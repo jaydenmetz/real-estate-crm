@@ -42,31 +42,51 @@ function startCronJobs() {
     }
   });
 
-  // Manager status checks every 30 minutes
-  cron.schedule('*/30 * * * *', async () => {
-    logger.info('Running manager status checks...');
-    
-    const managers = [buyerManager, listingManager, operationsManager];
-    
-    for (const manager of managers) {
-      if (manager.isEnabled()) {
-        try {
-          await manager.performStatusCheck();
-        } catch (error) {
-          logger.error(`${manager.name} status check failed:`, error);
-        }
+  // Buyer nurture cycle every day at 8 AM
+  cron.schedule('0 8 * * *', async () => {
+    if (buyerManager.isEnabled()) {
+      logger.info('Running buyer nurture cycle...');
+      try {
+        await buyerManager.runNurtureCycle();
+      } catch (error) {
+        logger.error('Buyer nurture cycle failed:', error);
       }
     }
   });
 
-  // Transaction deadline monitor - every hour
+  // Listing marketing cycle every day at 9 AM
+  cron.schedule('0 9 * * *', async () => {
+    if (listingManager.isEnabled()) {
+      logger.info('Running listing marketing cycle...');
+      try {
+        await listingManager.runMarketingCycle();
+      } catch (error) {
+        logger.error('Listing marketing cycle failed:', error);
+      }
+    }
+  });
+
+  // Daily operations (buyer, listing, transaction reminders) at midnight
+  cron.schedule('0 0 * * *', async () => {
+    if (operationsManager.isEnabled()) {
+      logger.info('Running daily operations...');
+      try {
+        await operationsManager.runDailyOperations();
+      } catch (error) {
+        logger.error('Daily operations failed:', error);
+      }
+    }
+  });
+
+  // Transaction reminder monitor - every hour
   cron.schedule('0 * * * *', async () => {
     if (operationsManager.isEnabled()) {
-      logger.info('Checking transaction deadlines...');
+      logger.info('Processing transaction reminders...');
       try {
-        await operationsManager.checkDeadlines();
+        // transaction reminders are part of daily operations, but for hourly we can call:
+        await operationsManager.runDailyOperations(); 
       } catch (error) {
-        logger.error('Deadline check failed:', error);
+        logger.error('Transaction reminder processing failed:', error);
       }
     }
   });
