@@ -1,200 +1,230 @@
-
-// backend/src/models/Appointment.js
-
-const { query, transaction } = require('../config/database');
+const { query } = require('../config/database');
 const { v4: uuidv4 } = require('uuid');
+const twilioClient = require('../config/twilio');
 
 class Appointment {
-  /**
-   * Create a new appointment.
-   * @param {Object} data
-   * @returns {Promise<Object>} created appointment
-   */
   static async create(data) {
     const id = `apt_${uuidv4().replace(/-/g, '').substring(0, 12)}`;
-    const {
-      title,
-      description,
-      appointmentDate,
-      startTime,
-      endTime,
-      clientId,
-      status = 'Scheduled'
-    } = data;
-
-    const sql = `
-      INSERT INTO appointments
-      (id, title, description, appointment_date, start_time, end_time, client_id, status)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
-      RETURNING
-        id,
-        title,
-        description,
-        appointment_date AS "date",
-        start_time       AS "startTime",
-        end_time         AS "endTime",
-        client_id        AS "clientId",
-        status,
-        created_at       AS "createdAt"
+    
+    const text = `
+      INSERT INTO appointments (
+        id, title, appointment_type, status, date, start_time,
+        end_time, duration, location, virtual_meeting_link,
+        property_address, preparation_checklist, notes
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+      RETURNING *
     `;
-    const params = [id, title, description, appointmentDate, startTime, endTime, clientId, status];
-    const { rows } = await query(sql, params);
-    return rows[0];
-  }
-
-  /**
-   * Fetch all appointments with optional date filter and pagination.
-   * @param {Object} filters
-   * @returns {Promise<Object>} { appointments: [], total, page, pages, limit }
-   */
-  static async findAll(filters = {}) {
-    const page   = parseInt(filters.page, 10) || 1;
-    const limit  = Math.min(parseInt(filters.limit, 10) || 20, 100);
-    const offset = (page - 1) * limit;
-    const date   = filters.date; // YYYY-MM-DD
-
-    let countSql = 'SELECT COUNT(*) FROM appointments';
-    let dataSql  = `
-      SELECT
-        id,
-        title,
-        description,
-        appointment_date AS "date",
-        start_time       AS "startTime",
-        end_time         AS "endTime",
-        client_id        AS "clientId",
-        status,
-        created_at       AS "createdAt"
-      FROM appointments
-    `;
-    const params = [];
-    if (date) {
-      params.push(date);
-      countSql += ' WHERE appointment_date = $1';
-      dataSql  += ' WHERE appointment_date = $1';
+    
+    const values = [
+      id,
+      data.title,
+      data.appointmentType,
+      data.status || 'Scheduled',
+      data.date,
+      data.startTime,
+      data.endTime,
+      data.duration,
+      JSON.stringify(data.location || {}),
+      data.virtualMeetingLink,
+      data.propertyAddress,
+      JSON.stringify(data.preparationChecklist || []),
+      JSON.stringify(data.notes || {})
+    ];
+    
+    const result = await query(text, values);
+    
+    // Add attendees
+    if (data.clients && data.clients.length > 0) {
+      await this.addAttendees(id, data.clients);
     }
-    dataSql += ` ORDER BY appointment_date DESC, start_time DESC LIMIT $${params.length+1} OFFSET $${params.length+2}`;
-    params.push(limit, offset);
-
-    const countRes = await query(countSql, params.slice(0, date ? 1 : 0));
-    const total    = parseInt(countRes.rows[0].count, 10);
-    const dataRes  = await query(dataSql, params);
-
+    
+    return this.findById(id);
+  }
+  
+  static async findAll(filters = {}) {
+    let text = `
+      SELECT a.*, 
+        array_agg(DISTINCT jsonb_build_object(
+          'id', aa.client_id, 
+          'name', c.first_name || ' ' || c.last_name,
+          'confirmed', aa.confirmed
+        )) FILTER (WHERE aa.client_id IS NOT NULL) as attendees
+      FROM appointments a
+      LEFT JOIN appointment_attendees aa ON a.id = aa.appointment_id
+      LEFT JOIN clients c ON aa.client_id = c.id
+      WHERE 1=1
+    `;
+    
+    const values = [];
+    let paramCount = 0;
+    
+    if (filters.date) {
+      paramCount++;
+      text += ` AND a.date = $${paramCount}`;
+      values.push(filters.date);
+    }
+    
+    if (filters.startDate && filters.endDate) {
+      paramCount++;
+      text += ` AND a.date BETWEEN $${paramCount}`;
+      values.push(filters.startDate);
+      paramCount++;
+      text += ` AND $${paramCount}`;
+      values.push(filters.endDate);
+    }
+    
+    if (filters.type) {
+      paramCount++;
+      text += ` AND a.appointment_type = $${paramCount}`;
+      values.push(filters.type);
+    }
+    
+    if (filters.status) {
+      paramCount++;
+      text += ` AND a.status = $${paramCount}`;
+      values.push(filters.status);
+    }
+    
+    text += ` GROUP BY a.id ORDER BY a.date, a.start_time`;
+    
+    const result = await query(text, values);
     return {
-      appointments: dataRes.rows,
-      pagination: {
-        total,
-        page,
-        pages: Math.ceil(total / limit),
-        limit
-      }
+      appointments: result.rows,
+      total: result.rows.length
     };
   }
-
-  /**
-   * Fetch a single appointment by ID.
-   * @param {string} id
-   * @returns {Promise<Object|null>}
-   */
+  
   static async findById(id) {
-    const sql = `
-      SELECT
-        id,
-        title,
-        description,
-        appointment_date AS "date",
-        start_time       AS "startTime",
-        end_time         AS "endTime",
-        client_id        AS "clientId",
-        status,
-        created_at       AS "createdAt",
-        updated_at       AS "updatedAt"
-      FROM appointments
-      WHERE id = $1
+    const text = `
+      SELECT a.*, 
+        array_agg(DISTINCT jsonb_build_object(
+          'id', aa.client_id, 
+          'name', c.first_name || ' ' || c.last_name,
+          'email', c.email,
+          'phone', c.phone,
+          'confirmed', aa.confirmed
+        )) FILTER (WHERE aa.client_id IS NOT NULL) as attendees
+      FROM appointments a
+      LEFT JOIN appointment_attendees aa ON a.id = aa.appointment_id
+      LEFT JOIN clients c ON aa.client_id = c.id
+      WHERE a.id = $1
+      GROUP BY a.id
     `;
-    const { rows } = await query(sql, [id]);
-    return rows[0] || null;
+    
+    const result = await query(text, [id]);
+    return result.rows.length > 0 ? result.rows[0] : null;
   }
-
-  /**
-   * Update an appointment.
-   * @param {string} id
-   * @param {Object} data
-   * @returns {Promise<Object|null>}
-   */
+  
   static async update(id, data) {
     const fields = [];
-    const params = [id];
-    let idx = 2;
-
-    const columns = {
-      title: 'title',
-      description: 'description',
-      appointmentDate: 'appointment_date',
-      startTime: 'start_time',
-      endTime: 'end_time',
-      clientId: 'client_id',
-      status: 'status'
-    };
-
-    for (const [key, col] of Object.entries(columns)) {
-      if (data[key] !== undefined) {
-        fields.push(`${col} = $${idx}`);
-        params.push(data[key]);
-        idx++;
+    const values = [id];
+    let paramCount = 1;
+    
+    Object.keys(data).forEach(key => {
+      if (key !== 'id' && key !== 'created_at' && key !== 'attendees') {
+        paramCount++;
+        if (typeof data[key] === 'object' && data[key] !== null) {
+          fields.push(`${key} = $${paramCount}`);
+          values.push(JSON.stringify(data[key]));
+        } else {
+          fields.push(`${key} = $${paramCount}`);
+          values.push(data[key]);
+        }
+      }
+    });
+    
+    const text = `
+      UPDATE appointments 
+      SET ${fields.join(', ')}, updated_at = NOW()
+      WHERE id = $1
+      RETURNING *
+    `;
+    
+    await query(text, values);
+    return this.findById(id);
+  }
+  
+  static async cancel(id, reason) {
+    const text = `
+      UPDATE appointments 
+      SET status = 'Cancelled', notes = jsonb_set(
+        COALESCE(notes, '{}'::jsonb),
+        '{cancellation_reason}',
+        $2::jsonb
+      ), updated_at = NOW()
+      WHERE id = $1
+      RETURNING *
+    `;
+    
+    const result = await query(text, [id, JSON.stringify(reason)]);
+    return result.rows.length > 0 ? this.findById(id) : null;
+  }
+  
+  static async complete(id, completionData) {
+    const text = `
+      UPDATE appointments 
+      SET 
+        status = 'Completed',
+        outcome = $2,
+        follow_up_actions = $3,
+        notes = jsonb_set(
+          COALESCE(notes, '{}'::jsonb),
+          '{completion_notes}',
+          $4::jsonb
+        ),
+        updated_at = NOW()
+      WHERE id = $1
+      RETURNING *
+    `;
+    
+    const values = [
+      id, 
+      completionData.outcome,
+      JSON.stringify(completionData.followUpActions || {}),
+      JSON.stringify(completionData.notes || {})
+    ];
+    
+    const result = await query(text, values);
+    return result.rows.length > 0 ? this.findById(id) : null;
+  }
+  
+  static async addAttendees(appointmentId, clientIds) {
+    const values = clientIds.map(clientId => `('${appointmentId}', '${clientId}', false)`).join(',');
+    const text = `INSERT INTO appointment_attendees (appointment_id, client_id, confirmed) VALUES ${values} ON CONFLICT DO NOTHING`;
+    await query(text);
+  }
+  
+  static async sendNotifications(appointmentId, type, additionalData = null) {
+    const appointment = await this.findById(appointmentId);
+    if (!appointment || !appointment.attendees) return;
+    
+    for (const attendee of appointment.attendees) {
+      if (attendee.phone) {
+        let message = '';
+        
+        switch (type) {
+          case 'created':
+            message = `Hi ${attendee.name.split(' ')[0]}, your appointment "${appointment.title}" is scheduled for ${appointment.date} at ${appointment.start_time}. Reply CONFIRM to confirm.`;
+            break;
+          case 'cancelled':
+            message = `Hi ${attendee.name.split(' ')[0]}, your appointment "${appointment.title}" on ${appointment.date} has been cancelled. ${additionalData ? 'Reason: ' + additionalData : ''}`;
+            break;
+          case 'reminder':
+            message = `Reminder: You have "${appointment.title}" tomorrow at ${appointment.start_time}. Location: ${appointment.location?.address || 'TBD'}`;
+            break;
+        }
+        
+        try {
+          await twilioClient.messages.create({
+            body: message,
+            from: process.env.TWILIO_PHONE_NUMBER,
+            to: attendee.phone
+          });
+        } catch (error) {
+          console.error(`Failed to send SMS to ${attendee.phone}:`, error);
+        }
       }
     }
-    if (fields.length === 0) return await this.findById(id);
-
-    const sql = `
-      UPDATE appointments
-        SET ${fields.join(', ')}, updated_at = NOW()
-      WHERE id = $1
-      RETURNING
-        id,
-        title,
-        description,
-        appointment_date AS "date",
-        start_time       AS "startTime",
-        end_time         AS "endTime",
-        client_id        AS "clientId",
-        status,
-        updated_at       AS "updatedAt"
-    `;
-    const { rows } = await query(sql, params);
-    return rows[0] || null;
-  }
-
-  /**
-   * Change status to 'Cancelled'.
-   * @param {string} id
-   * @returns {Promise<Object|null>}
-   */
-  static async cancel(id) {
-    const sql = `
-      UPDATE appointments
-        SET status = 'Cancelled', updated_at = NOW()
-      WHERE id = $1
-      RETURNING id, status
-    `;
-    const { rows } = await query(sql, [id]);
-    return rows[0] || null;
-  }
-
-  /**
-   * Change status to 'Completed'.
-   * @param {string} id
-   * @returns {Promise<Object|null>}
-   */
-  static async complete(id) {
-    const sql = `
-      UPDATE appointments
-        SET status = 'Completed', updated_at = NOW()
-      WHERE id = $1
-      RETURNING id, status
-    `;
-    const { rows } = await query(sql, [id]);
-    return rows[0] || null;
   }
 }
 

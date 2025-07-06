@@ -1,137 +1,112 @@
-
-
-// backend/src/models/DeletionRequest.js
-
 const { query } = require('../config/database');
 const { v4: uuidv4 } = require('uuid');
 
-/**
- * Model for handling deletion requests of various entities.
- * Schema (deletion_requests):
- *   id            TEXT PRIMARY KEY,
- *   entity_type   TEXT NOT NULL,       -- e.g. 'client', 'lead', 'escrow'
- *   entity_id     TEXT NOT NULL,       -- the ID of the entity to delete
- *   requested_by  TEXT NOT NULL,       -- user or API key making the request
- *   reason        TEXT,                -- optional explanation
- *   status        TEXT NOT NULL,       -- 'pending', 'approved', 'rejected'
- *   created_at    TIMESTAMPTZ DEFAULT NOW(),
- *   processed_at  TIMESTAMPTZ
- */
 class DeletionRequest {
-  /**
-   * Create a new deletion request.
-   * @param {Object} data
-   * @param {string} data.entityType
-   * @param {string} data.entityId
-   * @param {string} data.requestedBy
-   * @param {string} [data.reason]
-   * @returns {Promise<Object>}
-   */
-  static async create({ entityType, entityId, requestedBy, reason = null }) {
+  static async create(entityType, entityId, requestedBy, reason) {
     const id = `del_${uuidv4().replace(/-/g, '').substring(0, 12)}`;
-    const sql = `
-      INSERT INTO deletion_requests
-        (id, entity_type, entity_id, requested_by, reason, status)
-      VALUES ($1, $2, $3, $4, $5, 'pending')
-      RETURNING
-        id,
-        entity_type   AS "entityType",
-        entity_id     AS "entityId",
-        requested_by  AS "requestedBy",
-        reason,
-        status,
-        created_at    AS "createdAt"
+    
+    const text = `
+      INSERT INTO deletion_requests (
+        id, entity_type, entity_id, requested_by, reason, status
+      ) VALUES ($1, $2, $3, $4, $5, $6)
+      RETURNING *
     `;
-    const params = [id, entityType, entityId, requestedBy, reason];
-    const { rows } = await query(sql, params);
-    return rows[0];
+    
+    const values = [id, entityType, entityId, requestedBy, reason, 'pending_approval'];
+    const result = await query(text, values);
+    
+    return result.rows[0];
   }
-
-  /**
-   * Fetch all deletion requests, optionally filtered by status.
-   * @param {Object} [filters]
-   * @param {string} [filters.status]
-   * @returns {Promise<Array>}
-   */
+  
   static async findAll(filters = {}) {
-    let sql = `
-      SELECT
-        id,
-        entity_type   AS "entityType",
-        entity_id     AS "entityId",
-        requested_by  AS "requestedBy",
-        reason,
-        status,
-        created_at    AS "createdAt",
-        processed_at  AS "processedAt"
-      FROM deletion_requests
+    let text = `
+      SELECT dr.*, 
+        CASE 
+          WHEN dr.entity_type = 'escrow' THEN e.property_address
+          WHEN dr.entity_type = 'listing' THEN l.property_address
+          WHEN dr.entity_type = 'client' THEN c.first_name || ' ' || c.last_name
+          ELSE dr.entity_id
+        END as entity_description
+      FROM deletion_requests dr
+      LEFT JOIN escrows e ON dr.entity_id = e.id AND dr.entity_type = 'escrow'
+      LEFT JOIN listings l ON dr.entity_id = l.id AND dr.entity_type = 'listing'
+      LEFT JOIN clients c ON dr.entity_id = c.id AND dr.entity_type = 'client'
+      WHERE 1=1
     `;
-    const params = [];
+    
+    const values = [];
+    let paramCount = 0;
+    
     if (filters.status) {
-      params.push(filters.status);
-      sql += ` WHERE status = $${params.length}`;
+      paramCount++;
+      text += ` AND dr.status = $${paramCount}`;
+      values.push(filters.status);
     }
-    sql += ` ORDER BY created_at DESC`;
-    const { rows } = await query(sql, params);
-    return rows;
+    
+    if (filters.entityType) {
+      paramCount++;
+      text += ` AND dr.entity_type = $${paramCount}`;
+      values.push(filters.entityType);
+    }
+    
+    text += ` ORDER BY dr.created_at DESC`;
+    
+    const result = await query(text, values);
+    return result.rows;
   }
-
-  /**
-   * Fetch a single deletion request by ID.
-   * @param {string} id
-   * @returns {Promise<Object|null>}
-   */
-  static async findById(id) {
-    const sql = `
-      SELECT
-        id,
-        entity_type   AS "entityType",
-        entity_id     AS "entityId",
-        requested_by  AS "requestedBy",
-        reason,
-        status,
-        created_at    AS "createdAt",
-        processed_at  AS "processedAt"
-      FROM deletion_requests
+  
+  static async approve(id, approvedBy) {
+    const text = `
+      UPDATE deletion_requests 
+      SET status = 'approved', approved_by = $2, approved_at = NOW()
       WHERE id = $1
-      LIMIT 1
+      RETURNING *
     `;
-    const { rows } = await query(sql, [id]);
-    return rows[0] || null;
+    
+    const result = await query(text, [id, approvedBy]);
+    
+    if (result.rows.length > 0) {
+      const request = result.rows[0];
+      
+      // Perform actual deletion based on entity type
+      await this.executeActualDeletion(request);
+    }
+    
+    return result.rows[0];
   }
-
-  /**
-   * Update the status of a deletion request and set processed_at.
-   * @param {string} id
-   * @param {string} status           -- 'approved' or 'rejected'
-   * @returns {Promise<Object|null>}
-   */
-  static async updateStatus(id, status) {
-    const sql = `
-      UPDATE deletion_requests
-         SET status = $2,
-             processed_at = NOW()
-       WHERE id = $1
-       RETURNING
-         id,
-         status,
-         processed_at AS "processedAt"
+  
+  static async reject(id, rejectedBy, reason) {
+    const text = `
+      UPDATE deletion_requests 
+      SET status = 'rejected', approved_by = $2, reason = reason || ' | Rejection reason: ' || $3
+      WHERE id = $1
+      RETURNING *
     `;
-    const { rows } = await query(sql, [id, status]);
-    return rows[0] || null;
+    
+    const result = await query(text, [id, rejectedBy, reason]);
+    return result.rows[0];
   }
-
-  /**
-   * Permanently delete the request record by ID.
-   * @param {string} id
-   * @returns {Promise<boolean>}
-   */
-  static async remove(id) {
-    const result = await query(
-      'DELETE FROM deletion_requests WHERE id = $1',
-      [id]
-    );
-    return result.rowCount > 0;
+  
+  static async executeActualDeletion(request) {
+    const { entity_type, entity_id } = request;
+    
+    switch (entity_type) {
+      case 'escrow':
+        await query('DELETE FROM escrows WHERE id = $1', [entity_id]);
+        break;
+      case 'listing':
+        await query('DELETE FROM listings WHERE id = $1', [entity_id]);
+        break;
+      case 'client':
+        await query('DELETE FROM clients WHERE id = $1', [entity_id]);
+        break;
+      case 'lead':
+        await query('DELETE FROM leads WHERE id = $1', [entity_id]);
+        break;
+      case 'appointment':
+        await query('DELETE FROM appointments WHERE id = $1', [entity_id]);
+        break;
+    }
   }
 }
 

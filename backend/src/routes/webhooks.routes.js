@@ -1,20 +1,23 @@
-// backend/src/routes/webhooks.routes.js
-
 const express = require('express');
 const router = express.Router();
+const { body } = require('express-validator');
 const webhooksController = require('../controllers/webhooks.controller');
+const { authenticate, requireRole } = require('../middleware/auth.middleware');
+const handleValidationErrors = require('../middleware/validation.middleware');
 
-/**
- * Webhook endpoints - no authentication (public endpoints handled via service-level security).
- */
+// All routes require authentication
+router.use(authenticate);
 
-// Handle incoming SMS from Twilio
-router.post('/sms', webhooksController.handleSmsWebhook);
+// Validation rules
+const registerValidation = [
+  body('url').isURL().withMessage('Valid URL required'),
+  body('events').isArray().withMessage('Events must be an array'),
+  body('secret').isLength({ min: 10 }).withMessage('Secret must be at least 10 characters')
+];
 
-// Handle inbound emails (e.g. AWS SES)
-router.post('/email', webhooksController.handleEmailWebhook);
-
-// Generic notification webhook
-router.post('/notifications', webhooksController.handleNotificationWebhook);
+// Routes
+router.get('/', requireRole('master', 'executive'), webhooksController.getWebhooks);
+router.post('/', requireRole('master', 'executive'), registerValidation, handleValidationErrors, webhooksController.register);
+router.delete('/:id', requireRole('master', 'executive'), webhooksController.deleteWebhook);
 
 module.exports = router;

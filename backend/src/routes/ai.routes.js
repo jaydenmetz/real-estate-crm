@@ -1,24 +1,24 @@
 const express = require('express');
 const router = express.Router();
 const aiController = require('../controllers/ai.controller');
-const { authenticate } = require('../middleware/auth.middleware');
-const aiPermissions = require('../middleware/aiPermissions.middleware');
+const { authenticate, requireRole } = require('../middleware/auth.middleware');
+const { requireAIPermission } = require('../middleware/aiPermissions.middleware');
 
-// All AI routes require authentication and permission
+// All routes require authentication
 router.use(authenticate);
-router.use(aiPermissions);
 
-// List AI agents and their status
-router.get('/agents', aiController.getAgents);
+// AI Agent Management
+router.get('/agents', requireRole('master', 'executive'), aiController.getAgents);
+router.patch('/agents/:id/toggle', requireRole('master', 'executive'), aiController.toggleAgent);
 
-// Toggle an agent on or off
-router.patch('/agents/:agentId/toggle', aiController.toggleAgent);
+// Token Usage and Analytics
+router.get('/token-usage', requireRole('master', 'executive'), aiController.getTokenUsage);
 
-// Retrieve token usage statistics
-router.get('/token-usage', aiController.getTokenUsage);
+// Alex Executive Assistant Endpoints
+router.get('/alex/daily-briefing', requireRole('master', 'executive'), aiController.getDailyBriefing);
+router.get('/alex/urgent-tasks', requireRole('master', 'executive'), aiController.getUrgentTasks);
 
-// Executive (‘Alex’) endpoints
-router.get('/alex/daily-briefing', aiController.getDailyBriefing);
-router.get('/alex/urgent-tasks', aiController.getUrgentTasks);
+// Lead Processing (for AI agents)
+router.post('/process-lead', requireAIPermission('leads', 'create'), aiController.processLead);
 
 module.exports = router;

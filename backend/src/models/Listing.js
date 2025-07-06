@@ -1,217 +1,223 @@
-
-
-// backend/src/models/Listing.js
-
-const { query, transaction } = require('../config/database');
+const { query } = require('../config/database');
 const { v4: uuidv4 } = require('uuid');
 
 class Listing {
-  /**
-   * Create a new listing.
-   * @param {Object} data
-   * @param {string} data.address
-   * @param {number} data.price
-   * @param {string} [data.status]
-   * @param {string} [data.agentId]
-   * @returns {Promise<Object>} Created listing
-   */
-  static async create({ address, price, status = 'Active', agentId = null }) {
-    const id = `lst_${uuidv4().replace(/-/g, '').substring(0, 12)}`;
-    const sql = `
-      INSERT INTO listings
-        (id, address, price, status, agent_id)
-      VALUES ($1, $2, $3, $4, $5)
-      RETURNING
-        id,
-        address,
-        price,
-        status,
-        agent_id    AS "agentId",
-        created_at  AS "createdAt"
+  static async create(data) {
+    const id = `list_${uuidv4().replace(/-/g, '').substring(0, 12)}`;
+    
+    const text = `
+      INSERT INTO listings (
+        id, property_address, mls_number, listing_status, list_price,
+        original_list_price, price_per_sqft, property_type, bedrooms,
+        bathrooms, square_footage, lot_size, year_built, garage, pool,
+        listing_date, expiration_date, marketing_budget, virtual_tour_link,
+        professional_photos, drone_photos, video_walkthrough,
+        listing_commission, buyer_agent_commission, tags
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
+      RETURNING *
     `;
-    const params = [id, address, price, status, agentId];
-    const { rows } = await query(sql, params);
-    return rows[0];
+    
+    const values = [
+      id,
+      data.propertyAddress,
+      data.mlsNumber,
+      data.listingStatus || 'Active',
+      data.listPrice,
+      data.originalListPrice || data.listPrice,
+      data.listPrice && data.squareFootage ? (data.listPrice / data.squareFootage) : null,
+      data.propertyType,
+      data.bedrooms,
+      data.bathrooms,
+      data.squareFootage,
+      data.lotSize,
+      data.yearBuilt,
+      data.garage,
+      data.pool || false,
+      data.listingDate,
+      data.expirationDate,
+      data.marketingBudget,
+      data.virtualTourLink,
+      data.professionalPhotos || false,
+      data.dronePhotos || false,
+      data.videoWalkthrough || false,
+      data.listingCommission,
+      data.buyerAgentCommission,
+      data.tags || []
+    ];
+    
+    const result = await query(text, values);
+    
+    // Add sellers
+    if (data.sellers && data.sellers.length > 0) {
+      await this.addSellers(id, data.sellers);
+    }
+    
+    // Record initial price
+    await this.recordPriceHistory(id, data.listPrice, data.listingDate, 'Initial listing');
+    
+    return this.findById(id);
   }
-
-  /**
-   * Fetch all listings with pagination.
-   * @param {Object} filters
-   * @param {number} [filters.page]
-   * @param {number} [filters.limit]
-   * @returns {Promise<Object>} { listings, pagination }
-   */
-  static async findAll({ page = 1, limit = 20 } = {}) {
-    const maxLimit = Math.min(limit, 100);
-    const offset = (page - 1) * maxLimit;
-
-    // total count
-    const countRes = await query('SELECT COUNT(*) FROM listings');
-    const total = parseInt(countRes.rows[0].count, 10);
-
-    // page data
-    const sql = `
-      SELECT
-        id,
-        address,
-        price,
-        status,
-        agent_id    AS "agentId",
-        created_at  AS "createdAt"
-      FROM listings
-      ORDER BY created_at DESC
-      LIMIT $1 OFFSET $2
+  
+  static async findAll(filters = {}) {
+    let text = `
+      SELECT l.*, 
+        array_agg(DISTINCT jsonb_build_object('id', ls.client_id, 'name', c.first_name || ' ' || c.last_name)) FILTER (WHERE ls.client_id IS NOT NULL) as sellers,
+        COUNT(*) OVER() as total_count
+      FROM listings l
+      LEFT JOIN listing_sellers ls ON l.id = ls.listing_id
+      LEFT JOIN clients c ON ls.client_id = c.id
+      WHERE 1=1
     `;
-    const dataRes = await query(sql, [maxLimit, offset]);
-
+    
+    const values = [];
+    let paramCount = 0;
+    
+    if (filters.status) {
+      paramCount++;
+      text += ` AND l.listing_status = $${paramCount}`;
+      values.push(filters.status);
+    }
+    
+    if (filters.minPrice) {
+      paramCount++;
+      text += ` AND l.list_price >= $${paramCount}`;
+      values.push(filters.minPrice);
+    }
+    
+    if (filters.maxPrice) {
+      paramCount++;
+      text += ` AND l.list_price <= $${paramCount}`;
+      values.push(filters.maxPrice);
+    }
+    
+    if (filters.propertyType) {
+      paramCount++;
+      text += ` AND l.property_type = $${paramCount}`;
+      values.push(filters.propertyType);
+    }
+    
+    text += ` GROUP BY l.id`;
+    
+    // Add sorting
+    const sortField = filters.sort || 'created_at';
+    const sortOrder = filters.order === 'asc' ? 'ASC' : 'DESC';
+    text += ` ORDER BY l.${sortField} ${sortOrder}`;
+    
+    // Add pagination
+    const limit = Math.min(filters.limit || 20, 100);
+    const offset = ((filters.page || 1) - 1) * limit;
+    text += ` LIMIT ${limit} OFFSET ${offset}`;
+    
+    const result = await query(text, values);
+    
     return {
-      listings: dataRes.rows,
-      pagination: {
-        total,
-        page,
-        pages: Math.ceil(total / maxLimit),
-        limit: maxLimit
-      }
+      listings: result.rows,
+      total: result.rows.length > 0 ? parseInt(result.rows[0].total_count) : 0,
+      page: filters.page || 1,
+      pages: result.rows.length > 0 ? Math.ceil(result.rows[0].total_count / limit) : 0
     };
   }
-
-  /**
-   * Fetch a single listing by ID.
-   * @param {string} id
-   * @returns {Promise<Object|null>}
-   */
+  
   static async findById(id) {
-    const sql = `
-      SELECT
-        id,
-        address,
-        price,
-        status,
-        agent_id    AS "agentId",
-        created_at  AS "createdAt",
-        updated_at  AS "updatedAt"
-      FROM listings
-      WHERE id = $1
-      LIMIT 1
+    const text = `
+      SELECT l.*, 
+        array_agg(DISTINCT jsonb_build_object('id', ls.client_id, 'name', c.first_name || ' ' || c.last_name)) FILTER (WHERE ls.client_id IS NOT NULL) as sellers,
+        array_agg(DISTINCT lph.*) FILTER (WHERE lph.id IS NOT NULL) as price_history,
+        array_agg(DISTINCT d.*) FILTER (WHERE d.id IS NOT NULL) as documents,
+        array_agg(DISTINCT n.*) FILTER (WHERE n.id IS NOT NULL) as notes
+      FROM listings l
+      LEFT JOIN listing_sellers ls ON l.id = ls.listing_id
+      LEFT JOIN clients c ON ls.client_id = c.id
+      LEFT JOIN listing_price_history lph ON l.id = lph.listing_id
+      LEFT JOIN documents d ON d.entity_id = l.id AND d.entity_type = 'listing'
+      LEFT JOIN notes n ON n.entity_id = l.id AND n.entity_type = 'listing'
+      WHERE l.id = $1
+      GROUP BY l.id
     `;
-    const { rows } = await query(sql, [id]);
-    return rows[0] || null;
+    
+    const result = await query(text, [id]);
+    return result.rows.length > 0 ? result.rows[0] : null;
   }
-
-  /**
-   * Update an existing listing.
-   * @param {string} id
-   * @param {Object} data
-   * @returns {Promise<Object|null>}
-   */
-  static async update(id, { address, price, status, agentId }) {
+  
+  static async update(id, data) {
     const fields = [];
-    const params = [id];
-    let idx = 2;
-
-    if (address !== undefined) {
-      fields.push(`address = $${idx++}`);
-      params.push(address);
-    }
-    if (price !== undefined) {
-      fields.push(`price = $${idx++}`);
-      params.push(price);
-    }
-    if (status !== undefined) {
-      fields.push(`status = $${idx++}`);
-      params.push(status);
-    }
-    if (agentId !== undefined) {
-      fields.push(`agent_id = $${idx++}`);
-      params.push(agentId);
-    }
-
-    if (!fields.length) {
-      return this.findById(id);
-    }
-
-    const sql = `
-      UPDATE listings
-        SET ${fields.join(', ')}, updated_at = NOW()
-      WHERE id = $1
-      RETURNING
-        id,
-        address,
-        price,
-        status,
-        agent_id    AS "agentId",
-        updated_at  AS "updatedAt"
-    `;
-    const { rows } = await query(sql, params);
-    return rows[0] || null;
-  }
-
-  /**
-   * Delete a listing.
-   * @param {string} id
-   * @returns {Promise<boolean>}
-   */
-  static async delete(id) {
-    const res = await query('DELETE FROM listings WHERE id = $1', [id]);
-    return res.rowCount > 0;
-  }
-
-  /**
-   * Reduce the price of a listing.
-   * @param {string} id
-   * @param {number} amount
-   * @returns {Promise<Object|null>}
-   */
-  static async priceReduction(id, amount) {
-    const sql = `
-      UPDATE listings
-        SET price = price - $2, updated_at = NOW()
-      WHERE id = $1
-      RETURNING
-        id,
-        address,
-        price,
-        status,
-        agent_id    AS "agentId",
-        updated_at  AS "updatedAt"
-    `;
-    const { rows } = await query(sql, [id, amount]);
-    return rows[0] || null;
-  }
-
-  /**
-   * Log a showing event for a listing.
-   * @param {string} id
-   * @param {Object} data
-   * @param {string} data.showingDate
-   * @param {string} data.agentId
-   * @param {string} [data.notes]
-   * @returns {Promise<Object>}
-   */
-  static async logShowing(id, { showingDate, agentId, notes = null }) {
-    const showId = `shw_${uuidv4().replace(/-/g, '').substring(0, 12)}`;
-    return await transaction(async (client) => {
-      const insertSql = `
-        INSERT INTO showings (id, listing_id, showing_date, agent_id, notes)
-        VALUES ($1, $2, $3, $4, $5)
-        RETURNING
-          id            AS "showingId",
-          listing_id    AS "listingId",
-          showing_date  AS "showingDate",
-          agent_id      AS "agentId",
-          notes
-      `;
-      const params = [showId, id, showingDate, agentId, notes];
-      const { rows } = await client.query(insertSql, params);
-
-      // Optionally update listings.updated_at
-      await client.query(
-        'UPDATE listings SET updated_at = NOW() WHERE id = $1',
-        [id]
-      );
-
-      return rows[0];
+    const values = [id];
+    let paramCount = 1;
+    
+    Object.keys(data).forEach(key => {
+      if (key !== 'id' && key !== 'created_at' && key !== 'sellers') {
+        paramCount++;
+        fields.push(`${key} = $${paramCount}`);
+        values.push(data[key]);
+      }
     });
+    
+    fields.push('updated_at = NOW()');
+    
+    const text = `
+      UPDATE listings 
+      SET ${fields.join(', ')}
+      WHERE id = $1
+      RETURNING *
+    `;
+    
+    await query(text, values);
+    return this.findById(id);
+  }
+  
+  static async recordPriceReduction(id, data) {
+    // Update listing price
+    await query(
+      'UPDATE listings SET list_price = $2, updated_at = NOW() WHERE id = $1',
+      [id, data.newPrice]
+    );
+    
+    // Record price history
+    return this.recordPriceHistory(id, data.newPrice, data.effectiveDate, data.reason);
+  }
+  
+  static async recordPriceHistory(listingId, price, date, reason) {
+    const text = `
+      INSERT INTO listing_price_history (listing_id, price, date, reason)
+      VALUES ($1, $2, $3, $4)
+      RETURNING *
+    `;
+    
+    const result = await query(text, [listingId, price, date, reason]);
+    return result.rows[0];
+  }
+  
+  static async logShowing(id, showingData) {
+    // Update showing counts
+    await query(
+      'UPDATE listings SET total_showings = total_showings + 1 WHERE id = $1',
+      [id]
+    );
+    
+    // Log communication
+    const text = `
+      INSERT INTO communications (
+        entity_type, entity_id, type, direction, content, created_at
+      ) VALUES ($1, $2, $3, $4, $5, NOW())
+      RETURNING *
+    `;
+    
+    const values = [
+      'listing',
+      id,
+      'showing',
+      'inbound',
+      JSON.stringify(showingData)
+    ];
+    
+    const result = await query(text, values);
+    return result.rows[0];
+  }
+  
+  static async addSellers(listingId, sellerIds) {
+    const values = sellerIds.map(sellerId => `('${listingId}', '${sellerId}')`).join(',');
+    const text = `INSERT INTO listing_sellers (listing_id, client_id) VALUES ${values} ON CONFLICT DO NOTHING`;
+    await query(text);
   }
 }
 

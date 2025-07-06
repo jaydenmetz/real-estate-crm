@@ -1,132 +1,223 @@
-
-
-// backend/src/services/ai/agents/buyerNurtureSpecialist.js
-
 const axios = require('axios');
 const logger = require('../../../utils/logger');
-const Lead = require('../../../models/Lead');
+const { query } = require('../../../config/database');
 const twilioClient = require('../../../config/twilio');
-const emailService = require('../../../services/email.service');
 
 class BuyerNurtureSpecialistAgent {
   constructor() {
     this.name = 'Buyer Nurture Specialist';
-    this.model = 'claude-3-sonnet-20240307';
+    this.model = 'claude-3-haiku-20240307';
     this.enabled = true;
-    this.followUpIntervalHours = 48; // default interval between follow-ups
   }
 
-  /**
-   * Entry point for nurturing a lead: send tailored nurture content
-   * and schedule the next follow-up.
-   * @param {Object} leadData - The lead record from database
-   */
-  async nurtureLead(leadData) {
-    const start = Date.now();
-    try {
-      logger.info(`Nurturing lead: ${leadData.id}`);
+  async execute8x8Program(leadId) {
+    // Tom Ferry's 8x8 program: 8 touches in 8 weeks
+    const touchSchedule = [
+      { week: 1, day: 1, type: 'welcome_call' },
+      { week: 1, day: 3, type: 'market_update' },
+      { week: 2, day: 1, type: 'new_listings' },
+      { week: 3, day: 1, type: 'check_in_call' },
+      { week: 4, day: 1, type: 'market_report' },
+      { week: 5, day: 1, type: 'property_alert' },
+      { week: 6, day: 1, type: 'follow_up_call' },
+      { week: 8, day: 1, type: 'final_check_in' }
+    ];
 
-      // Generate personalized content
-      const content = await this.generateNurtureContent(leadData);
-
-      // Send via SMS or email based on lead preference
-      await this.deliverNurtureMessage(leadData, content);
-
-      // Log the communication
-      await this.logCommunication(leadData.id, leadData.preferredChannel, content);
-
-      // Schedule next follow-up
-      await this.scheduleNextFollowUp(leadData.id);
-
-      const duration = ((Date.now() - start) / 1000).toFixed(2);
-      logger.info(`Nurture complete for lead ${leadData.id} in ${duration}s`);
-    } catch (err) {
-      logger.error('Error in BuyerNurtureSpecialistAgent.nurtureLead:', err);
-      throw err;
+    for (const touch of touchSchedule) {
+      await this.scheduleTouchPoint(leadId, touch);
     }
   }
 
-  /**
-   * Generate nurture message content using an AI model.
-   * @param {Object} leadData
-   * @returns {Promise<string>}
-   */
-  async generateNurtureContent(leadData) {
+  async execute33TouchProgram(clientId) {
+    // Tom Ferry's 33-touch annual program for past clients
+    const touchPoints = [
+      // Monthly market updates (12)
+      ...Array.from({ length: 12 }, (_, i) => ({
+        month: i + 1,
+        type: 'market_update',
+        template: 'monthly_market_report'
+      })),
+      
+      // Quarterly check-ins (4)
+      ...Array.from({ length: 4 }, (_, i) => ({
+        quarter: i + 1,
+        type: 'personal_check_in',
+        template: 'quarterly_touch'
+      })),
+      
+      // Special occasions (17)
+      { type: 'birthday', template: 'birthday_greeting' },
+      { type: 'home_anniversary', template: 'home_anniversary' },
+      { type: 'thanksgiving', template: 'thanksgiving_card' },
+      { type: 'christmas', template: 'holiday_card' },
+      { type: 'new_year', template: 'new_year_wishes' },
+      { type: 'valentines', template: 'valentines_card' },
+      { type: 'easter', template: 'easter_greeting' },
+      { type: 'mothers_day', template: 'mothers_day' },
+      { type: 'fathers_day', template: 'fathers_day' },
+      { type: 'independence_day', template: 'july_4th' },
+      { type: 'halloween', template: 'halloween_card' },
+      { type: 'home_maintenance_spring', template: 'spring_maintenance' },
+      { type: 'home_maintenance_fall', template: 'fall_maintenance' },
+      { type: 'tax_season', template: 'tax_reminder' },
+      { type: 'insurance_review', template: 'insurance_check' },
+      { type: 'referral_request', template: 'referral_ask' },
+      { type: 'client_appreciation', template: 'appreciation_event' }
+    ];
+
+    for (const touch of touchPoints) {
+      await this.scheduleAnnualTouchPoint(clientId, touch);
+    }
+  }
+
+  async sendMarketUpdate(clientId) {
+    const client = await query('SELECT * FROM clients WHERE id = $1', [clientId]);
+    if (!client.rows.length) return;
+
+    const clientData = client.rows[0];
+    
+    // Get market data for client's area
+    const marketData = await this.getMarketData(clientData.preferences?.preferredAreas || []);
+    
+    // Generate personalized market update
     const prompt = `
-      You are a real estate nurturing specialist. Craft a friendly, helpful follow-up message for this buyer lead:
-      Lead: ${JSON.stringify(leadData)}
+      Create a personalized market update for ${clientData.first_name} ${clientData.last_name}.
+      Client preferences: ${JSON.stringify(clientData.preferences)}
+      Market data: ${JSON.stringify(marketData)}
+      
       Include:
-      - A brief recap of their preferences
-      - Relevant market insights
-      - A soft call-to-action to continue the conversation
-      Respond in 2-3 sentences.
+      - Current market trends in their preferred areas
+      - New listings that match their criteria
+      - Recent sales in their price range
+      - Actionable insights
+      
+      Keep it conversational and valuable.
     `;
 
-    const resp = await axios.post(
-      'https://api.anthropic.com/v1/messages',
-      {
-        model: this.model,
-        max_tokens: 300,
-        messages: [{ role: 'user', content: prompt }]
-      },
-      {
-        headers: {
-          'x-api-key': process.env.ANTHROPIC_API_KEY,
-          'anthropic-version': '2023-06-01',
-          'content-type': 'application/json'
-        }
-      }
-    );
-
-    return resp.data.completion || resp.data.content;
+    const response = await this.callClaude(prompt);
+    
+    // Send via email or SMS based on preference
+    if (clientData.preferred_contact_method === 'Email' && clientData.email) {
+      await this.sendEmail(clientData.email, 'Market Update', response.content);
+    } else if (clientData.phone) {
+      await this.sendSMS(clientData.phone, response.content);
+    }
+    
+    // Log communication
+    await this.logCommunication(clientId, 'market_update', response.content);
   }
 
-  /**
-   * Deliver the message via the lead's preferred channel.
-   * @param {Object} leadData
-   * @param {string} content
-   */
-  async deliverNurtureMessage(leadData, content) {
-    const channel = leadData.preferredChannel || 'email';
-    if (channel === 'sms' && leadData.phone) {
-      await twilioClient.messages.create({
-        body: content,
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: leadData.phone
-      });
-    } else if (leadData.email) {
-      await emailService.send({
-        to: leadData.email,
-        subject: 'Quick Follow-Up',
-        text: content
-      });
+  async scheduleTouchPoint(leadId, touch) {
+    const scheduleDate = new Date();
+    scheduleDate.setDate(scheduleDate.getDate() + (touch.week * 7) + touch.day - 1);
+    
+    // Store in database for later execution
+    await query(
+      'INSERT INTO scheduled_touches (lead_id, type, scheduled_date, status) VALUES ($1, $2, $3, $4)',
+      [leadId, touch.type, scheduleDate, 'scheduled']
+    );
+  }
+
+  async scheduleAnnualTouchPoint(clientId, touch) {
+    // Calculate next occurrence date based on touch type
+    let scheduleDate = new Date();
+    
+    if (touch.month) {
+      scheduleDate.setMonth(touch.month - 1, 15); // 15th of each month
+    } else if (touch.quarter) {
+      scheduleDate.setMonth((touch.quarter - 1) * 3, 1); // First of quarter
     } else {
-      logger.warn(`No valid contact channel for lead ${leadData.id}`);
+      // Special occasions - calculate based on type
+      scheduleDate = this.calculateSpecialOccasionDate(touch.type);
+    }
+    
+    await query(
+      'INSERT INTO scheduled_touches (client_id, type, scheduled_date, status, template) VALUES ($1, $2, $3, $4, $5)',
+      [clientId, touch.type, scheduleDate, 'scheduled', touch.template]
+    );
+  }
+
+  calculateSpecialOccasionDate(type) {
+    const now = new Date();
+    const year = now.getFullYear();
+    
+    const dates = {
+      'thanksgiving': new Date(year, 10, 23), // 4th Thursday of November (approx)
+      'christmas': new Date(year, 11, 25),
+      'new_year': new Date(year + 1, 0, 1),
+      'valentines': new Date(year, 1, 14),
+      'easter': new Date(year, 3, 15), // Approximate
+      'mothers_day': new Date(year, 4, 12), // 2nd Sunday of May (approx)
+      'fathers_day': new Date(year, 5, 16), // 3rd Sunday of June (approx)
+      'independence_day': new Date(year, 6, 4),
+      'halloween': new Date(year, 9, 31),
+      'home_maintenance_spring': new Date(year, 2, 15), // March 15
+      'home_maintenance_fall': new Date(year, 8, 15), // September 15
+      'tax_season': new Date(year, 3, 1), // April 1
+      'insurance_review': new Date(year, 0, 15), // January 15
+    };
+    
+    return dates[type] || new Date();
+  }
+
+  async sendEmail(email, subject, content) {
+    // Integration with email service would go here
+    logger.info(`Email sent to ${email}: ${subject}`);
+  }
+
+  async sendSMS(phone, message) {
+    try {
+      await twilioClient.messages.create({
+        body: message,
+        from: process.env.TWILIO_PHONE_NUMBER,
+        to: phone
+      });
+    } catch (error) {
+      logger.error('SMS send failed:', error);
     }
   }
 
-  /**
-   * Log outbound communications for audit.
-   * @param {string} leadId
-   * @param {string} channel
-   * @param {string} message
-   */
-  async logCommunication(leadId, channel, message) {
-    await Lead.logActivity(leadId, `[${channel.toUpperCase()}] ${message}`);
+  async logCommunication(entityId, type, content) {
+    await query(
+      'INSERT INTO communications (entity_type, entity_id, type, direction, content, created_at) VALUES ($1, $2, $3, $4, $5, NOW())',
+      ['client', entityId, type, 'outbound', content]
+    );
   }
 
-  /**
-   * Schedule the next follow-up by creating a job in Redis or scheduling service.
-   * @param {string} leadId
-   */
-  async scheduleNextFollowUp(leadId) {
-    const nextAt = Date.now() + this.followUpIntervalHours * 3600 * 1000;
-    // Example: use Redis sorted set or job scheduler:
-    await require('../../../config/redis').getRedisClient().zAdd(
-      'nurture:queue',
-      { score: nextAt, value: leadId }
-    );
-    logger.info(`Scheduled next follow-up for lead ${leadId} at ${new Date(nextAt).toISOString()}`);
+  async callClaude(prompt) {
+    try {
+      const response = await axios.post(
+        'https://api.anthropic.com/v1/messages',
+        {
+          model: this.model,
+          max_tokens: 800,
+          messages: [{ role: 'user', content: prompt }]
+        },
+        {
+          headers: {
+            'x-api-key': process.env.ANTHROPIC_API_KEY,
+            'anthropic-version': '2023-06-01',
+            'content-type': 'application/json'
+          }
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      logger.error('Claude API error:', error);
+      throw error;
+    }
+  }
+
+  async getMarketData(preferredAreas) {
+    // Mock market data - in real implementation, integrate with MLS or market data API
+    return {
+      avgPrice: 450000,
+      priceChange: 2.5,
+      inventoryDays: 45,
+      newListings: 23,
+      areas: preferredAreas
+    };
   }
 
   isEnabled() {

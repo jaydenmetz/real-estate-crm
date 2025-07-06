@@ -1,201 +1,228 @@
-
-
-// backend/src/models/Lead.js
-
-const { query, transaction } = require('../config/database');
+const { query } = require('../config/database');
 const { v4: uuidv4 } = require('uuid');
 
 class Lead {
-  /**
-   * Create a new lead.
-   * @param {Object} data
-   * @param {string} data.firstName
-   * @param {string} data.lastName
-   * @param {string} data.email
-   * @param {string} data.phone
-   * @param {string} [data.status]
-   * @returns {Promise<Object>} created lead
-   */
-  static async create({ firstName, lastName, email, phone, status = 'new' }) {
-    const id = `led_${uuidv4().replace(/-/g, '').substring(0,12)}`;
-    const sql = `
-      INSERT INTO leads
-        (id, first_name, last_name, email, phone, status)
-      VALUES ($1, $2, $3, $4, $5, $6)
-      RETURNING
-        id,
-        first_name  AS "firstName",
-        last_name   AS "lastName",
-        email,
-        phone,
-        status,
-        created_at  AS "createdAt"
+  static async create(data) {
+    const id = `lead_${uuidv4().replace(/-/g, '').substring(0, 12)}`;
+    
+    const text = `
+      INSERT INTO leads (
+        id, first_name, last_name, email, phone, lead_source,
+        lead_type, lead_status, lead_score, lead_temperature,
+        qualification, assigned_agent, campaign_info, property_interests, tags
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+      RETURNING *
     `;
-    const params = [id, firstName, lastName, email, phone, status];
-    const { rows } = await query(sql, params);
-    return rows[0];
+    
+    const values = [
+      id,
+      data.firstName,
+      data.lastName,
+      data.email,
+      data.phone,
+      data.leadSource,
+      data.leadType || 'Buyer',
+      data.leadStatus || 'New',
+      data.leadScore || 0,
+      data.leadTemperature || 'Cool',
+      JSON.stringify(data.qualification || {}),
+      data.assignedAgent,
+      JSON.stringify(data.campaignInfo || {}),
+      JSON.stringify(data.propertyInterests || {}),
+      data.tags || []
+    ];
+    
+    const result = await query(text, values);
+    return result.rows[0];
   }
-
-  /**
-   * Fetch paginated leads, with optional status filter.
-   * @param {Object} filters
-   * @param {string} [filters.status]
-   * @param {number} [filters.page]
-   * @param {number} [filters.limit]
-   * @returns {Promise<Object>} { leads, pagination }
-   */
-  static async findAll({ status, page = 1, limit = 20 } = {}) {
-    const maxLimit = Math.min(limit, 100);
-    const offset = (page - 1) * maxLimit;
-    const params = [];
-    let whereClause = '';
-
-    if (status) {
-      params.push(status);
-      whereClause = `WHERE status = $${params.length}`;
-    }
-
-    // Total count
-    const countSql = `SELECT COUNT(*) FROM leads ${whereClause}`;
-    const countRes = await query(countSql, params);
-    const total = parseInt(countRes.rows[0].count, 10);
-
-    // Data query
-    params.push(maxLimit, offset);
-    const dataSql = `
-      SELECT
-        id,
-        first_name  AS "firstName",
-        last_name   AS "lastName",
-        email,
-        phone,
-        status,
-        created_at  AS "createdAt"
-      FROM leads
-      ${whereClause}
-      ORDER BY created_at DESC
-      LIMIT $${params.length - 1} OFFSET $${params.length}
+  
+  static async findAll(filters = {}) {
+    let text = `
+      SELECT l.*,
+        COUNT(*) OVER() as total_count
+      FROM leads l
+      WHERE 1=1
     `;
-    const dataRes = await query(dataSql, params);
-
-    return {
-      leads: dataRes.rows,
-      pagination: {
-        total,
-        page,
-        pages: Math.ceil(total / maxLimit),
-        limit: maxLimit
+    
+    const values = [];
+    let paramCount = 0;
+    
+    if (filters.status) {
+      paramCount++;
+      text += ` AND l.lead_status = $${paramCount}`;
+      values.push(filters.status);
+    }
+    
+    if (filters.source) {
+      paramCount++;
+      text += ` AND l.lead_source = $${paramCount}`;
+      values.push(filters.source);
+    }
+    
+    if (filters.temperature) {
+      paramCount++;
+      text += ` AND l.lead_temperature = $${paramCount}`;
+      values.push(filters.temperature);
+    }
+    
+    if (filters.assignedAgent) {
+      paramCount++;
+      text += ` AND l.assigned_agent = $${paramCount}`;
+      values.push(filters.assignedAgent);
+    }
+    
+    if (filters.search) {
+      paramCount++;
+      text += ` AND (l.first_name ILIKE $${paramCount} OR l.last_name ILIKE $${paramCount} OR l.email ILIKE $${paramCount} OR l.phone ILIKE $${paramCount})`;
+      values.push(`%${filters.search}%`);
+    }
+    
+    if (filters.dateRange) {
+      const today = new Date();
+      let dateFilter;
+      
+      switch (filters.dateRange) {
+        case 'today':
+          dateFilter = 'DATE(l.date_created) = CURRENT_DATE';
+          break;
+        case 'week':
+          dateFilter = 'l.date_created >= NOW() - INTERVAL \'7 days\'';
+          break;
+        case 'month':
+          dateFilter = 'l.date_created >= NOW() - INTERVAL \'30 days\'';
+          break;
       }
+      
+      if (dateFilter) {
+        text += ` AND ${dateFilter}`;
+      }
+    }
+    
+    // Add sorting
+    const sortField = filters.sort || 'date_created';
+    const sortOrder = filters.order === 'asc' ? 'ASC' : 'DESC';
+    text += ` ORDER BY l.${sortField} ${sortOrder}`;
+    
+    // Add pagination
+    const limit = Math.min(filters.limit || 20, 100);
+    const offset = ((filters.page || 1) - 1) * limit;
+    text += ` LIMIT ${limit} OFFSET ${offset}`;
+    
+    const result = await query(text, values);
+    
+    return {
+      leads: result.rows,
+      total: result.rows.length > 0 ? parseInt(result.rows[0].total_count) : 0,
+      page: filters.page || 1,
+      pages: result.rows.length > 0 ? Math.ceil(result.rows[0].total_count / limit) : 0
     };
   }
-
-  /**
-   * Fetch a single lead by ID.
-   * @param {string} id
-   * @returns {Promise<Object|null>}
-   */
+  
   static async findById(id) {
-    const sql = `
-      SELECT
-        id,
-        first_name  AS "firstName",
-        last_name   AS "lastName",
-        email,
-        phone,
-        status,
-        created_at  AS "createdAt",
-        updated_at  AS "updatedAt"
-      FROM leads
-      WHERE id = $1
-      LIMIT 1
+    const text = `
+      SELECT l.*,
+        array_agg(DISTINCT c.*) FILTER (WHERE c.id IS NOT NULL) as communications
+      FROM leads l
+      LEFT JOIN communications c ON c.entity_id = l.id AND c.entity_type = 'lead'
+      WHERE l.id = $1
+      GROUP BY l.id
     `;
-    const { rows } = await query(sql, [id]);
-    return rows[0] || null;
+    
+    const result = await query(text, [id]);
+    return result.rows.length > 0 ? result.rows[0] : null;
   }
-
-  /**
-   * Update an existing lead.
-   * @param {string} id
-   * @param {Object} data
-   * @returns {Promise<Object|null>}
-   */
-  static async update(id, { firstName, lastName, email, phone, status }) {
+  
+  static async update(id, data) {
     const fields = [];
-    const params = [id];
-    let idx = 2;
-
-    if (firstName !== undefined) {
-      fields.push(`first_name = $${idx++}`);
-      params.push(firstName);
-    }
-    if (lastName !== undefined) {
-      fields.push(`last_name = $${idx++}`);
-      params.push(lastName);
-    }
-    if (email !== undefined) {
-      fields.push(`email = $${idx++}`);
-      params.push(email);
-    }
-    if (phone !== undefined) {
-      fields.push(`phone = $${idx++}`);
-      params.push(phone);
-    }
-    if (status !== undefined) {
-      fields.push(`status = $${idx++}`);
-      params.push(status);
-    }
-
-    if (!fields.length) {
-      return this.findById(id);
-    }
-
-    const sql = `
-      UPDATE leads
-        SET ${fields.join(', ')}, updated_at = NOW()
+    const values = [id];
+    let paramCount = 1;
+    
+    Object.keys(data).forEach(key => {
+      if (key !== 'id' && key !== 'date_created') {
+        paramCount++;
+        if (typeof data[key] === 'object' && data[key] !== null) {
+          fields.push(`${key} = $${paramCount}`);
+          values.push(JSON.stringify(data[key]));
+        } else {
+          fields.push(`${key} = $${paramCount}`);
+          values.push(data[key]);
+        }
+      }
+    });
+    
+    fields.push('updated_at = NOW()');
+    
+    const text = `
+      UPDATE leads 
+      SET ${fields.join(', ')}
       WHERE id = $1
-      RETURNING
-        id,
-        first_name  AS "firstName",
-        last_name   AS "lastName",
-        email,
-        phone,
-        status,
-        updated_at  AS "updatedAt"
+      RETURNING *
     `;
-    const { rows } = await query(sql, params);
-    return rows[0] || null;
+    
+    const result = await query(text, values);
+    return result.rows.length > 0 ? result.rows[0] : null;
   }
-
-  /**
-   * Delete a lead.
-   * @param {string} id
-   * @returns {Promise<boolean>} true if deleted
-   */
-  static async delete(id) {
-    const res = await query('DELETE FROM leads WHERE id = $1', [id]);
-    return res.rowCount > 0;
-  }
-
-  /**
-   * Log an activity for the lead.
-   * @param {string} leadId
-   * @param {string} activity
-   * @returns {Promise<Object>} logged activity record
-   */
-  static async logActivity(leadId, activity) {
-    const activityId = `act_${uuidv4().replace(/-/g, '').substring(0,12)}`;
-    const sql = `
-      INSERT INTO lead_activities
-        (id, lead_id, activity, created_at)
-      VALUES ($1, $2, $3, NOW())
-      RETURNING
-        id               AS "activityId",
-        lead_id          AS "leadId",
-        activity,
-        created_at       AS "createdAt"
+  
+  static async logActivity(id, activity) {
+    // Update lead with activity
+    await query(
+      'UPDATE leads SET number_of_contacts = number_of_contacts + 1, last_contact_date = NOW(), next_follow_up_date = $2 WHERE id = $1',
+      [id, activity.nextFollowUp]
+    );
+    
+    // Log communication
+    const text = `
+      INSERT INTO communications (
+        entity_type, entity_id, type, direction, content, response, created_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, NOW())
+      RETURNING *
     `;
-    const { rows } = await query(sql, [activityId, leadId, activity]);
-    return rows[0];
+    
+    const values = [
+      'lead',
+      id,
+      activity.type,
+      'outbound',
+      activity.notes,
+      activity.outcome
+    ];
+    
+    const result = await query(text, values);
+    return result.rows[0];
+  }
+  
+  static async calculateScore(qualificationData) {
+    let score = 0;
+    
+    // Timeline scoring
+    const timelineScores = {
+      'immediate': 25,
+      '1-3months': 20,
+      '3-6months': 15,
+      '6-12months': 10,
+      '12+months': 5
+    };
+    score += timelineScores[qualificationData.timeline] || 5;
+    
+    // Financial readiness
+    if (qualificationData.preApproved) score += 20;
+    if (qualificationData.cashBuyer) score += 25;
+    
+    // Motivation
+    const motivationScores = {
+      'high': 20,
+      'medium': 10,
+      'low': 5
+    };
+    score += motivationScores[qualificationData.motivation] || 5;
+    
+    // No current agent
+    if (!qualificationData.hasAgent) score += 15;
+    
+    // Engagement
+    if (qualificationData.engagementLevel === 'high') score += 10;
+    
+    return Math.min(score, 100);
   }
 }
 
