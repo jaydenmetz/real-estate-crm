@@ -1,4 +1,3 @@
-// frontend/src/components/dashboards/AppointmentsDashboard.jsx
 import React, { useState } from 'react';
 import {
   Container,
@@ -9,14 +8,20 @@ import {
   Button,
   Tabs,
   Tab,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   Chip,
   IconButton,
   Tooltip,
+  Card,
+  CardContent,
 } from '@mui/material';
 import {
   Add,
-  FilterList,
-  Download,
   Visibility,
   Edit,
   Cancel,
@@ -26,304 +31,209 @@ import {
   Group,
   LocationOn,
 } from '@mui/icons-material';
-import { DataGrid } from '@mui/x-data-grid';
-import { useQuery, useMutation, useQueryClient } from 'react-query';
-import { useSnackbar } from 'notistack';
-import { format, isToday, isTomorrow, isPast } from 'date-fns';
+import { useQuery } from 'react-query';
+import { format } from 'date-fns';
 import { appointmentsAPI } from '../../services/api';
-import AppointmentForm from '../forms/AppointmentForm';
-import StatsCard from '../common/StatsCard';
 
 const AppointmentsDashboard = () => {
   const [tabValue, setTabValue] = useState(0);
-  const [openForm, setOpenForm] = useState(false);
-  const [selectedAppointment, setSelectedAppointment] = useState(null);
-  const { enqueueSnackbar } = useSnackbar();
-  const queryClient = useQueryClient();
 
-  // Filter appointments based on tab
-  const filters = ['all', 'today', 'upcoming', 'completed'];
-  const currentFilter = filters[tabValue];
-
-  const { data, isLoading } = useQuery(
-    ['appointments', currentFilter],
-    () => {
-      const params = {};
-      if (currentFilter === 'today') {
-        params.date = format(new Date(), 'yyyy-MM-dd');
-      } else if (currentFilter === 'upcoming') {
-        params.status = 'Scheduled';
-        params.dateFrom = format(new Date(), 'yyyy-MM-dd');
-      } else if (currentFilter === 'completed') {
-        params.status = 'Completed';
-      }
-      return appointmentsAPI.getAll(params).then(res => res.data);
+  // Mock data for now
+  const appointments = [
+    {
+      id: 1,
+      title: 'Buyer Consultation',
+      date: '2024-01-15',
+      startTime: '10:00',
+      appointmentType: 'Buyer Consultation',
+      status: 'Scheduled',
+      location: { address: '123 Main St' },
+      clients: ['John Doe'],
     },
     {
-      refetchInterval: 30000, // Refresh every 30 seconds for real-time updates
-      keepPreviousData: true,
-    }
-  );
+      id: 2,
+      title: 'Property Showing',
+      date: '2024-01-15',
+      startTime: '14:00',
+      appointmentType: 'Property Showing',
+      status: 'Scheduled',
+      location: { address: '456 Oak Ave' },
+      clients: ['Jane Smith'],
+    },
+  ];
 
-  // Mutations
-  const cancelMutation = useMutation(
-    ({ id, reason }) => appointmentsAPI.cancel(id, { reason }),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries('appointments');
-        enqueueSnackbar('Appointment cancelled', { variant: 'info' });
-      },
-    }
-  );
-
-  const completeMutation = useMutation(
-    ({ id, notes }) => appointmentsAPI.complete(id, { notes }),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries('appointments');
-        enqueueSnackbar('Appointment marked as completed', { variant: 'success' });
-      },
-    }
-  );
-
-  const handleEdit = (appointment) => {
-    setSelectedAppointment(appointment);
-    setOpenForm(true);
-  };
-
-  const handleCloseForm = () => {
-    setOpenForm(false);
-    setSelectedAppointment(null);
+  const stats = {
+    todayCount: 2,
+    weekCount: 8,
+    completedCount: 45,
+    canceledCount: 3,
   };
 
   const getStatusColor = (status) => {
     switch (status) {
       case 'Scheduled': return 'primary';
-      case 'Confirmed': return 'success';
-      case 'Completed': return 'default';
+      case 'Completed': return 'success';
       case 'Cancelled': return 'error';
-      case 'No Show': return 'warning';
       default: return 'default';
     }
   };
 
-  const getTimeIndicator = (dateTime) => {
-    const appointmentDate = new Date(dateTime);
-    if (isPast(appointmentDate)) return { text: 'Past', color: 'text.secondary' };
-    if (isToday(appointmentDate)) return { text: 'Today', color: 'error.main' };
-    if (isTomorrow(appointmentDate)) return { text: 'Tomorrow', color: 'warning.main' };
-    return { text: format(appointmentDate, 'MMM d'), color: 'text.primary' };
+  const getTypeIcon = (type) => {
+    switch (type) {
+      case 'Property Showing': return <LocationOn />;
+      case 'Buyer Consultation': return <Group />;
+      default: return <Event />;
+    }
   };
-
-  const columns = [
-    {
-      field: 'title',
-      headerName: 'Title',
-      width: 200,
-      renderCell: (params) => (
-        <Box>
-          <Typography variant="body2">{params.value}</Typography>
-          <Typography variant="caption" color="text.secondary">
-            {params.row.appointmentType}
-          </Typography>
-        </Box>
-      ),
-    },
-    {
-      field: 'dateTime',
-      headerName: 'Date & Time',
-      width: 180,
-      renderCell: (params) => {
-        const indicator = getTimeIndicator(params.value);
-        return (
-          <Box>
-            <Typography variant="body2" color={indicator.color}>
-              {indicator.text} • {format(new Date(params.value), 'h:mm a')}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {format(new Date(params.value), 'EEEE')}
-            </Typography>
-          </Box>
-        );
-      },
-    },
-    {
-      field: 'clients',
-      headerName: 'Clients',
-      width: 200,
-      renderCell: (params) => (
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Group sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
-          <Typography variant="body2">
-            {params.value?.map(c => c.name).join(', ') || 'No clients assigned'}
-          </Typography>
-        </Box>
-      ),
-    },
-    {
-      field: 'location',
-      headerName: 'Location',
-      width: 200,
-      renderCell: (params) => (
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <LocationOn sx={{ fontSize: 16, mr: 1, color: 'text.secondary' }} />
-          <Typography variant="body2" noWrap>
-            {params.value || 'TBD'}
-          </Typography>
-        </Box>
-      ),
-    },
-    {
-      field: 'status',
-      headerName: 'Status',
-      width: 120,
-      renderCell: (params) => (
-        <Chip
-          label={params.value}
-          size="small"
-          color={getStatusColor(params.value)}
-          variant={params.value === 'Confirmed' ? 'filled' : 'outlined'}
-        />
-      ),
-    },
-    {
-      field: 'actions',
-      headerName: 'Actions',
-      width: 150,
-      sortable: false,
-      renderCell: (params) => (
-        <Box>
-          <IconButton size="small" onClick={() => handleEdit(params.row)}>
-            <Edit fontSize="small" />
-          </IconButton>
-          {params.row.status === 'Scheduled' && (
-            <>
-              <Tooltip title="Mark Complete">
-                <IconButton 
-                  size="small"
-                  onClick={() => completeMutation.mutate({ id: params.row.id })}
-                >
-                  <CheckCircle fontSize="small" color="success" />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Cancel">
-                <IconButton 
-                  size="small"
-                  onClick={() => cancelMutation.mutate({ id: params.row.id, reason: 'Cancelled by user' })}
-                >
-                  <Cancel fontSize="small" color="error" />
-                </IconButton>
-              </Tooltip>
-            </>
-          )}
-        </Box>
-      ),
-    },
-  ];
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-      {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4">Appointment Management</Typography>
-        <Box>
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={() => setOpenForm(true)}
-            sx={{ mr: 1 }}
-          >
-            Schedule Appointment
-          </Button>
-          <IconButton>
-            <FilterList />
-          </IconButton>
-          <IconButton>
-            <Download />
-          </IconButton>
-        </Box>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Typography variant="h4">Appointments</Typography>
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          onClick={() => console.log('Add appointment')}
+        >
+          New Appointment
+        </Button>
       </Box>
 
       {/* Stats Cards */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6} md={3}>
-          <StatsCard
-            title="Today's Appointments"
-            value={data?.stats?.today || 0}
-            icon={<Event />}
-            color="primary"
-          />
+          <Card>
+            <CardContent>
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Box>
+                  <Typography color="textSecondary" gutterBottom>
+                    Today
+                  </Typography>
+                  <Typography variant="h4">
+                    {stats.todayCount}
+                  </Typography>
+                </Box>
+                <Event color="primary" fontSize="large" />
+              </Box>
+            </CardContent>
+          </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <StatsCard
-            title="This Week"
-            value={data?.stats?.thisWeek || 0}
-            icon={<Schedule />}
-            color="success"
-          />
+          <Card>
+            <CardContent>
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Box>
+                  <Typography color="textSecondary" gutterBottom>
+                    This Week
+                  </Typography>
+                  <Typography variant="h4">
+                    {stats.weekCount}
+                  </Typography>
+                </Box>
+                <Schedule color="info" fontSize="large" />
+              </Box>
+            </CardContent>
+          </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <StatsCard
-            title="Confirmed Rate"
-            value={`${data?.stats?.confirmedRate || 0}%`}
-            icon={<CheckCircle />}
-            color="info"
-          />
+          <Card>
+            <CardContent>
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Box>
+                  <Typography color="textSecondary" gutterBottom>
+                    Completed
+                  </Typography>
+                  <Typography variant="h4">
+                    {stats.completedCount}
+                  </Typography>
+                </Box>
+                <CheckCircle color="success" fontSize="large" />
+              </Box>
+            </CardContent>
+          </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <StatsCard
-            title="No Shows"
-            value={data?.stats?.noShows || 0}
-            icon={<Cancel />}
-            color="warning"
-          />
+          <Card>
+            <CardContent>
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Box>
+                  <Typography color="textSecondary" gutterBottom>
+                    Cancelled
+                  </Typography>
+                  <Typography variant="h4">
+                    {stats.canceledCount}
+                  </Typography>
+                </Box>
+                <Cancel color="error" fontSize="large" />
+              </Box>
+            </CardContent>
+          </Card>
         </Grid>
       </Grid>
 
-      {/* Appointments Table */}
-      <Paper sx={{ width: '100%' }}>
-        <Tabs value={tabValue} onChange={(e, v) => setTabValue(v)}>
-          <Tab label="All Appointments" />
+      {/* Tabs */}
+      <Paper sx={{ mb: 3 }}>
+        <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)}>
+          <Tab label="All" />
           <Tab label="Today" />
           <Tab label="Upcoming" />
           <Tab label="Completed" />
         </Tabs>
-        <Box sx={{ height: 600, width: '100%' }}>
-          <DataGrid
-            rows={data?.appointments || []}
-            columns={columns}
-            pageSize={20}
-            rowsPerPageOptions={[20, 50, 100]}
-            loading={isLoading}
-            disableSelectionOnClick
-            checkboxSelection
-            getRowId={(row) => row.id}
-            sx={{
-              '& .MuiDataGrid-row': {
-                cursor: 'pointer',
-              },
-            }}
-          />
-        </Box>
       </Paper>
 
-      {/* Form Dialog */}
-      <AppointmentForm
-        open={openForm}
-        onClose={handleCloseForm}
-        onSubmit={(data) => {
-          const mutation = selectedAppointment 
-            ? appointmentsAPI.update(selectedAppointment.id, data)
-            : appointmentsAPI.create(data);
-          
-          mutation.then(() => {
-            queryClient.invalidateQueries('appointments');
-            enqueueSnackbar(`Appointment ${selectedAppointment ? 'updated' : 'created'}`, { variant: 'success' });
-            handleCloseForm();
-          });
-        }}
-        appointment={selectedAppointment}
-      />
+      {/* Appointments Table */}
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Title</TableCell>
+              <TableCell>Date & Time</TableCell>
+              <TableCell>Type</TableCell>
+              <TableCell>Location</TableCell>
+              <TableCell>Clients</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {appointments.map((appointment) => (
+              <TableRow key={appointment.id}>
+                <TableCell>{appointment.title}</TableCell>
+                <TableCell>
+                  {format(new Date(appointment.date), 'MMM d, yyyy')} at {appointment.startTime}
+                </TableCell>
+                <TableCell>
+                  <Box display="flex" alignItems="center" gap={1}>
+                    {getTypeIcon(appointment.appointmentType)}
+                    {appointment.appointmentType}
+                  </Box>
+                </TableCell>
+                <TableCell>{appointment.location?.address || 'N/A'}</TableCell>
+                <TableCell>{appointment.clients.join(', ')}</TableCell>
+                <TableCell>
+                  <Chip
+                    label={appointment.status}
+                    color={getStatusColor(appointment.status)}
+                    size="small"
+                  />
+                </TableCell>
+                <TableCell>
+                  <Tooltip title="View">
+                    <IconButton size="small">
+                      <Visibility />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Edit">
+                    <IconButton size="small">
+                      <Edit />
+                    </IconButton>
+                  </Tooltip>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </Container>
   );
 };

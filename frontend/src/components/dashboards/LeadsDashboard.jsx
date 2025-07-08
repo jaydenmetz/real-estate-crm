@@ -8,362 +8,265 @@ import {
   Button,
   Tabs,
   Tab,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
   Chip,
   IconButton,
   Tooltip,
-  LinearProgress,
   Card,
-  CardContent
+  CardContent,
+  LinearProgress,
 } from '@mui/material';
 import {
   Add,
-  FilterList,
-  Download,
   Visibility,
   Edit,
+  PersonAdd,
+  Email,
+  Phone,
   TrendingUp,
-  Speed,
   Assignment,
-  PersonAdd
+  Schedule,
+  CheckCircle,
 } from '@mui/icons-material';
-import { DataGrid } from '@mui/x-data-grid';
-import { useQuery, useMutation, useQueryClient } from 'react-query';
-import { useSnackbar } from 'notistack';
+import { useQuery } from 'react-query';
 import { format } from 'date-fns';
-import { api } from '../../services/api';
-import LeadForm from '../forms/LeadForm';
-import StatsCard from '../common/StatsCard';
+import { leadsAPI } from '../../services/api';
 
 const LeadsDashboard = () => {
   const [tabValue, setTabValue] = useState(0);
-  const [openForm, setOpenForm] = useState(false);
-  const [selectedLead, setSelectedLead] = useState(null);
-  const { enqueueSnackbar } = useSnackbar();
-  const queryClient = useQueryClient();
 
-  // Fetch leads based on status
-  const statusMap = ['all', 'New', 'Contacted', 'Qualified', 'Converted'];
-  const currentStatus = statusMap[tabValue];
-  
-  const { data, isLoading } = useQuery(
-    ['leads', currentStatus],
-    () => api.get('/leads', { 
-      params: currentStatus !== 'all' ? { status: currentStatus } : {} 
-    }).then(res => res.data)
-  );
-
-  // Create/Update mutation
-  const mutation = useMutation(
-    (leadData) => {
-      if (selectedLead) {
-        return api.put(`/leads/${selectedLead.id}`, leadData);
-      }
-      return api.post('/leads', leadData);
+  // Mock data for now
+  const leads = [
+    {
+      id: 1,
+      name: 'Sarah Johnson',
+      email: 'sarah.j@email.com',
+      phone: '555-0123',
+      leadSource: 'Website',
+      leadType: 'Buyer',
+      status: 'New',
+      score: 85,
+      assigned_to: 'John Agent',
+      created_at: '2024-01-10',
     },
     {
-      onSuccess: () => {
-        queryClient.invalidateQueries('leads');
-        enqueueSnackbar('Lead saved successfully', { variant: 'success' });
-        handleCloseForm();
-      },
-      onError: (error) => {
-        enqueueSnackbar(error.response?.data?.error?.message || 'Error saving lead', { 
-          variant: 'error' 
-        });
-      },
-    }
-  );
+      id: 2,
+      name: 'Mike Wilson',
+      email: 'mike.w@email.com',
+      phone: '555-0124',
+      leadSource: 'Referral',
+      leadType: 'Seller',
+      status: 'Contacted',
+      score: 72,
+      assigned_to: 'Jane Agent',
+      created_at: '2024-01-09',
+    },
+  ];
 
-  const handleCloseForm = () => {
-    setOpenForm(false);
-    setSelectedLead(null);
+  const stats = {
+    newLeads: 12,
+    hotLeads: 5,
+    contacted: 23,
+    converted: 8,
   };
 
-  const handleEdit = (lead) => {
-    setSelectedLead(lead);
-    setOpenForm(true);
-  };
-
-  const handleConvert = async (lead) => {
-    try {
-      await api.post(`/leads/${lead.id}/convert`, {
-        clientType: lead.leadType,
-        notes: 'Converted from lead'
-      });
-      queryClient.invalidateQueries('leads');
-      enqueueSnackbar('Lead converted to client successfully', { variant: 'success' });
-    } catch (error) {
-      enqueueSnackbar('Error converting lead', { variant: 'error' });
-    }
-  };
-
-  const getTemperatureColor = (temperature) => {
-    switch (temperature) {
-      case 'Hot': return 'error';
-      case 'Warm': return 'warning';
-      case 'Cool': return 'info';
-      case 'Cold': return 'default';
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'New': return 'info';
+      case 'Contacted': return 'primary';
+      case 'Qualified': return 'success';
+      case 'Unqualified': return 'error';
       default: return 'default';
     }
   };
 
   const getScoreColor = (score) => {
-    if (score >= 75) return 'success';
-    if (score >= 50) return 'warning';
+    if (score >= 80) return 'success';
+    if (score >= 60) return 'warning';
     return 'error';
   };
 
-  const columns = [
-    {
-      field: 'fullName',
-      headerName: 'Name',
-      width: 180,
-      valueGetter: (params) => `${params.row.firstName} ${params.row.lastName}`,
-      renderCell: (params) => (
-        <Box>
-          <Typography variant="body2" fontWeight="medium">
-            {params.value}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {params.row.leadSource}
-          </Typography>
-        </Box>
-      ),
-    },
-    {
-      field: 'email',
-      headerName: 'Email',
-      width: 180,
-    },
-    {
-      field: 'phone',
-      headerName: 'Phone',
-      width: 130,
-    },
-    {
-      field: 'leadType',
-      headerName: 'Type',
-      width: 100,
-      renderCell: (params) => (
-        <Chip
-          label={params.value}
-          size="small"
-          color="primary"
-          variant="outlined"
-        />
-      ),
-    },
-    {
-      field: 'leadTemperature',
-      headerName: 'Temperature',
-      width: 120,
-      renderCell: (params) => (
-        <Chip
-          label={params.value}
-          size="small"
-          color={getTemperatureColor(params.value)}
-        />
-      ),
-    },
-    {
-      field: 'leadScore',
-      headerName: 'Score',
-      width: 100,
-      renderCell: (params) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <LinearProgress
-            variant="determinate"
-            value={params.value}
-            color={getScoreColor(params.value)}
-            sx={{ width: 40, height: 6, borderRadius: 3 }}
-          />
-          <Typography variant="caption">
-            {params.value}
-          </Typography>
-        </Box>
-      ),
-    },
-    {
-      field: 'leadStatus',
-      headerName: 'Status',
-      width: 120,
-      renderCell: (params) => (
-        <Chip
-          label={params.value}
-          size="small"
-          color={
-            params.value === 'Converted' ? 'success' :
-            params.value === 'Qualified' ? 'primary' :
-            params.value === 'Contacted' ? 'info' : 'default'
-          }
-        />
-      ),
-    },
-    {
-      field: 'dateCreated',
-      headerName: 'Created',
-      width: 120,
-      valueFormatter: (params) => format(new Date(params.value), 'MMM d, yyyy'),
-    },
-    {
-      field: 'nextFollowUpDate',
-      headerName: 'Next Follow-up',
-      width: 130,
-      valueFormatter: (params) => params.value ? format(new Date(params.value), 'MMM d, yyyy') : 'Not set',
-      renderCell: (params) => (
-        <Typography 
-          variant="body2" 
-          color={params.value && new Date(params.value) < new Date() ? 'error' : 'inherit'}
-        >
-          {params.value ? format(new Date(params.value), 'MMM d, yyyy') : 'Not set'}
-        </Typography>
-      ),
-    },
-    {
-      field: 'actions',
-      headerName: 'Actions',
-      width: 150,
-      sortable: false,
-      renderCell: (params) => (
-        <Box>
-          <IconButton size="small" onClick={() => handleEdit(params.row)}>
-            <Edit fontSize="small" />
-          </IconButton>
-          <IconButton size="small">
-            <Visibility fontSize="small" />
-          </IconButton>
-          {params.row.leadStatus !== 'Converted' && (
-            <Tooltip title="Convert to Client">
-              <IconButton size="small" onClick={() => handleConvert(params.row)}>
-                <PersonAdd fontSize="small" />
-              </IconButton>
-            </Tooltip>
-          )}
-        </Box>
-      ),
-    },
-  ];
-
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-      {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4">Lead Management</Typography>
-        <Box>
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={() => setOpenForm(true)}
-            sx={{ mr: 1 }}
-          >
-            New Lead
-          </Button>
-          <IconButton>
-            <FilterList />
-          </IconButton>
-          <IconButton>
-            <Download />
-          </IconButton>
-        </Box>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+        <Typography variant="h4">Leads</Typography>
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          onClick={() => console.log('Add lead')}
+        >
+          New Lead
+        </Button>
       </Box>
 
-      {/* Stats */}
+      {/* Stats Cards */}
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6} md={3}>
-          <StatsCard
-            title="Total Leads"
-            value={data?.total || 0}
-            icon={<Assignment />}
-            color="primary"
-          />
+          <Card>
+            <CardContent>
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Box>
+                  <Typography color="textSecondary" gutterBottom>
+                    New Leads
+                  </Typography>
+                  <Typography variant="h4">
+                    {stats.newLeads}
+                  </Typography>
+                </Box>
+                <PersonAdd color="info" fontSize="large" />
+              </Box>
+            </CardContent>
+          </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <StatsCard
-            title="This Month"
-            value={data?.thisMonth || 0}
-            icon={<TrendingUp />}
-            color="success"
-            trend="+12%"
-          />
+          <Card>
+            <CardContent>
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Box>
+                  <Typography color="textSecondary" gutterBottom>
+                    Hot Leads
+                  </Typography>
+                  <Typography variant="h4">
+                    {stats.hotLeads}
+                  </Typography>
+                </Box>
+                <TrendingUp color="error" fontSize="large" />
+              </Box>
+            </CardContent>
+          </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <StatsCard
-            title="Conversion Rate"
-            value={`${(data?.conversionRate || 0).toFixed(1)}%`}
-            icon={<Speed />}
-            color="warning"
-          />
+          <Card>
+            <CardContent>
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Box>
+                  <Typography color="textSecondary" gutterBottom>
+                    Contacted
+                  </Typography>
+                  <Typography variant="h4">
+                    {stats.contacted}
+                  </Typography>
+                </Box>
+                <Phone color="primary" fontSize="large" />
+              </Box>
+            </CardContent>
+          </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <StatsCard
-            title="Avg Response Time"
-            value={`${data?.avgResponseTime || 0}m`}
-            icon={<Speed />}
-            color="info"
-          />
+          <Card>
+            <CardContent>
+              <Box display="flex" alignItems="center" justifyContent="space-between">
+                <Box>
+                  <Typography color="textSecondary" gutterBottom>
+                    Converted
+                  </Typography>
+                  <Typography variant="h4">
+                    {stats.converted}
+                  </Typography>
+                </Box>
+                <CheckCircle color="success" fontSize="large" />
+              </Box>
+            </CardContent>
+          </Card>
         </Grid>
       </Grid>
 
-      {/* Lead Funnel */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Lead Funnel
-        </Typography>
-        <Grid container spacing={2}>
-          {[
-            { status: 'New', count: data?.funnelData?.new || 0, color: 'primary' },
-            { status: 'Contacted', count: data?.funnelData?.contacted || 0, color: 'info' },
-            { status: 'Qualified', count: data?.funnelData?.qualified || 0, color: 'warning' },
-            { status: 'Appointment Set', count: data?.funnelData?.appointmentSet || 0, color: 'secondary' },
-            { status: 'Converted', count: data?.funnelData?.converted || 0, color: 'success' }
-          ].map((stage) => (
-            <Grid item xs key={stage.status}>
-              <Card>
-                <CardContent sx={{ textAlign: 'center', py: 2 }}>
-                  <Typography variant="h4" color={`${stage.color}.main`}>
-                    {stage.count}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {stage.status}
-                  </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
+      {/* Tabs */}
+      <Paper sx={{ mb: 3 }}>
+        <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)}>
+          <Tab label="All Leads" />
+          <Tab label="New" />
+          <Tab label="Hot" />
+          <Tab label="Contacted" />
+          <Tab label="Qualified" />
+        </Tabs>
       </Paper>
 
       {/* Leads Table */}
-      <Paper sx={{ width: '100%' }}>
-        <Tabs value={tabValue} onChange={(e, v) => setTabValue(v)}>
-          <Tab label="All Leads" />
-          <Tab label="New" />
-          <Tab label="Contacted" />
-          <Tab label="Qualified" />
-          <Tab label="Converted" />
-        </Tabs>
-        <Box sx={{ height: 600, width: '100%' }}>
-          <DataGrid
-            rows={data?.leads || []}
-            columns={columns}
-            pageSize={20}
-            rowsPerPageOptions={[20, 50, 100]}
-            loading={isLoading}
-            disableSelectionOnClick
-            checkboxSelection
-            getRowId={(row) => row.id}
-          />
-        </Box>
-      </Paper>
-
-      {/* Form Dialog */}
-      <LeadForm
-        open={openForm}
-        onClose={handleCloseForm}
-        onSubmit={(data) => mutation.mutate(data)}
-        lead={selectedLead}
-        loading={mutation.isLoading}
-      />
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>Name</TableCell>
+              <TableCell>Contact</TableCell>
+              <TableCell>Source</TableCell>
+              <TableCell>Type</TableCell>
+              <TableCell>Score</TableCell>
+              <TableCell>Status</TableCell>
+              <TableCell>Assigned To</TableCell>
+              <TableCell>Created</TableCell>
+              <TableCell>Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {leads.map((lead) => (
+              <TableRow key={lead.id}>
+                <TableCell>{lead.name}</TableCell>
+                <TableCell>
+                  <Box>
+                    <Typography variant="body2">{lead.email}</Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {lead.phone}
+                    </Typography>
+                  </Box>
+                </TableCell>
+                <TableCell>{lead.leadSource}</TableCell>
+                <TableCell>{lead.leadType}</TableCell>
+                <TableCell>
+                  <Box display="flex" alignItems="center" gap={1}>
+                    <LinearProgress
+                      variant="determinate"
+                      value={lead.score}
+                      sx={{
+                        width: 50,
+                        height: 6,
+                        borderRadius: 3,
+                        backgroundColor: 'grey.300',
+                        '& .MuiLinearProgress-bar': {
+                          backgroundColor: getScoreColor(lead.score) === 'success' ? 'success.main' :
+                                          getScoreColor(lead.score) === 'warning' ? 'warning.main' : 'error.main'
+                        }
+                      }}
+                    />
+                    <Typography variant="body2">{lead.score}</Typography>
+                  </Box>
+                </TableCell>
+                <TableCell>
+                  <Chip
+                    label={lead.status}
+                    color={getStatusColor(lead.status)}
+                    size="small"
+                  />
+                </TableCell>
+                <TableCell>{lead.assigned_to}</TableCell>
+                <TableCell>{format(new Date(lead.created_at), 'MMM d, yyyy')}</TableCell>
+                <TableCell>
+                  <Tooltip title="View">
+                    <IconButton size="small">
+                      <Visibility />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Edit">
+                    <IconButton size="small">
+                      <Edit />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Contact">
+                    <IconButton size="small">
+                      <Phone />
+                    </IconButton>
+                  </Tooltip>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
     </Container>
   );
 };
