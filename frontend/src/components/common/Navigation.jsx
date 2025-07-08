@@ -6,7 +6,7 @@ export default function Navigation() {
   return (
     <AppBar position="static">
       <Toolbar>
-        <Button component={NavLink} to="/" exact color="inherit">
+        <Button component={NavLink} to="/" color="inherit">
           Dashboard
         </Button>
         <Button component={NavLink} to="/escrows" color="inherit">
@@ -24,7 +24,6 @@ export default function Navigation() {
         <Button component={NavLink} to="/leads" color="inherit">
           Leads
         </Button>
-        {/* Add this: */}
         <Button component={NavLink} to="/ai-team" color="inherit">
           AI Team
         </Button>

@@ -1,98 +1,251 @@
-import axios from 'axios';
+// File: frontend/src/services/api.js
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5050/v1';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5050/api/v1';
 
-// Create axios instance
-export const api = axios.create({
-  baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+class ApiService {
+  constructor() {
+    this.baseURL = API_BASE_URL;
+    this.token = localStorage.getItem('authToken');
+  }
 
-// Add auth token to requests
-api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('api_token');
+  async request(endpoint, options = {}) {
+    const url = `${this.baseURL}${endpoint}`;
+    
+    const config = {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...options.headers,
+      }
+    };
+
+    if (this.token) {
+      config.headers.Authorization = `Bearer ${this.token}`;
+    }
+
+    try {
+      const response = await fetch(url, config);
+
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+      }
+
+      // Handle empty responses
+      const text = await response.text();
+      return text ? JSON.parse(text) : null;
+    } catch (error) {
+      console.error('API Request Error:', error);
+      throw error;
+    }
+  }
+
+  // GET request
+  async get(endpoint, params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    const url = queryString ? `${endpoint}?${queryString}` : endpoint;
+    
+    return this.request(url, {
+      method: 'GET',
+    });
+  }
+
+  // POST request
+  async post(endpoint, data = {}) {
+    return this.request(endpoint, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // PUT request
+  async put(endpoint, data = {}) {
+    return this.request(endpoint, {
+      method: 'PUT',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // DELETE request
+  async delete(endpoint) {
+    return this.request(endpoint, {
+      method: 'DELETE',
+    });
+  }
+
+  // PATCH request
+  async patch(endpoint, data = {}) {
+    return this.request(endpoint, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Set authentication token
+  setToken(token) {
+    this.token = token;
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      localStorage.setItem('authToken', token);
+    } else {
+      localStorage.removeItem('authToken');
     }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
   }
-);
 
-// Handle responses
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      // Handle unauthorized
-      localStorage.removeItem('api_token');
-      window.location.href = '/login';
-    }
-    return Promise.reject(error);
+  // File upload
+  async uploadFile(endpoint, file, additionalData = {}) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    Object.keys(additionalData).forEach(key => {
+      formData.append(key, additionalData[key]);
+    });
+
+    return this.request(endpoint, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        // Don't set Content-Type for FormData - let browser set it
+      }
+    });
   }
-);
+}
 
-// Specific API methods
+// Create the API instance
+const apiInstance = new ApiService();
+
+// Export specific API methods for better organization
 export const escrowsAPI = {
-  getAll: (params) => api.get('/escrows', { params }),
-  getOne: (id) => api.get(`/escrows/${id}`),
-  create: (data) => api.post('/escrows', data),
-  update: (id, data) => api.put(`/escrows/${id}`, data),
-  delete: (id) => api.delete(`/escrows/${id}`),
-  updateChecklist: (id, item, value, note) => 
-    api.patch(`/escrows/${id}/checklist`, { item, value, note }),
+  getAll: (params) => apiInstance.get('/escrows', params),
+  getById: (id) => apiInstance.get(`/escrows/${id}`),
+  create: (data) => apiInstance.post('/escrows', data),
+  update: (id, data) => apiInstance.put(`/escrows/${id}`, data),
+  delete: (id) => apiInstance.delete(`/escrows/${id}`),
+  updateChecklist: (id, checklist) => apiInstance.put(`/escrows/${id}/checklist`, { checklist }),
+  getAnalytics: (id) => apiInstance.get(`/analytics/escrow/${id}`)
 };
 
 export const listingsAPI = {
-  getAll: (params) => api.get('/listings', { params }),
-  getOne: (id) => api.get(`/listings/${id}`),
-  create: (data) => api.post('/listings', data),
-  update: (id, data) => api.put(`/listings/${id}`, data),
-  delete: (id) => api.delete(`/listings/${id}`),
-  priceReduction: (id, data) => api.post(`/listings/${id}/price-reduction`, data),
-  logShowing: (id, data) => api.post(`/listings/${id}/showings`, data),
+  getAll: (params) => apiInstance.get('/listings', params),
+  getById: (id) => apiInstance.get(`/listings/${id}`),
+  create: (data) => apiInstance.post('/listings', data),
+  update: (id, data) => apiInstance.put(`/listings/${id}`, data),
+  delete: (id) => apiInstance.delete(`/listings/${id}`),
+  updateChecklist: (id, checklist) => apiInstance.put(`/listings/${id}/checklist`, { checklist }),
+  getPriceHistory: (id) => apiInstance.get(`/listings/${id}/price-history`),
+  getAnalytics: (id) => apiInstance.get(`/analytics/listing/${id}`)
 };
 
 export const clientsAPI = {
-  getAll: (params) => api.get('/clients', { params }),
-  getOne: (id) => api.get(`/clients/${id}`),
-  create: (data) => api.post('/clients', data),
-  update: (id, data) => api.put(`/clients/${id}`, data),
-  delete: (id) => api.delete(`/clients/${id}`),
-  addNote: (id, note) => api.post(`/clients/${id}/notes`, note),
-  updateTags: (id, operation, tags) => 
-    api.patch(`/clients/${id}/tags`, { operation, tags }),
-};
-
-export const leadsAPI = {
-  getAll: (params) => api.get('/leads', { params }),
-  getOne: (id) => api.get(`/leads/${id}`),
-  create: (data) => api.post('/leads', data),
-  update: (id, data) => api.put(`/leads/${id}`, data),
-  convert: (id, data) => api.post(`/leads/${id}/convert`, data),
-  logActivity: (id, activity) => api.post(`/leads/${id}/activities`, activity),
+  getAll: (params) => apiInstance.get('/clients', params),
+  getById: (id) => apiInstance.get(`/clients/${id}`),
+  create: (data) => apiInstance.post('/clients', data),
+  update: (id, data) => apiInstance.put(`/clients/${id}`, data),
+  delete: (id) => apiInstance.delete(`/clients/${id}`),
+  updateChecklist: (id, checklist) => apiInstance.put(`/clients/${id}/checklist`, { checklist }),
+  getTransactions: (id) => apiInstance.get(`/clients/${id}/transactions`),
+  getCommunications: (id) => apiInstance.get(`/clients/${id}/communications`),
+  getNotes: (id) => apiInstance.get(`/clients/${id}/notes`),
+  addNote: (id, note) => apiInstance.post(`/clients/${id}/notes`, note),
+  updateTags: (id, operation, tags) => apiInstance.patch(`/clients/${id}/tags`, { operation, tags })
 };
 
 export const appointmentsAPI = {
-  getAll: (params) => api.get('/appointments', { params }),
-  getOne: (id) => api.get(`/appointments/${id}`),
-  create: (data) => api.post('/appointments', data),
-  update: (id, data) => api.put(`/appointments/${id}`, data),
-  cancel: (id, data) => api.post(`/appointments/${id}/cancel`, data),
-  complete: (id, data) => api.post(`/appointments/${id}/complete`, data),
+  getAll: (params) => apiInstance.get('/appointments', params),
+  getById: (id) => apiInstance.get(`/appointments/${id}`),
+  create: (data) => apiInstance.post('/appointments', data),
+  update: (id, data) => apiInstance.put(`/appointments/${id}`, data),
+  delete: (id) => apiInstance.delete(`/appointments/${id}`),
+  updateChecklist: (id, checklist) => apiInstance.put(`/appointments/${id}/checklist`, { checklist }),
+  getAnalytics: (id) => apiInstance.get(`/analytics/appointments/${id}`)
 };
 
+export const leadsAPI = {
+  getAll: (params) => apiInstance.get('/leads', params),
+  getById: (id) => apiInstance.get(`/leads/${id}`),
+  create: (data) => apiInstance.post('/leads', data),
+  update: (id, data) => apiInstance.put(`/leads/${id}`, data),
+  delete: (id) => apiInstance.delete(`/leads/${id}`),
+  updateChecklist: (id, checklist) => apiInstance.put(`/leads/${id}/checklist`, { checklist }),
+  getActivities: (id) => apiInstance.get(`/leads/${id}/activities`),
+  getCommunications: (id) => apiInstance.get(`/leads/${id}/communications`),
+  getAnalytics: (id) => apiInstance.get(`/analytics/lead/${id}`),
+  convertToClient: (id) => apiInstance.post(`/leads/${id}/convert`)
+};
+
+export const propertiesAPI = {
+  search: (query) => apiInstance.get('/properties/search', { address: query })
+};
+
+export const aiAgentsAPI = {
+  getAll: () => apiInstance.get('/ai/agents'),
+  getById: (id) => apiInstance.get(`/ai/agents/${id}`),
+  updateStatus: (id, enabled) => apiInstance.patch(`/ai/agents/${id}`, { enabled }),
+  getActivities: (agentId) => apiInstance.get(`/ai/activities`, { agentId }),
+  triggerAgent: (agentId, task) => apiInstance.post(`/ai/agents/${agentId}/trigger`, { task })
+};
+
+export const analyticsAPI = {
+  getDashboard: () => apiInstance.get('/analytics/dashboard'),
+  getMetrics: (type, period) => apiInstance.get('/analytics/metrics', { type, period }),
+  getReport: (type, params) => apiInstance.get(`/analytics/reports/${type}`, params)
+};
+
+export const documentsAPI = {
+  upload: (entityType, entityId, file) => 
+    apiInstance.uploadFile('/documents/upload', file, { entityType, entityId }),
+  getByEntity: (entityType, entityId) => 
+    apiInstance.get('/documents', { entityType, entityId }),
+  download: (id) => apiInstance.get(`/documents/${id}/download`),
+  delete: (id) => apiInstance.delete(`/documents/${id}`)
+};
+
+export const communicationsAPI = {
+  create: (data) => apiInstance.post('/communications', data),
+  getByEntity: (entityType, entityId) => 
+    apiInstance.get('/communications', { entityType, entityId }),
+  sendEmail: (data) => apiInstance.post('/communications/email', data),
+  sendSMS: (data) => apiInstance.post('/communications/sms', data)
+};
+
+export const webhooksAPI = {
+  getAll: () => apiInstance.get('/webhooks'),
+  create: (data) => apiInstance.post('/webhooks', data),
+  update: (id, data) => apiInstance.put(`/webhooks/${id}`, data),
+  delete: (id) => apiInstance.delete(`/webhooks/${id}`),
+  test: (id) => apiInstance.post(`/webhooks/${id}/test`)
+};
+
+// Additional Alex-specific API endpoints
 export const aiAPI = {
-  getAgents: () => api.get('/ai/agents'),
-  toggleAgent: (id, enabled) => api.patch(`/ai/agents/${id}/toggle`, { enabled }),
-  getTokenUsage: () => api.get('/ai/token-usage'),
-  getDailyBrief: () => api.get('/ai/alex/daily-briefing'),
-  getUrgentTasks: () => api.get('/ai/alex/urgent-tasks'),
+  getAgents: () => apiInstance.get('/ai/agents'),
+  toggleAgent: (id, enabled) => apiInstance.patch(`/ai/agents/${id}/toggle`, { enabled }),
+  getTokenUsage: () => apiInstance.get('/ai/token-usage'),
+  getDailyBrief: () => apiInstance.get('/ai/alex/daily-briefing'),
+  getUrgentTasks: () => apiInstance.get('/ai/alex/urgent-tasks'),
 };
 
-export default api;
+// Export the main API instance as default
+export default apiInstance;
+
+// Also export a named api object containing all the modules
+export const api = {
+  escrowsAPI,
+  listingsAPI,
+  clientsAPI,
+  appointmentsAPI,
+  leadsAPI,
+  propertiesAPI,
+  aiAgentsAPI,
+  aiAPI,
+  analyticsAPI,
+  documentsAPI,
+  communicationsAPI,
+  webhooksAPI,
+  // Include the raw instance methods for flexibility
+  get: (...args) => apiInstance.get(...args),
+  post: (...args) => apiInstance.post(...args),
+  put: (...args) => apiInstance.put(...args),
+  delete: (...args) => apiInstance.delete(...args),
+  patch: (...args) => apiInstance.patch(...args),
+  setToken: (token) => apiInstance.setToken(token),
+  uploadFile: (...args) => apiInstance.uploadFile(...args),
+};

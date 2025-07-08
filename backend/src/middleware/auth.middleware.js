@@ -1,26 +1,32 @@
-// backend/src/middleware/auth.middleware.js
+// TEMPORARY: Mock authentication for development
+const logger = require('../utils/logger');
 
-// Simple authentication check
-function authenticate(req, res, next) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader) {
-    return res.status(401).json({ error: 'Not authenticated' });
-  }
-  // TODO: verify token or session, then attach user info to req.user
-  next();
-}
-
-// Authorization factory
-function requirePermission(permission) {
-  return (req, res, next) => {
-    // TODO: check req.user.permissions for the required permission
-    // e.g. if (!req.user.permissions.includes(permission)) { … }
-    const user = req.user;
-    if (!user || !user.permissions || !user.permissions.includes(permission)) {
-      return res.status(403).json({ error: 'Insufficient permissions' });
-    }
-    next();
+const authenticate = (req, res, next) => {
+  // Mock user data for development
+  req.user = {
+    id: 'dev-user-123',
+    role: 'master', 
+    email: 'dev@example.com',
+    name: 'Development User'
   };
-}
+  
+  next();
+};
 
-module.exports = { authenticate, requirePermission };
+const requireRole = (...roles) => {
+  return (req, res, next) => {
+    next(); // Always allow access in development
+  };
+};
+
+const requirePermission = (permission) => {
+  return (req, res, next) => {
+    next(); // Always allow access in development
+  };
+};
+
+module.exports = {
+  authenticate,
+  requireRole,
+  requirePermission
+};

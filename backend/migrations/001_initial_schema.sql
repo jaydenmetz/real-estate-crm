@@ -96,13 +96,7 @@ CREATE TABLE listings (
   pool BOOLEAN DEFAULT FALSE,
   listing_date DATE,
   expiration_date DATE,
-  days_on_market INTEGER GENERATED ALWAYS AS (
-    CASE 
-      WHEN listing_status IN ('Active', 'Pending') 
-      THEN EXTRACT(DAY FROM (CURRENT_DATE - listing_date))
-      ELSE NULL
-    END
-  ) STORED,
+  days_on_market INTEGER DEFAULT 0,
   marketing_budget DECIMAL(10,2),
   marketing_spent DECIMAL(10,2),
   virtual_tour_link VARCHAR(500),

@@ -4,6 +4,7 @@ const Listing = require('../models/Listing');
 const logger = require('../utils/logger');
 const { validationResult } = require('express-validator');
 
+// GET /listings
 exports.getListings = async (req, res) => {
   try {
     const filters = {
@@ -15,9 +16,9 @@ exports.getListings = async (req, res) => {
       limit: req.query.limit,
       sort: req.query.sort
     };
-    
+
     const result = await Listing.findAll(filters);
-    
+
     res.json({
       success: true,
       data: result,
@@ -35,10 +36,11 @@ exports.getListings = async (req, res) => {
   }
 };
 
+// GET /listings/:id
 exports.getListing = async (req, res) => {
   try {
     const listing = await Listing.findById(req.params.id);
-    
+
     if (!listing) {
       return res.status(404).json({
         success: false,
@@ -48,7 +50,7 @@ exports.getListing = async (req, res) => {
         }
       });
     }
-    
+
     res.json({
       success: true,
       data: listing,
@@ -66,6 +68,7 @@ exports.getListing = async (req, res) => {
   }
 };
 
+// POST /listings
 exports.createListing = async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -79,13 +82,13 @@ exports.createListing = async (req, res) => {
         }
       });
     }
-    
+
     const listing = await Listing.create(req.body);
-    
+
     // Emit real-time update
     const io = req.app.get('io');
     io.to('listings').emit('listing:created', listing);
-    
+
     res.status(201).json({
       success: true,
       data: listing,
@@ -103,10 +106,11 @@ exports.createListing = async (req, res) => {
   }
 };
 
+// PUT /listings/:id
 exports.updateListing = async (req, res) => {
   try {
     const listing = await Listing.update(req.params.id, req.body);
-    
+
     if (!listing) {
       return res.status(404).json({
         success: false,
@@ -116,11 +120,11 @@ exports.updateListing = async (req, res) => {
         }
       });
     }
-    
+
     // Emit real-time update
     const io = req.app.get('io');
     io.to('listings').emit('listing:updated', listing);
-    
+
     res.json({
       success: true,
       data: listing,
@@ -138,16 +142,17 @@ exports.updateListing = async (req, res) => {
   }
 };
 
+// POST /listings/:id/price-reduction
 exports.priceReduction = async (req, res) => {
   try {
     const { newPrice, reason, effectiveDate } = req.body;
-    
+
     const result = await Listing.recordPriceReduction(req.params.id, {
       newPrice,
       reason,
       effectiveDate: effectiveDate || new Date()
     });
-    
+
     res.json({
       success: true,
       data: result,
@@ -165,10 +170,11 @@ exports.priceReduction = async (req, res) => {
   }
 };
 
+// POST /listings/:id/showings
 exports.logShowing = async (req, res) => {
   try {
     const { date, time, agent, feedback, interested } = req.body;
-    
+
     const showing = await Listing.logShowing(req.params.id, {
       date,
       time,
@@ -176,7 +182,7 @@ exports.logShowing = async (req, res) => {
       feedback,
       interested
     });
-    
+
     res.json({
       success: true,
       data: showing,

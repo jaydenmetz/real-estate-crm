@@ -1,3 +1,5 @@
+// frontend/src/components/dashboards/EscrowsDashboard.jsx
+
 import React, { useState } from 'react';
 import {
   Container,
@@ -34,14 +36,23 @@ const EscrowsDashboard = () => {
   const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
 
-  // Fetch escrows based on status
+  // Determine which status tab is active
   const status = ['Active', 'Pending', 'Closed'][tabValue];
-  const { data, isLoading } = useQuery(
-    ['escrows', status],
-    () => api.get('/escrows', { params: { status } }).then(res => res.data)
-  );
 
-  // Create/Update mutation
+  // Debounced/refetch-controlled version
+const { data, isLoading } = useQuery(
+  ['escrows', status],
+  () => api.get('/escrows', { params: { status } }).then(res => res.data),
+  {
+    retry: false,               // don’t retry on error
+    refetchOnMount: false,      // fetch only once, on mount
+    refetchOnWindowFocus: false,// don’t refetch when window regains focus
+    refetchInterval: false,     // no polling interval
+    keepPreviousData: true,     // keep old data while loading new
+  }
+);
+
+  // Mutation for creating or updating an escrow
   const mutation = useMutation(
     (escrowData) => {
       if (selectedEscrow) {
@@ -56,9 +67,10 @@ const EscrowsDashboard = () => {
         handleCloseForm();
       },
       onError: (error) => {
-        enqueueSnackbar(error.response?.data?.error?.message || 'Error saving escrow', { 
-          variant: 'error' 
-        });
+        enqueueSnackbar(
+          error.response?.data?.error?.message || 'Error saving escrow',
+          { variant: 'error' }
+        );
       },
     }
   );
@@ -73,6 +85,7 @@ const EscrowsDashboard = () => {
     setOpenForm(true);
   };
 
+  // Define columns for the DataGrid
   const columns = [
     {
       field: 'propertyAddress',
@@ -98,7 +111,7 @@ const EscrowsDashboard = () => {
       width: 200,
       renderCell: (params) => (
         <Box>
-          {params.value?.map(buyer => buyer.name).join(', ') || 'N/A'}
+          {params.value?.map(b => b.name).join(', ') || 'N/A'}
         </Box>
       ),
     },
@@ -106,7 +119,8 @@ const EscrowsDashboard = () => {
       field: 'closingDate',
       headerName: 'Closing Date',
       width: 120,
-      valueFormatter: (params) => params.value ? format(new Date(params.value), 'MMM d, yyyy') : '',
+      valueFormatter: (params) =>
+        params.value ? format(new Date(params.value), 'MMM d, yyyy') : '',
     },
     {
       field: 'escrowStatus',
@@ -117,8 +131,11 @@ const EscrowsDashboard = () => {
           label={params.value}
           size="small"
           color={
-            params.value === 'Active' ? 'success' :
-            params.value === 'Pending' ? 'warning' : 'default'
+            params.value === 'Active'
+              ? 'success'
+              : params.value === 'Pending'
+              ? 'warning'
+              : 'default'
           }
         />
       ),
@@ -196,7 +213,7 @@ const EscrowsDashboard = () => {
         </Grid>
       </Grid>
 
-      {/* Tabs and Data Grid */}
+      {/* Tabs & Data Grid */}
       <Paper sx={{ width: '100%' }}>
         <Tabs value={tabValue} onChange={(e, v) => setTabValue(v)}>
           <Tab label="Active" />
@@ -220,7 +237,7 @@ const EscrowsDashboard = () => {
       <EscrowForm
         open={openForm}
         onClose={handleCloseForm}
-        onSubmit={(data) => mutation.mutate(data)}
+        onSubmit={(formData) => mutation.mutate(formData)}
         escrow={selectedEscrow}
         loading={mutation.isLoading}
       />
