@@ -30,4 +30,12 @@ router.put('/:id', requirePermission('listings'), updateValidation, handleValida
 router.post('/:id/price-reduction', requirePermission('listings'), listingsController.priceReduction);
 router.post('/:id/showings', requirePermission('listings'), listingsController.logShowing);
 
+// New routes to add
+router.patch('/:id/status', authenticate, listingsController.updateStatus);
+router.put('/:id/checklist', authenticate, listingsController.updateChecklist);
+router.get('/:id/price-history', authenticate, listingsController.getPriceHistory);
+
+// Analytics route (could also be in a separate analytics router)
+router.get('/analytics/:id', authenticate, listingsController.getAnalytics);
+
 module.exports = router;

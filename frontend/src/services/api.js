@@ -124,14 +124,22 @@ export const escrowsAPI = {
 };
 
 export const listingsAPI = {
-  getAll: (params) => apiInstance.get('/listings', params),
-  getById: (id) => apiInstance.get(`/listings/${id}`),
+  getAll: (params) => apiInstance.get('/listings', { params }),
+  getOne: (id) => apiInstance.get(`/listings/${id}`),
   create: (data) => apiInstance.post('/listings', data),
   update: (id, data) => apiInstance.put(`/listings/${id}`, data),
   delete: (id) => apiInstance.delete(`/listings/${id}`),
+  updateStatus: (id, status) => apiInstance.patch(`/listings/${id}/status`, { status }),
   updateChecklist: (id, checklist) => apiInstance.put(`/listings/${id}/checklist`, { checklist }),
   getPriceHistory: (id) => apiInstance.get(`/listings/${id}/price-history`),
-  getAnalytics: (id) => apiInstance.get(`/analytics/listing/${id}`)
+  getAnalytics: (id) => apiInstance.get(`/analytics/listing/${id}`),
+  recordPriceReduction: (id, data) => apiInstance.post(`/listings/${id}/price-reduction`, data),
+  logShowing: (id, data) => apiInstance.post(`/listings/${id}/showings`, data),
+  updatePrice: (id, price) => apiInstance.post(`/listings/${id}/price-reduction`, { 
+    newPrice: price, 
+    reason: 'Market adjustment',
+    effectiveDate: new Date()
+  }),
 };
 
 export const clientsAPI = {
