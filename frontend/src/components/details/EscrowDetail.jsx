@@ -1,544 +1,1171 @@
-// File: frontend/src/components/details/EscrowDetail.jsx
+// frontend/src/components/details/EscrowDetail.jsx
 
-import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { 
-  Home, Users, FileText, Calendar, DollarSign, CheckCircle2, 
-  AlertCircle, Clock, TrendingUp, Building, Phone, Mail,
-  MapPin, Briefcase, Calculator, PieChart
-} from 'lucide-react';
-import api from '../../services/api';
-import { formatCurrency, formatDate } from '../../utils/formatters';
+import React, { useState } from 'react';
 import {
-  LineChart, Line, BarChart, Bar, PieChart as RePieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
-} from 'recharts';
+  Container,
+  Grid,
+  Paper,
+  Typography,
+  Box,
+  Button,
+  Chip,
+  Avatar,
+  Tabs,
+  Tab,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  TextField,
+  IconButton,
+  Card,
+  CardContent,
+  Divider,
+  LinearProgress,
+  Breadcrumbs,
+  Link,
+  Tooltip,
+  Alert,
+  FormGroup,
+  FormControlLabel,
+  Checkbox,
+  CircularProgress,
+  Menu,
+  MenuItem,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Table,
+  TableBody,
+  TableCell,
+  TableRow,
+  Collapse,
+  ListItemAvatar,
+  ListItemSecondaryAction,
+  Stepper,
+  Step,
+  StepLabel,
+  StepContent,
+} from '@mui/material';
+import {
+  Timeline,
+  TimelineItem,
+  TimelineSeparator,
+  TimelineConnector,
+  TimelineContent,
+  TimelineDot,
+  TimelineOppositeContent,
+} from '@mui/lab';
+import {
+  ArrowBack,
+  Edit,
+  Share,
+  Print,
+  MoreVert,
+  Home,
+  LocationOn,
+  AttachMoney,
+  CalendarToday,
+  Person,
+  Phone,
+  Email,
+  Description,
+  Check,
+  Warning,
+  Error,
+  Timer,
+  Assignment,
+  Gavel,
+  AccountBalance,
+  LocalShipping,
+  CheckCircle,
+  Schedule,
+  Note,
+  TrendingUp,
+  Calculate,
+  Groups,
+  Assessment,
+  ExpandMore,
+  ExpandLess,
+  Download,
+  Upload,
+  ContentCopy,
+  NavigateNext,
+  Business,
+  Notifications,
+  History,
+  NoteAdd,
+} from '@mui/icons-material';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from 'react-query';
+import { format, differenceInDays } from 'date-fns';
+import { useSnackbar } from 'notistack';
+import { escrowsAPI } from '../../services/api';
 
-export default function EscrowDetail() {
+// Mock data for fallback
+const mockEscrowDetail = {
+  id: 'esc_001',
+  escrowNumber: 'ESC-2025-001',
+  propertyAddress: '456 Ocean View Dr, La Jolla, CA 92037',
+  propertyType: 'Single Family',
+  transactionType: 'Purchase',
+  purchasePrice: 1250000,
+  earnestMoneyDeposit: 25000,
+  downPayment: 250000,
+  loanAmount: 1000000,
+  commissionPercentage: 2.5,
+  grossCommission: 31250,
+  netCommission: 28125,
+  escrowStatus: 'Active',
+  currentStage: 'Inspection',
+  acceptanceDate: new Date('2025-06-15'),
+  closingDate: new Date('2025-07-30'),
+  inspectionDeadline: new Date('2025-07-10'),
+  appraisalDeadline: new Date('2025-07-15'),
+  loanContingencyDeadline: new Date('2025-07-20'),
+  createdAt: new Date('2025-06-14'),
+  updatedAt: new Date('2025-07-08'),
+  
+  buyers: [
+    {
+      id: 'cli_001',
+      name: 'Michael & Sarah Chen',
+      email: 'chen.family@email.com',
+      phone: '(858) 555-1234',
+      preApproved: true,
+      lender: 'Wells Fargo',
+    }
+  ],
+  sellers: [
+    {
+      id: 'cli_002',
+      name: 'Robert Johnson',
+      email: 'rjohnson@email.com',
+      phone: '(858) 555-5678',
+    }
+  ],
+  
+  listingAgent: {
+    id: 'agent_001',
+    name: 'You',
+    email: 'you@realestate.com',
+    phone: '(858) 555-0000',
+    commission: 15625,
+  },
+  buyerAgent: {
+    id: 'agent_002',
+    name: 'Jessica Martinez',
+    email: 'jmartinez@otherrealty.com',
+    phone: '(858) 555-9999',
+    brokerage: 'Premier Realty',
+    commission: 15625,
+  },
+  
+  escrowOfficer: {
+    name: 'Linda Thompson',
+    company: 'Pacific Escrow',
+    phone: '(858) 555-2222',
+    email: 'lthompson@pacificescrow.com',
+  },
+  
+  timeline: [
+    {
+      id: 1,
+      date: new Date('2025-06-14'),
+      event: 'Offer submitted',
+      description: 'Initial offer of $1,200,000 submitted',
+      type: 'milestone',
+    },
+    {
+      id: 2,
+      date: new Date('2025-06-15'),
+      event: 'Offer accepted',
+      description: 'Counter at $1,250,000 accepted by buyer',
+      type: 'milestone',
+    },
+    {
+      id: 3,
+      date: new Date('2025-06-16'),
+      event: 'Escrow opened',
+      description: 'Escrow opened with Pacific Escrow',
+      type: 'milestone',
+    },
+  ],
+  
+  documents: [
+    {
+      id: 1,
+      name: 'Purchase Agreement',
+      type: 'contract',
+      uploadedAt: new Date('2025-06-15'),
+      uploadedBy: 'You',
+      size: '2.4 MB',
+      status: 'signed',
+    },
+    {
+      id: 2,
+      name: 'Earnest Money Receipt',
+      type: 'receipt',
+      uploadedAt: new Date('2025-06-17'),
+      uploadedBy: 'Escrow Officer',
+      size: '156 KB',
+      status: 'completed',
+    },
+  ],
+  
+  notes: [
+    {
+      id: 1,
+      content: 'Buyers are very motivated. Pre-approved for $1.3M',
+      createdAt: new Date('2025-06-14T10:30:00'),
+      createdBy: 'You',
+    },
+    {
+      id: 2,
+      content: 'Seller prefers to close before August 1st due to relocation.',
+      createdAt: new Date('2025-06-15T14:15:00'),
+      createdBy: 'You',
+    },
+  ],
+  
+  checklist: {
+    opening: {
+      contract_signed: true,
+      escrow_opened: true,
+      earnest_deposited: true,
+      disclosures_sent: true,
+      title_ordered: false,
+    },
+    dueDiligence: {
+      inspection_complete: false,
+      inspection_response: false,
+      appraisal_ordered: false,
+      loan_processing: false,
+    },
+    closing: {
+      appraisal_received: false,
+      loan_approved: false,
+      closing_scheduled: false,
+      final_walkthrough: false,
+      docs_signed: false,
+    }
+  }
+};
+
+// Tom Ferry best practice checklists
+const escrowChecklists = {
+  opening: {
+    title: 'Opening (Days 1-3)',
+    items: [
+      { id: 'contract_signed', label: 'Fully executed contract received', critical: true },
+      { id: 'escrow_opened', label: 'Escrow opened and number assigned', critical: true },
+      { id: 'earnest_deposited', label: 'Earnest money deposited', critical: true },
+      { id: 'disclosures_sent', label: 'Seller disclosures sent to buyer', critical: true },
+      { id: 'title_ordered', label: 'Preliminary title report ordered', critical: true },
+      { id: 'inspection_scheduled', label: 'Home inspection scheduled', critical: false },
+      { id: 'insurance_quote', label: 'Insurance quote requested by buyer', critical: false },
+    ]
+  },
+  dueDiligence: {
+    title: 'Due Diligence (Days 4-17)',
+    items: [
+      { id: 'inspection_complete', label: 'Home inspection completed', critical: true },
+      { id: 'inspection_response', label: 'Inspection response negotiated', critical: true },
+      { id: 'disclosures_signed', label: 'All disclosures signed by buyer', critical: true },
+      { id: 'appraisal_ordered', label: 'Appraisal ordered by lender', critical: true },
+      { id: 'loan_processing', label: 'Loan in underwriting', critical: true },
+      { id: 'hoa_docs', label: 'HOA documents delivered (if applicable)', critical: false },
+      { id: 'repairs_complete', label: 'Agreed repairs completed', critical: false },
+    ]
+  },
+  finalSteps: {
+    title: 'Final Steps (Days 18-30)',
+    items: [
+      { id: 'appraisal_received', label: 'Appraisal received at value', critical: true },
+      { id: 'loan_approved', label: 'Loan approved - clear to close', critical: true },
+      { id: 'closing_scheduled', label: 'Closing appointment scheduled', critical: true },
+      { id: 'final_walkthrough', label: 'Final walkthrough scheduled', critical: true },
+      { id: 'utilities_transfer', label: 'Utilities transfer arranged', critical: false },
+      { id: 'docs_signed', label: 'Closing documents signed', critical: true },
+      { id: 'funds_wired', label: 'Funds wired to escrow', critical: true },
+    ]
+  },
+  postClosing: {
+    title: 'Post-Closing',
+    items: [
+      { id: 'keys_delivered', label: 'Keys delivered to buyer', critical: true },
+      { id: 'recording_confirmed', label: 'Recording confirmed', critical: true },
+      { id: 'commission_received', label: 'Commission received', critical: true },
+      { id: 'client_gift', label: 'Closing gift delivered', critical: false },
+      { id: 'review_request', label: 'Review request sent', critical: false },
+      { id: 'file_archived', label: 'Transaction file archived', critical: false },
+    ]
+  }
+};
+
+const EscrowDetail = () => {
   const { id } = useParams();
-  const [escrow, setEscrow] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [checklistItems, setChecklistItems] = useState({});
-  const [analytics, setAnalytics] = useState(null);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { enqueueSnackbar } = useSnackbar();
+  
+  const [activeTab, setActiveTab] = useState(0);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [expandedSections, setExpandedSections] = useState({
+    buyers: true,
+    sellers: true,
+    professionals: true,
+    financial: true,
+  });
+  const [newNote, setNewNote] = useState('');
+  const [openNoteDialog, setOpenNoteDialog] = useState(false);
+  const [checklistStates, setChecklistStates] = useState({});
 
-  useEffect(() => {
-    fetchEscrowDetails();
-    fetchAnalytics();
-  }, [id]);
-
-  const fetchEscrowDetails = async () => {
-    try {
-      const response = await api.get(`/escrows/${id}`);
-      setEscrow(response.data);
-      setChecklistItems(response.data.checklist || {});
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching escrow details:', error);
-      setLoading(false);
-    }
-  };
-
-  const fetchAnalytics = async () => {
-    try {
-      const response = await api.get(`/analytics/escrow/${id}`);
-      setAnalytics(response.data);
-    } catch (error) {
-      console.error('Error fetching analytics:', error);
-    }
-  };
-
-  const handleChecklistToggle = async (category, item) => {
-    const updatedChecklist = {
-      ...checklistItems,
-      [category]: {
-        ...checklistItems[category],
-        [item]: !checklistItems[category]?.[item]
+  // Fetch escrow details
+  const { data: escrow, isLoading, error } = useQuery(
+    ['escrow', id],
+    () => escrowsAPI.getOne(id).then(res => res.data),
+    {
+      refetchInterval: 30000,
+      onError: () => {
+        // Return mock data on error
+        return mockEscrowDetail;
       }
-    };
-    
-    setChecklistItems(updatedChecklist);
-    
-    try {
-      await api.put(`/escrows/${id}/checklist`, { checklist: updatedChecklist });
-    } catch (error) {
-      console.error('Error updating checklist:', error);
     }
+  );
+
+  // Use mock data if API fails
+  const escrowData = escrow || mockEscrowDetail;
+
+  // Initialize checklist states
+  React.useEffect(() => {
+    if (escrowData?.checklist) {
+      const states = {};
+      Object.entries(escrowData.checklist).forEach(([category, items]) => {
+        Object.entries(items).forEach(([item, checked]) => {
+          states[`${category}_${item}`] = checked;
+        });
+      });
+      setChecklistStates(states);
+    }
+  }, [escrowData]);
+
+  // Add note mutation
+  const addNoteMutation = useMutation(
+    (note) => escrowsAPI.addNote(id, { note }),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(['escrow', id]);
+        enqueueSnackbar('Note added successfully', { variant: 'success' });
+        setNewNote('');
+        setOpenNoteDialog(false);
+      },
+      onError: () => {
+        enqueueSnackbar('Failed to add note', { variant: 'error' });
+      }
+    }
+  );
+
+  // Update checklist mutation
+  const updateChecklistMutation = useMutation(
+    ({ category, item, checked }) => 
+      escrowsAPI.updateChecklist(id, { category, item, checked }),
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(['escrow', id]);
+      }
+    }
+  );
+
+  const handleChecklistToggle = (category, itemId) => {
+    const key = `${category}_${itemId}`;
+    const newValue = !checklistStates[key];
+    setChecklistStates(prev => ({
+      ...prev,
+      [key]: newValue
+    }));
+    updateChecklistMutation.mutate({ category, item: itemId, checked: newValue });
   };
 
-  const buyerChecklist = [
-    { key: 'earnest_money_deposited', label: 'Earnest Money Deposited' },
-    { key: 'loan_application_submitted', label: 'Loan Application Submitted' },
-    { key: 'home_inspection_ordered', label: 'Home Inspection Ordered' },
-    { key: 'home_inspection_completed', label: 'Home Inspection Completed' },
-    { key: 'appraisal_ordered', label: 'Appraisal Ordered' },
-    { key: 'appraisal_completed', label: 'Appraisal Completed' },
-    { key: 'loan_approval_received', label: 'Loan Approval Received' },
-    { key: 'homeowners_insurance_obtained', label: 'Homeowners Insurance Obtained' },
-    { key: 'final_walkthrough_scheduled', label: 'Final Walkthrough Scheduled' },
-    { key: 'closing_documents_reviewed', label: 'Closing Documents Reviewed' }
-  ];
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
 
-  const sellerChecklist = [
-    { key: 'property_disclosures_completed', label: 'Property Disclosures Completed' },
-    { key: 'title_report_ordered', label: 'Title Report Ordered' },
-    { key: 'title_cleared', label: 'Title Cleared' },
-    { key: 'repairs_completed', label: 'Requested Repairs Completed' },
-    { key: 'home_warranty_purchased', label: 'Home Warranty Purchased' },
-    { key: 'utilities_transfer_arranged', label: 'Utilities Transfer Arranged' },
-    { key: 'moving_arrangements_made', label: 'Moving Arrangements Made' },
-    { key: 'final_water_reading', label: 'Final Water Reading Scheduled' },
-    { key: 'keys_prepared', label: 'Keys and Garage Openers Prepared' },
-    { key: 'property_vacant', label: 'Property Vacant and Clean' }
-  ];
+  const getDaysToClose = () => {
+    if (!escrowData.closingDate) return null;
+    return differenceInDays(new Date(escrowData.closingDate), new Date());
+  };
 
-  const agentChecklist = [
-    { key: 'purchase_agreement_executed', label: 'Purchase Agreement Fully Executed' },
-    { key: 'contingencies_tracked', label: 'All Contingencies Being Tracked' },
-    { key: 'commission_agreement_signed', label: 'Commission Agreement Signed' },
-    { key: 'vendor_contacts_shared', label: 'Vendor Contacts Shared with Client' },
-    { key: 'weekly_updates_sent', label: 'Weekly Status Updates Sent' },
-    { key: 'closing_statement_reviewed', label: 'Closing Statement Reviewed' },
-    { key: 'closing_gift_prepared', label: 'Closing Gift Prepared' },
-    { key: 'testimonial_requested', label: 'Testimonial/Review Requested' },
-    { key: 'referral_request_made', label: 'Referral Request Made' },
-    { key: 'post_closing_followup', label: 'Post-Closing Follow-up Scheduled' }
-  ];
+  const getTimelineProgress = () => {
+    const stages = ['Contract', 'Inspection', 'Appraisal', 'Loan Approval', 'Final Walkthrough', 'Closing'];
+    const currentIndex = stages.indexOf(escrowData.currentStage);
+    return ((currentIndex + 1) / stages.length) * 100;
+  };
 
   const getStatusColor = (status) => {
     const colors = {
-      'Active': 'text-green-600 bg-green-50',
-      'Pending': 'text-yellow-600 bg-yellow-50',
-      'Closed': 'text-blue-600 bg-blue-50',
-      'Cancelled': 'text-red-600 bg-red-50',
-      'On Hold': 'text-gray-600 bg-gray-50'
+      'Active': 'success',
+      'Pending': 'warning',
+      'Closing': 'info',
+      'Closed': 'default',
+      'Cancelled': 'error'
     };
-    return colors[status] || 'text-gray-600 bg-gray-50';
+    return colors[status] || 'default';
   };
 
-  const getDaysUntilClosing = () => {
-    if (!escrow?.closing_date) return null;
-    const today = new Date();
-    const closing = new Date(escrow.closing_date);
-    const diffTime = closing - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
-
-  const calculateCommissionBreakdown = () => {
-    if (!escrow?.gross_commission) return [];
-    
-    const data = [
-      { name: 'Listing Side', value: escrow.gross_commission / 2 },
-      { name: 'Buying Side', value: escrow.gross_commission / 2 }
-    ];
-    
-    if (escrow.commission_adjustments) {
-      data.push({ name: 'Adjustments', value: Math.abs(escrow.commission_adjustments) });
-    }
-    
-    return data;
-  };
-
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
-
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
+      <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+        <LinearProgress />
+      </Container>
     );
   }
 
-  if (!escrow) {
-    return (
-      <div className="max-w-7xl mx-auto p-6">
-        <div className="text-center py-12">
-          <h2 className="text-2xl font-semibold text-gray-900">Escrow not found</h2>
-        </div>
-      </div>
-    );
-  }
-
-  const daysUntilClosing = getDaysUntilClosing();
+  const daysToClose = getDaysToClose();
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+      {/* Breadcrumbs */}
+      <Breadcrumbs separator={<NavigateNext fontSize="small" />} sx={{ mb: 2 }}>
+        <Link
+          component="button"
+          variant="body1"
+          underline="hover"
+          color="inherit"
+          onClick={() => navigate('/')}
+        >
+          Dashboard
+        </Link>
+        <Link
+          component="button"
+          variant="body1"
+          underline="hover"
+          color="inherit"
+          onClick={() => navigate('/escrows')}
+        >
+          Escrows
+        </Link>
+        <Typography color="text.primary">{escrowData.propertyAddress}</Typography>
+      </Breadcrumbs>
+
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <div className="flex justify-between items-start mb-4">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <Building className="h-8 w-8 text-blue-600" />
-              <h1 className="text-3xl font-bold text-gray-900">{escrow.property_address}</h1>
-            </div>
-            <p className="text-gray-600">Escrow #{escrow.escrow_number || escrow.id}</p>
-          </div>
-          <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(escrow.escrow_status)}`}>
-            {escrow.escrow_status}
-          </span>
-        </div>
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={12} md={6}>
+            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+              <IconButton onClick={() => navigate('/escrows')} sx={{ mr: 2 }}>
+                <ArrowBack />
+              </IconButton>
+              <Box>
+                <Typography variant="h4" gutterBottom>
+                  {escrowData.propertyAddress}
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                  <Chip
+                    label={escrowData.escrowStatus}
+                    color={getStatusColor(escrowData.escrowStatus)}
+                    size="small"
+                  />
+                  <Chip
+                    label={`Stage: ${escrowData.currentStage}`}
+                    color="primary"
+                    size="small"
+                  />
+                  <Chip
+                    label={escrowData.propertyType}
+                    variant="outlined"
+                    size="small"
+                  />
+                  <Chip
+                    label={`Escrow #${escrowData.escrowNumber}`}
+                    variant="outlined"
+                    size="small"
+                  />
+                </Box>
+              </Box>
+            </Box>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Box sx={{ display: 'flex', justifyContent: { xs: 'flex-start', md: 'flex-end' }, gap: 1 }}>
+              <Button variant="outlined" startIcon={<Edit />}>
+                Edit
+              </Button>
+              <Button variant="outlined" startIcon={<Share />}>
+                Share
+              </Button>
+              <Button variant="outlined" startIcon={<Print />}>
+                Print
+              </Button>
+              <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
+                <MoreVert />
+              </IconButton>
+            </Box>
+          </Grid>
+        </Grid>
 
         {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Purchase Price</p>
-                <p className="text-2xl font-bold text-gray-900">{formatCurrency(escrow.purchase_price)}</p>
-              </div>
-              <DollarSign className="h-8 w-8 text-green-600" />
-            </div>
-          </div>
+        <Grid container spacing={3} sx={{ mt: 2 }}>
+          <Grid item xs={12} sm={6} md={3}>
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="h4" color="primary">
+                ${escrowData.purchasePrice.toLocaleString()}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Purchase Price
+              </Typography>
+            </Box>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography 
+                variant="h4" 
+                color={daysToClose && daysToClose < 7 ? 'error' : 'success'}
+              >
+                {daysToClose !== null ? daysToClose : '--'}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Days to Close
+              </Typography>
+            </Box>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="h4" color="primary">
+                ${escrowData.grossCommission.toLocaleString()}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Total Commission
+              </Typography>
+            </Box>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="h4" color="success.main">
+                ${escrowData.listingAgent.commission.toLocaleString()}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Your Commission
+              </Typography>
+            </Box>
+          </Grid>
+        </Grid>
 
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Days to Close</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {daysUntilClosing !== null ? (
-                    daysUntilClosing >= 0 ? `${daysUntilClosing} days` : 'Closed'
-                  ) : 'TBD'}
-                </p>
-              </div>
-              <Clock className="h-8 w-8 text-blue-600" />
-            </div>
-          </div>
+        {/* Progress Bar */}
+        <Box sx={{ mt: 3 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+            <Typography variant="body2">Transaction Progress</Typography>
+            <Typography variant="body2">{Math.round(getTimelineProgress())}%</Typography>
+          </Box>
+          <LinearProgress
+            variant="determinate"
+            value={getTimelineProgress()}
+            sx={{ height: 8, borderRadius: 4 }}
+          />
+        </Box>
+      </Paper>
 
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Gross Commission</p>
-                <p className="text-2xl font-bold text-gray-900">{formatCurrency(escrow.gross_commission)}</p>
-              </div>
-              <Calculator className="h-8 w-8 text-purple-600" />
-            </div>
-          </div>
+      {/* Tabs */}
+      <Paper sx={{ mb: 3 }}>
+        <Tabs
+          value={activeTab}
+          onChange={(e, v) => setActiveTab(v)}
+          variant="scrollable"
+          scrollButtons="auto"
+        >
+          <Tab label="Overview" />
+          <Tab label="Timeline" />
+          <Tab label="Checklists" />
+          <Tab label="Documents" />
+          <Tab label="Financial" />
+          <Tab label="Analytics" />
+        </Tabs>
+      </Paper>
 
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Net Commission</p>
-                <p className="text-2xl font-bold text-gray-900">{formatCurrency(escrow.net_commission)}</p>
-              </div>
-              <TrendingUp className="h-8 w-8 text-green-600" />
-            </div>
-          </div>
-        </div>
-      </div>
+      {/* Tab Content */}
+      {activeTab === 0 && (
+        <Grid container spacing={3}>
+          {/* Left Column */}
+          <Grid item xs={12} lg={8}>
+            {/* Parties Section */}
+            <Card sx={{ mb: 3 }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  <Groups sx={{ mr: 1, verticalAlign: 'bottom' }} />
+                  Transaction Parties
+                </Typography>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Details and People */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Transaction Details */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4">Transaction Details</h2>
-            <dl className="space-y-3">
-              <div>
-                <dt className="text-sm text-gray-600">Property Type</dt>
-                <dd className="text-sm font-medium text-gray-900">{escrow.property_type || 'Not specified'}</dd>
-              </div>
-              <div>
-                <dt className="text-sm text-gray-600">Loan Amount</dt>
-                <dd className="text-sm font-medium text-gray-900">{formatCurrency(escrow.loan_amount)}</dd>
-              </div>
-              <div>
-                <dt className="text-sm text-gray-600">Down Payment</dt>
-                <dd className="text-sm font-medium text-gray-900">{formatCurrency(escrow.down_payment)}</dd>
-              </div>
-              <div>
-                <dt className="text-sm text-gray-600">EMD Amount</dt>
-                <dd className="text-sm font-medium text-gray-900">{formatCurrency(escrow.earnest_money_deposit)}</dd>
-              </div>
-              <div>
-                <dt className="text-sm text-gray-600">Lead Source</dt>
-                <dd className="text-sm font-medium text-gray-900">{escrow.lead_source || 'Not specified'}</dd>
-              </div>
-            </dl>
-          </div>
-
-          {/* People Involved */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4">People Involved</h2>
-            
-            {/* Buyers */}
-            {escrow.buyers?.length > 0 && (
-              <div className="mb-4">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">Buyers</h3>
-                {escrow.buyers.map(buyer => (
-                  <Link 
-                    key={buyer.id} 
-                    to={`/clients/${buyer.id}`}
-                    className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors"
+                {/* Buyers */}
+                <Box sx={{ mb: 3 }}>
+                  <Box 
+                    sx={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                      mb: 1
+                    }}
+                    onClick={() => toggleSection('buyers')}
                   >
-                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                      <Users className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{buyer.name}</p>
-                      <p className="text-xs text-gray-600">{buyer.email}</p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-
-            {/* Sellers */}
-            {escrow.sellers?.length > 0 && (
-              <div className="mb-4">
-                <h3 className="text-sm font-medium text-gray-700 mb-2">Sellers</h3>
-                {escrow.sellers.map(seller => (
-                  <Link 
-                    key={seller.id} 
-                    to={`/clients/${seller.id}`}
-                    className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded-lg transition-colors"
-                  >
-                    <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                      <Users className="h-5 w-5 text-green-600" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{seller.name}</p>
-                      <p className="text-xs text-gray-600">{seller.email}</p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-
-            {/* Service Providers */}
-            <div>
-              <h3 className="text-sm font-medium text-gray-700 mb-2">Service Providers</h3>
-              <div className="space-y-2">
-                {escrow.escrow_officer && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Briefcase className="h-4 w-4 text-gray-400" />
-                    <span className="text-gray-600">Escrow:</span>
-                    <span className="font-medium">{escrow.escrow_officer.name}</span>
-                  </div>
-                )}
-                {escrow.loan_officer && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Briefcase className="h-4 w-4 text-gray-400" />
-                    <span className="text-gray-600">Lender:</span>
-                    <span className="font-medium">{escrow.loan_officer.name}</span>
-                  </div>
-                )}
-                {escrow.title_company && (
-                  <div className="flex items-center gap-2 text-sm">
-                    <Building className="h-4 w-4 text-gray-400" />
-                    <span className="text-gray-600">Title:</span>
-                    <span className="font-medium">{escrow.title_company.name}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {/* Important Dates */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4">Important Dates</h2>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Acceptance Date</span>
-                <span className="text-sm font-medium">{formatDate(escrow.acceptance_date)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">EMD Due</span>
-                <span className="text-sm font-medium">{formatDate(escrow.emd_due_date)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Inspection Deadline</span>
-                <span className="text-sm font-medium">{formatDate(escrow.inspection_deadline)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Appraisal Deadline</span>
-                <span className="text-sm font-medium">{formatDate(escrow.appraisal_deadline)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Loan Contingency</span>
-                <span className="text-sm font-medium">{formatDate(escrow.loan_contingency_deadline)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-600">Closing Date</span>
-                <span className="text-sm font-medium text-blue-600">{formatDate(escrow.closing_date)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Middle Column - Checklists */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Buyer Checklist */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4">Buyer Checklist</h2>
-            <div className="space-y-2">
-              {buyerChecklist.map(item => (
-                <label key={item.key} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={checklistItems.buyer?.[item.key] || false}
-                    onChange={() => handleChecklistToggle('buyer', item.key)}
-                    className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
-                  />
-                  <span className={`text-sm ${checklistItems.buyer?.[item.key] ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
-                    {item.label}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Seller Checklist */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4">Seller Checklist</h2>
-            <div className="space-y-2">
-              {sellerChecklist.map(item => (
-                <label key={item.key} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={checklistItems.seller?.[item.key] || false}
-                    onChange={() => handleChecklistToggle('seller', item.key)}
-                    className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
-                  />
-                  <span className={`text-sm ${checklistItems.seller?.[item.key] ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
-                    {item.label}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Agent Checklist */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4">Agent Checklist</h2>
-            <div className="space-y-2">
-              {agentChecklist.map(item => (
-                <label key={item.key} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={checklistItems.agent?.[item.key] || false}
-                    onChange={() => handleChecklistToggle('agent', item.key)}
-                    className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
-                  />
-                  <span className={`text-sm ${checklistItems.agent?.[item.key] ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
-                    {item.label}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column - Analytics */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Commission Breakdown */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4">Commission Breakdown</h2>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <RePieChart>
-                  <Pie
-                    data={calculateCommissionBreakdown()}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={({ name, value }) => `${name}: ${formatCurrency(value)}`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="value"
-                  >
-                    {calculateCommissionBreakdown().map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    <Typography variant="subtitle1" fontWeight="bold">
+                      Buyers
+                    </Typography>
+                    <IconButton size="small">
+                      {expandedSections.buyers ? <ExpandLess /> : <ExpandMore />}
+                    </IconButton>
+                  </Box>
+                  <Collapse in={expandedSections.buyers}>
+                    {escrowData.buyers.map((buyer) => (
+                      <Box key={buyer.id} sx={{ ml: 2, mb: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                          <Avatar sx={{ mr: 2 }}>{buyer.name.charAt(0)}</Avatar>
+                          <Box sx={{ flexGrow: 1 }}>
+                            <Typography variant="body1">{buyer.name}</Typography>
+                            <Box sx={{ display: 'flex', gap: 2 }}>
+                              <Typography variant="body2" color="text.secondary">
+                                <Phone sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'bottom' }} />
+                                {buyer.phone}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                <Email sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'bottom' }} />
+                                {buyer.email}
+                              </Typography>
+                            </Box>
+                          </Box>
+                          {buyer.preApproved && (
+                            <Chip label="Pre-approved" color="success" size="small" />
+                          )}
+                        </Box>
+                        {buyer.lender && (
+                          <Typography variant="body2" color="text.secondary" sx={{ ml: 7 }}>
+                            Lender: {buyer.lender}
+                          </Typography>
+                        )}
+                      </Box>
                     ))}
-                  </Pie>
-                  <Tooltip formatter={(value) => formatCurrency(value)} />
-                </RePieChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
+                  </Collapse>
+                </Box>
 
-          {/* Progress Overview */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4">Progress Overview</h2>
-            <div className="space-y-4">
-              {Object.entries({
-                'Buyer Tasks': buyerChecklist,
-                'Seller Tasks': sellerChecklist,
-                'Agent Tasks': agentChecklist
-              }).map(([category, items]) => {
-                const completed = items.filter(item => 
-                  checklistItems[category.toLowerCase().split(' ')[0]]?.[item.key]
-                ).length;
-                const percentage = (completed / items.length) * 100;
+                <Divider sx={{ my: 2 }} />
 
-                return (
-                  <div key={category}>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-700">{category}</span>
-                      <span className="text-gray-900 font-medium">{completed}/{items.length}</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${percentage}%` }}
+                {/* Sellers */}
+                <Box>
+                  <Box 
+                    sx={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'center',
+                      cursor: 'pointer',
+                      mb: 1
+                    }}
+                    onClick={() => toggleSection('sellers')}
+                  >
+                    <Typography variant="subtitle1" fontWeight="bold">
+                      Sellers
+                    </Typography>
+                    <IconButton size="small">
+                      {expandedSections.sellers ? <ExpandLess /> : <ExpandMore />}
+                    </IconButton>
+                  </Box>
+                  <Collapse in={expandedSections.sellers}>
+                    {escrowData.sellers.map((seller) => (
+                      <Box key={seller.id} sx={{ ml: 2, mb: 2 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Avatar sx={{ mr: 2 }}>{seller.name.charAt(0)}</Avatar>
+                          <Box>
+                            <Typography variant="body1">{seller.name}</Typography>
+                            <Box sx={{ display: 'flex', gap: 2 }}>
+                              <Typography variant="body2" color="text.secondary">
+                                <Phone sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'bottom' }} />
+                                {seller.phone}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                <Email sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'bottom' }} />
+                                {seller.email}
+                              </Typography>
+                            </Box>
+                          </Box>
+                        </Box>
+                      </Box>
+                    ))}
+                  </Collapse>
+                </Box>
+              </CardContent>
+            </Card>
+
+            {/* Recent Activity */}
+            <Card>
+              <CardContent>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="h6">
+                    <History sx={{ mr: 1, verticalAlign: 'bottom' }} />
+                    Recent Activity
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<NoteAdd />}
+                    onClick={() => setOpenNoteDialog(true)}
+                  >
+                    Add Note
+                  </Button>
+                </Box>
+                <List>
+                  {escrowData.notes.map((note) => (
+                    <ListItem key={note.id} alignItems="flex-start">
+                      <ListItemAvatar>
+                        <Avatar>{note.createdBy.charAt(0)}</Avatar>
+                      </ListItemAvatar>
+                      <ListItemText
+                        primary={note.content}
+                        secondary={
+                          <>
+                            {note.createdBy} • {format(new Date(note.createdAt), 'MMM dd, yyyy h:mm a')}
+                          </>
+                        }
                       />
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+                    </ListItem>
+                  ))}
+                </List>
+              </CardContent>
+            </Card>
+          </Grid>
 
-          {/* Recent Activity */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
-            <div className="space-y-3">
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <CheckCircle2 className="h-4 w-4 text-green-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-900">Loan approval received</p>
-                  <p className="text-xs text-gray-600">2 days ago</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <FileText className="h-4 w-4 text-blue-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-900">Appraisal report uploaded</p>
-                  <p className="text-xs text-gray-600">5 days ago</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <AlertCircle className="h-4 w-4 text-yellow-600" />
-                </div>
-                <div>
-                  <p className="text-sm text-gray-900">Inspection contingency removed</p>
-                  <p className="text-xs text-gray-600">1 week ago</p>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Right Column */}
+          <Grid item xs={12} lg={4}>
+            {/* Key Dates */}
+            <Card sx={{ mb: 3 }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  <CalendarToday sx={{ mr: 1, verticalAlign: 'bottom' }} />
+                  Key Dates
+                </Typography>
+                <List dense>
+                  <ListItem>
+                    <ListItemText
+                      primary="Acceptance Date"
+                      secondary={format(new Date(escrowData.acceptanceDate), 'MMM d, yyyy')}
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemText
+                      primary="Inspection Deadline"
+                      secondary={
+                        <Typography
+                          variant="body2"
+                          color={new Date(escrowData.inspectionDeadline) < new Date() ? 'error' : 'text.secondary'}
+                        >
+                          {format(new Date(escrowData.inspectionDeadline), 'MMM d, yyyy')}
+                        </Typography>
+                      }
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemText
+                      primary="Appraisal Deadline"
+                      secondary={format(new Date(escrowData.appraisalDeadline), 'MMM d, yyyy')}
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemText
+                      primary="Loan Contingency"
+                      secondary={format(new Date(escrowData.loanContingencyDeadline), 'MMM d, yyyy')}
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemText
+                      primary="Closing Date"
+                      secondary={
+                        <Typography variant="body2" color="primary">
+                          {format(new Date(escrowData.closingDate), 'MMM d, yyyy')}
+                        </Typography>
+                      }
+                    />
+                  </ListItem>
+                </List>
+              </CardContent>
+            </Card>
 
-          {/* Risk Indicators */}
-          {daysUntilClosing !== null && daysUntilClosing < 10 && daysUntilClosing >= 0 && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <h3 className="text-sm font-medium text-yellow-800">Closing Date Approaching</h3>
-                  <p className="text-sm text-yellow-700 mt-1">
-                    Only {daysUntilClosing} days until closing. Ensure all tasks are completed and documents are ready.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+            {/* Financial Summary */}
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  <AttachMoney sx={{ mr: 1, verticalAlign: 'bottom' }} />
+                  Financial Summary
+                </Typography>
+                <Table size="small">
+                  <TableBody>
+                    <TableRow>
+                      <TableCell>Purchase Price</TableCell>
+                      <TableCell align="right">${escrowData.purchasePrice.toLocaleString()}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>Earnest Money</TableCell>
+                      <TableCell align="right">${escrowData.earnestMoneyDeposit.toLocaleString()}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>Down Payment</TableCell>
+                      <TableCell align="right">${escrowData.downPayment.toLocaleString()}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>Loan Amount</TableCell>
+                      <TableCell align="right">${escrowData.loanAmount.toLocaleString()}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell colSpan={2}>
+                        <Divider />
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell>Total Commission ({escrowData.commissionPercentage}%)</TableCell>
+                      <TableCell align="right">${escrowData.grossCommission.toLocaleString()}</TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell><strong>Your Commission</strong></TableCell>
+                      <TableCell align="right" sx={{ color: 'success.main', fontWeight: 'bold' }}>
+                        ${escrowData.listingAgent.commission.toLocaleString()}
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      )}
+
+      {activeTab === 1 && (
+        <Card>
+          <CardContent>
+            <Timeline position="alternate">
+              {escrowData.timeline.map((event, index) => (
+                <TimelineItem key={event.id}>
+                  <TimelineOppositeContent color="text.secondary">
+                    {format(new Date(event.date), 'MMM d, yyyy')}
+                  </TimelineOppositeContent>
+                  <TimelineSeparator>
+                    <TimelineDot 
+                      color={
+                        event.type === 'milestone' ? 'success' : 
+                        event.type === 'financial' ? 'primary' : 
+                        'info'
+                      }
+                    >
+                      {event.type === 'milestone' && <CheckCircle />}
+                      {event.type === 'financial' && <AttachMoney />}
+                      {event.type === 'task' && <Assignment />}
+                    </TimelineDot>
+                    {index < escrowData.timeline.length - 1 && <TimelineConnector />}
+                  </TimelineSeparator>
+                  <TimelineContent>
+                    <Typography variant="h6" component="span">
+                      {event.event}
+                    </Typography>
+                    <Typography>{event.description}</Typography>
+                  </TimelineContent>
+                </TimelineItem>
+              ))}
+            </Timeline>
+          </CardContent>
+        </Card>
+      )}
+
+      {activeTab === 2 && (
+        <Grid container spacing={3}>
+          {Object.entries(escrowChecklists).map(([key, checklist]) => (
+            <Grid item xs={12} md={6} key={key}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>
+                    {checklist.title}
+                  </Typography>
+                  <FormGroup>
+                    {checklist.items.map((item) => (
+                      <FormControlLabel
+                        key={item.id}
+                        control={
+                          <Checkbox
+                            checked={checklistStates[`${key}_${item.id}`] || false}
+                            onChange={() => handleChecklistToggle(key, item.id)}
+                            color={item.critical ? 'primary' : 'default'}
+                          />
+                        }
+                        label={
+                          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                textDecoration: checklistStates[`${key}_${item.id}`] ? 'line-through' : 'none',
+                                color: checklistStates[`${key}_${item.id}`] ? 'text.secondary' : 'text.primary',
+                              }}
+                            >
+                              {item.label}
+                            </Typography>
+                            {item.critical && (
+                              <Chip
+                                label="Critical"
+                                size="small"
+                                color="error"
+                                sx={{ ml: 1, height: 20 }}
+                              />
+                            )}
+                          </Box>
+                        }
+                      />
+                    ))}
+                  </FormGroup>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+      )}
+
+      {activeTab === 3 && (
+        <Card>
+          <CardContent>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+              <Typography variant="h6">
+                Transaction Documents
+              </Typography>
+              <Button
+                variant="contained"
+                startIcon={<Upload />}
+                size="small"
+              >
+                Upload Document
+              </Button>
+            </Box>
+            <List>
+              {escrowData.documents.map((doc) => (
+                <ListItem
+                  key={doc.id}
+                  sx={{
+                    border: 1,
+                    borderColor: 'divider',
+                    borderRadius: 1,
+                    mb: 1,
+                  }}
+                >
+                  <ListItemAvatar>
+                    <Avatar sx={{ bgcolor: 'primary.light' }}>
+                      <Description />
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={doc.name}
+                    secondary={
+                      <>
+                        {doc.type} • {doc.size} • Uploaded {format(new Date(doc.uploadedAt), 'MMM d, yyyy')} by {doc.uploadedBy}
+                      </>
+                    }
+                  />
+                  <ListItemSecondaryAction>
+                    {doc.status === 'signed' && (
+                      <Chip label="Signed" color="success" size="small" sx={{ mr: 1 }} />
+                    )}
+                    {doc.status === 'review' && (
+                      <Chip label="Review Required" color="warning" size="small" sx={{ mr: 1 }} />
+                    )}
+                    <Button size="small">View</Button>
+                    <Button size="small">Download</Button>
+                  </ListItemSecondaryAction>
+                </ListItem>
+              ))}
+            </List>
+          </CardContent>
+        </Card>
+      )}
+
+      {activeTab === 4 && (
+        <Card>
+          <CardContent>
+            <Typography variant="h6" gutterBottom>
+              Detailed Financial Breakdown
+            </Typography>
+            <Table>
+              <TableBody>
+                <TableRow>
+                  <TableCell><strong>Purchase Price</strong></TableCell>
+                  <TableCell align="right">${escrowData.purchasePrice.toLocaleString()}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Earnest Money Deposit</TableCell>
+                  <TableCell align="right">${escrowData.earnestMoneyDeposit.toLocaleString()}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Down Payment (20%)</TableCell>
+                  <TableCell align="right">${escrowData.downPayment.toLocaleString()}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Loan Amount</TableCell>
+                  <TableCell align="right">${escrowData.loanAmount.toLocaleString()}</TableCell>
+                </TableRow>
+                <TableRow sx={{ bgcolor: 'grey.100' }}>
+                  <TableCell colSpan={2}><strong>Commission Details</strong></TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Total Commission ({escrowData.commissionPercentage}%)</TableCell>
+                  <TableCell align="right">${escrowData.grossCommission.toLocaleString()}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Listing Agent (50%)</TableCell>
+                  <TableCell align="right">${escrowData.listingAgent.commission.toLocaleString()}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell>Buyer's Agent (50%)</TableCell>
+                  <TableCell align="right">${escrowData.buyerAgent.commission.toLocaleString()}</TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell><strong>Net Commission (after split)</strong></TableCell>
+                  <TableCell align="right" sx={{ color: 'success.main' }}>
+                    <strong>${escrowData.netCommission.toLocaleString()}</strong>
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
+
+      {activeTab === 5 && (
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Key Performance Indicators
+                </Typography>
+                <List>
+                  <ListItem>
+                    <ListItemText
+                      primary="Days on Market"
+                      secondary="From listing to contract"
+                    />
+                    <Typography variant="h6" color="primary">
+                      12 days
+                    </Typography>
+                  </ListItem>
+                  <ListItem>
+                    <ListItemText
+                      primary="Contract to Close"
+                      secondary="Expected closing time"
+                    />
+                    <Typography variant="h6" color="primary">
+                      30 days
+                    </Typography>
+                  </ListItem>
+                  <ListItem>
+                    <ListItemText
+                      primary="List to Sale Ratio"
+                      secondary="Final price vs list price"
+                    />
+                    <Typography variant="h6" color="success.main">
+                      104.2%
+                    </Typography>
+                  </ListItem>
+                </List>
+              </CardContent>
+            </Card>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Transaction Health Score
+                </Typography>
+                <Box sx={{ position: 'relative', display: 'inline-flex', width: '100%', justifyContent: 'center', my: 3 }}>
+                  <CircularProgress
+                    variant="determinate"
+                    value={85}
+                    size={180}
+                    thickness={4}
+                    color="success"
+                  />
+                  <Box
+                    sx={{
+                      top: 0,
+                      left: 0,
+                      bottom: 0,
+                      right: 0,
+                      position: 'absolute',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Box sx={{ textAlign: 'center' }}>
+                      <Typography variant="h2" component="div" color="text.secondary">
+                        85%
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Excellent
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Box>
+                <Alert severity="success">
+                  Transaction is progressing smoothly with all deadlines met on time.
+                </Alert>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      )}
+
+      {/* Context Menu */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={() => setAnchorEl(null)}
+      >
+        <MenuItem onClick={() => setAnchorEl(null)}>
+          <ListItemIcon><ContentCopy /></ListItemIcon>
+          Duplicate Escrow
+        </MenuItem>
+        <MenuItem onClick={() => setAnchorEl(null)}>
+          <ListItemIcon><Download /></ListItemIcon>
+          Export Report
+        </MenuItem>
+        <MenuItem onClick={() => setAnchorEl(null)} sx={{ color: 'error.main' }}>
+          <ListItemIcon><Error sx={{ color: 'error.main' }} /></ListItemIcon>
+          Cancel Escrow
+        </MenuItem>
+      </Menu>
+
+      {/* Add Note Dialog */}
+      <Dialog open={openNoteDialog} onClose={() => setOpenNoteDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Add Note</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Note"
+            type="text"
+            fullWidth
+            multiline
+            rows={4}
+            variant="outlined"
+            value={newNote}
+            onChange={(e) => setNewNote(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenNoteDialog(false)}>Cancel</Button>
+          <Button 
+            onClick={() => addNoteMutation.mutate(newNote)} 
+            variant="contained"
+            disabled={!newNote.trim() || addNoteMutation.isLoading}
+          >
+            {addNoteMutation.isLoading ? 'Adding...' : 'Add Note'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Container>
   );
-}
+};
+
+export default EscrowDetail;
