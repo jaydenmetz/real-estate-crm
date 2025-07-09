@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "babylonjs": "^5.54.0",
+    "babylonjs-gui": "^5.54.0"
+  }
+}

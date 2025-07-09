@@ -16,7 +16,7 @@ import ListingsDashboard from './components/dashboards/ListingsDashboard';
 import ClientsDashboard from './components/dashboards/ClientsDashboard';
 import AppointmentsDashboard from './components/dashboards/AppointmentsDashboard';
 import LeadsDashboard from './components/dashboards/LeadsDashboard';
-import VirtualOfficeDashboard from './components/dashboards/VirtualOfficeDashboard';
+import AITeamDashboard from './components/dashboards/AITeamDashboard';
 import OtherDataDashboard from './components/dashboards/OtherDataDashboard';
 import AnalyticsDashboard from './components/dashboards/AnalyticsDashboard';
 
@@ -112,7 +112,7 @@ function App() {
                     <Route path="/clients" element={<ClientsDashboard />} />
                     <Route path="/appointments" element={<AppointmentsDashboard />} />
                     <Route path="/leads" element={<LeadsDashboard />} />
-                    <Route path="/virtual-office" element={<VirtualOfficeDashboard />} />
+                    <Route path="/virtual-office" element={<AITeamDashboard />} />
                     <Route path="/other-data" element={<OtherDataDashboard />} />
                     <Route path="/analytics" element={<AnalyticsDashboard />} />
                     
