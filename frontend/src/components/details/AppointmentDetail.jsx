@@ -1,39 +1,102 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { 
-  Calendar, Clock, MapPin, Video, Users, FileText, CheckCircle2,
-  AlertCircle, Phone, Mail, Car, Home, Briefcase, Target,
-  MessageSquare, Star, TrendingUp, Navigation, Edit3, Coffee
-} from 'lucide-react';
-import api from '../../services/api';
-import { formatDate, formatTime } from '../../utils/formatters';
+import { useParams, useNavigate } from 'react-router-dom';
 import {
-  BarChart, Bar, PieChart as RePieChart, Pie, Cell,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
-} from 'recharts';
+  Container,
+  Grid,
+  Paper,
+  Typography,
+  Box,
+  Button,
+  Chip,
+  Avatar,
+  Tabs,
+  Tab,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  TextField,
+  IconButton,
+  Card,
+  CardContent,
+  Divider,
+  LinearProgress,
+  Breadcrumbs,
+  Link,
+  Tooltip,
+  Alert,
+  FormGroup,
+  FormControlLabel,
+  Checkbox,
+  CircularProgress,
+  Menu,
+  MenuItem,
+} from '@mui/material';
+import {
+  Timeline,
+  TimelineItem,
+  TimelineSeparator,
+  TimelineConnector,
+  TimelineContent,
+  TimelineDot,
+  TimelineOppositeContent,
+} from '@mui/lab';
+import {
+  ArrowBack,
+  Edit,
+  Phone,
+  Email,
+  LocationOn,
+  CalendarToday,
+  AccessTime,
+  CheckCircle,
+  Cancel,
+  Schedule,
+  VideoCall,
+  Home,
+  Business,
+  People,
+  Assignment,
+  Description,
+  Notifications,
+  MoreVert,
+  Map,
+  DirectionsCar,
+  Star,
+  StarBorder,
+  Send,
+  Add,
+} from '@mui/icons-material';
+import { format, formatDistanceToNow, isPast, differenceInMinutes } from 'date-fns';
+import api from '../../services/api';
 
 export default function AppointmentDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [appointment, setAppointment] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState(0);
   const [checklistItems, setChecklistItems] = useState({});
   const [attendees, setAttendees] = useState([]);
   const [relatedProperty, setRelatedProperty] = useState(null);
   const [analytics, setAnalytics] = useState(null);
+  const [newNote, setNewNote] = useState('');
+  const [anchorEl, setAnchorEl] = useState(null);
 
   // Mock data for development
   const mockAppointments = {
     '1': {
       id: 1,
       title: 'Buyer Consultation',
-      date: '2024-01-15',
+      date: '2024-01-20',
       start_time: '10:00:00',
       end_time: '11:00:00',
       appointment_type: 'Buyer Consultation',
       status: 'Scheduled',
       location: { 
         address: '123 Main St, Bakersfield, CA 93301',
-        parking_info: 'Free parking available in front'
+        parking_info: 'Free parking available in front',
+        coordinates: { lat: 35.3733, lng: -119.0187 }
       },
       virtual_meeting_link: null,
       property_address: '456 Oak Ave, Bakersfield, CA 93301',
@@ -54,18 +117,41 @@ export default function AppointmentDetail() {
         ]
       },
       attendees: [
-        { id: 1, name: 'John Doe', email: 'john.doe@email.com', phone: '(555) 123-4567', confirmed: true },
-        { id: 2, name: 'Agent Name', email: 'agent@realty.com', phone: '(555) 987-6543', confirmed: true }
+        { id: 1, name: 'John Doe', email: 'john.doe@email.com', phone: '(555) 123-4567', confirmed: true, type: 'client' },
+        { id: 2, name: 'Agent Name', email: 'agent@realty.com', phone: '(555) 987-6543', confirmed: true, type: 'agent' }
       ],
       reminders: [
         { time_before: '24 hours', type: 'Email', recipients: ['All Attendees'] },
         { time_before: '1 hour', type: 'SMS', recipients: ['John Doe'] }
       ],
-      checklist: {}
+      checklist: {},
+      activities: [
+        {
+          id: 1,
+          type: 'created',
+          description: 'Appointment created',
+          timestamp: '2024-01-10T14:30:00',
+          user: 'System'
+        },
+        {
+          id: 2,
+          type: 'updated',
+          description: 'Location updated',
+          timestamp: '2024-01-11T09:15:00',
+          user: 'Agent'
+        },
+        {
+          id: 3,
+          type: 'reminder',
+          description: 'Reminder sent to all attendees',
+          timestamp: '2024-01-19T10:00:00',
+          user: 'System'
+        }
+      ]
     },
     '2': {
       id: 2,
-      title: 'Property Showing',
+      title: 'Property Showing - 456 Oak Ave',
       date: '2024-01-16',
       start_time: '14:00:00',
       end_time: '16:00:00',
@@ -73,9 +159,10 @@ export default function AppointmentDetail() {
       status: 'Scheduled',
       location: { 
         address: '456 Oak Ave, Bakersfield, CA 93301',
-        parking_info: 'Driveway parking available'
+        parking_info: 'Driveway parking available',
+        coordinates: { lat: 35.3733, lng: -119.0187 }
       },
-      virtual_meeting_link: null,
+      virtual_meeting_link: 'https://zoom.us/j/123456789',
       property_address: '456 Oak Ave, Bakersfield, CA 93301',
       outcome: null,
       notes: {
@@ -94,14 +181,15 @@ export default function AppointmentDetail() {
         ]
       },
       attendees: [
-        { id: 3, name: 'Jane Smith', email: 'jane.smith@email.com', phone: '(555) 234-5678', confirmed: true },
-        { id: 2, name: 'Agent Name', email: 'agent@realty.com', phone: '(555) 987-6543', confirmed: true }
+        { id: 3, name: 'Jane Smith', email: 'jane.smith@email.com', phone: '(555) 234-5678', confirmed: true, type: 'client' },
+        { id: 2, name: 'Agent Name', email: 'agent@realty.com', phone: '(555) 987-6543', confirmed: true, type: 'agent' }
       ],
       reminders: [
         { time_before: '24 hours', type: 'Email', recipients: ['All Attendees'] },
         { time_before: '2 hours', type: 'SMS', recipients: ['Jane Smith'] }
       ],
-      checklist: {}
+      checklist: {},
+      activities: []
     }
   };
 
@@ -152,6 +240,16 @@ export default function AppointmentDetail() {
       }
     } catch (error) {
       console.error('Error fetching related property:', error);
+      // Mock property data
+      setRelatedProperty({
+        id: 1,
+        address: address,
+        price: '$475,000',
+        bedrooms: 4,
+        bathrooms: 3,
+        sqft: 2500,
+        yearBuilt: 2015
+      });
     }
   };
 
@@ -163,6 +261,10 @@ export default function AppointmentDetail() {
       console.error('Error fetching analytics:', error);
       setAnalytics(mockAnalytics);
     }
+  };
+
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
   };
 
   const handleChecklistToggle = async (category, item) => {
@@ -183,639 +285,727 @@ export default function AppointmentDetail() {
     }
   };
 
-  const preAppointmentChecklist = [
-    { key: 'appointment_confirmed', label: 'Appointment Confirmed with All Parties' },
-    { key: 'location_directions_sent', label: 'Location/Directions Sent' },
-    { key: 'parking_info_provided', label: 'Parking Information Provided' },
-    { key: 'documents_prepared', label: 'Necessary Documents Prepared' },
-    { key: 'property_info_reviewed', label: 'Property Information Reviewed' },
-    { key: 'client_needs_reviewed', label: 'Client Needs & Preferences Reviewed' },
-    { key: 'comps_prepared', label: 'Comparable Properties Prepared' },
-    { key: 'reminder_sent', label: 'Reminder Sent (24 hours prior)' },
-    { key: 'weather_checked', label: 'Weather Conditions Checked' },
-    { key: 'backup_plan_ready', label: 'Backup Plan Ready (if needed)' }
-  ];
-
-  const duringAppointmentChecklist = [
-    { key: 'arrived_early', label: 'Arrived 15 Minutes Early' },
-    { key: 'property_walkthrough', label: 'Complete Property Walkthrough' },
-    { key: 'features_highlighted', label: 'Key Features Highlighted' },
-    { key: 'questions_answered', label: 'All Questions Answered' },
-    { key: 'neighborhood_discussed', label: 'Neighborhood Amenities Discussed' },
-    { key: 'next_steps_outlined', label: 'Next Steps Clearly Outlined' },
-    { key: 'feedback_gathered', label: 'Initial Feedback Gathered' },
-    { key: 'photos_taken', label: 'Photos/Notes Taken (if permitted)' },
-    { key: 'safety_protocols_followed', label: 'Safety Protocols Followed' },
-    { key: 'professional_demeanor', label: 'Professional Demeanor Maintained' }
-  ];
-
-  const postAppointmentChecklist = [
-    { key: 'thank_you_sent', label: 'Thank You Message Sent' },
-    { key: 'feedback_documented', label: 'Detailed Feedback Documented' },
-    { key: 'crm_updated', label: 'CRM System Updated' },
-    { key: 'followup_scheduled', label: 'Follow-up Meeting Scheduled' },
-    { key: 'additional_info_sent', label: 'Additional Information Sent' },
-    { key: 'team_debriefed', label: 'Team Debriefed (if applicable)' },
-    { key: 'client_preferences_noted', label: 'Client Preferences Updated' },
-    { key: 'comparable_analysis_sent', label: 'Comparable Analysis Sent' },
-    { key: 'social_media_posted', label: 'Social Media Update Posted' },
-    { key: 'referral_requested', label: 'Referral Request Made (if appropriate)' }
-  ];
-
   const getStatusColor = (status) => {
-    const colors = {
-      'Scheduled': 'text-blue-600 bg-blue-50',
-      'Confirmed': 'text-green-600 bg-green-50',
-      'In Progress': 'text-yellow-600 bg-yellow-50',
-      'Completed': 'text-gray-600 bg-gray-50',
-      'Cancelled': 'text-red-600 bg-red-50',
-      'Rescheduled': 'text-purple-600 bg-purple-50'
+    const statusColors = {
+      'Scheduled': 'primary',
+      'Confirmed': 'success',
+      'In Progress': 'warning',
+      'Completed': 'default',
+      'Cancelled': 'error',
+      'No Show': 'error'
     };
-    return colors[status] || 'text-gray-600 bg-gray-50';
+    return statusColors[status] || 'default';
   };
 
   const getAppointmentTypeIcon = (type) => {
     const icons = {
-      'Property Showing': <Home className="h-5 w-5" />,
-      'Listing Presentation': <Briefcase className="h-5 w-5" />,
-      'Buyer Consultation': <Users className="h-5 w-5" />,
-      'Open House': <Home className="h-5 w-5" />,
-      'Closing': <FileText className="h-5 w-5" />,
-      'Inspection': <CheckCircle2 className="h-5 w-5" />,
-      'Virtual Meeting': <Video className="h-5 w-5" />,
-      'Coffee Meeting': <Coffee className="h-5 w-5" />
+      'Property Showing': <Home />,
+      'Listing Presentation': <Business />,
+      'Buyer Consultation': <People />,
+      'Open House': <Home />,
+      'Closing': <Assignment />,
+      'Inspection': <CheckCircle />,
+      'Virtual Meeting': <VideoCall />,
     };
-    return icons[type] || <Calendar className="h-5 w-5" />;
-  };
-
-  const calculateDuration = () => {
-    if (!appointment?.start_time || !appointment?.end_time) return 0;
-    const start = new Date(`1970-01-01T${appointment.start_time}`);
-    const end = new Date(`1970-01-01T${appointment.end_time}`);
-    return Math.round((end - start) / (1000 * 60)); // Duration in minutes
+    return icons[type] || <CalendarToday />;
   };
 
   const getTimeUntilAppointment = () => {
-    if (!appointment?.date || !appointment?.start_time) return null;
-    const appointmentDateTime = new Date(`${appointment.date}T${appointment.start_time}`);
+    if (!appointment) return null;
+    const appointmentDate = new Date(`${appointment.date}T${appointment.start_time}`);
     const now = new Date();
-    const diff = appointmentDateTime - now;
+    const isPastAppointment = isPast(appointmentDate);
+    const minutesUntil = differenceInMinutes(appointmentDate, now);
     
-    if (diff < 0) return { isPast: true };
-    
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-    
-    return { days, hours, minutes, isPast: false };
+    return {
+      isPast: isPastAppointment,
+      minutesUntil,
+      timeString: formatDistanceToNow(appointmentDate, { addSuffix: true })
+    };
   };
 
-  const getAttendanceStats = () => {
-    const confirmed = attendees.filter(a => a.confirmed).length;
-    const pending = attendees.filter(a => !a.confirmed).length;
-    
-    return [
-      { name: 'Confirmed', value: confirmed },
-      { name: 'Pending', value: pending }
-    ];
+  const handleMenuClick = (event) => {
+    setAnchorEl(event.currentTarget);
   };
 
-  const COLORS = ['#10B981', '#F59E0B'];
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleAddNote = () => {
+    if (!newNote.trim()) return;
+    
+    // Add note logic here
+    console.log('Adding note:', newNote);
+    setNewNote('');
+  };
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
+      <Container>
+        <LinearProgress />
+      </Container>
     );
   }
 
   if (!appointment) {
     return (
-      <div className="max-w-7xl mx-auto p-6">
-        <div className="text-center py-12">
-          <h2 className="text-2xl font-semibold text-gray-900">Appointment not found</h2>
-        </div>
-      </div>
+      <Container>
+        <Alert severity="error">Appointment not found</Alert>
+      </Container>
     );
   }
 
-  const duration = calculateDuration();
   const timeUntil = getTimeUntilAppointment();
+  const duration = appointment.start_time && appointment.end_time ? 
+    differenceInMinutes(
+      new Date(`2000-01-01T${appointment.end_time}`),
+      new Date(`2000-01-01T${appointment.start_time}`)
+    ) : 0;
 
   return (
-  <div className="max-w-7xl mx-auto p-6 space-y-6">
-    {/* Header */}
-    <div className="bg-white rounded-lg shadow-sm p-6">
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <div className="flex items-center gap-3 mb-2">
-            {getAppointmentTypeIcon(appointment.appointment_type)}
-            <h1 className="text-3xl font-bold text-gray-900">{appointment.title}</h1>
-          </div>
-          <div className="flex items-center gap-4 text-gray-600">
-            <div className="flex items-center gap-1">
-              <Calendar className="h-4 w-4" />
-              <span>{formatDate(appointment.date)}</span>
-            </div>
-            <span>•</span>
-            <div className="flex items-center gap-1">
-              <Clock className="h-4 w-4" />
-              <span>{formatTime(appointment.start_time)} - {formatTime(appointment.end_time)}</span>
-            </div>
-            <span>•</span>
-            <span>{duration} minutes</span>
-          </div>
-        </div>
-        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(appointment.status)}`}>
-          {appointment.status}
-        </span>
-      </div>
+    <Container maxWidth="xl">
+      {/* Breadcrumbs */}
+      <Breadcrumbs sx={{ mb: 2 }}>
+        <Link
+          component="button"
+          variant="body1"
+          onClick={() => navigate('/appointments')}
+          sx={{ textDecoration: 'none' }}
+        >
+          Appointments
+        </Link>
+        <Typography color="textPrimary">{appointment.title}</Typography>
+      </Breadcrumbs>
 
-      {/* Time Until Appointment */}
-      {timeUntil && !timeUntil.isPast && appointment.status === 'Scheduled' && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4">
-          <div className="flex items-center gap-3">
-            <Clock className="h-5 w-5 text-blue-600" />
-            <div>
-              <p className="text-sm font-medium text-blue-800">
-                Appointment in {timeUntil.days > 0 && `${timeUntil.days} days, `}
-                {timeUntil.hours} hours and {timeUntil.minutes} minutes
-              </p>
-            </div>
-          </div>
-        </div>
+      {/* Header */}
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <Box sx={{ display: 'flex', gap: 3 }}>
+            <Avatar sx={{ width: 80, height: 80, bgcolor: 'primary.main' }}>
+              {getAppointmentTypeIcon(appointment.appointment_type)}
+            </Avatar>
+            <Box>
+              <Typography variant="h4" gutterBottom>{appointment.title}</Typography>
+              <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                <Chip
+                  label={appointment.status}
+                  color={getStatusColor(appointment.status)}
+                  size="small"
+                />
+                <Chip
+                  label={appointment.appointment_type}
+                  variant="outlined"
+                  size="small"
+                  icon={getAppointmentTypeIcon(appointment.appointment_type)}
+                />
+                {appointment.virtual_meeting_link && (
+                  <Chip
+                    label="Virtual Meeting"
+                    color="secondary"
+                    size="small"
+                    icon={<VideoCall />}
+                  />
+                )}
+              </Box>
+              <Box sx={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CalendarToday fontSize="small" color="action" />
+                  <Typography variant="body2">
+                    {format(new Date(appointment.date), 'EEEE, MMMM d, yyyy')}
+                  </Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <AccessTime fontSize="small" color="action" />
+                  <Typography variant="body2">
+                    {format(new Date(`2000-01-01T${appointment.start_time}`), 'h:mm a')} - 
+                    {format(new Date(`2000-01-01T${appointment.end_time}`), 'h:mm a')}
+                    ({duration} minutes)
+                  </Typography>
+                </Box>
+                {appointment.location && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <LocationOn fontSize="small" color="action" />
+                    <Typography variant="body2">{appointment.location.address}</Typography>
+                  </Box>
+                )}
+              </Box>
+            </Box>
+          </Box>
+          <Box>
+            <IconButton onClick={handleMenuClick}>
+              <MoreVert />
+            </IconButton>
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleMenuClose}
+            >
+              <MenuItem onClick={handleMenuClose}>Edit Appointment</MenuItem>
+              <MenuItem onClick={handleMenuClose}>Reschedule</MenuItem>
+              <MenuItem onClick={handleMenuClose}>Send Reminder</MenuItem>
+              <MenuItem onClick={handleMenuClose}>Convert to Virtual</MenuItem>
+              <Divider />
+              <MenuItem onClick={handleMenuClose} sx={{ color: 'error.main' }}>
+                Cancel Appointment
+              </MenuItem>
+            </Menu>
+          </Box>
+        </Box>
+
+        {/* Time Until Alert */}
+        {timeUntil && !timeUntil.isPast && appointment.status === 'Scheduled' && (
+          <Alert severity="info" sx={{ mt: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <Schedule />
+              <Typography variant="body2">
+                This appointment is {timeUntil.timeString}
+              </Typography>
+            </Box>
+          </Alert>
+        )}
+      </Paper>
+
+      {/* Main Content */}
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs value={activeTab} onChange={handleTabChange}>
+          <Tab label="Details" />
+          <Tab label="Attendees" />
+          <Tab label="Checklist" />
+          <Tab label="Notes & Activity" />
+          <Tab label="Related" />
+        </Tabs>
+      </Box>
+
+      {/* Tab Content */}
+      {activeTab === 0 && (
+        <Grid container spacing={3}>
+          {/* Location Card */}
+          <Grid item xs={12} md={6}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>Location Details</Typography>
+                <List>
+                  {appointment.virtual_meeting_link ? (
+                    <>
+                      <ListItem>
+                        <ListItemIcon>
+                          <VideoCall color="primary" />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary="Virtual Meeting"
+                          secondary={
+                            <Link href={appointment.virtual_meeting_link} target="_blank">
+                              Join Meeting
+                            </Link>
+                          }
+                        />
+                      </ListItem>
+                    </>
+                  ) : (
+                    <>
+                      <ListItem>
+                        <ListItemIcon>
+                          <LocationOn color="primary" />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary="Meeting Location"
+                          secondary={appointment.location?.address}
+                        />
+                      </ListItem>
+                      {appointment.location?.parking_info && (
+                        <ListItem>
+                          <ListItemIcon>
+                            <DirectionsCar color="action" />
+                          </ListItemIcon>
+                          <ListItemText
+                            primary="Parking"
+                            secondary={appointment.location.parking_info}
+                          />
+                        </ListItem>
+                      )}
+                    </>
+                  )}
+                  {appointment.property_address && (
+                    <ListItem>
+                      <ListItemIcon>
+                        <Home color="primary" />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary="Property Address"
+                        secondary={appointment.property_address}
+                      />
+                    </ListItem>
+                  )}
+                </List>
+                {appointment.location?.coordinates && (
+                  <Box sx={{ mt: 2 }}>
+                    <Button
+                      variant="outlined"
+                      startIcon={<Map />}
+                      fullWidth
+                      onClick={() => {
+                        const { lat, lng } = appointment.location.coordinates;
+                        window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`);
+                      }}
+                    >
+                      Get Directions
+                    </Button>
+                  </Box>
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Property Details Card */}
+          {relatedProperty && (
+            <Grid item xs={12} md={6}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>Property Details</Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <Typography variant="body2" color="textSecondary">Price</Typography>
+                      <Typography variant="body1">{relatedProperty.price}</Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography variant="body2" color="textSecondary">Beds/Baths</Typography>
+                      <Typography variant="body1">
+                        {relatedProperty.bedrooms} / {relatedProperty.bathrooms}
+                      </Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography variant="body2" color="textSecondary">Square Feet</Typography>
+                      <Typography variant="body1">{relatedProperty.sqft} sqft</Typography>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography variant="body2" color="textSecondary">Year Built</Typography>
+                      <Typography variant="body1">{relatedProperty.yearBuilt}</Typography>
+                    </Grid>
+                  </Grid>
+                  <Box sx={{ mt: 2 }}>
+                    <Button
+                      variant="outlined"
+                      fullWidth
+                      onClick={() => navigate(`/listings/${relatedProperty.id}`)}
+                    >
+                      View Full Listing
+                    </Button>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          )}
+
+          {/* Preparation Notes */}
+          {appointment.notes && (
+            <Grid item xs={12}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>Preparation Notes</Typography>
+                  <Typography variant="body2" paragraph>
+                    {appointment.notes.preparation}
+                  </Typography>
+                  
+                  {appointment.notes.agenda && appointment.notes.agenda.length > 0 && (
+                    <>
+                      <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>
+                        Agenda
+                      </Typography>
+                      <List dense>
+                        {appointment.notes.agenda.map((item, index) => (
+                          <ListItem key={index}>
+                            <ListItemIcon>
+                              <CheckCircle fontSize="small" />
+                            </ListItemIcon>
+                            <ListItemText primary={item} />
+                          </ListItem>
+                        ))}
+                      </List>
+                    </>
+                  )}
+                  
+                  {appointment.notes.materials_needed && appointment.notes.materials_needed.length > 0 && (
+                    <>
+                      <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>
+                        Materials Needed
+                      </Typography>
+                      <List dense>
+                        {appointment.notes.materials_needed.map((item, index) => (
+                          <ListItem key={index}>
+                            <ListItemIcon>
+                              <Description fontSize="small" />
+                            </ListItemIcon>
+                            <ListItemText primary={item} />
+                          </ListItem>
+                        ))}
+                      </List>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            </Grid>
+          )}
+        </Grid>
       )}
 
-      {/* Key Information Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
-        <div className="bg-gray-50 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Type</p>
-              <p className="text-lg font-semibold text-gray-900">{appointment.appointment_type}</p>
-            </div>
-            {getAppointmentTypeIcon(appointment.appointment_type)}
-          </div>
-        </div>
+      {activeTab === 1 && (
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <Card>
+              <CardContent>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="h6">Attendees ({attendees.length})</Typography>
+                  <Button variant="outlined" size="small" startIcon={<Add />}>
+                    Add Attendee
+                  </Button>
+                </Box>
+                <List>
+                  {attendees.map((attendee, index) => (
+                    <React.Fragment key={attendee.id}>
+                      {index > 0 && <Divider />}
+                      <ListItem>
+                        <ListItemIcon>
+                          <Avatar sx={{ bgcolor: attendee.type === 'client' ? 'primary.main' : 'secondary.main' }}>
+                            {attendee.name.charAt(0)}
+                          </Avatar>
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              {attendee.name}
+                              <Chip
+                                label={attendee.type}
+                                size="small"
+                                variant="outlined"
+                              />
+                              {attendee.confirmed && (
+                                <Chip
+                                  label="Confirmed"
+                                  size="small"
+                                  color="success"
+                                  icon={<CheckCircle />}
+                                />
+                              )}
+                            </Box>
+                          }
+                          secondary={
+                            <Box sx={{ mt: 1 }}>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Email fontSize="small" />
+                                <Typography variant="caption">{attendee.email}</Typography>
+                              </Box>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                <Phone fontSize="small" />
+                                <Typography variant="caption">{attendee.phone}</Typography>
+                              </Box>
+                            </Box>
+                          }
+                        />
+                        <Box>
+                          <IconButton size="small">
+                            <Email />
+                          </IconButton>
+                          <IconButton size="small">
+                            <Phone />
+                          </IconButton>
+                        </Box>
+                      </ListItem>
+                    </React.Fragment>
+                  ))}
+                </List>
+              </CardContent>
+            </Card>
+          </Grid>
 
-        <div className="bg-gray-50 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Attendees</p>
-              <p className="text-lg font-semibold text-gray-900">{attendees.length} people</p>
-            </div>
-            <Users className="h-6 w-6 text-blue-600" />
-          </div>
-        </div>
-
-        <div className="bg-gray-50 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Location Type</p>
-              <p className="text-lg font-semibold text-gray-900">
-                {appointment.virtual_meeting_link ? 'Virtual' : 'In-Person'}
-              </p>
-            </div>
-            {appointment.virtual_meeting_link ? 
-              <Video className="h-6 w-6 text-purple-600" /> : 
-              <MapPin className="h-6 w-6 text-green-600" />
-            }
-          </div>
-        </div>
-
-        <div className="bg-gray-50 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-600">Outcome</p>
-              <p className="text-lg font-semibold text-gray-900">{appointment.outcome || 'Pending'}</p>
-            </div>
-            <Target className="h-6 w-6 text-yellow-600" />
-          </div>
-        </div>
-      </div>
-    </div>
-
-    {/* Main Content Grid */}
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Left Column - Details */}
-      <div className="lg:col-span-1 space-y-6">
-        {/* Location Details */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-xl font-semibold mb-4">Location Details</h2>
-          
-          {appointment.virtual_meeting_link ? (
-            <div>
-              <div className="flex items-center gap-2 mb-3">
-                <Video className="h-5 w-5 text-purple-600" />
-                <span className="font-medium">Virtual Meeting</span>
-              </div>
-              <a 
-                href={appointment.virtual_meeting_link} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:text-blue-800 text-sm break-all"
-              >
-                {appointment.virtual_meeting_link}
-              </a>
-            </div>
-          ) : (
-            <div>
-              {appointment.property_address && (
-                <div className="mb-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Home className="h-5 w-5 text-blue-600" />
-                    <span className="font-medium">Property Address</span>
-                  </div>
-                  <p className="text-sm text-gray-700">{appointment.property_address}</p>
-                  {relatedProperty && (
-                    <Link 
-                      to={`/listings/${relatedProperty.id}`}
-                      className="text-sm text-blue-600 hover:text-blue-800 mt-1 inline-block"
-                    >
-                      View Listing Details →
-                    </Link>
-                  )}
-                </div>
-              )}
-              
-              {appointment.location && (
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <MapPin className="h-5 w-5 text-green-600" />
-                    <span className="font-medium">Meeting Location</span>
-                  </div>
-                  <p className="text-sm text-gray-700">{appointment.location.address}</p>
-                  {appointment.location.parking_info && (
-                    <div className="mt-2">
-                      <p className="text-xs text-gray-600">Parking Info:</p>
-                      <p className="text-xs text-gray-700">{appointment.location.parking_info}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Map or Virtual Meeting Button */}
-          <div className="mt-4">
-            {appointment.virtual_meeting_link ? (
-              <a
-                href={appointment.virtual_meeting_link}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
-              >
-                <Video className="h-4 w-4" />
-                Join Virtual Meeting
-              </a>
-            ) : appointment.location?.coordinates ? (
-              <button className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
-                <Navigation className="h-4 w-4" />
-                Get Directions
-              </button>
-            ) : null}
-          </div>
-        </div>
-
-        {/* Attendees */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-xl font-semibold mb-4">Attendees ({attendees.length})</h2>
-          <div className="space-y-3">
-            {attendees.map(attendee => (
-              <Link
-                key={attendee.id}
-                to={`/clients/${attendee.id}`}
-                className="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Users className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{attendee.name}</p>
-                    <p className="text-xs text-gray-600">{attendee.email}</p>
-                  </div>
-                </div>
-                <span className={`text-xs px-2 py-1 rounded-full ${
-                  attendee.confirmed 
-                    ? 'bg-green-100 text-green-700' 
-                    : 'bg-yellow-100 text-yellow-700'
-                }`}>
-                  {attendee.confirmed ? 'Confirmed' : 'Pending'}
-                </span>
-              </Link>
-            ))}
-            
-            {attendees.length === 0 && (
-              <p className="text-sm text-gray-500">No attendees added</p>
-            )}
-          </div>
-
-          {/* Attendance Stats */}
-          {attendees.length > 0 && (
-            <div className="mt-4 pt-4 border-t">
-              <div className="h-32">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RePieChart>
-                    <Pie
-                      data={getAttendanceStats()}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={30}
-                      outerRadius={50}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {getAttendanceStats().map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </RePieChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Notes & Preparation */}
-        {appointment.notes && (
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4">Notes & Preparation</h2>
-            <div className="prose prose-sm text-gray-700">
-              <p>{appointment.notes.preparation || 'No preparation notes'}</p>
-              
-              {appointment.notes.agenda && (
-                <div className="mt-4">
-                  <h3 className="font-medium text-gray-900 mb-2">Agenda</h3>
-                  <ul className="list-disc list-inside space-y-1">
-                    {appointment.notes.agenda.map((item, index) => (
-                      <li key={index} className="text-sm">{item}</li>
+          {/* Reminders */}
+          {appointment.reminders && appointment.reminders.length > 0 && (
+            <Grid item xs={12}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>Reminders Set</Typography>
+                  <List>
+                    {appointment.reminders.map((reminder, index) => (
+                      <ListItem key={index}>
+                        <ListItemIcon>
+                          <Notifications color="primary" />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={`${reminder.time_before} before`}
+                          secondary={`${reminder.type} to ${reminder.recipients.join(', ')}`}
+                        />
+                      </ListItem>
                     ))}
-                  </ul>
-                </div>
-              )}
-              
-              {appointment.notes.materials_needed && (
-                <div className="mt-4">
-                  <h3 className="font-medium text-gray-900 mb-2">Materials Needed</h3>
-                  <ul className="list-disc list-inside space-y-1">
-                    {appointment.notes.materials_needed.map((item, index) => (
-                      <li key={index} className="text-sm">{item}</li>
+                  </List>
+                </CardContent>
+              </Card>
+            </Grid>
+          )}
+        </Grid>
+      )}
+
+      {activeTab === 2 && (
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={4}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>Pre-Appointment</Typography>
+                <FormGroup>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={checklistItems.preAppointment?.appointment_confirmed || false}
+                        onChange={() => handleChecklistToggle('preAppointment', 'appointment_confirmed')}
+                      />
+                    }
+                    label="Appointment Confirmed"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={checklistItems.preAppointment?.location_sent || false}
+                        onChange={() => handleChecklistToggle('preAppointment', 'location_sent')}
+                      />
+                    }
+                    label="Location/Directions Sent"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={checklistItems.preAppointment?.documents_prepared || false}
+                        onChange={() => handleChecklistToggle('preAppointment', 'documents_prepared')}
+                      />
+                    }
+                    label="Documents Prepared"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={checklistItems.preAppointment?.reminder_sent || false}
+                        onChange={() => handleChecklistToggle('preAppointment', 'reminder_sent')}
+                      />
+                    }
+                    label="Reminder Sent"
+                  />
+                </FormGroup>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>During Appointment</Typography>
+                <FormGroup>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={checklistItems.duringAppointment?.arrived_on_time || false}
+                        onChange={() => handleChecklistToggle('duringAppointment', 'arrived_on_time')}
+                      />
+                    }
+                    label="Arrived On Time"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={checklistItems.duringAppointment?.presentation_complete || false}
+                        onChange={() => handleChecklistToggle('duringAppointment', 'presentation_complete')}
+                      />
+                    }
+                    label="Presentation Complete"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={checklistItems.duringAppointment?.questions_answered || false}
+                        onChange={() => handleChecklistToggle('duringAppointment', 'questions_answered')}
+                      />
+                    }
+                    label="Questions Answered"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={checklistItems.duringAppointment?.next_steps_discussed || false}
+                        onChange={() => handleChecklistToggle('duringAppointment', 'next_steps_discussed')}
+                      />
+                    }
+                    label="Next Steps Discussed"
+                  />
+                </FormGroup>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          <Grid item xs={12} md={4}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>Post-Appointment</Typography>
+                <FormGroup>
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={checklistItems.postAppointment?.thank_you_sent || false}
+                        onChange={() => handleChecklistToggle('postAppointment', 'thank_you_sent')}
+                      />
+                    }
+                    label="Thank You Sent"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={checklistItems.postAppointment?.notes_updated || false}
+                        onChange={() => handleChecklistToggle('postAppointment', 'notes_updated')}
+                      />
+                    }
+                    label="Notes Updated"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={checklistItems.postAppointment?.followup_scheduled || false}
+                        onChange={() => handleChecklistToggle('postAppointment', 'followup_scheduled')}
+                      />
+                    }
+                    label="Follow-up Scheduled"
+                  />
+                  <FormControlLabel
+                    control={
+                      <Checkbox
+                        checked={checklistItems.postAppointment?.crm_updated || false}
+                        onChange={() => handleChecklistToggle('postAppointment', 'crm_updated')}
+                      />
+                    }
+                    label="CRM Updated"
+                  />
+                </FormGroup>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      )}
+
+      {activeTab === 3 && (
+        <Grid container spacing={3}>
+          {/* Activity Timeline */}
+          <Grid item xs={12} md={8}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>Activity Timeline</Typography>
+                {appointment.activities && appointment.activities.length > 0 ? (
+                  <Timeline>
+                    {appointment.activities.map((activity, index) => (
+                      <TimelineItem key={activity.id}>
+                        <TimelineOppositeContent color="textSecondary">
+                          {format(new Date(activity.timestamp), 'MMM d, h:mm a')}
+                        </TimelineOppositeContent>
+                        <TimelineSeparator>
+                          <TimelineDot color={
+                            activity.type === 'created' ? 'primary' : 
+                            activity.type === 'updated' ? 'secondary' : 
+                            'grey'
+                          } />
+                          {index < appointment.activities.length - 1 && <TimelineConnector />}
+                        </TimelineSeparator>
+                        <TimelineContent>
+                          <Typography variant="body2" component="span">
+                            {activity.description}
+                          </Typography>
+                          <Typography variant="caption" display="block" color="textSecondary">
+                            by {activity.user}
+                          </Typography>
+                        </TimelineContent>
+                      </TimelineItem>
                     ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Middle Column - Checklists */}
-      <div className="lg:col-span-1 space-y-6">
-        {/* Pre-Appointment Checklist */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-xl font-semibold mb-4">Pre-Appointment Checklist</h2>
-          <div className="space-y-2">
-            {preAppointmentChecklist.map(item => (
-              <label key={item.key} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={checklistItems.preAppointment?.[item.key] || false}
-                  onChange={() => handleChecklistToggle('preAppointment', item.key)}
-                  className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
-                />
-                <span className={`text-sm ${checklistItems.preAppointment?.[item.key] ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
-                  {item.label}
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* During Appointment Checklist */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-xl font-semibold mb-4">During Appointment</h2>
-          <div className="space-y-2">
-            {duringAppointmentChecklist.map(item => (
-              <label key={item.key} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={checklistItems.duringAppointment?.[item.key] || false}
-                  onChange={() => handleChecklistToggle('duringAppointment', item.key)}
-                  className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
-                />
-                <span className={`text-sm ${checklistItems.duringAppointment?.[item.key] ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
-                  {item.label}
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        {/* Post-Appointment Checklist */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-xl font-semibold mb-4">Post-Appointment Tasks</h2>
-          <div className="space-y-2">
-            {postAppointmentChecklist.map(item => (
-              <label key={item.key} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={checklistItems.postAppointment?.[item.key] || false}
-                  onChange={() => handleChecklistToggle('postAppointment', item.key)}
-                  className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
-                />
-                <span className={`text-sm ${checklistItems.postAppointment?.[item.key] ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
-                  {item.label}
-                </span>
-              </label>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Right Column - Outcomes & Follow-up */}
-      <div className="lg:col-span-1 space-y-6">
-        {/* Progress Overview */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-xl font-semibold mb-4">Checklist Progress</h2>
-          <div className="space-y-4">
-            {Object.entries({
-              'Pre-Appointment': preAppointmentChecklist,
-              'During Appointment': duringAppointmentChecklist,
-              'Post-Appointment': postAppointmentChecklist
-            }).map(([category, items]) => {
-              const categoryKey = category.toLowerCase().replace('-', '').replace(' ', '');
-              const completed = items.filter(item => 
-                checklistItems[categoryKey]?.[item.key]
-              ).length;
-              const percentage = (completed / items.length) * 100;
-
-              return (
-                <div key={category}>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-700">{category}</span>
-                    <span className="text-gray-900 font-medium">{completed}/{items.length}</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${percentage}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Appointment Outcome */}
-        {appointment.status === 'Completed' && (
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4">Appointment Outcome</h2>
-            
-            {appointment.outcome ? (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5 text-green-600" />
-                  <span className="font-medium text-green-800">{appointment.outcome}</span>
-                </div>
-                
-                {appointment.follow_up_actions && appointment.follow_up_actions.length > 0 && (
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-700 mb-2">Follow-up Actions</h3>
-                    <ul className="space-y-2">
-                      {appointment.follow_up_actions.map((action, index) => (
-                        <li key={index} className="flex items-start gap-2">
-                          <div className="w-2 h-2 bg-blue-600 rounded-full mt-1.5 flex-shrink-0" />
-                          <span className="text-sm text-gray-700">{action}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                  </Timeline>
+                ) : (
+                  <Typography variant="body2" color="textSecondary">
+                    No activities recorded yet
+                  </Typography>
                 )}
-                
-                {appointment.client_feedback && (
-                  <div>
-                    <h3 className="text-sm font-medium text-gray-700 mb-2">Client Feedback</h3>
-                    <div className="bg-gray-50 rounded-lg p-3">
-                      <p className="text-sm text-gray-700 italic">"{appointment.client_feedback}"</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <p className="text-sm text-gray-500">No outcome recorded yet</p>
-            )}
-          </div>
-        )}
+              </CardContent>
+            </Card>
+          </Grid>
 
-        {/* Reminders */}
-        {appointment.reminders && appointment.reminders.length > 0 && (
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4">Reminders Set</h2>
-            <div className="space-y-3">
-              {appointment.reminders.map((reminder, index) => (
-                <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                  <Clock className="h-5 w-5 text-blue-600" />
-                  <div>
-                    <p className="text-sm font-medium">{reminder.time_before} before</p>
-                    <p className="text-xs text-gray-600">
-                      {reminder.type} • {reminder.recipients.join(', ')}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Related Appointments */}
-        {analytics?.related_appointments && analytics.related_appointments.length > 0 && (
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4">Related Appointments</h2>
-            <div className="space-y-3">
-              {analytics.related_appointments.map(apt => (
-                <Link
-                  key={apt.id}
-                  to={`/appointments/${apt.id}`}
-                  className="block p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+          {/* Add Note */}
+          <Grid item xs={12} md={4}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>Add Note</Typography>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={4}
+                  variant="outlined"
+                  placeholder="Add a note..."
+                  value={newNote}
+                  onChange={(e) => setNewNote(e.target.value)}
+                  sx={{ mb: 2 }}
+                />
+                <Button
+                  variant="contained"
+                  fullWidth
+                  startIcon={<Send />}
+                  onClick={handleAddNote}
+                  disabled={!newNote.trim()}
                 >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-sm font-medium">{apt.title}</p>
-                      <p className="text-xs text-gray-600">{formatDate(apt.date)}</p>
-                    </div>
-                    <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(apt.status)}`}>
-                      {apt.status}
-                    </span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
+                  Add Note
+                </Button>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      )}
 
-        {/* Quick Actions */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
-          <div className="space-y-2">
-            <button className="w-full text-left px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-gray-600" />
-              <span className="text-sm">Send Follow-up Message</span>
-            </button>
-            <button className="w-full text-left px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-gray-600" />
-              <span className="text-sm">Schedule Next Appointment</span>
-            </button>
-            <button className="w-full text-left px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-2">
-              <Edit3 className="h-4 w-4 text-gray-600" />
-              <span className="text-sm">Add Notes</span>
-            </button>
-            <button className="w-full text-left px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-2">
-              <Star className="h-4 w-4 text-gray-600" />
-              <span className="text-sm">Request Review</span>
-            </button>
-          </div>
-        </div>
+      {activeTab === 4 && (
+        <Grid container spacing={3}>
+          {/* Related Appointments */}
+          {analytics?.related_appointments && analytics.related_appointments.length > 0 && (
+            <Grid item xs={12}>
+              <Card>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>Related Appointments</Typography>
+                  <List>
+                    {analytics.related_appointments.map((apt) => (
+                      <ListItem
+                        key={apt.id}
+                        button
+                        onClick={() => navigate(`/appointments/${apt.id}`)}
+                      >
+                        <ListItemIcon>
+                          <CalendarToday />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={apt.title}
+                          secondary={format(new Date(apt.date), 'MMMM d, yyyy')}
+                        />
+                        <Chip
+                          label={apt.status}
+                          size="small"
+                          color={getStatusColor(apt.status)}
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                </CardContent>
+              </Card>
+            </Grid>
+          )}
+        </Grid>
+      )}
 
-        {/* Tips for Success */}
-        {appointment.status === 'Scheduled' && timeUntil && !timeUntil.isPast && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <Target className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <h3 className="text-sm font-medium text-blue-800">Tips for Success</h3>
-                <ul className="text-sm text-blue-700 mt-2 space-y-1">
-                  {appointment.appointment_type === 'Property Showing' && (
-                    <>
-                      <li>• Research comparable properties in the area</li>
-                      <li>• Prepare answers about HOA fees and utilities</li>
-                      <li>• Highlight unique features of the property</li>
-                    </>
-                  )}
-                  {appointment.appointment_type === 'Listing Presentation' && (
-                    <>
-                      <li>• Bring updated CMA and marketing plan</li>
-                      <li>• Prepare success stories and testimonials</li>
-                      <li>• Discuss pricing strategy thoroughly</li>
-                    </>
-                  )}
-                  {appointment.appointment_type === 'Buyer Consultation' && (
-                    <>
-                      <li>• Review client's wishlist and budget</li>
-                      <li>• Prepare area market overview</li>
-                      <li>• Discuss financing options</li>
-                    </>
-                  )}
-                </ul>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  </div>
-);
+      {/* Quick Actions */}
+      <Box sx={{ position: 'fixed', bottom: 20, right: 20 }}>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<Send />}
+          onClick={() => console.log('Send reminder')}
+        >
+          Send Reminder
+        </Button>
+      </Box>
+    </Container>
+  );
 }
