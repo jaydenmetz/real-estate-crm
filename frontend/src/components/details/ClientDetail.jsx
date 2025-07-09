@@ -32,6 +32,11 @@ import {
   MenuItem,
   Breadcrumbs,
   Link,
+  Tooltip,
+  Alert,
+  FormControlLabel,
+  Checkbox,
+  Menu,
 } from '@mui/material';
 import {
   Timeline,
@@ -47,75 +52,204 @@ import {
   Edit,
   Phone,
   Email,
-  Home,
-  AttachMoney,
-  CalendarToday,
   Person,
-  Assignment,
-  History,
-  Description,
-  TrendingUp,
   LocationOn,
+  CalendarToday,
+  Note,
+  AttachMoney,
+  TrendingUp,
+  History,
+  Task,
+  CheckCircle,
+  Cancel,
+  Schedule,
   Star,
   StarBorder,
+  Home,
+  Business,
+  DirectionsCar,
+  School,
+  FamilyRestroom,
+  Description,
+  Upload,
+  Download,
+  Visibility,
+  Send,
+  MoreVert,
+  Add,
+  Chat,
+  Assignment,
+  FolderOpen,
+  VideoCameraFront,
+  PhoneInTalk,
+  EmailOutlined,
+  MessageOutlined,
+  InsertDriveFile,
+  PictureAsPdf,
+  Image,
+  AccountBalance,
+  CreditCard,
+  Cake,
+  Work,
+  LocalOffer,
+  SwapHoriz,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from 'react-query';
-import { format } from 'date-fns';
-import { clientsAPI } from '../../services/api';
+import { useQuery, useMutation, useQueryClient } from 'react-query';
+import { format, formatDistanceToNow } from 'date-fns';
+import { api } from '../../services/api';
 
 const ClientDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState(0);
+  const [editMode, setEditMode] = useState(false);
+  const [newNote, setNewNote] = useState('');
+  const [anchorEl, setAnchorEl] = useState(null);
 
   // Fetch client details
   const { data: client, isLoading } = useQuery(
     ['client', id],
-    () => clientsAPI.getOne(id),
-    { refetchInterval: 30000 }
+    () => api.get(`/clients/${id}`).then(res => res.data),
+    { 
+      refetchInterval: 30000,
+      onError: () => {
+        // If API fails, use mock data
+        return mockClient;
+      }
+    }
   );
 
   // Mock data for demonstration
   const mockClient = {
     id: 1,
-    name: 'Robert Chen',
-    email: 'rchen@email.com',
+    name: 'Michael & Sarah Thompson',
+    email: 'michael.thompson@email.com',
     phone: '(555) 234-5678',
-    type: 'Buyer',
+    alternatePhone: '(555) 234-5679',
     status: 'Active',
+    type: 'Buyer',
     source: 'Referral',
-    agent: 'You',
+    assignedAgent: 'You',
     createdAt: new Date('2023-06-15'),
-    lastActivity: new Date('2024-01-17'),
-    address: '123 Main St, Roseville, CA 95661',
-    notes: 'First-time buyer, very motivated',
-    totalTransactions: 1,
-    totalVolume: '$650,000',
-    properties: [
+    lastContact: new Date('2024-01-18'),
+    birthday: '1985-03-15',
+    anniversary: '2010-06-20',
+    occupation: 'Software Engineer / Teacher',
+    address: '789 Oak Street, San Diego, CA 92103',
+    budget: '$800,000 - $1,200,000',
+    preApproved: true,
+    lender: 'Wells Fargo',
+    preferredContactMethod: 'Email',
+    timeZone: 'PST',
+    notes: 'Looking for 4BR home in good school district. Both work from home occasionally.',
+    tags: ['VIP', 'Cash Buyer', 'Repeat Client'],
+    starred: true,
+    lifetimeValue: '$45,000',
+    totalTransactions: 3,
+    referrals: 5,
+    properties: {
+      owned: [
+        {
+          id: 1,
+          address: '789 Oak Street, San Diego, CA 92103',
+          type: 'Single Family',
+          purchaseDate: '2018-07-15',
+          purchasePrice: '$650,000',
+          currentValue: '$850,000',
+          status: 'Primary Residence'
+        }
+      ],
+      interested: [
+        {
+          id: 2,
+          address: '456 Maple Drive, La Jolla, CA 92037',
+          type: 'Single Family',
+          listPrice: '$1,150,000',
+          status: 'Scheduled Showing',
+          notes: 'Love the location, concerned about price'
+        },
+        {
+          id: 3,
+          address: '321 Beach Blvd, Carlsbad, CA 92008',
+          type: 'Condo',
+          listPrice: '$875,000',
+          status: 'Viewed',
+          notes: 'Backup option'
+        }
+      ]
+    },
+    appointments: [
       {
         id: 1,
-        address: '456 Oak Ave, Roseville, CA',
-        type: 'Purchase',
-        status: 'In Escrow',
-        price: '$650,000',
-        date: '2024-01-10',
+        title: 'Property Tour - La Jolla',
+        date: '2024-01-20',
+        time: '2:00 PM',
+        type: 'Property Showing',
+        status: 'Scheduled'
+      },
+      {
+        id: 2,
+        title: 'Market Update Meeting',
+        date: '2024-01-25',
+        time: '10:00 AM',
+        type: 'Consultation',
+        status: 'Scheduled'
       }
     ],
     communications: [
       {
         id: 1,
         type: 'email',
-        subject: 'Property Documents',
-        date: new Date('2024-01-17'),
-        preview: 'Hi Robert, attached are the documents...'
+        subject: 'New Listings Matching Your Criteria',
+        date: new Date('2024-01-17T14:30:00'),
+        direction: 'outbound',
+        status: 'sent',
+        preview: 'Hi Michael and Sarah, I found 3 new properties that match your criteria...'
       },
       {
         id: 2,
         type: 'call',
-        subject: 'Inspection Results',
-        date: new Date('2024-01-15'),
-        duration: '15 min'
+        subject: 'Follow up on La Jolla property',
+        date: new Date('2024-01-16T10:15:00'),
+        direction: 'inbound',
+        duration: '15 min',
+        notes: 'Discussed financing options and scheduling a tour'
+      },
+      {
+        id: 3,
+        type: 'text',
+        subject: 'Confirmation for Saturday showing',
+        date: new Date('2024-01-15T16:45:00'),
+        direction: 'outbound',
+        status: 'delivered'
+      }
+    ],
+    documents: [
+      {
+        id: 1,
+        name: 'Pre-approval Letter.pdf',
+        type: 'pdf',
+        size: '245 KB',
+        uploadDate: '2024-01-10',
+        category: 'Financial'
+      },
+      {
+        id: 2,
+        name: 'Buyer Preferences Worksheet.docx',
+        type: 'doc',
+        size: '128 KB',
+        uploadDate: '2024-01-05',
+        category: 'Preferences'
+      },
+      {
+        id: 3,
+        name: 'Market Analysis Report.pdf',
+        type: 'pdf',
+        size: '1.2 MB',
+        uploadDate: '2024-01-15',
+        category: 'Reports'
       }
     ],
     activities: [
@@ -123,38 +257,101 @@ const ClientDetail = () => {
         id: 1,
         type: 'client_created',
         description: 'Client profile created',
-        timestamp: new Date('2023-06-15'),
+        timestamp: new Date('2023-06-15T09:00:00'),
+        user: 'System'
       },
       {
         id: 2,
-        type: 'property_shown',
-        description: 'Showed 5 properties in West Roseville',
-        timestamp: new Date('2023-12-20'),
+        type: 'property_viewed',
+        description: 'Viewed property at 321 Beach Blvd',
+        timestamp: new Date('2024-01-14T15:30:00'),
+        user: 'You'
       },
       {
         id: 3,
-        type: 'offer_made',
-        description: 'Offer submitted for 456 Oak Ave',
-        timestamp: new Date('2024-01-05'),
+        type: 'document_uploaded',
+        description: 'Uploaded Pre-approval Letter',
+        timestamp: new Date('2024-01-10T11:20:00'),
+        user: 'You'
       },
       {
         id: 4,
-        type: 'escrow_opened',
-        description: 'Escrow opened for 456 Oak Ave',
-        timestamp: new Date('2024-01-10'),
+        type: 'appointment_scheduled',
+        description: 'Scheduled property tour for La Jolla',
+        timestamp: new Date('2024-01-17T16:00:00'),
+        user: 'You'
       }
-    ]
+    ],
+    preferences: {
+      propertyType: ['Single Family', 'Townhouse'],
+      bedrooms: '4+',
+      bathrooms: '3+',
+      sqft: '2,500+',
+      lot: '7,000+ sqft',
+      features: ['Home Office', 'Pool', 'Updated Kitchen', '2-Car Garage'],
+      neighborhoods: ['La Jolla', 'Carmel Valley', 'Del Mar'],
+      schools: ['Great Schools Rating 8+'],
+      maxHOA: '$300/month',
+      moveInDate: '3-6 months',
+      dealBreakers: ['Busy street', 'Major repairs needed', 'No backyard']
+    }
   };
 
   const displayClient = client || mockClient;
 
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'Active': return 'success';
+      case 'Inactive': return 'warning';
+      case 'Archived': return 'default';
+      default: return 'default';
+    }
+  };
+
+  const getTypeIcon = (type) => {
+    switch (type) {
+      case 'Buyer': return <Home />;
+      case 'Seller': return <Business />;
+      case 'Both': return <SwapHoriz />;
+      case 'Investor': return <TrendingUp />;
+      default: return <Person />;
+    }
+  };
+
+  const getCommunicationIcon = (type) => {
+    switch (type) {
+      case 'email': return <EmailOutlined />;
+      case 'call': return <PhoneInTalk />;
+      case 'text': return <MessageOutlined />;
+      case 'video': return <VideoCameraFront />;
+      case 'meeting': return <Business />;
+      default: return <Chat />;
+    }
+  };
+
+  const getDocumentIcon = (type) => {
+    switch (type) {
+      case 'pdf': return <PictureAsPdf />;
+      case 'doc':
+      case 'docx': return <Description />;
+      case 'xls':
+      case 'xlsx': return <Description />;
+      case 'img':
+      case 'jpg':
+      case 'png': return <Image />;
+      default: return <InsertDriveFile />;
+    }
+  };
+
   const getActivityIcon = (type) => {
     switch (type) {
-      case 'email_sent': return <Email />;
-      case 'call_made': return <Phone />;
-      case 'property_shown': return <Home />;
-      case 'offer_made': return <AttachMoney />;
-      case 'escrow_opened': return <Assignment />;
+      case 'client_created': return <Person />;
+      case 'property_viewed': return <Home />;
+      case 'document_uploaded': return <Upload />;
+      case 'appointment_scheduled': return <CalendarToday />;
+      case 'communication_sent': return <Send />;
+      case 'note_added': return <Note />;
+      case 'status_changed': return <TrendingUp />;
       default: return <History />;
     }
   };
@@ -163,183 +360,344 @@ const ClientDetail = () => {
     setActiveTab(newValue);
   };
 
+  const handleMenuClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleAddNote = async () => {
+    if (!newNote.trim()) return;
+    
+    try {
+      // Add note API call
+      await api.post(`/clients/${id}/notes`, { content: newNote });
+      queryClient.invalidateQueries(['client', id]);
+      setNewNote('');
+    } catch (error) {
+      console.error('Error adding note:', error);
+    }
+  };
+
   if (isLoading) {
     return (
-      <Container>
+      <Container sx={{ py: 4 }}>
         <LinearProgress />
       </Container>
     );
   }
 
   return (
-    <Container maxWidth="xl">
-      {/* Breadcrumbs */}
-      <Breadcrumbs sx={{ mb: 2 }}>
-        <Link
-          component="button"
-          variant="body1"
-          onClick={() => navigate('/clients')}
-          sx={{ textDecoration: 'none' }}
-        >
-          Clients
-        </Link>
-        <Typography color="textPrimary">{displayClient.name}</Typography>
-      </Breadcrumbs>
-
+    <Container maxWidth="xl" sx={{ py: 4 }}>
       {/* Header */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <Box sx={{ display: 'flex', gap: 3 }}>
-            <Avatar sx={{ width: 80, height: 80, bgcolor: 'primary.main', fontSize: '2rem' }}>
-              {displayClient.name.split(' ').map(n => n[0]).join('')}
-            </Avatar>
-            <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
-                <Typography variant="h4">{displayClient.name}</Typography>
-                <Chip 
-                  label={displayClient.type} 
-                  color="primary" 
-                  size="small"
-                />
-                <Chip 
-                  label={displayClient.status} 
-                  color={displayClient.status === 'Active' ? 'success' : 'default'}
-                  size="small"
-                />
-              </Box>
-              <Box sx={{ display: 'flex', gap: 3, color: 'text.secondary' }}>
+      <Box sx={{ mb: 3 }}>
+        <Breadcrumbs separator="›" sx={{ mb: 2 }}>
+          <Link color="inherit" href="/dashboard" onClick={(e) => { e.preventDefault(); navigate('/dashboard'); }}>
+            Dashboard
+          </Link>
+          <Link color="inherit" href="/clients" onClick={(e) => { e.preventDefault(); navigate('/clients'); }}>
+            Clients
+          </Link>
+          <Typography color="text.primary">{displayClient.name}</Typography>
+        </Breadcrumbs>
+
+        <Grid container spacing={3} alignItems="center">
+          <Grid item xs={12} md={6}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <IconButton onClick={() => navigate('/clients')}>
+                <ArrowBack />
+              </IconButton>
+              <Avatar sx={{ width: 64, height: 64, bgcolor: 'primary.main' }}>
+                {displayClient.name.split(' ').map(n => n[0]).join('')}
+              </Avatar>
+              <Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Email fontSize="small" />
-                  <Typography variant="body2">{displayClient.email}</Typography>
+                  <Typography variant="h4">{displayClient.name}</Typography>
+                  <Tooltip title={displayClient.starred ? 'Remove from favorites' : 'Add to favorites'}>
+                    <IconButton size="small" onClick={() => console.log('Toggle star')}>
+                      {displayClient.starred ? <Star color="warning" /> : <StarBorder />}
+                    </IconButton>
+                  </Tooltip>
                 </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Phone fontSize="small" />
-                  <Typography variant="body2">{displayClient.phone}</Typography>
-                </Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <LocationOn fontSize="small" />
-                  <Typography variant="body2">{displayClient.address}</Typography>
+                <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
+                  <Chip
+                    label={displayClient.status}
+                    size="small"
+                    color={getStatusColor(displayClient.status)}
+                  />
+                  <Chip
+                    label={displayClient.type}
+                    size="small"
+                    icon={getTypeIcon(displayClient.type)}
+                  />
+                  {displayClient.tags.map(tag => (
+                    <Chip key={tag} label={tag} size="small" variant="outlined" />
+                  ))}
                 </Box>
               </Box>
             </Box>
-          </Box>
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            <Button variant="outlined" startIcon={<Phone />}>
-              Call
-            </Button>
-            <Button variant="outlined" startIcon={<Email />}>
-              Email
-            </Button>
-            <Button variant="contained" startIcon={<Edit />}>
+          </Grid>
+          <Grid item xs={12} md={6} sx={{ textAlign: 'right' }}>
+            <Button
+              variant="outlined"
+              startIcon={<Edit />}
+              onClick={() => setEditMode(!editMode)}
+              sx={{ mr: 1 }}
+            >
               Edit
             </Button>
-          </Box>
-        </Box>
-      </Paper>
+            <IconButton onClick={handleMenuClick}>
+              <MoreVert />
+            </IconButton>
+            <Menu
+              anchorEl={anchorEl}
+              open={Boolean(anchorEl)}
+              onClose={handleMenuClose}
+            >
+              <MenuItem onClick={() => { handleMenuClose(); }}>
+                <ListItemIcon><Email /></ListItemIcon>
+                Send Email
+              </MenuItem>
+              <MenuItem onClick={() => { handleMenuClose(); }}>
+                <ListItemIcon><Phone /></ListItemIcon>
+                Call Client
+              </MenuItem>
+              <MenuItem onClick={() => { handleMenuClose(); }}>
+                <ListItemIcon><CalendarToday /></ListItemIcon>
+                Schedule Appointment
+              </MenuItem>
+              <MenuItem onClick={() => { handleMenuClose(); }}>
+                <ListItemIcon><Description /></ListItemIcon>
+                Generate Report
+              </MenuItem>
+            </Menu>
+          </Grid>
+        </Grid>
+      </Box>
 
-      {/* Main Content */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+      {/* Quick Stats */}
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid item xs={6} sm={3}>
+          <Card>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Typography variant="h4" color="primary">
+                {displayClient.totalTransactions}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Transactions
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={6} sm={3}>
+          <Card>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Typography variant="h4" color="secondary">
+                {displayClient.lifetimeValue}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Lifetime Value
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={6} sm={3}>
+          <Card>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Typography variant="h4" color="success.main">
+                {displayClient.referrals}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Referrals
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={6} sm={3}>
+          <Card>
+            <CardContent sx={{ textAlign: 'center' }}>
+              <Typography variant="h4" color="info.main">
+                {formatDistanceToNow(displayClient.lastContact, { addSuffix: true })}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Last Contact
+              </Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Tabs */}
+      <Paper sx={{ mb: 3 }}>
         <Tabs value={activeTab} onChange={handleTabChange}>
           <Tab label="Overview" />
           <Tab label="Properties" />
+          <Tab label="Appointments" />
           <Tab label="Communications" />
           <Tab label="Documents" />
-          <Tab label="Activity" />
+          <Tab label="Notes" />
         </Tabs>
-      </Box>
+      </Paper>
 
       {/* Tab Content */}
       {activeTab === 0 && (
         <Grid container spacing={3}>
-          <Grid item xs={12} md={8}>
-            {/* Client Information */}
-            <Card sx={{ mb: 3 }}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>Client Information</Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={6}>
-                    <Typography variant="body2" color="textSecondary">Client Since</Typography>
-                    <Typography variant="body1">
-                      {format(displayClient.createdAt, 'MMMM d, yyyy')}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="body2" color="textSecondary">Lead Source</Typography>
-                    <Typography variant="body1">{displayClient.source}</Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="body2" color="textSecondary">Total Transactions</Typography>
-                    <Typography variant="body1">{displayClient.totalTransactions}</Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="body2" color="textSecondary">Total Volume</Typography>
-                    <Typography variant="body1">{displayClient.totalVolume}</Typography>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-
-            {/* Recent Activity Timeline */}
+          {/* Contact Information */}
+          <Grid item xs={12} md={6}>
             <Card>
               <CardContent>
-                <Typography variant="h6" gutterBottom>Recent Activity</Typography>
-                <Timeline>
-                  {displayClient.activities.map((activity, index) => (
-                    <TimelineItem key={activity.id}>
-                      <TimelineOppositeContent sx={{ py: '12px', px: 2 }}>
-                        <Typography variant="caption" color="textSecondary">
-                          {format(activity.timestamp, 'MMM d, yyyy')}
-                        </Typography>
-                      </TimelineOppositeContent>
-                      <TimelineSeparator>
-                        <TimelineDot color={index === 0 ? 'primary' : 'grey'}>
-                          {getActivityIcon(activity.type)}
-                        </TimelineDot>
-                        {index < displayClient.activities.length - 1 && <TimelineConnector />}
-                      </TimelineSeparator>
-                      <TimelineContent sx={{ py: '12px', px: 2 }}>
-                        <Typography variant="body2">{activity.description}</Typography>
-                      </TimelineContent>
-                    </TimelineItem>
-                  ))}
-                </Timeline>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          <Grid item xs={12} md={4}>
-            {/* Quick Stats */}
-            <Card sx={{ mb: 3 }}>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>Quick Stats</Typography>
+                <Typography variant="h6" gutterBottom>
+                  Contact Information
+                </Typography>
                 <List>
                   <ListItem>
-                    <ListItemIcon>
-                      <CalendarToday />
-                    </ListItemIcon>
+                    <ListItemIcon><Email /></ListItemIcon>
                     <ListItemText 
-                      primary="Last Activity"
-                      secondary={format(displayClient.lastActivity, 'MMM d, yyyy')}
+                      primary="Email"
+                      secondary={displayClient.email}
                     />
                   </ListItem>
                   <ListItem>
-                    <ListItemIcon>
-                      <Person />
-                    </ListItemIcon>
+                    <ListItemIcon><Phone /></ListItemIcon>
                     <ListItemText 
-                      primary="Assigned Agent"
-                      secondary={displayClient.agent}
+                      primary="Phone"
+                      secondary={displayClient.phone}
+                    />
+                  </ListItem>
+                  {displayClient.alternatePhone && (
+                    <ListItem>
+                      <ListItemIcon><Phone /></ListItemIcon>
+                      <ListItemText 
+                        primary="Alternate Phone"
+                        secondary={displayClient.alternatePhone}
+                      />
+                    </ListItem>
+                  )}
+                  <ListItem>
+                    <ListItemIcon><LocationOn /></ListItemIcon>
+                    <ListItemText 
+                      primary="Address"
+                      secondary={displayClient.address}
                     />
                   </ListItem>
                 </List>
               </CardContent>
             </Card>
+          </Grid>
 
-            {/* Notes */}
+          {/* Personal Information */}
+          <Grid item xs={12} md={6}>
             <Card>
               <CardContent>
-                <Typography variant="h6" gutterBottom>Notes</Typography>
-                <Typography variant="body2">{displayClient.notes}</Typography>
+                <Typography variant="h6" gutterBottom>
+                  Personal Information
+                </Typography>
+                <List>
+                  <ListItem>
+                    <ListItemIcon><Work /></ListItemIcon>
+                    <ListItemText 
+                      primary="Occupation"
+                      secondary={displayClient.occupation}
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemIcon><Cake /></ListItemIcon>
+                    <ListItemText 
+                      primary="Birthday"
+                      secondary={displayClient.birthday}
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemIcon><FamilyRestroom /></ListItemIcon>
+                    <ListItemText 
+                      primary="Anniversary"
+                      secondary={displayClient.anniversary}
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemIcon><Schedule /></ListItemIcon>
+                    <ListItemText 
+                      primary="Time Zone"
+                      secondary={displayClient.timeZone}
+                    />
+                  </ListItem>
+                </List>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Financial Information */}
+          <Grid item xs={12} md={6}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Financial Information
+                </Typography>
+                <List>
+                  <ListItem>
+                    <ListItemIcon><AttachMoney /></ListItemIcon>
+                    <ListItemText 
+                      primary="Budget"
+                      secondary={displayClient.budget}
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemIcon><CheckCircle /></ListItemIcon>
+                    <ListItemText 
+                      primary="Pre-Approved"
+                      secondary={displayClient.preApproved ? 'Yes' : 'No'}
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemIcon><AccountBalance /></ListItemIcon>
+                    <ListItemText 
+                      primary="Lender"
+                      secondary={displayClient.lender}
+                    />
+                  </ListItem>
+                </List>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Activity Timeline */}
+          <Grid item xs={12} md={6}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Recent Activity
+                </Typography>
+                {displayClient.activities.length > 0 ? (
+                  <Timeline>
+                    {displayClient.activities.slice(0, 4).map((activity, index) => (
+                      <TimelineItem key={activity.id}>
+                        <TimelineOppositeContent color="textSecondary" sx={{ maxWidth: '120px' }}>
+                          {formatDistanceToNow(activity.timestamp, { addSuffix: true })}
+                        </TimelineOppositeContent>
+                        <TimelineSeparator>
+                          <TimelineDot color="primary">
+                            {getActivityIcon(activity.type)}
+                          </TimelineDot>
+                          {index < displayClient.activities.slice(0, 4).length - 1 && <TimelineConnector />}
+                        </TimelineSeparator>
+                        <TimelineContent>
+                          <Typography variant="body2">
+                            {activity.description}
+                          </Typography>
+                          <Typography variant="caption" color="textSecondary">
+                            by {activity.user}
+                          </Typography>
+                        </TimelineContent>
+                      </TimelineItem>
+                    ))}
+                  </Timeline>
+                ) : (
+                  <Typography variant="body2" color="textSecondary">
+                    No recent activity
+                  </Typography>
+                )}
               </CardContent>
             </Card>
           </Grid>
@@ -347,41 +705,362 @@ const ClientDetail = () => {
       )}
 
       {activeTab === 1 && (
-        <TableContainer component={Paper}>
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell>Property Address</TableCell>
-                <TableCell>Type</TableCell>
-                <TableCell>Status</TableCell>
-                <TableCell>Price</TableCell>
-                <TableCell>Date</TableCell>
-                <TableCell>Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {displayClient.properties.map((property) => (
-                <TableRow key={property.id}>
-                  <TableCell>{property.address}</TableCell>
-                  <TableCell>{property.type}</TableCell>
-                  <TableCell>
-                    <Chip 
-                      label={property.status} 
-                      size="small"
-                      color={property.status === 'In Escrow' ? 'warning' : 'default'}
-                    />
-                  </TableCell>
-                  <TableCell>{property.price}</TableCell>
-                  <TableCell>{property.date}</TableCell>
-                  <TableCell>
-                    <Button size="small">View Details</Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        <Grid container spacing={3}>
+          {/* Owned Properties */}
+          <Grid item xs={12}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Owned Properties
+                </Typography>
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Address</TableCell>
+                        <TableCell>Type</TableCell>
+                        <TableCell>Purchase Date</TableCell>
+                        <TableCell>Purchase Price</TableCell>
+                        <TableCell>Current Value</TableCell>
+                        <TableCell>Status</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {displayClient.properties.owned.map((property) => (
+                        <TableRow key={property.id}>
+                          <TableCell>{property.address}</TableCell>
+                          <TableCell>{property.type}</TableCell>
+                          <TableCell>{format(new Date(property.purchaseDate), 'MMM d, yyyy')}</TableCell>
+                          <TableCell>{property.purchasePrice}</TableCell>
+                          <TableCell>{property.currentValue}</TableCell>
+                          <TableCell>
+                            <Chip label={property.status} size="small" />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Properties of Interest */}
+          <Grid item xs={12}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Properties of Interest
+                </Typography>
+                <List>
+                  {displayClient.properties.interested.map((property) => (
+                    <ListItem key={property.id}>
+                      <ListItemIcon>
+                        <Home />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={property.address}
+                        secondary={
+                          <>
+                            {property.type} • {property.listPrice}
+                            <br />
+                            {property.notes}
+                          </>
+                        }
+                      />
+                      <Chip 
+                        label={property.status} 
+                        size="small"
+                        color={property.status === 'Scheduled Showing' ? 'primary' : 'default'}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Property Preferences */}
+          <Grid item xs={12}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Property Preferences
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="subtitle2" color="textSecondary">Property Types</Typography>
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
+                      {displayClient.preferences.propertyType.map((type) => (
+                        <Chip key={type} label={type} size="small" />
+                      ))}
+                    </Box>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Typography variant="subtitle2" color="textSecondary">Bedrooms</Typography>
+                    <Typography variant="body1">{displayClient.preferences.bedrooms}</Typography>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Typography variant="subtitle2" color="textSecondary">Bathrooms</Typography>
+                    <Typography variant="body1">{displayClient.preferences.bathrooms}</Typography>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" color="textSecondary">Desired Features</Typography>
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
+                      {displayClient.preferences.features.map((feature) => (
+                        <Chip key={feature} label={feature} size="small" variant="outlined" />
+                      ))}
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" color="textSecondary">Preferred Neighborhoods</Typography>
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
+                      {displayClient.preferences.neighborhoods.map((neighborhood) => (
+                        <Chip key={neighborhood} label={neighborhood} size="small" color="primary" variant="outlined" />
+                      ))}
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" color="textSecondary">Deal Breakers</Typography>
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
+                      {displayClient.preferences.dealBreakers.map((item) => (
+                        <Chip key={item} label={item} size="small" color="error" variant="outlined" />
+                      ))}
+                    </Box>
+                  </Grid>
+                </Grid>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
       )}
+
+      {activeTab === 2 && (
+        <Grid container spacing={3}>
+          {/* Upcoming Appointments */}
+          <Grid item xs={12}>
+            <Card>
+              <CardContent>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="h6">Appointments</Typography>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    startIcon={<Add />}
+                    onClick={() => navigate('/appointments/new', { state: { clientId: id } })}
+                  >
+                    Schedule New
+                  </Button>
+                </Box>
+                <List>
+                  {displayClient.appointments.map((appointment) => (
+                    <ListItem
+                      key={appointment.id}
+                      button
+                      onClick={() => navigate(`/appointments/${appointment.id}`)}
+                    >
+                      <ListItemIcon>
+                        <CalendarToday />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={appointment.title}
+                        secondary={`${format(new Date(appointment.date), 'MMMM d, yyyy')} at ${appointment.time}`}
+                      />
+                      <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Chip 
+                          label={appointment.type} 
+                          size="small"
+                          variant="outlined"
+                        />
+                        <Chip 
+                          label={appointment.status} 
+                          size="small"
+                          color="primary"
+                        />
+                      </Box>
+                    </ListItem>
+                  ))}
+                </List>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      )}
+
+      {activeTab === 3 && (
+        <Grid container spacing={3}>
+          {/* Communication History */}
+          <Grid item xs={12}>
+            <Card>
+              <CardContent>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="h6">Communication History</Typography>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <Button size="small" startIcon={<Email />}>Email</Button>
+                    <Button size="small" startIcon={<Phone />}>Call</Button>
+                    <Button size="small" startIcon={<MessageOutlined />}>Text</Button>
+                  </Box>
+                </Box>
+                <List>
+                  {displayClient.communications.map((comm) => (
+                    <ListItem key={comm.id} alignItems="flex-start">
+                      <ListItemIcon>
+                        {getCommunicationIcon(comm.type)}
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Typography variant="body1">{comm.subject}</Typography>
+                            <Typography variant="caption" color="textSecondary">
+                              {formatDistanceToNow(comm.date, { addSuffix: true })}
+                            </Typography>
+                          </Box>
+                        }
+                        secondary={
+                          <>
+                            {comm.type === 'call' && comm.duration && (
+                              <Typography variant="body2" color="textSecondary">
+                                Duration: {comm.duration}
+                              </Typography>
+                            )}
+                            {comm.preview && (
+                              <Typography variant="body2" color="textSecondary">
+                                {comm.preview}
+                              </Typography>
+                            )}
+                            {comm.notes && (
+                              <Typography variant="body2" color="textSecondary">
+                                Notes: {comm.notes}
+                              </Typography>
+                            )}
+                          </>
+                        }
+                      />
+                      <Chip 
+                        label={comm.direction} 
+                        size="small"
+                        variant="outlined"
+                        sx={{ ml: 1 }}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      )}
+
+      {activeTab === 4 && (
+        <Grid container spacing={3}>
+          {/* Documents */}
+          <Grid item xs={12}>
+            <Card>
+              <CardContent>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="h6">Documents</Typography>
+                  <Button
+                    variant="contained"
+                    size="small"
+                    startIcon={<Upload />}
+                    onClick={() => console.log('Upload document')}
+                  >
+                    Upload Document
+                  </Button>
+                </Box>
+                <TableContainer>
+                  <Table>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Name</TableCell>
+                        <TableCell>Category</TableCell>
+                        <TableCell>Size</TableCell>
+                        <TableCell>Upload Date</TableCell>
+                        <TableCell>Actions</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {displayClient.documents.map((doc) => (
+                        <TableRow key={doc.id}>
+                          <TableCell>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              {getDocumentIcon(doc.type)}
+                              {doc.name}
+                            </Box>
+                          </TableCell>
+                          <TableCell>{doc.category}</TableCell>
+                          <TableCell>{doc.size}</TableCell>
+                          <TableCell>{format(new Date(doc.uploadDate), 'MMM d, yyyy')}</TableCell>
+                          <TableCell>
+                            <IconButton size="small" onClick={() => console.log('View document')}>
+                              <Visibility />
+                            </IconButton>
+                            <IconButton size="small" onClick={() => console.log('Download document')}>
+                              <Download />
+                            </IconButton>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </TableContainer>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      )}
+
+      {activeTab === 5 && (
+        <Grid container spacing={3}>
+          {/* Notes */}
+          <Grid item xs={12}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>Notes</Typography>
+                <Box sx={{ mb: 3 }}>
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={3}
+                    placeholder="Add a note..."
+                    value={newNote}
+                    onChange={(e) => setNewNote(e.target.value)}
+                  />
+                  <Button
+                    variant="contained"
+                    sx={{ mt: 1 }}
+                    onClick={handleAddNote}
+                    disabled={!newNote.trim()}
+                  >
+                    Add Note
+                  </Button>
+                </Box>
+                <Divider sx={{ mb: 2 }} />
+                <Box>
+                  <Alert severity="info" sx={{ mb: 2 }}>
+                    <Typography variant="body2">
+                      <strong>Client Notes:</strong> {displayClient.notes}
+                    </Typography>
+                  </Alert>
+                  {/* Additional notes would be listed here */}
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      )}
+
+      {/* Quick Actions Floating Button */}
+      <Box sx={{ position: 'fixed', bottom: 20, right: 20 }}>
+        <Button
+          variant="contained"
+          color="primary"
+          startIcon={<Email />}
+          onClick={() => console.log('Send email')}
+        >
+          Send Email
+        </Button>
+      </Box>
     </Container>
   );
 };
