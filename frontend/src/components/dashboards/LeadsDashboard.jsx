@@ -6,8 +6,6 @@ import {
   Typography,
   Box,
   Button,
-  Tabs,
-  Tab,
   Table,
   TableBody,
   TableCell,
@@ -16,257 +14,431 @@ import {
   TableRow,
   Chip,
   IconButton,
-  Tooltip,
+  TextField,
+  InputAdornment,
+  Menu,
+  MenuItem,
+  Avatar,
+  LinearProgress,
   Card,
   CardContent,
-  LinearProgress,
+  Tooltip,
+  Link,
 } from '@mui/material';
 import {
   Add,
-  Visibility,
-  Edit,
-  PersonAdd,
-  Email,
+  Search,
+  FilterList,
+  MoreVert,
   Phone,
+  Email,
+  Person,
   TrendingUp,
-  Assignment,
-  Schedule,
+  AccessTime,
+  Star,
+  StarBorder,
   CheckCircle,
+  Warning,
 } from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
 import { useQuery } from 'react-query';
 import { format } from 'date-fns';
+import StatsCard from '../common/StatsCard';
 import { leadsAPI } from '../../services/api';
 
 const LeadsDashboard = () => {
-  const [tabValue, setTabValue] = useState(0);
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterAnchorEl, setFilterAnchorEl] = useState(null);
+  const [selectedFilter, setSelectedFilter] = useState('all');
+  const [menuAnchorEl, setMenuAnchorEl] = useState(null);
+  const [selectedLead, setSelectedLead] = useState(null);
 
-  // Mock data for now
-  const leads = [
+  // Fetch leads data
+  const { data: leads = [], isLoading } = useQuery(
+    ['leads', selectedFilter, searchTerm],
+    () => leadsAPI.getAll({ 
+      status: selectedFilter === 'all' ? undefined : selectedFilter,
+      search: searchTerm 
+    }),
+    { refetchInterval: 30000 }
+  );
+
+  // Mock data for demonstration
+  const mockLeads = [
     {
       id: 1,
       name: 'Sarah Johnson',
-      email: 'sarah.j@email.com',
-      phone: '555-0123',
-      leadSource: 'Website',
-      leadType: 'Buyer',
-      status: 'New',
-      score: 85,
-      assigned_to: 'John Agent',
-      created_at: '2024-01-10',
+      email: 'sarah.johnson@email.com',
+      phone: '(555) 123-4567',
+      status: 'hot',
+      source: 'Website',
+      assignedTo: 'Alex AI',
+      createdAt: new Date('2024-01-15'),
+      lastContact: new Date('2024-01-18'),
+      score: 95,
+      interested_in: 'Buying',
+      budget: '$500,000 - $750,000',
+      timeline: '1-3 months',
+      notes: 'Looking for 4BR in Roseville area',
+      starred: true,
     },
     {
       id: 2,
-      name: 'Mike Wilson',
-      email: 'mike.w@email.com',
-      phone: '555-0124',
-      leadSource: 'Referral',
-      leadType: 'Seller',
-      status: 'Contacted',
-      score: 72,
-      assigned_to: 'Jane Agent',
-      created_at: '2024-01-09',
+      name: 'Michael Chen',
+      email: 'mchen@email.com',
+      phone: '(555) 234-5678',
+      status: 'warm',
+      source: 'Referral',
+      assignedTo: 'You',
+      createdAt: new Date('2024-01-10'),
+      lastContact: new Date('2024-01-16'),
+      score: 75,
+      interested_in: 'Selling',
+      budget: 'N/A',
+      timeline: '3-6 months',
+      notes: 'Wants to downsize, owns property in Lincoln',
+      starred: false,
+    },
+    {
+      id: 3,
+      name: 'Emily Rodriguez',
+      email: 'emily.r@email.com',
+      phone: '(555) 345-6789',
+      status: 'cold',
+      source: 'Open House',
+      assignedTo: 'Buyer Manager AI',
+      createdAt: new Date('2024-01-05'),
+      lastContact: new Date('2024-01-05'),
+      score: 45,
+      interested_in: 'Buying',
+      budget: '$300,000 - $400,000',
+      timeline: '6+ months',
+      notes: 'First-time buyer, needs pre-approval',
+      starred: false,
     },
   ];
 
+  const displayLeads = leads.length > 0 ? leads : mockLeads;
+
   const stats = {
-    newLeads: 12,
-    hotLeads: 5,
-    contacted: 23,
-    converted: 8,
+    total: displayLeads.length,
+    hot: displayLeads.filter(l => l.status === 'hot').length,
+    warm: displayLeads.filter(l => l.status === 'warm').length,
+    cold: displayLeads.filter(l => l.status === 'cold').length,
+    newThisWeek: displayLeads.filter(l => {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return new Date(l.createdAt) > weekAgo;
+    }).length,
   };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'New': return 'info';
-      case 'Contacted': return 'primary';
-      case 'Qualified': return 'success';
-      case 'Unqualified': return 'error';
+      case 'hot': return 'error';
+      case 'warm': return 'warning';
+      case 'cold': return 'info';
       default: return 'default';
     }
   };
 
-  const getScoreColor = (score) => {
-    if (score >= 80) return 'success';
-    if (score >= 60) return 'warning';
-    return 'error';
+  const getScoreIcon = (score) => {
+    if (score >= 80) return <TrendingUp color="error" />;
+    if (score >= 60) return <TrendingUp color="warning" />;
+    return <TrendingUp color="action" />;
   };
 
+  const handleFilterClick = (event) => {
+    setFilterAnchorEl(event.currentTarget);
+  };
+
+  const handleFilterClose = (filter) => {
+    setFilterAnchorEl(null);
+    if (filter) {
+      setSelectedFilter(filter);
+    }
+  };
+
+  const handleMenuClick = (event, lead) => {
+    event.stopPropagation();
+    setMenuAnchorEl(event.currentTarget);
+    setSelectedLead(lead);
+  };
+
+  const handleMenuClose = () => {
+    setMenuAnchorEl(null);
+    setSelectedLead(null);
+  };
+
+  const handleLeadClick = (leadId) => {
+    navigate(`/leads/${leadId}`);
+  };
+
+  const handleAddLead = () => {
+    // Navigate to lead creation or open a modal
+    navigate('/leads/new');
+  };
+
+  const filteredLeads = displayLeads.filter(lead => {
+    const matchesSearch = lead.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         lead.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         lead.phone.includes(searchTerm);
+    const matchesFilter = selectedFilter === 'all' || lead.status === selectedFilter;
+    return matchesSearch && matchesFilter;
+  });
+
   return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4">Leads</Typography>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={() => console.log('Add lead')}
-        >
-          New Lead
-        </Button>
-      </Box>
+    <Container maxWidth="xl">
+      <Box sx={{ mb: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+          <Typography variant="h4" component="h1">
+            Leads Management
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={handleAddLead}
+          >
+            Add New Lead
+          </Button>
+        </Box>
 
-      {/* Stats Cards */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box>
-                  <Typography color="textSecondary" gutterBottom>
-                    New Leads
-                  </Typography>
-                  <Typography variant="h4">
-                    {stats.newLeads}
-                  </Typography>
-                </Box>
-                <PersonAdd color="info" fontSize="large" />
-              </Box>
-            </CardContent>
-          </Card>
+        {/* Stats Cards */}
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid item xs={12} sm={6} md={3}>
+            <StatsCard
+              title="Total Leads"
+              value={stats.total}
+              icon={<Person />}
+              color="#1976d2"
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <StatsCard
+              title="Hot Leads"
+              value={stats.hot}
+              icon={<TrendingUp />}
+              color="#d32f2f"
+              trend={`${Math.round((stats.hot / stats.total) * 100)}% of total`}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <StatsCard
+              title="Warm Leads"
+              value={stats.warm}
+              icon={<AccessTime />}
+              color="#f57c00"
+              trend={`${Math.round((stats.warm / stats.total) * 100)}% of total`}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <StatsCard
+              title="New This Week"
+              value={stats.newThisWeek}
+              icon={<Star />}
+              color="#388e3c"
+            />
+          </Grid>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box>
-                  <Typography color="textSecondary" gutterBottom>
-                    Hot Leads
-                  </Typography>
-                  <Typography variant="h4">
-                    {stats.hotLeads}
-                  </Typography>
-                </Box>
-                <TrendingUp color="error" fontSize="large" />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box>
-                  <Typography color="textSecondary" gutterBottom>
-                    Contacted
-                  </Typography>
-                  <Typography variant="h4">
-                    {stats.contacted}
-                  </Typography>
-                </Box>
-                <Phone color="primary" fontSize="large" />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box>
-                  <Typography color="textSecondary" gutterBottom>
-                    Converted
-                  </Typography>
-                  <Typography variant="h4">
-                    {stats.converted}
-                  </Typography>
-                </Box>
-                <CheckCircle color="success" fontSize="large" />
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
 
-      {/* Tabs */}
-      <Paper sx={{ mb: 3 }}>
-        <Tabs value={tabValue} onChange={(e, newValue) => setTabValue(newValue)}>
-          <Tab label="All Leads" />
-          <Tab label="New" />
-          <Tab label="Hot" />
-          <Tab label="Contacted" />
-          <Tab label="Qualified" />
-        </Tabs>
-      </Paper>
+        {/* Search and Filter Bar */}
+        <Paper sx={{ p: 2, mb: 3 }}>
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            <TextField
+              fullWidth
+              variant="outlined"
+              placeholder="Search leads by name, email, or phone..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search />
+                  </InputAdornment>
+                ),
+              }}
+            />
+            <Button
+              variant="outlined"
+              startIcon={<FilterList />}
+              onClick={handleFilterClick}
+            >
+              Filter: {selectedFilter === 'all' ? 'All' : selectedFilter}
+            </Button>
+            <Menu
+              anchorEl={filterAnchorEl}
+              open={Boolean(filterAnchorEl)}
+              onClose={() => handleFilterClose(null)}
+            >
+              <MenuItem onClick={() => handleFilterClose('all')}>All Leads</MenuItem>
+              <MenuItem onClick={() => handleFilterClose('hot')}>Hot Leads</MenuItem>
+              <MenuItem onClick={() => handleFilterClose('warm')}>Warm Leads</MenuItem>
+              <MenuItem onClick={() => handleFilterClose('cold')}>Cold Leads</MenuItem>
+            </Menu>
+          </Box>
+        </Paper>
 
-      {/* Leads Table */}
-      <TableContainer component={Paper}>
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableCell>Name</TableCell>
-              <TableCell>Contact</TableCell>
-              <TableCell>Source</TableCell>
-              <TableCell>Type</TableCell>
-              <TableCell>Score</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Assigned To</TableCell>
-              <TableCell>Created</TableCell>
-              <TableCell>Actions</TableCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
-            {leads.map((lead) => (
-              <TableRow key={lead.id}>
-                <TableCell>{lead.name}</TableCell>
-                <TableCell>
-                  <Box>
-                    <Typography variant="body2">{lead.email}</Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {lead.phone}
-                    </Typography>
-                  </Box>
-                </TableCell>
-                <TableCell>{lead.leadSource}</TableCell>
-                <TableCell>{lead.leadType}</TableCell>
-                <TableCell>
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <LinearProgress
-                      variant="determinate"
-                      value={lead.score}
-                      sx={{
-                        width: 50,
-                        height: 6,
-                        borderRadius: 3,
-                        backgroundColor: 'grey.300',
-                        '& .MuiLinearProgress-bar': {
-                          backgroundColor: getScoreColor(lead.score) === 'success' ? 'success.main' :
-                                          getScoreColor(lead.score) === 'warning' ? 'warning.main' : 'error.main'
-                        }
-                      }}
-                    />
-                    <Typography variant="body2">{lead.score}</Typography>
-                  </Box>
-                </TableCell>
-                <TableCell>
-                  <Chip
-                    label={lead.status}
-                    color={getStatusColor(lead.status)}
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell>{lead.assigned_to}</TableCell>
-                <TableCell>{format(new Date(lead.created_at), 'MMM d, yyyy')}</TableCell>
-                <TableCell>
-                  <Tooltip title="View">
-                    <IconButton size="small">
-                      <Visibility />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Edit">
-                    <IconButton size="small">
-                      <Edit />
-                    </IconButton>
-                  </Tooltip>
-                  <Tooltip title="Contact">
-                    <IconButton size="small">
-                      <Phone />
-                    </IconButton>
-                  </Tooltip>
-                </TableCell>
+        {/* Leads Table */}
+        <TableContainer component={Paper}>
+          <Table>
+            <TableHead>
+              <TableRow>
+                <TableCell padding="checkbox"></TableCell>
+                <TableCell>Lead</TableCell>
+                <TableCell>Status</TableCell>
+                <TableCell>Score</TableCell>
+                <TableCell>Source</TableCell>
+                <TableCell>Interest</TableCell>
+                <TableCell>Timeline</TableCell>
+                <TableCell>Assigned To</TableCell>
+                <TableCell>Last Contact</TableCell>
+                <TableCell align="right">Actions</TableCell>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </TableContainer>
+            </TableHead>
+            <TableBody>
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={10} align="center">
+                    <LinearProgress />
+                  </TableCell>
+                </TableRow>
+              ) : filteredLeads.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={10} align="center">
+                    <Typography color="textSecondary">No leads found</Typography>
+                  </TableCell>
+                </TableRow>
+              ) : (
+                filteredLeads.map((lead) => (
+                  <TableRow 
+                    key={lead.id} 
+                    hover
+                    sx={{ cursor: 'pointer' }}
+                  >
+                    <TableCell padding="checkbox">
+                      <IconButton size="small">
+                        {lead.starred ? <Star color="primary" /> : <StarBorder />}
+                      </IconButton>
+                    </TableCell>
+                    <TableCell onClick={() => handleLeadClick(lead.id)}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Avatar sx={{ bgcolor: 'primary.main' }}>
+                          {lead.name.split(' ').map(n => n[0]).join('')}
+                        </Avatar>
+                        <Box>
+                          <Link
+                            component="button"
+                            variant="subtitle2"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleLeadClick(lead.id);
+                            }}
+                            sx={{ 
+                              textAlign: 'left',
+                              textDecoration: 'none',
+                              color: 'primary.main',
+                              '&:hover': {
+                                textDecoration: 'underline'
+                              }
+                            }}
+                          >
+                            {lead.name}
+                          </Link>
+                          <Typography variant="caption" display="block" color="textSecondary">
+                            {lead.email}
+                          </Typography>
+                          <Typography variant="caption" color="textSecondary">
+                            {lead.phone}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </TableCell>
+                    <TableCell onClick={() => handleLeadClick(lead.id)}>
+                      <Chip
+                        label={lead.status.toUpperCase()}
+                        color={getStatusColor(lead.status)}
+                        size="small"
+                      />
+                    </TableCell>
+                    <TableCell onClick={() => handleLeadClick(lead.id)}>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        {getScoreIcon(lead.score)}
+                        <Typography variant="body2">{lead.score}</Typography>
+                      </Box>
+                    </TableCell>
+                    <TableCell onClick={() => handleLeadClick(lead.id)}>{lead.source}</TableCell>
+                    <TableCell onClick={() => handleLeadClick(lead.id)}>
+                      <Typography variant="body2">{lead.interested_in}</Typography>
+                      <Typography variant="caption" color="textSecondary">
+                        {lead.budget}
+                      </Typography>
+                    </TableCell>
+                    <TableCell onClick={() => handleLeadClick(lead.id)}>{lead.timeline}</TableCell>
+                    <TableCell onClick={() => handleLeadClick(lead.id)}>
+                      <Chip
+                        label={lead.assignedTo}
+                        size="small"
+                        variant="outlined"
+                        color={lead.assignedTo.includes('AI') ? 'secondary' : 'default'}
+                      />
+                    </TableCell>
+                    <TableCell onClick={() => handleLeadClick(lead.id)}>
+                      <Typography variant="body2">
+                        {format(new Date(lead.lastContact), 'MMM dd')}
+                      </Typography>
+                      <Typography variant="caption" color="textSecondary">
+                        {format(new Date(lead.lastContact), 'h:mm a')}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="right">
+                      <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                        <Tooltip title="Call">
+                          <IconButton size="small" color="primary">
+                            <Phone />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Email">
+                          <IconButton size="small" color="primary">
+                            <Email />
+                          </IconButton>
+                        </Tooltip>
+                        <IconButton
+                          size="small"
+                          onClick={(e) => handleMenuClick(e, lead)}
+                        >
+                          <MoreVert />
+                        </IconButton>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+        {/* Action Menu */}
+        <Menu
+          anchorEl={menuAnchorEl}
+          open={Boolean(menuAnchorEl)}
+          onClose={handleMenuClose}
+        >
+          <MenuItem onClick={() => {
+            handleLeadClick(selectedLead?.id);
+            handleMenuClose();
+          }}>
+            View Details
+          </MenuItem>
+          <MenuItem onClick={handleMenuClose}>Edit Lead</MenuItem>
+          <MenuItem onClick={handleMenuClose}>Change Status</MenuItem>
+          <MenuItem onClick={handleMenuClose}>Assign To</MenuItem>
+          <MenuItem onClick={handleMenuClose}>Add Note</MenuItem>
+          <MenuItem onClick={handleMenuClose}>Convert to Client</MenuItem>
+          <MenuItem onClick={handleMenuClose} sx={{ color: 'error.main' }}>
+            Delete Lead
+          </MenuItem>
+        </Menu>
+      </Box>
     </Container>
   );
 };

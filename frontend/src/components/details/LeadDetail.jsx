@@ -1,734 +1,685 @@
-// File: frontend/src/components/details/LeadDetail.jsx
-
-import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { 
-  UserPlus, Phone, Mail, Globe, Calendar, TrendingUp, Clock,
-  MessageCircle, Tag, ThermometerSun, Target, CheckCircle2,
-  AlertCircle, BarChart3, Activity, Zap, Award, Home, DollarSign
-} from 'lucide-react';
-import api from '../../services/api';
-import { formatDate, formatPhone, daysSince } from '../../utils/formatters';
+import React, { useState } from 'react';
 import {
-  LineChart, Line, BarChart, Bar, RadialBarChart, RadialBar,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
-} from 'recharts';
+  Container,
+  Grid,
+  Paper,
+  Typography,
+  Box,
+  Button,
+  Chip,
+  Avatar,
+  Tabs,
+  Tab,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  TextField,
+  IconButton,
+  Card,
+  CardContent,
+  Divider,
+  LinearProgress,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Breadcrumbs,
+  Link,
+  Tooltip,
+  Alert,
+} from '@mui/material';
+import {
+  Timeline,
+  TimelineItem,
+  TimelineSeparator,
+  TimelineConnector,
+  TimelineContent,
+  TimelineDot,
+  TimelineOppositeContent,
+} from '@mui/lab';
+import {
+  ArrowBack,
+  Edit,
+  Phone,
+  Email,
+  Person,
+  LocationOn,
+  CalendarToday,
+  Note,
+  AttachMoney,
+  TrendingUp,
+  History,
+  Task,
+  CheckCircle,
+  Cancel,
+  Schedule,
+  Star,
+  StarBorder,
+  Home,
+  Business,
+  DirectionsCar,
+  School,
+  FamilyRestroom,
+} from '@mui/icons-material';
+import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from 'react-query';
+import { format } from 'date-fns';
+import { leadsAPI } from '../../services/api';
 
-export default function LeadDetail() {
+const LeadDetail = () => {
   const { id } = useParams();
-  const [lead, setLead] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [checklistItems, setChecklistItems] = useState({});
-  const [activities, setActivities] = useState([]);
-  const [communications, setCommunications] = useState([]);
-  const [analytics, setAnalytics] = useState(null);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState(0);
+  const [editMode, setEditMode] = useState(false);
+  const [newNote, setNewNote] = useState('');
 
-  useEffect(() => {
-    fetchLeadDetails();
-    fetchActivities();
-    fetchCommunications();
-    fetchAnalytics();
-  }, [id]);
-
-  const fetchLeadDetails = async () => {
-    try {
-      const response = await api.get(`/leads/${id}`);
-      setLead(response.data);
-      setChecklistItems(response.data.checklist || {});
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching lead details:', error);
-      setLoading(false);
-    }
-  };
-
-  const fetchActivities = async () => {
-    try {
-      const response = await api.get(`/leads/${id}/activities`);
-      setActivities(response.data);
-    } catch (error) {
-      console.error('Error fetching activities:', error);
-    }
-  };
-
-  const fetchCommunications = async () => {
-    try {
-      const response = await api.get(`/leads/${id}/communications`);
-      setCommunications(response.data);
-    } catch (error) {
-      console.error('Error fetching communications:', error);
-    }
-  };
-
-  const fetchAnalytics = async () => {
-    try {
-      const response = await api.get(`/analytics/lead/${id}`);
-      setAnalytics(response.data);
-    } catch (error) {
-      console.error('Error fetching analytics:', error);
-    }
-  };
-
-  const handleChecklistToggle = async (category, item) => {
-    const updatedChecklist = {
-      ...checklistItems,
-      [category]: {
-        ...checklistItems[category],
-        [item]: !checklistItems[category]?.[item]
+  // Fetch lead details
+  const { data: lead, isLoading } = useQuery(
+    ['lead', id],
+    () => leadsAPI.getOne(id),
+    { 
+      refetchInterval: 30000,
+      onError: () => {
+        // If API fails, use mock data
+        return mockLead;
       }
-    };
-    
-    setChecklistItems(updatedChecklist);
-    
-    try {
-      await api.put(`/leads/${id}/checklist`, { checklist: updatedChecklist });
-    } catch (error) {
-      console.error('Error updating checklist:', error);
     }
+  );
+
+  // Mock data for demonstration
+  const mockLead = {
+    id: 1,
+    name: 'Sarah Johnson',
+    email: 'sarah.johnson@email.com',
+    phone: '(555) 123-4567',
+    status: 'hot',
+    score: 95,
+    source: 'Website',
+    assignedTo: 'Alex AI',
+    createdAt: new Date('2024-01-15'),
+    lastContact: new Date('2024-01-18'),
+    interested_in: 'Buying',
+    propertyType: 'Single Family Home',
+    budget: '$500,000 - $750,000',
+    timeline: '1-3 months',
+    location: 'Roseville, CA',
+    preApproved: true,
+    currentSituation: 'Renting',
+    motivation: 'Growing family, need more space',
+    starred: true,
+    notes: [
+      {
+        id: 1,
+        content: 'Initial contact made. Very motivated buyer, pre-approved for $750k.',
+        createdAt: new Date('2024-01-15T10:30:00'),
+        createdBy: 'System'
+      },
+      {
+        id: 2,
+        content: 'Interested in 4BR homes in Roseville area. School district is important.',
+        createdAt: new Date('2024-01-16T14:15:00'),
+        createdBy: 'Alex AI'
+      },
+      {
+        id: 3,
+        content: 'Scheduled property tour for this weekend. Sending 5 listings for review.',
+        createdAt: new Date('2024-01-18T09:00:00'),
+        createdBy: 'You'
+      }
+    ],
+    activities: [
+      {
+        id: 1,
+        type: 'lead_created',
+        description: 'Lead created from website inquiry',
+        timestamp: new Date('2024-01-15T10:00:00'),
+        icon: 'add'
+      },
+      {
+        id: 2,
+        type: 'email_sent',
+        description: 'Welcome email sent by Alex AI',
+        timestamp: new Date('2024-01-15T10:05:00'),
+        icon: 'email'
+      },
+      {
+        id: 3,
+        type: 'call_made',
+        description: 'Initial qualification call completed',
+        timestamp: new Date('2024-01-15T10:30:00'),
+        icon: 'phone'
+      },
+      {
+        id: 4,
+        type: 'status_changed',
+        description: 'Status changed from Warm to Hot',
+        timestamp: new Date('2024-01-16T14:15:00'),
+        icon: 'trending_up'
+      },
+      {
+        id: 5,
+        type: 'task_created',
+        description: 'Property tour scheduled',
+        timestamp: new Date('2024-01-18T09:00:00'),
+        icon: 'event'
+      }
+    ],
+    preferences: {
+      bedrooms: '4+',
+      bathrooms: '2.5+',
+      squareFeet: '2,500+',
+      lotSize: '6,000+ sq ft',
+      garage: '3 car',
+      features: ['Pool', 'Modern Kitchen', 'Home Office', 'Good Schools'],
+      neighborhoods: ['West Roseville', 'Granite Bay', 'Rocklin'],
+      maxHOA: '$200/month'
+    },
+    tasks: [
+      {
+        id: 1,
+        title: 'Send property listings',
+        dueDate: new Date('2024-01-19'),
+        status: 'completed',
+        assignedTo: 'You'
+      },
+      {
+        id: 2,
+        title: 'Property tour - 5 homes',
+        dueDate: new Date('2024-01-21'),
+        status: 'pending',
+        assignedTo: 'You'
+      },
+      {
+        id: 3,
+        title: 'Follow up after tour',
+        dueDate: new Date('2024-01-22'),
+        status: 'pending',
+        assignedTo: 'Alex AI'
+      }
+    ]
   };
 
-  const initialContactChecklist = [
-    { key: 'initial_response_sent', label: 'Initial Response Sent (within 5 minutes)' },
-    { key: 'contact_info_verified', label: 'Contact Information Verified' },
-    { key: 'lead_source_documented', label: 'Lead Source Documented' },
-    { key: 'initial_needs_identified', label: 'Initial Needs Identified' },
-    { key: 'timeline_discussed', label: 'Timeline Discussed' },
-    { key: 'budget_range_identified', label: 'Budget Range Identified' },
-    { key: 'preferred_communication_noted', label: 'Preferred Communication Method Noted' },
-    { key: 'added_to_crm', label: 'Added to CRM System' },
-    { key: 'welcome_package_sent', label: 'Welcome Package/Info Sent' },
-    { key: 'first_meeting_scheduled', label: 'First Meeting Scheduled' }
-  ];
-
-  const qualificationChecklist = [
-    { key: 'motivation_assessed', label: 'Motivation Level Assessed' },
-    { key: 'financial_capability_verified', label: 'Financial Capability Verified' },
-    { key: 'decision_timeline_confirmed', label: 'Decision Timeline Confirmed' },
-    { key: 'property_requirements_detailed', label: 'Property Requirements Detailed' },
-    { key: 'location_preferences_mapped', label: 'Location Preferences Mapped' },
-    { key: 'competition_identified', label: 'Competition/Other Agents Identified' },
-    { key: 'pain_points_discovered', label: 'Pain Points Discovered' },
-    { key: 'value_proposition_presented', label: 'Value Proposition Presented' },
-    { key: 'objections_addressed', label: 'Initial Objections Addressed' },
-    { key: 'lead_score_assigned', label: 'Lead Score Assigned' }
-  ];
-
-  const nurturingChecklist = [
-    { key: 'drip_campaign_enrolled', label: 'Enrolled in Drip Campaign' },
-    { key: 'market_updates_subscribed', label: 'Subscribed to Market Updates' },
-    { key: 'property_alerts_setup', label: 'Property Alerts Set Up' },
-    { key: 'educational_content_sent', label: 'Educational Content Sent' },
-    { key: 'success_stories_shared', label: 'Success Stories Shared' },
-    { key: 'market_report_sent', label: 'Local Market Report Sent' },
-    { key: 'social_media_connected', label: 'Connected on Social Media' },
-    { key: 'newsletter_subscribed', label: 'Newsletter Subscription Added' },
-    { key: 'periodic_check_ins_scheduled', label: 'Periodic Check-ins Scheduled' },
-    { key: 'referral_request_made', label: 'Referral Request Made' }
-  ];
-
-  const conversionChecklist = [
-    { key: 'buyer_agency_discussed', label: 'Buyer Agency Agreement Discussed' },
-    { key: 'listing_agreement_discussed', label: 'Listing Agreement Discussed' },
-    { key: 'financing_options_reviewed', label: 'Financing Options Reviewed' },
-    { key: 'property_showings_started', label: 'Property Showings Started' },
-    { key: 'offer_strategy_developed', label: 'Offer Strategy Developed' },
-    { key: 'market_analysis_presented', label: 'Market Analysis Presented' },
-    { key: 'contract_terms_explained', label: 'Contract Terms Explained' },
-    { key: 'service_agreement_signed', label: 'Service Agreement Signed' },
-    { key: 'client_onboarding_complete', label: 'Client Onboarding Complete' },
-    { key: 'conversion_celebrated', label: 'Conversion Milestone Celebrated' }
-  ];
+  const displayLead = lead || mockLead;
 
   const getStatusColor = (status) => {
-    const colors = {
-      'New': 'text-blue-600 bg-blue-50',
-      'Contacted': 'text-purple-600 bg-purple-50',
-      'Qualified': 'text-green-600 bg-green-50',
-      'Nurturing': 'text-yellow-600 bg-yellow-50',
-      'Hot': 'text-red-600 bg-red-50',
-      'Converted': 'text-emerald-600 bg-emerald-50',
-      'Lost': 'text-gray-600 bg-gray-50'
-    };
-    return colors[status] || 'text-gray-600 bg-gray-50';
+    switch (status) {
+      case 'hot': return 'error';
+      case 'warm': return 'warning';
+      case 'cold': return 'info';
+      case 'converted': return 'success';
+      default: return 'default';
+    }
   };
 
-  const getTemperatureIcon = (temperature) => {
-    const icons = {
-      'Cold': <ThermometerSun className="h-5 w-5 text-blue-500" />,
-      'Warm': <ThermometerSun className="h-5 w-5 text-yellow-500" />,
-      'Hot': <ThermometerSun className="h-5 w-5 text-red-500" />
-    };
-    return icons[temperature] || <ThermometerSun className="h-5 w-5 text-gray-500" />;
+  const getActivityIcon = (type) => {
+    switch (type) {
+      case 'email_sent': return <Email />;
+      case 'call_made': return <Phone />;
+      case 'lead_created': return <Person />;
+      case 'status_changed': return <TrendingUp />;
+      case 'task_created': return <Task />;
+      case 'note_added': return <Note />;
+      default: return <History />;
+    }
   };
 
-  const getLeadScoreColor = (score) => {
-    if (score >= 80) return 'text-green-600';
-    if (score >= 60) return 'text-yellow-600';
-    if (score >= 40) return 'text-orange-600';
-    return 'text-red-600';
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
   };
 
-  const calculateEngagementScore = () => {
-    const totalActivities = activities.length;
-    const recentActivities = activities.filter(a => 
-      daysSince(a.created_at) <= 7
-    ).length;
-    const communicationCount = communications.length;
+  const handleStatusChange = async (newStatus) => {
+    try {
+      await leadsAPI.updateStatus(id, newStatus);
+      queryClient.invalidateQueries(['lead', id]);
+    } catch (error) {
+      console.error('Error updating status:', error);
+    }
+  };
+
+  const handleAddNote = async () => {
+    if (!newNote.trim()) return;
     
-    // Simple engagement score calculation
-    const score = Math.min(100, (totalActivities * 5) + (recentActivities * 10) + (communicationCount * 3));
-    return score;
+    try {
+      await leadsAPI.addNote(id, { content: newNote });
+      setNewNote('');
+      queryClient.invalidateQueries(['lead', id]);
+    } catch (error) {
+      console.error('Error adding note:', error);
+    }
   };
 
-  const getActivityTimeline = () => {
-    return activities.slice(0, 10).map(activity => ({
-      date: new Date(activity.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      type: activity.type,
-      score: activity.engagement_points || 1
-    }));
+  const handleConvertToClient = () => {
+    // Implement conversion logic
+    navigate(`/clients/new?leadId=${id}`);
   };
 
-  const getLeadScoreData = () => {
-    const score = lead?.lead_score || 0;
-    return [
-      {
-        name: 'Lead Score',
-        value: score,
-        fill: score >= 80 ? '#10B981' : score >= 60 ? '#F59E0B' : '#EF4444'
-      }
-    ];
-  };
-
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
+      <Container>
+        <LinearProgress />
+      </Container>
     );
   }
-
-  if (!lead) {
-    return (
-      <div className="max-w-7xl mx-auto p-6">
-        <div className="text-center py-12">
-          <h2 className="text-2xl font-semibold text-gray-900">Lead not found</h2>
-        </div>
-      </div>
-    );
-  }
-
-  const engagementScore = calculateEngagementScore();
-  const daysSinceContact = lead.last_contact_date ? daysSince(lead.last_contact_date) : null;
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-6">
+    <Container maxWidth="xl">
+      {/* Breadcrumbs */}
+      <Breadcrumbs sx={{ mb: 2 }}>
+        <Link
+          component="button"
+          variant="body1"
+          onClick={() => navigate('/leads')}
+          sx={{ textDecoration: 'none' }}
+        >
+          Leads
+        </Link>
+        <Typography color="textPrimary">{displayLead.name}</Typography>
+      </Breadcrumbs>
+
       {/* Header */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <div className="flex justify-between items-start mb-4">
-          <div className="flex items-start gap-4">
-            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center">
-              <UserPlus className="h-8 w-8 text-purple-600" />
-            </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                {lead.first_name} {lead.last_name}
-              </h1>
-              <div className="flex items-center gap-4 mt-2 text-gray-600">
-                <span>{lead.lead_source}</span>
-                <span>•</span>
-                <span>{lead.lead_type}</span>
-                <span>•</span>
-                <span>Added {formatDate(lead.date_created)}</span>
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            {getTemperatureIcon(lead.lead_temperature)}
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(lead.lead_status)}`}>
-              {lead.lead_status}
-            </span>
-          </div>
-        </div>
+      <Paper sx={{ p: 3, mb: 3 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
+          <Box sx={{ display: 'flex', gap: 3 }}>
+            <Avatar sx={{ width: 80, height: 80, bgcolor: 'primary.main', fontSize: '2rem' }}>
+              {displayLead.name.split(' ').map(n => n[0]).join('')}
+            </Avatar>
+            <Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 1 }}>
+                <Typography variant="h4">{displayLead.name}</Typography>
+                <IconButton onClick={() => setEditMode(!editMode)}>
+                  <Edit />
+                </IconButton>
+                <IconButton>
+                  {displayLead.starred ? <Star color="primary" /> : <StarBorder />}
+                </IconButton>
+              </Box>
+              <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                <Chip
+                  label={displayLead.status.toUpperCase()}
+                  color={getStatusColor(displayLead.status)}
+                  size="small"
+                />
+                <Chip
+                  label={`Score: ${displayLead.score}`}
+                  color="primary"
+                  variant="outlined"
+                  size="small"
+                  icon={<TrendingUp />}
+                />
+                <Chip
+                  label={displayLead.source}
+                  size="small"
+                  variant="outlined"
+                />
+                <Chip
+                  label={`Assigned to: ${displayLead.assignedTo}`}
+                  size="small"
+                  variant="outlined"
+                  color={displayLead.assignedTo.includes('AI') ? 'secondary' : 'default'}
+                />
+              </Box>
+              <Box sx={{ display: 'flex', gap: 3, color: 'text.secondary' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Email fontSize="small" />
+                  <Typography variant="body2">{displayLead.email}</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Phone fontSize="small" />
+                  <Typography variant="body2">{displayLead.phone}</Typography>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <LocationOn fontSize="small" />
+                  <Typography variant="body2">{displayLead.location}</Typography>
+                </Box>
+              </Box>
+            </Box>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <Button variant="outlined" startIcon={<Phone />}>
+              Call
+            </Button>
+            <Button variant="outlined" startIcon={<Email />}>
+              Email
+            </Button>
+            <Button 
+              variant="contained" 
+              color="success"
+              onClick={handleConvertToClient}
+            >
+              Convert to Client
+            </Button>
+          </Box>
+        </Box>
 
-        {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mt-6">
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Lead Score</p>
-                <p className={`text-2xl font-bold ${getLeadScoreColor(lead.lead_score)}`}>
-                  {lead.lead_score}/100
-                </p>
-              </div>
-              <BarChart3 className="h-8 w-8 text-purple-600" />
-            </div>
-          </div>
+        {/* Quick Actions */}
+        <Grid container spacing={2}>
+          <Grid item xs={12} md={3}>
+            <FormControl fullWidth size="small">
+              <InputLabel>Status</InputLabel>
+              <Select
+                value={displayLead.status}
+                label="Status"
+                onChange={(e) => handleStatusChange(e.target.value)}
+              >
+                <MenuItem value="cold">Cold</MenuItem>
+                <MenuItem value="warm">Warm</MenuItem>
+                <MenuItem value="hot">Hot</MenuItem>
+                <MenuItem value="converted">Converted</MenuItem>
+                <MenuItem value="lost">Lost</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Timeline"
+              value={displayLead.timeline}
+              disabled={!editMode}
+            />
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Budget"
+              value={displayLead.budget}
+              disabled={!editMode}
+            />
+          </Grid>
+          <Grid item xs={12} md={3}>
+            <TextField
+              fullWidth
+              size="small"
+              label="Interest"
+              value={displayLead.interested_in}
+              disabled={!editMode}
+            />
+          </Grid>
+        </Grid>
+      </Paper>
 
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Days Since Contact</p>
-                <p className={`text-2xl font-bold ${daysSinceContact > 7 ? 'text-red-600' : 'text-gray-900'}`}>
-                  {daysSinceContact !== null ? daysSinceContact : 'Never'}
-                </p>
-              </div>
-              <Clock className="h-8 w-8 text-blue-600" />
-            </div>
-          </div>
+      {/* Main Content */}
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+        <Tabs value={activeTab} onChange={handleTabChange}>
+          <Tab label="Overview" />
+          <Tab label="Preferences" />
+          <Tab label="Activities" />
+          <Tab label="Tasks" />
+          <Tab label="Notes" />
+          <Tab label="Documents" />
+        </Tabs>
+      </Box>
 
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Contacts</p>
-                <p className="text-2xl font-bold text-gray-900">{lead.number_of_contacts || 0}</p>
-              </div>
-              <MessageCircle className="h-8 w-8 text-green-600" />
-            </div>
-          </div>
+      {/* Tab Content */}
+      {activeTab === 0 && (
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={8}>
+            {/* Lead Information */}
+            <Card sx={{ mb: 3 }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>Lead Information</Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    <Typography variant="body2" color="textSecondary">Property Type</Typography>
+                    <Typography variant="body1">{displayLead.propertyType}</Typography>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Typography variant="body2" color="textSecondary">Pre-Approved</Typography>
+                    <Typography variant="body1">
+                      {displayLead.preApproved ? (
+                        <Chip label="Yes" color="success" size="small" />
+                      ) : (
+                        <Chip label="No" color="default" size="small" />
+                      )}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Typography variant="body2" color="textSecondary">Current Situation</Typography>
+                    <Typography variant="body1">{displayLead.currentSituation}</Typography>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Typography variant="body2" color="textSecondary">Motivation</Typography>
+                    <Typography variant="body1">{displayLead.motivation}</Typography>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Typography variant="body2" color="textSecondary">Created Date</Typography>
+                    <Typography variant="body1">
+                      {format(new Date(displayLead.createdAt), 'MMM dd, yyyy')}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <Typography variant="body2" color="textSecondary">Last Contact</Typography>
+                    <Typography variant="body1">
+                      {format(new Date(displayLead.lastContact), 'MMM dd, yyyy h:mm a')}
+                    </Typography>
+                  </Grid>
+                </Grid>
+              </CardContent>
+            </Card>
 
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Activities</p>
-                <p className="text-2xl font-bold text-gray-900">{activities.length}</p>
-              </div>
-              <Activity className="h-8 w-8 text-orange-600" />
-            </div>
-          </div>
+            {/* Recent Activity */}
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>Recent Activity</Typography>
+                <Timeline>
+                  {displayLead.activities.slice(0, 5).map((activity, index) => (
+                    <TimelineItem key={activity.id}>
+                      <TimelineOppositeContent sx={{ py: '12px', px: 2 }}>
+                        <Typography variant="caption" color="textSecondary">
+                          {format(new Date(activity.timestamp), 'MMM dd, h:mm a')}
+                        </Typography>
+                      </TimelineOppositeContent>
+                      <TimelineSeparator>
+                        <TimelineDot color={index === 0 ? 'primary' : 'grey'}>
+                          {getActivityIcon(activity.type)}
+                        </TimelineDot>
+                        {index < displayLead.activities.length - 1 && <TimelineConnector />}
+                      </TimelineSeparator>
+                      <TimelineContent sx={{ py: '12px', px: 2 }}>
+                        <Typography variant="body2">{activity.description}</Typography>
+                      </TimelineContent>
+                    </TimelineItem>
+                  ))}
+                </Timeline>
+              </CardContent>
+            </Card>
+          </Grid>
 
-          <div className="bg-gray-50 rounded-lg p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Engagement</p>
-                <p className="text-2xl font-bold text-gray-900">{engagementScore}%</p>
-              </div>
-              <Zap className="h-8 w-8 text-yellow-600" />
-            </div>
-          </div>
-        </div>
+          <Grid item xs={12} md={4}>
+            {/* Quick Stats */}
+            <Card sx={{ mb: 3 }}>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>Lead Score Analysis</Typography>
+                <Box sx={{ mb: 3 }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                    <Typography variant="body2">Lead Score</Typography>
+                    <Typography variant="h5" color="primary">{displayLead.score}</Typography>
+                  </Box>
+                  <LinearProgress 
+                    variant="determinate" 
+                    value={displayLead.score} 
+                    sx={{ height: 8, borderRadius: 4 }}
+                  />
+                </Box>
+                <Alert severity={displayLead.score >= 80 ? 'success' : 'info'}>
+                  {displayLead.score >= 80 
+                    ? 'High priority lead - engage immediately!'
+                    : 'Continue nurturing this lead'}
+                </Alert>
+              </CardContent>
+            </Card>
 
-        {/* Alert if not contacted recently */}
-        {daysSinceContact > 7 && lead.lead_status !== 'Converted' && lead.lead_status !== 'Lost' && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mt-4">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <h3 className="text-sm font-medium text-yellow-800">Follow-up Required</h3>
-                <p className="text-sm text-yellow-700 mt-1">
-                  This lead hasn't been contacted in {daysSinceContact} days. Consider reaching out to maintain engagement.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
+            {/* Tasks */}
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>Upcoming Tasks</Typography>
+                <List dense>
+                  {displayLead.tasks.map((task) => (
+                    <ListItem key={task.id}>
+                      <ListItemIcon>
+                        {task.status === 'completed' ? (
+                          <CheckCircle color="success" />
+                        ) : (
+                          <Schedule color="action" />
+                        )}
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={task.title}
+                        secondary={`Due: ${format(new Date(task.dueDate), 'MMM dd')} - ${task.assignedTo}`}
+                        primaryTypographyProps={{
+                          style: {
+                            textDecoration: task.status === 'completed' ? 'line-through' : 'none'
+                          }
+                        }}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      )}
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Column - Contact & Details */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Contact Information */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4">Contact Information</h2>
-            <div className="space-y-3">
-              {lead.email && (
-                <a href={`mailto:${lead.email}`} className="flex items-center gap-3 text-gray-700 hover:text-blue-600">
-                  <Mail className="h-5 w-5 text-gray-400" />
-                  <span className="text-sm">{lead.email}</span>
-                </a>
-              )}
-              {lead.phone && (
-                <a href={`tel:${lead.phone}`} className="flex items-center gap-3 text-gray-700 hover:text-blue-600">
-                  <Phone className="h-5 w-5 text-gray-400" />
-                  <span className="text-sm">{formatPhone(lead.phone)}</span>
-                </a>
-              )}
-              {lead.lead_source && (
-                <div className="flex items-center gap-3 text-gray-700">
-                  <Globe className="h-5 w-5 text-gray-400" />
-                  <span className="text-sm">Source: {lead.lead_source}</span>
-                </div>
-              )}
-            </div>
-
-            {/* Quick Contact Actions */}
-            <div className="mt-6 pt-6 border-t space-y-2">
-              <button className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
-                <Phone className="h-4 w-4" />
-                Call Lead
-              </button>
-              <button className="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center gap-2">
-                <Mail className="h-4 w-4" />
-                Send Email
-              </button>
-            </div>
-          </div>
-
-          {/* Lead Qualification */}
-          {lead.qualification && (
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold mb-4">Qualification Details</h2>
-              <div className="space-y-3">
-                {lead.qualification.budget_range && (
-                  <div>
-                    <p className="text-sm text-gray-600">Budget Range</p>
-                    <p className="font-medium">${lead.qualification.budget_range.min?.toLocaleString()} - ${lead.qualification.budget_range.max?.toLocaleString()}</p>
-                  </div>
-                )}
-                {lead.qualification.timeline && (
-                  <div>
-                    <p className="text-sm text-gray-600">Timeline</p>
-                    <p className="font-medium">{lead.qualification.timeline}</p>
-                  </div>
-                )}
-                {lead.qualification.motivation && (
-                  <div>
-                    <p className="text-sm text-gray-600">Motivation Level</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <div className="flex-1 bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-green-600 h-2 rounded-full"
-                          style={{ width: `${lead.qualification.motivation}%` }}
+      {activeTab === 1 && (
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>Property Preferences</Typography>
+                <Grid container spacing={3}>
+                  <Grid item xs={12} md={6}>
+                    <List dense>
+                      <ListItem>
+                        <ListItemIcon><Home /></ListItemIcon>
+                        <ListItemText 
+                          primary="Property Type"
+                          secondary={displayLead.propertyType}
                         />
-                      </div>
-                      <span className="text-sm font-medium">{lead.qualification.motivation}%</span>
-                    </div>
-                  </div>
-                )}
-                {lead.qualification.financing && (
-                  <div>
-                    <p className="text-sm text-gray-600">Financing</p>
-                    <p className="font-medium">{lead.qualification.financing}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
+                      </ListItem>
+                      <ListItem>
+                        <ListItemIcon><AttachMoney /></ListItemIcon>
+                        <ListItemText 
+                          primary="Budget Range"
+                          secondary={displayLead.budget}
+                        />
+                      </ListItem>
+                      <ListItem>
+                        <ListItemIcon><Business /></ListItemIcon>
+                        <ListItemText 
+                          primary="Bedrooms"
+                          secondary={displayLead.preferences.bedrooms}
+                        />
+                      </ListItem>
+                      <ListItem>
+                        <ListItemIcon><Business /></ListItemIcon>
+                        <ListItemText 
+                          primary="Bathrooms"
+                          secondary={displayLead.preferences.bathrooms}
+                        />
+                      </ListItem>
+                    </List>
+                  </Grid>
+                  <Grid item xs={12} md={6}>
+                    <List dense>
+                      <ListItem>
+                        <ListItemIcon><Home /></ListItemIcon>
+                        <ListItemText 
+                          primary="Square Feet"
+                          secondary={displayLead.preferences.squareFeet}
+                        />
+                      </ListItem>
+                      <ListItem>
+                        <ListItemIcon><LocationOn /></ListItemIcon>
+                        <ListItemText 
+                          primary="Lot Size"
+                          secondary={displayLead.preferences.lotSize}
+                        />
+                      </ListItem>
+                      <ListItem>
+                        <ListItemIcon><DirectionsCar /></ListItemIcon>
+                        <ListItemText 
+                          primary="Garage"
+                          secondary={displayLead.preferences.garage}
+                        />
+                      </ListItem>
+                      <ListItem>
+                        <ListItemIcon><AttachMoney /></ListItemIcon>
+                        <ListItemText 
+                          primary="Max HOA"
+                          secondary={displayLead.preferences.maxHOA}
+                        />
+                      </ListItem>
+                    </List>
+                  </Grid>
+                </Grid>
+                <Divider sx={{ my: 2 }} />
+                <Typography variant="subtitle1" gutterBottom>Desired Features</Typography>
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 2 }}>
+                  {displayLead.preferences.features.map((feature) => (
+                    <Chip key={feature} label={feature} />
+                  ))}
+                </Box>
+                <Typography variant="subtitle1" gutterBottom>Preferred Neighborhoods</Typography>
+                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                  {displayLead.preferences.neighborhoods.map((neighborhood) => (
+                    <Chip key={neighborhood} label={neighborhood} variant="outlined" />
+                  ))}
+                </Box>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      )}
 
-          {/* Property Interests */}
-          {lead.property_interests && (
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold mb-4">Property Interests</h2>
-              <div className="space-y-3">
-                {lead.property_interests.property_types && (
-                  <div>
-                    <p className="text-sm text-gray-600 mb-2">Property Types</p>
-                    <div className="flex flex-wrap gap-2">
-                      {lead.property_interests.property_types.map((type, index) => (
-                        <span key={index} className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
-                          {type}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {lead.property_interests.locations && (
-                  <div>
-                    <p className="text-sm text-gray-600 mb-2">Preferred Locations</p>
-                    <div className="flex flex-wrap gap-2">
-                      {lead.property_interests.locations.map((location, index) => (
-                        <span key={index} className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
-                          {location}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )}
-                {lead.property_interests.features && (
-                  <div>
-                    <p className="text-sm text-gray-600 mb-2">Must-Have Features</p>
-                    <ul className="text-sm space-y-1">
-                      {lead.property_interests.features.map((feature, index) => (
-                        <li key={index} className="flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 bg-gray-400 rounded-full" />
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Tags */}
-          {lead.tags && lead.tags.length > 0 && (
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold mb-4">Tags</h2>
-              <div className="flex flex-wrap gap-2">
-                {lead.tags.map((tag, index) => (
-                  <span key={index} className="px-3 py-1 bg-gray-100 text-gray-700 text-sm rounded-full">
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Middle Column - Checklists */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Initial Contact Checklist */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4">Initial Contact</h2>
-            <div className="space-y-2">
-              {initialContactChecklist.map(item => (
-                <label key={item.key} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={checklistItems.initialContact?.[item.key] || false}
-                    onChange={() => handleChecklistToggle('initialContact', item.key)}
-                    className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
+      {activeTab === 4 && (
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <Card>
+              <CardContent>
+                <Box sx={{ mb: 3 }}>
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={3}
+                    placeholder="Add a note..."
+                    value={newNote}
+                    onChange={(e) => setNewNote(e.target.value)}
                   />
-                  <span className={`text-sm ${checklistItems.initialContact?.[item.key] ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
-                    {item.label}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Qualification Checklist */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4">Qualification Process</h2>
-            <div className="space-y-2">
-              {qualificationChecklist.map(item => (
-                <label key={item.key} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={checklistItems.qualification?.[item.key] || false}
-                    onChange={() => handleChecklistToggle('qualification', item.key)}
-                    className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
-                  />
-                  <span className={`text-sm ${checklistItems.qualification?.[item.key] ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
-                    {item.label}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Nurturing Checklist */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4">Lead Nurturing</h2>
-            <div className="space-y-2">
-              {nurturingChecklist.map(item => (
-                <label key={item.key} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={checklistItems.nurturing?.[item.key] || false}
-                    onChange={() => handleChecklistToggle('nurturing', item.key)}
-                    className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
-                  />
-                  <span className={`text-sm ${checklistItems.nurturing?.[item.key] ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
-                    {item.label}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Conversion Checklist */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4">Conversion Steps</h2>
-            <div className="space-y-2">
-              {conversionChecklist.map(item => (
-                <label key={item.key} className="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={checklistItems.conversion?.[item.key] || false}
-                    onChange={() => handleChecklistToggle('conversion', item.key)}
-                    className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
-                  />
-                  <span className={`text-sm ${checklistItems.conversion?.[item.key] ? 'text-gray-500 line-through' : 'text-gray-900'}`}>
-                    {item.label}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* Right Column - Analytics & Activity */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Lead Score Visualization */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4">Lead Score Analysis</h2>
-            <div className="h-48">
-              <ResponsiveContainer width="100%" height="100%">
-                <RadialBarChart 
-                  cx="50%" 
-                  cy="50%" 
-                  innerRadius="60%" 
-                  outerRadius="90%" 
-                  barSize={20} 
-                  data={getLeadScoreData()}
-                >
-                  <RadialBar
-                    minAngle={15}
-                    background
-                    clockWise
-                    dataKey="value"
-                  />
-                  <text 
-                    x="50%" 
-                    y="50%" 
-                    textAnchor="middle" 
-                    dominantBaseline="middle" 
-                    className="text-3xl font-bold"
-                    fill={getLeadScoreData()[0].fill}
+                  <Button
+                    variant="contained"
+                    sx={{ mt: 1 }}
+                    onClick={handleAddNote}
+                    disabled={!newNote.trim()}
                   >
-                    {lead.lead_score}
-                  </text>
-                </RadialBarChart>
-              </ResponsiveContainer>
-            </div>
-            
-            {/* Score Breakdown */}
-            <div className="mt-4 space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Engagement</span>
-                <span className="font-medium">{Math.min(30, activities.length * 2)}/30</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Qualification</span>
-                <span className="font-medium">{lead.qualification ? 25 : 0}/30</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Interest Level</span>
-                <span className="font-medium">{lead.lead_temperature === 'Hot' ? 20 : lead.lead_temperature === 'Warm' ? 10 : 5}/20</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Timeliness</span>
-                <span className="font-medium">{daysSinceContact <= 3 ? 20 : daysSinceContact <= 7 ? 10 : 0}/20</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Recent Activity Timeline */}
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4">Activity Timeline</h2>
-            <div className="space-y-3">
-              {activities.slice(0, 5).map((activity, index) => (
-                <div key={activity.id} className="flex items-start gap-3">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                    activity.type === 'email' ? 'bg-blue-100' :
-                    activity.type === 'call' ? 'bg-green-100' :
-                    activity.type === 'meeting' ? 'bg-purple-100' :
-                    'bg-gray-100'
-                  }`}>
-                    {activity.type === 'email' ? <Mail className="h-4 w-4 text-blue-600" /> :
-                     activity.type === 'call' ? <Phone className="h-4 w-4 text-green-600" /> :
-                     activity.type === 'meeting' ? <Calendar className="h-4 w-4 text-purple-600" /> :
-                     <Activity className="h-4 w-4 text-gray-600" />}
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">{activity.description}</p>
-                    <p className="text-xs text-gray-600">{formatDate(activity.created_at)}</p>
-                  </div>
-                </div>
-              ))}
-              
-              {activities.length === 0 && (
-                <p className="text-sm text-gray-500">No activities recorded yet</p>
-              )}
-              
-              {activities.length > 5 && (
-                <button className="text-sm text-blue-600 hover:text-blue-800">
-                  View all {activities.length} activities
-                </button>
-              )}
-            </div>
-          </div>
-
-          {/* Communication History Chart */}
-          {communications.length > 0 && (
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold mb-4">Communication Frequency</h2>
-              <div className="h-48">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={getActivityTimeline()}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
-                    <YAxis />
-                    <Tooltip />
-                    <Bar dataKey="score" fill="#3B82F6" />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          )}
-
-          {/* Campaign Info */}
-          {lead.campaign_info && (
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold mb-4">Campaign Information</h2>
-              <div className="space-y-3">
-                {lead.campaign_info.name && (
-                  <div>
-                    <p className="text-sm text-gray-600">Campaign Name</p>
-                    <p className="font-medium">{lead.campaign_info.name}</p>
-                  </div>
-                )}
-                {lead.campaign_info.medium && (
-                  <div>
-                    <p className="text-sm text-gray-600">Medium</p>
-                    <p className="font-medium">{lead.campaign_info.medium}</p>
-                  </div>
-                )}
-                {lead.campaign_info.cost && (
-                  <div>
-                    <p className="text-sm text-gray-600">Acquisition Cost</p>
-                    <p className="font-medium">${lead.campaign_info.cost}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Next Best Actions */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <Target className="h-5 w-5 text-blue-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <h3 className="text-sm font-medium text-blue-800">Recommended Actions</h3>
-                <ul className="text-sm text-blue-700 mt-2 space-y-1">
-                  {daysSinceContact > 3 && <li>• Follow up - it's been {daysSinceContact} days</li>}
-                  {lead.lead_temperature === 'Hot' && !lead.next_follow_up_date && <li>• Schedule immediate showing</li>}
-                  {lead.lead_score >= 70 && lead.lead_status !== 'Qualified' && <li>• Update status to Qualified</li>}
-                  {!lead.assigned_agent && <li>• Assign to specific agent</li>}
-                  {communications.length === 0 && <li>• Send initial welcome email</li>}
-                </ul>
-              </div>
-            </div>
-          </div>
-
-          {/* Conversion Actions */}
-          {lead.lead_status !== 'Converted' && lead.lead_status !== 'Lost' && (
-            <div className="bg-white rounded-lg shadow-sm p-6">
-              <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
-              <div className="space-y-2">
-                <button className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2">
-                  <CheckCircle2 className="h-4 w-4" />
-                  Convert to Client
-                </button>
-                <button className="w-full bg-yellow-600 text-white py-2 px-4 rounded-lg hover:bg-yellow-700 transition-colors flex items-center justify-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  Schedule Appointment
-                </button>
-                <button className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
-                  <Home className="h-4 w-4" />
-                  Send Property Matches
-                </button>
-                <button className="w-full bg-gray-200 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-300 transition-colors flex items-center justify-center gap-2">
-                  <Target className="h-4 w-4" />
-                  Update Lead Score
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+                    Add Note
+                  </Button>
+                </Box>
+                <Divider sx={{ mb: 2 }} />
+                <List>
+                  {displayLead.notes.map((note) => (
+                    <ListItem key={note.id} alignItems="flex-start">
+                      <ListItemText
+                        primary={note.content}
+                        secondary={
+                          <>
+                            {note.createdBy} • {format(new Date(note.createdAt), 'MMM dd, yyyy h:mm a')}
+                          </>
+                        }
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      )}
+    </Container>
   );
-}
+};
+
+export default LeadDetail;
