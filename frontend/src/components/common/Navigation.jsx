@@ -57,7 +57,6 @@ const Navigation = () => {
   const [notificationAnchor, setNotificationAnchor] = useState(null);
 
   const mainNavItems = [
-    { path: '/', label: 'Dashboard', icon: <Dashboard /> },
     { path: '/escrows', label: 'Escrows', icon: <Business /> },
     { path: '/listings', label: 'Listings', icon: <Home /> },
     { path: '/clients', label: 'Clients', icon: <People /> },
@@ -127,7 +126,22 @@ const Navigation = () => {
   // Mobile Drawer Content
   const drawer = (
     <Box sx={{ width: 250 }}>
-      <Box sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+      <Box 
+        sx={{ 
+          p: 2, 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: 1,
+          cursor: 'pointer',
+          '&:hover': {
+            bgcolor: 'action.hover',
+          }
+        }}
+        onClick={() => {
+          navigate('/');
+          setMobileOpen(false);
+        }}
+      >
         <Home sx={{ color: 'primary.main' }} />
         <Typography variant="h6">Real Estate CRM</Typography>
       </Box>
@@ -178,8 +192,22 @@ const Navigation = () => {
             </IconButton>
           )}
 
-          {/* Logo/Brand */}
-          <Box sx={{ display: 'flex', alignItems: 'center', mr: 3 }}>
+          {/* Logo/Brand - NOW CLICKABLE */}
+          <Box 
+            component={NavLink}
+            to="/"
+            sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              mr: 3,
+              textDecoration: 'none',
+              color: 'inherit',
+              cursor: 'pointer',
+              '&:hover': {
+                opacity: 0.85,
+              }
+            }}
+          >
             <Avatar sx={{ bgcolor: 'white', color: 'primary.main', mr: 1 }}>
               <Home />
             </Avatar>
