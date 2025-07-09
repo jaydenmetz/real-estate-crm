@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   Container,
   Grid,
@@ -19,6 +20,7 @@ import {
   Tooltip,
   Card,
   CardContent,
+  Link,
 } from '@mui/material';
 import {
   Add,
@@ -37,6 +39,7 @@ import { appointmentsAPI } from '../../services/api';
 
 const AppointmentsDashboard = () => {
   const [tabValue, setTabValue] = useState(0);
+  const navigate = useNavigate();
 
   // Mock data for now
   const appointments = [
@@ -53,7 +56,7 @@ const AppointmentsDashboard = () => {
     {
       id: 2,
       title: 'Property Showing',
-      date: '2024-01-15',
+      date: '2024-01-16',
       startTime: '14:00',
       appointmentType: 'Property Showing',
       status: 'Scheduled',
@@ -63,44 +66,57 @@ const AppointmentsDashboard = () => {
   ];
 
   const stats = {
-    todayCount: 2,
-    weekCount: 8,
+    todayCount: 3,
+    upcomingCount: 12,
     completedCount: 45,
-    canceledCount: 3,
+    canceledCount: 2,
   };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Scheduled': return 'primary';
-      case 'Completed': return 'success';
-      case 'Cancelled': return 'error';
-      default: return 'default';
+      case 'Scheduled':
+        return 'primary';
+      case 'Completed':
+        return 'success';
+      case 'Cancelled':
+        return 'error';
+      case 'No Show':
+        return 'warning';
+      default:
+        return 'default';
     }
   };
 
   const getTypeIcon = (type) => {
     switch (type) {
-      case 'Property Showing': return <LocationOn />;
-      case 'Buyer Consultation': return <Group />;
-      default: return <Event />;
+      case 'Buyer Consultation':
+        return <Group sx={{ fontSize: 20, mr: 1 }} />;
+      case 'Property Showing':
+        return <LocationOn sx={{ fontSize: 20, mr: 1 }} />;
+      case 'Listing Presentation':
+        return <Event sx={{ fontSize: 20, mr: 1 }} />;
+      default:
+        return <Schedule sx={{ fontSize: 20, mr: 1 }} />;
     }
+  };
+
+  const handleAppointmentClick = (appointmentId) => {
+    navigate(`/appointments/${appointmentId}`);
   };
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h4">Appointments</Typography>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={() => console.log('Add appointment')}
-        >
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+        <Typography variant="h4" component="h1">
+          Appointments
+        </Typography>
+        <Button variant="contained" startIcon={<Add />}>
           New Appointment
         </Button>
       </Box>
 
       {/* Stats Cards */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
+      <Grid container spacing={3} mb={4}>
         <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
@@ -124,10 +140,10 @@ const AppointmentsDashboard = () => {
               <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box>
                   <Typography color="textSecondary" gutterBottom>
-                    This Week
+                    Upcoming
                   </Typography>
                   <Typography variant="h4">
-                    {stats.weekCount}
+                    {stats.upcomingCount}
                   </Typography>
                 </Box>
                 <Schedule color="info" fontSize="large" />
@@ -197,8 +213,28 @@ const AppointmentsDashboard = () => {
           </TableHead>
           <TableBody>
             {appointments.map((appointment) => (
-              <TableRow key={appointment.id}>
-                <TableCell>{appointment.title}</TableCell>
+              <TableRow 
+                key={appointment.id}
+                hover
+                sx={{ '&:hover': { backgroundColor: 'rgba(0, 0, 0, 0.04)' } }}
+              >
+                <TableCell>
+                  <Link
+                    component="button"
+                    variant="body1"
+                    onClick={() => handleAppointmentClick(appointment.id)}
+                    sx={{
+                      textDecoration: 'none',
+                      color: 'primary.main',
+                      fontWeight: 500,
+                      '&:hover': {
+                        textDecoration: 'underline',
+                      },
+                    }}
+                  >
+                    {appointment.title}
+                  </Link>
+                </TableCell>
                 <TableCell>
                   {format(new Date(appointment.date), 'MMM d, yyyy')} at {appointment.startTime}
                 </TableCell>
@@ -219,7 +255,10 @@ const AppointmentsDashboard = () => {
                 </TableCell>
                 <TableCell>
                   <Tooltip title="View">
-                    <IconButton size="small">
+                    <IconButton 
+                      size="small"
+                      onClick={() => handleAppointmentClick(appointment.id)}
+                    >
                       <Visibility />
                     </IconButton>
                   </Tooltip>
