@@ -58,3 +58,4 @@ public/uploads/
 *.env
 *.env.*
 all-code.txt
+combine.sh
