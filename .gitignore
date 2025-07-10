@@ -57,3 +57,4 @@ uploads/
 public/uploads/
 *.env
 *.env.*
+all-code.txt
