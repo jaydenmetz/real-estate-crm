@@ -1,1368 +1,619 @@
-import React, { useState, useEffect } from 'react';
+// VirtualOfficeDashboard.jsx
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Container,
   Grid,
   Paper,
   Typography,
   Box,
-  Avatar,
   Card,
   CardContent,
-  LinearProgress,
-  Chip,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  Alert,
-  Badge,
-  Tooltip,
-  Zoom,
-  Fade,
   Button,
   IconButton,
-  ToggleButton,
-  ToggleButtonGroup,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
   TextField,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemAvatar,
+  Avatar,
   Stack,
+  Chip,
+  LinearProgress,
   Divider,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
+  ToggleButtonGroup,
+  ToggleButton,
+  Fade,
+  Backdrop,
+  Tab,
+  Tabs,
+  FormControlLabel,
+  Switch,
+  Badge,
+  Tooltip,
+  Alert,
+  Snackbar,
 } from '@mui/material';
 import {
-  SmartToy,
   Business,
-  ViewList,
   ViewModule,
-  Close,
-  Send,
-  Work,
-  Analytics,
-  Task,
-  Schedule,
-  CheckCircle,
-  Warning,
-  Celebration,
-  Speed,
-  Assessment,
+  ViewList,
+  GridView,
+  Refresh,
   Groups,
-  Email,
-  Phone,
-  ExpandMore,
-  AccountTree,
-  Psychology,
   TrendingUp,
-  Assignment,
-  Chat,
-  Edit,
-  Save,
-  Cancel,
-  MeetingRoom,
-  HomeWork,
-  Coffee,
+  AttachMoney,
+  CheckCircle,
+  Schedule,
+  Assessment,
+  Analytics,
+  Send,
+  Close,
+  PlayArrow,
+  Pause,
+  QuestionAnswer,
+  SupportAgent,
+  Work,
   Computer,
+  Coffee,
   PhoneInTalk,
-  Group,
+  Timer,
+  NotificationsActive,
+  Map,
+  MeetingRoom,
+  Home,
 } from '@mui/icons-material';
-import { useQuery } from 'react-query';
-import { format } from 'date-fns';
-import Confetti from 'react-confetti';
+import { useQuery, useMutation, useQueryClient } from 'react-query';
+import { useSnackbar } from 'notistack';
+import Office3D from './Office3D';
+import { aiAgentsAPI, analyticsAPI } from '../../services/api';
 import websocketService from '../../services/websocket';
-import { aiAPI } from '../../services/api';
 
-// Office areas with 3D-like positioning
-const officeAreas = {
-  reception: {
-    name: 'Reception',
-    x: 15,
-    y: 15,
-    width: 25,
-    height: 20,
-    color: 'rgba(25, 118, 210, 0.1)',
-    border: '#1976d2',
-    icon: <MeetingRoom />,
-    description: 'Main entrance and Alex\'s desk'
-  },
-  buyerDept: {
-    name: 'Buyer Department',
-    x: 60,
-    y: 10,
-    width: 35,
-    height: 40,
-    color: 'rgba(46, 125, 50, 0.05)',
-    border: '#2e7d32',
-    icon: <HomeWork />,
-    description: 'Buyer team offices'
-  },
-  listingDept: {
-    name: 'Listing Department',
-    x: 5,
-    y: 55,
-    width: 35,
-    height: 40,
-    color: 'rgba(237, 108, 2, 0.05)',
-    border: '#ed6c02',
-    icon: <Business />,
-    description: 'Listing team offices'
-  },
-  operationsDept: {
-    name: 'Operations',
-    x: 60,
-    y: 55,
-    width: 35,
-    height: 40,
-    color: 'rgba(156, 39, 176, 0.05)',
-    border: '#9c27b0',
-    icon: <Computer />,
-    description: 'Operations team offices'
-  },
-  conferenceRoom: {
-    name: 'Conference Room',
-    x: 42,
-    y: 35,
-    width: 16,
-    height: 20,
-    color: 'rgba(33, 150, 243, 0.1)',
-    border: '#2196f3',
-    icon: <Group />,
-    description: 'Team meetings'
-  },
-  breakRoom: {
-    name: 'Break Room',
-    x: 42,
-    y: 15,
-    width: 16,
-    height: 15,
-    color: 'rgba(255, 152, 0, 0.05)',
-    border: '#ff9800',
-    icon: <Coffee />,
-    description: 'Relaxation area'
-  },
-  ceoOffice: {
-    name: 'CEO Office',
-    x: 80,
-    y: 5,
-    width: 15,
-    height: 15,
-    color: 'rgba(211, 47, 47, 0.1)',
-    border: '#d32f2f',
-    icon: <Business />,
-    description: 'Your office'
-  }
-};
-
-// Agent locations based on their current activity
-const getAgentLocation = (agent, activity) => {
-  if (!activity) return agent.defaultLocation;
-  
-  switch (activity.type) {
-    case 'phone_call':
-      return { area: `${agent.department}Dept`, subArea: 'privateOffice' };
-    case 'team_meeting':
-      return { area: 'conferenceRoom', subArea: 'meeting' };
-    case 'break':
-      return { area: 'breakRoom', subArea: 'relaxing' };
-    case 'client_meeting':
-      return { area: 'conferenceRoom', subArea: 'client' };
-    default:
-      return agent.defaultLocation;
-  }
-};
-
-// Agent data with locations
+// Agent configurations matching your floor plan
 const agentProfiles = {
-  alex_executive: {
-    id: 'alex_executive',
+  alex: {
+    id: 'alex',
     name: 'Alex',
     title: 'Executive Assistant',
-    department: 'management',
+    department: 'reception',
     icon: '🤖',
     color: '#1976d2',
-    image: 'https://i.pravatar.cc/300?img=1',
-    defaultLocation: { area: 'reception', x: 20, y: 50 },
-    stage: 2,
-    model: 'GPT-4',
-    apiEndpoint: '/api/v1/ai/alex',
-    responsibilities: [
-      'Oversight of all AI managers',
-      'Weekly reporting and summaries',
-      'Command processing from CEO',
-      'Time-based check-ins',
-      'Intelligence hub operations'
-    ],
-    metrics: {
-      tasksToday: 47,
-      avgResponseTime: '1.2m',
-      efficiency: '97%',
-      lastActive: '2 minutes ago'
-    }
+    defaultPosition: { x: 15, z: -3.5 }, // Reception area
+    status: 'available',
+    currentTask: 'Managing appointments',
   },
-  buyer_manager: {
-    id: 'buyer_manager',
-    name: 'Buyer Manager',
-    title: 'Buyer Department Head',
-    department: 'buyer',
-    icon: '👔',
+  sarah: {
+    id: 'sarah',
+    name: 'Sarah',
+    title: 'Listing Manager',
+    department: 'listings',
+    icon: '🏠',
     color: '#2e7d32',
-    image: 'https://i.pravatar.cc/300?img=2',
-    defaultLocation: { area: 'buyerDept', x: 20, y: 20 },
-    stage: 2,
-    model: 'Claude-3-Sonnet',
-    apiEndpoint: '/api/v1/ai/buyer-manager',
-    metrics: {
-      tasksToday: 23,
-      avgResponseTime: '2.1m',
-      efficiency: '94%',
-      lastActive: '5 minutes ago'
-    }
+    defaultPosition: { x: -15, z: 11 }, // Executive office 1
+    status: 'busy',
+    currentTask: 'Reviewing new listings',
   },
-  buyer_qualifier: {
-    id: 'buyer_qualifier',
-    name: 'Ella',
-    title: 'Lead Response Specialist',
-    department: 'buyer',
-    icon: '📞',
-    color: '#2e7d32',
-    image: 'https://i.pravatar.cc/300?img=5',
-    defaultLocation: { area: 'buyerDept', x: 60, y: 30 },
-    stage: 1,
-    model: 'GPT-3.5',
-    apiEndpoint: '/api/v1/ai/ella',
-    metrics: {
-      tasksToday: 89,
-      avgResponseTime: '1.8m',
-      efficiency: '96%',
-      lastActive: 'Active now'
-    }
-  },
-  buyer_nurture: {
-    id: 'buyer_nurture',
-    name: 'Noah',
-    title: 'Relationship Manager',
-    department: 'buyer',
-    icon: '💌',
-    color: '#2e7d32',
-    image: 'https://i.pravatar.cc/300?img=3',
-    defaultLocation: { area: 'buyerDept', x: 30, y: 70 },
-    stage: 1,
-    model: 'GPT-3.5',
-    apiEndpoint: '/api/v1/ai/noah',
-    metrics: {
-      tasksToday: 156,
-      avgResponseTime: 'N/A',
-      efficiency: '99%',
-      lastActive: '10 minutes ago'
-    }
-  },
-  showing_coordinator: {
-    id: 'showing_coordinator',
-    name: 'Sofia',
-    title: 'Appointment Specialist',
-    department: 'buyer',
-    icon: '🗓️',
-    color: '#2e7d32',
-    image: 'https://i.pravatar.cc/300?img=9',
-    defaultLocation: { area: 'buyerDept', x: 70, y: 70 },
-    stage: 1,
-    model: 'GPT-3.5',
-    apiEndpoint: '/api/v1/ai/sofia',
-    metrics: {
-      tasksToday: 34,
-      avgResponseTime: '3.5m',
-      efficiency: '92%',
-      lastActive: '15 minutes ago'
-    }
-  },
-  listing_manager: {
-    id: 'listing_manager',
-    name: 'Liam',
-    title: 'Listing Department Head',
-    department: 'listing',
-    icon: '👔',
-    color: '#ed6c02',
-    image: 'https://i.pravatar.cc/300?img=4',
-    defaultLocation: { area: 'listingDept', x: 20, y: 20 },
-    stage: 2,
-    model: 'Claude-3-Sonnet',
-    apiEndpoint: '/api/v1/ai/liam',
-    metrics: {
-      tasksToday: 31,
-      avgResponseTime: '2.5m',
-      efficiency: '93%',
-      lastActive: '8 minutes ago'
-    }
-  },
-  listing_launch: {
-    id: 'listing_launch',
-    name: 'Luna',
-    title: 'MLS Optimization Expert',
-    department: 'listing',
-    icon: '🚀',
-    color: '#ed6c02',
-    image: 'https://i.pravatar.cc/300?img=20',
-    defaultLocation: { area: 'listingDept', x: 60, y: 30 },
-    stage: 1,
-    model: 'GPT-4',
-    apiEndpoint: '/api/v1/ai/luna',
-    metrics: {
-      tasksToday: 12,
-      avgResponseTime: '5m',
-      efficiency: '98%',
-      lastActive: '20 minutes ago'
-    }
-  },
-  market_analyst: {
-    id: 'market_analyst',
-    name: 'Marcus',
-    title: 'Market Intelligence',
-    department: 'listing',
-    icon: '📊',
-    color: '#ed6c02',
-    image: 'https://i.pravatar.cc/300?img=7',
-    defaultLocation: { area: 'listingDept', x: 30, y: 70 },
-    stage: 2,
-    model: 'GPT-4',
-    apiEndpoint: '/api/v1/ai/marcus',
-    metrics: {
-      tasksToday: 18,
-      avgResponseTime: '8m',
-      efficiency: '95%',
-      lastActive: '30 minutes ago'
-    }
-  },
-  listing_marketing: {
-    id: 'listing_marketing',
-    name: 'Maya',
-    title: 'Digital Marketing Specialist',
-    department: 'listing',
-    icon: '📢',
-    color: '#ed6c02',
-    image: 'https://i.pravatar.cc/300?img=21',
-    defaultLocation: { area: 'listingDept', x: 70, y: 70 },
-    stage: 1,
-    model: 'GPT-3.5',
-    apiEndpoint: '/api/v1/ai/maya',
-    metrics: {
-      tasksToday: 67,
-      avgResponseTime: '4m',
-      efficiency: '91%',
-      lastActive: '5 minutes ago'
-    }
-  },
-  ops_manager: {
-    id: 'ops_manager',
-    name: 'Oscar',
-    title: 'Operations Department Head',
+  mike: {
+    id: 'mike',
+    name: 'Mike',
+    title: 'Operations Manager',
     department: 'operations',
-    icon: '👔',
-    color: '#9c27b0',
-    image: 'https://i.pravatar.cc/300?img=8',
-    defaultLocation: { area: 'operationsDept', x: 20, y: 20 },
-    stage: 2,
-    model: 'Claude-3-Sonnet',
-    apiEndpoint: '/api/v1/ai/oscar',
-    metrics: {
-      tasksToday: 28,
-      avgResponseTime: '3m',
-      efficiency: '96%',
-      lastActive: '12 minutes ago'
-    }
+    icon: '⚙️',
+    color: '#ed6c02',
+    defaultPosition: { x: -5, z: 11 }, // Executive office 2
+    status: 'available',
+    currentTask: 'Coordinating team activities',
   },
-  transaction_coordinator: {
-    id: 'transaction_coordinator',
-    name: 'Tara',
-    title: 'Escrow Management',
-    department: 'operations',
-    icon: '📄',
+  emma: {
+    id: 'emma',
+    name: 'Emma',
+    title: 'Client Relations',
+    department: 'clients',
+    icon: '👥',
     color: '#9c27b0',
-    image: 'https://i.pravatar.cc/300?img=22',
-    defaultLocation: { area: 'operationsDept', x: 60, y: 30 },
-    stage: 1,
-    model: 'GPT-3.5',
-    apiEndpoint: '/api/v1/ai/tara',
-    metrics: {
-      tasksToday: 45,
-      avgResponseTime: '2.8m',
-      efficiency: '94%',
-      lastActive: 'Active now'
-    }
+    defaultPosition: { x: 5, z: 11 }, // Executive office 3
+    status: 'available',
+    currentTask: 'Following up with clients',
   },
-  compliance_officer: {
-    id: 'compliance_officer',
-    name: 'Carlos',
-    title: 'Legal & Compliance',
-    department: 'operations',
-    icon: '✅',
-    color: '#9c27b0',
-    image: 'https://i.pravatar.cc/300?img=11',
-    defaultLocation: { area: 'operationsDept', x: 30, y: 70 },
-    stage: 1,
-    model: 'GPT-4',
-    apiEndpoint: '/api/v1/ai/carlos',
-    metrics: {
-      tasksToday: 23,
-      avgResponseTime: '6m',
-      efficiency: '99%',
-      lastActive: '18 minutes ago'
-    }
-  },
-  financial_analyst: {
-    id: 'financial_analyst',
-    name: 'Finn',
-    title: 'Commission & Finance',
-    department: 'operations',
-    icon: '💰',
-    color: '#9c27b0',
-    image: 'https://i.pravatar.cc/300?img=12',
-    defaultLocation: { area: 'operationsDept', x: 70, y: 70 },
-    stage: 1,
-    model: 'GPT-3.5',
-    apiEndpoint: '/api/v1/ai/finn',
-    metrics: {
-      tasksToday: 19,
-      avgResponseTime: '4.5m',
-      efficiency: '97%',
-      lastActive: '25 minutes ago'
-    }
-  },
-  database_specialist: {
-    id: 'database_specialist',
-    name: 'Olivia',
-    title: 'CRM & Database Admin',
-    department: 'support',
-    icon: '💾',
-    color: '#757575',
-    image: 'https://i.pravatar.cc/300?img=23',
-    defaultLocation: { area: 'breakRoom', x: 50, y: 50 },
-    stage: 1,
-    model: 'GPT-3.5',
-    apiEndpoint: '/api/v1/ai/olivia',
-    metrics: {
-      tasksToday: 38,
-      avgResponseTime: '3.2m',
-      efficiency: '95%',
-      lastActive: '10 minutes ago'
-    }
-  }
 };
 
-// Department configurations
-const departments = {
-  management: { name: 'Executive', color: '#1976d2', icon: '🏢' },
-  buyer: { name: 'Buyer Department', color: '#2e7d32', icon: '🏠' },
-  listing: { name: 'Listing Department', color: '#ed6c02', icon: '📋' },
-  operations: { name: 'Operations Department', color: '#9c27b0', icon: '⚙️' },
-  support: { name: 'Support', color: '#757575', icon: '🔧' }
+// Room configurations for your floor plan
+const roomConfigs = {
+  executive1: {
+    name: 'Executive Office 1',
+    type: 'office',
+    capacity: 2,
+    features: ['Desk', 'Meeting Chairs', 'Whiteboard'],
+    assignedAgent: 'sarah',
+  },
+  executive2: {
+    name: 'Executive Office 2',
+    type: 'office',
+    capacity: 2,
+    features: ['Desk', 'Meeting Chairs', 'Monitor'],
+    assignedAgent: 'mike',
+  },
+  executive3: {
+    name: 'Executive Office 3',
+    type: 'office',
+    capacity: 2,
+    features: ['Desk', 'Meeting Chairs', 'Filing Cabinet'],
+    assignedAgent: 'emma',
+  },
+  conference: {
+    name: 'Conference Room',
+    type: 'meeting',
+    capacity: 8,
+    features: ['Conference Table', 'Projector', 'Video Conference'],
+    currentMeeting: null,
+  },
+  officeStorage: {
+    name: 'Office with Storage',
+    type: 'office',
+    capacity: 3,
+    features: ['Desk', 'Storage Cabinets', 'Printer'],
+    purpose: 'Administrative work and supply storage',
+  },
+  lounge: {
+    name: 'Lounge Area',
+    type: 'relaxation',
+    capacity: 6,
+    features: ['Comfortable Seating', 'Coffee Machine', 'Water Cooler'],
+    amenities: ['Coffee', 'Tea', 'Snacks'],
+  },
+  reception: {
+    name: 'Reception/Waiting Area',
+    type: 'reception',
+    capacity: 4,
+    features: ['Reception Desk', 'Waiting Chairs', 'Info Display'],
+    assignedAgent: 'alex',
+  },
+  meeting: {
+    name: 'Meeting Room',
+    type: 'meeting',
+    capacity: 4,
+    features: ['Round Table', 'Whiteboard', 'Phone'],
+    availability: 'Available',
+  },
+  client: {
+    name: 'Client Area',
+    type: 'client',
+    capacity: 3,
+    features: ['Consultation Desk', 'Display Screen', 'Brochures'],
+    purpose: 'Client consultations',
+  },
+  workspace: {
+    name: 'Open Workspace',
+    type: 'workspace',
+    capacity: 10,
+    features: ['Hot Desks', 'Collaboration Areas', 'Printers'],
+    currentOccupancy: 5,
+  },
 };
 
 const VirtualOfficeDashboard = () => {
-  const [viewMode, setViewMode] = useState('office');
   const [selectedAgent, setSelectedAgent] = useState(null);
-  const [editMode, setEditMode] = useState(false);
-  const [editedAgent, setEditedAgent] = useState(null);
-  const [dmMessage, setDmMessage] = useState('');
-  const [activities, setActivities] = useState([]);
-  const [achievements, setAchievements] = useState([]);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [teamStats, setTeamStats] = useState({
-    activeAgents: 12,
-    totalTasks: 247,
-    efficiency: 94.2,
-    avgResponseTime: 2.1
-  });
-  const [agentLocations, setAgentLocations] = useState({});
+  const [selectedRoom, setSelectedRoom] = useState(null);
+  const [viewMode, setViewMode] = useState('3d');
+  const [showRoomDetails, setShowRoomDetails] = useState(false);
+  const [agentMessage, setAgentMessage] = useState('');
+  const [announcement, setAnnouncement] = useState('');
+  const [showAnnouncement, setShowAnnouncement] = useState(false);
+  const { enqueueSnackbar } = useSnackbar();
+  const queryClient = useQueryClient();
 
-  // Initialize agent locations
+  // Convert agent profiles to array format for Office3D
+  const agents = Object.values(agentProfiles);
+
+  // Fetch real-time data
+  const { data: officeStats } = useQuery(
+    'officeStats',
+    () => analyticsAPI.getOfficeStats(),
+    { refetchInterval: 30000 }
+  );
+
+  // WebSocket connection for real-time updates
   useEffect(() => {
-    const initialLocations = {};
-    Object.entries(agentProfiles).forEach(([id, agent]) => {
-      initialLocations[id] = agent.defaultLocation;
+    websocketService.on('agent-update', (data) => {
+      queryClient.invalidateQueries('officeStats');
+      enqueueSnackbar(`${data.agentName} is now ${data.status}`, { 
+        variant: 'info' 
+      });
     });
-    setAgentLocations(initialLocations);
-  }, []);
 
-  // Simulate agent movements
-  useEffect(() => {
-    const moveInterval = setInterval(() => {
-      // Randomly move an agent
-      const agents = Object.keys(agentProfiles);
-      const randomAgent = agents[Math.floor(Math.random() * agents.length)];
-      const agent = agentProfiles[randomAgent];
-      
-      // Simulate different activities
-      const activities = [
-        { type: 'phone_call', duration: 5000 },
-        { type: 'team_meeting', duration: 10000 },
-        { type: 'break', duration: 3000 },
-        { type: 'working', duration: 0 }
-      ];
-      
-      const activity = activities[Math.floor(Math.random() * activities.length)];
-      const newLocation = getAgentLocation(agent, activity);
-      
-      setAgentLocations(prev => ({
-        ...prev,
-        [randomAgent]: newLocation
-      }));
-      
-      // Return to default after activity
-      if (activity.duration > 0) {
-        setTimeout(() => {
-          setAgentLocations(prev => ({
-            ...prev,
-            [randomAgent]: agent.defaultLocation
-          }));
-        }, activity.duration);
+    websocketService.on('room-update', (data) => {
+      if (data.roomId === selectedRoom?.id) {
+        setSelectedRoom({ ...selectedRoom, ...data.updates });
       }
-    }, 8000);
-    
-    return () => clearInterval(moveInterval);
-  }, []);
-
-  // Subscribe to WebSocket events
-  useEffect(() => {
-    const handleActivity = (data) => {
-      setActivities(prev => [{
-        id: Date.now(),
-        ...data,
-        timestamp: new Date()
-      }, ...prev].slice(0, 20));
-    };
-
-    const handleAchievement = (data) => {
-      setAchievements(prev => [...prev, data]);
-      setShowConfetti(true);
-      setTimeout(() => setShowConfetti(false), 5000);
-    };
-
-    const handleTeamStatus = (data) => {
-      setTeamStats(data);
-    };
-
-    websocketService.on('ai:activity', handleActivity);
-    websocketService.on('ai:achievement', handleAchievement);
-    websocketService.on('ai:teamStatus', handleTeamStatus);
+    });
 
     return () => {
-      websocketService.off('ai:activity', handleActivity);
-      websocketService.off('ai:achievement', handleAchievement);
-      websocketService.off('ai:teamStatus', handleTeamStatus);
+      websocketService.off('agent-update');
+      websocketService.off('room-update');
     };
-  }, []);
+  }, [selectedRoom]);
 
-  // Get agent status
-  const getAgentStatus = (agentId) => {
-    const activity = activities.find(a => a.agentId === agentId);
-    if (!activity) return 'idle';
-    
-    const timeDiff = Date.now() - new Date(activity.timestamp).getTime();
-    if (timeDiff < 10000) return activity.status;
-    return 'idle';
-  };
-
-  // Handle agent profile click
-  const handleAgentClick = (agent) => {
+  const handleAgentClick = (agentId) => {
+    const agent = agentProfiles[agentId];
     setSelectedAgent(agent);
-    setEditMode(false);
-    setEditedAgent(null);
-    setDmMessage('');
   };
 
-  // Render office view
-  const renderOfficeView = () => (
-    <Paper
-      sx={{
-        position: 'relative',
-        height: 700,
-        background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-        overflow: 'hidden',
-        borderRadius: 3,
-        boxShadow: '0 10px 40px rgba(0,0,0,0.1)'
-      }}
-    >
-      {/* 3D effect background */}
-      <Box
-        sx={{
-          position: 'absolute',
-          width: '100%',
-          height: '100%',
-          background: `
-            repeating-linear-gradient(
-              0deg,
-              transparent,
-              transparent 2px,
-              rgba(0,0,0,0.03) 2px,
-              rgba(0,0,0,0.03) 4px
-            ),
-            repeating-linear-gradient(
-              90deg,
-              transparent,
-              transparent 2px,
-              rgba(0,0,0,0.03) 2px,
-              rgba(0,0,0,0.03) 4px
-            )
-          `,
-          backgroundSize: '50px 50px'
-        }}
-      />
+  const handleRoomClick = (roomName) => {
+    const room = roomConfigs[roomName];
+    if (room) {
+      setSelectedRoom({ id: roomName, ...room });
+      setShowRoomDetails(true);
+    }
+  };
 
-      {/* Office areas */}
-      {Object.entries(officeAreas).map(([areaId, area]) => (
-        <Box
-          key={areaId}
-          sx={{
-            position: 'absolute',
-            left: `${area.x}%`,
-            top: `${area.y}%`,
-            width: `${area.width}%`,
-            height: `${area.height}%`,
-            backgroundColor: area.color,
-            border: `2px solid ${area.border}`,
-            borderRadius: 2,
-            transition: 'all 0.3s ease',
-            '&:hover': {
-              boxShadow: `0 4px 20px ${area.color}`,
-              transform: 'translateY(-2px)'
-            }
-          }}
-        >
-          {/* Area label */}
-          <Box
-            sx={{
-              position: 'absolute',
-              top: 8,
-              left: 8,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 0.5,
-              bgcolor: 'white',
-              px: 1.5,
-              py: 0.5,
-              borderRadius: 1,
-              boxShadow: 1
-            }}
-          >
-            {area.icon}
-            <Typography variant="caption" fontWeight={600}>
-              {area.name}
-            </Typography>
-          </Box>
+  const handleSendMessageToAgent = () => {
+    if (selectedAgent && agentMessage) {
+      enqueueSnackbar(`Message sent to ${selectedAgent.name}`, { 
+        variant: 'success' 
+      });
+      setAgentMessage('');
+      // In real app, this would send via API
+    }
+  };
 
-          {/* Special room features */}
-          {areaId === 'conferenceRoom' && (
-            <Box
-              sx={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                width: '60%',
-                height: '40%',
-                bgcolor: '#8b6914',
-                borderRadius: '50%',
-                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.2)'
-              }}
-            />
-          )}
-        </Box>
-      ))}
+  const handleMakeAnnouncement = () => {
+    if (announcement) {
+      setShowAnnouncement(true);
+      enqueueSnackbar('Announcement broadcasted!', { variant: 'success' });
+      setTimeout(() => setShowAnnouncement(false), 5000);
+    }
+  };
 
-      {/* Render agents */}
-      {Object.entries(agentProfiles).map(([agentId, agent]) => {
-        const status = getAgentStatus(agentId);
-        const isActive = status === 'working';
-        const currentActivity = activities.find(a => a.agentId === agentId);
-        const location = agentLocations[agentId] || agent.defaultLocation;
-        const area = officeAreas[location.area];
-        
-        // Calculate absolute position
-        const agentX = area.x + (area.width * (location.x || 50) / 100);
-        const agentY = area.y + (area.height * (location.y || 50) / 100);
-
-        return (
-          <Card
-            key={agentId}
-            onClick={() => handleAgentClick(agent)}
-            sx={{
-              position: 'absolute',
-              left: `${agentX}%`,
-              top: `${agentY}%`,
-              transform: 'translate(-50%, -50%)',
-              width: 140,
-              cursor: 'pointer',
-              transition: 'all 0.5s ease',
-              bgcolor: 'white',
-              boxShadow: isActive ? '0 0 20px rgba(76, 175, 80, 0.5)' : 3,
-              border: isActive ? '2px solid #4caf50' : 'none',
-              '&:hover': {
-                transform: 'translate(-50%, -50%) scale(1.05)',
-                boxShadow: '0 8px 30px rgba(0,0,0,0.15)'
-              }
-            }}
-          >
-            <Box sx={{ p: 1.5 }}>
-              {/* Agent avatar */}
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <Badge
-                  badgeContent={isActive ? '●' : ''}
-                  color="success"
-                  variant="dot"
-                  invisible={!isActive}
-                  sx={{
-                    '& .MuiBadge-dot': {
-                      animation: isActive ? 'pulse 2s infinite' : 'none',
-                    }
-                  }}
-                >
-                  <Avatar
-                    src={agent.image}
-                    sx={{
-                      width: 40,
-                      height: 40,
-                      border: `2px solid ${agent.color}`
-                    }}
-                  >
-                    <Typography fontSize="18px">{agent.icon}</Typography>
-                  </Avatar>
-                </Badge>
-                <Box sx={{ ml: 1, flex: 1 }}>
-                  <Typography variant="subtitle2" sx={{ lineHeight: 1.2 }}>
-                    {agent.name}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.65rem' }}>
-                    {agent.title}
-                  </Typography>
-                </Box>
-              </Box>
-
-              {/* Activity status */}
-              {currentActivity && (
-                <Box
-                  sx={{
-                    bgcolor: location.area === 'conferenceRoom' 
-                      ? 'info.light' 
-                      : location.area === 'breakRoom'
-                      ? 'warning.light'
-                      : 'action.hover',
-                    borderRadius: 1,
-                    p: 0.5,
-                    mt: 0.5
-                  }}
-                >
-                  <Typography variant="caption" sx={{ fontSize: '0.65rem' }}>
-                    {location.area === 'conferenceRoom' && '🤝 In meeting'}
-                    {location.area === 'breakRoom' && '☕ On break'}
-                    {location.area.includes('Dept') && currentActivity.type === 'phone_call' && '📞 On call'}
-                    {currentActivity.currentTask && !['conferenceRoom', 'breakRoom'].includes(location.area) && 
-                      currentActivity.currentTask.substring(0, 20) + '...'}
-                  </Typography>
-                  {currentActivity.progress > 0 && (
-                    <LinearProgress
-                      variant="determinate"
-                      value={currentActivity.progress}
-                      sx={{ mt: 0.5, height: 3 }}
-                    />
-                  )}
-                </Box>
-              )}
-            </Box>
-          </Card>
-        );
-      })}
-
-      {/* Office time */}
-      <Box
-        sx={{
-          position: 'absolute',
-          top: 16,
-          right: 16,
-          bgcolor: 'white',
-          px: 2,
-          py: 1,
-          borderRadius: 2,
-          boxShadow: 2
-        }}
-      >
-        <Typography variant="body2">
-          {format(new Date(), 'h:mm a')} PST
-        </Typography>
-      </Box>
-    </Paper>
-  );
-
-  // Render card view
-  const renderCardView = () => (
-    <Grid container spacing={2}>
-      {Object.entries(agentProfiles).map(([agentId, agent]) => {
-        const status = getAgentStatus(agentId);
-        const isActive = status === 'working';
-        const currentActivity = activities.find(a => a.agentId === agentId);
-
-        return (
-          <Grid item xs={12} sm={6} md={4} lg={3} key={agentId}>
-            <Card
-              onClick={() => handleAgentClick(agent)}
-              sx={{
-                cursor: 'pointer',
-                height: '100%',
-                transition: 'all 0.3s ease',
-                border: isActive ? '2px solid #4caf50' : 'none',
-                '&:hover': {
-                  transform: 'translateY(-4px)',
-                  boxShadow: 4
-                }
-              }}
-            >
-              <CardContent>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                  <Badge
-                    badgeContent={isActive ? '●' : ''}
-                    color="success"
-                    variant="dot"
-                    invisible={!isActive}
-                  >
-                    <Avatar
-                      src={agent.image}
-                      sx={{
-                        width: 56,
-                        height: 56,
-                        border: `3px solid ${agent.color}`
-                      }}
-                    >
-                      <Typography fontSize="24px">{agent.icon}</Typography>
-                    </Avatar>
-                  </Badge>
-                  <Box sx={{ ml: 2, flex: 1 }}>
-                    <Typography variant="h6">{agent.name}</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {agent.title}
-                    </Typography>
-                    <Chip
-                      label={`Stage ${agent.stage}`}
-                      size="small"
-                      color={agent.stage === 3 ? 'success' : agent.stage === 2 ? 'primary' : 'default'}
-                      sx={{ mt: 0.5 }}
-                    />
-                  </Box>
-                </Box>
-
-                <Divider sx={{ my: 2 }} />
-
-                <Grid container spacing={1}>
-                  <Grid item xs={6}>
-                    <Typography variant="caption" color="text.secondary">
-                      Tasks Today
-                    </Typography>
-                    <Typography variant="h6">
-                      {agent.metrics.tasksToday}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="caption" color="text.secondary">
-                      Efficiency
-                    </Typography>
-                    <Typography variant="h6">
-                      {agent.metrics.efficiency}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="caption" color="text.secondary">
-                      Response Time
-                    </Typography>
-                    <Typography variant="body2">
-                      {agent.metrics.avgResponseTime}
-                    </Typography>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Typography variant="caption" color="text.secondary">
-                      Status
-                    </Typography>
-                    <Typography variant="body2" color={isActive ? 'success.main' : 'text.secondary'}>
-                      {agent.metrics.lastActive}
-                    </Typography>
-                  </Grid>
-                </Grid>
-
-                {currentActivity && (
-                  <Box
-                    sx={{
-                      mt: 2,
-                      p: 1,
-                      bgcolor: 'action.hover',
-                      borderRadius: 1
-                    }}
-                  >
-                    <Typography variant="caption">
-                      Current: {currentActivity.currentTask || 'Processing...'}
-                    </Typography>
-                    {currentActivity.progress > 0 && (
-                      <LinearProgress
-                        variant="determinate"
-                        value={currentActivity.progress}
-                        sx={{ mt: 1 }}
-                      />
-                    )}
-                  </Box>
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
-        );
-      })}
-    </Grid>
-  );
-
-  // Render list view
-  const renderListView = () => (
-    <Box>
-      {Object.entries(departments).map(([deptId, dept]) => {
-        const deptAgents = Object.values(agentProfiles).filter(
-          agent => agent.department === deptId
-        );
-
-        return (
-          <Accordion key={deptId} defaultExpanded>
-            <AccordionSummary expandIcon={<ExpandMore />}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Typography fontSize="20px">{dept.icon}</Typography>
-                <Typography variant="h6">{dept.name}</Typography>
-                <Chip
-                  label={`${deptAgents.length} agents`}
-                  size="small"
-                  sx={{ ml: 2 }}
-                />
-              </Box>
-            </AccordionSummary>
-            <AccordionDetails>
-              <List>
-                {deptAgents.map((agent) => {
-                  const status = getAgentStatus(agent.id);
-                  const isActive = status === 'working';
-
-                  return (
-                    <ListItem
-                      key={agent.id}
-                      onClick={() => handleAgentClick(agent)}
-                      sx={{
-                        cursor: 'pointer',
-                        borderRadius: 2,
-                        mb: 1,
-                        bgcolor: isActive ? 'action.hover' : 'transparent',
-                        '&:hover': { bgcolor: 'action.hover' }
-                      }}
-                    >
-                      <ListItemAvatar>
-                        <Badge
-                          badgeContent={isActive ? '●' : ''}
-                          color="success"
-                          variant="dot"
-                          invisible={!isActive}
-                        >
-                          <Avatar src={agent.image} sx={{ width: 48, height: 48 }}>
-                            <Typography fontSize="20px">{agent.icon}</Typography>
-                          </Avatar>
-                        </Badge>
-                      </ListItemAvatar>
-                      <ListItemText
-                        primary={
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            <Typography variant="subtitle1">{agent.name}</Typography>
-                            <Chip
-                              label={`Stage ${agent.stage}`}
-                              size="small"
-                              color={agent.stage === 3 ? 'success' : agent.stage === 2 ? 'primary' : 'default'}
-                            />
-                          </Box>
-                        }
-                        secondary={
-                          <Box>
-                            <Typography variant="body2" color="text.secondary">
-                              {agent.title} • {agent.model}
-                            </Typography>
-                            <Box sx={{ display: 'flex', gap: 2, mt: 0.5 }}>
-                              <Typography variant="caption">
-                                Tasks: {agent.metrics.tasksToday}
-                              </Typography>
-                              <Typography variant="caption">
-                                Efficiency: {agent.metrics.efficiency}
-                              </Typography>
-                              <Typography variant="caption" color={isActive ? 'success.main' : 'text.secondary'}>
-                                {agent.metrics.lastActive}
-                              </Typography>
-                            </Box>
-                          </Box>
-                        }
-                      />
-                    </ListItem>
-                  );
-                })}
-              </List>
-            </AccordionDetails>
-          </Accordion>
-        );
-      })}
-    </Box>
-  );
-
-  // Agent Profile Dialog with Edit functionality
-  const renderAgentProfile = () => (
-    <Dialog
-      open={!!selectedAgent}
-      onClose={() => {
-        setSelectedAgent(null);
-        setEditMode(false);
-      }}
-      maxWidth="md"
-      fullWidth
-    >
-      {selectedAgent && (
-        <>
-          <DialogTitle>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Avatar src={selectedAgent.image} sx={{ width: 56, height: 56 }}>
-                  <Typography fontSize="28px">{selectedAgent.icon}</Typography>
-                </Avatar>
-                <Box>
-                  {editMode ? (
-                    <TextField
-                      value={editedAgent?.name || ''}
-                      onChange={(e) => setEditedAgent({ ...editedAgent, name: e.target.value })}
-                      variant="standard"
-                      sx={{ fontSize: '1.5rem' }}
-                    />
-                  ) : (
-                    <Typography variant="h5">{selectedAgent.name}</Typography>
-                  )}
-                  {editMode ? (
-                    <TextField
-                      value={editedAgent?.title || ''}
-                      onChange={(e) => setEditedAgent({ ...editedAgent, title: e.target.value })}
-                      variant="standard"
-                      size="small"
-                    />
-                  ) : (
-                    <Typography variant="subtitle1" color="text.secondary">
-                      {selectedAgent.title}
-                    </Typography>
-                  )}
-                </Box>
-              </Box>
-              <Box>
-                {editMode ? (
-                  <>
-                    <IconButton onClick={() => {
-                      // Save logic
-                      setEditMode(false);
-                    }} color="primary">
-                      <Save />
-                    </IconButton>
-                    <IconButton onClick={() => setEditMode(false)}>
-                      <Cancel />
-                    </IconButton>
-                  </>
-                ) : (
-                  <>
-                    <IconButton onClick={() => {
-                      setEditMode(true);
-                      setEditedAgent({ ...selectedAgent });
-                    }}>
-                      <Edit />
-                    </IconButton>
-                    <IconButton onClick={() => setSelectedAgent(null)}>
-                      <Close />
-                    </IconButton>
-                  </>
-                )}
-              </Box>
-            </Box>
-          </DialogTitle>
-
-          <DialogContent dividers>
-            <Grid container spacing={3}>
-              {/* Agent Info */}
-              <Grid item xs={12} md={6}>
-                <Typography variant="h6" gutterBottom>
-                  <Psychology sx={{ mr: 1, verticalAlign: 'bottom' }} />
-                  Agent Information
-                </Typography>
-                <Stack spacing={2}>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">Model</Typography>
-                    {editMode ? (
-                      <TextField
-                        fullWidth
-                        value={editedAgent?.model || ''}
-                        onChange={(e) => setEditedAgent({ ...editedAgent, model: e.target.value })}
-                        size="small"
-                      />
-                    ) : (
-                      <Typography variant="body1">{selectedAgent.model}</Typography>
-                    )}
-                  </Box>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">Stage</Typography>
-                    {editMode ? (
-                      <FormControl fullWidth size="small">
-                        <Select
-                          value={editedAgent?.stage || 1}
-                          onChange={(e) => setEditedAgent({ ...editedAgent, stage: e.target.value })}
-                        >
-                          <MenuItem value={1}>Stage 1</MenuItem>
-                          <MenuItem value={2}>Stage 2</MenuItem>
-                          <MenuItem value={3}>Stage 3</MenuItem>
-                        </Select>
-                      </FormControl>
-                    ) : (
-                      <Chip
-                        label={`Stage ${selectedAgent.stage}`}
-                        color={selectedAgent.stage === 3 ? 'success' : selectedAgent.stage === 2 ? 'primary' : 'default'}
-                      />
-                    )}
-                  </Box>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">Department</Typography>
-                    <Typography variant="body1">
-                      {departments[selectedAgent.department]?.icon} {departments[selectedAgent.department]?.name}
-                    </Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">API Endpoint</Typography>
-                    {editMode ? (
-                      <TextField
-                        fullWidth
-                        value={editedAgent?.apiEndpoint || ''}
-                        onChange={(e) => setEditedAgent({ ...editedAgent, apiEndpoint: e.target.value })}
-                        size="small"
-                        sx={{ fontFamily: 'monospace' }}
-                      />
-                    ) : (
-                      <Typography variant="body1" fontFamily="monospace">
-                        {selectedAgent.apiEndpoint}
-                      </Typography>
-                    )}
-                  </Box>
-                </Stack>
-              </Grid>
-
-              {/* Performance Metrics */}
-              <Grid item xs={12} md={6}>
-                <Typography variant="h6" gutterBottom>
-                  <TrendingUp sx={{ mr: 1, verticalAlign: 'bottom' }} />
-                  Performance Metrics
-                </Typography>
-                <Stack spacing={2}>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">Tasks Today</Typography>
-                    <Typography variant="h6">{selectedAgent.metrics.tasksToday}</Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">Avg Response Time</Typography>
-                    <Typography variant="h6">{selectedAgent.metrics.avgResponseTime}</Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">Efficiency</Typography>
-                    <Typography variant="h6">{selectedAgent.metrics.efficiency}</Typography>
-                  </Box>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">Last Active</Typography>
-                    <Typography variant="body1" color="success.main">
-                      {selectedAgent.metrics.lastActive}
-                    </Typography>
-                  </Box>
-                </Stack>
-              </Grid>
-
-              {/* Responsibilities */}
-              {selectedAgent.responsibilities && (
-                <Grid item xs={12}>
-                  <Typography variant="h6" gutterBottom>
-                    <Work sx={{ mr: 1, verticalAlign: 'bottom' }} />
-                    Responsibilities
-                  </Typography>
-                  <List dense>
-                    {selectedAgent.responsibilities.map((resp, idx) => (
-                      <ListItem key={idx}>
-                        <CheckCircle sx={{ mr: 1, fontSize: 16, color: 'success.main' }} />
-                        <ListItemText primary={resp} />
-                      </ListItem>
-                    ))}
-                  </List>
-                </Grid>
-              )}
-
-              {/* Direct Message */}
-              <Grid item xs={12}>
-                <Typography variant="h6" gutterBottom>
-                  <Chat sx={{ mr: 1, verticalAlign: 'bottom' }} />
-                  Direct Message
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <TextField
-                    fullWidth
-                    multiline
-                    maxRows={3}
-                    value={dmMessage}
-                    onChange={(e) => setDmMessage(e.target.value)}
-                    placeholder={`Send a message to ${selectedAgent.name}...`}
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        // Send DM logic
-                        setDmMessage('');
-                      }
-                    }}
-                  />
-                  <Button
-                    variant="contained"
-                    onClick={() => {
-                      // Send DM logic
-                      setDmMessage('');
-                    }}
-                    disabled={!dmMessage.trim()}
-                  >
-                    <Send />
-                  </Button>
-                </Box>
-              </Grid>
-
-              {/* Quick Actions */}
-              <Grid item xs={12}>
-                <Typography variant="h6" gutterBottom>
-                  <Task sx={{ mr: 1, verticalAlign: 'bottom' }} />
-                  Quick Actions
-                </Typography>
-                <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
-                  <Button variant="outlined" startIcon={<Assessment />}>
-                    View Reports
-                  </Button>
-                  <Button variant="outlined" startIcon={<Analytics />}>
-                    Performance Stats
-                  </Button>
-                  <Button variant="outlined" startIcon={<Schedule />}>
-                    Schedule Task
-                  </Button>
-                </Stack>
-              </Grid>
-            </Grid>
-          </DialogContent>
-        </>
-      )}
-    </Dialog>
-  );
+  const handleRoomAction = (action, room) => {
+    switch(action) {
+      case 'book':
+        enqueueSnackbar(`${room.name} booked successfully`, { 
+          variant: 'success' 
+        });
+        break;
+      case 'start_meeting':
+        enqueueSnackbar(`Meeting started in ${room.name}`, { 
+          variant: 'info' 
+        });
+        break;
+      case 'order_refreshments':
+        enqueueSnackbar('Refreshments ordered', { variant: 'success' });
+        break;
+      default:
+        break;
+    }
+  };
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-      {showConfetti && <Confetti recycle={false} numberOfPieces={200} />}
-
+    <Container maxWidth="xl" sx={{ mt: 2, mb: 4 }}>
       {/* Header */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Box>
-              <Typography variant="h4" gutterBottom>
-                Virtual AI Office
-              </Typography>
-              <Typography variant="subtitle1" color="text.secondary">
-                Your AI team workspace - {teamStats.activeAgents} agents online
-              </Typography>
-            </Box>
-            
-            <ToggleButtonGroup
-              value={viewMode}
-              exclusive
-              onChange={(e, value) => value && setViewMode(value)}
-              aria-label="view mode"
-            >
-              <ToggleButton value="office" aria-label="office view">
-                <Business sx={{ mr: 1 }} />
-                Office View
-              </ToggleButton>
-              <ToggleButton value="card" aria-label="card view">
-                <ViewModule sx={{ mr: 1 }} />
-                Card View
-              </ToggleButton>
-              <ToggleButton value="list" aria-label="list view">
-                <ViewList sx={{ mr: 1 }} />
-                List View
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </Box>
-        </Grid>
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h4" gutterBottom>
+          Virtual Office Dashboard - Luxury Real Estate
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
+          40' x 30' Office Space | Real-time View
+        </Typography>
+      </Box>
 
-        {/* Team Stats */}
+      {/* Stats Overview */}
+      <Grid container spacing={2} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <Groups sx={{ mr: 1, color: 'primary.main' }} />
-                <Typography variant="h6">{teamStats.activeAgents}/14</Typography>
-              </Box>
-              <Typography variant="body2" color="text.secondary">
-                Active Agents
-              </Typography>
+              <Stack direction="row" alignItems="center" spacing={2}>
+                <Groups color="primary" />
+                <Box>
+                  <Typography variant="h6">
+                    {agents.filter(a => a.status === 'available').length}/{agents.length}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Agents Available
+                  </Typography>
+                </Box>
+              </Stack>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <Assignment sx={{ mr: 1, color: 'success.main' }} />
-                <Typography variant="h6">{teamStats.totalTasks}</Typography>
-              </Box>
-              <Typography variant="body2" color="text.secondary">
-                Tasks Today
-              </Typography>
+              <Stack direction="row" alignItems="center" spacing={2}>
+                <MeetingRoom color="success" />
+                <Box>
+                  <Typography variant="h6">
+                    {Object.values(roomConfigs).filter(r => r.type === 'meeting').length}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Meeting Rooms
+                  </Typography>
+                </Box>
+              </Stack>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <Speed sx={{ mr: 1, color: 'warning.main' }} />
-                <Typography variant="h6">{teamStats.efficiency}%</Typography>
-              </Box>
-              <Typography variant="body2" color="text.secondary">
-                Efficiency
-              </Typography>
+              <Stack direction="row" alignItems="center" spacing={2}>
+                <Work color="warning" />
+                <Box>
+                  <Typography variant="h6">
+                    {roomConfigs.workspace.currentOccupancy}/{roomConfigs.workspace.capacity}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Workspace Occupancy
+                  </Typography>
+                </Box>
+              </Stack>
             </CardContent>
           </Card>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                <Schedule sx={{ mr: 1, color: 'info.main' }} />
-                <Typography variant="h6">{teamStats.avgResponseTime}m</Typography>
-              </Box>
-              <Typography variant="body2" color="text.secondary">
-                Avg Response
-              </Typography>
+              <Stack direction="row" alignItems="center" spacing={2}>
+                <Timer color="info" />
+                <Box>
+                  <Typography variant="h6">
+                    {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Local Time
+                  </Typography>
+                </Box>
+              </Stack>
             </CardContent>
           </Card>
         </Grid>
       </Grid>
 
-      {/* Main View */}
-      <Box>
-        {viewMode === 'office' && renderOfficeView()}
-        {viewMode === 'card' && renderCardView()}
-        {viewMode === 'list' && renderListView()}
-      </Box>
+      {/* 3D Office View */}
+      <Paper sx={{ p: 2, mb: 3, height: '600px', position: 'relative' }}>
+        <Office3D
+          agents={agents}
+          selectedAgent={selectedAgent}
+          onAgentClick={handleAgentClick}
+          onRoomClick={handleRoomClick}
+        />
+        
+        {/* Quick Actions Overlay */}
+        <Box sx={{ position: 'absolute', bottom: 20, right: 20 }}>
+          <Stack spacing={1}>
+            <Tooltip title="Make Announcement">
+              <IconButton 
+                color="primary" 
+                sx={{ bgcolor: 'background.paper', boxShadow: 2 }}
+                onClick={() => setShowAnnouncement(true)}
+              >
+                <NotificationsActive />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Refresh View">
+              <IconButton 
+                color="secondary" 
+                sx={{ bgcolor: 'background.paper', boxShadow: 2 }}
+                onClick={() => queryClient.invalidateQueries()}
+              >
+                <Refresh />
+              </IconButton>
+            </Tooltip>
+          </Stack>
+        </Box>
+      </Paper>
 
-      {/* Agent Profile Dialog */}
-      {renderAgentProfile()}
+      {/* Agent Details Panel */}
+      {selectedAgent && (
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={8}>
+            <Paper sx={{ p: 3 }}>
+              <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
+                <Avatar sx={{ bgcolor: selectedAgent.color, width: 56, height: 56 }}>
+                  {selectedAgent.icon}
+                </Avatar>
+                <Box flex={1}>
+                  <Typography variant="h5">{selectedAgent.name}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {selectedAgent.title}
+                  </Typography>
+                </Box>
+                <Chip 
+                  label={selectedAgent.status} 
+                  color={selectedAgent.status === 'available' ? 'success' : 'warning'}
+                />
+              </Stack>
+              
+              <Divider sx={{ my: 2 }} />
+              
+              <Typography variant="body1" sx={{ mb: 2 }}>
+                Current Task: {selectedAgent.currentTask}
+              </Typography>
+              
+              <Box sx={{ mt: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Send Message
+                </Typography>
+                <Stack direction="row" spacing={2}>
+                  <TextField
+                    fullWidth
+                    variant="outlined"
+                    placeholder="Type your message..."
+                    value={agentMessage}
+                    onChange={(e) => setAgentMessage(e.target.value)}
+                  />
+                  <Button 
+                    variant="contained" 
+                    endIcon={<Send />}
+                    onClick={handleSendMessageToAgent}
+                  >
+                    Send
+                  </Button>
+                </Stack>
+              </Box>
+            </Paper>
+          </Grid>
+          
+          <Grid item xs={12} md={4}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" gutterBottom>
+                Agent Activity
+              </Typography>
+              <List dense>
+                <ListItem>
+                  <ListItemText 
+                    primary="Completed client call"
+                    secondary="5 minutes ago"
+                  />
+                </ListItem>
+                <ListItem>
+                  <ListItemText 
+                    primary="Updated listing #4521"
+                    secondary="12 minutes ago"
+                  />
+                </ListItem>
+                <ListItem>
+                  <ListItemText 
+                    primary="Scheduled viewing"
+                    secondary="25 minutes ago"
+                  />
+                </ListItem>
+              </List>
+            </Paper>
+          </Grid>
+        </Grid>
+      )}
+
+      {/* Room Details Dialog */}
+      <Dialog
+        open={showRoomDetails}
+        onClose={() => setShowRoomDetails(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        {selectedRoom && (
+          <>
+            <DialogTitle>
+              <Stack direction="row" alignItems="center" justifyContent="space-between">
+                <Typography variant="h5">{selectedRoom.name}</Typography>
+                <IconButton onClick={() => setShowRoomDetails(false)}>
+                  <Close />
+                </IconButton>
+              </Stack>
+            </DialogTitle>
+            <DialogContent>
+              <Grid container spacing={2} sx={{ mt: 1 }}>
+                <Grid item xs={12} md={6}>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Room Type
+                  </Typography>
+                  <Typography variant="body1" sx={{ mb: 2 }}>
+                    {selectedRoom.type}
+                  </Typography>
+                  
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Capacity
+                  </Typography>
+                  <Typography variant="body1" sx={{ mb: 2 }}>
+                    {selectedRoom.capacity} people
+                  </Typography>
+                  
+                  {selectedRoom.assignedAgent && (
+                    <>
+                      <Typography variant="subtitle2" color="text.secondary">
+                        Assigned To
+                      </Typography>
+                      <Typography variant="body1" sx={{ mb: 2 }}>
+                        {agentProfiles[selectedRoom.assignedAgent]?.name}
+                      </Typography>
+                    </>
+                  )}
+                </Grid>
+                
+                <Grid item xs={12} md={6}>
+                  <Typography variant="subtitle2" color="text.secondary">
+                    Features
+                  </Typography>
+                  <Stack spacing={1} sx={{ mb: 2 }}>
+                    {selectedRoom.features?.map((feature, index) => (
+                      <Chip key={index} label={feature} size="small" />
+                    ))}
+                  </Stack>
+                  
+                  {selectedRoom.type === 'meeting' && (
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      startIcon={<Schedule />}
+                      onClick={() => handleRoomAction('book', selectedRoom)}
+                      sx={{ mt: 2 }}
+                    >
+                      Book This Room
+                    </Button>
+                  )}
+                  
+                  {selectedRoom.type === 'relaxation' && (
+                    <Button
+                      fullWidth
+                      variant="outlined"
+                      startIcon={<Coffee />}
+                      onClick={() => handleRoomAction('order_refreshments', selectedRoom)}
+                      sx={{ mt: 2 }}
+                    >
+                      Order Refreshments
+                    </Button>
+                  )}
+                </Grid>
+              </Grid>
+            </DialogContent>
+          </>
+        )}
+      </Dialog>
+
+      {/* Announcement Dialog */}
+      <Dialog
+        open={showAnnouncement}
+        onClose={() => setShowAnnouncement(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Office Announcement</DialogTitle>
+        <DialogContent>
+          <TextField
+            fullWidth
+            multiline
+            rows={3}
+            placeholder="Type your announcement..."
+            value={announcement}
+            onChange={(e) => setAnnouncement(e.target.value)}
+            sx={{ mt: 2 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowAnnouncement(false)}>Cancel</Button>
+          <Button 
+            variant="contained" 
+            onClick={handleMakeAnnouncement}
+            startIcon={<NotificationsActive />}
+          >
+            Broadcast
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Floating Announcement */}
+      <Snackbar
+        open={showAnnouncement && announcement}
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        sx={{ mt: 8 }}
+      >
+        <Alert severity="info" sx={{ width: '100%' }}>
+          <Typography variant="h6">Office Announcement</Typography>
+          <Typography>{announcement}</Typography>
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };

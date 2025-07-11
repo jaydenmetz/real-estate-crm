@@ -1,7 +1,11 @@
+// File: backend/src/services/websocket.service.js
 const socketIo = require('socket.io');
 const jwt = require('jsonwebtoken');
 const logger = require('../utils/logger');
 const alexService = require('./ai/alex.service');
+const sarahService = require('./ai/sarah.service');
+const davidService = require('./ai/david.service');
+const mikeService = require('./ai/mike.service');
 
 class WebSocketService {
   constructor() {
@@ -9,9 +13,37 @@ class WebSocketService {
     this.connectedClients = new Map();
     this.aiServices = {
       alex_executive: alexService,
+      sarah_buyer: sarahService,
+      david_listing: davidService,
+      mike_operations: mikeService
     };
     this.teamActivities = new Map();
     this.kpiMetrics = new Map();
+    this.agentLocations = new Map();
+    this.roomOccupancy = new Map();
+    
+    // Initialize default agent locations based on floor plan
+    this.defaultLocations = {
+      alex_executive: { room: 'reception', x: -14.5, z: 10 },
+      sarah_buyer: { room: 'clientLounge', x: -0.5, z: 10 },
+      david_listing: { room: 'leadLounge', x: 12.5, z: 10 },
+      mike_operations: { room: 'managerSuite', x: -14.5, z: 0 }
+    };
+    
+    // Room configurations for 40' x 30' office
+    this.rooms = {
+      partnerOffice: { x: -15, z: -10, capacity: 4 },
+      seniorOffice1: { x: -5.5, z: -10, capacity: 3 },
+      seniorOffice2: { x: 3.5, z: -10, capacity: 3 },
+      conferenceRoom: { x: 12, z: -10, capacity: 12 },
+      managerSuite: { x: -14.5, z: 0, capacity: 6 },
+      commonArea: { x: 1, z: -1.5, capacity: 20 },
+      wellnessZone: { x: 13, z: -1.5, capacity: 8 },
+      refreshmentBar: { x: 13, z: 7.5, capacity: 6 },
+      reception: { x: -14.5, z: 10, capacity: 8 },
+      clientLounge: { x: -0.5, z: 10, capacity: 15 },
+      leadLounge: { x: 12.5, z: 10, capacity: 15 }
+    };
   }
 
   initialize(server) {
@@ -24,21 +56,47 @@ class WebSocketService {
       transports: ['websocket', 'polling']
     });
 
-    // TEMPORARY: Skip auth and assign default user for development
+    // Authentication middleware (simplified for development)
     this.io.use(async (socket, next) => {
-      socket.userId = 'dev-user';
-      socket.userRole = 'admin';
-      next();
+      try {
+        const token = socket.handshake.auth.token;
+        if (token) {
+          const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret');
+          socket.userId = decoded.userId;
+          socket.userRole = decoded.role;
+        } else {
+          // Development mode - assign default user
+          socket.userId = 'dev-user';
+          socket.userRole = 'admin';
+        }
+        next();
+      } catch (error) {
+        socket.userId = 'dev-user';
+        socket.userRole = 'admin';
+        next();
+      }
     });
 
     this.io.on('connection', (socket) => {
       this.handleConnection(socket);
     });
 
+    // Initialize agent locations
+    this.initializeAgentLocations();
+
     // Start real-time updates
     this.startRealTimeUpdates();
 
-    logger.info('WebSocket service initialized with virtual office features');
+    // Start agent activity simulation
+    this.startAgentSimulation();
+
+    logger.info('WebSocket service initialized for 40x30 office layout');
+  }
+
+  initializeAgentLocations() {
+    Object.entries(this.defaultLocations).forEach(([agentId, location]) => {
+      this.agentLocations.set(agentId, { ...location });
+    });
   }
 
   handleConnection(socket) {
@@ -47,33 +105,44 @@ class WebSocketService {
 
     this.connectedClients.set(userId, socket);
 
-    // Send initial team status
-    this.sendTeamStatus(socket);
+    // Join user to virtual office room
+    socket.join('virtual-office');
+
+    // Send initial data
+    this.sendInitialData(socket);
     this.sendAlexWelcome(socket);
 
-    // Handle AI messages and quick tasks
+    // Event handlers
     socket.on('ai:message', async (data) => {
       await this.handleAIMessage(socket, data);
     });
 
-    // Handle Alex quick tasks
     socket.on('alex:quickTask', async (data) => {
       await this.handleAlexQuickTask(socket, data);
     });
 
-    // Handle task delegation
     socket.on('ai:delegateTask', async (data) => {
       await this.handleTaskDelegation(socket, data);
     });
 
-    // Handle agent status requests
     socket.on('ai:getTeamStatus', () => {
       this.sendTeamStatus(socket);
     });
 
-    // Handle agent toggle
     socket.on('ai:toggle', async (data) => {
       await this.handleAgentToggle(socket, data);
+    });
+
+    socket.on('agent:move', async (data) => {
+      await this.handleAgentMove(socket, data);
+    });
+
+    socket.on('room:book', async (data) => {
+      await this.handleRoomBooking(socket, data);
+    });
+
+    socket.on('room:status', (data) => {
+      this.sendRoomStatus(socket, data.roomId);
     });
 
     socket.on('disconnect', (reason) => {
@@ -82,489 +151,636 @@ class WebSocketService {
     });
   }
 
+  sendInitialData(socket) {
+    // Send current agent locations
+    const locations = {};
+    this.agentLocations.forEach((location, agentId) => {
+      locations[agentId] = location;
+    });
+    socket.emit('agents:locations', locations);
+
+    // Send team status
+    this.sendTeamStatus(socket);
+
+    // Send recent activities
+    const recentActivities = Array.from(this.teamActivities.values())
+      .slice(-50)
+      .reverse();
+    socket.emit('activities:history', recentActivities);
+  }
+
   async sendAlexWelcome(socket) {
     try {
-      const welcomeMessage = `🎉 Welcome to your AI Real Estate Office! 
+      const welcomeMessage = {
+        id: Date.now(),
+        agentId: 'alex_executive',
+        agentName: 'Alex',
+        type: 'welcome',
+        content: `🎉 Welcome to your Virtual AI Office! 
 
-I'm Alex, your Executive Assistant. I'm currently managing your team of 14 AI agents who are working on:
-• 🔄 ${Math.floor(Math.random() * 20) + 10} active tasks
-• 📞 Lead follow-ups and qualifying
-• 📋 Listing optimizations  
-• 📄 Transaction coordination
-• 📊 Market analysis
+I'm Alex, your Executive Assistant. I'm here at the reception desk ready to help coordinate your team.
 
-Use the quick task bar above to delegate anything to me, or visit the AI Team page to see your virtual office in action!`;
+Your office layout includes:
+• Manager's Suite (11' x 10') - Our largest office
+• Conference Room (16' x 10') - Perfect for team meetings
+• Client & Lead Lounges - For nurturing relationships
+• Wellness Zone - For team wellbeing
+
+How can I help you today?`,
+        timestamp: new Date(),
+        location: this.agentLocations.get('alex_executive')
+      };
+
+      socket.emit('ai:message', welcomeMessage);
       
-      socket.emit('ai:message', {
-        from: 'alex_executive',
-        message: welcomeMessage,
-        timestamp: new Date().toISOString(),
-        type: 'welcome'
+      // Add to activities
+      this.addActivity({
+        id: Date.now(),
+        type: 'system',
+        agent: 'Alex',
+        action: `Welcomed ${socket.userId} to the virtual office`,
+        timestamp: new Date().toLocaleTimeString()
       });
     } catch (error) {
-      logger.error('Failed to send Alex welcome message:', error);
+      logger.error('Error sending Alex welcome:', error);
     }
   }
 
   async handleAIMessage(socket, data) {
     try {
-      const { to, message, type } = data;
+      const { agentId, message } = data;
+      const aiService = this.aiServices[agentId];
       
-      // Process with Alex (main AI service)
-      const response = await this.processWithAlex(message, type, socket.userId);
-      
-      // Send response
-      socket.emit('ai:message', {
-        from: to || 'alex_executive',
-        message: response,
-        timestamp: new Date().toISOString(),
-        type: 'response'
+      if (!aiService) {
+        socket.emit('error', { message: 'Agent not found' });
+        return;
+      }
+
+      // Move agent to indicate activity
+      this.simulateAgentActivity(agentId, 'message');
+
+      // Process message with AI service
+      const response = await aiService.processMessage(message, {
+        userId: socket.userId,
+        context: {
+          location: this.agentLocations.get(agentId),
+          office: 'virtual'
+        }
       });
 
-      // Log interaction
-      await this.logAIInteraction(socket.userId, to || 'alex_executive', message, response);
+      // Send response
+      socket.emit('ai:response', {
+        agentId,
+        agentName: response.agentName,
+        content: response.content,
+        timestamp: new Date(),
+        metadata: response.metadata
+      });
+
+      // Log activity
+      this.addActivity({
+        id: Date.now(),
+        type: 'message',
+        agent: response.agentName,
+        action: `Responded to ${socket.userId}`,
+        timestamp: new Date().toLocaleTimeString()
+      });
 
     } catch (error) {
       logger.error('Error handling AI message:', error);
-      socket.emit('ai:message', {
-        from: 'system',
-        message: 'Sorry, I encountered an error. Please try again.',
-        timestamp: new Date().toISOString(),
-        type: 'error'
-      });
+      socket.emit('error', { message: 'Failed to process message' });
     }
   }
 
   async handleAlexQuickTask(socket, data) {
     try {
-      const { description, action, page } = data;
+      const { action, context } = data;
       
-      // Notify that Alex is processing
-      socket.emit('alex:status', {
-        status: 'working',
-        message: `Processing: ${description}`,
-        timestamp: new Date().toISOString()
+      // Move Alex to indicate activity
+      this.simulateAgentActivity('alex_executive', 'task');
+
+      // Process quick task
+      const result = await alexService.handleQuickTask(action, {
+        userId: socket.userId,
+        context
       });
 
-      // Simulate processing time
-      const processingTime = 2000 + Math.random() * 3000; // 2-5 seconds
-      
-      setTimeout(() => {
-        // Determine which agent should handle this
-        const assignedAgent = this.determineAgentForTask(action, page);
-        
-        // Create task delegation
-        this.delegateTaskToAgent(assignedAgent, description, socket);
-        
-        // Notify completion
-        socket.emit('alex:status', {
-          status: 'completed',
-          message: `✅ Task delegated to ${assignedAgent}`,
-          timestamp: new Date().toISOString()
-        });
+      // Delegate to appropriate agents
+      if (result.delegations) {
+        for (const delegation of result.delegations) {
+          const agentId = delegation.agentId;
+          
+          // Move agent to appropriate location
+          this.moveAgentToRoom(agentId, delegation.location || 'commonArea');
+          
+          // Simulate task execution
+          setTimeout(() => {
+            this.io.to('virtual-office').emit('task:progress', {
+              taskId: delegation.taskId,
+              agentId,
+              progress: 50,
+              status: 'in_progress'
+            });
+          }, 2000);
 
-        // Broadcast to all clients for virtual office
-        this.broadcast('ai:taskDelegated', {
-          from: 'alex_executive',
-          to: assignedAgent,
-          task: description,
-          timestamp: new Date().toISOString()
-        });
+          setTimeout(() => {
+            this.io.to('virtual-office').emit('task:complete', {
+              taskId: delegation.taskId,
+              agentId,
+              result: delegation.expectedResult
+            });
+            
+            // Return agent to default location
+            this.moveAgentToDefault(agentId);
+          }, 5000);
+        }
+      }
 
-      }, processingTime);
+      // Send response
+      socket.emit('alex:taskResponse', {
+        action,
+        status: 'delegated',
+        message: result.message,
+        delegations: result.delegations
+      });
+
+      // Log activity
+      this.addActivity({
+        id: Date.now(),
+        type: 'task',
+        agent: 'Alex',
+        action: `Delegated "${action}" task`,
+        timestamp: new Date().toLocaleTimeString()
+      });
 
     } catch (error) {
-      logger.error('Error handling Alex quick task:', error);
-      socket.emit('alex:status', {
-        status: 'error',
-        message: 'Failed to process task',
-        timestamp: new Date().toISOString()
-      });
+      logger.error('Error handling quick task:', error);
+      socket.emit('error', { message: 'Failed to execute task' });
     }
   }
 
-  determineAgentForTask(action, page) {
-    const agentMapping = {
-      // Page-based routing
-      '/leads': {
-        'followup_leads': 'buyer_nurture',
-        'score_leads': 'buyer_qualifier',
-        'qualify_prospects': 'buyer_qualifier',
-        'nurture_sequence': 'buyer_nurture'
-      },
-      '/appointments': {
-        'schedule_followups': 'showing_coordinator',
-        'confirm_appointments': 'showing_coordinator',
-        'send_reminders': 'alex_executive',
-        'prep_packets': 'transaction_coordinator'
-      },
-      '/listings': {
-        'analyze_listings': 'market_analyst',
-        'showing_feedback': 'listing_marketing',
-        'update_mls': 'listing_launch',
-        'call_prospects': 'buyer_qualifier'
-      },
-      '/clients': {
-        'market_updates': 'market_analyst',
-        'annual_checkins': 'buyer_nurture',
-        'update_profiles': 'alex_executive',
-        'anniversary_reminders': 'buyer_nurture'
-      },
-      '/ai-team': {
-        'optimize_workflows': 'alex_executive',
-        'review_kpis': 'alex_executive',
-        'schedule_training': 'alex_executive',
-        'team_report': 'alex_executive'
-      }
-    };
-
-    // Default assignments for general tasks
-    const defaultMapping = {
-      'daily_briefing': 'alex_executive',
-      'urgent_tasks': 'alex_executive',
-      'performance': 'alex_executive',
-      'alerts': 'alex_executive'
-    };
-
-    // Try page-specific mapping first
-    const pageAgents = agentMapping[page];
-    if (pageAgents && pageAgents[action]) {
-      return pageAgents[action];
-    }
-
-    // Fall back to default mapping
-    if (defaultMapping[action]) {
-      return defaultMapping[action];
-    }
-
-    // Default to Alex for unknown tasks
-    return 'alex_executive';
-  }
-
-  delegateTaskToAgent(agentId, taskDescription, socket) {
-    // Update agent activity
-    this.teamActivities.set(agentId, {
-      agentId,
-      status: 'working',
-      currentTask: taskDescription,
-      progress: 0,
-      startTime: new Date().toISOString(),
-      estimatedCompletion: new Date(Date.now() + Math.random() * 300000).toISOString()
-    });
-
-    // Simulate task completion
-    setTimeout(() => {
-      this.completeAgentTask(agentId, taskDescription);
-    }, 3000 + Math.random() * 7000); // 3-10 seconds
-  }
-
-  completeAgentTask(agentId, taskDescription) {
-    // Mark as completed
-    this.teamActivities.set(agentId, {
-      agentId,
-      status: 'completed',
-      currentTask: null,
-      lastCompleted: taskDescription,
-      completedAt: new Date().toISOString()
-    });
-
-    // Broadcast completion
-    this.broadcast('ai:taskCompleted', {
-      agentId,
-      task: taskDescription,
-      timestamp: new Date().toISOString()
-    });
-
-    // Check for KPI achievements
-    this.checkKPIAchievements(agentId, taskDescription);
-
-    // Return to idle after showing completion
-    setTimeout(() => {
-      this.teamActivities.set(agentId, {
-        agentId,
-        status: 'idle',
-        currentTask: null,
-        lastCompleted: taskDescription,
-        lastActive: new Date().toISOString()
-      });
-      
-      this.broadcastTeamStatus();
-    }, 5000);
-  }
-
-  checkKPIAchievements(agentId, taskDescription) {
-    const achievements = [];
-
-    // Random KPI achievements for demo
-    if (Math.random() > 0.7) {
-      const kpiTypes = [
-        {
-          type: 'response_time',
-          achievement: `Lightning response: 2.1 minutes (Target: <5 min)`,
-          celebration: true
-        },
-        {
-          type: 'conversion',
-          achievement: `Lead qualification rate: 95% (Target: >90%)`,
-          celebration: true
-        },
-        {
-          type: 'efficiency',
-          achievement: `Task completed 40% faster than average`,
-          celebration: true
-        },
-        {
-          type: 'performance',
-          achievement: `Weekly KPI target exceeded by 15%`,
-          celebration: true
-        }
-      ];
-
-      const randomKPI = kpiTypes[Math.floor(Math.random() * kpiTypes.length)];
-      
-      achievements.push({
-        agentId,
-        ...randomKPI,
-        timestamp: new Date().toISOString()
-      });
-    }
-
-    // Broadcast achievements
-    achievements.forEach(achievement => {
-      this.broadcast('ai:achievement', achievement);
-    });
-  }
-
-  async processWithAlex(message, type, userId) {
+  async handleTaskDelegation(socket, data) {
     try {
-      // Enhanced Alex responses for virtual office
-      const responses = {
-        briefing: `📊 **Daily Briefing - ${new Date().toLocaleDateString()}**
+      const { task, targetAgentId } = data;
+      
+      // Move agents to conference room for delegation
+      this.moveAgentToRoom('alex_executive', 'conferenceRoom');
+      this.moveAgentToRoom(targetAgentId, 'conferenceRoom');
 
-🤖 **AI Team Status:**
-• 12 agents active and working
-• 247 tasks completed today
-• 94.2% efficiency rating
+      // Simulate delegation
+      setTimeout(() => {
+        this.io.to('virtual-office').emit('task:delegated', {
+          fromAgent: 'alex_executive',
+          toAgent: targetAgentId,
+          task,
+          location: 'conferenceRoom'
+        });
 
-🎯 **Key Achievements:**
-• Buyer Qualifier: 2.1 min avg response time
-• Listing Launch: +150% listing views
-• Transaction Coord: 98% on-time completion
+        // Return agents after meeting
+        setTimeout(() => {
+          this.moveAgentToDefault('alex_executive');
+          this.moveAgentToDefault(targetAgentId);
+        }, 3000);
+      }, 1000);
 
-🔄 **Currently Working On:**
-• Lead qualification for 3 new prospects
-• MLS optimization for 2 listings  
-• Escrow coordination for 4 transactions
+      socket.emit('delegation:success', {
+        task,
+        targetAgentId,
+        estimatedCompletion: '30 minutes'
+      });
 
-**Recommendation:** Focus on the Henderson closing tomorrow - all documentation is ready!`,
+    } catch (error) {
+      logger.error('Error handling task delegation:', error);
+      socket.emit('error', { message: 'Failed to delegate task' });
+    }
+  }
 
-        urgent: `⚠️ **Urgent Tasks Requiring Your Attention:**
+  handleAgentMove(socket, data) {
+    const { agentId, targetRoom } = data;
+    
+    if (!this.rooms[targetRoom]) {
+      socket.emit('error', { message: 'Invalid room' });
+      return;
+    }
 
-🔥 **High Priority (Next 2 hours):**
-• Wilson contract negotiation response needed
-• Henderson inspection contingency expires  
+    this.moveAgentToRoom(agentId, targetRoom);
+  }
 
-⚡ **Medium Priority (Today):**
-• Johnson family showing follow-up
-• Martinez closing document review
+  moveAgentToRoom(agentId, roomId) {
+    const room = this.rooms[roomId];
+    if (!room) return;
 
-🤖 **AI Team Handling:**
-• Lead follow-ups (Buyer Nurture)
-• MLS updates (Listing Launch)
-• Document preparation (Transaction Coord)
+    const currentLocation = this.agentLocations.get(agentId);
+    const newLocation = {
+      room: roomId,
+      x: room.x + (Math.random() - 0.5) * 4, // Random offset within room
+      z: room.z + (Math.random() - 0.5) * 4
+    };
 
-**I'll keep monitoring and escalate anything critical!**`,
+    this.agentLocations.set(agentId, newLocation);
 
-        schedule: `📅 **Today's Schedule & AI Support:**
+    // Broadcast movement
+    this.io.to('virtual-office').emit('agent:move', {
+      agentId,
+      from: currentLocation,
+      to: newLocation,
+      timestamp: new Date()
+    });
 
-**Your Appointments:**
-• 10:00 AM - Smith Listing Presentation
-  (AI prepared: comps, market analysis, presentation deck)
-• 2:00 PM - Johnson Buyer Consultation  
-  (AI prepared: buyer profile, property matches, financing options)
-• 4:30 PM - Downtown Condo Showing
-  (AI coordinated: keys, showing instructions, feedback form)
+    // Update room occupancy
+    this.updateRoomOccupancy();
+  }
 
-**AI Team Tasks:**
-• Morning: Lead follow-up calls (3 completed)
-• Afternoon: Listing optimization (2 in progress)
-• Evening: Tomorrow's preparation (auto-scheduled)
+  moveAgentToDefault(agentId) {
+    const defaultLocation = this.defaultLocations[agentId];
+    if (!defaultLocation) return;
 
-**Your calendar is optimized for maximum productivity!**`
+    this.agentLocations.set(agentId, { ...defaultLocation });
+
+    this.io.to('virtual-office').emit('agent:move', {
+      agentId,
+      to: defaultLocation,
+      timestamp: new Date()
+    });
+
+    this.updateRoomOccupancy();
+  }
+
+  updateRoomOccupancy() {
+    const occupancy = new Map();
+    
+    // Initialize all rooms
+    Object.keys(this.rooms).forEach(roomId => {
+      occupancy.set(roomId, []);
+    });
+
+    // Count agents in each room
+    this.agentLocations.forEach((location, agentId) => {
+      if (location.room) {
+        const agents = occupancy.get(location.room) || [];
+        agents.push(agentId);
+        occupancy.set(location.room, agents);
+      }
+    });
+
+    this.roomOccupancy = occupancy;
+
+    // Broadcast update
+    this.io.to('virtual-office').emit('rooms:occupancy', {
+      occupancy: Object.fromEntries(occupancy),
+      timestamp: new Date()
+    });
+  }
+
+  async handleRoomBooking(socket, data) {
+    try {
+      const { roomId, date, startTime, endTime, purpose } = data;
+      
+      // Validate room
+      if (!this.rooms[roomId]) {
+        socket.emit('error', { message: 'Invalid room' });
+        return;
+      }
+
+      // Create booking
+      const booking = {
+        id: Date.now(),
+        roomId,
+        userId: socket.userId,
+        date,
+        startTime,
+        endTime,
+        purpose,
+        status: 'confirmed'
       };
 
-      // Check for specific quick commands
-      const lowerMessage = message.toLowerCase();
-      
-      if (lowerMessage.includes('brief')) {
-        return responses.briefing;
-      } else if (lowerMessage.includes('urgent')) {
-        return responses.urgent;
-      } else if (lowerMessage.includes('schedule')) {
-        return responses.schedule;
-      } else if (lowerMessage.includes('team') || lowerMessage.includes('agents')) {
-        return `🤖 **AI Team Overview:**
+      // Send confirmation
+      socket.emit('booking:confirmed', booking);
 
-**Managers (Always Active):**
-• Buyer Manager: Overseeing 4 buyer agents
-• Listing Manager: Managing 3 listing agents  
-• Operations Manager: Coordinating 3 ops agents
+      // Notify others
+      socket.broadcast.to('virtual-office').emit('room:booked', {
+        roomId,
+        booking
+      });
 
-**Current Activities:**
-• 🟢 4 agents actively working on tasks
-• 🟡 6 agents available for new assignments
-• ⚪ 2 agents in standby mode
-
-**Today's Performance:**
-• 247 tasks completed
-• 94.2% efficiency rating
-• $23.50 token cost (within budget)
-
-Visit the AI Team page to see them working in the virtual office!`;
-      } else {
-        // General AI response
-        return `I understand you want me to: "${message}"
-
-I'm processing this request and will delegate it to the appropriate team member. You can:
-
-• Use the quick task buttons for common requests
-• Visit the AI Team page to see real-time progress
-• Check back here for updates
-
-Is there anything specific you'd like me to prioritize?`;
-      }
+      // Log activity
+      this.addActivity({
+        id: Date.now(),
+        type: 'booking',
+        agent: 'System',
+        action: `${socket.userId} booked ${roomId}`,
+        timestamp: new Date().toLocaleTimeString()
+      });
 
     } catch (error) {
-      logger.error('Error processing Alex message:', error);
-      return "I'm having trouble processing that request right now. Please try again.";
+      logger.error('Error handling room booking:', error);
+      socket.emit('error', { message: 'Failed to book room' });
     }
+  }
+
+  sendRoomStatus(socket, roomId) {
+    const room = this.rooms[roomId];
+    if (!room) {
+      socket.emit('error', { message: 'Room not found' });
+      return;
+    }
+
+    const occupants = this.roomOccupancy.get(roomId) || [];
+    
+    socket.emit('room:status', {
+      roomId,
+      capacity: room.capacity,
+      occupied: occupants.length,
+      occupants,
+      available: occupants.length < room.capacity
+    });
   }
 
   sendTeamStatus(socket) {
-    const teamStatus = {
-      totalAgents: 14,
-      activeAgents: 12,
-      workingAgents: Array.from(this.teamActivities.values()).filter(a => a.status === 'working').length,
-      completedToday: 247,
-      efficiency: 94.2,
-      activities: Array.from(this.teamActivities.values()),
-      timestamp: new Date().toISOString()
+    const status = {
+      agents: [],
+      metrics: {
+        totalActive: 0,
+        totalTasks: 0,
+        avgResponseTime: 0
+      }
     };
 
-    socket.emit('ai:teamStatus', teamStatus);
-  }
+    // Compile agent status
+    const agentIds = ['alex_executive', 'sarah_buyer', 'david_listing', 'mike_operations'];
+    
+    agentIds.forEach(agentId => {
+      const location = this.agentLocations.get(agentId);
+      const metrics = this.kpiMetrics.get(agentId) || {
+        tasksCompleted: 0,
+        avgResponseTime: 0,
+        efficiency: 0
+      };
 
-  broadcastTeamStatus() {
-    const teamStatus = {
-      totalAgents: 14,
-      activeAgents: 12,
-      workingAgents: Array.from(this.teamActivities.values()).filter(a => a.status === 'working').length,
-      completedToday: 247,
-      efficiency: 94.2,
-      activities: Array.from(this.teamActivities.values()),
-      timestamp: new Date().toISOString()
-    };
+      const agentStatus = {
+        id: agentId,
+        name: this.getAgentName(agentId),
+        status: this.getAgentStatus(agentId),
+        location,
+        metrics,
+        lastActive: new Date()
+      };
 
-    this.broadcast('ai:teamStatus', teamStatus);
-  }
+      status.agents.push(agentStatus);
+      
+      if (agentStatus.status === 'available' || agentStatus.status === 'busy') {
+        status.metrics.totalActive++;
+      }
+    });
 
-  startRealTimeUpdates() {
-    // Send team status updates every 10 seconds
-    setInterval(() => {
-      this.broadcastTeamStatus();
-    }, 10000);
+    // Calculate totals
+    status.metrics.totalTasks = Array.from(this.kpiMetrics.values())
+      .reduce((sum, m) => sum + (m.tasksCompleted || 0), 0);
+    
+    status.metrics.avgResponseTime = Array.from(this.kpiMetrics.values())
+      .reduce((sum, m) => sum + (m.avgResponseTime || 0), 0) / agentIds.length;
 
-    // Simulate random agent activities
-    setInterval(() => {
-      this.simulateAgentActivity();
-    }, 15000);
-  }
-
-  simulateAgentActivity() {
-    const agents = ['buyer_qualifier', 'listing_launch', 'market_analyst', 'buyer_nurture', 'transaction_coordinator'];
-    const tasks = [
-      'Qualifying new lead inquiry',
-      'Optimizing listing description',
-      'Analyzing market trends',
-      'Sending follow-up sequence',
-      'Updating transaction timeline',
-      'Preparing market comparison',
-      'Coordinating inspection schedule',
-      'Processing referral lead'
-    ];
-
-    const randomAgent = agents[Math.floor(Math.random() * agents.length)];
-    const randomTask = tasks[Math.floor(Math.random() * tasks.length)];
-
-    // Only assign if agent is idle
-    const currentActivity = this.teamActivities.get(randomAgent);
-    if (!currentActivity || currentActivity.status === 'idle') {
-      this.delegateTaskToAgent(randomAgent, randomTask, null);
-    }
+    socket.emit('team:status', status);
   }
 
   async handleAgentToggle(socket, data) {
-    try {
-      const { agentId, enabled } = data;
+    const { agentId } = data;
+    
+    // Toggle agent status
+    const currentStatus = this.getAgentStatus(agentId);
+    const newStatus = currentStatus === 'available' ? 'away' : 'available';
+    
+    // Update status
+    this.setAgentStatus(agentId, newStatus);
+
+    // Broadcast update
+    this.io.to('virtual-office').emit('agent:update', {
+      agentId,
+      updates: { status: newStatus }
+    });
+
+    // Log activity
+    this.addActivity({
+      id: Date.now(),
+      type: 'status',
+      agent: this.getAgentName(agentId),
+      action: `Status changed to ${newStatus}`,
+      timestamp: new Date().toLocaleTimeString()
+    });
+  }
+
+  simulateAgentActivity(agentId, activityType) {
+    const activities = {
+      message: ['commonArea', 'managerSuite'],
+      task: ['conferenceRoom', 'commonArea'],
+      meeting: ['conferenceRoom'],
+      break: ['wellnessZone', 'refreshmentBar']
+    };
+
+    const possibleRooms = activities[activityType] || ['commonArea'];
+    const targetRoom = possibleRooms[Math.floor(Math.random() * possibleRooms.length)];
+    
+    this.moveAgentToRoom(agentId, targetRoom);
+
+    // Return to default after activity
+    const duration = activityType === 'meeting' ? 10000 : 5000;
+    setTimeout(() => {
+      this.moveAgentToDefault(agentId);
+    }, duration);
+  }
+
+  startAgentSimulation() {
+    // Simulate random agent activities
+    setInterval(() => {
+      const agents = ['alex_executive', 'sarah_buyer', 'david_listing', 'mike_operations'];
+      const randomAgent = agents[Math.floor(Math.random() * agents.length)];
       
-      socket.emit('ai:status', {
-        agentId,
-        enabled,
-        message: `Agent ${enabled ? 'enabled' : 'disabled'} successfully`,
-        timestamp: new Date().toISOString()
+      const activities = ['message', 'task', 'meeting', 'break'];
+      const randomActivity = activities[Math.floor(Math.random() * activities.length)];
+      
+      if (Math.random() > 0.7) { // 30% chance of activity
+        this.simulateAgentActivity(randomAgent, randomActivity);
+        
+        // Generate activity log
+        this.addActivity({
+          id: Date.now(),
+          type: randomActivity,
+          agent: this.getAgentName(randomAgent),
+          action: this.generateActivityDescription(randomActivity),
+          timestamp: new Date().toLocaleTimeString()
+        });
+      }
+    }, 15000); // Every 15 seconds
+  }
+
+  startRealTimeUpdates() {
+    // Update KPIs every 30 seconds
+    setInterval(() => {
+      this.updateKPIMetrics();
+      this.broadcastKPIUpdate();
+    }, 30000);
+
+    // Check for achievements every minute
+    setInterval(() => {
+      this.checkAchievements();
+    }, 60000);
+  }
+
+  updateKPIMetrics() {
+    const agents = ['alex_executive', 'sarah_buyer', 'david_listing', 'mike_operations'];
+    
+    agents.forEach(agentId => {
+      const currentMetrics = this.kpiMetrics.get(agentId) || {
+        tasksCompleted: 0,
+        avgResponseTime: 2.5,
+        efficiency: 90
+      };
+
+      // Simulate metric changes
+      const metrics = {
+        tasksCompleted: currentMetrics.tasksCompleted + Math.floor(Math.random() * 5),
+        avgResponseTime: Math.max(0.5, currentMetrics.avgResponseTime + (Math.random() - 0.5) * 0.5),
+        efficiency: Math.min(100, Math.max(80, currentMetrics.efficiency + (Math.random() - 0.5) * 5))
+      };
+
+      this.kpiMetrics.set(agentId, metrics);
+    });
+  }
+
+  broadcastKPIUpdate() {
+    const kpiData = {};
+    this.kpiMetrics.forEach((metrics, agentId) => {
+      kpiData[agentId] = metrics;
+    });
+
+    this.io.to('virtual-office').emit('kpi:update', {
+      metrics: kpiData,
+      timestamp: new Date()
+    });
+  }
+
+  checkAchievements() {
+    const totalTasks = Array.from(this.kpiMetrics.values())
+      .reduce((sum, m) => sum + m.tasksCompleted, 0);
+
+    // Check for milestones
+    if (totalTasks >= 100 && totalTasks < 105) {
+      this.broadcastAchievement({
+        id: Date.now(),
+        title: 'Century Club',
+        description: 'Team completed 100 tasks!',
+        icon: '🎯',
+        timestamp: new Date()
       });
+    }
 
-      logger.info(`Agent ${agentId} ${enabled ? 'enabled' : 'disabled'} by user ${socket.userId}`);
-
-    } catch (error) {
-      logger.error('Error toggling agent:', error);
-      socket.emit('ai:status', {
-        agentId: data.agentId,
-        error: 'Failed to toggle agent status'
+    if (totalTasks >= 500 && totalTasks < 505) {
+      this.broadcastAchievement({
+        id: Date.now(),
+        title: 'Task Masters',
+        description: 'Team completed 500 tasks!',
+        icon: '🏆',
+        timestamp: new Date()
       });
     }
   }
 
-  async logAIInteraction(userId, agentId, userMessage, aiResponse) {
-    try {
-      logger.info('AI Interaction:', {
-        userId,
-        agentId,
-        userMessage: userMessage.substring(0, 100),
-        responseLength: aiResponse.length,
-        timestamp: new Date().toISOString()
-      });
-    } catch (error) {
-      logger.error('Failed to log AI interaction:', error);
+  broadcastAchievement(achievement) {
+    this.io.to('virtual-office').emit('achievement:earned', achievement);
+    
+    this.addActivity({
+      id: Date.now(),
+      type: 'achievement',
+      agent: 'Team',
+      action: `Earned "${achievement.title}"`,
+      timestamp: new Date().toLocaleTimeString()
+    });
+  }
+
+  addActivity(activity) {
+    this.teamActivities.set(activity.id, activity);
+    
+    // Keep only last 1000 activities
+    if (this.teamActivities.size > 1000) {
+      const firstKey = this.teamActivities.keys().next().value;
+      this.teamActivities.delete(firstKey);
     }
+
+    // Broadcast to all clients
+    this.io.to('virtual-office').emit('activity:new', activity);
   }
 
-  broadcast(event, data) {
-    this.io.emit(event, data);
+  generateActivityDescription(activityType) {
+    const descriptions = {
+      message: [
+        'Responded to client inquiry',
+        'Updated team on progress',
+        'Sent follow-up email',
+        'Clarified requirements'
+      ],
+      task: [
+        'Completed market analysis',
+        'Updated listing information',
+        'Processed new lead',
+        'Reviewed contracts'
+      ],
+      meeting: [
+        'Attended team standup',
+        'Client consultation',
+        'Strategy session',
+        'Progress review'
+      ],
+      break: [
+        'Taking a quick break',
+        'Grabbing coffee',
+        'In wellness zone',
+        'Recharging'
+      ]
+    };
+
+    const options = descriptions[activityType] || ['Working on tasks'];
+    return options[Math.floor(Math.random() * options.length)];
   }
 
-  sendToUser(userId, event, data) {
+  getAgentName(agentId) {
+    const names = {
+      alex_executive: 'Alex',
+      sarah_buyer: 'Sarah',
+      david_listing: 'David',
+      mike_operations: 'Mike'
+    };
+    return names[agentId] || 'Unknown';
+  }
+
+  getAgentStatus(agentId) {
+    // Simplified status management
+    const statuses = new Map([
+      ['alex_executive', 'available'],
+      ['sarah_buyer', 'busy'],
+      ['david_listing', 'available'],
+      ['mike_operations', 'away']
+    ]);
+    return statuses.get(agentId) || 'offline';
+  }
+
+  setAgentStatus(agentId, status) {
+    // In production, this would update a database
+    logger.info(`Agent ${agentId} status changed to ${status}`);
+  }
+
+  getIO() {
+    return this.io;
+  }
+
+  emitToUser(userId, event, data) {
     const socket = this.connectedClients.get(userId);
     if (socket) {
       socket.emit(event, data);
     }
   }
 
-  sendNotification(message, type = 'info', priority = 'normal') {
-    this.broadcast('notification', {
-      message,
-      type,
-      priority,
-      timestamp: new Date().toISOString()
-    });
-  }
-
-  getConnectedClients() {
-    return Array.from(this.connectedClients.keys());
-  }
-
-  getConnectionCount() {
-    return this.connectedClients.size;
+  emitToAll(event, data) {
+    this.io.to('virtual-office').emit(event, data);
   }
 }
 

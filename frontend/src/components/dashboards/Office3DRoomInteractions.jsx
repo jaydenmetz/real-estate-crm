@@ -1,1085 +1,614 @@
 // File: frontend/src/components/dashboards/Office3DRoomInteractions.jsx
-// This is a NEW FILE - create it in your dashboards folder
-
-import React, { useState, useEffect, useRef } from 'react';
-import * as BABYLON from 'babylonjs';
-import * as GUI from 'babylonjs-gui';
-import { 
-  Box, Paper, Typography, Button, IconButton, Stack, Grid, 
-  Avatar, Chip, LinearProgress, Tabs, Tab, List, ListItem, 
-  ListItemText, ListItemAvatar, Divider, Card, CardContent,
-  Fade, Backdrop, Dialog, DialogTitle, DialogContent
+import React, { useState, useEffect } from 'react';
+import {
+  Box,
+  Paper,
+  Typography,
+  Button,
+  IconButton,
+  Stack,
+  Grid,
+  Avatar,
+  Chip,
+  LinearProgress,
+  Tabs,
+  Tab,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemAvatar,
+  Divider,
+  Card,
+  CardContent,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Alert,
 } from '@mui/material';
 import {
-  Close, Schedule, VideoCall, Description, Message,
-  Assessment, Groups, Coffee, LocalBar, Spa, Work,
-  Business, PhoneInTalk, TrendingUp, Star, WhatshotOutlined,
-  AcUnit, Assignment, NotificationsActive, CheckCircle,
-  Timer, People, TrendingDown, AttachMoney, Videocam,
-  Phone, Email, LocationOn, Event, BarChart
+  Close,
+  Schedule,
+  VideoCall,
+  Description,
+  Message,
+  Assessment,
+  Groups,
+  Coffee,
+  LocalBar,
+  Spa,
+  Work,
+  Business,
+  PhoneInTalk,
+  TrendingUp,
+  Star,
+  WhatshotOutlined,
+  Assignment,
+  NotificationsActive,
+  CheckCircle,
+  Timer,
+  People,
+  AttachMoney,
+  Email,
+  LocationOn,
+  Event,
+  BarChart,
+  Add,
+  Edit,
+  Delete,
 } from '@mui/icons-material';
+import { useSnackbar } from 'notistack';
+
+// Room configurations based on 2D floor plan
+const roomConfigs = {
+  partnerOffice: {
+    name: 'Partner Office',
+    type: 'office',
+    size: "10' x 10'",
+    capacity: 4,
+    features: ['Executive Desk', 'Meeting Chairs', 'Private Workspace'],
+    icon: <Business />,
+    color: '#1976d2'
+  },
+  seniorOffice1: {
+    name: 'Senior Office 1',
+    type: 'office',
+    size: "9' x 10'",
+    capacity: 3,
+    features: ['Desk', 'Client Chairs', 'Filing Cabinet'],
+    icon: <Work />,
+    color: '#1976d2'
+  },
+  seniorOffice2: {
+    name: 'Senior Office 2',
+    type: 'office',
+    size: "9' x 10'",
+    capacity: 3,
+    features: ['Desk', 'Client Chairs', 'Filing Cabinet'],
+    icon: <Work />,
+    color: '#1976d2'
+  },
+  conferenceRoom: {
+    name: 'Conference Room',
+    type: 'meeting',
+    size: "16' x 10'",
+    capacity: 12,
+    features: ['Large Table', '85" Display', 'Video Conference System', 'Whiteboard'],
+    icon: <Groups />,
+    color: '#ff9800'
+  },
+  managerSuite: {
+    name: "Manager's Suite",
+    type: 'office',
+    size: "11' x 10'",
+    capacity: 6,
+    features: ['Executive Desk', 'Lounge Area', 'Private TV', 'Coffee Table'],
+    icon: <Star />,
+    color: '#9c27b0'
+  },
+  commonArea: {
+    name: 'Open Common Area',
+    type: 'open',
+    size: "20' x 13'",
+    capacity: 20,
+    features: ['Flexible Seating', 'Collaboration Space', 'Natural Light'],
+    icon: <People />,
+    color: '#4caf50'
+  },
+  wellnessZone: {
+    name: 'Wellness Zone',
+    type: 'wellness',
+    size: "14' x 7'",
+    capacity: 8,
+    features: ['Quiet Zone', 'Relaxation Seating', 'Plants', 'Natural Light'],
+    icon: <Spa />,
+    color: '#4caf50'
+  },
+  refreshmentBar: {
+    name: 'Refreshment Bar',
+    type: 'amenity',
+    size: "14' x 5'",
+    capacity: 6,
+    features: ['Coffee Machine', 'Refrigerator', 'Bar Seating', 'Snacks'],
+    icon: <Coffee />,
+    color: '#ff9800'
+  },
+  reception: {
+    name: 'Reception',
+    type: 'public',
+    size: "11' x 10'",
+    capacity: 8,
+    features: ['Curved Desk', 'Waiting Area', 'Guest WiFi', 'Company Display'],
+    icon: <Business />,
+    color: '#00bcd4'
+  },
+  clientLounge: {
+    name: 'Client Lounge',
+    type: 'lounge',
+    size: "17' x 10'",
+    capacity: 15,
+    features: ['Premium Seating', 'Entertainment System', 'Refreshments', 'Reading Materials'],
+    icon: <People />,
+    color: '#e91e63'
+  },
+  leadLounge: {
+    name: 'Lead Lounge',
+    type: 'lounge',
+    size: "17' x 10'",
+    capacity: 15,
+    features: ['Comfortable Seating', 'Presentation Screen', 'Coffee Station', 'Lead Nurture Area'],
+    icon: <TrendingUp />,
+    color: '#3f51b5'
+  }
+};
 
 // Room detail panel component
-const RoomDetailPanel = ({ room, onClose, agents, clients, leads, onAction }) => {
+const RoomDetailPanel = ({ room, onClose, onAction }) => {
   const [activeTab, setActiveTab] = useState(0);
+  const [bookingDialog, setBookingDialog] = useState(false);
+  const [taskDialog, setTaskDialog] = useState(false);
+  const { enqueueSnackbar } = useSnackbar();
 
-  // Conference Room Content
-  const renderConferenceRoom = () => (
-    <Grid container spacing={3}>
-      <Grid item xs={12} md={4}>
-        <Typography variant="h6" gutterBottom>Quick Actions</Typography>
-        <Stack spacing={1}>
-          <Button 
-            fullWidth 
-            startIcon={<Schedule />} 
-            variant="contained"
-            onClick={() => onAction('schedule_meeting', room)}
-          >
-            Schedule Meeting
-          </Button>
-          <Button 
-            fullWidth 
-            startIcon={<VideoCall />} 
-            variant="outlined"
-            onClick={() => onAction('start_video', room)}
-          >
-            Start Video Call
-          </Button>
-          <Button 
-            fullWidth 
-            startIcon={<Description />} 
-            variant="outlined"
-            onClick={() => onAction('book_presentation', room)}
-          >
-            Book Presentation
-          </Button>
-          <Button 
-            fullWidth 
-            startIcon={<Assessment />} 
-            variant="outlined"
-            onClick={() => onAction('view_calendar', room)}
-          >
-            View Room Calendar
-          </Button>
-        </Stack>
-      </Grid>
-      
-      <Grid item xs={12} md={4}>
-        <Typography variant="h6" gutterBottom>Meeting History</Typography>
-        <List dense>
-          {[
-            { title: 'Q4 Sales Review', time: '2h ago', attendees: 8, agent: 'Sarah' },
-            { title: 'Client Presentation - Smith', time: 'Yesterday', attendees: 4, agent: 'Mike' },
-            { title: 'Team Standup', time: 'Mon 9 AM', attendees: 12, agent: 'Alex' },
-            { title: 'Contract Negotiation', time: 'Last Week', attendees: 6, agent: 'Lisa' },
-            { title: 'Strategy Session', time: 'Last Week', attendees: 10, agent: 'Sarah' }
-          ].map((meeting, idx) => (
-            <ListItem key={idx}>
-              <ListItemText
-                primary={meeting.title}
-                secondary={`${meeting.time} • ${meeting.attendees} attendees • Host: ${meeting.agent}`}
-              />
-            </ListItem>
-          ))}
-        </List>
-        <Button size="small" onClick={() => onAction('view_all_meetings', room)}>
-          View All History
-        </Button>
-      </Grid>
-      
-      <Grid item xs={12} md={4}>
-        <Typography variant="h6" gutterBottom>Room Status</Typography>
-        <Stack spacing={2}>
-          <Box>
-            <Typography variant="body2" color="text.secondary">Current Status</Typography>
-            <Chip 
-              label="Available" 
-              color="success" 
-              size="small" 
-              icon={<CheckCircle />}
-            />
-          </Box>
-          <Box>
-            <Typography variant="body2" color="text.secondary">Next Meeting</Typography>
-            <Typography variant="body1">3:00 PM - Budget Review</Typography>
-            <Typography variant="caption" color="text.secondary">In 2 hours 15 minutes</Typography>
-          </Box>
-          <Box>
-            <Typography variant="body2" color="text.secondary">Equipment</Typography>
-            <Stack direction="row" spacing={1}>
-              <Chip label='85" Display' size="small" variant="outlined" />              <Chip label="Whiteboard" size="small" variant="outlined" />
-              <Chip label="Conference Phone" size="small" variant="outlined" />
+  const config = roomConfigs[room.id] || {};
+
+  // Booking form state
+  const [bookingForm, setBookingForm] = useState({
+    date: new Date().toISOString().split('T')[0],
+    startTime: '',
+    endTime: '',
+    attendees: '',
+    purpose: ''
+  });
+
+  // Task form state
+  const [taskForm, setTaskForm] = useState({
+    type: '',
+    assignTo: '',
+    priority: 'medium',
+    notes: ''
+  });
+
+  const handleBooking = () => {
+    if (!bookingForm.startTime || !bookingForm.endTime) {
+      enqueueSnackbar('Please select start and end times', { variant: 'error' });
+      return;
+    }
+
+    onAction('book_room', {
+      room: room.id,
+      ...bookingForm
+    });
+
+    setBookingDialog(false);
+    enqueueSnackbar(`${config.name} booked successfully`, { variant: 'success' });
+  };
+
+  const handleTaskAssignment = () => {
+    if (!taskForm.type || !taskForm.assignTo) {
+      enqueueSnackbar('Please select task type and assignee', { variant: 'error' });
+      return;
+    }
+
+    onAction('assign_task', {
+      room: room.id,
+      ...taskForm
+    });
+
+    setTaskDialog(false);
+    enqueueSnackbar('Task assigned successfully', { variant: 'success' });
+  };
+
+  const renderRoomInfo = () => (
+    <Grid container spacing={2}>
+      <Grid item xs={12}>
+        <Card>
+          <CardContent>
+            <Stack direction="row" alignItems="center" spacing={2} mb={2}>
+              {config.icon}
+              <Box>
+                <Typography variant="h6">{config.name}</Typography>
+                <Chip 
+                  label={config.type} 
+                  size="small" 
+                  sx={{ bgcolor: config.color, color: 'white' }}
+                />
+              </Box>
             </Stack>
-          </Box>
-          <Box>
-            <Typography variant="body2" color="text.secondary">Capacity</Typography>
-            <Box display="flex" alignItems="center" gap={1}>
-              <People fontSize="small" />
-              <Typography variant="body1">12 people maximum</Typography>
-            </Box>
-          </Box>
-          {agents && agents.filter(a => a.location === 'conferenceRoom').length > 0 && (
-            <Box>
-              <Typography variant="body2" color="text.secondary">Currently Inside</Typography>
-              <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
-                {agents.filter(a => a.location === 'conferenceRoom').map(agent => (
-                  <Chip 
-                    key={agent.id}
-                    label={agent.name}
-                    size="small"
-                    avatar={<Avatar sx={{ width: 20, height: 20 }}>{agent.name[0]}</Avatar>}
-                  />
-                ))}
-              </Stack>
-            </Box>
+
+            <Grid container spacing={2}>
+              <Grid item xs={6}>
+                <Typography variant="body2" color="text.secondary">Size</Typography>
+                <Typography variant="body1">{config.size}</Typography>
+              </Grid>
+              <Grid item xs={6}>
+                <Typography variant="body2" color="text.secondary">Capacity</Typography>
+                <Typography variant="body1">{config.capacity} people</Typography>
+              </Grid>
+            </Grid>
+
+            <Divider sx={{ my: 2 }} />
+
+            <Typography variant="subtitle2" gutterBottom>Features</Typography>
+            <Stack direction="row" flexWrap="wrap" gap={1}>
+              {config.features?.map((feature, index) => (
+                <Chip key={index} label={feature} size="small" variant="outlined" />
+              ))}
+            </Stack>
+          </CardContent>
+        </Card>
+      </Grid>
+
+      <Grid item xs={12}>
+        <Typography variant="h6" gutterBottom>Quick Actions</Typography>
+        <Grid container spacing={1}>
+          {['meeting', 'office'].includes(config.type) && (
+            <>
+              <Grid item xs={6}>
+                <Button 
+                  fullWidth 
+                  variant="contained" 
+                  startIcon={<Schedule />}
+                  onClick={() => setBookingDialog(true)}
+                >
+                  Book Room
+                </Button>
+              </Grid>
+              <Grid item xs={6}>
+                <Button 
+                  fullWidth 
+                  variant="outlined" 
+                  startIcon={<VideoCall />}
+                  onClick={() => onAction('start_video', room)}
+                >
+                  Video Call
+                </Button>
+              </Grid>
+            </>
           )}
-        </Stack>
+          
+          <Grid item xs={6}>
+            <Button 
+              fullWidth 
+              variant="outlined" 
+              startIcon={<Assignment />}
+              onClick={() => setTaskDialog(true)}
+            >
+              Assign Task
+            </Button>
+          </Grid>
+          
+          <Grid item xs={6}>
+            <Button 
+              fullWidth 
+              variant="outlined" 
+              startIcon={<Assessment />}
+              onClick={() => onAction('view_analytics', room)}
+            >
+              Analytics
+            </Button>
+          </Grid>
+        </Grid>
       </Grid>
     </Grid>
   );
 
-  // Manager's Office Content
-  const renderManagerOffice = () => (
+  const renderActivity = () => (
     <Box>
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={8}>
-          <Box display="flex" alignItems="center" gap={2} mb={3}>
-            <Avatar sx={{ width: 80, height: 80, bgcolor: 'primary.main' }}>M</Avatar>
-            <Box>
-              <Typography variant="h5">Manager's Suite</Typography>
-              <Typography variant="body2" color="text.secondary">Executive Operations Center</Typography>
-              <Chip label="In Office" color="success" size="small" sx={{ mt: 1 }} />
-            </Box>
-          </Box>
-          
-          <Grid container spacing={2}>
-            <Grid item xs={6}>
-              <Card variant="outlined">
-                <CardContent>
-                  <Typography variant="h4" color="primary">87%</Typography>
-                  <Typography variant="body2" color="text.secondary">Team Performance</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={6}>
-              <Card variant="outlined">
-                <CardContent>
-                  <Typography variant="h4" color="success.main">$2.4M</Typography>
-                  <Typography variant="body2" color="text.secondary">Monthly Revenue</Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
-          
-          <Box mt={3}>
-            <Typography variant="h6" gutterBottom>Recent Decisions</Typography>
-            <List dense>
-              <ListItem>
-                <ListItemText 
-                  primary="Approved marketing budget increase"
-                  secondary="2 hours ago"
-                />
-              </ListItem>
-              <ListItem>
-                <ListItemText 
-                  primary="Assigned Sarah to luxury waterfront listing"
-                  secondary="This morning"
-                />
-              </ListItem>
-              <ListItem>
-                <ListItemText 
-                  primary="Scheduled team training for next week"
-                  secondary="Yesterday"
-                />
-              </ListItem>
-            </List>
-          </Box>
-        </Grid>
-        
-        <Grid item xs={12} md={4}>
-          <Typography variant="h6" gutterBottom>Quick Actions</Typography>
-          <Stack spacing={1}>
-            <Button 
-              fullWidth 
-              startIcon={<Message />} 
-              variant="contained"
-              onClick={() => onAction('request_meeting', room)}
-            >
-              Request 1-on-1
-            </Button>
-            <Button 
-              fullWidth 
-              startIcon={<Assignment />} 
-              variant="outlined"
-              onClick={() => onAction('submit_report', room)}
-            >
-              Submit Report
-            </Button>
-            <Button 
-              fullWidth 
-              startIcon={<BarChart />} 
-              variant="outlined"
-              onClick={() => onAction('view_okrs', room)}
-            >
-              View OKRs
-            </Button>
-            <Button 
-              fullWidth 
-              startIcon={<Email />} 
-              variant="outlined"
-              onClick={() => onAction('send_message', room)}
-            >
-              Send Message
-            </Button>
-          </Stack>
-          
-          <Box mt={3}>
-            <Typography variant="h6" gutterBottom>Office Hours</Typography>
-            <List dense>
-              <ListItem>
-                <ListItemText 
-                  primary="Monday - Friday"
-                  secondary="9:00 AM - 6:00 PM"
-                />
-              </ListItem>
-              <ListItem>
-                <ListItemText 
-                  primary="Open Door Policy"
-                  secondary="2:00 PM - 4:00 PM"
-                />
-              </ListItem>
-            </List>
-          </Box>
-        </Grid>
-      </Grid>
+      <Typography variant="h6" gutterBottom>Recent Activity</Typography>
+      <List>
+        <ListItem>
+          <ListItemAvatar>
+            <Avatar sx={{ bgcolor: 'primary.light' }}>A</Avatar>
+          </ListItemAvatar>
+          <ListItemText
+            primary="Alex scheduled a meeting"
+            secondary="2 hours ago"
+          />
+        </ListItem>
+        <ListItem>
+          <ListItemAvatar>
+            <Avatar sx={{ bgcolor: 'success.light' }}>S</Avatar>
+          </ListItemAvatar>
+          <ListItemText
+            primary="Sarah completed client presentation"
+            secondary="3 hours ago"
+          />
+        </ListItem>
+        <ListItem>
+          <ListItemAvatar>
+            <Avatar sx={{ bgcolor: 'warning.light' }}>D</Avatar>
+          </ListItemAvatar>
+          <ListItemText
+            primary="David updated listing materials"
+            secondary="5 hours ago"
+          />
+        </ListItem>
+      </List>
     </Box>
   );
 
-  // Client Lounge Content
-  const renderClientLounge = () => (
+  const renderSchedule = () => (
     <Box>
-      <Typography variant="h6" gutterBottom>Active Clients in Lounge</Typography>
-      <Grid container spacing={2}>
-        {(clients || [
-          { id: 1, name: 'John Smith', vip: true, rating: 5, propertyInterest: 'Luxury Condo', lastInteraction: '2 hours ago', inLounge: true, netWorth: '$5M+' },
-          { id: 2, name: 'Jane Doe', vip: false, rating: 4, propertyInterest: 'Beach House', lastInteraction: 'Yesterday', inLounge: true, netWorth: '$2M+' },
-          { id: 3, name: 'Robert Chen', vip: true, rating: 5, propertyInterest: 'Investment Properties', lastInteraction: '1 hour ago', inLounge: true, netWorth: '$10M+' },
-          { id: 4, name: 'Maria Garcia', vip: false, rating: 4, propertyInterest: 'Family Home', lastInteraction: '3 days ago', inLounge: true, netWorth: '$1M+' }
-        ]).filter(c => c.inLounge).map((client, idx) => (
-          <Grid item xs={12} sm={6} md={4} key={idx}>
-            <Card 
-              variant="outlined" 
-              sx={{ 
-                borderColor: client.vip ? 'warning.main' : 'divider',
-                borderWidth: client.vip ? 2 : 1
-              }}
-            >
-              <CardContent>
-                <Box display="flex" alignItems="center" mb={1}>
-                  <Avatar sx={{ mr: 2, bgcolor: client.vip ? 'warning.main' : 'primary.main' }}>
-                    {client.name?.[0]}
-                  </Avatar>
-                  <Box flex={1}>
-                    <Typography variant="subtitle2">{client.name}</Typography>
-                    <Box display="flex" alignItems="center">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} sx={{ 
-                          fontSize: 14, 
-                          color: i < client.rating ? 'warning.main' : 'action.disabled' 
-                        }} />
-                      ))}
-                    </Box>
-                  </Box>
-                  {client.vip && <Chip label="VIP" size="small" color="warning" />}
-                </Box>
-                <Divider sx={{ my: 1 }} />
-                <Typography variant="body2" color="text.secondary">
-                  <LocationOn sx={{ fontSize: 16, verticalAlign: 'middle' }} /> {client.propertyInterest}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  <AttachMoney sx={{ fontSize: 16, verticalAlign: 'middle' }} /> {client.netWorth}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  Last seen: {client.lastInteraction}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
+      <Typography variant="h6" gutterBottom>Today's Schedule</Typography>
+      <List>
+        <ListItem>
+          <ListItemText
+            primary="Team Meeting"
+            secondary="9:00 AM - 10:00 AM"
+          />
+          <Chip label="In Progress" color="warning" size="small" />
+        </ListItem>
+        <ListItem>
+          <ListItemText
+            primary="Client Presentation"
+            secondary="11:00 AM - 12:00 PM"
+          />
+          <Chip label="Upcoming" size="small" />
+        </ListItem>
+        <ListItem>
+          <ListItemText
+            primary="Strategy Session"
+            secondary="2:00 PM - 3:30 PM"
+          />
+          <Chip label="Upcoming" size="small" />
+        </ListItem>
+      </List>
       
-      <Box mt={3}>
-        <Grid container spacing={3}>
-          <Grid item xs={12} md={6}>
-            <Card variant="outlined">
-              <CardContent>
-                <Typography variant="h6" gutterBottom>Lounge Analytics</Typography>
-                <Stack spacing={2}>
-                  <Box display="flex" justifyContent="space-between">
-                    <Typography variant="body2">Clients Currently Here</Typography>
-                    <Typography variant="body2" fontWeight="bold">
-                      {(clients || []).filter(c => c.inLounge).length}
-                    </Typography>
-                  </Box>
-                  <Box display="flex" justifyContent="space-between">
-                    <Typography variant="body2">Average Wait Time</Typography>
-                    <Typography variant="body2" fontWeight="bold">12 mins</Typography>
-                  </Box>
-                  <Box display="flex" justifyContent="space-between">
-                    <Typography variant="body2">Satisfaction Score</Typography>
-                    <Typography variant="body2" fontWeight="bold" color="success.main">4.8/5</Typography>
-                  </Box>
-                  <Box display="flex" justifyContent="space-between">
-                    <Typography variant="body2">VIP Clients Present</Typography>
-                    <Typography variant="body2" fontWeight="bold" color="warning.main">
-                      {(clients || []).filter(c => c.inLounge && c.vip).length}
-                    </Typography>
-                  </Box>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-          
-          <Grid item xs={12} md={6}>
-            <Card variant="outlined">
-              <CardContent>
-                <Typography variant="h6" gutterBottom>Quick Actions</Typography>
-                <Stack spacing={1}>
-                  <Button 
-                    fullWidth 
-                    variant="contained" 
-                    startIcon={<LocalBar />}
-                    onClick={() => onAction('order_refreshments', room)}
-                  >
-                    Order Refreshments
-                  </Button>
-                  <Button 
-                    fullWidth 
-                    variant="outlined" 
-                    startIcon={<NotificationsActive />}
-                    onClick={() => onAction('notify_agent', room)}
-                  >
-                    Notify Agent of Arrival
-                  </Button>
-                  <Button 
-                    fullWidth 
-                    variant="outlined" 
-                    startIcon={<Videocam />}
-                    onClick={() => onAction('control_tv', room)}
-                  >
-                    Control Lounge TV
-                  </Button>
-                  <Button 
-                    fullWidth 
-                    variant="outlined" 
-                    startIcon={<Spa />}
-                    onClick={() => onAction('adjust_ambiance', room)}
-                  >
-                    Adjust Ambiance
-                  </Button>
-                </Stack>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
+      <Box sx={{ mt: 2 }}>
+        <Typography variant="body2" color="text.secondary" gutterBottom>
+          Room Utilization Today
+        </Typography>
+        <LinearProgress variant="determinate" value={65} />
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+          65% (5.2 hours booked)
+        </Typography>
       </Box>
     </Box>
   );
-
-  // Lead Lounge Content
-  const renderLeadLounge = () => (
-    <Box>
-      <Typography variant="h6" gutterBottom>Active Leads Walking Around</Typography>
-      <Grid container spacing={2}>
-        {(leads || [
-          { id: 1, name: 'Mike Johnson', source: 'Website', temperature: 'hot', daysInPipeline: 3, nextAction: 'Call today', value: '$750K', assignedTo: 'Sarah' },
-          { id: 2, name: 'Lisa Brown', source: 'Referral', temperature: 'warm', daysInPipeline: 7, nextAction: 'Send listings', value: '$500K', assignedTo: 'Mike' },
-          { id: 3, name: 'Tom Wilson', source: 'Open House', temperature: 'cold', daysInPipeline: 15, nextAction: 'Follow up email', value: '$300K', assignedTo: 'Lisa' },
-          { id: 4, name: 'Amanda Lee', source: 'Social Media', temperature: 'hot', daysInPipeline: 1, nextAction: 'Schedule showing', value: '$1.2M', assignedTo: 'Sarah' },
-          { id: 5, name: 'David Park', source: 'Zillow', temperature: 'warm', daysInPipeline: 5, nextAction: 'Qualification call', value: '$450K', assignedTo: 'Alex' },
-          { id: 6, name: 'Rachel Green', source: 'Referral', temperature: 'hot', daysInPipeline: 2, nextAction: 'Contract review', value: '$900K', assignedTo: 'Mike' }
-        ]).map((lead, idx) => (
-          <Grid item xs={12} sm={6} md={3} key={idx}>
-            <Card 
-              variant="outlined" 
-              sx={{ 
-                borderColor: lead.temperature === 'hot' ? 'error.main' : 
-                           lead.temperature === 'warm' ? 'warning.main' : 'info.main',
-                position: 'relative',
-                overflow: 'visible',
-                animation: lead.temperature === 'hot' ? 'pulse 2s infinite' : 'none',
-                '@keyframes pulse': {
-                  '0%': { transform: 'scale(1)' },
-                  '50%': { transform: 'scale(1.02)' },
-                  '100%': { transform: 'scale(1)' }
-                }
-              }}
-            >
-              <CardContent>
-                <Box position="absolute" top={-8} right={8}>
-                  {lead.temperature === 'hot' && <WhatshotOutlined color="error" />}
-                  {lead.temperature === 'warm' && <WhatshotOutlined color="warning" />}
-                  {lead.temperature === 'cold' && <AcUnit color="info" />}
-                </Box>
-                <Typography variant="subtitle2" fontWeight="bold">{lead.name}</Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {lead.source} • {lead.value}
-                </Typography>
-                <Box mt={1}>
-                  <Typography variant="caption">Pipeline Progress</Typography>
-                  <LinearProgress 
-                    variant="determinate" 
-                    value={Math.min(lead.daysInPipeline * 10, 100)} 
-                    sx={{ 
-                      mt: 0.5,
-                      backgroundColor: 'grey.300',
-                      '& .MuiLinearProgress-bar': {
-                        backgroundColor: lead.temperature === 'hot' ? 'error.main' :
-                                       lead.temperature === 'warm' ? 'warning.main' : 'info.main'
-                      }
-                    }}
-                  />
-                  <Typography variant="caption" color="text.secondary">
-                    Day {lead.daysInPipeline} • Agent: {lead.assignedTo}
-                  </Typography>
-                </Box>
-                <Typography variant="caption" color="primary" sx={{ mt: 1, display: 'block' }}>
-                  <Timer sx={{ fontSize: 12, verticalAlign: 'middle' }} /> {lead.nextAction}
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-      
-      <Box mt={3}>
-        <Typography variant="h6" gutterBottom>Lead Analytics</Typography>
-        <Grid container spacing={2}>
-          <Grid item xs={6} md={3}>
-            <Card variant="outlined">
-              <CardContent>
-                <Typography variant="h4">{leads?.length || 6}</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Total Leads
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={6} md={3}>
-            <Card variant="outlined">
-              <CardContent>
-                <Typography variant="h4" color="error.main">
-                  {leads?.filter(l => l.temperature === 'hot').length || 3}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Hot Leads
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={6} md={3}>
-            <Card variant="outlined">
-              <CardContent>
-                <Typography variant="h4" color="success.main">24%</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Conversion Rate
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={6} md={3}>
-            <Card variant="outlined">
-              <CardContent>
-                <Typography variant="h4">1.2h</Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Avg Response Time
-                </Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-        
-        <Box mt={2}>
-          <Stack direction="row" spacing={2}>
-            <Button 
-              variant="contained" 
-              startIcon={<People />}
-              onClick={() => onAction('capture_lead', room)}
-            >
-              Capture New Lead
-            </Button>
-            <Button 
-              variant="outlined" 
-              startIcon={<TrendingUp />}
-              onClick={() => onAction('bulk_outreach', room)}
-            >
-              Bulk Outreach
-            </Button>
-            <Button 
-              variant="outlined" 
-              startIcon={<Assignment />}
-              onClick={() => onAction('reassign_leads', room)}
-            >
-              Reassign Leads
-            </Button>
-          </Stack>
-        </Box>
-      </Box>
-    </Box>
-  );
-
-  // Reception Content
-  const renderReception = () => (
-    <Box>
-      <Box display="flex" alignItems="center" gap={2} mb={3}>
-        <Avatar sx={{ width: 60, height: 60, bgcolor: 'primary.main' }}>A</Avatar>
-        <Box>
-          <Typography variant="h5">Reception Desk</Typography>
-          <Typography variant="body2" color="text.secondary">Alex - Executive Assistant</Typography>
-          <Chip label="Active" color="success" size="small" sx={{ mt: 1 }} />
-        </Box>
-      </Box>
-      
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
-          <Typography variant="h6" gutterBottom>Today's Activity</Typography>
-          <List dense>
-            <ListItem>
-              <ListItemAvatar>
-                <Avatar sx={{ width: 32, height: 32 }}>
-                  <People />
-                </Avatar>
-              </ListItemAvatar>
-              <ListItemText 
-                primary="John Smith arrived"
-                secondary="VIP Client • 10 minutes ago"
-              />
-            </ListItem>
-            <ListItem>
-              <ListItemAvatar>
-                <Avatar sx={{ width: 32, height: 32 }}>
-                  <Phone />
-                </Avatar>
-              </ListItemAvatar>
-              <ListItemText 
-                primary="Call from potential buyer"
-                secondary="Transferred to Sarah • 30 minutes ago"
-              />
-            </ListItem>
-            <ListItem>
-              <ListItemAvatar>
-                <Avatar sx={{ width: 32, height: 32 }}>
-                  <Event />
-                </Avatar>
-              </ListItemAvatar>
-              <ListItemText 
-                primary="3 appointments scheduled"
-                secondary="For this afternoon • 1 hour ago"
-              />
-            </ListItem>
-          </List>
-        </Grid>
-        
-        <Grid item xs={12} md={6}>
-          <Typography variant="h6" gutterBottom>Quick Actions</Typography>
-          <Stack spacing={1}>
-            <Button 
-              fullWidth 
-              variant="contained" 
-              startIcon={<NotificationsActive />}
-              onClick={() => onAction('make_announcement', room)}
-            >
-              Make Announcement
-            </Button>
-            <Button 
-              fullWidth 
-              variant="outlined" 
-              startIcon={<People />}
-              onClick={() => onAction('visitor_checkin', room)}
-            >
-              Visitor Check-in
-            </Button>
-            <Button 
-              fullWidth 
-              variant="outlined" 
-              startIcon={<Event />}
-              onClick={() => onAction('view_schedule', room)}
-            >
-              View Day Schedule
-            </Button>
-          </Stack>
-        </Grid>
-      </Grid>
-    </Box>
-  );
-
-  // Private Office Content (for Partner/Senior offices)
-  const renderPrivateOffice = () => (
-    <Box>
-      <Typography variant="h6" gutterBottom>Office Details</Typography>
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={8}>
-          <Card variant="outlined">
-            <CardContent>
-              <Box display="flex" alignItems="center" gap={2} mb={2}>
-                <Avatar sx={{ width: 50, height: 50 }}>
-                  {room.id === 'partnerOffice' ? 'P' : 'S'}
-                </Avatar>
-                <Box>
-                  <Typography variant="h6">
-                    {room.id === 'partnerOffice' ? 'Partner Office' : 'Senior Agent Office'}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    {room.id === 'partnerOffice' ? 'Executive Suite' : 'Private Workspace'}
-                  </Typography>
-                </Box>
-              </Box>
-              
-              <Divider sx={{ my: 2 }} />
-              
-              <Typography variant="subtitle2" gutterBottom>Current Activity</Typography>
-              <List dense>
-                <ListItem>
-                  <ListItemText 
-                    primary="Working on luxury listing presentation"
-                    secondary="Started 45 minutes ago"
-                  />
-                </ListItem>
-                <ListItem>
-                  <ListItemText 
-                    primary="2 calls completed this morning"
-                    secondary="Client follow-ups"
-                  />
-                </ListItem>
-              </List>
-            </CardContent>
-          </Card>
-        </Grid>
-        
-        <Grid item xs={12} md={4}>
-          <Stack spacing={1}>
-            <Button 
-              fullWidth 
-              variant="outlined" 
-              startIcon={<Message />}
-              onClick={() => onAction('knock_door', room)}
-            >
-              Knock on Door
-            </Button>
-            <Button 
-              fullWidth 
-              variant="outlined" 
-              startIcon={<Event />}
-              onClick={() => onAction('book_time', room)}
-            >
-              Book Time
-            </Button>
-            <Button 
-              fullWidth 
-              variant="outlined" 
-              startIcon={<Description />}
-              onClick={() => onAction('drop_document', room)}
-            >
-              Drop Document
-            </Button>
-          </Stack>
-        </Grid>
-      </Grid>
-    </Box>
-  );
-
-  // Render room content based on room ID
-  const renderRoomContent = () => {
-    switch (room.id) {
-      case 'conferenceRoom':
-        return renderConferenceRoom();
-      case 'managerOffice':
-        return renderManagerOffice();
-      case 'clientLounge':
-        return renderClientLounge();
-      case 'leadLounge':
-        return renderLeadLounge();
-      case 'reception':
-        return renderReception();
-      case 'partnerOffice':
-      case 'seniorOffice1':
-      case 'seniorOffice2':
-        return renderPrivateOffice();
-      default:
-        return <Typography>Room details coming soon...</Typography>;
-    }
-  };
 
   return (
-    <Dialog
-      open={true}
-      onClose={onClose}
-      maxWidth="lg"
-      fullWidth
-      PaperProps={{
-        sx: {
-          maxHeight: '90vh',
-          overflow: 'hidden'
-        }
-      }}
-    >
-      <DialogTitle>
-        <Box display="flex" justifyContent="space-between" alignItems="center">
-          <Box display="flex" alignItems="center" gap={2}>
-            <Business sx={{ color: 'primary.main' }} />
-            <Typography variant="h5">{room.name}</Typography>
-          </Box>
-          <IconButton onClick={onClose} size="small">
-            <Close />
-          </IconButton>
+    <>
+      <Paper
+        sx={{
+          position: 'absolute',
+          right: 0,
+          top: 0,
+          width: 400,
+          height: '100%',
+          overflow: 'auto',
+          boxShadow: 3,
+          zIndex: 1000
+        }}
+      >
+        <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+          <Stack direction="row" justifyContent="space-between" alignItems="center">
+            <Typography variant="h5">{config.name}</Typography>
+            <IconButton onClick={onClose}>
+              <Close />
+            </IconButton>
+          </Stack>
         </Box>
-      </DialogTitle>
-      
-      <Divider />
-      
-      <DialogContent sx={{ p: 3 }}>
-        {renderRoomContent()}
-      </DialogContent>
-    </Dialog>
+
+        <Tabs value={activeTab} onChange={(e, v) => setActiveTab(v)} sx={{ px: 2 }}>
+          <Tab label="Info" />
+          <Tab label="Activity" />
+          <Tab label="Schedule" />
+        </Tabs>
+
+        <Box sx={{ p: 2 }}>
+          {activeTab === 0 && renderRoomInfo()}
+          {activeTab === 1 && renderActivity()}
+          {activeTab === 2 && renderSchedule()}
+        </Box>
+      </Paper>
+
+      {/* Booking Dialog */}
+      <Dialog open={bookingDialog} onClose={() => setBookingDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Book {config.name}</DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Date"
+                type="date"
+                value={bookingForm.date}
+                onChange={(e) => setBookingForm({ ...bookingForm, date: e.target.value })}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                fullWidth
+                label="Start Time"
+                type="time"
+                value={bookingForm.startTime}
+                onChange={(e) => setBookingForm({ ...bookingForm, startTime: e.target.value })}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                fullWidth
+                label="End Time"
+                type="time"
+                value={bookingForm.endTime}
+                onChange={(e) => setBookingForm({ ...bookingForm, endTime: e.target.value })}
+                InputLabelProps={{ shrink: true }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Attendees"
+                value={bookingForm.attendees}
+                onChange={(e) => setBookingForm({ ...bookingForm, attendees: e.target.value })}
+                placeholder="Enter email addresses"
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Purpose"
+                multiline
+                rows={2}
+                value={bookingForm.purpose}
+                onChange={(e) => setBookingForm({ ...bookingForm, purpose: e.target.value })}
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setBookingDialog(false)}>Cancel</Button>
+          <Button variant="contained" onClick={handleBooking}>Book Room</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Task Assignment Dialog */}
+      <Dialog open={taskDialog} onClose={() => setTaskDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Assign Task for {config.name}</DialogTitle>
+        <DialogContent>
+          <Grid container spacing={2} sx={{ mt: 1 }}>
+            <Grid item xs={12}>
+              <FormControl fullWidth>
+                <InputLabel>Task Type</InputLabel>
+                <Select
+                  value={taskForm.type}
+                  onChange={(e) => setTaskForm({ ...taskForm, type: e.target.value })}
+                  label="Task Type"
+                >
+                  <MenuItem value="clean">Cleaning</MenuItem>
+                  <MenuItem value="setup">Room Setup</MenuItem>
+                  <MenuItem value="maintenance">Maintenance</MenuItem>
+                  <MenuItem value="inspection">Inspection</MenuItem>
+                  <MenuItem value="preparation">Meeting Preparation</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+              <FormControl fullWidth>
+                <InputLabel>Assign To</InputLabel>
+                <Select
+                  value={taskForm.assignTo}
+                  onChange={(e) => setTaskForm({ ...taskForm, assignTo: e.target.value })}
+                  label="Assign To"
+                >
+                  <MenuItem value="alex">Alex (Executive Assistant)</MenuItem>
+                  <MenuItem value="mike">Mike (Operations Manager)</MenuItem>
+                  <MenuItem value="maintenance">Maintenance Team</MenuItem>
+                  <MenuItem value="cleaning">Cleaning Staff</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+              <FormControl fullWidth>
+                <InputLabel>Priority</InputLabel>
+                <Select
+                  value={taskForm.priority}
+                  onChange={(e) => setTaskForm({ ...taskForm, priority: e.target.value })}
+                  label="Priority"
+                >
+                  <MenuItem value="low">Low</MenuItem>
+                  <MenuItem value="medium">Medium</MenuItem>
+                  <MenuItem value="high">High</MenuItem>
+                  <MenuItem value="urgent">Urgent</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Notes"
+                multiline
+                rows={3}
+                value={taskForm.notes}
+                onChange={(e) => setTaskForm({ ...taskForm, notes: e.target.value })}
+              />
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setTaskDialog(false)}>Cancel</Button>
+          <Button variant="contained" onClick={handleTaskAssignment}>Assign Task</Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 };
 
-// Enhanced Office3D component with room interactions
-export const enhanceOffice3DWithRoomInteractions = (Office3DComponent) => {
-  return ({ agents, selectedAgent, onAgentClick, currentFloor, clients, leads }) => {
+// Higher-order component to enhance Office3D with room interactions
+const enhanceOffice3DWithRoomInteractions = (Office3DComponent) => {
+  return (props) => {
     const [selectedRoom, setSelectedRoom] = useState(null);
-    const [highlightedRoom, setHighlightedRoom] = useState(null);
-    const sceneRef = useRef(null);
-    const cameraRef = useRef(null);
-    const originalCameraPosition = useRef(null);
-    const roomMeshesRef = useRef({});
-    const highlightLayerRef = useRef(null);
-    
-    // Room definitions matching your floor plan
-    const rooms = [
-      { id: 'conferenceRoom', name: 'Conference Room', position: { x: 32, z: -27.5 } },
-      { id: 'managerOffice', name: "Manager's Office", position: { x: -40, z: 0 } },
-      { id: 'clientLounge', name: 'Client Lounge', position: { x: -40, z: 27.5 } },
-      { id: 'leadLounge', name: 'Lead Lounge', position: { x: 8, z: 27.5 } },
-      { id: 'reception', name: 'Reception', position: { x: -55, z: 27.5 } },
-      { id: 'partnerOffice', name: 'Partner Office', position: { x: -50, z: -27.5 } },
-      { id: 'seniorOffice1', name: 'Senior Office 1', position: { x: -25, z: -27.5 } },
-      { id: 'seniorOffice2', name: 'Senior Office 2', position: { x: 0, z: -27.5 } }
-    ];
-
-    // Initialize room click handlers
-    const setupRoomInteractions = (scene, camera) => {
-      sceneRef.current = scene;
-      cameraRef.current = camera;
-      
-      // Create highlight layer
-      highlightLayerRef.current = new BABYLON.HighlightLayer("roomHighlight", scene);
-      highlightLayerRef.current.outerGlow = true;
-      highlightLayerRef.current.innerGlow = false;
-      highlightLayerRef.current.blurHorizontalSize = 1.5;
-      highlightLayerRef.current.blurVerticalSize = 1.5;
-      
-      // Store original camera position
-      originalCameraPosition.current = {
-        alpha: camera.alpha,
-        beta: camera.beta,
-        radius: camera.radius,
-        target: camera.target.clone()
-      };
-      
-      // Add click handlers to room meshes
-      rooms.forEach(room => {
-        // Try to find the room by its ID
-        const roomMesh = scene.getMeshByName(room.id);
-        if (roomMesh) {
-          roomMeshesRef.current[room.id] = roomMesh;
-          
-          // Make room clickable
-          roomMesh.actionManager = new BABYLON.ActionManager(scene);
-          roomMesh.actionManager.registerAction(
-            new BABYLON.ExecuteCodeAction(
-              BABYLON.ActionManager.OnPickTrigger,
-              () => handleRoomClick(room)
-            )
-          );
-          
-          // Add hover effects
-          roomMesh.actionManager.registerAction(
-            new BABYLON.ExecuteCodeAction(
-              BABYLON.ActionManager.OnPointerOverTrigger,
-              () => handleRoomHover(room)
-            )
-          );
-          
-          roomMesh.actionManager.registerAction(
-            new BABYLON.ExecuteCodeAction(
-              BABYLON.ActionManager.OnPointerOutTrigger,
-              () => handleRoomHoverOut(room)
-            )
-          );
-        }
-      });
-    };
+    const { enqueueSnackbar } = useSnackbar();
 
     const handleRoomClick = (room) => {
-      if (selectedRoom?.id === room.id) {
-        // Clicking same room deselects it
-        deselectRoom();
-      } else {
-        selectRoom(room);
-      }
+      setSelectedRoom(room);
     };
 
-    const handleRoomHover = (room) => {
-      if (!selectedRoom && highlightLayerRef.current) {
-        const mesh = roomMeshesRef.current[room.id];
-        if (mesh) {
-          highlightLayerRef.current.addMesh(mesh, BABYLON.Color3.Yellow());
-          setHighlightedRoom(room);
-          
-          // Change cursor
-          document.body.style.cursor = 'pointer';
-        }
-      }
-    };
-
-    const handleRoomHoverOut = (room) => {
-      if (!selectedRoom && highlightLayerRef.current) {
-        const mesh = roomMeshesRef.current[room.id];
-        if (mesh) {
-          highlightLayerRef.current.removeMesh(mesh);
-          setHighlightedRoom(null);
-          
-          // Reset cursor
-          document.body.style.cursor = 'default';
-        }
-      }
-    };
-
-    const selectRoom = (room) => {
-      const camera = cameraRef.current;
-      const scene = sceneRef.current;
+    const handleRoomAction = (action, data) => {
+      console.log('Room action:', action, data);
       
-      if (!camera || !scene) return;
-      
-      // Highlight the room
-      if (highlightLayerRef.current) {
-        // Remove previous highlights
-        Object.values(roomMeshesRef.current).forEach(mesh => {
-          highlightLayerRef.current.removeMesh(mesh);
-        });
-        
-        // Add highlight to selected room
-        const mesh = roomMeshesRef.current[room.id];
-        if (mesh) {
-          highlightLayerRef.current.addMesh(mesh, BABYLON.Color3.Green());
-        }
-      }
-      
-      // Animate camera to focus on room
-      const targetPosition = new BABYLON.Vector3(room.position.x, 0, room.position.z);
-      
-      // Create smooth camera animations
-      const animationAlpha = BABYLON.Animation.CreateAndStartAnimation(
-        "cameraAlpha",
-        camera,
-        "alpha",
-        30,
-        24,
-        camera.alpha,
-        camera.alpha, // Keep same alpha
-        BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
-        new BABYLON.CubicEase()
-      );
-      
-      const animationBeta = BABYLON.Animation.CreateAndStartAnimation(
-        "cameraBeta",
-        camera,
-        "beta",
-        30,
-        24,
-        camera.beta,
-        Math.PI / 3, // Slightly lower angle
-        BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
-        new BABYLON.CubicEase()
-      );
-      
-      const animationRadius = BABYLON.Animation.CreateAndStartAnimation(
-        "cameraRadius",
-        camera,
-        "radius",
-        30,
-        24,
-        camera.radius,
-        50, // Zoom in closer
-        BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
-        new BABYLON.CubicEase()
-      );
-      
-      const animationTarget = BABYLON.Animation.CreateAndStartAnimation(
-        "cameraTarget",
-        camera,
-        "target",
-        30,
-        24,
-        camera.target,
-        targetPosition,
-        BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
-        new BABYLON.CubicEase()
-      );
-      
-      // Set selected room after animation starts
-      setTimeout(() => {
-        setSelectedRoom(room);
-      }, 100);
-    };
-
-    const deselectRoom = () => {
-      const camera = cameraRef.current;
-      
-      if (!camera || !originalCameraPosition.current) return;
-      
-      // Remove highlights
-      if (highlightLayerRef.current) {
-        Object.values(roomMeshesRef.current).forEach(mesh => {
-          highlightLayerRef.current.removeMesh(mesh);
-        });
-      }
-      
-      // Animate camera back to original position
-      const orig = originalCameraPosition.current;
-      
-      BABYLON.Animation.CreateAndStartAnimation(
-        "cameraAlphaReset",
-        camera,
-        "alpha",
-        30,
-        24,
-        camera.alpha,
-        orig.alpha,
-        BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
-        new BABYLON.CubicEase()
-      );
-      
-      BABYLON.Animation.CreateAndStartAnimation(
-        "cameraBetaReset",
-        camera,
-        "beta",
-        30,
-        24,
-        camera.beta,
-        orig.beta,
-        BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
-        new BABYLON.CubicEase()
-      );
-      
-      BABYLON.Animation.CreateAndStartAnimation(
-        "cameraRadiusReset",
-        camera,
-        "radius",
-        30,
-        24,
-        camera.radius,
-        orig.radius,
-        BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
-        new BABYLON.CubicEase()
-      );
-      
-      BABYLON.Animation.CreateAndStartAnimation(
-        "cameraTargetReset",
-        camera,
-        "target",
-        30,
-        24,
-        camera.target,
-        orig.target,
-        BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT,
-        new BABYLON.CubicEase()
-      );
-      
-      setSelectedRoom(null);
-    };
-
-    // Handle room actions
-    const handleRoomAction = (action, room) => {
-      console.log(`Action: ${action} for room: ${room.name}`);
-      // Here you can implement actual actions like API calls, opening modals, etc.
-      // For now, we'll just log the action
-      
-      switch(action) {
-        case 'schedule_meeting':
-          // Open meeting scheduler
+      switch (action) {
+        case 'book_room':
+          // Handle room booking
           break;
         case 'start_video':
-          // Start video call
+          enqueueSnackbar(`Starting video call in ${data.name}`, { variant: 'info' });
           break;
-        case 'order_refreshments':
-          // Send order to kitchen/reception
+        case 'assign_task':
+          // Handle task assignment
           break;
-        case 'capture_lead':
-          // Open lead capture form
+        case 'view_analytics':
+          enqueueSnackbar(`Opening analytics for ${data.name}`, { variant: 'info' });
           break;
-        // Add more cases as needed
+        default:
+          break;
       }
     };
 
     return (
-      <Box position="relative">
+      <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
         <Office3DComponent
-          agents={agents}
-          selectedAgent={selectedAgent}
-          onAgentClick={onAgentClick}
-          currentFloor={currentFloor}
-          onSceneReady={setupRoomInteractions}
+          {...props}
+          onRoomClick={handleRoomClick}
         />
         
         {selectedRoom && (
-          <>
-            <Backdrop
-              open={true}
-              sx={{ 
-                zIndex: 1300, 
-                backdropFilter: 'blur(5px)',
-                backgroundColor: 'rgba(0, 0, 0, 0.5)'
-              }}
-              onClick={() => deselectRoom()}
-            />
-            <RoomDetailPanel
-              room={selectedRoom}
-              onClose={() => deselectRoom()}
-              agents={agents}
-              clients={clients}
-              leads={leads}
-              onAction={handleRoomAction}
-            />
-          </>
-        )}
-        
-        {/* Room tooltip on hover */}
-        {highlightedRoom && !selectedRoom && (
-          <Box
-            sx={{
-              position: 'absolute',
-              bottom: 20,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              bgcolor: 'background.paper',
-              px: 2,
-              py: 1,
-              borderRadius: 1,
-              boxShadow: 2,
-              pointerEvents: 'none'
-            }}
-          >
-            <Typography variant="body2">
-              Click to view {highlightedRoom.name}
-            </Typography>
-          </Box>
+          <RoomDetailPanel
+            room={selectedRoom}
+            onClose={() => setSelectedRoom(null)}
+            onAction={handleRoomAction}
+          />
         )}
       </Box>
     );
   };
 };
 
-// Export the enhancement function
 export default enhanceOffice3DWithRoomInteractions;

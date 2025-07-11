@@ -1,19 +1,17 @@
-// File: components/dashboards/Office3D.jsx
-// Luxury Real Estate Office - 3D Implementation based on 2D Floor Plan
-
+// File: frontend/src/components/dashboards/Office3D.jsx
 import React, { useEffect, useRef, useState } from 'react';
 import * as BABYLON from 'babylonjs';
 import * as GUI from 'babylonjs-gui';
 
-const Office3D = ({ agents, selectedAgent, onAgentClick, currentFloor = 'buyers' }) => {
+const Office3D = ({ agents = [], selectedAgent, onAgentClick, onRoomClick, onSceneReady }) => {
   const canvasRef = useRef(null);
   const sceneRef = useRef(null);
   const engineRef = useRef(null);
   const agentMeshesRef = useRef({});
-  const officesRef = useRef({});
-  const doorsRef = useRef({});
-  const lightsRef = useRef({});
-  const [agentStates, setAgentStates] = useState({});
+  const roomsRef = useRef({});
+  const cameraRef = useRef(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedRoom, setSelectedRoom] = useState(null);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -23,938 +21,530 @@ const Office3D = ({ agents, selectedAgent, onAgentClick, currentFloor = 'buyers'
 
     const createScene = () => {
       const scene = new BABYLON.Scene(engine);
-      scene.clearColor = new BABYLON.Color3(0.9, 0.88, 0.85); // Warm background
+      scene.clearColor = new BABYLON.Color3(0.95, 0.95, 0.95);
 
-      // Camera setup - adjusted for larger office
+      // Camera setup for 80' x 60' office
       const camera = new BABYLON.ArcRotateCamera(
         "camera",
-        -Math.PI / 3,
-        Math.PI / 3.5,
+        -Math.PI / 2,
+        Math.PI / 3,
         100,
-        new BABYLON.Vector3(0, 0, -10),
+        new BABYLON.Vector3(0, 0, 0),
         scene
       );
       camera.attachControl(canvasRef.current, true);
-      camera.lowerRadiusLimit = 40;
-      camera.upperRadiusLimit = 120;
-      camera.wheelPrecision = 15;
-      camera.upperBetaLimit = Math.PI / 2.1;
-      camera.lowerBetaLimit = Math.PI / 6;
+      camera.lowerRadiusLimit = 30;
+      camera.upperRadiusLimit = 150;
+      camera.wheelPrecision = 20;
+      camera.panningSensibility = 50;
+      cameraRef.current = camera;
 
-      // Ambient lighting
-      const ambientLight = new BABYLON.HemisphericLight("ambient", new BABYLON.Vector3(0, 1, 0), scene);
-      ambientLight.intensity = 0.8;
-      ambientLight.diffuse = new BABYLON.Color3(1, 0.98, 0.95);
-      ambientLight.groundColor = new BABYLON.Color3(0.6, 0.55, 0.5);
+      // Lighting setup
+      const hemisphereLight = new BABYLON.HemisphericLight("hemisphereLight", 
+        new BABYLON.Vector3(0, 1, 0), scene);
+      hemisphereLight.intensity = 0.7;
+      hemisphereLight.groundColor = new BABYLON.Color3(0.5, 0.5, 0.5);
 
-      // Main directional light
-      const sunLight = new BABYLON.DirectionalLight("sun", new BABYLON.Vector3(-1, -2, -1), scene);
-      sunLight.position = new BABYLON.Vector3(20, 40, 20);
-      sunLight.intensity = 0.5;
+      const directionalLight = new BABYLON.DirectionalLight("directionalLight", 
+        new BABYLON.Vector3(-1, -2, -1), scene);
+      directionalLight.position = new BABYLON.Vector3(20, 40, 20);
+      directionalLight.intensity = 0.5;
 
-      // Shadow generator with softer shadows
-      const shadowGenerator = new BABYLON.ShadowGenerator(2048, sunLight);
+      // Shadow generator
+      const shadowGenerator = new BABYLON.ShadowGenerator(2048, directionalLight);
       shadowGenerator.useBlurExponentialShadowMap = true;
-      shadowGenerator.blurKernel = 64;
-      shadowGenerator.useKernelBlur = true;
       shadowGenerator.blurScale = 2;
+      shadowGenerator.setDarkness(0.2);
 
       // Materials
       const materials = {
-        floor: (() => {
-          const mat = new BABYLON.PBRMaterial("floor", scene);
-          mat.albedoColor = new BABYLON.Color3(0.95, 0.93, 0.91);
-          mat.metallic = 0.1;
-          mat.roughness = 0.3;
-          return mat;
-          // Add window on back wall
-          const window = BABYLON.MeshBuilder.CreateBox(`${id}_window`, {
-            width: 8,
-            height: 5,
-            depth: 0.1
-          }, scene);
-          window.position.set(
-            position.x + item.x,
-            5,
-            position.z - 10 + 0.25
-          );
-          window.material = materials.glass;
-          window.parent = room;
-        })(),
-        wall: (() => {
-          const mat = new BABYLON.PBRMaterial("wall", scene);
-          mat.albedoColor = new BABYLON.Color3(0.88, 0.88, 0.88);
-          mat.metallic = 0;
-          mat.roughness = 0.5;
-          return mat;
-        })(),
-        glass: (() => {
-          const mat = new BABYLON.PBRMaterial("glass", scene);
-          mat.albedoColor = new BABYLON.Color3(0.5, 0.8, 1);
-          mat.metallic = 0.1;
-          mat.roughness = 0;
-          mat.alpha = 0.3;
-          mat.transparencyMode = BABYLON.Material.MATERIAL_ALPHABLEND;
-          return mat;
-        })(),
-        door: (() => {
-          const mat = new BABYLON.PBRMaterial("door", scene);
-          mat.albedoColor = new BABYLON.Color3(0.3, 0.2, 0.15);
-          mat.metallic = 0.1;
-          mat.roughness = 0.6;
-          return mat;
-        })(),
-        doorFrame: (() => {
-          const mat = new BABYLON.PBRMaterial("doorFrame", scene);
-          mat.albedoColor = new BABYLON.Color3(0.2, 0.15, 0.1);
-          mat.metallic = 0.2;
-          mat.roughness = 0.4;
-          return mat;
-        })(),
-        furniture: (() => {
-          const mat = new BABYLON.PBRMaterial("furniture", scene);
-          mat.albedoColor = new BABYLON.Color3(0.7, 0.65, 0.6);
-          mat.metallic = 0.1;
-          mat.roughness = 0.5;
-          return mat;
-        })(),
-        darkFurniture: (() => {
-          const mat = new BABYLON.PBRMaterial("darkFurniture", scene);
-          mat.albedoColor = new BABYLON.Color3(0.2, 0.18, 0.16);
-          mat.metallic = 0.1;
-          mat.roughness = 0.6;
-          return mat;
-        })(),
-        couch: (() => {
-          const mat = new BABYLON.PBRMaterial("couch", scene);
-          mat.albedoColor = new BABYLON.Color3(0.42, 0.36, 0.58); // Purple tone
-          mat.metallic = 0;
-          mat.roughness = 0.8;
-          return mat;
-        })(),
-        reception: (() => {
-          const mat = new BABYLON.PBRMaterial("reception", scene);
-          mat.albedoColor = new BABYLON.Color3(0.88, 0.95, 0.94); // Teal tone
-          mat.metallic = 0.1;
-          mat.roughness = 0.3;
-          return mat;
-        })(),
-        wellness: (() => {
-          const mat = new BABYLON.PBRMaterial("wellness", scene);
-          mat.albedoColor = new BABYLON.Color3(0.91, 0.96, 0.91); // Green tone
-          mat.metallic = 0;
-          mat.roughness = 0.4;
-          return mat;
-        })(),
-        metal: (() => {
-          const mat = new BABYLON.PBRMaterial("metal", scene);
-          mat.albedoColor = new BABYLON.Color3(0.7, 0.7, 0.7);
-          mat.metallic = 0.9;
-          mat.roughness = 0.3;
-          return mat;
-        })()
+        floor: new BABYLON.StandardMaterial("floorMat", scene),
+        wall: new BABYLON.StandardMaterial("wallMat", scene),
+        glass: new BABYLON.StandardMaterial("glassMat", scene),
+        door: new BABYLON.StandardMaterial("doorMat", scene),
+        furniture: new BABYLON.StandardMaterial("furnitureMat", scene),
+        accent: new BABYLON.StandardMaterial("accentMat", scene)
       };
 
-      // Office dimensions (scaled from feet to Babylon units - 1 unit = 1 foot)
-      const OFFICE_WIDTH = 100; // Total width
-      const OFFICE_DEPTH = 75;  // Total depth
-      const WALL_HEIGHT = 10;
-      const WALL_THICKNESS = 0.5;
+      // Material properties
+      materials.floor.diffuseColor = new BABYLON.Color3(0.9, 0.9, 0.9);
+      materials.floor.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1);
 
-      // Create floor
+      materials.wall.diffuseColor = new BABYLON.Color3(0.85, 0.85, 0.85);
+      materials.wall.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1);
+
+      materials.glass.diffuseColor = new BABYLON.Color3(0.7, 0.8, 0.9);
+      materials.glass.alpha = 0.3;
+      materials.glass.specularColor = new BABYLON.Color3(0.9, 0.9, 0.9);
+
+      materials.door.diffuseColor = new BABYLON.Color3(0.5, 0.3, 0.2);
+      
+      materials.furniture.diffuseColor = new BABYLON.Color3(0.4, 0.3, 0.25);
+      
+      materials.accent.diffuseColor = new BABYLON.Color3(0.2, 0.4, 0.6);
+
+      // Floor (80' x 60' = 80 x 60 units)
       const floor = BABYLON.MeshBuilder.CreateGround("floor", {
-        width: OFFICE_WIDTH,
-        height: OFFICE_DEPTH
+        width: 80,
+        height: 60,
+        subdivisions: 1
       }, scene);
+      floor.position.y = 0;
       floor.material = materials.floor;
       floor.receiveShadows = true;
 
-      // Create ceiling
-      const ceiling = BABYLON.MeshBuilder.CreateGround("ceiling", {
-        width: OFFICE_WIDTH,
-        height: OFFICE_DEPTH
-      }, scene);
-      ceiling.position.y = WALL_HEIGHT;
-      ceiling.rotation.x = Math.PI;
-      ceiling.material = materials.wall;
-
-      // Create external walls
-      const createExternalWalls = () => {
-        // North wall
-        const northWall = BABYLON.MeshBuilder.CreateBox("northWall", {
-          width: OFFICE_WIDTH,
-          height: WALL_HEIGHT,
-          depth: WALL_THICKNESS
+      // Function to create walls with proper positioning
+      const wallHeight = 5; // Half height as requested
+      const wallThickness = 0.5;
+      
+      const createWall = (name, width, height, depth, position, rotation = 0) => {
+        const wall = BABYLON.MeshBuilder.CreateBox(name, {
+          width: width,
+          height: height,
+          depth: depth
         }, scene);
-        northWall.position.set(0, WALL_HEIGHT/2, -OFFICE_DEPTH/2);
-        northWall.material = materials.wall;
-
-        // South wall with main entrance
-        const southLeftWall = BABYLON.MeshBuilder.CreateBox("southLeftWall", {
-          width: OFFICE_WIDTH/2 - 5,
-          height: WALL_HEIGHT,
-          depth: WALL_THICKNESS
-        }, scene);
-        southLeftWall.position.set(-OFFICE_WIDTH/4 - 2.5, WALL_HEIGHT/2, OFFICE_DEPTH/2);
-        southLeftWall.material = materials.wall;
-
-        const southRightWall = BABYLON.MeshBuilder.CreateBox("southRightWall", {
-          width: OFFICE_WIDTH/2 - 5,
-          height: WALL_HEIGHT,
-          depth: WALL_THICKNESS
-        }, scene);
-        southRightWall.position.set(OFFICE_WIDTH/4 + 2.5, WALL_HEIGHT/2, OFFICE_DEPTH/2);
-        southRightWall.material = materials.wall;
-
-        // East wall
-        const eastWall = BABYLON.MeshBuilder.CreateBox("eastWall", {
-          width: WALL_THICKNESS,
-          height: WALL_HEIGHT,
-          depth: OFFICE_DEPTH
-        }, scene);
-        eastWall.position.set(OFFICE_WIDTH/2, WALL_HEIGHT/2, 0);
-        eastWall.material = materials.wall;
-
-        // West wall
-        const westWall = BABYLON.MeshBuilder.CreateBox("westWall", {
-          width: WALL_THICKNESS,
-          height: WALL_HEIGHT,
-          depth: OFFICE_DEPTH
-        }, scene);
-        westWall.position.set(-OFFICE_WIDTH/2, WALL_HEIGHT/2, 0);
-        westWall.material = materials.wall;
+        wall.position = position;
+        wall.rotation.y = rotation;
+        wall.material = materials.wall;
+        shadowGenerator.addShadowCaster(wall);
+        wall.receiveShadows = true;
+        return wall;
       };
 
-      // Create room with specific layout
-      const createRoom = (id, position, size, config = {}) => {
-        const room = new BABYLON.TransformNode(`room_${id}`);
+      // Outer walls
+      createWall("northWall", 80, wallHeight, wallThickness, 
+        new BABYLON.Vector3(0, wallHeight/2, 30));
+      createWall("southWall", 80, wallHeight, wallThickness, 
+        new BABYLON.Vector3(0, wallHeight/2, -30));
+      createWall("eastWall", wallThickness, wallHeight, 60, 
+        new BABYLON.Vector3(40, wallHeight/2, 0));
+      createWall("westWall", wallThickness, wallHeight, 60, 
+        new BABYLON.Vector3(-40, wallHeight/2, 0));
+
+      // TOP ROW (anchored to top edge and respective corners)
+      // Partner Office (10' x 10') - anchored to top-left corner
+      createWall("partnerOfficeEast", wallThickness, wallHeight, 10, 
+        new BABYLON.Vector3(-30, wallHeight/2, 25));
+      createWall("partnerOfficeSouth", 10, wallHeight, wallThickness, 
+        new BABYLON.Vector3(-35, wallHeight/2, 20));
+      
+      // Senior Office 1 (9' x 10') - next to Partner Office
+      createWall("senior1West", wallThickness, wallHeight, 10, 
+        new BABYLON.Vector3(-30, wallHeight/2, 25));
+      createWall("senior1East", wallThickness, wallHeight, 10, 
+        new BABYLON.Vector3(-21, wallHeight/2, 25));
+      createWall("senior1South", 9, wallHeight, wallThickness, 
+        new BABYLON.Vector3(-25.5, wallHeight/2, 20));
+      
+      // Senior Office 2 (9' x 10') - next to Senior Office 1
+      createWall("senior2West", wallThickness, wallHeight, 10, 
+        new BABYLON.Vector3(-21, wallHeight/2, 25));
+      createWall("senior2East", wallThickness, wallHeight, 10, 
+        new BABYLON.Vector3(-12, wallHeight/2, 25));
+      createWall("senior2South", 9, wallHeight, wallThickness, 
+        new BABYLON.Vector3(-16.5, wallHeight/2, 20));
+      
+      // Conference Room (16' x 10') - anchored to top-right corner (with gap from Senior Office 2)
+      createWall("conferenceWest", wallThickness, wallHeight, 10, 
+        new BABYLON.Vector3(24, wallHeight/2, 25));
+      createWall("conferenceSouth", 16, wallHeight, wallThickness, 
+        new BABYLON.Vector3(32, wallHeight/2, 20));
+
+      // MIDDLE ROW
+      // Manager Office (11' x 10') - anchored to left side (with gap from Reception below)
+      createWall("managerNorth", 11, wallHeight, wallThickness, 
+        new BABYLON.Vector3(-34.5, wallHeight/2, 10));
+      createWall("managerEast", wallThickness, wallHeight, 10, 
+        new BABYLON.Vector3(-29, wallHeight/2, 5));
+      createWall("managerSouth", 11, wallHeight, wallThickness, 
+        new BABYLON.Vector3(-34.5, wallHeight/2, 0));
+      
+      // Wellness Zone (14' x 7') - anchored to right side
+      createWall("wellnessNorth", 14, wallHeight, wallThickness, 
+        new BABYLON.Vector3(33, wallHeight/2, 10));
+      createWall("wellnessWest", wallThickness, wallHeight, 7, 
+        new BABYLON.Vector3(26, wallHeight/2, 6.5));
+      createWall("wellnessSouth", 14, wallHeight, wallThickness, 
+        new BABYLON.Vector3(33, wallHeight/2, 3));
+      
+      // Refreshment Bar (14' x 5') - anchored to right side below Wellness (with gap from Lead Lounge)
+      createWall("refreshmentNorth", 14, wallHeight, wallThickness, 
+        new BABYLON.Vector3(33, wallHeight/2, 3));
+      createWall("refreshmentWest", wallThickness, wallHeight, 5, 
+        new BABYLON.Vector3(26, wallHeight/2, 0.5));
+      createWall("refreshmentSouth", 14, wallHeight, wallThickness, 
+        new BABYLON.Vector3(33, wallHeight/2, -2));
+
+      // BOTTOM ROW
+      // Reception (11' x 10') - anchored to bottom-left corner
+      createWall("receptionNorth", 11, wallHeight, wallThickness, 
+        new BABYLON.Vector3(-34.5, wallHeight/2, -20));
+      createWall("receptionEast", wallThickness, wallHeight, 10, 
+        new BABYLON.Vector3(-29, wallHeight/2, -25));
+      
+      // Client Lounge (17' x 10') - positioned with gap from Reception
+      createWall("clientLoungeWest", wallThickness, wallHeight, 10, 
+        new BABYLON.Vector3(-10, wallHeight/2, -25));
+      createWall("clientLoungeEast", wallThickness, wallHeight, 10, 
+        new BABYLON.Vector3(7.5, wallHeight/2, -25));
+      createWall("clientLoungeNorth", 17.5, wallHeight, wallThickness, 
+        new BABYLON.Vector3(-1.25, wallHeight/2, -20));
+      
+      // Lead Lounge (17' x 10') - anchored to bottom-right corner
+      createWall("leadLoungeWest", wallThickness, wallHeight, 10, 
+        new BABYLON.Vector3(23, wallHeight/2, -25));
+      createWall("leadLoungeNorth", 17, wallHeight, wallThickness, 
+        new BABYLON.Vector3(31.5, wallHeight/2, -20));
+
+      // Create room areas for interaction
+      const createRoomArea = (name, position, width, depth, color) => {
+        const room = BABYLON.MeshBuilder.CreateGround(name, {
+          width: width,
+          height: depth
+        }, scene);
+        room.position = new BABYLON.Vector3(position.x, 0.01, position.z);
         
-        // Room-specific floor color
-        if (config.floorColor) {
-          const roomFloor = BABYLON.MeshBuilder.CreateGround(`${id}_floor`, {
-            width: size.width,
-            height: size.depth
-          }, scene);
-          roomFloor.position.set(position.x, 0.01, position.z);
-          roomFloor.material = config.floorMaterial || materials.floor;
-          roomFloor.receiveShadows = true;
-          roomFloor.parent = room;
-        }
-
-        // Create walls based on configuration
-        if (config.walls) {
-          config.walls.forEach(wall => {
-            if (wall.type === 'glass') {
-              // Glass wall
-              const glassWall = BABYLON.MeshBuilder.CreateBox(`${id}_glass_${wall.side}`, {
-                width: wall.width || size.width,
-                height: WALL_HEIGHT * 0.8,
-                depth: WALL_THICKNESS / 2
-              }, scene);
-              glassWall.position.set(
-                position.x + (wall.offsetX || 0),
-                WALL_HEIGHT * 0.4,
-                position.z + (wall.offsetZ || 0)
-              );
-              if (wall.rotation) glassWall.rotation.y = wall.rotation;
-              glassWall.material = materials.glass;
-              glassWall.parent = room;
-            } else {
-              // Regular solid wall
-              const wallMesh = BABYLON.MeshBuilder.CreateBox(`${id}_wall_${wall.side}`, {
-                width: wall.width || size.width,
-                height: WALL_HEIGHT,
-                depth: WALL_THICKNESS
-              }, scene);
-              wallMesh.position.set(
-                position.x + (wall.offsetX || 0),
-                WALL_HEIGHT / 2,
-                position.z + (wall.offsetZ || 0)
-              );
-              if (wall.rotation) wallMesh.rotation.y = wall.rotation;
-              wallMesh.material = materials.wall;
-              wallMesh.parent = room;
-              shadowGenerator.addShadowCaster(wallMesh);
-            }
-          });
-        }
-
-        // Add door if specified
-        if (config.door) {
-          // Door frame
-          const doorFrame = BABYLON.MeshBuilder.CreateBox(`${id}_doorFrame`, {
-            width: config.door.width || 3,
-            height: WALL_HEIGHT - 7.2,
-            depth: WALL_THICKNESS * 1.2
-          }, scene);
-          doorFrame.position.set(
-            position.x + (config.door.offsetX || 0),
-            WALL_HEIGHT - (WALL_HEIGHT - 7.2)/2,
-            position.z + (config.door.offsetZ || 0)
-          );
-          if (config.door.rotation) doorFrame.rotation.y = config.door.rotation;
-          doorFrame.material = materials.doorFrame;
-          doorFrame.parent = room;
-
-          // Door
-          const door = BABYLON.MeshBuilder.CreateBox(`${id}_door`, {
-            width: (config.door.width || 3) - 0.2,
-            height: 7,
-            depth: 0.1
-          }, scene);
-          door.position.set(
-            position.x + (config.door.offsetX || 0),
-            3.5,
-            position.z + (config.door.offsetZ || 0)
-          );
-          if (config.door.rotation) door.rotation.y = config.door.rotation;
-          door.material = materials.door;
-          doorsRef.current[id] = door;
-          shadowGenerator.addShadowCaster(door);
-          door.parent = room;
-        }
-
-        // Add furniture based on room type
-        if (config.furniture) {
-          config.furniture.forEach((item, index) => {
-            switch (item.type) {
-              case 'desk':
-                const desk = BABYLON.MeshBuilder.CreateBox(`${id}_desk_${index}`, {
-                  width: item.width || 6,
-                  height: 0.2,
-                  depth: item.depth || 3
-                }, scene);
-                desk.position.set(
-                  position.x + item.x,
-                  2.5,
-                  position.z + item.z
-                );
-                desk.material = materials.furniture;
-                shadowGenerator.addShadowCaster(desk);
-                desk.parent = room;
-
-                // Desk legs
-                for (let i = 0; i < 4; i++) {
-                  const leg = BABYLON.MeshBuilder.CreateCylinder(`${id}_desk_leg_${index}_${i}`, {
-                    height: 2.5,
-                    diameter: 0.2
-                  }, scene);
-                  const xOffset = (i % 2 === 0) ? -(item.width || 6)/2 + 0.3 : (item.width || 6)/2 - 0.3;
-                  const zOffset = (i < 2) ? -(item.depth || 3)/2 + 0.3 : (item.depth || 3)/2 - 0.3;
-                  leg.position.set(
-                    position.x + item.x + xOffset,
-                    1.25,
-                    position.z + item.z + zOffset
-                  );
-                  leg.material = materials.darkFurniture;
-                  leg.parent = room;
-                }
-                break;
-
-              case 'chair':
-                const chairSeat = BABYLON.MeshBuilder.CreateBox(`${id}_chair_${index}`, {
-                  width: 1.5,
-                  height: 0.1,
-                  depth: 1.5
-                }, scene);
-                chairSeat.position.set(
-                  position.x + item.x,
-                  1.8,
-                  position.z + item.z
-                );
-                chairSeat.material = materials.darkFurniture;
-                chairSeat.parent = room;
-
-                const chairBack = BABYLON.MeshBuilder.CreateBox(`${id}_chair_back_${index}`, {
-                  width: 1.5,
-                  height: 2,
-                  depth: 0.1
-                }, scene);
-                
-                // Determine chair rotation based on position relative to table
-                let chairRotation = 0;
-                if (id === 'conferenceRoom') {
-                  if (item.z > 0) chairRotation = Math.PI; // Chairs on far side face towards camera
-                  else if (item.z < 0) chairRotation = 0; // Chairs on near side face away
-                  else if (item.x < 0) chairRotation = Math.PI/2; // Left end chair
-                  else if (item.x > 0) chairRotation = -Math.PI/2; // Right end chair
-                }
-                
-                chairBack.position.set(
-                  position.x + item.x - 0.7 * Math.sin(chairRotation),
-                  2.8,
-                  position.z + item.z - 0.7 * Math.cos(chairRotation)
-                );
-                chairBack.rotation.y = chairRotation;
-                chairBack.material = materials.darkFurniture;
-                chairBack.parent = room;
-                
-                // Also rotate the seat
-                chairSeat.rotation.y = chairRotation;
-                break;
-
-              case 'couch':
-                const couch = BABYLON.MeshBuilder.CreateBox(`${id}_couch_${index}`, {
-                  width: item.width || 8,
-                  height: 1.5,
-                  depth: 3
-                }, scene);
-                couch.position.set(
-                  position.x + item.x,
-                  0.75,
-                  position.z + item.z
-                );
-                couch.material = materials.couch;
-                shadowGenerator.addShadowCaster(couch);
-                couch.parent = room;
-
-                const couchBack = BABYLON.MeshBuilder.CreateBox(`${id}_couch_back_${index}`, {
-                  width: item.width || 8,
-                  height: 2,
-                  depth: 0.5
-                }, scene);
-                couchBack.position.set(
-                  position.x + item.x,
-                  2,
-                  position.z + item.z - 1.25
-                );
-                couchBack.material = materials.couch;
-                couchBack.parent = room;
-                break;
-
-              case 'table':
-                const table = BABYLON.MeshBuilder.CreateCylinder(`${id}_table_${index}`, {
-                  height: 0.1,
-                  diameter: item.diameter || 3
-                }, scene);
-                table.position.set(
-                  position.x + item.x,
-                  2,
-                  position.z + item.z
-                );
-                table.material = materials.furniture;
-                shadowGenerator.addShadowCaster(table);
-                table.parent = room;
-
-                const tableLeg = BABYLON.MeshBuilder.CreateCylinder(`${id}_table_leg_${index}`, {
-                  height: 2,
-                  diameter: 0.3
-                }, scene);
-                tableLeg.position.set(
-                  position.x + item.x,
-                  1,
-                  position.z + item.z
-                );
-                tableLeg.material = materials.darkFurniture;
-                tableLeg.parent = room;
-                break;
-
-              case 'conferenceTable':
-                const confTable = BABYLON.MeshBuilder.CreateBox(`${id}_conf_table_${index}`, {
-                  width: item.width || 12,
-                  height: 0.2,
-                  depth: item.depth || 6
-                }, scene);
-                confTable.position.set(
-                  position.x + item.x,
-                  2.5,
-                  position.z + item.z
-                );
-                confTable.material = materials.furniture;
-                shadowGenerator.addShadowCaster(confTable);
-                confTable.parent = room;
-                break;
-
-              case 'receptionDesk':
-                // Curved reception desk using torus
-                const receptionDesk = BABYLON.MeshBuilder.CreateTorus(`${id}_reception_${index}`, {
-                  diameter: 8,
-                  thickness: 2,
-                  tessellation: 32
-                }, scene);
-                receptionDesk.position.set(
-                  position.x + item.x,
-                  2.5,
-                  position.z + item.z
-                );
-                receptionDesk.rotation.x = Math.PI / 2;
-                receptionDesk.scaling.y = 0.5; // Make it more desk-like
-                receptionDesk.material = materials.reception;
-                shadowGenerator.addShadowCaster(receptionDesk);
-                receptionDesk.parent = room;
-                break;
-
-              case 'cabinet':
-                const cabinet = BABYLON.MeshBuilder.CreateBox(`${id}_cabinet_${index}`, {
-                  width: item.width || 3,
-                  height: 5,
-                  depth: item.depth || 1.5
-                }, scene);
-                cabinet.position.set(
-                  position.x + item.x,
-                  2.5,
-                  position.z + item.z
-                );
-                cabinet.material = materials.darkFurniture;
-                shadowGenerator.addShadowCaster(cabinet);
-                cabinet.parent = room;
-                
-                // Cabinet handles
-                for (let i = 0; i < 3; i++) {
-                  const handle = BABYLON.MeshBuilder.CreateCylinder(`${id}_handle_${index}_${i}`, {
-                    height: 0.3,
-                    diameter: 0.1
-                  }, scene);
-                  handle.position.set(
-                    position.x + item.x + (item.width || 3)/2 - 0.1,
-                    3.5 - i * 1.5,
-                    position.z + item.z
-                  );
-                  handle.rotation.z = Math.PI/2;
-                  handle.material = materials.metal;
-                  handle.parent = room;
-                }
-                break;
-
-              case 'whiteboard':
-                const board = BABYLON.MeshBuilder.CreateBox(`${id}_whiteboard_${index}`, {
-                  width: item.width || 8,
-                  height: 4,
-                  depth: 0.2
-                }, scene);
-                board.position.set(
-                  position.x + item.x,
-                  5,
-                  position.z + item.z
-                );
-                const boardMat = new BABYLON.PBRMaterial(`${id}_board_mat_${index}`, scene);
-                boardMat.albedoColor = new BABYLON.Color3(0.98, 0.98, 0.98);
-                boardMat.metallic = 0.1;
-                boardMat.roughness = 0.3;
-                board.material = boardMat;
-                board.parent = room;
-                
-                // Whiteboard frame
-                const frame = BABYLON.MeshBuilder.CreateBox(`${id}_frame_${index}`, {
-                  width: (item.width || 8) + 0.3,
-                  height: 4.3,
-                  depth: 0.3
-                }, scene);
-                frame.position.set(
-                  position.x + item.x,
-                  5,
-                  position.z + item.z + 0.05
-                );
-                frame.material = materials.darkFurniture;
-                frame.parent = room;
-                
-                // Marker tray
-                const tray = BABYLON.MeshBuilder.CreateBox(`${id}_tray_${index}`, {
-                  width: (item.width || 8) * 0.8,
-                  height: 0.2,
-                  depth: 0.4
-                }, scene);
-                tray.position.set(
-                  position.x + item.x,
-                  3,
-                  position.z + item.z + 0.2
-                );
-                tray.material = materials.metal;
-                tray.parent = room;
-                break;
-
-              case 'plant':
-                const pot = BABYLON.MeshBuilder.CreateCylinder(`${id}_pot_${index}`, {
-                  height: 1,
-                  diameterTop: 1,
-                  diameterBottom: 0.8
-                }, scene);
-                pot.position.set(
-                  position.x + item.x,
-                  0.5,
-                  position.z + item.z
-                );
-                pot.material = materials.darkFurniture;
-                pot.parent = room;
-
-                const plant = BABYLON.MeshBuilder.CreateSphere(`${id}_plant_${index}`, {
-                  diameter: 2,
-                  segments: 16
-                }, scene);
-                plant.position.set(
-                  position.x + item.x,
-                  1.5,
-                  position.z + item.z
-                );
-                const plantMat = new BABYLON.PBRMaterial(`${id}_plant_mat_${index}`, scene);
-                plantMat.albedoColor = new BABYLON.Color3(0.2, 0.7, 0.2);
-                plantMat.roughness = 0.8;
-                plant.material = plantMat;
-                plant.parent = room;
-                break;
-            }
-          });
-        }
-
-        // Add room lighting
-        if (config.lighting) {
-          const roomLight = new BABYLON.PointLight(`${id}_light`,
-            new BABYLON.Vector3(position.x, WALL_HEIGHT - 1, position.z),
-            scene
-          );
-          roomLight.intensity = config.lighting.intensity || 0.5;
-          roomLight.diffuse = config.lighting.color || new BABYLON.Color3(1, 0.95, 0.8);
-          lightsRef.current[id] = roomLight;
-          
-          // Add ceiling light fixture for closed offices
-          if (config.walls && config.walls.some(w => w.type === 'solid')) {
-            const lightFixture = BABYLON.MeshBuilder.CreateCylinder(`${id}_fixture`, {
-              height: 0.5,
-              diameterTop: 2,
-              diameterBottom: 1.5
-            }, scene);
-            lightFixture.position.set(position.x, WALL_HEIGHT - 0.25, position.z);
-            const fixtureMat = new BABYLON.PBRMaterial(`${id}_fixture_mat`, scene);
-            fixtureMat.albedoColor = new BABYLON.Color3(0.9, 0.9, 0.9);
-            fixtureMat.metallic = 0.8;
-            fixtureMat.roughness = 0.2;
-            lightFixture.material = fixtureMat;
-            lightFixture.parent = room;
-          }
-        }
-
-        // Add windows for offices on exterior walls
-        if (config.hasWindow) {
-          const windowMesh = BABYLON.MeshBuilder.CreateBox(`${id}_window`, {
-            width: config.windowWidth || 8,
-            height: 5,
-            depth: 0.1
-          }, scene);
-          windowMesh.position.set(
-            position.x + (config.windowOffsetX || 0),
-            5,
-            position.z + (config.windowOffsetZ || 0)
-          );
-          if (config.windowRotation) windowMesh.rotation.y = config.windowRotation;
-          windowMesh.material = materials.glass;
-          windowMesh.parent = room;
-        }
-
-        officesRef.current[id] = room;
+        const roomMat = new BABYLON.StandardMaterial(name + "Mat", scene);
+        roomMat.diffuseColor = color;
+        roomMat.alpha = 0.3;
+        roomMat.emissiveColor = new BABYLON.Color3(0, 0, 0);
+        room.material = roomMat;
+        room.isPickable = true;
+        
+        // Store original color for hover effects
+        room.metadata = {
+          originalColor: color,
+          roomName: name,
+          isHighlighted: false
+        };
+        
+        roomsRef.current[name] = room;
         return room;
       };
 
-      // Build the office layout based on 2D floor plan
-      createExternalWalls();
-
-      // Top row offices - CLOSED IN WITH SOLID WALLS
-      createRoom('partnerOffice', { x: -40, z: -27.5 }, { width: 20, depth: 20 }, {
-        floorColor: true,
-        floorMaterial: (() => {
-          const mat = materials.floor.clone();
-          mat.albedoColor = new BABYLON.Color3(0.91, 0.94, 1);
-          return mat;
-        })(),
-        walls: [
-          // Solid front wall with door opening
-          { side: 'frontLeft', type: 'solid', width: 8.5, offsetX: -5.75, offsetZ: 10, rotation: 0 },
-          { side: 'frontRight', type: 'solid', width: 8.5, offsetX: 5.75, offsetZ: 10, rotation: 0 },
-          // Side walls
-          { side: 'left', type: 'solid', width: 20, offsetX: -10, offsetZ: 0, rotation: Math.PI/2 },
-          { side: 'right', type: 'solid', width: 20, offsetX: 10, offsetZ: 0, rotation: Math.PI/2 }
-        ],
-        door: { offsetX: 0, offsetZ: 10, width: 3 },
-        furniture: [
-          { type: 'desk', x: 0, z: -3, width: 8, depth: 4 },
-          { type: 'chair', x: 0, z: 0 },
-          { type: 'chair', x: -3, z: -5 },
-          { type: 'chair', x: 3, z: -5 },
-          { type: 'plant', x: -8, z: -8 },
-          { type: 'cabinet', x: 8, z: -8 }
-        ],
-        lighting: { intensity: 0.8 },
-        hasWindow: true,
-        windowOffsetZ: -9.95,
-        windowWidth: 10
-      });
-
-      createRoom('seniorOffice1', { x: -15, z: -27.5 }, { width: 18, depth: 20 }, {
-        floorColor: true,
-        floorMaterial: (() => {
-          const mat = materials.floor.clone();
-          mat.albedoColor = new BABYLON.Color3(0.91, 0.94, 1);
-          return mat;
-        })(),
-        walls: [
-          // Solid front wall with door opening
-          { side: 'frontLeft', type: 'solid', width: 7.5, offsetX: -5.25, offsetZ: 10, rotation: 0 },
-          { side: 'frontRight', type: 'solid', width: 7.5, offsetX: 5.25, offsetZ: 10, rotation: 0 },
-          // Side walls
-          { side: 'left', type: 'solid', width: 20, offsetX: -9, offsetZ: 0, rotation: Math.PI/2 },
-          { side: 'right', type: 'solid', width: 20, offsetX: 9, offsetZ: 0, rotation: Math.PI/2 }
-        ],
-        door: { offsetX: 0, offsetZ: 10, width: 3 },
-        furniture: [
-          { type: 'desk', x: 0, z: -3, width: 6, depth: 3 },
-          { type: 'chair', x: 0, z: 0 },
-          { type: 'chair', x: -2, z: -5 },
-          { type: 'chair', x: 2, z: -5 },
-          { type: 'cabinet', x: 7, z: -5 }
-        ],
-        lighting: { intensity: 0.7 },
-        hasWindow: true,
-        windowOffsetZ: -9.95,
-        windowWidth: 8
-      });
-
-      createRoom('seniorOffice2', { x: 8, z: -27.5 }, { width: 18, depth: 20 }, {
-        floorColor: true,
-        floorMaterial: (() => {
-          const mat = materials.floor.clone();
-          mat.albedoColor = new BABYLON.Color3(0.91, 0.94, 1);
-          return mat;
-        })(),
-        walls: [
-          // Solid front wall with door opening
-          { side: 'frontLeft', type: 'solid', width: 7.5, offsetX: -5.25, offsetZ: 10, rotation: 0 },
-          { side: 'frontRight', type: 'solid', width: 7.5, offsetX: 5.25, offsetZ: 10, rotation: 0 },
-          // Side walls
-          { side: 'left', type: 'solid', width: 20, offsetX: -9, offsetZ: 0, rotation: Math.PI/2 },
-          { side: 'right', type: 'solid', width: 20, offsetX: 9, offsetZ: 0, rotation: Math.PI/2 }
-        ],
-        door: { offsetX: 0, offsetZ: 10, width: 3 },
-        furniture: [
-          { type: 'desk', x: 0, z: -3, width: 6, depth: 3 },
-          { type: 'chair', x: 0, z: 0 },
-          { type: 'chair', x: -2, z: -5 },
-          { type: 'chair', x: 2, z: -5 },
-          { type: 'cabinet', x: 7, z: -5 }
-        ],
-        lighting: { intensity: 0.7 },
-        hasWindow: true,
-        windowOffsetZ: -9.95,
-        windowWidth: 8
-      });
-
-      createRoom('conferenceRoom', { x: 32, z: -27.5 }, { width: 33, depth: 20 }, {
-        floorColor: true,
-        floorMaterial: (() => {
-          const mat = materials.floor.clone();
-          mat.albedoColor = new BABYLON.Color3(1, 0.95, 0.88);
-          return mat;
-        })(),
-        walls: [
-          // Solid front wall with door opening - larger door for conference room
-          { side: 'frontLeft', type: 'solid', width: 14.5, offsetX: -9.25, offsetZ: 10, rotation: 0 },
-          { side: 'frontRight', type: 'solid', width: 14.5, offsetX: 9.25, offsetZ: 10, rotation: 0 },
-          // Side walls
-          { side: 'left', type: 'solid', width: 20, offsetX: -16.5, offsetZ: 0, rotation: Math.PI/2 },
-          { side: 'right', type: 'solid', width: 20, offsetX: 16.5, offsetZ: 0, rotation: Math.PI/2 }
-        ],
-        door: { offsetX: 0, offsetZ: 10, width: 4 },
-        furniture: [
-          { type: 'conferenceTable', x: 0, z: 0, width: 14, depth: 7 },
-          // Chairs around the table
-          { type: 'chair', x: -6, z: -3 },
-          { type: 'chair', x: -3, z: -3 },
-          { type: 'chair', x: 0, z: -3 },
-          { type: 'chair', x: 3, z: -3 },
-          { type: 'chair', x: 6, z: -3 },
-          { type: 'chair', x: -6, z: 3 },
-          { type: 'chair', x: -3, z: 3 },
-          { type: 'chair', x: 0, z: 3 },
-          { type: 'chair', x: 3, z: 3 },
-          { type: 'chair', x: 6, z: 3 },
-          // Head chairs
-          { type: 'chair', x: -7, z: 0 },
-          { type: 'chair', x: 7, z: 0 },
-          // Whiteboard
-          { type: 'whiteboard', x: 0, z: -9 }
-        ],
-        lighting: { intensity: 0.9, color: new BABYLON.Color3(1, 0.98, 0.95) },
-        hasWindow: true,
-        windowOffsetZ: -9.95,
-        windowWidth: 20,
-        windowOffsetX: 0
-      });
-
-      // Middle row - CLOSED IN MANAGER'S OFFICE
-      createRoom('managerOffice', { x: -40, z: 0 }, { width: 22, depth: 20 }, {
-        floorColor: true,
-        floorMaterial: (() => {
-          const mat = materials.floor.clone();
-          mat.albedoColor = new BABYLON.Color3(0.91, 0.94, 1);
-          return mat;
-        })(),
-        walls: [
-          // Solid front wall (facing east) with door opening
-          { side: 'frontTop', type: 'solid', width: 8.5, offsetX: 11, offsetZ: -5.75, rotation: Math.PI/2 },
-          { side: 'frontBottom', type: 'solid', width: 8.5, offsetX: 11, offsetZ: 5.75, rotation: Math.PI/2 },
-          // Other walls
-          { side: 'top', type: 'solid', width: 22, offsetX: 0, offsetZ: -10, rotation: 0 },
-          { side: 'bottom', type: 'solid', width: 22, offsetX: 0, offsetZ: 10, rotation: 0 },
-          { side: 'back', type: 'solid', width: 20, offsetX: -11, offsetZ: 0, rotation: Math.PI/2 }
-        ],
-        door: { offsetX: 11, offsetZ: 0, rotation: Math.PI/2, width: 3 },
-        furniture: [
-          { type: 'desk', x: -3, z: 0, width: 8, depth: 4 },
-          { type: 'chair', x: 0, z: 0 },
-          { type: 'couch', x: 5, z: 0, width: 6 },
-          { type: 'table', x: 5, z: 5, diameter: 2 },
-          { type: 'plant', x: -9, z: -8 },
-          { type: 'cabinet', x: -9, z: 8, width: 4 }
-        ],
-        lighting: { intensity: 0.8 },
-        hasWindow: true,
-        windowOffsetX: -10.95,
-        windowOffsetZ: 0,
-        windowRotation: Math.PI/2,
-        windowWidth: 10
-      });
-
-      // Wellness Zone
-      createRoom('wellnessZone', { x: 35, z: 0 }, { width: 29, depth: 14 }, {
-        floorColor: true,
-        floorMaterial: materials.wellness,
-        furniture: [
-          { type: 'couch', x: -8, z: 0, width: 8 },
-          { type: 'couch', x: 8, z: 0, width: 8 },
-          { type: 'table', x: 0, z: 3, diameter: 2 },
-          { type: 'plant', x: -12, z: -5 },
-          { type: 'plant', x: 12, z: 5 }
-        ],
-        lighting: { intensity: 0.4, color: new BABYLON.Color3(0.9, 1, 0.9) }
-      });
-
-      // Refreshment Bar
-      createRoom('refreshmentBar', { x: 35, z: 15 }, { width: 29, depth: 10 }, {
-        floorColor: true,
-        floorMaterial: (() => {
-          const mat = materials.floor.clone();
-          mat.albedoColor = new BABYLON.Color3(1, 0.97, 0.88);
-          return mat;
-        })(),
-        furniture: [
-          { type: 'table', x: 0, z: 0, diameter: 6 },
-          { type: 'chair', x: -3, z: 0 },
-          { type: 'chair', x: 3, z: 0 },
-          { type: 'chair', x: 0, z: 3 }
-        ],
-        lighting: { intensity: 0.5 }
-      });
-
-      // Bottom row
-      createRoom('reception', { x: -40, z: 27.5 }, { width: 22, depth: 20 }, {
-        floorColor: true,
-        floorMaterial: materials.reception,
-        walls: [
-          { side: 'front', type: 'glass', width: 22, offsetZ: -10, rotation: 0 }
-        ],
-        door: { offsetX: 0, offsetZ: -10, width: 4 },
-        furniture: [
-          { type: 'receptionDesk', x: 0, z: 0 },
-          { type: 'chair', x: 0, z: 2 },
-          { type: 'chair', x: -5, z: -5 },
-          { type: 'chair', x: 5, z: -5 },
-          { type: 'plant', x: -8, z: 8 },
-          { type: 'plant', x: 8, z: 8 }
-        ],
-        lighting: { intensity: 0.6, color: new BABYLON.Color3(0.95, 1, 0.98) }
-      });
-
-      createRoom('clientLounge', { x: -12, z: 27.5 }, { width: 34, depth: 20 }, {
-        floorColor: true,
-        floorMaterial: (() => {
-          const mat = materials.floor.clone();
-          mat.albedoColor = new BABYLON.Color3(0.95, 0.9, 0.96);
-          return mat;
-        })(),
-        furniture: [
-          { type: 'couch', x: -10, z: -5, width: 10 },
-          { type: 'couch', x: -10, z: 5, width: 10 },
-          { type: 'couch', x: 10, z: 0, width: 8 },
-          { type: 'table', x: 0, z: 0, diameter: 4 },
-          { type: 'table', x: 10, z: -7, diameter: 2 },
-          { type: 'chair', x: 10, z: 7 }
-        ],
-        lighting: { intensity: 0.5, color: new BABYLON.Color3(0.95, 0.9, 1) }
-      });
-
-      createRoom('leadLounge', { x: 28, z: 27.5 }, { width: 35, depth: 20 }, {
-        floorColor: true,
-        floorMaterial: (() => {
-          const mat = materials.floor.clone();
-          mat.albedoColor = new BABYLON.Color3(0.89, 0.95, 0.99);
-          return mat;
-        })(),
-        furniture: [
-          { type: 'couch', x: -12, z: -5, width: 8 },
-          { type: 'couch', x: -12, z: 5, width: 8 },
-          { type: 'couch', x: 12, z: -5, width: 8 },
-          { type: 'couch', x: 12, z: 5, width: 8 },
-          { type: 'table', x: 0, z: 0, diameter: 5 },
-          { type: 'chair', x: 0, z: -8 },
-          { type: 'chair', x: 0, z: 8 }
-        ],
-        lighting: { intensity: 0.5, color: new BABYLON.Color3(0.9, 0.95, 1) }
-      });
-
-      // Central Open Common Area
-      const commonAreaFloor = BABYLON.MeshBuilder.CreateGround("commonArea", {
-        width: 40,
-        height: 26
-      }, scene);
-      commonAreaFloor.position.set(0, 0.01, 0);
-      const commonMat = materials.floor.clone();
-      commonMat.albedoColor = new BABYLON.Color3(0.98, 0.98, 0.98);
-      commonAreaFloor.material = commonMat;
-      commonAreaFloor.receiveShadows = true;
-
-      // Common area furniture
-      const commonTable = BABYLON.MeshBuilder.CreateCylinder("commonTable", {
-        height: 0.2,
-        diameter: 8
-      }, scene);
-      commonTable.position.set(0, 2, 0);
-      commonTable.material = materials.furniture;
-      shadowGenerator.addShadowCaster(commonTable);
-
-      // Add some plants around common area
-      const plantPositions = [
-        { x: -15, z: -10 },
-        { x: 15, z: 10 },
-        { x: -15, z: 10 },
-        { x: 15, z: -10 }
-      ];
+      // Define all rooms based on floor plan
+      createRoomArea("partnerOffice", {x: -35, z: 25}, 10, 10, new BABYLON.Color3(0.2, 0.4, 0.7));
+      createRoomArea("seniorOffice1", {x: -25.5, z: 25}, 9, 10, new BABYLON.Color3(0.2, 0.4, 0.7));
+      createRoomArea("seniorOffice2", {x: -16.5, z: 25}, 9, 10, new BABYLON.Color3(0.2, 0.4, 0.7));
+      createRoomArea("conference", {x: 32, z: 25}, 16, 10, new BABYLON.Color3(0.7, 0.5, 0.2));
       
-      plantPositions.forEach((pos, i) => {
-        const pot = BABYLON.MeshBuilder.CreateCylinder(`common_pot_${i}`, {
-          height: 1.5,
-          diameterTop: 1.5,
-          diameterBottom: 1
-        }, scene);
-        pot.position.set(pos.x, 0.75, pos.z);
-        pot.material = materials.darkFurniture;
+      createRoomArea("managerOffice", {x: -34.5, z: 5}, 11, 10, new BABYLON.Color3(0.2, 0.4, 0.7));
+      createRoomArea("openCommon", {x: 0, z: 0}, 40, 26, new BABYLON.Color3(0.9, 0.9, 0.9));
+      
+      createRoomArea("wellness", {x: 33, z: 6.5}, 14, 7, new BABYLON.Color3(0.4, 0.7, 0.4));
+      createRoomArea("refreshment", {x: 33, z: 0.5}, 14, 5, new BABYLON.Color3(0.7, 0.6, 0.3));
+      
+      createRoomArea("reception", {x: -34.5, z: -25}, 11, 10, new BABYLON.Color3(0.3, 0.7, 0.6));
+      createRoomArea("clientLounge", {x: -1.25, z: -25}, 17.5, 10, new BABYLON.Color3(0.6, 0.4, 0.6));
+      createRoomArea("leadLounge", {x: 31.5, z: -25}, 17, 10, new BABYLON.Color3(0.4, 0.6, 0.8));
 
-        const plant = BABYLON.MeshBuilder.CreateSphere(`common_plant_${i}`, {
-          diameter: 3,
-          segments: 16
+      // Add furniture
+      const createDesk = (position, rotation = 0) => {
+        const desk = BABYLON.MeshBuilder.CreateBox("desk", {
+          width: 3,
+          height: 2.5,
+          depth: 1.5
         }, scene);
-        plant.position.set(pos.x, 2, pos.z);
-        const plantMat = new BABYLON.PBRMaterial(`common_plant_mat_${i}`, scene);
-        plantMat.albedoColor = new BABYLON.Color3(0.2, 0.7, 0.2);
-        plantMat.roughness = 0.8;
+        desk.position = new BABYLON.Vector3(position.x, 1.25, position.z);
+        desk.rotation.y = rotation;
+        desk.material = materials.furniture;
+        shadowGenerator.addShadowCaster(desk);
+        return desk;
+      };
+
+      const createChair = (position, rotation = 0) => {
+        const chair = BABYLON.MeshBuilder.CreateBox("chair", {
+          width: 1,
+          height: 2,
+          depth: 1
+        }, scene);
+        chair.position = new BABYLON.Vector3(position.x, 1, position.z);
+        chair.rotation.y = rotation;
+        chair.material = materials.accent;
+        shadowGenerator.addShadowCaster(chair);
+        return chair;
+      };
+
+      // Add desks and chairs in offices
+      createDesk({x: -35, z: 25}, 0);
+      createChair({x: -35, z: 23}, 0);
+      
+      createDesk({x: -25.5, z: 25}, 0);
+      createChair({x: -25.5, z: 23}, 0);
+      
+      createDesk({x: -16.5, z: 25}, 0);
+      createChair({x: -16.5, z: 23}, 0);
+      
+      createDesk({x: -34.5, z: 5}, 0);
+      createChair({x: -34.5, z: 3}, 0);
+
+      // Conference table
+      const conferenceTable = BABYLON.MeshBuilder.CreateBox("conferenceTable", {
+        width: 7,
+        height: 2.5,
+        depth: 3.5
+      }, scene);
+      conferenceTable.position = new BABYLON.Vector3(32, 1.25, 25);
+      conferenceTable.material = materials.furniture;
+      shadowGenerator.addShadowCaster(conferenceTable);
+
+      // Reception desk (curved)
+      const receptionDesk = BABYLON.MeshBuilder.CreateCylinder("receptionDesk", {
+        height: 2.5,
+        diameterTop: 7,
+        diameterBottom: 7,
+        tessellation: 6
+      }, scene);
+      receptionDesk.position = new BABYLON.Vector3(-34.5, 1.25, -25);
+      receptionDesk.material = materials.furniture;
+      shadowGenerator.addShadowCaster(receptionDesk);
+
+      // Lounge furniture
+      const createCouch = (position, width = 3) => {
+        const couch = BABYLON.MeshBuilder.CreateBox("couch", {
+          width: width,
+          height: 1.5,
+          depth: 1.5
+        }, scene);
+        couch.position = new BABYLON.Vector3(position.x, 0.75, position.z);
+        couch.material = materials.accent;
+        shadowGenerator.addShadowCaster(couch);
+        return couch;
+      };
+
+      createCouch({x: -1.25, z: -25}, 6);
+      createCouch({x: 31.5, z: -25}, 5);
+      
+      // Wellness Zone furniture
+      createCouch({x: 33, z: 6.5}, 4);
+      
+      // Refreshment bar counter
+      const barCounter = BABYLON.MeshBuilder.CreateBox("barCounter", {
+        width: 10,
+        height: 3,
+        depth: 2
+      }, scene);
+      barCounter.position = new BABYLON.Vector3(33, 1.5, 0.5);
+      barCounter.material = materials.furniture;
+      shadowGenerator.addShadowCaster(barCounter);
+      
+      // Add meeting tables in the open common area
+      const createMeetingTable = (position) => {
+        const table = BABYLON.MeshBuilder.CreateBox("meetingTable", {
+          width: 5,
+          height: 2.5,
+          depth: 3
+        }, scene);
+        table.position = new BABYLON.Vector3(position.x, 1.25, position.z);
+        table.material = materials.furniture;
+        shadowGenerator.addShadowCaster(table);
+        return table;
+      };
+      
+      // Place a few meeting tables in the common area
+      createMeetingTable({x: -10, z: 0});
+      createMeetingTable({x: 10, z: 0});
+
+      // Add plants and decorative elements in the open common area
+      const createPlant = (position) => {
+        const plant = BABYLON.MeshBuilder.CreateCylinder("plant", {
+          height: 3,
+          diameterTop: 2,
+          diameterBottom: 2.5,
+          tessellation: 8
+        }, scene);
+        plant.position = new BABYLON.Vector3(position.x, 1.5, position.z);
+        const plantMat = new BABYLON.StandardMaterial("plantMat", scene);
+        plantMat.diffuseColor = new BABYLON.Color3(0.2, 0.6, 0.2);
         plant.material = plantMat;
+        shadowGenerator.addShadowCaster(plant);
+        return plant;
+      };
+      
+      // Add plants in strategic locations
+      createPlant({x: -20, z: 10});
+      createPlant({x: 20, z: 10});
+      createPlant({x: -20, z: -10});
+      createPlant({x: 20, z: -10});
+      createPlant({x: 0, z: 0});
+
+      // Add grid lines to floor for better spatial reference
+      const gridSize = 10;
+      const lineColor = new BABYLON.Color3(0.8, 0.8, 0.8);
+      
+      // Vertical lines
+      for (let x = -40; x <= 40; x += gridSize) {
+        const line = BABYLON.MeshBuilder.CreateBox("gridLineV", {
+          width: 0.1,
+          height: 0.01,
+          depth: 60
+        }, scene);
+        line.position = new BABYLON.Vector3(x, 0.005, 0);
+        const lineMat = new BABYLON.StandardMaterial("gridLineMat", scene);
+        lineMat.diffuseColor = lineColor;
+        line.material = lineMat;
+        line.isPickable = false;
+      }
+      
+      // Horizontal lines
+      for (let z = -30; z <= 30; z += gridSize) {
+        const line = BABYLON.MeshBuilder.CreateBox("gridLineH", {
+          width: 80,
+          height: 0.01,
+          depth: 0.1
+        }, scene);
+        line.position = new BABYLON.Vector3(0, 0.005, z);
+        const lineMat = new BABYLON.StandardMaterial("gridLineMat", scene);
+        lineMat.diffuseColor = lineColor;
+        line.material = lineMat;
+        line.isPickable = false;
+      }
+
+      // Add agents
+      const createAgent = (agent, position) => {
+        const agentMesh = BABYLON.MeshBuilder.CreateSphere(`agent_${agent.id}`, {
+          diameter: 2
+        }, scene);
+        
+        agentMesh.position = new BABYLON.Vector3(position.x, 1, position.z);
+        
+        const agentMat = new BABYLON.StandardMaterial(`agentMat_${agent.id}`, scene);
+        agentMat.diffuseColor = agent.status === 'busy' ? 
+          new BABYLON.Color3(0.8, 0.2, 0.2) : 
+          new BABYLON.Color3(0.2, 0.8, 0.2);
+        
+        agentMesh.material = agentMat;
+        agentMesh.isPickable = true;
+        shadowGenerator.addShadowCaster(agentMesh);
+        
+        agentMeshesRef.current[agent.id] = agentMesh;
+
+        // Add label
+        const advancedTexture = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI_" + agent.id);
+        const label = new GUI.Rectangle();
+        label.width = "100px";
+        label.height = "30px";
+        label.cornerRadius = 5;
+        label.color = "white";
+        label.thickness = 2;
+        label.background = "black";
+
+        const text = new GUI.TextBlock();
+        text.text = agent.name;
+        text.color = "white";
+        text.fontSize = 12;
+        label.addControl(text);
+
+        advancedTexture.addControl(label);
+        label.linkWithMesh(agentMesh);
+        label.linkOffsetY = -30;
+
+        return agentMesh;
+      };
+
+      // Position agents based on their default positions or roles
+      if (agents && agents.length > 0) {
+        agents.forEach((agent, index) => {
+          let position;
+          if (agent.defaultPosition) {
+            position = agent.defaultPosition;
+          } else {
+            // Default positions for different roles
+            switch(agent.department || agent.role) {
+              case 'management':
+                position = {x: -34.5, z: 5}; // Manager office
+                break;
+              case 'reception':
+                position = {x: -34.5, z: -25}; // Reception
+                break;
+              case 'sales':
+                position = {x: 0, z: 0}; // Open common area
+                break;
+              default:
+                // Distribute in offices
+                switch(index % 4) {
+                  case 0: position = {x: -35, z: 25}; break; // Partner office
+                  case 1: position = {x: -25.5, z: 25}; break; // Senior office 1
+                  case 2: position = {x: -16.5, z: 25}; break; // Senior office 2
+                  case 3: position = {x: 32, z: 25}; break; // Conference room
+                  default: position = {x: 0, z: 0}; // Common area
+                }
+            }
+          }
+          createAgent(agent, position);
+        });
+      }
+
+      // Handle clicks and hover
+      scene.onPointerObservable.add((pointerInfo) => {
+        if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERPICK) {
+          if (pointerInfo.pickInfo.hit) {
+            const pickedMesh = pointerInfo.pickInfo.pickedMesh;
+            
+            // Check if agent was clicked
+            const agentId = Object.keys(agentMeshesRef.current).find(
+              id => agentMeshesRef.current[id] === pickedMesh
+            );
+            if (agentId && onAgentClick) {
+              onAgentClick(agentId);
+            }
+            
+            // Check if room was clicked
+            const roomName = Object.keys(roomsRef.current).find(
+              name => roomsRef.current[name] === pickedMesh
+            );
+            if (roomName) {
+              // Update selected room state
+              setSelectedRoom(roomName);
+              
+              // Reset all room highlights
+              Object.values(roomsRef.current).forEach(room => {
+                if (room.material) {
+                  room.material.emissiveColor = new BABYLON.Color3(0, 0, 0);
+                  room.material.alpha = 0.3;
+                }
+              });
+              
+              // Highlight selected room
+              const selectedMesh = roomsRef.current[roomName];
+              if (selectedMesh && selectedMesh.material) {
+                selectedMesh.material.emissiveColor = new BABYLON.Color3(0.2, 0.4, 0.6);
+                selectedMesh.material.alpha = 0.5;
+              }
+              
+              if (onRoomClick) {
+                onRoomClick(roomName);
+              }
+            }
+          }
+        } else if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERMOVE) {
+          if (pointerInfo.pickInfo.hit) {
+            const pickedMesh = pointerInfo.pickInfo.pickedMesh;
+            
+            // Check if hovering over a room
+            const roomName = Object.keys(roomsRef.current).find(
+              name => roomsRef.current[name] === pickedMesh
+            );
+            
+            // Reset hover effect on all rooms except selected
+            Object.entries(roomsRef.current).forEach(([name, room]) => {
+              if (room.material && name !== selectedRoom) {
+                room.material.alpha = name === roomName ? 0.4 : 0.3;
+              }
+            });
+            
+            // Change cursor on room hover
+            canvasRef.current.style.cursor = roomName ? 'pointer' : 'grab';
+          } else {
+            canvasRef.current.style.cursor = 'grab';
+          }
+        }
       });
 
-      // Enable shadows
-      floor.receiveShadows = true;
-      ceiling.receiveShadows = true;
-
-      // Add reflection probe for better visual quality
-      const probe = new BABYLON.ReflectionProbe("main", 512, scene);
-      probe.renderList.push(floor);
-      probe.renderList.push(ceiling);
+      setIsLoading(false);
+      if (onSceneReady) {
+        onSceneReady(scene);
+      }
 
       return scene;
     };
@@ -966,241 +556,232 @@ const Office3D = ({ agents, selectedAgent, onAgentClick, currentFloor = 'buyers'
       scene.render();
     });
 
-    const handleResize = () => {
+    window.addEventListener("resize", () => {
       engine.resize();
-    };
-    window.addEventListener("resize", handleResize);
+    });
 
     return () => {
-      window.removeEventListener("resize", handleResize);
       scene.dispose();
       engine.dispose();
     };
-  }, [currentFloor]);
+  }, [agents, selectedAgent, onAgentClick, onRoomClick, onSceneReady]);
 
-  // Update agents and handle office states
-  useEffect(() => {
-    if (!sceneRef.current) return;
+  // Camera view controls
+  const setCameraView = (viewType) => {
+    const camera = cameraRef.current;
+    if (!camera) return;
 
-    // Clear existing agent meshes
-    Object.values(agentMeshesRef.current).forEach(mesh => {
-      mesh.dispose();
-    });
-    agentMeshesRef.current = {};
-
-    // Store animation functions for cleanup
-    const animationFunctions = [];
-
-    // Map agents to offices based on the new layout
-    const officeIds = ['partnerOffice', 'managerOffice', 'seniorOffice1', 'seniorOffice2'];
-    const loungeIds = ['clientLounge', 'leadLounge'];
-    const advancedTexture = GUI.AdvancedDynamicTexture.CreateFullscreenUI("AgentUI");
-    
-    let agentIndex = 0;
-    Object.values(agents || {}).forEach(agent => {
-      const agentGroup = new BABYLON.TransformNode(agent.id);
-      
-      const agentBody = BABYLON.MeshBuilder.CreateCylinder(agent.id + "_body", {
-        height: 3,
-        diameterTop: 0.8,
-        diameterBottom: 1
-      }, sceneRef.current);
-      
-      // Assign positions based on agent role
-      let position;
-      if (agent.role === 'manager' || agent.role === 'partner') {
-        // Manager goes to manager office, partner to partner office
-        position = agent.role === 'manager' 
-          ? new BABYLON.Vector3(-40, 1.5, 0) // Manager office
-          : new BABYLON.Vector3(-40, 1.5, -27.5); // Partner office
-      } else if (agentIndex < officeIds.length) {
-        // Senior agents in senior offices
-        const officePositions = {
-          seniorOffice1: new BABYLON.Vector3(-15, 1.5, -27.5),
-          seniorOffice2: new BABYLON.Vector3(8, 1.5, -27.5)
-        };
-        position = officePositions[officeIds[agentIndex + 2]] || new BABYLON.Vector3(0, 1.5, 0);
-      } else if (agentIndex < officeIds.length + loungeIds.length) {
-        // Some agents in lounges
-        const loungePositions = {
-          clientLounge: new BABYLON.Vector3(-12, 1.5, 27.5),
-          leadLounge: new BABYLON.Vector3(28, 1.5, 27.5)
-        };
-        position = loungePositions[loungeIds[agentIndex - officeIds.length]] || new BABYLON.Vector3(0, 1.5, 0);
-      } else {
-        // Extra agents in common area
-        position = new BABYLON.Vector3(
-          Math.random() * 20 - 10,
-          1.5,
-          Math.random() * 20 - 10
-        );
-      }
-      
-      agentBody.position = position;
-      agentBody.material = new BABYLON.PBRMaterial(agent.id + "_mat", sceneRef.current);
-      
-      if (agent.isActive) {
-        // Active agent - bright green with emissive glow
-        agentBody.material.albedoColor = new BABYLON.Color3(0.2, 0.8, 0.2);
-        agentBody.material.emissiveColor = new BABYLON.Color3(0.1, 0.4, 0.1);
-        agentBody.material.emissiveIntensity = 0.5;
-      } else {
-        // Inactive agent - gray
-        agentBody.material.albedoColor = new BABYLON.Color3(0.5, 0.5, 0.5);
-      }
-      agentBody.material.metallic = 0.1;
-      agentBody.material.roughness = 0.5;
-      
-      // Agent head
-      const agentHead = BABYLON.MeshBuilder.CreateSphere(agent.id + "_head", {
-        diameter: 1
-      }, sceneRef.current);
-      agentHead.position = position.clone();
-      agentHead.position.y += 2;
-      agentHead.material = agentBody.material.clone(agent.id + "_head_mat");
-      agentHead.parent = agentGroup;
-      agentBody.parent = agentGroup;
-      
-      // Agent name label
-      const rect = new GUI.Rectangle();
-      rect.width = "150px";
-      rect.height = "30px";
-      rect.cornerRadius = 10;
-      rect.color = "white";
-      rect.background = agent.isActive ? "#4CAF50" : "#757575";
-      rect.thickness = 0;
-      advancedTexture.addControl(rect);
-      
-      const label = new GUI.TextBlock();
-      label.text = agent.name;
-      label.color = "white";
-      label.fontSize = 14;
-      rect.addControl(label);
-      
-      rect.linkWithMesh(agentHead);
-      rect.linkOffsetY = -40;
-      
-      // Click handler
-      agentBody.actionManager = new BABYLON.ActionManager(sceneRef.current);
-      agentBody.actionManager.registerAction(
-        new BABYLON.ExecuteCodeAction(
-          BABYLON.ActionManager.OnPickTrigger,
-          () => onAgentClick && onAgentClick(agent)
-        )
-      );
-      
-      agentMeshesRef.current[agent.id] = agentGroup;
-      
-      // Animation for active agents
-      if (agent.isActive) {
-        // Breathing animation
-        const animationFunc = () => {
-          if (agentHead && !agentHead.isDisposed()) {
-            agentHead.position.y = position.y + 2 + Math.sin(Date.now() * 0.001) * 0.1;
-          }
-        };
-        sceneRef.current.registerBeforeRender(animationFunc);
-        animationFunctions.push(animationFunc);
-      }
-      
-      agentIndex++;
-    });
-
-    // Animate doors based on occupancy
-    Object.entries(doorsRef.current).forEach(([officeId, door]) => {
-      const hasAgent = Object.values(agents || {}).some(agent => 
-        (agent.role === 'manager' && officeId === 'managerOffice') ||
-        (agent.role === 'partner' && officeId === 'partnerOffice')
-      );
-      
-      if (hasAgent && door) {
-        // Open door animation - adjust based on door orientation
-        const targetRotation = door.rotation.y + Math.PI / 4;
-        BABYLON.Animation.CreateAndStartAnimation(
-          "doorOpen",
-          door,
-          "rotation.y",
-          30,
-          15,
-          door.rotation.y,
-          targetRotation,
-          BABYLON.Animation.ANIMATIONLOOPMODE_CONSTANT
-        );
-      }
-    });
-
-    // Cleanup function
-    return () => {
-      // Unregister all animation functions
-      animationFunctions.forEach(func => {
-        if (sceneRef.current) {
-          sceneRef.current.unregisterBeforeRender(func);
-        }
-      });
-      
-      // Dispose of the advanced texture
-      try {
-        if (advancedTexture) {
-          advancedTexture.dispose();
-        }
-      } catch (error) {
-        // Texture may already be disposed
-        console.log("Advanced texture cleanup:", error.message);
-      }
-    };
-
-  }, [agents, onAgentClick]);
-
-  // Handle selected agent highlighting
-  useEffect(() => {
-    if (!selectedAgent || !agentMeshesRef.current[selectedAgent.id] || !sceneRef.current) return;
-    
-    const agentMesh = agentMeshesRef.current[selectedAgent.id];
-    
-    // Update material to show selection
-    agentMesh.getChildMeshes().forEach(mesh => {
-      if (mesh.material) {
-        mesh.material.emissiveColor = new BABYLON.Color3(1, 1, 0); // Yellow glow
-        mesh.material.emissiveIntensity = 0.3;
-      }
-    });
-    
-    return () => {
-      // Reset material when deselected
-      agentMesh.getChildMeshes().forEach(mesh => {
-        if (mesh.material) {
-          if (selectedAgent.isActive) {
-            mesh.material.emissiveColor = new BABYLON.Color3(0.1, 0.4, 0.1);
-            mesh.material.emissiveIntensity = 0.5;
-          } else {
-            mesh.material.emissiveColor = new BABYLON.Color3(0, 0, 0);
-            mesh.material.emissiveIntensity = 0;
-          }
-        }
-      });
-    };
-  }, [selectedAgent]);
+    switch(viewType) {
+      case 'top':
+        camera.alpha = -Math.PI / 2;
+        camera.beta = 0.1;
+        camera.radius = 80;
+        break;
+      case '3d':
+        camera.alpha = -Math.PI / 2;
+        camera.beta = Math.PI / 3;
+        camera.radius = 100;
+        break;
+      case 'side':
+        camera.alpha = 0;
+        camera.beta = Math.PI / 3;
+        camera.radius = 100;
+        break;
+      default:
+        break;
+    }
+  };
 
   return (
-    <div style={{ width: '100%', height: '600px', position: 'relative' }}>
-      <canvas ref={canvasRef} style={{ width: '100%', height: '100%' }} />
-      {selectedAgent && (
+    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+      <canvas
+        ref={canvasRef}
+        style={{ width: '100%', height: '100%', display: 'block' }}
+      />
+      
+      {/* Camera controls */}
+      <div style={{
+        position: 'absolute',
+        top: 20,
+        left: 20,
+        background: 'white',
+        padding: '15px',
+        borderRadius: '8px',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
+        zIndex: 10
+      }}>
+        <button 
+          onClick={() => setCameraView('top')}
+          style={{
+            display: 'block',
+            width: '120px',
+            padding: '8px 16px',
+            margin: '5px 0',
+            background: '#3b82f6',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '14px'
+          }}
+        >
+          Top View
+        </button>
+        <button 
+          onClick={() => setCameraView('3d')}
+          style={{
+            display: 'block',
+            width: '120px',
+            padding: '8px 16px',
+            margin: '5px 0',
+            background: '#3b82f6',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '14px'
+          }}
+        >
+          3D View
+        </button>
+        <button 
+          onClick={() => setCameraView('side')}
+          style={{
+            display: 'block',
+            width: '120px',
+            padding: '8px 16px',
+            margin: '5px 0',
+            background: '#3b82f6',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            cursor: 'pointer',
+            fontSize: '14px'
+          }}
+        >
+          Side View
+        </button>
+        <p style={{ margin: '10px 0 0 0', fontSize: '11px', color: '#999', textAlign: 'center' }}>
+          Click rooms to select
+        </p>
+      </div>
+
+      {isLoading && (
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          color: 'white',
+          background: 'rgba(0,0,0,0.7)',
+          padding: '20px',
+          borderRadius: '10px'
+        }}>
+          Loading 3D Office...
+        </div>
+      )}
+      
+      {/* Selected room display */}
+      {selectedRoom && (
         <div style={{
           position: 'absolute',
           bottom: 20,
-          left: 20,
-          background: 'rgba(0,0,0,0.8)',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'rgba(0, 0, 0, 0.8)',
           color: 'white',
           padding: '10px 20px',
-          borderRadius: '5px'
+          borderRadius: '20px',
+          fontSize: '16px',
+          fontWeight: 'bold',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.3)'
         }}>
-          <h3>{selectedAgent.name}</h3>
-          <p>Status: {selectedAgent.isActive ? 'Active' : 'Inactive'}</p>
-          <p>Current Task: {selectedAgent.currentTask || 'Idle'}</p>
+          {roomConfigs[selectedRoom]?.name || selectedRoom}
         </div>
       )}
     </div>
   );
+};
+
+// Room configuration export for reference
+export const roomConfigs = {
+  partnerOffice: {
+    name: 'Partner Office',
+    type: 'office',
+    size: "10' x 10'",
+    capacity: 4,
+    features: ['Executive Desk', 'Meeting Chairs', 'Private Storage']
+  },
+  seniorOffice1: {
+    name: 'Senior Office 1',
+    type: 'office',
+    size: "9' x 10'",
+    capacity: 3,
+    features: ['Desk', 'Guest Chairs', 'Filing Cabinet']
+  },
+  seniorOffice2: {
+    name: 'Senior Office 2',
+    type: 'office',
+    size: "9' x 10'",
+    capacity: 3,
+    features: ['Desk', 'Guest Chairs', 'Filing Cabinet']
+  },
+  conference: {
+    name: 'Conference Room',
+    type: 'meeting',
+    size: "16' x 10'",
+    capacity: 12,
+    features: ['Conference Table', '85" Display', 'Video Conference']
+  },
+  managerOffice: {
+    name: 'Manager Office',
+    type: 'office',
+    size: "11' x 10'",
+    capacity: 5,
+    features: ['Executive Desk', 'Lounge Area', 'TV Display']
+  },
+  openCommon: {
+    name: 'Open Common Area',
+    type: 'common',
+    size: "20' x 13'",
+    capacity: 20,
+    features: ['Flexible Meeting Space', 'Collaboration Tables']
+  },
+  wellness: {
+    name: 'Wellness Zone',
+    type: 'wellness',
+    size: "14' x 7'",
+    capacity: 8,
+    features: ['Quiet Zone', 'Comfortable Seating', 'Plants']
+  },
+  refreshment: {
+    name: 'Refreshment Bar',
+    type: 'refreshment',
+    size: "14' x 5'",
+    capacity: 6,
+    features: ['Coffee Machine', 'Refreshments', 'Bar Seating']
+  },
+  reception: {
+    name: 'Reception',
+    type: 'reception',
+    size: "11' x 10'",
+    capacity: 6,
+    features: ['Curved Reception Desk', 'Waiting Area', 'Display']
+  },
+  clientLounge: {
+    name: 'Client Lounge',
+    type: 'lounge',
+    size: "17' x 10'",
+    capacity: 10,
+    features: ['Premium Seating', 'TV', 'Coffee Table']
+  },
+  leadLounge: {
+    name: 'Lead Lounge',
+    type: 'lounge',
+    size: "17' x 10'",
+    capacity: 10,
+    features: ['Lead Nurture Area', 'Comfortable Seating', 'TV']
+  }
 };
 
 export default Office3D;
