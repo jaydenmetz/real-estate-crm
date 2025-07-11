@@ -37,6 +37,7 @@ import {
   Alert,
   Snackbar,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import {
   Business,
   ViewModule,
@@ -371,39 +372,118 @@ const VirtualOfficeDashboard = () => {
         </Grid>
       </Grid>
 
-      {/* 3D Office View */}
-      <Paper sx={{ p: 2, mb: 3, height: '600px', position: 'relative' }}>
-        <Office3D
-          agents={agents}
-          selectedAgent={selectedAgent}
-          onAgentClick={handleAgentClick}
-          onRoomClick={handleRoomClick}
-        />
-        
-        {/* Quick Actions Overlay */}
-        <Box sx={{ position: 'absolute', bottom: 20, right: 20 }}>
-          <Stack spacing={1}>
-            <Tooltip title="Make Announcement">
-              <IconButton 
-                color="primary" 
-                sx={{ bgcolor: 'background.paper', boxShadow: 2 }}
-                onClick={() => setShowAnnouncement(true)}
-              >
-                <NotificationsActive />
-              </IconButton>
-            </Tooltip>
-            <Tooltip title="Refresh View">
-              <IconButton 
-                color="secondary" 
-                sx={{ bgcolor: 'background.paper', boxShadow: 2 }}
-                onClick={() => queryClient.invalidateQueries()}
-              >
-                <Refresh />
-              </IconButton>
-            </Tooltip>
-          </Stack>
+      {/* 3D Office View - Updated with Floating Style */}
+      <Box
+        sx={{
+          position: 'relative',
+          height: '600px',
+          // Floating effect with transparent background
+          background: 'transparent',
+          // Remove overflow hidden to let elements float
+          overflow: 'visible',
+          // Enhanced floating shadow
+          filter: 'drop-shadow(0 20px 60px rgba(0,0,0,0.15))',
+          // Add some margin for the floating effect
+          margin: '40px 0',
+          // Transform for subtle 3D floating effect
+          transform: 'perspective(1000px) rotateX(2deg)',
+          transition: 'transform 0.3s ease',
+          '&:hover': {
+            transform: 'perspective(1000px) rotateX(0deg) translateY(-5px)',
+          }
+        }}
+      >
+        {/* Office floor container with floating appearance */}
+        <Box
+          sx={{
+            position: 'relative',
+            width: '100%',
+            height: '100%',
+            // Gradient background for the office floor
+            background: 'linear-gradient(135deg, rgba(245,247,250,0.95) 0%, rgba(195,207,226,0.95) 100%)',
+            // Subtle border for definition
+            border: '1px solid rgba(255,255,255,0.5)',
+            // Rounded corners for modern look
+            borderRadius: 3,
+            // Inner shadow for depth
+            boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.05)',
+            // Backdrop blur for glass effect
+            backdropFilter: 'blur(10px)',
+            p: 2,
+          }}
+        >
+          <Office3D
+            agents={agents}
+            selectedAgent={selectedAgent}
+            onAgentClick={handleAgentClick}
+            onRoomClick={handleRoomClick}
+          />
+          
+          {/* Quick Actions Overlay - Updated positioning */}
+          <Box sx={{ 
+            position: 'absolute', 
+            bottom: 20, 
+            right: 20,
+            zIndex: 10
+          }}>
+            <Stack spacing={1}>
+              <Tooltip title="Make Announcement">
+                <IconButton 
+                  color="primary" 
+                  sx={{ 
+                    bgcolor: 'background.paper', 
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                    '&:hover': {
+                      transform: 'scale(1.05)',
+                      boxShadow: '0 6px 16px rgba(0,0,0,0.15)'
+                    }
+                  }}
+                  onClick={() => setShowAnnouncement(true)}
+                >
+                  <NotificationsActive />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Refresh View">
+                <IconButton 
+                  color="secondary" 
+                  sx={{ 
+                    bgcolor: 'background.paper', 
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                    '&:hover': {
+                      transform: 'scale(1.05)',
+                      boxShadow: '0 6px 16px rgba(0,0,0,0.15)'
+                    }
+                  }}
+                  onClick={() => queryClient.invalidateQueries()}
+                >
+                  <Refresh />
+                </IconButton>
+              </Tooltip>
+            </Stack>
+          </Box>
         </Box>
-      </Paper>
+
+        {/* Floating office label */}
+        <Fade in={true}>
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: -30,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              backgroundColor: 'rgba(0,0,0,0.8)',
+              color: 'white',
+              padding: '8px 16px',
+              borderRadius: 2,
+              fontSize: '0.875rem',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+              backdropFilter: 'blur(5px)'
+            }}
+          >
+            Live Office View - Hover to interact
+          </Box>
+        </Fade>
+      </Box>
 
       {/* Agent Details Panel */}
       {selectedAgent && (
