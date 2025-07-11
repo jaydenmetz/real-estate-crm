@@ -23,21 +23,131 @@ const Office3D = ({ agents = [], selectedAgent, onAgentClick, onRoomClick, onSce
       const scene = new BABYLON.Scene(engine);
       scene.clearColor = new BABYLON.Color3(0.95, 0.95, 0.95);
 
-      // Camera setup for 80' x 60' office
+      // Camera setup for Clash of Clans style view
       const camera = new BABYLON.ArcRotateCamera(
         "camera",
-        -Math.PI / 2,
-        Math.PI / 3,
-        100,
+        -Math.PI / 2,      // Alpha - rotation around Y axis (locked)
+        Math.PI / 3.5,     // Beta - tilt angle (adjustable)
+        80,                // Radius - distance from target
         new BABYLON.Vector3(0, 0, 0),
         scene
       );
+      
+      // Attach camera control
       camera.attachControl(canvasRef.current, true);
-      camera.lowerRadiusLimit = 30;
-      camera.upperRadiusLimit = 150;
-      camera.wheelPrecision = 20;
-      camera.panningSensibility = 50;
+      
+      // Camera limits for Clash of Clans style
+      camera.lowerRadiusLimit = 40;    // Can't zoom in too close
+      camera.upperRadiusLimit = 120;   // Can't zoom out too far
+      camera.wheelPrecision = 30;      // Zoom sensitivity
+      camera.panningSensibility = 100; // Pan sensitivity
+      
+      // Lock horizontal rotation but allow vertical tilt
+      camera.lowerAlphaLimit = -Math.PI / 2;
+      camera.upperAlphaLimit = -Math.PI / 2;
+      camera.lowerBetaLimit = 0.1;          // Near top-down view
+      camera.upperBetaLimit = Math.PI / 2.8; // Maximum tilt angle
+      
+      // Disable horizontal rotation, enable vertical tilt
+      camera.angularSensibilityX = Infinity; // Disable horizontal rotation
+      camera.angularSensibilityY = 2000;     // Enable vertical tilt (higher = less sensitive)
+      camera.pinchPrecision = 50;            // For touch devices
+      
       cameraRef.current = camera;
+
+      // Custom input handling for panning and tilting
+      let isPanning = false;
+      let isTilting = false;
+      let startPoint = { x: 0, y: 0 };
+      let startBeta = camera.beta;
+      
+      scene.onPointerObservable.add((pointerInfo) => {
+        switch (pointerInfo.type) {
+          case BABYLON.PointerEventTypes.POINTERDOWN:
+            if (pointerInfo.event.button === 2) { // Right click for panning
+              isPanning = true;
+              isTilting = false;
+              startPoint.x = pointerInfo.event.clientX;
+              startPoint.y = pointerInfo.event.clientY;
+            } else if (pointerInfo.event.button === 1) { // Middle click for tilting
+              isTilting = true;
+              isPanning = false;
+              startPoint.y = pointerInfo.event.clientY;
+              startBeta = camera.beta;
+            }
+            break;
+            
+          case BABYLON.PointerEventTypes.POINTERUP:
+            isPanning = false;
+            isTilting = false;
+            break;
+            
+          case BABYLON.PointerEventTypes.POINTERMOVE:
+            if (isPanning) {
+              const deltaX = pointerInfo.event.clientX - startPoint.x;
+              const deltaY = pointerInfo.event.clientY - startPoint.y;
+              
+              // Calculate pan amount based on camera distance
+              const panSpeed = camera.radius * 0.001;
+              
+              // Pan the camera target
+              camera.target.x -= deltaX * panSpeed;
+              camera.target.z += deltaY * panSpeed;
+              
+              startPoint.x = pointerInfo.event.clientX;
+              startPoint.y = pointerInfo.event.clientY;
+            } else if (isTilting) {
+              const deltaY = pointerInfo.event.clientY - startPoint.y;
+              
+              // Adjust tilt based on mouse movement
+              const tiltSpeed = 0.005;
+              camera.beta = Math.max(
+                camera.lowerBetaLimit,
+                Math.min(camera.upperBetaLimit, startBeta + deltaY * tiltSpeed)
+              );
+            }
+            break;
+        }
+      });
+
+      // Add keyboard controls for tilting
+      scene.actionManager = new BABYLON.ActionManager(scene);
+      
+      // Tilt up (more top-down)
+      scene.actionManager.registerAction(
+        new BABYLON.ExecuteCodeAction(
+          BABYLON.ActionManager.OnKeyDownTrigger,
+          (evt) => {
+            if (evt.sourceEvent.key === "q" || evt.sourceEvent.key === "Q") {
+              camera.beta = Math.max(camera.lowerBetaLimit, camera.beta - 0.1);
+            }
+          }
+        )
+      );
+      
+      // Tilt down (more angled)
+      scene.actionManager.registerAction(
+        new BABYLON.ExecuteCodeAction(
+          BABYLON.ActionManager.OnKeyDownTrigger,
+          (evt) => {
+            if (evt.sourceEvent.key === "e" || evt.sourceEvent.key === "E") {
+              camera.beta = Math.min(camera.upperBetaLimit, camera.beta + 0.1);
+            }
+          }
+        )
+      );
+
+      // Mouse wheel with shift for tilting
+      canvasRef.current.addEventListener('wheel', (evt) => {
+        if (evt.shiftKey) {
+          evt.preventDefault();
+          const tiltAmount = evt.deltaY * 0.001;
+          camera.beta = Math.max(
+            camera.lowerBetaLimit,
+            Math.min(camera.upperBetaLimit, camera.beta + tiltAmount)
+          );
+        }
+      });
 
       // Lighting setup
       const hemisphereLight = new BABYLON.HemisphericLight("hemisphereLight", 
@@ -159,21 +269,10 @@ const Office3D = ({ agents = [], selectedAgent, onAgentClick, onRoomClick, onSce
       createWall("managerSouth", 11, wallHeight, wallThickness, 
         new BABYLON.Vector3(-34.5, wallHeight/2, 0));
       
-      // Wellness Zone (14' x 7') - anchored to right side
-      createWall("wellnessNorth", 14, wallHeight, wallThickness, 
-        new BABYLON.Vector3(33, wallHeight/2, 10));
-      createWall("wellnessWest", wallThickness, wallHeight, 7, 
-        new BABYLON.Vector3(26, wallHeight/2, 6.5));
-      createWall("wellnessSouth", 14, wallHeight, wallThickness, 
+      // Wellness Zone (14' x 7') - Only divider wall between wellness and refreshment
+      // Keep only the divider wall (south wall of wellness / north wall of refreshment)
+      createWall("wellness_refreshment_divider", 14, wallHeight, wallThickness, 
         new BABYLON.Vector3(33, wallHeight/2, 3));
-      
-      // Refreshment Bar (14' x 5') - anchored to right side below Wellness (with gap from Lead Lounge)
-      createWall("refreshmentNorth", 14, wallHeight, wallThickness, 
-        new BABYLON.Vector3(33, wallHeight/2, 3));
-      createWall("refreshmentWest", wallThickness, wallHeight, 5, 
-        new BABYLON.Vector3(26, wallHeight/2, 0.5));
-      createWall("refreshmentSouth", 14, wallHeight, wallThickness, 
-        new BABYLON.Vector3(33, wallHeight/2, -2));
 
       // BOTTOM ROW
       // Reception (11' x 10') - anchored to bottom-left corner
@@ -475,10 +574,10 @@ const Office3D = ({ agents = [], selectedAgent, onAgentClick, onRoomClick, onSce
         });
       }
 
-      // Handle clicks and hover
+      // Handle clicks and hover (modified to not interfere with panning)
       scene.onPointerObservable.add((pointerInfo) => {
         if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERPICK) {
-          if (pointerInfo.pickInfo.hit) {
+          if (pointerInfo.pickInfo.hit && pointerInfo.event.button === 0) { // Left click only
             const pickedMesh = pointerInfo.pickInfo.pickedMesh;
             
             // Check if agent was clicked
@@ -518,7 +617,7 @@ const Office3D = ({ agents = [], selectedAgent, onAgentClick, onRoomClick, onSce
             }
           }
         } else if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERMOVE) {
-          if (pointerInfo.pickInfo.hit) {
+          if (pointerInfo.pickInfo.hit && !isPanning && !isTilting) {
             const pickedMesh = pointerInfo.pickInfo.pickedMesh;
             
             // Check if hovering over a room
@@ -536,7 +635,7 @@ const Office3D = ({ agents = [], selectedAgent, onAgentClick, onRoomClick, onSce
             // Change cursor on room hover
             canvasRef.current.style.cursor = roomName ? 'pointer' : 'grab';
           } else {
-            canvasRef.current.style.cursor = 'grab';
+            canvasRef.current.style.cursor = isPanning ? 'grabbing' : (isTilting ? 'ns-resize' : 'grab');
           }
         }
       });
@@ -566,26 +665,25 @@ const Office3D = ({ agents = [], selectedAgent, onAgentClick, onRoomClick, onSce
     };
   }, [agents, selectedAgent, onAgentClick, onRoomClick, onSceneReady]);
 
-  // Camera view controls
+  // Camera view controls - modified for Clash of Clans style
   const setCameraView = (viewType) => {
     const camera = cameraRef.current;
     if (!camera) return;
 
     switch(viewType) {
       case 'top':
-        camera.alpha = -Math.PI / 2;
+        // Near top-down but not completely flat
         camera.beta = 0.1;
         camera.radius = 80;
         break;
       case '3d':
-        camera.alpha = -Math.PI / 2;
-        camera.beta = Math.PI / 3;
-        camera.radius = 100;
+        // Default angled view
+        camera.beta = Math.PI / 3.5;
+        camera.radius = 80;
         break;
-      case 'side':
-        camera.alpha = 0;
-        camera.beta = Math.PI / 3;
-        camera.radius = 100;
+      case 'close':
+        // Zoomed in view
+        camera.radius = 40;
         break;
       default:
         break;
@@ -642,10 +740,10 @@ const Office3D = ({ agents = [], selectedAgent, onAgentClick, onRoomClick, onSce
             fontSize: '14px'
           }}
         >
-          3D View
+          Default View
         </button>
         <button 
-          onClick={() => setCameraView('side')}
+          onClick={() => setCameraView('close')}
           style={{
             display: 'block',
             width: '120px',
@@ -659,10 +757,26 @@ const Office3D = ({ agents = [], selectedAgent, onAgentClick, onRoomClick, onSce
             fontSize: '14px'
           }}
         >
-          Side View
+          Close View
         </button>
-        <p style={{ margin: '10px 0 0 0', fontSize: '11px', color: '#999', textAlign: 'center' }}>
-          Click rooms to select
+        <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px solid #e0e0e0' }} />
+        <p style={{ margin: '5px 0', fontSize: '11px', color: '#666', textAlign: 'left' }}>
+          <strong>Controls:</strong>
+        </p>
+        <p style={{ margin: '2px 0', fontSize: '10px', color: '#999' }}>
+          • Scroll: Zoom
+        </p>
+        <p style={{ margin: '2px 0', fontSize: '10px', color: '#999' }}>
+          • Right-drag: Pan
+        </p>
+        <p style={{ margin: '2px 0', fontSize: '10px', color: '#999' }}>
+          • Middle-drag: Tilt
+        </p>
+        <p style={{ margin: '2px 0', fontSize: '10px', color: '#999' }}>
+          • Shift+Scroll: Tilt
+        </p>
+        <p style={{ margin: '2px 0', fontSize: '10px', color: '#999' }}>
+          • Q/E keys: Tilt
         </p>
       </div>
 
