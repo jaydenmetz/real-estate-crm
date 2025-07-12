@@ -1,954 +1,1208 @@
 // File: frontend/src/components/dashboards/Office3D.jsx
-// 3D Office Layout - 80' x 60' (4,800 sq ft) with Open Concept Reception
 import React, { useEffect, useRef, useState } from 'react';
-import * as BABYLON from 'babylonjs';
-import * as GUI from 'babylonjs-gui';
+import {
+  Box,
+  Paper,
+  ToggleButton,
+  ToggleButtonGroup,
+  Typography,
+  Stack,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  Avatar,
+  Alert,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  Card,
+  CardContent,
+  Grid,
+  IconButton,
+  Chip,
+} from '@mui/material';
+import {
+  Home,
+  SmartToy,
+  Business,
+  Close,
+  Person,
+  Group,
+  CorporateFare,
+  AssistantPhoto,
+} from '@mui/icons-material';
+import * as THREE from 'three';
+import { useSnackbar } from 'notistack';
 
-/*
-  Office Layout Structure (80' x 60' = 4,800 sq ft):
-  
-  TOP ROW (North - Back):
-  - Executive Office 1 (20' x 15') | Executive Office 2 (20' x 15') | Executive Office 3 (20' x 15')
-  
-  MIDDLE ROW:
-  - Conference Room (25' x 20') | OPEN RECEPTION AREA (40' x 30') | Client Lounge (25' x 20')
-  
-  BOTTOM ROW (South - Front):
-  - Private Office 1 (20' x 15') | Meeting Room 1 (15' x 12') | Meeting Room 2 (15' x 12') | Private Office 2 (20' x 15')
-  
-  The Reception Area is completely open with no interior walls, creating a welcoming central hub.
-  Total office space provides luxury amenities in an efficient, modern layout.
-*/
+// Office configurations
+const officeConfigs = {
+  solo: {
+    name: 'Solo Office',
+    description: 'Personal workspace with executive assistant',
+    size: { width: 20, depth: 15 },
+    agents: ['alex_assistant', 'executive_assistant']
+  },
+  team: {
+    name: 'Team Office',
+    description: 'Collaborative team workspace from your layout',
+    size: { width: 80, depth: 60 },
+    agents: ['alex_assistant', 'buyer_specialist', 'listing_specialist', 'escrow_coordinator', 'client_success', 'marketing_specialist', 'compliance_officer', 'financial_analyst']
+  },
+  company: {
+    name: 'Company Office',
+    description: '3 department layout with full teams',
+    size: { width: 120, depth: 60 },
+    agents: ['alex_assistant', 'buyer_specialist', 'listing_specialist', 'escrow_coordinator', 'client_success', 'marketing_specialist', 'compliance_officer', 'financial_analyst', 'operations_manager', 'buyer_manager', 'listing_manager', 'database_specialist']
+  }
+};
 
-const Office3D = ({ agents = [], selectedAgent, onAgentClick, onRoomClick, onSceneReady }) => {
-  const canvasRef = useRef(null);
+// Agent configurations
+const agentConfigs = {
+  alex_assistant: {
+    name: 'Alex',
+    title: 'Executive Assistant',
+    icon: '🤖',
+    color: '#2196f3',
+    department: 'management'
+  },
+  executive_assistant: {
+    name: 'Emma',
+    title: 'Personal Assistant',
+    icon: '👩‍💼',
+    color: '#9c27b0',
+    department: 'management'
+  },
+  buyer_specialist: {
+    name: 'Bailey',
+    title: 'Buyer Specialist',
+    icon: '🏠',
+    color: '#4caf50',
+    department: 'buyer'
+  },
+  listing_specialist: {
+    name: 'Skylar',
+    title: 'Listing Specialist',
+    icon: '📋',
+    color: '#ff9800',
+    department: 'listing'
+  },
+  escrow_coordinator: {
+    name: 'Esther',
+    title: 'Escrow Coordinator',
+    icon: '📄',
+    color: '#795548',
+    department: 'operations'
+  },
+  client_success: {
+    name: 'Sam',
+    title: 'Client Success',
+    icon: '⭐',
+    color: '#607d8b',
+    department: 'support'
+  },
+  marketing_specialist: {
+    name: 'Morgan',
+    title: 'Marketing Specialist',
+    icon: '📣',
+    color: '#e91e63',
+    department: 'marketing'
+  },
+  compliance_officer: {
+    name: 'Carlos',
+    title: 'Legal & Compliance',
+    icon: '✅',
+    color: '#9c27b0',
+    department: 'operations'
+  },
+  financial_analyst: {
+    name: 'Finn',
+    title: 'Commission & Finance',
+    icon: '💰',
+    color: '#009688',
+    department: 'operations'
+  },
+  operations_manager: {
+    name: 'Oscar',
+    title: 'Operations Manager',
+    icon: '⚙️',
+    color: '#3f51b5',
+    department: 'operations'
+  },
+  buyer_manager: {
+    name: 'Brenda',
+    title: 'Buyer Department Manager',
+    icon: '🏢',
+    color: '#2e7d32',
+    department: 'buyer'
+  },
+  listing_manager: {
+    name: 'Laura',
+    title: 'Listing Department Manager',
+    icon: '📊',
+    color: '#ed6c02',
+    department: 'listing'
+  },
+  database_specialist: {
+    name: 'Olivia',
+    title: 'CRM & Database Admin',
+    icon: '💾',
+    color: '#757575',
+    department: 'support'
+  }
+};
+
+const Office3D = ({ agents = [] }) => {
+  const mountRef = useRef(null);
   const sceneRef = useRef(null);
-  const engineRef = useRef(null);
-  const agentMeshesRef = useRef({});
-  const roomsRef = useRef({});
+  const rendererRef = useRef(null);
   const cameraRef = useRef(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedRoom, setSelectedRoom] = useState(null);
+  const agentMeshesRef = useRef({});
+  const cameraDistanceRef = useRef(50);
+  const cameraAngleXRef = useRef(Math.PI / 3.5);
+  const cameraAngleYRef = useRef(-Math.PI / 2);
+  const [selectedTab, setSelectedTab] = useState('team');
+  const [selectedAgent, setSelectedAgent] = useState(null);
+  const { enqueueSnackbar } = useSnackbar();
 
   useEffect(() => {
-    if (!canvasRef.current) return;
+    if (!mountRef.current) return;
 
-    const engine = new BABYLON.Engine(canvasRef.current, true);
-    engineRef.current = engine;
-
-    const createScene = () => {
-      const scene = new BABYLON.Scene(engine);
-      scene.clearColor = new BABYLON.Color3(0.95, 0.95, 0.95);
-
-      // Camera setup for Clash of Clans style view
-      const camera = new BABYLON.ArcRotateCamera(
-        "camera",
-        -Math.PI / 2,      // Alpha - rotation around Y axis (locked)
-        Math.PI / 3.5,     // Beta - tilt angle (adjustable)
-        100,               // Radius - distance from target (increased for larger space)
-        new BABYLON.Vector3(0, 0, 0),
-        scene
-      );
-      
-      // Attach camera control
-      camera.attachControl(canvasRef.current, true);
-      
-      // Camera limits for Clash of Clans style
-      camera.lowerRadiusLimit = 50;    // Can't zoom in too close
-      camera.upperRadiusLimit = 150;   // Can't zoom out too far (increased)
-      camera.wheelPrecision = 30;      // Zoom sensitivity
-      camera.panningSensibility = 100; // Pan sensitivity
-      
-      // Lock horizontal rotation but allow vertical tilt
-      camera.lowerAlphaLimit = -Math.PI / 2;
-      camera.upperAlphaLimit = -Math.PI / 2;
-      camera.lowerBetaLimit = 0.1;          // Near top-down view
-      camera.upperBetaLimit = Math.PI / 2.8; // Maximum tilt angle
-      
-      // Disable horizontal rotation, enable vertical tilt
-      camera.angularSensibilityX = Infinity; // Disable horizontal rotation
-      camera.angularSensibilityY = 2000;     // Enable vertical tilt (higher = less sensitive)
-      camera.pinchPrecision = 50;            // For touch devices
-      
-      cameraRef.current = camera;
-
-      // Custom input handling for panning and tilting
-      let isPanning = false;
-      let isTilting = false;
-      let startPoint = { x: 0, y: 0 };
-      let startBeta = camera.beta;
-      
-      scene.onPointerObservable.add((pointerInfo) => {
-        switch (pointerInfo.type) {
-          case BABYLON.PointerEventTypes.POINTERDOWN:
-            if (pointerInfo.event.button === 2) { // Right click for panning
-              isPanning = true;
-              isTilting = false;
-              startPoint.x = pointerInfo.event.clientX;
-              startPoint.y = pointerInfo.event.clientY;
-            } else if (pointerInfo.event.button === 1) { // Middle click for tilting
-              isTilting = true;
-              isPanning = false;
-              startPoint.y = pointerInfo.event.clientY;
-              startBeta = camera.beta;
-            }
-            break;
-            
-          case BABYLON.PointerEventTypes.POINTERUP:
-            isPanning = false;
-            isTilting = false;
-            break;
-            
-          case BABYLON.PointerEventTypes.POINTERMOVE:
-            if (isPanning) {
-              const deltaX = pointerInfo.event.clientX - startPoint.x;
-              const deltaY = pointerInfo.event.clientY - startPoint.y;
-              
-              // Calculate pan amount based on camera distance
-              const panSpeed = camera.radius * 0.001;
-              
-              // Pan the camera target
-              camera.target.x -= deltaX * panSpeed;
-              camera.target.z += deltaY * panSpeed;
-              
-              startPoint.x = pointerInfo.event.clientX;
-              startPoint.y = pointerInfo.event.clientY;
-            } else if (isTilting) {
-              const deltaY = pointerInfo.event.clientY - startPoint.y;
-              
-              // Adjust tilt based on mouse movement
-              const tiltSpeed = 0.005;
-              camera.beta = Math.max(
-                camera.lowerBetaLimit,
-                Math.min(camera.upperBetaLimit, startBeta + deltaY * tiltSpeed)
-              );
-            }
-            break;
-        }
-      });
-
-      // Add keyboard controls for tilting
-      scene.actionManager = new BABYLON.ActionManager(scene);
-      
-      // Tilt up (more top-down)
-      scene.actionManager.registerAction(
-        new BABYLON.ExecuteCodeAction(
-          BABYLON.ActionManager.OnKeyDownTrigger,
-          (evt) => {
-            if (evt.sourceEvent.key === "q" || evt.sourceEvent.key === "Q") {
-              camera.beta = Math.max(camera.lowerBetaLimit, camera.beta - 0.1);
-            }
-          }
-        )
-      );
-      
-      // Tilt down (more angled)
-      scene.actionManager.registerAction(
-        new BABYLON.ExecuteCodeAction(
-          BABYLON.ActionManager.OnKeyDownTrigger,
-          (evt) => {
-            if (evt.sourceEvent.key === "e" || evt.sourceEvent.key === "E") {
-              camera.beta = Math.min(camera.upperBetaLimit, camera.beta + 0.1);
-            }
-          }
-        )
-      );
-
-      // Mouse wheel with shift for tilting
-      canvasRef.current.addEventListener('wheel', (evt) => {
-        if (evt.shiftKey) {
-          evt.preventDefault();
-          const tiltAmount = evt.deltaY * 0.001;
-          camera.beta = Math.max(
-            camera.lowerBetaLimit,
-            Math.min(camera.upperBetaLimit, camera.beta + tiltAmount)
-          );
-        }
-      });
-
-      // Lighting setup
-      const hemisphereLight = new BABYLON.HemisphericLight("hemisphereLight", 
-        new BABYLON.Vector3(0, 1, 0), scene);
-      hemisphereLight.intensity = 0.7;
-      hemisphereLight.groundColor = new BABYLON.Color3(0.5, 0.5, 0.5);
-
-      const directionalLight = new BABYLON.DirectionalLight("directionalLight", 
-        new BABYLON.Vector3(-1, -2, -1), scene);
-      directionalLight.position = new BABYLON.Vector3(20, 40, 20);
-      directionalLight.intensity = 0.5;
-
-      // Shadow generator
-      const shadowGenerator = new BABYLON.ShadowGenerator(2048, directionalLight);
-      shadowGenerator.useBlurExponentialShadowMap = true;
-      shadowGenerator.blurScale = 2;
-      shadowGenerator.setDarkness(0.2);
-
-      // Materials
-      const materials = {
-        floor: new BABYLON.StandardMaterial("floorMat", scene),
-        wall: new BABYLON.StandardMaterial("wallMat", scene),
-        glass: new BABYLON.StandardMaterial("glassMat", scene),
-        door: new BABYLON.StandardMaterial("doorMat", scene),
-        furniture: new BABYLON.StandardMaterial("furnitureMat", scene),
-        accent: new BABYLON.StandardMaterial("accentMat", scene)
-      };
-
-      // Material properties
-      materials.floor.diffuseColor = new BABYLON.Color3(0.9, 0.9, 0.9);
-      materials.floor.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1);
-
-      materials.wall.diffuseColor = new BABYLON.Color3(0.85, 0.85, 0.85);
-      materials.wall.specularColor = new BABYLON.Color3(0.1, 0.1, 0.1);
-
-      materials.glass.diffuseColor = new BABYLON.Color3(0.7, 0.8, 0.9);
-      materials.glass.alpha = 0.3;
-      materials.glass.specularColor = new BABYLON.Color3(0.9, 0.9, 0.9);
-
-      materials.door.diffuseColor = new BABYLON.Color3(0.5, 0.3, 0.2);
-      
-      materials.furniture.diffuseColor = new BABYLON.Color3(0.4, 0.3, 0.25);
-      
-      materials.accent.diffuseColor = new BABYLON.Color3(0.2, 0.4, 0.6);
-
-      // Floor (80' width x 60' depth = 80 x 60 units in 3D space)
-      const floor = BABYLON.MeshBuilder.CreateGround("floor", {
-        width: 80,
-        height: 60,
-        subdivisions: 1
-      }, scene);
-      floor.position.y = 0;
-      floor.material = materials.floor;
-      floor.receiveShadows = true;
-
-      // Function to create walls with proper positioning
-      const wallHeight = 5; // Half height as requested
-      const wallThickness = 0.5;
-      
-      const createWall = (name, width, height, depth, position, rotation = 0) => {
-        const wall = BABYLON.MeshBuilder.CreateBox(name, {
-          width: width,
-          height: height,
-          depth: depth
-        }, scene);
-        wall.position = position;
-        wall.rotation.y = rotation;
-        wall.material = materials.wall;
-        shadowGenerator.addShadowCaster(wall);
-        wall.receiveShadows = true;
-        return wall;
-      };
-
-      // Outer walls for 80x60 space
-      createWall("northWall", 80, wallHeight, wallThickness, 
-        new BABYLON.Vector3(0, wallHeight/2, 30));
-      createWall("southWall", 80, wallHeight, wallThickness, 
-        new BABYLON.Vector3(0, wallHeight/2, -30));
-      createWall("eastWall", wallThickness, wallHeight, 60, 
-        new BABYLON.Vector3(40, wallHeight/2, 0));
-      createWall("westWall", wallThickness, wallHeight, 60, 
-        new BABYLON.Vector3(-40, wallHeight/2, 0));
-
-      // INTERIOR WALLS - Updated for 80x60 layout
-      
-      // TOP ROW - Executive Offices (back row)
-      // Executive Office 1 (20' x 15') - top left
-      createWall("exec1East", wallThickness, wallHeight, 15, 
-        new BABYLON.Vector3(-20, wallHeight/2, 22.5));
-      createWall("exec1South", 20, wallHeight, wallThickness, 
-        new BABYLON.Vector3(-30, wallHeight/2, 15));
-      
-      // Executive Office 2 (20' x 15') - top center
-      createWall("exec2West", wallThickness, wallHeight, 15, 
-        new BABYLON.Vector3(-10, wallHeight/2, 22.5));
-      createWall("exec2East", wallThickness, wallHeight, 15, 
-        new BABYLON.Vector3(10, wallHeight/2, 22.5));
-      createWall("exec2South", 20, wallHeight, wallThickness, 
-        new BABYLON.Vector3(0, wallHeight/2, 15));
-      
-      // Executive Office 3 (20' x 15') - top right
-      createWall("exec3West", wallThickness, wallHeight, 15, 
-        new BABYLON.Vector3(20, wallHeight/2, 22.5));
-      createWall("exec3South", 20, wallHeight, wallThickness, 
-        new BABYLON.Vector3(30, wallHeight/2, 15));
-
-      // MIDDLE ROW
-      // Main Conference Room (25' x 20') - left side
-      createWall("conferenceNorth", 25, wallHeight, wallThickness, 
-        new BABYLON.Vector3(-27.5, wallHeight/2, 10));
-      createWall("conferenceEast", wallThickness, wallHeight, 20, 
-        new BABYLON.Vector3(-15, wallHeight/2, 0));
-      createWall("conferenceSouth", 25, wallHeight, wallThickness, 
-        new BABYLON.Vector3(-27.5, wallHeight/2, -10));
-      
-      // Client Lounge (25' x 20') - right side
-      createWall("loungeNorth", 25, wallHeight, wallThickness, 
-        new BABYLON.Vector3(27.5, wallHeight/2, 10));
-      createWall("loungeWest", wallThickness, wallHeight, 20, 
-        new BABYLON.Vector3(15, wallHeight/2, 0));
-      createWall("loungeSouth", 25, wallHeight, wallThickness, 
-        new BABYLON.Vector3(27.5, wallHeight/2, -10));
-
-      // BOTTOM ROW
-      // Private Office 1 (20' x 15') - bottom left corner
-      createWall("private1North", 20, wallHeight, wallThickness, 
-        new BABYLON.Vector3(-30, wallHeight/2, -15));
-      createWall("private1East", wallThickness, wallHeight, 15, 
-        new BABYLON.Vector3(-20, wallHeight/2, -22.5));
-      
-      // Private Office 2 (20' x 15') - bottom right corner
-      createWall("private2North", 20, wallHeight, wallThickness, 
-        new BABYLON.Vector3(30, wallHeight/2, -15));
-      createWall("private2West", wallThickness, wallHeight, 15, 
-        new BABYLON.Vector3(20, wallHeight/2, -22.5));
-
-      // Small Meeting Rooms (15' x 12') - bottom center
-      createWall("meeting1North", 15, wallHeight, wallThickness, 
-        new BABYLON.Vector3(-7.5, wallHeight/2, -15));
-      createWall("meeting1East", wallThickness, wallHeight, 12, 
-        new BABYLON.Vector3(0, wallHeight/2, -21));
-      createWall("meeting1West", wallThickness, wallHeight, 12, 
-        new BABYLON.Vector3(-15, wallHeight/2, -21));
-      
-      createWall("meeting2North", 15, wallHeight, wallThickness, 
-        new BABYLON.Vector3(7.5, wallHeight/2, -15));
-      createWall("meeting2West", wallThickness, wallHeight, 12, 
-        new BABYLON.Vector3(0, wallHeight/2, -21));
-      createWall("meeting2East", wallThickness, wallHeight, 12, 
-        new BABYLON.Vector3(15, wallHeight/2, -21));
-
-      // NO WALLS FOR RECEPTION AREA - It's the open central space (40' x 30')
-
-      // Create room areas for interaction
-      const createRoomArea = (name, position, width, depth, color) => {
-        const room = BABYLON.MeshBuilder.CreateGround(name, {
-          width: width,
-          height: depth
-        }, scene);
-        room.position = new BABYLON.Vector3(position.x, 0.01, position.z);
-        
-        const roomMat = new BABYLON.StandardMaterial(name + "Mat", scene);
-        roomMat.diffuseColor = color;
-        roomMat.alpha = 0.3;
-        roomMat.emissiveColor = new BABYLON.Color3(0, 0, 0);
-        room.material = roomMat;
-        room.isPickable = true;
-        
-        // Store original color for hover effects
-        room.metadata = {
-          originalColor: color,
-          roomName: name,
-          isHighlighted: false
-        };
-        
-        roomsRef.current[name] = room;
-        return room;
-      };
-
-      // Define all rooms based on the new 80x60 layout
-      // Executive Offices (Top Row)
-      createRoomArea("executive1", {x: -30, z: 22.5}, 20, 15, new BABYLON.Color3(0.2, 0.4, 0.7));
-      createRoomArea("executive2", {x: 0, z: 22.5}, 20, 15, new BABYLON.Color3(0.2, 0.4, 0.7));
-      createRoomArea("executive3", {x: 30, z: 22.5}, 20, 15, new BABYLON.Color3(0.2, 0.4, 0.7));
-      
-      // Conference and Lounge (Middle Row Sides)
-      createRoomArea("conference", {x: -27.5, z: 0}, 25, 20, new BABYLON.Color3(0.7, 0.5, 0.2));
-      createRoomArea("lounge", {x: 27.5, z: 0}, 25, 20, new BABYLON.Color3(0.6, 0.4, 0.6));
-      
-      // Private Offices (Bottom Row Corners)
-      createRoomArea("privateOffice1", {x: -30, z: -22.5}, 20, 15, new BABYLON.Color3(0.2, 0.4, 0.7));
-      createRoomArea("privateOffice2", {x: 30, z: -22.5}, 20, 15, new BABYLON.Color3(0.2, 0.4, 0.7));
-      
-      // Meeting Rooms (Bottom Row Center)
-      createRoomArea("meetingRoom1", {x: -7.5, z: -21}, 15, 12, new BABYLON.Color3(0.5, 0.5, 0.7));
-      createRoomArea("meetingRoom2", {x: 7.5, z: -21}, 15, 12, new BABYLON.Color3(0.5, 0.5, 0.7));
-      
-      // Open Reception Area (40' x 30') - Central open space
-      createRoomArea("reception", {x: 0, z: 0}, 40, 30, new BABYLON.Color3(0.3, 0.7, 0.6));
-      
-      // Workspace area overlay (within reception)
-      createRoomArea("workspace", {x: 0, z: -8}, 30, 25, new BABYLON.Color3(0.9, 0.9, 0.9));
-      
-      // Wellness area (within reception)
-      createRoomArea("wellness", {x: -10, z: 0}, 12, 12, new BABYLON.Color3(0.4, 0.7, 0.4));
-
-      // Add furniture
-      const createDesk = (position, rotation = 0) => {
-        const desk = BABYLON.MeshBuilder.CreateBox("desk", {
-          width: 3,
-          height: 2.5,
-          depth: 1.5
-        }, scene);
-        desk.position = new BABYLON.Vector3(position.x, 1.25, position.z);
-        desk.rotation.y = rotation;
-        desk.material = materials.furniture;
-        shadowGenerator.addShadowCaster(desk);
-        return desk;
-      };
-
-      const createChair = (position, rotation = 0) => {
-        const chair = BABYLON.MeshBuilder.CreateBox("chair", {
-          width: 1,
-          height: 2,
-          depth: 1
-        }, scene);
-        chair.position = new BABYLON.Vector3(position.x, 1, position.z);
-        chair.rotation.y = rotation;
-        chair.material = materials.accent;
-        shadowGenerator.addShadowCaster(chair);
-        return chair;
-      };
-
-      // Add desks and chairs in executive offices
-      createDesk({x: -30, z: 22.5}, 0);
-      createChair({x: -30, z: 20}, 0);
-      
-      createDesk({x: 0, z: 22.5}, 0);
-      createChair({x: 0, z: 20}, 0);
-      
-      createDesk({x: 30, z: 22.5}, 0);
-      createChair({x: 30, z: 20}, 0);
-      
-      // Private offices
-      createDesk({x: -30, z: -22.5}, 0);
-      createChair({x: -30, z: -25}, 0);
-      
-      createDesk({x: 30, z: -22.5}, 0);
-      createChair({x: 30, z: -25}, 0);
-
-      // Large conference table
-      const conferenceTable = BABYLON.MeshBuilder.CreateBox("conferenceTable", {
-        width: 15,
-        height: 2.5,
-        depth: 6
-      }, scene);
-      conferenceTable.position = new BABYLON.Vector3(-27.5, 1.25, 0);
-      conferenceTable.material = materials.furniture;
-      shadowGenerator.addShadowCaster(conferenceTable);
-
-      // Reception desk (modern curved design in open area)
-      const receptionDesk = BABYLON.MeshBuilder.CreateCylinder("receptionDesk", {
-        height: 3,
-        diameterTop: 10,
-        diameterBottom: 10,
-        tessellation: 6
-      }, scene);
-      receptionDesk.position = new BABYLON.Vector3(0, 1.5, -3);
-      receptionDesk.material = materials.furniture;
-      shadowGenerator.addShadowCaster(receptionDesk);
-
-      // Lounge furniture
-      const createCouch = (position, width = 3) => {
-        const couch = BABYLON.MeshBuilder.CreateBox("couch", {
-          width: width,
-          height: 1.5,
-          depth: 1.5
-        }, scene);
-        couch.position = new BABYLON.Vector3(position.x, 0.75, position.z);
-        couch.material = materials.accent;
-        shadowGenerator.addShadowCaster(couch);
-        return couch;
-      };
-
-      // Client lounge couches
-      createCouch({x: 27.5, z: 3}, 8);
-      createCouch({x: 27.5, z: -3}, 8);
-      
-      // Wellness area seating
-      createCouch({x: -10, z: 0}, 5);
-      
-      // Meeting room tables
-      const createMeetingTable = (position) => {
-        const table = BABYLON.MeshBuilder.CreateBox("meetingTable", {
-          width: 5,
-          height: 2.5,
-          depth: 3
-        }, scene);
-        table.position = new BABYLON.Vector3(position.x, 1.25, position.z);
-        table.material = materials.furniture;
-        shadowGenerator.addShadowCaster(table);
-        return table;
-      };
-      
-      createMeetingTable({x: -7.5, z: -21});
-      createMeetingTable({x: 7.5, z: -21});
-
-      // Add collaborative workspace tables in open area
-      createMeetingTable({x: -10, z: -8});
-      createMeetingTable({x: 10, z: -8});
-      createMeetingTable({x: 0, z: 6});
-
-      // Add plants for decoration
-      const createPlant = (position) => {
-        const plant = BABYLON.MeshBuilder.CreateCylinder("plant", {
-          height: 3,
-          diameterTop: 2,
-          diameterBottom: 2.5,
-          tessellation: 8
-        }, scene);
-        plant.position = new BABYLON.Vector3(position.x, 1.5, position.z);
-        const plantMat = new BABYLON.StandardMaterial("plantMat", scene);
-        plantMat.diffuseColor = new BABYLON.Color3(0.2, 0.6, 0.2);
-        plant.material = plantMat;
-        shadowGenerator.addShadowCaster(plant);
-        return plant;
-      };
-      
-      // Add plants throughout the open space
-      createPlant({x: -15, z: 7});
-      createPlant({x: 15, z: 7});
-      createPlant({x: -15, z: -7});
-      createPlant({x: 15, z: -7});
-      createPlant({x: 0, z: 10});
-      createPlant({x: -27.5, z: -15});
-      createPlant({x: 27.5, z: -15});
-
-      // Add grid lines to floor for better spatial reference
-      const gridSize = 5; // 5 foot grid
-      const lineColor = new BABYLON.Color3(0.8, 0.8, 0.8);
-      
-      // Vertical lines
-      for (let x = -40; x <= 40; x += gridSize) {
-        const line = BABYLON.MeshBuilder.CreateBox("gridLineV", {
-          width: 0.1,
-          height: 0.01,
-          depth: 60
-        }, scene);
-        line.position = new BABYLON.Vector3(x, 0.005, 0);
-        const lineMat = new BABYLON.StandardMaterial("gridLineMat", scene);
-        lineMat.diffuseColor = lineColor;
-        line.material = lineMat;
-        line.isPickable = false;
-      }
-      
-      // Horizontal lines
-      for (let z = -30; z <= 30; z += gridSize) {
-        const line = BABYLON.MeshBuilder.CreateBox("gridLineH", {
-          width: 80,
-          height: 0.01,
-          depth: 0.1
-        }, scene);
-        line.position = new BABYLON.Vector3(0, 0.005, z);
-        const lineMat = new BABYLON.StandardMaterial("gridLineMat", scene);
-        lineMat.diffuseColor = lineColor;
-        line.material = lineMat;
-        line.isPickable = false;
-      }
-
-      // Add agents
-      const createAgent = (agent, position) => {
-        const agentMesh = BABYLON.MeshBuilder.CreateSphere(`agent_${agent.id}`, {
-          diameter: 2
-        }, scene);
-        
-        agentMesh.position = new BABYLON.Vector3(position.x, 1, position.z);
-        
-        const agentMat = new BABYLON.StandardMaterial(`agentMat_${agent.id}`, scene);
-        agentMat.diffuseColor = agent.status === 'busy' ? 
-          new BABYLON.Color3(0.8, 0.2, 0.2) : 
-          new BABYLON.Color3(0.2, 0.8, 0.2);
-        
-        agentMesh.material = agentMat;
-        agentMesh.isPickable = true;
-        shadowGenerator.addShadowCaster(agentMesh);
-        
-        agentMeshesRef.current[agent.id] = agentMesh;
-
-        // Add label
-        const advancedTexture = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI_" + agent.id);
-        const label = new GUI.Rectangle();
-        label.width = "100px";
-        label.height = "30px";
-        label.cornerRadius = 5;
-        label.color = "white";
-        label.thickness = 2;
-        label.background = "black";
-
-        const text = new GUI.TextBlock();
-        text.text = agent.name;
-        text.color = "white";
-        text.fontSize = 12;
-        label.addControl(text);
-
-        advancedTexture.addControl(label);
-        label.linkWithMesh(agentMesh);
-        label.linkOffsetY = -30;
-
-        return agentMesh;
-      };
-
-      // Position agents based on their default positions
-      if (agents && agents.length > 0) {
-        agents.forEach((agent, index) => {
-          let position;
-          if (agent.defaultPosition) {
-            position = agent.defaultPosition;
-          } else {
-            // Default positions for different departments
-            switch(agent.department || agent.role) {
-              case 'management':
-              case 'executive':
-                position = {x: 0, z: 22.5}; // Executive office 2
-                break;
-              case 'reception':
-                position = {x: 0, z: -3}; // Reception desk
-                break;
-              case 'sales':
-              case 'operations':
-                position = {x: 0, z: -8}; // Open workspace
-                break;
-              case 'marketing':
-                position = {x: -30, z: -22.5}; // Private office 1
-                break;
-              case 'clients':
-                position = {x: 27.5, z: 0}; // Client lounge
-                break;
-              default:
-                // Distribute in offices
-                switch(index % 7) {
-                  case 0: position = {x: -30, z: 22.5}; break; // Exec 1
-                  case 1: position = {x: 0, z: 22.5}; break; // Exec 2
-                  case 2: position = {x: 30, z: 22.5}; break; // Exec 3
-                  case 3: position = {x: -27.5, z: 0}; break; // Conference
-                  case 4: position = {x: -30, z: -22.5}; break; // Private 1
-                  case 5: position = {x: 30, z: -22.5}; break; // Private 2
-                  default: position = {x: 0, z: 0}; // Reception area
-                }
-            }
-          }
-          createAgent(agent, position);
-        });
-      }
-
-      // Handle clicks and hover
-      scene.onPointerObservable.add((pointerInfo) => {
-        if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERPICK) {
-          if (pointerInfo.pickInfo.hit && pointerInfo.event.button === 0) { // Left click only
-            const pickedMesh = pointerInfo.pickInfo.pickedMesh;
-            
-            // Check if agent was clicked
-            const agentId = Object.keys(agentMeshesRef.current).find(
-              id => agentMeshesRef.current[id] === pickedMesh
-            );
-            if (agentId && onAgentClick) {
-              onAgentClick(agentId);
-            }
-            
-            // Check if room was clicked
-            const roomName = Object.keys(roomsRef.current).find(
-              name => roomsRef.current[name] === pickedMesh
-            );
-            if (roomName) {
-              // Update selected room state
-              setSelectedRoom(roomName);
-              
-              // Reset all room highlights
-              Object.values(roomsRef.current).forEach(room => {
-                if (room.material) {
-                  room.material.emissiveColor = new BABYLON.Color3(0, 0, 0);
-                  room.material.alpha = 0.3;
-                }
-              });
-              
-              // Highlight selected room
-              const selectedMesh = roomsRef.current[roomName];
-              if (selectedMesh && selectedMesh.material) {
-                selectedMesh.material.emissiveColor = new BABYLON.Color3(0.2, 0.4, 0.6);
-                selectedMesh.material.alpha = 0.5;
-              }
-              
-              if (onRoomClick) {
-                onRoomClick(roomName);
-              }
-            }
-          }
-        } else if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERMOVE) {
-          if (pointerInfo.pickInfo.hit && !isPanning && !isTilting) {
-            const pickedMesh = pointerInfo.pickInfo.pickedMesh;
-            
-            // Check if hovering over a room
-            const roomName = Object.keys(roomsRef.current).find(
-              name => roomsRef.current[name] === pickedMesh
-            );
-            
-            // Reset hover effect on all rooms except selected
-            Object.entries(roomsRef.current).forEach(([name, room]) => {
-              if (room.material && name !== selectedRoom) {
-                room.material.alpha = name === roomName ? 0.4 : 0.3;
-              }
-            });
-            
-            // Change cursor on room hover
-            canvasRef.current.style.cursor = roomName ? 'pointer' : 'grab';
-          } else {
-            canvasRef.current.style.cursor = isPanning ? 'grabbing' : (isTilting ? 'ns-resize' : 'grab');
-          }
-        }
-      });
-
-      setIsLoading(false);
-      if (onSceneReady) {
-        onSceneReady(scene);
-      }
-
-      return scene;
-    };
-
-    const scene = createScene();
+    // Scene setup
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0xf0f0f0);
     sceneRef.current = scene;
 
-    engine.runRenderLoop(() => {
-      scene.render();
-    });
+    // Camera
+    const camera = new THREE.PerspectiveCamera(
+      50, // Slightly wider field of view for better view
+      mountRef.current.clientWidth / mountRef.current.clientHeight,
+      0.1,
+      1000
+    );
+    cameraRef.current = camera;
 
-    window.addEventListener("resize", () => {
-      engine.resize();
-    });
+    // Renderer
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    mountRef.current.appendChild(renderer.domElement);
+    rendererRef.current = renderer;
 
-    return () => {
-      scene.dispose();
-      engine.dispose();
+    // Lighting
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    scene.add(ambientLight);
+
+    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.4);
+    directionalLight.position.set(10, 20, 5);
+    directionalLight.castShadow = true;
+    directionalLight.shadow.camera.near = 0.5;
+    directionalLight.shadow.camera.far = 50;
+    directionalLight.shadow.camera.left = -30;
+    directionalLight.shadow.camera.right = 30;
+    directionalLight.shadow.camera.top = 30;
+    directionalLight.shadow.camera.bottom = -30;
+    scene.add(directionalLight);
+
+    // Create office based on selected tab
+    createOffice(selectedTab);
+
+    // Camera controls
+    let isDragging = false;
+    let previousMousePosition = { x: 0, y: 0 };
+    // Adjust distance for better head-on view
+    cameraDistanceRef.current = selectedTab === 'company' ? 75 : selectedTab === 'team' ? 60 : 30;
+    cameraAngleXRef.current = Math.PI / 3.5; // Tilt angle
+    cameraAngleYRef.current = Math.PI; // Head-on view from front/south (looking at the office entrance)
+
+    const updateCamera = () => {
+      camera.position.x = cameraDistanceRef.current * Math.sin(cameraAngleYRef.current) * Math.cos(cameraAngleXRef.current);
+      camera.position.y = cameraDistanceRef.current * Math.sin(cameraAngleXRef.current);
+      camera.position.z = cameraDistanceRef.current * Math.cos(cameraAngleYRef.current) * Math.cos(cameraAngleXRef.current);
+      camera.lookAt(0, 0, 0);
     };
-  }, [agents, selectedAgent, onAgentClick, onRoomClick, onSceneReady]);
 
-  // Camera view controls
-  const setCameraView = (viewType) => {
-    const camera = cameraRef.current;
-    if (!camera) return;
+    // Mouse controls
+    const handleMouseDown = (e) => {
+      if (e.button === 2 || e.button === 1) {
+        isDragging = true;
+        previousMousePosition = { x: e.clientX, y: e.clientY };
+      }
+    };
 
+    const handleMouseMove = (e) => {
+      if (isDragging) {
+        const deltaX = e.clientX - previousMousePosition.x;
+        const deltaY = e.clientY - previousMousePosition.y;
+        
+        // Rotate around Y axis (horizontal movement)
+        cameraAngleYRef.current -= deltaX * 0.01;
+        
+        // Tilt up/down (vertical movement)
+        cameraAngleXRef.current = Math.max(0.1, Math.min(Math.PI / 2 - 0.1, cameraAngleXRef.current - deltaY * 0.01));
+        
+        previousMousePosition = { x: e.clientX, y: e.clientY };
+        updateCamera();
+      }
+    };
+
+    const handleMouseUp = () => {
+      isDragging = false;
+    };
+
+    const handleContextMenu = (e) => {
+      e.preventDefault();
+    };
+
+    const handleWheel = (e) => {
+      e.preventDefault();
+      if (e.shiftKey) {
+        cameraAngleXRef.current = Math.max(0.1, Math.min(Math.PI / 2 - 0.1, cameraAngleXRef.current - e.deltaY * 0.001));
+      } else {
+        const zoomSpeed = selectedTab === 'company' ? 0.1 : 0.05;
+        cameraDistanceRef.current = Math.max(15, Math.min(150, cameraDistanceRef.current + e.deltaY * zoomSpeed));
+      }
+      updateCamera();
+    };
+
+    // Raycaster for clicking agents
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    const handleClick = (e) => {
+      const rect = mountRef.current.getBoundingClientRect();
+      mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+      mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+
+      const agentMeshes = Object.values(agentMeshesRef.current);
+      const intersects = raycaster.intersectObjects(agentMeshes, true); // true for recursive check</      
+      if (intersects.length > 0) {
+        const clickedObject = intersects[0].object;
+        // Find the parent group if clicked on a child mesh
+        let clickedMesh = clickedObject;
+        while (clickedMesh.parent && !agentMeshes.includes(clickedMesh)) {
+          clickedMesh = clickedMesh.parent;
+        }
+        
+        const agentId = Object.keys(agentMeshesRef.current).find(
+          id => agentMeshesRef.current[id] === clickedMesh
+        );
+        if (agentId) {
+          const agent = agentConfigs[agentId];
+          setSelectedAgent({ ...agent, id: agentId });
+        }
+      }
+    };
+
+    // Add event listeners
+    renderer.domElement.addEventListener('mousedown', handleMouseDown);
+    renderer.domElement.addEventListener('mousemove', handleMouseMove);
+    renderer.domElement.addEventListener('mouseup', handleMouseUp);
+    renderer.domElement.addEventListener('contextmenu', handleContextMenu);
+    renderer.domElement.addEventListener('wheel', handleWheel);
+    renderer.domElement.addEventListener('click', handleClick);
+
+    // Keyboard controls
+    const handleKeyDown = (e) => {
+      // Don't trigger if typing in an input field or dialog is open
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || selectedAgent) return;
+      
+      if ((e.key === 'w' || e.key === 'W') || e.key === 'ArrowUp' || e.key === 'q' || e.key === 'Q') {
+        // Tilt camera up (more top-down)
+        cameraAngleXRef.current = Math.max(0.1, cameraAngleXRef.current - 0.1);
+        updateCamera();
+      } else if ((e.key === 's' || e.key === 'S') || e.key === 'ArrowDown' || e.key === 'e' || e.key === 'E') {
+        // Tilt camera down (more angled)
+        cameraAngleXRef.current = Math.min(Math.PI / 2 - 0.1, cameraAngleXRef.current + 0.1);
+        updateCamera();
+      } else if (e.key === 'a' || e.key === 'A' || e.key === 'ArrowLeft') {
+        // Rotate left
+        cameraAngleYRef.current -= 0.1;
+        updateCamera();
+      } else if (e.key === 'd' || e.key === 'D' || e.key === 'ArrowRight') {
+        // Rotate right
+        cameraAngleYRef.current += 0.1;
+        updateCamera();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+
+    // Animation loop
+    const animate = () => {
+      requestAnimationFrame(animate);
+      
+      // Rotate agents slightly for visual interest
+      Object.values(agentMeshesRef.current).forEach(mesh => {
+        if (mesh) {
+          mesh.rotation.y += 0.005;
+        }
+      });
+      
+      renderer.render(scene, camera);
+    };
+
+    updateCamera();
+    animate();
+
+    // Handle resize
+    const handleResize = () => {
+      if (!mountRef.current || !cameraRef.current) return;
+      cameraRef.current.aspect = mountRef.current.clientWidth / mountRef.current.clientHeight;
+      cameraRef.current.updateProjectionMatrix();
+      renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    // Cleanup
+    const setCameraView = (viewType) => {
+    if (!cameraRef.current) return;
+    
     switch(viewType) {
       case 'top':
         // Near top-down but not completely flat
-        camera.beta = 0.1;
-        camera.radius = 90;
+        cameraAngleXRef.current = 0.1;
+        cameraDistanceRef.current = selectedTab === 'company' ? 100 : selectedTab === 'team' ? 75 : 40;
+      case 'reset':
+        // Reset to default head-on view
+        cameraAngleXRef.current = Math.PI / 3.5;
+        cameraAngleYRef.current = Math.PI;
+        cameraDistanceRef.current = selectedTab === 'company' ? 75 : selectedTab === 'team' ? 60 : 30;
         break;
-      case '3d':
-        // Default angled view
-        camera.beta = Math.PI / 3.5;
-        camera.radius = 100;
+      case 'default':
+        // Default angled view from front
+        cameraAngleXRef.current = Math.PI / 3.5;
+        cameraAngleYRef.current = Math.PI;
+        cameraDistanceRef.current = selectedTab === 'company' ? 75 : selectedTab === 'team' ? 60 : 30;
         break;
       case 'close':
         // Zoomed in view
-        camera.radius = 50;
+        cameraDistanceRef.current = selectedTab === 'company' ? 50 : selectedTab === 'team' ? 40 : 20;
         break;
-      default:
+      case 'front':
+        // Head-on from front (looking at Reception/Lounges)
+        cameraAngleYRef.current = Math.PI;
+        break;
+      case 'back':
+        // Head-on from back (looking at Executive Offices)
+        cameraAngleYRef.current = 0;
+        break;
+      case 'left':
+        // Head-on from left side
+        cameraAngleYRef.current = Math.PI / 2;
+        break;
+      case 'right':
+        // Head-on from right side
+        cameraAngleYRef.current = -Math.PI / 2;
+        break;
+      case 'reset':
+        // Reset to default head-on view
+        cameraAngleXRef.current = Math.PI / 3.5;
+        cameraAngleYRef.current = Math.PI;
+        cameraDistanceRef.current = selectedTab === 'company' ? 75 : selectedTab === 'team' ? 60 : 30;
+        break;
+    }
+    
+    // Update camera position
+    const camera = cameraRef.current;
+    camera.position.x = cameraDistanceRef.current * Math.sin(cameraAngleYRef.current) * Math.cos(cameraAngleXRef.current);
+    camera.position.y = cameraDistanceRef.current * Math.sin(cameraAngleXRef.current);
+    camera.position.z = cameraDistanceRef.current * Math.cos(cameraAngleYRef.current) * Math.cos(cameraAngleXRef.current);
+    camera.lookAt(0, 0, 0);
+  };
+
+  return () => {
+      window.removeEventListener('resize', handleResize);
+      renderer.domElement.removeEventListener('mousedown', handleMouseDown);
+      renderer.domElement.removeEventListener('mousemove', handleMouseMove);
+      renderer.domElement.removeEventListener('mouseup', handleMouseUp);
+      renderer.domElement.removeEventListener('contextmenu', handleContextMenu);
+      renderer.domElement.removeEventListener('wheel', handleWheel);
+      renderer.domElement.removeEventListener('click', handleClick);
+      
+      if (mountRef.current && renderer.domElement) {
+        mountRef.current.removeChild(renderer.domElement);
+      }
+      renderer.dispose();
+    };
+  }, []);
+
+  // Update office when tab changes
+  useEffect(() => {
+    if (sceneRef.current && cameraRef.current) {
+      createOffice(selectedTab);
+      // Adjust camera distance based on office size
+              cameraDistanceRef.current = selectedTab === 'company' ? 75 : selectedTab === 'team' ? 60 : 30;
+      cameraAngleYRef.current = Math.PI; // Reset to head-on view from front when changing tabs
+      // Update camera position
+      const camera = cameraRef.current;
+      camera.position.x = cameraDistanceRef.current * Math.sin(cameraAngleYRef.current) * Math.cos(cameraAngleXRef.current);
+      camera.position.y = cameraDistanceRef.current * Math.sin(cameraAngleXRef.current);
+      camera.position.z = cameraDistanceRef.current * Math.cos(cameraAngleYRef.current) * Math.cos(cameraAngleXRef.current);
+      camera.lookAt(0, 0, 0);
+    }
+  }, [selectedTab, agents]);
+
+  const createOffice = (officeType) => {
+    const scene = sceneRef.current;
+    if (!scene) return;
+
+    // Clear existing objects
+    while (scene.children.length > 2) { // Keep lights
+      const child = scene.children[2];
+      if (child.geometry) child.geometry.dispose();
+      if (child.material) child.material.dispose();
+      scene.remove(child);
+    }
+    agentMeshesRef.current = {};
+
+    const config = officeConfigs[officeType];
+    const materials = {
+      floor: new THREE.MeshStandardMaterial({ color: 0xcccccc }),
+      wall: new THREE.MeshStandardMaterial({ color: 0xe0e0e0 }),
+      desk: new THREE.MeshStandardMaterial({ color: 0x8B4513 }),
+      chair: new THREE.MeshStandardMaterial({ color: 0x2B2B2B }),
+      accent: new THREE.MeshStandardMaterial({ color: 0x4A90E2 }),
+      plant: new THREE.MeshStandardMaterial({ color: 0x228B22 }),
+      glass: new THREE.MeshStandardMaterial({ 
+        color: 0x87CEEB, 
+        transparent: true, 
+        opacity: 0.3 
+      }),
+    };
+
+    // Floor
+    const floor = new THREE.Mesh(
+      new THREE.BoxGeometry(config.size.width, 0.1, config.size.depth),
+      materials.floor
+    );
+    floor.receiveShadow = true;
+    scene.add(floor);
+
+    // Create office-specific layouts
+    switch (officeType) {
+      case 'solo':
+        createSoloOffice(scene, materials, config);
+        break;
+      case 'team':
+        createTeamOffice(scene, materials, config);
+        break;
+      case 'company':
+        createCompanyOffice(scene, materials, config);
         break;
     }
   };
 
+  const createDesk = (scene, materials, x, y, z, rotation = 0) => {
+    const deskGroup = new THREE.Group();
+    
+    // Desk top
+    const deskTop = new THREE.Mesh(
+      new THREE.BoxGeometry(2, 0.1, 1),
+      materials.desk
+    );
+    deskTop.position.y = 0.75;
+    deskTop.castShadow = true;
+    deskTop.receiveShadow = true;
+    
+    // Desk legs
+    const legGeometry = new THREE.BoxGeometry(0.1, 0.7, 0.1);
+    const positions = [
+      [-0.9, 0.35, 0.4],
+      [0.9, 0.35, 0.4],
+      [-0.9, 0.35, -0.4],
+      [0.9, 0.35, -0.4]
+    ];
+    
+    positions.forEach(pos => {
+      const leg = new THREE.Mesh(legGeometry, materials.desk);
+      leg.position.set(...pos);
+      leg.castShadow = true;
+      deskGroup.add(leg);
+    });
+    
+    deskGroup.add(deskTop);
+    deskGroup.position.set(x, y, z);
+    deskGroup.rotation.y = rotation;
+    
+    scene.add(deskGroup);
+    return deskGroup;
+  };
+
+  const createChair = (scene, materials, x, y, z, rotation = 0) => {
+    const chairGroup = new THREE.Group();
+    
+    // Seat
+    const seat = new THREE.Mesh(
+      new THREE.BoxGeometry(0.5, 0.1, 0.5),
+      materials.chair
+    );
+    seat.position.y = 0.5;
+    seat.castShadow = true;
+    
+    // Back
+    const back = new THREE.Mesh(
+      new THREE.BoxGeometry(0.5, 0.5, 0.1),
+      materials.chair
+    );
+    back.position.set(0, 0.75, -0.2);
+    back.castShadow = true;
+    
+    chairGroup.add(seat);
+    chairGroup.add(back);
+    chairGroup.position.set(x, y, z);
+    chairGroup.rotation.y = rotation;
+    
+    scene.add(chairGroup);
+    return chairGroup;
+  };
+
+  const createWall = (scene, materials, width, height, depth, position, rotation = 0) => {
+    const wall = new THREE.Mesh(
+      new THREE.BoxGeometry(width, height, depth),
+      materials.wall
+    );
+    wall.position.copy(position);
+    wall.rotation.y = rotation;
+    wall.castShadow = true;
+    wall.receiveShadow = true;
+    scene.add(wall);
+    return wall;
+  };
+
+  const createAgent = (scene, agentId, position) => {
+    const agent = agentConfigs[agentId];
+    if (!agent) return;
+
+    const agentGroup = new THREE.Group();
+    
+    // Body
+    const body = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.3, 0.3, 1.5, 8),
+      new THREE.MeshStandardMaterial({ color: agent.color })
+    );
+    body.position.y = 0.75;
+    body.castShadow = true;
+    
+    // Head
+    const head = new THREE.Mesh(
+      new THREE.SphereGeometry(0.25, 8, 8),
+      new THREE.MeshStandardMaterial({ color: 0xfdbcb4 })
+    );
+    head.position.y = 1.75;
+    head.castShadow = true;
+    
+    agentGroup.add(body);
+    agentGroup.add(head);
+    agentGroup.position.copy(position);
+    
+    scene.add(agentGroup);
+    agentMeshesRef.current[agentId] = agentGroup;
+    
+    return agentGroup;
+  };
+
+  const createSoloOffice = (scene, materials, config) => {
+    const wallHeight = 3;
+    const wallThickness = 0.2;
+    
+    // Outer walls
+    createWall(scene, materials, config.size.width, wallHeight, wallThickness, 
+      new THREE.Vector3(0, wallHeight/2, -config.size.depth/2));
+    createWall(scene, materials, config.size.width, wallHeight, wallThickness, 
+      new THREE.Vector3(0, wallHeight/2, config.size.depth/2));
+    createWall(scene, materials, wallThickness, wallHeight, config.size.depth, 
+      new THREE.Vector3(-config.size.width/2, wallHeight/2, 0));
+    createWall(scene, materials, wallThickness, wallHeight, config.size.depth, 
+      new THREE.Vector3(config.size.width/2, wallHeight/2, 0));
+    
+    // Main office area
+    createDesk(scene, materials, -3, 0, 0);
+    createChair(scene, materials, -3, 0, 1.5);
+    
+    // Executive assistant area
+    createDesk(scene, materials, 3, 0, -3, Math.PI/2);
+    createChair(scene, materials, 1.5, 0, -3);
+    
+    // Meeting area
+    const meetingTable = new THREE.Mesh(
+      new THREE.BoxGeometry(2, 0.1, 2),
+      materials.desk
+    );
+    meetingTable.position.set(5, 0.75, 3);
+    meetingTable.castShadow = true;
+    scene.add(meetingTable);
+    
+    // Add chairs around meeting table
+    createChair(scene, materials, 5, 0, 1.5);
+    createChair(scene, materials, 5, 0, 4.5, Math.PI);
+    createChair(scene, materials, 3.5, 0, 3, Math.PI/2);
+    createChair(scene, materials, 6.5, 0, 3, -Math.PI/2);
+    
+    // Plant
+    const plant = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.5, 0.5, 1, 8),
+      materials.plant
+    );
+    plant.position.set(-8, 0.5, 5);
+    plant.castShadow = true;
+    scene.add(plant);
+    
+    // Add agents
+    createAgent(scene, 'alex_assistant', new THREE.Vector3(-3, 0.05, 0));
+    createAgent(scene, 'executive_assistant', new THREE.Vector3(3, 0.05, -3));
+  };
+
+  const createRoomArea = (scene, name, position, width, depth, color) => {
+    const roomMat = new THREE.MeshStandardMaterial({
+      color: color,
+      transparent: true,
+      opacity: 0.3,
+      emissive: new THREE.Color(0x000000)
+    });
+    
+    const room = new THREE.Mesh(
+      new THREE.BoxGeometry(width, 0.02, depth),
+      roomMat
+    );
+    room.position.set(position.x, 0.01, position.z);
+    room.receiveShadow = true;
+    room.name = name;
+    
+    scene.add(room);
+    return room;
+  };
+
+  const createTeamOffice = (scene, materials, config) => {
+    // This recreates your Office3D.jsx layout
+    const wallHeight = 5;
+    const wallThickness = 0.5;
+    
+    // Outer walls
+    createWall(scene, materials, 80, wallHeight, wallThickness, 
+      new THREE.Vector3(0, wallHeight/2, 30));
+    createWall(scene, materials, 80, wallHeight, wallThickness, 
+      new THREE.Vector3(0, wallHeight/2, -30));
+    createWall(scene, materials, wallThickness, wallHeight, 60, 
+      new THREE.Vector3(40, wallHeight/2, 0));
+    createWall(scene, materials, wallThickness, wallHeight, 60, 
+      new THREE.Vector3(-40, wallHeight/2, 0));
+    
+    // TOP ROW - Partner and Senior Offices
+    // Partner Office (10' x 10')
+    createWall(scene, materials, wallThickness, wallHeight, 10, 
+      new THREE.Vector3(-30, wallHeight/2, 25));
+    createWall(scene, materials, 10, wallHeight, wallThickness, 
+      new THREE.Vector3(-35, wallHeight/2, 20));
+    
+    createDesk(scene, materials, -35, 0.05, 25);
+    createChair(scene, materials, -35, 0.05, 23);
+    
+    // Senior Office 1 (9' x 10')
+    createWall(scene, materials, wallThickness, wallHeight, 10, 
+      new THREE.Vector3(-21, wallHeight/2, 25));
+    createWall(scene, materials, 9, wallHeight, wallThickness, 
+      new THREE.Vector3(-25.5, wallHeight/2, 20));
+    
+    createDesk(scene, materials, -25.5, 0.05, 25);
+    createChair(scene, materials, -25.5, 0.05, 23);
+    
+    // Senior Office 2 (9' x 10')
+    createWall(scene, materials, wallThickness, wallHeight, 10, 
+      new THREE.Vector3(-12, wallHeight/2, 25));
+    createWall(scene, materials, 9, wallHeight, wallThickness, 
+      new THREE.Vector3(-16.5, wallHeight/2, 20));
+    
+    createDesk(scene, materials, -16.5, 0.05, 25);
+    createChair(scene, materials, -16.5, 0.05, 23);
+    
+    // Conference Room (16' x 10')
+    createWall(scene, materials, wallThickness, wallHeight, 10, 
+      new THREE.Vector3(24, wallHeight/2, 25));
+    createWall(scene, materials, 16, wallHeight, wallThickness, 
+      new THREE.Vector3(32, wallHeight/2, 20));
+    
+    // Conference table
+    const conferenceTable = new THREE.Mesh(
+      new THREE.BoxGeometry(7, 0.1, 3.5),
+      materials.desk
+    );
+    conferenceTable.position.set(32, 1.25, 25);
+    conferenceTable.castShadow = true;
+    scene.add(conferenceTable);
+    
+    // MIDDLE ROW
+    // Manager Office (11' x 10')
+    createWall(scene, materials, 11, wallHeight, wallThickness, 
+      new THREE.Vector3(-34.5, wallHeight/2, 10));
+    createWall(scene, materials, wallThickness, wallHeight, 10, 
+      new THREE.Vector3(-29, wallHeight/2, 5));
+    createWall(scene, materials, 11, wallHeight, wallThickness, 
+      new THREE.Vector3(-34.5, wallHeight/2, 0));
+    
+    createDesk(scene, materials, -34.5, 0.05, 5);
+    createChair(scene, materials, -34.5, 0.05, 3);
+    
+    // Wellness Zone divider
+    createWall(scene, materials, 14, wallHeight, wallThickness, 
+      new THREE.Vector3(33, wallHeight/2, 3));
+    
+    // Refreshment bar counter
+    const barCounter = new THREE.Mesh(
+      new THREE.BoxGeometry(10, 0.1, 2),
+      materials.desk
+    );
+    barCounter.position.set(33, 1.5, 0.5);
+    barCounter.castShadow = true;
+    scene.add(barCounter);
+    
+    // BOTTOM ROW
+    // Reception (11' x 10')
+    createWall(scene, materials, 11, wallHeight, wallThickness, 
+      new THREE.Vector3(-34.5, wallHeight/2, -20));
+    createWall(scene, materials, wallThickness, wallHeight, 10, 
+      new THREE.Vector3(-29, wallHeight/2, -25));
+    
+    // Reception desk (curved)
+    const receptionDesk = new THREE.Mesh(
+      new THREE.CylinderGeometry(3.5, 3.5, 0.1, 6),
+      materials.desk
+    );
+    receptionDesk.position.set(-34.5, 1.25, -25);
+    receptionDesk.castShadow = true;
+    scene.add(receptionDesk);
+    
+    // Client Lounge walls
+    createWall(scene, materials, wallThickness, wallHeight, 10, 
+      new THREE.Vector3(-10, wallHeight/2, -25));
+    createWall(scene, materials, wallThickness, wallHeight, 10, 
+      new THREE.Vector3(7.5, wallHeight/2, -25));
+    createWall(scene, materials, 17.5, wallHeight, wallThickness, 
+      new THREE.Vector3(-1.25, wallHeight/2, -20));
+    
+    // Lead Lounge walls
+    createWall(scene, materials, wallThickness, wallHeight, 10, 
+      new THREE.Vector3(23, wallHeight/2, -25));
+    createWall(scene, materials, 17, wallHeight, wallThickness, 
+      new THREE.Vector3(31.5, wallHeight/2, -20));
+    
+    // Create colored room areas for visual distinction
+    createRoomArea(scene, "partnerOffice", {x: -35, z: 25}, 10, 10, 0x4169E1);
+    createRoomArea(scene, "seniorOffice1", {x: -25.5, z: 25}, 9, 10, 0x4169E1);
+    createRoomArea(scene, "seniorOffice2", {x: -16.5, z: 25}, 9, 10, 0x4169E1);
+    createRoomArea(scene, "conference", {x: 32, z: 25}, 16, 10, 0xFFA500);
+    createRoomArea(scene, "managerOffice", {x: -34.5, z: 5}, 11, 10, 0x4169E1);
+    createRoomArea(scene, "openCommon", {x: 0, z: 0}, 40, 26, 0xE0E0E0);
+    createRoomArea(scene, "wellness", {x: 33, z: 6.5}, 14, 7, 0x66BB6A);
+    createRoomArea(scene, "refreshment", {x: 33, z: 0.5}, 14, 5, 0xFFB74D);
+    createRoomArea(scene, "reception", {x: -34.5, z: -25}, 11, 10, 0x4DD0E1);
+    createRoomArea(scene, "clientLounge", {x: -1.25, z: -25}, 17.5, 10, 0x9C27B0);
+    createRoomArea(scene, "leadLounge", {x: 31.5, z: -25}, 17, 10, 0x5C6BC0);
+    
+    // Add grid lines for better spatial reference
+    const gridSize = 10;
+    const gridMat = new THREE.MeshBasicMaterial({ color: 0xdddddd, transparent: true, opacity: 0.5 });
+    
+    // Vertical lines
+    for (let x = -40; x <= 40; x += gridSize) {
+      const line = new THREE.Mesh(
+        new THREE.BoxGeometry(0.1, 0.01, 60),
+        gridMat
+      );
+      line.position.set(x, 0.005, 0);
+      scene.add(line);
+    }
+    
+    // Horizontal lines
+    for (let z = -30; z <= 30; z += gridSize) {
+      const line = new THREE.Mesh(
+        new THREE.BoxGeometry(80, 0.01, 0.1),
+        gridMat
+      );
+      line.position.set(0, 0.005, z);
+      scene.add(line);
+    }
+    
+    // Add open area meeting tables
+    createDesk(scene, materials, -10, 0.05, 0);
+    createDesk(scene, materials, 10, 0.05, 0);
+    
+    // Add couches in lounges
+    const createCouch = (x, z, width = 3) => {
+      const couch = new THREE.Mesh(
+        new THREE.BoxGeometry(width, 0.75, 1.5),
+        materials.accent
+      );
+      couch.position.set(x, 0.375, z);
+      couch.castShadow = true;
+      scene.add(couch);
+    };
+    
+    createCouch(-1.25, -25, 6);  // Client lounge couch
+    createCouch(31.5, -25, 5);   // Lead lounge couch
+    createCouch(33, 6.5, 4);     // Wellness zone couch
+    
+    // Add plants
+    const plantPositions = [
+      [-20, 0.5, 10], [20, 0.5, 10], 
+      [-20, 0.5, -10], [20, 0.5, -10],
+      [0, 0.5, 0]
+    ];
+    
+    plantPositions.forEach(pos => {
+      const plant = new THREE.Mesh(
+        new THREE.CylinderGeometry(1, 1.25, 3, 8),
+        materials.plant
+      );
+      plant.position.set(...pos);
+      plant.castShadow = true;
+      scene.add(plant);
+    });
+    
+    // Add agents based on their roles
+    createAgent(scene, 'alex_assistant', new THREE.Vector3(-34.5, 0.05, -25));
+    createAgent(scene, 'buyer_specialist', new THREE.Vector3(-35, 0.05, 25));
+    createAgent(scene, 'listing_specialist', new THREE.Vector3(-25.5, 0.05, 25));
+    createAgent(scene, 'escrow_coordinator', new THREE.Vector3(-16.5, 0.05, 25));
+    createAgent(scene, 'client_success', new THREE.Vector3(-10, 0.05, 0));
+    createAgent(scene, 'marketing_specialist', new THREE.Vector3(10, 0.05, 0));
+    createAgent(scene, 'compliance_officer', new THREE.Vector3(-34.5, 0.05, 5));
+    createAgent(scene, 'financial_analyst', new THREE.Vector3(33, 0.05, 6.5));
+  };
+
+  const createCompanyOffice = (scene, materials, config) => {
+    // 3 department layout - essentially 3 team offices side by side
+    const wallHeight = 5;
+    const wallThickness = 0.5;
+    const deptWidth = 40;
+    
+    // Outer walls
+    createWall(scene, materials, 120, wallHeight, wallThickness, 
+      new THREE.Vector3(0, wallHeight/2, 30));
+    createWall(scene, materials, 120, wallHeight, wallThickness, 
+      new THREE.Vector3(0, wallHeight/2, -30));
+    createWall(scene, materials, wallThickness, wallHeight, 60, 
+      new THREE.Vector3(60, wallHeight/2, 0));
+    createWall(scene, materials, wallThickness, wallHeight, 60, 
+      new THREE.Vector3(-60, wallHeight/2, 0));
+    
+    // Department dividers
+    createWall(scene, materials, wallThickness, wallHeight, 60, 
+      new THREE.Vector3(-20, wallHeight/2, 0));
+    createWall(scene, materials, wallThickness, wallHeight, 60, 
+      new THREE.Vector3(20, wallHeight/2, 0));
+    
+    // Department signs
+    const deptNames = ['BUYERS DEPT', 'LISTINGS DEPT', 'OPERATIONS'];
+    const deptColors = [0x2e7d32, 0xed6c02, 0x9c27b0];
+    const deptXPositions = [-40, 0, 40];
+    
+    deptNames.forEach((name, index) => {
+      const sign = new THREE.Mesh(
+        new THREE.BoxGeometry(8, 1, 0.2),
+        new THREE.MeshStandardMaterial({ color: deptColors[index] })
+      );
+      sign.position.set(deptXPositions[index], 3.5, 29.8);
+      scene.add(sign);
+    });
+    
+    // Create offices for each department
+    deptXPositions.forEach((xOffset, deptIndex) => {
+      // Manager office for each department
+      createWall(scene, materials, 10, wallHeight, wallThickness, 
+        new THREE.Vector3(xOffset, wallHeight/2, 10));
+      createWall(scene, materials, wallThickness, wallHeight, 10, 
+        new THREE.Vector3(xOffset - 5, wallHeight/2, 15));
+      createWall(scene, materials, wallThickness, wallHeight, 10, 
+        new THREE.Vector3(xOffset + 5, wallHeight/2, 15));
+      
+      createDesk(scene, materials, xOffset, 0.05, 15);
+      createChair(scene, materials, xOffset, 0.05, 13);
+      
+      // Team desks - 6 per department
+      const deskPositions = [
+        { x: xOffset - 10, z: 0 },
+        { x: xOffset, z: 0 },
+        { x: xOffset + 10, z: 0 },
+        { x: xOffset - 10, z: -15 },
+        { x: xOffset, z: -15 },
+        { x: xOffset + 10, z: -15 }
+      ];
+      
+      deskPositions.forEach(pos => {
+        createDesk(scene, materials, pos.x, 0.05, pos.z);
+        createChair(scene, materials, pos.x, 0.05, pos.z + 1.5);
+      });
+      
+      // Meeting area for each department
+      const meetingTable = new THREE.Mesh(
+        new THREE.BoxGeometry(4, 0.1, 3),
+        materials.desk
+      );
+      meetingTable.position.set(xOffset, 0.75, 25);
+      meetingTable.castShadow = true;
+      scene.add(meetingTable);
+    });
+    
+    // Central reception area
+    const centralReception = new THREE.Mesh(
+      new THREE.CylinderGeometry(5, 5, 0.1, 8),
+      materials.accent
+    );
+    centralReception.position.set(0, 0.75, 0);
+    centralReception.castShadow = true;
+    scene.add(centralReception);
+    
+    // Add agents to their departments
+    // Buyer Department
+    createAgent(scene, 'buyer_manager', new THREE.Vector3(-40, 0.05, 15));
+    createAgent(scene, 'buyer_specialist', new THREE.Vector3(-50, 0.05, 0));
+    createAgent(scene, 'client_success', new THREE.Vector3(-30, 0.05, 0));
+    
+    // Listing Department
+    createAgent(scene, 'listing_manager', new THREE.Vector3(0, 0.05, 15));
+    createAgent(scene, 'listing_specialist', new THREE.Vector3(-10, 0.05, 0));
+    createAgent(scene, 'marketing_specialist', new THREE.Vector3(10, 0.05, 0));
+    
+    // Operations Department
+    createAgent(scene, 'operations_manager', new THREE.Vector3(40, 0.05, 15));
+    createAgent(scene, 'escrow_coordinator', new THREE.Vector3(30, 0.05, 0));
+    createAgent(scene, 'compliance_officer', new THREE.Vector3(40, 0.05, 0));
+    createAgent(scene, 'financial_analyst', new THREE.Vector3(50, 0.05, 0));
+    createAgent(scene, 'database_specialist', new THREE.Vector3(40, 0.05, -15));
+    
+    // Alex at central reception
+    createAgent(scene, 'alex_assistant', new THREE.Vector3(0, 0.05, 0));
+  };
+
   return (
-    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-      <canvas
-        ref={canvasRef}
-        style={{ width: '100%', height: '100%', display: 'block' }}
-      />
-      
-      {/* Camera controls */}
-      <div style={{
-        position: 'absolute',
-        top: 20,
-        left: 20,
-        background: 'white',
-        padding: '15px',
-        borderRadius: '8px',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-        zIndex: 10
-      }}>
-        <button 
-          onClick={() => setCameraView('top')}
-          style={{
-            display: 'block',
-            width: '120px',
-            padding: '8px 16px',
-            margin: '5px 0',
-            background: '#3b82f6',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '14px'
-          }}
-        >
-          Top View
-        </button>
-        <button 
-          onClick={() => setCameraView('3d')}
-          style={{
-            display: 'block',
-            width: '120px',
-            padding: '8px 16px',
-            margin: '5px 0',
-            background: '#3b82f6',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '14px'
-          }}
-        >
-          Default View
-        </button>
-        <button 
-          onClick={() => setCameraView('close')}
-          style={{
-            display: 'block',
-            width: '120px',
-            padding: '8px 16px',
-            margin: '5px 0',
-            background: '#3b82f6',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            fontSize: '14px'
-          }}
-        >
-          Close View
-        </button>
-        <hr style={{ margin: '10px 0', border: 'none', borderTop: '1px solid #e0e0e0' }} />
-        <p style={{ margin: '5px 0', fontSize: '11px', color: '#666', textAlign: 'left' }}>
-          <strong>Controls:</strong>
-        </p>
-        <p style={{ margin: '2px 0', fontSize: '10px', color: '#999' }}>
-          • Scroll: Zoom
-        </p>
-        <p style={{ margin: '2px 0', fontSize: '10px', color: '#999' }}>
-          • Right-drag: Pan
-        </p>
-        <p style={{ margin: '2px 0', fontSize: '10px', color: '#999' }}>
-          • Middle-drag: Tilt
-        </p>
-        <p style={{ margin: '2px 0', fontSize: '10px', color: '#999' }}>
-          • Shift+Scroll: Tilt
-        </p>
-        <p style={{ margin: '2px 0', fontSize: '10px', color: '#999' }}>
-          • Q/E keys: Tilt
-        </p>
-      </div>
-
-      {isLoading && (
-        <div style={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          color: 'white',
-          background: 'rgba(0,0,0,0.7)',
-          padding: '20px',
-          borderRadius: '10px'
-        }}>
-          Loading 3D Office...
-        </div>
-      )}
-      
-      {/* Selected room display */}
-      {selectedRoom && (
-        <div style={{
-          position: 'absolute',
-          bottom: 20,
-          left: '50%',
+    <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
+      {/* Tab controls */}
+      <Paper 
+        sx={{ 
+          position: 'absolute', 
+          top: 20, 
+          left: '50%', 
           transform: 'translateX(-50%)',
-          background: 'rgba(0, 0, 0, 0.8)',
-          color: 'white',
-          padding: '10px 20px',
-          borderRadius: '20px',
-          fontSize: '16px',
-          fontWeight: 'bold',
-          boxShadow: '0 2px 10px rgba(0,0,0,0.3)'
-        }}>
-          {roomConfigs[selectedRoom]?.name || selectedRoom}
-        </div>
-      )}
-    </div>
-  );
-};
+          zIndex: 10,
+          borderRadius: 8,
+          overflow: 'hidden'
+        }}
+      >
+        <ToggleButtonGroup
+          value={selectedTab}
+          exclusive
+          onChange={(e, value) => value && setSelectedTab(value)}
+          aria-label="office view"
+        >
+          <ToggleButton value="solo" aria-label="solo office">
+            <Person sx={{ mr: 1 }} />
+            Solo
+          </ToggleButton>
+          <ToggleButton value="team" aria-label="team office">
+            <Group sx={{ mr: 1 }} />
+            Team
+          </ToggleButton>
+          <ToggleButton value="company" aria-label="company office">
+            <CorporateFare sx={{ mr: 1 }} />
+            Company
+          </ToggleButton>
+        </ToggleButtonGroup>
+      </Paper>
 
-// Updated room configuration for 80x60 grid
-export const roomConfigs = {
-  executive1: {
-    name: 'Executive Office 1',
-    type: 'office',
-    size: "20' x 15'",
-    capacity: 6,
-    features: ['Executive Desk', 'Meeting Chairs', 'Private Storage', 'Window View']
-  },
-  executive2: {
-    name: 'Executive Office 2',
-    type: 'office',
-    size: "20' x 15'",
-    capacity: 6,
-    features: ['Executive Desk', 'Meeting Chairs', 'Display Wall']
-  },
-  executive3: {
-    name: 'Executive Office 3',
-    type: 'office',
-    size: "20' x 15'",
-    capacity: 6,
-    features: ['Executive Desk', 'Meeting Chairs', 'Filing System']
-  },
-  conference: {
-    name: 'Main Conference Room',
-    type: 'meeting',
-    size: "25' x 20'",
-    capacity: 20,
-    features: ['Large Conference Table', '85" Display', 'Video Conference', 'Soundproofing']
-  },
-  lounge: {
-    name: 'Client Lounge',
-    type: 'lounge',
-    size: "25' x 20'",
-    capacity: 15,
-    features: ['Luxury Seating', 'Refreshment Bar', 'Entertainment System', 'Private Meeting Area']
-  },
-  privateOffice1: {
-    name: 'Private Office Suite 1',
-    type: 'office',
-    size: "20' x 15'",
-    capacity: 6,
-    features: ['Corner Office', 'Private Meeting Area', 'Storage', 'Executive Amenities']
-  },
-  privateOffice2: {
-    name: 'Private Office Suite 2',
-    type: 'office',
-    size: "20' x 15'",
-    capacity: 6,
-    features: ['Window Office', 'Built-in Storage', 'Printer Station', 'Conference Phone']
-  },
-  meetingRoom1: {
-    name: 'Small Meeting Room 1',
-    type: 'meeting',
-    size: "15' x 12'",
-    capacity: 8,
-    features: ['Round Table', 'Wall Display', 'Whiteboard', 'Video Conference']
-  },
-  meetingRoom2: {
-    name: 'Small Meeting Room 2',
-    type: 'meeting',
-    size: "15' x 12'",
-    capacity: 8,
-    features: ['Conference Table', 'Video Display', 'Phone System', 'Whiteboard']
-  },
-  reception: {
-    name: 'Open Reception Area',
-    type: 'reception',
-    size: "40' x 30'",
-    capacity: 25,
-    features: ['Modern Reception Desk', 'Lounge Seating', 'Digital Display Wall', 'Coffee Bar', 'Guest WiFi'],
-    openConcept: true
-  },
-  workspace: {
-    name: 'Open Collaborative Workspace',
-    type: 'workspace',
-    size: "30' x 25'",
-    capacity: 30,
-    features: ['Hot Desks', 'Standing Desks', 'Collaboration Zones', 'Quiet Pods', 'Tech Bar']
-  },
-  wellness: {
-    name: 'Wellness Zone',
-    type: 'wellness',
-    size: "12' x 12'",
-    capacity: 6,
-    features: ['Meditation Space', 'Comfortable Seating', 'Plants', 'Relaxation Area']
-  }
+      {/* Controls info */}
+      <Paper 
+        sx={{ 
+          position: 'absolute', 
+          top: 80, 
+          left: 20,
+          p: 2,
+          zIndex: 10
+        }}
+      >
+        <Typography variant="h6" gutterBottom>View Controls</Typography>
+        <Stack spacing={1} sx={{ mb: 2 }}>
+          <Button 
+            variant="contained" 
+            fullWidth 
+            size="small"
+            onClick={() => setCameraView('top')}
+          >
+            Top View
+          </Button>
+          <Button 
+            variant="contained" 
+            fullWidth 
+            size="small"
+            onClick={() => setCameraView('default')}
+          >
+            Default View
+          </Button>
+          <Button 
+            variant="contained" 
+            fullWidth 
+            size="small"
+            onClick={() => setCameraView('close')}
+          >
+            Close View
+          </Button>
+          <Button 
+            variant="outlined" 
+            fullWidth 
+            size="small"
+            color="secondary"
+            onClick={() => setCameraView('reset')}
+          >
+            Reset Camera
+          </Button>
+        </Stack>
+        
+        <Typography variant="body2" sx={{ mb: 1, fontWeight: 'bold' }}>Quick Angles:</Typography>
+        <Stack direction="row" spacing={0.5} sx={{ mb: 2, flexWrap: 'wrap', gap: 0.5 }}>
+          <Button 
+            variant="outlined" 
+            size="small"
+            onClick={() => setCameraView('front')}
+            sx={{ minWidth: '40px', fontSize: '0.7rem' }}
+          >
+            Front
+          </Button>
+          <Button 
+            variant="outlined" 
+            size="small"
+            onClick={() => setCameraView('back')}
+            sx={{ minWidth: '40px', fontSize: '0.7rem' }}
+          >
+            Back
+          </Button>
+          <Button 
+            variant="outlined" 
+            size="small"
+            onClick={() => setCameraView('left')}
+            sx={{ minWidth: '40px', fontSize: '0.7rem' }}
+          >
+            Left
+          </Button>
+          <Button 
+            variant="outlined" 
+            size="small"
+            onClick={() => setCameraView('right')}
+            sx={{ minWidth: '40px', fontSize: '0.7rem' }}
+          >
+            Right
+          </Button>
+        </Stack>
+        
+        <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>• Scroll: Zoom</Typography>
+        <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>• Right-drag: Rotate</Typography>
+        <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>• Shift+Scroll: Tilt</Typography>
+        <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>• W/S or ↑/↓: Tilt</Typography>
+        <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>• A/D or ←/→: Rotate</Typography>
+        <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>• Click agents to interact</Typography>
+      </Paper>
+
+      {/* Office info */}
+      <Paper 
+        sx={{ 
+          position: 'absolute', 
+          bottom: 20, 
+          left: 20,
+          p: 2,
+          zIndex: 10,
+          maxWidth: 300
+        }}
+      >
+        <Typography variant="h6">{officeConfigs[selectedTab].name}</Typography>
+        <Typography variant="body2" color="text.secondary">
+          {officeConfigs[selectedTab].description}
+        </Typography>
+        <Typography variant="body2" sx={{ mt: 1, fontWeight: 'bold' }}>
+          Size: {officeConfigs[selectedTab].size.width}' × {officeConfigs[selectedTab].size.depth}'
+        </Typography>
+        <Alert severity="info" sx={{ mt: 1 }}>
+          {officeConfigs[selectedTab].agents.length} agents active
+        </Alert>
+      </Paper>
+
+      {/* 3D Scene */}
+      <Box 
+        ref={mountRef} 
+        sx={{ 
+          width: '100%', 
+          height: '100%',
+          cursor: 'grab',
+          '&:active': {
+            cursor: 'grabbing'
+          }
+        }} 
+      />
+
+      {/* Agent Dialog */}
+      <Dialog
+        open={Boolean(selectedAgent)}
+        onClose={() => setSelectedAgent(null)}
+        maxWidth="sm"
+        fullWidth
+      >
+        {selectedAgent && (
+          <>
+            <DialogTitle>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Avatar sx={{ bgcolor: selectedAgent.color, width: 48, height: 48 }}>
+                    {selectedAgent.icon}
+                  </Avatar>
+                  <Box>
+                    <Typography variant="h6">{selectedAgent.name}</Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {selectedAgent.title}
+                    </Typography>
+                  </Box>
+                </Box>
+                <IconButton onClick={() => setSelectedAgent(null)}>
+                  <Close />
+                </IconButton>
+              </Box>
+            </DialogTitle>
+            <DialogContent>
+              <Grid container spacing={2}>
+                <Grid item xs={12}>
+                  <Card variant="outlined">
+                    <CardContent>
+                      <Typography variant="subtitle2" gutterBottom>Department</Typography>
+                      <Chip 
+                        label={selectedAgent.department} 
+                        size="small" 
+                        color="primary"
+                      />
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12}>
+                  <Button 
+                    variant="contained" 
+                    fullWidth
+                    onClick={() => {
+                      enqueueSnackbar(`Starting chat with ${selectedAgent.name}`, { variant: 'info' });
+                      setSelectedAgent(null);
+                    }}
+                  >
+                    Chat with {selectedAgent.name}
+                  </Button>
+                </Grid>
+              </Grid>
+            </DialogContent>
+          </>
+        )}
+      </Dialog>
+    </Box>
+  );
 };
 
 export default Office3D;

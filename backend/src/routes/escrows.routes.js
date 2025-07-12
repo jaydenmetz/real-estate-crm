@@ -2,10 +2,26 @@
 
 const express = require('express');
 const { body, param, query } = require('express-validator');
+const multer = require('multer');
 const router = express.Router();
 const escrowsController = require('../controllers/escrows.controller');
 const { authenticate, requirePermission } = require('../middleware/auth.middleware');
 const validationMiddleware = require('../middleware/validation.middleware');
+
+// Configure multer for file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'application/pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF files are allowed'), false);
+    }
+  }
+});
 
 // All routes require authentication and escrows permission
 router.use(authenticate);
@@ -41,15 +57,40 @@ router.get(
 router.post(
   '/',
   [
+    // Required core fields for every transaction
     body('propertyAddress').notEmpty().withMessage('Property address is required'),
     body('purchasePrice').isNumeric().withMessage('Purchase price must be a number'),
     body('buyers').isArray({ min: 1 }).withMessage('Buyers must be a non-empty array'),
+    body('buyers.*.name').notEmpty().withMessage('Buyer name is required'),
     body('sellers').isArray({ min: 1 }).withMessage('Sellers must be a non-empty array'),
+    body('sellers.*.name').notEmpty().withMessage('Seller name is required'),
     body('acceptanceDate').isISO8601().withMessage('Invalid acceptance date'),
-    body('closingDate').isISO8601().withMessage('Invalid closing date')
+    body('closingDate').isISO8601().withMessage('Invalid closing date'),
+    
+    // Optional fields that AI can update later
+    body('propertyType').optional().isString(),
+    body('escrowCompany').optional().isString(),
+    body('escrowOfficer').optional().isString(),
+    body('titleCompany').optional().isString(),
+    body('lender').optional().isString(),
+    body('earnestMoneyDeposit').optional().isNumeric(),
+    body('downPayment').optional().isNumeric(),
+    body('loanAmount').optional().isNumeric(),
+    body('commissionPercentage').optional().isNumeric(),
+    body('inspectionDeadline').optional().isISO8601(),
+    body('appraisalDeadline').optional().isISO8601(),
+    body('loanContingencyDeadline').optional().isISO8601(),
+    body('notes').optional().isString()
   ],
   validationMiddleware,
   escrowsController.createEscrow
+);
+
+// POST /v1/escrows/parse-rpa - Parse RPA PDF and extract escrow data
+router.post(
+  '/parse-rpa',
+  upload.single('rpa'),
+  escrowsController.parseRPA
 );
 
 // PUT /v1/escrows/:id

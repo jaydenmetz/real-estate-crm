@@ -1,3 +1,4 @@
+// File: frontend/src/App.jsx
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
@@ -9,14 +10,26 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { Box } from '@mui/material';
 
 // Components
-import Navigation from './components/common/Navigation';
-import HomeDashboard from './components/dashboards/HomeDashboard';
+import EnhancedNavigation from './components/common/EnhancedNavigation';
+import AlexQuickTaskBar from './components/ai/AlexQuickTaskBar';
+
+// Dashboard Components
+import VirtualOfficeDashboard from './components/dashboards/VirtualOfficeDashboard';
 import EscrowsDashboard from './components/dashboards/EscrowsDashboard';
+import EscrowDetail from './components/details/EscrowDetail';
 import ListingsDashboard from './components/dashboards/ListingsDashboard';
+// import ListingDetail from './components/listings/ListingDetail';
 import ClientsDashboard from './components/dashboards/ClientsDashboard';
+// import ClientDetail from './components/clients/ClientDetail';
 import AppointmentsDashboard from './components/dashboards/AppointmentsDashboard';
 import LeadsDashboard from './components/dashboards/LeadsDashboard';
-import VirtualOfficeDashboard from './components/dashboards/VirtualOfficeDashboard';
+
+// System Components
+import ActivityLog from './components/system/ActivityLog';
+import AllNotes from './components/system/AllNotes';
+// import Reports from './components/system/Reports';
+// import Calendar from './components/system/Calendar';
+// import Settings from './components/system/Settings';
 
 // Services
 import websocketService from './services/websocket';
@@ -51,65 +64,34 @@ const theme = createTheme({
     },
   },
   typography: {
-    h1: {
-      fontSize: '2.5rem',
-      fontWeight: 600,
-    },
-    h2: {
-      fontSize: '2rem',
-      fontWeight: 600,
-    },
-    h3: {
-      fontSize: '1.75rem',
-      fontWeight: 600,
-    },
-    h4: {
-      fontSize: '1.5rem',
-      fontWeight: 600,
-    },
-    h5: {
-      fontSize: '1.25rem',
-      fontWeight: 600,
-    },
-    h6: {
-      fontSize: '1rem',
-      fontWeight: 600,
-    },
+    h1: { fontSize: '2.5rem', fontWeight: 600 },
+    h2: { fontSize: '2rem', fontWeight: 600 },
+    h3: { fontSize: '1.75rem', fontWeight: 600 },
+    h4: { fontSize: '1.5rem', fontWeight: 600 },
+    h5: { fontSize: '1.25rem', fontWeight: 600 },
+    h6: { fontSize: '1rem', fontWeight: 600 },
   },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          textTransform: 'none',
-          borderRadius: 8,
-        },
-      },
-    },
-    MuiPaper: {
-      styleOverrides: {
-        root: {
-          borderRadius: 12,
-        },
-      },
-    },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: 12,
-          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-        },
-      },
-    },
+  shape: {
+    borderRadius: 8,
   },
 });
 
-// Create a query client instance
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnWindowFocus: false,
+      refetchOnWindowFocus: process.env.NODE_ENV === 'production',
+      retry: process.env.NODE_ENV === 'production' ? 3 : false,
+      staleTime: process.env.NODE_ENV === 'production' ? 30000 : false,
+    },
+    mutations: {
       retry: 1,
-      staleTime: 5 * 60 * 1000, // 5 minutes
+      onSuccess: (data, variables, context) => {
+        if (context?.invalidateQueries) {
+          context.invalidateQueries.forEach(queryKey => {
+            queryClient.invalidateQueries(queryKey);
+          });
+        }
+      },
     },
   },
 });
@@ -164,18 +146,38 @@ function App() {
             <Router>
               <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
                 {/* Navigation */}
-                <Navigation />
+                <EnhancedNavigation />
+                
+                {/* Alex Quick Task Bar - On every page */}
+                <AlexQuickTaskBar />
                 
                 {/* Main Content */}
                 <Box sx={{ flexGrow: 1, backgroundColor: '#f8f9fa' }}>
                   <Routes>
-                    <Route path="/" element={<HomeDashboard />} />
+                    {/* Virtual Office as Home */}
+                    <Route path="/" element={<VirtualOfficeDashboard />} />
+                    
+                    {/* Main Features */}
                     <Route path="/escrows" element={<EscrowsDashboard />} />
+                    <Route path="/escrows/:id" element={<EscrowDetail />} />
+                    
                     <Route path="/listings" element={<ListingsDashboard />} />
+                    {/* <Route path="/listings/:id" element={<ListingDetail />} /> */}
+                    
                     <Route path="/clients" element={<ClientsDashboard />} />
+                    {/* <Route path="/clients/:id" element={<ClientDetail />} /> */}
+                    
                     <Route path="/appointments" element={<AppointmentsDashboard />} />
                     <Route path="/leads" element={<LeadsDashboard />} />
-                    <Route path="/virtual-office" element={<VirtualOfficeDashboard />} />
+                    
+                    {/* System Features */}
+                    <Route path="/activity-log" element={<ActivityLog />} />
+                    <Route path="/all-notes" element={<AllNotes />} />
+                    {/* <Route path="/reports" element={<Reports />} />
+                    <Route path="/calendar" element={<Calendar />} />
+                    <Route path="/settings" element={<Settings />} /> */}
+                    
+                    {/* Catch all redirect */}
                     <Route path="*" element={<Navigate to="/" />} />
                   </Routes>
                 </Box>

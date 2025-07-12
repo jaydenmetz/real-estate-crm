@@ -42,6 +42,7 @@ import { format, differenceInDays } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../services/api';
 import EscrowForm from '../forms/EscrowForm';
+import EscrowCreated from '../escrows/EscrowCreated';
 import StatsCard from '../common/StatsCard';
 
 // Mock data for fallback
@@ -96,9 +97,12 @@ const mockEscrows = [
 const EscrowsDashboard = () => {
   const [tabValue, setTabValue] = useState(0);
   const [openForm, setOpenForm] = useState(false);
+  const [formMode, setFormMode] = useState('full');
   const [selectedEscrow, setSelectedEscrow] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedCard, setSelectedCard] = useState(null);
+  const [showSuccessPage, setShowSuccessPage] = useState(false);
+  const [createdEscrowData, setCreatedEscrowData] = useState(null);
   const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -155,10 +159,20 @@ const EscrowsDashboard = () => {
       return api.post('/escrows', escrowData);
     },
     {
-      onSuccess: () => {
+      onSuccess: (response) => {
         queryClient.invalidateQueries('escrows');
-        enqueueSnackbar('Escrow saved successfully', { variant: 'success' });
-        handleCloseForm();
+        
+        if (selectedEscrow) {
+          // Update mode
+          enqueueSnackbar('Escrow updated successfully', { variant: 'success' });
+          handleCloseForm();
+        } else {
+          // Create mode - show success page
+          const newEscrow = response.data?.data || response.data;
+          setCreatedEscrowData(newEscrow);
+          setShowSuccessPage(true);
+          handleCloseForm();
+        }
       },
       onError: (error) => {
         enqueueSnackbar(
@@ -225,6 +239,33 @@ const EscrowsDashboard = () => {
     return days;
   };
 
+  const handleEditFromSuccess = () => {
+    setShowSuccessPage(false);
+    setSelectedEscrow(createdEscrowData);
+    setOpenForm(true);
+  };
+
+  const handleViewDetailsFromSuccess = (escrowId) => {
+    navigate(`/escrows/${escrowId}`);
+  };
+
+  const handleBackFromSuccess = () => {
+    setShowSuccessPage(false);
+    setCreatedEscrowData(null);
+  };
+
+  // Show success page if we just created an escrow
+  if (showSuccessPage && createdEscrowData) {
+    return (
+      <EscrowCreated
+        escrowData={createdEscrowData}
+        onEdit={handleEditFromSuccess}
+        onViewDetails={handleViewDetailsFromSuccess}
+        onBack={handleBackFromSuccess}
+      />
+    );
+  }
+
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       {/* Header */}
@@ -234,10 +275,13 @@ const EscrowsDashboard = () => {
           <Button
             variant="contained"
             startIcon={<Add />}
-            onClick={() => setOpenForm(true)}
-            sx={{ mr: 1 }}
+            onClick={() => {
+              setFormMode('full');
+              setOpenForm(true);
+            }}
+            sx={{ mr: 2 }}
           >
-            New Escrow
+            Add Escrow
           </Button>
           <IconButton>
             <FilterList />
@@ -480,6 +524,7 @@ const EscrowsDashboard = () => {
         onSubmit={(formData) => mutation.mutate(formData)}
         escrow={selectedEscrow}
         loading={mutation.isLoading}
+        mode={formMode}
       />
     </Container>
   );
