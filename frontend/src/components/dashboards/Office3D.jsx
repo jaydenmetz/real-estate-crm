@@ -1,7 +1,24 @@
 // File: frontend/src/components/dashboards/Office3D.jsx
+// 3D Office Layout - 80' x 60' (4,800 sq ft) with Open Concept Reception
 import React, { useEffect, useRef, useState } from 'react';
 import * as BABYLON from 'babylonjs';
 import * as GUI from 'babylonjs-gui';
+
+/*
+  Office Layout Structure (80' x 60' = 4,800 sq ft):
+  
+  TOP ROW (North - Back):
+  - Executive Office 1 (20' x 15') | Executive Office 2 (20' x 15') | Executive Office 3 (20' x 15')
+  
+  MIDDLE ROW:
+  - Conference Room (25' x 20') | OPEN RECEPTION AREA (40' x 30') | Client Lounge (25' x 20')
+  
+  BOTTOM ROW (South - Front):
+  - Private Office 1 (20' x 15') | Meeting Room 1 (15' x 12') | Meeting Room 2 (15' x 12') | Private Office 2 (20' x 15')
+  
+  The Reception Area is completely open with no interior walls, creating a welcoming central hub.
+  Total office space provides luxury amenities in an efficient, modern layout.
+*/
 
 const Office3D = ({ agents = [], selectedAgent, onAgentClick, onRoomClick, onSceneReady }) => {
   const canvasRef = useRef(null);
@@ -28,7 +45,7 @@ const Office3D = ({ agents = [], selectedAgent, onAgentClick, onRoomClick, onSce
         "camera",
         -Math.PI / 2,      // Alpha - rotation around Y axis (locked)
         Math.PI / 3.5,     // Beta - tilt angle (adjustable)
-        80,                // Radius - distance from target
+        100,               // Radius - distance from target (increased for larger space)
         new BABYLON.Vector3(0, 0, 0),
         scene
       );
@@ -37,8 +54,8 @@ const Office3D = ({ agents = [], selectedAgent, onAgentClick, onRoomClick, onSce
       camera.attachControl(canvasRef.current, true);
       
       // Camera limits for Clash of Clans style
-      camera.lowerRadiusLimit = 40;    // Can't zoom in too close
-      camera.upperRadiusLimit = 120;   // Can't zoom out too far
+      camera.lowerRadiusLimit = 50;    // Can't zoom in too close
+      camera.upperRadiusLimit = 150;   // Can't zoom out too far (increased)
       camera.wheelPrecision = 30;      // Zoom sensitivity
       camera.panningSensibility = 100; // Pan sensitivity
       
@@ -193,7 +210,7 @@ const Office3D = ({ agents = [], selectedAgent, onAgentClick, onRoomClick, onSce
       
       materials.accent.diffuseColor = new BABYLON.Color3(0.2, 0.4, 0.6);
 
-      // Floor (80' x 60' = 80 x 60 units)
+      // Floor (80' width x 60' depth = 80 x 60 units in 3D space)
       const floor = BABYLON.MeshBuilder.CreateGround("floor", {
         width: 80,
         height: 60,
@@ -221,7 +238,7 @@ const Office3D = ({ agents = [], selectedAgent, onAgentClick, onRoomClick, onSce
         return wall;
       };
 
-      // Outer walls
+      // Outer walls for 80x60 space
       createWall("northWall", 80, wallHeight, wallThickness, 
         new BABYLON.Vector3(0, wallHeight/2, 30));
       createWall("southWall", 80, wallHeight, wallThickness, 
@@ -231,69 +248,75 @@ const Office3D = ({ agents = [], selectedAgent, onAgentClick, onRoomClick, onSce
       createWall("westWall", wallThickness, wallHeight, 60, 
         new BABYLON.Vector3(-40, wallHeight/2, 0));
 
-      // TOP ROW (anchored to top edge and respective corners)
-      // Partner Office (10' x 10') - anchored to top-left corner
-      createWall("partnerOfficeEast", wallThickness, wallHeight, 10, 
-        new BABYLON.Vector3(-30, wallHeight/2, 25));
-      createWall("partnerOfficeSouth", 10, wallHeight, wallThickness, 
-        new BABYLON.Vector3(-35, wallHeight/2, 20));
+      // INTERIOR WALLS - Updated for 80x60 layout
       
-      // Senior Office 1 (9' x 10') - next to Partner Office
-      createWall("senior1West", wallThickness, wallHeight, 10, 
-        new BABYLON.Vector3(-30, wallHeight/2, 25));
-      createWall("senior1East", wallThickness, wallHeight, 10, 
-        new BABYLON.Vector3(-21, wallHeight/2, 25));
-      createWall("senior1South", 9, wallHeight, wallThickness, 
-        new BABYLON.Vector3(-25.5, wallHeight/2, 20));
+      // TOP ROW - Executive Offices (back row)
+      // Executive Office 1 (20' x 15') - top left
+      createWall("exec1East", wallThickness, wallHeight, 15, 
+        new BABYLON.Vector3(-20, wallHeight/2, 22.5));
+      createWall("exec1South", 20, wallHeight, wallThickness, 
+        new BABYLON.Vector3(-30, wallHeight/2, 15));
       
-      // Senior Office 2 (9' x 10') - next to Senior Office 1
-      createWall("senior2West", wallThickness, wallHeight, 10, 
-        new BABYLON.Vector3(-21, wallHeight/2, 25));
-      createWall("senior2East", wallThickness, wallHeight, 10, 
-        new BABYLON.Vector3(-12, wallHeight/2, 25));
-      createWall("senior2South", 9, wallHeight, wallThickness, 
-        new BABYLON.Vector3(-16.5, wallHeight/2, 20));
+      // Executive Office 2 (20' x 15') - top center
+      createWall("exec2West", wallThickness, wallHeight, 15, 
+        new BABYLON.Vector3(-10, wallHeight/2, 22.5));
+      createWall("exec2East", wallThickness, wallHeight, 15, 
+        new BABYLON.Vector3(10, wallHeight/2, 22.5));
+      createWall("exec2South", 20, wallHeight, wallThickness, 
+        new BABYLON.Vector3(0, wallHeight/2, 15));
       
-      // Conference Room (16' x 10') - anchored to top-right corner (with gap from Senior Office 2)
-      createWall("conferenceWest", wallThickness, wallHeight, 10, 
-        new BABYLON.Vector3(24, wallHeight/2, 25));
-      createWall("conferenceSouth", 16, wallHeight, wallThickness, 
-        new BABYLON.Vector3(32, wallHeight/2, 20));
+      // Executive Office 3 (20' x 15') - top right
+      createWall("exec3West", wallThickness, wallHeight, 15, 
+        new BABYLON.Vector3(20, wallHeight/2, 22.5));
+      createWall("exec3South", 20, wallHeight, wallThickness, 
+        new BABYLON.Vector3(30, wallHeight/2, 15));
 
       // MIDDLE ROW
-      // Manager Office (11' x 10') - anchored to left side (with gap from Reception below)
-      createWall("managerNorth", 11, wallHeight, wallThickness, 
-        new BABYLON.Vector3(-34.5, wallHeight/2, 10));
-      createWall("managerEast", wallThickness, wallHeight, 10, 
-        new BABYLON.Vector3(-29, wallHeight/2, 5));
-      createWall("managerSouth", 11, wallHeight, wallThickness, 
-        new BABYLON.Vector3(-34.5, wallHeight/2, 0));
+      // Main Conference Room (25' x 20') - left side
+      createWall("conferenceNorth", 25, wallHeight, wallThickness, 
+        new BABYLON.Vector3(-27.5, wallHeight/2, 10));
+      createWall("conferenceEast", wallThickness, wallHeight, 20, 
+        new BABYLON.Vector3(-15, wallHeight/2, 0));
+      createWall("conferenceSouth", 25, wallHeight, wallThickness, 
+        new BABYLON.Vector3(-27.5, wallHeight/2, -10));
       
-      // Wellness Zone (14' x 7') - Only divider wall between wellness and refreshment
-      // Keep only the divider wall (south wall of wellness / north wall of refreshment)
-      createWall("wellness_refreshment_divider", 14, wallHeight, wallThickness, 
-        new BABYLON.Vector3(33, wallHeight/2, 3));
+      // Client Lounge (25' x 20') - right side
+      createWall("loungeNorth", 25, wallHeight, wallThickness, 
+        new BABYLON.Vector3(27.5, wallHeight/2, 10));
+      createWall("loungeWest", wallThickness, wallHeight, 20, 
+        new BABYLON.Vector3(15, wallHeight/2, 0));
+      createWall("loungeSouth", 25, wallHeight, wallThickness, 
+        new BABYLON.Vector3(27.5, wallHeight/2, -10));
 
       // BOTTOM ROW
-      // Reception (11' x 10') - anchored to bottom-left corner
-      createWall("receptionNorth", 11, wallHeight, wallThickness, 
-        new BABYLON.Vector3(-34.5, wallHeight/2, -20));
-      createWall("receptionEast", wallThickness, wallHeight, 10, 
-        new BABYLON.Vector3(-29, wallHeight/2, -25));
+      // Private Office 1 (20' x 15') - bottom left corner
+      createWall("private1North", 20, wallHeight, wallThickness, 
+        new BABYLON.Vector3(-30, wallHeight/2, -15));
+      createWall("private1East", wallThickness, wallHeight, 15, 
+        new BABYLON.Vector3(-20, wallHeight/2, -22.5));
       
-      // Client Lounge (17' x 10') - positioned with gap from Reception
-      createWall("clientLoungeWest", wallThickness, wallHeight, 10, 
-        new BABYLON.Vector3(-10, wallHeight/2, -25));
-      createWall("clientLoungeEast", wallThickness, wallHeight, 10, 
-        new BABYLON.Vector3(7.5, wallHeight/2, -25));
-      createWall("clientLoungeNorth", 17.5, wallHeight, wallThickness, 
-        new BABYLON.Vector3(-1.25, wallHeight/2, -20));
+      // Private Office 2 (20' x 15') - bottom right corner
+      createWall("private2North", 20, wallHeight, wallThickness, 
+        new BABYLON.Vector3(30, wallHeight/2, -15));
+      createWall("private2West", wallThickness, wallHeight, 15, 
+        new BABYLON.Vector3(20, wallHeight/2, -22.5));
+
+      // Small Meeting Rooms (15' x 12') - bottom center
+      createWall("meeting1North", 15, wallHeight, wallThickness, 
+        new BABYLON.Vector3(-7.5, wallHeight/2, -15));
+      createWall("meeting1East", wallThickness, wallHeight, 12, 
+        new BABYLON.Vector3(0, wallHeight/2, -21));
+      createWall("meeting1West", wallThickness, wallHeight, 12, 
+        new BABYLON.Vector3(-15, wallHeight/2, -21));
       
-      // Lead Lounge (17' x 10') - anchored to bottom-right corner
-      createWall("leadLoungeWest", wallThickness, wallHeight, 10, 
-        new BABYLON.Vector3(23, wallHeight/2, -25));
-      createWall("leadLoungeNorth", 17, wallHeight, wallThickness, 
-        new BABYLON.Vector3(31.5, wallHeight/2, -20));
+      createWall("meeting2North", 15, wallHeight, wallThickness, 
+        new BABYLON.Vector3(7.5, wallHeight/2, -15));
+      createWall("meeting2West", wallThickness, wallHeight, 12, 
+        new BABYLON.Vector3(0, wallHeight/2, -21));
+      createWall("meeting2East", wallThickness, wallHeight, 12, 
+        new BABYLON.Vector3(15, wallHeight/2, -21));
+
+      // NO WALLS FOR RECEPTION AREA - It's the open central space (40' x 30')
 
       // Create room areas for interaction
       const createRoomArea = (name, position, width, depth, color) => {
@@ -321,21 +344,32 @@ const Office3D = ({ agents = [], selectedAgent, onAgentClick, onRoomClick, onSce
         return room;
       };
 
-      // Define all rooms based on floor plan
-      createRoomArea("partnerOffice", {x: -35, z: 25}, 10, 10, new BABYLON.Color3(0.2, 0.4, 0.7));
-      createRoomArea("seniorOffice1", {x: -25.5, z: 25}, 9, 10, new BABYLON.Color3(0.2, 0.4, 0.7));
-      createRoomArea("seniorOffice2", {x: -16.5, z: 25}, 9, 10, new BABYLON.Color3(0.2, 0.4, 0.7));
-      createRoomArea("conference", {x: 32, z: 25}, 16, 10, new BABYLON.Color3(0.7, 0.5, 0.2));
+      // Define all rooms based on the new 80x60 layout
+      // Executive Offices (Top Row)
+      createRoomArea("executive1", {x: -30, z: 22.5}, 20, 15, new BABYLON.Color3(0.2, 0.4, 0.7));
+      createRoomArea("executive2", {x: 0, z: 22.5}, 20, 15, new BABYLON.Color3(0.2, 0.4, 0.7));
+      createRoomArea("executive3", {x: 30, z: 22.5}, 20, 15, new BABYLON.Color3(0.2, 0.4, 0.7));
       
-      createRoomArea("managerOffice", {x: -34.5, z: 5}, 11, 10, new BABYLON.Color3(0.2, 0.4, 0.7));
-      createRoomArea("openCommon", {x: 0, z: 0}, 40, 26, new BABYLON.Color3(0.9, 0.9, 0.9));
+      // Conference and Lounge (Middle Row Sides)
+      createRoomArea("conference", {x: -27.5, z: 0}, 25, 20, new BABYLON.Color3(0.7, 0.5, 0.2));
+      createRoomArea("lounge", {x: 27.5, z: 0}, 25, 20, new BABYLON.Color3(0.6, 0.4, 0.6));
       
-      createRoomArea("wellness", {x: 33, z: 6.5}, 14, 7, new BABYLON.Color3(0.4, 0.7, 0.4));
-      createRoomArea("refreshment", {x: 33, z: 0.5}, 14, 5, new BABYLON.Color3(0.7, 0.6, 0.3));
+      // Private Offices (Bottom Row Corners)
+      createRoomArea("privateOffice1", {x: -30, z: -22.5}, 20, 15, new BABYLON.Color3(0.2, 0.4, 0.7));
+      createRoomArea("privateOffice2", {x: 30, z: -22.5}, 20, 15, new BABYLON.Color3(0.2, 0.4, 0.7));
       
-      createRoomArea("reception", {x: -34.5, z: -25}, 11, 10, new BABYLON.Color3(0.3, 0.7, 0.6));
-      createRoomArea("clientLounge", {x: -1.25, z: -25}, 17.5, 10, new BABYLON.Color3(0.6, 0.4, 0.6));
-      createRoomArea("leadLounge", {x: 31.5, z: -25}, 17, 10, new BABYLON.Color3(0.4, 0.6, 0.8));
+      // Meeting Rooms (Bottom Row Center)
+      createRoomArea("meetingRoom1", {x: -7.5, z: -21}, 15, 12, new BABYLON.Color3(0.5, 0.5, 0.7));
+      createRoomArea("meetingRoom2", {x: 7.5, z: -21}, 15, 12, new BABYLON.Color3(0.5, 0.5, 0.7));
+      
+      // Open Reception Area (40' x 30') - Central open space
+      createRoomArea("reception", {x: 0, z: 0}, 40, 30, new BABYLON.Color3(0.3, 0.7, 0.6));
+      
+      // Workspace area overlay (within reception)
+      createRoomArea("workspace", {x: 0, z: -8}, 30, 25, new BABYLON.Color3(0.9, 0.9, 0.9));
+      
+      // Wellness area (within reception)
+      createRoomArea("wellness", {x: -10, z: 0}, 12, 12, new BABYLON.Color3(0.4, 0.7, 0.4));
 
       // Add furniture
       const createDesk = (position, rotation = 0) => {
@@ -364,37 +398,41 @@ const Office3D = ({ agents = [], selectedAgent, onAgentClick, onRoomClick, onSce
         return chair;
       };
 
-      // Add desks and chairs in offices
-      createDesk({x: -35, z: 25}, 0);
-      createChair({x: -35, z: 23}, 0);
+      // Add desks and chairs in executive offices
+      createDesk({x: -30, z: 22.5}, 0);
+      createChair({x: -30, z: 20}, 0);
       
-      createDesk({x: -25.5, z: 25}, 0);
-      createChair({x: -25.5, z: 23}, 0);
+      createDesk({x: 0, z: 22.5}, 0);
+      createChair({x: 0, z: 20}, 0);
       
-      createDesk({x: -16.5, z: 25}, 0);
-      createChair({x: -16.5, z: 23}, 0);
+      createDesk({x: 30, z: 22.5}, 0);
+      createChair({x: 30, z: 20}, 0);
       
-      createDesk({x: -34.5, z: 5}, 0);
-      createChair({x: -34.5, z: 3}, 0);
+      // Private offices
+      createDesk({x: -30, z: -22.5}, 0);
+      createChair({x: -30, z: -25}, 0);
+      
+      createDesk({x: 30, z: -22.5}, 0);
+      createChair({x: 30, z: -25}, 0);
 
-      // Conference table
+      // Large conference table
       const conferenceTable = BABYLON.MeshBuilder.CreateBox("conferenceTable", {
-        width: 7,
+        width: 15,
         height: 2.5,
-        depth: 3.5
+        depth: 6
       }, scene);
-      conferenceTable.position = new BABYLON.Vector3(32, 1.25, 25);
+      conferenceTable.position = new BABYLON.Vector3(-27.5, 1.25, 0);
       conferenceTable.material = materials.furniture;
       shadowGenerator.addShadowCaster(conferenceTable);
 
-      // Reception desk (curved)
+      // Reception desk (modern curved design in open area)
       const receptionDesk = BABYLON.MeshBuilder.CreateCylinder("receptionDesk", {
-        height: 2.5,
-        diameterTop: 7,
-        diameterBottom: 7,
+        height: 3,
+        diameterTop: 10,
+        diameterBottom: 10,
         tessellation: 6
       }, scene);
-      receptionDesk.position = new BABYLON.Vector3(-34.5, 1.25, -25);
+      receptionDesk.position = new BABYLON.Vector3(0, 1.5, -3);
       receptionDesk.material = materials.furniture;
       shadowGenerator.addShadowCaster(receptionDesk);
 
@@ -411,23 +449,14 @@ const Office3D = ({ agents = [], selectedAgent, onAgentClick, onRoomClick, onSce
         return couch;
       };
 
-      createCouch({x: -1.25, z: -25}, 6);
-      createCouch({x: 31.5, z: -25}, 5);
+      // Client lounge couches
+      createCouch({x: 27.5, z: 3}, 8);
+      createCouch({x: 27.5, z: -3}, 8);
       
-      // Wellness Zone furniture
-      createCouch({x: 33, z: 6.5}, 4);
+      // Wellness area seating
+      createCouch({x: -10, z: 0}, 5);
       
-      // Refreshment bar counter
-      const barCounter = BABYLON.MeshBuilder.CreateBox("barCounter", {
-        width: 10,
-        height: 3,
-        depth: 2
-      }, scene);
-      barCounter.position = new BABYLON.Vector3(33, 1.5, 0.5);
-      barCounter.material = materials.furniture;
-      shadowGenerator.addShadowCaster(barCounter);
-      
-      // Add meeting tables in the open common area
+      // Meeting room tables
       const createMeetingTable = (position) => {
         const table = BABYLON.MeshBuilder.CreateBox("meetingTable", {
           width: 5,
@@ -440,11 +469,15 @@ const Office3D = ({ agents = [], selectedAgent, onAgentClick, onRoomClick, onSce
         return table;
       };
       
-      // Place a few meeting tables in the common area
-      createMeetingTable({x: -10, z: 0});
-      createMeetingTable({x: 10, z: 0});
+      createMeetingTable({x: -7.5, z: -21});
+      createMeetingTable({x: 7.5, z: -21});
 
-      // Add plants and decorative elements in the open common area
+      // Add collaborative workspace tables in open area
+      createMeetingTable({x: -10, z: -8});
+      createMeetingTable({x: 10, z: -8});
+      createMeetingTable({x: 0, z: 6});
+
+      // Add plants for decoration
       const createPlant = (position) => {
         const plant = BABYLON.MeshBuilder.CreateCylinder("plant", {
           height: 3,
@@ -460,15 +493,17 @@ const Office3D = ({ agents = [], selectedAgent, onAgentClick, onRoomClick, onSce
         return plant;
       };
       
-      // Add plants in strategic locations
-      createPlant({x: -20, z: 10});
-      createPlant({x: 20, z: 10});
-      createPlant({x: -20, z: -10});
-      createPlant({x: 20, z: -10});
-      createPlant({x: 0, z: 0});
+      // Add plants throughout the open space
+      createPlant({x: -15, z: 7});
+      createPlant({x: 15, z: 7});
+      createPlant({x: -15, z: -7});
+      createPlant({x: 15, z: -7});
+      createPlant({x: 0, z: 10});
+      createPlant({x: -27.5, z: -15});
+      createPlant({x: 27.5, z: -15});
 
       // Add grid lines to floor for better spatial reference
-      const gridSize = 10;
+      const gridSize = 5; // 5 foot grid
       const lineColor = new BABYLON.Color3(0.8, 0.8, 0.8);
       
       // Vertical lines
@@ -541,32 +576,42 @@ const Office3D = ({ agents = [], selectedAgent, onAgentClick, onRoomClick, onSce
         return agentMesh;
       };
 
-      // Position agents based on their default positions or roles
+      // Position agents based on their default positions
       if (agents && agents.length > 0) {
         agents.forEach((agent, index) => {
           let position;
           if (agent.defaultPosition) {
             position = agent.defaultPosition;
           } else {
-            // Default positions for different roles
+            // Default positions for different departments
             switch(agent.department || agent.role) {
               case 'management':
-                position = {x: -34.5, z: 5}; // Manager office
+              case 'executive':
+                position = {x: 0, z: 22.5}; // Executive office 2
                 break;
               case 'reception':
-                position = {x: -34.5, z: -25}; // Reception
+                position = {x: 0, z: -3}; // Reception desk
                 break;
               case 'sales':
-                position = {x: 0, z: 0}; // Open common area
+              case 'operations':
+                position = {x: 0, z: -8}; // Open workspace
+                break;
+              case 'marketing':
+                position = {x: -30, z: -22.5}; // Private office 1
+                break;
+              case 'clients':
+                position = {x: 27.5, z: 0}; // Client lounge
                 break;
               default:
                 // Distribute in offices
-                switch(index % 4) {
-                  case 0: position = {x: -35, z: 25}; break; // Partner office
-                  case 1: position = {x: -25.5, z: 25}; break; // Senior office 1
-                  case 2: position = {x: -16.5, z: 25}; break; // Senior office 2
-                  case 3: position = {x: 32, z: 25}; break; // Conference room
-                  default: position = {x: 0, z: 0}; // Common area
+                switch(index % 7) {
+                  case 0: position = {x: -30, z: 22.5}; break; // Exec 1
+                  case 1: position = {x: 0, z: 22.5}; break; // Exec 2
+                  case 2: position = {x: 30, z: 22.5}; break; // Exec 3
+                  case 3: position = {x: -27.5, z: 0}; break; // Conference
+                  case 4: position = {x: -30, z: -22.5}; break; // Private 1
+                  case 5: position = {x: 30, z: -22.5}; break; // Private 2
+                  default: position = {x: 0, z: 0}; // Reception area
                 }
             }
           }
@@ -574,7 +619,7 @@ const Office3D = ({ agents = [], selectedAgent, onAgentClick, onRoomClick, onSce
         });
       }
 
-      // Handle clicks and hover (modified to not interfere with panning)
+      // Handle clicks and hover
       scene.onPointerObservable.add((pointerInfo) => {
         if (pointerInfo.type === BABYLON.PointerEventTypes.POINTERPICK) {
           if (pointerInfo.pickInfo.hit && pointerInfo.event.button === 0) { // Left click only
@@ -665,7 +710,7 @@ const Office3D = ({ agents = [], selectedAgent, onAgentClick, onRoomClick, onSce
     };
   }, [agents, selectedAgent, onAgentClick, onRoomClick, onSceneReady]);
 
-  // Camera view controls - modified for Clash of Clans style
+  // Camera view controls
   const setCameraView = (viewType) => {
     const camera = cameraRef.current;
     if (!camera) return;
@@ -674,16 +719,16 @@ const Office3D = ({ agents = [], selectedAgent, onAgentClick, onRoomClick, onSce
       case 'top':
         // Near top-down but not completely flat
         camera.beta = 0.1;
-        camera.radius = 80;
+        camera.radius = 90;
         break;
       case '3d':
         // Default angled view
         camera.beta = Math.PI / 3.5;
-        camera.radius = 80;
+        camera.radius = 100;
         break;
       case 'close':
         // Zoomed in view
-        camera.radius = 40;
+        camera.radius = 50;
         break;
       default:
         break;
@@ -817,84 +862,92 @@ const Office3D = ({ agents = [], selectedAgent, onAgentClick, onRoomClick, onSce
   );
 };
 
-// Room configuration export for reference
+// Updated room configuration for 80x60 grid
 export const roomConfigs = {
-  partnerOffice: {
-    name: 'Partner Office',
+  executive1: {
+    name: 'Executive Office 1',
     type: 'office',
-    size: "10' x 10'",
-    capacity: 4,
-    features: ['Executive Desk', 'Meeting Chairs', 'Private Storage']
+    size: "20' x 15'",
+    capacity: 6,
+    features: ['Executive Desk', 'Meeting Chairs', 'Private Storage', 'Window View']
   },
-  seniorOffice1: {
-    name: 'Senior Office 1',
+  executive2: {
+    name: 'Executive Office 2',
     type: 'office',
-    size: "9' x 10'",
-    capacity: 3,
-    features: ['Desk', 'Guest Chairs', 'Filing Cabinet']
+    size: "20' x 15'",
+    capacity: 6,
+    features: ['Executive Desk', 'Meeting Chairs', 'Display Wall']
   },
-  seniorOffice2: {
-    name: 'Senior Office 2',
+  executive3: {
+    name: 'Executive Office 3',
     type: 'office',
-    size: "9' x 10'",
-    capacity: 3,
-    features: ['Desk', 'Guest Chairs', 'Filing Cabinet']
+    size: "20' x 15'",
+    capacity: 6,
+    features: ['Executive Desk', 'Meeting Chairs', 'Filing System']
   },
   conference: {
-    name: 'Conference Room',
+    name: 'Main Conference Room',
     type: 'meeting',
-    size: "16' x 10'",
-    capacity: 12,
-    features: ['Conference Table', '85" Display', 'Video Conference']
-  },
-  managerOffice: {
-    name: 'Manager Office',
-    type: 'office',
-    size: "11' x 10'",
-    capacity: 5,
-    features: ['Executive Desk', 'Lounge Area', 'TV Display']
-  },
-  openCommon: {
-    name: 'Open Common Area',
-    type: 'common',
-    size: "20' x 13'",
+    size: "25' x 20'",
     capacity: 20,
-    features: ['Flexible Meeting Space', 'Collaboration Tables']
+    features: ['Large Conference Table', '85" Display', 'Video Conference', 'Soundproofing']
+  },
+  lounge: {
+    name: 'Client Lounge',
+    type: 'lounge',
+    size: "25' x 20'",
+    capacity: 15,
+    features: ['Luxury Seating', 'Refreshment Bar', 'Entertainment System', 'Private Meeting Area']
+  },
+  privateOffice1: {
+    name: 'Private Office Suite 1',
+    type: 'office',
+    size: "20' x 15'",
+    capacity: 6,
+    features: ['Corner Office', 'Private Meeting Area', 'Storage', 'Executive Amenities']
+  },
+  privateOffice2: {
+    name: 'Private Office Suite 2',
+    type: 'office',
+    size: "20' x 15'",
+    capacity: 6,
+    features: ['Window Office', 'Built-in Storage', 'Printer Station', 'Conference Phone']
+  },
+  meetingRoom1: {
+    name: 'Small Meeting Room 1',
+    type: 'meeting',
+    size: "15' x 12'",
+    capacity: 8,
+    features: ['Round Table', 'Wall Display', 'Whiteboard', 'Video Conference']
+  },
+  meetingRoom2: {
+    name: 'Small Meeting Room 2',
+    type: 'meeting',
+    size: "15' x 12'",
+    capacity: 8,
+    features: ['Conference Table', 'Video Display', 'Phone System', 'Whiteboard']
+  },
+  reception: {
+    name: 'Open Reception Area',
+    type: 'reception',
+    size: "40' x 30'",
+    capacity: 25,
+    features: ['Modern Reception Desk', 'Lounge Seating', 'Digital Display Wall', 'Coffee Bar', 'Guest WiFi'],
+    openConcept: true
+  },
+  workspace: {
+    name: 'Open Collaborative Workspace',
+    type: 'workspace',
+    size: "30' x 25'",
+    capacity: 30,
+    features: ['Hot Desks', 'Standing Desks', 'Collaboration Zones', 'Quiet Pods', 'Tech Bar']
   },
   wellness: {
     name: 'Wellness Zone',
     type: 'wellness',
-    size: "14' x 7'",
-    capacity: 8,
-    features: ['Quiet Zone', 'Comfortable Seating', 'Plants']
-  },
-  refreshment: {
-    name: 'Refreshment Bar',
-    type: 'refreshment',
-    size: "14' x 5'",
+    size: "12' x 12'",
     capacity: 6,
-    features: ['Coffee Machine', 'Refreshments', 'Bar Seating']
-  },
-  reception: {
-    name: 'Reception',
-    type: 'reception',
-    size: "11' x 10'",
-    capacity: 6,
-    features: ['Curved Reception Desk', 'Waiting Area', 'Display']
-  },
-  clientLounge: {
-    name: 'Client Lounge',
-    type: 'lounge',
-    size: "17' x 10'",
-    capacity: 10,
-    features: ['Premium Seating', 'TV', 'Coffee Table']
-  },
-  leadLounge: {
-    name: 'Lead Lounge',
-    type: 'lounge',
-    size: "17' x 10'",
-    capacity: 10,
-    features: ['Lead Nurture Area', 'Comfortable Seating', 'TV']
+    features: ['Meditation Space', 'Comfortable Seating', 'Plants', 'Relaxation Area']
   }
 };
 

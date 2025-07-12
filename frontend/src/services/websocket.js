@@ -73,6 +73,15 @@ class WebSocketService {
         this.emit('notification', data);
       });
 
+      // Add missing event listeners from your original code
+      this.socket.on('agent-update', (data) => {
+        this.emit('agent-update', data);
+      });
+
+      this.socket.on('task-complete', (data) => {
+        this.emit('task-complete', data);
+      });
+
     } catch (error) {
       console.error('Failed to initialize WebSocket:', error);
     }
@@ -175,6 +184,11 @@ class WebSocketService {
       reconnectAttempts: this.reconnectAttempts,
       queuedMessages: this.messageQueue.length,
     };
+  }
+
+  getConnectionCount() {
+    // This would typically come from the server
+    return this.isConnected ? 1 : 0;
   }
 }
 

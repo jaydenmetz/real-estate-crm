@@ -194,7 +194,9 @@ export const aiAgentsAPI = {
 export const analyticsAPI = {
   getDashboard: () => apiInstance.get('/analytics/dashboard'),
   getMetrics: (type, period) => apiInstance.get('/analytics/metrics', { type, period }),
-  getReport: (type, params) => apiInstance.get(`/analytics/reports/${type}`, params)
+  getReport: (type, params) => apiInstance.get(`/analytics/reports/${type}`, params),
+  getAITeamStats: () => apiInstance.get('/analytics/ai-team'),
+  getOfficeStats: () => apiInstance.get('/analytics/office'),
 };
 
 export const documentsAPI = {
