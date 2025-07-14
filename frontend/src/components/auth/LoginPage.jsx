@@ -227,6 +227,17 @@ const LoginPage = () => {
             </Button>
           </form>
 
+          <Divider sx={{ my: 3 }} />
+
+          {/* Register Link */}
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="body2" color="text.secondary">
+              Don't have an account?{' '}
+              <Link component="a" href="/register" sx={{ textDecoration: 'none' }}>
+                Create one
+              </Link>
+            </Typography>
+          </Box>
 
           {/* Features */}
           <Box sx={{ mt: 4, pt: 3, borderTop: 1, borderColor: 'divider' }}>

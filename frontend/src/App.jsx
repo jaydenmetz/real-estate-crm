@@ -13,6 +13,7 @@ import { Box } from '@mui/material';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import LoginPage from './components/auth/LoginPage';
+import RegisterPage from './components/auth/RegisterPage';
 import UserAwareErrorBoundary from './components/common/UserAwareErrorBoundary';
 
 // Components
@@ -167,6 +168,7 @@ function App() {
                 <Routes>
                   {/* Public Routes */}
                   <Route path="/login" element={<LoginPage />} />
+                  <Route path="/register" element={<RegisterPage />} />
                   
                   {/* Protected Routes */}
                   <Route

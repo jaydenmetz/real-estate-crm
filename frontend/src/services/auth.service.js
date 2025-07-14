@@ -39,6 +39,49 @@ class AuthService {
     }
   }
 
+  // Register user
+  async register(userData) {
+    try {
+      const response = await apiInstance.post('/auth/register', userData);
+
+      if (response.success && response.data) {
+        const { token, user } = response.data;
+        
+        // Store token and user data
+        this.token = token;
+        this.user = user;
+        this.apiKey = user.apiKey;
+        
+        // Save to localStorage for persistence
+        localStorage.setItem(TOKEN_KEY, token);
+        localStorage.setItem(USER_KEY, JSON.stringify(user));
+        if (user.apiKey) {
+          localStorage.setItem(API_KEY_KEY, user.apiKey);
+        }
+        
+        // Set auth header
+        this.setAuthHeader(token);
+        
+        return {
+          success: true,
+          user: user,
+          message: response.data.message
+        };
+      }
+      
+      return {
+        success: false,
+        error: response.error || 'Registration failed'
+      };
+    } catch (error) {
+      console.error('Registration error:', error);
+      return {
+        success: false,
+        error: error.message || 'Network error during registration'
+      };
+    }
+  }
+
   // Login user
   async login(username, password, rememberMe = true) {
     try {

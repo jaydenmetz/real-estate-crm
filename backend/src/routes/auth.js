@@ -3,36 +3,27 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const router = express.Router();
 
-// Mock user database - In production, this would be in PostgreSQL
-const users = {
-  jaydenmetz: {
-    id: 'user_001',
-    username: 'jaydenmetz',
-    email: 'jayden@jaydenmetz.com',
-    passwordHash: '$2a$10$Vf9HedqwlzydziZYG7zWxucAOUG306SayHp8K0WQKoUtAJALDRYWi',
-    role: 'admin',
-    apiKey: 'jm_live_k3y_' + Buffer.from('jaydenmetz:2025').toString('base64'),
-    createdAt: new Date('2025-01-01'),
-    preferences: {
-      showDebugInfo: true,
-      defaultDashboard: 'ai-agents',
-      theme: 'light',
-      emailNotifications: true,
-      twoFactorEnabled: false,
-      errorDisplay: 'detailed', // 'detailed' for admins, 'friendly' for regular users
-      timezone: 'America/Los_Angeles',
-      dateFormat: 'MM/DD/YYYY',
-      numberFormat: 'en-US'
-    },
-    profile: {
-      firstName: 'Jayden',
-      lastName: 'Metz',
-      company: 'Metz Real Estate',
-      phone: '(858) 555-0100',
-      licenseNumber: 'DRE#12345678',
-      photo: null
-    }
-  }
+// User storage - In production, this would be in PostgreSQL
+const users = {};
+
+// Default preferences for new users
+const defaultPreferences = {
+  showDebugInfo: false,
+  defaultDashboard: 'ai-agents',
+  theme: 'light',
+  emailNotifications: true,
+  twoFactorEnabled: false,
+  errorDisplay: 'friendly',
+  timezone: 'America/Los_Angeles',
+  dateFormat: 'MM/DD/YYYY',
+  numberFormat: 'en-US'
+};
+
+// Admin preferences
+const adminPreferences = {
+  ...defaultPreferences,
+  showDebugInfo: true,
+  errorDisplay: 'detailed'
 };
 
 // Session storage - In production, use Redis
@@ -93,6 +84,145 @@ const authenticateToken = (req, res, next) => {
     next();
   });
 };
+
+// Registration endpoint
+router.post('/register', async (req, res) => {
+  try {
+    const { username, email, password, firstName, lastName, company, phone } = req.body;
+
+    // Validate required fields
+    if (!username || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'MISSING_FIELDS', message: 'Username, email, and password are required' }
+      });
+    }
+
+    // Validate username format
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'INVALID_USERNAME', message: 'Username must be 3-20 characters, alphanumeric and underscore only' }
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'INVALID_EMAIL', message: 'Invalid email format' }
+      });
+    }
+
+    // Validate password strength
+    if (password.length < 8) {
+      return res.status(400).json({
+        success: false,
+        error: { code: 'WEAK_PASSWORD', message: 'Password must be at least 8 characters' }
+      });
+    }
+
+    // Check if username already exists
+    if (users[username.toLowerCase()]) {
+      return res.status(409).json({
+        success: false,
+        error: { code: 'USERNAME_EXISTS', message: 'Username already taken' }
+      });
+    }
+
+    // Check if email already exists
+    const emailExists = Object.values(users).some(u => u.email.toLowerCase() === email.toLowerCase());
+    if (emailExists) {
+      return res.status(409).json({
+        success: false,
+        error: { code: 'EMAIL_EXISTS', message: 'Email already registered' }
+      });
+    }
+
+    // You get admin role with all privileges
+    const role = 'admin';
+    const preferences = adminPreferences;
+
+    // Hash password
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    // Generate user ID and API key
+    const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const apiKey = `${username.toLowerCase().substring(0, 2)}_live_k3y_${Buffer.from(`${username}:${Date.now()}`).toString('base64')}`;
+
+    // Create user object
+    const newUser = {
+      id: userId,
+      username: username.toLowerCase(),
+      email: email.toLowerCase(),
+      passwordHash,
+      role,
+      apiKey,
+      createdAt: new Date(),
+      preferences,
+      profile: {
+        firstName: firstName || '',
+        lastName: lastName || '',
+        company: company || '',
+        phone: phone || '',
+        licenseNumber: '',
+        photo: null
+      }
+    };
+
+    // Store user
+    users[username.toLowerCase()] = newUser;
+
+    // Generate session and token
+    const sessionId = `sess_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const tokenData = {
+      id: newUser.id,
+      username: newUser.username,
+      email: newUser.email,
+      role: newUser.role,
+      sessionId
+    };
+
+    const token = jwt.sign(tokenData, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+
+    // Store session
+    activeSessions.set(sessionId, {
+      userId: newUser.id,
+      createdAt: new Date(),
+      lastActivity: new Date(),
+      userAgent: req.headers['user-agent'],
+      ip: req.ip
+    });
+
+    // Return user data without sensitive info
+    const userData = {
+      id: newUser.id,
+      username: newUser.username,
+      email: newUser.email,
+      role: newUser.role,
+      preferences: newUser.preferences,
+      profile: newUser.profile,
+      apiKey: newUser.apiKey
+    };
+
+    res.json({
+      success: true,
+      data: {
+        token,
+        user: userData,
+        message: 'Welcome! Your admin account has been created.'
+      }
+    });
+
+  } catch (error) {
+    console.error('Registration error:', error);
+    res.status(500).json({
+      success: false,
+      error: { code: 'SERVER_ERROR', message: 'An error occurred during registration' }
+    });
+  }
+});
 
 // Login endpoint
 router.post('/login', async (req, res) => {
