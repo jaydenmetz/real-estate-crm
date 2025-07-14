@@ -14,7 +14,7 @@ import EnhancedNavigation from './components/common/EnhancedNavigation';
 import AlexQuickTaskBar from './components/ai/AlexQuickTaskBar';
 
 // Dashboard Components
-import VirtualOfficeDashboard from './components/dashboards/VirtualOfficeDashboard';
+import AIAgentsDashboard from './components/dashboards/AIAgentsDashboard';
 import EscrowsDashboard from './components/dashboards/EscrowsDashboard';
 import EscrowDetail from './components/details/EscrowDetail';
 import ListingsDashboard from './components/dashboards/ListingsDashboard';
@@ -165,7 +165,7 @@ function App() {
                 <Box sx={{ flexGrow: 1, backgroundColor: '#f8f9fa' }}>
                   <Routes>
                     {/* Virtual Office as Home */}
-                    <Route path="/" element={<VirtualOfficeDashboard />} />
+                    <Route path="/" element={<AIAgentsDashboard />} />
                     
                     {/* Main Features */}
                     <Route path="/escrows" element={<EscrowsDashboard />} />
