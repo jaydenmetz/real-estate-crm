@@ -387,8 +387,8 @@ const EscrowDetail = () => {
   React.useEffect(() => {
     if (escrowData?.checklist) {
       const states = {};
-      Object.entries(escrowData.checklist).forEach(([category, items]) => {
-        Object.entries(items).forEach(([item, checked]) => {
+      Object.entries(escrowData.checklist || {}).forEach(([category, items]) => {
+        Object.entries(items || {}).forEach(([item, checked]) => {
           states[`${category}_${item}`] = checked;
         });
       });
@@ -590,7 +590,7 @@ const EscrowDetail = () => {
           <Grid item xs={12} sm={6} md={3}>
             <Box sx={{ textAlign: 'center' }}>
               <Typography variant="h4" color="primary">
-                ${escrowData.purchasePrice.toLocaleString()}
+                ${(escrowData.purchasePrice || 0).toLocaleString()}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Purchase Price
@@ -613,7 +613,7 @@ const EscrowDetail = () => {
           <Grid item xs={12} sm={6} md={3}>
             <Box sx={{ textAlign: 'center' }}>
               <Typography variant="h4" color="primary">
-                ${escrowData.grossCommission.toLocaleString()}
+                ${(escrowData.grossCommission || 0).toLocaleString()}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Total Commission
@@ -623,7 +623,7 @@ const EscrowDetail = () => {
           <Grid item xs={12} sm={6} md={3}>
             <Box sx={{ textAlign: 'center' }}>
               <Typography variant="h4" color="success.main">
-                ${escrowData.listingAgent.commission.toLocaleString()}
+                ${escrowData.listingAgent?.commission?.toLocaleString() || '0'}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Your Commission
@@ -696,20 +696,20 @@ const EscrowDetail = () => {
                     </IconButton>
                   </Box>
                   <Collapse in={expandedSections.buyers}>
-                    {escrowData.buyers.map((buyer) => (
+                    {(escrowData.buyers || []).map((buyer) => (
                       <Box key={buyer.id} sx={{ ml: 2, mb: 2 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                          <Avatar sx={{ mr: 2 }}>{buyer.name.charAt(0)}</Avatar>
+                          <Avatar sx={{ mr: 2 }}>{buyer.name?.charAt(0) || '?'}</Avatar>
                           <Box sx={{ flexGrow: 1 }}>
-                            <Typography variant="body1">{buyer.name}</Typography>
+                            <Typography variant="body1">{buyer.name || 'Unknown Buyer'}</Typography>
                             <Box sx={{ display: 'flex', gap: 2 }}>
                               <Typography variant="body2" color="text.secondary">
                                 <Phone sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'bottom' }} />
-                                {buyer.phone}
+                                {buyer.phone || 'No phone'}
                               </Typography>
                               <Typography variant="body2" color="text.secondary">
                                 <Email sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'bottom' }} />
-                                {buyer.email}
+                                {buyer.email || 'No email'}
                               </Typography>
                             </Box>
                           </Box>
@@ -749,20 +749,20 @@ const EscrowDetail = () => {
                     </IconButton>
                   </Box>
                   <Collapse in={expandedSections.sellers}>
-                    {escrowData.sellers.map((seller) => (
+                    {(escrowData.sellers || []).map((seller) => (
                       <Box key={seller.id} sx={{ ml: 2, mb: 2 }}>
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                          <Avatar sx={{ mr: 2 }}>{seller.name.charAt(0)}</Avatar>
+                          <Avatar sx={{ mr: 2 }}>{seller.name?.charAt(0) || '?'}</Avatar>
                           <Box>
-                            <Typography variant="body1">{seller.name}</Typography>
+                            <Typography variant="body1">{seller.name || 'Unknown Seller'}</Typography>
                             <Box sx={{ display: 'flex', gap: 2 }}>
                               <Typography variant="body2" color="text.secondary">
                                 <Phone sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'bottom' }} />
-                                {seller.phone}
+                                {seller.phone || 'No phone'}
                               </Typography>
                               <Typography variant="body2" color="text.secondary">
                                 <Email sx={{ fontSize: 16, mr: 0.5, verticalAlign: 'bottom' }} />
-                                {seller.email}
+                                {seller.email || 'No email'}
                               </Typography>
                             </Box>
                           </Box>
@@ -792,7 +792,7 @@ const EscrowDetail = () => {
                   </Button>
                 </Box>
                 <List>
-                  {escrowData.notes.map((note) => (
+                  {(escrowData.notes || []).map((note) => (
                     <ListItem key={note.id} alignItems="flex-start">
                       <ListItemAvatar>
                         <Avatar>{note.createdBy.charAt(0)}</Avatar>
@@ -878,19 +878,19 @@ const EscrowDetail = () => {
                   <TableBody>
                     <TableRow>
                       <TableCell>Purchase Price</TableCell>
-                      <TableCell align="right">${escrowData.purchasePrice.toLocaleString()}</TableCell>
+                      <TableCell align="right">${(escrowData.purchasePrice || 0).toLocaleString()}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>Earnest Money</TableCell>
-                      <TableCell align="right">${escrowData.earnestMoneyDeposit.toLocaleString()}</TableCell>
+                      <TableCell align="right">${(escrowData.earnestMoneyDeposit || 0).toLocaleString()}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>Down Payment</TableCell>
-                      <TableCell align="right">${escrowData.downPayment.toLocaleString()}</TableCell>
+                      <TableCell align="right">${(escrowData.downPayment || 0).toLocaleString()}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell>Loan Amount</TableCell>
-                      <TableCell align="right">${escrowData.loanAmount.toLocaleString()}</TableCell>
+                      <TableCell align="right">${(escrowData.loanAmount || 0).toLocaleString()}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell colSpan={2}>
@@ -898,13 +898,13 @@ const EscrowDetail = () => {
                       </TableCell>
                     </TableRow>
                     <TableRow>
-                      <TableCell>Total Commission ({escrowData.commissionPercentage}%)</TableCell>
-                      <TableCell align="right">${escrowData.grossCommission.toLocaleString()}</TableCell>
+                      <TableCell>Total Commission ({escrowData.commissionPercentage || 0}%)</TableCell>
+                      <TableCell align="right">${(escrowData.grossCommission || 0).toLocaleString()}</TableCell>
                     </TableRow>
                     <TableRow>
                       <TableCell><strong>Your Commission</strong></TableCell>
                       <TableCell align="right" sx={{ color: 'success.main', fontWeight: 'bold' }}>
-                        ${escrowData.listingAgent.commission.toLocaleString()}
+                        ${escrowData.listingAgent?.commission?.toLocaleString() || '0'}
                       </TableCell>
                     </TableRow>
                   </TableBody>
@@ -919,7 +919,7 @@ const EscrowDetail = () => {
         <Card>
           <CardContent>
             <Timeline position="alternate">
-              {escrowData.timeline.map((event, index) => (
+              {(escrowData.timeline || []).map((event, index) => (
                 <TimelineItem key={event.id}>
                   <TimelineOppositeContent color="text.secondary">
                     {format(new Date(event.date), 'MMM d, yyyy')}
@@ -1018,7 +1018,7 @@ const EscrowDetail = () => {
               </Button>
             </Box>
             <List>
-              {escrowData.documents.map((doc) => (
+              {(escrowData.documents || []).map((doc) => (
                 <ListItem
                   key={doc.id}
                   sx={{
@@ -1068,39 +1068,39 @@ const EscrowDetail = () => {
               <TableBody>
                 <TableRow>
                   <TableCell><strong>Purchase Price</strong></TableCell>
-                  <TableCell align="right">${escrowData.purchasePrice.toLocaleString()}</TableCell>
+                  <TableCell align="right">${(escrowData.purchasePrice || 0).toLocaleString()}</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell>Earnest Money Deposit</TableCell>
-                  <TableCell align="right">${escrowData.earnestMoneyDeposit.toLocaleString()}</TableCell>
+                  <TableCell align="right">${(escrowData.earnestMoneyDeposit || 0).toLocaleString()}</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell>Down Payment (20%)</TableCell>
-                  <TableCell align="right">${escrowData.downPayment.toLocaleString()}</TableCell>
+                  <TableCell align="right">${(escrowData.downPayment || 0).toLocaleString()}</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell>Loan Amount</TableCell>
-                  <TableCell align="right">${escrowData.loanAmount.toLocaleString()}</TableCell>
+                  <TableCell align="right">${(escrowData.loanAmount || 0).toLocaleString()}</TableCell>
                 </TableRow>
                 <TableRow sx={{ bgcolor: 'grey.100' }}>
                   <TableCell colSpan={2}><strong>Commission Details</strong></TableCell>
                 </TableRow>
                 <TableRow>
-                  <TableCell>Total Commission ({escrowData.commissionPercentage}%)</TableCell>
-                  <TableCell align="right">${escrowData.grossCommission.toLocaleString()}</TableCell>
+                  <TableCell>Total Commission ({escrowData.commissionPercentage || 0}%)</TableCell>
+                  <TableCell align="right">${(escrowData.grossCommission || 0).toLocaleString()}</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell>Listing Agent (50%)</TableCell>
-                  <TableCell align="right">${escrowData.listingAgent.commission.toLocaleString()}</TableCell>
+                  <TableCell align="right">${escrowData.listingAgent?.commission?.toLocaleString() || '0'}</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell>Buyer's Agent (50%)</TableCell>
-                  <TableCell align="right">${escrowData.buyerAgent.commission.toLocaleString()}</TableCell>
+                  <TableCell align="right">${escrowData.buyerAgent?.commission?.toLocaleString() || '0'}</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell><strong>Net Commission (after split)</strong></TableCell>
                   <TableCell align="right" sx={{ color: 'success.main' }}>
-                    <strong>${escrowData.netCommission.toLocaleString()}</strong>
+                    <strong>${(escrowData.netCommission || 0).toLocaleString()}</strong>
                   </TableCell>
                 </TableRow>
               </TableBody>
