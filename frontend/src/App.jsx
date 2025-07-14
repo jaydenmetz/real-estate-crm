@@ -9,6 +9,12 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { Box } from '@mui/material';
 
+// Auth imports
+import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import LoginPage from './components/auth/LoginPage';
+import UserAwareErrorBoundary from './components/common/UserAwareErrorBoundary';
+
 // Components
 import EnhancedNavigation from './components/common/EnhancedNavigation';
 import AlexQuickTaskBar from './components/ai/AlexQuickTaskBar';
@@ -157,51 +163,68 @@ function App() {
           >
             <CssBaseline />
             <Router>
-              <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-                {/* Navigation */}
-                <EnhancedNavigation />
-                
-                {/* Alex Quick Task Bar - On every page */}
-                <AlexQuickTaskBar />
-                
-                {/* Main Content */}
-                <Box sx={{ flexGrow: 1, backgroundColor: '#f8f9fa' }}>
-                  <Routes>
-                    {/* Virtual Office as Home */}
-                    <Route path="/" element={
-                      <ErrorBoundary>
-                        <AIAgentsDashboardSimple />
-                      </ErrorBoundary>
-                    } />
+              <AuthProvider>
+                <Routes>
+                  {/* Public Routes */}
+                  <Route path="/login" element={<LoginPage />} />
+                  
+                  {/* Protected Routes */}
+                  <Route
+                    path="/*"
+                    element={
+                      <ProtectedRoute>
+                        <UserAwareErrorBoundary pageName="Application">
+                          <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+                            {/* Navigation */}
+                            <EnhancedNavigation />
+                            
+                            {/* Alex Quick Task Bar - On every page */}
+                            <AlexQuickTaskBar />
+                            
+                            {/* Main Content */}
+                            <Box sx={{ flexGrow: 1, backgroundColor: '#f8f9fa' }}>
+                              <Routes>
+                                {/* Virtual Office as Home */}
+                                <Route path="/" element={
+                                  <UserAwareErrorBoundary pageName="AI Agents Dashboard">
+                                    <AIAgentsDashboardSimple />
+                                  </UserAwareErrorBoundary>
+                                } />
                     
-                    {/* Main Features */}
-                    <Route path="/escrows" element={<EscrowsDashboard />} />
-                    <Route path="/escrows/:id" element={<EscrowDetail />} />
+                                {/* Main Features */}
+                                <Route path="/escrows" element={<EscrowsDashboard />} />
+                                <Route path="/escrows/:id" element={<EscrowDetail />} />
                     
-                    <Route path="/listings" element={<ListingsDashboard />} />
-                    <Route path="/listings/:id" element={<ListingDetail />} />
+                                <Route path="/listings" element={<ListingsDashboard />} />
+                                <Route path="/listings/:id" element={<ListingDetail />} />
                     
-                    <Route path="/clients" element={<ClientsDashboard />} />
-                    <Route path="/clients/:id" element={<ClientDetail />} />
+                                <Route path="/clients" element={<ClientsDashboard />} />
+                                <Route path="/clients/:id" element={<ClientDetail />} />
                     
-                    <Route path="/appointments" element={<AppointmentsDashboard />} />
-                    <Route path="/appointments/:id" element={<AppointmentDetail />} />
+                                <Route path="/appointments" element={<AppointmentsDashboard />} />
+                                <Route path="/appointments/:id" element={<AppointmentDetail />} />
                     
-                    <Route path="/leads" element={<LeadsDashboard />} />
-                    <Route path="/leads/:id" element={<LeadDetail />} />
+                                <Route path="/leads" element={<LeadsDashboard />} />
+                                <Route path="/leads/:id" element={<LeadDetail />} />
                     
-                    {/* System Features */}
-                    <Route path="/activity-log" element={<ActivityLog />} />
-                    <Route path="/all-notes" element={<AllNotes />} />
-                    {/* <Route path="/reports" element={<Reports />} />
-                    <Route path="/calendar" element={<Calendar />} />
-                    <Route path="/settings" element={<Settings />} /> */}
+                                {/* System Features */}
+                                <Route path="/activity-log" element={<ActivityLog />} />
+                                <Route path="/all-notes" element={<AllNotes />} />
+                                {/* <Route path="/reports" element={<Reports />} />
+                                <Route path="/calendar" element={<Calendar />} />
+                                <Route path="/settings" element={<Settings />} /> */}
                     
-                    {/* Catch all redirect */}
-                    <Route path="*" element={<Navigate to="/" />} />
-                  </Routes>
-                </Box>
-              </Box>
+                                {/* Catch all redirect */}
+                                <Route path="*" element={<Navigate to="/" />} />
+                              </Routes>
+                            </Box>
+                          </Box>
+                        </UserAwareErrorBoundary>
+                      </ProtectedRoute>
+                    }
+                  />
+                </Routes>
+              </AuthProvider>
             </Router>
           </SnackbarProvider>
         </LocalizationProvider>

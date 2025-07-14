@@ -41,6 +41,7 @@ import {
   Assessment,
   Menu as MenuIcon,
 } from '@mui/icons-material';
+import UserMenu from './UserMenu';
 
 const EnhancedNavigation = () => {
   const navigate = useNavigate();
@@ -48,7 +49,6 @@ const EnhancedNavigation = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
   const [otherDataAnchor, setOtherDataAnchor] = useState(null);
-  const [profileAnchor, setProfileAnchor] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notificationAnchor, setNotificationAnchor] = useState(null);
 
@@ -236,16 +236,8 @@ const EnhancedNavigation = () => {
               </IconButton>
             </Tooltip>
 
-            {/* Profile */}
-            <Tooltip title="Profile">
-              <IconButton
-                onClick={(e) => setProfileAnchor(e.currentTarget)}
-                size="small"
-                sx={{ ml: 1 }}
-              >
-                <Avatar sx={{ width: 32, height: 32 }}>U</Avatar>
-              </IconButton>
-            </Tooltip>
+            {/* User Menu */}
+            <UserMenu />
           </Box>
         </Toolbar>
       </AppBar>
@@ -325,27 +317,6 @@ const EnhancedNavigation = () => {
         </MenuItem>
       </Menu>
 
-      {/* Profile Menu */}
-      <Menu
-        anchorEl={profileAnchor}
-        open={Boolean(profileAnchor)}
-        onClose={() => setProfileAnchor(null)}
-        onClick={() => setProfileAnchor(null)}
-      >
-        <MenuItem component={NavLink} to="/profile">
-          <ListItemIcon><People /></ListItemIcon>
-          <ListItemText primary="My Profile" />
-        </MenuItem>
-        <MenuItem component={NavLink} to="/settings">
-          <ListItemIcon><Settings /></ListItemIcon>
-          <ListItemText primary="Settings" />
-        </MenuItem>
-        <Divider />
-        <MenuItem onClick={() => console.log('Logout')}>
-          <ListItemIcon><ExitToApp /></ListItemIcon>
-          <ListItemText primary="Logout" />
-        </MenuItem>
-      </Menu>
     </>
   );
 };

@@ -121,6 +121,10 @@ app.get('/ws/status', (req, res) => {
 const apiRouter = express.Router();
 apiRouter.use(rateLimit);
 
+// Auth routes (no authentication required)
+apiRouter.use('/auth', require('./routes/auth').router);
+
+// Protected routes - comment out authenticateToken for now to avoid breaking existing functionality
 apiRouter.use('/escrows', require('./routes/escrows.routes'));
 apiRouter.use('/listings', require('./routes/listings.routes'));
 apiRouter.use('/clients', require('./routes/clients.routes'));
