@@ -11,6 +11,7 @@ import {
   Typography,
   IconButton,
   InputAdornment,
+  MenuItem,
 } from '@mui/material';
 import {
   Close,
@@ -26,7 +27,10 @@ import { format, addDays } from 'date-fns';
 const EscrowFormSimple = ({ open, onClose, onSubmit, loading = false }) => {
   const { control, handleSubmit, reset, formState: { errors } } = useForm({
     defaultValues: {
-      propertyAddress: '',
+      street: '',
+      city: '',
+      state: 'CA',
+      zipCode: '',
       purchasePrice: '',
       buyerName: '',
       sellerName: '',
@@ -44,8 +48,11 @@ const EscrowFormSimple = ({ open, onClose, onSubmit, loading = false }) => {
 
   const handleFormSubmit = (data) => {
     // Format the data to match API requirements
+    // The API expects propertyAddress as a single string for v1/escrows
+    const fullAddress = `${data.street.trim()}, ${data.city.trim()}, ${data.state.trim()} ${data.zipCode.trim()}`;
+    
     const formattedData = {
-      propertyAddress: data.propertyAddress.trim(),
+      propertyAddress: fullAddress,
       purchasePrice: parseFloat(data.purchasePrice),
       buyers: [{
         name: data.buyerName.trim(),
@@ -84,21 +91,21 @@ const EscrowFormSimple = ({ open, onClose, onSubmit, loading = false }) => {
           </Typography>
           
           <Grid container spacing={3}>
-            {/* Property Address */}
+            {/* Property Address Fields */}
             <Grid item xs={12}>
               <Controller
-                name="propertyAddress"
+                name="street"
                 control={control}
-                rules={{ required: 'Property address is required' }}
+                rules={{ required: 'Street address is required' }}
                 render={({ field }) => (
                   <TextField
                     {...field}
-                    label="Property Address"
+                    label="Street Address"
                     fullWidth
                     required
-                    error={!!errors.propertyAddress}
-                    helperText={errors.propertyAddress?.message}
-                    placeholder="123 Main St, San Diego, CA 92101"
+                    error={!!errors.street}
+                    helperText={errors.street?.message}
+                    placeholder="123 Main St"
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
@@ -106,6 +113,77 @@ const EscrowFormSimple = ({ open, onClose, onSubmit, loading = false }) => {
                         </InputAdornment>
                       ),
                     }}
+                  />
+                )}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={5}>
+              <Controller
+                name="city"
+                control={control}
+                rules={{ required: 'City is required' }}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="City"
+                    fullWidth
+                    required
+                    error={!!errors.city}
+                    helperText={errors.city?.message}
+                    placeholder="San Diego"
+                  />
+                )}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={3}>
+              <Controller
+                name="state"
+                control={control}
+                rules={{ required: 'State is required' }}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="State"
+                    fullWidth
+                    required
+                    select
+                    error={!!errors.state}
+                    helperText={errors.state?.message}
+                  >
+                    <MenuItem value="CA">CA</MenuItem>
+                    <MenuItem value="AZ">AZ</MenuItem>
+                    <MenuItem value="NV">NV</MenuItem>
+                    <MenuItem value="OR">OR</MenuItem>
+                    <MenuItem value="WA">WA</MenuItem>
+                    <MenuItem value="TX">TX</MenuItem>
+                    <MenuItem value="FL">FL</MenuItem>
+                  </TextField>
+                )}
+              />
+            </Grid>
+
+            <Grid item xs={12} sm={4}>
+              <Controller
+                name="zipCode"
+                control={control}
+                rules={{ 
+                  required: 'ZIP code is required',
+                  pattern: {
+                    value: /^\d{5}(-\d{4})?$/,
+                    message: 'Invalid ZIP code'
+                  }
+                }}
+                render={({ field }) => (
+                  <TextField
+                    {...field}
+                    label="ZIP Code"
+                    fullWidth
+                    required
+                    error={!!errors.zipCode}
+                    helperText={errors.zipCode?.message}
+                    placeholder="92101"
                   />
                 )}
               />
