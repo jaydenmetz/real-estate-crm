@@ -157,7 +157,8 @@ export const escrowsAPI = {
   update: (id, data) => apiInstance.put(`/escrows/${id}`, data),
   delete: (id) => apiInstance.delete(`/escrows/${id}`),
   updateChecklist: (id, checklist) => apiInstance.put(`/escrows/${id}/checklist`, { checklist }),
-  getAnalytics: (id) => apiInstance.get(`/analytics/escrow/${id}`)
+  getAnalytics: (id) => apiInstance.get(`/analytics/escrow/${id}`),
+  addNote: (id, note) => apiInstance.post(`/escrows/${id}/notes`, note)
 };
 
 export const listingsAPI = {

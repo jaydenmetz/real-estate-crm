@@ -325,7 +325,7 @@ const EscrowDetail = () => {
   // Fetch escrow details
   const { data: escrow, isLoading, error } = useQuery(
     ['escrow', id],
-    () => escrowsAPI.getOne(id).then(res => res.data),
+    () => escrowsAPI.getById(id).then(res => res.data),
     {
       refetchInterval: 30000,
       onError: () => {
