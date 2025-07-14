@@ -12,9 +12,11 @@ import { Box } from '@mui/material';
 // Components
 import EnhancedNavigation from './components/common/EnhancedNavigation';
 import AlexQuickTaskBar from './components/ai/AlexQuickTaskBar';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Dashboard Components
 import AIAgentsDashboard from './components/dashboards/AIAgentsDashboard';
+import SimpleAIAgentsDashboard from './components/dashboards/SimpleAIAgentsDashboard';
 import EscrowsDashboard from './components/dashboards/EscrowsDashboard';
 import EscrowDetail from './components/details/EscrowDetail';
 import ListingsDashboard from './components/dashboards/ListingsDashboard';
@@ -165,7 +167,11 @@ function App() {
                 <Box sx={{ flexGrow: 1, backgroundColor: '#f8f9fa' }}>
                   <Routes>
                     {/* Virtual Office as Home */}
-                    <Route path="/" element={<AIAgentsDashboard />} />
+                    <Route path="/" element={
+                      <ErrorBoundary>
+                        <SimpleAIAgentsDashboard />
+                      </ErrorBoundary>
+                    } />
                     
                     {/* Main Features */}
                     <Route path="/escrows" element={<EscrowsDashboard />} />

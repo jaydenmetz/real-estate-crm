@@ -208,6 +208,8 @@ const agentConfigs = {
 };
 
 const AIAgentsDashboard = () => {
+  console.log('AIAgentsDashboard rendering');
+  
   const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedAgent, setSelectedAgent] = useState(null);
@@ -218,6 +220,7 @@ const AIAgentsDashboard = () => {
 
   // Fetch agents data
   useEffect(() => {
+    console.log('AIAgentsDashboard useEffect running');
     fetchAgents();
     
     // Set up WebSocket listeners
@@ -238,6 +241,7 @@ const AIAgentsDashboard = () => {
   }, [chatMessages, selectedAgent]);
 
   const fetchAgents = async () => {
+    console.log('fetchAgents called');
     setLoading(true);
     
     // Always use mock data for now
@@ -249,6 +253,7 @@ const AIAgentsDashboard = () => {
       lastActivity: new Date(Date.now() - Math.random() * 86400000).toISOString()
     }));
     
+    console.log('Mock agents created:', mockAgents.length);
     setAgents(mockAgents);
     
     // Mock activities for each agent
@@ -350,12 +355,15 @@ const AIAgentsDashboard = () => {
   };
 
   if (loading) {
+    console.log('AIAgentsDashboard showing loading state');
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
         <CircularProgress />
       </Box>
     );
   }
+  
+  console.log('AIAgentsDashboard rendering with agents:', agents.length);
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
