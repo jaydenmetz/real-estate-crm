@@ -6,7 +6,7 @@ This document provides comprehensive documentation for the Real Estate CRM API. 
 
 ### Base URL
 ```
-https://your-backend.railway.app/api/v1
+https://crm.jaydenmetz.com/api/v1
 ```
 
 ### Authentication
@@ -804,7 +804,7 @@ POST /v1/webhooks
 
 Connect to WebSocket for real-time updates:
 ```javascript
-const ws = new WebSocket('wss://your-backend.railway.app');
+const ws = new WebSocket('wss://crm.jaydenmetz.com');
 ```
 
 ### Event Types:
@@ -824,7 +824,7 @@ const api = require('@your-company/crm-sdk');
 
 const client = new api.Client({
   apiKey: 'your-api-key',
-  baseUrl: 'https://your-backend.railway.app/api/v1'
+  baseUrl: 'https://crm.jaydenmetz.com/api/v1'
 });
 
 // Get all active listings
@@ -848,7 +848,7 @@ from crm_sdk import Client
 
 client = Client(
     api_key='your-api-key',
-    base_url='https://your-backend.railway.app/api/v1'
+    base_url='https://crm.jaydenmetz.com/api/v1'
 )
 
 # Get escrow details
