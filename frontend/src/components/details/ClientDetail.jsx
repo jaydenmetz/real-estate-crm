@@ -38,6 +38,8 @@ import {
   Checkbox,
   Menu,
 } from '@mui/material';
+import DetailPageDebugger from '../common/DetailPageDebugger';
+import DetailPageErrorBoundary from '../common/DetailPageErrorBoundary';
 import {
   Timeline,
   TimelineItem,
@@ -108,16 +110,27 @@ const ClientDetail = () => {
   const [newNote, setNewNote] = useState('');
   const [anchorEl, setAnchorEl] = useState(null);
 
+  // Debug logging
+  console.log('[ClientDetail] Component mounted');
+  console.log('[ClientDetail] ID received:', id);
+  console.log('[ClientDetail] Window location:', window.location.href);
+
   // Fetch client details
-  const { data: client, isLoading } = useQuery(
+  const { data: client, isLoading, error, isError } = useQuery(
     ['client', id],
-    () => api.get(`/clients/${id}`).then(res => res.data),
-    { 
-      refetchInterval: 30000,
-      onError: () => {
-        // If API fails, use mock data
+    async () => {
+      try {
+        const res = await api.get(`/clients/${id}`);
+        return res.data;
+      } catch (err) {
+        console.error('Error fetching client:', err);
+        // Return mock data on error
         return mockClient;
       }
+    },
+    { 
+      refetchInterval: 30000,
+      retry: 1
     }
   );
 
@@ -391,6 +404,19 @@ const ClientDetail = () => {
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
+      <DetailPageDebugger 
+        pageName="ClientDetail"
+        id={id}
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        data={displayClient}
+        additionalInfo={{
+          activeTab,
+          hasClientData: !!client,
+          usingMockData: !client && !!displayClient
+        }}
+      />
       {/* Header */}
       <Box sx={{ mb: 3 }}>
         <Breadcrumbs separator="›" sx={{ mb: 2 }}>
@@ -1065,4 +1091,10 @@ const ClientDetail = () => {
   );
 };
 
-export default ClientDetail;
+const ClientDetailWithErrorBoundary = () => (
+  <DetailPageErrorBoundary pageName="ClientDetail">
+    <ClientDetail />
+  </DetailPageErrorBoundary>
+);
+
+export default ClientDetailWithErrorBoundary;

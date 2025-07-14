@@ -32,6 +32,8 @@ import {
   Menu,
   MenuItem,
 } from '@mui/material';
+import DetailPageDebugger from '../common/DetailPageDebugger';
+import DetailPageErrorBoundary from '../common/DetailPageErrorBoundary';
 import {
   Timeline,
   TimelineItem,
@@ -70,11 +72,12 @@ import {
 import { format, formatDistanceToNow, isPast, differenceInMinutes } from 'date-fns';
 import api from '../../services/api';
 
-export default function AppointmentDetail() {
+function AppointmentDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [appointment, setAppointment] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState(0);
   const [checklistItems, setChecklistItems] = useState({});
   const [attendees, setAttendees] = useState([]);
@@ -82,6 +85,11 @@ export default function AppointmentDetail() {
   const [analytics, setAnalytics] = useState(null);
   const [newNote, setNewNote] = useState('');
   const [anchorEl, setAnchorEl] = useState(null);
+
+  // Debug logging
+  console.log('[AppointmentDetail] Component mounted');
+  console.log('[AppointmentDetail] ID received:', id);
+  console.log('[AppointmentDetail] Window location:', window.location.href);
 
   // Mock data for development
   const mockAppointments = {
@@ -217,8 +225,9 @@ export default function AppointmentDetail() {
       }
       
       setLoading(false);
-    } catch (error) {
-      console.error('Error fetching appointment details:', error);
+    } catch (err) {
+      console.error('Error fetching appointment details:', err);
+      setError(err);
       
       // Use mock data as fallback
       const mockAppointment = mockAppointments[id];
@@ -365,6 +374,21 @@ export default function AppointmentDetail() {
 
   return (
     <Container maxWidth="xl">
+      <DetailPageDebugger 
+        pageName="AppointmentDetail"
+        id={id}
+        isLoading={loading}
+        isError={!!error}
+        error={error}
+        data={appointment}
+        additionalInfo={{
+          activeTab,
+          hasAppointmentData: !!appointment,
+          usingMockData: !!error && !!appointment,
+          attendeeCount: attendees.length,
+          hasRelatedProperty: !!relatedProperty
+        }}
+      />
       {/* Breadcrumbs */}
       <Breadcrumbs sx={{ mb: 2 }}>
         <Link
@@ -1009,3 +1033,11 @@ export default function AppointmentDetail() {
     </Container>
   );
 }
+
+const AppointmentDetailWithErrorBoundary = () => (
+  <DetailPageErrorBoundary pageName="AppointmentDetail">
+    <AppointmentDetail />
+  </DetailPageErrorBoundary>
+);
+
+export default AppointmentDetailWithErrorBoundary;

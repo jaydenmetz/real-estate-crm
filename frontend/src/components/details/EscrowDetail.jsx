@@ -1,6 +1,8 @@
 // frontend/src/components/details/EscrowDetail.jsx
 
 import React, { useState } from 'react';
+import DetailPageDebugger from '../common/DetailPageDebugger';
+import DetailPageErrorBoundary from '../common/DetailPageErrorBoundary';
 import {
   Container,
   Grid,
@@ -310,6 +312,10 @@ const EscrowDetail = () => {
   const queryClient = useQueryClient();
   const { enqueueSnackbar } = useSnackbar();
   
+  // Debug logging
+  console.log('[EscrowDetail] Component mounted with ID:', id);
+  console.log('[EscrowDetail] Window location:', window.location.href);
+  
   const [activeTab, setActiveTab] = useState(0);
   const [anchorEl, setAnchorEl] = useState(null);
   const [expandedSections, setExpandedSections] = useState({
@@ -321,22 +327,61 @@ const EscrowDetail = () => {
   const [newNote, setNewNote] = useState('');
   const [openNoteDialog, setOpenNoteDialog] = useState(false);
   const [checklistStates, setChecklistStates] = useState({});
+  const [debugInfo, setDebugInfo] = useState({
+    componentMounted: true,
+    idReceived: id,
+    timestamp: new Date().toISOString()
+  });
 
-  // Fetch escrow details
-  const { data: escrow, isLoading, error } = useQuery(
+  // Fetch escrow details with proper error handling
+  const { data: escrow, isLoading, error, isError, isFetching } = useQuery(
     ['escrow', id],
-    () => escrowsAPI.getById(id).then(res => res.data),
+    async () => {
+      console.log('[EscrowDetail] Starting API fetch for ID:', id);
+      try {
+        const response = await escrowsAPI.getById(id);
+        console.log('[EscrowDetail] API response:', response);
+        setDebugInfo(prev => ({ ...prev, apiResponse: response, apiSuccess: true }));
+        return response.data;
+      } catch (err) {
+        console.error('[EscrowDetail] API error:', err);
+        setDebugInfo(prev => ({ 
+          ...prev, 
+          apiError: err.message, 
+          apiStatus: err.status,
+          apiSuccess: false,
+          errorStack: err.stack 
+        }));
+        // Return mock data on error
+        console.log('[EscrowDetail] Returning mock data due to error');
+        return mockEscrowDetail;
+      }
+    },
     {
       refetchInterval: 30000,
-      onError: () => {
-        // Return mock data on error
-        return mockEscrowDetail;
+      retry: 1,
+      onError: (err) => {
+        console.error('[EscrowDetail] Query error callback:', err);
+        setDebugInfo(prev => ({ ...prev, queryError: err.message }));
+      },
+      onSuccess: (data) => {
+        console.log('[EscrowDetail] Query success:', data);
+        setDebugInfo(prev => ({ ...prev, querySuccess: true, dataReceived: !!data }));
       }
     }
   );
 
   // Use mock data if API fails
   const escrowData = escrow || mockEscrowDetail;
+  
+  // Log render state
+  console.log('[EscrowDetail] Render state:', {
+    isLoading,
+    isError,
+    isFetching,
+    hasData: !!escrow,
+    escrowData: escrowData
+  });
 
   // Initialize checklist states
   React.useEffect(() => {
@@ -451,6 +496,17 @@ const EscrowDetail = () => {
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+      {/* Debug Panel */}
+      <DetailPageDebugger
+        pageName="EscrowDetail"
+        id={id}
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        data={escrow}
+        additionalInfo={debugInfo}
+      />
+      
       {/* Breadcrumbs */}
       <Breadcrumbs separator={<NavigateNext fontSize="small" />} sx={{ mb: 2 }}>
         <Link
@@ -1190,4 +1246,11 @@ const EscrowDetail = () => {
   );
 };
 
-export default EscrowDetail;
+// Wrap with error boundary
+const EscrowDetailWithErrorBoundary = () => (
+  <DetailPageErrorBoundary pageName="Escrow Detail">
+    <EscrowDetail />
+  </DetailPageErrorBoundary>
+);
+
+export default EscrowDetailWithErrorBoundary;

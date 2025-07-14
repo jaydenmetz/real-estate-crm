@@ -29,6 +29,8 @@ import {
   Tooltip,
   Alert,
 } from '@mui/material';
+import DetailPageDebugger from '../common/DetailPageDebugger';
+import DetailPageErrorBoundary from '../common/DetailPageErrorBoundary';
 import {
   Timeline,
   TimelineItem,
@@ -75,16 +77,27 @@ const LeadDetail = () => {
   const [editMode, setEditMode] = useState(false);
   const [newNote, setNewNote] = useState('');
 
+  // Debug logging
+  console.log('[LeadDetail] Component mounted');
+  console.log('[LeadDetail] ID received:', id);
+  console.log('[LeadDetail] Window location:', window.location.href);
+
   // Fetch lead details
-  const { data: lead, isLoading } = useQuery(
+  const { data: lead, isLoading, error, isError } = useQuery(
     ['lead', id],
-    () => leadsAPI.getOne(id),
-    { 
-      refetchInterval: 30000,
-      onError: () => {
-        // If API fails, use mock data
+    async () => {
+      try {
+        const response = await leadsAPI.getOne(id);
+        return response;
+      } catch (err) {
+        console.error('Error fetching lead:', err);
+        // Return mock data on error
         return mockLead;
       }
+    },
+    { 
+      refetchInterval: 30000,
+      retry: 1
     }
   );
 
@@ -265,6 +278,19 @@ const LeadDetail = () => {
 
   return (
     <Container maxWidth="xl">
+      <DetailPageDebugger 
+        pageName="LeadDetail"
+        id={id}
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        data={displayLead}
+        additionalInfo={{
+          activeTab,
+          hasLeadData: !!lead,
+          usingMockData: !lead && !!displayLead
+        }}
+      />
       {/* Breadcrumbs */}
       <Breadcrumbs sx={{ mb: 2 }}>
         <Link
@@ -682,4 +708,10 @@ const LeadDetail = () => {
   );
 };
 
-export default LeadDetail;
+const LeadDetailWithErrorBoundary = () => (
+  <DetailPageErrorBoundary pageName="LeadDetail">
+    <LeadDetail />
+  </DetailPageErrorBoundary>
+);
+
+export default LeadDetailWithErrorBoundary;

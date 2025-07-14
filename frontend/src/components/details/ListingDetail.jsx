@@ -42,6 +42,8 @@ import {
   TableCell,
   TableRow,
 } from '@mui/material';
+import DetailPageDebugger from '../common/DetailPageDebugger';
+import DetailPageErrorBoundary from '../common/DetailPageErrorBoundary';
 import {
   Timeline,
   TimelineItem,
@@ -123,6 +125,11 @@ const ListingDetail = () => {
   const [openImageDialog, setOpenImageDialog] = useState(false);
   const [selectedImage, setSelectedImage] = useState('');
   const [openShareDialog, setOpenShareDialog] = useState(false);
+
+  // Debug logging
+  console.log('[ListingDetail] Component mounted');
+  console.log('[ListingDetail] ID received:', id);
+  console.log('[ListingDetail] Window location:', window.location.href);
 
   // Mock listing data for demonstration
   const mockListing = {
@@ -257,7 +264,7 @@ const ListingDetail = () => {
   };
 
   // Fetch listing details
-  const { data: listing, isLoading, error } = useQuery(
+  const { data: listing, isLoading, error, isError } = useQuery(
     ['listing', id],
     async () => {
       try {
@@ -368,6 +375,19 @@ const ListingDetail = () => {
 
   return (
     <Container maxWidth="xl">
+      <DetailPageDebugger 
+        pageName="ListingDetail"
+        id={id}
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        data={displayListing}
+        additionalInfo={{
+          activeTab,
+          hasListingData: !!listing,
+          usingMockData: !listing && !!displayListing
+        }}
+      />
       {/* Breadcrumbs */}
       <Breadcrumbs sx={{ mb: 2 }}>
         <Link
@@ -1124,4 +1144,10 @@ const ListingDetail = () => {
   );
 };
 
-export default ListingDetail;
+const ListingDetailWithErrorBoundary = () => (
+  <DetailPageErrorBoundary pageName="ListingDetail">
+    <ListingDetail />
+  </DetailPageErrorBoundary>
+);
+
+export default ListingDetailWithErrorBoundary;
