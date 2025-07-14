@@ -11,40 +11,19 @@ import {
   Button,
   Avatar,
   Chip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  IconButton,
-  List,
-  ListItem,
-  ListItemText,
-  Paper,
-  Divider,
-  CircularProgress,
-  Alert,
-  Tabs,
-  Tab,
   Badge,
   LinearProgress,
   Fade,
   Collapse,
+  CircularProgress,
 } from '@mui/material';
 import {
   SmartToy,
   Chat,
-  History,
-  Close,
-  Send,
-  PowerSettingsNew,
   Schedule,
-  CheckCircle,
-  Warning,
   TrendingUp,
   Person,
   Home,
-  AccountBalance,
   Gavel,
   Campaign,
   Description,
@@ -61,6 +40,7 @@ import {
 import { aiAPI, aiAgentsAPI } from '../../services/api';
 import websocketService from '../../services/websocket';
 import { formatDistanceToNow } from 'date-fns';
+import EnhancedAgentChat from '../ai/EnhancedAgentChat';
 
 // Agent categories for organized display
 const agentCategories = {
@@ -232,12 +212,9 @@ const AIAgentsDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [selectedAgent, setSelectedAgent] = useState(null);
   const [chatOpen, setChatOpen] = useState(false);
-  const [activityTab, setActivityTab] = useState(0);
-  const [message, setMessage] = useState('');
   const [chatMessages, setChatMessages] = useState({});
   const [activities, setActivities] = useState({});
   const [expandedAgents, setExpandedAgents] = useState({});
-  const messagesEndRef = useRef(null);
 
   // Fetch agents data
   useEffect(() => {
@@ -353,46 +330,10 @@ const AIAgentsDashboard = () => {
     }
   };
 
-  const handleSendMessage = () => {
-    if (!message.trim() || !selectedAgent) return;
-
-    const newMessage = {
-      id: Date.now(),
-      sender: 'user',
-      text: message,
-      timestamp: new Date().toISOString()
-    };
-
-    setChatMessages(prev => ({
-      ...prev,
-      [selectedAgent.id]: [...(prev[selectedAgent.id] || []), newMessage]
-    }));
-
-    // Send via WebSocket
-    websocketService.sendToAgent(selectedAgent.id, message, 'chat');
-
-    // Simulate agent response
-    setTimeout(() => {
-      const response = {
-        id: Date.now() + 1,
-        sender: 'agent',
-        text: `I understand your request. I'll ${message.toLowerCase().includes('analyze') ? 'analyze that data' : 'take care of that'} right away.`,
-        timestamp: new Date().toISOString()
-      };
-      
-      setChatMessages(prev => ({
-        ...prev,
-        [selectedAgent.id]: [...(prev[selectedAgent.id] || []), response]
-      }));
-    }, 1000);
-
-    setMessage('');
-  };
 
   const openChat = (agent) => {
     setSelectedAgent(agent);
     setChatOpen(true);
-    setActivityTab(0);
   };
 
   const toggleAgentExpand = (agentId) => {
@@ -587,17 +528,7 @@ const AIAgentsDashboard = () => {
                     onClick={() => openChat(agent)}
                     disabled={!agent.enabled}
                   >
-                    Chat
-                  </Button>
-                  <Button
-                    startIcon={<History />}
-                    onClick={() => {
-                      setSelectedAgent(agent);
-                      setActivityTab(1);
-                      setChatOpen(true);
-                    }}
-                  >
-                    View Logs
+                    Chat & Activity
                   </Button>
                 </CardActions>
               </Card>
@@ -772,136 +703,17 @@ const AIAgentsDashboard = () => {
         );
       })}
 
-      {/* Chat Dialog */}
-      <Dialog
-        open={chatOpen}
-        onClose={() => setChatOpen(false)}
-        maxWidth="md"
-        fullWidth
-        PaperProps={{
-          sx: { height: '80vh' }
-        }}
-      >
-        {selectedAgent && (
-          <>
-            <DialogTitle>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                  <Avatar sx={{ bgcolor: selectedAgent.color, mr: 2 }}>
-                    {selectedAgent.icon}
-                  </Avatar>
-                  <Box>
-                    <Typography variant="h6">{selectedAgent.name}</Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {selectedAgent.title}
-                    </Typography>
-                  </Box>
-                </Box>
-                <IconButton onClick={() => setChatOpen(false)}>
-                  <Close />
-                </IconButton>
-              </Box>
-            </DialogTitle>
-
-            <Tabs 
-              value={activityTab} 
-              onChange={(e, v) => setActivityTab(v)}
-              sx={{ px: 3, borderBottom: 1, borderColor: 'divider' }}
-            >
-              <Tab label="Chat" />
-              <Tab label="Activity Log" />
-            </Tabs>
-
-            <DialogContent sx={{ p: 0, display: 'flex', flexDirection: 'column' }}>
-              {activityTab === 0 ? (
-                <>
-                  <Box sx={{ flexGrow: 1, overflowY: 'auto', p: 3 }}>
-                    <List>
-                      {(chatMessages[selectedAgent.id] || []).map((msg) => (
-                        <ListItem
-                          key={msg.id}
-                          sx={{
-                            flexDirection: 'column',
-                            alignItems: msg.sender === 'user' ? 'flex-end' : 'flex-start'
-                          }}
-                        >
-                          <Paper
-                            sx={{
-                              p: 2,
-                              maxWidth: '70%',
-                              bgcolor: msg.sender === 'user' ? 'primary.main' : 'grey.100',
-                              color: msg.sender === 'user' ? 'white' : 'text.primary'
-                            }}
-                          >
-                            <Typography variant="body2">{msg.text}</Typography>
-                            <Typography variant="caption" sx={{ opacity: 0.7 }}>
-                              {formatDistanceToNow(new Date(msg.timestamp), { addSuffix: true })}
-                            </Typography>
-                          </Paper>
-                        </ListItem>
-                      ))}
-                      <div ref={messagesEndRef} />
-                    </List>
-                  </Box>
-                  
-                  <Divider />
-                  
-                  <Box sx={{ p: 2, display: 'flex', gap: 1 }}>
-                    <TextField
-                      fullWidth
-                      placeholder={`Ask ${selectedAgent.name} anything...`}
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                      disabled={!selectedAgent.enabled}
-                    />
-                    <IconButton 
-                      onClick={handleSendMessage}
-                      color="primary"
-                      disabled={!selectedAgent.enabled || !message.trim()}
-                    >
-                      <Send />
-                    </IconButton>
-                  </Box>
-                </>
-              ) : (
-                <Box sx={{ p: 3, overflowY: 'auto' }}>
-                  <List>
-                    {(activities[selectedAgent.id] || []).map((activity, index) => (
-                      <React.Fragment key={activity.id || index}>
-                        <ListItem alignItems="flex-start">
-                          <ListItemText
-                            primary={activity.description}
-                            secondary={
-                              <Box>
-                                <Typography variant="caption" color="text.secondary">
-                                  {formatDistanceToNow(new Date(activity.timestamp), { addSuffix: true })}
-                                </Typography>
-                                {activity.details && (
-                                  <Typography variant="body2" sx={{ mt: 1 }}>
-                                    {activity.details}
-                                  </Typography>
-                                )}
-                              </Box>
-                            }
-                          />
-                        </ListItem>
-                        {index < activities[selectedAgent.id].length - 1 && <Divider />}
-                      </React.Fragment>
-                    ))}
-                  </List>
-                  
-                  {(!activities[selectedAgent.id] || activities[selectedAgent.id].length === 0) && (
-                    <Alert severity="info">
-                      No activity logs available for this agent yet.
-                    </Alert>
-                  )}
-                </Box>
-              )}
-            </DialogContent>
-          </>
-        )}
-      </Dialog>
+      {/* Enhanced Chat Dialog */}
+      {selectedAgent && (
+        <EnhancedAgentChat
+          agent={selectedAgent}
+          open={chatOpen}
+          onClose={() => setChatOpen(false)}
+          messages={chatMessages}
+          setMessages={setChatMessages}
+          activities={activities}
+        />
+      )}
     </Container>
   );
 };
