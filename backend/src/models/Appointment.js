@@ -214,14 +214,18 @@ class Appointment {
             break;
         }
         
-        try {
-          await twilioClient.messages.create({
-            body: message,
-            from: process.env.TWILIO_PHONE_NUMBER,
-            to: attendee.phone
-          });
-        } catch (error) {
-          console.error(`Failed to send SMS to ${attendee.phone}:`, error);
+        if (twilioClient) {
+          try {
+            await twilioClient.messages.create({
+              body: message,
+              from: process.env.TWILIO_PHONE_NUMBER,
+              to: attendee.phone
+            });
+          } catch (error) {
+            console.error(`Failed to send SMS to ${attendee.phone}:`, error);
+          }
+        } else {
+          console.warn('Twilio client not initialized. SMS reminders disabled.');
         }
       }
     }

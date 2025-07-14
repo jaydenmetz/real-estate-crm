@@ -56,12 +56,16 @@ class BuyerLeadQualifierAgent {
   async sendImmediateResponse(leadData) {
     const message = `Hi ${leadData.firstName}! I'm Alex from the Metz Real Estate Team. I saw you were interested in ${leadData.propertyInterest || 'finding a home'}. I'd love to help! When would be a good time for a quick call to discuss what you're looking for?`;
     
-    if (leadData.phone) {
-      await twilioClient.messages.create({
-        body: message,
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: leadData.phone
-      });
+    if (leadData.phone && twilioClient) {
+      try {
+        await twilioClient.messages.create({
+          body: message,
+          from: process.env.TWILIO_PHONE_NUMBER,
+          to: leadData.phone
+        });
+      } catch (error) {
+        console.error('Failed to send SMS:', error.message);
+      }
     }
     
     // Log communication

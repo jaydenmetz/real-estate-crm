@@ -136,12 +136,16 @@ class TransactionCoordinatorAgent {
     // Send to all parties
     const allParties = [...buyers, ...sellers];
     for (const party of allParties) {
-      if (party.phone) {
-        await twilioClient.messages.create({
-          body: message,
-          from: process.env.TWILIO_PHONE_NUMBER,
-          to: party.phone
-        });
+      if (party.phone && twilioClient) {
+        try {
+          await twilioClient.messages.create({
+            body: message,
+            from: process.env.TWILIO_PHONE_NUMBER,
+            to: party.phone
+          });
+        } catch (error) {
+          console.error(`Failed to send SMS to ${party.phone}:`, error.message);
+        }
       }
     }
   }

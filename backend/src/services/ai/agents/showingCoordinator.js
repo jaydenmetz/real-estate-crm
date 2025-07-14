@@ -109,11 +109,17 @@ class ShowingCoordinatorAgent {
     if (buyerAgent.phone) {
       const message = `Showing confirmed for ${listing.property_address} on ${showingTime.date} at ${showingTime.time}. ${listing.showing_instructions || 'Contact listing agent for access.'}`;
       
-      await twilioClient.messages.create({
-        body: message,
-        from: process.env.TWILIO_PHONE_NUMBER,
-        to: buyerAgent.phone
-      });
+      if (twilioClient) {
+        try {
+          await twilioClient.messages.create({
+            body: message,
+            from: process.env.TWILIO_PHONE_NUMBER,
+            to: buyerAgent.phone
+          });
+        } catch (error) {
+          console.error('Failed to send SMS:', error.message);
+        }
+      }
     }
     
     // Log the confirmation

@@ -166,6 +166,10 @@ class BuyerNurtureSpecialistAgent {
   }
 
   async sendSMS(phone, message) {
+    if (!twilioClient) {
+      logger.warn('Twilio client not initialized. SMS not sent.');
+      return;
+    }
     try {
       await twilioClient.messages.create({
         body: message,

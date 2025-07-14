@@ -150,12 +150,16 @@ class ListingMarketingAgent {
           subject: `Listing Update: ${listingData.address}`,
           html: `<p>${copy}</p><p><a href="${url}">View Listing</a></p>`
         });
-      } else if (channel === 'sms' && listingData.agentPhone) {
-        await twilioClient.messages.create({
-          body: message,
-          from: process.env.TWILIO_PHONE_NUMBER,
-          to: listingData.agentPhone
-        });
+      } else if (channel === 'sms' && listingData.agentPhone && twilioClient) {
+        try {
+          await twilioClient.messages.create({
+            body: message,
+            from: process.env.TWILIO_PHONE_NUMBER,
+            to: listingData.agentPhone
+          });
+        } catch (error) {
+          console.error('Failed to send SMS:', error.message);
+        }
       } else if (channel === 'social') {
         // placeholder: integrate with social media API
         logger.info(`Social post scheduled: ${copy}`);

@@ -117,12 +117,16 @@ class ListingLaunchSpecialistAgent {
     // Send SMS to listing agent
     if (listingData.agentId) {
       const agent = await Listing.findById(listingData.id);
-      if (agent && agent.agentPhone) {
-        await twilioClient.messages.create({
-          body: `New listing live: ${headline}. View at ${process.env.FRONTEND_URL}/listings/${listingData.id}`,
-          from: process.env.TWILIO_PHONE_NUMBER,
-          to: agent.agentPhone
-        });
+      if (agent && agent.agentPhone && twilioClient) {
+        try {
+          await twilioClient.messages.create({
+            body: `New listing live: ${headline}. View at ${process.env.FRONTEND_URL}/listings/${listingData.id}`,
+            from: process.env.TWILIO_PHONE_NUMBER,
+            to: agent.agentPhone
+          });
+        } catch (error) {
+          console.error('Failed to send SMS:', error.message);
+        }
       }
     }
   }
