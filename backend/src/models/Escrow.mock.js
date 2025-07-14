@@ -4,7 +4,7 @@ const logger = require('../utils/logger');
 // In-memory storage for mock data
 let mockEscrows = [
   {
-    id: 'esc_001',
+    id: '1',
     escrowNumber: 'ESC-2025-001',
     propertyAddress: '456 Ocean View Dr, La Jolla, CA 92037',
     propertyType: 'Single Family',
@@ -26,7 +26,7 @@ let mockEscrows = [
     updatedAt: new Date()
   },
   {
-    id: 'esc_002',
+    id: '2',
     escrowNumber: 'ESC-2025-002',
     propertyAddress: '789 Sunset Blvd, Del Mar, CA 92014',
     propertyType: 'Condo',
@@ -48,7 +48,7 @@ let mockEscrows = [
     updatedAt: new Date()
   },
   {
-    id: 'esc_003',
+    id: '3',
     escrowNumber: 'ESC-2025-003',
     propertyAddress: '321 Palm Ave, Coronado, CA 92118',
     propertyType: 'Townhouse',
@@ -117,7 +117,7 @@ class EscrowMock {
   static async create(data) {
     try {
       // Generate unique ID and escrow number
-      const id = `esc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const id = String(Math.max(...mockEscrows.map(e => parseInt(e.id) || 0)) + 1);
       const year = new Date().getFullYear();
       const month = String(new Date().getMonth() + 1).padStart(2, '0');
       const count = mockEscrows.length + 1;

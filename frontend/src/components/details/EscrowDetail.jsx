@@ -22,6 +22,7 @@ import {
   CardContent,
   Divider,
   LinearProgress,
+  CircularProgress,
   Breadcrumbs,
   Link,
   Tooltip,
@@ -29,7 +30,6 @@ import {
   FormGroup,
   FormControlLabel,
   Checkbox,
-  CircularProgress,
   Menu,
   MenuItem,
   Dialog,
@@ -420,7 +420,29 @@ const EscrowDetail = () => {
   if (isLoading) {
     return (
       <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-        <LinearProgress />
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+          <CircularProgress />
+        </Box>
+      </Container>
+    );
+  }
+
+  if (error && !escrow) {
+    return (
+      <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+        <Alert severity="error">
+          Failed to load escrow details. Please try again later.
+        </Alert>
+      </Container>
+    );
+  }
+
+  if (!escrowData) {
+    return (
+      <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+        <Alert severity="warning">
+          Escrow not found.
+        </Alert>
       </Container>
     );
   }

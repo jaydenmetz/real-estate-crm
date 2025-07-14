@@ -21,6 +21,7 @@ import {
   CardMedia,
   Divider,
   LinearProgress,
+  CircularProgress,
   Breadcrumbs,
   Link,
   Tooltip,
@@ -28,7 +29,6 @@ import {
   FormGroup,
   FormControlLabel,
   Checkbox,
-  CircularProgress,
   Menu,
   MenuItem,
   Dialog,
@@ -257,15 +257,21 @@ const ListingDetail = () => {
   };
 
   // Fetch listing details
-  const { data: listing, isLoading } = useQuery(
+  const { data: listing, isLoading, error } = useQuery(
     ['listing', id],
-    () => listingsAPI.getOne(id),
-    { 
-      refetchInterval: 30000,
-      onError: () => {
-        // If API fails, use mock data
+    async () => {
+      try {
+        const response = await listingsAPI.getOne(id);
+        return response;
+      } catch (err) {
+        console.error('Error fetching listing:', err);
+        // Return mock data on error
         return mockListing;
       }
+    },
+    { 
+      refetchInterval: 30000,
+      retry: 1
     }
   );
 
@@ -332,8 +338,30 @@ const ListingDetail = () => {
 
   if (isLoading) {
     return (
-      <Container>
-        <LinearProgress />
+      <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '50vh' }}>
+          <CircularProgress />
+        </Box>
+      </Container>
+    );
+  }
+
+  if (error && !listing) {
+    return (
+      <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+        <Alert severity="error">
+          Failed to load listing details. Please try again later.
+        </Alert>
+      </Container>
+    );
+  }
+
+  if (!displayListing) {
+    return (
+      <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+        <Alert severity="warning">
+          Listing not found.
+        </Alert>
       </Container>
     );
   }
