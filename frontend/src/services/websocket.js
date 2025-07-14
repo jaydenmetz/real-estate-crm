@@ -15,7 +15,11 @@ class WebSocketService {
     try {
       const token = localStorage.getItem('api_token');
       
-      this.socket = io(process.env.REACT_APP_WS_URL || 'http://localhost:5050', {
+      // Use Vite environment variable and ensure HTTPS in production
+      const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:5050';
+      console.log('Connecting to WebSocket:', wsUrl);
+      
+      this.socket = io(wsUrl, {
         // auth: { token },  // ← Commented out temporarily
         reconnection: true,
         reconnectionAttempts: this.maxReconnectAttempts,
@@ -24,6 +28,7 @@ class WebSocketService {
         forceNew: false,
         upgrade: true,
         rememberUpgrade: true,
+        transports: ['websocket', 'polling'], // Try websocket first, fallback to polling
       });
 
       this.socket.on('connect', () => {
@@ -42,14 +47,24 @@ class WebSocketService {
       });
 
       this.socket.on('connect_error', (error) => {
-        console.error('WebSocket connection error:', error);
+        console.error('WebSocket connection error:', error.message, error.type);
+        
+        // Log more details about the error
+        if (error.type === 'TransportError') {
+          console.error('Transport error - check CORS configuration');
+        }
+        
         this.reconnectAttempts++;
         
         if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+          console.error('Max reconnection attempts reached. WebSocket connection failed.');
           this.emit('connection', { 
             status: 'failed', 
-            error: 'Max reconnection attempts reached' 
+            error: 'Max reconnection attempts reached',
+            details: error.message
           });
+        } else {
+          console.log(`Reconnection attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts}...`);
         }
       });
 

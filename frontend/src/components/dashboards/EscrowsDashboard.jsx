@@ -113,7 +113,7 @@ const EscrowsDashboard = () => {
   // Query with fallback to mock data
   const { data, isLoading, error } = useQuery(
     ['escrows', status],
-    () => api.get('/escrows', { params: { status: status === 'all' ? undefined : status } }).then(res => res.data),
+    () => api.get('/escrows', status === 'all' ? {} : { status }).then(res => res.data),
     {
       retry: false,
       refetchOnMount: false,

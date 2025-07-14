@@ -47,13 +47,37 @@ class WebSocketService {
   }
 
   initialize(server) {
+    // Use the same CORS origins as the main app
+    const allowedOrigins = [
+      'https://crm.jaydenmetz.com',
+      'https://api.jaydenmetz.com',
+      'http://localhost:3000',
+      'http://localhost:3001'
+    ];
+    
     this.io = socketIo(server, {
       cors: {
-        origin: process.env.FRONTEND_URL || "http://localhost:3000",
+        origin: (origin, callback) => {
+          // Allow requests with no origin (like mobile apps or curl)
+          if (!origin) return callback(null, true);
+          
+          if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+          }
+          
+          // Allow subdomains of jaydenmetz.com
+          if (/^https:\/\/[a-z0-9-]+\.jaydenmetz\.com$/.test(origin)) {
+            return callback(null, true);
+          }
+          
+          callback(new Error('Not allowed by CORS'));
+        },
         methods: ["GET", "POST"],
-        credentials: true
+        credentials: true,
+        allowedHeaders: ['Content-Type', 'Authorization']
       },
-      transports: ['websocket', 'polling']
+      transports: ['websocket', 'polling'],
+      allowEIO3: true // Allow different Socket.io versions
     });
 
     // Authentication middleware (simplified for development)

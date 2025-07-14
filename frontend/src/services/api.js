@@ -2,10 +2,21 @@
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5050/api/v1';
 
+// Log the API URL for debugging
+console.log('API Base URL:', API_BASE_URL);
+console.log('Environment:', import.meta.env.MODE);
+
 class ApiService {
   constructor() {
     this.baseURL = API_BASE_URL;
     this.token = localStorage.getItem('authToken');
+    
+    // Log initialization
+    console.log('API Service initialized:', {
+      baseURL: this.baseURL,
+      hasToken: !!this.token,
+      environment: import.meta.env.MODE
+    });
   }
 
   async request(endpoint, options = {}) {
@@ -16,7 +27,8 @@ class ApiService {
       headers: {
         'Content-Type': 'application/json',
         ...options.headers,
-      }
+      },
+      credentials: 'include', // Important for CORS with credentials
     };
 
     if (this.token) {
@@ -24,17 +36,41 @@ class ApiService {
     }
 
     try {
+      console.log(`API Request: ${config.method || 'GET'} ${url}`);
+      
       const response = await fetch(url, config);
 
+      // Log response details for debugging
+      console.log(`API Response: ${response.status} ${response.statusText}`);
+
       if (!response.ok) {
-        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        // Try to get error details from response
+        let errorMessage = `API Error: ${response.status} ${response.statusText}`;
+        try {
+          const errorData = await response.json();
+          if (errorData.error) {
+            errorMessage = errorData.error.message || errorMessage;
+          }
+        } catch (e) {
+          // Response wasn't JSON
+        }
+        
+        const error = new Error(errorMessage);
+        error.status = response.status;
+        error.response = response;
+        throw error;
       }
 
       // Handle empty responses
       const text = await response.text();
       return text ? JSON.parse(text) : null;
     } catch (error) {
-      console.error('API Request Error:', error);
+      console.error('API Request Error:', {
+        url,
+        method: config.method || 'GET',
+        error: error.message,
+        status: error.status
+      });
       throw error;
     }
   }
