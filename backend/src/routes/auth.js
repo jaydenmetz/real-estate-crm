@@ -9,7 +9,6 @@ const users = {
     id: 'user_001',
     username: 'jaydenmetz',
     email: 'jayden@jaydenmetz.com',
-    // Password: Password123!
     passwordHash: '$2a$10$Vf9HedqwlzydziZYG7zWxucAOUG306SayHp8K0WQKoUtAJALDRYWi',
     role: 'admin',
     apiKey: 'jm_live_k3y_' + Buffer.from('jaydenmetz:2025').toString('base64'),

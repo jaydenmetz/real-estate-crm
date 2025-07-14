@@ -227,26 +227,6 @@ const LoginPage = () => {
             </Button>
           </form>
 
-          <Divider sx={{ my: 3 }}>
-            <Typography variant="body2" color="text.secondary">
-              OR
-            </Typography>
-          </Divider>
-
-          {/* Demo Account Info */}
-          <Card variant="outlined" sx={{ bgcolor: 'grey.50' }}>
-            <CardContent>
-              <Typography variant="subtitle2" gutterBottom>
-                Demo Account
-              </Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                Username: <Chip label="jaydenmetz" size="small" sx={{ mx: 0.5 }} />
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Password: <Chip label="Password123!" size="small" sx={{ mx: 0.5 }} />
-              </Typography>
-            </CardContent>
-          </Card>
 
           {/* Features */}
           <Box sx={{ mt: 4, pt: 3, borderTop: 1, borderColor: 'divider' }}>
