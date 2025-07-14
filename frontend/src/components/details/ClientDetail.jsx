@@ -101,6 +101,51 @@ import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { format, formatDistanceToNow } from 'date-fns';
 import { api } from '../../services/api';
 
+// Safe date parsing helper
+const safeParseDate = (dateValue) => {
+  if (!dateValue) return null;
+  
+  try {
+    // If it's already a Date object, return it
+    if (dateValue instanceof Date) {
+      return isNaN(dateValue.getTime()) ? null : dateValue;
+    }
+    
+    // Try to parse the date string
+    const parsed = new Date(dateValue);
+    return isNaN(parsed.getTime()) ? null : parsed;
+  } catch (error) {
+    console.error('Error parsing date:', error);
+    return null;
+  }
+};
+
+// Safe date formatting helper
+const safeFormatDate = (dateValue, formatString, fallback = 'N/A') => {
+  const date = safeParseDate(dateValue);
+  if (!date) return fallback;
+  
+  try {
+    return format(date, formatString);
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return fallback;
+  }
+};
+
+// Safe formatDistanceToNow helper
+const safeFormatDistanceToNow = (dateValue, options = {}, fallback = 'N/A') => {
+  const date = safeParseDate(dateValue);
+  if (!date) return fallback;
+  
+  try {
+    return formatDistanceToNow(date, options);
+  } catch (error) {
+    console.error('Error formatting distance to now:', error);
+    return fallback;
+  }
+};
+
 const ClientDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -145,8 +190,8 @@ const ClientDetail = () => {
     type: 'Buyer',
     source: 'Referral',
     assignedAgent: 'You',
-    createdAt: new Date('2023-06-15'),
-    lastContact: new Date('2024-01-18'),
+    createdAt: '2023-06-15',
+    lastContact: '2024-01-18',
     birthday: '1985-03-15',
     anniversary: '2010-06-20',
     occupation: 'Software Engineer / Teacher',
@@ -216,7 +261,7 @@ const ClientDetail = () => {
         id: 1,
         type: 'email',
         subject: 'New Listings Matching Your Criteria',
-        date: new Date('2024-01-17T14:30:00'),
+        date: '2024-01-17T14:30:00',
         direction: 'outbound',
         status: 'sent',
         preview: 'Hi Michael and Sarah, I found 3 new properties that match your criteria...'
@@ -225,7 +270,7 @@ const ClientDetail = () => {
         id: 2,
         type: 'call',
         subject: 'Follow up on La Jolla property',
-        date: new Date('2024-01-16T10:15:00'),
+        date: '2024-01-16T10:15:00',
         direction: 'inbound',
         duration: '15 min',
         notes: 'Discussed financing options and scheduling a tour'
@@ -234,7 +279,7 @@ const ClientDetail = () => {
         id: 3,
         type: 'text',
         subject: 'Confirmation for Saturday showing',
-        date: new Date('2024-01-15T16:45:00'),
+        date: '2024-01-15T16:45:00',
         direction: 'outbound',
         status: 'delivered'
       }
@@ -270,28 +315,28 @@ const ClientDetail = () => {
         id: 1,
         type: 'client_created',
         description: 'Client profile created',
-        timestamp: new Date('2023-06-15T09:00:00'),
+        timestamp: '2023-06-15T09:00:00',
         user: 'System'
       },
       {
         id: 2,
         type: 'property_viewed',
         description: 'Viewed property at 321 Beach Blvd',
-        timestamp: new Date('2024-01-14T15:30:00'),
+        timestamp: '2024-01-14T15:30:00',
         user: 'You'
       },
       {
         id: 3,
         type: 'document_uploaded',
         description: 'Uploaded Pre-approval Letter',
-        timestamp: new Date('2024-01-10T11:20:00'),
+        timestamp: '2024-01-10T11:20:00',
         user: 'You'
       },
       {
         id: 4,
         type: 'appointment_scheduled',
         description: 'Scheduled property tour for La Jolla',
-        timestamp: new Date('2024-01-17T16:00:00'),
+        timestamp: '2024-01-17T16:00:00',
         user: 'You'
       }
     ],
@@ -545,7 +590,7 @@ const ClientDetail = () => {
           <Card>
             <CardContent sx={{ textAlign: 'center' }}>
               <Typography variant="h4" color="info.main">
-                {formatDistanceToNow(displayClient.lastContact, { addSuffix: true })}
+                {safeFormatDistanceToNow(displayClient.lastContact, { addSuffix: true })}
               </Typography>
               <Typography variant="body2" color="text.secondary">
                 Last Contact
@@ -700,7 +745,7 @@ const ClientDetail = () => {
                     {displayClient.activities.slice(0, 4).map((activity, index) => (
                       <TimelineItem key={activity.id}>
                         <TimelineOppositeContent color="textSecondary" sx={{ maxWidth: '120px' }}>
-                          {formatDistanceToNow(activity.timestamp, { addSuffix: true })}
+                          {safeFormatDistanceToNow(activity.timestamp, { addSuffix: true })}
                         </TimelineOppositeContent>
                         <TimelineSeparator>
                           <TimelineDot color="primary">
@@ -756,7 +801,7 @@ const ClientDetail = () => {
                         <TableRow key={property.id}>
                           <TableCell>{property.address}</TableCell>
                           <TableCell>{property.type}</TableCell>
-                          <TableCell>{format(new Date(property.purchaseDate), 'MMM d, yyyy')}</TableCell>
+                          <TableCell>{safeFormatDate(property.purchaseDate, 'MMM d, yyyy')}</TableCell>
                           <TableCell>{property.purchasePrice}</TableCell>
                           <TableCell>{property.currentValue}</TableCell>
                           <TableCell>
@@ -890,7 +935,7 @@ const ClientDetail = () => {
                       </ListItemIcon>
                       <ListItemText
                         primary={appointment.title}
-                        secondary={`${format(new Date(appointment.date), 'MMMM d, yyyy')} at ${appointment.time}`}
+                        secondary={`${safeFormatDate(appointment.date, 'MMMM d, yyyy')} at ${appointment.time}`}
                       />
                       <Box sx={{ display: 'flex', gap: 1 }}>
                         <Chip 
@@ -938,7 +983,7 @@ const ClientDetail = () => {
                           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <Typography variant="body1">{comm.subject}</Typography>
                             <Typography variant="caption" color="textSecondary">
-                              {formatDistanceToNow(comm.date, { addSuffix: true })}
+                              {safeFormatDistanceToNow(comm.date, { addSuffix: true })}
                             </Typography>
                           </Box>
                         }
@@ -1016,7 +1061,7 @@ const ClientDetail = () => {
                           </TableCell>
                           <TableCell>{doc.category}</TableCell>
                           <TableCell>{doc.size}</TableCell>
-                          <TableCell>{format(new Date(doc.uploadDate), 'MMM d, yyyy')}</TableCell>
+                          <TableCell>{safeFormatDate(doc.uploadDate, 'MMM d, yyyy')}</TableCell>
                           <TableCell>
                             <IconButton size="small" onClick={() => console.log('View document')}>
                               <Visibility />

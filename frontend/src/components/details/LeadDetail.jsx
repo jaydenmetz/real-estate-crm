@@ -69,6 +69,38 @@ import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { format } from 'date-fns';
 import { leadsAPI } from '../../services/api';
 
+// Safe date parsing helper
+const safeParseDate = (dateValue) => {
+  if (!dateValue) return null;
+  
+  try {
+    // If it's already a Date object, return it
+    if (dateValue instanceof Date) {
+      return isNaN(dateValue.getTime()) ? null : dateValue;
+    }
+    
+    // Try to parse the date string
+    const parsed = new Date(dateValue);
+    return isNaN(parsed.getTime()) ? null : parsed;
+  } catch (error) {
+    console.error('Error parsing date:', error);
+    return null;
+  }
+};
+
+// Safe date formatting helper
+const safeFormatDate = (dateValue, formatString, fallback = 'N/A') => {
+  const date = safeParseDate(dateValue);
+  if (!date) return fallback;
+  
+  try {
+    return format(date, formatString);
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return fallback;
+  }
+};
+
 const LeadDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -111,8 +143,8 @@ const LeadDetail = () => {
     score: 95,
     source: 'Website',
     assignedTo: 'Alex AI',
-    createdAt: new Date('2024-01-15'),
-    lastContact: new Date('2024-01-18'),
+    createdAt: '2024-01-15',
+    lastContact: '2024-01-18',
     interested_in: 'Buying',
     propertyType: 'Single Family Home',
     budget: '$500,000 - $750,000',
@@ -126,19 +158,19 @@ const LeadDetail = () => {
       {
         id: 1,
         content: 'Initial contact made. Very motivated buyer, pre-approved for $750k.',
-        createdAt: new Date('2024-01-15T10:30:00'),
+        createdAt: '2024-01-15T10:30:00',
         createdBy: 'System'
       },
       {
         id: 2,
         content: 'Interested in 4BR homes in Roseville area. School district is important.',
-        createdAt: new Date('2024-01-16T14:15:00'),
+        createdAt: '2024-01-16T14:15:00',
         createdBy: 'Alex AI'
       },
       {
         id: 3,
         content: 'Scheduled property tour for this weekend. Sending 5 listings for review.',
-        createdAt: new Date('2024-01-18T09:00:00'),
+        createdAt: '2024-01-18T09:00:00',
         createdBy: 'You'
       }
     ],
@@ -147,35 +179,35 @@ const LeadDetail = () => {
         id: 1,
         type: 'lead_created',
         description: 'Lead created from website inquiry',
-        timestamp: new Date('2024-01-15T10:00:00'),
+        timestamp: '2024-01-15T10:00:00',
         icon: 'add'
       },
       {
         id: 2,
         type: 'email_sent',
         description: 'Welcome email sent by Alex AI',
-        timestamp: new Date('2024-01-15T10:05:00'),
+        timestamp: '2024-01-15T10:05:00',
         icon: 'email'
       },
       {
         id: 3,
         type: 'call_made',
         description: 'Initial qualification call completed',
-        timestamp: new Date('2024-01-15T10:30:00'),
+        timestamp: '2024-01-15T10:30:00',
         icon: 'phone'
       },
       {
         id: 4,
         type: 'status_changed',
         description: 'Status changed from Warm to Hot',
-        timestamp: new Date('2024-01-16T14:15:00'),
+        timestamp: '2024-01-16T14:15:00',
         icon: 'trending_up'
       },
       {
         id: 5,
         type: 'task_created',
         description: 'Property tour scheduled',
-        timestamp: new Date('2024-01-18T09:00:00'),
+        timestamp: '2024-01-18T09:00:00',
         icon: 'event'
       }
     ],
@@ -193,21 +225,21 @@ const LeadDetail = () => {
       {
         id: 1,
         title: 'Send property listings',
-        dueDate: new Date('2024-01-19'),
+        dueDate: '2024-01-19',
         status: 'completed',
         assignedTo: 'You'
       },
       {
         id: 2,
         title: 'Property tour - 5 homes',
-        dueDate: new Date('2024-01-21'),
+        dueDate: '2024-01-21',
         status: 'pending',
         assignedTo: 'You'
       },
       {
         id: 3,
         title: 'Follow up after tour',
-        dueDate: new Date('2024-01-22'),
+        dueDate: '2024-01-22',
         status: 'pending',
         assignedTo: 'Alex AI'
       }
@@ -473,13 +505,13 @@ const LeadDetail = () => {
                   <Grid item xs={6}>
                     <Typography variant="body2" color="textSecondary">Created Date</Typography>
                     <Typography variant="body1">
-                      {format(new Date(displayLead.createdAt), 'MMM dd, yyyy')}
+                      {safeFormatDate(displayLead.createdAt, 'MMM dd, yyyy')}
                     </Typography>
                   </Grid>
                   <Grid item xs={6}>
                     <Typography variant="body2" color="textSecondary">Last Contact</Typography>
                     <Typography variant="body1">
-                      {format(new Date(displayLead.lastContact), 'MMM dd, yyyy h:mm a')}
+                      {safeFormatDate(displayLead.lastContact, 'MMM dd, yyyy h:mm a')}
                     </Typography>
                   </Grid>
                 </Grid>
@@ -495,7 +527,7 @@ const LeadDetail = () => {
                     <TimelineItem key={activity.id}>
                       <TimelineOppositeContent sx={{ py: '12px', px: 2 }}>
                         <Typography variant="caption" color="textSecondary">
-                          {format(new Date(activity.timestamp), 'MMM dd, h:mm a')}
+                          {safeFormatDate(activity.timestamp, 'MMM dd, h:mm a')}
                         </Typography>
                       </TimelineOppositeContent>
                       <TimelineSeparator>
@@ -554,7 +586,7 @@ const LeadDetail = () => {
                       </ListItemIcon>
                       <ListItemText
                         primary={task.title}
-                        secondary={`Due: ${format(new Date(task.dueDate), 'MMM dd')} - ${task.assignedTo}`}
+                        secondary={`Due: ${safeFormatDate(task.dueDate, 'MMM dd')} - ${task.assignedTo}`}
                         primaryTypographyProps={{
                           style: {
                             textDecoration: task.status === 'completed' ? 'line-through' : 'none'
@@ -692,7 +724,7 @@ const LeadDetail = () => {
                         primary={note.content}
                         secondary={
                           <>
-                            {note.createdBy} • {format(new Date(note.createdAt), 'MMM dd, yyyy h:mm a')}
+                            {note.createdBy} • {safeFormatDate(note.createdAt, 'MMM dd, yyyy h:mm a')}
                           </>
                         }
                       />

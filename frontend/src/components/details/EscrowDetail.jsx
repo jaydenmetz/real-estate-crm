@@ -3,6 +3,32 @@
 import React, { useState } from 'react';
 import DetailPageDebugger from '../common/DetailPageDebugger';
 import DetailPageErrorBoundary from '../common/DetailPageErrorBoundary';
+
+// Safe date parsing function
+const safeParseDate = (dateValue) => {
+  if (!dateValue) return null;
+  try {
+    const date = new Date(dateValue);
+    // Check if date is valid
+    if (isNaN(date.getTime())) return null;
+    return date;
+  } catch (error) {
+    console.error('Invalid date:', dateValue);
+    return null;
+  }
+};
+
+// Safe date formatting function
+const safeFormatDate = (dateValue, formatString = 'MMM d, yyyy') => {
+  const date = safeParseDate(dateValue);
+  if (!date) return 'N/A';
+  try {
+    return format(date, formatString);
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return 'Invalid Date';
+  }
+};
 import {
   Container,
   Grid,
@@ -442,7 +468,14 @@ const EscrowDetail = () => {
 
   const getDaysToClose = () => {
     if (!escrowData.closingDate) return null;
-    return differenceInDays(new Date(escrowData.closingDate), new Date());
+    const closingDate = safeParseDate(escrowData.closingDate);
+    if (!closingDate) return null;
+    try {
+      return differenceInDays(closingDate, new Date());
+    } catch (error) {
+      console.error('Error calculating days to close:', error);
+      return null;
+    }
   };
 
   const getTimelineProgress = () => {
@@ -801,7 +834,7 @@ const EscrowDetail = () => {
                         primary={note.content}
                         secondary={
                           <>
-                            {note.createdBy} • {format(new Date(note.createdAt), 'MMM dd, yyyy h:mm a')}
+                            {note.createdBy} • {safeFormatDate(note.createdAt, 'MMM dd, yyyy h:mm a')}
                           </>
                         }
                       />
@@ -825,7 +858,7 @@ const EscrowDetail = () => {
                   <ListItem>
                     <ListItemText
                       primary="Acceptance Date"
-                      secondary={format(new Date(escrowData.acceptanceDate), 'MMM d, yyyy')}
+                      secondary={safeFormatDate(escrowData.acceptanceDate, 'MMM d, yyyy')}
                     />
                   </ListItem>
                   <ListItem>
@@ -834,9 +867,9 @@ const EscrowDetail = () => {
                       secondary={
                         <Typography
                           variant="body2"
-                          color={new Date(escrowData.inspectionDeadline) < new Date() ? 'error' : 'text.secondary'}
+                          color={safeParseDate(escrowData.inspectionDeadline) && safeParseDate(escrowData.inspectionDeadline) < new Date() ? 'error' : 'text.secondary'}
                         >
-                          {format(new Date(escrowData.inspectionDeadline), 'MMM d, yyyy')}
+                          {safeFormatDate(escrowData.inspectionDeadline, 'MMM d, yyyy')}
                         </Typography>
                       }
                     />
@@ -844,13 +877,13 @@ const EscrowDetail = () => {
                   <ListItem>
                     <ListItemText
                       primary="Appraisal Deadline"
-                      secondary={format(new Date(escrowData.appraisalDeadline), 'MMM d, yyyy')}
+                      secondary={safeFormatDate(escrowData.appraisalDeadline, 'MMM d, yyyy')}
                     />
                   </ListItem>
                   <ListItem>
                     <ListItemText
                       primary="Loan Contingency"
-                      secondary={format(new Date(escrowData.loanContingencyDeadline), 'MMM d, yyyy')}
+                      secondary={safeFormatDate(escrowData.loanContingencyDeadline, 'MMM d, yyyy')}
                     />
                   </ListItem>
                   <ListItem>
@@ -858,7 +891,7 @@ const EscrowDetail = () => {
                       primary="Closing Date"
                       secondary={
                         <Typography variant="body2" color="primary">
-                          {format(new Date(escrowData.closingDate), 'MMM d, yyyy')}
+                          {safeFormatDate(escrowData.closingDate, 'MMM d, yyyy')}
                         </Typography>
                       }
                     />
@@ -922,7 +955,7 @@ const EscrowDetail = () => {
               {(escrowData.timeline || []).map((event, index) => (
                 <TimelineItem key={event.id}>
                   <TimelineOppositeContent color="text.secondary">
-                    {format(new Date(event.date), 'MMM d, yyyy')}
+                    {safeFormatDate(event.date, 'MMM d, yyyy')}
                   </TimelineOppositeContent>
                   <TimelineSeparator>
                     <TimelineDot 
@@ -1037,7 +1070,7 @@ const EscrowDetail = () => {
                     primary={doc.name}
                     secondary={
                       <>
-                        {doc.type} • {doc.size} • Uploaded {format(new Date(doc.uploadedAt), 'MMM d, yyyy')} by {doc.uploadedBy}
+                        {doc.type} • {doc.size} • Uploaded {safeFormatDate(doc.uploadedAt, 'MMM d, yyyy')} by {doc.uploadedBy}
                       </>
                     }
                   />

@@ -72,6 +72,51 @@ import {
 import { format, formatDistanceToNow, isPast, differenceInMinutes } from 'date-fns';
 import api from '../../services/api';
 
+// Safe date parsing helper
+const safeParseDate = (dateValue) => {
+  if (!dateValue) return null;
+  
+  try {
+    // If it's already a Date object, return it
+    if (dateValue instanceof Date) {
+      return isNaN(dateValue.getTime()) ? null : dateValue;
+    }
+    
+    // Try to parse the date string
+    const parsed = new Date(dateValue);
+    return isNaN(parsed.getTime()) ? null : parsed;
+  } catch (error) {
+    console.error('Error parsing date:', error);
+    return null;
+  }
+};
+
+// Safe date formatting helper
+const safeFormatDate = (dateValue, formatString, fallback = 'N/A') => {
+  const date = safeParseDate(dateValue);
+  if (!date) return fallback;
+  
+  try {
+    return format(date, formatString);
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return fallback;
+  }
+};
+
+// Safe formatDistanceToNow helper
+const safeFormatDistanceToNow = (dateValue, options = {}, fallback = 'N/A') => {
+  const date = safeParseDate(dateValue);
+  if (!date) return fallback;
+  
+  try {
+    return formatDistanceToNow(date, options);
+  } catch (error) {
+    console.error('Error formatting distance to now:', error);
+    return fallback;
+  }
+};
+
 function AppointmentDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -321,7 +366,8 @@ function AppointmentDetail() {
 
   const getTimeUntilAppointment = () => {
     if (!appointment) return null;
-    const appointmentDate = new Date(`${appointment.date}T${appointment.start_time}`);
+    const appointmentDate = safeParseDate(`${appointment.date}T${appointment.start_time}`);
+    if (!appointmentDate) return null;
     const now = new Date();
     const isPastAppointment = isPast(appointmentDate);
     const minutesUntil = differenceInMinutes(appointmentDate, now);
@@ -329,7 +375,7 @@ function AppointmentDetail() {
     return {
       isPast: isPastAppointment,
       minutesUntil,
-      timeString: formatDistanceToNow(appointmentDate, { addSuffix: true })
+      timeString: safeFormatDistanceToNow(appointmentDate, { addSuffix: true })
     };
   };
 
@@ -366,11 +412,10 @@ function AppointmentDetail() {
   }
 
   const timeUntil = getTimeUntilAppointment();
-  const duration = appointment.start_time && appointment.end_time ? 
-    differenceInMinutes(
-      new Date(`2000-01-01T${appointment.end_time}`),
-      new Date(`2000-01-01T${appointment.start_time}`)
-    ) : 0;
+  const startTime = safeParseDate(`2000-01-01T${appointment.start_time}`);
+  const endTime = safeParseDate(`2000-01-01T${appointment.end_time}`);
+  const duration = appointment.start_time && appointment.end_time && startTime && endTime ? 
+    differenceInMinutes(endTime, startTime) : 0;
 
   return (
     <Container maxWidth="xl">
@@ -436,14 +481,14 @@ function AppointmentDetail() {
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <CalendarToday fontSize="small" color="action" />
                   <Typography variant="body2">
-                    {format(new Date(appointment.date), 'EEEE, MMMM d, yyyy')}
+                    {safeFormatDate(appointment.date, 'EEEE, MMMM d, yyyy')}
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <AccessTime fontSize="small" color="action" />
                   <Typography variant="body2">
-                    {format(new Date(`2000-01-01T${appointment.start_time}`), 'h:mm a')} - 
-                    {format(new Date(`2000-01-01T${appointment.end_time}`), 'h:mm a')}
+                    {safeFormatDate(`2000-01-01T${appointment.start_time}`, 'h:mm a')} - 
+                    {safeFormatDate(`2000-01-01T${appointment.end_time}`, 'h:mm a')}
                     ({duration} minutes)
                   </Typography>
                 </Box>
@@ -922,7 +967,7 @@ function AppointmentDetail() {
                     {appointment.activities.map((activity, index) => (
                       <TimelineItem key={activity.id}>
                         <TimelineOppositeContent color="textSecondary">
-                          {format(new Date(activity.timestamp), 'MMM d, h:mm a')}
+                          {safeFormatDate(activity.timestamp, 'MMM d, h:mm a')}
                         </TimelineOppositeContent>
                         <TimelineSeparator>
                           <TimelineDot color={
@@ -1002,7 +1047,7 @@ function AppointmentDetail() {
                         </ListItemIcon>
                         <ListItemText
                           primary={apt.title}
-                          secondary={format(new Date(apt.date), 'MMMM d, yyyy')}
+                          secondary={safeFormatDate(apt.date, 'MMMM d, yyyy')}
                         />
                         <Chip
                           label={apt.status}

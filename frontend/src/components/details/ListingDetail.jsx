@@ -114,6 +114,38 @@ import {
 } from 'recharts';
 import { listingsAPI } from '../../services/api';
 
+// Safe date parsing helper
+const safeParseDate = (dateValue) => {
+  if (!dateValue) return null;
+  
+  try {
+    // If it's already a Date object, return it
+    if (dateValue instanceof Date) {
+      return isNaN(dateValue.getTime()) ? null : dateValue;
+    }
+    
+    // Try to parse the date string
+    const parsed = new Date(dateValue);
+    return isNaN(parsed.getTime()) ? null : parsed;
+  } catch (error) {
+    console.error('Error parsing date:', error);
+    return null;
+  }
+};
+
+// Safe date formatting helper
+const safeFormatDate = (dateValue, formatString, fallback = 'N/A') => {
+  const date = safeParseDate(dateValue);
+  if (!date) return fallback;
+  
+  try {
+    return format(date, formatString);
+  } catch (error) {
+    console.error('Error formatting date:', error);
+    return fallback;
+  }
+};
+
 const ListingDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -153,8 +185,8 @@ const ListingDetail = () => {
     yearBuilt: 2018,
     garage: 2,
     pool: true,
-    listingDate: new Date('2024-01-05'),
-    expirationDate: new Date('2024-07-05'),
+    listingDate: '2024-01-05',
+    expirationDate: '2024-07-05',
     daysOnMarket: 15,
     virtualTourLink: 'https://example.com/tour/123',
     professionalPhotos: true,
@@ -197,10 +229,10 @@ const ListingDetail = () => {
       'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800',
     ],
     showings: [
-      { id: 1, date: new Date('2024-01-18'), time: '2:00 PM', agent: 'Sarah Chen', feedback: 'Clients loved it, considering offer' },
-      { id: 2, date: new Date('2024-01-17'), time: '10:00 AM', agent: 'Mike Johnson', feedback: 'Price too high for clients' },
-      { id: 3, date: new Date('2024-01-16'), time: '4:00 PM', agent: 'Lisa Wong', feedback: 'Very interested, second showing requested' },
-      { id: 4, date: new Date('2024-01-15'), time: '11:00 AM', agent: 'David Park', feedback: 'Not enough bedrooms' }
+      { id: 1, date: '2024-01-18', time: '2:00 PM', agent: 'Sarah Chen', feedback: 'Clients loved it, considering offer' },
+      { id: 2, date: '2024-01-17', time: '10:00 AM', agent: 'Mike Johnson', feedback: 'Price too high for clients' },
+      { id: 3, date: '2024-01-16', time: '4:00 PM', agent: 'Lisa Wong', feedback: 'Very interested, second showing requested' },
+      { id: 4, date: '2024-01-15', time: '11:00 AM', agent: 'David Park', feedback: 'Not enough bedrooms' }
     ],
     analytics: {
       views: 342,
@@ -242,8 +274,8 @@ const ListingDetail = () => {
       neighborhoodMailers: false
     },
     priceHistory: [
-      { date: new Date('2024-01-05'), price: 875000, event: 'Listed' },
-      { date: new Date('2024-01-12'), price: 850000, event: 'Price Reduced' }
+      { date: '2024-01-05', price: 875000, event: 'Listed' },
+      { date: '2024-01-12', price: 850000, event: 'Price Reduced' }
     ],
     comparableProperties: [
       { address: '456 Oak Ave', soldPrice: 825000, soldDate: '2023-12-15', sqft: 2350, pricePerSqft: 351 },
@@ -251,9 +283,9 @@ const ListingDetail = () => {
       { address: '321 Pine Rd', soldPrice: 835000, soldDate: '2024-01-02', sqft: 2300, pricePerSqft: 363 }
     ],
     notes: [
-      { id: 1, content: 'Sellers motivated due to job relocation', createdAt: new Date('2024-01-05'), createdBy: 'You' },
-      { id: 2, content: 'Price reduction approved by sellers', createdAt: new Date('2024-01-12'), createdBy: 'You' },
-      { id: 3, content: 'Open house scheduled for this weekend', createdAt: new Date('2024-01-16'), createdBy: 'Marketing Team' }
+      { id: 1, content: 'Sellers motivated due to job relocation', createdAt: '2024-01-05', createdBy: 'You' },
+      { id: 2, content: 'Price reduction approved by sellers', createdAt: '2024-01-12', createdBy: 'You' },
+      { id: 3, content: 'Open house scheduled for this weekend', createdAt: '2024-01-16', createdBy: 'Marketing Team' }
     ],
     documents: [
       { id: 1, name: 'Property Disclosure', type: 'PDF', size: '2.4 MB', uploadedDate: '2024-01-05' },
@@ -420,7 +452,7 @@ const ListingDetail = () => {
                 <strong>MLS#:</strong> {displayListing.mlsNumber}
               </Typography>
               <Typography variant="body1" color="text.secondary">
-                <strong>Listed:</strong> {format(displayListing.listingDate, 'MMM d, yyyy')}
+                <strong>Listed:</strong> {safeFormatDate(displayListing.listingDate, 'MMM d, yyyy')}
               </Typography>
               <Typography variant="body1" color="text.secondary">
                 <strong>DOM:</strong> {displayListing.daysOnMarket}
@@ -683,7 +715,7 @@ const ListingDetail = () => {
                         <TableCell>{formatPrice(comp.soldPrice)}</TableCell>
                         <TableCell>{comp.sqft.toLocaleString()} sqft</TableCell>
                         <TableCell>{formatPrice(comp.pricePerSqft)}/sqft</TableCell>
-                        <TableCell>{format(new Date(comp.soldDate), 'MMM d, yyyy')}</TableCell>
+                        <TableCell>{safeFormatDate(comp.soldDate, 'MMM d, yyyy')}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
@@ -798,7 +830,7 @@ const ListingDetail = () => {
                         <Groups />
                       </ListItemIcon>
                       <ListItemText
-                        primary={`${format(showing.date, 'MMM d, yyyy')} at ${showing.time} - ${showing.agent}`}
+                        primary={`${safeFormatDate(showing.date, 'MMM d, yyyy')} at ${showing.time} - ${showing.agent}`}
                         secondary={showing.feedback ? `Feedback: ${showing.feedback}` : 'No feedback yet'}
                       />
                       <Chip
@@ -947,7 +979,7 @@ const ListingDetail = () => {
                   {displayListing.priceHistory.map((price, index) => (
                     <TimelineItem key={index}>
                       <TimelineOppositeContent color="text.secondary">
-                        {format(price.date, 'MMM d, yyyy')}
+                        {safeFormatDate(price.date, 'MMM d, yyyy')}
                       </TimelineOppositeContent>
                       <TimelineSeparator>
                         <TimelineDot color={index === 0 ? 'primary' : 'secondary'} />
@@ -1040,7 +1072,7 @@ const ListingDetail = () => {
                         primary={note.content}
                         secondary={
                           <>
-                            {note.createdBy} • {format(note.createdAt, 'MMM dd, yyyy h:mm a')}
+                            {note.createdBy} • {safeFormatDate(note.createdAt, 'MMM dd, yyyy h:mm a')}
                           </>
                         }
                       />
