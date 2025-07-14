@@ -275,10 +275,6 @@ const AlexQuickTaskBar = () => {
             </Badge>
 
             <Box sx={{ flexGrow: 1 }}>
-              <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                Alex - Executive Assistant
-              </Typography>
-              
               <Fade in={!!recentActivity}>
                 <Typography 
                   variant="body2" 
