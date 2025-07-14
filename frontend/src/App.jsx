@@ -15,8 +15,7 @@ import AlexQuickTaskBar from './components/ai/AlexQuickTaskBar';
 import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Dashboard Components
-import AIAgentsDashboard from './components/dashboards/AIAgentsDashboard';
-import SimpleAIAgentsDashboard from './components/dashboards/SimpleAIAgentsDashboard';
+import AIAgentsDashboardSimple from './components/dashboards/AIAgentsDashboardSimple';
 import EscrowsDashboard from './components/dashboards/EscrowsDashboard';
 import EscrowDetail from './components/details/EscrowDetail';
 import ListingsDashboard from './components/dashboards/ListingsDashboard';
@@ -169,7 +168,7 @@ function App() {
                     {/* Virtual Office as Home */}
                     <Route path="/" element={
                       <ErrorBoundary>
-                        <AIAgentsDashboard />
+                        <AIAgentsDashboardSimple />
                       </ErrorBoundary>
                     } />
                     
