@@ -1,15 +1,26 @@
-FROM node:18-alpine as builder
+# Use Node.js Alpine image
+FROM node:18-alpine
 
+# Set working directory
 WORKDIR /app
 
+# Copy package files
 COPY package*.json ./
-RUN npm ci
 
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy application files
 COPY . .
+
+# Build the application
 RUN npm run build
 
-FROM nginx:alpine
-COPY --from=builder /app/build /usr/share/nginx/html
-EXPOSE 80
+# Install serve globally
+RUN npm install -g serve
 
-CMD ["nginx", "-g", "daemon off;"]
+# Expose port (Railway will override this)
+EXPOSE 3000
+
+# Start the application using PORT environment variable
+CMD serve -s build -l $PORT
