@@ -98,13 +98,15 @@ const queryClient = new QueryClient({
 
 function App() {
   useEffect(() => {
+    let unsubscribe = null;
+    
     const initializeWebSocket = async () => {
       try {
         if (!websocketService.isConnected) {
           console.log('🔌 Initializing WebSocket connection...');
-          await websocketService.connect();
           
-          const unsubscribe = websocketService.on('connection', (data) => {
+          // Set up connection listener before connecting
+          unsubscribe = websocketService.on('connection', (data) => {
             if (data.status === 'connected') {
               console.log('✅ WebSocket connected successfully');
               websocketService.send('ai:requestTeamStatus');
@@ -112,19 +114,27 @@ function App() {
               console.error('❌ WebSocket connection failed:', data.error);
             }
           });
-
-          return unsubscribe;
+          
+          // Try to connect with a timeout
+          const connectPromise = websocketService.connect();
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('WebSocket connection timeout')), 10000)
+          );
+          
+          await Promise.race([connectPromise, timeoutPromise]);
         }
       } catch (error) {
-        console.error('Failed to initialize WebSocket:', error);
+        console.error('WebSocket initialization error:', error.message);
+        // Don't let WebSocket errors crash the app
+        console.log('App will continue without WebSocket connection');
       }
     };
 
-    const cleanup = initializeWebSocket();
+    initializeWebSocket();
 
     return () => {
-      if (cleanup && typeof cleanup === 'function') {
-        cleanup();
+      if (unsubscribe && typeof unsubscribe === 'function') {
+        unsubscribe();
       }
     };
   }, []);

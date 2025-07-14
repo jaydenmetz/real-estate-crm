@@ -12,14 +12,15 @@ class WebSocketService {
   }
 
   connect() {
-    try {
-      const token = localStorage.getItem('api_token');
-      
-      // Use Vite environment variable and ensure HTTPS in production
-      const wsUrl = import.meta.env.VITE_WS_URL || 'ws://localhost:5050';
-      console.log('Connecting to WebSocket:', wsUrl);
-      
-      this.socket = io(wsUrl, {
+    return new Promise((resolve, reject) => {
+      try {
+        const token = localStorage.getItem('api_token');
+        
+        // Use React environment variable and ensure HTTPS in production
+        const wsUrl = process.env.REACT_APP_WS_URL || 'ws://localhost:5050';
+        console.log('Connecting to WebSocket:', wsUrl);
+        
+        this.socket = io(wsUrl, {
         // auth: { token },  // ← Commented out temporarily
         reconnection: true,
         reconnectionAttempts: this.maxReconnectAttempts,
@@ -31,8 +32,31 @@ class WebSocketService {
         transports: ['websocket', 'polling'], // Try websocket first, fallback to polling
       });
 
-      this.socket.on('connect', () => {
+      // Set up one-time connection handler for the promise
+      const onConnect = () => {
         console.log('✅ WebSocket connected');
+        this.isConnected = true;
+        this.reconnectAttempts = 0;
+        
+        this.processMessageQueue();
+        this.emit('connection', { status: 'connected' });
+        
+        // Resolve the promise
+        resolve();
+      };
+      
+      // Set up one-time error handler for the promise
+      const onError = (error) => {
+        console.error('WebSocket initial connection failed:', error);
+        reject(error);
+      };
+      
+      this.socket.once('connect', onConnect);
+      this.socket.once('connect_error', onError);
+      
+      // Set up persistent handlers
+      this.socket.on('connect', () => {
+        console.log('✅ WebSocket reconnected');
         this.isConnected = true;
         this.reconnectAttempts = 0;
         
@@ -97,9 +121,11 @@ class WebSocketService {
         this.emit('task-complete', data);
       });
 
-    } catch (error) {
-      console.error('Failed to initialize WebSocket:', error);
-    }
+      } catch (error) {
+        console.error('Failed to initialize WebSocket:', error);
+        reject(error);
+      }
+    });
   }
 
   disconnect() {
