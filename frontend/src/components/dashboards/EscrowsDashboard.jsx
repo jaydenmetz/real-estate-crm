@@ -42,6 +42,7 @@ import { format, differenceInDays } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../services/api';
 import EscrowForm from '../forms/EscrowForm';
+import EscrowFormSimple from '../forms/EscrowFormSimple';
 import EscrowCreated from '../escrows/EscrowCreated';
 import StatsCard from '../common/StatsCard';
 
@@ -97,8 +98,6 @@ const mockEscrows = [
 const EscrowsDashboard = () => {
   const [tabValue, setTabValue] = useState(0);
   const [openForm, setOpenForm] = useState(false);
-  const [formMode, setFormMode] = useState('full');
-  const [selectedEscrow, setSelectedEscrow] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedCard, setSelectedCard] = useState(null);
   const [showSuccessPage, setShowSuccessPage] = useState(false);
@@ -150,23 +149,14 @@ const EscrowsDashboard = () => {
     return escrows.filter(e => e.escrowStatus === status);
   };
 
-  // Mutation for creating or updating
+  // Mutation for creating escrow
   const mutation = useMutation(
     async (escrowData) => {
       try {
-        if (selectedEscrow) {
-          return api.put(`/escrows/${selectedEscrow.id}`, escrowData);
-        }
         return api.post('/escrows', escrowData);
       } catch (error) {
         // Fallback to mock implementation if API fails
         console.log('API failed, using mock implementation');
-        
-        if (selectedEscrow) {
-          // Mock update
-          const updatedEscrow = { ...selectedEscrow, ...escrowData };
-          return { data: { data: updatedEscrow } };
-        } else {
           // Mock create
           const id = `esc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
           const year = new Date().getFullYear();
@@ -199,29 +189,20 @@ const EscrowsDashboard = () => {
           mockEscrows.push(newEscrow);
           
           return { data: { data: newEscrow } };
-        }
       }
     },
     {
       onSuccess: (response) => {
         queryClient.invalidateQueries('escrows');
         
-        if (selectedEscrow) {
-          // Update mode
-          enqueueSnackbar('Escrow updated successfully', { variant: 'success' });
-          handleCloseForm();
-        } else {
-          // Create mode - show success page
-          const newEscrow = response.data?.data || response.data;
-          setCreatedEscrowData(newEscrow);
-          setShowSuccessPage(true);
-          handleCloseForm();
-        }
+        // Show success page
+        const newEscrow = response.data?.data || response.data;
+        setCreatedEscrowData(newEscrow);
+        setShowSuccessPage(true);
+        handleCloseForm();
       },
       onError: (error) => {
         console.error('Escrow mutation error:', error);
-        // For development, still show success with mock data
-        if (!selectedEscrow) {
           // Mock create even on error
           const id = `esc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
           const mockNewEscrow = {
@@ -243,26 +224,18 @@ const EscrowsDashboard = () => {
           handleCloseForm();
           queryClient.invalidateQueries('escrows');
           enqueueSnackbar('Escrow created successfully (offline mode)', { variant: 'info' });
-        } else {
-          enqueueSnackbar(
-            error.response?.data?.error?.message || 'Error saving escrow - using offline mode',
-            { variant: 'warning' }
-          );
-        }
       },
     }
   );
 
   const handleCloseForm = () => {
     setOpenForm(false);
-    setSelectedEscrow(null);
   };
 
   const handleEdit = (escrow, event) => {
     event.stopPropagation();
-    setSelectedEscrow(escrow);
-    setOpenForm(true);
     setAnchorEl(null);
+    enqueueSnackbar('Edit functionality coming soon. For now, please create a new escrow.', { variant: 'info' });
   };
 
   const handleCardClick = (escrow) => {
@@ -311,8 +284,7 @@ const EscrowsDashboard = () => {
 
   const handleEditFromSuccess = () => {
     setShowSuccessPage(false);
-    setSelectedEscrow(createdEscrowData);
-    setOpenForm(true);
+    enqueueSnackbar('Edit functionality coming soon. For now, please create a new escrow.', { variant: 'info' });
   };
 
   const handleViewDetailsFromSuccess = (escrowId) => {
@@ -345,10 +317,7 @@ const EscrowsDashboard = () => {
           <Button
             variant="contained"
             startIcon={<Add />}
-            onClick={() => {
-              setFormMode('full');
-              setOpenForm(true);
-            }}
+            onClick={() => setOpenForm(true)}
             sx={{ mr: 2 }}
           >
             Add Escrow
@@ -588,13 +557,11 @@ const EscrowsDashboard = () => {
       </Menu>
 
       {/* Form Dialog */}
-      <EscrowForm
+      <EscrowFormSimple
         open={openForm}
         onClose={handleCloseForm}
         onSubmit={(formData) => mutation.mutate(formData)}
-        escrow={selectedEscrow}
         loading={mutation.isLoading}
-        mode={formMode}
       />
     </Container>
   );
