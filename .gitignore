@@ -1,6 +1,5 @@
 # Dependencies
 node_modules/
-package-lock.json
 yarn.lock
 
 # Environment
@@ -56,6 +55,7 @@ temp/
 uploads/
 public/uploads/
 *.env
-*.env.*
+.env.*
+!.env.example
 all-code.txt
 combine.sh
