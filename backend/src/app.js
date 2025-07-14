@@ -36,10 +36,33 @@ app.use(helmet({
 }));
 
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || "http://localhost:3000",
+  origin: function (origin, callback) {
+    const allowedOrigins = [
+      'https://crm.jaydenmetz.com',
+      'https://api.jaydenmetz.com',
+      'http://localhost:3000',
+      'http://localhost:3001'
+    ];
+    
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin is in allowed list
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    // Allow subdomains of jaydenmetz.com
+    if (/^https:\/\/[a-z0-9-]+\.jaydenmetz\.com$/.test(origin)) {
+      return callback(null, true);
+    }
+    
+    callback(new Error('Not allowed by CORS'));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Team-ID'],
+  exposedHeaders: ['X-Total-Count', 'X-Page-Count'],
   optionsSuccessStatus: 200
 };
 

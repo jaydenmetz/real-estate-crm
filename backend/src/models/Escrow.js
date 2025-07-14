@@ -1,9 +1,11 @@
 
-
 // backend/src/models/Escrow.js
 
-const { query, transaction } = require('../config/database');
-const { v4: uuidv4 } = require('uuid');
+const { query } = require('../config/database');
+const redis = require('../config/redis');
+const logger = require('../utils/logger');
+const { generateEscrowIds } = require('../utils/idGenerator');
+const { emitWebhook } = require('../services/webhook');
 
 class Escrow {
   /**
