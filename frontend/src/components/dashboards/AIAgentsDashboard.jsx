@@ -40,7 +40,7 @@ import {
 import { aiAPI, aiAgentsAPI } from '../../services/api';
 // import websocketService from '../../services/websocket';
 import { formatDistanceToNow } from 'date-fns';
-import EnhancedAgentChat from '../ai/EnhancedAgentChat';
+import EnhancedAgentChatFixed from '../ai/EnhancedAgentChatFixed';
 
 // Agent categories for organized display
 const agentCategories = {
@@ -707,7 +707,7 @@ const AIAgentsDashboard = () => {
 
       {/* Enhanced Chat Dialog */}
       {selectedAgent && (
-        <EnhancedAgentChat
+        <EnhancedAgentChatFixed
           agent={{
             ...selectedAgent,
             icon: React.createElement(agentIcons[selectedAgent.id] || SmartToy)
