@@ -19,11 +19,13 @@ import AIAgentsDashboardSimple from './components/dashboards/AIAgentsDashboardSi
 import EscrowsDashboard from './components/dashboards/EscrowsDashboard';
 import EscrowDetail from './components/details/EscrowDetail';
 import ListingsDashboard from './components/dashboards/ListingsDashboard';
-// import ListingDetail from './components/listings/ListingDetail';
+import ListingDetail from './components/details/ListingDetail';
 import ClientsDashboard from './components/dashboards/ClientsDashboard';
-// import ClientDetail from './components/clients/ClientDetail';
+import ClientDetail from './components/details/ClientDetail';
 import AppointmentsDashboard from './components/dashboards/AppointmentsDashboard';
+import AppointmentDetail from './components/details/AppointmentDetail';
 import LeadsDashboard from './components/dashboards/LeadsDashboard';
+import LeadDetail from './components/details/LeadDetail';
 
 // System Components
 import ActivityLog from './components/system/ActivityLog';
@@ -177,13 +179,16 @@ function App() {
                     <Route path="/escrows/:id" element={<EscrowDetail />} />
                     
                     <Route path="/listings" element={<ListingsDashboard />} />
-                    {/* <Route path="/listings/:id" element={<ListingDetail />} /> */}
+                    <Route path="/listings/:id" element={<ListingDetail />} />
                     
                     <Route path="/clients" element={<ClientsDashboard />} />
-                    {/* <Route path="/clients/:id" element={<ClientDetail />} /> */}
+                    <Route path="/clients/:id" element={<ClientDetail />} />
                     
                     <Route path="/appointments" element={<AppointmentsDashboard />} />
+                    <Route path="/appointments/:id" element={<AppointmentDetail />} />
+                    
                     <Route path="/leads" element={<LeadsDashboard />} />
+                    <Route path="/leads/:id" element={<LeadDetail />} />
                     
                     {/* System Features */}
                     <Route path="/activity-log" element={<ActivityLog />} />
