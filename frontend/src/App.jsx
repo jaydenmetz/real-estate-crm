@@ -169,7 +169,7 @@ function App() {
                     {/* Virtual Office as Home */}
                     <Route path="/" element={
                       <ErrorBoundary>
-                        <SimpleAIAgentsDashboard />
+                        <AIAgentsDashboard />
                       </ErrorBoundary>
                     } />
                     

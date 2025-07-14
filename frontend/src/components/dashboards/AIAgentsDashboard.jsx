@@ -38,7 +38,7 @@ import {
   ExpandLess,
 } from '@mui/icons-material';
 import { aiAPI, aiAgentsAPI } from '../../services/api';
-import websocketService from '../../services/websocket';
+// import websocketService from '../../services/websocket';
 import { formatDistanceToNow } from 'date-fns';
 import EnhancedAgentChat from '../ai/EnhancedAgentChat';
 
@@ -223,22 +223,17 @@ const AIAgentsDashboard = () => {
     console.log('AIAgentsDashboard useEffect running');
     fetchAgents();
     
-    // Set up WebSocket listeners
-    const unsubscribeUpdate = websocketService.on('agent-update', handleAgentUpdate);
-    const unsubscribeActivity = websocketService.on('ai:activity', handleNewActivity);
+    // Skip WebSocket for now to prevent issues
+    // const unsubscribeUpdate = websocketService.on('agent-update', handleAgentUpdate);
+    // const unsubscribeActivity = websocketService.on('ai:activity', handleNewActivity);
     
-    return () => {
-      unsubscribeUpdate();
-      unsubscribeActivity();
-    };
+    // return () => {
+    //   unsubscribeUpdate();
+    //   unsubscribeActivity();
+    // };
   }, []);
 
-  // Auto-scroll chat to bottom
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [chatMessages, selectedAgent]);
+  // Removed auto-scroll for now to prevent issues
 
   const fetchAgents = async () => {
     console.log('fetchAgents called');
@@ -324,7 +319,7 @@ const AIAgentsDashboard = () => {
       ));
       
       // Notify via WebSocket
-      websocketService.updateAgentStatus(agentId, enabled);
+      // websocketService.updateAgentStatus(agentId, enabled);
     } catch (error) {
       console.error('Error toggling agent:', error);
     }
