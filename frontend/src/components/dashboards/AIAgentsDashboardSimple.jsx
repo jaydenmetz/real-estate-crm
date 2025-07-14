@@ -34,7 +34,7 @@ import {
 } from '@mui/icons-material';
 
 const AIAgentsDashboardSimple = () => {
-  const [agents] = useState([
+  const [agents, setAgents] = useState([
     // Executive
     {
       id: 'alex_executive',
@@ -172,7 +172,13 @@ const AIAgentsDashboardSimple = () => {
   };
 
   const handleToggle = (agentId) => {
-    console.log('Toggle agent:', agentId);
+    setAgents(prevAgents => 
+      prevAgents.map(agent => 
+        agent.id === agentId 
+          ? { ...agent, enabled: !agent.enabled }
+          : agent
+      )
+    );
   };
 
   const openChat = (agent) => {
