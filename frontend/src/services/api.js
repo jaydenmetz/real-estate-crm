@@ -1,6 +1,6 @@
 // File: frontend/src/services/api.js
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com/api/v1';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
 
 // Log the API URL for debugging
 console.log('API Base URL:', API_BASE_URL);
@@ -8,7 +8,8 @@ console.log('Environment:', process.env.NODE_ENV);
 
 class ApiService {
   constructor() {
-    this.baseURL = API_BASE_URL;
+    // Backend routes are mounted at /v1, not /api/v1
+    this.baseURL = `${API_BASE_URL}/v1`;
     this.token = localStorage.getItem('authToken');
     
     // Log initialization
