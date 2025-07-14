@@ -1,6 +1,6 @@
 // File: frontend/src/services/api.js
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5050/api/v1';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com/api/v1';
 
 // Log the API URL for debugging
 console.log('API Base URL:', API_BASE_URL);
