@@ -238,52 +238,24 @@ const AIAgentsDashboard = () => {
   }, [chatMessages, selectedAgent]);
 
   const fetchAgents = async () => {
-    try {
-      const response = await aiAgentsAPI.getAll();
-      const agentsData = response.data || [];
-      
-      // Merge with config data
-      const enrichedAgents = agentsData.map(agent => ({
-        ...agent,
-        ...agentConfigs[agent.id],
-        lastActivity: agent.lastActivity || new Date().toISOString()
-      }));
-      
-      setAgents(enrichedAgents);
-      
-      // Fetch activities for each agent
-      enrichedAgents.forEach(agent => {
-        fetchAgentActivities(agent.id);
-      });
-    } catch (error) {
-      console.error('Error fetching agents:', error);
-      // Use mock data as fallback
-      const mockAgents = Object.entries(agentConfigs).map(([id, config]) => ({
-        id,
-        ...config,
-        enabled: false,
-        tasksCompleted: Math.floor(Math.random() * 100),
-        lastActivity: new Date(Date.now() - Math.random() * 86400000).toISOString()
-      }));
-      setAgents(mockAgents);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchAgentActivities = async (agentId) => {
-    try {
-      const response = await aiAgentsAPI.getActivities(agentId);
+    setLoading(true);
+    
+    // Always use mock data for now
+    const mockAgents = Object.entries(agentConfigs).map(([id, config]) => ({
+      id,
+      ...config,
+      enabled: false,
+      tasksCompleted: Math.floor(Math.random() * 100),
+      lastActivity: new Date(Date.now() - Math.random() * 86400000).toISOString()
+    }));
+    
+    setAgents(mockAgents);
+    
+    // Mock activities for each agent
+    mockAgents.forEach(agent => {
       setActivities(prev => ({
         ...prev,
-        [agentId]: response.data || []
-      }));
-    } catch (error) {
-      console.error(`Error fetching activities for ${agentId}:`, error);
-      // Mock activities as fallback
-      setActivities(prev => ({
-        ...prev,
-        [agentId]: [
+        [agent.id]: [
           {
             id: 1,
             type: 'task_completed',
@@ -292,13 +264,36 @@ const AIAgentsDashboard = () => {
           },
           {
             id: 2,
-            type: 'client_interaction',
-            description: 'Sent follow-up email to Johnson family',
+            type: 'notification',
+            description: 'New lead qualified ✅',
             timestamp: new Date(Date.now() - 7200000).toISOString()
           }
         ]
       }));
+    });
+    
+    setLoading(false);
+    
+    // Try to fetch real data in background
+    try {
+      const response = await aiAgentsAPI.getAll();
+      if (response?.data?.length > 0) {
+        const agentsData = response.data;
+        const enrichedAgents = agentsData.map(agent => ({
+          ...agent,
+          ...agentConfigs[agent.id],
+          lastActivity: agent.lastActivity || new Date().toISOString()
+        }));
+        setAgents(enrichedAgents);
+      }
+    } catch (error) {
+      // Silently fail - we already have mock data
+      console.log('Using mock data for AI agents');
     }
+  };
+
+  const fetchAgentActivities = async (agentId) => {
+    // Skip for now - activities are set in fetchAgents
   };
 
   const handleAgentUpdate = (data) => {
