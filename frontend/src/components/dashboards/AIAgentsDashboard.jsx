@@ -66,12 +66,32 @@ const agentCategories = {
   }
 };
 
+// Icon mapping
+const agentIcons = {
+  alex_executive: SmartToy,
+  buyer_qualification: Person,
+  listing_marketing: Campaign,
+  transaction_coordinator: AssignmentTurnedIn,
+  showing_scheduler: Schedule,
+  market_analyst: TrendingUp,
+  lead_nurturing: Email,
+  compliance_monitor: Gavel,
+  client_care: Support,
+  document_processor: Description,
+  mls_sync: Home,
+  offer_negotiator: LocalOffer,
+  roi_calculator: Calculate,
+  vendor_coordinator: Business,
+  buyer_manager: Analytics,
+  listing_manager: Analytics,
+  operations_manager: Analytics,
+};
+
 // Agent configuration with details
 const agentConfigs = {
   alex_executive: {
     name: 'Alex',
     title: 'Executive Assistant',
-    icon: <SmartToy />,
     color: '#2196f3',
     description: 'Manages daily operations, coordinates team activities, and provides strategic insights',
     capabilities: ['Task Management', 'Team Coordination', 'Daily Briefings', 'Strategic Planning']
@@ -79,7 +99,6 @@ const agentConfigs = {
   buyer_qualification: {
     name: 'Sofia',
     title: 'Buyer Qualification Specialist',
-    icon: <Person />,
     color: '#4caf50',
     description: 'Qualifies buyer leads, assesses financial readiness, and matches preferences',
     capabilities: ['Lead Qualification', 'Financial Assessment', 'Property Matching', 'Follow-up Automation']
@@ -87,7 +106,6 @@ const agentConfigs = {
   listing_marketing: {
     name: 'Marcus',
     title: 'Listing Marketing Expert',
-    icon: <Campaign />,
     color: '#ff9800',
     description: 'Creates and manages property marketing campaigns across all channels',
     capabilities: ['Listing Descriptions', 'Social Media', 'Virtual Tours', 'Market Analysis']
@@ -95,7 +113,6 @@ const agentConfigs = {
   transaction_coordinator: {
     name: 'Emma',
     title: 'Transaction Coordinator',
-    icon: <AssignmentTurnedIn />,
     color: '#9c27b0',
     description: 'Manages escrow timelines, coordinates with all parties, ensures smooth closings',
     capabilities: ['Timeline Management', 'Document Tracking', 'Party Coordination', 'Deadline Alerts']
@@ -103,7 +120,6 @@ const agentConfigs = {
   showing_scheduler: {
     name: 'David',
     title: 'Showing Scheduler',
-    icon: <Schedule />,
     color: '#00bcd4',
     description: 'Coordinates property showings, manages calendars, and sends reminders',
     capabilities: ['Appointment Scheduling', 'Calendar Management', 'Reminder Automation', 'Route Planning']
@@ -111,7 +127,6 @@ const agentConfigs = {
   market_analyst: {
     name: 'Rachel',
     title: 'Market Analyst',
-    icon: <TrendingUp />,
     color: '#f44336',
     description: 'Provides real-time market insights, pricing recommendations, and trend analysis',
     capabilities: ['CMA Reports', 'Market Trends', 'Pricing Strategy', 'Competition Analysis']
@@ -119,7 +134,6 @@ const agentConfigs = {
   lead_nurturing: {
     name: 'James',
     title: 'Lead Nurturing Specialist',
-    icon: <Email />,
     color: '#ff5722',
     description: 'Maintains consistent communication with leads through personalized campaigns',
     capabilities: ['Email Campaigns', 'SMS Follow-ups', 'Lead Scoring', 'Drip Campaigns']
@@ -127,7 +141,6 @@ const agentConfigs = {
   compliance_monitor: {
     name: 'Patricia',
     title: 'Compliance Monitor',
-    icon: <Gavel />,
     color: '#607d8b',
     description: 'Ensures all transactions comply with regulations and best practices',
     capabilities: ['Regulatory Compliance', 'Document Review', 'Risk Assessment', 'Training Updates']
@@ -135,7 +148,6 @@ const agentConfigs = {
   client_care: {
     name: 'Michael',
     title: 'Client Care Specialist',
-    icon: <Support />,
     color: '#795548',
     description: 'Maintains client relationships, handles concerns, and ensures satisfaction',
     capabilities: ['Client Communication', 'Issue Resolution', 'Satisfaction Surveys', 'Relationship Management']
@@ -143,7 +155,6 @@ const agentConfigs = {
   document_processor: {
     name: 'Sarah',
     title: 'Document Processor',
-    icon: <Description />,
     color: '#3f51b5',
     description: 'Manages all transaction documents, ensures accuracy and completeness',
     capabilities: ['Document Management', 'E-signatures', 'Filing Systems', 'Accuracy Checks']
@@ -151,7 +162,6 @@ const agentConfigs = {
   mls_sync: {
     name: 'Thomas',
     title: 'MLS Sync Specialist',
-    icon: <Home />,
     color: '#009688',
     description: 'Keeps MLS listings updated and synchronized across all platforms',
     capabilities: ['MLS Updates', 'Data Synchronization', 'Listing Accuracy', 'Platform Integration']
@@ -159,7 +169,6 @@ const agentConfigs = {
   offer_negotiator: {
     name: 'Linda',
     title: 'Offer Negotiation Expert',
-    icon: <LocalOffer />,
     color: '#e91e63',
     description: 'Analyzes offers, provides negotiation strategies, and maximizes outcomes',
     capabilities: ['Offer Analysis', 'Negotiation Strategy', 'Counter Offers', 'Deal Optimization']
@@ -167,7 +176,6 @@ const agentConfigs = {
   roi_calculator: {
     name: 'Robert',
     title: 'ROI Calculator',
-    icon: <Calculate />,
     color: '#673ab7',
     description: 'Calculates investment returns, analyzes deals, and provides financial insights',
     capabilities: ['ROI Analysis', 'Investment Calculations', 'Cash Flow Analysis', 'Deal Comparison']
@@ -175,7 +183,6 @@ const agentConfigs = {
   vendor_coordinator: {
     name: 'Jennifer',
     title: 'Vendor Coordinator',
-    icon: <Business />,
     color: '#ffc107',
     description: 'Manages relationships with vendors, schedules services, and tracks performance',
     capabilities: ['Vendor Management', 'Service Scheduling', 'Quality Control', 'Cost Tracking']
@@ -184,7 +191,6 @@ const agentConfigs = {
   buyer_manager: {
     name: 'Victoria',
     title: "Buyer's Manager",
-    icon: <Analytics />,
     color: '#1976d2',
     description: 'Oversees all buyer-related operations and coordinates the buyer team agents',
     capabilities: ['Team Management', 'Buyer Strategy', 'Performance Analytics', 'Client Relations']
@@ -192,7 +198,6 @@ const agentConfigs = {
   listing_manager: {
     name: 'Richard',
     title: 'Listing Manager',
-    icon: <Analytics />,
     color: '#388e3c',
     description: 'Manages listing operations and coordinates the listing team agents',
     capabilities: ['Team Leadership', 'Listing Strategy', 'Market Analysis', 'Agent Coordination']
@@ -200,7 +205,6 @@ const agentConfigs = {
   operations_manager: {
     name: 'Diana',
     title: 'Operations Manager',
-    icon: <Analytics />,
     color: '#7b1fa2',
     description: 'Oversees transaction operations and ensures smooth processing',
     capabilities: ['Process Management', 'Compliance Oversight', 'Team Coordination', 'Quality Assurance']
@@ -429,7 +433,7 @@ const AIAgentsDashboard = () => {
                           mr: 2
                         }}
                       >
-                        {agent.icon}
+                        {React.createElement(agentIcons[agent.id] || SmartToy)}
                       </Avatar>
                     </Badge>
                     
@@ -581,7 +585,7 @@ const AIAgentsDashboard = () => {
                                   mr: 2
                                 }}
                               >
-                                {agent.icon}
+                                {React.createElement(agentIcons[agent.id] || SmartToy)}
                               </Avatar>
                             </Badge>
                             
@@ -704,7 +708,10 @@ const AIAgentsDashboard = () => {
       {/* Enhanced Chat Dialog */}
       {selectedAgent && (
         <EnhancedAgentChat
-          agent={selectedAgent}
+          agent={{
+            ...selectedAgent,
+            icon: React.createElement(agentIcons[selectedAgent.id] || SmartToy)
+          }}
           open={chatOpen}
           onClose={() => setChatOpen(false)}
           messages={chatMessages}
