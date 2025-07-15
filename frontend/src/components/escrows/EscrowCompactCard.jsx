@@ -47,8 +47,9 @@ const EscrowCompactCard = ({ escrow, index, showCommission = true }) => {
     'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800',
   ];
 
-  const daysToClose = escrow.closingDate ? 
-    differenceInDays(new Date(escrow.closingDate), new Date()) : null;
+  const daysToClose = escrow.daysToClose !== undefined ? escrow.daysToClose : 
+    (escrow.closingDate || escrow.scheduledCoeDate ? 
+      differenceInDays(new Date(escrow.closingDate || escrow.scheduledCoeDate), new Date()) : null);
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
@@ -113,7 +114,11 @@ const EscrowCompactCard = ({ escrow, index, showCommission = true }) => {
   };
 
   const commission = escrow.grossCommission || (escrow.purchasePrice * 0.025);
-  const myCommission = commission * 0.5;
+  const myCommission = escrow.myCommission || (commission * 0.5);
+  
+  // Extract buyers and sellers from clients array
+  const buyers = escrow.buyers || escrow.clients?.filter(c => c.role === 'Buyer' || c.type === 'Buyer') || [];
+  const sellers = escrow.sellers || escrow.clients?.filter(c => c.role === 'Seller' || c.type === 'Seller') || [];
 
   return (
     <Grow in={true} timeout={300 + index * 100}>
@@ -217,13 +222,13 @@ const EscrowCompactCard = ({ escrow, index, showCommission = true }) => {
                 <Box sx={{ display: 'flex', gap: 1 }}>
                   <Chip
                     icon={<People />}
-                    label={escrow.buyers?.[0]?.name || 'Buyer'}
+                    label={buyers[0]?.name || 'Buyer'}
                     size="small"
                     variant="outlined"
                   />
                   <Chip
                     icon={<Home />}
-                    label={escrow.sellers?.[0]?.name || 'Seller'}
+                    label={sellers[0]?.name || 'Seller'}
                     size="small"
                     variant="outlined"
                   />
@@ -243,7 +248,7 @@ const EscrowCompactCard = ({ escrow, index, showCommission = true }) => {
                     Timeline Progress
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    Closing: {safeFormatDate(escrow.closingDate, 'MMM d, yyyy')}
+                    Closing: {safeFormatDate(escrow.closingDate || escrow.scheduledCoeDate, 'MMM d, yyyy')}
                   </Typography>
                 </Box>
                 <LinearProgress 

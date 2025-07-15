@@ -424,7 +424,13 @@ const EscrowDetail = ({ defaultView = 'dashboard' }) => {
     async () => {
       try {
         const response = await escrowsAPI.getOne(id);
-        return response.data?.data || response.data;
+        console.log('API Response:', response); // Debug log
+        // The API returns { success: true, data: {...} }
+        if (response.success && response.data) {
+          return response.data;
+        }
+        // Fallback for different response structures
+        return response.data || response;
       } catch (err) {
         console.error('API error:', err);
         return mockEscrowDetail;

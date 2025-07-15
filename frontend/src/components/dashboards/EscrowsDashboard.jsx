@@ -49,7 +49,7 @@ import { useSnackbar } from 'notistack';
 import { format, differenceInDays } from 'date-fns';
 import { safeFormatDate } from '../../utils/safeDateUtils';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../../services/api';
+import { api, escrowsAPI } from '../../services/api';
 import EscrowForm from '../forms/EscrowForm';
 import EscrowFormSimple from '../forms/EscrowFormSimple';
 import EscrowCreated from '../escrows/EscrowCreated';
@@ -134,17 +134,27 @@ const EscrowsDashboard = () => {
   // Query with fallback to mock data
   const { data, isLoading, error } = useQuery(
     ['escrows', status],
-    () => api.get('/escrows', status === 'all' ? {} : { status }).then(res => res.data),
+    async () => {
+      try {
+        const response = await escrowsAPI.getAll(status === 'all' ? {} : { status });
+        console.log('Dashboard API Response:', response); // Debug log
+        // The API returns { success: true, data: { escrows: [...], pagination: {...} } }
+        if (response.success && response.data) {
+          return response.data;
+        }
+        // Fallback for different response structures
+        return response.data || response;
+      } catch (err) {
+        console.error('Dashboard API error:', err);
+        return { escrows: mockEscrows };
+      }
+    },
     {
       retry: false,
       refetchOnMount: false,
       refetchOnWindowFocus: false,
       refetchInterval: false,
       keepPreviousData: true,
-      onError: () => {
-        // Return mock data on error
-        return { escrows: mockEscrows };
-      }
     }
   );
 
