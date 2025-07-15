@@ -1,29 +1,39 @@
-# Use Node.js Alpine image
-FROM node:18-alpine
+# Multi-stage build for optimized deployment
+FROM node:18-alpine AS builder
 
 # Set working directory
 WORKDIR /app
 
-# Copy package files
+# Copy package files first (better caching)
 COPY package*.json ./
 
-# Install ALL dependencies (including devDependencies for build)
-RUN npm ci
+# Install dependencies with cache mount
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --only=production --silent && \
+    npm ci --silent
 
 # Copy application files
 COPY . .
 
-# Build the application
+# Build the application with optimizations
+ENV GENERATE_SOURCEMAP=false
+ENV INLINE_RUNTIME_CHUNK=false
 RUN npm run build
 
-# Remove devDependencies after build to reduce image size
-RUN npm prune --production
+# Production stage
+FROM node:18-alpine AS runner
 
 # Install serve globally
 RUN npm install -g serve
 
-# Expose port (Railway will override this)
+# Set working directory
+WORKDIR /app
+
+# Copy only the built files
+COPY --from=builder /app/build ./build
+
+# Expose port
 EXPOSE 3000
 
-# Start the application using PORT environment variable
-CMD serve -s build -l $PORT
+# Start the application
+CMD ["serve", "-s", "build", "-l", "$PORT"]
