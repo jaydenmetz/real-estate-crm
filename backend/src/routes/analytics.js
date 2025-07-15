@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken } = require('./auth');
 const databaseService = require('../services/database.service');
 
 // Apply authentication to all routes
