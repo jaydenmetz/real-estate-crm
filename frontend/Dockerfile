@@ -7,9 +7,8 @@ WORKDIR /app
 # Copy package files first (better caching)
 COPY package*.json ./
 
-# Install dependencies with cache mount
-RUN --mount=type=cache,id=npm-cache,target=/root/.npm \
-    npm ci --only=production --silent && \
+# Install dependencies (Railway doesn't support cache mounts)
+RUN npm ci --only=production --silent && \
     npm ci --silent
 
 # Copy application files
