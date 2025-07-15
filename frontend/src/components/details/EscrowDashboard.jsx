@@ -133,7 +133,7 @@ import {
   Line,
   BarChart as RechartsBarChart,
   Bar,
-  PieChart,
+  PieChart as RechartsPieChart,
   Pie,
   Cell,
   XAxis, 
@@ -1359,7 +1359,7 @@ const EscrowDashboard = () => {
                     </Box>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                       <Typography variant="body2">Response Time</Typography>
-                      <Typography variant="body2" fontWeight="bold"><100ms</Typography>
+                      <Typography variant="body2" fontWeight="bold">&lt;100ms</Typography>
                     </Box>
                   </Stack>
                 </Grid>
