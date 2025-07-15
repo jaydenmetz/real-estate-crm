@@ -5,6 +5,14 @@ import DetailPageDebugger from '../common/DetailPageDebugger';
 import DetailPageErrorBoundary from '../common/DetailPageErrorBoundary';
 import EscrowDashboard from './EscrowDashboard';
 import MetricCard from '../escrows/MetricCard';
+import { motion } from 'framer-motion';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Pagination, Autoplay, EffectFade } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+import 'swiper/css/effect-fade';
+import { styled } from '@mui/material/styles';
 import {
   Container,
   Grid,
@@ -136,12 +144,98 @@ import {
   SquareFootOutlined,
   Landscape,
   Chat,
+  Bed,
+  Bathroom,
+  SquareFoot,
+  DirectionsCar,
+  Share,
+  Favorite,
+  Visibility,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { format, differenceInDays, addDays, parseISO, isValid } from 'date-fns';
 import { useSnackbar } from 'notistack';
 import { escrowsAPI } from '../../services/api';
+import CountUp from 'react-countup';
+
+// Styled components for beautiful modern UI
+const HeroSection = styled(Box)(({ theme }) => ({
+  position: 'relative',
+  borderRadius: theme.spacing(3),
+  overflow: 'hidden',
+  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  color: 'white',
+  minHeight: 450,
+  marginBottom: theme.spacing(4),
+  boxShadow: '0 20px 60px rgba(102, 126, 234, 0.3)',
+  [theme.breakpoints.down('md')]: {
+    minHeight: 350,
+  },
+}));
+
+const PropertyImageContainer = styled(Box)(({ theme }) => ({
+  position: 'relative',
+  borderRadius: theme.spacing(2),
+  overflow: 'hidden',
+  height: '100%',
+  '& .swiper': {
+    borderRadius: theme.spacing(2),
+    height: '100%',
+  },
+  '& .swiper-slide': {
+    position: 'relative',
+    '& img': {
+      width: '100%',
+      height: '100%',
+      objectFit: 'cover',
+    },
+  },
+  '& .swiper-button-next, & .swiper-button-prev': {
+    color: 'white',
+    '&::after': {
+      fontSize: '24px',
+    },
+  },
+  '& .swiper-pagination-bullet': {
+    background: 'white',
+    opacity: 0.6,
+    '&.swiper-pagination-bullet-active': {
+      opacity: 1,
+    },
+  },
+}));
+
+const PropertyFeature = ({ icon: Icon, label, value }) => (
+  <Box sx={{ textAlign: 'center', color: 'white' }}>
+    <Icon sx={{ fontSize: 24, mb: 0.5, opacity: 0.9 }} />
+    <Typography variant="h6" fontWeight="bold">{value}</Typography>
+    <Typography variant="caption" sx={{ opacity: 0.8 }}>{label}</Typography>
+  </Box>
+);
+
+const AnimatedCard = styled(Card)(({ theme }) => ({
+  position: 'relative',
+  overflow: 'hidden',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  '&:hover': {
+    transform: 'translateY(-8px)',
+    boxShadow: theme.shadows[10],
+  },
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: '-100%',
+    width: '100%',
+    height: '100%',
+    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
+    transition: 'left 0.5s',
+  },
+  '&:hover::before': {
+    left: '100%',
+  },
+}));
 
 // Safe date parsing function
 const safeParseDate = (dateValue) => {
@@ -306,6 +400,15 @@ const mockEscrowDetail = {
   tags: ['Hot Lead', 'Cash Buyer', 'Relocation'],
   priorityLevel: 'High',
   archivedStatus: false,
+  
+  // Property Images for carousel
+  propertyImages: [
+    'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800',
+    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800',
+    'https://images.unsplash.com/photo-1600607687644-c7171b42498b?w=800',
+    'https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?w=800',
+    'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=800'
+  ],
 };
 
 // Checklist items organized by phase
@@ -598,200 +701,306 @@ const EscrowDetail = ({ defaultView = 'detail' }) => {
         <Typography color="text.primary">{escrowData.propertyAddress}</Typography>
       </Breadcrumbs>
 
-      {/* Header */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} md={8}>
-            <Box sx={{ display: 'flex', alignItems: 'center' }}>
-              <IconButton onClick={() => navigate('/escrows')} sx={{ mr: 2 }}>
-                <ArrowBack />
-              </IconButton>
-              <Box sx={{ flexGrow: 1 }}>
-                <Typography variant="h4" gutterBottom>
-                  {escrowData.propertyAddress}
-                </Typography>
-                <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', alignItems: 'center' }}>
+      {/* Beautiful Hero Section with Carousel */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <HeroSection>
+          <Grid container sx={{ height: '100%' }}>
+            <Grid item xs={12} md={6} sx={{ p: { xs: 3, md: 6 }, display: 'flex', alignItems: 'center' }}>
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                style={{ width: '100%' }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <IconButton 
+                    onClick={() => navigate('/escrows')} 
+                    sx={{ 
+                      mr: 2, 
+                      bgcolor: 'rgba(255, 255, 255, 0.2)',
+                      color: 'white',
+                      '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.3)' }
+                    }}
+                  >
+                    <ArrowBack />
+                  </IconButton>
                   <Chip
                     label={escrowData.escrowStatus}
-                    color={getStatusColor(escrowData.escrowStatus)}
-                    size="small"
+                    sx={{ 
+                      bgcolor: getStatusColor(escrowData.escrowStatus) === 'success' ? 'success.main' : 
+                              getStatusColor(escrowData.escrowStatus) === 'warning' ? 'warning.main' : 
+                              getStatusColor(escrowData.escrowStatus) === 'error' ? 'error.main' : 'grey.500',
+                      color: 'white',
+                      fontWeight: 'bold'
+                    }}
                   />
+                </Box>
+
+                <Typography variant="h3" fontWeight="bold" gutterBottom>
+                  {escrowData.propertyAddress}
+                </Typography>
+
+                <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
                   <Chip
-                    label={escrowData.transactionType}
-                    color="primary"
-                    variant="outlined"
-                    size="small"
+                    icon={<AttachMoney />}
+                    label={`$${escrowData.purchasePrice?.toLocaleString()}`}
+                    sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)', color: 'white', fontSize: '1.1rem' }}
                   />
-                  <Chip
-                    label={escrowData.propertyType}
-                    variant="outlined"
-                    size="small"
-                  />
-                  <Chip
-                    icon={<Badge />}
-                    label={`Escrow #${escrowData.escrowNumber}`}
-                    variant="outlined"
-                    size="small"
-                  />
-                  {escrowData.mlsNumber && (
-                    <Chip
-                      label={`MLS #${escrowData.mlsNumber}`}
-                      variant="outlined"
-                      size="small"
-                    />
-                  )}
                   {escrowData.priorityLevel === 'High' && (
                     <Chip
                       icon={<Flag />}
                       label="High Priority"
-                      color="error"
-                      size="small"
+                      sx={{ bgcolor: 'error.main', color: 'white' }}
                     />
                   )}
-                </Box>
-                {/* Property Features */}
-                <Box sx={{ display: 'flex', gap: 2, mt: 1, flexWrap: 'wrap' }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <BedOutlined sx={{ fontSize: 18, color: 'text.secondary' }} />
-                    <Typography variant="body2">
-                      {escrowData.bedrooms || 3} beds
-                    </Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <BathtubOutlined sx={{ fontSize: 18, color: 'text.secondary' }} />
-                    <Typography variant="body2">
-                      {escrowData.bathrooms || 2} baths
-                    </Typography>
-                  </Box>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    <SquareFootOutlined sx={{ fontSize: 18, color: 'text.secondary' }} />
-                    <Typography variant="body2">
-                      {escrowData.squareFootage?.toLocaleString() || '2,000'} sq ft
-                    </Typography>
-                  </Box>
-                  {escrowData.lotSize > 0 && (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <Landscape sx={{ fontSize: 18, color: 'text.secondary' }} />
-                      <Typography variant="body2">
-                        {escrowData.lotSize >= 43560 
-                          ? `${(escrowData.lotSize / 43560).toFixed(1)} acres`
-                          : `${escrowData.lotSize?.toLocaleString()} sq ft lot`
-                        }
-                      </Typography>
-                    </Box>
-                  )}
-                </Box>
-              </Box>
-            </Box>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <Box sx={{ display: 'flex', justifyContent: { xs: 'flex-start', md: 'flex-end' }, gap: 1, flexWrap: 'wrap' }}>
-              <ToggleButtonGroup
-                value={viewMode}
-                exclusive
-                onChange={(e, newMode) => newMode && setViewMode(newMode)}
-                size="small"
-              >
-                <ToggleButton value="dashboard">
-                  <BarChart sx={{ mr: 1 }} />
-                  Dashboard
-                </ToggleButton>
-                <ToggleButton value="details">
-                  <Category sx={{ mr: 1 }} />
-                  Details
-                </ToggleButton>
-              </ToggleButtonGroup>
-              <ButtonGroup>
-                <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
-                  <MoreVert />
-                </IconButton>
-              </ButtonGroup>
-            </Box>
-          </Grid>
-        </Grid>
+                </Stack>
 
-        {/* Progress Bar with Percentage */}
-        <Box sx={{ mt: 3 }}>
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-            <Typography variant="body2">Overall Completion</Typography>
-            <Typography variant="body2" fontWeight="bold">{checklistProgress}%</Typography>
-          </Box>
-          <LinearProgress
-            variant="determinate"
-            value={checklistProgress}
-            sx={{ height: 10, borderRadius: 5 }}
-            color={checklistProgress === 100 ? 'success' : checklistProgress > 75 ? 'primary' : 'warning'}
-          />
-        </Box>
-      </Paper>
+                <Typography variant="h6" sx={{ mb: 3, opacity: 0.9 }}>
+                  {escrowData.transactionType} • {escrowData.escrowNumber}
+                </Typography>
+
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 3 }}>
+                  <Button
+                    variant="contained"
+                    size="large"
+                    startIcon={<Visibility />}
+                    sx={{ 
+                      bgcolor: 'white', 
+                      color: 'primary.main',
+                      '&:hover': { bgcolor: 'grey.100' }
+                    }}
+                    onClick={() => setViewMode(viewMode === 'dashboard' ? 'details' : 'dashboard')}
+                  >
+                    {viewMode === 'dashboard' ? 'View Details' : 'View Dashboard'}
+                  </Button>
+                  <IconButton sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)', color: 'white' }}>
+                    <Share />
+                  </IconButton>
+                  <IconButton sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)', color: 'white' }}>
+                    <Favorite />
+                  </IconButton>
+                  <IconButton sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)', color: 'white' }} onClick={(e) => setAnchorEl(e.currentTarget)}>
+                    <MoreVert />
+                  </IconButton>
+                </Box>
+
+                {/* Progress Bar */}
+                <Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                    <Typography variant="body1" sx={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+                      Overall Completion
+                    </Typography>
+                    <Typography variant="body1" fontWeight="bold">
+                      {checklistProgress}%
+                    </Typography>
+                  </Box>
+                  <LinearProgress
+                    variant="determinate"
+                    value={checklistProgress}
+                    sx={{ 
+                      height: 10, 
+                      borderRadius: 5,
+                      bgcolor: 'rgba(255, 255, 255, 0.3)',
+                      '& .MuiLinearProgress-bar': {
+                        bgcolor: 'white',
+                        borderRadius: 5,
+                      }
+                    }}
+                  />
+                </Box>
+              </motion.div>
+            </Grid>
+            
+            <Grid item xs={12} md={6} sx={{ position: 'relative', height: { xs: 300, md: '100%' } }}>
+              <PropertyImageContainer sx={{ height: '100%' }}>
+                <Swiper
+                  modules={[Navigation, Pagination, Autoplay, EffectFade]}
+                  spaceBetween={0}
+                  slidesPerView={1}
+                  navigation
+                  pagination={{ clickable: true }}
+                  autoplay={{ delay: 5000, disableOnInteraction: false }}
+                  effect="fade"
+                  style={{ height: '100%' }}
+                >
+                  {(escrowData.propertyImages || mockEscrowDetail.propertyImages)?.map((image, index) => (
+                    <SwiperSlide key={index}>
+                      <Box
+                        sx={{
+                          height: '100%',
+                          background: `url(${image}) center/cover`,
+                          position: 'relative',
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)',
+                            p: 3,
+                          }}
+                        >
+                          <Grid container spacing={2}>
+                            <Grid item xs={3}>
+                              <PropertyFeature icon={Bed} label="Beds" value={escrowData.bedrooms || 4} />
+                            </Grid>
+                            <Grid item xs={3}>
+                              <PropertyFeature icon={Bathroom} label="Baths" value={escrowData.bathrooms || 3} />
+                            </Grid>
+                            <Grid item xs={3}>
+                              <PropertyFeature icon={SquareFoot} label="Sq Ft" value={escrowData.squareFootage?.toLocaleString() || '3,200'} />
+                            </Grid>
+                            <Grid item xs={3}>
+                              <PropertyFeature icon={DirectionsCar} label="Garage" value="2" />
+                            </Grid>
+                          </Grid>
+                        </Box>
+                      </Box>
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
+              </PropertyImageContainer>
+            </Grid>
+          </Grid>
+        </HeroSection>
+      </motion.div>
 
       {/* Key Metrics with Expandable Details */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
+      <Grid container spacing={3} sx={{ mb: 3, mt: -2 }}>
         <Grid item xs={12} sm={6} md={3}>
-          <MetricCard
-            title="Days to Close"
-            value={daysToClose || 'N/A'}
-            icon={<Schedule />}
-            color={daysToClose && daysToClose <= 7 ? 'error' : 'primary'}
-            trend={-5}
-            escrowData={escrowData}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            whileHover={{ scale: 1.02 }}
+          >
+            <MetricCard
+              title="Days to Close"
+              value={daysToClose || 'N/A'}
+              icon={<Schedule />}
+              color={daysToClose && daysToClose <= 7 ? 'error' : 'primary'}
+              trend={-5}
+              escrowData={escrowData}
+            />
+          </motion.div>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <MetricCard
-            title="My Commission"
-            value={(escrowData.grossCommission || escrowData.purchasePrice * 0.025) * 0.5}
-            icon={<AttachMoney />}
-            color="success"
-            trend={12}
-            escrowData={escrowData}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            whileHover={{ scale: 1.02 }}
+          >
+            <MetricCard
+              title="My Commission"
+              value={(escrowData.grossCommission || escrowData.purchasePrice * 0.025) * 0.5}
+              icon={<AttachMoney />}
+              color="success"
+              trend={12}
+              escrowData={escrowData}
+            />
+          </motion.div>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <MetricCard
-            title="Checklist Progress"
-            value={`${checklistProgress}%`}
-            icon={<Task />}
-            color="info"
-            trend={8}
-            escrowData={escrowData}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            whileHover={{ scale: 1.02 }}
+          >
+            <MetricCard
+              title="Checklist Progress"
+              value={`${checklistProgress}%`}
+              icon={<Task />}
+              color="info"
+              trend={8}
+              escrowData={escrowData}
+            />
+          </motion.div>
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
-          <MetricCard
-            title="Communication Score"
-            value={92}
-            icon={<Chat />}
-            color="primary"
-            trend={3}
-            escrowData={escrowData}
-          />
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            whileHover={{ scale: 1.02 }}
+          >
+            <MetricCard
+              title="Communication Score"
+              value={92}
+              icon={<Chat />}
+              color="primary"
+              trend={3}
+              escrowData={escrowData}
+            />
+          </motion.div>
         </Grid>
       </Grid>
 
       {/* Tabs */}
-      <Paper sx={{ mb: 3 }}>
-        <Tabs
-          value={activeTab}
-          onChange={(e, v) => setActiveTab(v)}
-          variant="scrollable"
-          scrollButtons="auto"
-        >
-          <Tab icon={<Category />} label="Core Info" iconPosition="start" />
-          <Tab icon={<AttachMoney />} label="Financial" iconPosition="start" />
-          <Tab icon={<AccountTree />} label="Relations" iconPosition="start" />
-          <Tab icon={<DateRange />} label="Dates" iconPosition="start" />
-          <Tab icon={<Task />} label="Checklist" iconPosition="start" />
-          <Tab icon={<Description />} label="Documents" iconPosition="start" />
-          <Tab icon={<History />} label="Communication" iconPosition="start" />
-          <Tab icon={<Analytics />} label="Analytics" iconPosition="start" />
-        </Tabs>
-      </Paper>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.5 }}
+      >
+        <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden' }}>
+          <Tabs
+            value={activeTab}
+            onChange={(e, v) => setActiveTab(v)}
+            variant="scrollable"
+            scrollButtons="auto"
+            sx={{
+              '& .MuiTab-root': {
+                minHeight: 64,
+                textTransform: 'none',
+                fontSize: '0.95rem',
+                fontWeight: 500,
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  bgcolor: 'action.hover',
+                },
+              },
+              '& .Mui-selected': {
+                bgcolor: 'primary.main',
+                color: 'white !important',
+                '& .MuiSvgIcon-root': {
+                  color: 'white',
+                },
+              },
+              '& .MuiTabs-indicator': {
+                display: 'none',
+              },
+            }}
+          >
+            <Tab icon={<Category />} label="Core Info" iconPosition="start" />
+            <Tab icon={<AttachMoney />} label="Financial" iconPosition="start" />
+            <Tab icon={<AccountTree />} label="Relations" iconPosition="start" />
+            <Tab icon={<DateRange />} label="Dates" iconPosition="start" />
+            <Tab icon={<Task />} label="Checklist" iconPosition="start" />
+            <Tab icon={<Description />} label="Documents" iconPosition="start" />
+            <Tab icon={<History />} label="Communication" iconPosition="start" />
+            <Tab icon={<Analytics />} label="Analytics" iconPosition="start" />
+          </Tabs>
+        </Paper>
+      </motion.div>
 
       {/* Tab Content */}
-      {activeTab === 0 && (
-        <Card>
-          <CardContent>
+      <motion.div
+        key={activeTab}
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        transition={{ duration: 0.3 }}
+      >
+        {activeTab === 0 && (
+          <AnimatedCard>
+            <CardContent>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
               <Typography variant="h6">
                 <Domain sx={{ mr: 1, verticalAlign: 'bottom' }} />
@@ -1775,6 +1984,7 @@ const EscrowDetail = ({ defaultView = 'detail' }) => {
           Cancel Escrow
         </MenuItem>
       </Menu>
+      </motion.div>
     </Container>
   );
 };
