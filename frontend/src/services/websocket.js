@@ -1,4 +1,5 @@
 import io from 'socket.io-client';
+import { getSafeTimestamp } from '../utils/safeDateUtils';
 
 class WebSocketService {
   constructor() {
@@ -141,7 +142,7 @@ class WebSocketService {
       to: 'alex_executive',
       message,
       type,
-      timestamp: new Date().toISOString(),
+      timestamp: getSafeTimestamp(),
     };
 
     this.send('ai:message', payload);
@@ -152,7 +153,7 @@ class WebSocketService {
       to: agentId,
       message,
       type,
-      timestamp: new Date().toISOString(),
+      timestamp: getSafeTimestamp(),
     };
 
     this.send('ai:message', payload);

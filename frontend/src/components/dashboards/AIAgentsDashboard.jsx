@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { getSafeTimestamp, safeParseDate } from '../../utils/safeDateUtils';
 import {
   Container,
   Grid,
@@ -16,6 +17,7 @@ import {
   Fade,
   Collapse,
   CircularProgress,
+  Paper,
 } from '@mui/material';
 import {
   SmartToy,
@@ -36,10 +38,12 @@ import {
   Analytics,
   ExpandMore,
   ExpandLess,
+  History,
 } from '@mui/icons-material';
 import { aiAPI, aiAgentsAPI } from '../../services/api';
 // import websocketService from '../../services/websocket';
 import { formatDistanceToNow } from 'date-fns';
+import { safeFormatRelativeTime } from '../../utils/safeDateUtils';
 import EnhancedAgentChatFixed from '../ai/EnhancedAgentChatFixed';
 
 // Agent categories for organized display
@@ -221,6 +225,7 @@ const AIAgentsDashboard = () => {
   const [chatMessages, setChatMessages] = useState({});
   const [activities, setActivities] = useState({});
   const [expandedAgents, setExpandedAgents] = useState({});
+  const [activityTab, setActivityTab] = useState(0);
 
   // Fetch agents data
   useEffect(() => {
@@ -249,7 +254,7 @@ const AIAgentsDashboard = () => {
       ...config,
       enabled: false,
       tasksCompleted: Math.floor(Math.random() * 100),
-      lastActivity: new Date(Date.now() - Math.random() * 86400000).toISOString()
+      lastActivity: getSafeTimestamp()
     }));
     
     console.log('Mock agents created:', mockAgents.length);
@@ -264,13 +269,13 @@ const AIAgentsDashboard = () => {
             id: 1,
             type: 'task_completed',
             description: 'Analyzed market trends for downtown properties',
-            timestamp: new Date(Date.now() - 3600000).toISOString()
+            timestamp: getSafeTimestamp()
           },
           {
             id: 2,
             type: 'notification',
             description: 'New lead qualified ✅',
-            timestamp: new Date(Date.now() - 7200000).toISOString()
+            timestamp: getSafeTimestamp()
           }
         ]
       }));
@@ -286,7 +291,7 @@ const AIAgentsDashboard = () => {
         const enrichedAgents = agentsData.map(agent => ({
           ...agent,
           ...agentConfigs[agent.id],
-          lastActivity: agent.lastActivity || new Date().toISOString()
+          lastActivity: agent.lastActivity || getSafeTimestamp()
         }));
         setAgents(enrichedAgents);
       }
@@ -344,7 +349,9 @@ const AIAgentsDashboard = () => {
 
   const getAgentStatus = (agent) => {
     if (!agent.enabled) return { text: 'Offline', color: 'default' };
-    const lastActivityTime = new Date(agent.lastActivity).getTime();
+    const lastActivityDate = safeParseDate(agent.lastActivity);
+    if (!lastActivityDate) return { text: 'Unknown', color: 'default' };
+    const lastActivityTime = lastActivityDate.getTime();
     const now = Date.now();
     const hoursSinceActivity = (now - lastActivityTime) / (1000 * 60 * 60);
     
@@ -503,7 +510,7 @@ const AIAgentsDashboard = () => {
                         )}
                         {agent.lastActivity && (
                           <Typography variant="caption" color="text.secondary">
-                            {formatDistanceToNow(new Date(agent.lastActivity), { addSuffix: true })}
+                            {safeFormatRelativeTime(agent.lastActivity)}
                           </Typography>
                         )}
                       </Paper>
@@ -655,7 +662,7 @@ const AIAgentsDashboard = () => {
                                 )}
                                 {agent.lastActivity && (
                                   <Typography variant="caption" color="text.secondary">
-                                    {formatDistanceToNow(new Date(agent.lastActivity), { addSuffix: true })}
+                                    {safeFormatRelativeTime(agent.lastActivity)}
                                   </Typography>
                                 )}
                               </Paper>

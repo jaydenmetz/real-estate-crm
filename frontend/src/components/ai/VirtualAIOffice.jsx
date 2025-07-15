@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { safeFormatDate, getSafeTimestamp } from '../../utils/safeDateUtils';
 import { 
   Container, Grid, Paper, Typography, Box, Card, CardContent, 
   Avatar, Badge, IconButton, Button, Chip, List, ListItem, 
@@ -480,7 +481,7 @@ const DatabaseItemPage = ({ type, item, onClose }) => {
       setNotes([...notes, {
         id: Date.now(),
         text: newNote,
-        timestamp: new Date().toLocaleString(),
+        timestamp: safeFormatDate(getSafeTimestamp(), 'MM/dd/yyyy HH:mm:ss'),
         author: 'You'
       }]);
       setNewNote('');

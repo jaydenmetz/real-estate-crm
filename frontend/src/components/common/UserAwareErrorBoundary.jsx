@@ -3,6 +3,7 @@ import { Container, Paper, Typography, Button, Box, Alert, Divider } from '@mui/
 import { Home, Refresh, Email, BugReport } from '@mui/icons-material';
 import authService from '../../services/auth.service';
 import CopyButton from './CopyButton';
+import { safeFormatDate } from '../../utils/safeDateUtils';
 
 class UserAwareErrorBoundary extends React.Component {
   constructor(props) {
@@ -64,7 +65,7 @@ class UserAwareErrorBoundary extends React.Component {
     errorReport += `Page: ${pageName}\n`;
     errorReport += `User: ${user?.username || 'Unknown'} (Admin)\n`;
     errorReport += `Error Count: ${errorCount}\n`;
-    errorReport += `Time: ${new Date().toLocaleString()}\n\n`;
+    errorReport += `Time: ${safeFormatDate(new Date(), 'MM/dd/yyyy HH:mm:ss')}\n\n`;
     
     if (error?.stack) {
       errorReport += `Stack Trace:\n${error.stack}\n\n`;
@@ -195,7 +196,7 @@ class UserAwareErrorBoundary extends React.Component {
                     Page: {this.props.pageName || 'Unknown'}<br />
                     User: {user?.username} (Admin)<br />
                     Error Count: {this.state.errorCount}<br />
-                    Time: {new Date().toLocaleString()}
+                    Time: {safeFormatDate(new Date(), 'MM/dd/yyyy HH:mm:ss')}
                   </Typography>
                 </Box>
               </Box>

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { getSafeTimestamp } from '../../utils/safeDateUtils';
 import {
   Container,
   Grid,
@@ -193,7 +194,7 @@ const AIAgentsDashboardSimple = () => {
       id: Date.now(),
       text: message,
       sender: 'user',
-      timestamp: new Date().toISOString(),
+      timestamp: getSafeTimestamp(),
     };
 
     setMessages(prev => ({
@@ -207,7 +208,7 @@ const AIAgentsDashboardSimple = () => {
         id: Date.now() + 1,
         text: `I'll help you with that right away!`,
         sender: 'agent',
-        timestamp: new Date().toISOString(),
+        timestamp: getSafeTimestamp(),
       };
       setMessages(prev => ({
         ...prev,

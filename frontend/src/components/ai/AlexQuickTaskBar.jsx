@@ -1,5 +1,6 @@
 // frontend/src/components/ai/AlexQuickTaskBar.jsx
 import React, { useState, useEffect } from 'react';
+import { getSafeTimestamp } from '../../utils/safeDateUtils';
 import {
   Box,
   Paper,
@@ -149,7 +150,7 @@ const AlexQuickTaskBar = () => {
         task: taskData.description,
         action: taskData.action,
         page: taskData.page,
-        timestamp: new Date().toISOString()
+        timestamp: getSafeTimestamp()
       });
 
       // Simulate processing time

@@ -37,7 +37,7 @@ import {
   Timeline,
   Assignment,
 } from '@mui/icons-material';
-import { format } from 'date-fns';
+import { safeFormatDate } from '../../utils/safeDateUtils';
 import { useNavigate } from 'react-router-dom';
 import Confetti from 'react-confetti';
 
@@ -207,13 +207,13 @@ const EscrowCreated = ({ escrowData, onEdit, onViewDetails }) => {
                       </TableRow>
                       <TableRow>
                         <TableCell><strong>Acceptance Date</strong></TableCell>
-                        <TableCell>{format(new Date(escrowData.acceptanceDate), 'MMMM d, yyyy')}</TableCell>
+                        <TableCell>{safeFormatDate(escrowData.acceptanceDate, 'MMMM d, yyyy')}</TableCell>
                       </TableRow>
                       <TableRow>
                         <TableCell><strong>Closing Date</strong></TableCell>
                         <TableCell>
                           <Typography color="success.main" fontWeight="bold">
-                            {format(new Date(escrowData.closingDate), 'MMMM d, yyyy')}
+                            {safeFormatDate(escrowData.closingDate, 'MMMM d, yyyy')}
                           </Typography>
                         </TableCell>
                       </TableRow>

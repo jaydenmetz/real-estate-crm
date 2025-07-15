@@ -32,7 +32,8 @@ import {
 } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { useForm, Controller } from 'react-hook-form';
-import { format, addDays } from 'date-fns';
+import { addDays } from 'date-fns';
+import { safeFormatDate } from '../../utils/safeDateUtils';
 
 const EscrowFormSimple = ({ open, onClose, onSubmit, loading = false }) => {
   const [showAdditionalDetails, setShowAdditionalDetails] = useState(false);
@@ -109,8 +110,8 @@ const EscrowFormSimple = ({ open, onClose, onSubmit, loading = false }) => {
         email: data.sellerEmail?.trim() || '',
         phone: data.sellerPhone?.trim() || ''
       }],
-      acceptanceDate: format(new Date(data.acceptanceDate), 'yyyy-MM-dd'),
-      closingDate: format(new Date(data.closingDate), 'yyyy-MM-dd'),
+      acceptanceDate: safeFormatDate(data.acceptanceDate, 'yyyy-MM-dd'),
+      closingDate: safeFormatDate(data.closingDate, 'yyyy-MM-dd'),
       // Include additional details if provided
       earnestMoneyDeposit: earnestMoney,
       downPayment: downPayment,

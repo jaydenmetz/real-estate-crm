@@ -1,6 +1,7 @@
 // frontend/src/components/dashboards/EscrowsDashboard.jsx
 
 import React, { useState } from 'react';
+import { safeParseDate } from '../../utils/safeDateUtils';
 import {
   Container,
   Grid,
@@ -160,8 +161,9 @@ const EscrowsDashboard = () => {
         console.log('API failed, using mock implementation');
           // Mock create
           const id = `esc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-          const year = new Date().getFullYear();
-          const month = String(new Date().getMonth() + 1).padStart(2, '0');
+          const now = safeParseDate(new Date()) || new Date();
+          const year = now.getFullYear();
+          const month = String(now.getMonth() + 1).padStart(2, '0');
           const count = (escrows?.length || 0) + 1;
           const escrowNumber = `ESC-${year}-${month}-${count.toString().padStart(3, '0')}`;
           

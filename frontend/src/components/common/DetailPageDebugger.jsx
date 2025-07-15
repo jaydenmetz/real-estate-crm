@@ -1,6 +1,7 @@
 import React from 'react';
 import { Paper, Typography, Alert, Box, Chip, Divider } from '@mui/material';
 import CopyButton from './CopyButton';
+import { getSafeTimestamp } from '../../utils/safeDateUtils';
 
 const DetailPageDebugger = ({ 
   pageName, 
@@ -19,7 +20,7 @@ const DetailPageDebugger = ({
   const debugInfo = {
     page: pageName,
     routeId: id,
-    timestamp: new Date().toISOString(),
+    timestamp: getSafeTimestamp(),
     url: window.location.href,
     pathname: window.location.pathname,
     reactRouterWorking: !!id,

@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { safeFormatDate, safeParseDate } from '../../utils/safeDateUtils';
 import {
   Dialog,
   DialogTitle,
@@ -97,14 +98,14 @@ const ClientForm = ({ open, onClose, onSubmit, client, loading }) => {
       demographics: {
         ...data.demographics,
         birthDate: data.demographics.birthDate ? 
-          data.demographics.birthDate.toISOString().split('T')[0] : null,
+          safeFormatDate(data.demographics.birthDate, 'yyyy-MM-dd') : null,
         anniversary: data.demographics.anniversary ? 
-          data.demographics.anniversary.toISOString().split('T')[0] : null
+          safeFormatDate(data.demographics.anniversary, 'yyyy-MM-dd') : null
       },
       leadInfo: {
         ...data.leadInfo,
         leadDate: data.leadInfo.leadDate ? 
-          data.leadInfo.leadDate.toISOString().split('T')[0] : null
+          safeFormatDate(data.leadInfo.leadDate, 'yyyy-MM-dd') : null
       }
     };
     onSubmit(formattedData);

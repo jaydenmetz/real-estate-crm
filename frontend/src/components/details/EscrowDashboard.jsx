@@ -1,6 +1,7 @@
 // frontend/src/components/details/EscrowDashboard.jsx
 
 import React, { useState, useEffect } from 'react';
+import { safeFormatDate, safeParseDate } from '../../utils/safeDateUtils';
 import {
   Container,
   Grid,
@@ -812,7 +813,7 @@ const EscrowDashboard = () => {
                                   {event.description}
                                 </Typography>
                                 <Typography variant="caption" color="text.secondary">
-                                  {new Date(event.date).toLocaleDateString()}
+                                  {safeFormatDate(event.date, 'MM/dd/yyyy')}
                                 </Typography>
                               </>
                             }
@@ -1111,11 +1112,16 @@ const EscrowDashboard = () => {
                               {deadline.label}
                             </Typography>
                             <Typography variant="caption">
-                              {new Date(deadline.date).toLocaleDateString()}
+                              {safeFormatDate(deadline.date, 'MM/dd/yyyy')}
                             </Typography>
                           </Box>
                           <Typography variant="caption" fontWeight="bold" color={`${deadline.color}.dark`}>
-                            {Math.ceil((new Date(deadline.date) - new Date()) / (1000 * 60 * 60 * 24))} days
+                            {(() => {
+                              const deadlineDate = safeParseDate(deadline.date);
+                              if (!deadlineDate) return 'N/A';
+                              const days = Math.ceil((deadlineDate - new Date()) / (1000 * 60 * 60 * 24));
+                              return `${days} days`;
+                            })()}
                           </Typography>
                         </Box>
                       </motion.div>

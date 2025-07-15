@@ -1,5 +1,6 @@
 // File: frontend/src/components/dashboards/Office3DRoomInteractions.jsx
 import React, { useState, useEffect } from 'react';
+import { safeFormatDate } from '../../utils/safeDateUtils';
 import {
   Box,
   Paper,
@@ -178,7 +179,7 @@ const RoomDetailPanel = ({ room, onClose, onAction }) => {
 
   // Booking form state
   const [bookingForm, setBookingForm] = useState({
-    date: new Date().toISOString().split('T')[0],
+    date: safeFormatDate(new Date(), 'yyyy-MM-dd'),
     startTime: '',
     endTime: '',
     attendees: '',

@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
+import { safeFormatDate, getSafeTimestamp } from '../../utils/safeDateUtils';
 import {
   Fab,
   Dialog,
@@ -50,7 +51,7 @@ const AlexChatInterface = () => {
       id: 1,
       type: 'alex',
       content: "Hi! I'm Alex, your Executive Assistant. I can help you manage your real estate business. What would you like to focus on today?",
-      timestamp: new Date(),
+      timestamp: getSafeTimestamp(),
       quickActions: [
         { label: 'Daily Briefing', icon: <Assessment />, action: 'daily-briefing' },
         { label: 'Urgent Tasks', icon: <Warning />, action: 'urgent-tasks' },
@@ -112,7 +113,7 @@ const AlexChatInterface = () => {
       id: Date.now(),
       type,
       content,
-      timestamp: new Date(),
+      timestamp: getSafeTimestamp(),
       quickActions
     }]);
   };
@@ -131,7 +132,7 @@ const AlexChatInterface = () => {
         message: userMessage,
         context: {
           currentView: window.location.pathname,
-          timestamp: new Date().toISOString()
+          timestamp: getSafeTimestamp()
         }
       });
 
@@ -160,7 +161,7 @@ const AlexChatInterface = () => {
           
         case 'schedule-review':
           const appointments = await appointmentsAPI.getAll({ 
-            date: new Date().toISOString().split('T')[0] 
+            date: safeFormatDate(new Date(), 'yyyy-MM-dd') 
           });
           addMessage('alex', formatSchedule(appointments.data));
           break;
@@ -301,7 +302,7 @@ ${appointments.map(apt => `• ${apt.startTime} - ${apt.title} (${apt.appointmen
                         {message.content}
                       </Typography>
                       <Typography variant="caption" sx={{ display: 'block', mt: 1, opacity: 0.7 }}>
-                        {new Date(message.timestamp).toLocaleTimeString()}
+                        {safeFormatDate(message.timestamp, 'HH:mm:ss')}
                       </Typography>
                     </Paper>
                     

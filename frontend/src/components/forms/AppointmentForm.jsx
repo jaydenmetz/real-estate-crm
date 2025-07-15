@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { safeFormatDate } from '../../utils/safeDateUtils';
 import {
   Dialog,
   DialogTitle,
@@ -63,9 +64,15 @@ const AppointmentForm = ({ open, onClose, onSubmit, appointment, loading }) => {
   const duration = watch('duration');
   useEffect(() => {
     if (startTime && duration) {
-      const start = new Date(startTime);
-      const end = new Date(start.getTime() + duration * 60000);
-      setValue('endTime', end);
+      try {
+        const start = new Date(startTime);
+        if (!isNaN(start.getTime())) {
+          const end = new Date(start.getTime() + duration * 60000);
+          setValue('endTime', end);
+        }
+      } catch (error) {
+        console.warn('Error calculating end time:', error);
+      }
     }
   }, [startTime, duration, setValue]);
 
@@ -86,9 +93,9 @@ const AppointmentForm = ({ open, onClose, onSubmit, appointment, loading }) => {
   const handleFormSubmit = (data) => {
     const formattedData = {
       ...data,
-      date: data.date ? data.date.toISOString().split('T')[0] : null,
-      startTime: data.startTime ? data.startTime.toTimeString().split(' ')[0].substring(0, 5) : null,
-      endTime: data.endTime ? data.endTime.toTimeString().split(' ')[0].substring(0, 5) : null,
+      date: data.date ? safeFormatDate(data.date, 'yyyy-MM-dd') : null,
+      startTime: data.startTime ? (data.startTime instanceof Date ? data.startTime.toTimeString().split(' ')[0].substring(0, 5) : data.startTime) : null,
+      endTime: data.endTime ? (data.endTime instanceof Date ? data.endTime.toTimeString().split(' ')[0].substring(0, 5) : data.endTime) : null,
       clients: data.clients.map(c => c.id)
     };
     onSubmit(formattedData);

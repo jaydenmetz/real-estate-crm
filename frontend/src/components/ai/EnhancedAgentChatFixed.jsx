@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { getSafeTimestamp } from '../../utils/safeDateUtils';
 import {
   Dialog,
   DialogTitle,
@@ -43,6 +44,7 @@ import {
   Notifications,
 } from '@mui/icons-material';
 import { format, formatDistanceToNow } from 'date-fns';
+import { safeParseDate } from '../../utils/safeDateUtils';
 import { clientsAPI, leadsAPI, listingsAPI } from '../../services/api';
 
 // Icon mappings for commands
@@ -151,14 +153,14 @@ const EnhancedAgentChatFixed = ({ agent, open, onClose, messages, setMessages, a
     const chatMsgs = (messages[agent.id] || []).map(msg => ({
       ...msg,
       type: 'chat',
-      timestamp: new Date(msg.timestamp)
+      timestamp: safeParseDate(msg.timestamp) || getSafeTimestamp()
     }));
     
     const activityMsgs = (activities[agent.id] || []).map(activity => ({
       ...activity,
       type: 'activity',
       sender: 'system',
-      timestamp: new Date(activity.timestamp)
+      timestamp: safeParseDate(activity.timestamp) || getSafeTimestamp()
     }));
     
     // Combine and sort by timestamp
@@ -215,7 +217,7 @@ const EnhancedAgentChatFixed = ({ agent, open, onClose, messages, setMessages, a
       id: Date.now(),
       sender: 'user',
       text: message,
-      timestamp: new Date().toISOString()
+      timestamp: getSafeTimestamp()
     };
 
     setMessages(prev => ({
@@ -230,7 +232,7 @@ const EnhancedAgentChatFixed = ({ agent, open, onClose, messages, setMessages, a
           id: Date.now() + 1,
           sender: 'agent',
           text: `Processing command: ${message}...`,
-          timestamp: new Date().toISOString()
+          timestamp: getSafeTimestamp()
         };
         
         setMessages(prev => ({
@@ -253,7 +255,7 @@ const EnhancedAgentChatFixed = ({ agent, open, onClose, messages, setMessages, a
             id: Date.now() + 2,
             sender: 'agent',
             text: resultText,
-            timestamp: new Date().toISOString()
+            timestamp: getSafeTimestamp()
           };
           
           setMessages(prev => ({

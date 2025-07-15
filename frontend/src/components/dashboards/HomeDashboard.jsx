@@ -23,7 +23,7 @@ import {
   Warning,
 } from '@mui/icons-material';
 import { useQuery } from 'react-query';
-import { format } from 'date-fns';
+import { safeFormatDate, getSafeTimestamp } from '../../utils/safeDateUtils';
 import api from '../../services/api';
 
 const HomeDashboard = () => {
@@ -55,7 +55,7 @@ const HomeDashboard = () => {
   const { data: todaySchedule } = useQuery(
     'todaySchedule',
     () => api.get('/appointments', {
-      date: format(new Date(), 'yyyy-MM-dd')
+      date: safeFormatDate(new Date(), 'yyyy-MM-dd')
     })
   );
 
@@ -76,7 +76,7 @@ const HomeDashboard = () => {
         Welcome Back!
       </Typography>
       <Typography variant="body1" color="text.secondary" gutterBottom>
-        {format(new Date(), 'EEEE, MMMM d, yyyy')}
+        {safeFormatDate(new Date(), 'EEEE, MMMM d, yyyy')}
       </Typography>
 
       {/* Stats Grid */}

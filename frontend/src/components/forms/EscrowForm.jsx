@@ -38,7 +38,8 @@ import {
 } from '@mui/icons-material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
-import { format, addDays } from 'date-fns';
+import { addDays } from 'date-fns';
+import { safeFormatDate, safeParseDate } from '../../utils/safeDateUtils';
 import SimpleRPAParser from './SimpleRPAParser';
 
 const EscrowForm = ({ open, onClose, onSubmit, escrow = null, loading = false, mode = 'full' }) => {
@@ -139,11 +140,11 @@ const EscrowForm = ({ open, onClose, onSubmit, escrow = null, loading = false, m
       downPayment: data.downPayment ? parseFloat(data.downPayment) : null,
       loanAmount: data.loanAmount ? parseFloat(data.loanAmount) : null,
       commissionPercentage: parseFloat(data.commissionPercentage),
-      acceptanceDate: format(new Date(data.acceptanceDate), 'yyyy-MM-dd'),
-      closingDate: format(new Date(data.closingDate), 'yyyy-MM-dd'),
-      inspectionDeadline: data.inspectionDeadline ? format(new Date(data.inspectionDeadline), 'yyyy-MM-dd') : null,
-      appraisalDeadline: data.appraisalDeadline ? format(new Date(data.appraisalDeadline), 'yyyy-MM-dd') : null,
-      loanContingencyDeadline: data.loanContingencyDeadline ? format(new Date(data.loanContingencyDeadline), 'yyyy-MM-dd') : null,
+      acceptanceDate: safeFormatDate(data.acceptanceDate, 'yyyy-MM-dd'),
+      closingDate: safeFormatDate(data.closingDate, 'yyyy-MM-dd'),
+      inspectionDeadline: data.inspectionDeadline ? safeFormatDate(data.inspectionDeadline, 'yyyy-MM-dd') : null,
+      appraisalDeadline: data.appraisalDeadline ? safeFormatDate(data.appraisalDeadline, 'yyyy-MM-dd') : null,
+      loanContingencyDeadline: data.loanContingencyDeadline ? safeFormatDate(data.loanContingencyDeadline, 'yyyy-MM-dd') : null,
     };
     
     onSubmit(formattedData);

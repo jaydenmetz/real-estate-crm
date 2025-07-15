@@ -2,6 +2,7 @@ import React from 'react';
 import { Container, Alert, Typography, Button, Box, Paper } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import CopyButton from './CopyButton';
+import { safeFormatDate } from '../../utils/safeDateUtils';
 
 class DetailPageErrorBoundary extends React.Component {
   constructor(props) {
@@ -57,7 +58,7 @@ Debug Information:
 Page: ${pageName}
 Error Count: ${errorCount}
 URL: ${window.location.href}
-Time: ${new Date().toLocaleString()}
+Time: ${safeFormatDate(new Date(), 'MM/dd/yyyy HH:mm:ss')}
 Stack Trace (Click to expand)
 ${error?.stack || 'No stack trace available'}
 Component Stack (Click to expand)
@@ -99,7 +100,7 @@ ${errorInfo?.componentStack || 'No component stack available'}`;
                   <strong>Page:</strong> {this.props.pageName}<br />
                   <strong>Error Count:</strong> {this.state.errorCount}<br />
                   <strong>URL:</strong> {window.location.href}<br />
-                  <strong>Time:</strong> {new Date().toLocaleString()}
+                  <strong>Time:</strong> {safeFormatDate(new Date(), 'MM/dd/yyyy HH:mm:ss')}
                 </Typography>
               </Paper>
             </Box>

@@ -43,7 +43,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from 'react-query';
 import { format } from 'date-fns';
-import { safeFormatDate } from '../../utils/safeDateUtils';
+import { safeFormatDate, safeParseDate } from '../../utils/safeDateUtils';
 import StatsCard from '../common/StatsCard';
 import { leadsAPI } from '../../services/api';
 
@@ -130,7 +130,8 @@ const LeadsDashboard = () => {
     newThisWeek: displayLeads.filter(l => {
       const weekAgo = new Date();
       weekAgo.setDate(weekAgo.getDate() - 7);
-      return new Date(l.createdAt) > weekAgo;
+      const createdDate = safeParseDate(l.createdAt);
+      return createdDate && createdDate > weekAgo;
     }).length,
   };
 
