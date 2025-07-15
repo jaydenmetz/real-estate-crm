@@ -24,6 +24,9 @@ import {
   MenuItem,
   Switch,
   FormControlLabel,
+  List,
+  ListItem,
+  ListItemText,
 } from '@mui/material';
 import {
   Add,
@@ -54,6 +57,7 @@ import EscrowForm from '../forms/EscrowForm';
 import EscrowFormSimple from '../forms/EscrowFormSimple';
 import EscrowCreated from '../escrows/EscrowCreated';
 import StatsCard from '../common/StatsCard';
+import StatsFullView from '../common/StatsFullView';
 
 // Mock data for fallback
 const mockEscrows = [
@@ -118,6 +122,7 @@ const EscrowsDashboard = () => {
     const saved = localStorage.getItem('showCommission');
     return saved !== null ? JSON.parse(saved) : true;
   });
+  const [showStatsFullView, setShowStatsFullView] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -435,6 +440,31 @@ const EscrowsDashboard = () => {
             value={stats.totalActive}
             icon={<Home />}
             color="primary"
+            onClick={() => setStatusFilter('Active')}
+            subtitle={`${stats.totalActive} properties in escrow`}
+            onRequestFullView={() => setShowStatsFullView(true)}
+            expandable={true}
+            details={
+              <Box>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Active escrows require daily attention for timely closing.
+                </Typography>
+                <List dense>
+                  <ListItem>
+                    <ListItemText 
+                      primary="High Priority" 
+                      secondary={`${escrows.filter(e => e.escrowStatus === 'Active' && e.priorityLevel === 'high').length} escrows`}
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemText 
+                      primary="Normal Priority" 
+                      secondary={`${escrows.filter(e => e.escrowStatus === 'Active' && e.priorityLevel !== 'high').length} escrows`}
+                    />
+                  </ListItem>
+                </List>
+              </Box>
+            }
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
@@ -443,14 +473,65 @@ const EscrowsDashboard = () => {
             value={stats.closingThisWeek}
             icon={<Warning />}
             color="warning"
+            onClick={() => {
+              setStatusFilter('Active');
+              enqueueSnackbar(`${stats.closingThisWeek} escrows closing within 7 days`, { variant: 'warning' });
+            }}
+            subtitle="Urgent attention needed"
+            trend={stats.closingThisWeek > 0 ? 25 : 0}
+            onRequestFullView={() => setShowStatsFullView(true)}
+            expandable={true}
+            details={
+              <Box>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Escrows requiring immediate action:
+                </Typography>
+                {escrows
+                  .filter(e => {
+                    const days = differenceInDays(new Date(e.closingDate || e.scheduledCoeDate), new Date());
+                    return days >= 0 && days <= 7 && e.escrowStatus === 'Active';
+                  })
+                  .slice(0, 3)
+                  .map(e => (
+                    <Typography key={e.id} variant="caption" display="block" sx={{ mt: 1 }}>
+                      • {e.propertyAddress} - {differenceInDays(new Date(e.closingDate || e.scheduledCoeDate), new Date())} days
+                    </Typography>
+                  ))
+                }
+              </Box>
+            }
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
           <StatsCard
             title="Total Volume"
-            value={`$${(stats.totalVolume / 1000000).toFixed(1)}M`}
+            value={showCommission ? `$${(stats.totalVolume / 1000000).toFixed(1)}M` : '•••••'}
             icon={<AttachMoney />}
             color="success"
+            subtitle={showCommission ? "YTD transaction volume" : "Hidden"}
+            onRequestFullView={() => setShowStatsFullView(true)}
+            expandable={true}
+            details={showCommission ? (
+              <Box>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Volume breakdown by status:
+                </Typography>
+                <List dense>
+                  <ListItem>
+                    <ListItemText 
+                      primary="Active" 
+                      secondary={`$${(escrows.filter(e => e.escrowStatus === 'Active').reduce((sum, e) => sum + e.purchasePrice, 0) / 1000000).toFixed(1)}M`}
+                    />
+                  </ListItem>
+                  <ListItem>
+                    <ListItemText 
+                      primary="Closed" 
+                      secondary={`$${(escrows.filter(e => e.escrowStatus === 'Closed').reduce((sum, e) => sum + e.purchasePrice, 0) / 1000000).toFixed(1)}M`}
+                    />
+                  </ListItem>
+                </List>
+              </Box>
+            ) : "Commission details are hidden"}
           />
         </Grid>
         <Grid item xs={12} sm={6} md={3}>
@@ -459,6 +540,23 @@ const EscrowsDashboard = () => {
             value={stats.avgDaysToClose}
             icon={<Schedule />}
             color="info"
+            subtitle="Industry avg: 43 days"
+            trend={stats.avgDaysToClose < 43 ? -((43 - stats.avgDaysToClose) / 43 * 100).toFixed(0) : ((stats.avgDaysToClose - 43) / 43 * 100).toFixed(0)}
+            onRequestFullView={() => setShowStatsFullView(true)}
+            expandable={true}
+            details={
+              <Box>
+                <Typography variant="body2" color="text.secondary" gutterBottom>
+                  Your performance vs industry average.
+                </Typography>
+                <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                  {stats.avgDaysToClose < 43 
+                    ? `You're closing ${43 - stats.avgDaysToClose} days faster than average!`
+                    : `Consider process improvements to reduce closing time.`
+                  }
+                </Typography>
+              </Box>
+            }
           />
         </Grid>
       </Grid>
@@ -674,6 +772,15 @@ const EscrowsDashboard = () => {
         onClose={handleCloseForm}
         onSubmit={(formData) => mutation.mutate(formData)}
         loading={mutation.isLoading}
+      />
+
+      {/* Stats Full View Modal */}
+      <StatsFullView
+        open={showStatsFullView}
+        onClose={() => setShowStatsFullView(false)}
+        stats={stats}
+        escrows={escrows}
+        showCommission={showCommission}
       />
     </Container>
   );
