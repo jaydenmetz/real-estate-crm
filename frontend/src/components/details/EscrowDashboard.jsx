@@ -131,7 +131,7 @@ import {
   Area, 
   LineChart,
   Line,
-  BarChart,
+  BarChart as RechartsBarChart,
   Bar,
   PieChart,
   Pie,
