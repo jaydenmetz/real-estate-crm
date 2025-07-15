@@ -86,6 +86,7 @@ import {
   Kitchen,
   Weekend,
   Visibility,
+  VisibilityOff,
   Message,
   Call,
   Email,
