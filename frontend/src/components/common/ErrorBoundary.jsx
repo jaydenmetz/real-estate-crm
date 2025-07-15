@@ -21,6 +21,18 @@ class ErrorBoundary extends React.Component {
     });
   }
 
+  formatFullError = () => {
+    const { error, errorInfo } = this.state;
+    let errorReport = `❌ Something went wrong\n`;
+    errorReport += `${error?.toString() || 'An unexpected error occurred'}\n\n`;
+    
+    if (process.env.NODE_ENV === 'development' && errorInfo?.componentStack) {
+      errorReport += `Component Stack:\n${errorInfo.componentStack}`;
+    }
+    
+    return errorReport;
+  };
+
   render() {
     if (this.state.hasError) {
       return (
@@ -31,21 +43,23 @@ class ErrorBoundary extends React.Component {
           minHeight: '100vh',
           p: 3
         }}>
-          <Paper sx={{ p: 4, maxWidth: 600, textAlign: 'center' }}>
+          <Paper sx={{ p: 4, maxWidth: 600, textAlign: 'center', position: 'relative' }}>
+            {/* Single copy button for entire error report */}
+            <Box sx={{ position: 'absolute', top: 16, right: 16 }}>
+              <CopyButton 
+                text={this.formatFullError()} 
+                label="Copy full error report" 
+              />
+            </Box>
+            
             <ErrorIcon sx={{ fontSize: 64, color: 'error.main', mb: 2 }} />
             <Typography variant="h4" gutterBottom>
               Oops! Something went wrong
             </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', mb: 3 }}>
+            <Box sx={{ mb: 3 }}>
               <Typography variant="body1" color="text.secondary">
                 {this.state.error && this.state.error.toString()}
               </Typography>
-              {this.state.error && (
-                <CopyButton 
-                  text={this.state.error.toString()} 
-                  label="Copy error message" 
-                />
-              )}
             </Box>
             {process.env.NODE_ENV === 'development' && this.state.errorInfo && (
               <Box sx={{ position: 'relative' }}>
@@ -61,12 +75,6 @@ class ErrorBoundary extends React.Component {
                   maxHeight: 200
                 }}>
                   {this.state.errorInfo.componentStack}
-                </Box>
-                <Box sx={{ position: 'absolute', top: 8, right: 8 }}>
-                  <CopyButton 
-                    text={this.state.errorInfo.componentStack} 
-                    label="Copy component stack" 
-                  />
                 </Box>
               </Box>
             )}

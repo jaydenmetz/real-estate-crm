@@ -54,6 +54,29 @@ class UserAwareErrorBoundary extends React.Component {
     window.location.reload();
   };
 
+  formatFullError = () => {
+    const user = authService.getCurrentUser();
+    const { error, errorInfo, errorCount } = this.state;
+    const pageName = this.props.pageName || 'Application';
+    
+    let errorReport = `❌ ${pageName} Error (Admin View)\n`;
+    errorReport += `${error?.toString() || 'An unexpected error occurred'}\n`;
+    errorReport += `Page: ${pageName}\n`;
+    errorReport += `User: ${user?.username || 'Unknown'} (Admin)\n`;
+    errorReport += `Error Count: ${errorCount}\n`;
+    errorReport += `Time: ${new Date().toLocaleString()}\n\n`;
+    
+    if (error?.stack) {
+      errorReport += `Stack Trace:\n${error.stack}\n\n`;
+    }
+    
+    if (errorInfo?.componentStack) {
+      errorReport += `Component Stack:\n${errorInfo.componentStack}`;
+    }
+    
+    return errorReport;
+  };
+
   render() {
     if (this.state.hasError) {
       const user = authService.getCurrentUser();
@@ -149,8 +172,16 @@ class UserAwareErrorBoundary extends React.Component {
       // Detailed error page for admins
       return (
         <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-          <Paper sx={{ p: 4, bgcolor: 'error.light', color: 'error.contrastText' }}>
-            <Typography variant="h4" gutterBottom>
+          <Paper sx={{ p: 4, bgcolor: 'error.light', color: 'error.contrastText', position: 'relative' }}>
+            {/* Single copy button for entire error report */}
+            <Box sx={{ position: 'absolute', top: 16, right: 16 }}>
+              <CopyButton 
+                text={this.formatFullError()} 
+                label="Copy full error report" 
+              />
+            </Box>
+            
+            <Typography variant="h4" gutterBottom sx={{ pr: 8 }}>
               ❌ {this.props.pageName || 'Application'} Error (Admin View)
             </Typography>
             
@@ -167,10 +198,6 @@ class UserAwareErrorBoundary extends React.Component {
                     Time: {new Date().toLocaleString()}
                   </Typography>
                 </Box>
-                <CopyButton 
-                  text={`Error: ${this.state.error?.toString()}\nPage: ${this.props.pageName || 'Unknown'}\nUser: ${user?.username} (Admin)\nError Count: ${this.state.errorCount}\nTime: ${new Date().toLocaleString()}`} 
-                  label="Copy error details" 
-                />
               </Box>
             </Alert>
 
