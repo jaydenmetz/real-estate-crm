@@ -356,6 +356,15 @@ const ClientDetail = () => {
   };
 
   const displayClient = client || mockClient;
+  
+  // Ensure displayClient has a name property
+  if (displayClient && !displayClient.name) {
+    if (displayClient.firstName || displayClient.lastName) {
+      displayClient.name = `${displayClient.firstName || ''} ${displayClient.lastName || ''}`.trim();
+    } else {
+      displayClient.name = 'Unknown Client';
+    }
+  }
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -481,7 +490,7 @@ const ClientDetail = () => {
                 <ArrowBack />
               </IconButton>
               <Avatar sx={{ width: 64, height: 64, bgcolor: 'primary.main' }}>
-                {displayClient.name.split(' ').map(n => n[0]).join('')}
+                {displayClient.name ? displayClient.name.split(' ').map(n => n[0]).join('') : 'UC'}
               </Avatar>
               <Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -503,7 +512,7 @@ const ClientDetail = () => {
                     size="small"
                     icon={getTypeIcon(displayClient.type)}
                   />
-                  {displayClient.tags.map(tag => (
+                  {(displayClient.tags || []).map(tag => (
                     <Chip key={tag} label={tag} size="small" variant="outlined" />
                   ))}
                 </Box>
@@ -627,14 +636,14 @@ const ClientDetail = () => {
                     <ListItemIcon><Email /></ListItemIcon>
                     <ListItemText 
                       primary="Email"
-                      secondary={displayClient.email}
+                      secondary={displayClient.email || 'No email provided'}
                     />
                   </ListItem>
                   <ListItem>
                     <ListItemIcon><Phone /></ListItemIcon>
                     <ListItemText 
                       primary="Phone"
-                      secondary={displayClient.phone}
+                      secondary={displayClient.phone || 'No phone provided'}
                     />
                   </ListItem>
                   {displayClient.alternatePhone && (
@@ -650,7 +659,7 @@ const ClientDetail = () => {
                     <ListItemIcon><LocationOn /></ListItemIcon>
                     <ListItemText 
                       primary="Address"
-                      secondary={displayClient.address}
+                      secondary={displayClient.address || 'No address provided'}
                     />
                   </ListItem>
                 </List>
@@ -740,9 +749,9 @@ const ClientDetail = () => {
                 <Typography variant="h6" gutterBottom>
                   Recent Activity
                 </Typography>
-                {displayClient.activities.length > 0 ? (
+                {(displayClient.activities || []).length > 0 ? (
                   <Timeline>
-                    {displayClient.activities.slice(0, 4).map((activity, index) => (
+                    {(displayClient.activities || []).slice(0, 4).map((activity, index) => (
                       <TimelineItem key={activity.id}>
                         <TimelineOppositeContent color="textSecondary" sx={{ maxWidth: '120px' }}>
                           {safeFormatDistanceToNow(activity.timestamp, { addSuffix: true })}
@@ -751,7 +760,7 @@ const ClientDetail = () => {
                           <TimelineDot color="primary">
                             {getActivityIcon(activity.type)}
                           </TimelineDot>
-                          {index < displayClient.activities.slice(0, 4).length - 1 && <TimelineConnector />}
+                          {index < (displayClient.activities || []).slice(0, 4).length - 1 && <TimelineConnector />}
                         </TimelineSeparator>
                         <TimelineContent>
                           <Typography variant="body2">
@@ -797,7 +806,7 @@ const ClientDetail = () => {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {displayClient.properties.owned.map((property) => (
+                      {(displayClient.properties?.owned || []).map((property) => (
                         <TableRow key={property.id}>
                           <TableCell>{property.address}</TableCell>
                           <TableCell>{property.type}</TableCell>
@@ -824,7 +833,7 @@ const ClientDetail = () => {
                   Properties of Interest
                 </Typography>
                 <List>
-                  {displayClient.properties.interested.map((property) => (
+                  {(displayClient.properties?.interested || []).map((property) => (
                     <ListItem key={property.id}>
                       <ListItemIcon>
                         <Home />
@@ -862,23 +871,23 @@ const ClientDetail = () => {
                   <Grid item xs={12} sm={6}>
                     <Typography variant="subtitle2" color="textSecondary">Property Types</Typography>
                     <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
-                      {displayClient.preferences.propertyType.map((type) => (
+                      {(displayClient.preferences?.propertyType || []).map((type) => (
                         <Chip key={type} label={type} size="small" />
                       ))}
                     </Box>
                   </Grid>
                   <Grid item xs={6} sm={3}>
                     <Typography variant="subtitle2" color="textSecondary">Bedrooms</Typography>
-                    <Typography variant="body1">{displayClient.preferences.bedrooms}</Typography>
+                    <Typography variant="body1">{displayClient.preferences?.bedrooms || 'N/A'}</Typography>
                   </Grid>
                   <Grid item xs={6} sm={3}>
                     <Typography variant="subtitle2" color="textSecondary">Bathrooms</Typography>
-                    <Typography variant="body1">{displayClient.preferences.bathrooms}</Typography>
+                    <Typography variant="body1">{displayClient.preferences?.bathrooms || 'N/A'}</Typography>
                   </Grid>
                   <Grid item xs={12}>
                     <Typography variant="subtitle2" color="textSecondary">Desired Features</Typography>
                     <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
-                      {displayClient.preferences.features.map((feature) => (
+                      {(displayClient.preferences?.features || []).map((feature) => (
                         <Chip key={feature} label={feature} size="small" variant="outlined" />
                       ))}
                     </Box>
@@ -886,7 +895,7 @@ const ClientDetail = () => {
                   <Grid item xs={12}>
                     <Typography variant="subtitle2" color="textSecondary">Preferred Neighborhoods</Typography>
                     <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
-                      {displayClient.preferences.neighborhoods.map((neighborhood) => (
+                      {(displayClient.preferences?.neighborhoods || []).map((neighborhood) => (
                         <Chip key={neighborhood} label={neighborhood} size="small" color="primary" variant="outlined" />
                       ))}
                     </Box>
@@ -894,7 +903,7 @@ const ClientDetail = () => {
                   <Grid item xs={12}>
                     <Typography variant="subtitle2" color="textSecondary">Deal Breakers</Typography>
                     <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
-                      {displayClient.preferences.dealBreakers.map((item) => (
+                      {(displayClient.preferences?.dealBreakers || []).map((item) => (
                         <Chip key={item} label={item} size="small" color="error" variant="outlined" />
                       ))}
                     </Box>
@@ -924,7 +933,7 @@ const ClientDetail = () => {
                   </Button>
                 </Box>
                 <List>
-                  {displayClient.appointments.map((appointment) => (
+                  {(displayClient.appointments || []).map((appointment) => (
                     <ListItem
                       key={appointment.id}
                       button
@@ -973,7 +982,7 @@ const ClientDetail = () => {
                   </Box>
                 </Box>
                 <List>
-                  {displayClient.communications.map((comm) => (
+                  {(displayClient.communications || []).map((comm) => (
                     <ListItem key={comm.id} alignItems="flex-start">
                       <ListItemIcon>
                         {getCommunicationIcon(comm.type)}
@@ -1051,7 +1060,7 @@ const ClientDetail = () => {
                       </TableRow>
                     </TableHead>
                     <TableBody>
-                      {displayClient.documents.map((doc) => (
+                      {(displayClient.documents || []).map((doc) => (
                         <TableRow key={doc.id}>
                           <TableCell>
                             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
