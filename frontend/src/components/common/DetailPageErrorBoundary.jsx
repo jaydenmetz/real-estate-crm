@@ -45,11 +45,38 @@ class DetailPageErrorBoundary extends React.Component {
     });
   };
 
+  formatFullError() {
+    const { error, errorInfo, errorCount } = this.state;
+    const { pageName } = this.props;
+    
+    return `❌ ${pageName} Crashed
+Something went wrong while rendering this page
+${error?.toString()}
+
+Debug Information:
+Page: ${pageName}
+Error Count: ${errorCount}
+URL: ${window.location.href}
+Time: ${new Date().toLocaleString()}
+Stack Trace (Click to expand)
+${error?.stack || 'No stack trace available'}
+Component Stack (Click to expand)
+${errorInfo?.componentStack || 'No component stack available'}`;
+  }
+
   render() {
     if (this.state.hasError) {
       return (
         <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-          <Paper sx={{ p: 4, bgcolor: 'error.light', color: 'error.contrastText' }}>
+          <Paper sx={{ p: 4, bgcolor: 'error.light', color: 'error.contrastText', position: 'relative' }}>
+            {/* Single copy button in top right */}
+            <Box sx={{ position: 'absolute', top: 16, right: 16 }}>
+              <CopyButton 
+                text={this.formatFullError()} 
+                label="Copy error report" 
+              />
+            </Box>
+            
             <Typography variant="h4" gutterBottom>
               ❌ {this.props.pageName} Crashed
             </Typography>
@@ -58,18 +85,12 @@ class DetailPageErrorBoundary extends React.Component {
               <Typography variant="h6" gutterBottom>
                 Something went wrong while rendering this page
               </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <Typography variant="body1" sx={{ fontFamily: 'monospace', flex: 1 }}>
-                  {this.state.error?.toString()}
-                </Typography>
-                <CopyButton 
-                  text={this.state.error?.toString() || ''} 
-                  label="Copy error message" 
-                />
-              </Box>
+              <Typography variant="body1" sx={{ fontFamily: 'monospace' }}>
+                {this.state.error?.toString()}
+              </Typography>
             </Alert>
 
-            <Box sx={{ mb: 3, position: 'relative' }}>
+            <Box sx={{ mb: 3 }}>
               <Typography variant="subtitle1" gutterBottom>
                 Debug Information:
               </Typography>
@@ -81,12 +102,6 @@ class DetailPageErrorBoundary extends React.Component {
                   <strong>Time:</strong> {new Date().toLocaleString()}
                 </Typography>
               </Paper>
-              <Box sx={{ position: 'absolute', top: 0, right: 0 }}>
-                <CopyButton 
-                  text={`Page: ${this.props.pageName}\nError Count: ${this.state.errorCount}\nURL: ${window.location.href}\nTime: ${new Date().toLocaleString()}`} 
-                  label="Copy debug info" 
-                />
-              </Box>
             </Box>
 
             <details style={{ marginBottom: '16px' }}>
@@ -95,27 +110,19 @@ class DetailPageErrorBoundary extends React.Component {
                   Stack Trace (Click to expand)
                 </Typography>
               </summary>
-              <Box sx={{ position: 'relative' }}>
-                <Paper 
-                  sx={{ 
-                    p: 2, 
-                    bgcolor: 'grey.900', 
-                    color: 'grey.100',
-                    overflow: 'auto',
-                    maxHeight: '300px'
-                  }}
-                >
-                  <pre style={{ fontSize: '12px', margin: 0 }}>
-                    {this.state.error?.stack}
-                  </pre>
-                </Paper>
-                <Box sx={{ position: 'absolute', top: 8, right: 8 }}>
-                  <CopyButton 
-                    text={this.state.error?.stack || ''} 
-                    label="Copy stack trace" 
-                  />
-                </Box>
-              </Box>
+              <Paper 
+                sx={{ 
+                  p: 2, 
+                  bgcolor: 'grey.900', 
+                  color: 'grey.100',
+                  overflow: 'auto',
+                  maxHeight: '300px'
+                }}
+              >
+                <pre style={{ fontSize: '12px', margin: 0 }}>
+                  {this.state.error?.stack}
+                </pre>
+              </Paper>
             </details>
 
             <details style={{ marginBottom: '16px' }}>
@@ -124,27 +131,19 @@ class DetailPageErrorBoundary extends React.Component {
                   Component Stack (Click to expand)
                 </Typography>
               </summary>
-              <Box sx={{ position: 'relative' }}>
-                <Paper 
-                  sx={{ 
-                    p: 2, 
-                    bgcolor: 'grey.900', 
-                    color: 'grey.100',
-                    overflow: 'auto',
-                    maxHeight: '300px'
-                  }}
-                >
-                  <pre style={{ fontSize: '12px', margin: 0 }}>
-                    {this.state.errorInfo?.componentStack}
-                  </pre>
-                </Paper>
-                <Box sx={{ position: 'absolute', top: 8, right: 8 }}>
-                  <CopyButton 
-                    text={this.state.errorInfo?.componentStack || ''} 
-                    label="Copy component stack" 
-                  />
-                </Box>
-              </Box>
+              <Paper 
+                sx={{ 
+                  p: 2, 
+                  bgcolor: 'grey.900', 
+                  color: 'grey.100',
+                  overflow: 'auto',
+                  maxHeight: '300px'
+                }}
+              >
+                <pre style={{ fontSize: '12px', margin: 0 }}>
+                  {this.state.errorInfo?.componentStack}
+                </pre>
+              </Paper>
             </details>
 
             <Box sx={{ display: 'flex', gap: 2 }}>
