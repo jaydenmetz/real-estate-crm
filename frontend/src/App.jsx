@@ -196,6 +196,7 @@ function App() {
                                 {/* Main Features */}
                                 <Route path="/escrows" element={<EscrowsDashboard />} />
                                 <Route path="/escrows/:id" element={<EscrowDetail />} />
+                <Route path="/escrows/:id/dashboard" element={<EscrowDetail defaultView="dashboard" />} />
                     
                                 <Route path="/listings" element={<ListingsDashboard />} />
                                 <Route path="/listings/:id" element={<ListingDetail />} />

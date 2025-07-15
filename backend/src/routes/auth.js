@@ -486,4 +486,4 @@ router.delete('/sessions/:sessionId', authenticateToken, (req, res) => {
   }
 });
 
-module.exports = { router, authenticateToken };
+module.exports = { router, authenticateToken, users };

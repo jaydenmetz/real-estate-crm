@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import DetailPageDebugger from '../common/DetailPageDebugger';
 import DetailPageErrorBoundary from '../common/DetailPageErrorBoundary';
+import EscrowDashboard from './EscrowDashboard';
 import {
   Container,
   Grid,
@@ -58,6 +59,7 @@ import {
   TableContainer,
   InputAdornment,
   Switch,
+  ButtonGroup,
 } from '@mui/material';
 import {
   Timeline,
@@ -127,6 +129,7 @@ import {
   Task,
   Analytics,
   SystemUpdate,
+  BarChart,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
@@ -378,12 +381,13 @@ const escrowChecklists = {
   }
 };
 
-const EscrowDetail = () => {
+const EscrowDetail = ({ defaultView = 'dashboard' }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { enqueueSnackbar } = useSnackbar();
   
+  const [viewMode, setViewMode] = useState(defaultView);
   const [activeTab, setActiveTab] = useState(0);
   const [anchorEl, setAnchorEl] = useState(null);
   const [expandedSections, setExpandedSections] = useState({
@@ -521,6 +525,11 @@ const EscrowDetail = () => {
 
   const checklistProgress = calculateChecklistProgress();
 
+  // Show dashboard view if selected
+  if (viewMode === 'dashboard') {
+    return <EscrowDashboard />;
+  }
+
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       {/* Breadcrumbs */}
@@ -601,19 +610,27 @@ const EscrowDetail = () => {
             </Box>
           </Grid>
           <Grid item xs={12} md={4}>
-            <Box sx={{ display: 'flex', justifyContent: { xs: 'flex-start', md: 'flex-end' }, gap: 1 }}>
-              <Button variant="outlined" startIcon={<Edit />}>
-                Edit
-              </Button>
-              <Button variant="outlined" startIcon={<Share />}>
-                Share
-              </Button>
-              <Button variant="outlined" startIcon={<Print />}>
-                Print
-              </Button>
-              <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
-                <MoreVert />
-              </IconButton>
+            <Box sx={{ display: 'flex', justifyContent: { xs: 'flex-start', md: 'flex-end' }, gap: 1, flexWrap: 'wrap' }}>
+              <ToggleButtonGroup
+                value={viewMode}
+                exclusive
+                onChange={(e, newMode) => newMode && setViewMode(newMode)}
+                size="small"
+              >
+                <ToggleButton value="dashboard">
+                  <BarChart sx={{ mr: 1 }} />
+                  Dashboard
+                </ToggleButton>
+                <ToggleButton value="details">
+                  <Category sx={{ mr: 1 }} />
+                  Details
+                </ToggleButton>
+              </ToggleButtonGroup>
+              <ButtonGroup>
+                <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
+                  <MoreVert />
+                </IconButton>
+              </ButtonGroup>
             </Box>
           </Grid>
         </Grid>
