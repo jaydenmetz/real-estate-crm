@@ -29,6 +29,7 @@ import {
   BathtubOutlined,
   BedOutlined,
   SquareFootOutlined,
+  Landscape,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { safeFormatDate } from '../../utils/safeDateUtils';
@@ -330,6 +331,12 @@ const EscrowCompactCard = ({ escrow, index }) => {
                       <SquareFootOutlined sx={{ fontSize: 18 }} />
                       <Typography variant="body2">
                         {escrow.squareFootage || '2,000'} sq ft
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <Landscape sx={{ fontSize: 18 }} />
+                      <Typography variant="body2">
+                        {escrow.lotSize || '6,500'} sq ft
                       </Typography>
                     </Box>
                   </Box>
