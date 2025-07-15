@@ -153,6 +153,7 @@ const apiInstance = new ApiService();
 export const escrowsAPI = {
   getAll: (params) => apiInstance.get('/escrows', params),
   getById: (id) => apiInstance.get(`/escrows/${id}`),
+  getOne: (id) => apiInstance.get(`/escrows/${id}`), // Alias for consistency
   create: (data) => apiInstance.post('/escrows', data),
   update: (id, data) => apiInstance.put(`/escrows/${id}`, data),
   delete: (id) => apiInstance.delete(`/escrows/${id}`),
