@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import DetailPageDebugger from '../common/DetailPageDebugger';
 import DetailPageErrorBoundary from '../common/DetailPageErrorBoundary';
 import EscrowDashboard from './EscrowDashboard';
+import MetricCard from '../escrows/MetricCard';
 import {
   Container,
   Grid,
@@ -649,6 +650,50 @@ const EscrowDetail = ({ defaultView = 'dashboard' }) => {
           />
         </Box>
       </Paper>
+
+      {/* Key Metrics with Expandable Details */}
+      <Grid container spacing={3} sx={{ mb: 3 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <MetricCard
+            title="Days to Close"
+            value={daysToClose || 'N/A'}
+            icon={<Schedule />}
+            color={daysToClose && daysToClose <= 7 ? 'error' : 'primary'}
+            trend={-5}
+            escrowData={escrowData}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <MetricCard
+            title="My Commission"
+            value={(escrowData.grossCommission || escrowData.purchasePrice * 0.025) * 0.5}
+            icon={<AttachMoney />}
+            color="success"
+            trend={12}
+            escrowData={escrowData}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <MetricCard
+            title="Checklist Progress"
+            value={`${checklistProgress}%`}
+            icon={<Task />}
+            color="info"
+            trend={8}
+            escrowData={escrowData}
+          />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <MetricCard
+            title="Communication Score"
+            value={92}
+            icon={<Chat />}
+            color="primary"
+            trend={3}
+            escrowData={escrowData}
+          />
+        </Grid>
+      </Grid>
 
       {/* Tabs */}
       <Paper sx={{ mb: 3 }}>

@@ -1,7 +1,7 @@
 // frontend/src/components/dashboards/EscrowsDashboard.jsx
 
 import React, { useState } from 'react';
-import EscrowFullWidthCarousel from '../escrows/EscrowFullWidthCarousel';
+import EscrowCompactCard from '../escrows/EscrowCompactCard';
 import { safeParseDate } from '../../utils/safeDateUtils';
 import {
   Container,
@@ -394,11 +394,15 @@ const EscrowsDashboard = () => {
       </Paper>
       )}
 
-      {/* Escrows Carousel View */}
+      {/* Escrows List View */}
       <Box sx={{ mb: 4 }}>
-        <EscrowFullWidthCarousel 
-          escrows={getFilteredEscrows()}
-        />
+        {getFilteredEscrows().map((escrow, index) => (
+          <EscrowCompactCard 
+            key={escrow.id}
+            escrow={escrow}
+            index={index}
+          />
+        ))}
       </Box>
 
       {/* Grid View (Hidden by default) */}
