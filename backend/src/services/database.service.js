@@ -74,7 +74,7 @@ class DatabaseService {
     const closeDate = new Date(openDate.getTime() + 45 * 24 * 60 * 60 * 1000);
 
     return {
-      id: `ESC-${String(id).padStart(6, '0')}`,
+      id: String(id),
       
       // Core Information
       escrowNumber: `${new Date().getFullYear()}-${String(id).padStart(4, '0')}`,
@@ -136,7 +136,7 @@ class DatabaseService {
       
       // Relations
       clients: [{
-        id: `CLT-${String(id).padStart(6, '0')}`,
+        id: String(id),
         name: `John Buyer ${id}`,
         role: 'Buyer',
         email: `buyer${id}@email.com`,
@@ -295,7 +295,7 @@ class DatabaseService {
     const listDate = new Date(Date.now() - (id * 2) * 24 * 60 * 60 * 1000);
 
     return {
-      id: `LST-${String(id).padStart(6, '0')}`,
+      id: String(id),
       mlsNumber: `ML${String(id * 1000 + 12345).padStart(7, '0')}`,
       
       // Basic Info
@@ -361,7 +361,7 @@ class DatabaseService {
     const stages = ['New', 'Qualified', 'Showing', 'Offer', 'Contract', 'Closed'];
     
     return {
-      id: `CLT-${String(id).padStart(6, '0')}`,
+      id: String(id),
       
       // Personal Info
       firstName: ['John', 'Jane', 'Michael', 'Sarah', 'David', 'Lisa'][id % 6],
@@ -416,7 +416,7 @@ class DatabaseService {
     const appointmentDate = new Date(Date.now() + (id % 14 - 7) * 24 * 60 * 60 * 1000);
     
     return {
-      id: `APT-${String(id).padStart(6, '0')}`,
+      id: String(id),
       
       // Basic Info
       title: `${types[id % types.length]} - ${id % 2 === 0 ? 'Buyer' : 'Seller'} Meeting`,
@@ -460,7 +460,7 @@ class DatabaseService {
     const interests = ['Buying', 'Selling', 'Both', 'Renting', 'Investing'];
     
     return {
-      id: `LED-${String(id).padStart(6, '0')}`,
+      id: String(id),
       
       // Contact Info
       firstName: ['Mike', 'Emily', 'Robert', 'Jennifer', 'William', 'Amanda'][id % 6],
@@ -564,7 +564,21 @@ class DatabaseService {
   }
 
   create(collection, data) {
-    const id = data.id || `${collection.slice(0, 3).toUpperCase()}-${Date.now()}`;
+    let id;
+    if (data.id) {
+      id = data.id;
+    } else if (collection === 'escrows') {
+      // For escrows, use simple numeric IDs
+      const existingIds = Array.from(this.collections[collection]?.keys() || [])
+        .map(id => parseInt(id))
+        .filter(id => !isNaN(id));
+      const maxId = existingIds.length > 0 ? Math.max(...existingIds) : 0;
+      id = String(maxId + 1);
+    } else {
+      // For other collections, use the old format
+      id = `${collection.slice(0, 3).toUpperCase()}-${Date.now()}`;
+    }
+    
     const item = {
       ...data,
       id,
