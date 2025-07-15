@@ -35,6 +35,7 @@ import {
 } from '@mui/icons-material';
 import { useQuery } from 'react-query';
 import { format } from 'date-fns';
+import { safeFormatDate } from '../../utils/safeDateUtils';
 import { appointmentsAPI } from '../../services/api';
 
 const AppointmentsDashboard = () => {
@@ -236,7 +237,7 @@ const AppointmentsDashboard = () => {
                   </Link>
                 </TableCell>
                 <TableCell>
-                  {format(new Date(appointment.date), 'MMM d, yyyy')} at {appointment.startTime}
+                  {safeFormatDate(appointment.date, 'MMM d, yyyy')} at {appointment.startTime || 'N/A'}
                 </TableCell>
                 <TableCell>
                   <Box display="flex" alignItems="center" gap={1}>

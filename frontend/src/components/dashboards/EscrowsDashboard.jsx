@@ -39,6 +39,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useSnackbar } from 'notistack';
 import { format, differenceInDays } from 'date-fns';
+import { safeFormatDate } from '../../utils/safeDateUtils';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../services/api';
 import EscrowForm from '../forms/EscrowForm';
@@ -472,7 +473,7 @@ const EscrowsDashboard = () => {
                             Closing Date
                           </Typography>
                           <Typography variant="body2">
-                            {format(new Date(escrow.closingDate), 'MMM d, yyyy')}
+                            {safeFormatDate(escrow.closingDate, 'MMM d, yyyy')}
                           </Typography>
                         </Box>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>

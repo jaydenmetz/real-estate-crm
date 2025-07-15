@@ -29,6 +29,7 @@ import { DataGrid } from '@mui/x-data-grid';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useSnackbar } from 'notistack';
 import { format } from 'date-fns';
+import { safeFormatDate } from '../../utils/safeDateUtils';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../services/api';
 import ClientForm from '../forms/ClientForm';
@@ -256,7 +257,7 @@ const ClientsDashboard = () => {
       field: 'lastContactDate',
       headerName: 'Last Contact',
       width: 120,
-      valueFormatter: (params) => params.value ? format(new Date(params.value), 'MMM d, yyyy') : 'Never',
+      valueFormatter: (params) => params.value ? safeFormatDate(params.value, 'MMM d, yyyy', 'Never') : 'Never',
     },
     {
       field: 'actions',

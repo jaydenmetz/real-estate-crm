@@ -43,6 +43,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from 'react-query';
 import { format } from 'date-fns';
+import { safeFormatDate } from '../../utils/safeDateUtils';
 import StatsCard from '../common/StatsCard';
 import { leadsAPI } from '../../services/api';
 
@@ -384,10 +385,10 @@ const LeadsDashboard = () => {
                     </TableCell>
                     <TableCell onClick={() => handleLeadClick(lead.id)}>
                       <Typography variant="body2">
-                        {format(new Date(lead.lastContact), 'MMM dd')}
+                        {safeFormatDate(lead.lastContact, 'MMM dd')}
                       </Typography>
                       <Typography variant="caption" color="textSecondary">
-                        {format(new Date(lead.lastContact), 'h:mm a')}
+                        {safeFormatDate(lead.lastContact, 'h:mm a')}
                       </Typography>
                     </TableCell>
                     <TableCell align="right">
