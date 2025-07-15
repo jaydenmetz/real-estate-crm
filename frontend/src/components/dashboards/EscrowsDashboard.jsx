@@ -383,7 +383,7 @@ const EscrowsDashboard = () => {
 
       {/* Tabs - Hidden to focus on carousel */}
       {false && (
-      <Paper sx={{ mb: 3 }}
+      <Paper sx={{ mb: 3 }}>
         <Tabs value={tabValue} onChange={(e, v) => setTabValue(v)}>
           <Tab label={`All (${escrows.length})`} />
           <Tab label={`Active (${escrows.filter(e => e.escrowStatus === 'Active').length})`} />
