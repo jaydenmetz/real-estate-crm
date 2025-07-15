@@ -125,11 +125,12 @@ apiRouter.use(rateLimit);
 apiRouter.use('/auth', require('./routes/auth').router);
 
 // Protected routes - comment out authenticateToken for now to avoid breaking existing functionality
-apiRouter.use('/escrows', require('./routes/escrows.routes'));
-apiRouter.use('/listings', require('./routes/listings.routes'));
-apiRouter.use('/clients', require('./routes/clients.routes'));
-apiRouter.use('/appointments', require('./routes/appointments.routes'));
-apiRouter.use('/leads', require('./routes/leads.routes'));
+apiRouter.use('/escrows', require('./routes/escrows'));
+apiRouter.use('/listings', require('./routes/listings'));
+apiRouter.use('/clients', require('./routes/clients'));
+apiRouter.use('/appointments', require('./routes/appointments'));
+apiRouter.use('/leads', require('./routes/leads'));
+apiRouter.use('/analytics', require('./routes/analytics'));
 apiRouter.use('/ai', require('./routes/ai.routes'));
 apiRouter.use('/webhooks', require('./routes/webhooks.routes'));
 apiRouter.use('/documents', require('./routes/documents.routes'));

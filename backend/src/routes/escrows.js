@@ -1,472 +1,567 @@
 const express = require('express');
 const router = express.Router();
+const databaseService = require('../services/database.service');
 
-// Mock comprehensive escrow data
-const generateComprehensiveEscrow = (id) => ({
-  // Core Information
-  id: `esc_${id}`,
-  escrowNumber: `ESC-2025-${String(id).padStart(3, '0')}`,
-  propertyAddress: '456 Ocean View Dr, La Jolla, CA 92037',
-  escrowStatus: ['Active', 'Pending', 'Closed'][id % 3],
-  transactionType: ['Purchase', 'Listing', 'Both Sides'][id % 3],
-  escrowOpenDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-  scheduledCoeDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-  actualCoeDate: null,
-  mlsNumber: `MLS-2025-${100000 + id}`,
-  propertyType: ['SFR', 'Condo', 'Townhouse'][id % 3],
-  
-  // Property Details
-  propertyImages: [
-    'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800',
-    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800',
-    'https://images.unsplash.com/photo-1600607687644-c7171b42498b?w=800'
-  ],
-  bedrooms: 4,
-  bathrooms: 3.5,
-  squareFootage: 3200,
-  lotSize: 8500,
-  yearBuilt: 2018,
-  propertyDescription: 'Stunning ocean view home with modern amenities',
-  
-  // Financial Details
-  purchasePrice: 1250000 + (id * 10000),
-  listPrice: 1200000 + (id * 10000),
-  loanAmount: 1000000 + (id * 8000),
-  downPaymentAmount: 250000 + (id * 2000),
-  downPaymentPercentage: 20,
-  commissionPercentageBuySide: 2.5,
-  commissionPercentageListSide: 2.5,
-  grossCommission: 62500 + (id * 500),
-  myCommission: 31250 + (id * 250),
-  commissionSplit: 70,
-  commissionAdjustments: -2500,
-  commissionAdjustmentNotes: 'Transaction coordinator fee',
-  referralFee: 0,
-  transactionCoordinatorFee: 500,
-  homeWarrantyCost: 600,
-  expenseAdjustments: 0,
-  totalExpenses: 3600,
-  netCommission: 27650 + (id * 250),
-  cashToClose: 265000 + (id * 2000),
-  vpExpensesPaidThroughEscrow: 0,
-  
-  // Relations
-  clients: [
-    { 
-      id: `cli_${id}01`, 
-      name: 'Michael Chen', 
-      type: 'Buyer', 
-      email: 'mchen@email.com', 
-      phone: '(858) 555-1234',
-      avatar: 'https://i.pravatar.cc/150?img=1'
-    },
-    { 
-      id: `cli_${id}02`, 
-      name: 'Sarah Chen', 
-      type: 'Buyer', 
-      email: 'schen@email.com', 
-      phone: '(858) 555-1235',
-      avatar: 'https://i.pravatar.cc/150?img=2'
-    }
-  ],
-  leadSource: { id: 'lead_001', name: 'Zillow', type: 'Online' },
-  listing: { id: 'list_001', mlsNumber: `MLS-2025-${100000 + id}`, address: '456 Ocean View Dr' },
-  propertyInquiries: [
-    { id: 'inq_001', date: '2024-12-15', source: 'Website', notes: 'Initial inquiry' }
-  ],
-  appointments: [
-    { id: 'apt_001', date: '2024-12-20', type: 'Showing', notes: 'First showing' },
-    { id: 'apt_002', date: '2025-01-03', type: 'Inspection', notes: 'Home inspection' }
-  ],
-  openHouse: { id: 'oh_001', date: '2024-12-10', visitors: 45 },
-  transactionCoordinator: { id: 'tc_001', name: 'Jessica Martinez', company: 'Premier TC Services' },
-  buyerAgent: { id: 'ba_001', name: 'You', email: 'you@realty.com', phone: '(858) 555-0001' },
-  listingAgent: { id: 'la_001', name: 'You', email: 'you@realty.com', phone: '(858) 555-0001' },
-  loanOfficer: { id: 'lo_001', name: 'Robert Smith', company: 'Wells Fargo', phone: '(858) 555-2001' },
-  escrowOfficer: { id: 'eo_001', name: 'Linda Thompson', company: 'Pacific Escrow', phone: '(858) 555-3001' },
-  titleOfficer: { id: 'to_001', name: 'James Wilson', company: 'First American Title', phone: '(858) 555-3002' },
-  homeInspector: { id: 'hi_001', name: 'Mike Johnson', company: 'A+ Home Inspections', phone: '(858) 555-4001' },
-  termiteInspector: { id: 'ti_001', name: 'Tom Davis', company: 'Termite Control Inc', phone: '(858) 555-4002' },
-  homeWarrantyCompany: { id: 'hw_001', name: 'American Home Shield', phone: '1-800-555-0001' },
-  nhdCompany: { id: 'nhd_001', name: 'Property ID', phone: '(858) 555-5001' },
-  appraiser: { id: 'ap_001', name: 'Susan Lee', company: 'Accurate Appraisals', phone: '(858) 555-6001' },
-  
-  // Important Dates & Deadlines
-  acceptanceDate: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString(),
-  emdDueDate: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000).toISOString(),
-  emdReceivedDate: new Date(Date.now() - 26 * 24 * 60 * 60 * 1000).toISOString(),
-  inspectionPeriodEndDate: new Date(Date.now() - 18 * 24 * 60 * 60 * 1000).toISOString(),
-  contingencyRemovalDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
-  loanContingencyDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
-  appraisalContingencyDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-  allContingenciesRemovedDate: null,
-  loanApprovalDate: null,
-  clearToCloseDate: null,
-  signingDate: null,
-  fundingDate: null,
-  recordingDate: null,
-  possessionDate: null,
-  
-  // Checklist Progress
-  checklistProgress: {
-    phase1: {
-      completed: 10,
-      total: 13,
-      percentage: 77
-    },
-    phase2: {
-      completed: 15,
-      total: 29,
-      percentage: 52
-    },
-    phase3: {
-      completed: 0,
-      total: 23,
-      percentage: 0
-    },
-    overall: {
-      completed: 25,
-      total: 65,
-      percentage: 38
-    }
-  },
-  
-  // Individual checklist states
-  checklists: {
-    fully_executed_pa: true,
-    open_escrow: true,
-    send_congrats: true,
-    add_contacts_crm: true,
-    add_contacts_phone: true,
-    intro_email: true,
-    order_nhd: true,
-    confirm_emd: true,
-    emd_deposited: true,
-    update_mls: true,
-    create_drive_folder: false,
-    send_tc_glide: false,
-    tc_intro_sent: false,
-    // ... more checklist items
-  },
-  
-  // Document Tracking
-  purchaseAgreementStatus: 'Signed',
-  counterOffers: 2,
-  addendums: ['Solar Lease Transfer', 'Repair Request'],
-  sellerDisclosuresStatus: 'Received',
-  inspectionReportsStatus: 'Complete',
-  repairRequestsStatus: 'Negotiating',
-  titleReportStatus: 'In Progress',
-  hoaDocumentsStatus: 'Pending',
-  loanDocumentsStatus: 'Processing',
-  closingDocumentsStatus: 'Not Started',
-  
-  // Communication Log
-  lastClientContactDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-  nextFollowUpDate: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
-  importantNotes: 'Buyers are very motivated. Must close by Feb 5 for job relocation.',
-  specialInstructions: 'Call before 5 PM only. Prefer text communication.',
-  redFlags: 'Appraisal may come in low - comps are mixed',
-  
-  // Analytics Fields
-  leadSourceType: 'Online',
-  marketingCampaign: 'Google Ads Q4 2024',
-  totalMarketingCost: 2500,
-  timeFromLeadToContract: 18,
-  timeFromContractToClose: null,
-  clientSatisfactionScore: null,
-  wouldReferScore: null,
-  
-  // System Fields
-  createdDate: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString(),
-  lastModifiedDate: new Date().toISOString(),
-  createdBy: 'Jayden Metz',
-  assignedTo: 'Jayden Metz',
-  tags: ['Hot Lead', 'Cash Buyer', 'Relocation'],
-  priorityLevel: ['High', 'Medium', 'Low'][id % 3],
-  archivedStatus: false,
-  
-  // Timeline Events
-  timeline: [
-    {
-      id: 1,
-      date: new Date(Date.now() - 28 * 24 * 60 * 60 * 1000).toISOString(),
-      event: 'Offer submitted',
-      description: 'Initial offer of $1,200,000 submitted',
-      type: 'milestone',
-      icon: 'offer'
-    },
-    {
-      id: 2,
-      date: new Date(Date.now() - 27 * 24 * 60 * 60 * 1000).toISOString(),
-      event: 'Offer accepted',
-      description: 'Counter at $1,250,000 accepted by buyer',
-      type: 'milestone',
-      icon: 'accepted'
-    },
-    {
-      id: 3,
-      date: new Date(Date.now() - 26 * 24 * 60 * 60 * 1000).toISOString(),
-      event: 'Escrow opened',
-      description: 'Escrow opened with Pacific Escrow',
-      type: 'milestone',
-      icon: 'escrow'
-    },
-    {
-      id: 4,
-      date: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
-      event: 'Inspection completed',
-      description: 'Home inspection completed, minor issues found',
-      type: 'inspection',
-      icon: 'inspection'
-    },
-    {
-      id: 5,
-      date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-      event: 'Appraisal ordered',
-      description: 'Appraisal ordered by Wells Fargo',
-      type: 'financial',
-      icon: 'appraisal'
-    }
-  ],
-  
-  // Activity Stats for Dashboard
-  activityStats: {
-    daysInEscrow: 28,
-    daysToClose: 30,
-    tasksCompletedToday: 3,
-    upcomingDeadlines: 2,
-    documentsUploaded: 8,
-    communicationScore: 95
-  },
-  
-  // Market Comparison Data
-  marketComparison: {
-    avgDaysOnMarket: 35,
-    avgSalePrice: 1180000,
-    pricePerSqft: 390,
-    neighborhoodTrend: '+5.2%',
-    similarProperties: [
-      { address: '123 Ocean View Dr', soldPrice: 1225000, soldDate: '2024-12-01' },
-      { address: '789 Ocean View Dr', soldPrice: 1195000, soldDate: '2024-11-15' }
-    ]
-  }
+// Helper function to transform database escrow to API response format for list view
+const transformEscrowForList = (escrow) => ({
+  id: escrow.id,
+  escrowNumber: escrow.escrowNumber,
+  propertyAddress: escrow.propertyAddress,
+  propertyImage: escrow.propertyImages?.[0] || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800',
+  escrowStatus: escrow.escrowStatus,
+  transactionType: escrow.transactionType,
+  purchasePrice: escrow.purchasePrice,
+  myCommission: escrow.myCommission,
+  clients: escrow.clients?.map(c => ({ 
+    name: c.name, 
+    type: c.role || c.type, 
+    avatar: c.avatar 
+  })) || [],
+  scheduledCoeDate: escrow.scheduledCoeDate,
+  daysToClose: escrow.activityStats?.daysToClose || 0,
+  checklistProgress: escrow.checklistProgress?.overall?.percentage || 0,
+  priorityLevel: escrow.priorityLevel,
+  lastActivity: escrow.lastModifiedDate,
+  upcomingDeadlines: escrow.activityStats?.upcomingDeadlines || 0
 });
 
 // GET /v1/escrows - List all escrows
 router.get('/', (req, res) => {
-  const { 
-    page = 1, 
-    limit = 20, 
-    status,
-    sort = 'createdDate',
-    order = 'desc',
-    search
-  } = req.query;
-  
-  // Generate mock escrows
-  const escrows = [];
-  const total = 42;
-  const startId = (page - 1) * limit + 1;
-  const endId = Math.min(startId + limit - 1, total);
-  
-  for (let i = startId; i <= endId; i++) {
-    const escrow = generateComprehensiveEscrow(i);
+  try {
+    const { 
+      page = 1, 
+      limit = 20, 
+      status,
+      sort = 'createdDate',
+      order = 'desc',
+      search
+    } = req.query;
     
-    // Apply filters
-    if (status && escrow.escrowStatus.toLowerCase() !== status.toLowerCase()) continue;
-    if (search && !escrow.propertyAddress.toLowerCase().includes(search.toLowerCase()) &&
-        !escrow.escrowNumber.toLowerCase().includes(search.toLowerCase())) continue;
+    // Get all escrows from database
+    let escrows = databaseService.getAll('escrows');
     
-    // Return simplified version for list view
-    escrows.push({
-      id: escrow.id,
-      escrowNumber: escrow.escrowNumber,
-      propertyAddress: escrow.propertyAddress,
-      propertyImage: escrow.propertyImages[0],
-      escrowStatus: escrow.escrowStatus,
-      transactionType: escrow.transactionType,
-      purchasePrice: escrow.purchasePrice,
-      myCommission: escrow.myCommission,
-      clients: escrow.clients.map(c => ({ name: c.name, type: c.type, avatar: c.avatar })),
-      scheduledCoeDate: escrow.scheduledCoeDate,
-      daysToClose: escrow.activityStats.daysToClose,
-      checklistProgress: escrow.checklistProgress.overall.percentage,
-      priorityLevel: escrow.priorityLevel,
-      lastActivity: escrow.lastModifiedDate,
-      upcomingDeadlines: escrow.activityStats.upcomingDeadlines
+    // Apply search filter
+    if (search) {
+      escrows = escrows.filter(escrow => 
+        escrow.propertyAddress?.toLowerCase().includes(search.toLowerCase()) ||
+        escrow.escrowNumber?.toLowerCase().includes(search.toLowerCase()) ||
+        escrow.mlsNumber?.toLowerCase().includes(search.toLowerCase())
+      );
+    }
+    
+    // Apply status filter
+    if (status) {
+      escrows = escrows.filter(escrow => 
+        escrow.escrowStatus?.toLowerCase() === status.toLowerCase()
+      );
+    }
+    
+    // Sort escrows
+    escrows.sort((a, b) => {
+      let aVal = a[sort] || '';
+      let bVal = b[sort] || '';
+      
+      // Handle date sorting
+      if (sort.includes('Date')) {
+        aVal = new Date(aVal).getTime();
+        bVal = new Date(bVal).getTime();
+      }
+      
+      // Handle numeric sorting
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return order === 'desc' ? bVal - aVal : aVal - bVal;
+      }
+      
+      // Handle string sorting
+      if (order === 'desc') {
+        return bVal.toString().localeCompare(aVal.toString());
+      }
+      return aVal.toString().localeCompare(bVal.toString());
+    });
+    
+    // Calculate pagination
+    const total = escrows.length;
+    const startIndex = (parseInt(page) - 1) * parseInt(limit);
+    const endIndex = startIndex + parseInt(limit);
+    const paginatedEscrows = escrows.slice(startIndex, endIndex);
+    
+    // Transform escrows for list view
+    const transformedEscrows = paginatedEscrows.map(transformEscrowForList);
+    
+    res.json({
+      success: true,
+      data: {
+        escrows: transformedEscrows,
+        pagination: {
+          total,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          totalPages: Math.ceil(total / limit)
+        }
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to fetch escrows'
+      }
     });
   }
-  
-  res.json({
-    success: true,
-    data: {
-      escrows,
-      pagination: {
-        total,
-        page: parseInt(page),
-        limit: parseInt(limit),
-        totalPages: Math.ceil(total / limit)
-      }
-    }
-  });
 });
 
 // GET /v1/escrows/stats - Get dashboard statistics
 router.get('/stats', (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      overview: {
-        activeEscrows: 15,
-        pendingEscrows: 8,
-        closedThisMonth: 12,
-        totalVolume: 18750000,
-        totalCommission: 468750,
-        avgDaysToClose: 32
-      },
-      performance: {
-        closingRate: 94,
-        avgListToSaleRatio: 98.5,
-        clientSatisfaction: 4.8,
-        onTimeClosingRate: 89
-      },
-      pipeline: {
-        thisWeek: 3,
-        thisMonth: 12,
-        nextMonth: 18,
-        projectedRevenue: 325000
-      },
-      trends: [
-        { month: 'Jan', closed: 8, volume: 9600000 },
-        { month: 'Feb', closed: 10, volume: 12500000 },
-        { month: 'Mar', closed: 12, volume: 15000000 },
-        { month: 'Apr', closed: 11, volume: 13750000 },
-        { month: 'May', closed: 14, volume: 17500000 },
-        { month: 'Jun', closed: 12, volume: 15000000 }
-      ]
+  try {
+    const escrows = databaseService.getAll('escrows');
+    const stats = databaseService.getStats('escrows');
+    
+    // Calculate additional statistics
+    const now = new Date();
+    const thisMonth = now.getMonth();
+    const thisYear = now.getFullYear();
+    
+    const closedThisMonth = escrows.filter(e => {
+      if (e.escrowStatus !== 'closed') return false;
+      const closeDate = new Date(e.actualCoeDate || e.scheduledCoeDate);
+      return closeDate.getMonth() === thisMonth && closeDate.getFullYear() === thisYear;
+    }).length;
+    
+    const avgDaysToClose = escrows
+      .filter(e => e.escrowStatus === 'closed' && e.actualCoeDate)
+      .reduce((sum, e) => {
+        const openDate = new Date(e.escrowOpenDate);
+        const closeDate = new Date(e.actualCoeDate);
+        const days = Math.floor((closeDate - openDate) / (24 * 60 * 60 * 1000));
+        return sum + days;
+      }, 0) / (escrows.filter(e => e.escrowStatus === 'closed').length || 1);
+    
+    // Calculate pipeline
+    const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+    const oneMonthFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const twoMonthsFromNow = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
+    
+    const thisWeek = escrows.filter(e => {
+      const closeDate = new Date(e.scheduledCoeDate);
+      return e.escrowStatus === 'active' && closeDate <= oneWeekFromNow;
+    }).length;
+    
+    const thisMonthPipeline = escrows.filter(e => {
+      const closeDate = new Date(e.scheduledCoeDate);
+      return e.escrowStatus === 'active' && closeDate <= oneMonthFromNow;
+    }).length;
+    
+    const nextMonth = escrows.filter(e => {
+      const closeDate = new Date(e.scheduledCoeDate);
+      return e.escrowStatus === 'active' && closeDate > oneMonthFromNow && closeDate <= twoMonthsFromNow;
+    }).length;
+    
+    const projectedRevenue = escrows
+      .filter(e => e.escrowStatus === 'active')
+      .reduce((sum, e) => sum + (e.myCommission || 0), 0);
+    
+    // Generate monthly trends
+    const trends = [];
+    for (let i = 5; i >= 0; i--) {
+      const trendDate = new Date(thisYear, thisMonth - i, 1);
+      const monthName = trendDate.toLocaleString('default', { month: 'short' });
+      
+      const monthlyEscrows = escrows.filter(e => {
+        if (e.escrowStatus !== 'closed') return false;
+        const closeDate = new Date(e.actualCoeDate || e.scheduledCoeDate);
+        return closeDate.getMonth() === trendDate.getMonth() && 
+               closeDate.getFullYear() === trendDate.getFullYear();
+      });
+      
+      trends.push({
+        month: monthName,
+        closed: monthlyEscrows.length,
+        volume: monthlyEscrows.reduce((sum, e) => sum + (e.purchasePrice || 0), 0)
+      });
     }
-  });
+    
+    res.json({
+      success: true,
+      data: {
+        overview: {
+          activeEscrows: stats.active,
+          pendingEscrows: stats.pending,
+          closedThisMonth,
+          totalVolume: stats.totalVolume,
+          totalCommission: stats.totalCommission,
+          avgDaysToClose: Math.round(avgDaysToClose)
+        },
+        performance: {
+          closingRate: stats.closed > 0 ? Math.round((stats.closed / stats.total) * 100) : 0,
+          avgListToSaleRatio: 98.5,
+          clientSatisfaction: 4.8,
+          onTimeClosingRate: 89
+        },
+        pipeline: {
+          thisWeek,
+          thisMonth: thisMonthPipeline,
+          nextMonth,
+          projectedRevenue
+        },
+        trends
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to fetch escrow statistics'
+      }
+    });
+  }
 });
 
 // GET /v1/escrows/:id - Get single escrow with full details
 router.get('/:id', (req, res) => {
-  const { id } = req.params;
-  const numericId = parseInt(id.replace('esc_', '')) || 1;
-  
-  const escrow = generateComprehensiveEscrow(numericId);
-  
-  res.json({
-    success: true,
-    data: escrow
-  });
+  try {
+    const { id } = req.params;
+    const escrow = databaseService.getById('escrows', id);
+    
+    if (!escrow) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Escrow not found'
+        }
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: escrow
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to fetch escrow'
+      }
+    });
+  }
 });
 
 // POST /v1/escrows - Create new escrow
 router.post('/', (req, res) => {
-  const newEscrow = {
-    ...generateComprehensiveEscrow(Date.now() % 1000),
-    ...req.body,
-    id: `esc_${Date.now()}`,
-    createdDate: new Date().toISOString()
-  };
-  
-  res.status(201).json({
-    success: true,
-    data: newEscrow,
-    message: 'Escrow created successfully'
-  });
+  try {
+    // Generate escrow number
+    const escrowCount = databaseService.getAll('escrows').length;
+    const escrowNumber = `${new Date().getFullYear()}-${String(escrowCount + 1).padStart(4, '0')}`;
+    
+    // Prepare new escrow data
+    const newEscrowData = {
+      ...req.body,
+      escrowNumber,
+      escrowStatus: req.body.escrowStatus || 'active',
+      createdBy: 'jaydenmetz',
+      assignedTo: 'jaydenmetz',
+      // Set default values for required fields
+      activityStats: {
+        daysInEscrow: 0,
+        daysToClose: 30,
+        tasksCompletedToday: 0,
+        upcomingDeadlines: 0,
+        documentsUploaded: 0,
+        communicationScore: 100
+      },
+      checklistProgress: {
+        phase1: { completed: 0, total: 10, percentage: 0 },
+        phase2: { completed: 0, total: 8, percentage: 0 },
+        phase3: { completed: 0, total: 7, percentage: 0 },
+        overall: { completed: 0, total: 25, percentage: 0 }
+      },
+      timeline: [{
+        date: new Date().toISOString(),
+        event: 'Escrow Created',
+        type: 'milestone',
+        icon: 'start',
+        description: 'New escrow initiated'
+      }]
+    };
+    
+    const newEscrow = databaseService.create('escrows', newEscrowData);
+    
+    res.status(201).json({
+      success: true,
+      data: newEscrow,
+      message: 'Escrow created successfully'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to create escrow'
+      }
+    });
+  }
 });
 
 // PUT /v1/escrows/:id - Update escrow
 router.put('/:id', (req, res) => {
-  const { id } = req.params;
-  const numericId = parseInt(id.replace('esc_', '')) || 1;
-  
-  const escrow = {
-    ...generateComprehensiveEscrow(numericId),
-    ...req.body,
-    lastModifiedDate: new Date().toISOString()
-  };
-  
-  res.json({
-    success: true,
-    data: escrow,
-    message: 'Escrow updated successfully'
-  });
+  try {
+    const { id } = req.params;
+    const updatedEscrow = databaseService.update('escrows', id, req.body);
+    
+    if (!updatedEscrow) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Escrow not found'
+        }
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: updatedEscrow,
+      message: 'Escrow updated successfully'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to update escrow'
+      }
+    });
+  }
 });
 
 // PATCH /v1/escrows/:id/checklist - Update checklist item
 router.patch('/:id/checklist', (req, res) => {
-  const { itemId, checked } = req.body;
-  
-  res.json({
-    success: true,
-    data: {
-      itemId,
-      checked,
-      completedAt: checked ? new Date().toISOString() : null,
-      completedBy: 'Jayden Metz'
-    },
-    message: 'Checklist item updated'
-  });
+  try {
+    const { id } = req.params;
+    const { itemId, checked } = req.body;
+    
+    const escrow = databaseService.getById('escrows', id);
+    if (!escrow) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Escrow not found'
+        }
+      });
+    }
+    
+    // Update checklist item
+    if (!escrow.checklists) {
+      escrow.checklists = {};
+    }
+    escrow.checklists[itemId] = checked;
+    
+    // Update checklist progress
+    // This is a simplified version - in production you'd calculate based on actual checklist structure
+    const totalItems = Object.keys(escrow.checklists).length || 1;
+    const completedItems = Object.values(escrow.checklists).filter(v => v === true).length;
+    const percentage = Math.round((completedItems / totalItems) * 100);
+    
+    escrow.checklistProgress.overall = {
+      completed: completedItems,
+      total: totalItems,
+      percentage
+    };
+    
+    databaseService.update('escrows', id, escrow);
+    
+    res.json({
+      success: true,
+      data: {
+        itemId,
+        checked,
+        completedAt: checked ? new Date().toISOString() : null,
+        completedBy: 'Jayden Metz'
+      },
+      message: 'Checklist item updated'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to update checklist'
+      }
+    });
+  }
 });
 
 // POST /v1/escrows/:id/documents - Upload document
 router.post('/:id/documents', (req, res) => {
-  const { documentType, name } = req.body;
-  
-  res.json({
-    success: true,
-    data: {
+  try {
+    const { id } = req.params;
+    const { documentType, name } = req.body;
+    
+    const escrow = databaseService.getById('escrows', id);
+    if (!escrow) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Escrow not found'
+        }
+      });
+    }
+    
+    // Add document to escrow
+    if (!escrow.documents) {
+      escrow.documents = [];
+    }
+    
+    const newDocument = {
       id: `doc_${Date.now()}`,
-      escrowId: req.params.id,
+      escrowId: id,
       documentType,
       name,
       uploadedAt: new Date().toISOString(),
       uploadedBy: 'Jayden Metz',
       size: '2.4 MB',
       url: 'https://example.com/document.pdf'
-    },
-    message: 'Document uploaded successfully'
-  });
+    };
+    
+    escrow.documents.push(newDocument);
+    
+    // Update document count in activity stats
+    if (escrow.activityStats) {
+      escrow.activityStats.documentsUploaded = escrow.documents.length;
+    }
+    
+    databaseService.update('escrows', id, escrow);
+    
+    res.json({
+      success: true,
+      data: newDocument,
+      message: 'Document uploaded successfully'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to upload document'
+      }
+    });
+  }
 });
 
 // POST /v1/escrows/:id/timeline - Add timeline event
 router.post('/:id/timeline', (req, res) => {
-  const { event, description, type } = req.body;
-  
-  res.json({
-    success: true,
-    data: {
+  try {
+    const { id } = req.params;
+    const { event, description, type, icon } = req.body;
+    
+    const escrow = databaseService.getById('escrows', id);
+    if (!escrow) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Escrow not found'
+        }
+      });
+    }
+    
+    // Add timeline event
+    if (!escrow.timeline) {
+      escrow.timeline = [];
+    }
+    
+    const newEvent = {
       id: Date.now(),
-      escrowId: req.params.id,
       date: new Date().toISOString(),
       event,
       description,
-      type,
+      type: type || 'update',
+      icon: icon || 'event',
       createdBy: 'Jayden Metz'
-    },
-    message: 'Timeline event added'
-  });
+    };
+    
+    escrow.timeline.push(newEvent);
+    
+    // Sort timeline by date (newest first)
+    escrow.timeline.sort((a, b) => new Date(b.date) - new Date(a.date));
+    
+    databaseService.update('escrows', id, escrow);
+    
+    res.json({
+      success: true,
+      data: newEvent,
+      message: 'Timeline event added'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to add timeline event'
+      }
+    });
+  }
 });
 
 // POST /v1/escrows/:id/notes - Add note
 router.post('/:id/notes', (req, res) => {
-  const { content, type = 'general' } = req.body;
-  
-  res.json({
-    success: true,
-    data: {
+  try {
+    const { id } = req.params;
+    const { content, type = 'general' } = req.body;
+    
+    const escrow = databaseService.getById('escrows', id);
+    if (!escrow) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Escrow not found'
+        }
+      });
+    }
+    
+    // Add note to escrow
+    if (!escrow.notes) {
+      escrow.notes = [];
+    }
+    
+    const newNote = {
       id: `note_${Date.now()}`,
-      escrowId: req.params.id,
+      escrowId: id,
       content,
       type,
       createdAt: new Date().toISOString(),
       createdBy: 'Jayden Metz'
-    },
-    message: 'Note added successfully'
-  });
+    };
+    
+    escrow.notes.push(newNote);
+    
+    // Update importantNotes if this is marked as important
+    if (type === 'important') {
+      escrow.importantNotes = content;
+    }
+    
+    databaseService.update('escrows', id, escrow);
+    
+    res.json({
+      success: true,
+      data: newNote,
+      message: 'Note added successfully'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to add note'
+      }
+    });
+  }
 });
 
 // POST /v1/escrows/:id/ai-assist - AI assistance endpoint
@@ -488,10 +583,33 @@ router.post('/:id/ai-assist', (req, res) => {
 
 // DELETE /v1/escrows/:id - Delete escrow
 router.delete('/:id', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Escrow deleted successfully'
-  });
+  try {
+    const { id } = req.params;
+    const deleted = databaseService.delete('escrows', id);
+    
+    if (!deleted) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Escrow not found'
+        }
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: 'Escrow deleted successfully'
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to delete escrow'
+      }
+    });
+  }
 });
 
 module.exports = router;
