@@ -98,7 +98,25 @@ class DatabaseService {
       bedrooms: 2 + (id % 4),
       bathrooms: 2 + (id % 3),
       squareFootage: 1500 + (id * 100),
-      lotSize: 5000 + (id * 500),
+      // Realistic lot sizes based on property type and area
+      lotSize: (() => {
+        const propertyType = propertyTypes[id % propertyTypes.length];
+        const baseSize = {
+          'Single Family': 6500,
+          'Condo': 0, // Condos typically don't have lot sizes
+          'Townhouse': 2200,
+          'Multi-Family': 8500,
+          'Land': 43560 // 1 acre
+        }[propertyType] || 6500;
+        
+        // Add variation based on location and id
+        if (propertyType === 'Condo') return 0;
+        if (propertyType === 'Land') return baseSize * (1 + (id % 5)); // 1-5 acres
+        
+        // For houses, vary between 80% and 150% of base size
+        const variation = 0.8 + (id % 8) * 0.1;
+        return Math.round(baseSize * variation);
+      })(),
       yearBuilt: 1990 + (id % 30),
       propertyDescription: `Beautiful ${propertyTypes[id % propertyTypes.length]} featuring modern amenities, stunning views, and prime location. Recently renovated with high-end finishes throughout.`,
       propertyFeatures: [
@@ -313,7 +331,22 @@ class DatabaseService {
       bedrooms: 2 + (id % 4),
       bathrooms: 1.5 + (id % 3) * 0.5,
       squareFootage: 1200 + (id * 50),
-      lotSize: 4000 + (id * 200),
+      // Realistic lot sizes based on property type
+      lotSize: (() => {
+        const type = propertyTypes[id % propertyTypes.length];
+        const baseSizes = {
+          'Single Family': 7200,
+          'Condo': 0,
+          'Townhouse': 2500,
+          'Multi-Family': 10000,
+          'Land': 43560 // 1 acre
+        };
+        const base = baseSizes[type] || 7200;
+        if (type === 'Condo') return 0;
+        if (type === 'Land') return base * (1 + (id % 10)); // 1-10 acres
+        // Vary lot size by +/- 30%
+        return Math.round(base * (0.7 + (id % 7) * 0.1));
+      })(),
       yearBuilt: 1985 + (id % 35),
       
       // Listing Details

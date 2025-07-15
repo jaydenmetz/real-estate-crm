@@ -333,12 +333,17 @@ const EscrowCompactCard = ({ escrow, index }) => {
                         {escrow.squareFootage || '2,000'} sq ft
                       </Typography>
                     </Box>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                      <Landscape sx={{ fontSize: 18 }} />
-                      <Typography variant="body2">
-                        {escrow.lotSize || '6,500'} sq ft
-                      </Typography>
-                    </Box>
+                    {escrow.lotSize > 0 && (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <Landscape sx={{ fontSize: 18 }} />
+                        <Typography variant="body2">
+                          {escrow.lotSize >= 43560 
+                            ? `${(escrow.lotSize / 43560).toFixed(1)} acres`
+                            : `${escrow.lotSize.toLocaleString()} sq ft`
+                          }
+                        </Typography>
+                      </Box>
+                    )}
                   </Box>
                 </Box>
                 

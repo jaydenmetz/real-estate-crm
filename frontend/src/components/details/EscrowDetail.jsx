@@ -131,6 +131,10 @@ import {
   Analytics,
   SystemUpdate,
   BarChart,
+  BedOutlined,
+  BathtubOutlined,
+  SquareFootOutlined,
+  Landscape,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
@@ -192,6 +196,13 @@ const mockEscrowDetail = {
   actualCoeDate: null,
   mlsNumber: 'MLS-2025-123456',
   propertyType: 'SFR',
+  
+  // Property Features
+  bedrooms: 4,
+  bathrooms: 3,
+  squareFootage: 3200,
+  lotSize: 8500, // sq ft
+  yearBuilt: 2018,
   
   // Financial Details
   purchasePrice: 1250000,
@@ -605,6 +616,38 @@ const EscrowDetail = ({ defaultView = 'dashboard' }) => {
                       color="error"
                       size="small"
                     />
+                  )}
+                </Box>
+                {/* Property Features */}
+                <Box sx={{ display: 'flex', gap: 2, mt: 1, flexWrap: 'wrap' }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <BedOutlined sx={{ fontSize: 18, color: 'text.secondary' }} />
+                    <Typography variant="body2">
+                      {escrowData.bedrooms || 3} beds
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <BathtubOutlined sx={{ fontSize: 18, color: 'text.secondary' }} />
+                    <Typography variant="body2">
+                      {escrowData.bathrooms || 2} baths
+                    </Typography>
+                  </Box>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                    <SquareFootOutlined sx={{ fontSize: 18, color: 'text.secondary' }} />
+                    <Typography variant="body2">
+                      {escrowData.squareFootage?.toLocaleString() || '2,000'} sq ft
+                    </Typography>
+                  </Box>
+                  {escrowData.lotSize > 0 && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                      <Landscape sx={{ fontSize: 18, color: 'text.secondary' }} />
+                      <Typography variant="body2">
+                        {escrowData.lotSize >= 43560 
+                          ? `${(escrowData.lotSize / 43560).toFixed(1)} acres`
+                          : `${escrowData.lotSize?.toLocaleString()} sq ft lot`
+                        }
+                      </Typography>
+                    </Box>
                   )}
                 </Box>
               </Box>

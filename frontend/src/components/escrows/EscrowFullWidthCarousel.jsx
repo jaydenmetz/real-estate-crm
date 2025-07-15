@@ -268,7 +268,21 @@ const EscrowFullWidthCarousel = ({ escrows }) => {
                   </Typography>
                 </Box>
                 <Chip
-                  label={`${currentEscrow.bedrooms || 3} beds • ${currentEscrow.bathrooms || 2} baths • ${currentEscrow.squareFootage || '2,000'} sq ft • ${currentEscrow.lotSize || '6,500'} sq ft lot`}
+                  label={(() => {
+                    const parts = [
+                      `${currentEscrow.bedrooms || 3} beds`,
+                      `${currentEscrow.bathrooms || 2} baths`,
+                      `${currentEscrow.squareFootage || '2,000'} sq ft`
+                    ];
+                    if (currentEscrow.lotSize > 0) {
+                      parts.push(
+                        currentEscrow.lotSize >= 43560
+                          ? `${(currentEscrow.lotSize / 43560).toFixed(1)} acre lot`
+                          : `${currentEscrow.lotSize?.toLocaleString() || '6,500'} sq ft lot`
+                      );
+                    }
+                    return parts.join(' • ');
+                  })()}
                   sx={{
                     bgcolor: 'rgba(255,255,255,0.2)',
                     color: 'white',
