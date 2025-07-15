@@ -393,7 +393,7 @@ const escrowChecklists = {
   }
 };
 
-const EscrowDetail = ({ defaultView = 'dashboard' }) => {
+const EscrowDetail = ({ defaultView = 'detail' }) => {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -544,6 +544,29 @@ const EscrowDetail = ({ defaultView = 'dashboard' }) => {
   const checklistProgress = calculateChecklistProgress();
 
   // Show dashboard view if selected
+  // Show loading state
+  if (isLoading) {
+    return (
+      <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
+          <CircularProgress />
+        </Box>
+      </Container>
+    );
+  }
+
+  // Show error state
+  if (error && !escrow) {
+    return (
+      <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+        <Alert severity="error">
+          <Typography variant="h6">Error loading escrow details</Typography>
+          <Typography variant="body2">{error.message || 'Unable to load escrow data'}</Typography>
+        </Alert>
+      </Container>
+    );
+  }
+
   if (viewMode === 'dashboard') {
     return <EscrowDashboard />;
   }
