@@ -35,7 +35,7 @@ import { useNavigate } from 'react-router-dom';
 import { safeFormatDate } from '../../utils/safeDateUtils';
 import { differenceInDays } from 'date-fns';
 
-const EscrowCompactCard = ({ escrow, index }) => {
+const EscrowCompactCard = ({ escrow, index, showCommission = true }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isExpanding, setIsExpanding] = useState(false);
   const cardRef = useRef(null);
@@ -196,7 +196,7 @@ const EscrowCompactCard = ({ escrow, index }) => {
                       Your Commission
                     </Typography>
                     <Typography variant="h6" fontWeight="bold" color="success.main">
-                      ${myCommission?.toLocaleString()}
+                      {showCommission ? `$${myCommission?.toLocaleString()}` : '•••••'}
                     </Typography>
                   </Box>
                 </Grid>

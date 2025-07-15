@@ -22,6 +22,8 @@ import {
   Skeleton,
   Menu,
   MenuItem,
+  Switch,
+  FormControlLabel,
 } from '@mui/material';
 import {
   Add,
@@ -39,6 +41,8 @@ import {
   Gavel,
   ViewModule,
   ViewCarousel,
+  Visibility,
+  VisibilityOff,
 } from '@mui/icons-material';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useSnackbar } from 'notistack';
@@ -109,9 +113,20 @@ const EscrowsDashboard = () => {
   const [createdEscrowData, setCreatedEscrowData] = useState(null);
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'carousel'
   const [statusFilter, setStatusFilter] = useState('Active'); // Default to Active
+  const [showCommission, setShowCommission] = useState(() => {
+    // Load commission visibility preference from localStorage
+    const saved = localStorage.getItem('showCommission');
+    return saved !== null ? JSON.parse(saved) : true;
+  });
   const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+
+  // Save commission visibility preference when it changes
+  const handleCommissionToggle = (checked) => {
+    setShowCommission(checked);
+    localStorage.setItem('showCommission', JSON.stringify(checked));
+  };
 
   // Determine which status tab is active
   const status = ['all', 'Active', 'Pending', 'Closing', 'Closed'][tabValue];
@@ -364,12 +379,32 @@ const EscrowsDashboard = () => {
             )}
           </Box>
         </Box>
-        <Box>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Tooltip title={showCommission ? "Hide commission amounts" : "Show commission amounts"}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={showCommission}
+                  onChange={(e) => handleCommissionToggle(e.target.checked)}
+                  icon={<VisibilityOff />}
+                  checkedIcon={<Visibility />}
+                  color="primary"
+                />
+              }
+              label={showCommission ? "Commission" : "Commission"}
+              sx={{ 
+                mr: 2,
+                '& .MuiFormControlLabel-label': {
+                  fontSize: '0.875rem'
+                }
+              }}
+            />
+          </Tooltip>
           <Button
             variant="contained"
             startIcon={<Add />}
             onClick={() => setOpenForm(true)}
-            sx={{ mr: 2 }}
+            sx={{ mr: 1 }}
           >
             Add Escrow
           </Button>
@@ -438,6 +473,7 @@ const EscrowsDashboard = () => {
             key={escrow.id}
             escrow={escrow}
             index={index}
+            showCommission={showCommission}
           />
         ))}
       </Box>
