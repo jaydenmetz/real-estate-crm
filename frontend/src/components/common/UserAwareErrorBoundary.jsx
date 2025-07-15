@@ -2,6 +2,7 @@ import React from 'react';
 import { Container, Paper, Typography, Button, Box, Alert, Divider } from '@mui/material';
 import { Home, Refresh, Email, BugReport } from '@mui/icons-material';
 import authService from '../../services/auth.service';
+import CopyButton from './CopyButton';
 
 class UserAwareErrorBoundary extends React.Component {
   constructor(props) {
@@ -130,9 +131,15 @@ class UserAwareErrorBoundary extends React.Component {
                 </Box>
 
                 {/* Error ID for support reference */}
-                <Typography variant="caption" color="text.disabled" sx={{ mt: 3, display: 'block' }}>
-                  Error ID: {Date.now()}-{Math.random().toString(36).substr(2, 9)}
-                </Typography>
+                <Box sx={{ mt: 3, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Typography variant="caption" color="text.disabled">
+                    Error ID: {Date.now()}-{Math.random().toString(36).substr(2, 9)}
+                  </Typography>
+                  <CopyButton 
+                    text={`Error ID: ${Date.now()}-${Math.random().toString(36).substr(2, 9)}`} 
+                    label="Copy error ID" 
+                  />
+                </Box>
               </Paper>
             </Container>
           </Box>
@@ -148,18 +155,26 @@ class UserAwareErrorBoundary extends React.Component {
             </Typography>
             
             <Alert severity="error" sx={{ mb: 3, bgcolor: 'white' }}>
-              <Typography variant="h6" gutterBottom>
-                {this.state.error?.toString()}
-              </Typography>
-              <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
-                Page: {this.props.pageName || 'Unknown'}<br />
-                User: {user?.username} (Admin)<br />
-                Error Count: {this.state.errorCount}<br />
-                Time: {new Date().toLocaleString()}
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="h6" gutterBottom>
+                    {this.state.error?.toString()}
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                    Page: {this.props.pageName || 'Unknown'}<br />
+                    User: {user?.username} (Admin)<br />
+                    Error Count: {this.state.errorCount}<br />
+                    Time: {new Date().toLocaleString()}
+                  </Typography>
+                </Box>
+                <CopyButton 
+                  text={`Error: ${this.state.error?.toString()}\nPage: ${this.props.pageName || 'Unknown'}\nUser: ${user?.username} (Admin)\nError Count: ${this.state.errorCount}\nTime: ${new Date().toLocaleString()}`} 
+                  label="Copy error details" 
+                />
+              </Box>
             </Alert>
 
-            <Box sx={{ mb: 3 }}>
+            <Box sx={{ mb: 3, position: 'relative' }}>
               <Typography variant="h6" gutterBottom>
                 Stack Trace:
               </Typography>
@@ -169,12 +184,19 @@ class UserAwareErrorBoundary extends React.Component {
                   bgcolor: 'grey.900', 
                   color: 'grey.100',
                   overflow: 'auto',
-                  maxHeight: '300px'
+                  maxHeight: '300px',
+                  position: 'relative'
                 }}
               >
                 <pre style={{ fontSize: '12px', margin: 0 }}>
                   {this.state.error?.stack}
                 </pre>
+                <Box sx={{ position: 'absolute', top: 8, right: 8 }}>
+                  <CopyButton 
+                    text={this.state.error?.stack || ''} 
+                    label="Copy stack trace" 
+                  />
+                </Box>
               </Paper>
             </Box>
 
@@ -184,19 +206,27 @@ class UserAwareErrorBoundary extends React.Component {
                   Component Stack (Click to expand)
                 </Typography>
               </summary>
-              <Paper 
-                sx={{ 
-                  p: 2, 
-                  bgcolor: 'grey.900', 
-                  color: 'grey.100',
-                  overflow: 'auto',
-                  maxHeight: '300px'
-                }}
-              >
-                <pre style={{ fontSize: '12px', margin: 0 }}>
-                  {this.state.errorInfo?.componentStack}
-                </pre>
-              </Paper>
+              <Box sx={{ position: 'relative' }}>
+                <Paper 
+                  sx={{ 
+                    p: 2, 
+                    bgcolor: 'grey.900', 
+                    color: 'grey.100',
+                    overflow: 'auto',
+                    maxHeight: '300px'
+                  }}
+                >
+                  <pre style={{ fontSize: '12px', margin: 0 }}>
+                    {this.state.errorInfo?.componentStack}
+                  </pre>
+                </Paper>
+                <Box sx={{ position: 'absolute', top: 8, right: 8 }}>
+                  <CopyButton 
+                    text={this.state.errorInfo?.componentStack || ''} 
+                    label="Copy component stack" 
+                  />
+                </Box>
+              </Box>
             </details>
 
             <Box sx={{ display: 'flex', gap: 2 }}>

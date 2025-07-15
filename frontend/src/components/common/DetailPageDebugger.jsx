@@ -1,5 +1,6 @@
 import React from 'react';
 import { Paper, Typography, Alert, Box, Chip, Divider } from '@mui/material';
+import CopyButton from './CopyButton';
 
 const DetailPageDebugger = ({ 
   pageName, 
@@ -100,7 +101,7 @@ const DetailPageDebugger = ({
 
       {/* Error Details */}
       {error && (
-        <Alert severity="error" sx={{ mb: 2 }}>
+        <Alert severity="error" sx={{ mb: 2, position: 'relative' }}>
           <Typography variant="subtitle2" gutterBottom>
             Error Details:
           </Typography>
@@ -112,6 +113,12 @@ const DetailPageDebugger = ({
               Status: {error.status}
             </Typography>
           )}
+          <Box sx={{ position: 'absolute', top: 8, right: 8 }}>
+            <CopyButton 
+              text={`Error: ${error.message || 'Unknown error'}${error.status ? `\nStatus: ${error.status}` : ''}`} 
+              label="Copy error details" 
+            />
+          </Box>
         </Alert>
       )}
 
@@ -122,18 +129,26 @@ const DetailPageDebugger = ({
             Full Debug Information
           </Typography>
         </summary>
-        <Box 
-          component="pre" 
-          sx={{ 
-            bgcolor: 'grey.100', 
-            p: 1, 
-            borderRadius: 1,
-            fontSize: '12px',
-            overflow: 'auto',
-            maxHeight: '300px'
-          }}
-        >
-          {JSON.stringify(debugInfo, null, 2)}
+        <Box sx={{ position: 'relative' }}>
+          <Box 
+            component="pre" 
+            sx={{ 
+              bgcolor: 'grey.100', 
+              p: 1, 
+              borderRadius: 1,
+              fontSize: '12px',
+              overflow: 'auto',
+              maxHeight: '300px'
+            }}
+          >
+            {JSON.stringify(debugInfo, null, 2)}
+          </Box>
+          <Box sx={{ position: 'absolute', top: 8, right: 8 }}>
+            <CopyButton 
+              text={JSON.stringify(debugInfo, null, 2)} 
+              label="Copy debug info" 
+            />
+          </Box>
         </Box>
       </details>
 

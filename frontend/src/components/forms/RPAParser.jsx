@@ -17,6 +17,7 @@ import {
   CheckCircle,
 } from '@mui/icons-material';
 import * as pdfjsLib from 'pdfjs-dist';
+import CopyButton from '../common/CopyButton';
 
 // Set up PDF.js worker with fallback
 try {
@@ -461,8 +462,14 @@ const RPAParser = ({ onDataExtracted, onClose }) => {
         )}
 
         {error && (
-          <Alert severity="error" sx={{ mt: 2 }}>
+          <Alert severity="error" sx={{ mt: 2, position: 'relative' }}>
             {error}
+            <Box sx={{ position: 'absolute', top: 8, right: 8 }}>
+              <CopyButton 
+                text={error} 
+                label="Copy error message" 
+              />
+            </Box>
           </Alert>
         )}
       </Paper>

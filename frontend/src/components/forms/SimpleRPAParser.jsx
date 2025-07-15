@@ -17,6 +17,7 @@ import {
   CheckCircle,
 } from '@mui/icons-material';
 import { api } from '../../services/api';
+import CopyButton from '../common/CopyButton';
 
 const SimpleRPAParser = ({ onDataExtracted, onClose }) => {
   const [loading, setLoading] = useState(false);
@@ -168,8 +169,14 @@ const SimpleRPAParser = ({ onDataExtracted, onClose }) => {
         )}
 
         {error && (
-          <Alert severity="error" sx={{ mt: 2 }}>
+          <Alert severity="error" sx={{ mt: 2, position: 'relative' }}>
             {error}
+            <Box sx={{ position: 'absolute', top: 8, right: 8 }}>
+              <CopyButton 
+                text={error} 
+                label="Copy error message" 
+              />
+            </Box>
           </Alert>
         )}
       </Paper>
