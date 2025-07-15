@@ -7,9 +7,8 @@ WORKDIR /app
 # Copy package files first (better caching)
 COPY package*.json ./
 
-# Install dependencies (Railway doesn't support cache mounts)
-RUN npm ci --only=production --silent && \
-    npm ci --silent
+# Install all dependencies (needed for build)
+RUN npm ci --silent
 
 # Copy application files
 COPY . .
@@ -34,5 +33,5 @@ COPY --from=builder /app/build ./build
 # Expose port
 EXPOSE 3000
 
-# Start the application
-CMD ["serve", "-s", "build", "-l", "$PORT"]
+# Start the application (Railway sets PORT env var)
+CMD serve -s build -l $PORT
