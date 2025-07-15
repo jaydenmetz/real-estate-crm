@@ -135,6 +135,7 @@ import {
   BathtubOutlined,
   SquareFootOutlined,
   Landscape,
+  Chat,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
@@ -448,6 +449,7 @@ const EscrowDetail = ({ defaultView = 'detail' }) => {
   const daysInEscrow = calculateDaysBetween(escrowData.escrowOpenDate, new Date());
   const daysToEmd = calculateDaysBetween(escrowData.acceptanceDate, escrowData.emdDueDate);
   const daysToContingencyRemoval = calculateDaysBetween(new Date(), escrowData.contingencyRemovalDate);
+  const daysToClose = calculateDaysBetween(new Date(), escrowData.scheduledCoeDate);
   
   // Calculate checklist progress
   const calculateChecklistProgress = () => {
