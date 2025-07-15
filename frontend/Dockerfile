@@ -34,4 +34,4 @@ COPY --from=builder /app/build ./build
 EXPOSE 3000
 
 # Start the application (Railway sets PORT env var)
-CMD serve -s build -l $PORT
+CMD ["sh", "-c", "serve -s build -l ${PORT:-3000}"]
