@@ -108,6 +108,7 @@ const EscrowsDashboard = () => {
   const [showSuccessPage, setShowSuccessPage] = useState(false);
   const [createdEscrowData, setCreatedEscrowData] = useState(null);
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'carousel'
+  const [statusFilter, setStatusFilter] = useState('Active'); // Default to Active
   const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -149,10 +150,10 @@ const EscrowsDashboard = () => {
     ),
   };
 
-  // Filter escrows based on tab
+  // Filter escrows based on status filter
   const getFilteredEscrows = () => {
-    if (status === 'all') return escrows;
-    return escrows.filter(e => e.escrowStatus === status);
+    if (!statusFilter) return escrows;
+    return escrows.filter(e => e.escrowStatus?.toLowerCase() === statusFilter?.toLowerCase());
   };
 
   // Mutation for creating escrow
@@ -318,12 +319,50 @@ const EscrowsDashboard = () => {
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Box>
-          <Typography variant="h4" gutterBottom>Escrow Management</Typography>
-          <Typography variant="body1" color="text.secondary">
-            Track and manage all your active escrow transactions
-          </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+          <Typography variant="h4">Escrows</Typography>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Chip
+              label={`Active (${escrows.filter(e => e.escrowStatus?.toLowerCase() === 'active').length})`}
+              onClick={() => setStatusFilter('Active')}
+              color={statusFilter === 'Active' ? 'primary' : 'default'}
+              variant={statusFilter === 'Active' ? 'filled' : 'outlined'}
+              sx={{ 
+                fontWeight: statusFilter === 'Active' ? 'bold' : 'normal',
+                cursor: 'pointer'
+              }}
+            />
+            <Chip
+              label={`Closed (${escrows.filter(e => e.escrowStatus?.toLowerCase() === 'closed').length})`}
+              onClick={() => setStatusFilter('Closed')}
+              color={statusFilter === 'Closed' ? 'success' : 'default'}
+              variant={statusFilter === 'Closed' ? 'filled' : 'outlined'}
+              sx={{ 
+                fontWeight: statusFilter === 'Closed' ? 'bold' : 'normal',
+                cursor: 'pointer'
+              }}
+            />
+            <Chip
+              label={`Cancelled (${escrows.filter(e => e.escrowStatus?.toLowerCase() === 'cancelled').length})`}
+              onClick={() => setStatusFilter('Cancelled')}
+              color={statusFilter === 'Cancelled' ? 'error' : 'default'}
+              variant={statusFilter === 'Cancelled' ? 'filled' : 'outlined'}
+              sx={{ 
+                fontWeight: statusFilter === 'Cancelled' ? 'bold' : 'normal',
+                cursor: 'pointer'
+              }}
+            />
+            {statusFilter && (
+              <Chip
+                label="All"
+                onClick={() => setStatusFilter(null)}
+                variant="outlined"
+                size="small"
+                sx={{ ml: 1 }}
+              />
+            )}
+          </Box>
         </Box>
         <Box>
           <Button
@@ -343,8 +382,8 @@ const EscrowsDashboard = () => {
         </Box>
       </Box>
 
-      {/* Stats - Hidden to focus on carousel */}
-      {false && (
+      {/* Stats Section */}
+      {
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6} md={3}>
           <StatsCard
@@ -381,7 +420,7 @@ const EscrowsDashboard = () => {
       </Grid>
       )}
 
-      {/* Tabs - Hidden to focus on carousel */}
+      {/* Tabs - Hidden */}
       {false && (
       <Paper sx={{ mb: 3 }}>
         <Tabs value={tabValue} onChange={(e, v) => setTabValue(v)}>

@@ -412,8 +412,8 @@ const EscrowDetail = ({ defaultView = 'dashboard' }) => {
     ['escrow', id],
     async () => {
       try {
-        const response = await escrowsAPI.getById(id);
-        return response.data;
+        const response = await escrowsAPI.getOne(id);
+        return response.data?.data || response.data;
       } catch (err) {
         console.error('API error:', err);
         return mockEscrowDetail;
