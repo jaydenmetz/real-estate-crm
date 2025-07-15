@@ -1,6 +1,7 @@
 // frontend/src/components/dashboards/EscrowsDashboard.jsx
 
 import React, { useState } from 'react';
+import EscrowFullWidthCarousel from '../escrows/EscrowFullWidthCarousel';
 import { safeParseDate } from '../../utils/safeDateUtils';
 import {
   Container,
@@ -36,6 +37,8 @@ import {
   CheckCircle,
   Schedule,
   Gavel,
+  ViewModule,
+  ViewCarousel,
 } from '@mui/icons-material';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useSnackbar } from 'notistack';
@@ -104,6 +107,7 @@ const EscrowsDashboard = () => {
   const [selectedCard, setSelectedCard] = useState(null);
   const [showSuccessPage, setShowSuccessPage] = useState(false);
   const [createdEscrowData, setCreatedEscrowData] = useState(null);
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'carousel'
   const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -315,7 +319,12 @@ const EscrowsDashboard = () => {
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       {/* Header */}
       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
-        <Typography variant="h4">Escrow Management</Typography>
+        <Box>
+          <Typography variant="h4" gutterBottom>Escrow Management</Typography>
+          <Typography variant="body1" color="text.secondary">
+            Track and manage all your active escrow transactions
+          </Typography>
+        </Box>
         <Box>
           <Button
             variant="contained"
@@ -334,7 +343,8 @@ const EscrowsDashboard = () => {
         </Box>
       </Box>
 
-      {/* Stats */}
+      {/* Stats - Hidden to focus on carousel */}
+      {false && (
       <Grid container spacing={3} sx={{ mb: 3 }}>
         <Grid item xs={12} sm={6} md={3}>
           <StatsCard
@@ -369,9 +379,11 @@ const EscrowsDashboard = () => {
           />
         </Grid>
       </Grid>
+      )}
 
-      {/* Tabs */}
-      <Paper sx={{ mb: 3 }}>
+      {/* Tabs - Hidden to focus on carousel */}
+      {false && (
+      <Paper sx={{ mb: 3 }}
         <Tabs value={tabValue} onChange={(e, v) => setTabValue(v)}>
           <Tab label={`All (${escrows.length})`} />
           <Tab label={`Active (${escrows.filter(e => e.escrowStatus === 'Active').length})`} />
@@ -380,8 +392,17 @@ const EscrowsDashboard = () => {
           <Tab label={`Closed (${escrows.filter(e => e.escrowStatus === 'Closed').length})`} />
         </Tabs>
       </Paper>
+      )}
 
-      {/* Escrows Grid */}
+      {/* Escrows Carousel View */}
+      <Box sx={{ mb: 4 }}>
+        <EscrowFullWidthCarousel 
+          escrows={getFilteredEscrows()}
+        />
+      </Box>
+
+      {/* Grid View (Hidden by default) */}
+      {false && (
       <Grid container spacing={3}>
         {isLoading ? (
           // Loading skeletons
@@ -535,6 +556,7 @@ const EscrowsDashboard = () => {
           })
         )}
       </Grid>
+      )}
 
       {/* Context Menu */}
       <Menu
