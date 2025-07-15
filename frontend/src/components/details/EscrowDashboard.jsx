@@ -39,6 +39,19 @@ import {
   ListItemText,
   AvatarGroup,
   ButtonGroup,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Stepper,
+  Step,
+  StepLabel,
+  StepContent,
+  Tab,
+  Tabs,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
 import { styled, keyframes } from '@mui/material/styles';
 import {
@@ -107,6 +120,9 @@ import {
   Fullscreen,
   ZoomIn,
   ZoomOut,
+  PlayCircleOutline,
+  Info,
+  ExpandMore as ExpandMoreIcon,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from 'react-query';
@@ -404,6 +420,10 @@ const EscrowDashboard = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [viewMode, setViewMode] = useState('dashboard');
   const [showFinancials, setShowFinancials] = useState(false);
+  const [showAIPreview, setShowAIPreview] = useState(false);
+  const [aiPreviewTab, setAIPreviewTab] = useState(0);
+  const [expandedFeature, setExpandedFeature] = useState(null);
+  const [playingVideo, setPlayingVideo] = useState(false);
   
   // Fetch escrow data
   const { data: escrow, isLoading } = useQuery(
@@ -1124,6 +1144,632 @@ const EscrowDashboard = () => {
           />
         ))}
       </SpeedDial>
+
+      {/* AI Vision Button - Floating */}
+      <Tooltip title="Preview AI Vision - The Future of Real Estate" placement="left">
+        <Box
+          sx={{
+            position: 'fixed',
+            bottom: 100,
+            right: 24,
+            animation: `${float} 4s ease-in-out infinite`,
+          }}
+        >
+          <Button
+            variant="contained"
+            startIcon={<AutoAwesome />}
+            onClick={() => setShowAIPreview(true)}
+            sx={{
+              background: 'linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 25%, #45B7D1 50%, #96CEB4 75%, #FECA57 100%)',
+              backgroundSize: '300% 300%',
+              animation: `${shimmer} 3s ease-in-out infinite`,
+              color: 'white',
+              fontWeight: 'bold',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.2)',
+              '&:hover': {
+                transform: 'scale(1.05)',
+                boxShadow: '0 12px 48px rgba(0,0,0,0.3)',
+              },
+            }}
+          >
+            AI Vision Preview
+          </Button>
+        </Box>
+      </Tooltip>
+
+      {/* AI Vision Preview Dialog */}
+      <Dialog
+        open={showAIPreview}
+        onClose={() => {
+          setShowAIPreview(false);
+          setExpandedFeature(null);
+          setPlayingVideo(false);
+          setAIPreviewTab(0);
+        }}
+        maxWidth="lg"
+        fullWidth
+        PaperProps={{
+          sx: {
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            color: 'white',
+            minHeight: '80vh',
+          }
+        }}
+      >
+        <DialogTitle sx={{ textAlign: 'center', pt: 4, position: 'relative' }}>
+          {/* Info Icon - Top Right */}
+          <Tooltip title="Learn more about AI Vision">
+            <IconButton
+              onClick={() => setExpandedFeature('overview')}
+              sx={{
+                position: 'absolute',
+                right: 16,
+                top: 16,
+                color: 'white',
+                bgcolor: 'rgba(255,255,255,0.1)',
+                '&:hover': { bgcolor: 'rgba(255,255,255,0.2)' },
+              }}
+            >
+              <Info />
+            </IconButton>
+          </Tooltip>
+          
+          <AutoAwesome sx={{ fontSize: 48, mb: 2, animation: `${glow} 2s ease-in-out infinite` }} />
+          <Typography variant="h4" fontWeight="bold">
+            AI Vision: The Future of Real Estate
+          </Typography>
+          <Typography variant="subtitle1" sx={{ mt: 1, opacity: 0.9 }}>
+            Coming Soon - Q2 2025
+          </Typography>
+          
+          {/* Demo Video Button */}
+          <Button
+            variant="outlined"
+            startIcon={<PlayCircleOutline />}
+            onClick={() => setPlayingVideo(true)}
+            sx={{
+              mt: 2,
+              color: 'white',
+              borderColor: 'rgba(255,255,255,0.5)',
+              '&:hover': {
+                borderColor: 'white',
+                bgcolor: 'rgba(255,255,255,0.1)',
+              },
+            }}
+          >
+            Watch Demo Video
+          </Button>
+        </DialogTitle>
+        
+        <DialogContent>
+          {/* Video Overlay */}
+          {playingVideo && (
+            <Box
+              sx={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                bgcolor: 'rgba(0,0,0,0.9)',
+                zIndex: 2000,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              onClick={() => setPlayingVideo(false)}
+            >
+              <Box
+                sx={{
+                  width: '90%',
+                  maxWidth: '800px',
+                  aspectRatio: '16/9',
+                  bgcolor: 'black',
+                  borderRadius: 2,
+                  overflow: 'hidden',
+                  position: 'relative',
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <iframe
+                  width="100%"
+                  height="100%"
+                  src="https://www.youtube.com/embed/dQw4w9WgXcQ?autoplay=1"
+                  title="AI Vision Demo"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+                <IconButton
+                  onClick={() => setPlayingVideo(false)}
+                  sx={{
+                    position: 'absolute',
+                    top: 8,
+                    right: 8,
+                    color: 'white',
+                    bgcolor: 'rgba(0,0,0,0.5)',
+                  }}
+                >
+                  <Close />
+                </IconButton>
+              </Box>
+            </Box>
+          )}
+
+          {/* Overview Expansion Panel */}
+          {expandedFeature === 'overview' && (
+            <Paper
+              sx={{
+                mb: 3,
+                p: 3,
+                bgcolor: 'rgba(255,255,255,0.1)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255,255,255,0.2)',
+              }}
+            >
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="h5" fontWeight="bold">
+                  About AI Vision Technology
+                </Typography>
+                <IconButton onClick={() => setExpandedFeature(null)} sx={{ color: 'white' }}>
+                  <Close />
+                </IconButton>
+              </Box>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={6}>
+                  <Typography variant="h6" gutterBottom>
+                    🧠 Machine Learning Core
+                  </Typography>
+                  <Typography variant="body2" sx={{ opacity: 0.9, mb: 2 }}>
+                    Our AI uses advanced neural networks trained on millions of real estate transactions 
+                    to predict outcomes, optimize pricing, and automate routine tasks with 95% accuracy.
+                  </Typography>
+                  <LinearProgress
+                    variant="determinate"
+                    value={85}
+                    sx={{
+                      height: 8,
+                      borderRadius: 4,
+                      bgcolor: 'rgba(255,255,255,0.2)',
+                      '& .MuiLinearProgress-bar': {
+                        bgcolor: 'white',
+                      },
+                    }}
+                  />
+                  <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>
+                    Development Progress: 85%
+                  </Typography>
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <Typography variant="h6" gutterBottom>
+                    🚀 Performance Metrics
+                  </Typography>
+                  <Stack spacing={1}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="body2">Task Automation</Typography>
+                      <Typography variant="body2" fontWeight="bold">90%</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="body2">Time Saved</Typography>
+                      <Typography variant="body2" fontWeight="bold">15 hrs/week</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="body2">Deal Success Rate</Typography>
+                      <Typography variant="body2" fontWeight="bold">+35%</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <Typography variant="body2">Response Time</Typography>
+                      <Typography variant="body2" fontWeight="bold"><100ms</Typography>
+                    </Box>
+                  </Stack>
+                </Grid>
+              </Grid>
+            </Paper>
+          )}
+
+          <Tabs
+            value={aiPreviewTab}
+            onChange={(_, newValue) => setAIPreviewTab(newValue)}
+            variant="fullWidth"
+            sx={{
+              mb: 3,
+              '& .MuiTab-root': { color: 'white' },
+              '& .Mui-selected': { color: 'white' },
+              '& .MuiTabs-indicator': { backgroundColor: 'white' }
+            }}
+          >
+            <Tab label="Autonomous Agents" icon={<Psychology />} />
+            <Tab label="Predictive Analytics" icon={<ShowChart />} />
+            <Tab label="Virtual Assistant" icon={<SmartToy />} />
+          </Tabs>
+
+          <Stack spacing={3}>
+            {/* Tab Content Based on Selection */}
+            {aiPreviewTab === 0 && (
+              <>
+                {/* Feature 1: Transaction Autopilot */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <Card sx={{ bgcolor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}>
+                    <CardContent>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, justifyContent: 'space-between' }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                          <Avatar sx={{ bgcolor: 'warning.main', mr: 2 }}>
+                            <Bolt />
+                          </Avatar>
+                          <Box>
+                            <Typography variant="h6" sx={{ color: 'white' }}>
+                              Transaction Autopilot
+                            </Typography>
+                            <Chip 
+                              label="90% Automation" 
+                              size="small" 
+                              sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }}
+                            />
+                          </Box>
+                        </Box>
+                        <IconButton
+                          onClick={() => setExpandedFeature(expandedFeature === 'autopilot' ? null : 'autopilot')}
+                          sx={{ color: 'white' }}
+                        >
+                          <Info />
+                        </IconButton>
+                      </Box>
+                  <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.9)', mb: 2 }}>
+                    AI agents will autonomously handle routine tasks:
+                  </Typography>
+                  <Stack direction="row" spacing={1} flexWrap="wrap" gap={1}>
+                    {[
+                      'Draft & send emails',
+                      'Schedule inspections',
+                      'Update MLS',
+                      'Order reports',
+                      'Track deadlines',
+                      'Coordinate showings'
+                    ].map((task) => (
+                      <Chip
+                        key={task}
+                        label={task}
+                        size="small"
+                        sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }}
+                      />
+                    ))}
+                  </Stack>
+                  
+                  {/* Expandable Content */}
+                  <Collapse in={expandedFeature === 'autopilot'}>
+                    <Box sx={{ mt: 3, p: 2, bgcolor: 'rgba(0,0,0,0.2)', borderRadius: 2 }}>
+                      <Typography variant="subtitle2" fontWeight="bold" sx={{ mb: 2 }}>
+                        🎯 How Transaction Autopilot Works
+                      </Typography>
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} md={6}>
+                          <Box sx={{ textAlign: 'center' }}>
+                            <Box
+                              component="img"
+                              src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 150'%3E%3Crect width='200' height='150' fill='%23667eea'/%3E%3Ctext x='100' y='75' text-anchor='middle' fill='white' font-size='16'%3EAI Workflow%3C/text%3E%3C/svg%3E"
+                              sx={{ width: '100%', height: 150, borderRadius: 1, mb: 1 }}
+                            />
+                            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.8)' }}>
+                              Interactive workflow visualization
+                            </Typography>
+                          </Box>
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                          <Stack spacing={1}>
+                            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.9)' }}>
+                              <strong>Step 1:</strong> AI monitors your transactions 24/7
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.9)' }}>
+                              <strong>Step 2:</strong> Identifies tasks that need completion
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.9)' }}>
+                              <strong>Step 3:</strong> Executes approved actions automatically
+                            </Typography>
+                            <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.9)' }}>
+                              <strong>Step 4:</strong> Sends you summaries of completed work
+                            </Typography>
+                          </Stack>
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<PlayCircleOutline />}
+                            sx={{ 
+                              mt: 2, 
+                              color: 'white', 
+                              borderColor: 'rgba(255,255,255,0.5)',
+                              '&:hover': { borderColor: 'white' }
+                            }}
+                            onClick={() => alert('Demo video coming soon!')}
+                          >
+                            Watch Tutorial
+                          </Button>
+                        </Grid>
+                      </Grid>
+                    </Box>
+                  </Collapse>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+                {/* Agent Performance Dashboard */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <Card sx={{ bgcolor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}>
+                    <CardContent>
+                      <Typography variant="h6" sx={{ color: 'white', mb: 2 }}>
+                        Live Agent Activity
+                      </Typography>
+                      <Box sx={{ height: 200, position: 'relative', overflow: 'hidden' }}>
+                        {/* Animated Agent Icons */}
+                        {[1, 2, 3, 4, 5].map((i) => (
+                          <motion.div
+                            key={i}
+                            animate={{
+                              x: [0, 300, 0],
+                              y: [0, 50, 0],
+                            }}
+                            transition={{
+                              duration: 10 + i * 2,
+                              repeat: Infinity,
+                              ease: 'linear',
+                            }}
+                            style={{
+                              position: 'absolute',
+                              left: i * 60,
+                              top: i * 30,
+                            }}
+                          >
+                            <Avatar sx={{ bgcolor: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FECA57'][i-1] }}>
+                              <SmartToy />
+                            </Avatar>
+                          </motion.div>
+                        ))}
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            position: 'absolute',
+                            bottom: 8,
+                            right: 8,
+                            color: 'rgba(255,255,255,0.7)',
+                          }}
+                        >
+                          5 agents currently active
+                        </Typography>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </>
+            )}
+
+            {aiPreviewTab === 1 && (
+              <>
+                {/* Predictive Analytics Content */}
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <Card sx={{ bgcolor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}>
+                    <CardContent>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                        <Avatar sx={{ bgcolor: 'success.main', mr: 2 }}>
+                          <TrendingUp />
+                        </Avatar>
+                        <Box>
+                          <Typography variant="h6" sx={{ color: 'white' }}>
+                            Predictive Deal Intelligence
+                          </Typography>
+                          <Chip 
+                            label="95% Accuracy" 
+                            size="small" 
+                            sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }}
+                          />
+                        </Box>
+                      </Box>
+                      <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.9)' }}>
+                        AI will predict and prevent deal failures before they happen:
+                      </Typography>
+                      <List dense>
+                        <ListItem>
+                          <ListItemIcon>
+                            <CheckCircle sx={{ color: 'white', fontSize: 20 }} />
+                          </ListItemIcon>
+                          <ListItemText 
+                            primary="Deal Risk Score" 
+                            secondary="Real-time assessment of transaction health"
+                            secondaryTypographyProps={{ sx: { color: 'rgba(255,255,255,0.7)' } }}
+                          />
+                        </ListItem>
+                        <ListItem>
+                          <ListItemIcon>
+                            <CheckCircle sx={{ color: 'white', fontSize: 20 }} />
+                          </ListItemIcon>
+                          <ListItemText 
+                            primary="Price Optimization" 
+                            secondary="AI-suggested pricing for faster closes"
+                            secondaryTypographyProps={{ sx: { color: 'rgba(255,255,255,0.7)' } }}
+                          />
+                        </ListItem>
+                        <ListItem>
+                          <ListItemIcon>
+                            <CheckCircle sx={{ color: 'white', fontSize: 20 }} />
+                          </ListItemIcon>
+                          <ListItemText 
+                            primary="Client Sentiment Analysis" 
+                            secondary="Detect concerns before they become issues"
+                            secondaryTypographyProps={{ sx: { color: 'rgba(255,255,255,0.7)' } }}
+                          />
+                        </ListItem>
+                      </List>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+
+                {/* Interactive Analytics Demo */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <Card sx={{ bgcolor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}>
+                    <CardContent>
+                      <Typography variant="h6" sx={{ color: 'white', mb: 2 }}>
+                        Interactive Demo: Deal Risk Analysis
+                      </Typography>
+                      <Box
+                        component="iframe"
+                        src="data:text/html,%3Chtml%3E%3Chead%3E%3Cstyle%3Ebody%7Bmargin:0;background:%23667eea;color:white;font-family:Arial;display:flex;align-items:center;justify-content:center;height:100vh%7D.demo%7Btext-align:center%7D.risk-meter%7Bwidth:200px;height:100px;background:%23764ba2;border-radius:100px 100px 0 0;position:relative;overflow:hidden%7D.needle%7Bposition:absolute;bottom:0;left:50%25;width:4px;height:80px;background:white;transform-origin:bottom;animation:swing 3s ease-in-out infinite%7D@keyframes swing%7B0%25,100%25%7Btransform:translateX(-50%25) rotate(-45deg)%7D50%25%7Btransform:translateX(-50%25) rotate(45deg)%7D%7D%3C/style%3E%3C/head%3E%3Cbody%3E%3Cdiv class='demo'%3E%3Ch2%3EDeal Risk Meter%3C/h2%3E%3Cdiv class='risk-meter'%3E%3Cdiv class='needle'%3E%3C/div%3E%3C/div%3E%3Cp%3ERisk Level: Dynamic%3C/p%3E%3C/div%3E%3C/body%3E%3C/html%3E"
+                        sx={{
+                          width: '100%',
+                          height: 300,
+                          border: 'none',
+                          borderRadius: 2,
+                        }}
+                      />
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </>
+            )}
+
+            {aiPreviewTab === 2 && (
+              <>
+                {/* Virtual Assistant Content */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <Card sx={{ bgcolor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}>
+                    <CardContent>
+                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                        <Avatar sx={{ bgcolor: 'info.main', mr: 2 }}>
+                          <SmartToy />
+                        </Avatar>
+                        <Box>
+                          <Typography variant="h6" sx={{ color: 'white' }}>
+                            AI Transaction Coordinator "Alex"
+                          </Typography>
+                          <Chip 
+                            label="24/7 Availability" 
+                            size="small" 
+                            sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white' }}
+                          />
+                        </Box>
+                      </Box>
+                      <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.9)', mb: 2 }}>
+                        Your AI assistant that never sleeps:
+                      </Typography>
+                      <Box sx={{ bgcolor: 'rgba(0,0,0,0.2)', p: 2, borderRadius: 2 }}>
+                        <Typography variant="caption" sx={{ fontFamily: 'monospace', color: 'rgba(255,255,255,0.8)' }}>
+                          "Hey Jayden! I noticed the appraisal for 456 Ocean View came in $25k over asking. 
+                          I've already drafted the good news email to your clients and scheduled the 
+                          final walkthrough for Thursday at 2 PM. The lender confirmed we're clear to close. 
+                          Should I order the closing gift from your preferred vendor?" - Alex 🤖
+                        </Typography>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+
+                {/* Chat Demo */}
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <Card sx={{ bgcolor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}>
+                    <CardContent>
+                      <Typography variant="h6" sx={{ color: 'white', mb: 2 }}>
+                        Try Alex - Interactive Demo
+                      </Typography>
+                      <Box sx={{ height: 300, overflowY: 'auto', bgcolor: 'rgba(0,0,0,0.2)', p: 2, borderRadius: 2 }}>
+                        <Stack spacing={2}>
+                          <Box sx={{ display: 'flex', justifyContent: 'flex-start' }}>
+                            <Chip
+                              avatar={<Avatar sx={{ bgcolor: 'info.main' }}><SmartToy /></Avatar>}
+                              label="Hi! I'm Alex, your AI assistant. How can I help you today?"
+                              sx={{ bgcolor: 'rgba(255,255,255,0.1)', color: 'white', maxWidth: '80%' }}
+                            />
+                          </Box>
+                          <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                            <Chip
+                              label="What's the status of 456 Ocean View?"
+                              sx={{ bgcolor: 'rgba(255,255,255,0.2)', color: 'white', maxWidth: '80%' }}
+                            />
+                          </Box>
+                          <Box sx={{ display: 'flex', justifyContent: 'flex-start' }}>
+                            <Chip
+                              avatar={<Avatar sx={{ bgcolor: 'info.main' }}><SmartToy /></Avatar>}
+                              label="456 Ocean View is progressing smoothly! Appraisal came in $25k over asking. Clear to close received. Closing scheduled for Friday."
+                              sx={{ bgcolor: 'rgba(255,255,255,0.1)', color: 'white', maxWidth: '80%' }}
+                            />
+                          </Box>
+                        </Stack>
+                      </Box>
+                      <TextField
+                        fullWidth
+                        placeholder="Type a message..."
+                        variant="outlined"
+                        size="small"
+                        sx={{
+                          mt: 2,
+                          '& .MuiOutlinedInput-root': {
+                            color: 'white',
+                            '& fieldset': { borderColor: 'rgba(255,255,255,0.3)' },
+                            '&:hover fieldset': { borderColor: 'rgba(255,255,255,0.5)' },
+                          },
+                        }}
+                        disabled
+                      />
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </>
+            )}
+
+            {/* Coming Soon Notice */}
+            <Alert 
+              severity="info" 
+              sx={{ 
+                bgcolor: 'rgba(255,255,255,0.1)', 
+                color: 'white',
+                '& .MuiAlert-icon': { color: 'white' },
+                mt: 3,
+              }}
+            >
+              <Typography variant="body2">
+                These AI features are currently in development. Join the waitlist to be the first to experience 
+                the future of real estate transaction management.
+              </Typography>
+            </Alert>
+          </Stack>
+        </DialogContent>
+
+        <DialogActions sx={{ justifyContent: 'center', pb: 4 }}>
+          <Button
+            variant="contained"
+            size="large"
+            onClick={() => setShowAIPreview(false)}
+            sx={{
+              bgcolor: 'white',
+              color: 'primary.main',
+              px: 4,
+              '&:hover': { bgcolor: 'grey.100' }
+            }}
+          >
+            Join Waitlist
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };
