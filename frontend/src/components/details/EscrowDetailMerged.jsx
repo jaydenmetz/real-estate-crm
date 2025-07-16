@@ -262,7 +262,6 @@ import {
   Explore as ExploreIcon,
   LocationCity,
   MyLocation,
-  Navigation,
   Map,
   Layers,
   Traffic,

@@ -1066,7 +1066,6 @@ import {
   MedicationLiquid,
   MeetingRoom,
   Memory as MemoryIcon,
-  Menu,
   MenuOpen,
   MergeType,
   Message as MessageIcon,
