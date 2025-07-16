@@ -1,7 +1,7 @@
 // frontend/src/components/dashboards/EscrowsDashboard.jsx
 
 import React, { useState } from 'react';
-import EscrowCompactCard from '../escrows/EscrowCompactCard';
+import EscrowCompactCard from '../common/EscrowCompactCard';
 import { safeParseDate } from '../../utils/safeDateUtils';
 import {
   Container,

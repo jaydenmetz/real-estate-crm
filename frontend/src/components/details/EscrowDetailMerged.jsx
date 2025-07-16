@@ -489,6 +489,7 @@ import {
   CloudCircle,
   Brightness1,
   Tag,
+  Archive,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';

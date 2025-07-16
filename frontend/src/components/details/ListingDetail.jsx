@@ -159,7 +159,7 @@ import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useSnackbar } from 'notistack';
 import { format, differenceInDays, parseISO, isValid } from 'date-fns';
 import { listingsAPI } from '../../services/api';
-import ListingForm from '../forms/ListingForm';
+import ListingForm from '../common/ListingForm';
 import {
   LineChart,
   Line,
