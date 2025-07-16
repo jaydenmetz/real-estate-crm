@@ -35,8 +35,20 @@ const EscrowCompactCard = ({ escrow, index, showCommission }) => {
     return statusColors[status] || 'default';
   };
   
-  const daysUntilClosing = differenceInDays(new Date(escrow.closingDate), new Date());
-  const progress = Math.max(0, Math.min(100, ((30 - daysUntilClosing) / 30) * 100));
+  let daysUntilClosing = 0;
+  let progress = 0;
+  
+  if (escrow.closingDate) {
+    try {
+      const closeDate = new Date(escrow.closingDate);
+      if (!isNaN(closeDate.getTime())) {
+        daysUntilClosing = differenceInDays(closeDate, new Date());
+        progress = Math.max(0, Math.min(100, ((30 - daysUntilClosing) / 30) * 100));
+      }
+    } catch {
+      // Use defaults
+    }
+  }
   
   return (
     <motion.div
@@ -97,7 +109,9 @@ const EscrowCompactCard = ({ escrow, index, showCommission }) => {
                 <Box>
                   <Typography variant="caption" color="text.secondary">Closing Date</Typography>
                   <Typography variant="body2" fontWeight="medium">
-                    {format(new Date(escrow.closingDate), 'MMM dd, yyyy')}
+                    {escrow.closingDate && !isNaN(new Date(escrow.closingDate).getTime()) 
+                      ? format(new Date(escrow.closingDate), 'MMM dd, yyyy')
+                      : 'Date TBD'}
                   </Typography>
                 </Box>
               </Box>
