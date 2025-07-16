@@ -302,7 +302,10 @@ const ActivityLog = () => {
 
     // Filter by date
     if (filterDate !== 'all') {
-      const activityDate = startOfDay(activity.timestamp);
+      if (!activity.timestamp || isNaN(new Date(activity.timestamp).getTime())) {
+        return false;
+      }
+      const activityDate = startOfDay(new Date(activity.timestamp));
       const now = new Date();
       
       switch (filterDate) {
