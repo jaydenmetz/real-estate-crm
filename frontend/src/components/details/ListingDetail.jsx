@@ -1,3 +1,5 @@
+// frontend/src/components/details/ListingDetail.jsx
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
@@ -52,8 +54,16 @@ import {
   MenuItem,
   FormControlLabel,
   Switch,
+  Table,
+  TableBody,
+  TableCell,
+  TableRow,
+  TableContainer,
+  ButtonGroup,
+  ToggleButton,
+  ToggleButtonGroup,
 } from '@mui/material';
-import { styled, alpha } from '@mui/material/styles';
+import { styled, alpha, keyframes } from '@mui/material/styles';
 import {
   ArrowBack,
   Home,
@@ -99,1166 +109,1745 @@ import {
   ContentCopy,
   Email,
   Phone,
-  Groups,
-  Campaign,
-  Psychology,
-  Garage,
-  Hvac,
-  Close,
-  OpenInNew,
   NavigateNext,
-  NavigateBefore,
-  LocalActivity,
-  HistoryEdu,
-  CameraAlt,
-  Videocam,
-  Map,
-  Tour,
-  EventAvailable,
-  Info,
-  WaterDrop,
-  Wifi,
+  RemoveRedEye,
+  FavoriteBorder,
+  Groups,
+  TrendingDown,
+  Chat,
+  Task,
+  Assessment,
+  Speed,
+  WbSunny,
+  AcUnit,
+  Garage,
+  Grass,
   LocalLaundryService,
   Balcony,
-  Yard,
-  AcUnit,
-  CheckBox,
-  CheckBoxOutlineBlank,
-  FiberManualRecord,
-  PlayArrow,
+  EmojiEvents,
+  Star,
+  StarBorder,
+  WhatsApp,
+  Sms,
+  Category,
+  DateRange,
+  Description,
+  History,
+  SystemUpdate,
+  BarChart,
+  ShowChart,
+  Domain,
+  AccountTree,
+  PeopleAlt,
+  Receipt,
+  Security,
+  Person,
+  Info,
+  VisibilityOff,
+  Close,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Pagination, Thumbs, Zoom as SwiperZoom, Autoplay } from 'swiper/modules';
-import { 
-  LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, 
-  RadarChart, Radar, RadialBarChart, RadialBar,
-  XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, 
-  ResponsiveContainer, Legend, Cell, PolarGrid, PolarAngleAxis, PolarRadiusAxis 
-} from 'recharts';
-import CountUp from 'react-countup';
-import { format, parseISO, differenceInDays, isAfter, isBefore } from 'date-fns';
+import { Navigation, Pagination, Autoplay, EffectFade, Thumbs } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
+import 'swiper/css/effect-fade';
 import 'swiper/css/thumbs';
-import 'swiper/css/zoom';
-import 'swiper/css/autoplay';
-import { useQuery } from 'react-query';
+import CountUp from 'react-countup';
+import { useQuery, useMutation, useQueryClient } from 'react-query';
+import { useSnackbar } from 'notistack';
+import { format, differenceInDays, parseISO, isValid } from 'date-fns';
 import { listingsAPI } from '../../services/api';
-import DetailPageErrorBoundary from '../common/DetailPageErrorBoundary';
+import ListingForm from '../forms/ListingForm';
+import {
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+  BarChart as RechartsBarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  RadialBarChart,
+  RadialBar,
+  Legend,
+} from 'recharts';
+
+// Animations
+const shimmer = keyframes`
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+`;
+
+const pulse = keyframes`
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+`;
+
+const float = keyframes`
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+`;
 
 // Styled Components
-const GlassCard = styled(Card)(({ theme }) => ({
-  background: alpha(theme.palette.background.paper, 0.8),
-  backdropFilter: 'blur(20px)',
-  border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-  transition: 'all 0.3s ease',
-  '&:hover': {
-    transform: 'translateY(-4px)',
-    boxShadow: theme.shadows[8],
+const HeroSection = styled(Box)(({ theme }) => ({
+  position: 'relative',
+  borderRadius: theme.spacing(3),
+  overflow: 'hidden',
+  background: 'linear-gradient(135deg, #2E7D32 0%, #66BB6A 100%)',
+  color: 'white',
+  minHeight: 500,
+  marginBottom: theme.spacing(4),
+  boxShadow: '0 20px 60px rgba(46, 125, 50, 0.3)',
+  [theme.breakpoints.down('md')]: {
+    minHeight: 400,
   },
 }));
 
-const MetricCard = styled(motion.div)(({ theme }) => ({
-  background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha(theme.palette.primary.dark, 0.1)} 100%)`,
-  padding: theme.spacing(3),
-  borderRadius: theme.shape.borderRadius * 2,
+const PropertyImageContainer = styled(Box)(({ theme }) => ({
+  position: 'relative',
+  borderRadius: theme.spacing(2),
+  overflow: 'hidden',
+  height: '100%',
+  '& .swiper': {
+    borderRadius: theme.spacing(2),
+    height: '100%',
+  },
+  '& .swiper-slide': {
+    position: 'relative',
+    '& img': {
+      width: '100%',
+      height: '100%',
+      objectFit: 'cover',
+    },
+  },
+  '& .swiper-button-next, & .swiper-button-prev': {
+    color: 'white',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    width: 40,
+    height: 40,
+    borderRadius: '50%',
+    '&::after': {
+      fontSize: '20px',
+    },
+  },
+  '& .swiper-pagination-bullet': {
+    background: 'white',
+    opacity: 0.6,
+    '&.swiper-pagination-bullet-active': {
+      opacity: 1,
+    },
+  },
+}));
+
+const PropertyFeature = ({ icon: Icon, label, value }) => (
+  <Box sx={{ textAlign: 'center', color: 'white' }}>
+    <Icon sx={{ fontSize: 28, mb: 0.5, opacity: 0.9 }} />
+    <Typography variant="h6" fontWeight="bold">{value}</Typography>
+    <Typography variant="caption" sx={{ opacity: 0.8 }}>{label}</Typography>
+  </Box>
+);
+
+const AnimatedCard = styled(Card)(({ theme }) => ({
   position: 'relative',
   overflow: 'hidden',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  borderRadius: theme.spacing(2),
+  '&:hover': {
+    transform: 'translateY(-8px)',
+    boxShadow: theme.shadows[10],
+  },
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: '-100%',
+    width: '100%',
+    height: '100%',
+    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)',
+    transition: 'left 0.5s',
+  },
+  '&:hover::before': {
+    left: '100%',
+  },
+}));
+
+const MetricCard = styled(Card)(({ theme, trend }) => ({
+  background: 'white',
+  borderRadius: theme.spacing(2),
+  padding: theme.spacing(3),
+  position: 'relative',
+  overflow: 'hidden',
+  border: 'none',
+  boxShadow: '0 4px 20px 0 rgba(0, 0, 0, 0.05)',
+  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+  cursor: 'pointer',
+  '&:hover': {
+    transform: 'translateY(-4px)',
+    boxShadow: '0 12px 40px 0 rgba(0, 0, 0, 0.1)',
+  },
   '&::before': {
     content: '""',
     position: 'absolute',
     top: 0,
     left: 0,
-    right: 0,
-    bottom: 0,
-    background: `radial-gradient(circle at top right, ${alpha(theme.palette.primary.main, 0.3)}, transparent)`,
-    opacity: 0,
-    transition: 'opacity 0.3s ease',
+    width: '100%',
+    height: '4px',
+    background: trend === 'up' ? 'linear-gradient(90deg, #4caf50 0%, #8bc34a 100%)' :
+                trend === 'down' ? 'linear-gradient(90deg, #f44336 0%, #ff5722 100%)' :
+                'linear-gradient(90deg, #2196f3 0%, #03a9f4 100%)',
   },
-  '&:hover::before': {
-    opacity: 1,
-  },
-}));
-
-const HeroSection = styled(Box)(({ theme }) => ({
-  position: 'relative',
-  height: '500px',
-  borderRadius: theme.shape.borderRadius * 2,
-  overflow: 'hidden',
-  marginBottom: theme.spacing(4),
-  background: theme.palette.grey[900],
-}));
-
-const ImageOverlay = styled(Box)(({ theme }) => ({
-  position: 'absolute',
-  bottom: 0,
-  left: 0,
-  right: 0,
-  background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%)',
-  padding: theme.spacing(4),
-  color: 'white',
 }));
 
 const FeatureChip = styled(Chip)(({ theme }) => ({
-  background: alpha(theme.palette.primary.main, 0.1),
-  border: `1px solid ${alpha(theme.palette.primary.main, 0.3)}`,
+  margin: theme.spacing(0.5),
+  fontWeight: 500,
   '& .MuiChip-icon': {
-    color: theme.palette.primary.main,
+    marginLeft: theme.spacing(0.5),
   },
 }));
 
-// Chart colors
-const CHART_COLORS = ['#3f51b5', '#2196f3', '#03a9f4', '#00bcd4', '#009688', '#4caf50'];
+const StatusBadge = styled(Badge)(({ theme, status }) => ({
+  '& .MuiBadge-badge': {
+    backgroundColor: status === 'Active' ? '#44b700' : 
+                     status === 'Pending' ? '#ff9800' : 
+                     status === 'Sold' ? '#757575' : '#f44336',
+    color: status === 'Active' ? '#44b700' : 
+           status === 'Pending' ? '#ff9800' : 
+           status === 'Sold' ? '#757575' : '#f44336',
+    boxShadow: `0 0 0 2px ${theme.palette.background.paper}`,
+    '&::after': {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+      borderRadius: '50%',
+      animation: status === 'Active' ? `${pulse} 2s infinite` : 'none',
+      border: '1px solid currentColor',
+      content: '""',
+    },
+  },
+}));
 
-// Safe date helpers
-const safeParseDate = (dateValue) => {
-  if (!dateValue) return null;
-  try {
-    if (dateValue instanceof Date) {
-      return isNaN(dateValue.getTime()) ? null : dateValue;
-    }
-    const parsed = new Date(dateValue);
-    return isNaN(parsed.getTime()) ? null : parsed;
-  } catch (error) {
-    console.error('Error parsing date:', error);
-    return null;
-  }
+// Mock listing detail data
+const mockListingDetail = {
+  id: 1,
+  propertyAddress: '123 Ocean View Drive, La Jolla, CA 92037',
+  mlsNumber: 'SD2024001',
+  listingStatus: 'Active',
+  listPrice: 2850000,
+  originalListPrice: 2950000,
+  pricePerSqFt: 892,
+  propertyType: 'Single Family',
+  yearBuilt: 2018,
+  lotSize: 12500,
+  squareFootage: 3200,
+  bedrooms: 4,
+  bathrooms: 3.5,
+  garage: 3,
+  stories: 2,
+  pool: true,
+  spa: true,
+  fireplace: true,
+  view: 'Ocean',
+  
+  // Additional details
+  propertyDescription: 'Stunning modern home with panoramic ocean views. This architectural masterpiece features an open floor plan, floor-to-ceiling windows, and premium finishes throughout. The gourmet kitchen boasts professional-grade appliances and a large center island perfect for entertaining.',
+  
+  // Features
+  features: {
+    interior: [
+      'Hardwood Floors',
+      'Granite Countertops',
+      'Stainless Steel Appliances',
+      'Walk-in Closets',
+      'Master Suite',
+      'Laundry Room',
+      'Home Office',
+      'Wine Cellar',
+      'Smart Home System'
+    ],
+    exterior: [
+      'Private Pool',
+      'Spa/Hot Tub',
+      'Outdoor Kitchen',
+      'Fire Pit',
+      'Garden',
+      '3-Car Garage',
+      'Security System',
+      'Solar Panels'
+    ],
+    community: [
+      'Gated Community',
+      'Tennis Courts',
+      'Clubhouse',
+      'Walking Trails',
+      'Private Beach Access'
+    ]
+  },
+  
+  // Room details
+  rooms: [
+    { name: 'Living Room', dimensions: '20x25', level: 1 },
+    { name: 'Kitchen', dimensions: '18x20', level: 1 },
+    { name: 'Master Bedroom', dimensions: '16x20', level: 2 },
+    { name: 'Home Office', dimensions: '12x14', level: 1 },
+    { name: 'Media Room', dimensions: '15x18', level: 1 }
+  ],
+  
+  // Financial
+  taxes: 28500,
+  hoaDues: 450,
+  insurance: 3200,
+  utilities: 350,
+  
+  // Dates
+  listingDate: '2024-01-05',
+  lastPriceChange: '2024-01-20',
+  daysOnMarket: 45,
+  
+  // Statistics
+  views: 1842,
+  favorites: 156,
+  showings: 28,
+  offers: 3,
+  
+  // Photos
+  photos: [
+    'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200',
+    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=1200',
+    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=1200',
+    'https://images.unsplash.com/photo-1600607687644-c7171b42498b?w=1200',
+    'https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?w=1200',
+    'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=1200',
+    'https://images.unsplash.com/photo-1600573472550-8090b5e0745e?w=1200',
+    'https://images.unsplash.com/photo-1600566752355-35792bedcfea?w=1200',
+  ],
+  
+  // Virtual tour
+  virtualTourUrl: 'https://my.matterport.com/show/?m=example',
+  videoUrl: 'https://www.youtube.com/embed/example',
+  
+  // Marketing
+  marketingRemarks: 'Exceptional oceanfront estate in prestigious La Jolla. Don\'t miss this rare opportunity!',
+  specialFeatures: ['Ocean View', 'Pool', 'Smart Home', 'Solar', 'Gated'],
+  
+  // Agents
+  listingAgent: {
+    name: 'You',
+    phone: '(858) 555-0001',
+    email: 'you@realty.com',
+    license: 'DRE# 01234567'
+  },
+  
+  // Seller info
+  sellers: ['John & Jane Smith'],
+  showingInstructions: 'Call listing agent for appointment. 24-hour notice required.',
+  
+  // Commission
+  commission: {
+    listing: 2.5,
+    buyer: 2.5,
+    total: 5.0
+  },
+  
+  // Nearby
+  schools: [
+    { name: 'La Jolla Elementary', rating: 9, distance: '0.5 mi' },
+    { name: 'Muirlands Middle School', rating: 8, distance: '1.2 mi' },
+    { name: 'La Jolla High School', rating: 9, distance: '1.8 mi' }
+  ],
+  
+  // Activity log
+  activityLog: [
+    { date: '2024-02-15', type: 'showing', agent: 'Jane Doe', feedback: 'Clients loved the view!' },
+    { date: '2024-02-14', type: 'inquiry', source: 'Zillow', message: 'Is this still available?' },
+    { date: '2024-02-13', type: 'price_change', oldPrice: 2950000, newPrice: 2850000 },
+    { date: '2024-02-12', type: 'showing', agent: 'Bob Smith', feedback: 'Too expensive for clients' },
+  ]
 };
 
-const safeFormatDate = (dateValue, formatString, fallback = 'N/A') => {
-  const date = safeParseDate(dateValue);
-  if (!date) return fallback;
-  try {
-    return format(date, formatString);
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    return fallback;
-  }
-};
+// Analytics data
+const viewsData = [
+  { day: 'Mon', views: 45, favorites: 5 },
+  { day: 'Tue', views: 62, favorites: 8 },
+  { day: 'Wed', views: 78, favorites: 12 },
+  { day: 'Thu', views: 92, favorites: 15 },
+  { day: 'Fri', views: 104, favorites: 18 },
+  { day: 'Sat', views: 142, favorites: 24 },
+  { day: 'Sun', views: 168, favorites: 28 },
+];
+
+const trafficSourceData = [
+  { source: 'Zillow', visits: 485, fill: '#006AFF' },
+  { source: 'Realtor.com', visits: 342, fill: '#D92228' },
+  { source: 'MLS', visits: 278, fill: '#27AE60' },
+  { source: 'Social Media', visits: 195, fill: '#1877F2' },
+  { source: 'Direct', visits: 156, fill: '#8B5CF6' },
+  { source: 'Other', visits: 86, fill: '#6B7280' },
+];
 
 const ListingDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { enqueueSnackbar } = useSnackbar();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const isTablet = useMediaQuery(theme.breakpoints.down('md'));
   
   const [activeTab, setActiveTab] = useState(0);
   const [thumbsSwiper, setThumbsSwiper] = useState(null);
-  const [speedDialOpen, setSpeedDialOpen] = useState(false);
+  const [showVirtualTour, setShowVirtualTour] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
-  const [aiVisionOpen, setAiVisionOpen] = useState(false);
-  const [expandedFeature, setExpandedFeature] = useState(null);
-  const [playingVideo, setPlayingVideo] = useState(false);
-
-  // Mock listing data
-  const mockListing = {
-    id: id,
-    propertyAddress: '789 Pine St',
-    city: 'Anytown',
-    state: 'CA',
-    zipCode: '12345',
-    fullAddress: '789 Pine St, Anytown, CA 12345',
-    mlsNumber: 'MLS123456',
-    listingStatus: 'Active',
-    listPrice: 565000,
-    originalListPrice: 595000,
-    pricePerSqft: 305,
-    propertyType: 'Single Family',
-    bedrooms: 3,
-    bathrooms: 2,
-    halfBathrooms: 0,
-    squareFootage: 1850,
-    lotSize: 6500,
-    yearBuilt: 2018,
-    garage: 2,
-    pool: false,
-    listDate: '2025-06-25',
-    expirationDate: '2025-12-25',
-    daysOnMarket: 11,
-    virtualTourLink: 'https://example.com/tour/789-pine',
-    professionalPhotos: true,
-    dronePhotos: true,
-    videoWalkthrough: true,
-    propertyDescription: 'Beautiful modern home with open floor plan and high-end finishes throughout. This stunning property features a gourmet kitchen, spacious master suite, and professionally landscaped yard.',
-    features: [
-      'Granite Countertops',
-      'Stainless Steel Appliances',
-      'Hardwood Floors',
-      'Walk-in Closet',
-      'Energy Efficient Windows',
-      'Smart Thermostat',
-      'Security System',
-      'Covered Patio'
-    ],
-    propertyImages: [
-      'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800',
-      'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800',
-      'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800',
-      'https://images.unsplash.com/photo-1600607687644-c7171b42498b?w=800',
-      'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800',
-    ],
-    sellers: ['Thompson Family'],
-    listingAgent: 'You',
-    commission: 17000,
-    showings: 8,
-    inquiries: 15,
-    offers: 1,
-    viewsThisWeek: 89,
-    viewsLastWeek: 76,
-    favoritesCount: 12,
-    analytics: {
-      views: 342,
-      favorites: 28,
-      shares: 15,
-      inquiries: 8,
-      viewsThisWeek: 89,
-      viewsLastWeek: 76,
-      viewsTrend: 'up',
-      avgTimeOnPage: '3:24',
-      viewsBySource: [
-        { source: 'MLS', views: 142 },
-        { source: 'Zillow', views: 89 },
-        { source: 'Realtor.com', views: 67 },
-        { source: 'Company Website', views: 44 }
-      ],
-      dailyViews: [
-        { date: '1/12', views: 12 },
-        { date: '1/13', views: 18 },
-        { date: '1/14', views: 22 },
-        { date: '1/15', views: 35 },
-        { date: '1/16', views: 28 },
-        { date: '1/17', views: 31 },
-        { date: '1/18', views: 42 }
-      ]
-    },
-    marketingChecklist: {
-      photography: true,
-      virtualTour: true,
-      droneVideo: true,
-      floorPlan: true,
-      brochures: true,
-      mlsListing: true,
-      zillowListing: true,
-      realtorListing: true,
-      socialMedia: true,
-      emailCampaign: false,
-      openHouse: false,
-      neighborhoodMailers: false
-    },
-    priceHistory: [
-      { date: '2025-06-25', price: 595000, event: 'Listed' },
-      { date: '2025-07-02', price: 565000, event: 'Price Reduced' }
-    ],
-    neighborhood: {
-      walkScore: 85,
-      transitScore: 72,
-      bikeScore: 90,
-      nearbySchools: [
-        { name: 'Pine Elementary', distance: '0.5 mi', rating: 8 },
-        { name: 'Anytown Middle', distance: '1.2 mi', rating: 7 },
-        { name: 'Central High', distance: '2.1 mi', rating: 9 }
-      ],
-      nearbyAmenities: [
-        { type: 'Grocery', name: 'Whole Foods', distance: '0.3 mi' },
-        { type: 'Park', name: 'Central Park', distance: '0.2 mi' },
-        { type: 'Hospital', name: 'Anytown Medical', distance: '1.5 mi' }
-      ]
+  const [editFormOpen, setEditFormOpen] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [photoGalleryOpen, setPhotoGalleryOpen] = useState(false);
+  const [showFinancials, setShowFinancials] = useState(false);
+  
+  // In a real app, this would fetch from API
+  const listing = mockListingDetail;
+  
+  // Calculate derived values
+  const priceChange = listing.listPrice - listing.originalListPrice;
+  const priceChangePercent = (priceChange / listing.originalListPrice) * 100;
+  const monthlyPayment = Math.round((listing.listPrice * 0.8 * 0.065 / 12) / (1 - Math.pow(1 + 0.065/12, -360)));
+  const potentialRent = Math.round(listing.listPrice * 0.004);
+  
+  const handleShare = (platform) => {
+    const url = window.location.href;
+    const text = `Check out this amazing property: ${listing.propertyAddress}`;
+    
+    switch(platform) {
+      case 'copy':
+        navigator.clipboard.writeText(url);
+        enqueueSnackbar('Link copied to clipboard!', { variant: 'success' });
+        break;
+      case 'email':
+        window.open(`mailto:?subject=${text}&body=${url}`);
+        break;
+      case 'whatsapp':
+        window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`);
+        break;
+      case 'sms':
+        window.open(`sms:?body=${encodeURIComponent(text + ' ' + url)}`);
+        break;
     }
+    setShareDialogOpen(false);
   };
-
-  // Fetch listing details
-  const { data: listing, isLoading, error } = useQuery(
-    ['listing', id],
-    async () => {
-      try {
-        const response = await listingsAPI.getOne(id);
-        return response;
-      } catch (err) {
-        console.error('Error fetching listing:', err);
-        return mockListing;
-      }
-    },
-    { 
-      refetchInterval: 30000,
-      retry: 1,
-      initialData: mockListing
-    }
-  );
-
-  const displayListing = listing || mockListing;
-
-  // AI speed dial actions
-  const aiActions = [
-    { 
-      icon: <Campaign />, 
-      name: 'Generate Marketing Copy',
-      description: 'AI writes compelling listing descriptions'
-    },
-    { 
-      icon: <PhotoCamera />, 
-      name: 'Enhance Photos',
-      description: 'AI optimizes property images'
-    },
-    { 
-      icon: <Analytics />, 
-      name: 'Price Analysis',
-      description: 'AI analyzes optimal pricing'
-    },
-    { 
-      icon: <Groups />, 
-      name: 'Find Buyers',
-      description: 'AI matches with potential buyers'
-    },
-    { 
-      icon: <Psychology />, 
-      name: 'Market Insights',
-      description: 'AI provides market predictions'
-    },
-  ];
-
-  // AI Vision features
-  const aiVisionFeatures = [
-    {
-      title: 'Virtual Staging',
-      description: 'Transform empty rooms with AI-powered furniture placement',
-      icon: <Weekend />,
-      demo: 'Show before/after staging examples',
-      status: 'coming_soon'
-    },
-    {
-      title: 'Automated Showings',
-      description: 'AI agent conducts virtual property tours 24/7',
-      icon: <Tour />,
-      demo: 'Interactive tour simulation',
-      status: 'coming_soon'
-    },
-    {
-      title: 'Buyer Matching',
-      description: 'AI matches property features with buyer preferences',
-      icon: <Groups />,
-      demo: 'Compatibility scoring system',
-      status: 'coming_soon'
-    },
-    {
-      title: 'Dynamic Pricing',
-      description: 'Real-time price optimization based on market conditions',
-      icon: <TrendingUp />,
-      demo: 'Price prediction dashboard',
-      status: 'coming_soon'
-    }
-  ];
-
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0
-    }).format(price);
+  
+  const handlePrint = () => {
+    window.print();
   };
-
+  
   const getStatusColor = (status) => {
-    switch (status) {
-      case 'Coming Soon': return 'info';
-      case 'Active': return 'success';
-      case 'Pending': return 'warning';
-      case 'Sold': return 'default';
-      case 'Expired': return 'error';
-      case 'Withdrawn': return 'error';
-      default: return 'default';
-    }
+    const colors = {
+      'Active': 'success',
+      'Pending': 'warning',
+      'Sold': 'default',
+      'Withdrawn': 'error',
+      'Expired': 'default'
+    };
+    return colors[status] || 'default';
   };
-
-  if (isLoading && !listing) {
-    return (
-      <Container maxWidth="xl" sx={{ mt: 4 }}>
-        <Stack spacing={3}>
-          <Skeleton variant="rectangular" height={500} sx={{ borderRadius: 2 }} />
-          <Grid container spacing={3}>
-            {[1, 2, 3, 4].map((i) => (
-              <Grid item xs={12} sm={6} md={3} key={i}>
-                <Skeleton variant="rectangular" height={150} sx={{ borderRadius: 2 }} />
-              </Grid>
-            ))}
-          </Grid>
-        </Stack>
-      </Container>
-    );
-  }
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 2, mb: 4 }}>
-      {/* Hero Section with Property Images */}
-      <HeroSection>
-        <Swiper
-          modules={[Navigation, Pagination, SwiperZoom, Autoplay, Thumbs]}
-          navigation
-          pagination={{ clickable: true }}
-          zoom
-          autoplay={{ delay: 5000, disableOnInteraction: false }}
-          thumbs={{ swiper: thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null }}
-          style={{ height: '100%' }}
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+      {/* Breadcrumbs */}
+      <Breadcrumbs separator={<NavigateNext fontSize="small" />} sx={{ mb: 2 }}>
+        <Link
+          component="button"
+          variant="body1"
+          underline="hover"
+          color="inherit"
+          onClick={() => navigate('/')}
         >
-          {displayListing.propertyImages?.map((image, index) => (
-            <SwiperSlide key={index}>
-              <div className="swiper-zoom-container">
-                <img
-                  src={image}
-                  alt={`Property ${index + 1}`}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              </div>
-            </SwiperSlide>
-          ))}
-        </Swiper>
-
-        <ImageOverlay>
-          <Stack direction="row" justifyContent="space-between" alignItems="flex-end">
-            <Box>
-              <Typography variant="h3" fontWeight="bold" gutterBottom>
-                {displayListing.propertyAddress}
-              </Typography>
-              <Typography variant="h6" sx={{ opacity: 0.9 }}>
-                {displayListing.city}, {displayListing.state} {displayListing.zipCode}
-              </Typography>
-              <Stack direction="row" spacing={2} mt={2}>
-                <FeatureChip
-                  icon={<Bed />}
-                  label={`${displayListing.bedrooms} Beds`}
-                  sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.3)' }}
-                />
-                <FeatureChip
-                  icon={<Bathroom />}
-                  label={`${displayListing.bathrooms} Baths`}
-                  sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.3)' }}
-                />
-                <FeatureChip
-                  icon={<SquareFoot />}
-                  label={`${displayListing.squareFootage?.toLocaleString()} sqft`}
-                  sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.3)' }}
-                />
-                {displayListing.pool && (
-                  <FeatureChip
-                    icon={<Pool />}
-                    label="Pool"
-                    sx={{ color: 'white', borderColor: 'rgba(255,255,255,0.3)' }}
-                  />
-                )}
-              </Stack>
-            </Box>
-            <Box textAlign="right">
-              <Typography variant="h2" fontWeight="bold">
-                {formatPrice(displayListing.listPrice)}
-              </Typography>
-              {displayListing.originalListPrice > displayListing.listPrice && (
-                <Typography variant="body1" sx={{ textDecoration: 'line-through', opacity: 0.7 }}>
-                  Was {formatPrice(displayListing.originalListPrice)}
-                </Typography>
-              )}
-              <Chip
-                label={displayListing.listingStatus}
-                color={getStatusColor(displayListing.listingStatus)}
-                size="large"
-                sx={{ mt: 1 }}
-              />
-            </Box>
-          </Stack>
-        </ImageOverlay>
-
-        {/* Action buttons */}
-        <Stack
-          direction="row"
-          spacing={1}
-          sx={{
-            position: 'absolute',
-            top: 16,
-            right: 16,
-            zIndex: 10,
-          }}
+          Dashboard
+        </Link>
+        <Link
+          component="button"
+          variant="body1"
+          underline="hover"
+          color="inherit"
+          onClick={() => navigate('/listings')}
         >
-          <IconButton
-            sx={{ 
-              bgcolor: 'rgba(0,0,0,0.5)', 
-              color: 'white',
-              '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' }
-            }}
-            onClick={() => navigate('/listings')}
-          >
-            <ArrowBack />
-          </IconButton>
-          <IconButton
-            sx={{ 
-              bgcolor: 'rgba(0,0,0,0.5)', 
-              color: 'white',
-              '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' }
-            }}
-            onClick={() => setShareDialogOpen(true)}
-          >
-            <Share />
-          </IconButton>
-          <IconButton
-            sx={{ 
-              bgcolor: 'rgba(0,0,0,0.5)', 
-              color: 'white',
-              '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' }
-            }}
-          >
-            <Print />
-          </IconButton>
-        </Stack>
-      </HeroSection>
+          Listings
+        </Link>
+        <Typography color="text.primary">{listing.propertyAddress}</Typography>
+      </Breadcrumbs>
 
-      {/* Thumbnail Gallery */}
-      <Box sx={{ mb: 4 }}>
-        <Swiper
-          onSwiper={setThumbsSwiper}
-          modules={[Thumbs]}
-          spaceBetween={10}
-          slidesPerView={isMobile ? 3 : isTablet ? 5 : 8}
-          freeMode
-          watchSlidesProgress
-          style={{ height: '80px' }}
-        >
-          {displayListing.propertyImages?.map((image, index) => (
-            <SwiperSlide key={index}>
-              <img
-                src={image}
-                alt={`Thumb ${index + 1}`}
-                style={{ 
-                  width: '100%', 
-                  height: '100%', 
-                  objectFit: 'cover',
-                  borderRadius: '8px',
-                  cursor: 'pointer'
-                }}
-              />
-            </SwiperSlide>
-          ))}
-        </Swiper>
-      </Box>
-
-      {/* Key Metrics */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <MetricCard
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Stack spacing={1}>
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Visibility color="primary" />
-                <Chip
-                  label={`${((displayListing.viewsThisWeek - displayListing.viewsLastWeek) / displayListing.viewsLastWeek * 100).toFixed(0)}%`}
-                  size="small"
-                  color={displayListing.viewsThisWeek > displayListing.viewsLastWeek ? 'success' : 'error'}
-                />
-              </Stack>
-              <Typography variant="h4" fontWeight="bold">
-                <CountUp end={displayListing.analytics?.views || 342} duration={2} />
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Total Views
-              </Typography>
-            </Stack>
-          </MetricCard>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <MetricCard
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Stack spacing={1}>
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Groups color="primary" />
-                <Badge badgeContent="New" color="error" />
-              </Stack>
-              <Typography variant="h4" fontWeight="bold">
-                <CountUp end={displayListing.showings || 8} duration={2} />
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Showings
-              </Typography>
-            </Stack>
-          </MetricCard>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <MetricCard
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Stack spacing={1}>
-              <Favorite color="primary" />
-              <Typography variant="h4" fontWeight="bold">
-                <CountUp end={displayListing.favoritesCount || 12} duration={2} />
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Favorites
-              </Typography>
-            </Stack>
-          </MetricCard>
-        </Grid>
-
-        <Grid item xs={12} sm={6} md={3}>
-          <MetricCard
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-          >
-            <Stack spacing={1}>
-              <CalendarToday color="primary" />
-              <Typography variant="h4" fontWeight="bold">
-                <CountUp end={displayListing.daysOnMarket || 11} duration={2} />
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Days on Market
-              </Typography>
-            </Stack>
-          </MetricCard>
-        </Grid>
-      </Grid>
-
-      {/* Main Content Grid */}
-      <Grid container spacing={3}>
-        {/* Left Column - Property Details */}
-        <Grid item xs={12} md={8}>
-          <Stack spacing={3}>
-            {/* Property Description */}
-            <GlassCard>
-              <CardContent>
-                <Typography variant="h5" gutterBottom fontWeight="bold">
-                  Property Description
-                </Typography>
-                <Typography variant="body1" paragraph>
-                  {displayListing.propertyDescription}
-                </Typography>
-                
-                <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
-                  Features & Amenities
-                </Typography>
-                <Grid container spacing={1}>
-                  {displayListing.features?.map((feature, index) => (
-                    <Grid item xs={12} sm={6} md={4} key={index}>
-                      <Stack direction="row" spacing={1} alignItems="center">
-                        <CheckCircle color="primary" fontSize="small" />
-                        <Typography variant="body2">{feature}</Typography>
-                      </Stack>
-                    </Grid>
-                  ))}
-                </Grid>
-              </CardContent>
-            </GlassCard>
-
-            {/* Analytics Chart */}
-            <GlassCard>
-              <CardContent>
-                <Typography variant="h5" gutterBottom fontWeight="bold">
-                  Performance Analytics
-                </Typography>
-                <Grid container spacing={3}>
-                  <Grid item xs={12} md={6}>
-                    <Typography variant="subtitle2" gutterBottom>
-                      Daily Views Trend
-                    </Typography>
-                    <ResponsiveContainer width="100%" height={200}>
-                      <AreaChart data={displayListing.analytics?.dailyViews || []}>
-                        <defs>
-                          <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#3f51b5" stopOpacity={0.8}/>
-                            <stop offset="95%" stopColor="#3f51b5" stopOpacity={0}/>
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.3)} />
-                        <XAxis dataKey="date" stroke={theme.palette.text.secondary} />
-                        <YAxis stroke={theme.palette.text.secondary} />
-                        <RechartsTooltip
-                          contentStyle={{
-                            backgroundColor: alpha(theme.palette.background.paper, 0.9),
-                            border: `1px solid ${theme.palette.divider}`,
-                            borderRadius: 8,
-                          }}
-                        />
-                        <Area 
-                          type="monotone" 
-                          dataKey="views" 
-                          stroke="#3f51b5" 
-                          fillOpacity={1} 
-                          fill="url(#colorViews)" 
-                        />
-                      </AreaChart>
-                    </ResponsiveContainer>
-                  </Grid>
-
-                  <Grid item xs={12} md={6}>
-                    <Typography variant="subtitle2" gutterBottom>
-                      Traffic Sources
-                    </Typography>
-                    <ResponsiveContainer width="100%" height={200}>
-                      <PieChart>
-                        <Pie
-                          data={displayListing.analytics?.viewsBySource || []}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={({ source, views }) => `${source}: ${views}`}
-                          outerRadius={80}
-                          fill="#8884d8"
-                          dataKey="views"
-                        >
-                          {displayListing.analytics?.viewsBySource?.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={CHART_COLORS[index % CHART_COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <RechartsTooltip
-                          contentStyle={{
-                            backgroundColor: alpha(theme.palette.background.paper, 0.9),
-                            border: `1px solid ${theme.palette.divider}`,
-                            borderRadius: 8,
-                          }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </Grid>
-                </Grid>
-
-                {/* Key Stats */}
-                <Grid container spacing={2} sx={{ mt: 2 }}>
-                  <Grid item xs={6} sm={3}>
-                    <Stack alignItems="center">
-                      <Typography variant="h6" fontWeight="bold" color="primary">
-                        {displayListing.analytics?.avgTimeOnPage || '3:24'}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Avg. Time on Page
-                      </Typography>
-                    </Stack>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Stack alignItems="center">
-                      <Typography variant="h6" fontWeight="bold" color="primary">
-                        {displayListing.inquiries || 15}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Inquiries
-                      </Typography>
-                    </Stack>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Stack alignItems="center">
-                      <Typography variant="h6" fontWeight="bold" color="primary">
-                        {displayListing.offers || 1}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Offers
-                      </Typography>
-                    </Stack>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Stack alignItems="center">
-                      <Typography variant="h6" fontWeight="bold" color="primary">
-                        {formatPrice(displayListing.pricePerSqft)}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Price/sqft
-                      </Typography>
-                    </Stack>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </GlassCard>
-
-            {/* Marketing Checklist */}
-            <GlassCard>
-              <CardContent>
-                <Typography variant="h5" gutterBottom fontWeight="bold">
-                  Marketing Checklist
-                </Typography>
-                <Grid container spacing={2}>
-                  {Object.entries(displayListing.marketingChecklist || {}).map(([key, value]) => (
-                    <Grid item xs={12} sm={6} md={4} key={key}>
-                      <FormControlLabel
-                        control={
-                          <Switch
-                            checked={value}
-                            color="primary"
-                          />
-                        }
-                        label={key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
-                      />
-                    </Grid>
-                  ))}
-                </Grid>
-              </CardContent>
-            </GlassCard>
-          </Stack>
-        </Grid>
-
-        {/* Right Column - Sidebar */}
-        <Grid item xs={12} md={4}>
-          <Stack spacing={3}>
-            {/* Property Details Card */}
-            <GlassCard>
-              <CardContent>
-                <Typography variant="h6" gutterBottom fontWeight="bold">
-                  Property Details
-                </Typography>
-                <List dense>
-                  <ListItem>
-                    <ListItemIcon><Home /></ListItemIcon>
-                    <ListItemText 
-                      primary="Property Type" 
-                      secondary={displayListing.propertyType}
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemIcon><CalendarToday /></ListItemIcon>
-                    <ListItemText 
-                      primary="Year Built" 
-                      secondary={displayListing.yearBuilt}
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemIcon><Landscape /></ListItemIcon>
-                    <ListItemText 
-                      primary="Lot Size" 
-                      secondary={`${displayListing.lotSize?.toLocaleString()} sqft`}
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemIcon><Garage /></ListItemIcon>
-                    <ListItemText 
-                      primary="Garage" 
-                      secondary={`${displayListing.garage} Cars`}
-                    />
-                  </ListItem>
-                </List>
-              </CardContent>
-            </GlassCard>
-
-            {/* Neighborhood Info */}
-            <GlassCard>
-              <CardContent>
-                <Typography variant="h6" gutterBottom fontWeight="bold">
-                  Neighborhood
-                </Typography>
-                <Stack spacing={2}>
-                  <Box>
-                    <Stack direction="row" justifyContent="space-between" alignItems="center">
-                      <Typography variant="subtitle2">Walk Score</Typography>
-                      <Chip 
-                        label={displayListing.neighborhood?.walkScore || 85} 
-                        color="primary" 
-                        size="small"
-                      />
-                    </Stack>
-                    <LinearProgress 
-                      variant="determinate" 
-                      value={displayListing.neighborhood?.walkScore || 85} 
-                      sx={{ mt: 1 }}
-                    />
-                  </Box>
-                  
-                  <Typography variant="subtitle2" sx={{ mt: 2 }}>
-                    Nearby Schools
-                  </Typography>
-                  {displayListing.neighborhood?.nearbySchools?.map((school, index) => (
-                    <Stack key={index} direction="row" justifyContent="space-between">
-                      <Typography variant="body2">{school.name}</Typography>
-                      <Stack direction="row" spacing={1}>
-                        <Typography variant="caption" color="text.secondary">
-                          {school.distance}
-                        </Typography>
-                        <Rating value={school.rating / 2} size="small" readOnly />
-                      </Stack>
-                    </Stack>
-                  ))}
-                </Stack>
-              </CardContent>
-            </GlassCard>
-
-            {/* Agent Info */}
-            <GlassCard>
-              <CardContent>
-                <Typography variant="h6" gutterBottom fontWeight="bold">
-                  Listing Agent
-                </Typography>
-                <Stack spacing={2} alignItems="center">
-                  <Avatar 
+      {/* Beautiful Hero Section with Carousel */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <HeroSection>
+          <Grid container sx={{ height: '100%' }}>
+            <Grid item xs={12} md={6} sx={{ p: { xs: 3, md: 6 }, display: 'flex', alignItems: 'center' }}>
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                style={{ width: '100%' }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                  <IconButton 
+                    onClick={() => navigate('/listings')} 
                     sx={{ 
-                      width: 80, 
-                      height: 80,
-                      bgcolor: theme.palette.primary.main 
+                      mr: 2, 
+                      bgcolor: 'rgba(255, 255, 255, 0.2)',
+                      color: 'white',
+                      '&:hover': { bgcolor: 'rgba(255, 255, 255, 0.3)' }
                     }}
                   >
-                    {displayListing.listingAgent?.charAt(0) || 'Y'}
-                  </Avatar>
-                  <Typography variant="subtitle1" fontWeight="medium">
-                    {displayListing.listingAgent}
-                  </Typography>
-                  <Stack direction="row" spacing={1}>
-                    <Button
-                      variant="contained"
-                      startIcon={<Phone />}
-                      size="small"
-                      fullWidth
-                    >
-                      Call
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      startIcon={<Email />}
-                      size="small"
-                      fullWidth
-                    >
-                      Email
-                    </Button>
-                  </Stack>
-                </Stack>
-              </CardContent>
-            </GlassCard>
+                    <ArrowBack />
+                  </IconButton>
+                  <StatusBadge
+                    overlap="circular"
+                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                    variant="dot"
+                    status={listing.listingStatus}
+                  >
+                    <Chip
+                      label={listing.listingStatus}
+                      sx={{ 
+                        bgcolor: 'rgba(255, 255, 255, 0.9)',
+                        fontWeight: 'bold'
+                      }}
+                    />
+                  </StatusBadge>
+                </Box>
 
-            {/* Quick Actions */}
-            <GlassCard>
-              <CardContent>
-                <Typography variant="h6" gutterBottom fontWeight="bold">
-                  Quick Actions
+                <Typography variant="h3" fontWeight="bold" gutterBottom>
+                  {listing.propertyAddress.split(',')[0]}
                 </Typography>
-                <Stack spacing={1}>
+                <Typography variant="h5" sx={{ mb: 3, opacity: 0.9 }}>
+                  {listing.propertyAddress.split(',').slice(1).join(',')}
+                </Typography>
+
+                <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
+                  <Box>
+                    <Typography variant="h3" fontWeight="bold">
+                      ${listing.listPrice.toLocaleString()}
+                    </Typography>
+                    {priceChange !== 0 && (
+                      <Chip
+                        icon={priceChange < 0 ? <TrendingDown /> : <TrendingUp />}
+                        label={`${priceChange < 0 ? '' : '+'}$${Math.abs(priceChange).toLocaleString()} (${priceChangePercent.toFixed(1)}%)`}
+                        sx={{ 
+                          bgcolor: priceChange < 0 ? 'success.main' : 'error.main',
+                          color: 'white',
+                          mt: 1
+                        }}
+                      />
+                    )}
+                  </Box>
+                </Stack>
+
+                <Typography variant="h6" sx={{ mb: 3, opacity: 0.9 }}>
+                  {listing.propertyType} • MLS# {listing.mlsNumber}
+                </Typography>
+
+                <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 3 }}>
                   <Button
-                    variant="outlined"
+                    variant="contained"
+                    size="large"
                     startIcon={<Schedule />}
-                    fullWidth
+                    sx={{ 
+                      bgcolor: 'white', 
+                      color: 'primary.main',
+                      '&:hover': { bgcolor: 'grey.100' }
+                    }}
                   >
                     Schedule Showing
                   </Button>
-                  <Button
-                    variant="outlined"
-                    startIcon={<LocalActivity />}
-                    fullWidth
-                  >
-                    Plan Open House
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    startIcon={<Campaign />}
-                    fullWidth
-                  >
-                    Boost Marketing
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    startIcon={<QrCode2 />}
-                    fullWidth
-                  >
-                    Generate QR Code
-                  </Button>
-                </Stack>
-              </CardContent>
-            </GlassCard>
-          </Stack>
+                  <IconButton sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)', color: 'white' }} onClick={() => setShareDialogOpen(true)}>
+                    <Share />
+                  </IconButton>
+                  <IconButton sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)', color: 'white' }}>
+                    <Favorite />
+                  </IconButton>
+                  <IconButton sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)', color: 'white' }} onClick={handlePrint}>
+                    <Print />
+                  </IconButton>
+                  <IconButton sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)', color: 'white' }} onClick={(e) => setAnchorEl(e.currentTarget)}>
+                    <MoreVert />
+                  </IconButton>
+                </Box>
+
+                {/* Quick Stats */}
+                <Grid container spacing={2}>
+                  <Grid item xs={6} sm={3}>
+                    <Box sx={{ textAlign: 'center', bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 2, p: 2 }}>
+                      <Typography variant="h5" fontWeight="bold">{listing.daysOnMarket}</Typography>
+                      <Typography variant="caption">Days on Market</Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Box sx={{ textAlign: 'center', bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 2, p: 2 }}>
+                      <Typography variant="h5" fontWeight="bold">{listing.views.toLocaleString()}</Typography>
+                      <Typography variant="caption">Total Views</Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Box sx={{ textAlign: 'center', bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 2, p: 2 }}>
+                      <Typography variant="h5" fontWeight="bold">{listing.favorites}</Typography>
+                      <Typography variant="caption">Favorites</Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Box sx={{ textAlign: 'center', bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 2, p: 2 }}>
+                      <Typography variant="h5" fontWeight="bold">{listing.showings}</Typography>
+                      <Typography variant="caption">Showings</Typography>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </motion.div>
+            </Grid>
+            
+            <Grid item xs={12} md={6} sx={{ position: 'relative', height: { xs: 400, md: '100%' } }}>
+              <PropertyImageContainer sx={{ height: '100%' }}>
+                <Swiper
+                  modules={[Navigation, Pagination, Autoplay, EffectFade, Thumbs]}
+                  spaceBetween={0}
+                  slidesPerView={1}
+                  navigation
+                  pagination={{ clickable: true }}
+                  autoplay={{ delay: 5000, disableOnInteraction: false }}
+                  effect="fade"
+                  thumbs={{ swiper: thumbsSwiper }}
+                  style={{ height: '100%' }}
+                  onSlideChange={(swiper) => setSelectedPhoto(swiper.activeIndex)}
+                >
+                  {listing.photos.map((photo, index) => (
+                    <SwiperSlide key={index}>
+                      <Box
+                        sx={{
+                          height: '100%',
+                          background: `url(${photo}) center/cover`,
+                          position: 'relative',
+                          cursor: 'pointer',
+                        }}
+                        onClick={() => {
+                          setSelectedPhoto(index);
+                          setPhotoGalleryOpen(true);
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)',
+                            p: 3,
+                          }}
+                        >
+                          <Grid container spacing={2}>
+                            <Grid item xs={3}>
+                              <PropertyFeature icon={Bed} label="Beds" value={listing.bedrooms} />
+                            </Grid>
+                            <Grid item xs={3}>
+                              <PropertyFeature icon={Bathroom} label="Baths" value={listing.bathrooms} />
+                            </Grid>
+                            <Grid item xs={3}>
+                              <PropertyFeature icon={SquareFoot} label="Sq Ft" value={listing.squareFootage.toLocaleString()} />
+                            </Grid>
+                            <Grid item xs={3}>
+                              <PropertyFeature icon={DirectionsCar} label="Garage" value={listing.garage} />
+                            </Grid>
+                          </Grid>
+                        </Box>
+                        
+                        {/* Photo count badge */}
+                        <Chip
+                          icon={<PhotoCamera />}
+                          label={`${index + 1} / ${listing.photos.length}`}
+                          sx={{
+                            position: 'absolute',
+                            top: 16,
+                            right: 16,
+                            bgcolor: 'rgba(0,0,0,0.7)',
+                            color: 'white',
+                          }}
+                        />
+                      </Box>
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
+                
+                {/* Thumbnail navigation */}
+                {!isMobile && (
+                  <Box sx={{ mt: 2 }}>
+                    <Swiper
+                      onSwiper={setThumbsSwiper}
+                      spaceBetween={10}
+                      slidesPerView={6}
+                      freeMode={true}
+                      watchSlidesProgress={true}
+                      modules={[Thumbs]}
+                    >
+                      {listing.photos.map((photo, index) => (
+                        <SwiperSlide key={index}>
+                          <Box
+                            sx={{
+                              height: 60,
+                              background: `url(${photo}) center/cover`,
+                              borderRadius: 1,
+                              cursor: 'pointer',
+                              opacity: 0.7,
+                              transition: 'opacity 0.3s',
+                              '&:hover': {
+                                opacity: 1,
+                              },
+                            }}
+                          />
+                        </SwiperSlide>
+                      ))}
+                    </Swiper>
+                  </Box>
+                )}
+              </PropertyImageContainer>
+            </Grid>
+          </Grid>
+        </HeroSection>
+      </motion.div>
+
+      {/* Key Metrics */}
+      <Grid container spacing={3} sx={{ mb: 3, mt: -2 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            whileHover={{ scale: 1.02 }}
+          >
+            <MetricCard trend="neutral">
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                <Box>
+                  <Typography variant="caption" color="text.secondary" gutterBottom>
+                    Price per Sq Ft
+                  </Typography>
+                  <Typography variant="h4" fontWeight="bold">
+                    $<CountUp end={listing.pricePerSqFt} duration={2} />
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Avg area: $750
+                  </Typography>
+                </Box>
+                <Avatar sx={{ bgcolor: 'primary.light', width: 48, height: 48 }}>
+                  <ShowChart />
+                </Avatar>
+              </Box>
+            </MetricCard>
+          </motion.div>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            whileHover={{ scale: 1.02 }}
+          >
+            <MetricCard trend="up">
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                <Box>
+                  <Typography variant="caption" color="text.secondary" gutterBottom>
+                    Est. Monthly Payment
+                  </Typography>
+                  <Typography variant="h4" fontWeight="bold">
+                    ${showFinancials ? <CountUp end={monthlyPayment} duration={2} separator="," /> : '••••'}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    20% down, 6.5% APR
+                  </Typography>
+                </Box>
+                <Avatar sx={{ bgcolor: 'success.light', width: 48, height: 48 }}>
+                  <AttachMoney />
+                </Avatar>
+              </Box>
+            </MetricCard>
+          </motion.div>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            whileHover={{ scale: 1.02 }}
+          >
+            <MetricCard>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                <Box>
+                  <Typography variant="caption" color="text.secondary" gutterBottom>
+                    Potential Rent
+                  </Typography>
+                  <Typography variant="h4" fontWeight="bold">
+                    ${showFinancials ? <CountUp end={potentialRent} duration={2} separator="," /> : '••••'}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Per month
+                  </Typography>
+                </Box>
+                <Avatar sx={{ bgcolor: 'info.light', width: 48, height: 48 }}>
+                  <Home />
+                </Avatar>
+              </Box>
+            </MetricCard>
+          </motion.div>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+            whileHover={{ scale: 1.02 }}
+          >
+            <MetricCard trend="up">
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
+                <Box>
+                  <Typography variant="caption" color="text.secondary" gutterBottom>
+                    Activity Score
+                  </Typography>
+                  <Typography variant="h4" fontWeight="bold">
+                    <CountUp end={95} duration={2} />
+                  </Typography>
+                  <Chip
+                    size="small"
+                    icon={<TrendingUp sx={{ fontSize: 16 }} />}
+                    label="High demand"
+                    sx={{ mt: 1, bgcolor: 'success.light', color: 'success.dark' }}
+                  />
+                </Box>
+                <Avatar sx={{ bgcolor: 'warning.light', width: 48, height: 48 }}>
+                  <Speed />
+                </Avatar>
+              </Box>
+            </MetricCard>
+          </motion.div>
         </Grid>
       </Grid>
 
-      {/* AI Speed Dial */}
-      <SpeedDial
-        ariaLabel="AI Assistant"
-        sx={{ position: 'fixed', bottom: 16, right: 16 }}
-        icon={<SpeedDialIcon icon={<AutoAwesome />} openIcon={<Close />} />}
-        onClose={() => setSpeedDialOpen(false)}
-        onOpen={() => setSpeedDialOpen(true)}
-        open={speedDialOpen}
+      {/* Financial Toggle */}
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+        <FormControlLabel
+          control={
+            <Switch 
+              checked={showFinancials}
+              onChange={(e) => setShowFinancials(e.target.checked)}
+            />
+          }
+          label="Show Financial Details"
+        />
+      </Box>
+
+      {/* Tabs */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.5 }}
       >
-        {aiActions.map((action) => (
-          <SpeedDialAction
-            key={action.name}
-            icon={action.icon}
-            tooltipTitle={
-              <Box>
-                <Typography variant="subtitle2">{action.name}</Typography>
-                <Typography variant="caption">{action.description}</Typography>
-              </Box>
-            }
-            onClick={() => {
-              console.log(`AI Action: ${action.name}`);
-              setSpeedDialOpen(false);
+        <Paper sx={{ mb: 3, borderRadius: 2, overflow: 'hidden' }}>
+          <Tabs
+            value={activeTab}
+            onChange={(e, v) => setActiveTab(v)}
+            variant="scrollable"
+            scrollButtons="auto"
+            sx={{
+              '& .MuiTab-root': {
+                minHeight: 64,
+                textTransform: 'none',
+                fontSize: '0.95rem',
+                fontWeight: 500,
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  bgcolor: 'action.hover',
+                },
+              },
+              '& .Mui-selected': {
+                bgcolor: 'primary.main',
+                color: 'white !important',
+                '& .MuiSvgIcon-root': {
+                  color: 'white',
+                },
+              },
+              '& .MuiTabs-indicator': {
+                display: 'none',
+              },
             }}
-          />
-        ))}
+          >
+            <Tab icon={<Home />} label="Overview" iconPosition="start" />
+            <Tab icon={<Category />} label="Features" iconPosition="start" />
+            <Tab icon={<AttachMoney />} label="Financial" iconPosition="start" />
+            <Tab icon={<PhotoCamera />} label="Media" iconPosition="start" />
+            <Tab icon={<Analytics />} label="Analytics" iconPosition="start" />
+            <Tab icon={<History />} label="Activity" iconPosition="start" />
+            <Tab icon={<LocationOn />} label="Location" iconPosition="start" />
+            <Tab icon={<Description />} label="Documents" iconPosition="start" />
+          </Tabs>
+        </Paper>
+      </motion.div>
+
+      {/* Tab Content */}
+      <motion.div
+        key={activeTab}
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        exit={{ opacity: 0, x: -20 }}
+        transition={{ duration: 0.3 }}
+      >
+        {/* Overview Tab */}
+        {activeTab === 0 && (
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={8}>
+              <AnimatedCard>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Home sx={{ mr: 1 }} />
+                    Property Description
+                  </Typography>
+                  <Typography variant="body1" paragraph>
+                    {listing.propertyDescription}
+                  </Typography>
+                  
+                  <Divider sx={{ my: 3 }} />
+                  
+                  <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Category sx={{ mr: 1 }} />
+                    Key Features
+                  </Typography>
+                  <Grid container spacing={2}>
+                    {listing.specialFeatures.map((feature, index) => (
+                      <Grid item xs={6} sm={4} key={index}>
+                        <FeatureChip
+                          icon={
+                            feature === 'Ocean View' ? <Visibility /> :
+                            feature === 'Pool' ? <Pool /> :
+                            feature === 'Smart Home' ? <AutoAwesome /> :
+                            feature === 'Solar' ? <WbSunny /> :
+                            feature === 'Gated' ? <Security /> :
+                            <Check />
+                          }
+                          label={feature}
+                          color="primary"
+                          variant="outlined"
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                  
+                  <Divider sx={{ my: 3 }} />
+                  
+                  <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Weekend sx={{ mr: 1 }} />
+                    Room Details
+                  </Typography>
+                  <TableContainer>
+                    <Table size="small">
+                      <TableBody>
+                        {listing.rooms.map((room, index) => (
+                          <TableRow key={index}>
+                            <TableCell>{room.name}</TableCell>
+                            <TableCell>{room.dimensions}</TableCell>
+                            <TableCell>Level {room.level}</TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                </CardContent>
+              </AnimatedCard>
+            </Grid>
+            
+            <Grid item xs={12} md={4}>
+              <Stack spacing={3}>
+                <AnimatedCard>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Info sx={{ mr: 1 }} />
+                      Quick Facts
+                    </Typography>
+                    <List dense>
+                      <ListItem>
+                        <ListItemText primary="Year Built" secondary={listing.yearBuilt} />
+                      </ListItem>
+                      <ListItem>
+                        <ListItemText primary="Lot Size" secondary={`${listing.lotSize.toLocaleString()} sq ft`} />
+                      </ListItem>
+                      <ListItem>
+                        <ListItemText primary="Stories" secondary={listing.stories} />
+                      </ListItem>
+                      <ListItem>
+                        <ListItemText primary="View" secondary={listing.view} />
+                      </ListItem>
+                    </List>
+                  </CardContent>
+                </AnimatedCard>
+                
+                <AnimatedCard>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                      <Phone sx={{ mr: 1 }} />
+                      Contact Information
+                    </Typography>
+                    <List dense>
+                      <ListItem>
+                        <ListItemIcon>
+                          <Person />
+                        </ListItemIcon>
+                        <ListItemText 
+                          primary="Listing Agent" 
+                          secondary={listing.listingAgent.name}
+                        />
+                      </ListItem>
+                      <ListItem>
+                        <ListItemIcon>
+                          <Phone />
+                        </ListItemIcon>
+                        <ListItemText 
+                          primary="Phone" 
+                          secondary={listing.listingAgent.phone}
+                        />
+                      </ListItem>
+                      <ListItem>
+                        <ListItemIcon>
+                          <Email />
+                        </ListItemIcon>
+                        <ListItemText 
+                          primary="Email" 
+                          secondary={listing.listingAgent.email}
+                        />
+                      </ListItem>
+                    </List>
+                    <Button 
+                      fullWidth 
+                      variant="contained" 
+                      startIcon={<Schedule />}
+                      sx={{ mt: 2 }}
+                    >
+                      Schedule a Showing
+                    </Button>
+                  </CardContent>
+                </AnimatedCard>
+              </Stack>
+            </Grid>
+          </Grid>
+        )}
+
+        {/* Features Tab */}
+        {activeTab === 1 && (
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={4}>
+              <AnimatedCard>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Home sx={{ mr: 1 }} />
+                    Interior Features
+                  </Typography>
+                  <List dense>
+                    {listing.features.interior.map((feature, index) => (
+                      <ListItem key={index}>
+                        <ListItemIcon>
+                          <CheckCircle color="primary" />
+                        </ListItemIcon>
+                        <ListItemText primary={feature} />
+                      </ListItem>
+                    ))}
+                  </List>
+                </CardContent>
+              </AnimatedCard>
+            </Grid>
+            
+            <Grid item xs={12} md={4}>
+              <AnimatedCard>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Landscape sx={{ mr: 1 }} />
+                    Exterior Features
+                  </Typography>
+                  <List dense>
+                    {listing.features.exterior.map((feature, index) => (
+                      <ListItem key={index}>
+                        <ListItemIcon>
+                          <CheckCircle color="primary" />
+                        </ListItemIcon>
+                        <ListItemText primary={feature} />
+                      </ListItem>
+                    ))}
+                  </List>
+                </CardContent>
+              </AnimatedCard>
+            </Grid>
+            
+            <Grid item xs={12} md={4}>
+              <AnimatedCard>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Groups sx={{ mr: 1 }} />
+                    Community Features
+                  </Typography>
+                  <List dense>
+                    {listing.features.community.map((feature, index) => (
+                      <ListItem key={index}>
+                        <ListItemIcon>
+                          <CheckCircle color="primary" />
+                        </ListItemIcon>
+                        <ListItemText primary={feature} />
+                      </ListItem>
+                    ))}
+                  </List>
+                </CardContent>
+              </AnimatedCard>
+            </Grid>
+          </Grid>
+        )}
+
+        {/* Financial Tab */}
+        {activeTab === 2 && (
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={6}>
+              <AnimatedCard>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                    <AttachMoney sx={{ mr: 1 }} />
+                    Price Analysis
+                  </Typography>
+                  <Table>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell>List Price</TableCell>
+                        <TableCell align="right">
+                          <Typography variant="h6">${listing.listPrice.toLocaleString()}</Typography>
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Original Price</TableCell>
+                        <TableCell align="right">${listing.originalListPrice.toLocaleString()}</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Price Change</TableCell>
+                        <TableCell align="right" sx={{ color: priceChange < 0 ? 'success.main' : 'error.main' }}>
+                          {priceChange < 0 ? '' : '+'} ${Math.abs(priceChange).toLocaleString()} ({priceChangePercent.toFixed(1)}%)
+                        </TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Price per Sq Ft</TableCell>
+                        <TableCell align="right">${listing.pricePerSqFt}</TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </AnimatedCard>
+            </Grid>
+            
+            <Grid item xs={12} md={6}>
+              <AnimatedCard>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                    <Receipt sx={{ mr: 1 }} />
+                    Monthly Expenses
+                  </Typography>
+                  <Table>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell>Property Taxes</TableCell>
+                        <TableCell align="right">${(listing.taxes / 12).toFixed(0)}/mo</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>HOA Dues</TableCell>
+                        <TableCell align="right">${listing.hoaDues}/mo</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Insurance (est.)</TableCell>
+                        <TableCell align="right">${(listing.insurance / 12).toFixed(0)}/mo</TableCell>
+                      </TableRow>
+                      <TableRow>
+                        <TableCell>Utilities (est.)</TableCell>
+                        <TableCell align="right">${listing.utilities}/mo</TableCell>
+                      </TableRow>
+                      <TableRow sx={{ bgcolor: 'action.hover' }}>
+                        <TableCell><strong>Total Monthly</strong></TableCell>
+                        <TableCell align="right">
+                          <Typography variant="h6">
+                            ${((listing.taxes / 12) + listing.hoaDues + (listing.insurance / 12) + listing.utilities).toFixed(0)}
+                          </Typography>
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </CardContent>
+              </AnimatedCard>
+            </Grid>
+            
+            <Grid item xs={12}>
+              <AnimatedCard>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                    <ShowChart sx={{ mr: 1 }} />
+                    Commission Breakdown
+                  </Typography>
+                  {showFinancials ? (
+                    <Grid container spacing={3}>
+                      <Grid item xs={12} md={4}>
+                        <Box sx={{ textAlign: 'center', p: 2 }}>
+                          <Typography variant="h4" color="primary">
+                            ${((listing.listPrice * listing.commission.listing) / 100).toLocaleString()}
+                          </Typography>
+                          <Typography variant="body1">Listing Side ({listing.commission.listing}%)</Typography>
+                        </Box>
+                      </Grid>
+                      <Grid item xs={12} md={4}>
+                        <Box sx={{ textAlign: 'center', p: 2 }}>
+                          <Typography variant="h4" color="secondary">
+                            ${((listing.listPrice * listing.commission.buyer) / 100).toLocaleString()}
+                          </Typography>
+                          <Typography variant="body1">Buyer Side ({listing.commission.buyer}%)</Typography>
+                        </Box>
+                      </Grid>
+                      <Grid item xs={12} md={4}>
+                        <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
+                          <Typography variant="h4" color="success.main">
+                            ${((listing.listPrice * listing.commission.total) / 100).toLocaleString()}
+                          </Typography>
+                          <Typography variant="body1">Total Commission ({listing.commission.total}%)</Typography>
+                        </Box>
+                      </Grid>
+                    </Grid>
+                  ) : (
+                    <Box sx={{ textAlign: 'center', py: 4 }}>
+                      <VisibilityOff sx={{ fontSize: 48, color: 'text.disabled', mb: 2 }} />
+                      <Typography color="text.secondary">
+                        Financial details are hidden. Toggle to view.
+                      </Typography>
+                    </Box>
+                  )}
+                </CardContent>
+              </AnimatedCard>
+            </Grid>
+          </Grid>
+        )}
+
+        {/* Media Tab */}
+        {activeTab === 3 && (
+          <Grid container spacing={3}>
+            <Grid item xs={12}>
+              <AnimatedCard>
+                <CardContent>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                    <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center' }}>
+                      <PhotoCamera sx={{ mr: 1 }} />
+                      Photo Gallery ({listing.photos.length} photos)
+                    </Typography>
+                    <ButtonGroup>
+                      <Button startIcon={<ThreeDRotation />} onClick={() => setShowVirtualTour(true)}>
+                        Virtual Tour
+                      </Button>
+                      <Button startIcon={<VideoCameraBack />}>
+                        Video Tour
+                      </Button>
+                    </ButtonGroup>
+                  </Box>
+                  
+                  <ImageList variant="quilted" cols={4} gap={8}>
+                    {listing.photos.map((photo, index) => (
+                      <ImageListItem 
+                        key={index} 
+                        cols={index === 0 ? 2 : 1} 
+                        rows={index === 0 ? 2 : 1}
+                      >
+                        <img
+                          src={photo}
+                          alt={`Property photo ${index + 1}`}
+                          loading="lazy"
+                          style={{ cursor: 'pointer', borderRadius: 8 }}
+                          onClick={() => {
+                            setSelectedPhoto(index);
+                            setPhotoGalleryOpen(true);
+                          }}
+                        />
+                      </ImageListItem>
+                    ))}
+                  </ImageList>
+                </CardContent>
+              </AnimatedCard>
+            </Grid>
+          </Grid>
+        )}
+
+        {/* Analytics Tab */}
+        {activeTab === 4 && (
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={8}>
+              <AnimatedCard>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>
+                    Views & Favorites Trend
+                  </Typography>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <AreaChart data={viewsData}>
+                      <defs>
+                        <linearGradient id="colorViews" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#2E7D32" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#2E7D32" stopOpacity={0}/>
+                        </linearGradient>
+                        <linearGradient id="colorFavorites" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#F44336" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#F44336" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="day" />
+                      <YAxis />
+                      <RechartsTooltip />
+                      <Area 
+                        type="monotone" 
+                        dataKey="views" 
+                        stroke="#2E7D32" 
+                        fillOpacity={1} 
+                        fill="url(#colorViews)" 
+                      />
+                      <Area 
+                        type="monotone" 
+                        dataKey="favorites" 
+                        stroke="#F44336" 
+                        fillOpacity={1} 
+                        fill="url(#colorFavorites)" 
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </AnimatedCard>
+            </Grid>
+            
+            <Grid item xs={12} md={4}>
+              <AnimatedCard>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>
+                    Traffic Sources
+                  </Typography>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={trafficSourceData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={(entry) => entry.source}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="visits"
+                      >
+                        {trafficSourceData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Pie>
+                      <RechartsTooltip />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </AnimatedCard>
+            </Grid>
+            
+            <Grid item xs={12}>
+              <AnimatedCard>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>
+                    Performance Metrics
+                  </Typography>
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} sm={3}>
+                      <Box sx={{ textAlign: 'center' }}>
+                        <CircularProgress
+                          variant="determinate"
+                          value={85}
+                          size={100}
+                          thickness={8}
+                          sx={{ color: 'success.main' }}
+                        />
+                        <Typography variant="h6" sx={{ mt: 2 }}>85%</Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Above similar listings
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12} sm={3}>
+                      <Box sx={{ textAlign: 'center' }}>
+                        <CircularProgress
+                          variant="determinate"
+                          value={92}
+                          size={100}
+                          thickness={8}
+                          sx={{ color: 'primary.main' }}
+                        />
+                        <Typography variant="h6" sx={{ mt: 2 }}>92%</Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Photo quality score
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12} sm={3}>
+                      <Box sx={{ textAlign: 'center' }}>
+                        <CircularProgress
+                          variant="determinate"
+                          value={78}
+                          size={100}
+                          thickness={8}
+                          sx={{ color: 'warning.main' }}
+                        />
+                        <Typography variant="h6" sx={{ mt: 2 }}>78%</Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Search visibility
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12} sm={3}>
+                      <Box sx={{ textAlign: 'center' }}>
+                        <CircularProgress
+                          variant="determinate"
+                          value={95}
+                          size={100}
+                          thickness={8}
+                          sx={{ color: 'info.main' }}
+                        />
+                        <Typography variant="h6" sx={{ mt: 2 }}>95%</Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Response rate
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  </Grid>
+                </CardContent>
+              </AnimatedCard>
+            </Grid>
+          </Grid>
+        )}
+
+        {/* Activity Tab */}
+        {activeTab === 5 && (
+          <AnimatedCard>
+            <CardContent>
+              <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                <History sx={{ mr: 1 }} />
+                Activity Log
+              </Typography>
+              <List>
+                {listing.activityLog.map((activity, index) => (
+                  <React.Fragment key={index}>
+                    <ListItem>
+                      <ListItemIcon>
+                        {activity.type === 'showing' ? <Groups /> :
+                         activity.type === 'inquiry' ? <Message /> :
+                         activity.type === 'price_change' ? <TrendingDown /> :
+                         <Schedule />}
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={
+                          activity.type === 'showing' ? `Showing with ${activity.agent}` :
+                          activity.type === 'inquiry' ? `Inquiry from ${activity.source}` :
+                          activity.type === 'price_change' ? `Price reduced from $${activity.oldPrice.toLocaleString()} to $${activity.newPrice.toLocaleString()}` :
+                          'Activity'
+                        }
+                        secondary={
+                          <>
+                            {format(new Date(activity.date), 'MMM d, yyyy')}
+                            {activity.feedback && ` - ${activity.feedback}`}
+                            {activity.message && ` - ${activity.message}`}
+                          </>
+                        }
+                      />
+                    </ListItem>
+                    {index < listing.activityLog.length - 1 && <Divider />}
+                  </React.Fragment>
+                ))}
+              </List>
+            </CardContent>
+          </AnimatedCard>
+        )}
+
+        {/* Location Tab */}
+        {activeTab === 6 && (
+          <Grid container spacing={3}>
+            <Grid item xs={12} md={8}>
+              <AnimatedCard>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                    <LocationOn sx={{ mr: 1 }} />
+                    Location & Neighborhood
+                  </Typography>
+                  {/* Map placeholder */}
+                  <Box
+                    sx={{
+                      height: 400,
+                      bgcolor: 'action.hover',
+                      borderRadius: 2,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Typography variant="h6" color="text.secondary">
+                      Interactive Map View
+                    </Typography>
+                  </Box>
+                </CardContent>
+              </AnimatedCard>
+            </Grid>
+            
+            <Grid item xs={12} md={4}>
+              <AnimatedCard>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                    <School sx={{ mr: 1 }} />
+                    Nearby Schools
+                  </Typography>
+                  <List>
+                    {listing.schools.map((school, index) => (
+                      <ListItem key={index}>
+                        <ListItemText
+                          primary={school.name}
+                          secondary={
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Rating value={school.rating / 2} readOnly size="small" />
+                              <Typography variant="caption">{school.distance}</Typography>
+                            </Box>
+                          }
+                        />
+                      </ListItem>
+                    ))}
+                  </List>
+                </CardContent>
+              </AnimatedCard>
+            </Grid>
+          </Grid>
+        )}
+
+        {/* Documents Tab */}
+        {activeTab === 7 && (
+          <AnimatedCard>
+            <CardContent>
+              <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center' }}>
+                <Description sx={{ mr: 1 }} />
+                Documents & Resources
+              </Typography>
+              <List>
+                <ListItem>
+                  <ListItemIcon>
+                    <Description />
+                  </ListItemIcon>
+                  <ListItemText primary="Property Brochure" secondary="PDF, 2.4 MB" />
+                  <Button startIcon={<Download />}>Download</Button>
+                </ListItem>
+                <ListItem>
+                  <ListItemIcon>
+                    <QrCode2 />
+                  </ListItemIcon>
+                  <ListItemText primary="QR Code Flyer" secondary="PDF, 1.1 MB" />
+                  <Button startIcon={<Download />}>Download</Button>
+                </ListItem>
+                <ListItem>
+                  <ListItemIcon>
+                    <PhotoCamera />
+                  </ListItemIcon>
+                  <ListItemText primary="High-Res Photos" secondary="ZIP, 45.2 MB" />
+                  <Button startIcon={<Download />}>Download</Button>
+                </ListItem>
+              </List>
+            </CardContent>
+          </AnimatedCard>
+        )}
+      </motion.div>
+
+      {/* Speed Dial Actions */}
+      <SpeedDial
+        ariaLabel="Property actions"
+        sx={{ position: 'fixed', bottom: 16, right: 16 }}
+        icon={<SpeedDialIcon />}
+      >
+        <SpeedDialAction
+          icon={<Edit />}
+          tooltipTitle="Edit Listing"
+          onClick={() => setEditFormOpen(true)}
+        />
+        <SpeedDialAction
+          icon={<Share />}
+          tooltipTitle="Share"
+          onClick={() => setShareDialogOpen(true)}
+        />
+        <SpeedDialAction
+          icon={<Print />}
+          tooltipTitle="Print"
+          onClick={handlePrint}
+        />
+        <SpeedDialAction
+          icon={<Schedule />}
+          tooltipTitle="Schedule Showing"
+        />
       </SpeedDial>
 
-      {/* AI Vision Button */}
-      <Fab
-        color="secondary"
-        sx={{
-          position: 'fixed',
-          bottom: 16,
-          left: 16,
-          background: `linear-gradient(45deg, ${theme.palette.secondary.main} 30%, ${theme.palette.secondary.light} 90%)`,
-        }}
-        onClick={() => setAiVisionOpen(true)}
+      {/* Context Menu */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={() => setAnchorEl(null)}
       >
-        <Tooltip title="AI Vision Preview">
-          <Info />
-        </Tooltip>
-      </Fab>
-
-      {/* AI Vision Dialog */}
-      <Dialog
-        open={aiVisionOpen}
-        onClose={() => setAiVisionOpen(false)}
-        maxWidth="md"
-        fullWidth
-        PaperProps={{
-          sx: {
-            background: alpha(theme.palette.background.paper, 0.95),
-            backdropFilter: 'blur(20px)',
-          }
-        }}
-      >
-        <DialogTitle>
-          <Stack direction="row" alignItems="center" justifyContent="space-between">
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <AutoAwesome color="secondary" />
-              <Typography variant="h6">AI Vision - Property Marketing</Typography>
-            </Stack>
-            <IconButton onClick={() => setAiVisionOpen(false)}>
-              <Close />
-            </IconButton>
-          </Stack>
-        </DialogTitle>
-        <DialogContent>
-          <Stack spacing={3}>
-            <Alert severity="info" icon={<AutoAwesome />}>
-              These AI-powered features are coming soon to revolutionize property marketing!
-            </Alert>
-
-            {aiVisionFeatures.map((feature, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.1 }}
-              >
-                <GlassCard>
-                  <CardContent>
-                    <Stack direction="row" spacing={2}>
-                      <Avatar sx={{ bgcolor: theme.palette.secondary.main }}>
-                        {feature.icon}
-                      </Avatar>
-                      <Box flex={1}>
-                        <Stack direction="row" justifyContent="space-between" alignItems="center">
-                          <Typography variant="h6">{feature.title}</Typography>
-                          <Chip label="Coming Soon" size="small" color="secondary" />
-                        </Stack>
-                        <Typography variant="body2" color="text.secondary" paragraph>
-                          {feature.description}
-                        </Typography>
-                        
-                        <Collapse in={expandedFeature === index}>
-                          <Box sx={{ mt: 2, p: 2, bgcolor: alpha(theme.palette.primary.main, 0.05), borderRadius: 1 }}>
-                            <Typography variant="subtitle2" gutterBottom>
-                              Preview Demo:
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {feature.demo}
-                            </Typography>
-                          </Box>
-                        </Collapse>
-                        
-                        <Button
-                          size="small"
-                          onClick={() => setExpandedFeature(expandedFeature === index ? null : index)}
-                          endIcon={expandedFeature === index ? <NavigateBefore /> : <NavigateNext />}
-                        >
-                          {expandedFeature === index ? 'Hide Demo' : 'View Demo'}
-                        </Button>
-                      </Box>
-                    </Stack>
-                  </CardContent>
-                </GlassCard>
-              </motion.div>
-            ))}
-
-            <Card sx={{ position: 'relative', overflow: 'hidden' }}>
-              <CardMedia
-                component="div"
-                sx={{
-                  height: 200,
-                  background: `linear-gradient(45deg, ${theme.palette.primary.main} 30%, ${theme.palette.secondary.main} 90%)`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                {playingVideo ? (
-                  <CircularProgress color="inherit" />
-                ) : (
-                  <IconButton
-                    sx={{
-                      bgcolor: 'white',
-                      color: theme.palette.primary.main,
-                      '&:hover': { bgcolor: 'white', transform: 'scale(1.1)' },
-                    }}
-                    onClick={() => setPlayingVideo(true)}
-                  >
-                    <PlayArrow fontSize="large" />
-                  </IconButton>
-                )}
-              </CardMedia>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  See AI Marketing in Action
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Watch how AI transforms your property listings with automated staging, 
-                  dynamic pricing, and intelligent buyer matching.
-                </Typography>
-              </CardContent>
-            </Card>
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setAiVisionOpen(false)}>Close</Button>
-          <Button variant="contained" color="secondary" startIcon={<AutoAwesome />}>
-            Join Waitlist
-          </Button>
-        </DialogActions>
-      </Dialog>
+        <MenuItem onClick={() => { setAnchorEl(null); setEditFormOpen(true); }}>
+          <ListItemIcon><Edit /></ListItemIcon>
+          Edit Listing
+        </MenuItem>
+        <MenuItem onClick={() => setAnchorEl(null)}>
+          <ListItemIcon><ContentCopy /></ListItemIcon>
+          Duplicate Listing
+        </MenuItem>
+        <MenuItem onClick={() => setAnchorEl(null)}>
+          <ListItemIcon><Download /></ListItemIcon>
+          Export Data
+        </MenuItem>
+        <MenuItem onClick={() => setAnchorEl(null)}>
+          <ListItemIcon><Analytics /></ListItemIcon>
+          View Full Analytics
+        </MenuItem>
+        <Divider />
+        <MenuItem onClick={() => setAnchorEl(null)} sx={{ color: 'error.main' }}>
+          <ListItemIcon><ErrorIcon sx={{ color: 'error.main' }} /></ListItemIcon>
+          Remove Listing
+        </MenuItem>
+      </Menu>
 
       {/* Share Dialog */}
       <Dialog open={shareDialogOpen} onClose={() => setShareDialogOpen(false)}>
         <DialogTitle>Share Listing</DialogTitle>
         <DialogContent>
-          <Stack spacing={2} sx={{ pt: 1 }}>
-            <Button variant="outlined" startIcon={<Email />} fullWidth>
-              Email to Client
-            </Button>
-            <Button variant="outlined" startIcon={<Message />} fullWidth>
-              Send via SMS
-            </Button>
-            <Button variant="outlined" startIcon={<ContentCopy />} fullWidth>
-              Copy Link
-            </Button>
-            <Button variant="outlined" startIcon={<QrCode2 />} fullWidth>
-              Generate QR Code
-            </Button>
-          </Stack>
+          <List>
+            <ListItem button onClick={() => handleShare('copy')}>
+              <ListItemIcon><ContentCopy /></ListItemIcon>
+              <ListItemText primary="Copy Link" />
+            </ListItem>
+            <ListItem button onClick={() => handleShare('email')}>
+              <ListItemIcon><Email /></ListItemIcon>
+              <ListItemText primary="Email" />
+            </ListItem>
+            <ListItem button onClick={() => handleShare('whatsapp')}>
+              <ListItemIcon><WhatsApp /></ListItemIcon>
+              <ListItemText primary="WhatsApp" />
+            </ListItem>
+            <ListItem button onClick={() => handleShare('sms')}>
+              <ListItemIcon><Sms /></ListItemIcon>
+              <ListItemText primary="Text Message" />
+            </ListItem>
+          </List>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setShareDialogOpen(false)}>Cancel</Button>
         </DialogActions>
       </Dialog>
+
+      {/* Edit Form */}
+      <ListingForm
+        open={editFormOpen}
+        onClose={() => setEditFormOpen(false)}
+        listing={listing}
+        onSuccess={() => {
+          setEditFormOpen(false);
+          queryClient.invalidateQueries(['listing', id]);
+          enqueueSnackbar('Listing updated successfully', { variant: 'success' });
+        }}
+      />
+
+      {/* Photo Gallery Dialog */}
+      <Dialog
+        open={photoGalleryOpen}
+        onClose={() => setPhotoGalleryOpen(false)}
+        maxWidth="xl"
+        fullWidth
+      >
+        <DialogContent sx={{ p: 0, position: 'relative', bgcolor: 'black' }}>
+          <IconButton
+            onClick={() => setPhotoGalleryOpen(false)}
+            sx={{
+              position: 'absolute',
+              right: 8,
+              top: 8,
+              color: 'white',
+              zIndex: 1,
+              bgcolor: 'rgba(0,0,0,0.5)',
+            }}
+          >
+            <Close />
+          </IconButton>
+          <Swiper
+            modules={[Navigation, Pagination]}
+            navigation
+            pagination={{ clickable: true }}
+            initialSlide={selectedPhoto}
+            style={{ height: '80vh' }}
+          >
+            {listing.photos.map((photo, index) => (
+              <SwiperSlide key={index}>
+                <Box
+                  sx={{
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    bgcolor: 'black',
+                  }}
+                >
+                  <img
+                    src={photo}
+                    alt={`Property photo ${index + 1}`}
+                    style={{
+                      maxWidth: '100%',
+                      maxHeight: '100%',
+                      objectFit: 'contain',
+                    }}
+                  />
+                </Box>
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        </DialogContent>
+      </Dialog>
+
+      {/* Virtual Tour Dialog */}
+      <Dialog
+        open={showVirtualTour}
+        onClose={() => setShowVirtualTour(false)}
+        maxWidth="xl"
+        fullWidth
+      >
+        <DialogTitle>
+          Virtual Tour
+          <IconButton
+            onClick={() => setShowVirtualTour(false)}
+            sx={{ position: 'absolute', right: 8, top: 8 }}
+          >
+            <Close />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ height: '70vh', bgcolor: 'action.hover', borderRadius: 2, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Typography variant="h6" color="text.secondary">
+              Virtual Tour Viewer
+            </Typography>
+          </Box>
+        </DialogContent>
+      </Dialog>
     </Container>
   );
 };
 
-// Wrap with error boundary
-const ListingDetailWithErrorBoundary = () => (
-  <DetailPageErrorBoundary pageName="Listing Detail">
-    <ListingDetail />
-  </DetailPageErrorBoundary>
-);
-
-export default ListingDetailWithErrorBoundary;
+export default ListingDetail;
