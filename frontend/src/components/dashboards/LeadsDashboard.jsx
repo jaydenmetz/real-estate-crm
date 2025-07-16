@@ -136,7 +136,7 @@ import {
   StaticTimePicker,
   Masonry,
 } from '@mui/material';
-import { styled, keyframes, alpha } from '@mui/material/styles';
+import { styled, keyframes } from '@mui/material/styles';
 import { DataGrid, GridToolbar } from '@mui/x-data-grid';
 import {
   Add,
@@ -2520,13 +2520,16 @@ const LeadsDashboard = () => {
   const [sourceFilter, setSourceFilter] = useState('all');
 
   // Fetch leads
-  const { data: leads = mockLeads, isLoading } = useQuery(
+  const { data: apiResponse, isLoading } = useQuery(
     ['leads', { stage: selectedStage, search: searchQuery, sort: sortBy }],
     () => leadsAPI.getAll({ stage: selectedStage, search: searchQuery, sort: sortBy }),
     {
-      initialData: mockLeads,
+      initialData: { data: mockLeads },
     }
   );
+  
+  // Extract leads array from API response
+  const leads = apiResponse?.data || mockLeads;
 
   // Mutations
   const deleteMutation = useMutation(
@@ -2647,8 +2650,11 @@ const LeadsDashboard = () => {
     return <TrendingUp sx={{ color: '#1976d2' }} />;
   };
 
+  // Ensure leads is always an array
+  const leadsArray = Array.isArray(leads) ? leads : [];
+  
   // Filter leads
-  const filteredLeads = leads.filter(lead => {
+  const filteredLeads = leadsArray.filter(lead => {
     if (selectedStage !== 'all' && lead.stage !== selectedStage) return false;
     if (searchQuery && !lead.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     if (sourceFilter !== 'all' && lead.source !== sourceFilter) return false;
@@ -2657,15 +2663,15 @@ const LeadsDashboard = () => {
   });
 
   // Calculate metrics
-  const totalLeads = leads.length;
-  const hotLeads = leads.filter(l => l.score >= 80).length;
-  const warmLeads = leads.filter(l => l.score >= 60 && l.score < 80).length;
-  const newLeadsThisWeek = leads.filter(l => {
+  const totalLeads = leadsArray.length;
+  const hotLeads = leadsArray.filter(l => l.score >= 80).length;
+  const warmLeads = leadsArray.filter(l => l.score >= 60 && l.score < 80).length;
+  const newLeadsThisWeek = leadsArray.filter(l => {
     const leadDate = new Date(l.lastContact);
     const weekAgo = subDays(new Date(), 7);
     return leadDate >= weekAgo;
   }).length;
-  const conversionRate = ((leads.filter(l => l.stage === 'Closed').length / totalLeads) * 100).toFixed(1);
+  const conversionRate = totalLeads > 0 ? ((leadsArray.filter(l => l.stage === 'Closed').length / totalLeads) * 100).toFixed(1) : '0';
   
   // Define stats object
   const stats = {
