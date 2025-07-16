@@ -2799,7 +2799,11 @@ const LeadsDashboard = () => {
             />
           </Grid>
         </Grid>
+        </Container>
+      </HeroSection>
 
+      {/* Main Content */}
+      <Container maxWidth="xl" sx={{ mt: -6, position: 'relative', zIndex: 1 }}>
         {/* Search and Filter Bar */}
         <Paper sx={{ p: 2, mb: 3 }}>
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
@@ -2997,8 +3001,8 @@ const LeadsDashboard = () => {
             Delete Lead
           </MenuItem>
         </Menu>
-      </Box>
-    </Container>
+      </Container>
+    </Box>
   );
 };
 
