@@ -251,7 +251,6 @@ import {
   Bar,
   LineChart,
   Line,
-  PieChart,
   Pie,
   Cell,
   XAxis,
