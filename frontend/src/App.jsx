@@ -18,7 +18,6 @@ import UserAwareErrorBoundary from './components/common/UserAwareErrorBoundary';
 
 // Components
 import EnhancedNavigation from './components/common/EnhancedNavigation';
-import AlexQuickTaskBar from './components/ai/AlexQuickTaskBar';
 import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Dashboard Components
@@ -179,9 +178,6 @@ function App() {
                           <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
                             {/* Navigation */}
                             <EnhancedNavigation />
-                            
-                            {/* Alex Quick Task Bar - On every page */}
-                            <AlexQuickTaskBar />
                             
                             {/* Main Content */}
                             <Box sx={{ flexGrow: 1, backgroundColor: '#f8f9fa' }}>

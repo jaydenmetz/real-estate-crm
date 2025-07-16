@@ -2065,6 +2065,7 @@ import { format, formatDistanceToNow, subDays, addDays, isToday, isYesterday, is
 import { leadsAPI } from '../../services/api';
 import { safeFormatDate } from '../../utils/safeDateUtils';
 import CountUp from 'react-countup';
+import { motion } from 'framer-motion';
 import {
   AreaChart,
   Area,
@@ -2138,14 +2139,12 @@ const bounce = keyframes`
 
 // Styled Components
 const HeroSection = styled(Box)(({ theme }) => ({
-  background: 'linear-gradient(135deg, #9C27B0 0%, #E91E63 100%)',
+  minHeight: '300px',
+  padding: theme.spacing(6, 0, 4),
+  background: 'linear-gradient(135deg, #10B981 0%, #34D399 100%)',
   color: 'white',
-  padding: theme.spacing(6),
-  borderRadius: theme.spacing(3),
   position: 'relative',
   overflow: 'hidden',
-  marginBottom: theme.spacing(4),
-  boxShadow: '0 20px 60px rgba(156, 39, 176, 0.3)',
   '&::before': {
     content: '""',
     position: 'absolute',
@@ -2169,46 +2168,79 @@ const HeroSection = styled(Box)(({ theme }) => ({
   },
 }));
 
-const StatsCard = styled(Card)(({ theme }) => ({
-  background: 'rgba(255, 255, 255, 0.95)',
-  backdropFilter: 'blur(10px)',
-  borderRadius: theme.spacing(3),
+const StatsCard = styled(Card)(({ theme, color = 'primary' }) => ({
+  background: 'white',
+  borderRadius: theme.spacing(2),
   padding: theme.spacing(3),
   height: '100%',
-  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-  border: '1px solid rgba(156, 39, 176, 0.1)',
-  overflow: 'hidden',
   position: 'relative',
+  overflow: 'hidden',
+  transition: 'all 0.3s ease-in-out',
+  animation: `${fadeIn} 0.6s ease-out`,
   '&:hover': {
-    transform: 'translateY(-8px)',
-    boxShadow: '0 20px 40px rgba(156, 39, 176, 0.2)',
-    '& .stat-icon': {
+    transform: 'translateY(-4px)',
+    boxShadow: theme.shadows[8],
+    '& .stats-icon': {
       transform: 'scale(1.1) rotate(5deg)',
+    },
+  },
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    top: -50,
+    right: -50,
+    width: 150,
+    height: 150,
+    borderRadius: '50%',
+    background: theme.palette[color].main,
+    opacity: 0.05,
+  },
+}));
+
+const LeadCard = styled(Card)(({ theme, status }) => ({
+  background: 'white',
+  borderRadius: theme.spacing(2),
+  overflow: 'hidden',
+  transition: 'all 0.3s ease-in-out',
+  animation: `${fadeIn} 0.6s ease-out`,
+  marginBottom: theme.spacing(3),
+  position: 'relative',
+  cursor: 'pointer',
+  '&:hover': {
+    transform: 'translateY(-2px)',
+    boxShadow: theme.shadows[12],
+    '& .lead-image': {
+      transform: 'scale(1.05)',
+    },
+    '& .action-buttons': {
+      opacity: 1,
     },
   },
   '&::before': {
     content: '""',
     position: 'absolute',
     top: 0,
-    left: -100,
-    width: '100%',
+    left: 0,
+    width: '4px',
     height: '100%',
-    background: 'linear-gradient(90deg, transparent, rgba(156, 39, 176, 0.1), transparent)',
-    animation: `${shimmer} 3s infinite`,
+    background: status === 'hot' ? theme.palette.error.main :
+                status === 'warm' ? theme.palette.warning.main :
+                status === 'cold' ? theme.palette.info.main :
+                theme.palette.grey[400],
   },
 }));
 
-const LeadCard = styled(Card)(({ theme }) => ({
-  borderRadius: theme.spacing(2),
-  overflow: 'hidden',
-  transition: 'all 0.3s ease',
-  cursor: 'pointer',
+const AnimatedButton = styled(Button)(({ theme }) => ({
+  background: 'linear-gradient(135deg, #10B981 0%, #34D399 100%)',
+  color: 'white',
+  fontWeight: 600,
+  padding: theme.spacing(1.5, 3),
+  borderRadius: theme.spacing(3),
+  transition: 'all 0.3s ease-in-out',
   '&:hover': {
-    transform: 'translateY(-5px)',
-    boxShadow: '0 15px 30px rgba(156, 39, 176, 0.15)',
-    '& .lead-actions': {
-      opacity: 1,
-    },
+    background: 'linear-gradient(135deg, #34D399 0%, #10B981 100%)',
+    transform: 'translateY(-2px)',
+    boxShadow: theme.shadows[8],
   },
 }));
 
@@ -2643,20 +2675,33 @@ const LeadsDashboard = () => {
   };
 
   return (
-    <Container maxWidth="xl">
-      <Box sx={{ mb: 4 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-          <Typography variant="h4" component="h1">
-            Leads Management
-          </Typography>
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={handleAddLead}
+    <Box sx={{ minHeight: '100vh', bgcolor: '#f5f5f5' }}>
+      {/* Hero Section */}
+      <HeroSection>
+        <Container maxWidth="xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
           >
-            Add New Lead
-          </Button>
-        </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+              <Box>
+                <Typography variant="h3" fontWeight="bold" gutterBottom>
+                  Lead Management
+                </Typography>
+                <Typography variant="h6" sx={{ opacity: 0.9 }}>
+                  Track and nurture your sales pipeline
+                </Typography>
+              </Box>
+              <AnimatedButton
+                startIcon={<Add />}
+                onClick={handleAddLead}
+                size="large"
+              >
+                New Lead
+              </AnimatedButton>
+            </Box>
+          </motion.div>
 
         {/* Stats Cards */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
