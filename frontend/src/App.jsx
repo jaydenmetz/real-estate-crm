@@ -182,8 +182,15 @@ function App() {
                             {/* Main Content */}
                             <Box sx={{ flexGrow: 1, backgroundColor: '#f8f9fa' }}>
                               <Routes>
-                                {/* Virtual Office as Home */}
+                                {/* Home Dashboard */}
                                 <Route path="/" element={
+                                  <UserAwareErrorBoundary pageName="Home Dashboard">
+                                    <HomeDashboard />
+                                  </UserAwareErrorBoundary>
+                                } />
+                                
+                                {/* AI Agents - moved to separate route */}
+                                <Route path="/ai-agents" element={
                                   <UserAwareErrorBoundary pageName="AI Agents Dashboard">
                                     <AIAgentsDashboardSimple />
                                   </UserAwareErrorBoundary>

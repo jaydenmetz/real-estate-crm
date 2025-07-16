@@ -71,6 +71,7 @@ const EnhancedNavigation = () => {
 
   // Other data menu items
   const otherDataItems = [
+    { path: '/ai-agents', label: 'AI Agents', icon: <SmartToy /> },
     { path: '/activity-log', label: 'Activity Log', icon: <Timeline /> },
     { path: '/all-notes', label: 'All Notes', icon: <Article /> },
     { path: '/reports', label: 'Reports', icon: <Assessment /> },
@@ -97,8 +98,8 @@ const EnhancedNavigation = () => {
               setMobileOpen(false);
             }}
           >
-            <ListItemIcon><SmartToy /></ListItemIcon>
-            <ListItemText primary="Virtual Office" />
+            <ListItemIcon><Dashboard /></ListItemIcon>
+            <ListItemText primary="Home" />
           </ListItemButton>
         </ListItem>
         

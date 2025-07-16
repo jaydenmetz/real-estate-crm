@@ -31,6 +31,7 @@ import {
   ToggleButtonGroup,
   useTheme,
   useMediaQuery,
+  alpha,
   Alert,
   Skeleton,
   Menu,
@@ -2703,25 +2704,78 @@ const LeadsDashboard = () => {
             </Box>
           </motion.div>
 
-        {/* Stats Cards */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatsCardComponent
-              title="Total Leads"
-              value={stats.total}
-              icon={<Person />}
-              color="#1976d2"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatsCardComponent
-              title="Hot Leads"
-              value={stats.hot}
-              icon={<TrendingUp />}
-              color="#d32f2f"
-              trend={`${Math.round((stats.hot / stats.total) * 100)}% of total`}
-            />
-          </Grid>
+          {/* Stats Cards */}
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={6} md={3}>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+              >
+                <StatsCard color="primary">
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <Box>
+                      <Typography variant="h3" fontWeight="bold">
+                        <CountUp end={stats.total} duration={2} />
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                        Total Leads
+                      </Typography>
+                    </Box>
+                    <Avatar 
+                      className="stats-icon"
+                      sx={{ 
+                        bgcolor: alpha('#10B981', 0.1), 
+                        color: 'success.main',
+                        width: 56,
+                        height: 56,
+                        transition: 'all 0.3s ease',
+                      }}
+                    >
+                      <Person />
+                    </Avatar>
+                  </Box>
+                </StatsCard>
+              </motion.div>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >
+                <StatsCard color="error">
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <Box>
+                      <Typography variant="h3" fontWeight="bold">
+                        <CountUp end={stats.hot} duration={2} />
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                        Hot Leads
+                      </Typography>
+                      <Chip
+                        label={`${Math.round((stats.hot / stats.total) * 100)}% of total`}
+                        size="small"
+                        color="error"
+                        sx={{ mt: 1 }}
+                      />
+                    </Box>
+                    <Avatar 
+                      className="stats-icon"
+                      sx={{ 
+                        bgcolor: alpha('#EF4444', 0.1), 
+                        color: 'error.main',
+                        width: 56,
+                        height: 56,
+                        transition: 'all 0.3s ease',
+                      }}
+                    >
+                      <LocalFireDepartment />
+                    </Avatar>
+                  </Box>
+                </StatsCard>
+              </motion.div>
+            </Grid>
           <Grid item xs={12} sm={6} md={3}>
             <StatsCardComponent
               title="Warm Leads"
