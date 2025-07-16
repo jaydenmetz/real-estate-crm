@@ -77,7 +77,6 @@ import {
   BottomNavigation,
   BottomNavigationAction,
   Slider,
-  Radio,
   RadioGroup,
   FormLabel,
   FormHelperText,
@@ -961,7 +960,6 @@ import {
   LineStyle,
   LineWeight,
   LinearScale,
-  Link as LinkIcon,
   LinkOff,
   LinkedCamera,
   Liquor,
@@ -1383,7 +1381,6 @@ import {
   Quiz,
   RMobiledata,
   Radar,
-  Radio,
   RadioButtonChecked as RadioButtonCheckedIcon,
   RadioButtonUnchecked as RadioButtonUncheckedIcon,
   Railway,
@@ -1706,7 +1703,6 @@ import {
   StarRate,
   Stars,
   Start,
-  Sticky,
   Sticky2,
   Stop as StopIcon,
   StopCircle as StopCircleIcon,
@@ -1770,7 +1766,6 @@ import {
   SystemSecurityUpdateWarning,
   SystemUpdate,
   SystemUpdateAlt,
-  Tab,
   TabUnselected,
   TableBar,
   TableChart,
@@ -1829,7 +1824,6 @@ import {
   Tiktok,
   TimeToLeave,
   Timelapse as TimelapseIcon,
-  Timeline,
   Timer as TimerIcon,
   Timer10 as Timer10Icon,
   Timer10Select,
@@ -2057,7 +2051,7 @@ import {
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Navigation, Pagination, Autoplay, EffectFade, EffectCoverflow, Thumbs } from 'swiper/modules';
+import { Navigation as SwiperNavigation, Pagination as SwiperPagination, Autoplay, EffectFade, EffectCoverflow, Thumbs } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
@@ -2073,11 +2067,11 @@ import CountUp from 'react-countup';
 import {
   AreaChart,
   Area,
-  BarChart,
+  BarChart as RechartsBarChart,
   Bar,
-  LineChart,
+  LineChart as RechartsLineChart,
   Line,
-  PieChart,
+  PieChart as RechartsPieChart,
   Pie,
   Cell,
   XAxis,
@@ -2089,7 +2083,7 @@ import {
   RadialBarChart,
   RadialBar,
   Treemap,
-  Radar,
+  Radar as RechartsRadar,
   RadarChart,
   PolarGrid,
   PolarAngleAxis,
