@@ -1,3 +1,5 @@
+// frontend/src/components/details/ClientDetail.jsx
+
 import React, { useState } from 'react';
 import {
   Container,
@@ -12,10 +14,13 @@ import {
   Tab,
   Card,
   CardContent,
+  CardActions,
   List,
   ListItem,
   ListItemText,
   ListItemIcon,
+  ListItemAvatar,
+  ListItemSecondaryAction,
   IconButton,
   TextField,
   Divider,
@@ -37,7 +42,34 @@ import {
   FormControlLabel,
   Checkbox,
   Menu,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  CircularProgress,
+  Stack,
+  Badge,
+  useTheme,
+  useMediaQuery,
+  Skeleton,
+  Collapse,
+  Fade,
+  Grow,
+  Zoom,
+  SpeedDial,
+  SpeedDialAction,
+  SpeedDialIcon,
+  Fab,
+  ButtonGroup,
+  ToggleButton,
+  ToggleButtonGroup,
+  Rating,
+  AvatarGroup,
+  ImageList,
+  ImageListItem,
+  Switch,
 } from '@mui/material';
+import { styled, alpha, keyframes } from '@mui/material/styles';
 import DetailPageDebugger from '../common/DetailPageDebugger';
 import DetailPageErrorBoundary from '../common/DetailPageErrorBoundary';
 import {
@@ -95,81 +127,321 @@ import {
   Work,
   LocalOffer,
   SwapHoriz,
+  Share,
+  Print,
+  Favorite,
+  FavoriteBorder,
+  Message,
+  Event,
+  Sms,
+  VideoCall,
+  MeetingRoom,
+  ContactMail,
+  Badge as BadgeIcon,
+  Verified,
+  Groups,
+  ThumbUp,
+  ThumbDown,
+  Flag,
+  Warning,
+  Info,
+  Check,
+  Close,
+  Remove,
+  Archive,
+  Delete,
+  Refresh,
+  QrCode2,
+  Receipt,
+  Category,
+  Label,
+  Bookmark,
+  BookmarkBorder,
+  NotificationsActive,
+  NotificationsOff,
+  VolumeUp,
+  VolumeOff,
+  VisibilityOff,
+  Lock,
+  LockOpen,
+  Security,
+  Policy,
+  Gavel,
+  AccountCircle,
+  SupervisorAccount,
+  ManageAccounts,
+  SupportAgent,
+  ContactSupport,
+  QuestionAnswer,
+  Forum,
+  Comment,
+  RateReview,
+  Feedback,
+  BugReport,
+  Analytics,
+  BarChart,
+  PieChart,
+  ShowChart,
+  TrendingFlat,
+  SignalCellularAlt,
+  Speed,
+  Timer as TimerIcon,
+  Update,
+  Cached,
+  Sync,
+  CloudSync,
+  CloudDone,
+  CloudOff,
+  WifiOff,
+  SignalWifiOff,
+  Battery20,
+  BatteryFull,
+  PowerSettingsNew,
+  Highlight,
+  FlashOn,
+  FlashOff,
+  WbSunny,
+  Brightness2,
+  Tonality,
+  Palette,
+  ColorLens,
+  Brush,
+  FormatPaint,
+  FormatColorFill,
+  FormatColorText,
+  FormatColorReset,
+  Gradient,
+  Grain,
+  Texture,
+  ViewCompact,
+  ViewModule,
+  ViewList,
+  ViewAgenda,
+  ViewCarousel,
+  ViewColumn,
+  ViewQuilt,
+  GridOn,
+  GridOff,
+  Dashboard,
+  WidgetsOutlined,
+  Extension,
+  Puzzle,
+  ContentCopy,
+  WhatsApp,
+  LinkedIn,
+  Facebook,
+  Twitter,
 } from '@mui/icons-material';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Pagination, Autoplay, EffectFade } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+import 'swiper/css/effect-fade';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { format, formatDistanceToNow } from 'date-fns';
-import { api } from '../../services/api';
+import { clientsAPI } from '../../services/api';
+import { safeFormatDate } from '../../utils/safeDateUtils';
+import CountUp from 'react-countup';
+import {
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  LineChart,
+  Line,
+  PieChart,
+  Pie,
+  Cell,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  Legend,
+  ResponsiveContainer,
+  RadialBarChart,
+  RadialBar,
+  Treemap,
+  Radar,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+} from 'recharts';
 
-// Safe date parsing helper
-const safeParseDate = (dateValue) => {
-  if (!dateValue) return null;
-  
-  try {
-    // If it's already a Date object, return it
-    if (dateValue instanceof Date) {
-      return isNaN(dateValue.getTime()) ? null : dateValue;
-    }
-    
-    // Try to parse the date string
-    const parsed = new Date(dateValue);
-    return isNaN(parsed.getTime()) ? null : parsed;
-  } catch (error) {
-    console.error('Error parsing date:', error);
-    return null;
-  }
-};
+// Styled Components
+const HeroSection = styled(Box)(({ theme }) => ({
+  background: 'linear-gradient(135deg, #1565C0 0%, #42A5F5 100%)',
+  color: 'white',
+  padding: theme.spacing(6),
+  borderRadius: theme.spacing(3),
+  position: 'relative',
+  overflow: 'hidden',
+  marginBottom: theme.spacing(4),
+  boxShadow: '0 20px 60px rgba(21, 101, 192, 0.3)',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: -50,
+    right: -50,
+    width: 200,
+    height: 200,
+    background: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: '50%',
+  },
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    bottom: -30,
+    left: -30,
+    width: 150,
+    height: 150,
+    background: 'rgba(255, 255, 255, 0.05)',
+    borderRadius: '50%',
+  },
+}));
 
-// Safe date formatting helper
-const safeFormatDate = (dateValue, formatString, fallback = 'N/A') => {
-  const date = safeParseDate(dateValue);
-  if (!date) return fallback;
-  
-  try {
-    return format(date, formatString);
-  } catch (error) {
-    console.error('Error formatting date:', error);
-    return fallback;
-  }
-};
+const StatsCard = styled(Card)(({ theme }) => ({
+  background: 'rgba(255, 255, 255, 0.9)',
+  backdropFilter: 'blur(10px)',
+  borderRadius: theme.spacing(2),
+  boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)',
+  transition: 'all 0.3s ease',
+  height: '100%',
+  '&:hover': {
+    transform: 'translateY(-5px)',
+    boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
+  },
+}));
 
-// Safe formatDistanceToNow helper
-const safeFormatDistanceToNow = (dateValue, options = {}, fallback = 'N/A') => {
-  const date = safeParseDate(dateValue);
-  if (!date) return fallback;
-  
-  try {
-    return formatDistanceToNow(date, options);
-  } catch (error) {
-    console.error('Error formatting distance to now:', error);
-    return fallback;
+const MetricCard = styled(Paper)(({ theme }) => ({
+  padding: theme.spacing(3),
+  textAlign: 'center',
+  background: alpha(theme.palette.background.paper, 0.8),
+  backdropFilter: 'blur(10px)',
+  borderRadius: theme.spacing(2),
+  transition: 'all 0.3s ease',
+  cursor: 'pointer',
+  position: 'relative',
+  overflow: 'hidden',
+  '&:hover': {
+    transform: 'translateY(-5px)',
+    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.15)',
+    '& .metric-icon': {
+      transform: 'scale(1.2) rotate(5deg)',
+    },
+  },
+  '& .metric-icon': {
+    transition: 'transform 0.3s ease',
+  },
+}));
+
+const pulseAnimation = keyframes`
+  0% {
+    box-shadow: 0 0 0 0 rgba(21, 101, 192, 0.4);
   }
+  70% {
+    box-shadow: 0 0 0 10px rgba(21, 101, 192, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(21, 101, 192, 0);
+  }
+`;
+
+const StatusBadge = styled(Badge)(({ theme, status }) => ({
+  '& .MuiBadge-badge': {
+    backgroundColor: status === 'active' ? theme.palette.success.main : theme.palette.grey[400],
+    color: theme.palette.common.white,
+    boxShadow: `0 0 0 2px ${theme.palette.background.paper}`,
+    '&::after': {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: '100%',
+      height: '100%',
+      borderRadius: '50%',
+      animation: status === 'active' ? `${pulseAnimation} 1.4s infinite` : 'none',
+      content: '""',
+    },
+  },
+}));
+
+const ActivityCard = styled(Card)(({ theme }) => ({
+  marginBottom: theme.spacing(2),
+  transition: 'all 0.3s ease',
+  borderRadius: theme.spacing(2),
+  '&:hover': {
+    transform: 'translateX(5px)',
+    boxShadow: '0 5px 20px rgba(0, 0, 0, 0.1)',
+  },
+}));
+
+const PropertyCard = styled(Card)(({ theme }) => ({
+  height: '100%',
+  display: 'flex',
+  flexDirection: 'column',
+  transition: 'all 0.3s ease',
+  borderRadius: theme.spacing(2),
+  overflow: 'hidden',
+  '&:hover': {
+    transform: 'translateY(-5px)',
+    boxShadow: '0 15px 40px rgba(0, 0, 0, 0.15)',
+  },
+}));
+
+const TabPanel = (props) => {
+  const { children, value, index, ...other } = props;
+  return (
+    <div
+      role="tabpanel"
+      hidden={value !== index}
+      id={`client-tabpanel-${index}`}
+      aria-labelledby={`client-tab-${index}`}
+      {...other}
+    >
+      {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
+    </div>
+  );
 };
 
 const ClientDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [activeTab, setActiveTab] = useState(0);
   const [editMode, setEditMode] = useState(false);
   const [newNote, setNewNote] = useState('');
   const [anchorEl, setAnchorEl] = useState(null);
+  const [noteDialog, setNoteDialog] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [taskDialog, setTaskDialog] = useState(false);
+  const [newTask, setNewTask] = useState({ title: '', dueDate: '', priority: 'medium' });
+  const [communicationDialog, setCommunicationDialog] = useState(false);
+  const [communicationType, setCommunicationType] = useState('email');
+  const [speedDialOpen, setSpeedDialOpen] = useState(false);
+  const [propertyImages, setPropertyImages] = useState([
+    'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800',
+    'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800',
+    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800',
+  ]);
 
   // Debug logging
   console.log('[ClientDetail] Component mounted');
   console.log('[ClientDetail] ID received:', id);
-  console.log('[ClientDetail] Window location:', window.location.href);
 
   // Fetch client details
   const { data: client, isLoading, error, isError } = useQuery(
     ['client', id],
     async () => {
       try {
-        const res = await api.get(`/clients/${id}`);
-        return res.data;
+        const res = await clientsAPI.getById(id);
+        return res.data || res;
       } catch (err) {
         console.error('Error fetching client:', err);
-        // Return mock data on error
         return mockClient;
       }
     },
@@ -181,7 +453,7 @@ const ClientDetail = () => {
 
   // Mock data for demonstration
   const mockClient = {
-    id: 1,
+    id: id,
     name: 'Michael & Sarah Thompson',
     email: 'michael.thompson@email.com',
     phone: '(555) 234-5678',
@@ -202,11 +474,13 @@ const ClientDetail = () => {
     preferredContactMethod: 'Email',
     timeZone: 'PST',
     notes: 'Looking for 4BR home in good school district. Both work from home occasionally.',
-    tags: ['VIP', 'Cash Buyer', 'Repeat Client'],
+    tags: ['VIP', 'Cash Buyer', 'Repeat Client', 'Pre-approved'],
     starred: true,
-    lifetimeValue: '$45,000',
+    lifetimeValue: 45000,
     totalTransactions: 3,
     referrals: 5,
+    rating: 5,
+    avatar: 'https://i.pravatar.cc/150?u=michael',
     properties: {
       owned: [
         {
@@ -214,9 +488,10 @@ const ClientDetail = () => {
           address: '789 Oak Street, San Diego, CA 92103',
           type: 'Single Family',
           purchaseDate: '2018-07-15',
-          purchasePrice: '$650,000',
-          currentValue: '$850,000',
-          status: 'Primary Residence'
+          purchasePrice: 650000,
+          currentValue: 850000,
+          status: 'Primary Residence',
+          image: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400'
         }
       ],
       interested: [
@@ -224,17 +499,19 @@ const ClientDetail = () => {
           id: 2,
           address: '456 Maple Drive, La Jolla, CA 92037',
           type: 'Single Family',
-          listPrice: '$1,150,000',
+          listPrice: 1150000,
           status: 'Scheduled Showing',
-          notes: 'Love the location, concerned about price'
+          notes: 'Love the location, concerned about price',
+          image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400'
         },
         {
           id: 3,
           address: '321 Beach Blvd, Carlsbad, CA 92008',
           type: 'Condo',
-          listPrice: '$875,000',
+          listPrice: 875000,
           status: 'Viewed',
-          notes: 'Backup option'
+          notes: 'Backup option',
+          image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=400'
         }
       ]
     },
@@ -356,15 +633,32 @@ const ClientDetail = () => {
   };
 
   const displayClient = client || mockClient;
-  
-  // Ensure displayClient has a name property
-  if (displayClient && !displayClient.name) {
-    if (displayClient.firstName || displayClient.lastName) {
-      displayClient.name = `${displayClient.firstName || ''} ${displayClient.lastName || ''}`.trim();
-    } else {
-      displayClient.name = 'Unknown Client';
-    }
-  }
+
+  // Chart data
+  const transactionHistory = [
+    { month: 'Jan', value: 0 },
+    { month: 'Feb', value: 0 },
+    { month: 'Mar', value: 0 },
+    { month: 'Apr', value: 0 },
+    { month: 'May', value: 425 },
+    { month: 'Jun', value: 0 },
+    { month: 'Jul', value: 0 },
+    { month: 'Aug', value: 550 },
+  ];
+
+  const communicationStats = [
+    { name: 'Emails', value: 45, color: '#1565C0' },
+    { name: 'Calls', value: 23, color: '#42A5F5' },
+    { name: 'Texts', value: 18, color: '#90CAF9' },
+    { name: 'Meetings', value: 8, color: '#BBDEFB' },
+  ];
+
+  const activityTimeline = [
+    { date: '2024-01-10', type: 'email', title: 'Sent property listings', icon: <Email /> },
+    { date: '2024-01-08', type: 'call', title: 'Discussed financing options', icon: <Phone /> },
+    { date: '2024-01-05', type: 'meeting', title: 'Property viewing - 456 Oak Ave', icon: <MeetingRoom /> },
+    { date: '2024-01-02', type: 'note', title: 'Added preference notes', icon: <Note /> },
+  ];
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -439,19 +733,53 @@ const ClientDetail = () => {
     if (!newNote.trim()) return;
     
     try {
-      // Add note API call
-      await api.post(`/clients/${id}/notes`, { content: newNote });
+      await clientsAPI.addNote(id, { content: newNote });
       queryClient.invalidateQueries(['client', id]);
       setNewNote('');
+      setNoteDialog(false);
     } catch (error) {
       console.error('Error adding note:', error);
     }
   };
 
+  const handleShare = (platform) => {
+    console.log(`Sharing via ${platform}...`);
+    setShareDialogOpen(false);
+  };
+
+  const speedDialActions = [
+    { icon: <Email />, name: 'Send Email', action: () => setCommunicationDialog(true) },
+    { icon: <Phone />, name: 'Log Call', action: () => console.log('Call logging') },
+    { icon: <Event />, name: 'Schedule Meeting', action: () => console.log('Meeting scheduler') },
+    { icon: <Note />, name: 'Add Note', action: () => setNoteDialog(true) },
+    { icon: <Assignment />, name: 'Create Task', action: () => setTaskDialog(true) },
+  ];
+
   if (isLoading) {
     return (
-      <Container sx={{ py: 4 }}>
-        <LinearProgress />
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Skeleton variant="rectangular" height={300} sx={{ mb: 3, borderRadius: 3 }} />
+        <Grid container spacing={3}>
+          {[1, 2, 3, 4].map((i) => (
+            <Grid item xs={12} md={3} key={i}>
+              <Skeleton variant="rectangular" height={150} sx={{ borderRadius: 2 }} />
+            </Grid>
+          ))}
+        </Grid>
+      </Container>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Container maxWidth="xl" sx={{ py: 4 }}>
+        <Alert severity="error" action={
+          <Button color="inherit" size="small" onClick={() => navigate('/clients')}>
+            Back to Clients
+          </Button>
+        }>
+          Failed to load client details. Please try again later.
+        </Alert>
       </Container>
     );
   }
@@ -471,676 +799,798 @@ const ClientDetail = () => {
           usingMockData: !client && !!displayClient
         }}
       />
-      {/* Header */}
-      <Box sx={{ mb: 3 }}>
-        <Breadcrumbs separator="›" sx={{ mb: 2 }}>
-          <Link color="inherit" href="/dashboard" onClick={(e) => { e.preventDefault(); navigate('/dashboard'); }}>
-            Dashboard
-          </Link>
-          <Link color="inherit" href="/clients" onClick={(e) => { e.preventDefault(); navigate('/clients'); }}>
-            Clients
-          </Link>
-          <Typography color="text.primary">{displayClient.name}</Typography>
-        </Breadcrumbs>
 
-        <Grid container spacing={3} alignItems="center">
-          <Grid item xs={12} md={6}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <IconButton onClick={() => navigate('/clients')}>
-                <ArrowBack />
-              </IconButton>
-              <Avatar sx={{ width: 64, height: 64, bgcolor: 'primary.main' }}>
-                {displayClient.name ? displayClient.name.split(' ').map(n => n[0]).join('') : 'UC'}
-              </Avatar>
-              <Box>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Typography variant="h4">{displayClient.name}</Typography>
-                  <Tooltip title={displayClient.starred ? 'Remove from favorites' : 'Add to favorites'}>
-                    <IconButton size="small" onClick={() => console.log('Toggle star')}>
-                      {displayClient.starred ? <Star color="warning" /> : <StarBorder />}
-                    </IconButton>
-                  </Tooltip>
+      {/* Breadcrumbs */}
+      <Breadcrumbs sx={{ mb: 3 }}>
+        <Link
+          component="button"
+          variant="body1"
+          onClick={() => navigate('/dashboard')}
+          sx={{ textDecoration: 'none', color: 'inherit' }}
+        >
+          <Home sx={{ mr: 0.5, fontSize: 20, verticalAlign: 'middle' }} />
+          Dashboard
+        </Link>
+        <Link
+          component="button"
+          variant="body1"
+          onClick={() => navigate('/clients')}
+          sx={{ textDecoration: 'none', color: 'inherit' }}
+        >
+          Clients
+        </Link>
+        <Typography color="primary">{displayClient.name}</Typography>
+      </Breadcrumbs>
+
+      {/* Hero Section with Property Images Carousel */}
+      <HeroSection>
+        <Box sx={{ position: 'relative', height: '100%' }}>
+          <Swiper
+            modules={[Navigation, Pagination, Autoplay, EffectFade]}
+            spaceBetween={0}
+            slidesPerView={1}
+            effect="fade"
+            autoplay={{ delay: 5000, disableOnInteraction: false }}
+            pagination={{ clickable: true }}
+            style={{ 
+              position: 'absolute', 
+              top: 0, 
+              left: 0, 
+              right: 0, 
+              bottom: 0,
+              opacity: 0.2,
+              borderRadius: theme.spacing(3),
+            }}
+          >
+            {propertyImages.map((image, index) => (
+              <SwiperSlide key={index}>
+                <Box
+                  sx={{
+                    height: '400px',
+                    backgroundImage: `url(${image})`,
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                  }}
+                />
+              </SwiperSlide>
+            ))}
+          </Swiper>
+          
+          <Grid container spacing={4} alignItems="center" sx={{ position: 'relative', zIndex: 1 }}>
+            <Grid item xs={12} md={8}>
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6 }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
+                  <StatusBadge
+                    overlap="circular"
+                    anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                    variant="dot"
+                    status={displayClient.status === 'Active' ? 'active' : 'inactive'}
+                  >
+                    <Avatar
+                      src={displayClient.avatar}
+                      sx={{
+                        width: 100,
+                        height: 100,
+                        border: '4px solid white',
+                        boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2)',
+                      }}
+                    >
+                      {displayClient.name?.[0]}
+                    </Avatar>
+                  </StatusBadge>
+                  <Box sx={{ ml: 3 }}>
+                    <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
+                      {displayClient.name}
+                    </Typography>
+                    <Stack direction="row" spacing={2} alignItems="center">
+                      <Chip
+                        label={displayClient.type}
+                        icon={getTypeIcon(displayClient.type)}
+                        sx={{
+                          backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                          color: 'white',
+                          fontWeight: 600,
+                        }}
+                      />
+                      <Rating value={displayClient.rating || 0} readOnly sx={{ 
+                        '& .MuiRating-iconFilled': { color: 'white' },
+                        '& .MuiRating-iconEmpty': { color: 'rgba(255, 255, 255, 0.4)' }
+                      }} />
+                      <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                        Client since {safeFormatDate(displayClient.createdAt, 'MMM yyyy')}
+                      </Typography>
+                    </Stack>
+                  </Box>
                 </Box>
-                <Box sx={{ display: 'flex', gap: 1, mt: 1 }}>
-                  <Chip
-                    label={displayClient.status}
-                    size="small"
-                    color={getStatusColor(displayClient.status)}
-                  />
-                  <Chip
-                    label={displayClient.type}
-                    size="small"
-                    icon={getTypeIcon(displayClient.type)}
-                  />
-                  {(displayClient.tags || []).map(tag => (
-                    <Chip key={tag} label={tag} size="small" variant="outlined" />
-                  ))}
+                <Stack direction="row" spacing={2} flexWrap="wrap">
+                  <Button
+                    variant="contained"
+                    startIcon={<Email />}
+                    onClick={() => setCommunicationDialog(true)}
+                    sx={{
+                      backgroundColor: 'white',
+                      color: 'primary.main',
+                      '&:hover': { backgroundColor: 'grey.100' },
+                    }}
+                  >
+                    Send Email
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    startIcon={<Phone />}
+                    sx={{
+                      borderColor: 'white',
+                      color: 'white',
+                      '&:hover': {
+                        borderColor: 'white',
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      },
+                    }}
+                  >
+                    Call Client
+                  </Button>
+                  <IconButton
+                    onClick={handleMenuClick}
+                    sx={{ color: 'white' }}
+                  >
+                    <MoreVert />
+                  </IconButton>
+                </Stack>
+              </motion.div>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >
+                <Grid container spacing={2}>
+                  <Grid item xs={6}>
+                    <MetricCard elevation={0}>
+                      <AttachMoney className="metric-icon" sx={{ fontSize: 40, color: 'success.main', mb: 1 }} />
+                      <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                        $<CountUp end={displayClient.lifetimeValue / 1000} duration={2} />K
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Lifetime Value
+                      </Typography>
+                    </MetricCard>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <MetricCard elevation={0}>
+                      <Assignment className="metric-icon" sx={{ fontSize: 40, color: 'primary.main', mb: 1 }} />
+                      <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                        <CountUp end={displayClient.totalTransactions} duration={2} />
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Transactions
+                      </Typography>
+                    </MetricCard>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <MetricCard elevation={0}>
+                      <Groups className="metric-icon" sx={{ fontSize: 40, color: 'info.main', mb: 1 }} />
+                      <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                        <CountUp end={displayClient.referrals} duration={2} />
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Referrals
+                      </Typography>
+                    </MetricCard>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <MetricCard elevation={0}>
+                      <Schedule className="metric-icon" sx={{ fontSize: 40, color: 'warning.main', mb: 1 }} />
+                      <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                        {displayClient.lastContact ? 
+                          Math.floor((new Date() - new Date(displayClient.lastContact)) / (1000 * 60 * 60 * 24)) 
+                          : 0
+                        }
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Days Since Contact
+                      </Typography>
+                    </MetricCard>
+                  </Grid>
+                </Grid>
+              </motion.div>
+            </Grid>
+          </Grid>
+        </Box>
+      </HeroSection>
+
+      {/* Quick Info Cards */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} md={4}>
+          <StatsCard>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                Contact Information
+              </Typography>
+              <Stack spacing={2}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Email color="action" />
+                  <Box>
+                    <Typography variant="body2" color="text.secondary">Email</Typography>
+                    <Typography variant="body1">{displayClient.email}</Typography>
+                  </Box>
                 </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Phone color="action" />
+                  <Box>
+                    <Typography variant="body2" color="text.secondary">Phone</Typography>
+                    <Typography variant="body1">{displayClient.phone}</Typography>
+                  </Box>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <LocationOn color="action" />
+                  <Box>
+                    <Typography variant="body2" color="text.secondary">Address</Typography>
+                    <Typography variant="body1">{displayClient.address}</Typography>
+                  </Box>
+                </Box>
+              </Stack>
+            </CardContent>
+          </StatsCard>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <StatsCard>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                Personal Details
+              </Typography>
+              <Stack spacing={2}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Cake color="action" />
+                  <Box>
+                    <Typography variant="body2" color="text.secondary">Birthday</Typography>
+                    <Typography variant="body1">{safeFormatDate(displayClient.birthday, 'MMMM d')}</Typography>
+                  </Box>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Work color="action" />
+                  <Box>
+                    <Typography variant="body2" color="text.secondary">Occupation</Typography>
+                    <Typography variant="body1">{displayClient.occupation}</Typography>
+                  </Box>
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Business color="action" />
+                  <Box>
+                    <Typography variant="body2" color="text.secondary">Company</Typography>
+                    <Typography variant="body1">{displayClient.company || 'N/A'}</Typography>
+                  </Box>
+                </Box>
+              </Stack>
+            </CardContent>
+          </StatsCard>
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <StatsCard>
+            <CardContent>
+              <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                Preferences
+              </Typography>
+              <Stack spacing={1}>
+                <Chip
+                  icon={<ContactMail />}
+                  label={`Preferred: ${displayClient.preferredContactMethod}`}
+                  variant="outlined"
+                  size="small"
+                />
+                <Chip
+                  icon={<Home />}
+                  label={`Type: ${displayClient.preferences?.propertyType?.join(', ') || 'Any'}`}
+                  variant="outlined"
+                  size="small"
+                />
+                <Chip
+                  icon={<AttachMoney />}
+                  label={`Budget: ${displayClient.budget}`}
+                  variant="outlined"
+                  size="small"
+                />
+              </Stack>
+              <Box sx={{ mt: 2 }}>
+                {displayClient.tags?.map((tag, idx) => (
+                  <Chip
+                    key={idx}
+                    label={tag}
+                    size="small"
+                    sx={{ mr: 0.5, mb: 0.5 }}
+                    color={tag === 'VIP' ? 'primary' : 'default'}
+                  />
+                ))}
               </Box>
-            </Box>
-          </Grid>
-          <Grid item xs={12} md={6} sx={{ textAlign: 'right' }}>
-            <Button
-              variant="outlined"
-              startIcon={<Edit />}
-              onClick={() => setEditMode(!editMode)}
-              sx={{ mr: 1 }}
-            >
-              Edit
-            </Button>
-            <IconButton onClick={handleMenuClick}>
-              <MoreVert />
-            </IconButton>
-            <Menu
-              anchorEl={anchorEl}
-              open={Boolean(anchorEl)}
-              onClose={handleMenuClose}
-            >
-              <MenuItem onClick={() => { handleMenuClose(); }}>
-                <ListItemIcon><Email /></ListItemIcon>
-                Send Email
-              </MenuItem>
-              <MenuItem onClick={() => { handleMenuClose(); }}>
-                <ListItemIcon><Phone /></ListItemIcon>
-                Call Client
-              </MenuItem>
-              <MenuItem onClick={() => { handleMenuClose(); }}>
-                <ListItemIcon><CalendarToday /></ListItemIcon>
-                Schedule Appointment
-              </MenuItem>
-              <MenuItem onClick={() => { handleMenuClose(); }}>
-                <ListItemIcon><Description /></ListItemIcon>
-                Generate Report
-              </MenuItem>
-            </Menu>
-          </Grid>
-        </Grid>
-      </Box>
-
-      {/* Quick Stats */}
-      <Grid container spacing={2} sx={{ mb: 3 }}>
-        <Grid item xs={6} sm={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" color="primary">
-                {displayClient.totalTransactions}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Transactions
-              </Typography>
             </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={6} sm={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" color="secondary">
-                {displayClient.lifetimeValue}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Lifetime Value
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={6} sm={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" color="success.main">
-                {displayClient.referrals}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Referrals
-              </Typography>
-            </CardContent>
-          </Card>
-        </Grid>
-        <Grid item xs={6} sm={3}>
-          <Card>
-            <CardContent sx={{ textAlign: 'center' }}>
-              <Typography variant="h4" color="info.main">
-                {safeFormatDistanceToNow(displayClient.lastContact, { addSuffix: true })}
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Last Contact
-              </Typography>
-            </CardContent>
-          </Card>
+          </StatsCard>
         </Grid>
       </Grid>
 
       {/* Tabs */}
       <Paper sx={{ mb: 3 }}>
-        <Tabs value={activeTab} onChange={handleTabChange}>
-          <Tab label="Overview" />
-          <Tab label="Properties" />
-          <Tab label="Appointments" />
-          <Tab label="Communications" />
-          <Tab label="Documents" />
-          <Tab label="Notes" />
+        <Tabs
+          value={activeTab}
+          onChange={handleTabChange}
+          variant="scrollable"
+          scrollButtons="auto"
+        >
+          <Tab label="Overview" icon={<Dashboard />} iconPosition="start" />
+          <Tab label="Properties" icon={<Home />} iconPosition="start" />
+          <Tab label="Communications" icon={<Message />} iconPosition="start" />
+          <Tab label="Appointments" icon={<CalendarToday />} iconPosition="start" />
+          <Tab label="Documents" icon={<Folder />} iconPosition="start" />
+          <Tab label="Analytics" icon={<Analytics />} iconPosition="start" />
+          <Tab label="Activity" icon={<History />} iconPosition="start" />
+          <Tab label="Notes" icon={<Note />} iconPosition="start" />
         </Tabs>
       </Paper>
 
       {/* Tab Content */}
-      {activeTab === 0 && (
+      <TabPanel value={activeTab} index={0}>
+        {/* Overview Tab */}
         <Grid container spacing={3}>
-          {/* Contact Information */}
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Contact Information
-                </Typography>
-                <List>
-                  <ListItem>
-                    <ListItemIcon><Email /></ListItemIcon>
-                    <ListItemText 
-                      primary="Email"
-                      secondary={displayClient.email || 'No email provided'}
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemIcon><Phone /></ListItemIcon>
-                    <ListItemText 
-                      primary="Phone"
-                      secondary={displayClient.phone || 'No phone provided'}
-                    />
-                  </ListItem>
-                  {displayClient.alternatePhone && (
+          <Grid item xs={12} md={8}>
+            <Paper sx={{ p: 3, mb: 3 }}>
+              <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+                Transaction History
+              </Typography>
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={transactionHistory}>
+                  <defs>
+                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#1565C0" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#1565C0" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="month" stroke="#666" />
+                  <YAxis stroke="#666" />
+                  <RechartsTooltip />
+                  <Area
+                    type="monotone"
+                    dataKey="value"
+                    stroke="#1565C0"
+                    fillOpacity={1}
+                    fill="url(#colorValue)"
+                    strokeWidth={2}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </Paper>
+            
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+                Recent Transactions
+              </Typography>
+              <List>
+                {displayClient.properties?.owned?.map((transaction, index) => (
+                  <React.Fragment key={transaction.id}>
                     <ListItem>
-                      <ListItemIcon><Phone /></ListItemIcon>
-                      <ListItemText 
-                        primary="Alternate Phone"
-                        secondary={displayClient.alternatePhone}
-                      />
-                    </ListItem>
-                  )}
-                  <ListItem>
-                    <ListItemIcon><LocationOn /></ListItemIcon>
-                    <ListItemText 
-                      primary="Address"
-                      secondary={displayClient.address || 'No address provided'}
-                    />
-                  </ListItem>
-                </List>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Personal Information */}
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Personal Information
-                </Typography>
-                <List>
-                  <ListItem>
-                    <ListItemIcon><Work /></ListItemIcon>
-                    <ListItemText 
-                      primary="Occupation"
-                      secondary={displayClient.occupation}
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemIcon><Cake /></ListItemIcon>
-                    <ListItemText 
-                      primary="Birthday"
-                      secondary={displayClient.birthday}
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemIcon><FamilyRestroom /></ListItemIcon>
-                    <ListItemText 
-                      primary="Anniversary"
-                      secondary={displayClient.anniversary}
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemIcon><Schedule /></ListItemIcon>
-                    <ListItemText 
-                      primary="Time Zone"
-                      secondary={displayClient.timeZone}
-                    />
-                  </ListItem>
-                </List>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Financial Information */}
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Financial Information
-                </Typography>
-                <List>
-                  <ListItem>
-                    <ListItemIcon><AttachMoney /></ListItemIcon>
-                    <ListItemText 
-                      primary="Budget"
-                      secondary={displayClient.budget}
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemIcon><CheckCircle /></ListItemIcon>
-                    <ListItemText 
-                      primary="Pre-Approved"
-                      secondary={displayClient.preApproved ? 'Yes' : 'No'}
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemIcon><AccountBalance /></ListItemIcon>
-                    <ListItemText 
-                      primary="Lender"
-                      secondary={displayClient.lender}
-                    />
-                  </ListItem>
-                </List>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Activity Timeline */}
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Recent Activity
-                </Typography>
-                {(displayClient.activities || []).length > 0 ? (
-                  <Timeline>
-                    {(displayClient.activities || []).slice(0, 4).map((activity, index) => (
-                      <TimelineItem key={activity.id}>
-                        <TimelineOppositeContent color="textSecondary" sx={{ maxWidth: '120px' }}>
-                          {safeFormatDistanceToNow(activity.timestamp, { addSuffix: true })}
-                        </TimelineOppositeContent>
-                        <TimelineSeparator>
-                          <TimelineDot color="primary">
-                            {getActivityIcon(activity.type)}
-                          </TimelineDot>
-                          {index < (displayClient.activities || []).slice(0, 4).length - 1 && <TimelineConnector />}
-                        </TimelineSeparator>
-                        <TimelineContent>
-                          <Typography variant="body2">
-                            {activity.description}
-                          </Typography>
-                          <Typography variant="caption" color="textSecondary">
-                            by {activity.user}
-                          </Typography>
-                        </TimelineContent>
-                      </TimelineItem>
-                    ))}
-                  </Timeline>
-                ) : (
-                  <Typography variant="body2" color="textSecondary">
-                    No recent activity
-                  </Typography>
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      )}
-
-      {activeTab === 1 && (
-        <Grid container spacing={3}>
-          {/* Owned Properties */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Owned Properties
-                </Typography>
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Address</TableCell>
-                        <TableCell>Type</TableCell>
-                        <TableCell>Purchase Date</TableCell>
-                        <TableCell>Purchase Price</TableCell>
-                        <TableCell>Current Value</TableCell>
-                        <TableCell>Status</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {(displayClient.properties?.owned || []).map((property) => (
-                        <TableRow key={property.id}>
-                          <TableCell>{property.address}</TableCell>
-                          <TableCell>{property.type}</TableCell>
-                          <TableCell>{safeFormatDate(property.purchaseDate, 'MMM d, yyyy')}</TableCell>
-                          <TableCell>{property.purchasePrice}</TableCell>
-                          <TableCell>{property.currentValue}</TableCell>
-                          <TableCell>
-                            <Chip label={property.status} size="small" />
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Properties of Interest */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Properties of Interest
-                </Typography>
-                <List>
-                  {(displayClient.properties?.interested || []).map((property) => (
-                    <ListItem key={property.id}>
-                      <ListItemIcon>
-                        <Home />
-                      </ListItemIcon>
+                      <ListItemAvatar>
+                        <Avatar src={transaction.image} variant="rounded">
+                          <Home />
+                        </Avatar>
+                      </ListItemAvatar>
                       <ListItemText
-                        primary={property.address}
-                        secondary={
-                          <>
-                            {property.type} • {property.listPrice}
-                            <br />
-                            {property.notes}
-                          </>
-                        }
+                        primary={transaction.address}
+                        secondary={`${transaction.type} • Purchased ${safeFormatDate(transaction.purchaseDate, 'MMMM d, yyyy')}`}
                       />
-                      <Chip 
-                        label={property.status} 
-                        size="small"
-                        color={property.status === 'Scheduled Showing' ? 'primary' : 'default'}
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-              </CardContent>
-            </Card>
-          </Grid>
-
-          {/* Property Preferences */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>
-                  Property Preferences
-                </Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <Typography variant="subtitle2" color="textSecondary">Property Types</Typography>
-                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
-                      {(displayClient.preferences?.propertyType || []).map((type) => (
-                        <Chip key={type} label={type} size="small" />
-                      ))}
-                    </Box>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Typography variant="subtitle2" color="textSecondary">Bedrooms</Typography>
-                    <Typography variant="body1">{displayClient.preferences?.bedrooms || 'N/A'}</Typography>
-                  </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Typography variant="subtitle2" color="textSecondary">Bathrooms</Typography>
-                    <Typography variant="body1">{displayClient.preferences?.bathrooms || 'N/A'}</Typography>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Typography variant="subtitle2" color="textSecondary">Desired Features</Typography>
-                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
-                      {(displayClient.preferences?.features || []).map((feature) => (
-                        <Chip key={feature} label={feature} size="small" variant="outlined" />
-                      ))}
-                    </Box>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Typography variant="subtitle2" color="textSecondary">Preferred Neighborhoods</Typography>
-                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
-                      {(displayClient.preferences?.neighborhoods || []).map((neighborhood) => (
-                        <Chip key={neighborhood} label={neighborhood} size="small" color="primary" variant="outlined" />
-                      ))}
-                    </Box>
-                  </Grid>
-                  <Grid item xs={12}>
-                    <Typography variant="subtitle2" color="textSecondary">Deal Breakers</Typography>
-                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mt: 1 }}>
-                      {(displayClient.preferences?.dealBreakers || []).map((item) => (
-                        <Chip key={item} label={item} size="small" color="error" variant="outlined" />
-                      ))}
-                    </Box>
-                  </Grid>
-                </Grid>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      )}
-
-      {activeTab === 2 && (
-        <Grid container spacing={3}>
-          {/* Upcoming Appointments */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <Typography variant="h6">Appointments</Typography>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    startIcon={<Add />}
-                    onClick={() => navigate('/appointments/new', { state: { clientId: id } })}
-                  >
-                    Schedule New
-                  </Button>
-                </Box>
-                <List>
-                  {(displayClient.appointments || []).map((appointment) => (
-                    <ListItem
-                      key={appointment.id}
-                      button
-                      onClick={() => navigate(`/appointments/${appointment.id}`)}
-                    >
-                      <ListItemIcon>
-                        <CalendarToday />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={appointment.title}
-                        secondary={`${safeFormatDate(appointment.date, 'MMMM d, yyyy')} at ${appointment.time}`}
-                      />
-                      <Box sx={{ display: 'flex', gap: 1 }}>
-                        <Chip 
-                          label={appointment.type} 
-                          size="small"
-                          variant="outlined"
-                        />
-                        <Chip 
-                          label={appointment.status} 
-                          size="small"
-                          color="primary"
-                        />
+                      <Box sx={{ textAlign: 'right' }}>
+                        <Typography variant="h6" color="primary">
+                          ${(transaction.purchasePrice / 1000).toFixed(0)}K
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Now: ${(transaction.currentValue / 1000).toFixed(0)}K
+                        </Typography>
                       </Box>
                     </ListItem>
-                  ))}
-                </List>
-              </CardContent>
-            </Card>
+                    {index < displayClient.properties.owned.length - 1 && <Divider />}
+                  </React.Fragment>
+                ))}
+              </List>
+            </Paper>
           </Grid>
-        </Grid>
-      )}
-
-      {activeTab === 3 && (
-        <Grid container spacing={3}>
-          {/* Communication History */}
-          <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <Typography variant="h6">Communication History</Typography>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <Button size="small" startIcon={<Email />}>Email</Button>
-                    <Button size="small" startIcon={<Phone />}>Call</Button>
-                    <Button size="small" startIcon={<MessageOutlined />}>Text</Button>
+          
+          <Grid item xs={12} md={4}>
+            <Paper sx={{ p: 3, mb: 3 }}>
+              <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+                Communication Stats
+              </Typography>
+              <ResponsiveContainer width="100%" height={200}>
+                <PieChart>
+                  <Pie
+                    data={communicationStats}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {communicationStats.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <RechartsTooltip />
+                </PieChart>
+              </ResponsiveContainer>
+              <Stack spacing={1} sx={{ mt: 2 }}>
+                {communicationStats.map((item) => (
+                  <Box key={item.name} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Box sx={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: item.color }} />
+                      <Typography variant="body2">{item.name}</Typography>
+                    </Box>
+                    <Typography variant="body2" fontWeight={600}>{item.value}</Typography>
                   </Box>
-                </Box>
-                <List>
-                  {(displayClient.communications || []).map((comm) => (
-                    <ListItem key={comm.id} alignItems="flex-start">
-                      <ListItemIcon>
-                        {getCommunicationIcon(comm.type)}
-                      </ListItemIcon>
-                      <ListItemText
-                        primary={
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Typography variant="body1">{comm.subject}</Typography>
-                            <Typography variant="caption" color="textSecondary">
-                              {safeFormatDistanceToNow(comm.date, { addSuffix: true })}
-                            </Typography>
-                          </Box>
-                        }
-                        secondary={
-                          <>
-                            {comm.type === 'call' && comm.duration && (
-                              <Typography variant="body2" color="textSecondary">
-                                Duration: {comm.duration}
-                              </Typography>
-                            )}
-                            {comm.preview && (
-                              <Typography variant="body2" color="textSecondary">
-                                {comm.preview}
-                              </Typography>
-                            )}
-                            {comm.notes && (
-                              <Typography variant="body2" color="textSecondary">
-                                Notes: {comm.notes}
-                              </Typography>
-                            )}
-                          </>
-                        }
-                      />
-                      <Chip 
-                        label={comm.direction} 
-                        size="small"
-                        variant="outlined"
-                        sx={{ ml: 1 }}
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-              </CardContent>
-            </Card>
+                ))}
+              </Stack>
+            </Paper>
+            
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+                Recent Activity
+              </Typography>
+              <Timeline>
+                {displayClient.activities?.slice(0, 4).map((activity, index) => (
+                  <TimelineItem key={activity.id}>
+                    <TimelineOppositeContent color="textSecondary" sx={{ maxWidth: '120px', flex: 0.3 }}>
+                      {safeFormatDate(activity.timestamp, 'MMM d')}
+                    </TimelineOppositeContent>
+                    <TimelineSeparator>
+                      <TimelineDot color="primary">
+                        {getActivityIcon(activity.type)}
+                      </TimelineDot>
+                      {index < displayClient.activities.slice(0, 4).length - 1 && <TimelineConnector />}
+                    </TimelineSeparator>
+                    <TimelineContent>
+                      <Typography variant="body2">
+                        {activity.description}
+                      </Typography>
+                      <Typography variant="caption" color="textSecondary">
+                        by {activity.user}
+                      </Typography>
+                    </TimelineContent>
+                  </TimelineItem>
+                ))}
+              </Timeline>
+            </Paper>
           </Grid>
         </Grid>
-      )}
+      </TabPanel>
 
-      {activeTab === 4 && (
+      <TabPanel value={activeTab} index={1}>
+        {/* Properties Tab */}
         <Grid container spacing={3}>
-          {/* Documents */}
           <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                  <Typography variant="h6">Documents</Typography>
-                  <Button
-                    variant="contained"
-                    size="small"
-                    startIcon={<Upload />}
-                    onClick={() => console.log('Upload document')}
-                  >
-                    Upload Document
-                  </Button>
-                </Box>
-                <TableContainer>
-                  <Table>
-                    <TableHead>
-                      <TableRow>
-                        <TableCell>Name</TableCell>
-                        <TableCell>Category</TableCell>
-                        <TableCell>Size</TableCell>
-                        <TableCell>Upload Date</TableCell>
-                        <TableCell>Actions</TableCell>
-                      </TableRow>
-                    </TableHead>
-                    <TableBody>
-                      {(displayClient.documents || []).map((doc) => (
-                        <TableRow key={doc.id}>
-                          <TableCell>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              {getDocumentIcon(doc.type)}
-                              {doc.name}
-                            </Box>
-                          </TableCell>
-                          <TableCell>{doc.category}</TableCell>
-                          <TableCell>{doc.size}</TableCell>
-                          <TableCell>{safeFormatDate(doc.uploadDate, 'MMM d, yyyy')}</TableCell>
-                          <TableCell>
-                            <IconButton size="small" onClick={() => console.log('View document')}>
-                              <Visibility />
-                            </IconButton>
-                            <IconButton size="small" onClick={() => console.log('Download document')}>
-                              <Download />
-                            </IconButton>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </TableContainer>
-              </CardContent>
-            </Card>
+            <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+              Properties of Interest
+            </Typography>
+            <Grid container spacing={3}>
+              {displayClient.properties?.interested?.map((property) => (
+                <Grid item xs={12} md={6} lg={4} key={property.id}>
+                  <PropertyCard>
+                    <Box
+                      sx={{
+                        height: 200,
+                        backgroundImage: `url(${property.image})`,
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        position: 'relative',
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          top: 16,
+                          right: 16,
+                          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                          color: 'white',
+                          px: 2,
+                          py: 1,
+                          borderRadius: 1,
+                        }}
+                      >
+                        ${(property.listPrice / 1000).toFixed(0)}K
+                      </Box>
+                    </Box>
+                    <CardContent>
+                      <Typography variant="h6" gutterBottom>
+                        {property.address}
+                      </Typography>
+                      <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                        <Chip label={property.type} size="small" />
+                        <Chip 
+                          label={property.status} 
+                          size="small"
+                          color={property.status === 'Scheduled Showing' ? 'primary' : 'default'}
+                        />
+                      </Box>
+                      <Typography variant="body2" color="text.secondary">
+                        {property.notes}
+                      </Typography>
+                    </CardContent>
+                    <CardActions>
+                      <Button size="small" startIcon={<Visibility />}>
+                        View Details
+                      </Button>
+                      <Button size="small" startIcon={<CalendarToday />}>
+                        Schedule
+                      </Button>
+                    </CardActions>
+                  </PropertyCard>
+                </Grid>
+              ))}
+            </Grid>
           </Grid>
-        </Grid>
-      )}
-
-      {activeTab === 5 && (
-        <Grid container spacing={3}>
-          {/* Notes */}
+          
           <Grid item xs={12}>
-            <Card>
-              <CardContent>
-                <Typography variant="h6" gutterBottom>Notes</Typography>
-                <Box sx={{ mb: 3 }}>
-                  <TextField
-                    fullWidth
-                    multiline
-                    rows={3}
-                    placeholder="Add a note..."
-                    value={newNote}
-                    onChange={(e) => setNewNote(e.target.value)}
-                  />
-                  <Button
-                    variant="contained"
-                    sx={{ mt: 1 }}
-                    onClick={handleAddNote}
-                    disabled={!newNote.trim()}
-                  >
-                    Add Note
-                  </Button>
-                </Box>
-                <Divider sx={{ mb: 2 }} />
-                <Box>
-                  <Alert severity="info" sx={{ mb: 2 }}>
-                    <Typography variant="body2">
-                      <strong>Client Notes:</strong> {displayClient.notes}
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+                Property Preferences
+              </Typography>
+              <Grid container spacing={3}>
+                <Grid item xs={12} md={6}>
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                      Property Types
                     </Typography>
-                  </Alert>
-                  {/* Additional notes would be listed here */}
-                </Box>
-              </CardContent>
-            </Card>
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                      {displayClient.preferences?.propertyType?.map((type) => (
+                        <Chip key={type} label={type} />
+                      ))}
+                    </Box>
+                  </Box>
+                  
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                      Desired Features
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                      {displayClient.preferences?.features?.map((feature) => (
+                        <Chip key={feature} label={feature} variant="outlined" />
+                      ))}
+                    </Box>
+                  </Box>
+                </Grid>
+                
+                <Grid item xs={12} md={6}>
+                  <Box sx={{ mb: 3 }}>
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                      Preferred Neighborhoods
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                      {displayClient.preferences?.neighborhoods?.map((neighborhood) => (
+                        <Chip key={neighborhood} label={neighborhood} color="primary" variant="outlined" />
+                      ))}
+                    </Box>
+                  </Box>
+                  
+                  <Box>
+                    <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                      Deal Breakers
+                    </Typography>
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                      {displayClient.preferences?.dealBreakers?.map((item) => (
+                        <Chip key={item} label={item} color="error" variant="outlined" />
+                      ))}
+                    </Box>
+                  </Box>
+                </Grid>
+              </Grid>
+            </Paper>
           </Grid>
         </Grid>
-      )}
+      </TabPanel>
 
-      {/* Quick Actions Floating Button */}
-      <Box sx={{ position: 'fixed', bottom: 20, right: 20 }}>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<Email />}
-          onClick={() => console.log('Send email')}
-        >
-          Send Email
-        </Button>
-      </Box>
+      <TabPanel value={activeTab} index={2}>
+        {/* Communications Tab */}
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={8}>
+            <Paper sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                  Communication History
+                </Typography>
+                <Button
+                  variant="outlined"
+                  startIcon={<Add />}
+                  onClick={() => setCommunicationDialog(true)}
+                >
+                  New Communication
+                </Button>
+              </Box>
+              <List>
+                {activityTimeline.map((activity, index) => (
+                  <ActivityCard key={index}>
+                    <CardContent>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Avatar sx={{ bgcolor: 'primary.light' }}>
+                          {activity.icon}
+                        </Avatar>
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                            {activity.title}
+                          </Typography>
+                          <Typography variant="body2" color="text.secondary">
+                            {safeFormatDate(activity.date, 'MMMM d, yyyy - h:mm a')}
+                          </Typography>
+                        </Box>
+                        <IconButton size="small">
+                          <MoreVert />
+                        </IconButton>
+                      </Box>
+                    </CardContent>
+                  </ActivityCard>
+                ))}
+              </List>
+            </Paper>
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <Paper sx={{ p: 3 }}>
+              <Typography variant="h6" sx={{ mb: 3, fontWeight: 600 }}>
+                Quick Actions
+              </Typography>
+              <Stack spacing={2}>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  startIcon={<Email />}
+                  onClick={() => {
+                    setCommunicationType('email');
+                    setCommunicationDialog(true);
+                  }}
+                >
+                  Send Email
+                </Button>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  startIcon={<Phone />}
+                  onClick={() => {
+                    setCommunicationType('call');
+                    setCommunicationDialog(true);
+                  }}
+                >
+                  Log Call
+                </Button>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  startIcon={<Sms />}
+                  onClick={() => {
+                    setCommunicationType('sms');
+                    setCommunicationDialog(true);
+                  }}
+                >
+                  Send SMS
+                </Button>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  startIcon={<VideoCall />}
+                  onClick={() => console.log('Video call')}
+                >
+                  Schedule Video Call
+                </Button>
+              </Stack>
+            </Paper>
+          </Grid>
+        </Grid>
+      </TabPanel>
+
+      {/* More Action Menu */}
+      <Menu
+        anchorEl={anchorEl}
+        open={Boolean(anchorEl)}
+        onClose={handleMenuClose}
+      >
+        <MenuItem onClick={() => { setEditMode(!editMode); handleMenuClose(); }}>
+          <ListItemIcon><Edit /></ListItemIcon>
+          Edit Client
+        </MenuItem>
+        <MenuItem onClick={() => { setShareDialogOpen(true); handleMenuClose(); }}>
+          <ListItemIcon><Share /></ListItemIcon>
+          Share Contact
+        </MenuItem>
+        <MenuItem onClick={() => { console.log('Print'); handleMenuClose(); }}>
+          <ListItemIcon><Print /></ListItemIcon>
+          Print Details
+        </MenuItem>
+        <MenuItem onClick={() => { console.log('Generate QR'); handleMenuClose(); }}>
+          <ListItemIcon><QrCode2 /></ListItemIcon>
+          Generate QR
+        </MenuItem>
+        <Divider />
+        <MenuItem onClick={() => { console.log('Archive'); handleMenuClose(); }}>
+          <ListItemIcon><Archive /></ListItemIcon>
+          Archive Client
+        </MenuItem>
+      </Menu>
+
+      {/* Note Dialog */}
+      <Dialog open={noteDialog} onClose={() => setNoteDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Add Note</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            multiline
+            rows={4}
+            fullWidth
+            variant="outlined"
+            placeholder="Enter your note here..."
+            value={newNote}
+            onChange={(e) => setNewNote(e.target.value)}
+            sx={{ mt: 2 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setNoteDialog(false)}>Cancel</Button>
+          <Button onClick={handleAddNote} variant="contained" disabled={!newNote.trim()}>
+            Add Note
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Share Dialog */}
+      <Dialog open={shareDialogOpen} onClose={() => setShareDialogOpen(false)}>
+        <DialogTitle>Share Contact</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ pt: 2 }}>
+            <Button
+              fullWidth
+              variant="outlined"
+              startIcon={<Email />}
+              onClick={() => handleShare('Email')}
+            >
+              Share via Email
+            </Button>
+            <Button
+              fullWidth
+              variant="outlined"
+              startIcon={<Sms />}
+              onClick={() => handleShare('SMS')}
+            >
+              Share via SMS
+            </Button>
+            <Button
+              fullWidth
+              variant="outlined"
+              startIcon={<ContentCopy />}
+              onClick={() => {
+                navigator.clipboard.writeText(window.location.href);
+                setShareDialogOpen(false);
+              }}
+            >
+              Copy Link
+            </Button>
+          </Stack>
+        </DialogContent>
+      </Dialog>
+
+      {/* Speed Dial */}
+      <SpeedDial
+        ariaLabel="Client actions"
+        sx={{ position: 'fixed', bottom: 16, right: 16 }}
+        icon={<SpeedDialIcon />}
+        onClose={() => setSpeedDialOpen(false)}
+        onOpen={() => setSpeedDialOpen(true)}
+        open={speedDialOpen}
+      >
+        {speedDialActions.map((action) => (
+          <SpeedDialAction
+            key={action.name}
+            icon={action.icon}
+            tooltipTitle={action.name}
+            onClick={action.action}
+          />
+        ))}
+      </SpeedDial>
     </Container>
   );
 };

@@ -170,7 +170,7 @@ const HeroSection = styled(Box)(({ theme }) => ({
   },
 }));
 
-const StatsCard = styled(Card)(({ theme, trend }) => ({
+const StyledStatsCard = styled(Card)(({ theme, trend }) => ({
   background: 'white',
   borderRadius: theme.spacing(2),
   padding: theme.spacing(3),
@@ -821,7 +821,7 @@ const ListingsDashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <StatsCard trend="up">
+            <StyledStatsCard trend="up">
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                 <Box>
                   <Typography variant="caption" color="text.secondary" gutterBottom>
@@ -841,7 +841,7 @@ const ListingsDashboard = () => {
                   <NewReleases />
                 </Avatar>
               </Box>
-            </StatsCard>
+            </StyledStatsCard>
           </motion.div>
         </Grid>
 
@@ -851,7 +851,7 @@ const ListingsDashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <StatsCard>
+            <StyledStatsCard>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                 <Box>
                   <Typography variant="caption" color="text.secondary" gutterBottom>
@@ -871,7 +871,7 @@ const ListingsDashboard = () => {
                   <Schedule />
                 </Avatar>
               </Box>
-            </StatsCard>
+            </StyledStatsCard>
           </motion.div>
         </Grid>
 
@@ -881,7 +881,7 @@ const ListingsDashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.3 }}
           >
-            <StatsCard trend="up">
+            <StyledStatsCard trend="up">
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                 <Box>
                   <Typography variant="caption" color="text.secondary" gutterBottom>
@@ -901,7 +901,7 @@ const ListingsDashboard = () => {
                   <Whatshot />
                 </Avatar>
               </Box>
-            </StatsCard>
+            </StyledStatsCard>
           </motion.div>
         </Grid>
 
@@ -911,7 +911,7 @@ const ListingsDashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.4 }}
           >
-            <StatsCard>
+            <StyledStatsCard>
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start' }}>
                 <Box>
                   <Typography variant="caption" color="text.secondary" gutterBottom>
@@ -931,7 +931,7 @@ const ListingsDashboard = () => {
                   <Groups />
                 </Avatar>
               </Box>
-            </StatsCard>
+            </StyledStatsCard>
           </motion.div>
         </Grid>
       </Grid>

@@ -148,9 +148,7 @@ import {
   Bathroom,
   SquareFoot,
   DirectionsCar,
-  Share,
   Favorite,
-  Visibility,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
@@ -1080,7 +1078,7 @@ const EscrowDetail = ({ defaultView = 'detail' }) => {
               </Grid>
             </Collapse>
           </CardContent>
-        </Card>
+        </AnimatedCard>
       )}
 
       {activeTab === 1 && (
