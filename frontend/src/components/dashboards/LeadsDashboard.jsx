@@ -159,6 +159,7 @@ import {
   Star,
   AttachMoney,
   Schedule,
+  AccessTime,
   Groups,
   Assessment,
   Check,
@@ -2344,6 +2345,43 @@ const FloatingActionButton = styled(Fab)(({ theme }) => ({
   },
 }));
 
+// StatsCard Component
+const StatsCardComponent = ({ title, value, icon, color, trend }) => {
+  return (
+    <StatsCard>
+      <CardContent>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+          <Box>
+            <Typography variant="h4" sx={{ fontWeight: 'bold', color }}>
+              {value}
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              {title}
+            </Typography>
+            {trend && (
+              <Typography variant="caption" color="text.secondary">
+                {trend}
+              </Typography>
+            )}
+          </Box>
+          <Avatar 
+            className="stat-icon"
+            sx={{ 
+              bgcolor: alpha(color, 0.1), 
+              color,
+              width: 56,
+              height: 56,
+              transition: 'all 0.3s ease',
+            }}
+          >
+            {icon}
+          </Avatar>
+        </Box>
+      </CardContent>
+    </StatsCard>
+  );
+};
+
 // Mock data
 const mockLeads = [
   {
@@ -2434,9 +2472,12 @@ const LeadsDashboard = () => {
   const [viewMode, setViewMode] = useState('grid');
   const [selectedStage, setSelectedStage] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedFilter, setSelectedFilter] = useState('all');
   const [dateRange, setDateRange] = useState('week');
   const [sortBy, setSortBy] = useState('recent');
   const [filterAnchorEl, setFilterAnchorEl] = useState(null);
+  const [menuAnchorEl, setMenuAnchorEl] = useState(null);
   const [selectedLead, setSelectedLead] = useState(null);
   const [addLeadOpen, setAddLeadOpen] = useState(false);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
@@ -2500,8 +2541,20 @@ const LeadsDashboard = () => {
     setFilterAnchorEl(event.currentTarget);
   };
 
-  const handleFilterClose = () => {
+  const handleFilterClose = (filter) => {
+    if (filter) {
+      setSelectedFilter(filter);
+    }
     setFilterAnchorEl(null);
+  };
+  
+  const handleMenuClick = (event, lead) => {
+    setMenuAnchorEl(event.currentTarget);
+    setSelectedLead(lead);
+  };
+  
+  const handleMenuClose = () => {
+    setMenuAnchorEl(null);
   };
 
   const handleLeadClick = (lead) => {
@@ -2541,6 +2594,25 @@ const LeadsDashboard = () => {
     return '#F44336';
   };
 
+  const getStatusColor = (status) => {
+    const statusColors = {
+      'hot': 'error',
+      'warm': 'warning',
+      'cold': 'info',
+      'new': 'success',
+      'contacted': 'primary',
+      'qualified': 'secondary',
+      'lost': 'default'
+    };
+    return statusColors[status.toLowerCase()] || 'default';
+  };
+
+  const getScoreIcon = (score) => {
+    if (score >= 80) return <LocalFireDepartment sx={{ color: '#d32f2f' }} />;
+    if (score >= 60) return <Whatshot sx={{ color: '#ff9800' }} />;
+    return <TrendingUp sx={{ color: '#1976d2' }} />;
+  };
+
   // Filter leads
   const filteredLeads = leads.filter(lead => {
     if (selectedStage !== 'all' && lead.stage !== selectedStage) return false;
@@ -2553,12 +2625,21 @@ const LeadsDashboard = () => {
   // Calculate metrics
   const totalLeads = leads.length;
   const hotLeads = leads.filter(l => l.score >= 80).length;
+  const warmLeads = leads.filter(l => l.score >= 60 && l.score < 80).length;
   const newLeadsThisWeek = leads.filter(l => {
     const leadDate = new Date(l.lastContact);
     const weekAgo = subDays(new Date(), 7);
     return leadDate >= weekAgo;
   }).length;
   const conversionRate = ((leads.filter(l => l.stage === 'Closed').length / totalLeads) * 100).toFixed(1);
+  
+  // Define stats object
+  const stats = {
+    total: totalLeads,
+    hot: hotLeads,
+    warm: warmLeads,
+    newThisWeek: newLeadsThisWeek
+  };
 
   return (
     <Container maxWidth="xl">
@@ -2579,7 +2660,7 @@ const LeadsDashboard = () => {
         {/* Stats Cards */}
         <Grid container spacing={3} sx={{ mb: 4 }}>
           <Grid item xs={12} sm={6} md={3}>
-            <StatsCard
+            <StatsCardComponent
               title="Total Leads"
               value={stats.total}
               icon={<Person />}
@@ -2587,7 +2668,7 @@ const LeadsDashboard = () => {
             />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
-            <StatsCard
+            <StatsCardComponent
               title="Hot Leads"
               value={stats.hot}
               icon={<TrendingUp />}
@@ -2596,7 +2677,7 @@ const LeadsDashboard = () => {
             />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
-            <StatsCard
+            <StatsCardComponent
               title="Warm Leads"
               value={stats.warm}
               icon={<AccessTime />}
@@ -2605,7 +2686,7 @@ const LeadsDashboard = () => {
             />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
-            <StatsCard
+            <StatsCardComponent
               title="New This Week"
               value={stats.newThisWeek}
               icon={<Star />}
