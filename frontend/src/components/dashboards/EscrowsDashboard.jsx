@@ -123,6 +123,7 @@ const EscrowsDashboard = () => {
     return saved !== null ? JSON.parse(saved) : true;
   });
   const [showStatsFullView, setShowStatsFullView] = useState(false);
+  const [editingEscrow, setEditingEscrow] = useState(null);
   const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -268,12 +269,14 @@ const EscrowsDashboard = () => {
 
   const handleCloseForm = () => {
     setOpenForm(false);
+    setEditingEscrow(null);
   };
 
   const handleEdit = (escrow, event) => {
     event.stopPropagation();
     setAnchorEl(null);
-    enqueueSnackbar('Edit functionality coming soon. For now, please create a new escrow.', { variant: 'info' });
+    setEditingEscrow(escrow);
+    setOpenForm(true);
   };
 
   const handleCardClick = (escrow) => {
@@ -320,9 +323,10 @@ const EscrowsDashboard = () => {
     return days;
   };
 
-  const handleEditFromSuccess = () => {
+  const handleEditFromSuccess = (escrowData) => {
     setShowSuccessPage(false);
-    enqueueSnackbar('Edit functionality coming soon. For now, please create a new escrow.', { variant: 'info' });
+    setEditingEscrow(escrowData);
+    setOpenForm(true);
   };
 
   const handleViewDetailsFromSuccess = (escrowId) => {
@@ -772,6 +776,11 @@ const EscrowsDashboard = () => {
         onClose={handleCloseForm}
         onSubmit={(formData) => mutation.mutate(formData)}
         loading={mutation.isLoading}
+        escrow={editingEscrow}
+        onSuccess={() => {
+          queryClient.invalidateQueries('escrows');
+          handleCloseForm();
+        }}
       />
 
       {/* Stats Full View Modal */}
