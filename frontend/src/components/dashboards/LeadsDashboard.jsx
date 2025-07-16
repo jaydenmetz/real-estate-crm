@@ -616,7 +616,6 @@ import {
   AddCard,
   AddToDrive,
   AssignmentInd as AssignmentUser,
-  Badge,
   BusinessCenter,
   CalendarMonth,
   CalendarToday,
