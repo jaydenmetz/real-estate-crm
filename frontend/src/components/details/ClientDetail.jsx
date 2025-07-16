@@ -248,7 +248,6 @@ import CountUp from 'react-countup';
 import {
   AreaChart,
   Area,
-  BarChart,
   Bar,
   LineChart,
   Line,
