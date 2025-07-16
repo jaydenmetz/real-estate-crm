@@ -2066,7 +2066,6 @@ import { format, formatDistanceToNow, subDays, addDays, isToday, isYesterday, is
 import { leadsAPI } from '../../services/api';
 import { safeFormatDate } from '../../utils/safeDateUtils';
 import CountUp from 'react-countup';
-import { motion } from 'framer-motion';
 import {
   AreaChart,
   Area,
