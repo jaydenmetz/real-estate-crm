@@ -24,7 +24,7 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 // Dashboard Components
 import AIAgentsDashboardSimple from './components/dashboards/AIAgentsDashboardSimple';
 import EscrowsDashboard from './components/dashboards/EscrowsDashboard';
-import EscrowDetail from './components/details/EscrowDetail';
+import EscrowDetailMerged from './components/details/EscrowDetailMerged';
 import ListingsDashboard from './components/dashboards/ListingsDashboard';
 import ListingDetail from './components/details/ListingDetail';
 import ClientsDashboard from './components/dashboards/ClientsDashboard';
@@ -195,8 +195,8 @@ function App() {
                     
                                 {/* Main Features */}
                                 <Route path="/escrows" element={<EscrowsDashboard />} />
-                                <Route path="/escrows/:id" element={<EscrowDetail />} />
-                <Route path="/escrows/:id/dashboard" element={<EscrowDetail defaultView="dashboard" />} />
+                                <Route path="/escrows/:id" element={<EscrowDetailMerged />} />
+                <Route path="/escrows/:id/dashboard" element={<EscrowDetailMerged defaultView="dashboard" />} />
                     
                                 <Route path="/listings" element={<ListingsDashboard />} />
                                 <Route path="/listings/:id" element={<ListingDetail />} />

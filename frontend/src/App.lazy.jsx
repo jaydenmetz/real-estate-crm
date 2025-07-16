@@ -10,7 +10,7 @@ export const AppointmentsDashboard = lazy(() => import('./components/dashboards/
 export const LeadsDashboard = lazy(() => import('./components/dashboards/LeadsDashboard'));
 
 // Detail Components
-export const EscrowDetail = lazy(() => import('./components/details/EscrowDetail'));
+export const EscrowDetailMerged = lazy(() => import('./components/details/EscrowDetailMerged'));
 export const ListingDetail = lazy(() => import('./components/details/ListingDetail'));
 export const ClientDetail = lazy(() => import('./components/details/ClientDetail'));
 export const AppointmentDetail = lazy(() => import('./components/details/AppointmentDetail'));
