@@ -2602,9 +2602,10 @@ const LeadsDashboard = () => {
       'new': 'success',
       'contacted': 'primary',
       'qualified': 'secondary',
-      'lost': 'default'
+      'lost': 'default',
+      'unknown': 'default'
     };
-    return statusColors[status.toLowerCase()] || 'default';
+    return statusColors[(status || 'unknown').toLowerCase()] || 'default';
   };
 
   const getScoreIcon = (score) => {
@@ -2809,8 +2810,8 @@ const LeadsDashboard = () => {
                     </TableCell>
                     <TableCell onClick={() => handleLeadClick(lead.id)}>
                       <Chip
-                        label={lead.status.toUpperCase()}
-                        color={getStatusColor(lead.status)}
+                        label={(lead.status || 'unknown').toUpperCase()}
+                        color={getStatusColor(lead.status || 'unknown')}
                         size="small"
                       />
                     </TableCell>
