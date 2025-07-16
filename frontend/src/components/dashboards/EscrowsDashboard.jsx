@@ -1,7 +1,6 @@
 // frontend/src/components/dashboards/EscrowsDashboard.jsx
 
 import React, { useState } from 'react';
-import EscrowCompactCard from '../common/EscrowCompactCard';
 import { safeParseDate } from '../../utils/safeDateUtils';
 import {
   Container,
@@ -27,7 +26,19 @@ import {
   List,
   ListItem,
   ListItemText,
+  Divider,
+  LinearProgress,
+  Fade,
+  Zoom,
+  Stack,
+  Avatar,
+  AvatarGroup,
+  useTheme,
+  alpha,
+  Collapse,
+  CardActions,
 } from '@mui/material';
+import { styled, keyframes } from '@mui/material/styles';
 import {
   Add,
   FilterList,
@@ -46,18 +57,166 @@ import {
   ViewCarousel,
   Visibility,
   VisibilityOff,
+  LocationOn,
+  Business,
+  Receipt,
+  AccountBalance,
+  Description,
+  Timeline,
+  Assignment,
+  ExpandMore,
+  Speed,
+  Timer,
+  AutoAwesome,
+  Star,
 } from '@mui/icons-material';
+import { motion, AnimatePresence } from 'framer-motion';
+import CountUp from 'react-countup';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useSnackbar } from 'notistack';
 import { format, differenceInDays } from 'date-fns';
 import { safeFormatDate } from '../../utils/safeDateUtils';
 import { useNavigate } from 'react-router-dom';
 import { api, escrowsAPI } from '../../services/api';
-import EscrowForm from '../forms/EscrowForm';
 import EscrowFormSimple from '../forms/EscrowFormSimple';
 import EscrowCreated from '../common/EscrowCreated';
-import StatsCard from '../common/StatsCard';
 import StatsFullView from '../common/StatsFullView';
+
+// Animations
+const fadeIn = keyframes`
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+`;
+
+const pulse = keyframes`
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+`;
+
+// Styled Components
+const HeroSection = styled(Box)(({ theme }) => ({
+  minHeight: '300px',
+  padding: theme.spacing(6, 0, 4),
+  background: 'linear-gradient(135deg, #1565C0 0%, #42A5F5 100%)',
+  color: 'white',
+  position: 'relative',
+  overflow: 'hidden',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'url("/patterns/escrow-pattern.svg")',
+    opacity: 0.1,
+  },
+}));
+
+const StyledStatsCard = styled(Card)(({ theme, color = 'primary' }) => ({
+  background: 'white',
+  borderRadius: theme.spacing(2),
+  padding: theme.spacing(3),
+  height: '100%',
+  position: 'relative',
+  overflow: 'hidden',
+  transition: 'all 0.3s ease-in-out',
+  animation: `${fadeIn} 0.6s ease-out`,
+  '&:hover': {
+    transform: 'translateY(-4px)',
+    boxShadow: theme.shadows[8],
+    '& .stats-icon': {
+      transform: 'scale(1.1) rotate(5deg)',
+    },
+  },
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    top: -50,
+    right: -50,
+    width: 150,
+    height: 150,
+    borderRadius: '50%',
+    background: theme.palette[color].main,
+    opacity: 0.05,
+  },
+}));
+
+const EscrowCard = styled(Card)(({ theme, status }) => ({
+  background: 'white',
+  borderRadius: theme.spacing(2),
+  overflow: 'hidden',
+  transition: 'all 0.3s ease-in-out',
+  animation: `${fadeIn} 0.6s ease-out`,
+  marginBottom: theme.spacing(3),
+  position: 'relative',
+  '&:hover': {
+    transform: 'translateY(-2px)',
+    boxShadow: theme.shadows[12],
+    '& .property-image': {
+      transform: 'scale(1.05)',
+    },
+    '& .action-buttons': {
+      opacity: 1,
+    },
+  },
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '4px',
+    height: '100%',
+    background: status === 'Active' ? theme.palette.success.main :
+                status === 'Pending' ? theme.palette.warning.main :
+                status === 'Closing' ? theme.palette.info.main :
+                theme.palette.grey[400],
+  },
+}));
+
+const StatusBadge = styled(Chip)(({ theme, status }) => ({
+  fontWeight: 600,
+  borderRadius: theme.spacing(1),
+  ...(status === 'Active' && {
+    background: alpha(theme.palette.success.main, 0.1),
+    color: theme.palette.success.dark,
+  }),
+  ...(status === 'Pending' && {
+    background: alpha(theme.palette.warning.main, 0.1),
+    color: theme.palette.warning.dark,
+  }),
+  ...(status === 'Closing' && {
+    background: alpha(theme.palette.info.main, 0.1),
+    color: theme.palette.info.dark,
+  }),
+}));
+
+const AnimatedButton = styled(Button)(({ theme }) => ({
+  background: 'linear-gradient(135deg, #1565C0 0%, #42A5F5 100%)',
+  color: 'white',
+  fontWeight: 600,
+  padding: theme.spacing(1.5, 3),
+  borderRadius: theme.spacing(3),
+  transition: 'all 0.3s ease-in-out',
+  '&:hover': {
+    background: 'linear-gradient(135deg, #42A5F5 0%, #1565C0 100%)',
+    transform: 'translateY(-2px)',
+    boxShadow: theme.shadows[8],
+  },
+}));
 
 // Mock data for fallback
 const mockEscrows = [
@@ -364,11 +523,238 @@ const EscrowsDashboard = () => {
   }
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-      {/* Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-          <Typography variant="h4">Escrows</Typography>
+    <Box sx={{ minHeight: '100vh', bgcolor: '#f5f5f5' }}>
+      {/* Hero Section */}
+      <HeroSection>
+        <Container maxWidth="xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+              <Box>
+                <Typography variant="h3" fontWeight="bold" gutterBottom>
+                  Escrow Management
+                </Typography>
+                <Typography variant="h6" sx={{ opacity: 0.9 }}>
+                  Track and manage all your active transactions in one place
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <Tooltip title={showCommission ? "Hide commission amounts" : "Show commission amounts"}>
+                  <IconButton
+                    sx={{ bgcolor: 'rgba(255,255,255,0.1)', color: 'white' }}
+                    onClick={() => handleCommissionToggle(!showCommission)}
+                  >
+                    {showCommission ? <Visibility /> : <VisibilityOff />}
+                  </IconButton>
+                </Tooltip>
+                <AnimatedButton
+                  startIcon={<Add />}
+                  onClick={() => setOpenForm(true)}
+                  size="large"
+                >
+                  New Escrow
+                </AnimatedButton>
+              </Box>
+            </Box>
+          </motion.div>
+
+          {/* Stats Cards */}
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={6} md={3}>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+              >
+                <StyledStatsCard color="primary">
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <Box>
+                      <Typography variant="h3" fontWeight="bold">
+                        <CountUp end={stats.totalActive} duration={2} />
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                        Active Escrows
+                      </Typography>
+                    </Box>
+                    <Avatar 
+                      className="stats-icon"
+                      sx={{ 
+                        bgcolor: alpha('#1565C0', 0.1), 
+                        color: 'primary.main',
+                        width: 56,
+                        height: 56,
+                        transition: 'all 0.3s ease',
+                      }}
+                    >
+                      <Home />
+                    </Avatar>
+                  </Box>
+                  <Box sx={{ mt: 2 }}>
+                    <LinearProgress 
+                      variant="determinate" 
+                      value={75} 
+                      sx={{ 
+                        height: 6, 
+                        borderRadius: 3,
+                        bgcolor: alpha('#1565C0', 0.1),
+                        '& .MuiLinearProgress-bar': {
+                          bgcolor: 'primary.main',
+                        }
+                      }} 
+                    />
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                      75% of monthly target
+                    </Typography>
+                  </Box>
+                </StyledStatsCard>
+              </motion.div>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={3}>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >
+                <StyledStatsCard color="warning">
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <Box>
+                      <Typography variant="h3" fontWeight="bold">
+                        <CountUp end={stats.closingThisWeek} duration={2} />
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                        Closing This Week
+                      </Typography>
+                    </Box>
+                    <Avatar 
+                      className="stats-icon"
+                      sx={{ 
+                        bgcolor: alpha('#ff9800', 0.1), 
+                        color: 'warning.main',
+                        width: 56,
+                        height: 56,
+                        transition: 'all 0.3s ease',
+                      }}
+                    >
+                      <Timer />
+                    </Avatar>
+                  </Box>
+                  {stats.closingThisWeek > 0 && (
+                    <Chip 
+                      label="Requires Attention" 
+                      size="small" 
+                      color="warning" 
+                      sx={{ mt: 2 }}
+                    />
+                  )}
+                </StyledStatsCard>
+              </motion.div>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={3}>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+              >
+                <StyledStatsCard color="success">
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <Box>
+                      <Typography variant="h3" fontWeight="bold">
+                        {showCommission ? (
+                          <>$<CountUp end={stats.totalVolume / 1000000} decimals={1} duration={2} />M</>
+                        ) : (
+                          '•••••'
+                        )}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                        Total Volume
+                      </Typography>
+                    </Box>
+                    <Avatar 
+                      className="stats-icon"
+                      sx={{ 
+                        bgcolor: alpha('#4caf50', 0.1), 
+                        color: 'success.main',
+                        width: 56,
+                        height: 56,
+                        transition: 'all 0.3s ease',
+                      }}
+                    >
+                      <AttachMoney />
+                    </Avatar>
+                  </Box>
+                  {showCommission && (
+                    <Typography variant="caption" color="success.main" sx={{ mt: 2, display: 'block' }}>
+                      +12.5% from last month
+                    </Typography>
+                  )}
+                </StyledStatsCard>
+              </motion.div>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={3}>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+              >
+                <StyledStatsCard color="info">
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <Box>
+                      <Typography variant="h3" fontWeight="bold">
+                        <CountUp end={stats.avgDaysToClose} duration={2} />
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                        Avg Days to Close
+                      </Typography>
+                    </Box>
+                    <Avatar 
+                      className="stats-icon"
+                      sx={{ 
+                        bgcolor: alpha('#2196f3', 0.1), 
+                        color: 'info.main',
+                        width: 56,
+                        height: 56,
+                        transition: 'all 0.3s ease',
+                      }}
+                    >
+                      <Speed />
+                    </Avatar>
+                  </Box>
+                  <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+                    <Chip 
+                      label={stats.avgDaysToClose < 43 ? 'Above Average' : 'Below Average'} 
+                      size="small" 
+                      color={stats.avgDaysToClose < 43 ? 'success' : 'warning'}
+                    />
+                  </Stack>
+                </StyledStatsCard>
+              </motion.div>
+            </Grid>
+          </Grid>
+        </Container>
+      </HeroSection>
+
+      {/* Main Content */}
+      <Container maxWidth="xl" sx={{ mt: -6, position: 'relative', zIndex: 1 }}>
+        {/* Filter Bar */}
+        <Paper 
+          elevation={0} 
+          sx={{ 
+            p: 2, 
+            mb: 3, 
+            borderRadius: 2,
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            bgcolor: 'white',
+          }}
+        >
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
           <Box sx={{ display: 'flex', gap: 1 }}>
             <Chip
               label={`Active (${escrows.filter(e => e.escrowStatus?.toLowerCase() === 'active').length})`}
@@ -410,373 +796,239 @@ const EscrowsDashboard = () => {
               />
             )}
           </Box>
-        </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-          <Tooltip title={showCommission ? "Hide commission amounts" : "Show commission amounts"}>
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={showCommission}
-                  onChange={(e) => handleCommissionToggle(e.target.checked)}
-                  icon={<VisibilityOff />}
-                  checkedIcon={<Visibility />}
-                  color="primary"
-                />
-              }
-              label={showCommission ? "Commission" : "Commission"}
-              sx={{ 
-                mr: 2,
-                '& .MuiFormControlLabel-label': {
-                  fontSize: '0.875rem'
-                }
-              }}
-            />
-          </Tooltip>
-          <Button
-            variant="contained"
-            startIcon={<Add />}
-            onClick={() => setOpenForm(true)}
-            sx={{ mr: 1 }}
-          >
-            Add Escrow
-          </Button>
-          <IconButton>
-            <FilterList />
-          </IconButton>
-          <IconButton>
-            <Download />
-          </IconButton>
-        </Box>
-      </Box>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <IconButton size="small">
+              <FilterList />
+            </IconButton>
+            <IconButton size="small">
+              <Download />
+            </IconButton>
+          </Box>
+        </Paper>
 
-      {/* Stats Section */}
-      <Grid container spacing={3} sx={{ mb: 3 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatsCard
-            title="Active Escrows"
-            value={stats.totalActive}
-            icon={<Home />}
-            color="primary"
-            onClick={() => setStatusFilter('Active')}
-            subtitle={`${stats.totalActive} properties in escrow`}
-            onRequestFullView={() => setShowStatsFullView(true)}
-            expandable={true}
-            details={
-              <Box>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Active escrows require daily attention for timely closing.
-                </Typography>
-                <List dense>
-                  <ListItem>
-                    <ListItemText 
-                      primary="High Priority" 
-                      secondary={`${escrows.filter(e => e.escrowStatus === 'Active' && e.priorityLevel === 'high').length} escrows`}
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText 
-                      primary="Normal Priority" 
-                      secondary={`${escrows.filter(e => e.escrowStatus === 'Active' && e.priorityLevel !== 'high').length} escrows`}
-                    />
-                  </ListItem>
-                </List>
-              </Box>
-            }
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatsCard
-            title="Closing This Week"
-            value={stats.closingThisWeek}
-            icon={<Warning />}
-            color="warning"
-            onClick={() => {
-              setStatusFilter('Active');
-              enqueueSnackbar(`${stats.closingThisWeek} escrows closing within 7 days`, { variant: 'warning' });
-            }}
-            subtitle="Urgent attention needed"
-            trend={stats.closingThisWeek > 0 ? 25 : 0}
-            onRequestFullView={() => setShowStatsFullView(true)}
-            expandable={true}
-            details={
-              <Box>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Escrows requiring immediate action:
-                </Typography>
-                {escrows
-                  .filter(e => {
-                    const dateStr = e.closingDate || e.scheduledCoeDate;
-                    if (!dateStr) return false;
-                    try {
-                      const closeDate = new Date(dateStr);
-                      if (isNaN(closeDate.getTime())) return false;
-                      const days = differenceInDays(closeDate, new Date());
-                      return days >= 0 && days <= 7 && e.escrowStatus === 'Active';
-                    } catch {
-                      return false;
-                    }
-                  })
-                  .slice(0, 3)
-                  .map(e => {
-                    const dateStr = e.closingDate || e.scheduledCoeDate;
-                    let days = 'N/A';
-                    try {
-                      const closeDate = new Date(dateStr);
-                      if (!isNaN(closeDate.getTime())) {
-                        days = differenceInDays(closeDate, new Date());
-                      }
-                    } catch {}
-                    return (
-                      <Typography key={e.id} variant="caption" display="block" sx={{ mt: 1 }}>
-                        • {e.propertyAddress} - {days} days
-                      </Typography>
-                    );
-                  })
-                }
-              </Box>
-            }
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatsCard
-            title="Total Volume"
-            value={showCommission ? `$${(stats.totalVolume / 1000000).toFixed(1)}M` : '•••••'}
-            icon={<AttachMoney />}
-            color="success"
-            subtitle={showCommission ? "YTD transaction volume" : "Hidden"}
-            onRequestFullView={() => setShowStatsFullView(true)}
-            expandable={true}
-            details={showCommission ? (
-              <Box>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Volume breakdown by status:
-                </Typography>
-                <List dense>
-                  <ListItem>
-                    <ListItemText 
-                      primary="Active" 
-                      secondary={`$${(escrows.filter(e => e.escrowStatus === 'Active').reduce((sum, e) => sum + e.purchasePrice, 0) / 1000000).toFixed(1)}M`}
-                    />
-                  </ListItem>
-                  <ListItem>
-                    <ListItemText 
-                      primary="Closed" 
-                      secondary={`$${(escrows.filter(e => e.escrowStatus === 'Closed').reduce((sum, e) => sum + e.purchasePrice, 0) / 1000000).toFixed(1)}M`}
-                    />
-                  </ListItem>
-                </List>
-              </Box>
-            ) : "Commission details are hidden"}
-          />
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <StatsCard
-            title="Avg Days to Close"
-            value={stats.avgDaysToClose}
-            icon={<Schedule />}
-            color="info"
-            subtitle="Industry avg: 43 days"
-            trend={stats.avgDaysToClose < 43 ? -((43 - stats.avgDaysToClose) / 43 * 100).toFixed(0) : ((stats.avgDaysToClose - 43) / 43 * 100).toFixed(0)}
-            onRequestFullView={() => setShowStatsFullView(true)}
-            expandable={true}
-            details={
-              <Box>
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  Your performance vs industry average.
-                </Typography>
-                <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-                  {stats.avgDaysToClose < 43 
-                    ? `You're closing ${43 - stats.avgDaysToClose} days faster than average!`
-                    : `Consider process improvements to reduce closing time.`
-                  }
-                </Typography>
-              </Box>
-            }
-          />
-        </Grid>
-      </Grid>
-
-      {/* Tabs - Hidden */}
-      {false && (
-      <Paper sx={{ mb: 3 }}>
-        <Tabs value={tabValue} onChange={(e, v) => setTabValue(v)}>
-          <Tab label={`All (${escrows.length})`} />
-          <Tab label={`Active (${escrows.filter(e => e.escrowStatus === 'Active').length})`} />
-          <Tab label={`Pending (${escrows.filter(e => e.escrowStatus === 'Pending').length})`} />
-          <Tab label={`Closing (${escrows.filter(e => e.escrowStatus === 'Closing').length})`} />
-          <Tab label={`Closed (${escrows.filter(e => e.escrowStatus === 'Closed').length})`} />
-        </Tabs>
-      </Paper>
-      )}
-
-      {/* Escrows List View */}
-      <Box sx={{ mb: 4 }}>
-        {getFilteredEscrows().map((escrow, index) => (
-          <EscrowCompactCard 
-            key={escrow.id}
-            escrow={escrow}
-            index={index}
-            showCommission={showCommission}
-          />
-        ))}
-      </Box>
-
-      {/* Grid View (Hidden by default) */}
-      {false && (
-      <Grid container spacing={3}>
-        {isLoading ? (
-          // Loading skeletons
-          [...Array(6)].map((_, index) => (
-            <Grid item xs={12} md={6} lg={4} key={index}>
-              <Card>
-                <Skeleton variant="rectangular" height={200} />
-                <CardContent>
-                  <Skeleton variant="text" height={32} />
-                  <Skeleton variant="text" width="60%" />
-                  <Skeleton variant="text" width="40%" />
-                </CardContent>
-              </Card>
-            </Grid>
-          ))
-        ) : (
-          getFilteredEscrows().map((escrow) => {
-            const daysToClose = calculateDaysToClose(escrow.closingDate);
-            
-            return (
-              <Grid item xs={12} md={6} lg={4} key={escrow.id}>
-                <Card 
-                  sx={{ 
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    transition: 'transform 0.2s',
-                    '&:hover': {
-                      transform: 'translateY(-4px)',
-                      boxShadow: 4,
-                    },
-                  }}
-                >
-                  <CardActionArea onClick={() => handleCardClick(escrow)}>
-                    <Box sx={{ position: 'relative' }}>
-                      <CardMedia
-                        component="img"
-                        height="200"
-                        image={escrow.propertyImage || 'https://images.unsplash.com/photo-1560184897-ae75f418493e?w=400'}
-                        alt={escrow.propertyAddress}
-                      />
-                      <Box
-                        sx={{
-                          position: 'absolute',
-                          top: 12,
-                          right: 12,
-                          display: 'flex',
-                          gap: 1,
-                        }}
-                      >
-                        <Chip
-                          label={escrow.escrowStatus}
-                          color={getStatusColor(escrow.escrowStatus)}
-                          size="small"
-                          sx={{ fontWeight: 'bold' }}
+        {/* Escrows List */}
+        <Box sx={{ mt: 3 }}>
+          <AnimatePresence>
+            {getFilteredEscrows().map((escrow, index) => (
+              <motion.div
+                key={escrow.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
+              >
+                <EscrowCard status={escrow.escrowStatus}>
+                  <Grid container spacing={3}>
+                    <Grid item xs={12} md={3}>
+                      <Box sx={{ position: 'relative', height: '200px' }}>
+                        <CardMedia
+                          component="img"
+                          height="200"
+                          image={escrow.propertyImage || 'https://images.unsplash.com/photo-1560184897-ae75f418493e?w=400'}
+                          alt={escrow.propertyAddress}
+                          className="property-image"
+                          sx={{ 
+                            borderRadius: 1,
+                            transition: 'all 0.3s ease',
+                          }}
+                        />
+                        <StatusBadge 
+                          label={escrow.escrowStatus} 
+                          status={escrow.escrowStatus}
+                          sx={{ 
+                            position: 'absolute', 
+                            top: 12, 
+                            left: 12,
+                          }} 
                         />
                       </Box>
-                      <IconButton
-                        sx={{
-                          position: 'absolute',
-                          top: 8,
-                          left: 8,
-                          bgcolor: 'background.paper',
-                          '&:hover': { bgcolor: 'background.paper' },
-                        }}
-                        size="small"
-                        onClick={(e) => handleMenuOpen(e, escrow)}
-                      >
-                        <MoreVert />
-                      </IconButton>
-                    </Box>
-                    <CardContent sx={{ flexGrow: 1 }}>
-                      <Typography variant="h6" gutterBottom noWrap>
-                        {escrow.propertyAddress}
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" gutterBottom>
-                        {escrow.escrowNumber} • {escrow.propertyType}
-                      </Typography>
-                      
-                      <Box sx={{ mt: 2 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                          <Typography variant="body2" color="text.secondary">
-                            Purchase Price
-                          </Typography>
-                          <Typography variant="body2" fontWeight="bold">
-                            ${escrow.purchasePrice.toLocaleString()}
-                          </Typography>
-                        </Box>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                          <Typography variant="body2" color="text.secondary">
-                            Closing Date
-                          </Typography>
-                          <Typography variant="body2">
-                            {safeFormatDate(escrow.closingDate, 'MMM d, yyyy')}
-                          </Typography>
-                        </Box>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                          <Typography variant="body2" color="text.secondary">
-                            Days to Close
-                          </Typography>
-                          <Typography 
-                            variant="body2" 
-                            fontWeight="bold"
-                            color={daysToClose && daysToClose <= 7 ? 'error.main' : 'success.main'}
+                    </Grid>
+                    
+                    <Grid item xs={12} md={9}>
+                      <CardContent sx={{ p: 3 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
+                          <Box>
+                            <Typography variant="h5" fontWeight="bold" gutterBottom>
+                              {escrow.propertyAddress}
+                            </Typography>
+                            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center', mb: 1 }}>
+                              <Chip 
+                                icon={<Receipt />} 
+                                label={escrow.escrowNumber} 
+                                size="small" 
+                                variant="outlined"
+                              />
+                              <Chip 
+                                icon={<Home />} 
+                                label={escrow.propertyType || 'Single Family'} 
+                                size="small" 
+                                variant="outlined"
+                              />
+                            </Box>
+                          </Box>
+                          <Box 
+                            className="action-buttons"
+                            sx={{ 
+                              display: 'flex', 
+                              gap: 1,
+                              opacity: 0,
+                              transition: 'opacity 0.3s ease',
+                            }}
                           >
-                            {daysToClose !== null ? 
-                              (daysToClose > 0 ? `${daysToClose} days` : 'Closed') : 
-                              'N/A'
-                            }
-                          </Typography>
+                            <IconButton 
+                              size="small"
+                              onClick={() => handleCardClick(escrow)}
+                              sx={{ bgcolor: 'primary.light', color: 'white' }}
+                            >
+                              <Visibility />
+                            </IconButton>
+                            <IconButton 
+                              size="small"
+                              onClick={(e) => handleMenuOpen(e, escrow)}
+                            >
+                              <MoreVert />
+                            </IconButton>
+                          </Box>
                         </Box>
-                      </Box>
 
-                      <Box sx={{ mt: 2, pt: 2, borderTop: 1, borderColor: 'divider' }}>
+                        <Grid container spacing={3}>
+                          <Grid item xs={12} sm={6} md={3}>
+                            <Box>
+                              <Typography variant="caption" color="text.secondary">
+                                Purchase Price
+                              </Typography>
+                              <Typography variant="h6" fontWeight="bold">
+                                ${escrow.purchasePrice?.toLocaleString() || 'N/A'}
+                              </Typography>
+                            </Box>
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={3}>
+                            <Box>
+                              <Typography variant="caption" color="text.secondary">
+                                Closing Date
+                              </Typography>
+                              <Typography variant="h6" fontWeight="bold">
+                                {escrow.closingDate && !isNaN(new Date(escrow.closingDate).getTime()) 
+                                  ? format(new Date(escrow.closingDate), 'MMM dd, yyyy')
+                                  : 'TBD'}
+                              </Typography>
+                            </Box>
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={3}>
+                            <Box>
+                              <Typography variant="caption" color="text.secondary">
+                                Days to Close
+                              </Typography>
+                              <Typography 
+                                variant="h6" 
+                                fontWeight="bold"
+                                color={escrow.daysToClose <= 7 ? 'error.main' : 'success.main'}
+                              >
+                                {escrow.daysToClose || calculateDaysToClose(escrow.closingDate) || 'N/A'} days
+                              </Typography>
+                            </Box>
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={3}>
+                            <Box>
+                              <Typography variant="caption" color="text.secondary">
+                                Commission
+                              </Typography>
+                              <Typography variant="h6" fontWeight="bold" color="success.main">
+                                {showCommission 
+                                  ? `$${((escrow.grossCommission || 0) * 0.5).toLocaleString()}`
+                                  : '•••••'
+                                }
+                              </Typography>
+                            </Box>
+                          </Grid>
+                        </Grid>
+
+                        <Divider sx={{ my: 2 }} />
+
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <Box sx={{ display: 'flex', gap: 1 }}>
-                            <Chip 
-                              icon={<People />}
-                              label={escrow.buyers?.[0]?.name?.split(' ')[0] || 'Buyer'}
-                              size="small"
-                              variant="outlined"
-                            />
-                            <Chip 
-                              icon={<Home />}
-                              label={escrow.sellers?.[0]?.name?.split(' ')[0] || 'Seller'}
-                              size="small"
-                              variant="outlined"
-                            />
+                          <Box sx={{ display: 'flex', gap: 2 }}>
+                            <Stack direction="row" spacing={1} alignItems="center">
+                              <People fontSize="small" color="action" />
+                              <Typography variant="body2">
+                                <strong>Buyers:</strong> {escrow.buyers?.[0]?.name || 'TBD'}
+                              </Typography>
+                            </Stack>
+                            <Stack direction="row" spacing={1} alignItems="center">
+                              <Business fontSize="small" color="action" />
+                              <Typography variant="body2">
+                                <strong>Sellers:</strong> {escrow.sellers?.[0]?.name || 'TBD'}
+                              </Typography>
+                            </Stack>
                           </Box>
-                          <Box sx={{ textAlign: 'right' }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            <Timeline fontSize="small" color="action" />
+                            <Typography variant="body2" color="text.secondary">
+                              Stage: <strong>{escrow.currentStage || 'Contract'}</strong>
+                            </Typography>
+                          </Box>
+                        </Box>
+
+                        {/* Progress Bar */}
+                        <Box sx={{ mt: 3 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                             <Typography variant="caption" color="text.secondary">
-                              Commission
+                              Transaction Progress
                             </Typography>
-                            <Typography variant="body2" fontWeight="bold" color="success.main">
-                              ${(escrow.grossCommission * 0.5).toLocaleString()}
+                            <Typography variant="caption" color="text.secondary">
+                              {Math.round(((30 - (escrow.daysToClose || 30)) / 30) * 100)}%
                             </Typography>
                           </Box>
+                          <LinearProgress 
+                            variant="determinate" 
+                            value={Math.round(((30 - (escrow.daysToClose || 30)) / 30) * 100)} 
+                            sx={{ 
+                              height: 8, 
+                              borderRadius: 4,
+                              bgcolor: alpha('#1565C0', 0.1),
+                              '& .MuiLinearProgress-bar': {
+                                borderRadius: 4,
+                                background: 'linear-gradient(90deg, #1565C0 0%, #42A5F5 100%)',
+                              }
+                            }}
+                          />
                         </Box>
-                        <Box sx={{ mt: 1, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                          {getStageIcon(escrow.currentStage)}
-                          <Typography variant="caption" color="text.secondary">
-                            {escrow.currentStage}
-                          </Typography>
-                        </Box>
-                      </Box>
-                    </CardContent>
-                  </CardActionArea>
-                </Card>
-              </Grid>
-            );
-          })
-        )}
-      </Grid>
-      )}
+                      </CardContent>
+                    </Grid>
+                  </Grid>
+                </EscrowCard>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+
+          {getFilteredEscrows().length === 0 && (
+            <Paper 
+              sx={{ 
+                p: 8, 
+                textAlign: 'center',
+                borderRadius: 2,
+              }}
+            >
+              <Typography variant="h6" color="text.secondary" gutterBottom>
+                No escrows found
+              </Typography>
+              <Typography variant="body2" color="text.secondary" paragraph>
+                {statusFilter 
+                  ? `No ${statusFilter.toLowerCase()} escrows at this time.`
+                  : 'Start by creating your first escrow.'}
+              </Typography>
+              <Button
+                variant="contained"
+                startIcon={<Add />}
+                onClick={() => setOpenForm(true)}
+                sx={{ mt: 2 }}
+              >
+                Create New Escrow
+              </Button>
+            </Paper>
+          )}
+        </Box>
+      </Container>
 
       {/* Context Menu */}
       <Menu
@@ -822,7 +1074,7 @@ const EscrowsDashboard = () => {
         escrows={escrows}
         showCommission={showCommission}
       />
-    </Container>
+    </Box>
   );
 };
 
