@@ -55,7 +55,7 @@ import { useNavigate } from 'react-router-dom';
 import { api, escrowsAPI } from '../../services/api';
 import EscrowForm from '../forms/EscrowForm';
 import EscrowFormSimple from '../forms/EscrowFormSimple';
-import EscrowCreated from '../escrows/EscrowCreated';
+import EscrowCreated from '../common/EscrowCreated';
 import StatsCard from '../common/StatsCard';
 import StatsFullView from '../common/StatsFullView';
 

@@ -108,7 +108,7 @@ import { useSnackbar } from 'notistack';
 import { format, differenceInDays, parseISO } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import { listingsAPI } from '../../services/api';
-import ListingForm from '../common/ListingForm';
+import ListingForm from '../forms/ListingForm';
 import StatsCard from '../common/StatsCard';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Swiper, SwiperSlide } from 'swiper/react';
