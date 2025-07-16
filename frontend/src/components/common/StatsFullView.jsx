@@ -40,13 +40,16 @@ import {
 const StatsFullView = ({ open, onClose, stats = {}, escrows = [], showCommission }) => {
   const theme = useTheme();
   
+  // Early return if no stats provided
+  if (!open) return null;
+  
   // Ensure stats has default values
   const safeStats = {
     totalActive: 0,
     closingThisWeek: 0,
     totalVolume: 0,
     avgDaysToClose: 0,
-    ...stats
+    ...(stats || {})
   };
 
   const getActiveEscrows = () => escrows.filter(e => e.escrowStatus?.toLowerCase() === 'active');
