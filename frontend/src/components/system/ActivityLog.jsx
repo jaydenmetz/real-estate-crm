@@ -240,12 +240,19 @@ const ActivityLog = () => {
   };
 
   const formatTimestamp = (timestamp) => {
-    if (isToday(timestamp)) {
-      return `Today at ${format(timestamp, 'h:mm a')}`;
-    } else if (isYesterday(timestamp)) {
-      return `Yesterday at ${format(timestamp, 'h:mm a')}`;
+    // Validate timestamp
+    if (!timestamp || isNaN(new Date(timestamp).getTime())) {
+      return 'Unknown time';
+    }
+    
+    const date = new Date(timestamp);
+    
+    if (isToday(date)) {
+      return `Today at ${format(date, 'h:mm a')}`;
+    } else if (isYesterday(date)) {
+      return `Yesterday at ${format(date, 'h:mm a')}`;
     } else {
-      return format(timestamp, 'MMM dd, yyyy h:mm a');
+      return format(date, 'MMM dd, yyyy h:mm a');
     }
   };
 
@@ -321,7 +328,10 @@ const ActivityLog = () => {
 
   // Group activities by date
   const groupedActivities = filteredActivities.reduce((groups, activity) => {
-    const date = format(activity.timestamp, 'yyyy-MM-dd');
+    if (!activity.timestamp || isNaN(new Date(activity.timestamp).getTime())) {
+      return groups;
+    }
+    const date = format(new Date(activity.timestamp), 'yyyy-MM-dd');
     if (!groups[date]) {
       groups[date] = [];
     }
@@ -331,7 +341,7 @@ const ActivityLog = () => {
 
   const activityStats = {
     total: activities.length,
-    today: activities.filter(a => isToday(a.timestamp)).length,
+    today: activities.filter(a => a.timestamp && !isNaN(new Date(a.timestamp).getTime()) && isToday(new Date(a.timestamp))).length,
     byType: activities.reduce((acc, activity) => {
       acc[activity.type] = (acc[activity.type] || 0) + 1;
       return acc;

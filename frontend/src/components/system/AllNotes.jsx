@@ -527,7 +527,9 @@ const AllNotes = () => {
 
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Typography variant="caption" color="text.secondary">
-                    {note.createdBy} • {formatDistanceToNow(note.updatedAt, { addSuffix: true })}
+                    {note.createdBy} • {note.updatedAt && !isNaN(new Date(note.updatedAt).getTime()) 
+                      ? formatDistanceToNow(new Date(note.updatedAt), { addSuffix: true })
+                      : 'recently'}
                   </Typography>
                   <Chip
                     label={note.entityType}
