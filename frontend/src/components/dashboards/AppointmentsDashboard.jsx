@@ -1263,17 +1263,26 @@ const AppointmentsDashboard = () => {
         <SpeedDialAction
           icon={<VideoCall />}
           tooltipTitle="Schedule Video Call"
-          onClick={() => enqueueSnackbar('Video call scheduling coming soon', { variant: 'info' })}
+          onClick={() => {
+            setSelectedAppointment({ isVideoCall: true });
+            setOpenForm(true);
+          }}
         />
         <SpeedDialAction
           icon={<EventRepeat />}
           tooltipTitle="Recurring Appointment"
-          onClick={() => enqueueSnackbar('Recurring appointments coming soon', { variant: 'info' })}
+          onClick={() => {
+            setSelectedAppointment({ isRecurring: true });
+            setOpenForm(true);
+          }}
         />
         <SpeedDialAction
           icon={<Groups />}
           tooltipTitle="Group Appointment"
-          onClick={() => enqueueSnackbar('Group appointments coming soon', { variant: 'info' })}
+          onClick={() => {
+            setSelectedAppointment({ isGroupAppointment: true });
+            setOpenForm(true);
+          }}
         />
       </SpeedDial>
 

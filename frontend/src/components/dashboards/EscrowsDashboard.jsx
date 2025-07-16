@@ -818,7 +818,11 @@ const EscrowsDashboard = () => {
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
               >
-                <EscrowCard status={escrow.escrowStatus}>
+                <EscrowCard 
+                  status={escrow.escrowStatus}
+                  onClick={() => handleCardClick(escrow)}
+                  sx={{ cursor: 'pointer' }}
+                >
                   <Grid container spacing={3}>
                     <Grid item xs={12} md={3}>
                       <Box sx={{ position: 'relative', height: '200px' }}>
@@ -867,29 +871,20 @@ const EscrowsDashboard = () => {
                               />
                             </Box>
                           </Box>
-                          <Box 
+                          <IconButton 
                             className="action-buttons"
+                            size="small"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMenuOpen(e, escrow);
+                            }}
                             sx={{ 
-                              display: 'flex', 
-                              gap: 1,
                               opacity: 0,
                               transition: 'opacity 0.3s ease',
                             }}
                           >
-                            <IconButton 
-                              size="small"
-                              onClick={() => handleCardClick(escrow)}
-                              sx={{ bgcolor: 'primary.light', color: 'white' }}
-                            >
-                              <Visibility />
-                            </IconButton>
-                            <IconButton 
-                              size="small"
-                              onClick={(e) => handleMenuOpen(e, escrow)}
-                            >
-                              <MoreVert />
-                            </IconButton>
-                          </Box>
+                            <MoreVert />
+                          </IconButton>
                         </Box>
 
                         <Grid container spacing={3}>
