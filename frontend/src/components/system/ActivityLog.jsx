@@ -307,10 +307,10 @@ const ActivityLog = () => {
       
       switch (filterDate) {
         case 'today':
-          if (!isToday(activity.timestamp)) return false;
+          if (!activity.timestamp || !isToday(new Date(activity.timestamp))) return false;
           break;
         case 'yesterday':
-          if (!isYesterday(activity.timestamp)) return false;
+          if (!activity.timestamp || !isYesterday(new Date(activity.timestamp))) return false;
           break;
         case 'week':
           const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -509,9 +509,17 @@ const ActivityLog = () => {
           <Box key={date}>
             <Box sx={{ px: 2, py: 1, bgcolor: 'grey.100' }}>
               <Typography variant="subtitle2" color="text.secondary">
-                {isToday(new Date(date)) ? 'Today' :
-                 isYesterday(new Date(date)) ? 'Yesterday' :
-                 format(new Date(date), 'EEEE, MMMM d, yyyy')}
+                {(() => {
+                  try {
+                    const dateObj = new Date(date);
+                    if (isNaN(dateObj.getTime())) return date;
+                    return isToday(dateObj) ? 'Today' :
+                           isYesterday(dateObj) ? 'Yesterday' :
+                           format(dateObj, 'EEEE, MMMM d, yyyy');
+                  } catch {
+                    return date;
+                  }
+                })()}
               </Typography>
             </Box>
             <List>

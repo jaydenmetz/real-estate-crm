@@ -171,8 +171,15 @@ const EscrowsDashboard = () => {
   const stats = {
     totalActive: escrows.filter(e => e.escrowStatus === 'Active').length,
     closingThisWeek: escrows.filter(e => {
-      const days = differenceInDays(new Date(e.closingDate), new Date());
-      return days >= 0 && days <= 7;
+      if (!e.closingDate) return false;
+      try {
+        const closeDate = new Date(e.closingDate);
+        if (isNaN(closeDate.getTime())) return false;
+        const days = differenceInDays(closeDate, new Date());
+        return days >= 0 && days <= 7;
+      } catch {
+        return false;
+      }
     }).length,
     totalVolume: escrows.reduce((sum, e) => sum + e.purchasePrice, 0),
     avgDaysToClose: Math.round(
@@ -319,8 +326,14 @@ const EscrowsDashboard = () => {
 
   const calculateDaysToClose = (closingDate) => {
     if (!closingDate) return null;
-    const days = differenceInDays(new Date(closingDate), new Date());
-    return days;
+    try {
+      const closeDate = new Date(closingDate);
+      if (isNaN(closeDate.getTime())) return null;
+      const days = differenceInDays(closeDate, new Date());
+      return days;
+    } catch {
+      return null;
+    }
   };
 
   const handleEditFromSuccess = (escrowData) => {
@@ -492,15 +505,33 @@ const EscrowsDashboard = () => {
                 </Typography>
                 {escrows
                   .filter(e => {
-                    const days = differenceInDays(new Date(e.closingDate || e.scheduledCoeDate), new Date());
-                    return days >= 0 && days <= 7 && e.escrowStatus === 'Active';
+                    const dateStr = e.closingDate || e.scheduledCoeDate;
+                    if (!dateStr) return false;
+                    try {
+                      const closeDate = new Date(dateStr);
+                      if (isNaN(closeDate.getTime())) return false;
+                      const days = differenceInDays(closeDate, new Date());
+                      return days >= 0 && days <= 7 && e.escrowStatus === 'Active';
+                    } catch {
+                      return false;
+                    }
                   })
                   .slice(0, 3)
-                  .map(e => (
-                    <Typography key={e.id} variant="caption" display="block" sx={{ mt: 1 }}>
-                      • {e.propertyAddress} - {differenceInDays(new Date(e.closingDate || e.scheduledCoeDate), new Date())} days
-                    </Typography>
-                  ))
+                  .map(e => {
+                    const dateStr = e.closingDate || e.scheduledCoeDate;
+                    let days = 'N/A';
+                    try {
+                      const closeDate = new Date(dateStr);
+                      if (!isNaN(closeDate.getTime())) {
+                        days = differenceInDays(closeDate, new Date());
+                      }
+                    } catch {}
+                    return (
+                      <Typography key={e.id} variant="caption" display="block" sx={{ mt: 1 }}>
+                        • {e.propertyAddress} - {days} days
+                      </Typography>
+                    );
+                  })
                 }
               </Box>
             }
