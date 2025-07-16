@@ -231,7 +231,6 @@ import {
   LinkedIn,
   Facebook,
   Twitter,
-  History,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Swiper, SwiperSlide } from 'swiper/react';
