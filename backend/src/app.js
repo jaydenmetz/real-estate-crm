@@ -23,6 +23,11 @@ const { initializeRedis } = require('./config/redis');
 
 const app = express();
 
+// Trust proxy when running in production (needed for rate limiting and getting real IPs)
+if (process.env.NODE_ENV === 'production') {
+  app.set('trust proxy', true);
+}
+
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
