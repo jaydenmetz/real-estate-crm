@@ -21,6 +21,7 @@ import EnhancedNavigation from './components/common/EnhancedNavigation';
 import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Dashboard Components
+import HomeDashboard from './components/dashboards/HomeDashboard';
 import AIAgentsDashboardSimple from './components/dashboards/AIAgentsDashboardSimple';
 import EscrowsDashboard from './components/dashboards/EscrowsDashboard';
 import EscrowDetailMerged from './components/details/EscrowDetailMerged';
