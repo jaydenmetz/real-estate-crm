@@ -1311,7 +1311,6 @@ import {
   PictureInPictureAlt,
   PieChart,
   PieChartOutline,
-  Pin,
   PinDrop,
   PinEnd,
   PinInvoke,
