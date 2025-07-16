@@ -37,14 +37,35 @@ import {
   Assignment,
 } from '@mui/icons-material';
 
-const StatsFullView = ({ open, onClose, stats, escrows, showCommission }) => {
+const StatsFullView = ({ open, onClose, stats = {}, escrows = [], showCommission }) => {
   const theme = useTheme();
+  
+  // Ensure stats has default values
+  const safeStats = {
+    totalActive: 0,
+    closingThisWeek: 0,
+    totalVolume: 0,
+    avgDaysToClose: 0,
+    ...stats
+  };
 
   const getActiveEscrows = () => escrows.filter(e => e.escrowStatus?.toLowerCase() === 'active');
   const getClosingThisWeek = () => escrows.filter(e => {
-    const days = e.daysToClose !== undefined ? e.daysToClose : 
-      (e.closingDate || e.scheduledCoeDate ? 
-        Math.floor((new Date(e.closingDate || e.scheduledCoeDate) - new Date()) / (1000 * 60 * 60 * 24)) : null);
+    let days = null;
+    
+    if (e.daysToClose !== undefined) {
+      days = e.daysToClose;
+    } else if (e.closingDate || e.scheduledCoeDate) {
+      try {
+        const closeDate = new Date(e.closingDate || e.scheduledCoeDate);
+        if (!isNaN(closeDate.getTime())) {
+          days = Math.floor((closeDate - new Date()) / (1000 * 60 * 60 * 24));
+        }
+      } catch {
+        days = null;
+      }
+    }
+    
     return days !== null && days >= 0 && days <= 7 && e.escrowStatus?.toLowerCase() === 'active';
   });
 
@@ -98,7 +119,7 @@ const StatsFullView = ({ open, onClose, stats, escrows, showCommission }) => {
                 </Box>
                 <Box>
                   <Typography variant="h4" fontWeight="bold" color="primary">
-                    {stats.totalActive}
+                    {safeStats.totalActive}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Active Escrows
@@ -164,7 +185,7 @@ const StatsFullView = ({ open, onClose, stats, escrows, showCommission }) => {
                 </Box>
                 <Box>
                   <Typography variant="h4" fontWeight="bold" color="warning.main">
-                    {stats.closingThisWeek}
+                    {safeStats.closingThisWeek}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Closing This Week
@@ -248,7 +269,7 @@ const StatsFullView = ({ open, onClose, stats, escrows, showCommission }) => {
                 </Box>
                 <Box>
                   <Typography variant="h4" fontWeight="bold" color="success.main">
-                    {showCommission ? `$${(stats.totalVolume / 1000000).toFixed(1)}M` : '•••••'}
+                    {showCommission ? `$${(safeStats.totalVolume / 1000000).toFixed(1)}M` : '•••••'}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Total Volume
@@ -291,7 +312,7 @@ const StatsFullView = ({ open, onClose, stats, escrows, showCommission }) => {
                       Commission Projection
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Estimated: ${((stats.totalVolume * 0.025) / 1000).toFixed(0)}K
+                      Estimated: ${((safeStats.totalVolume * 0.025) / 1000).toFixed(0)}K
                     </Typography>
                     <Typography variant="caption" color="text.secondary">
                       Based on 2.5% average commission
@@ -325,7 +346,7 @@ const StatsFullView = ({ open, onClose, stats, escrows, showCommission }) => {
                 </Box>
                 <Box>
                   <Typography variant="h4" fontWeight="bold" color="info.main">
-                    {stats.avgDaysToClose}
+                    {safeStats.avgDaysToClose}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Avg Days to Close
@@ -343,7 +364,7 @@ const StatsFullView = ({ open, onClose, stats, escrows, showCommission }) => {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                   <Typography variant="body2">Your Average</Typography>
                   <Typography variant="body2" fontWeight="bold">
-                    {stats.avgDaysToClose} days
+                    {safeStats.avgDaysToClose} days
                   </Typography>
                 </Box>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
@@ -353,7 +374,7 @@ const StatsFullView = ({ open, onClose, stats, escrows, showCommission }) => {
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Typography variant="body2">Difference</Typography>
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                    {stats.avgDaysToClose < 43 ? (
+                    {safeStats.avgDaysToClose < 43 ? (
                       <TrendingDown sx={{ fontSize: 16, color: 'success.main' }} />
                     ) : (
                       <TrendingUp sx={{ fontSize: 16, color: 'error.main' }} />
@@ -361,9 +382,9 @@ const StatsFullView = ({ open, onClose, stats, escrows, showCommission }) => {
                     <Typography 
                       variant="body2" 
                       fontWeight="bold"
-                      color={stats.avgDaysToClose < 43 ? 'success.main' : 'error.main'}
+                      color={safeStats.avgDaysToClose < 43 ? 'success.main' : 'error.main'}
                     >
-                      {Math.abs(stats.avgDaysToClose - 43)} days
+                      {Math.abs(safeStats.avgDaysToClose - 43)} days
                     </Typography>
                   </Box>
                 </Box>
@@ -371,13 +392,13 @@ const StatsFullView = ({ open, onClose, stats, escrows, showCommission }) => {
               
               <LinearProgress 
                 variant="determinate" 
-                value={(stats.avgDaysToClose / 60) * 100} 
+                value={(safeStats.avgDaysToClose / 60) * 100} 
                 sx={{ height: 8, borderRadius: 4, mb: 1 }}
               />
               
               <Typography variant="caption" color="text.secondary">
-                {stats.avgDaysToClose < 43 
-                  ? `You're ${((43 - stats.avgDaysToClose) / 43 * 100).toFixed(0)}% faster than average!`
+                {safeStats.avgDaysToClose < 43 
+                  ? `You're ${((43 - safeStats.avgDaysToClose) / 43 * 100).toFixed(0)}% faster than average!`
                   : `Consider process optimization to improve closing times.`
                 }
               </Typography>
