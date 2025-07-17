@@ -1,56 +1,29 @@
 
+const Appointment = require('../models/Appointment.mock');
 const logger = require('../utils/logger');
+const { validationResult } = require('express-validator');
 
 exports.getAppointments = async (req, res) => {
   try {
-    // MOCK DATA - Replace database query
-    const mockAppointments = [
-      {
-        id: '1',
-        title: 'Listing Presentation - Smith Property',
-        date: '2025-07-06',
-        startTime: '10:00',
-        duration: 60,
-        appointmentType: 'Listing Presentation',
-        status: 'Scheduled',
-        client: 'Smith Family',
-        location: '123 Main St',
-        notes: 'Bring comps and market analysis'
-      },
-      {
-        id: '2', 
-        title: 'Buyer Consultation - Johnson Family',
-        date: '2025-07-06',
-        startTime: '14:00',
-        duration: 90,
-        appointmentType: 'Buyer Consultation',
-        status: 'Confirmed',
-        client: 'Johnson Family',
-        location: 'Office',
-        notes: 'First-time homebuyers, budget $400k'
-      },
-      {
-        id: '3',
-        title: 'Property Showing - Downtown Condo',
-        date: '2025-07-06', 
-        startTime: '16:30',
-        duration: 30,
-        appointmentType: 'Property Showing',
-        status: 'Scheduled',
-        client: 'Wilson LLC',
-        location: '456 Oak Ave #12',
-        notes: 'Investment property showing'
-      }
-    ];
-
+    const filters = {
+      type: req.query.type,
+      status: req.query.status,
+      startDate: req.query.startDate,
+      endDate: req.query.endDate,
+      clientId: req.query.clientId,
+      propertyId: req.query.propertyId,
+      search: req.query.search,
+      page: req.query.page || 1,
+      limit: req.query.limit || 20,
+      sort: req.query.sort,
+      order: req.query.order
+    };
+    
+    const result = await Appointment.findAll(filters);
+    
     res.json({
       success: true,
-      data: {
-        appointments: mockAppointments,
-        total: mockAppointments.length,
-        page: 1,
-        pages: 1
-      },
+      data: result,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
@@ -67,24 +40,21 @@ exports.getAppointments = async (req, res) => {
 
 exports.getAppointment = async (req, res) => {
   try {
-    const { id } = req.params;
+    const appointment = await Appointment.findById(req.params.id);
     
-    const mockAppointment = {
-      id: id,
-      title: 'Listing Presentation - Smith Property',
-      date: '2025-07-06',
-      startTime: '10:00',
-      duration: 60,
-      appointmentType: 'Listing Presentation',
-      status: 'Scheduled',
-      client: 'Smith Family',
-      location: '123 Main St',
-      notes: 'Bring comps and market analysis'
-    };
-
+    if (!appointment) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Appointment not found'
+        }
+      });
+    }
+    
     res.json({
       success: true,
-      data: mockAppointment,
+      data: appointment,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
@@ -101,20 +71,27 @@ exports.getAppointment = async (req, res) => {
 
 exports.createAppointment = async (req, res) => {
   try {
-    const appointmentData = req.body;
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(422).json({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Invalid input data',
+          details: errors.array()
+        }
+      });
+    }
     
-    const newAppointment = {
-      id: Date.now().toString(),
-      ...appointmentData,
-      status: 'Scheduled',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
+    const appointment = await Appointment.create(req.body);
+    
+    // Emit real-time update
+    const io = req.app.get('io');
+    io.to('appointments').emit('appointment:created', appointment);
+    
     res.status(201).json({
       success: true,
-      data: newAppointment,
-      message: 'Appointment created successfully',
+      data: appointment,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
@@ -131,19 +108,25 @@ exports.createAppointment = async (req, res) => {
 
 exports.updateAppointment = async (req, res) => {
   try {
-    const { id } = req.params;
-    const updateData = req.body;
+    const appointment = await Appointment.update(req.params.id, req.body);
     
-    const updatedAppointment = {
-      id: id,
-      ...updateData,
-      updatedAt: new Date().toISOString()
-    };
-
+    if (!appointment) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Appointment not found'
+        }
+      });
+    }
+    
+    // Emit real-time update
+    const io = req.app.get('io');
+    io.to('appointments').emit('appointment:updated', appointment);
+    
     res.json({
       success: true,
-      data: updatedAppointment,
-      message: 'Appointment updated successfully',
+      data: appointment,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
@@ -160,11 +143,15 @@ exports.updateAppointment = async (req, res) => {
 
 exports.deleteAppointment = async (req, res) => {
   try {
-    const { id } = req.params;
-
+    const deletedAppointment = await Appointment.delete(req.params.id);
+    
+    // Emit real-time update
+    const io = req.app.get('io');
+    io.to('appointments').emit('appointment:deleted', { id: req.params.id });
+    
     res.json({
       success: true,
-      message: 'Appointment deleted successfully',
+      data: deletedAppointment,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
@@ -179,20 +166,103 @@ exports.deleteAppointment = async (req, res) => {
   }
 };
 
-exports.cancelAppointment = async (req, res) => {
+// PATCH /appointments/:id/status
+exports.updateStatus = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { reason } = req.body;
-
+    const { status, reason } = req.body;
+    
+    const appointment = await Appointment.updateStatus(req.params.id, status, reason);
+    
+    if (!appointment) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Appointment not found'
+        }
+      });
+    }
+    
+    // Emit real-time update
+    const io = req.app.get('io');
+    io.to('appointments').emit('appointment:statusChanged', { id: req.params.id, status });
+    
     res.json({
       success: true,
-      message: 'Appointment cancelled successfully',
-      data: {
-        id: id,
-        status: 'Cancelled',
-        cancelReason: reason,
-        cancelledAt: new Date().toISOString()
-      },
+      data: appointment,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('Error updating appointment status:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'STATUS_ERROR',
+        message: 'Failed to update appointment status'
+      }
+    });
+  }
+};
+
+// POST /appointments/:id/reschedule
+exports.rescheduleAppointment = async (req, res) => {
+  try {
+    const { startTime, endTime, reason } = req.body;
+    
+    const appointment = await Appointment.reschedule(
+      req.params.id, 
+      startTime, 
+      endTime, 
+      reason
+    );
+    
+    if (!appointment) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Appointment not found'
+        }
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: appointment,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('Error rescheduling appointment:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'RESCHEDULE_ERROR',
+        message: 'Failed to reschedule appointment'
+      }
+    });
+  }
+};
+
+// POST /appointments/:id/cancel
+exports.cancelAppointment = async (req, res) => {
+  try {
+    const { reason } = req.body;
+    
+    const appointment = await Appointment.cancel(req.params.id, reason);
+    
+    if (!appointment) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Appointment not found'
+        }
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: appointment,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
@@ -207,30 +277,73 @@ exports.cancelAppointment = async (req, res) => {
   }
 };
 
-exports.completeAppointment = async (req, res) => {
+// GET /appointments/upcoming
+exports.getUpcomingAppointments = async (req, res) => {
   try {
-    const { id } = req.params;
-    const { notes, outcome } = req.body;
-
+    const days = parseInt(req.query.days) || 7;
+    const appointments = await Appointment.getUpcoming(days);
+    
     res.json({
       success: true,
-      message: 'Appointment completed successfully',
+      data: appointments,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('Error fetching upcoming appointments:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'FETCH_ERROR',
+        message: 'Failed to fetch upcoming appointments'
+      }
+    });
+  }
+};
+
+// GET /appointments/stats
+exports.getStats = async (req, res) => {
+  try {
+    const stats = await Appointment.getStats();
+    
+    res.json({
+      success: true,
+      data: stats,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('Error fetching appointment stats:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'STATS_ERROR',
+        message: 'Failed to fetch appointment statistics'
+      }
+    });
+  }
+};
+
+// POST /appointments/check-conflicts
+exports.checkConflicts = async (req, res) => {
+  try {
+    const { startTime, endTime, excludeId } = req.body;
+    
+    const conflicts = await Appointment.checkConflicts(startTime, endTime, excludeId);
+    
+    res.json({
+      success: true,
       data: {
-        id: id,
-        status: 'Completed',
-        completionNotes: notes,
-        outcome: outcome,
-        completedAt: new Date().toISOString()
+        hasConflicts: conflicts.length > 0,
+        conflicts
       },
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    logger.error('Error completing appointment:', error);
+    logger.error('Error checking conflicts:', error);
     res.status(500).json({
       success: false,
       error: {
-        code: 'COMPLETE_ERROR',
-        message: 'Failed to complete appointment'
+        code: 'CONFLICT_ERROR',
+        message: 'Failed to check appointment conflicts'
       }
     });
   }

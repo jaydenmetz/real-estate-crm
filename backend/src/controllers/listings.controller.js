@@ -1,10 +1,11 @@
 // backend/src/controllers/listings.controller.js
 
-const Listing = require('../models/Listing');
+const Listing = require('../models/Listing.mock');
 const logger = require('../utils/logger');
 const { validationResult } = require('express-validator');
 
-// Mock listings data for development/demo
+// DEPRECATED: Mock data moved to Listing.mock.js model
+// This controller now uses the comprehensive Listing.mock.js model
 const mockListings = [
   {
     id: '1',
@@ -282,77 +283,8 @@ const mockListings = [
   }
 ];
 
-// Helper function to add additional details to a listing
-const getDetailedListing = (listing) => {
-  return {
-    ...listing,
-    showings: [
-      { id: 1, date: new Date('2024-01-18'), time: '2:00 PM', agent: 'Sarah Chen', feedback: 'Clients loved it, considering offer' },
-      { id: 2, date: new Date('2024-01-17'), time: '10:00 AM', agent: 'Mike Johnson', feedback: 'Price too high for clients' },
-      { id: 3, date: new Date('2024-01-16'), time: '4:00 PM', agent: 'Lisa Wong', feedback: 'Very interested, second showing requested' },
-      { id: 4, date: new Date('2024-01-15'), time: '11:00 AM', agent: 'David Park', feedback: 'Not enough bedrooms' }
-    ],
-    analytics: {
-      views: listing.views,
-      favorites: listing.favorites,
-      shares: listing.shares,
-      inquiries: listing.inquiries,
-      viewsThisWeek: 89,
-      viewsLastWeek: 76,
-      viewsTrend: 'up',
-      avgTimeOnPage: '3:24',
-      viewsBySource: [
-        { source: 'MLS', views: 142 },
-        { source: 'Zillow', views: 89 },
-        { source: 'Realtor.com', views: 67 },
-        { source: 'Company Website', views: 44 }
-      ],
-      dailyViews: [
-        { date: '1/12', views: 12 },
-        { date: '1/13', views: 18 },
-        { date: '1/14', views: 22 },
-        { date: '1/15', views: 35 },
-        { date: '1/16', views: 28 },
-        { date: '1/17', views: 31 },
-        { date: '1/18', views: 42 }
-      ]
-    },
-    marketingChecklist: {
-      photography: true,
-      virtualTour: listing.virtualTourLink !== null,
-      droneVideo: listing.dronePhotos,
-      floorPlan: true,
-      brochures: true,
-      mlsListing: true,
-      zillowListing: true,
-      realtorListing: true,
-      socialMedia: true,
-      emailCampaign: false,
-      openHouse: false,
-      neighborhoodMailers: false
-    },
-    priceHistory: [
-      { date: new Date(listing.listingDate), price: listing.originalListPrice, event: 'Listed' },
-      ...(listing.originalListPrice !== listing.listPrice ? [{ date: new Date('2024-01-12'), price: listing.listPrice, event: 'Price Reduced' }] : [])
-    ],
-    comparableProperties: [
-      { address: '456 Nearby St', soldPrice: listing.listPrice * 0.97, soldDate: '2023-12-15', sqft: listing.squareFootage * 0.98, pricePerSqft: (listing.listPrice * 0.97) / (listing.squareFootage * 0.98) },
-      { address: '789 Similar Ave', soldPrice: listing.listPrice * 1.05, soldDate: '2023-11-20', sqft: listing.squareFootage * 1.04, pricePerSqft: (listing.listPrice * 1.05) / (listing.squareFootage * 1.04) },
-      { address: '321 Comp Rd', soldPrice: listing.listPrice * 0.98, soldDate: '2024-01-02', sqft: listing.squareFootage * 0.96, pricePerSqft: (listing.listPrice * 0.98) / (listing.squareFootage * 0.96) }
-    ],
-    notes: [
-      { id: 1, content: 'Sellers motivated due to job relocation', createdAt: new Date(listing.listingDate), createdBy: 'You' },
-      { id: 2, content: 'Price reduction approved by sellers', createdAt: new Date('2024-01-12'), createdBy: 'You' },
-      { id: 3, content: 'Open house scheduled for this weekend', createdAt: new Date('2024-01-16'), createdBy: 'Marketing Team' }
-    ],
-    documents: [
-      { id: 1, name: 'Property Disclosure', type: 'PDF', size: '2.4 MB', uploadedDate: listing.listingDate },
-      { id: 2, name: 'Survey Report', type: 'PDF', size: '1.8 MB', uploadedDate: listing.listingDate },
-      { id: 3, name: 'HOA Documents', type: 'PDF', size: '5.2 MB', uploadedDate: '2024-01-06' },
-      { id: 4, name: 'Marketing Brochure', type: 'PDF', size: '3.1 MB', uploadedDate: '2024-01-08' }
-    ]
-  };
-};
+// DEPRECATED: Helper function moved to Listing.mock.js model
+// The mock model now returns comprehensive data directly
 
 // GET /listings
 exports.getListings = async (req, res) => {
@@ -379,43 +311,10 @@ exports.getListings = async (req, res) => {
       // If database fails, use mock data
       logger.warn('Database unavailable, using mock data');
       
-      let filteredListings = [...mockListings];
-      
-      // Filter by status if provided
-      if (filters.status && filters.status !== 'all') {
-        filteredListings = filteredListings.filter(listing => listing.listingStatus === filters.status);
-      }
-
-      // Filter by price range
-      if (filters.minPrice) {
-        filteredListings = filteredListings.filter(listing => listing.listPrice >= filters.minPrice);
-      }
-      if (filters.maxPrice) {
-        filteredListings = filteredListings.filter(listing => listing.listPrice <= filters.maxPrice);
-      }
-
-      // Filter by property type
-      if (filters.propertyType) {
-        filteredListings = filteredListings.filter(listing => listing.propertyType === filters.propertyType);
-      }
-
-      // Calculate pagination
-      const total = filteredListings.length;
-      const pages = Math.ceil(total / filters.limit);
-      const startIndex = (filters.page - 1) * filters.limit;
-      const endIndex = startIndex + filters.limit;
-      
-      const paginatedListings = filteredListings.slice(startIndex, endIndex);
-
+      const result = await Listing.findAll(filters);
       res.json({
         success: true,
-        data: {
-          listings: paginatedListings,
-          total,
-          page: parseInt(filters.page),
-          pages,
-          limit: parseInt(filters.limit)
-        },
+        data: result,
         timestamp: new Date().toISOString()
       });
     }
@@ -451,7 +350,7 @@ exports.getListing = async (req, res) => {
       // If database fails, use mock data
       logger.warn('Database unavailable, using mock data');
       
-      const listing = mockListings.find(l => l.id === req.params.id);
+      const listing = await Listing.findById(req.params.id);
 
       if (!listing) {
         return res.status(404).json({
@@ -463,12 +362,9 @@ exports.getListing = async (req, res) => {
         });
       }
 
-      // Return detailed listing with additional data
-      const detailedListing = getDetailedListing(listing);
-
       res.json({
         success: true,
-        data: detailedListing,
+        data: listing,
         timestamp: new Date().toISOString()
       });
     }

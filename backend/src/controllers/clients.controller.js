@@ -1,17 +1,19 @@
-const Client = require('../models/Client');
+const Client = require('../models/Client.mock');
 const logger = require('../utils/logger');
 const { validationResult } = require('express-validator');
 
 exports.getClients = async (req, res) => {
   try {
     const filters = {
-      type: req.query.type,
+      clientType: req.query.type || req.query.clientType,
       status: req.query.status,
+      source: req.query.source,
       tag: req.query.tag,
       search: req.query.search,
-      page: req.query.page,
-      limit: req.query.limit,
-      sort: req.query.sort
+      page: req.query.page || 1,
+      limit: req.query.limit || 20,
+      sort: req.query.sort,
+      order: req.query.order
     };
     
     const result = await Client.findAll(filters);
@@ -138,66 +140,81 @@ exports.updateClient = async (req, res) => {
 
 exports.deleteClient = async (req, res) => {
   try {
-    const reason = req.headers['x-deletion-reason'] || 'No reason provided';
-    const deletionRequest = await Client.delete(
-      req.params.id, 
-      req.user.name,
-      reason
-    );
+    const deletedClient = await Client.delete(req.params.id);
+    
+    // Emit real-time update
+    const io = req.app.get('io');
+    io.to('clients').emit('client:deleted', { id: req.params.id });
     
     res.json({
       success: true,
-      data: {
-        deletionRequest,
-        approvalUrl: `${process.env.FRONTEND_URL}/approvals/${deletionRequest.id}`
-      },
+      data: deletedClient,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    logger.error('Error requesting client deletion:', error);
+    logger.error('Error deleting client:', error);
     res.status(500).json({
       success: false,
       error: {
         code: 'DELETE_ERROR',
-        message: 'Failed to request client deletion'
+        message: 'Failed to delete client'
       }
     });
   }
 };
 
-exports.addNote = async (req, res) => {
+// POST /clients/:id/communication
+exports.logCommunication = async (req, res) => {
   try {
-    const { note, type, isPrivate } = req.body;
+    const communication = await Client.logCommunication(req.params.id, req.body);
     
-    const noteRecord = await Client.addNote(req.params.id, {
-      note,
-      type: type || 'general',
-      isPrivate: isPrivate || false,
-      createdBy: req.user.name
-    });
+    if (!communication) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Client not found'
+        }
+      });
+    }
     
     res.json({
       success: true,
-      data: noteRecord,
+      data: communication,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    logger.error('Error adding client note:', error);
+    logger.error('Error logging communication:', error);
     res.status(500).json({
       success: false,
       error: {
-        code: 'NOTE_ERROR',
-        message: 'Failed to add client note'
+        code: 'COMMUNICATION_ERROR',
+        message: 'Failed to log communication'
       }
     });
   }
 };
 
-exports.updateTags = async (req, res) => {
+// PATCH /clients/:id/status
+exports.updateStatus = async (req, res) => {
   try {
-    const { operation, tags } = req.body;
+    const { status, note } = req.body;
     
-    const client = await Client.updateTags(req.params.id, operation, tags);
+    const client = await Client.updateStatus(req.params.id, status, note);
+    
+    if (!client) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Client not found'
+        }
+      });
+    }
+    
+    // Emit real-time update
+    const io = req.app.get('io');
+    io.to('clients').emit('client:statusChanged', { id: req.params.id, status });
     
     res.json({
       success: true,
@@ -205,12 +222,100 @@ exports.updateTags = async (req, res) => {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
-    logger.error('Error updating client tags:', error);
+    logger.error('Error updating client status:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'STATUS_ERROR',
+        message: 'Failed to update client status'
+      }
+    });
+  }
+};
+
+// POST /clients/:id/tags
+exports.addTag = async (req, res) => {
+  try {
+    const { tag } = req.body;
+    
+    const client = await Client.addTag(req.params.id, tag);
+    
+    if (!client) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Client not found'
+        }
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: client,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('Error adding tag:', error);
     res.status(500).json({
       success: false,
       error: {
         code: 'TAG_ERROR',
-        message: 'Failed to update client tags'
+        message: 'Failed to add tag'
+      }
+    });
+  }
+};
+
+// DELETE /clients/:id/tags/:tag
+exports.removeTag = async (req, res) => {
+  try {
+    const client = await Client.removeTag(req.params.id, req.params.tag);
+    
+    if (!client) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Client not found'
+        }
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: client,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('Error removing tag:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'TAG_ERROR',
+        message: 'Failed to remove tag'
+      }
+    });
+  }
+};
+
+// GET /clients/stats
+exports.getStats = async (req, res) => {
+  try {
+    const stats = await Client.getStats();
+    
+    res.json({
+      success: true,
+      data: stats,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('Error fetching client stats:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'STATS_ERROR',
+        message: 'Failed to fetch client statistics'
       }
     });
   }

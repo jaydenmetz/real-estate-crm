@@ -1281,16 +1281,16 @@ const VirtualAIOffice = () => {
 
   // Calculate team stats
   const teamStats = {
-    activeAgents: Object.values(agents).filter(a => a.status === 'working').length,
-    totalTasks: Object.values(agents).reduce((sum, agent) => sum + agent.metrics.tasksToday, 0),
-    efficiency: Math.round(
+    activeAgents: agents ? Object.values(agents).filter(a => a.status === 'working').length : 0,
+    totalTasks: agents ? Object.values(agents).reduce((sum, agent) => sum + agent.metrics.tasksToday, 0) : 0,
+    efficiency: agents && Object.values(agents).length > 0 ? Math.round(
       Object.values(agents).reduce((sum, agent) => sum + parseInt(agent.metrics.efficiency), 0) / 
       Object.values(agents).length
-    ),
-    avgResponseTime: Math.round(
+    ) : 0,
+    avgResponseTime: agents && Object.values(agents).length > 0 ? Math.round(
       Object.values(agents).reduce((sum, agent) => sum + parseFloat(agent.metrics.avgResponseTime), 0) / 
       Object.values(agents).length * 10
-    ) / 10
+    ) / 10 : 0
   };
 
   // Mock database items
@@ -1390,7 +1390,7 @@ const VirtualAIOffice = () => {
   };
 
   // Convert agents object to array for workspace
-  const agentsArray = Object.values(agents);
+  const agentsArray = agents ? Object.values(agents) : [];
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
