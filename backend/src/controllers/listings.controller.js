@@ -1,323 +1,130 @@
-// backend/src/controllers/listings.controller.js
-
-const Listing = require('../models/Listing.mock');
+const { pool, query, transaction } = require('../config/database');
 const logger = require('../utils/logger');
 const { validationResult } = require('express-validator');
 
-// DEPRECATED: Mock data moved to Listing.mock.js model
-// This controller now uses the comprehensive Listing.mock.js model
-const mockListings = [
-  {
-    id: '1',
-    propertyAddress: '123 Main Street',
-    city: 'San Diego',
-    state: 'CA',
-    zipCode: '92101',
-    fullAddress: '123 Main Street, San Diego, CA 92101',
-    mlsNumber: 'SD2024001',
-    listingStatus: 'Active',
-    listPrice: 850000,
-    originalListPrice: 875000,
-    pricePerSqft: 354,
-    propertyType: 'Single Family',
-    bedrooms: 4,
-    bathrooms: 3,
-    halfBathrooms: 0,
-    squareFootage: 2400,
-    lotSize: 7200,
-    yearBuilt: 2018,
-    garage: 2,
-    pool: true,
-    listingDate: '2024-01-05',
-    expirationDate: '2024-07-05',
-    daysOnMarket: 15,
-    virtualTourLink: 'https://example.com/tour/123',
-    professionalPhotos: true,
-    dronePhotos: true,
-    videoWalkthrough: true,
-    propertyDescription: 'Beautiful modern home in prime location. This stunning 4-bedroom, 3-bathroom residence offers contemporary luxury living with an open floor plan, gourmet kitchen, and resort-style backyard. High ceilings, natural light, and premium finishes throughout.',
-    features: [
-      'Gourmet Kitchen with Quartz Countertops',
-      'Stainless Steel Appliances',
-      'Hardwood Floors Throughout',
-      'Master Suite with Walk-in Closet',
-      'Resort-Style Pool and Spa',
-      'Smart Home Technology',
-      'Solar Panels',
-      'EV Charging Station',
-      'Custom Built-ins',
-      'Drought-Resistant Landscaping'
-    ],
-    sellers: [
-      { id: 1, name: 'John Smith', email: 'john.smith@email.com', phone: '(555) 123-4567' },
-      { id: 2, name: 'Jane Smith', email: 'jane.smith@email.com', phone: '(555) 123-4568' }
-    ],
-    listingAgent: {
-      id: 1,
-      name: 'You',
-      email: 'agent@realestate.com',
-      phone: '(555) 999-8888'
-    },
-    commission: {
-      listing: 3.0,
-      buyer: 2.5,
-      total: 5.5
-    },
-    images: [
-      'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800',
-      'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800',
-      'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800',
-      'https://images.unsplash.com/photo-1600607687644-c7171b42498b?w=800',
-      'https://images.unsplash.com/photo-1600566753086-00f18fb6b3ea?w=800',
-      'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800',
-    ],
-    primaryImage: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400',
-    showings: 12,
-    views: 342,
-    favorites: 28,
-    shares: 15,
-    inquiries: 8
-  },
-  {
-    id: '2',
-    propertyAddress: '456 Oak Avenue',
-    city: 'La Jolla',
-    state: 'CA',
-    zipCode: '92037',
-    fullAddress: '456 Oak Avenue, La Jolla, CA 92037',
-    mlsNumber: 'LJ2024002',
-    listingStatus: 'Active',
-    listPrice: 1250000,
-    originalListPrice: 1250000,
-    pricePerSqft: 694,
-    propertyType: 'Condo',
-    bedrooms: 3,
-    bathrooms: 2,
-    halfBathrooms: 1,
-    squareFootage: 1800,
-    lotSize: 0,
-    yearBuilt: 2020,
-    garage: 2,
-    pool: false,
-    listingDate: '2024-01-10',
-    expirationDate: '2024-07-10',
-    daysOnMarket: 10,
-    virtualTourLink: 'https://example.com/tour/456',
-    professionalPhotos: true,
-    dronePhotos: false,
-    videoWalkthrough: false,
-    propertyDescription: 'Luxury oceanview condo in the heart of La Jolla. Modern finishes, open concept living, and spectacular sunset views. Walking distance to beaches, shopping, and fine dining.',
-    features: [
-      'Ocean Views',
-      'Balcony',
-      'In-Unit Laundry',
-      'Central AC/Heat',
-      'Secure Building',
-      'Guest Parking',
-      'Storage Unit',
-      'Pet Friendly'
-    ],
-    sellers: [
-      { id: 3, name: 'Michael Johnson', email: 'mjohnson@email.com', phone: '(555) 234-5678' }
-    ],
-    listingAgent: {
-      id: 1,
-      name: 'You',
-      email: 'agent@realestate.com',
-      phone: '(555) 999-8888'
-    },
-    commission: {
-      listing: 3.0,
-      buyer: 2.5,
-      total: 5.5
-    },
-    images: [
-      'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800',
-      'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800'
-    ],
-    primaryImage: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400',
-    showings: 8,
-    views: 256,
-    favorites: 18,
-    shares: 10,
-    inquiries: 5
-  },
-  {
-    id: '3',
-    propertyAddress: '789 Beach Drive',
-    city: 'Carlsbad',
-    state: 'CA',
-    zipCode: '92008',
-    fullAddress: '789 Beach Drive, Carlsbad, CA 92008',
-    mlsNumber: 'CB2024003',
-    listingStatus: 'Pending',
-    listPrice: 2100000,
-    originalListPrice: 2250000,
-    pricePerSqft: 553,
-    propertyType: 'Single Family',
-    bedrooms: 5,
-    bathrooms: 4,
-    halfBathrooms: 1,
-    squareFootage: 3800,
-    lotSize: 12000,
-    yearBuilt: 2016,
-    garage: 3,
-    pool: true,
-    listingDate: '2023-12-15',
-    expirationDate: '2024-06-15',
-    daysOnMarket: 35,
-    virtualTourLink: 'https://example.com/tour/789',
-    professionalPhotos: true,
-    dronePhotos: true,
-    videoWalkthrough: true,
-    propertyDescription: 'Stunning beachside estate with panoramic ocean views. This exceptional property features a gourmet kitchen, home theater, wine cellar, and infinity pool. Just steps from the beach.',
-    features: [
-      'Ocean Views',
-      'Infinity Pool',
-      'Home Theater',
-      'Wine Cellar',
-      'Gourmet Kitchen',
-      'Master Suite with Ocean Views',
-      'Guest House',
-      'Solar Panels',
-      'Smart Home',
-      'Private Beach Access'
-    ],
-    sellers: [
-      { id: 4, name: 'Robert Williams', email: 'rwilliams@email.com', phone: '(555) 345-6789' },
-      { id: 5, name: 'Susan Williams', email: 'swilliams@email.com', phone: '(555) 345-6790' }
-    ],
-    listingAgent: {
-      id: 1,
-      name: 'You',
-      email: 'agent@realestate.com',
-      phone: '(555) 999-8888'
-    },
-    buyerAgent: {
-      id: 2,
-      name: 'Sarah Chen',
-      email: 'schen@realestate.com',
-      phone: '(555) 888-7777'
-    },
-    commission: {
-      listing: 3.0,
-      buyer: 2.5,
-      total: 5.5
-    },
-    images: [
-      'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800',
-      'https://images.unsplash.com/photo-1600047509807-ba8f99d2cdde?w=800',
-      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800'
-    ],
-    primaryImage: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=400',
-    showings: 22,
-    views: 567,
-    favorites: 45,
-    shares: 25,
-    inquiries: 12
-  },
-  {
-    id: '4',
-    propertyAddress: '321 Sunset Boulevard',
-    city: 'Del Mar',
-    state: 'CA',
-    zipCode: '92014',
-    fullAddress: '321 Sunset Boulevard, Del Mar, CA 92014',
-    mlsNumber: 'DM2024004',
-    listingStatus: 'Coming Soon',
-    listPrice: 3500000,
-    originalListPrice: 3500000,
-    pricePerSqft: 778,
-    propertyType: 'Single Family',
-    bedrooms: 6,
-    bathrooms: 5,
-    halfBathrooms: 0,
-    squareFootage: 4500,
-    lotSize: 15000,
-    yearBuilt: 2022,
-    garage: 3,
-    pool: true,
-    listingDate: '2024-01-25',
-    expirationDate: '2024-07-25',
-    daysOnMarket: 0,
-    virtualTourLink: null,
-    professionalPhotos: false,
-    dronePhotos: false,
-    videoWalkthrough: false,
-    propertyDescription: 'Brand new construction in prestigious Del Mar. This modern masterpiece features breathtaking architecture, the finest finishes, and spectacular views. Coming to market soon.',
-    features: [
-      'New Construction',
-      'Ocean Views',
-      'Chef\'s Kitchen',
-      'Home Office',
-      'Gym',
-      'Game Room',
-      'Outdoor Kitchen',
-      'Fire Pit',
-      'Security System',
-      'Electric Car Charging'
-    ],
-    sellers: [
-      { id: 6, name: 'The Thompson Trust', email: 'trust@email.com', phone: '(555) 456-7890' }
-    ],
-    listingAgent: {
-      id: 1,
-      name: 'You',
-      email: 'agent@realestate.com',
-      phone: '(555) 999-8888'
-    },
-    commission: {
-      listing: 3.0,
-      buyer: 2.5,
-      total: 5.5
-    },
-    images: [
-      'https://images.unsplash.com/photo-1613977257363-707ba9348227?w=800'
-    ],
-    primaryImage: 'https://images.unsplash.com/photo-1613977257363-707ba9348227?w=400',
-    showings: 0,
-    views: 0,
-    favorites: 0,
-    shares: 0,
-    inquiries: 0
-  }
-];
+// Helper to generate MLS number
+function generateMLSNumber() {
+  const prefix = 'MLS';
+  const year = new Date().getFullYear();
+  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  return `${prefix}${year}${random}`;
+}
 
-// DEPRECATED: Helper function moved to Listing.mock.js model
-// The mock model now returns comprehensive data directly
+// Valid status transitions
+const validStatusTransitions = {
+  'Coming Soon': ['Active', 'Cancelled'],
+  'Active': ['Pending', 'Sold', 'Expired', 'Cancelled', 'Withdrawn'],
+  'Pending': ['Active', 'Sold', 'Cancelled'],
+  'Sold': [], // Terminal state
+  'Expired': ['Active', 'Withdrawn'],
+  'Cancelled': ['Active'],
+  'Withdrawn': ['Active']
+};
 
-// GET /listings
+// Get all listings with filtering and pagination
 exports.getListings = async (req, res) => {
   try {
-    const filters = {
-      status: req.query.status,
-      minPrice: req.query.minPrice,
-      maxPrice: req.query.maxPrice,
-      propertyType: req.query.propertyType,
-      page: req.query.page || 1,
-      limit: req.query.limit || 20,
-      sort: req.query.sort
-    };
+    const {
+      status,
+      minPrice,
+      maxPrice,
+      propertyType,
+      minDaysOnMarket,
+      maxDaysOnMarket,
+      sortBy = 'created_at',
+      sortOrder = 'DESC',
+      page = 1,
+      limit = 20
+    } = req.query;
 
-    // Try to get from database first
-    try {
-      const result = await Listing.findAll(filters);
-      res.json({
-        success: true,
-        data: result,
-        timestamp: new Date().toISOString()
-      });
-    } catch (dbError) {
-      // If database fails, use mock data
-      logger.warn('Database unavailable, using mock data');
-      
-      const result = await Listing.findAll(filters);
-      res.json({
-        success: true,
-        data: result,
-        timestamp: new Date().toISOString()
-      });
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+    const params = [];
+    let whereConditions = ['l.deleted_at IS NULL'];
+
+    // Add filters
+    if (status) {
+      params.push(status);
+      whereConditions.push(`l.listing_status = $${params.length}`);
     }
+
+    if (minPrice) {
+      params.push(minPrice);
+      whereConditions.push(`l.list_price >= $${params.length}`);
+    }
+
+    if (maxPrice) {
+      params.push(maxPrice);
+      whereConditions.push(`l.list_price <= $${params.length}`);
+    }
+
+    if (propertyType) {
+      params.push(propertyType);
+      whereConditions.push(`l.property_type = $${params.length}`);
+    }
+
+    if (minDaysOnMarket) {
+      params.push(minDaysOnMarket);
+      whereConditions.push(`l.days_on_market >= $${params.length}`);
+    }
+
+    if (maxDaysOnMarket) {
+      params.push(maxDaysOnMarket);
+      whereConditions.push(`l.days_on_market <= $${params.length}`);
+    }
+
+    const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+
+    // Validate sort column
+    const allowedSortColumns = ['created_at', 'list_price', 'listing_date', 'days_on_market'];
+    const sortColumn = allowedSortColumns.includes(sortBy) ? sortBy : 'created_at';
+    const order = sortOrder.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+
+    // Get total count
+    const countQuery = `
+      SELECT COUNT(*) as total
+      FROM listings l
+      ${whereClause}
+    `;
+    const countResult = await query(countQuery, params);
+    const total = parseInt(countResult.rows[0].total);
+
+    // Get listings with pagination
+    params.push(limit, offset);
+    const listingsQuery = `
+      SELECT 
+        l.*,
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'type', la.event_type,
+              'count', SUM(la.event_count)
+            )
+          ) FILTER (WHERE la.id IS NOT NULL),
+          '[]'
+        ) as analytics_summary
+      FROM listings l
+      LEFT JOIN listing_analytics la ON l.id = la.listing_id
+      ${whereClause}
+      GROUP BY l.id
+      ORDER BY l.${sortColumn} ${order}
+      LIMIT $${params.length - 1} OFFSET $${params.length}
+    `;
+
+    const result = await query(listingsQuery, params);
+
+    res.json({
+      success: true,
+      data: {
+        listings: result.rows,
+        pagination: {
+          total,
+          page: parseInt(page),
+          limit: parseInt(limit),
+          pages: Math.ceil(total / parseInt(limit))
+        }
+      },
+      timestamp: new Date().toISOString()
+    });
   } catch (error) {
     logger.error('Error fetching listings:', error);
     res.status(500).json({
@@ -330,44 +137,98 @@ exports.getListings = async (req, res) => {
   }
 };
 
-// GET /listings/:id
+// Get single listing with all details
 exports.getListing = async (req, res) => {
   try {
-    // Try to get from database first
-    try {
-      const listing = await Listing.findById(req.params.id);
+    const { id } = req.params;
 
-      if (!listing) {
-        throw new Error('Not found');
-      }
+    // Get listing with additional details
+    const listingQuery = `
+      SELECT 
+        l.*,
+        json_build_object(
+          'listing', l.listing_commission,
+          'buyer', l.buyer_commission,
+          'total', l.total_commission
+        ) as commission,
+        COALESCE(
+          json_agg(DISTINCT jsonb_build_object(
+            'id', ph.id,
+            'old_price', ph.old_price,
+            'new_price', ph.new_price,
+            'reason', ph.reason,
+            'effective_date', ph.effective_date,
+            'created_at', ph.created_at
+          )) FILTER (WHERE ph.id IS NOT NULL),
+          '[]'
+        ) as price_history,
+        COALESCE(
+          json_agg(DISTINCT jsonb_build_object(
+            'id', ls.id,
+            'date', ls.showing_date,
+            'time', ls.showing_time,
+            'agent_name', ls.agent_name,
+            'feedback', ls.feedback,
+            'interested', ls.interested
+          )) FILTER (WHERE ls.id IS NOT NULL),
+          '[]'
+        ) as showings,
+        COUNT(DISTINCT ls.id) as showing_count
+      FROM listings l
+      LEFT JOIN listing_price_history ph ON l.id = ph.listing_id
+      LEFT JOIN listing_showings ls ON l.id = ls.listing_id
+      WHERE l.id = $1 AND l.deleted_at IS NULL
+      GROUP BY l.id
+    `;
 
-      res.json({
-        success: true,
-        data: listing,
-        timestamp: new Date().toISOString()
-      });
-    } catch (dbError) {
-      // If database fails, use mock data
-      logger.warn('Database unavailable, using mock data');
-      
-      const listing = await Listing.findById(req.params.id);
+    const listingResult = await query(listingQuery, [id]);
 
-      if (!listing) {
-        return res.status(404).json({
-          success: false,
-          error: {
-            code: 'NOT_FOUND',
-            message: 'Listing not found'
-          }
-        });
-      }
-
-      res.json({
-        success: true,
-        data: listing,
-        timestamp: new Date().toISOString()
+    if (listingResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Listing not found'
+        }
       });
     }
+
+    const listing = listingResult.rows[0];
+
+    // Get analytics data
+    const analyticsQuery = `
+      SELECT 
+        event_type,
+        SUM(event_count) as total_count,
+        json_agg(json_build_object(
+          'date', event_date,
+          'count', event_count
+        ) ORDER BY event_date DESC) as daily_breakdown
+      FROM listing_analytics
+      WHERE listing_id = $1
+      GROUP BY event_type
+    `;
+    const analyticsResult = await query(analyticsQuery, [id]);
+
+    // Format analytics
+    const analytics = {
+      views: 0,
+      favorites: 0,
+      shares: 0,
+      inquiries: 0
+    };
+
+    analyticsResult.rows.forEach(row => {
+      analytics[row.event_type + 's'] = parseInt(row.total_count);
+    });
+
+    listing.analytics = analytics;
+
+    res.json({
+      success: true,
+      data: listing,
+      timestamp: new Date().toISOString()
+    });
   } catch (error) {
     logger.error('Error fetching listing:', error);
     res.status(500).json({
@@ -380,7 +241,7 @@ exports.getListing = async (req, res) => {
   }
 };
 
-// POST /listings
+// Create new listing
 exports.createListing = async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -395,15 +256,131 @@ exports.createListing = async (req, res) => {
       });
     }
 
-    const listing = await Listing.create(req.body);
+    const {
+      propertyAddress,
+      listPrice,
+      propertyType = 'Single Family',
+      bedrooms,
+      bathrooms,
+      squareFootage,
+      lotSize,
+      yearBuilt,
+      description,
+      features = [],
+      photos = [],
+      listingStatus = 'Coming Soon',
+      listingCommission = 3.0,
+      buyerCommission = 2.5,
+      virtualTourLink,
+      professionalPhotos = false,
+      dronePhotos = false,
+      videoWalkthrough = false
+    } = req.body;
+
+    const result = await transaction(async (client) => {
+      // Generate MLS number
+      const mlsNumber = generateMLSNumber();
+
+      // Calculate days on market (0 for new listings)
+      const daysOnMarket = listingStatus === 'Active' ? 0 : null;
+
+      // Insert listing
+      const listingQuery = `
+        INSERT INTO listings (
+          property_address, list_price, listing_status, mls_number,
+          property_type, bedrooms, bathrooms, square_feet, lot_size,
+          year_built, description, features, photos, listing_date,
+          days_on_market, listing_commission, buyer_commission,
+          virtual_tour_link, professional_photos, drone_photos,
+          video_walkthrough, listing_agent_id, team_id
+        ) VALUES (
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
+          CURRENT_DATE, $14, $15, $16, $17, $18, $19, $20, $21, $22
+        ) RETURNING *
+      `;
+
+      const listingValues = [
+        propertyAddress,
+        listPrice,
+        listingStatus,
+        mlsNumber,
+        propertyType,
+        bedrooms,
+        bathrooms,
+        squareFootage,
+        lotSize,
+        yearBuilt,
+        description,
+        JSON.stringify(features),
+        JSON.stringify(photos),
+        daysOnMarket,
+        listingCommission,
+        buyerCommission,
+        virtualTourLink,
+        professionalPhotos,
+        dronePhotos,
+        videoWalkthrough,
+        req.user?.id || null,
+        req.user?.team_id || null
+      ];
+
+      const listingResult = await client.query(listingQuery, listingValues);
+      const listing = listingResult.rows[0];
+
+      // Add initial price history entry
+      const priceHistoryQuery = `
+        INSERT INTO listing_price_history (
+          listing_id, old_price, new_price, reason, created_by
+        ) VALUES ($1, $2, $3, $4, $5)
+      `;
+      await client.query(priceHistoryQuery, [
+        listing.id,
+        listPrice,
+        listPrice,
+        'Initial listing price',
+        req.user?.id || null
+      ]);
+
+      // Initialize marketing checklist items
+      const checklistItems = [
+        'Professional photos scheduled',
+        'Property description written',
+        'MLS listing submitted',
+        'Yard sign installed',
+        'Lockbox installed',
+        'Virtual tour created',
+        'Social media posts created',
+        'Email blast sent',
+        'Open house scheduled',
+        'Flyers printed'
+      ];
+
+      for (const item of checklistItems) {
+        await client.query(
+          `INSERT INTO listing_marketing_checklist (listing_id, checklist_item) VALUES ($1, $2)`,
+          [listing.id, item]
+        );
+      }
+
+      return listing;
+    });
 
     // Emit real-time update
     const io = req.app.get('io');
-    io.to('listings').emit('listing:created', listing);
+    if (io) {
+      io.to('listings').emit('listing:created', result);
+    }
+
+    logger.info('New listing created', {
+      listingId: result.id,
+      mlsNumber: result.mls_number,
+      propertyAddress: result.property_address,
+      listPrice: result.list_price
+    });
 
     res.status(201).json({
       success: true,
-      data: listing,
+      data: result,
       timestamp: new Date().toISOString()
     });
   } catch (error) {
@@ -418,12 +395,89 @@ exports.createListing = async (req, res) => {
   }
 };
 
-// PUT /listings/:id
+// Update listing
 exports.updateListing = async (req, res) => {
   try {
-    const listing = await Listing.update(req.params.id, req.body);
+    const { id } = req.params;
+    const updates = req.body;
 
-    if (!listing) {
+    // Build dynamic update query
+    const updateFields = [];
+    const values = [];
+    let paramCount = 1;
+
+    // Track if price is being changed
+    let priceChanged = false;
+    let oldPrice, newPrice;
+
+    // Get current listing first if price is being updated
+    if (updates.listPrice) {
+      const currentListing = await query('SELECT list_price FROM listings WHERE id = $1', [id]);
+      if (currentListing.rows.length > 0) {
+        oldPrice = currentListing.rows[0].list_price;
+        newPrice = updates.listPrice;
+        priceChanged = oldPrice !== newPrice;
+      }
+    }
+
+    Object.entries(updates).forEach(([key, value]) => {
+      // Map camelCase to snake_case
+      const columnMap = {
+        propertyAddress: 'property_address',
+        listPrice: 'list_price',
+        listingStatus: 'listing_status',
+        propertyType: 'property_type',
+        squareFootage: 'square_feet',
+        lotSize: 'lot_size',
+        yearBuilt: 'year_built',
+        listingCommission: 'listing_commission',
+        buyerCommission: 'buyer_commission',
+        virtualTourLink: 'virtual_tour_link',
+        professionalPhotos: 'professional_photos',
+        dronePhotos: 'drone_photos',
+        videoWalkthrough: 'video_walkthrough'
+      };
+
+      const column = columnMap[key] || key;
+      if (column && key !== 'id') {
+        updateFields.push(`${column} = $${paramCount}`);
+        values.push(value);
+        paramCount++;
+      }
+    });
+
+    if (updateFields.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'NO_UPDATES',
+          message: 'No valid fields to update'
+        }
+      });
+    }
+
+    // Update days on market if status is changing to Active
+    if (updates.listingStatus === 'Active') {
+      updateFields.push(`days_on_market = 0`);
+      updateFields.push(`listing_date = CURRENT_DATE`);
+    }
+
+    // Add updated_at
+    updateFields.push(`updated_at = CURRENT_TIMESTAMP`);
+
+    // Add id as last parameter
+    values.push(id);
+
+    const updateQuery = `
+      UPDATE listings 
+      SET ${updateFields.join(', ')}
+      WHERE id = $${paramCount} AND deleted_at IS NULL
+      RETURNING *
+    `;
+
+    const result = await query(updateQuery, values);
+
+    if (result.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -433,13 +487,32 @@ exports.updateListing = async (req, res) => {
       });
     }
 
+    // If price changed, record it in price history
+    if (priceChanged) {
+      await query(
+        `INSERT INTO listing_price_history (listing_id, old_price, new_price, reason, created_by)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [id, oldPrice, newPrice, updates.priceChangeReason || 'Price updated', req.user?.id || null]
+      );
+
+      // Recalculate commission amounts if needed
+      const commissionQuery = `
+        UPDATE listings 
+        SET updated_at = CURRENT_TIMESTAMP
+        WHERE id = $1
+      `;
+      await query(commissionQuery, [id]);
+    }
+
     // Emit real-time update
     const io = req.app.get('io');
-    io.to('listings').emit('listing:updated', listing);
+    if (io) {
+      io.to('listings').emit('listing:updated', result.rows[0]);
+    }
 
     res.json({
       success: true,
-      data: listing,
+      data: result.rows[0],
       timestamp: new Date().toISOString()
     });
   } catch (error) {
@@ -454,72 +527,19 @@ exports.updateListing = async (req, res) => {
   }
 };
 
-// POST /listings/:id/price-reduction
-exports.priceReduction = async (req, res) => {
-  try {
-    const { newPrice, reason, effectiveDate } = req.body;
-
-    const result = await Listing.recordPriceReduction(req.params.id, {
-      newPrice,
-      reason,
-      effectiveDate: effectiveDate || new Date()
-    });
-
-    res.json({
-      success: true,
-      data: result,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    logger.error('Error recording price reduction:', error);
-    res.status(500).json({
-      success: false,
-      error: {
-        code: 'PRICE_ERROR',
-        message: 'Failed to record price reduction'
-      }
-    });
-  }
-};
-
-// POST /listings/:id/showings
-exports.logShowing = async (req, res) => {
-  try {
-    const { date, time, agent, feedback, interested } = req.body;
-
-    const showing = await Listing.logShowing(req.params.id, {
-      date,
-      time,
-      agent,
-      feedback,
-      interested
-    });
-
-    res.json({
-      success: true,
-      data: showing,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    logger.error('Error logging showing:', error);
-    res.status(500).json({
-      success: false,
-      error: {
-        code: 'SHOWING_ERROR',
-        message: 'Failed to log showing'
-      }
-    });
-  }
-};
-
-// PATCH /listings/:id/status
+// Update listing status with validation
 exports.updateStatus = async (req, res) => {
   try {
+    const { id } = req.params;
     const { status } = req.body;
-    
-    const listing = await Listing.updateStatus(req.params.id, status);
 
-    if (!listing) {
+    // Get current status
+    const currentResult = await query(
+      'SELECT listing_status FROM listings WHERE id = $1 AND deleted_at IS NULL',
+      [id]
+    );
+
+    if (currentResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -529,13 +549,48 @@ exports.updateStatus = async (req, res) => {
       });
     }
 
+    const currentStatus = currentResult.rows[0].listing_status;
+
+    // Validate status transition
+    const allowedTransitions = validStatusTransitions[currentStatus] || [];
+    if (!allowedTransitions.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_TRANSITION',
+          message: `Cannot change status from ${currentStatus} to ${status}`,
+          allowedTransitions
+        }
+      });
+    }
+
+    // Update status
+    const updateQuery = `
+      UPDATE listings 
+      SET listing_status = $1, updated_at = CURRENT_TIMESTAMP
+      WHERE id = $2
+      RETURNING *
+    `;
+
+    const result = await query(updateQuery, [status, id]);
+
+    // Log status change
+    logger.info('Listing status updated', {
+      listingId: id,
+      oldStatus: currentStatus,
+      newStatus: status,
+      updatedBy: req.user?.email || 'unknown'
+    });
+
     // Emit real-time update
     const io = req.app.get('io');
-    io.to('listings').emit('listing:statusChanged', { id: req.params.id, status });
+    if (io) {
+      io.to('listings').emit('listing:statusChanged', { id, status });
+    }
 
     res.json({
       success: true,
-      data: listing,
+      data: result.rows[0],
       timestamp: new Date().toISOString()
     });
   } catch (error) {
@@ -550,14 +605,204 @@ exports.updateStatus = async (req, res) => {
   }
 };
 
-// PUT /listings/:id/checklist
-exports.updateChecklist = async (req, res) => {
+// Record price change
+exports.recordPriceChange = async (req, res) => {
   try {
-    const { checklist } = req.body;
-    
-    const listing = await Listing.updateChecklist(req.params.id, checklist);
+    const { id } = req.params;
+    const { newPrice, reason } = req.body;
 
-    if (!listing) {
+    if (!newPrice || newPrice <= 0) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Valid new price is required'
+        }
+      });
+    }
+
+    const result = await transaction(async (client) => {
+      // Get current price
+      const currentResult = await client.query(
+        'SELECT list_price FROM listings WHERE id = $1 AND deleted_at IS NULL',
+        [id]
+      );
+
+      if (currentResult.rows.length === 0) {
+        throw new Error('Listing not found');
+      }
+
+      const oldPrice = currentResult.rows[0].list_price;
+
+      // Update listing price
+      const updateResult = await client.query(
+        `UPDATE listings 
+         SET list_price = $1, updated_at = CURRENT_TIMESTAMP 
+         WHERE id = $2 
+         RETURNING *`,
+        [newPrice, id]
+      );
+
+      // Record price history
+      await client.query(
+        `INSERT INTO listing_price_history (listing_id, old_price, new_price, reason, created_by)
+         VALUES ($1, $2, $3, $4, $5)`,
+        [id, oldPrice, newPrice, reason || 'Price adjustment', req.user?.id || null]
+      );
+
+      return updateResult.rows[0];
+    });
+
+    // Emit real-time update
+    const io = req.app.get('io');
+    if (io) {
+      io.to('listings').emit('listing:priceChanged', { id, newPrice });
+    }
+
+    res.json({
+      success: true,
+      data: result,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('Error recording price change:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'PRICE_ERROR',
+        message: 'Failed to record price change'
+      }
+    });
+  }
+};
+
+// Log showing
+exports.logShowing = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { date, time, agentName, agentEmail, agentPhone, feedback, interested } = req.body;
+
+    if (!date || !time) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Date and time are required'
+        }
+      });
+    }
+
+    const showingQuery = `
+      INSERT INTO listing_showings (
+        listing_id, showing_date, showing_time, agent_name,
+        agent_email, agent_phone, feedback, interested
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING *
+    `;
+
+    const values = [
+      id,
+      date,
+      time,
+      agentName,
+      agentEmail,
+      agentPhone,
+      feedback,
+      interested || false
+    ];
+
+    const result = await query(showingQuery, values);
+
+    // Update listing showing count
+    await query(
+      'UPDATE listings SET updated_at = CURRENT_TIMESTAMP WHERE id = $1',
+      [id]
+    );
+
+    res.json({
+      success: true,
+      data: result.rows[0],
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('Error logging showing:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'SHOWING_ERROR',
+        message: 'Failed to log showing'
+      }
+    });
+  }
+};
+
+// Update marketing checklist
+exports.updateMarketingChecklist = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { checklistData } = req.body;
+
+    if (!Array.isArray(checklistData)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Checklist data must be an array'
+        }
+      });
+    }
+
+    const results = [];
+
+    for (const item of checklistData) {
+      const { checklistItem, completed, notes } = item;
+
+      const updateQuery = `
+        UPDATE listing_marketing_checklist
+        SET completed = $1,
+            completed_date = CASE WHEN $1 = true THEN CURRENT_DATE ELSE NULL END,
+            notes = $2,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE listing_id = $3 AND checklist_item = $4
+        RETURNING *
+      `;
+
+      const result = await query(updateQuery, [completed, notes, id, checklistItem]);
+      
+      if (result.rows.length > 0) {
+        results.push(result.rows[0]);
+      }
+    }
+
+    res.json({
+      success: true,
+      data: results,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('Error updating marketing checklist:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'CHECKLIST_ERROR',
+        message: 'Failed to update marketing checklist'
+      }
+    });
+  }
+};
+
+// Get listing analytics
+exports.getListingAnalytics = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Get listing basic info
+    const listingResult = await query(
+      'SELECT id, property_address, list_price, property_type, square_feet, listing_date FROM listings WHERE id = $1',
+      [id]
+    );
+
+    if (listingResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
@@ -567,49 +812,91 @@ exports.updateChecklist = async (req, res) => {
       });
     }
 
-    res.json({
-      success: true,
-      data: listing,
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    logger.error('Error updating checklist:', error);
-    res.status(500).json({
-      success: false,
-      error: {
-        code: 'CHECKLIST_ERROR',
-        message: 'Failed to update checklist'
+    const listing = listingResult.rows[0];
+
+    // Get analytics data
+    const analyticsQuery = `
+      SELECT 
+        event_type,
+        SUM(event_count) as total,
+        json_agg(json_build_object(
+          'date', event_date,
+          'count', event_count
+        ) ORDER BY event_date DESC) as daily_data
+      FROM listing_analytics
+      WHERE listing_id = $1
+        AND event_date >= CURRENT_DATE - INTERVAL '30 days'
+      GROUP BY event_type
+    `;
+
+    const analyticsResult = await query(analyticsQuery, [id]);
+
+    // Get showing feedback summary
+    const showingQuery = `
+      SELECT 
+        COUNT(*) as total_showings,
+        COUNT(CASE WHEN interested = true THEN 1 END) as interested_count,
+        COUNT(CASE WHEN feedback IS NOT NULL THEN 1 END) as feedback_count,
+        json_agg(json_build_object(
+          'date', showing_date,
+          'agent', agent_name,
+          'interested', interested,
+          'feedback', feedback
+        ) ORDER BY showing_date DESC) as recent_showings
+      FROM listing_showings
+      WHERE listing_id = $1
+    `;
+
+    const showingResult = await query(showingQuery, [id]);
+
+    // Get average days on market for similar properties
+    const comparableQuery = `
+      SELECT 
+        AVG(days_on_market) as avg_days_on_market,
+        AVG(list_price / NULLIF(square_feet, 0)) as avg_price_per_sqft,
+        COUNT(*) as comparable_count
+      FROM listings
+      WHERE property_type = $1
+        AND listing_status = 'Sold'
+        AND ABS(square_feet - $2) <= $2 * 0.2  -- Within 20% of square footage
+        AND ABS(list_price - $3) <= $3 * 0.2   -- Within 20% of price
+        AND listing_date >= CURRENT_DATE - INTERVAL '6 months'
+    `;
+
+    const comparableResult = await query(comparableQuery, [
+      listing.property_type,
+      listing.square_feet || 0,
+      listing.list_price
+    ]);
+
+    // Format response
+    const analytics = {
+      listing: {
+        id: listing.id,
+        address: listing.property_address,
+        listPrice: listing.list_price,
+        pricePerSqft: listing.square_feet ? (listing.list_price / listing.square_feet).toFixed(2) : null
+      },
+      metrics: {
+        views: 0,
+        favorites: 0,
+        shares: 0,
+        inquiries: 0
+      },
+      dailyBreakdown: {},
+      showings: showingResult.rows[0],
+      marketComparison: {
+        avgDaysOnMarket: Math.round(comparableResult.rows[0].avg_days_on_market || 0),
+        avgPricePerSqft: parseFloat(comparableResult.rows[0].avg_price_per_sqft || 0).toFixed(2),
+        comparableProperties: parseInt(comparableResult.rows[0].comparable_count || 0)
       }
-    });
-  }
-};
+    };
 
-// GET /listings/:id/price-history
-exports.getPriceHistory = async (req, res) => {
-  try {
-    const priceHistory = await Listing.getPriceHistory(req.params.id);
-
-    res.json({
-      success: true,
-      data: priceHistory,
-      timestamp: new Date().toISOString()
+    // Process analytics data
+    analyticsResult.rows.forEach(row => {
+      analytics.metrics[row.event_type + 's'] = parseInt(row.total);
+      analytics.dailyBreakdown[row.event_type] = row.daily_data;
     });
-  } catch (error) {
-    logger.error('Error fetching price history:', error);
-    res.status(500).json({
-      success: false,
-      error: {
-        code: 'FETCH_ERROR',
-        message: 'Failed to fetch price history'
-      }
-    });
-  }
-};
-
-// GET /analytics/listing/:id
-exports.getAnalytics = async (req, res) => {
-  try {
-    const analytics = await Listing.getAnalytics(req.params.id);
 
     res.json({
       success: true,
@@ -623,6 +910,51 @@ exports.getAnalytics = async (req, res) => {
       error: {
         code: 'ANALYTICS_ERROR',
         message: 'Failed to fetch listing analytics'
+      }
+    });
+  }
+};
+
+// Track analytics event (views, favorites, etc.)
+exports.trackAnalytics = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { eventType } = req.body;
+
+    const validEvents = ['view', 'favorite', 'share', 'inquiry'];
+    if (!validEvents.includes(eventType)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_EVENT',
+          message: 'Invalid event type'
+        }
+      });
+    }
+
+    // Upsert analytics record
+    const upsertQuery = `
+      INSERT INTO listing_analytics (listing_id, event_type, event_date, event_count)
+      VALUES ($1, $2, CURRENT_DATE, 1)
+      ON CONFLICT (listing_id, event_type, event_date)
+      DO UPDATE SET event_count = listing_analytics.event_count + 1
+      RETURNING *
+    `;
+
+    const result = await query(upsertQuery, [id, eventType]);
+
+    res.json({
+      success: true,
+      data: result.rows[0],
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('Error tracking analytics:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'ANALYTICS_ERROR',
+        message: 'Failed to track analytics event'
       }
     });
   }

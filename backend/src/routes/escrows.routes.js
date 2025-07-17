@@ -120,12 +120,43 @@ router.patch(
   '/:id/checklist',
   [
     param('id').notEmpty().withMessage('Escrow ID is required'),
-    body('item').notEmpty().withMessage('Checklist item is required'),
-    body('value').isBoolean().withMessage('Value must be boolean'),
-    body('note').optional().isString().withMessage('Note must be a string')
+    body('checklistUpdates').notEmpty().withMessage('Checklist updates are required')
   ],
   validationMiddleware,
   escrowsController.updateChecklist
+);
+
+// POST /v1/escrows/:id/notes
+router.post(
+  '/:id/notes',
+  [
+    param('id').notEmpty().withMessage('Escrow ID is required'),
+    body('content').notEmpty().withMessage('Note content is required'),
+    body('isPrivate').optional().isBoolean().withMessage('isPrivate must be boolean')
+  ],
+  validationMiddleware,
+  escrowsController.addNote
+);
+
+// POST /v1/escrows/:id/documents
+router.post(
+  '/:id/documents',
+  [
+    param('id').notEmpty().withMessage('Escrow ID is required'),
+    body('fileName').notEmpty().withMessage('File name is required'),
+    body('filePath').notEmpty().withMessage('File path is required'),
+    body('fileSize').optional().isNumeric().withMessage('File size must be numeric'),
+    body('mimeType').optional().isString().withMessage('MIME type must be string'),
+    body('documentType').optional().isString().withMessage('Document type must be string')
+  ],
+  validationMiddleware,
+  escrowsController.uploadDocument
+);
+
+// GET /v1/escrows/stats
+router.get(
+  '/stats/dashboard',
+  escrowsController.getStats
 );
 
 module.exports = router;
