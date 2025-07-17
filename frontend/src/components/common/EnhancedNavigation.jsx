@@ -70,13 +70,13 @@ const EnhancedNavigation = () => {
     { path: '/clients', label: 'Clients', icon: <People /> },
     { path: '/appointments', label: 'Appointments', icon: <Event /> },
     { path: '/leads', label: 'Leads', icon: <TrendingUp /> },
-    { path: '/commissions', label: 'Commissions', icon: <AttachMoney /> },
-    { path: '/invoices', label: 'Invoices', icon: <Receipt /> },
-    { path: '/expenses', label: 'Expenses', icon: <AccountBalanceWallet /> },
   ];
 
   // Other data menu items
   const otherDataItems = [
+    { path: '/commissions', label: 'Commission tracking', icon: <AttachMoney /> },
+    { path: '/invoices', label: 'Invoice management', icon: <Receipt /> },
+    { path: '/expenses', label: 'Expense tracking', icon: <AccountBalanceWallet /> },
     { path: '/ai-agents', label: 'AI Agents', icon: <SmartToy /> },
     { path: '/activity-log', label: 'Activity Log', icon: <Timeline /> },
     { path: '/all-notes', label: 'All Notes', icon: <Article /> },
