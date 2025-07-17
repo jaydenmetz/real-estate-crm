@@ -1,339 +1,267 @@
--- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Initial schema migration for Real Estate CRM
+-- Created: 2025-01-17
 
--- Clients table
-CREATE TABLE clients (
-  id VARCHAR(20) PRIMARY KEY,
-  first_name VARCHAR(100) NOT NULL,
-  last_name VARCHAR(100) NOT NULL,
-  preferred_name VARCHAR(100),
-  client_status VARCHAR(50) DEFAULT 'Active',
-  client_type VARCHAR(50),
-  email VARCHAR(255) UNIQUE,
-  phone VARCHAR(20),
-  alternate_phone VARCHAR(20),
-  address JSONB,
-  preferred_contact_method VARCHAR(20),
-  best_time_to_contact VARCHAR(100),
-  demographics JSONB,
-  preferences JSONB,
-  financial JSONB,
-  lead_info JSONB,
-  communication JSONB,
-  lifetime_value DECIMAL(12,2) DEFAULT 0,
-  tags TEXT[],
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- Note: If uuid-ossp extension is not available, we'll use gen_random_uuid() instead
+-- which is built into PostgreSQL 13+
+
+-- Teams table
+CREATE TABLE IF NOT EXISTS teams (
+    team_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
+    subdomain VARCHAR(100) UNIQUE NOT NULL,
+    settings JSONB DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Users table
+CREATE TABLE IF NOT EXISTS users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    email VARCHAR(255) UNIQUE NOT NULL,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    role VARCHAR(50) NOT NULL DEFAULT 'agent',
+    team_id UUID REFERENCES teams(team_id) ON DELETE CASCADE,
+    password_hash VARCHAR(255),
+    is_active BOOLEAN DEFAULT true,
+    last_login TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Escrows table
-CREATE TABLE escrows (
-  id VARCHAR(20) PRIMARY KEY,
-  property_address VARCHAR(255) NOT NULL,
-  escrow_status VARCHAR(50) DEFAULT 'Active',
-  escrow_number VARCHAR(50),
-  purchase_price DECIMAL(12,2),
-  earnest_money_deposit DECIMAL(12,2),
-  down_payment DECIMAL(12,2),
-  loan_amount DECIMAL(12,2),
-  commission_percentage DECIMAL(5,2),
-  gross_commission DECIMAL(12,2),
-  net_commission DECIMAL(12,2),
-  commission_adjustments DECIMAL(12,2),
-  expense_adjustments DECIMAL(12,2),
-  acceptance_date DATE,
-  emd_due_date DATE,
-  contingency_removal_date DATE,
-  appraisal_deadline DATE,
-  loan_contingency_deadline DATE,
-  inspection_deadline DATE,
-  closing_date DATE,
-  possession_date DATE,
-  property_type VARCHAR(50),
-  lead_source VARCHAR(100),
-  tags TEXT[],
-  created_by VARCHAR(100),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE IF NOT EXISTS escrows (
+    id VARCHAR(50) PRIMARY KEY,
+    property_address TEXT NOT NULL,
+    escrow_status VARCHAR(50) DEFAULT 'Active',
+    purchase_price DECIMAL(12,2) NOT NULL,
+    earnest_money_deposit DECIMAL(10,2),
+    down_payment DECIMAL(10,2),
+    loan_amount DECIMAL(12,2),
+    commission_percentage DECIMAL(5,2) DEFAULT 2.5,
+    gross_commission DECIMAL(10,2),
+    net_commission DECIMAL(10,2),
+    acceptance_date DATE,
+    closing_date DATE,
+    property_type VARCHAR(100) DEFAULT 'Single Family',
+    lead_source VARCHAR(100),
+    created_by UUID REFERENCES users(id),
+    team_id UUID REFERENCES teams(team_id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Escrow relationships
-CREATE TABLE escrow_buyers (
-  escrow_id VARCHAR(20) REFERENCES escrows(id) ON DELETE CASCADE,
-  client_id VARCHAR(20) REFERENCES clients(id),
-  PRIMARY KEY (escrow_id, client_id)
+-- Escrow buyers junction table
+CREATE TABLE IF NOT EXISTS escrow_buyers (
+    id SERIAL PRIMARY KEY,
+    escrow_id VARCHAR(50) REFERENCES escrows(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255),
+    phone VARCHAR(20),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE escrow_sellers (
-  escrow_id VARCHAR(20) REFERENCES escrows(id) ON DELETE CASCADE,
-  client_id VARCHAR(20) REFERENCES clients(id),
-  PRIMARY KEY (escrow_id, client_id)
-);
-
--- Escrow checklist
-CREATE TABLE escrow_checklists (
-  escrow_id VARCHAR(20) PRIMARY KEY REFERENCES escrows(id) ON DELETE CASCADE,
-  checklist_items JSONB DEFAULT '{}',
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- Escrow sellers junction table
+CREATE TABLE IF NOT EXISTS escrow_sellers (
+    id SERIAL PRIMARY KEY,
+    escrow_id VARCHAR(50) REFERENCES escrows(id) ON DELETE CASCADE,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255),
+    phone VARCHAR(20),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Listings table
-CREATE TABLE listings (
-  id VARCHAR(20) PRIMARY KEY,
-  property_address VARCHAR(255) NOT NULL,
-  mls_number VARCHAR(50),
-  listing_status VARCHAR(50) DEFAULT 'Active',
-  list_price DECIMAL(12,2),
-  original_list_price DECIMAL(12,2),
-  price_per_sqft DECIMAL(10,2),
-  property_type VARCHAR(50),
-  bedrooms INTEGER,
-  bathrooms DECIMAL(3,1),
-  square_footage INTEGER,
-  lot_size INTEGER,
-  year_built INTEGER,
-  garage INTEGER,
-  pool BOOLEAN DEFAULT FALSE,
-  listing_date DATE,
-  expiration_date DATE,
-  days_on_market INTEGER DEFAULT 0,
-  marketing_budget DECIMAL(10,2),
-  marketing_spent DECIMAL(10,2),
-  virtual_tour_link VARCHAR(500),
-  professional_photos BOOLEAN DEFAULT FALSE,
-  drone_photos BOOLEAN DEFAULT FALSE,
-  video_walkthrough BOOLEAN DEFAULT FALSE,
-  total_showings INTEGER DEFAULT 0,
-  showings_this_week INTEGER DEFAULT 0,
-  online_views INTEGER DEFAULT 0,
-  saved_favorites INTEGER DEFAULT 0,
-  listing_commission DECIMAL(5,2),
-  buyer_agent_commission DECIMAL(5,2),
-  tags TEXT[],
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE IF NOT EXISTS listings (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    property_address TEXT NOT NULL,
+    list_price DECIMAL(12,2) NOT NULL,
+    listing_status VARCHAR(50) DEFAULT 'Active',
+    mls_number VARCHAR(50) UNIQUE,
+    property_type VARCHAR(100) DEFAULT 'Single Family',
+    bedrooms INTEGER,
+    bathrooms DECIMAL(3,1),
+    square_feet INTEGER,
+    lot_size DECIMAL(10,2),
+    year_built INTEGER,
+    description TEXT,
+    features JSONB DEFAULT '[]',
+    photos JSONB DEFAULT '[]',
+    listing_date DATE DEFAULT CURRENT_DATE,
+    expiration_date DATE,
+    days_on_market INTEGER,
+    team_id UUID REFERENCES teams(team_id) ON DELETE CASCADE,
+    listing_agent_id UUID REFERENCES users(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Listing relationships
-CREATE TABLE listing_sellers (
-  listing_id VARCHAR(20) REFERENCES listings(id) ON DELETE CASCADE,
-  client_id VARCHAR(20) REFERENCES clients(id),
-  PRIMARY KEY (listing_id, client_id)
-);
-
--- Price history
-CREATE TABLE listing_price_history (
-  id SERIAL PRIMARY KEY,
-  listing_id VARCHAR(20) REFERENCES listings(id) ON DELETE CASCADE,
-  price DECIMAL(12,2),
-  date DATE,
-  reason VARCHAR(255),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- Clients table
+CREATE TABLE IF NOT EXISTS clients (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    email VARCHAR(255),
+    phone VARCHAR(20),
+    client_type VARCHAR(50) DEFAULT 'Buyer', -- Buyer, Seller, Both
+    status VARCHAR(50) DEFAULT 'Active',
+    source VARCHAR(100),
+    preferred_contact_method VARCHAR(50) DEFAULT 'Email',
+    notes TEXT,
+    budget_min DECIMAL(12,2),
+    budget_max DECIMAL(12,2),
+    pre_qualified BOOLEAN DEFAULT false,
+    assigned_agent_id UUID REFERENCES users(id),
+    team_id UUID REFERENCES teams(team_id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Leads table
-CREATE TABLE leads (
-  id VARCHAR(20) PRIMARY KEY,
-  first_name VARCHAR(100),
-  last_name VARCHAR(100),
-  email VARCHAR(255),
-  phone VARCHAR(20),
-  lead_source VARCHAR(100),
-  lead_type VARCHAR(50),
-  lead_status VARCHAR(50) DEFAULT 'New',
-  lead_score INTEGER DEFAULT 0,
-  lead_temperature VARCHAR(20),
-  date_created TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  first_contact_date TIMESTAMP,
-  last_contact_date TIMESTAMP,
-  next_follow_up_date DATE,
-  number_of_contacts INTEGER DEFAULT 0,
-  qualification JSONB,
-  assigned_agent VARCHAR(100),
-  assigned_date TIMESTAMP,
-  campaign_info JSONB,
-  converted_to_client BOOLEAN DEFAULT FALSE,
-  conversion_date TIMESTAMP,
-  reason_lost VARCHAR(255),
-  property_interests JSONB,
-  tags TEXT[],
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE IF NOT EXISTS leads (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    first_name VARCHAR(100),
+    last_name VARCHAR(100),
+    email VARCHAR(255),
+    phone VARCHAR(20),
+    lead_source VARCHAR(100),
+    lead_status VARCHAR(50) DEFAULT 'New',
+    lead_score INTEGER DEFAULT 0,
+    lead_temperature VARCHAR(20) DEFAULT 'Cold', -- Hot, Warm, Cold
+    property_interest TEXT,
+    budget_range VARCHAR(100),
+    timeline VARCHAR(100),
+    notes TEXT,
+    last_contact_date DATE,
+    next_follow_up DATE,
+    assigned_agent_id UUID REFERENCES users(id),
+    converted_to_client_id UUID REFERENCES clients(id),
+    team_id UUID REFERENCES teams(team_id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Appointments table
-CREATE TABLE appointments (
-  id VARCHAR(20) PRIMARY KEY,
-  title VARCHAR(255) NOT NULL,
-  appointment_type VARCHAR(50),
-  status VARCHAR(50) DEFAULT 'Scheduled',
-  date DATE NOT NULL,
-  start_time TIME NOT NULL,
-  end_time TIME,
-  duration INTEGER,
-  location JSONB,
-  virtual_meeting_link VARCHAR(500),
-  property_address VARCHAR(255),
-  preparation_checklist JSONB,
-  reminders JSONB,
-  notes JSONB,
-  outcome VARCHAR(100),
-  follow_up_actions JSONB,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Appointment attendees
-CREATE TABLE appointment_attendees (
-  appointment_id VARCHAR(20) REFERENCES appointments(id) ON DELETE CASCADE,
-  client_id VARCHAR(20) REFERENCES clients(id),
-  confirmed BOOLEAN DEFAULT FALSE,
-  PRIMARY KEY (appointment_id, client_id)
+CREATE TABLE IF NOT EXISTS appointments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title VARCHAR(255) NOT NULL,
+    appointment_date DATE NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    location TEXT,
+    appointment_type VARCHAR(50) DEFAULT 'Showing', -- Showing, Meeting, Open House, etc.
+    description TEXT,
+    status VARCHAR(50) DEFAULT 'Scheduled',
+    client_id UUID REFERENCES clients(id),
+    listing_id UUID REFERENCES listings(id),
+    agent_id UUID REFERENCES users(id),
+    reminder_sent BOOLEAN DEFAULT false,
+    team_id UUID REFERENCES teams(team_id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Documents table
-CREATE TABLE documents (
-  id VARCHAR(20) PRIMARY KEY,
-  entity_type VARCHAR(50) NOT NULL,
-  entity_id VARCHAR(20) NOT NULL,
-  document_type VARCHAR(100),
-  name VARCHAR(255),
-  file_path VARCHAR(500),
-  file_size INTEGER,
-  uploaded_by VARCHAR(100),
-  uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE IF NOT EXISTS documents (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    entity_type VARCHAR(50) NOT NULL, -- escrow, listing, client, etc.
+    entity_id VARCHAR(255) NOT NULL,
+    document_type VARCHAR(100),
+    file_name VARCHAR(255) NOT NULL,
+    file_path TEXT NOT NULL,
+    file_size INTEGER,
+    mime_type VARCHAR(100),
+    uploaded_by UUID REFERENCES users(id),
+    team_id UUID REFERENCES teams(team_id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Notes table
-CREATE TABLE notes (
-  id VARCHAR(20) PRIMARY KEY,
-  entity_type VARCHAR(50) NOT NULL,
-  entity_id VARCHAR(20) NOT NULL,
-  content TEXT,
-  note_type VARCHAR(50),
-  is_private BOOLEAN DEFAULT FALSE,
-  created_by VARCHAR(100),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE IF NOT EXISTS notes (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    entity_type VARCHAR(50) NOT NULL, -- escrow, listing, client, lead, etc.
+    entity_id VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    is_private BOOLEAN DEFAULT false,
+    created_by UUID REFERENCES users(id),
+    team_id UUID REFERENCES teams(team_id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Communications log
-CREATE TABLE communications (
-  id SERIAL PRIMARY KEY,
-  entity_type VARCHAR(50),
-  entity_id VARCHAR(20),
-  type VARCHAR(50),
-  direction VARCHAR(20),
-  content TEXT,
-  response TEXT,
-  sentiment VARCHAR(20),
-  created_by VARCHAR(100),
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- AI Agents table
+CREATE TABLE IF NOT EXISTS ai_agents (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(100) NOT NULL,
+    role VARCHAR(100) NOT NULL,
+    description TEXT,
+    model VARCHAR(50) DEFAULT 'gpt-4',
+    enabled BOOLEAN DEFAULT true,
+    settings JSONB DEFAULT '{}',
+    capabilities JSONB DEFAULT '[]',
+    last_activity TIMESTAMP WITH TIME ZONE,
+    total_tasks_completed INTEGER DEFAULT 0,
+    team_id UUID REFERENCES teams(team_id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- Deletion requests table
-CREATE TABLE deletion_requests (
-  id VARCHAR(20) PRIMARY KEY,
-  entity_type VARCHAR(50) NOT NULL,
-  entity_id VARCHAR(20) NOT NULL,
-  requested_by VARCHAR(100),
-  reason TEXT,
-  status VARCHAR(50) DEFAULT 'pending_approval',
-  approved_by VARCHAR(100),
-  approved_at TIMESTAMP,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- AI agents table
-CREATE TABLE ai_agents (
-  id VARCHAR(50) PRIMARY KEY,
-  name VARCHAR(100) NOT NULL,
-  role VARCHAR(50),
-  department VARCHAR(50),
-  enabled BOOLEAN DEFAULT TRUE,
-  last_active TIMESTAMP,
-  tasks_completed INTEGER DEFAULT 0,
-  tokens_used INTEGER DEFAULT 0,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- AI agent activities
-CREATE TABLE ai_activities (
-  id SERIAL PRIMARY KEY,
-  agent_id VARCHAR(50) REFERENCES ai_agents(id),
-  activity_type VARCHAR(100),
-  entity_type VARCHAR(50),
-  entity_id VARCHAR(20),
-  description TEXT,
-  tokens_used INTEGER,
-  duration_ms INTEGER,
-  success BOOLEAN DEFAULT TRUE,
-  error_message TEXT,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Webhooks table
-CREATE TABLE webhooks (
-  id VARCHAR(20) PRIMARY KEY,
-  url VARCHAR(500) NOT NULL,
-  events TEXT[],
-  secret VARCHAR(255),
-  active BOOLEAN DEFAULT TRUE,
-  last_triggered TIMESTAMP,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- Migrations tracking table
+CREATE TABLE IF NOT EXISTS migrations (
+    id SERIAL PRIMARY KEY,
+    filename VARCHAR(255) UNIQUE NOT NULL,
+    executed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 -- Create indexes for better performance
 CREATE INDEX idx_escrows_status ON escrows(escrow_status);
 CREATE INDEX idx_escrows_closing_date ON escrows(closing_date);
+CREATE INDEX idx_escrows_team_id ON escrows(team_id);
+
 CREATE INDEX idx_listings_status ON listings(listing_status);
 CREATE INDEX idx_listings_price ON listings(list_price);
-CREATE INDEX idx_clients_email ON clients(email);
-CREATE INDEX idx_clients_phone ON clients(phone);
+CREATE INDEX idx_listings_team_id ON listings(team_id);
+
+CREATE INDEX idx_clients_type ON clients(client_type);
+CREATE INDEX idx_clients_status ON clients(status);
+CREATE INDEX idx_clients_team_id ON clients(team_id);
+
 CREATE INDEX idx_leads_status ON leads(lead_status);
 CREATE INDEX idx_leads_score ON leads(lead_score);
-CREATE INDEX idx_appointments_date ON appointments(date);
-CREATE INDEX idx_communications_entity ON communications(entity_type, entity_id);
-CREATE INDEX idx_ai_activities_agent ON ai_activities(agent_id);
+CREATE INDEX idx_leads_temperature ON leads(lead_temperature);
+CREATE INDEX idx_leads_team_id ON leads(team_id);
 
--- Create update trigger function
+CREATE INDEX idx_appointments_date ON appointments(appointment_date);
+CREATE INDEX idx_appointments_agent ON appointments(agent_id);
+CREATE INDEX idx_appointments_team_id ON appointments(team_id);
+
+CREATE INDEX idx_documents_entity ON documents(entity_type, entity_id);
+CREATE INDEX idx_documents_team_id ON documents(team_id);
+
+CREATE INDEX idx_notes_entity ON notes(entity_type, entity_id);
+CREATE INDEX idx_notes_team_id ON notes(team_id);
+
+CREATE INDEX idx_ai_agents_enabled ON ai_agents(enabled);
+CREATE INDEX idx_ai_agents_team_id ON ai_agents(team_id);
+
+-- Create updated_at trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $
+RETURNS TRIGGER AS $$
 BEGIN
     NEW.updated_at = CURRENT_TIMESTAMP;
     RETURN NEW;
 END;
-$ language 'plpgsql';
+$$ language 'plpgsql';
 
--- Apply update trigger to all tables with updated_at
-CREATE TRIGGER update_clients_updated_at BEFORE UPDATE ON clients
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-    
-CREATE TRIGGER update_escrows_updated_at BEFORE UPDATE ON escrows
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-    
-CREATE TRIGGER update_listings_updated_at BEFORE UPDATE ON listings
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-    
-CREATE TRIGGER update_leads_updated_at BEFORE UPDATE ON leads
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-    
-CREATE TRIGGER update_appointments_updated_at BEFORE UPDATE ON appointments
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
--- Insert initial AI agents
-INSERT INTO ai_agents (id, name, role, department) VALUES
-  ('alex_executive', 'Alex - Executive Assistant', 'executive', 'management'),
-  ('buyer_manager', 'Buyer Manager', 'manager', 'buyer'),
-  ('listing_manager', 'Listing Manager', 'manager', 'listing'),
-  ('ops_manager', 'Operations Manager', 'manager', 'operations'),
-  ('buyer_qualifier', 'Buyer Lead Qualifier', 'agent', 'buyer'),
-  ('buyer_nurture', 'Buyer Nurture Specialist', 'agent', 'buyer'),
-  ('showing_coord', 'Showing Coordinator', 'agent', 'buyer'),
-  ('listing_launch', 'Listing Launch Specialist', 'agent', 'listing'),
-  ('market_analyst', 'Market Analyst', 'agent', 'listing'),
-  ('listing_marketing', 'Listing Marketing Agent', 'agent', 'listing'),
-  ('transaction_coord', 'Transaction Coordinator', 'agent', 'operations'),
-  ('compliance_officer', 'Compliance Officer', 'agent', 'operations'),
-  ('financial_analyst', 'Financial Analyst', 'agent', 'operations'),
-  ('database_specialist', 'Database Maintenance Specialist', 'agent', 'operations');
+-- Apply updated_at triggers to all tables
+CREATE TRIGGER update_teams_updated_at BEFORE UPDATE ON teams FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_escrows_updated_at BEFORE UPDATE ON escrows FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_listings_updated_at BEFORE UPDATE ON listings FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_clients_updated_at BEFORE UPDATE ON clients FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_leads_updated_at BEFORE UPDATE ON leads FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_appointments_updated_at BEFORE UPDATE ON appointments FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_documents_updated_at BEFORE UPDATE ON documents FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_notes_updated_at BEFORE UPDATE ON notes FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_ai_agents_updated_at BEFORE UPDATE ON ai_agents FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
