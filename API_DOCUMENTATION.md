@@ -87,9 +87,7 @@ GET /v1/escrows
 GET /v1/escrows/:id
 ```
 
-**Note:** Returns comprehensive escrow data including property details, timeline, documents, AI agents, and market data. See [ESCROW_API_STRUCTURE.md](/backend/ESCROW_API_STRUCTURE.md) for complete response structure.
-
-**Response (Simplified):**
+**Response (Comprehensive):**
 ```json
 {
   "success": true,
@@ -98,49 +96,252 @@ GET /v1/escrows/:id
     "escrowNumber": "ESC-2025-001",
     "propertyAddress": "456 Ocean View Dr, La Jolla, CA 92037",
     "purchasePrice": 1250000,
-    "status": "Active",
     "escrowStatus": "Active",
+    "status": "Active",
     "currentStage": "Inspection",
     "closingDate": "2025-08-15T00:00:00.000Z",
+    "acceptanceDate": "2025-07-01T00:00:00.000Z",
     "daysToClose": 30,
+    "daysInEscrow": 16,
     
+    "earnestMoneyDeposit": 37500,
+    "downPayment": 250000,
+    "loanAmount": 1000000,
+    "grossCommission": 31250,
+    "commissionPercentage": 2.5,
+    "commissionSplit": {
+      "listing": 15625,
+      "selling": 15625
+    },
+    
+    "escrowCompany": "Pacific Escrow Services",
+    "escrowOfficer": "Jennifer Martinez",
+    "titleCompany": "First American Title",
+    "lender": "Wells Fargo Home Mortgage",
+    
+    "propertyType": "Single Family",
+    "propertyImage": "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=400",
     "property": {
       "type": "Single Family",
       "bedrooms": 4,
       "bathrooms": 3,
       "sqft": 2800,
       "yearBuilt": 2018,
-      "images": ["..."]
+      "lot": "0.25 acres",
+      "images": [
+        "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800",
+        "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800",
+        "https://images.unsplash.com/photo-1600607687644-c7171b42498b?w=800"
+      ]
     },
     
+    "buyers": [{
+      "name": "Michael & Sarah Chen",
+      "email": "chen.family@email.com",
+      "phone": "(858) 555-1234"
+    }],
+    "sellers": [{
+      "name": "Robert Johnson",
+      "email": "rjohnson@email.com",
+      "phone": "(858) 555-5678"
+    }],
     "buyer": {
       "name": "Michael & Sarah Chen",
       "email": "chen.family@email.com",
       "phone": "(858) 555-1234",
-      "agent": "Sarah Johnson"
+      "agent": "Sarah Johnson",
+      "agentPhone": "(555) 234-5678",
+      "agentEmail": "sarah@realty.com"
     },
-    
     "seller": {
       "name": "Robert Johnson",
       "email": "rjohnson@email.com",
       "phone": "(858) 555-5678",
-      "agent": "Mike Davis"
+      "agent": "Mike Davis",
+      "agentPhone": "(555) 456-7890",
+      "agentEmail": "mike@realty.com"
+    },
+    
+    "financials": {
+      "purchasePrice": 1250000,
+      "downPayment": 250000,
+      "loanAmount": 1000000,
+      "earnestMoneyDeposit": 25000,
+      "closingCosts": 15000,
+      "sellerCredits": 5000,
+      "commission": {
+        "listingSide": 37500,
+        "buyingSide": 37500,
+        "total": 75000
+      }
     },
     
     "checklist": {
-      "Pre-Contract": { "...": true },
-      "Contract to Close": { "...": false },
-      "Closing": { "...": false }
+      "Pre-Contract": {
+        "offerSubmitted": true,
+        "offerAccepted": true,
+        "escrowOpened": true,
+        "earnestMoneyDeposited": true
+      },
+      "Contract to Close": {
+        "inspectionScheduled": true,
+        "inspectionCompleted": true,
+        "repairNegotiation": false,
+        "appraisalOrdered": true,
+        "appraisalCompleted": false,
+        "loanApproval": false,
+        "titleOrdered": true,
+        "titleReportReceived": false,
+        "homeInsurance": false,
+        "finalWalkthrough": false
+      },
+      "Closing": {
+        "closingScheduled": false,
+        "closingDocumentsReviewed": false,
+        "finalFundsTransferred": false,
+        "closingCompleted": false,
+        "keysDelivered": false
+      }
     },
     
-    "timeline": [ "..." ],
-    "documents": [ "..." ],
-    "aiAgents": [ "..." ],
-    "recentActivity": [ "..." ],
-    "marketData": { "..." }
-  }
+    "timeline": [
+      {
+        "date": "2025-07-01T00:00:00.000Z",
+        "event": "Offer Accepted",
+        "status": "completed",
+        "notes": "Offer accepted at full asking price"
+      },
+      {
+        "date": "2025-07-03T00:00:00.000Z",
+        "event": "Escrow Opened",
+        "status": "completed",
+        "notes": "Escrow opened with Pacific Escrow Services"
+      },
+      {
+        "date": "2025-07-10T00:00:00.000Z",
+        "event": "Inspection Completed",
+        "status": "completed",
+        "notes": "Minor repairs needed"
+      },
+      {
+        "date": "2025-07-20T00:00:00.000Z",
+        "event": "Appraisal",
+        "status": "pending"
+      },
+      {
+        "date": "2025-08-01T00:00:00.000Z",
+        "event": "Loan Approval",
+        "status": "upcoming"
+      },
+      {
+        "date": "2025-08-13T00:00:00.000Z",
+        "event": "Final Walkthrough",
+        "status": "upcoming"
+      },
+      {
+        "date": "2025-08-15T00:00:00.000Z",
+        "event": "Closing",
+        "status": "upcoming"
+      }
+    ],
+    
+    "documents": [
+      {
+        "id": 1,
+        "name": "Purchase Agreement",
+        "type": "contract",
+        "uploadedDate": "2025-07-01T00:00:00.000Z",
+        "uploadedBy": "Sarah Johnson",
+        "size": "2.4 MB"
+      },
+      {
+        "id": 2,
+        "name": "Escrow Instructions",
+        "type": "escrow",
+        "uploadedDate": "2025-07-03T00:00:00.000Z",
+        "uploadedBy": "Pacific Escrow",
+        "size": "1.8 MB"
+      },
+      {
+        "id": 3,
+        "name": "Inspection Report",
+        "type": "inspection",
+        "uploadedDate": "2025-07-10T00:00:00.000Z",
+        "uploadedBy": "Home Inspector Pro",
+        "size": "5.2 MB"
+      }
+    ],
+    
+    "aiAgents": [
+      {
+        "id": "transaction_coord",
+        "name": "Transaction Coordinator AI",
+        "type": "coordination",
+        "status": "active",
+        "tasksCompleted": 8,
+        "currentTask": "Monitoring appraisal status",
+        "efficiency": 98.5
+      },
+      {
+        "id": "compliance_officer",
+        "name": "Compliance Officer AI",
+        "type": "compliance",
+        "status": "active",
+        "tasksCompleted": 5,
+        "currentTask": "Reviewing documentation completeness",
+        "efficiency": 99.2
+      }
+    ],
+    
+    "recentActivity": [
+      {
+        "date": "2025-07-17T10:30:00.000Z",
+        "type": "update",
+        "description": "Appraisal scheduled for July 20th",
+        "user": "Sarah Johnson"
+      },
+      {
+        "date": "2025-07-16T14:15:00.000Z",
+        "type": "document",
+        "description": "Repair addendum uploaded",
+        "user": "Mike Davis"
+      },
+      {
+        "date": "2025-07-15T09:00:00.000Z",
+        "type": "milestone",
+        "description": "Loan conditions submitted to lender",
+        "user": "Transaction Coordinator AI"
+      }
+    ],
+    
+    "marketData": {
+      "originalListPrice": 1295000,
+      "daysOnMarket": 12,
+      "pricePerSqft": 446,
+      "neighborhoodAverage": 425,
+      "appreciationRate": 5.2,
+      "similarSales": [
+        {
+          "address": "789 Coastal Dr",
+          "price": 1187500,
+          "soldDate": "2025-06-27T00:00:00.000Z",
+          "daysOnMarket": 15
+        }
+      ]
+    },
+    
+    "createdAt": "2025-07-01T00:00:00.000Z",
+    "updatedAt": "2025-07-17T00:00:00.000Z"
+  },
+  "timestamp": "2025-07-17T12:00:00.000Z"
 }
 ```
+
+**Performance Notes:**
+- Full response size: ~15-20KB (acceptable with compression)
+- Consider field selection: `?fields=id,propertyAddress,status,closingDate`
+- For list views, only essential fields are returned
+- Use caching for property details and market data
 
 ### Create Escrow
 ```http
