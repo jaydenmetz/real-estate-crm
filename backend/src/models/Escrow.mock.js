@@ -12,17 +12,29 @@ let mockEscrows = [
     purchasePrice: 1250000,
     escrowStatus: 'Active',
     currentStage: 'Inspection',
-    closingDate: new Date('2025-07-30'),
-    daysToClose: 22,
+    closingDate: new Date('2025-08-15'),
+    daysToClose: 30,
     grossCommission: 31250,
-    buyers: [{ name: 'Michael & Sarah Chen' }],
-    sellers: [{ name: 'Robert Johnson' }],
-    acceptanceDate: new Date('2025-06-30'),
-    earnestMoneyDeposit: 12500,
+    buyers: [{ 
+      name: 'Michael & Sarah Chen',
+      email: 'chen.family@email.com',
+      phone: '(858) 555-1234'
+    }],
+    sellers: [{ 
+      name: 'Robert Johnson',
+      email: 'rjohnson@email.com',
+      phone: '(858) 555-5678'
+    }],
+    acceptanceDate: new Date('2025-07-01'),
+    earnestMoneyDeposit: 37500,
     downPayment: 250000,
     loanAmount: 1000000,
     commissionPercentage: 2.5,
-    createdAt: new Date('2025-06-30'),
+    escrowCompany: 'Pacific Escrow Services',
+    escrowOfficer: 'Jennifer Martinez',
+    titleCompany: 'First American Title',
+    lender: 'Wells Fargo Home Mortgage',
+    createdAt: new Date('2025-07-01'),
     updatedAt: new Date()
   },
   {
@@ -34,17 +46,29 @@ let mockEscrows = [
     purchasePrice: 850000,
     escrowStatus: 'Pending',
     currentStage: 'Appraisal',
-    closingDate: new Date('2025-07-15'),
-    daysToClose: 7,
+    closingDate: new Date('2025-07-25'),
+    daysToClose: 8,
     grossCommission: 21250,
-    buyers: [{ name: 'Emily Davis' }],
-    sellers: [{ name: 'The Andersons' }],
-    acceptanceDate: new Date('2025-06-15'),
-    earnestMoneyDeposit: 8500,
+    buyers: [{ 
+      name: 'Emily Davis',
+      email: 'emily.davis@email.com',
+      phone: '(760) 555-2345'
+    }],
+    sellers: [{ 
+      name: 'Thomas & Margaret Anderson',
+      email: 'andersons@email.com',
+      phone: '(760) 555-6789'
+    }],
+    acceptanceDate: new Date('2025-06-25'),
+    earnestMoneyDeposit: 25500,
     downPayment: 170000,
     loanAmount: 680000,
     commissionPercentage: 2.5,
-    createdAt: new Date('2025-06-15'),
+    escrowCompany: 'Coastal Escrow',
+    escrowOfficer: 'Maria Rodriguez',
+    titleCompany: 'Chicago Title',
+    lender: 'Bank of America',
+    createdAt: new Date('2025-06-25'),
     updatedAt: new Date()
   },
   {
@@ -56,17 +80,29 @@ let mockEscrows = [
     purchasePrice: 1450000,
     escrowStatus: 'Closing',
     currentStage: 'Final Walkthrough',
-    closingDate: new Date('2025-07-10'),
-    daysToClose: 2,
+    closingDate: new Date('2025-07-20'),
+    daysToClose: 3,
     grossCommission: 36250,
-    buyers: [{ name: 'David & Lisa Park' }],
-    sellers: [{ name: 'William Thompson' }],
-    acceptanceDate: new Date('2025-06-10'),
-    earnestMoneyDeposit: 14500,
+    buyers: [{ 
+      name: 'David & Lisa Park',
+      email: 'park.family@email.com',
+      phone: '(619) 555-3456'
+    }],
+    sellers: [{ 
+      name: 'William Thompson',
+      email: 'w.thompson@email.com',
+      phone: '(619) 555-7890'
+    }],
+    acceptanceDate: new Date('2025-06-20'),
+    earnestMoneyDeposit: 43500,
     downPayment: 290000,
     loanAmount: 1160000,
     commissionPercentage: 2.5,
-    createdAt: new Date('2025-06-10'),
+    escrowCompany: 'Premier Escrow Services',
+    escrowOfficer: 'James Wilson',
+    titleCompany: 'Stewart Title',
+    lender: 'Chase Home Finance',
+    createdAt: new Date('2025-06-20'),
     updatedAt: new Date()
   }
 ];
@@ -111,7 +147,300 @@ class EscrowMock {
   }
 
   static async findById(id) {
-    return mockEscrows.find(e => e.id === id) || null;
+    const escrow = mockEscrows.find(e => e.id === id);
+    if (!escrow) return null;
+    
+    // Return comprehensive escrow data structure
+    return {
+      ...escrow,
+      // Fix status field name mismatch
+      status: escrow.escrowStatus,
+      
+      // Property details
+      property: {
+        type: escrow.propertyType || 'Single Family',
+        bedrooms: 4,
+        bathrooms: 3,
+        sqft: 2800,
+        yearBuilt: 2018,
+        lot: '0.25 acres',
+        images: [
+          'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800',
+          'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800',
+          'https://images.unsplash.com/photo-1600607687644-c7171b42498b?w=800',
+          'https://images.unsplash.com/photo-1600607687644-aac73f2ae48b?w=800',
+        ],
+      },
+      
+      // Enhanced buyer/seller information
+      buyer: {
+        name: escrow.buyers?.[0]?.name || 'Unknown Buyer',
+        email: escrow.buyers?.[0]?.email || 'buyer@email.com',
+        phone: escrow.buyers?.[0]?.phone || '(555) 123-4567',
+        agent: 'Sarah Johnson',
+        agentPhone: '(555) 234-5678',
+        agentEmail: 'sarah@realty.com',
+      },
+      seller: {
+        name: escrow.sellers?.[0]?.name || 'Unknown Seller',
+        email: escrow.sellers?.[0]?.email || 'seller@email.com',
+        phone: escrow.sellers?.[0]?.phone || '(555) 345-6789',
+        agent: 'Mike Davis',
+        agentPhone: '(555) 456-7890',
+        agentEmail: 'mike@realty.com',
+      },
+      
+      // Financial details
+      commissionSplit: {
+        listing: escrow.grossCommission * 0.5,
+        selling: escrow.grossCommission * 0.5,
+      },
+      
+      // Comprehensive checklist
+      checklist: {
+        'Pre-Contract': {
+          'Property listed': true,
+          'Marketing materials prepared': true,
+          'Showings scheduled': true,
+          'Offers received': true,
+          'Offer accepted': true,
+        },
+        'Contract to Close': {
+          'Escrow opened': true,
+          'Earnest money deposited': escrow.earnestMoneyDeposit > 0,
+          'Inspection scheduled': escrow.currentStage !== 'Contract',
+          'Inspection completed': ['Appraisal', 'Loan Processing', 'Final Walkthrough', 'Closing'].includes(escrow.currentStage),
+          'Repairs negotiated': false,
+          'Loan application': ['Loan Processing', 'Final Walkthrough', 'Closing'].includes(escrow.currentStage),
+          'Appraisal ordered': ['Appraisal', 'Loan Processing', 'Final Walkthrough', 'Closing'].includes(escrow.currentStage),
+          'Title search': false,
+          'Insurance obtained': false,
+          'Final walkthrough': escrow.currentStage === 'Final Walkthrough' || escrow.currentStage === 'Closing',
+        },
+        'Closing': {
+          'Documents prepared': escrow.currentStage === 'Closing',
+          'Funds confirmed': false,
+          'Documents signed': false,
+          'Keys transferred': false,
+          'Commission paid': false,
+        },
+      },
+      
+      // Timeline
+      timeline: [
+        { 
+          date: escrow.acceptanceDate, 
+          event: 'Escrow Opened', 
+          status: 'completed',
+          icon: 'CheckCircle'
+        },
+        { 
+          date: new Date(escrow.acceptanceDate.getTime() + 3 * 24 * 60 * 60 * 1000), 
+          event: 'Initial Deposit Received', 
+          status: escrow.earnestMoneyDeposit > 0 ? 'completed' : 'pending',
+          icon: 'AttachMoney'
+        },
+        { 
+          date: new Date(escrow.acceptanceDate.getTime() + 7 * 24 * 60 * 60 * 1000), 
+          event: 'Inspection Period Begins', 
+          status: ['Inspection', 'Appraisal', 'Loan Processing', 'Final Walkthrough', 'Closing'].includes(escrow.currentStage) ? 'completed' : 'pending',
+          icon: 'Build'
+        },
+        { 
+          date: new Date(escrow.acceptanceDate.getTime() + 10 * 24 * 60 * 60 * 1000), 
+          event: 'Inspection Completed', 
+          status: ['Appraisal', 'Loan Processing', 'Final Walkthrough', 'Closing'].includes(escrow.currentStage) ? 'completed' : 'pending',
+          icon: 'Task'
+        },
+        { 
+          date: new Date(escrow.acceptanceDate.getTime() + 14 * 24 * 60 * 60 * 1000), 
+          event: 'Loan Application Submitted', 
+          status: ['Loan Processing', 'Final Walkthrough', 'Closing'].includes(escrow.currentStage) ? 'completed' : 'pending',
+          icon: 'AccountBalance'
+        },
+        { 
+          date: new Date(escrow.acceptanceDate.getTime() + 17 * 24 * 60 * 60 * 1000), 
+          event: 'Appraisal Scheduled', 
+          status: ['Appraisal', 'Loan Processing', 'Final Walkthrough', 'Closing'].includes(escrow.currentStage) ? 'completed' : escrow.currentStage === 'Appraisal' ? 'in-progress' : 'pending',
+          icon: 'Assessment'
+        },
+        { 
+          date: new Date(escrow.acceptanceDate.getTime() + 21 * 24 * 60 * 60 * 1000), 
+          event: 'Loan Approval', 
+          status: ['Final Walkthrough', 'Closing'].includes(escrow.currentStage) ? 'completed' : 'pending',
+          icon: 'VerifiedUser'
+        },
+        { 
+          date: new Date(escrow.closingDate.getTime() - 2 * 24 * 60 * 60 * 1000), 
+          event: 'Final Walkthrough', 
+          status: escrow.currentStage === 'Closing' ? 'completed' : escrow.currentStage === 'Final Walkthrough' ? 'in-progress' : 'pending',
+          icon: 'Visibility'
+        },
+        { 
+          date: escrow.closingDate, 
+          event: 'Closing Date', 
+          status: escrow.escrowStatus === 'Closed' ? 'completed' : 'pending',
+          icon: 'Gavel'
+        },
+      ],
+      
+      // Documents
+      documents: [
+        { 
+          id: 1, 
+          name: 'Purchase Agreement', 
+          type: 'Contract', 
+          uploadDate: escrow.acceptanceDate, 
+          status: 'Signed', 
+          size: '2.4 MB' 
+        },
+        { 
+          id: 2, 
+          name: 'Disclosure Package', 
+          type: 'Disclosure', 
+          uploadDate: new Date(escrow.acceptanceDate.getTime() + 1 * 24 * 60 * 60 * 1000), 
+          status: 'Reviewed', 
+          size: '5.8 MB' 
+        },
+        { 
+          id: 3, 
+          name: 'Inspection Report', 
+          type: 'Report', 
+          uploadDate: new Date(escrow.acceptanceDate.getTime() + 10 * 24 * 60 * 60 * 1000), 
+          status: ['Inspection', 'Appraisal', 'Loan Processing', 'Final Walkthrough', 'Closing'].includes(escrow.currentStage) ? 'Complete' : 'Pending', 
+          size: '8.2 MB' 
+        },
+        { 
+          id: 4, 
+          name: 'Loan Application', 
+          type: 'Financial', 
+          uploadDate: new Date(escrow.acceptanceDate.getTime() + 14 * 24 * 60 * 60 * 1000), 
+          status: ['Loan Processing', 'Final Walkthrough', 'Closing'].includes(escrow.currentStage) ? 'Submitted' : 'Pending', 
+          size: '3.1 MB' 
+        },
+        { 
+          id: 5, 
+          name: 'Title Report', 
+          type: 'Title', 
+          uploadDate: new Date(escrow.acceptanceDate.getTime() + 20 * 24 * 60 * 60 * 1000), 
+          status: 'Under Review', 
+          size: '4.5 MB' 
+        },
+      ],
+      
+      // AI Agents
+      aiAgents: [
+        {
+          id: 1,
+          name: 'Document Analyzer',
+          type: 'document',
+          status: 'active',
+          confidence: 98,
+          lastAction: 'Analyzed purchase agreement for completeness',
+          icon: 'Description',
+          tasksCompleted: 145,
+          efficiency: 99.2,
+        },
+        {
+          id: 2,
+          name: 'Timeline Monitor',
+          type: 'timeline',
+          status: 'active',
+          confidence: 95,
+          lastAction: 'Sent reminder for upcoming appraisal',
+          icon: 'Schedule',
+          tasksCompleted: 89,
+          efficiency: 97.5,
+        },
+        {
+          id: 3,
+          name: 'Compliance Guard',
+          type: 'compliance',
+          status: 'idle',
+          confidence: 100,
+          lastAction: 'All current requirements met',
+          icon: 'VerifiedUser',
+          tasksCompleted: 67,
+          efficiency: 100,
+        },
+        {
+          id: 4,
+          name: 'Communication Hub',
+          type: 'communication',
+          status: 'active',
+          confidence: 92,
+          lastAction: 'Coordinating appraisal appointment',
+          icon: 'Forum',
+          tasksCompleted: 234,
+          efficiency: 94.8,
+        },
+      ],
+      
+      // Recent Activity
+      recentActivity: [
+        {
+          id: 1,
+          type: 'document',
+          action: 'Title report uploaded',
+          user: 'Title Company',
+          timestamp: '2 hours ago',
+          priority: 'medium',
+        },
+        {
+          id: 2,
+          type: 'ai',
+          action: 'AI detected potential timeline delay in loan processing',
+          user: 'Timeline Monitor',
+          timestamp: '3 hours ago',
+          priority: 'high',
+        },
+        {
+          id: 3,
+          type: 'communication',
+          action: 'Buyer agent confirmed appraisal appointment',
+          user: 'Sarah Johnson',
+          timestamp: '5 hours ago',
+          priority: 'low',
+        },
+        {
+          id: 4,
+          type: 'task',
+          action: 'Inspection contingency removed',
+          user: escrow.buyers?.[0]?.name || 'Buyer',
+          timestamp: '1 day ago',
+          priority: 'medium',
+        },
+      ],
+      
+      // Market Data
+      marketData: {
+        avgDaysOnMarket: 28,
+        medianPrice: 1150000,
+        pricePerSqft: Math.round(escrow.purchasePrice / 2800),
+        inventoryLevel: 'Low',
+        demandLevel: 'High',
+        similarSales: [
+          { 
+            address: '456 Pine St', 
+            price: escrow.purchasePrice * 0.95, 
+            soldDate: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000), 
+            daysOnMarket: 15 
+          },
+          { 
+            address: '123 Elm Ave', 
+            price: escrow.purchasePrice * 0.98, 
+            soldDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000), 
+            daysOnMarket: 22 
+          },
+          { 
+            address: '789 Maple Dr', 
+            price: escrow.purchasePrice * 0.96, 
+            soldDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), 
+            daysOnMarket: 31 
+          },
+        ],
+      },
+    };
   }
 
   static async create(data) {

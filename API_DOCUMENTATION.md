@@ -87,27 +87,57 @@ GET /v1/escrows
 GET /v1/escrows/:id
 ```
 
-**Response:**
+**Note:** Returns comprehensive escrow data including property details, timeline, documents, AI agents, and market data. See [ESCROW_API_STRUCTURE.md](/backend/ESCROW_API_STRUCTURE.md) for complete response structure.
+
+**Response (Simplified):**
 ```json
 {
   "success": true,
   "data": {
     "id": "1",
-    "propertyAddress": "123 Main St",
-    "purchasePrice": 500000,
-    "buyers": [{"name": "John Doe", "email": "john@example.com"}],
-    "sellers": [{"name": "Jane Smith", "email": "jane@example.com"}],
+    "escrowNumber": "ESC-2025-001",
+    "propertyAddress": "456 Ocean View Dr, La Jolla, CA 92037",
+    "purchasePrice": 1250000,
     "status": "Active",
-    "acceptanceDate": "2025-07-01T00:00:00.000Z",
+    "escrowStatus": "Active",
+    "currentStage": "Inspection",
     "closingDate": "2025-08-15T00:00:00.000Z",
-    "propertyType": "Single Family",
-    "escrowCompany": "ABC Escrow",
-    "escrowOfficer": "Sarah Johnson",
+    "daysToClose": 30,
+    
+    "property": {
+      "type": "Single Family",
+      "bedrooms": 4,
+      "bathrooms": 3,
+      "sqft": 2800,
+      "yearBuilt": 2018,
+      "images": ["..."]
+    },
+    
+    "buyer": {
+      "name": "Michael & Sarah Chen",
+      "email": "chen.family@email.com",
+      "phone": "(858) 555-1234",
+      "agent": "Sarah Johnson"
+    },
+    
+    "seller": {
+      "name": "Robert Johnson",
+      "email": "rjohnson@email.com",
+      "phone": "(858) 555-5678",
+      "agent": "Mike Davis"
+    },
+    
     "checklist": {
-      "earnestMoneyDeposited": true,
-      "inspectionCompleted": false,
-      "appraisalOrdered": true
-    }
+      "Pre-Contract": { "...": true },
+      "Contract to Close": { "...": false },
+      "Closing": { "...": false }
+    },
+    
+    "timeline": [ "..." ],
+    "documents": [ "..." ],
+    "aiAgents": [ "..." ],
+    "recentActivity": [ "..." ],
+    "marketData": { "..." }
   }
 }
 ```
