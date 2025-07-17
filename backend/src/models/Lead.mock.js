@@ -278,8 +278,30 @@ class LeadMock {
       const offset = (page - 1) * limit;
       const paginated = filtered.slice(offset, offset + limit);
       
+      // Return minimal data for list view
+      const minimalLeads = paginated.map(lead => ({
+        id: lead.id,
+        fullName: lead.fullName,
+        firstName: lead.firstName,
+        lastName: lead.lastName,
+        email: lead.email,
+        phone: lead.phone,
+        type: lead.type,
+        status: lead.status,
+        source: lead.source,
+        score: lead.score,
+        temperature: lead.temperature,
+        estimatedValue: lead.estimatedValue,
+        lastContactDate: lead.lastContactDate,
+        nextFollowUpDate: lead.nextFollowUpDate,
+        conversionProbability: lead.conversionProbability,
+        tags: lead.tags,
+        createdAt: lead.createdAt,
+        updatedAt: lead.updatedAt
+      }));
+      
       return {
-        leads: paginated,
+        leads: minimalLeads,
         pagination: {
           total: filtered.length,
           page,

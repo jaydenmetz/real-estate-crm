@@ -265,8 +265,27 @@ class AppointmentMock {
       const offset = (page - 1) * limit;
       const paginated = filtered.slice(offset, offset + limit);
       
+      // Return minimal data for list view
+      const minimalAppointments = paginated.map(appointment => ({
+        id: appointment.id,
+        title: appointment.title,
+        type: appointment.type,
+        status: appointment.status,
+        priority: appointment.priority,
+        startTime: appointment.startTime,
+        endTime: appointment.endTime,
+        location: appointment.location,
+        clientId: appointment.clientId,
+        clientName: appointment.clientName,
+        propertyId: appointment.propertyId,
+        propertyAddress: appointment.propertyAddress,
+        reminder: appointment.reminder,
+        createdAt: appointment.createdAt,
+        updatedAt: appointment.updatedAt
+      }));
+      
       return {
-        appointments: paginated,
+        appointments: minimalAppointments,
         pagination: {
           total: filtered.length,
           page,

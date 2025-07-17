@@ -32,12 +32,62 @@ All API responses follow this structure:
 }
 ```
 
+### List vs Detail Pattern
+To optimize performance, the API implements a list vs detail pattern:
+- **List endpoints** (`GET /v1/resource`) return minimal data suitable for displaying in tables/lists
+- **Detail endpoints** (`GET /v1/resource/:id`) return comprehensive data for full page views
+
+This reduces payload sizes for list views from ~15-20KB per record to ~2-3KB per record.
+
 ### Pagination
 List endpoints support pagination with these query parameters:
 - `page` (integer, default: 1) - Page number
 - `limit` (integer, default: 10) - Items per page
 - `sort` (string) - Field to sort by
 - `order` (string: "asc" | "desc") - Sort order
+
+### Performance Considerations
+
+#### Response Size Management
+- **List views**: ~2-3KB per record (minimal data)
+- **Detail views**: ~15-20KB per record (comprehensive data)
+- **Compression**: Enable gzip to reduce transfer size by ~70%
+
+#### Optimization Strategies
+
+1. **Field Selection** (future enhancement)
+   ```http
+   GET /v1/escrows/:id?fields=id,propertyAddress,status,closingDate
+   ```
+
+2. **Nested Resource Control** (future enhancement)
+   ```http
+   GET /v1/escrows/:id?include=property,timeline,documents
+   GET /v1/escrows/:id?exclude=aiAgents,marketData
+   ```
+
+3. **Separate Endpoints for Heavy Data** (future enhancement)
+   ```http
+   GET /v1/escrows/:id/timeline
+   GET /v1/escrows/:id/documents
+   GET /v1/escrows/:id/market-analysis
+   ```
+
+#### Caching Strategy
+- Cache property details (changes rarely)
+- Cache market data (update daily)
+- Don't cache transaction-specific data
+- Use ETags for conditional requests
+
+#### Database Optimization
+```sql
+-- Recommended indexes
+CREATE INDEX idx_escrows_status ON escrows(escrowStatus);
+CREATE INDEX idx_escrows_closing_date ON escrows(closingDate);
+CREATE INDEX idx_listings_status ON listings(listingStatus);
+CREATE INDEX idx_clients_type ON clients(clientType);
+CREATE INDEX idx_leads_score ON leads(score);
+```
 
 ---
 
@@ -59,7 +109,7 @@ GET /v1/escrows
 | page | integer | Page number (min: 1) |
 | limit | integer | Items per page (min: 1) |
 
-**Response:**
+**Response (Minimal List View):**
 ```json
 {
   "success": true,
@@ -67,17 +117,28 @@ GET /v1/escrows
     "escrows": [
       {
         "id": "1",
-        "propertyAddress": "123 Main St",
-        "purchasePrice": 500000,
-        "buyers": [{"name": "John Doe"}],
-        "sellers": [{"name": "Jane Smith"}],
-        "status": "Active",
-        "closingDate": "2025-08-15T00:00:00.000Z"
+        "escrowNumber": "ESC-2025-001",
+        "propertyAddress": "456 Ocean View Dr, La Jolla, CA 92037",
+        "propertyType": "Single Family",
+        "propertyImage": "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=400",
+        "purchasePrice": 1250000,
+        "escrowStatus": "Active",
+        "currentStage": "Inspection",
+        "closingDate": "2025-08-15T00:00:00.000Z",
+        "daysToClose": 30,
+        "grossCommission": 31250,
+        "buyers": [{"name": "Michael & Sarah Chen"}],
+        "sellers": [{"name": "Robert Johnson"}],
+        "createdAt": "2025-07-01T00:00:00.000Z",
+        "updatedAt": "2025-07-17T00:00:00.000Z"
       }
     ],
-    "total": 25,
-    "page": 1,
-    "pages": 3
+    "pagination": {
+      "total": 25,
+      "page": 1,
+      "pages": 3,
+      "limit": 20
+    }
   }
 }
 ```
@@ -457,7 +518,7 @@ GET /v1/listings
 | sort | string | Sort field (default: listingDate) |
 | order | string | Sort order: asc or desc |
 
-**Response:**
+**Response (Minimal List View):**
 ```json
 {
   "success": true,
@@ -465,37 +526,26 @@ GET /v1/listings
     "listings": [
       {
         "id": "1",
+        "mlsNumber": "SD2025001",
         "propertyAddress": "123 Main Street",
         "city": "San Diego",
         "state": "CA",
         "zipCode": "92101",
         "fullAddress": "123 Main Street, San Diego, CA 92101",
-        "mlsNumber": "SD2025001",
         "listingStatus": "Active",
         "listPrice": 850000,
-        "originalListPrice": 875000,
         "pricePerSqft": 354,
         "propertyType": "Single Family",
         "bedrooms": 4,
         "bathrooms": 3,
-        "halfBathrooms": 0,
         "squareFootage": 2400,
-        "lotSize": 7200,
-        "yearBuilt": 2018,
-        "garage": 2,
-        "pool": true,
-        "listingDate": "2025-06-15T00:00:00.000Z",
-        "daysOnMarket": 32,
-        "virtualTourLink": "https://example.com/tour/123",
         "primaryImage": "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400",
-        "showings": 12,
-        "views": 342,
-        "favorites": 28,
+        "daysOnMarket": 32,
         "listingAgent": {
-          "id": 1,
-          "name": "Jayden Metz",
-          "email": "jayden@luxuryrealty.com"
-        }
+          "name": "Jayden Metz"
+        },
+        "createdAt": "2025-07-01T00:00:00.000Z",
+        "updatedAt": "2025-07-17T00:00:00.000Z"
       }
     ],
     "pagination": {
@@ -731,7 +781,7 @@ GET /v1/clients
 | page | integer | Page number (default: 1) |
 | limit | integer | Items per page (default: 20) |
 
-**Response:**
+**Response (Minimal List View):**
 ```json
 {
   "success": true,
@@ -739,20 +789,21 @@ GET /v1/clients
     "clients": [
       {
         "id": "1",
+        "fullName": "Michael Thompson",
         "firstName": "Michael",
         "lastName": "Thompson",
-        "fullName": "Michael Thompson",
         "email": "michael.thompson@email.com",
         "phone": "(619) 555-1234",
         "clientType": "Buyer",
         "status": "Active",
         "source": "Referral",
+        "tags": ["First Time Buyer", "Pre-Approved", "Urgent"],
         "preApproved": true,
         "preApprovalAmount": 950000,
-        "tags": ["First Time Buyer", "Pre-Approved", "Urgent"],
         "lastContactDate": "2025-07-10T00:00:00.000Z",
         "nextFollowUpDate": "2025-07-20T00:00:00.000Z",
-        "createdAt": "2025-06-01T00:00:00.000Z"
+        "createdAt": "2025-06-01T00:00:00.000Z",
+        "updatedAt": "2025-07-17T00:00:00.000Z"
       }
     ],
     "pagination": {
@@ -995,7 +1046,7 @@ GET /v1/appointments
 | clientId | string | Filter by client |
 | propertyId | string | Filter by property |
 
-**Response:**
+**Response (Minimal List View):**
 ```json
 {
   "success": true,
@@ -1009,12 +1060,17 @@ GET /v1/appointments
         "priority": "High",
         "startTime": "2025-07-18T14:00:00.000Z",
         "endTime": "2025-07-18T15:00:00.000Z",
-        "duration": 60,
         "location": "123 Main Street, San Diego, CA 92101",
+        "clientId": "1",
         "clientName": "Michael Thompson",
-        "clientPhone": "(619) 555-1234",
-        "agentName": "Jayden Metz",
-        "notes": "Second showing - bringing spouse"
+        "propertyId": "123",
+        "propertyAddress": "123 Main Street",
+        "reminder": {
+          "enabled": true,
+          "minutesBefore": 30
+        },
+        "createdAt": "2025-07-15T00:00:00.000Z",
+        "updatedAt": "2025-07-17T00:00:00.000Z"
       }
     ],
     "pagination": {
@@ -1270,7 +1326,7 @@ GET /v1/leads
 | minScore | number | Minimum lead score |
 | maxScore | number | Maximum lead score |
 
-**Response:**
+**Response (Minimal List View):**
 ```json
 {
   "success": true,
@@ -1278,21 +1334,23 @@ GET /v1/leads
     "leads": [
       {
         "id": "1",
+        "fullName": "Jennifer Wilson",
         "firstName": "Jennifer",
         "lastName": "Wilson",
-        "fullName": "Jennifer Wilson",
         "email": "jennifer.wilson@email.com",
         "phone": "(619) 555-6789",
-        "source": "Website",
+        "type": "Buyer",
         "status": "New",
+        "source": "Website",
         "score": 85,
         "temperature": "Hot",
         "estimatedValue": 125000,
-        "type": "Buyer",
-        "timeline": "1-3 months",
-        "tags": ["Urgent", "Growing Family", "Tech Professional"],
         "lastContactDate": "2025-07-15T00:00:00.000Z",
-        "nextFollowUpDate": "2025-07-17T00:00:00.000Z"
+        "nextFollowUpDate": "2025-07-17T00:00:00.000Z",
+        "conversionProbability": 0.75,
+        "tags": ["Urgent", "Growing Family", "Tech Professional"],
+        "createdAt": "2025-07-01T00:00:00.000Z",
+        "updatedAt": "2025-07-17T00:00:00.000Z"
       }
     ],
     "pagination": {
@@ -2153,6 +2211,786 @@ client.clients.update('456', {
 - Communication history and logging
 - Financial calculations and summaries
 - Property matching and recommendations
+
+---
+
+## Financial Management
+
+### Commissions
+
+#### List All Commissions
+```http
+GET /v1/commissions
+```
+
+**Query Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| status | string | Filter by status (Pending, Processing, Paid, Cancelled) |
+| agentId | string | Filter by agent ID |
+| side | string | Filter by side (Listing, Buyer, Both) |
+| startDate | ISO8601 | Start date for payout date range |
+| endDate | ISO8601 | End date for payout date range |
+| page | integer | Page number (default: 1) |
+| limit | integer | Items per page (default: 20) |
+
+**Response (Minimal List View):**
+```json
+{
+  "success": true,
+  "data": {
+    "commissions": [
+      {
+        "id": "1",
+        "escrowId": "1",
+        "escrowNumber": "ESC-2025-001",
+        "propertyAddress": "456 Ocean View Dr, La Jolla, CA 92037",
+        "side": "Listing",
+        "agentName": "Jayden Metz",
+        "salePrice": 1250000,
+        "grossCommission": 31250,
+        "netCommission": 24605,
+        "status": "Pending",
+        "projectedPayoutDate": "2025-08-15T00:00:00.000Z",
+        "actualPayoutDate": null,
+        "createdAt": "2025-07-01T00:00:00.000Z",
+        "updatedAt": "2025-07-17T00:00:00.000Z"
+      }
+    ],
+    "pagination": {
+      "total": 12,
+      "page": 1,
+      "pages": 1,
+      "limit": 20
+    }
+  },
+  "timestamp": "2025-07-17T00:00:00.000Z"
+}
+```
+
+#### Get Single Commission
+```http
+GET /v1/commissions/:id
+```
+
+**Response (Comprehensive):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "1",
+    "escrowId": "1",
+    "escrowNumber": "ESC-2025-001",
+    "propertyAddress": "456 Ocean View Dr, La Jolla, CA 92037",
+    "transactionType": "Sale",
+    "side": "Listing",
+    "agentId": "1",
+    "agentName": "Jayden Metz",
+    "salePrice": 1250000,
+    "commissionRate": 2.5,
+    "grossCommission": 31250,
+    "brokerageSplit": 80,
+    "agentCommission": 25000,
+    "brokerageCommission": 6250,
+    "referralFee": 0,
+    "referralAgent": null,
+    "transactionFee": 395,
+    "netCommission": 24605,
+    "status": "Pending",
+    "projectedPayoutDate": "2025-08-15T00:00:00.000Z",
+    "actualPayoutDate": null,
+    "invoiceId": null,
+    "notes": "Standard listing side commission",
+    "taxWithheld": false,
+    "taxRate": 0,
+    "deductions": [],
+    "breakdown": {
+      "salePrice": 1250000,
+      "commissionRate": 2.5,
+      "grossCommission": 31250,
+      "brokerageSplit": "80/20",
+      "agentCommission": 25000,
+      "brokerageCommission": 6250,
+      "referralFee": 0,
+      "transactionFee": 395,
+      "deductions": [],
+      "taxWithheld": 0,
+      "netCommission": 24605
+    },
+    "transaction": {
+      "escrowId": "1",
+      "escrowNumber": "ESC-2025-001",
+      "propertyAddress": "456 Ocean View Dr, La Jolla, CA 92037",
+      "closingDate": "2025-08-15T00:00:00.000Z",
+      "buyers": ["Michael & Sarah Chen"],
+      "sellers": ["Robert Johnson"],
+      "otherAgent": "Sarah Johnson (Buyer Agent)"
+    },
+    "paymentHistory": [],
+    "documents": [
+      {
+        "id": 1,
+        "name": "Commission Agreement",
+        "type": "agreement",
+        "uploadDate": "2025-07-01T00:00:00.000Z",
+        "url": "/api/v1/documents/commission-agreement-1"
+      }
+    ],
+    "auditTrail": [
+      {
+        "date": "2025-07-01T00:00:00.000Z",
+        "action": "Commission Created",
+        "user": "System",
+        "details": "Commission record created from escrow"
+      }
+    ],
+    "createdAt": "2025-07-01T00:00:00.000Z",
+    "updatedAt": "2025-07-17T00:00:00.000Z"
+  },
+  "timestamp": "2025-07-17T00:00:00.000Z"
+}
+```
+
+#### Get Commission Statistics
+```http
+GET /v1/commissions/stats
+```
+
+**Query Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| agentId | string | Filter stats by agent ID (optional) |
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "ytd": {
+      "totalGross": 185000,
+      "totalNet": 148000,
+      "totalTransactions": 8,
+      "averageCommission": 18500,
+      "byStatus": {
+        "pending": 2,
+        "processing": 1,
+        "paid": 5
+      }
+    },
+    "monthly": {
+      "totalGross": 52500,
+      "totalNet": 42000,
+      "totalTransactions": 2
+    },
+    "pipeline": {
+      "pending": 52500,
+      "processing": 36250
+    },
+    "averageSplit": 80
+  },
+  "timestamp": "2025-07-17T00:00:00.000Z"
+}
+```
+
+#### Create Commission
+```http
+POST /v1/commissions
+```
+
+**Request Body:**
+```json
+{
+  "escrowId": "4",
+  "escrowNumber": "ESC-2025-004",
+  "propertyAddress": "123 New St, San Diego, CA",
+  "transactionType": "Sale",
+  "side": "Buyer",
+  "agentId": "1",
+  "agentName": "Jayden Metz",
+  "salePrice": 950000,
+  "commissionRate": 2.5,
+  "brokerageSplit": 75,
+  "referralFee": 0,
+  "referralAgent": null,
+  "transactionFee": 395,
+  "deductions": [],
+  "notes": "Buyer side commission"
+}
+```
+
+#### Update Commission Status
+```http
+PATCH /v1/commissions/:id/status
+```
+
+**Request Body:**
+```json
+{
+  "status": "Paid",
+  "paymentDetails": {
+    "payoutDate": "2025-07-20T00:00:00.000Z",
+    "checkNumber": "12456",
+    "depositAccount": "Business Checking ****1234",
+    "invoiceId": "INV-2025-0045"
+  }
+}
+```
+
+### Invoices
+
+#### List All Invoices
+```http
+GET /v1/invoices
+```
+
+**Query Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| status | string | Filter by status (Pending, Paid, Overdue, Cancelled) |
+| type | string | Filter by type (Commission, Service, Other) |
+| clientId | string | Filter by client ID |
+| startDate | ISO8601 | Start date range |
+| endDate | ISO8601 | End date range |
+| overdue | boolean | Show only overdue invoices |
+| search | string | Search invoice number or client name |
+
+**Response (Minimal List View):**
+```json
+{
+  "success": true,
+  "data": {
+    "invoices": [
+      {
+        "id": "3",
+        "invoiceNumber": "INV-2025-0043",
+        "type": "Service",
+        "status": "Pending",
+        "clientName": "Michael Thompson",
+        "issueDate": "2025-07-15T00:00:00.000Z",
+        "dueDate": "2025-08-15T00:00:00.000Z",
+        "total": 2706.25,
+        "amountPaid": 0,
+        "balance": 2706.25,
+        "createdAt": "2025-07-15T00:00:00.000Z",
+        "updatedAt": "2025-07-15T00:00:00.000Z"
+      }
+    ],
+    "pagination": {
+      "total": 25,
+      "page": 1,
+      "pages": 2,
+      "limit": 20
+    }
+  },
+  "timestamp": "2025-07-17T00:00:00.000Z"
+}
+```
+
+#### Get Single Invoice
+```http
+GET /v1/invoices/:id
+```
+
+**Response (Comprehensive):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "3",
+    "invoiceNumber": "INV-2025-0043",
+    "type": "Service",
+    "status": "Pending",
+    "clientId": "1",
+    "clientName": "Michael Thompson",
+    "clientEmail": "michael.thompson@email.com",
+    "clientPhone": "(619) 555-1234",
+    "billingAddress": {
+      "street": "789 Buyer Lane",
+      "city": "La Jolla",
+      "state": "CA",
+      "zipCode": "92037"
+    },
+    "issueDate": "2025-07-15T00:00:00.000Z",
+    "dueDate": "2025-08-15T00:00:00.000Z",
+    "paidDate": null,
+    "subtotal": 2500,
+    "tax": 206.25,
+    "discount": 0,
+    "total": 2706.25,
+    "amountPaid": 0,
+    "balance": 2706.25,
+    "currency": "USD",
+    "items": [
+      {
+        "id": 1,
+        "description": "Professional Photography Package",
+        "quantity": 1,
+        "rate": 500,
+        "amount": 500,
+        "type": "service"
+      },
+      {
+        "id": 2,
+        "description": "Virtual Tour Creation",
+        "quantity": 1,
+        "rate": 750,
+        "amount": 750,
+        "type": "service"
+      }
+    ],
+    "notes": "Marketing services for property listing",
+    "terms": "Net 30",
+    "attachments": [],
+    "relatedTo": {
+      "type": "listing",
+      "id": "1",
+      "reference": "123 Main Street"
+    },
+    "paymentHistory": [],
+    "activityLog": [
+      {
+        "date": "2025-07-15T00:00:00.000Z",
+        "action": "Invoice Created",
+        "user": "Jayden Metz",
+        "details": "Invoice INV-2025-0043 created"
+      }
+    ],
+    "emailHistory": [
+      {
+        "date": "2025-07-15T00:00:00.000Z",
+        "subject": "Invoice INV-2025-0043 - Michael Thompson",
+        "recipient": "michael.thompson@email.com",
+        "status": "Sent",
+        "opened": true,
+        "openedDate": "2025-07-15T02:00:00.000Z"
+      }
+    ],
+    "createdBy": "Jayden Metz",
+    "createdAt": "2025-07-15T00:00:00.000Z",
+    "updatedAt": "2025-07-15T00:00:00.000Z"
+  },
+  "timestamp": "2025-07-17T00:00:00.000Z"
+}
+```
+
+#### Get Invoice Statistics
+```http
+GET /v1/invoices/stats
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "outstanding": {
+      "total": 4868.63,
+      "count": 2,
+      "overdue": 162.38,
+      "overdueCount": 1
+    },
+    "ytd": {
+      "total": 85291.13,
+      "paid": 80422.50,
+      "count": 42,
+      "avgInvoiceValue": 2030.74
+    },
+    "monthly": {
+      "total": 12543.25,
+      "paid": 9837.00,
+      "count": 6
+    },
+    "performance": {
+      "avgDaysToPayment": 12,
+      "paymentRate": 85.7,
+      "byType": {
+        "commission": 25,
+        "service": 17
+      }
+    }
+  },
+  "timestamp": "2025-07-17T00:00:00.000Z"
+}
+```
+
+#### Create Invoice
+```http
+POST /v1/invoices
+```
+
+**Request Body:**
+```json
+{
+  "type": "Service",
+  "clientId": "2",
+  "clientName": "Jennifer Wilson",
+  "clientEmail": "jennifer.wilson@email.com",
+  "clientPhone": "(619) 555-6789",
+  "billingAddress": {
+    "street": "456 Seller Ave",
+    "city": "Del Mar",
+    "state": "CA",
+    "zipCode": "92014"
+  },
+  "items": [
+    {
+      "description": "Home Staging Services",
+      "quantity": 1,
+      "rate": 2500,
+      "amount": 2500,
+      "type": "service"
+    }
+  ],
+  "taxRate": 8.25,
+  "notes": "Full home staging for listing",
+  "terms": "Net 30",
+  "dueDate": "2025-08-15T00:00:00.000Z"
+}
+```
+
+#### Record Invoice Payment
+```http
+POST /v1/invoices/:id/payment
+```
+
+**Request Body:**
+```json
+{
+  "amount": 2706.25,
+  "method": "Check",
+  "reference": "CHK-98765",
+  "date": "2025-07-20T00:00:00.000Z"
+}
+```
+
+### Expenses
+
+#### List All Expenses
+```http
+GET /v1/expenses
+```
+
+**Query Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| category | string | Filter by category |
+| status | string | Filter by status |
+| startDate | ISO8601 | Start date range |
+| endDate | ISO8601 | End date range |
+| taxDeductible | boolean | Filter by tax deductible status |
+| search | string | Search vendor or description |
+
+**Response (Minimal List View):**
+```json
+{
+  "success": true,
+  "data": {
+    "expenses": [
+      {
+        "id": "1",
+        "category": "Marketing",
+        "subcategory": "Online Advertising",
+        "vendor": "Google Ads",
+        "description": "PPC Campaign for Luxury Listings",
+        "amount": 1250.00,
+        "date": "2025-07-01T00:00:00.000Z",
+        "status": "Paid",
+        "taxDeductible": true,
+        "hasReceipt": true,
+        "tags": ["advertising", "digital", "luxury"],
+        "createdAt": "2025-07-01T00:00:00.000Z",
+        "updatedAt": "2025-07-01T00:00:00.000Z"
+      }
+    ],
+    "pagination": {
+      "total": 45,
+      "page": 1,
+      "pages": 3,
+      "limit": 20
+    }
+  },
+  "timestamp": "2025-07-17T00:00:00.000Z"
+}
+```
+
+#### Get Single Expense
+```http
+GET /v1/expenses/:id
+```
+
+**Response (Comprehensive):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "1",
+    "category": "Marketing",
+    "subcategory": "Online Advertising",
+    "vendor": "Google Ads",
+    "description": "PPC Campaign for Luxury Listings",
+    "amount": 1250.00,
+    "date": "2025-07-01T00:00:00.000Z",
+    "paymentMethod": "Credit Card",
+    "paymentReference": "CC-****1234",
+    "status": "Paid",
+    "taxDeductible": true,
+    "receipt": {
+      "id": 1,
+      "filename": "google-ads-receipt-july.pdf",
+      "url": "/api/v1/documents/receipt-1",
+      "uploadDate": "2025-07-02T00:00:00.000Z"
+    },
+    "notes": "Monthly Google Ads spend for luxury property campaigns",
+    "tags": ["advertising", "digital", "luxury"],
+    "relatedTo": {
+      "type": "listing",
+      "id": "3",
+      "reference": "789 Sunset Boulevard"
+    },
+    "recurring": {
+      "enabled": true,
+      "frequency": "monthly",
+      "endDate": "2025-12-31T00:00:00.000Z"
+    },
+    "categoryInfo": {
+      "main": "Marketing",
+      "sub": "Online Advertising",
+      "allSubcategories": [
+        "Online Advertising",
+        "Print Advertising",
+        "Signs & Banners",
+        "Photography",
+        "Virtual Tours",
+        "Direct Mail",
+        "Social Media",
+        "Website",
+        "Other"
+      ]
+    },
+    "taxInfo": {
+      "deductible": true,
+      "category": "Marketing",
+      "estimatedDeduction": 1250.00,
+      "mileageDeduction": 0,
+      "totalDeduction": 1250.00
+    },
+    "relatedExpenses": [
+      {
+        "id": "6",
+        "vendor": "Google Ads",
+        "description": "PPC Campaign - June",
+        "amount": 1185.00,
+        "date": "2025-06-01T00:00:00.000Z"
+      }
+    ],
+    "auditTrail": [
+      {
+        "date": "2025-07-01T00:00:00.000Z",
+        "action": "Expense Created",
+        "user": "Jayden Metz",
+        "details": "Created expense for Google Ads"
+      },
+      {
+        "date": "2025-07-02T00:00:00.000Z",
+        "action": "Receipt Uploaded",
+        "user": "Jayden Metz",
+        "details": "Uploaded google-ads-receipt-july.pdf"
+      }
+    ],
+    "createdBy": "Jayden Metz",
+    "approvedBy": null,
+    "createdAt": "2025-07-01T00:00:00.000Z",
+    "updatedAt": "2025-07-01T00:00:00.000Z"
+  },
+  "timestamp": "2025-07-17T00:00:00.000Z"
+}
+```
+
+#### Get Expense Statistics
+```http
+GET /v1/expenses/stats
+```
+
+**Query Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| year | integer | Year for statistics (default: current year) |
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "ytd": {
+      "total": 45678.92,
+      "count": 145,
+      "deductible": 42156.78,
+      "nonDeductible": 3522.14,
+      "avgPerMonth": 3806.58,
+      "avgPerExpense": 315.03
+    },
+    "byCategory": {
+      "Marketing": {
+        "total": 12456.78,
+        "count": 32,
+        "deductible": 12456.78
+      },
+      "Transportation": {
+        "total": 5234.56,
+        "count": 45,
+        "deductible": 5234.56
+      }
+    },
+    "monthlyBreakdown": [
+      {
+        "month": 1,
+        "total": 3456.78,
+        "count": 12
+      },
+      {
+        "month": 7,
+        "total": 4567.89,
+        "count": 15
+      }
+    ],
+    "topVendors": [
+      {
+        "vendor": "Google Ads",
+        "total": 8750.00
+      },
+      {
+        "vendor": "Premier Property Photos",
+        "total": 4500.00
+      }
+    ],
+    "mileage": {
+      "totalMiles": 3456,
+      "totalDeduction": 2263.68,
+      "currentRate": 0.655
+    },
+    "pending": {
+      "count": 3,
+      "total": 856.42
+    },
+    "reimbursable": {
+      "pending": 2500.00,
+      "approved": 750.00
+    }
+  },
+  "timestamp": "2025-07-17T00:00:00.000Z"
+}
+```
+
+#### Get Expense Categories
+```http
+GET /v1/expenses/categories
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "Marketing": [
+      "Online Advertising",
+      "Print Advertising",
+      "Signs & Banners",
+      "Photography",
+      "Virtual Tours",
+      "Direct Mail",
+      "Social Media",
+      "Website",
+      "Other"
+    ],
+    "Transportation": [
+      "Vehicle",
+      "Gas",
+      "Parking",
+      "Tolls",
+      "Public Transit",
+      "Uber/Lyft",
+      "Other"
+    ],
+    "Office Supplies": [
+      "Technology",
+      "Furniture",
+      "Stationery",
+      "Software",
+      "Printing",
+      "Other"
+    ],
+    "Professional Services": [
+      "Legal",
+      "Accounting",
+      "Photography",
+      "Staging",
+      "Inspection",
+      "Other"
+    ],
+    "Professional Development": [
+      "Education",
+      "Conferences",
+      "Training",
+      "Certifications",
+      "Memberships",
+      "Other"
+    ]
+  },
+  "timestamp": "2025-07-17T00:00:00.000Z"
+}
+```
+
+#### Create Expense
+```http
+POST /v1/expenses
+```
+
+**Request Body:**
+```json
+{
+  "category": "Transportation",
+  "subcategory": "Gas",
+  "vendor": "Chevron",
+  "description": "Gas for property showings",
+  "amount": 92.45,
+  "date": "2025-07-17T00:00:00.000Z",
+  "paymentMethod": "Credit Card",
+  "paymentReference": "CC-****1234",
+  "taxDeductible": true,
+  "notes": "Showing properties in North County",
+  "tags": ["gas", "auto", "showings"],
+  "mileage": {
+    "start": 45389,
+    "end": 45612,
+    "total": 223,
+    "rate": 0.655
+  }
+}
+```
+
+#### Generate Expense Report
+```http
+POST /v1/expenses/report
+```
+
+**Request Body:**
+```json
+{
+  "year": 2025,
+  "startDate": "2025-01-01T00:00:00.000Z",
+  "endDate": "2025-12-31T00:00:00.000Z",
+  "category": "all",
+  "taxDeductible": true
+}
+```
+
+**Recently Implemented:**
+- **Financial Management System**:
+  - Commission tracking with split calculations and payout management
+  - Invoice generation and payment tracking
+  - Expense management with tax deduction tracking
+  - Financial reporting and analytics
+  - Receipt upload and document management
 
 **Pending Implementation:**
 - Full authentication enforcement (currently disabled on some routes)

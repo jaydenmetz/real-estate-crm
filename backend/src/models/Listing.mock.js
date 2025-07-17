@@ -291,8 +291,33 @@ class ListingMock {
       const offset = (page - 1) * limit;
       const paginated = filtered.slice(offset, offset + limit);
       
+      // Return minimal data for list view
+      const minimalListings = paginated.map(listing => ({
+        id: listing.id,
+        mlsNumber: listing.mlsNumber,
+        propertyAddress: listing.propertyAddress,
+        city: listing.city,
+        state: listing.state,
+        zipCode: listing.zipCode,
+        fullAddress: listing.fullAddress,
+        listingStatus: listing.listingStatus,
+        listPrice: listing.listPrice,
+        pricePerSqft: listing.pricePerSqft,
+        propertyType: listing.propertyType,
+        bedrooms: listing.bedrooms,
+        bathrooms: listing.bathrooms,
+        squareFootage: listing.squareFootage,
+        primaryImage: listing.primaryImage,
+        daysOnMarket: listing.daysOnMarket,
+        listingAgent: {
+          name: listing.listingAgent.name
+        },
+        createdAt: listing.createdAt,
+        updatedAt: listing.updatedAt
+      }));
+      
       return {
-        listings: paginated,
+        listings: minimalListings,
         pagination: {
           total: filtered.length,
           page,

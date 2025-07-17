@@ -217,8 +217,28 @@ class ClientMock {
       const offset = (page - 1) * limit;
       const paginated = filtered.slice(offset, offset + limit);
       
+      // Return minimal data for list view
+      const minimalClients = paginated.map(client => ({
+        id: client.id,
+        fullName: client.fullName,
+        firstName: client.firstName,
+        lastName: client.lastName,
+        email: client.email,
+        phone: client.phone,
+        clientType: client.clientType,
+        status: client.status,
+        source: client.source,
+        tags: client.tags,
+        preApproved: client.preApproved,
+        preApprovalAmount: client.preApprovalAmount,
+        lastContactDate: client.lastContactDate,
+        nextFollowUpDate: client.nextFollowUpDate,
+        createdAt: client.createdAt,
+        updatedAt: client.updatedAt
+      }));
+      
       return {
-        clients: paginated,
+        clients: minimalClients,
         pagination: {
           total: filtered.length,
           page,

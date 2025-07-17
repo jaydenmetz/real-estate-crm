@@ -131,8 +131,27 @@ class EscrowMock {
       const offset = (page - 1) * limit;
       const paginated = filtered.slice(offset, offset + limit);
       
+      // Return minimal data for list view
+      const minimalEscrows = paginated.map(escrow => ({
+        id: escrow.id,
+        escrowNumber: escrow.escrowNumber,
+        propertyAddress: escrow.propertyAddress,
+        propertyType: escrow.propertyType,
+        propertyImage: escrow.propertyImage,
+        purchasePrice: escrow.purchasePrice,
+        escrowStatus: escrow.escrowStatus,
+        currentStage: escrow.currentStage,
+        closingDate: escrow.closingDate,
+        daysToClose: escrow.daysToClose,
+        grossCommission: escrow.grossCommission,
+        buyers: escrow.buyers.map(b => ({ name: b.name })),
+        sellers: escrow.sellers.map(s => ({ name: s.name })),
+        createdAt: escrow.createdAt,
+        updatedAt: escrow.updatedAt
+      }));
+      
       return {
-        escrows: paginated,
+        escrows: minimalEscrows,
         pagination: {
           total: filtered.length,
           page,

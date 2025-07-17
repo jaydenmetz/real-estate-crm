@@ -140,6 +140,11 @@ apiRouter.use('/ai', require('./routes/ai.routes'));
 apiRouter.use('/webhooks', require('./routes/webhooks.routes'));
 apiRouter.use('/documents', require('./routes/documents.routes'));
 
+// Financial routes
+apiRouter.use('/commissions', require('./routes/commissions.routes'));
+apiRouter.use('/invoices', require('./routes/invoices.routes'));
+apiRouter.use('/expenses', require('./routes/expenses.routes'));
+
 apiRouter.get('/analytics/dashboard', async (req, res) => {
   try {
     // MOCK DASHBOARD DATA - Replace database queries
