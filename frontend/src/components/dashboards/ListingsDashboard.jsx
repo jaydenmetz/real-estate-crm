@@ -287,100 +287,13 @@ const StatusChip = styled(Chip)(({ theme, status }) => {
   };
 });
 
-// Mock data generators
-const generateMockListings = () => {
-  const addresses = [
-    '123 Ocean View Drive, La Jolla, CA 92037',
-    '456 Sunset Boulevard, Del Mar, CA 92014',
-    '789 Palm Avenue, Coronado, CA 92118',
-    '321 Harbor Lane, Point Loma, CA 92106',
-    '654 Beach Street, Pacific Beach, CA 92109',
-    '987 Hillcrest Avenue, Bankers Hill, CA 92103',
-    '147 Park Row, Balboa Park, CA 92101',
-    '258 Marina Way, Downtown, CA 92101',
-    '369 Canyon Road, Mission Hills, CA 92103',
-    '741 Vista Drive, Mount Soledad, CA 92037',
-  ];
+// Empty data for fresh start
+const mockListings = [];
 
-  const images = [
-    'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800',
-    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800',
-    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800',
-    'https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?w=800',
-    'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?w=800',
-    'https://images.unsplash.com/photo-1600607687644-c7171b42498b?w=800',
-    'https://images.unsplash.com/photo-1600573472550-8090b5e0745e?w=800',
-    'https://images.unsplash.com/photo-1600566752355-35792bedcfea?w=800',
-    'https://images.unsplash.com/photo-1600563438938-a9a27216b4f5?w=800',
-    'https://images.unsplash.com/photo-1600566753151-384129cf4e3e?w=800',
-  ];
+// Empty analytics data
+const marketTrendData = [];
 
-  const statuses = ['Active', 'Active', 'Active', 'Pending', 'Under Contract', 'Active', 'Active', 'Sold', 'Active', 'Active'];
-  const propertyTypes = ['Single Family', 'Condo', 'Townhouse', 'Single Family', 'Condo', 'Single Family', 'Condo', 'Single Family', 'Townhouse', 'Single Family'];
-
-  return addresses.map((address, index) => ({
-    id: index + 1,
-    propertyAddress: address,
-    mlsNumber: `SD2024${String(index + 1).padStart(3, '0')}`,
-    listingStatus: statuses[index],
-    listPrice: 750000 + (index * 150000) + Math.floor(Math.random() * 200000),
-    originalListPrice: 800000 + (index * 150000) + Math.floor(Math.random() * 200000),
-    propertyType: propertyTypes[index],
-    bedrooms: 3 + Math.floor(Math.random() * 3),
-    bathrooms: 2 + Math.floor(Math.random() * 2),
-    squareFootage: 1800 + Math.floor(Math.random() * 1500),
-    lotSize: 5000 + Math.floor(Math.random() * 10000),
-    yearBuilt: 2010 + Math.floor(Math.random() * 14),
-    garage: 2 + Math.floor(Math.random() * 2),
-    pool: Math.random() > 0.5,
-    listingDate: new Date(2024, 0, 1 + index * 3).toISOString().split('T')[0],
-    daysOnMarket: Math.floor(Math.random() * 90),
-    views: 200 + Math.floor(Math.random() * 500),
-    favorites: 10 + Math.floor(Math.random() * 50),
-    showings: 5 + Math.floor(Math.random() * 20),
-    primaryImage: images[index],
-    virtualTourLink: `https://example.com/tour/${index + 1}`,
-    professionalPhotos: true,
-    dronePhotos: Math.random() > 0.3,
-    sellers: [`Seller ${index + 1}`],
-    listingAgent: 'You',
-    buyerAgent: statuses[index] === 'Under Contract' ? 'Other Agent' : null,
-    commission: { listing: 2.5, buyer: 2.5 },
-    pricePerSqFt: null,
-    hoaDues: Math.random() > 0.5 ? 200 + Math.floor(Math.random() * 400) : 0,
-    features: {
-      hasPool: Math.random() > 0.5,
-      hasFireplace: Math.random() > 0.7,
-      hasDeck: Math.random() > 0.6,
-      hasHardwoodFloors: Math.random() > 0.5,
-      hasGraniteCounters: Math.random() > 0.7,
-      hasStainlessAppliances: Math.random() > 0.8,
-    }
-  })).map(listing => ({
-    ...listing,
-    pricePerSqFt: Math.floor(listing.listPrice / listing.squareFootage),
-  }));
-};
-
-const mockListings = generateMockListings();
-
-// Mock analytics data
-const marketTrendData = [
-  { month: 'Jan', avgPrice: 850000, listings: 45, sold: 32 },
-  { month: 'Feb', avgPrice: 865000, listings: 52, sold: 38 },
-  { month: 'Mar', avgPrice: 875000, listings: 58, sold: 42 },
-  { month: 'Apr', avgPrice: 890000, listings: 61, sold: 45 },
-  { month: 'May', avgPrice: 905000, listings: 65, sold: 48 },
-  { month: 'Jun', avgPrice: 920000, listings: 68, sold: 52 },
-];
-
-const priceRangeData = [
-  { range: '<$500k', count: 5, fill: '#8884d8' },
-  { range: '$500k-$750k', count: 12, fill: '#83a6ed' },
-  { range: '$750k-$1M', count: 18, fill: '#8dd1e1' },
-  { range: '$1M-$1.5M', count: 15, fill: '#82ca9d' },
-  { range: '$1.5M+', count: 8, fill: '#ffc658' },
-];
+const priceRangeData = [];
 
 const ListingsDashboard = () => {
   const [tabValue, setTabValue] = useState(0);

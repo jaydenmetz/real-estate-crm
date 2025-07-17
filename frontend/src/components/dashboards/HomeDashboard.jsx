@@ -225,68 +225,27 @@ const HomeDashboard = () => {
   const navigate = useNavigate();
   const theme = useTheme();
 
-  // Mock data for now
+  // Empty data for fresh start
   const stats = {
-    activeEscrows: 12,
-    activeListings: 8,
-    totalClients: 156,
-    upcomingAppointments: 4,
-    monthlyVolume: 3250000,
-    closingThisWeek: 3,
-    newLeads: 24,
-    pendingTasks: 7,
+    activeEscrows: 0,
+    activeListings: 0,
+    totalClients: 0,
+    upcomingAppointments: 0,
+    monthlyVolume: 0,
+    closingThisWeek: 0,
+    newLeads: 0,
+    pendingTasks: 0,
   };
 
-  const recentActivity = [
-    { 
-      id: 1, 
-      title: 'New escrow opened', 
-      subtitle: '456 Ocean View Dr, La Jolla',
-      time: '2 hours ago',
-      icon: <Home />,
-      color: 'primary',
-      link: '/escrows/esc_001'
-    },
-    { 
-      id: 2, 
-      title: 'Lead converted to client', 
-      subtitle: 'Sarah Johnson',
-      time: '4 hours ago',
-      icon: <People />,
-      color: 'success',
-      link: '/clients/cl_001'
-    },
-    { 
-      id: 3, 
-      title: 'Appointment scheduled', 
-      subtitle: 'Property showing at 2 PM',
-      time: '5 hours ago',
-      icon: <Schedule />,
-      color: 'info',
-      link: '/appointments'
-    },
-    { 
-      id: 4, 
-      title: 'Offer submitted', 
-      subtitle: '789 Sunset Blvd, Del Mar',
-      time: '1 day ago',
-      icon: <Assignment />,
-      color: 'warning',
-      link: '/escrows/esc_002'
-    },
-  ];
+  const recentActivity = [];
 
-  const upcomingTasks = [
-    { id: 1, title: 'Follow up with John Doe', priority: 'high', dueTime: '10:00 AM' },
-    { id: 2, title: 'Submit offer for 123 Main St', priority: 'urgent', dueTime: '12:00 PM' },
-    { id: 3, title: 'Prepare listing presentation', priority: 'medium', dueTime: '3:00 PM' },
-  ];
+  const upcomingTasks = [];
 
   const quickStats = [
-    { label: 'Conversion Rate', value: '68%', change: '+5%', positive: true },
-    { label: 'Avg Days on Market', value: '21', change: '-3 days', positive: true },
-    { label: 'Client Satisfaction', value: '4.8', change: '+0.2', positive: true },
-    { label: 'Response Time', value: '2.5h', change: '-30m', positive: true },
+    { label: 'Conversion Rate', value: '0%', change: '+0%', positive: true },
+    { label: 'Avg Days on Market', value: '0', change: '+0 days', positive: true },
+    { label: 'Client Satisfaction', value: '0.0', change: '+0.0', positive: true },
+    { label: 'Response Time', value: '0h', change: '+0m', positive: true },
   ];
 
   const handleCardClick = (stat, path) => {

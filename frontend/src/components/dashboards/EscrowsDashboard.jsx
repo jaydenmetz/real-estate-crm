@@ -218,54 +218,8 @@ const AnimatedButton = styled(Button)(({ theme }) => ({
   },
 }));
 
-// Mock data for fallback
-const mockEscrows = [
-  {
-    id: 'esc_001',
-    escrowNumber: 'ESC-2025-001',
-    propertyAddress: '456 Ocean View Dr, La Jolla, CA 92037',
-    propertyType: 'Single Family',
-    propertyImage: 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=400',
-    purchasePrice: 1250000,
-    escrowStatus: 'Active',
-    currentStage: 'Inspection',
-    closingDate: new Date('2025-07-30'),
-    daysToClose: 22,
-    grossCommission: 31250,
-    buyers: [{ name: 'Michael & Sarah Chen' }],
-    sellers: [{ name: 'Robert Johnson' }],
-  },
-  {
-    id: 'esc_002',
-    escrowNumber: 'ESC-2025-002',
-    propertyAddress: '789 Sunset Blvd, Del Mar, CA 92014',
-    propertyType: 'Condo',
-    propertyImage: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400',
-    purchasePrice: 850000,
-    escrowStatus: 'Pending',
-    currentStage: 'Appraisal',
-    closingDate: new Date('2025-07-15'),
-    daysToClose: 7,
-    grossCommission: 21250,
-    buyers: [{ name: 'Emily Davis' }],
-    sellers: [{ name: 'The Andersons' }],
-  },
-  {
-    id: 'esc_003',
-    escrowNumber: 'ESC-2025-003',
-    propertyAddress: '321 Palm Ave, Coronado, CA 92118',
-    propertyType: 'Townhouse',
-    propertyImage: 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=400',
-    purchasePrice: 1450000,
-    escrowStatus: 'Closing',
-    currentStage: 'Final Walkthrough',
-    closingDate: new Date('2025-07-10'),
-    daysToClose: 2,
-    grossCommission: 36250,
-    buyers: [{ name: 'David & Lisa Park' }],
-    sellers: [{ name: 'William Thompson' }],
-  },
-];
+// Empty data for fresh start
+const mockEscrows = [];
 
 const EscrowsDashboard = () => {
   const [tabValue, setTabValue] = useState(0);
@@ -361,39 +315,8 @@ const EscrowsDashboard = () => {
       } catch (error) {
         // Fallback to mock implementation if API fails
         console.log('API failed, using mock implementation');
-          // Mock create
-          const id = `esc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-          const now = safeParseDate(new Date()) || new Date();
-          const year = now.getFullYear();
-          const month = String(now.getMonth() + 1).padStart(2, '0');
-          const count = (escrows?.length || 0) + 1;
-          const escrowNumber = `ESC-${year}-${month}-${count.toString().padStart(3, '0')}`;
-          
-          const purchasePrice = parseFloat(escrowData.purchasePrice) || 0;
-          const commissionPercentage = parseFloat(escrowData.commissionPercentage) || 2.5;
-          const grossCommission = purchasePrice * (commissionPercentage / 100);
-          
-          const closingDate = new Date(escrowData.closingDate);
-          const today = new Date();
-          const daysToClose = Math.ceil((closingDate - today) / (1000 * 60 * 60 * 24));
-          
-          const newEscrow = {
-            id,
-            escrowNumber,
-            ...escrowData,
-            propertyImage: 'https://images.unsplash.com/photo-1560184897-ae75f418493e?w=400',
-            escrowStatus: 'Active',
-            currentStage: 'Contract',
-            daysToClose,
-            grossCommission,
-            createdAt: new Date(),
-            updatedAt: new Date()
-          };
-          
-          // Add to mock data
-          mockEscrows.push(newEscrow);
-          
-          return { data: { data: newEscrow } };
+          // Return empty response for mock create
+          return { data: { data: null } };
       }
     },
     {
@@ -408,27 +331,8 @@ const EscrowsDashboard = () => {
       },
       onError: (error) => {
         console.error('Escrow mutation error:', error);
-          // Mock create even on error
-          const id = `esc_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-          const mockNewEscrow = {
-            id,
-            escrowNumber: `ESC-2025-${mockEscrows.length + 1}`,
-            ...mutation.variables,
-            propertyImage: 'https://images.unsplash.com/photo-1560184897-ae75f418493e?w=400',
-            escrowStatus: 'Active',
-            currentStage: 'Contract',
-            daysToClose: 30,
-            grossCommission: parseFloat(mutation.variables.purchasePrice) * 0.025,
-            createdAt: new Date(),
-            updatedAt: new Date()
-          };
-          
-          mockEscrows.push(mockNewEscrow);
-          setCreatedEscrowData(mockNewEscrow);
-          setShowSuccessPage(true);
-          handleCloseForm();
-          queryClient.invalidateQueries('escrows');
-          enqueueSnackbar('Escrow created successfully (offline mode)', { variant: 'info' });
+          // Don't create mock data on error
+          enqueueSnackbar('Failed to create escrow. Please try again.', { variant: 'error' });
       },
     }
   );
