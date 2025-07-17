@@ -1062,17 +1062,21 @@ const EscrowDetailMerged = () => {
     ? differenceInDays(new Date(escrow.estimatedCloseDate), new Date())
     : 0;
   
-  const totalTasks = Object.values(escrow.checklist).reduce(
-    (acc, section) => acc + Object.keys(section).length,
-    0
-  );
+  const totalTasks = escrow.checklist 
+    ? Object.values(escrow.checklist).reduce(
+        (acc, section) => acc + Object.keys(section).length,
+        0
+      )
+    : 0;
   
-  const completedTasks = Object.values(escrow.checklist).reduce(
-    (acc, section) => acc + Object.values(section).filter(Boolean).length,
-    0
-  );
+  const completedTasks = escrow.checklist
+    ? Object.values(escrow.checklist).reduce(
+        (acc, section) => acc + Object.values(section).filter(Boolean).length,
+        0
+      )
+    : 0;
   
-  const progress = Math.round((completedTasks / totalTasks) * 100);
+  const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
   // Handlers
   const handleTabChange = (event, newValue) => {
@@ -2094,7 +2098,7 @@ const EscrowDetailMerged = () => {
 
               <TabPanel hidden={activeTab !== 4}>
                 <Stack spacing={3}>
-                  {Object.entries(escrow.checklist).map(([section, tasks]) => (
+                  {escrow.checklist && Object.entries(escrow.checklist).map(([section, tasks]) => (
                     <ProcessStep key={section}>
                       <Stack
                         direction="row"
