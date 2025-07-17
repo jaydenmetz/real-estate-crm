@@ -242,7 +242,19 @@ POST /v1/escrows/parse-rpa
 GET /v1/listings
 ```
 
-**Query Parameters:** Standard pagination parameters
+**Query Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| status | string | Filter by listing status (Active, Pending, Sold, etc.) |
+| propertyType | string | Filter by property type |
+| minPrice | number | Minimum list price |
+| maxPrice | number | Maximum list price |
+| minBedrooms | number | Minimum number of bedrooms |
+| minBathrooms | number | Minimum number of bathrooms |
+| page | integer | Page number (default: 1) |
+| limit | integer | Items per page (default: 20) |
+| sort | string | Sort field (default: listingDate) |
+| order | string | Sort order: asc or desc |
 
 **Response:**
 ```json
@@ -252,24 +264,135 @@ GET /v1/listings
     "listings": [
       {
         "id": "1",
-        "propertyAddress": "321 Elm St",
-        "listPrice": 899000,
+        "propertyAddress": "123 Main Street",
+        "city": "San Diego",
+        "state": "CA",
+        "zipCode": "92101",
+        "fullAddress": "123 Main Street, San Diego, CA 92101",
+        "mlsNumber": "SD2025001",
         "listingStatus": "Active",
+        "listPrice": 850000,
+        "originalListPrice": 875000,
+        "pricePerSqft": 354,
         "propertyType": "Single Family",
-        "listingDate": "2025-07-01T00:00:00.000Z",
-        "daysOnMarket": 13
+        "bedrooms": 4,
+        "bathrooms": 3,
+        "halfBathrooms": 0,
+        "squareFootage": 2400,
+        "lotSize": 7200,
+        "yearBuilt": 2018,
+        "garage": 2,
+        "pool": true,
+        "listingDate": "2025-06-15T00:00:00.000Z",
+        "daysOnMarket": 32,
+        "virtualTourLink": "https://example.com/tour/123",
+        "primaryImage": "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400",
+        "showings": 12,
+        "views": 342,
+        "favorites": 28,
+        "listingAgent": {
+          "id": 1,
+          "name": "Jayden Metz",
+          "email": "jayden@luxuryrealty.com"
+        }
       }
     ],
-    "total": 15,
-    "page": 1,
-    "pages": 2
-  }
+    "pagination": {
+      "total": 15,
+      "page": 1,
+      "pages": 2,
+      "limit": 20
+    }
+  },
+  "timestamp": "2025-07-17T00:00:00.000Z"
 }
 ```
 
 ### Get Single Listing
 ```http
 GET /v1/listings/:id
+```
+
+**Response (Comprehensive):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "1",
+    "propertyAddress": "123 Main Street",
+    "city": "San Diego",
+    "state": "CA",
+    "zipCode": "92101",
+    "listPrice": 850000,
+    "propertyType": "Single Family",
+    "bedrooms": 4,
+    "bathrooms": 3,
+    "squareFootage": 2400,
+    
+    "taxes": 10625,
+    "hoaDues": 0,
+    "insurance": 3400,
+    "utilities": 350,
+    
+    "features": {
+      "interior": ["Gourmet Kitchen", "Hardwood Floors", "Master Suite"],
+      "exterior": ["Pool & Spa", "Solar Panels", "Landscaping"],
+      "community": ["Smart Home", "EV Charging"]
+    },
+    
+    "rooms": [
+      { "name": "Master Bedroom", "dimensions": "18x20", "level": 2 },
+      { "name": "Living Room", "dimensions": "22x25", "level": 1 }
+    ],
+    
+    "schools": [
+      { "name": "La Jolla Elementary", "rating": 9, "distance": "0.5 mi" }
+    ],
+    
+    "activityLog": [
+      {
+        "date": "2025-07-15T00:00:00.000Z",
+        "type": "showing",
+        "agent": "Sarah Johnson - Coastal Realty",
+        "feedback": "Buyers loved the property"
+      }
+    ],
+    
+    "analytics": {
+      "views": 342,
+      "viewsThisWeek": 51,
+      "viewsTrend": "up",
+      "viewsBySource": [
+        { "source": "MLS", "views": 137 },
+        { "source": "Zillow", "views": 103 }
+      ]
+    },
+    
+    "marketingChecklist": {
+      "photography": true,
+      "virtualTour": true,
+      "droneVideo": true,
+      "mlsListing": true,
+      "socialMedia": true
+    },
+    
+    "priceHistory": [
+      { "date": "2025-06-15T00:00:00.000Z", "price": 875000, "event": "Listed" },
+      { "date": "2025-07-01T00:00:00.000Z", "price": 850000, "event": "Price Reduced" }
+    ],
+    
+    "comparableProperties": [
+      {
+        "address": "321 Maple Street",
+        "soldPrice": 833000,
+        "soldDate": "2025-06-01T00:00:00.000Z",
+        "sqft": 2200,
+        "pricePerSqft": 378
+      }
+    ]
+  },
+  "timestamp": "2025-07-17T00:00:00.000Z"
+}
 ```
 
 ### Create Listing
@@ -348,9 +471,28 @@ POST /v1/listings/:id/showings
 GET /v1/listings/:id/price-history
 ```
 
+### Update Listing Checklist
+```http
+PUT /v1/listings/:id/checklist
+```
+
+**Request Body:**
+```json
+{
+  "checklist": {
+    "photography": true,
+    "virtualTour": true,
+    "droneVideo": false,
+    "mlsListing": true,
+    "socialMedia": true,
+    "openHouse": false
+  }
+}
+```
+
 ### Get Listing Analytics
 ```http
-GET /v1/listings/analytics/:id
+GET /v1/analytics/listing/:id
 ```
 
 **Response:**
@@ -377,6 +519,17 @@ GET /v1/listings/analytics/:id
 GET /v1/clients
 ```
 
+**Query Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| clientType | string | Filter by type (Buyer, Seller, Lead, Past Client) |
+| status | string | Filter by status (New, Active, Hot Lead, Inactive) |
+| source | string | Filter by lead source |
+| tag | string | Filter by specific tag |
+| search | string | Search in name, email, phone, notes |
+| page | integer | Page number (default: 1) |
+| limit | integer | Items per page (default: 20) |
+
 **Response:**
 ```json
 {
@@ -385,25 +538,119 @@ GET /v1/clients
     "clients": [
       {
         "id": "1",
-        "firstName": "Sarah",
-        "lastName": "Johnson",
-        "email": "sarah@example.com",
-        "phone": "+1234567890",
+        "firstName": "Michael",
+        "lastName": "Thompson",
+        "fullName": "Michael Thompson",
+        "email": "michael.thompson@email.com",
+        "phone": "(619) 555-1234",
         "clientType": "Buyer",
-        "clientStatus": "Active",
-        "createdAt": "2025-06-15T00:00:00.000Z"
+        "status": "Active",
+        "source": "Referral",
+        "preApproved": true,
+        "preApprovalAmount": 950000,
+        "tags": ["First Time Buyer", "Pre-Approved", "Urgent"],
+        "lastContactDate": "2025-07-10T00:00:00.000Z",
+        "nextFollowUpDate": "2025-07-20T00:00:00.000Z",
+        "createdAt": "2025-06-01T00:00:00.000Z"
       }
     ],
-    "total": 150,
-    "page": 1,
-    "pages": 15
-  }
+    "pagination": {
+      "total": 150,
+      "page": 1,
+      "pages": 8,
+      "limit": 20
+    }
+  },
+  "timestamp": "2025-07-17T00:00:00.000Z"
 }
 ```
 
 ### Get Single Client
 ```http
 GET /v1/clients/:id
+```
+
+**Response (Comprehensive):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "1",
+    "firstName": "Michael",
+    "lastName": "Thompson",
+    "fullName": "Michael Thompson",
+    "email": "michael.thompson@email.com",
+    "phone": "(619) 555-1234",
+    "clientType": "Buyer",
+    "status": "Active",
+    "preApproved": true,
+    "preApprovalAmount": 950000,
+    "occupation": "Software Engineer",
+    "annualIncome": 185000,
+    "spouseName": "Jennifer Thompson",
+    
+    "communicationHistory": [
+      {
+        "id": 1,
+        "date": "2025-07-15T00:00:00.000Z",
+        "type": "Email",
+        "subject": "New Listings Matching Your Criteria",
+        "notes": "Sent 3 properties, client interested in 123 Main St",
+        "outcome": "Scheduled showing"
+      }
+    ],
+    
+    "properties": {
+      "interested": [
+        {
+          "id": "1",
+          "address": "123 Main Street, San Diego, CA",
+          "listPrice": 850000,
+          "status": "Active",
+          "notes": "Loves the kitchen, concerned about street noise",
+          "rating": 4
+        }
+      ],
+      "viewed": [],
+      "owned": []
+    },
+    
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Send new listings in La Jolla",
+        "dueDate": "2025-07-20T00:00:00.000Z",
+        "priority": "high",
+        "status": "pending"
+      }
+    ],
+    
+    "financialSummary": {
+      "preApprovalAmount": 950000,
+      "downPaymentAvailable": 190000,
+      "monthlyBudget": 4316,
+      "creditScore": 750
+    },
+    
+    "preferences": {
+      "propertyTypes": ["Single Family", "Townhouse"],
+      "bedrooms": { "min": 3, "max": 5 },
+      "priceRange": { "min": 760000, "max": 950000 },
+      "locations": ["La Jolla", "Del Mar", "Carmel Valley"],
+      "mustHaves": ["Home Office", "Good Schools", "Garage"]
+    },
+    
+    "aiInsights": {
+      "engagementScore": 85,
+      "readinessToBuy": "High",
+      "recommendedActions": [
+        "Schedule follow-up for new listings",
+        "Check on mortgage rate lock status"
+      ]
+    }
+  },
+  "timestamp": "2025-07-17T00:00:00.000Z"
+}
 ```
 
 ### Create Client
@@ -448,15 +695,83 @@ POST /v1/clients/:id/notes
 }
 ```
 
-### Update Client Tags
+### Log Client Communication
 ```http
-PATCH /v1/clients/:id/tags
+POST /v1/clients/:id/communication
 ```
 
 **Request Body:**
 ```json
 {
-  "tags": ["First Time Buyer", "Cash Buyer", "Investor"]
+  "type": "Email",
+  "subject": "New Property Matches",
+  "notes": "Sent 5 properties matching criteria",
+  "duration": null,
+  "outcome": "Client interested in 2 properties",
+  "nextFollowUpDate": "2025-07-20T00:00:00.000Z"
+}
+```
+
+### Update Client Status
+```http
+PATCH /v1/clients/:id/status
+```
+
+**Request Body:**
+```json
+{
+  "status": "Hot Lead",
+  "note": "Ready to make offer on 123 Main St"
+}
+```
+
+### Add Client Tag
+```http
+POST /v1/clients/:id/tags
+```
+
+**Request Body:**
+```json
+{
+  "tag": "Cash Buyer"
+}
+```
+
+### Remove Client Tag
+```http
+DELETE /v1/clients/:id/tags/:tag
+```
+
+### Get Client Statistics
+```http
+GET /v1/clients/stats
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "total": 156,
+    "byType": {
+      "buyers": 78,
+      "sellers": 45,
+      "pastClients": 28,
+      "leads": 5
+    },
+    "byStatus": {
+      "active": 92,
+      "hotLeads": 12,
+      "inactive": 35,
+      "new": 17
+    },
+    "bySource": {
+      "referral": 67,
+      "website": 43,
+      "openHouse": 28,
+      "other": 18
+    }
+  }
 }
 ```
 
@@ -469,6 +784,16 @@ PATCH /v1/clients/:id/tags
 GET /v1/appointments
 ```
 
+**Query Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| type | string | Filter by appointment type |
+| status | string | Filter by status |
+| startDate | ISO8601 | Start of date range |
+| endDate | ISO8601 | End of date range |
+| clientId | string | Filter by client |
+| propertyId | string | Filter by property |
+
 **Response:**
 ```json
 {
@@ -478,24 +803,107 @@ GET /v1/appointments
       {
         "id": "1",
         "title": "Property Showing - 123 Main St",
-        "appointmentType": "Property Showing",
-        "date": "2025-07-15T00:00:00.000Z",
-        "startTime": "14:00",
+        "type": "Showing",
+        "status": "Confirmed",
+        "priority": "High",
+        "startTime": "2025-07-18T14:00:00.000Z",
+        "endTime": "2025-07-18T15:00:00.000Z",
         "duration": 60,
-        "status": "Scheduled",
-        "attendees": ["John Doe", "Sarah Agent"]
+        "location": "123 Main Street, San Diego, CA 92101",
+        "clientName": "Michael Thompson",
+        "clientPhone": "(619) 555-1234",
+        "agentName": "Jayden Metz",
+        "notes": "Second showing - bringing spouse"
       }
     ],
-    "total": 45,
-    "page": 1,
-    "pages": 5
-  }
+    "pagination": {
+      "total": 45,
+      "page": 1,
+      "pages": 3,
+      "limit": 20
+    }
+  },
+  "timestamp": "2025-07-17T00:00:00.000Z"
 }
 ```
 
 ### Get Single Appointment
 ```http
 GET /v1/appointments/:id
+```
+
+**Response (Comprehensive):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "1",
+    "title": "Property Showing - 123 Main St",
+    "type": "Showing",
+    "status": "Confirmed",
+    "startTime": "2025-07-18T14:00:00.000Z",
+    "endTime": "2025-07-18T15:00:00.000Z",
+    "location": "123 Main Street, San Diego, CA 92101",
+    
+    "locationDetails": {
+      "propertyId": "1",
+      "propertyMLS": "SD2025001",
+      "propertyPrice": 850000,
+      "lockboxCode": "1234",
+      "specialInstructions": "Use side gate if front door locked"
+    },
+    
+    "attendees": [
+      {
+        "id": 1,
+        "name": "Jayden Metz",
+        "role": "Agent",
+        "status": "Confirmed"
+      },
+      {
+        "id": 2,
+        "name": "Michael Thompson",
+        "role": "Client",
+        "email": "michael.thompson@email.com",
+        "phone": "(619) 555-1234",
+        "status": "Confirmed"
+      }
+    ],
+    
+    "tasks": [
+      { "id": 1, "task": "Confirm appointment with client", "completed": true },
+      { "id": 2, "task": "Get lockbox code", "completed": true },
+      { "id": 3, "task": "Prepare comp analysis", "completed": false }
+    ],
+    
+    "relatedAppointments": [
+      {
+        "id": "2",
+        "title": "Initial Consultation",
+        "type": "Meeting",
+        "startTime": "2025-07-01T10:00:00.000Z"
+      }
+    ],
+    
+    "drivingInfo": {
+      "fromOffice": {
+        "distance": "12.5 miles",
+        "duration": "22 minutes"
+      },
+      "parking": "Street parking available"
+    },
+    
+    "followUpActions": [
+      {
+        "id": 1,
+        "action": "Send thank you note",
+        "dueDate": "2025-07-19T14:00:00.000Z",
+        "status": "Pending"
+      }
+    ]
+  },
+  "timestamp": "2025-07-17T00:00:00.000Z"
+}
 ```
 
 ### Create Appointment
@@ -534,17 +942,111 @@ POST /v1/appointments/:id/cancel
 }
 ```
 
-### Complete Appointment
+### Reschedule Appointment
 ```http
-POST /v1/appointments/:id/complete
+POST /v1/appointments/:id/reschedule
 ```
 
 **Request Body:**
 ```json
 {
-  "outcome": "Successful showing, buyers interested",
-  "followUpRequired": true,
-  "followUpNotes": "Send comparable sales data"
+  "startTime": "2025-07-20T14:00:00.000Z",
+  "endTime": "2025-07-20T15:00:00.000Z",
+  "reason": "Client requested different time"
+}
+```
+
+### Update Appointment Status
+```http
+PATCH /v1/appointments/:id/status
+```
+
+**Request Body:**
+```json
+{
+  "status": "Completed",
+  "reason": "Showing completed successfully"
+}
+```
+
+### Get Upcoming Appointments
+```http
+GET /v1/appointments/upcoming
+```
+
+**Query Parameters:**
+- `days` (integer) - Number of days to look ahead (default: 7)
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "1",
+      "title": "Property Showing - 123 Main St",
+      "type": "Showing",
+      "startTime": "2025-07-18T14:00:00.000Z",
+      "clientName": "Michael Thompson",
+      "location": "123 Main Street, San Diego, CA"
+    }
+  ]
+}
+```
+
+### Check Appointment Conflicts
+```http
+POST /v1/appointments/check-conflicts
+```
+
+**Request Body:**
+```json
+{
+  "startTime": "2025-07-20T14:00:00.000Z",
+  "endTime": "2025-07-20T15:00:00.000Z",
+  "excludeId": "123"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "hasConflicts": false,
+    "conflicts": []
+  }
+}
+```
+
+### Get Appointment Statistics
+```http
+GET /v1/appointments/stats
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "total": 245,
+    "upcoming": 18,
+    "today": 3,
+    "thisWeek": 12,
+    "thisMonth": 45,
+    "byType": {
+      "showing": 28,
+      "listing": 8,
+      "openHouse": 3,
+      "inspection": 4,
+      "closing": 2
+    },
+    "byStatus": {
+      "scheduled": 32,
+      "confirmed": 10,
+      "completed": 3
+    }
+  }
 }
 ```
 
@@ -557,6 +1059,16 @@ POST /v1/appointments/:id/complete
 GET /v1/leads
 ```
 
+**Query Parameters:**
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| type | string | Filter by lead type (Buyer, Seller, Investor, Renter) |
+| status | string | Filter by status (New, Contacted, Qualified, etc.) |
+| temperature | string | Filter by temperature (Hot, Warm, Cold) |
+| source | string | Filter by lead source |
+| minScore | number | Minimum lead score |
+| maxScore | number | Maximum lead score |
+
 **Response:**
 ```json
 {
@@ -565,26 +1077,115 @@ GET /v1/leads
     "leads": [
       {
         "id": "1",
-        "firstName": "Mark",
+        "firstName": "Jennifer",
         "lastName": "Wilson",
-        "email": "mark@example.com",
-        "phone": "+1234567892",
-        "leadSource": "Zillow",
-        "leadType": "Buyer",
-        "leadStatus": "New",
-        "createdAt": "2025-07-14T08:00:00.000Z"
+        "fullName": "Jennifer Wilson",
+        "email": "jennifer.wilson@email.com",
+        "phone": "(619) 555-6789",
+        "source": "Website",
+        "status": "New",
+        "score": 85,
+        "temperature": "Hot",
+        "estimatedValue": 125000,
+        "type": "Buyer",
+        "timeline": "1-3 months",
+        "tags": ["Urgent", "Growing Family", "Tech Professional"],
+        "lastContactDate": "2025-07-15T00:00:00.000Z",
+        "nextFollowUpDate": "2025-07-17T00:00:00.000Z"
       }
     ],
-    "total": 85,
-    "page": 1,
-    "pages": 9
-  }
+    "pagination": {
+      "total": 85,
+      "page": 1,
+      "pages": 5,
+      "limit": 20
+    }
+  },
+  "timestamp": "2025-07-17T00:00:00.000Z"
 }
 ```
 
 ### Get Single Lead
 ```http
 GET /v1/leads/:id
+```
+
+**Response (Comprehensive):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "1",
+    "firstName": "Jennifer",
+    "lastName": "Wilson",
+    "email": "jennifer.wilson@email.com",
+    "phone": "(619) 555-6789",
+    "source": "Website",
+    "status": "New",
+    "score": 85,
+    "temperature": "Hot",
+    "type": "Buyer",
+    
+    "sourceDetails": {
+      "page": "Property Listing - 123 Main St",
+      "referrer": "Google Search",
+      "utmSource": "google",
+      "utmCampaign": "luxury-homes"
+    },
+    
+    "budget": {
+      "min": 600000,
+      "max": 800000,
+      "isPreApproved": false,
+      "downPayment": 120000
+    },
+    
+    "propertyInterest": {
+      "types": ["Single Family"],
+      "locations": ["La Jolla", "Del Mar"],
+      "bedrooms": { "min": 4, "max": 5 },
+      "features": ["Good Schools", "Pool", "Large Yard"]
+    },
+    
+    "scoreBreakdown": {
+      "engagement": 25,
+      "budget": 20,
+      "timeline": 15,
+      "motivation": 20,
+      "total": 85
+    },
+    
+    "activityTimeline": [
+      {
+        "id": 1,
+        "date": "2025-07-14T00:00:00.000Z",
+        "type": "created",
+        "title": "Lead Created",
+        "description": "Lead came in from Website"
+      }
+    ],
+    
+    "recommendedProperties": [
+      {
+        "id": "1",
+        "address": "123 Ocean View Dr, La Jolla",
+        "price": 720000,
+        "matchScore": 92
+      }
+    ],
+    
+    "aiInsights": {
+      "conversionProbability": 85,
+      "bestContactTime": "Weekday evenings 6-8 PM",
+      "buyerReadiness": "High",
+      "recommendedActions": [
+        "Send personalized property matches",
+        "Schedule follow-up call"
+      ]
+    }
+  },
+  "timestamp": "2025-07-17T00:00:00.000Z"
+}
 ```
 
 ### Create Lead
@@ -598,11 +1199,40 @@ POST /v1/leads
   "firstName": "Emily",
   "lastName": "Davis",
   "email": "emily@example.com",
-  "phone": "+1234567893",
-  "leadSource": "Website Contact Form",
-  "leadType": "Seller",
-  "propertyInterest": "Looking to sell condo downtown",
-  "expectedTimeline": "3-6 months"
+  "phone": "(619) 555-7890",
+  "source": "Website",
+  "type": "Buyer",
+  "budget": {
+    "min": 500000,
+    "max": 700000,
+    "isPreApproved": false
+  },
+  "timeline": "3-6 months",
+  "motivation": "First time buyer, getting married",
+  "propertyInterest": {
+    "types": ["Condo", "Townhouse"],
+    "locations": ["Downtown", "Mission Valley"],
+    "bedrooms": { "min": 2, "max": 3 }
+  },
+  "notes": "Prefers modern construction with parking"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "6",
+    "firstName": "Emily",
+    "lastName": "Davis",
+    "score": 65,
+    "temperature": "Warm",
+    "estimatedValue": 17500,
+    "status": "New",
+    "assignedTo": "Jayden Metz"
+  },
+  "timestamp": "2025-07-17T00:00:00.000Z"
 }
 ```
 
@@ -627,18 +1257,128 @@ POST /v1/leads/:id/convert
 }
 ```
 
-### Log Lead Activity
+### Delete Lead
 ```http
-POST /v1/leads/:id/activities
+DELETE /v1/leads/:id
+```
+
+### Update Lead Status
+```http
+PATCH /v1/leads/:id/status
 ```
 
 **Request Body:**
 ```json
 {
-  "activityType": "Phone Call",
-  "notes": "Discussed market conditions and pricing strategy",
-  "outcome": "Scheduled listing appointment",
-  "nextAction": "Prepare CMA before meeting"
+  "status": "Qualified",
+  "note": "Pre-approved and ready to view properties"
+}
+```
+
+### Update Lead Score
+```http
+PATCH /v1/leads/:id/score
+```
+
+**Request Body:**
+```json
+{
+  "score": 90,
+  "reason": "Pre-approval obtained and urgent timeline"
+}
+```
+
+### Log Lead Activity
+```http
+POST /v1/leads/:id/activity
+```
+
+**Request Body:**
+```json
+{
+  "type": "Phone",
+  "subject": "Initial qualification call",
+  "notes": "Discussed budget and timeline",
+  "duration": 15,
+  "outcome": "Qualified - scheduling property tour",
+  "nextFollowUpDate": "2025-07-20T00:00:00.000Z"
+}
+```
+
+### Get Lead Statistics
+```http
+GET /v1/leads/stats
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "total": 125,
+    "new": 23,
+    "thisWeek": 18,
+    "thisMonth": 45,
+    "byStatus": {
+      "new": 23,
+      "contacted": 34,
+      "qualified": 28,
+      "nurturing": 25,
+      "converted": 12,
+      "lost": 3
+    },
+    "byType": {
+      "buyer": 78,
+      "seller": 32,
+      "investor": 12,
+      "renter": 3
+    },
+    "bySource": {
+      "website": 45,
+      "referral": 38,
+      "zillow": 22,
+      "facebook": 12,
+      "openHouse": 8
+    },
+    "byTemperature": {
+      "hot": 28,
+      "warm": 67,
+      "cold": 30
+    },
+    "avgScore": 72,
+    "totalEstimatedValue": 8750000,
+    "conversionRate": 10
+  }
+}
+```
+
+### Get Hot Leads
+```http
+GET /v1/leads/hot
+```
+
+**Query Parameters:**
+- `limit` (integer) - Maximum number of leads to return (default: 10)
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "3",
+      "fullName": "Amanda Chen",
+      "score": 92,
+      "temperature": "Hot",
+      "type": "Buyer",
+      "timeline": "ASAP",
+      "budget": {
+        "max": 650000,
+        "isPreApproved": true
+      },
+      "lastContactDate": "2025-07-16T00:00:00.000Z"
+    }
+  ]
 }
 ```
 
@@ -1189,25 +1929,39 @@ client.clients.update('456', {
 
 ### Current State (July 2025)
 
-**Fully Implemented:**
-- Basic CRUD operations for all entities (Escrows, Listings, Clients, Appointments, Leads)
+**Fully Implemented with Comprehensive Mock Data:**
+- Complete CRUD operations for all entities (Escrows, Listings, Clients, Appointments, Leads)
+- Comprehensive data structures with rich, detailed responses
+- Extended endpoints for each entity:
+  - **Escrows**: Full checklist management, timeline tracking, AI agents integration
+  - **Listings**: Marketing checklist, price history, analytics, comparable properties
+  - **Clients**: Communication tracking, financial summaries, AI insights, preferences
+  - **Appointments**: Conflict checking, attendee management, follow-up actions
+  - **Leads**: Scoring system, conversion tracking, activity timeline, hot leads
 - Standard response format and error handling
 - WebSocket support for real-time updates
 - File upload for RPA parsing
+- Statistics endpoints for all entities
+- Specialized operations (price reductions, status updates, tag management)
 
-**Partially Implemented (Mock Data):**
-- Analytics Dashboard endpoint (`/v1/analytics/dashboard`)
-- Entity-specific analytics endpoints
-- AI agent endpoints (basic structure in place)
-- Some listing analytics return randomized data
+**Enhanced Features (Mock Implementation):**
+- AI-powered insights and recommendations
+- Comprehensive activity tracking and timelines
+- Market analysis and comparable properties
+- Task and checklist management
+- Communication history and logging
+- Financial calculations and summaries
+- Property matching and recommendations
 
 **Pending Implementation:**
 - Full authentication enforcement (currently disabled on some routes)
-- Real data aggregation for analytics endpoints
+- Database persistence (currently using in-memory mock data)
 - Integration with external services (MLS, email providers)
 - Webhook delivery system
 - Rate limiting enforcement
-- Full AI agent task execution
+- Full AI agent task execution with actual AI services
+- File storage for documents and images
+- Email/SMS notification system
 
 ### Development Notes
 
