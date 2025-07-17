@@ -40,6 +40,9 @@ import {
   CalendarMonth,
   Assessment,
   Menu as MenuIcon,
+  AttachMoney,
+  Receipt,
+  AccountBalanceWallet,
 } from '@mui/icons-material';
 import UserMenu from './UserMenu';
 
@@ -67,6 +70,9 @@ const EnhancedNavigation = () => {
     { path: '/clients', label: 'Clients', icon: <People /> },
     { path: '/appointments', label: 'Appointments', icon: <Event /> },
     { path: '/leads', label: 'Leads', icon: <TrendingUp /> },
+    { path: '/commissions', label: 'Commissions', icon: <AttachMoney /> },
+    { path: '/invoices', label: 'Invoices', icon: <Receipt /> },
+    { path: '/expenses', label: 'Expenses', icon: <AccountBalanceWallet /> },
   ];
 
   // Other data menu items

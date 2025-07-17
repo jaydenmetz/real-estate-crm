@@ -34,6 +34,11 @@ import AppointmentDetail from './components/details/AppointmentDetail';
 import LeadsDashboard from './components/dashboards/LeadsDashboard';
 import LeadDetail from './components/details/LeadDetail';
 
+// Financial Components
+import CommissionDashboard from './components/dashboards/CommissionDashboard';
+import InvoiceDashboard from './components/dashboards/InvoiceDashboard';
+import ExpenseDashboard from './components/dashboards/ExpenseDashboard';
+
 // System Components
 import ActivityLog from './components/system/ActivityLog';
 import AllNotes from './components/system/AllNotes';
@@ -213,6 +218,11 @@ function App() {
                     
                                 <Route path="/leads" element={<LeadsDashboard />} />
                                 <Route path="/leads/:id" element={<LeadDetail />} />
+                    
+                                {/* Financial Management */}
+                                <Route path="/commissions" element={<CommissionDashboard />} />
+                                <Route path="/invoices" element={<InvoiceDashboard />} />
+                                <Route path="/expenses" element={<ExpenseDashboard />} />
                     
                                 {/* System Features */}
                                 <Route path="/activity-log" element={<ActivityLog />} />
