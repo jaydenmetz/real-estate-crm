@@ -6,7 +6,8 @@ This document provides comprehensive documentation for the Real Estate CRM API. 
 
 ### Base URL
 ```
-https://api.jaydenmetz.com/v1
+Production: https://api.jaydenmetz.com/v1
+Development: http://localhost:5050/v1
 ```
 
 ### Authentication
@@ -14,6 +15,8 @@ All endpoints require authentication via Bearer token in the Authorization heade
 ```
 Authorization: Bearer <your-jwt-token>
 ```
+
+**Note:** Some endpoints currently have authentication middleware commented out during development. These will be enforced in production.
 
 ### Standard Response Format
 All API responses follow this structure:
@@ -725,6 +728,8 @@ POST /v1/ai/process-lead
 GET /v1/analytics/dashboard
 ```
 
+**Note:** Currently returns mock data. Will be connected to real data aggregation in production.
+
 **Response:**
 ```json
 {
@@ -753,6 +758,293 @@ GET /v1/analytics/dashboard
         "timestamp": "2025-07-14T09:30:00.000Z"
       }
     ]
+  }
+}
+```
+
+### Escrow Analytics
+```http
+GET /v1/analytics/escrow/:id
+```
+
+Get detailed analytics and insights for a specific escrow transaction.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "completion_percentage": 75,
+    "days_until_closing": 15,
+    "commission_breakdown": {
+      "listing_side": 15000,
+      "buying_side": 15000,
+      "adjustments": -500
+    },
+    "risk_factors": [],
+    "milestone_progress": {
+      "inspection": 100,
+      "appraisal": 100,
+      "loan_approval": 80,
+      "closing_prep": 50
+    }
+  }
+}
+```
+
+### Listing Analytics
+```http
+GET /v1/analytics/listing/:id
+```
+
+Get performance analytics and trends for a specific listing.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "showing_trend": [
+      {"date": "2025-07-17T00:00:00.000Z", "showings": 3}
+    ],
+    "views_trend": [
+      {"date": "2025-07-17T00:00:00.000Z", "views": 45}
+    ],
+    "average_showings_per_week": 12,
+    "view_to_showing_ratio": 0.15
+  }
+}
+```
+
+### Appointment Analytics
+```http
+GET /v1/analytics/appointments/:id
+```
+
+Get analytics and related information for a specific appointment.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "related_appointments": [],
+    "average_duration": 60,
+    "typical_outcome": "Positive",
+    "conversion_rate": 0.75
+  }
+}
+```
+
+### Lead Analytics
+```http
+GET /v1/analytics/lead/:id
+```
+
+Get engagement analytics and conversion insights for a specific lead.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "engagement_trend": [],
+    "conversion_probability": 0.65,
+    "recommended_actions": [
+      "Follow up within 24 hours",
+      "Send property matches",
+      "Schedule viewing"
+    ],
+    "similar_leads_converted": 8
+  }
+}
+```
+
+---
+
+## Additional Entity Endpoints
+
+### Get Client Transactions
+```http
+GET /v1/clients/:id/transactions
+```
+
+Get all closed transactions for a specific client.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "esc_789012",
+      "property_address": "123 Main St, San Diego, CA 92101",
+      "purchase_price": 750000,
+      "closing_date": "2025-06-15T00:00:00.000Z",
+      "gross_commission": 22500,
+      "transaction_type": "Buyer",
+      "commission_earned": 7875
+    }
+  ]
+}
+```
+
+### Get Communications
+```http
+GET /v1/clients/:id/communications
+GET /v1/leads/:id/communications
+```
+
+Get communication history for a client or lead.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "comm_123",
+      "type": "email",
+      "subject": "Property Update",
+      "content": "Hi! I wanted to share some new listings...",
+      "direction": "outbound",
+      "status": "delivered",
+      "created_at": "2025-07-16T15:30:00Z"
+    }
+  ]
+}
+```
+
+### Get Client Notes
+```http
+GET /v1/clients/:id/notes
+```
+
+Get all notes associated with a client.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "note_456",
+      "content": "Client prefers modern homes with open floor plans",
+      "type": "preference",
+      "created_by": "agent_123",
+      "created_at": "2025-07-15T09:00:00Z"
+    }
+  ]
+}
+```
+
+### Update Entity Checklists
+```http
+PUT /v1/escrows/:id/checklist
+PUT /v1/listings/:id/checklist
+PUT /v1/clients/:id/checklist
+PUT /v1/appointments/:id/checklist
+PUT /v1/leads/:id/checklist
+```
+
+Update checklist items for any entity type.
+
+**Request Body:**
+```json
+{
+  "checklist": [
+    {
+      "id": "chk_001",
+      "task": "Order title report",
+      "completed": true,
+      "completedDate": "2025-07-15T10:00:00Z"
+    }
+  ]
+}
+```
+
+### Property Search
+```http
+GET /v1/properties/search
+```
+
+Search for properties by address.
+
+**Query Parameters:**
+- `address` (string) - Partial or full address to search
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "lst_789012",
+      "property_address": "123 Main St, San Diego, CA 92101",
+      "list_price": 750000,
+      "bedrooms": 3,
+      "bathrooms": 2,
+      "square_footage": 1800,
+      "status": "active"
+    }
+  ]
+}
+```
+
+---
+
+## AI Team Integration
+
+### Get AI Team Status
+```http
+GET /v1/ai/team
+```
+
+Get status and information about all AI team members.
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "team_members": [
+      {
+        "id": "alex",
+        "name": "Alex - Sales Team Lead",
+        "status": "active",
+        "current_tasks": 3,
+        "specialties": ["lead_management", "client_communication"]
+      },
+      {
+        "id": "morgan",
+        "name": "Morgan - Listing Specialist",
+        "status": "active",
+        "current_tasks": 2,
+        "specialties": ["listing_optimization", "market_analysis"]
+      }
+    ],
+    "total_tasks_completed_today": 45,
+    "average_response_time": "2.3s"
+  }
+}
+```
+
+### Trigger AI Task
+```http
+POST /v1/ai/team/task
+```
+
+Assign a task to the appropriate AI team member.
+
+**Request Body:**
+```json
+{
+  "task_type": "lead_qualification",
+  "entity_id": "lead_123",
+  "priority": "high",
+  "context": {
+    "source": "Website inquiry",
+    "property_interest": "3BR homes in downtown"
   }
 }
 ```
@@ -860,6 +1152,42 @@ client.clients.update('456', {
     'notes': 'Ready to make offers'
 })
 ```
+
+---
+
+## Implementation Status
+
+### Current State (July 2025)
+
+**Fully Implemented:**
+- Basic CRUD operations for all entities (Escrows, Listings, Clients, Appointments, Leads)
+- Standard response format and error handling
+- WebSocket support for real-time updates
+- File upload for RPA parsing
+
+**Partially Implemented (Mock Data):**
+- Analytics Dashboard endpoint (`/v1/analytics/dashboard`)
+- Entity-specific analytics endpoints
+- AI agent endpoints (basic structure in place)
+- Some listing analytics return randomized data
+
+**Pending Implementation:**
+- Full authentication enforcement (currently disabled on some routes)
+- Real data aggregation for analytics endpoints
+- Integration with external services (MLS, email providers)
+- Webhook delivery system
+- Rate limiting enforcement
+- Full AI agent task execution
+
+### Development Notes
+
+1. **Mock Data**: Several endpoints currently return static or randomized mock data for development purposes. These are marked with notes in the documentation.
+
+2. **Authentication**: While the authentication middleware is implemented, it's currently commented out on many routes to facilitate development. All routes will require authentication in production.
+
+3. **Database**: The system is designed to work with PostgreSQL, but many endpoints currently return in-memory mock data.
+
+4. **AI Integration**: The AI agent framework is in place but requires integration with actual AI services for full functionality.
 
 ---
 
