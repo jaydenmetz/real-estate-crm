@@ -129,9 +129,9 @@ const HeroSection = styled(Box)(({ theme }) => ({
 const StyledStatsCard = styled(Card)(({ theme, color = 'primary' }) => ({
   background: 'white',
   borderRadius: theme.spacing(2),
-  padding: theme.spacing(3),
+  padding: theme.spacing(2.5),
   height: '100%',
-  minHeight: '200px',
+  minHeight: '160px',
   position: 'relative',
   overflow: 'hidden',
   transition: 'all 0.3s ease-in-out',
@@ -478,12 +478,12 @@ const EscrowsDashboard = () => {
                 transition={{ duration: 0.6, delay: 0.1 }}
               >
                 <StyledStatsCard color="primary">
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 'auto' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                     <Box>
                       <Typography variant="h3" fontWeight="bold">
                         <CountUp end={stats.totalActive} duration={2} />
                       </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                         Active Escrows
                       </Typography>
                     </Box>
@@ -492,15 +492,15 @@ const EscrowsDashboard = () => {
                       sx={{ 
                         bgcolor: alpha('#1565C0', 0.1), 
                         color: 'primary.main',
-                        width: 56,
-                        height: 56,
+                        width: 48,
+                        height: 48,
                         transition: 'all 0.3s ease',
                       }}
                     >
                       <Home />
                     </Avatar>
                   </Box>
-                  <Box sx={{ mt: 2 }}>
+                  <Box>
                     <LinearProgress 
                       variant="determinate" 
                       value={75} 
@@ -528,12 +528,12 @@ const EscrowsDashboard = () => {
                 transition={{ duration: 0.6, delay: 0.2 }}
               >
                 <StyledStatsCard color="warning">
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 'auto' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                     <Box>
                       <Typography variant="h3" fontWeight="bold">
                         <CountUp end={stats.closingThisWeek} duration={2} />
                       </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                         Closing This Week
                       </Typography>
                     </Box>
@@ -542,15 +542,15 @@ const EscrowsDashboard = () => {
                       sx={{ 
                         bgcolor: alpha('#ff9800', 0.1), 
                         color: 'warning.main',
-                        width: 56,
-                        height: 56,
+                        width: 48,
+                        height: 48,
                         transition: 'all 0.3s ease',
                       }}
                     >
                       <Timer />
                     </Avatar>
                   </Box>
-                  <Box sx={{ mt: 2, minHeight: '32px', display: 'flex', alignItems: 'center' }}>
+                  <Box sx={{ minHeight: '28px', display: 'flex', alignItems: 'center' }}>
                     {stats.closingThisWeek > 0 ? (
                       <Chip 
                         label="Requires Attention" 
@@ -574,7 +574,7 @@ const EscrowsDashboard = () => {
                 transition={{ duration: 0.6, delay: 0.3 }}
               >
                 <StyledStatsCard color="success">
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 'auto' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                     <Box>
                       <Typography variant="h3" fontWeight="bold">
                         {showCommission ? (
@@ -586,7 +586,7 @@ const EscrowsDashboard = () => {
                           '•••••'
                         )}
                       </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                         Expected Commission
                       </Typography>
                     </Box>
@@ -595,15 +595,15 @@ const EscrowsDashboard = () => {
                       sx={{ 
                         bgcolor: alpha('#4caf50', 0.1), 
                         color: 'success.main',
-                        width: 56,
-                        height: 56,
+                        width: 48,
+                        height: 48,
                         transition: 'all 0.3s ease',
                       }}
                     >
                       <AttachMoney />
                     </Avatar>
                   </Box>
-                  <Box sx={{ mt: 2, minHeight: '32px' }}>
+                  <Box sx={{ minHeight: '28px' }}>
                     {showCommission ? (
                       <>
                         <Typography variant="caption" color="text.secondary" display="block">
@@ -630,12 +630,12 @@ const EscrowsDashboard = () => {
                 transition={{ duration: 0.6, delay: 0.4 }}
               >
                 <StyledStatsCard color="info">
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 'auto' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
                     <Box>
                       <Typography variant="h3" fontWeight="bold">
                         <CountUp end={stats.avgDaysToClose} duration={2} />
                       </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                      <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                         Avg Days to Close
                       </Typography>
                     </Box>
@@ -644,15 +644,15 @@ const EscrowsDashboard = () => {
                       sx={{ 
                         bgcolor: alpha('#2196f3', 0.1), 
                         color: 'info.main',
-                        width: 56,
-                        height: 56,
+                        width: 48,
+                        height: 48,
                         transition: 'all 0.3s ease',
                       }}
                     >
                       <Speed />
                     </Avatar>
                   </Box>
-                  <Box sx={{ mt: 2, minHeight: '32px', display: 'flex', alignItems: 'center' }}>
+                  <Box sx={{ minHeight: '28px', display: 'flex', alignItems: 'center' }}>
                     <Chip 
                       label={stats.avgDaysToClose < 43 ? 'Above Average' : 'Below Average'} 
                       size="small" 
