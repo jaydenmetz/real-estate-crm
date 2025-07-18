@@ -131,10 +131,13 @@ const StyledStatsCard = styled(Card)(({ theme, color = 'primary' }) => ({
   borderRadius: theme.spacing(2),
   padding: theme.spacing(3),
   height: '100%',
+  minHeight: '200px',
   position: 'relative',
   overflow: 'hidden',
   transition: 'all 0.3s ease-in-out',
   animation: `${fadeIn} 0.6s ease-out`,
+  display: 'flex',
+  flexDirection: 'column',
   '&:hover': {
     transform: 'translateY(-4px)',
     boxShadow: theme.shadows[8],
@@ -475,7 +478,7 @@ const EscrowsDashboard = () => {
                 transition={{ duration: 0.6, delay: 0.1 }}
               >
                 <StyledStatsCard color="primary">
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 'auto' }}>
                     <Box>
                       <Typography variant="h3" fontWeight="bold">
                         <CountUp end={stats.totalActive} duration={2} />
@@ -510,7 +513,7 @@ const EscrowsDashboard = () => {
                         }
                       }} 
                     />
-                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
                       75% of monthly target
                     </Typography>
                   </Box>
@@ -525,7 +528,7 @@ const EscrowsDashboard = () => {
                 transition={{ duration: 0.6, delay: 0.2 }}
               >
                 <StyledStatsCard color="warning">
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 'auto' }}>
                     <Box>
                       <Typography variant="h3" fontWeight="bold">
                         <CountUp end={stats.closingThisWeek} duration={2} />
@@ -547,14 +550,19 @@ const EscrowsDashboard = () => {
                       <Timer />
                     </Avatar>
                   </Box>
-                  {stats.closingThisWeek > 0 && (
-                    <Chip 
-                      label="Requires Attention" 
-                      size="small" 
-                      color="warning" 
-                      sx={{ mt: 2 }}
-                    />
-                  )}
+                  <Box sx={{ mt: 2, minHeight: '32px', display: 'flex', alignItems: 'center' }}>
+                    {stats.closingThisWeek > 0 ? (
+                      <Chip 
+                        label="Requires Attention" 
+                        size="small" 
+                        color="warning" 
+                      />
+                    ) : (
+                      <Typography variant="caption" color="text.secondary">
+                        No closings scheduled
+                      </Typography>
+                    )}
+                  </Box>
                 </StyledStatsCard>
               </motion.div>
             </Grid>
@@ -566,7 +574,7 @@ const EscrowsDashboard = () => {
                 transition={{ duration: 0.6, delay: 0.3 }}
               >
                 <StyledStatsCard color="success">
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 'auto' }}>
                     <Box>
                       <Typography variant="h3" fontWeight="bold">
                         {showCommission ? (
@@ -595,16 +603,22 @@ const EscrowsDashboard = () => {
                       <AttachMoney />
                     </Avatar>
                   </Box>
-                  {showCommission && (
-                    <Box sx={{ mt: 2 }}>
-                      <Typography variant="caption" color="text.secondary" display="block">
-                        Total Volume: ${(stats.totalVolume / 1000000).toFixed(1)}M
+                  <Box sx={{ mt: 2, minHeight: '32px' }}>
+                    {showCommission ? (
+                      <>
+                        <Typography variant="caption" color="text.secondary" display="block">
+                          Total Volume: ${(stats.totalVolume / 1000000).toFixed(1)}M
+                        </Typography>
+                        <Typography variant="caption" color="success.main">
+                          +12.5% from last month
+                        </Typography>
+                      </>
+                    ) : (
+                      <Typography variant="caption" color="text.secondary">
+                        Commission data hidden
                       </Typography>
-                      <Typography variant="caption" color="success.main">
-                        +12.5% from last month
-                      </Typography>
-                    </Box>
-                  )}
+                    )}
+                  </Box>
                 </StyledStatsCard>
               </motion.div>
             </Grid>
@@ -616,7 +630,7 @@ const EscrowsDashboard = () => {
                 transition={{ duration: 0.6, delay: 0.4 }}
               >
                 <StyledStatsCard color="info">
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 'auto' }}>
                     <Box>
                       <Typography variant="h3" fontWeight="bold">
                         <CountUp end={stats.avgDaysToClose} duration={2} />
@@ -638,13 +652,13 @@ const EscrowsDashboard = () => {
                       <Speed />
                     </Avatar>
                   </Box>
-                  <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+                  <Box sx={{ mt: 2, minHeight: '32px', display: 'flex', alignItems: 'center' }}>
                     <Chip 
                       label={stats.avgDaysToClose < 43 ? 'Above Average' : 'Below Average'} 
                       size="small" 
                       color={stats.avgDaysToClose < 43 ? 'success' : 'warning'}
                     />
-                  </Stack>
+                  </Box>
                 </StyledStatsCard>
               </motion.div>
             </Grid>
