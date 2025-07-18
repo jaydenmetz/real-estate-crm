@@ -60,7 +60,7 @@ const UserMenu = () => {
     if (firstName && lastName) {
       return `${firstName[0]}${lastName[0]}`.toUpperCase();
     }
-    return user.username[0].toUpperCase();
+    return user.username ? user.username[0].toUpperCase() : '?';
   };
 
   if (!user) return null;

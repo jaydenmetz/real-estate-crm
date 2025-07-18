@@ -246,7 +246,7 @@ const AITeamDashboard = () => {
                 <Typography variant="h6">3D Office View</Typography>
                 <Stack direction="row" spacing={1}>
                   <Chip 
-                    label={`Floor: ${currentFloor.charAt(0).toUpperCase() + currentFloor.slice(1)}`}
+                    label={`Floor: ${currentFloor ? currentFloor.charAt(0).toUpperCase() + currentFloor.slice(1) : 'Unknown'}`}
                     color="primary"
                   />
                   <Tooltip title="Refresh">

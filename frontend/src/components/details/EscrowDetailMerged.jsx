@@ -1177,7 +1177,7 @@ const EscrowDetailMerged = () => {
                       {escrow.address}
                     </Typography>
                     <Chip 
-                      label={escrow.status.toUpperCase()} 
+                      label={(escrow.status || 'UNKNOWN').toUpperCase()} 
                       color={getStatusColor(escrow.status)}
                       size="large"
                       sx={{ fontWeight: 600 }}

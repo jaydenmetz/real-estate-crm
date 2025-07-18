@@ -667,7 +667,7 @@ const EscrowsDashboard = () => {
       </HeroSection>
 
       {/* Main Content */}
-      <Container maxWidth="xl" sx={{ mt: -6, position: 'relative', zIndex: 1 }}>
+      <Container maxWidth="xl" sx={{ mt: -3, position: 'relative', zIndex: 1 }}>
         {/* Filter Bar */}
         <Paper 
           elevation={0} 

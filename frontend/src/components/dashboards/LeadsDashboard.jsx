@@ -2918,7 +2918,7 @@ const LeadsDashboard = () => {
                     </TableCell>
                     <TableCell onClick={() => handleLeadClick(lead.id)}>
                       <Chip
-                        label={(lead.status || 'unknown').toUpperCase()}
+                        label={(lead.status || 'UNKNOWN').toUpperCase()}
                         color={getStatusColor(lead.status || 'unknown')}
                         size="small"
                       />

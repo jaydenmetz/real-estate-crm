@@ -355,7 +355,7 @@ const LeadDetail = () => {
               </Box>
               <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
                 <Chip
-                  label={displayLead.status.toUpperCase()}
+                  label={(displayLead.status || 'UNKNOWN').toUpperCase()}
                   color={getStatusColor(displayLead.status)}
                   size="small"
                 />
