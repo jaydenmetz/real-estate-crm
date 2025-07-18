@@ -109,7 +109,7 @@ const pulse = keyframes`
 // Styled Components
 const HeroSection = styled(Box)(({ theme }) => ({
   minHeight: '300px',
-  padding: theme.spacing(6, 0, 4),
+  padding: theme.spacing(6, 0, 8),
   background: 'linear-gradient(135deg, #1565C0 0%, #42A5F5 100%)',
   color: 'white',
   position: 'relative',
@@ -667,7 +667,7 @@ const EscrowsDashboard = () => {
       </HeroSection>
 
       {/* Main Content */}
-      <Container maxWidth="xl" sx={{ mt: -3, position: 'relative', zIndex: 1 }}>
+      <Container maxWidth="xl" sx={{ mt: 2, position: 'relative', zIndex: 1 }}>
         {/* Filter Bar */}
         <Paper 
           elevation={0} 
