@@ -1208,15 +1208,15 @@ const EscrowDetailMerged = () => {
                   <Grid item xs={12} sm={6}>
                     <Box sx={{ opacity: 0.9 }}>
                       <Typography variant="subtitle2" sx={{ mb: 1 }}>Buyer</Typography>
-                      <Typography variant="h6">{escrow.buyer.name}</Typography>
-                      <Typography variant="body2">Agent: {escrow.buyer.agent}</Typography>
+                      <Typography variant="h6">{escrow.buyer?.name || 'TBD'}</Typography>
+                      <Typography variant="body2">Agent: {escrow.buyer?.agent || 'TBD'}</Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={12} sm={6}>
                     <Box sx={{ opacity: 0.9 }}>
                       <Typography variant="subtitle2" sx={{ mb: 1 }}>Seller</Typography>
-                      <Typography variant="h6">{escrow.seller.name}</Typography>
-                      <Typography variant="body2">Agent: {escrow.seller.agent}</Typography>
+                      <Typography variant="h6">{escrow.seller?.name || 'TBD'}</Typography>
+                      <Typography variant="body2">Agent: {escrow.seller?.agent || 'TBD'}</Typography>
                     </Box>
                   </Grid>
                 </Grid>
@@ -1275,7 +1275,7 @@ const EscrowDetailMerged = () => {
                   effect="fade"
                   onSlideChange={(swiper) => setSelectedImage(swiper.activeIndex)}
                 >
-                  {escrow.property.images.map((image, index) => (
+                  {(escrow.property?.images || []).map((image, index) => (
                     <SwiperSlide key={index}>
                       <img src={image} alt={`Property ${index + 1}`} />
                     </SwiperSlide>
@@ -1285,13 +1285,13 @@ const EscrowDetailMerged = () => {
                   <Grid container spacing={2}>
                     <Grid item xs={3}>
                       <Typography variant="h4" fontWeight="bold">
-                        {escrow.property.bedrooms}
+                        {escrow.property?.bedrooms || 0}
                       </Typography>
                       <Typography variant="body2">Beds</Typography>
                     </Grid>
                     <Grid item xs={3}>
                       <Typography variant="h4" fontWeight="bold">
-                        {escrow.property.bathrooms}
+                        {escrow.property?.bathrooms || 0}
                       </Typography>
                       <Typography variant="body2">Baths</Typography>
                     </Grid>
@@ -1303,7 +1303,7 @@ const EscrowDetailMerged = () => {
                     </Grid>
                     <Grid item xs={3}>
                       <Typography variant="h4" fontWeight="bold">
-                        {escrow.property.yearBuilt}
+                        {escrow.property?.yearBuilt || 'N/A'}
                       </Typography>
                       <Typography variant="body2">Built</Typography>
                     </Grid>
@@ -1412,7 +1412,7 @@ const EscrowDetailMerged = () => {
               <Stack direction="row" justifyContent="space-between" alignItems="center">
                 <Box>
                   <Typography variant="h4" fontWeight="bold" className="metric-value">
-                    <CountUp end={escrow.documents.length} duration={2} />
+                    <CountUp end={escrow.documents?.length || 0} duration={2} />
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Documents
@@ -1433,7 +1433,7 @@ const EscrowDetailMerged = () => {
               </Stack>
               <Box sx={{ mt: 1 }}>
                 <Stack direction="row" spacing={0.5}>
-                  {escrow.documents.slice(0, 3).map((doc, idx) => (
+                  {(escrow.documents || []).slice(0, 3).map((doc, idx) => (
                     <Chip 
                       key={idx}
                       label={doc.type} 
@@ -1442,9 +1442,9 @@ const EscrowDetailMerged = () => {
                       sx={{ fontSize: '0.7rem' }}
                     />
                   ))}
-                  {escrow.documents.length > 3 && (
+                  {(escrow.documents?.length || 0) > 3 && (
                     <Chip 
-                      label={`+${escrow.documents.length - 3}`} 
+                      label={`+${(escrow.documents?.length || 0) - 3}`} 
                       size="small"
                       sx={{ fontSize: '0.7rem' }}
                     />
@@ -1465,8 +1465,8 @@ const EscrowDetailMerged = () => {
               <Stack direction="row" justifyContent="space-between" alignItems="center">
                 <Box>
                   <Typography variant="h4" fontWeight="bold" className="metric-value">
-                    <CountUp end={escrow.aiAgents.filter(a => a.status === 'active').length} duration={2} />
-                    /{escrow.aiAgents.length}
+                    <CountUp end={(escrow.aiAgents || []).filter(a => a.status === 'active').length} duration={2} />
+                    /{escrow.aiAgents?.length || 0}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Active AI Agents
@@ -1520,7 +1520,7 @@ const EscrowDetailMerged = () => {
                   </Stack>
 
                   <Grid container spacing={2} sx={{ mb: 3 }}>
-                    {escrow.aiAgents.map((agent) => (
+                    {(escrow.aiAgents || []).map((agent) => (
                       <Grid item xs={12} sm={6} key={agent.id}>
                         <AIAgentCard 
                           className={agent.status === 'active' ? 'active' : ''}
@@ -1617,7 +1617,7 @@ const EscrowDetailMerged = () => {
                   </Stack>
 
                   <Stack spacing={2}>
-                    {escrow.recentActivity.map((activity) => (
+                    {(escrow.recentActivity || []).map((activity) => (
                       <ActivityCard key={activity.id}>
                         <Stack direction="row" spacing={2} alignItems="flex-start">
                           <Avatar 
@@ -1746,7 +1746,7 @@ const EscrowDetailMerged = () => {
                           <Grid item xs={6} sm={3}>
                             <Box textAlign="center">
                               <Typography variant="h4" color="primary" fontWeight="bold">
-                                {escrow.marketData.avgDaysOnMarket}
+                                {escrow.marketData?.avgDaysOnMarket || 0}
                               </Typography>
                               <Typography variant="body2" color="text.secondary">
                                 Avg Days on Market
@@ -1756,7 +1756,7 @@ const EscrowDetailMerged = () => {
                           <Grid item xs={6} sm={3}>
                             <Box textAlign="center">
                               <Typography variant="h4" color="primary" fontWeight="bold">
-                                ${(escrow.marketData.medianPrice / 1000).toFixed(0)}k
+                                ${((escrow.marketData?.medianPrice || 0) / 1000).toFixed(0)}k
                               </Typography>
                               <Typography variant="body2" color="text.secondary">
                                 Median Price
@@ -1766,7 +1766,7 @@ const EscrowDetailMerged = () => {
                           <Grid item xs={6} sm={3}>
                             <Box textAlign="center">
                               <Typography variant="h4" color="primary" fontWeight="bold">
-                                ${escrow.marketData.pricePerSqft}
+                                ${escrow.marketData?.pricePerSqft || 0}
                               </Typography>
                               <Typography variant="body2" color="text.secondary">
                                 Price per Sq Ft
@@ -1777,7 +1777,7 @@ const EscrowDetailMerged = () => {
                             <Box textAlign="center">
                               <Stack direction="row" spacing={1} justifyContent="center" alignItems="center">
                                 <Typography variant="h4" color="primary" fontWeight="bold">
-                                  {escrow.marketData.demandLevel}
+                                  {escrow.marketData?.demandLevel || 'N/A'}
                                 </Typography>
                                 <TrendingUp color="success" />
                               </Stack>
@@ -1793,7 +1793,7 @@ const EscrowDetailMerged = () => {
                           Recent Comparable Sales
                         </Typography>
                         <List dense>
-                          {escrow.marketData.similarSales.map((sale, idx) => (
+                          {(escrow.marketData?.similarSales || []).map((sale, idx) => (
                             <ListItem key={idx} disableGutters>
                               <ListItemText
                                 primary={sale.address}
@@ -1938,7 +1938,7 @@ const EscrowDetailMerged = () => {
 
               <TabPanel hidden={activeTab !== 1}>
                 <Timeline position="alternate">
-                  {escrow.timeline.map((event, index) => (
+                  {(escrow.timeline || []).map((event, index) => (
                     <TimelineItem key={index}>
                       <TimelineOppositeContent color="text.secondary">
                         {format(new Date(event.date), 'MMM dd, yyyy')}
@@ -2165,7 +2165,7 @@ const EscrowDetailMerged = () => {
                               <Person />
                             </ListItemIcon>
                             <ListItemText
-                              primary={escrow.buyer.name}
+                              primary={escrow.buyer?.name || 'TBD'}
                               secondary="Buyer"
                             />
                           </ListItem>
@@ -2174,7 +2174,7 @@ const EscrowDetailMerged = () => {
                               <Email />
                             </ListItemIcon>
                             <ListItemText
-                              primary={escrow.buyer.email}
+                              primary={escrow.buyer?.email || 'TBD'}
                               secondary="Email"
                             />
                           </ListItem>
@@ -2183,7 +2183,7 @@ const EscrowDetailMerged = () => {
                               <Phone />
                             </ListItemIcon>
                             <ListItemText
-                              primary={escrow.buyer.phone}
+                              primary={escrow.buyer?.phone || 'TBD'}
                               secondary="Phone"
                             />
                           </ListItem>
@@ -2193,7 +2193,7 @@ const EscrowDetailMerged = () => {
                               <BusinessCenter />
                             </ListItemIcon>
                             <ListItemText
-                              primary={escrow.buyer.agent}
+                              primary={escrow.buyer?.agent || 'TBD'}
                               secondary="Buyer's Agent"
                             />
                           </ListItem>
@@ -2202,7 +2202,7 @@ const EscrowDetailMerged = () => {
                               <Phone />
                             </ListItemIcon>
                             <ListItemText
-                              primary={escrow.buyer.agentPhone}
+                              primary={escrow.buyer?.agentPhone || 'TBD'}
                               secondary="Agent Phone"
                             />
                           </ListItem>
@@ -2223,7 +2223,7 @@ const EscrowDetailMerged = () => {
                               <Person />
                             </ListItemIcon>
                             <ListItemText
-                              primary={escrow.seller.name}
+                              primary={escrow.seller?.name || 'TBD'}
                               secondary="Seller"
                             />
                           </ListItem>
@@ -2232,7 +2232,7 @@ const EscrowDetailMerged = () => {
                               <Email />
                             </ListItemIcon>
                             <ListItemText
-                              primary={escrow.seller.email}
+                              primary={escrow.seller?.email || 'TBD'}
                               secondary="Email"
                             />
                           </ListItem>
@@ -2241,7 +2241,7 @@ const EscrowDetailMerged = () => {
                               <Phone />
                             </ListItemIcon>
                             <ListItemText
-                              primary={escrow.seller.phone}
+                              primary={escrow.seller?.phone || 'TBD'}
                               secondary="Phone"
                             />
                           </ListItem>
@@ -2251,7 +2251,7 @@ const EscrowDetailMerged = () => {
                               <BusinessCenter />
                             </ListItemIcon>
                             <ListItemText
-                              primary={escrow.seller.agent}
+                              primary={escrow.seller?.agent || 'TBD'}
                               secondary="Seller's Agent"
                             />
                           </ListItem>
@@ -2260,7 +2260,7 @@ const EscrowDetailMerged = () => {
                               <Phone />
                             </ListItemIcon>
                             <ListItemText
-                              primary={escrow.seller.agentPhone}
+                              primary={escrow.seller?.agentPhone || 'TBD'}
                               secondary="Agent Phone"
                             />
                           </ListItem>
@@ -2285,15 +2285,15 @@ const EscrowDetailMerged = () => {
                               <TableBody>
                                 <TableRow>
                                   <TableCell>Property Type</TableCell>
-                                  <TableCell>{escrow.property.type}</TableCell>
+                                  <TableCell>{escrow.property?.type || 'N/A'}</TableCell>
                                 </TableRow>
                                 <TableRow>
                                   <TableCell>Bedrooms</TableCell>
-                                  <TableCell>{escrow.property.bedrooms}</TableCell>
+                                  <TableCell>{escrow.property?.bedrooms || 0}</TableCell>
                                 </TableRow>
                                 <TableRow>
                                   <TableCell>Bathrooms</TableCell>
-                                  <TableCell>{escrow.property.bathrooms}</TableCell>
+                                  <TableCell>{escrow.property?.bathrooms || 0}</TableCell>
                                 </TableRow>
                                 <TableRow>
                                   <TableCell>Square Feet</TableCell>
@@ -2301,11 +2301,11 @@ const EscrowDetailMerged = () => {
                                 </TableRow>
                                 <TableRow>
                                   <TableCell>Year Built</TableCell>
-                                  <TableCell>{escrow.property.yearBuilt}</TableCell>
+                                  <TableCell>{escrow.property?.yearBuilt || 'N/A'}</TableCell>
                                 </TableRow>
                                 <TableRow>
                                   <TableCell>Lot Size</TableCell>
-                                  <TableCell>{escrow.property.lot}</TableCell>
+                                  <TableCell>{escrow.property?.lot || 'N/A'}</TableCell>
                                 </TableRow>
                               </TableBody>
                             </Table>
@@ -2313,7 +2313,7 @@ const EscrowDetailMerged = () => {
                           <Grid item xs={12} md={6}>
                             <Box sx={{ height: 300 }}>
                               <img 
-                                src={escrow.property.images[0]} 
+                                src={escrow.property?.images?.[0] || 'https://images.unsplash.com/photo-1560184897-ae75f418493e?w=400'} 
                                 alt="Property"
                                 style={{ 
                                   width: '100%', 
