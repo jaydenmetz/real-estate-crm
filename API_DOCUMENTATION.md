@@ -213,6 +213,8 @@ CREATE INDEX idx_leads_score ON leads(score);
 
 ## Escrows
 
+**Note**: The escrow system has been updated to use a contact-based structure. All participants (buyers, sellers, agents) are now stored in a central `contacts` table and linked to escrows through the `contact_escrows` junction table. This allows for better relationship management and data consistency.
+
 ### List All Escrows
 ```http
 GET /v1/escrows
