@@ -1297,7 +1297,7 @@ const EscrowDetailMerged = () => {
                     </Grid>
                     <Grid item xs={3}>
                       <Typography variant="h4" fontWeight="bold">
-                        {((escrow.property.sqft || 0) / 1000).toFixed(1)}k
+                        {(((escrow.property && escrow.property.sqft) || 0) / 1000).toFixed(1)}k
                       </Typography>
                       <Typography variant="body2">Sq Ft</Typography>
                     </Grid>
