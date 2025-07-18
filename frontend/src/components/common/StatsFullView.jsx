@@ -48,6 +48,7 @@ const StatsFullView = ({ open, onClose, stats = {}, escrows = [], showCommission
     totalActive: 0,
     closingThisWeek: 0,
     totalVolume: 0,
+    totalCommission: 0,
     avgDaysToClose: 0,
     ...(stats || {})
   };
@@ -258,7 +259,7 @@ const StatsFullView = ({ open, onClose, stats = {}, escrows = [], showCommission
             </Box>
           </Grid>
 
-          {/* Total Volume */}
+          {/* Expected Commission */}
           <Grid item xs={12} md={6} lg={3} sx={{ borderRight: 1, borderColor: 'divider' }}>
             <Box sx={{ p: 3 }}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
@@ -272,10 +273,14 @@ const StatsFullView = ({ open, onClose, stats = {}, escrows = [], showCommission
                 </Box>
                 <Box>
                   <Typography variant="h4" fontWeight="bold" color="success.main">
-                    {showCommission ? `$${(safeStats.totalVolume / 1000000).toFixed(1)}M` : '•••••'}
+                    {showCommission ? 
+                      `$${safeStats.totalCommission > 999999 ? 
+                        (safeStats.totalCommission / 1000000).toFixed(1) + 'M' : 
+                        (safeStats.totalCommission / 1000).toFixed(0) + 'K'}` 
+                      : '•••••'}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Total Volume
+                    Expected Commission
                   </Typography>
                 </Box>
               </Box>

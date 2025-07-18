@@ -46,7 +46,7 @@ router.post('/document', requirePermission('uploads'), (req, res) => {
       });
 
       // Save document metadata to database
-      const document = new Document({
+      const document = await Document.create({
         filename: fileInfo.filename,
         originalName: fileInfo.originalName,
         mimeType: fileInfo.mimeType,
@@ -54,7 +54,7 @@ router.post('/document', requirePermission('uploads'), (req, res) => {
         path: fileInfo.path,
         url: fileInfo.url,
         storage: fileInfo.storage,
-        uploadedBy: req.user.id,
+        uploadedBy: req.user?.id || 'anonymous',
         category: req.body.category || 'general',
         description: req.body.description,
         tags: req.body.tags ? req.body.tags.split(',').map(t => t.trim()) : [],
@@ -63,8 +63,6 @@ router.post('/document', requirePermission('uploads'), (req, res) => {
           entityId: req.body.entityId
         }
       });
-
-      await document.save();
 
       res.status(201).json({
         success: true,
@@ -132,7 +130,7 @@ router.post('/image', requirePermission('uploads'), (req, res) => {
       });
 
       // Save image metadata to database
-      const document = new Document({
+      const document = await Document.create({
         filename: fileInfo.filename,
         originalName: fileInfo.originalName,
         mimeType: fileInfo.mimeType,
@@ -141,7 +139,7 @@ router.post('/image', requirePermission('uploads'), (req, res) => {
         url: fileInfo.url,
         variants: fileInfo.variants,
         storage: fileInfo.storage,
-        uploadedBy: req.user.id,
+        uploadedBy: req.user?.id || 'anonymous',
         category: req.body.category || 'property',
         description: req.body.description,
         altText: req.body.altText,
@@ -152,8 +150,6 @@ router.post('/image', requirePermission('uploads'), (req, res) => {
           entityId: req.body.entityId
         }
       });
-
-      await document.save();
 
       res.status(201).json({
         success: true,
@@ -291,7 +287,7 @@ router.delete('/:id', requirePermission('uploads'), async (req, res) => {
     const deletionResult = await uploadService.deleteFile(document);
     
     // Delete from database
-    await document.remove();
+    await Document.remove(document.id);
     
     logger.info('File deleted successfully:', {
       id: req.params.id,

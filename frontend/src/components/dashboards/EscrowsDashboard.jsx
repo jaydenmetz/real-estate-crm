@@ -295,6 +295,7 @@ const EscrowsDashboard = () => {
       }
     }).length,
     totalVolume: escrows.reduce((sum, e) => sum + e.purchasePrice, 0),
+    totalCommission: escrows.reduce((sum, e) => sum + ((e.grossCommission || 0) * 0.5), 0), // 50% of gross commission
     avgDaysToClose: Math.round(
       escrows.filter(e => e.daysToClose > 0).reduce((sum, e) => sum + e.daysToClose, 0) / 
       escrows.filter(e => e.daysToClose > 0).length || 0
@@ -569,13 +570,16 @@ const EscrowsDashboard = () => {
                     <Box>
                       <Typography variant="h3" fontWeight="bold">
                         {showCommission ? (
-                          <>$<CountUp end={stats.totalVolume / 1000000} decimals={1} duration={2} />M</>
+                          <>$<CountUp end={stats.totalCommission > 999999 ? stats.totalCommission / 1000000 : stats.totalCommission / 1000} 
+                                      decimals={stats.totalCommission > 999999 ? 1 : 0} 
+                                      duration={2} />
+                            {stats.totalCommission > 999999 ? 'M' : 'K'}</>
                         ) : (
                           '•••••'
                         )}
                       </Typography>
                       <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                        Total Volume
+                        Expected Commission
                       </Typography>
                     </Box>
                     <Avatar 
@@ -592,9 +596,14 @@ const EscrowsDashboard = () => {
                     </Avatar>
                   </Box>
                   {showCommission && (
-                    <Typography variant="caption" color="success.main" sx={{ mt: 2, display: 'block' }}>
-                      +12.5% from last month
-                    </Typography>
+                    <Box sx={{ mt: 2 }}>
+                      <Typography variant="caption" color="text.secondary" display="block">
+                        Total Volume: ${(stats.totalVolume / 1000000).toFixed(1)}M
+                      </Typography>
+                      <Typography variant="caption" color="success.main">
+                        +12.5% from last month
+                      </Typography>
+                    </Box>
                   )}
                 </StyledStatsCard>
               </motion.div>
