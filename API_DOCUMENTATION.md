@@ -1,5 +1,125 @@
 # Real Estate CRM API Documentation
 
+## All Endpoints
+
+### Escrows
+- <span style="color: #28a745;">**GET**</span> `/v1/escrows` - [List All Escrows](#list-all-escrows)
+- <span style="color: #28a745;">**GET**</span> `/v1/escrows/:id` - [Get Single Escrow](#get-single-escrow)
+- <span style="color: #007bff;">**POST**</span> `/v1/escrows` - [Create Escrow](#create-escrow)
+- <span style="color: #ffc107;">**PUT**</span> `/v1/escrows/:id` - [Update Escrow](#update-escrow)
+- <span style="color: #dc3545;">**DELETE**</span> `/v1/escrows/:id` - [Delete Escrow](#delete-escrow)
+- <span style="color: #17a2b8;">**PATCH**</span> `/v1/escrows/:id/checklist` - [Update Escrow Checklist](#update-escrow-checklist)
+- <span style="color: #007bff;">**POST**</span> `/v1/escrows/parse-rpa` - [Parse RPA PDF](#parse-rpa-pdf)
+
+### Listings
+- <span style="color: #28a745;">**GET**</span> `/v1/listings` - [List All Listings](#list-all-listings)
+- <span style="color: #28a745;">**GET**</span> `/v1/listings/:id` - [Get Single Listing](#get-single-listing)
+- <span style="color: #007bff;">**POST**</span> `/v1/listings` - [Create Listing](#create-listing)
+- <span style="color: #ffc107;">**PUT**</span> `/v1/listings/:id` - [Update Listing](#update-listing)
+- <span style="color: #17a2b8;">**PATCH**</span> `/v1/listings/:id/status` - [Update Listing Status](#update-listing-status)
+- <span style="color: #007bff;">**POST**</span> `/v1/listings/:id/price-reduction` - [Log Price Reduction](#log-price-reduction)
+- <span style="color: #007bff;">**POST**</span> `/v1/listings/:id/showings` - [Log Showing](#log-showing)
+- <span style="color: #28a745;">**GET**</span> `/v1/listings/:id/price-history` - [Get Price History](#get-price-history)
+- <span style="color: #ffc107;">**PUT**</span> `/v1/listings/:id/checklist` - [Update Listing Checklist](#update-listing-checklist)
+- <span style="color: #28a745;">**GET**</span> `/v1/analytics/listing/:id` - [Get Listing Analytics](#get-listing-analytics)
+
+### Clients
+- <span style="color: #28a745;">**GET**</span> `/v1/clients` - [List All Clients](#list-all-clients)
+- <span style="color: #28a745;">**GET**</span> `/v1/clients/:id` - [Get Single Client](#get-single-client)
+- <span style="color: #007bff;">**POST**</span> `/v1/clients` - [Create Client](#create-client)
+- <span style="color: #ffc107;">**PUT**</span> `/v1/clients/:id` - [Update Client](#update-client)
+- <span style="color: #dc3545;">**DELETE**</span> `/v1/clients/:id` - [Delete Client](#delete-client)
+- <span style="color: #007bff;">**POST**</span> `/v1/clients/:id/notes` - [Add Client Note](#add-client-note)
+- <span style="color: #007bff;">**POST**</span> `/v1/clients/:id/communication` - [Log Client Communication](#log-client-communication)
+- <span style="color: #17a2b8;">**PATCH**</span> `/v1/clients/:id/status` - [Update Client Status](#update-client-status)
+- <span style="color: #007bff;">**POST**</span> `/v1/clients/:id/tags` - [Add Client Tag](#add-client-tag)
+- <span style="color: #dc3545;">**DELETE**</span> `/v1/clients/:id/tags/:tag` - [Remove Client Tag](#remove-client-tag)
+- <span style="color: #28a745;">**GET**</span> `/v1/clients/stats` - [Get Client Statistics](#get-client-statistics)
+- <span style="color: #28a745;">**GET**</span> `/v1/clients/:id/transactions` - [Get Client Transactions](#get-client-transactions)
+- <span style="color: #28a745;">**GET**</span> `/v1/clients/:id/communications` - [Get Communications](#get-communications)
+- <span style="color: #28a745;">**GET**</span> `/v1/clients/:id/notes` - [Get Client Notes](#get-client-notes)
+- <span style="color: #ffc107;">**PUT**</span> `/v1/clients/:id/checklist` - [Update Client Checklist](#update-entity-checklists)
+
+### Appointments
+- <span style="color: #28a745;">**GET**</span> `/v1/appointments` - [List All Appointments](#list-all-appointments)
+- <span style="color: #28a745;">**GET**</span> `/v1/appointments/:id` - [Get Single Appointment](#get-single-appointment)
+- <span style="color: #007bff;">**POST**</span> `/v1/appointments` - [Create Appointment](#create-appointment)
+- <span style="color: #ffc107;">**PUT**</span> `/v1/appointments/:id` - [Update Appointment](#update-appointment)
+- <span style="color: #007bff;">**POST**</span> `/v1/appointments/:id/cancel` - [Cancel Appointment](#cancel-appointment)
+- <span style="color: #007bff;">**POST**</span> `/v1/appointments/:id/reschedule` - [Reschedule Appointment](#reschedule-appointment)
+- <span style="color: #17a2b8;">**PATCH**</span> `/v1/appointments/:id/status` - [Update Appointment Status](#update-appointment-status)
+- <span style="color: #28a745;">**GET**</span> `/v1/appointments/upcoming` - [Get Upcoming Appointments](#get-upcoming-appointments)
+- <span style="color: #007bff;">**POST**</span> `/v1/appointments/check-conflicts` - [Check Appointment Conflicts](#check-appointment-conflicts)
+- <span style="color: #28a745;">**GET**</span> `/v1/appointments/stats` - [Get Appointment Statistics](#get-appointment-statistics)
+- <span style="color: #28a745;">**GET**</span> `/v1/analytics/appointments/:id` - [Get Appointment Analytics](#get-appointment-analytics)
+- <span style="color: #ffc107;">**PUT**</span> `/v1/appointments/:id/checklist` - [Update Appointment Checklist](#update-entity-checklists)
+
+### Leads
+- <span style="color: #28a745;">**GET**</span> `/v1/leads` - [List All Leads](#list-all-leads)
+- <span style="color: #28a745;">**GET**</span> `/v1/leads/:id` - [Get Single Lead](#get-single-lead)
+- <span style="color: #007bff;">**POST**</span> `/v1/leads` - [Create Lead](#create-lead)
+- <span style="color: #ffc107;">**PUT**</span> `/v1/leads/:id` - [Update Lead](#update-lead)
+- <span style="color: #007bff;">**POST**</span> `/v1/leads/:id/convert` - [Convert Lead to Client](#convert-lead-to-client)
+- <span style="color: #dc3545;">**DELETE**</span> `/v1/leads/:id` - [Delete Lead](#delete-lead)
+- <span style="color: #17a2b8;">**PATCH**</span> `/v1/leads/:id/status` - [Update Lead Status](#update-lead-status)
+- <span style="color: #17a2b8;">**PATCH**</span> `/v1/leads/:id/score` - [Update Lead Score](#update-lead-score)
+- <span style="color: #007bff;">**POST**</span> `/v1/leads/:id/activity` - [Log Lead Activity](#log-lead-activity)
+- <span style="color: #28a745;">**GET**</span> `/v1/leads/stats` - [Get Lead Statistics](#get-lead-statistics)
+- <span style="color: #28a745;">**GET**</span> `/v1/leads/hot` - [Get Hot Leads](#get-hot-leads)
+- <span style="color: #28a745;">**GET**</span> `/v1/leads/:id/communications` - [Get Lead Communications](#get-communications)
+- <span style="color: #28a745;">**GET**</span> `/v1/analytics/lead/:id` - [Get Lead Analytics](#get-lead-analytics)
+- <span style="color: #ffc107;">**PUT**</span> `/v1/leads/:id/checklist` - [Update Lead Checklist](#update-entity-checklists)
+
+### Commissions
+- <span style="color: #28a745;">**GET**</span> `/v1/commissions` - [List All Commissions](#list-all-commissions)
+- <span style="color: #28a745;">**GET**</span> `/v1/commissions/:id` - [Get Single Commission](#get-single-commission)
+- <span style="color: #28a745;">**GET**</span> `/v1/commissions/stats` - [Get Commission Statistics](#get-commission-statistics)
+- <span style="color: #007bff;">**POST**</span> `/v1/commissions` - [Create Commission](#create-commission)
+- <span style="color: #17a2b8;">**PATCH**</span> `/v1/commissions/:id/status` - [Update Commission Status](#update-commission-status)
+
+### Invoices
+- <span style="color: #28a745;">**GET**</span> `/v1/invoices` - [List All Invoices](#list-all-invoices)
+- <span style="color: #28a745;">**GET**</span> `/v1/invoices/:id` - [Get Single Invoice](#get-single-invoice)
+- <span style="color: #28a745;">**GET**</span> `/v1/invoices/stats` - [Get Invoice Statistics](#get-invoice-statistics)
+- <span style="color: #007bff;">**POST**</span> `/v1/invoices` - [Create Invoice](#create-invoice)
+- <span style="color: #007bff;">**POST**</span> `/v1/invoices/:id/payment` - [Record Invoice Payment](#record-invoice-payment)
+
+### Expenses
+- <span style="color: #28a745;">**GET**</span> `/v1/expenses` - [List All Expenses](#list-all-expenses)
+- <span style="color: #28a745;">**GET**</span> `/v1/expenses/:id` - [Get Single Expense](#get-single-expense)
+- <span style="color: #28a745;">**GET**</span> `/v1/expenses/stats` - [Get Expense Statistics](#get-expense-statistics)
+- <span style="color: #28a745;">**GET**</span> `/v1/expenses/categories` - [Get Expense Categories](#get-expense-categories)
+- <span style="color: #007bff;">**POST**</span> `/v1/expenses` - [Create Expense](#create-expense)
+- <span style="color: #007bff;">**POST**</span> `/v1/expenses/report` - [Generate Expense Report](#generate-expense-report)
+
+### AI Agents
+- <span style="color: #28a745;">**GET**</span> `/v1/ai/agents` - [Get All AI Agents](#get-all-ai-agents)
+- <span style="color: #17a2b8;">**PATCH**</span> `/v1/ai/agents/:id/toggle` - [Toggle AI Agent](#toggle-ai-agent)
+- <span style="color: #28a745;">**GET**</span> `/v1/ai/token-usage` - [Get Token Usage](#get-token-usage)
+- <span style="color: #28a745;">**GET**</span> `/v1/ai/alex/daily-briefing` - [Get Daily Briefing (Alex)](#get-daily-briefing-alex)
+- <span style="color: #007bff;">**POST**</span> `/v1/ai/process-lead` - [Process Lead with AI](#process-lead-with-ai)
+- <span style="color: #28a745;">**GET**</span> `/v1/ai/team` - [Get AI Team Status](#get-ai-team-status)
+- <span style="color: #007bff;">**POST**</span> `/v1/ai/team/task` - [Trigger AI Task](#trigger-ai-task)
+
+### Analytics
+- <span style="color: #28a745;">**GET**</span> `/v1/analytics/dashboard` - [Dashboard Analytics](#dashboard-analytics)
+- <span style="color: #28a745;">**GET**</span> `/v1/analytics/escrow/:id` - [Escrow Analytics](#escrow-analytics)
+
+### Additional
+- <span style="color: #28a745;">**GET**</span> `/v1/properties/search` - [Property Search](#property-search)
+- <span style="color: #007bff;">**POST**</span> `/v1/webhooks` - [Configure Webhooks](#webhooks)
+
+---
+
+## Legend
+- <span style="color: #28a745;">**GET**</span> - Retrieve data
+- <span style="color: #007bff;">**POST**</span> - Create new resources
+- <span style="color: #ffc107;">**PUT**</span> - Update entire resources
+- <span style="color: #17a2b8;">**PATCH**</span> - Partial updates
+- <span style="color: #dc3545;">**DELETE**</span> - Remove resources
+
+---
+
 ## Overview
 
 This document provides comprehensive documentation for the Real Estate CRM API. All endpoints follow RESTful conventions and return standardized JSON responses.
@@ -1027,6 +1147,74 @@ GET /v1/clients/stats
 }
 ```
 
+### Get Client Transactions
+```http
+GET /v1/clients/:id/transactions
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "esc_789012",
+      "property_address": "123 Main St, San Diego, CA 92101",
+      "purchase_price": 750000,
+      "closing_date": "2025-06-15T00:00:00.000Z",
+      "gross_commission": 22500,
+      "transaction_type": "Buyer",
+      "commission_earned": 7875
+    }
+  ]
+}
+```
+
+### Get Communications
+```http
+GET /v1/clients/:id/communications
+GET /v1/leads/:id/communications
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "comm_123",
+      "type": "email",
+      "subject": "Property Update",
+      "content": "Hi! I wanted to share some new listings...",
+      "direction": "outbound",
+      "status": "delivered",
+      "created_at": "2025-07-16T15:30:00Z"
+    }
+  ]
+}
+```
+
+### Get Client Notes
+```http
+GET /v1/clients/:id/notes
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "note_456",
+      "content": "Client prefers modern homes with open floor plans",
+      "type": "preference",
+      "created_by": "agent_123",
+      "created_at": "2025-07-15T09:00:00Z"
+    }
+  ]
+}
+```
+
 ---
 
 ## Appointments
@@ -1303,6 +1491,24 @@ GET /v1/appointments/stats
       "confirmed": 10,
       "completed": 3
     }
+  }
+}
+```
+
+### Get Appointment Analytics
+```http
+GET /v1/analytics/appointments/:id
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "related_appointments": [],
+    "average_duration": 60,
+    "typical_outcome": "Positive",
+    "conversion_rate": 0.75
   }
 }
 ```
@@ -1641,6 +1847,28 @@ GET /v1/leads/hot
 }
 ```
 
+### Get Lead Analytics
+```http
+GET /v1/analytics/lead/:id
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "engagement_trend": [],
+    "conversion_probability": 0.65,
+    "recommended_actions": [
+      "Follow up within 24 hours",
+      "Send property matches",
+      "Schedule viewing"
+    ],
+    "similar_leads_converted": 8
+  }
+}
+```
+
 ---
 
 ## AI Agents
@@ -1748,6 +1976,56 @@ POST /v1/ai/process-lead
 }
 ```
 
+### Get AI Team Status
+```http
+GET /v1/ai/team
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "team_members": [
+      {
+        "id": "alex",
+        "name": "Alex - Sales Team Lead",
+        "status": "active",
+        "current_tasks": 3,
+        "specialties": ["lead_management", "client_communication"]
+      },
+      {
+        "id": "morgan",
+        "name": "Morgan - Listing Specialist",
+        "status": "active",
+        "current_tasks": 2,
+        "specialties": ["listing_optimization", "market_analysis"]
+      }
+    ],
+    "total_tasks_completed_today": 45,
+    "average_response_time": "2.3s"
+  }
+}
+```
+
+### Trigger AI Task
+```http
+POST /v1/ai/team/task
+```
+
+**Request Body:**
+```json
+{
+  "task_type": "lead_qualification",
+  "entity_id": "lead_123",
+  "priority": "high",
+  "context": {
+    "source": "Website inquiry",
+    "property_interest": "3BR homes in downtown"
+  }
+}
+```
+
 ---
 
 ## Analytics
@@ -1821,84 +2099,17 @@ Get detailed analytics and insights for a specific escrow transaction.
 }
 ```
 
-### Listing Analytics
-```http
-GET /v1/analytics/listing/:id
-```
-
-Get performance analytics and trends for a specific listing.
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "showing_trend": [
-      {"date": "2025-07-17T00:00:00.000Z", "showings": 3}
-    ],
-    "views_trend": [
-      {"date": "2025-07-17T00:00:00.000Z", "views": 45}
-    ],
-    "average_showings_per_week": 12,
-    "view_to_showing_ratio": 0.15
-  }
-}
-```
-
-### Appointment Analytics
-```http
-GET /v1/analytics/appointments/:id
-```
-
-Get analytics and related information for a specific appointment.
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "related_appointments": [],
-    "average_duration": 60,
-    "typical_outcome": "Positive",
-    "conversion_rate": 0.75
-  }
-}
-```
-
-### Lead Analytics
-```http
-GET /v1/analytics/lead/:id
-```
-
-Get engagement analytics and conversion insights for a specific lead.
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "engagement_trend": [],
-    "conversion_probability": 0.65,
-    "recommended_actions": [
-      "Follow up within 24 hours",
-      "Send property matches",
-      "Schedule viewing"
-    ],
-    "similar_leads_converted": 8
-  }
-}
-```
-
 ---
 
 ## Additional Entity Endpoints
 
-### Get Client Transactions
+### Property Search
 ```http
-GET /v1/clients/:id/transactions
+GET /v1/properties/search
 ```
 
-Get all closed transactions for a specific client.
+**Query Parameters:**
+- `address` (string) - Partial or full address to search
 
 **Response:**
 ```json
@@ -1906,62 +2117,13 @@ Get all closed transactions for a specific client.
   "success": true,
   "data": [
     {
-      "id": "esc_789012",
+      "id": "lst_789012",
       "property_address": "123 Main St, San Diego, CA 92101",
-      "purchase_price": 750000,
-      "closing_date": "2025-06-15T00:00:00.000Z",
-      "gross_commission": 22500,
-      "transaction_type": "Buyer",
-      "commission_earned": 7875
-    }
-  ]
-}
-```
-
-### Get Communications
-```http
-GET /v1/clients/:id/communications
-GET /v1/leads/:id/communications
-```
-
-Get communication history for a client or lead.
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": "comm_123",
-      "type": "email",
-      "subject": "Property Update",
-      "content": "Hi! I wanted to share some new listings...",
-      "direction": "outbound",
-      "status": "delivered",
-      "created_at": "2025-07-16T15:30:00Z"
-    }
-  ]
-}
-```
-
-### Get Client Notes
-```http
-GET /v1/clients/:id/notes
-```
-
-Get all notes associated with a client.
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": "note_456",
-      "content": "Client prefers modern homes with open floor plans",
-      "type": "preference",
-      "created_by": "agent_123",
-      "created_at": "2025-07-15T09:00:00Z"
+      "list_price": 750000,
+      "bedrooms": 3,
+      "bathrooms": 2,
+      "square_footage": 1800,
+      "status": "active"
     }
   ]
 }
@@ -1991,226 +2153,6 @@ Update checklist items for any entity type.
   ]
 }
 ```
-
-### Property Search
-```http
-GET /v1/properties/search
-```
-
-Search for properties by address.
-
-**Query Parameters:**
-- `address` (string) - Partial or full address to search
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": "lst_789012",
-      "property_address": "123 Main St, San Diego, CA 92101",
-      "list_price": 750000,
-      "bedrooms": 3,
-      "bathrooms": 2,
-      "square_footage": 1800,
-      "status": "active"
-    }
-  ]
-}
-```
-
----
-
-## AI Team Integration
-
-### Get AI Team Status
-```http
-GET /v1/ai/team
-```
-
-Get status and information about all AI team members.
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "team_members": [
-      {
-        "id": "alex",
-        "name": "Alex - Sales Team Lead",
-        "status": "active",
-        "current_tasks": 3,
-        "specialties": ["lead_management", "client_communication"]
-      },
-      {
-        "id": "morgan",
-        "name": "Morgan - Listing Specialist",
-        "status": "active",
-        "current_tasks": 2,
-        "specialties": ["listing_optimization", "market_analysis"]
-      }
-    ],
-    "total_tasks_completed_today": 45,
-    "average_response_time": "2.3s"
-  }
-}
-```
-
-### Trigger AI Task
-```http
-POST /v1/ai/team/task
-```
-
-Assign a task to the appropriate AI team member.
-
-**Request Body:**
-```json
-{
-  "task_type": "lead_qualification",
-  "entity_id": "lead_123",
-  "priority": "high",
-  "context": {
-    "source": "Website inquiry",
-    "property_interest": "3BR homes in downtown"
-  }
-}
-```
-
----
-
-## Error Codes
-
-| Code | Description |
-|------|-------------|
-| `UNAUTHORIZED` | Missing or invalid authentication token |
-| `FORBIDDEN` | User lacks required permissions |
-| `NOT_FOUND` | Requested resource not found |
-| `VALIDATION_ERROR` | Request body validation failed |
-| `DUPLICATE_ENTRY` | Attempting to create duplicate record |
-| `SERVER_ERROR` | Internal server error |
-
----
-
-## Rate Limiting
-
-API requests are limited to:
-- 100 requests per minute for authenticated users
-- 20 requests per minute for unauthenticated requests
-
-Rate limit headers are included in responses:
-- `X-RateLimit-Limit`: Maximum requests allowed
-- `X-RateLimit-Remaining`: Requests remaining
-- `X-RateLimit-Reset`: Unix timestamp when limit resets
-
----
-
-## Webhooks
-
-Configure webhooks to receive real-time updates for:
-- New leads
-- Escrow status changes
-- Listing status changes
-- Appointment updates
-
-Webhook configuration endpoint:
-```http
-POST /v1/webhooks
-```
-
----
-
-## WebSocket Events
-
-Connect to WebSocket for real-time updates:
-```javascript
-const ws = new WebSocket('wss://api.jaydenmetz.com');
-```
-
-### Event Types:
-- `lead:new` - New lead created
-- `escrow:update` - Escrow status changed
-- `listing:update` - Listing updated
-- `ai:status` - AI agent status update
-- `notification` - General notifications
-
----
-
-## SDK Examples
-
-### JavaScript/Node.js
-```javascript
-const api = require('@your-company/crm-sdk');
-
-const client = new api.Client({
-  apiKey: 'your-api-key',
-  baseUrl: 'https://api.jaydenmetz.com/v1'
-});
-
-// Get all active listings
-const listings = await client.listings.list({
-  status: 'Active',
-  limit: 20
-});
-
-// Create new lead
-const lead = await client.leads.create({
-  firstName: 'John',
-  lastName: 'Doe',
-  email: 'john@example.com',
-  leadSource: 'Website'
-});
-```
-
-### Python
-```python
-from crm_sdk import Client
-
-client = Client(
-    api_key='your-api-key',
-    base_url='https://api.jaydenmetz.com/v1'
-)
-
-# Get escrow details
-escrow = client.escrows.get('123')
-
-# Update client information
-client.clients.update('456', {
-    'clientStatus': 'Active',
-    'notes': 'Ready to make offers'
-})
-```
-
----
-
-## Implementation Status
-
-### Current State (July 2025)
-
-**Fully Implemented with Comprehensive Mock Data:**
-- Complete CRUD operations for all entities (Escrows, Listings, Clients, Appointments, Leads)
-- Comprehensive data structures with rich, detailed responses
-- Extended endpoints for each entity:
-  - **Escrows**: Full checklist management, timeline tracking, AI agents integration
-  - **Listings**: Marketing checklist, price history, analytics, comparable properties
-  - **Clients**: Communication tracking, financial summaries, AI insights, preferences
-  - **Appointments**: Conflict checking, attendee management, follow-up actions
-  - **Leads**: Scoring system, conversion tracking, activity timeline, hot leads
-- Standard response format and error handling
-- WebSocket support for real-time updates
-- File upload for RPA parsing
-- Statistics endpoints for all entities
-- Specialized operations (price reductions, status updates, tag management)
-
-**Enhanced Features (Mock Implementation):**
-- AI-powered insights and recommendations
-- Comprehensive activity tracking and timelines
-- Market analysis and comparable properties
-- Task and checklist management
-- Communication history and logging
-- Financial calculations and summaries
-- Property matching and recommendations
 
 ---
 
@@ -2984,13 +2926,145 @@ POST /v1/expenses/report
 }
 ```
 
-**Recently Implemented:**
+---
+
+## Error Codes
+
+| Code | Description |
+|------|-------------|
+| `UNAUTHORIZED` | Missing or invalid authentication token |
+| `FORBIDDEN` | User lacks required permissions |
+| `NOT_FOUND` | Requested resource not found |
+| `VALIDATION_ERROR` | Request body validation failed |
+| `DUPLICATE_ENTRY` | Attempting to create duplicate record |
+| `SERVER_ERROR` | Internal server error |
+
+---
+
+## Rate Limiting
+
+API requests are limited to:
+- 100 requests per minute for authenticated users
+- 20 requests per minute for unauthenticated requests
+
+Rate limit headers are included in responses:
+- `X-RateLimit-Limit`: Maximum requests allowed
+- `X-RateLimit-Remaining`: Requests remaining
+- `X-RateLimit-Reset`: Unix timestamp when limit resets
+
+---
+
+## Webhooks
+
+Configure webhooks to receive real-time updates for:
+- New leads
+- Escrow status changes
+- Listing status changes
+- Appointment updates
+
+Webhook configuration endpoint:
+```http
+POST /v1/webhooks
+```
+
+---
+
+## WebSocket Events
+
+Connect to WebSocket for real-time updates:
+```javascript
+const ws = new WebSocket('wss://api.jaydenmetz.com');
+```
+
+### Event Types:
+- `lead:new` - New lead created
+- `escrow:update` - Escrow status changed
+- `listing:update` - Listing updated
+- `ai:status` - AI agent status update
+- `notification` - General notifications
+
+---
+
+## SDK Examples
+
+### JavaScript/Node.js
+```javascript
+const api = require('@your-company/crm-sdk');
+
+const client = new api.Client({
+  apiKey: 'your-api-key',
+  baseUrl: 'https://api.jaydenmetz.com/v1'
+});
+
+// Get all active listings
+const listings = await client.listings.list({
+  status: 'Active',
+  limit: 20
+});
+
+// Create new lead
+const lead = await client.leads.create({
+  firstName: 'John',
+  lastName: 'Doe',
+  email: 'john@example.com',
+  leadSource: 'Website'
+});
+```
+
+### Python
+```python
+from crm_sdk import Client
+
+client = Client(
+    api_key='your-api-key',
+    base_url='https://api.jaydenmetz.com/v1'
+)
+
+# Get escrow details
+escrow = client.escrows.get('123')
+
+# Update client information
+client.clients.update('456', {
+    'clientStatus': 'Active',
+    'notes': 'Ready to make offers'
+})
+```
+
+---
+
+## Implementation Status
+
+### Current State (July 2025)
+
+**Fully Implemented with Comprehensive Mock Data:**
+- Complete CRUD operations for all entities (Escrows, Listings, Clients, Appointments, Leads)
+- Comprehensive data structures with rich, detailed responses
+- Extended endpoints for each entity:
+  - **Escrows**: Full checklist management, timeline tracking, AI agents integration
+  - **Listings**: Marketing checklist, price history, analytics, comparable properties
+  - **Clients**: Communication tracking, financial summaries, AI insights, preferences
+  - **Appointments**: Conflict checking, attendee management, follow-up actions
+  - **Leads**: Scoring system, conversion tracking, activity timeline, hot leads
+- Standard response format and error handling
+- WebSocket support for real-time updates
+- File upload for RPA parsing
+- Statistics endpoints for all entities
+- Specialized operations (price reductions, status updates, tag management)
 - **Financial Management System**:
   - Commission tracking with split calculations and payout management
   - Invoice generation and payment tracking
   - Expense management with tax deduction tracking
   - Financial reporting and analytics
   - Receipt upload and document management
+
+**Enhanced Features (Mock Implementation):**
+- AI-powered insights and recommendations
+- Comprehensive activity tracking and timelines
+- Market analysis and comparable properties
+- Task and checklist management
+- Communication history and logging
+- Financial calculations and summaries
+- Property matching and recommendations
 
 **Pending Implementation:**
 - Full authentication enforcement (currently disabled on some routes)
@@ -3011,6 +3085,763 @@ POST /v1/expenses/report
 3. **Database**: The system is designed to work with PostgreSQL, but many endpoints currently return in-memory mock data.
 
 4. **AI Integration**: The AI agent framework is in place but requires integration with actual AI services for full functionality.
+
+---
+
+## Invoices
+
+### List All Invoices
+```http
+GET /v1/invoices
+```
+
+**Query Parameters:**
+- `status` (string) - Filter by status: "pending", "paid", "overdue", "cancelled"
+- `clientId` (integer) - Filter by client ID
+- `dateFrom` (string) - Start date filter (ISO 8601)
+- `dateTo` (string) - End date filter (ISO 8601)
+- `minAmount` (number) - Minimum invoice amount
+- `maxAmount` (number) - Maximum invoice amount
+- `page` (integer) - Page number (default: 1)
+- `limit` (integer) - Items per page (default: 10)
+
+**Response (Summary):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "inv_001",
+      "invoiceNumber": "INV-2025-001",
+      "clientId": "1",
+      "clientName": "Michael & Sarah Chen",
+      "escrowId": "1",
+      "escrowNumber": "ESC-2025-001",
+      "amount": 31250,
+      "status": "pending",
+      "dueDate": "2025-08-30T00:00:00.000Z",
+      "createdDate": "2025-08-15T00:00:00.000Z",
+      "paidDate": null,
+      "type": "commission"
+    }
+  ],
+  "pagination": {
+    "total": 45,
+    "page": 1,
+    "pages": 5,
+    "limit": 10
+  },
+  "timestamp": "2025-07-17T00:00:00.000Z"
+}
+```
+
+### Get Single Invoice
+```http
+GET /v1/invoices/:id
+```
+
+**Response (Comprehensive):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "inv_001",
+    "invoiceNumber": "INV-2025-001",
+    "clientId": "1",
+    "clientName": "Michael & Sarah Chen",
+    "clientEmail": "michael.chen@email.com",
+    "clientPhone": "+1-858-555-0123",
+    "escrowId": "1",
+    "escrowNumber": "ESC-2025-001",
+    "propertyAddress": "456 Ocean View Dr, La Jolla, CA 92037",
+    "amount": 31250,
+    "status": "pending",
+    "dueDate": "2025-08-30T00:00:00.000Z",
+    "createdDate": "2025-08-15T00:00:00.000Z",
+    "paidDate": null,
+    "type": "commission",
+    "description": "Commission for sale of property",
+    "lineItems": [
+      {
+        "id": 1,
+        "description": "Real estate commission - Sale",
+        "quantity": 1,
+        "rate": 31250,
+        "amount": 31250
+      }
+    ],
+    "subtotal": 31250,
+    "tax": 0,
+    "taxRate": 0,
+    "total": 31250,
+    "paymentTerms": "Net 15",
+    "paymentMethod": null,
+    "paymentReference": null,
+    "notes": "Commission payable upon successful closing",
+    "attachments": [
+      {
+        "id": 1,
+        "name": "Commission Agreement.pdf",
+        "type": "application/pdf",
+        "size": 245632,
+        "uploadDate": "2025-08-15T00:00:00.000Z",
+        "url": "/api/v1/documents/inv_001_attachment_1"
+      }
+    ],
+    "paymentHistory": [],
+    "remindersSent": [
+      {
+        "date": "2025-08-25T00:00:00.000Z",
+        "type": "email",
+        "recipient": "michael.chen@email.com",
+        "status": "sent"
+      }
+    ],
+    "auditTrail": [
+      {
+        "date": "2025-08-15T00:00:00.000Z",
+        "action": "Invoice Created",
+        "user": "System",
+        "details": "Invoice generated from commission"
+      }
+    ],
+    "createdAt": "2025-08-15T00:00:00.000Z",
+    "updatedAt": "2025-08-15T00:00:00.000Z"
+  },
+  "timestamp": "2025-07-17T00:00:00.000Z"
+}
+```
+
+### Get Invoice Statistics
+```http
+GET /v1/invoices/stats
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "summary": {
+      "totalInvoices": 156,
+      "totalAmount": 2456780,
+      "pendingAmount": 487650,
+      "paidAmount": 1969130,
+      "overdueAmount": 125400,
+      "averageInvoiceAmount": 15748,
+      "averagePaymentTime": 12.5
+    },
+    "byStatus": {
+      "pending": {
+        "count": 23,
+        "amount": 487650
+      },
+      "paid": {
+        "count": 125,
+        "amount": 1969130
+      },
+      "overdue": {
+        "count": 6,
+        "amount": 125400
+      },
+      "cancelled": {
+        "count": 2,
+        "amount": 0
+      }
+    },
+    "byMonth": [
+      {
+        "month": "2025-01",
+        "invoices": 18,
+        "amount": 285600,
+        "paid": 245600,
+        "pending": 40000
+      },
+      {
+        "month": "2025-02",
+        "invoices": 22,
+        "amount": 342800,
+        "paid": 298400,
+        "pending": 44400
+      }
+    ],
+    "byType": {
+      "commission": {
+        "count": 98,
+        "amount": 1876540
+      },
+      "service": {
+        "count": 45,
+        "amount": 456780
+      },
+      "other": {
+        "count": 13,
+        "amount": 123460
+      }
+    },
+    "topClients": [
+      {
+        "clientId": "1",
+        "clientName": "Michael & Sarah Chen",
+        "invoiceCount": 12,
+        "totalAmount": 186500
+      }
+    ],
+    "paymentMethods": {
+      "check": {
+        "count": 85,
+        "amount": 1345670
+      },
+      "wire": {
+        "count": 32,
+        "amount": 567890
+      },
+      "ach": {
+        "count": 8,
+        "amount": 55570
+      }
+    }
+  },
+  "timestamp": "2025-07-17T00:00:00.000Z"
+}
+```
+
+### Create Invoice
+```http
+POST /v1/invoices
+```
+
+**Request Body:**
+```json
+{
+  "clientId": "1",
+  "escrowId": "1",
+  "type": "commission",
+  "dueDate": "2025-08-30",
+  "paymentTerms": "Net 15",
+  "lineItems": [
+    {
+      "description": "Real estate commission - Sale",
+      "quantity": 1,
+      "rate": 31250
+    }
+  ],
+  "notes": "Commission payable upon successful closing",
+  "sendEmail": true
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "inv_002",
+    "invoiceNumber": "INV-2025-002",
+    "message": "Invoice created successfully",
+    "emailSent": true
+  },
+  "timestamp": "2025-07-17T00:00:00.000Z"
+}
+```
+
+### Record Invoice Payment
+```http
+POST /v1/invoices/:id/payment
+```
+
+**Request Body:**
+```json
+{
+  "amount": 31250,
+  "paymentMethod": "check",
+  "paymentDate": "2025-08-28",
+  "paymentReference": "Check #1234",
+  "notes": "Payment received via mail"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "inv_001",
+    "status": "paid",
+    "paidAmount": 31250,
+    "paidDate": "2025-08-28T00:00:00.000Z",
+    "balance": 0,
+    "message": "Payment recorded successfully"
+  },
+  "timestamp": "2025-07-17T00:00:00.000Z"
+}
+```
+
+---
+
+## Expenses
+
+### List All Expenses
+```http
+GET /v1/expenses
+```
+
+**Query Parameters:**
+- `category` (string) - Filter by category
+- `dateFrom` (string) - Start date filter (ISO 8601)
+- `dateTo` (string) - End date filter (ISO 8601)
+- `minAmount` (number) - Minimum expense amount
+- `maxAmount` (number) - Maximum expense amount
+- `taxDeductible` (boolean) - Filter by tax deductible status
+- `reimbursable` (boolean) - Filter by reimbursable status
+- `page` (integer) - Page number (default: 1)
+- `limit` (integer) - Items per page (default: 10)
+
+**Response (Summary):**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "exp_001",
+      "date": "2025-07-15T00:00:00.000Z",
+      "vendor": "Office Depot",
+      "description": "Office supplies",
+      "category": "office_supplies",
+      "amount": 156.43,
+      "taxDeductible": true,
+      "reimbursable": false,
+      "status": "approved",
+      "paymentMethod": "credit_card",
+      "hasReceipt": true
+    }
+  ],
+  "pagination": {
+    "total": 234,
+    "page": 1,
+    "pages": 24,
+    "limit": 10
+  },
+  "timestamp": "2025-07-17T00:00:00.000Z"
+}
+```
+
+### Get Single Expense
+```http
+GET /v1/expenses/:id
+```
+
+**Response (Comprehensive):**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "exp_001",
+    "date": "2025-07-15T00:00:00.000Z",
+    "vendor": "Office Depot",
+    "description": "Office supplies for July",
+    "category": "office_supplies",
+    "subcategory": "general_supplies",
+    "amount": 156.43,
+    "taxAmount": 12.51,
+    "totalAmount": 168.94,
+    "taxDeductible": true,
+    "deductionCategory": "business_expense",
+    "reimbursable": false,
+    "reimbursementStatus": null,
+    "status": "approved",
+    "paymentMethod": "credit_card",
+    "paymentAccount": "Business Credit Card ****1234",
+    "referenceNumber": "OD-2025-07-15-001",
+    "notes": "Monthly office supply run - printer paper, pens, folders",
+    "tags": ["office", "supplies", "monthly"],
+    "receipt": {
+      "id": "rec_001",
+      "filename": "office_depot_receipt_071525.pdf",
+      "uploadDate": "2025-07-15T14:30:00.000Z",
+      "fileSize": 145632,
+      "url": "/api/v1/documents/exp_001_receipt"
+    },
+    "attachments": [
+      {
+        "id": "att_001",
+        "filename": "itemized_list.xlsx",
+        "type": "application/vnd.ms-excel",
+        "uploadDate": "2025-07-15T14:32:00.000Z",
+        "url": "/api/v1/documents/exp_001_att_001"
+      }
+    ],
+    "mileage": null,
+    "project": null,
+    "client": null,
+    "approvedBy": "Jayden Metz",
+    "approvedDate": "2025-07-16T09:00:00.000Z",
+    "accounting": {
+      "glCode": "6100",
+      "glDescription": "Office Supplies",
+      "costCenter": "ADMIN",
+      "taxYear": 2025,
+      "quarter": "Q3"
+    },
+    "recurring": {
+      "isRecurring": false,
+      "frequency": null,
+      "nextDate": null
+    },
+    "auditTrail": [
+      {
+        "date": "2025-07-15T14:30:00.000Z",
+        "action": "Expense Created",
+        "user": "Jayden Metz",
+        "details": "Expense submitted for approval"
+      },
+      {
+        "date": "2025-07-16T09:00:00.000Z",
+        "action": "Expense Approved",
+        "user": "Admin",
+        "details": "Approved as business expense"
+      }
+    ],
+    "createdAt": "2025-07-15T14:30:00.000Z",
+    "updatedAt": "2025-07-16T09:00:00.000Z"
+  },
+  "timestamp": "2025-07-17T00:00:00.000Z"
+}
+```
+
+### Get Expense Statistics
+```http
+GET /v1/expenses/stats
+```
+
+**Query Parameters:**
+- `year` (integer) - Year for statistics (default: current year)
+- `quarter` (string) - Quarter filter (Q1, Q2, Q3, Q4)
+- `groupBy` (string) - Group statistics by: "category", "month", "vendor"
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "summary": {
+      "totalExpenses": 456,
+      "totalAmount": 125678.90,
+      "taxDeductibleAmount": 98456.78,
+      "nonDeductibleAmount": 27222.12,
+      "averageExpense": 275.61,
+      "largestExpense": 8945.00,
+      "expenseCount": {
+        "daily": 2.1,
+        "weekly": 14.7,
+        "monthly": 63.5
+      }
+    },
+    "byCategory": [
+      {
+        "category": "office_supplies",
+        "displayName": "Office Supplies",
+        "count": 48,
+        "amount": 3456.78,
+        "percentage": 2.75,
+        "taxDeductible": 3456.78
+      },
+      {
+        "category": "travel",
+        "displayName": "Travel & Transportation",
+        "count": 89,
+        "amount": 12345.67,
+        "percentage": 9.82,
+        "taxDeductible": 11234.56
+      },
+      {
+        "category": "marketing",
+        "displayName": "Marketing & Advertising",
+        "count": 67,
+        "amount": 23456.78,
+        "percentage": 18.65,
+        "taxDeductible": 23456.78
+      }
+    ],
+    "byMonth": [
+      {
+        "month": "2025-01",
+        "expenses": 38,
+        "amount": 9876.54,
+        "taxDeductible": 8765.43
+      },
+      {
+        "month": "2025-02",
+        "expenses": 42,
+        "amount": 10234.56,
+        "taxDeductible": 9123.45
+      }
+    ],
+    "topVendors": [
+      {
+        "vendor": "Office Depot",
+        "count": 12,
+        "totalAmount": 1876.54
+      },
+      {
+        "vendor": "Uber",
+        "count": 45,
+        "totalAmount": 2345.67
+      }
+    ],
+    "paymentMethods": {
+      "credit_card": {
+        "count": 234,
+        "amount": 67890.12
+      },
+      "debit_card": {
+        "count": 123,
+        "amount": 34567.89
+      },
+      "cash": {
+        "count": 89,
+        "amount": 12345.67
+      },
+      "check": {
+        "count": 10,
+        "amount": 10875.22
+      }
+    },
+    "taxDeductions": {
+      "estimatedDeductions": 98456.78,
+      "byCategory": [
+        {
+          "category": "business_expense",
+          "amount": 45678.90
+        },
+        {
+          "category": "vehicle",
+          "amount": 23456.78
+        },
+        {
+          "category": "home_office",
+          "amount": 12345.67
+        }
+      ]
+    },
+    "trends": {
+      "monthOverMonth": {
+        "change": 5.2,
+        "trend": "increasing"
+      },
+      "yearOverYear": {
+        "change": -2.8,
+        "trend": "decreasing"
+      },
+      "projectedYearEnd": 145678.90
+    }
+  },
+  "timestamp": "2025-07-17T00:00:00.000Z"
+}
+```
+
+### Get Expense Categories
+```http
+GET /v1/expenses/categories
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": "office_supplies",
+      "name": "Office Supplies",
+      "description": "General office supplies and equipment",
+      "taxDeductible": true,
+      "glCode": "6100",
+      "subcategories": [
+        { "id": "general_supplies", "name": "General Supplies" },
+        { "id": "furniture", "name": "Office Furniture" },
+        { "id": "equipment", "name": "Office Equipment" }
+      ]
+    },
+    {
+      "id": "travel",
+      "name": "Travel & Transportation",
+      "description": "Business travel and local transportation",
+      "taxDeductible": true,
+      "glCode": "6200",
+      "subcategories": [
+        { "id": "airfare", "name": "Airfare" },
+        { "id": "lodging", "name": "Hotels & Lodging" },
+        { "id": "meals", "name": "Meals & Entertainment" },
+        { "id": "ground_transport", "name": "Ground Transportation" },
+        { "id": "mileage", "name": "Vehicle Mileage" }
+      ]
+    },
+    {
+      "id": "marketing",
+      "name": "Marketing & Advertising",
+      "description": "Marketing, advertising, and promotional expenses",
+      "taxDeductible": true,
+      "glCode": "6300",
+      "subcategories": [
+        { "id": "digital_ads", "name": "Digital Advertising" },
+        { "id": "print_ads", "name": "Print Advertising" },
+        { "id": "promotional", "name": "Promotional Materials" },
+        { "id": "events", "name": "Events & Sponsorships" }
+      ]
+    }
+  ],
+  "timestamp": "2025-07-17T00:00:00.000Z"
+}
+```
+
+### Create Expense
+```http
+POST /v1/expenses
+```
+
+**Request Body:**
+```json
+{
+  "date": "2025-07-15",
+  "vendor": "Office Depot",
+  "description": "Office supplies for July",
+  "category": "office_supplies",
+  "subcategory": "general_supplies",
+  "amount": 156.43,
+  "taxAmount": 12.51,
+  "taxDeductible": true,
+  "paymentMethod": "credit_card",
+  "referenceNumber": "OD-2025-07-15-001",
+  "notes": "Monthly office supply run",
+  "tags": ["office", "supplies", "monthly"],
+  "receipt": {
+    "data": "base64_encoded_file_data",
+    "filename": "receipt.pdf",
+    "mimeType": "application/pdf"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "exp_002",
+    "message": "Expense created successfully",
+    "status": "pending_approval",
+    "receiptUploaded": true
+  },
+  "timestamp": "2025-07-17T00:00:00.000Z"
+}
+```
+
+### Generate Expense Report
+```http
+POST /v1/expenses/report
+```
+
+**Request Body:**
+```json
+{
+  "startDate": "2025-01-01",
+  "endDate": "2025-12-31",
+  "categories": ["travel", "marketing", "office_supplies"],
+  "format": "pdf",
+  "groupBy": "category",
+  "includeTaxSummary": true,
+  "includeReceipts": false
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "reportId": "rpt_2025_001",
+    "status": "processing",
+    "estimatedTime": 30,
+    "downloadUrl": null,
+    "message": "Report generation started. You will be notified when complete."
+  },
+  "timestamp": "2025-07-17T00:00:00.000Z"
+}
+```
+
+---
+
+## Additional Resources
+
+### Webhooks
+```http
+POST /v1/webhooks
+```
+
+Configure webhooks to receive real-time notifications for various events.
+
+**Request Body:**
+```json
+{
+  "url": "https://your-domain.com/webhook-endpoint",
+  "events": [
+    "escrow.created",
+    "escrow.updated",
+    "escrow.closed",
+    "listing.created",
+    "listing.status_changed",
+    "client.created",
+    "lead.converted",
+    "appointment.created",
+    "appointment.cancelled",
+    "commission.paid",
+    "invoice.paid",
+    "ai.task_completed"
+  ],
+  "secret": "your-webhook-secret",
+  "active": true
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "wh_001",
+    "url": "https://your-domain.com/webhook-endpoint",
+    "events": ["escrow.created", "escrow.updated"],
+    "secret": "wh_sec_***",
+    "active": true,
+    "createdAt": "2025-07-17T00:00:00.000Z"
+  },
+  "timestamp": "2025-07-17T00:00:00.000Z"
+}
+```
+
+**Webhook Payload Format:**
+```json
+{
+  "id": "evt_001",
+  "type": "escrow.created",
+  "timestamp": "2025-07-17T00:00:00.000Z",
+  "data": {
+    "escrowId": "1",
+    "escrowNumber": "ESC-2025-001",
+    "propertyAddress": "456 Ocean View Dr, La Jolla, CA 92037"
+  },
+  "signature": "sha256=..."
+}
+```
+
+**Available Webhook Events:**
+- **Escrows**: `escrow.created`, `escrow.updated`, `escrow.closed`, `escrow.cancelled`
+- **Listings**: `listing.created`, `listing.updated`, `listing.status_changed`, `listing.price_reduced`
+- **Clients**: `client.created`, `client.updated`, `client.deleted`, `client.status_changed`
+- **Leads**: `lead.created`, `lead.updated`, `lead.converted`, `lead.status_changed`
+- **Appointments**: `appointment.created`, `appointment.updated`, `appointment.cancelled`, `appointment.completed`
+- **Financial**: `commission.created`, `commission.paid`, `invoice.created`, `invoice.paid`, `expense.approved`
+- **AI**: `ai.task_started`, `ai.task_completed`, `ai.task_failed`, `ai.insight_generated`
 
 ---
 
