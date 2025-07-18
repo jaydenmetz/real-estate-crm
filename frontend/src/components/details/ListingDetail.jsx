@@ -639,12 +639,12 @@ const ListingDetail = () => {
                 <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
                   <Box>
                     <Typography variant="h3" fontWeight="bold">
-                      ${listing.listPrice.toLocaleString()}
+                      ${(listing.listPrice || 0).toLocaleString()}
                     </Typography>
                     {priceChange !== 0 && (
                       <Chip
                         icon={priceChange < 0 ? <TrendingDown /> : <TrendingUp />}
-                        label={`${priceChange < 0 ? '' : '+'}$${Math.abs(priceChange).toLocaleString()} (${priceChangePercent.toFixed(1)}%)`}
+                        label={`${priceChange < 0 ? '' : '+'}$${Math.abs(priceChange || 0).toLocaleString()} (${(priceChangePercent || 0).toFixed(1)}%)`}
                         sx={{ 
                           bgcolor: priceChange < 0 ? 'success.main' : 'error.main',
                           color: 'white',
@@ -696,7 +696,7 @@ const ListingDetail = () => {
                   </Grid>
                   <Grid item xs={6} sm={3}>
                     <Box sx={{ textAlign: 'center', bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 2, p: 2 }}>
-                      <Typography variant="h5" fontWeight="bold">{listing.views.toLocaleString()}</Typography>
+                      <Typography variant="h5" fontWeight="bold">{(listing.views || 0).toLocaleString()}</Typography>
                       <Typography variant="caption">Total Views</Typography>
                     </Box>
                   </Grid>
@@ -762,7 +762,7 @@ const ListingDetail = () => {
                               <PropertyFeature icon={Bathroom} label="Baths" value={listing.bathrooms} />
                             </Grid>
                             <Grid item xs={3}>
-                              <PropertyFeature icon={SquareFoot} label="Sq Ft" value={listing.squareFootage.toLocaleString()} />
+                              <PropertyFeature icon={SquareFoot} label="Sq Ft" value={(listing.squareFootage || 0).toLocaleString()} />
                             </Grid>
                             <Grid item xs={3}>
                               <PropertyFeature icon={DirectionsCar} label="Garage" value={listing.garage} />
@@ -1086,7 +1086,7 @@ const ListingDetail = () => {
                         <ListItemText primary="Year Built" secondary={listing.yearBuilt} />
                       </ListItem>
                       <ListItem>
-                        <ListItemText primary="Lot Size" secondary={`${listing.lotSize.toLocaleString()} sq ft`} />
+                        <ListItemText primary="Lot Size" secondary={`${(listing.lotSize || 0).toLocaleString()} sq ft`} />
                       </ListItem>
                       <ListItem>
                         <ListItemText primary="Stories" secondary={listing.stories} />
@@ -1231,17 +1231,17 @@ const ListingDetail = () => {
                       <TableRow>
                         <TableCell>List Price</TableCell>
                         <TableCell align="right">
-                          <Typography variant="h6">${listing.listPrice.toLocaleString()}</Typography>
+                          <Typography variant="h6">${(listing.listPrice || 0).toLocaleString()}</Typography>
                         </TableCell>
                       </TableRow>
                       <TableRow>
                         <TableCell>Original Price</TableCell>
-                        <TableCell align="right">${listing.originalListPrice.toLocaleString()}</TableCell>
+                        <TableCell align="right">${(listing.originalListPrice || 0).toLocaleString()}</TableCell>
                       </TableRow>
                       <TableRow>
                         <TableCell>Price Change</TableCell>
                         <TableCell align="right" sx={{ color: priceChange < 0 ? 'success.main' : 'error.main' }}>
-                          {priceChange < 0 ? '' : '+'} ${Math.abs(priceChange).toLocaleString()} ({priceChangePercent.toFixed(1)}%)
+                          {priceChange < 0 ? '' : '+'} ${Math.abs(priceChange || 0).toLocaleString()} ({(priceChangePercent || 0).toFixed(1)}%)
                         </TableCell>
                       </TableRow>
                       <TableRow>
@@ -1305,7 +1305,7 @@ const ListingDetail = () => {
                       <Grid item xs={12} md={4}>
                         <Box sx={{ textAlign: 'center', p: 2 }}>
                           <Typography variant="h4" color="primary">
-                            ${((listing.listPrice * listing.commission.listing) / 100).toLocaleString()}
+                            ${(((listing.listPrice || 0) * ((listing.commission && listing.commission.listing) || 0)) / 100).toLocaleString()}
                           </Typography>
                           <Typography variant="body1">Listing Side ({listing.commission.listing}%)</Typography>
                         </Box>
@@ -1313,7 +1313,7 @@ const ListingDetail = () => {
                       <Grid item xs={12} md={4}>
                         <Box sx={{ textAlign: 'center', p: 2 }}>
                           <Typography variant="h4" color="secondary">
-                            ${((listing.listPrice * listing.commission.buyer) / 100).toLocaleString()}
+                            ${(((listing.listPrice || 0) * ((listing.commission && listing.commission.buyer) || 0)) / 100).toLocaleString()}
                           </Typography>
                           <Typography variant="body1">Buyer Side ({listing.commission.buyer}%)</Typography>
                         </Box>
@@ -1321,7 +1321,7 @@ const ListingDetail = () => {
                       <Grid item xs={12} md={4}>
                         <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
                           <Typography variant="h4" color="success.main">
-                            ${((listing.listPrice * listing.commission.total) / 100).toLocaleString()}
+                            ${(((listing.listPrice || 0) * ((listing.commission && listing.commission.total) || 0)) / 100).toLocaleString()}
                           </Typography>
                           <Typography variant="body1">Total Commission ({listing.commission.total}%)</Typography>
                         </Box>
@@ -1558,7 +1558,7 @@ const ListingDetail = () => {
                         primary={
                           activity.type === 'showing' ? `Showing with ${activity.agent}` :
                           activity.type === 'inquiry' ? `Inquiry from ${activity.source}` :
-                          activity.type === 'price_change' ? `Price reduced from $${activity.oldPrice.toLocaleString()} to $${activity.newPrice.toLocaleString()}` :
+                          activity.type === 'price_change' ? `Price reduced from $${(activity.oldPrice || 0).toLocaleString()} to $${(activity.newPrice || 0).toLocaleString()}` :
                           'Activity'
                         }
                         secondary={

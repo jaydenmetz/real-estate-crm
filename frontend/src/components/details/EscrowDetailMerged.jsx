@@ -1191,7 +1191,7 @@ const EscrowDetailMerged = () => {
                     />
                     <MetricChip
                       icon={<AttachMoney />}
-                      label={`$${escrow.price.toLocaleString()}`}
+                      label={`$${(escrow.price || 0).toLocaleString()}`}
                     />
                     <MetricChip
                       icon={<CalendarToday />}
@@ -1297,7 +1297,7 @@ const EscrowDetailMerged = () => {
                     </Grid>
                     <Grid item xs={3}>
                       <Typography variant="h4" fontWeight="bold">
-                        {(escrow.property.sqft / 1000).toFixed(1)}k
+                        {((escrow.property.sqft || 0) / 1000).toFixed(1)}k
                       </Typography>
                       <Typography variant="body2">Sq Ft</Typography>
                     </Grid>
@@ -1797,7 +1797,7 @@ const EscrowDetailMerged = () => {
                             <ListItem key={idx} disableGutters>
                               <ListItemText
                                 primary={sale.address}
-                                secondary={`$${sale.price.toLocaleString()} • ${sale.daysOnMarket} days`}
+                                secondary={`$${(sale.price || 0).toLocaleString()} • ${sale.daysOnMarket} days`}
                               />
                             </ListItem>
                           ))}
@@ -1853,26 +1853,26 @@ const EscrowDetailMerged = () => {
                               <TableCell>Purchase Price</TableCell>
                               <TableCell align="right">
                                 <Typography variant="h6">
-                                  ${escrow.purchasePrice.toLocaleString()}
+                                  ${(escrow.purchasePrice || 0).toLocaleString()}
                                 </Typography>
                               </TableCell>
                             </TableRow>
                             <TableRow>
                               <TableCell>Down Payment</TableCell>
                               <TableCell align="right">
-                                ${escrow.downPayment.toLocaleString()} ({Math.round((escrow.downPayment / escrow.purchasePrice) * 100)}%)
+                                ${(escrow.downPayment || 0).toLocaleString()} ({Math.round(((escrow.downPayment || 0) / (escrow.purchasePrice || 1)) * 100)}%)
                               </TableCell>
                             </TableRow>
                             <TableRow>
                               <TableCell>Loan Amount</TableCell>
                               <TableCell align="right">
-                                ${escrow.loanAmount.toLocaleString()}
+                                ${(escrow.loanAmount || 0).toLocaleString()}
                               </TableCell>
                             </TableRow>
                             <TableRow>
                               <TableCell>Commission</TableCell>
                               <TableCell align="right">
-                                ${escrow.commission.toLocaleString()}
+                                ${(escrow.commission || 0).toLocaleString()}
                               </TableCell>
                             </TableRow>
                           </TableBody>
@@ -2041,26 +2041,26 @@ const EscrowDetailMerged = () => {
                               <TableCell>Purchase Price</TableCell>
                               <TableCell align="right">
                                 <Typography variant="h5">
-                                  ${escrow.purchasePrice.toLocaleString()}
+                                  ${(escrow.purchasePrice || 0).toLocaleString()}
                                 </Typography>
                               </TableCell>
                             </TableRow>
                             <TableRow>
                               <TableCell>Down Payment (20%)</TableCell>
                               <TableCell align="right">
-                                ${escrow.downPayment.toLocaleString()}
+                                ${(escrow.downPayment || 0).toLocaleString()}
                               </TableCell>
                             </TableRow>
                             <TableRow>
                               <TableCell>Loan Amount</TableCell>
                               <TableCell align="right">
-                                ${escrow.loanAmount.toLocaleString()}
+                                ${(escrow.loanAmount || 0).toLocaleString()}
                               </TableCell>
                             </TableRow>
                             <TableRow>
                               <TableCell>Earnest Money Deposit</TableCell>
                               <TableCell align="right">
-                                ${escrow.earnestMoney.toLocaleString()}
+                                ${(escrow.earnestMoney || 0).toLocaleString()}
                               </TableCell>
                             </TableRow>
                             <Divider />
@@ -2072,20 +2072,20 @@ const EscrowDetailMerged = () => {
                               </TableCell>
                               <TableCell align="right">
                                 <Typography variant="subtitle1" fontWeight="medium">
-                                  ${escrow.commission.toLocaleString()}
+                                  ${(escrow.commission || 0).toLocaleString()}
                                 </Typography>
                               </TableCell>
                             </TableRow>
                             <TableRow>
                               <TableCell sx={{ pl: 4 }}>Listing Agent (3%)</TableCell>
                               <TableCell align="right">
-                                ${escrow.commissionSplit.listing.toLocaleString()}
+                                ${((escrow.commissionSplit && escrow.commissionSplit.listing) || 0).toLocaleString()}
                               </TableCell>
                             </TableRow>
                             <TableRow>
                               <TableCell sx={{ pl: 4 }}>Selling Agent (3%)</TableCell>
                               <TableCell align="right">
-                                ${escrow.commissionSplit.selling.toLocaleString()}
+                                ${((escrow.commissionSplit && escrow.commissionSplit.selling) || 0).toLocaleString()}
                               </TableCell>
                             </TableRow>
                           </TableBody>
@@ -2297,7 +2297,7 @@ const EscrowDetailMerged = () => {
                                 </TableRow>
                                 <TableRow>
                                   <TableCell>Square Feet</TableCell>
-                                  <TableCell>{escrow.property.sqft.toLocaleString()}</TableCell>
+                                  <TableCell>{((escrow.property && escrow.property.sqft) || 0).toLocaleString()}</TableCell>
                                 </TableRow>
                                 <TableRow>
                                   <TableCell>Year Built</TableCell>

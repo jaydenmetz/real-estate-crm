@@ -430,7 +430,7 @@ const ListingsDashboard = () => {
       />
       
       <Typography className="price-badge" variant="h6">
-        ${listing.listPrice.toLocaleString()}
+        ${(listing.listPrice || 0).toLocaleString()}
       </Typography>
 
       <Box
@@ -466,7 +466,7 @@ const ListingsDashboard = () => {
             <Grid item xs={3}>
               <Box sx={{ textAlign: 'center', color: 'white' }}>
                 <SquareFoot />
-                <Typography variant="caption" display="block">{listing.squareFootage.toLocaleString()} ft²</Typography>
+                <Typography variant="caption" display="block">{(listing.squareFootage || 0).toLocaleString()} ft²</Typography>
               </Box>
             </Grid>
             <Grid item xs={3}>
@@ -599,7 +599,7 @@ const ListingsDashboard = () => {
       field: 'listPrice',
       headerName: 'List Price',
       width: 130,
-      renderCell: (params) => `$${params.value.toLocaleString()}`,
+      renderCell: (params) => `$${(params.value || 0).toLocaleString()}`,
     },
     {
       field: 'bedrooms',
@@ -611,7 +611,7 @@ const ListingsDashboard = () => {
       field: 'squareFootage',
       headerName: 'Sq Ft',
       width: 100,
-      renderCell: (params) => params.value.toLocaleString(),
+      renderCell: (params) => (params.value || 0).toLocaleString(),
     },
     {
       field: 'daysOnMarket',

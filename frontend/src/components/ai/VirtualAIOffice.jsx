@@ -1056,7 +1056,7 @@ const OtherDataPage = ({ type, onClose }) => {
                     secondary={item.timestamp}
                   />
                   <Typography variant="body2" color="text.secondary">
-                    {item.tokens.toLocaleString()} tokens
+                    {(item.tokens || 0).toLocaleString()} tokens
                   </Typography>
                 </ListItem>
               ))}
@@ -1650,7 +1650,7 @@ const VirtualAIOffice = () => {
                           />
                           {item.price && (
                             <Typography variant="h6" color="primary" sx={{ mt: 1 }}>
-                              ${item.price.toLocaleString()}
+                              ${(item.price || 0).toLocaleString()}
                             </Typography>
                           )}
                           {item.closingDate && (
