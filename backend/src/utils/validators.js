@@ -115,11 +115,26 @@ const appointmentValidators = {
   ]
 };
 
+// Utility validation functions
+const validateEmail = (email) => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
+
+const validatePhone = (phone) => {
+  // Remove all non-digit characters and check if it's a valid phone number
+  const cleanPhone = phone.replace(/\D/g, '');
+  // US phone number: 10 digits or 11 digits starting with 1
+  return cleanPhone.length === 10 || (cleanPhone.length === 11 && cleanPhone.startsWith('1'));
+};
+
 module.exports = {
   validators,
   escrowValidators,
   listingValidators,
   clientValidators,
   leadValidators,
-  appointmentValidators
+  appointmentValidators,
+  validateEmail,
+  validatePhone
 };
