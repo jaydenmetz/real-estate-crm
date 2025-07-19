@@ -3,7 +3,7 @@
 ## Controller Files (11 total)
 
 ### Core Entity Controllers
-1. **escrow.controller.js** - Escrow management
+1. **escrows.controller.js** - Escrow management
    - Currently used by escrows route for database endpoints
    - Handles getAllEscrows and getEscrowById
 
@@ -37,7 +37,7 @@
 ## Removed Files (Backed up)
 The following duplicate/versioned files were moved to `_backup_controllers/`:
 - ai.controller.updated.js
-- escrowController.simple.js (renamed to escrow.controller.js)
+- escrowController.simple.js (renamed to escrows.controller.js)
 - escrowController.updated.js
 - escrows.controller.js (duplicate implementation)
 
@@ -45,7 +45,7 @@ The following duplicate/versioned files were moved to `_backup_controllers/`:
 
 ### Routes Using Controllers:
 - ✅ AI routes → ai.controller.js
-- ✅ Escrows routes → escrow.controller.js (database endpoints only)
+- ✅ Escrows routes → escrows.controller.js (database endpoints only)
 
 ### Routes with Inline Logic:
 - ❌ Listings - has controller but not used
@@ -60,7 +60,7 @@ The following duplicate/versioned files were moved to `_backup_controllers/`:
 
 ## File Naming Convention
 All controllers now follow the standard pattern:
-- ✅ `escrow.controller.js`
+- ✅ `escrows.controller.js`
 - ✅ `listings.controller.js`
 - ✅ `clients.controller.js`
 - ❌ `escrowController.simple.js`

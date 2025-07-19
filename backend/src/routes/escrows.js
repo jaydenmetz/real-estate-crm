@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const databaseService = require('../services/database.service');
-const EscrowController = require('../controllers/escrow.controller');
+const EscrowController = require('../controllers/escrows.controller');
 
 // Database routes
 router.get('/database', EscrowController.getAllEscrows);
