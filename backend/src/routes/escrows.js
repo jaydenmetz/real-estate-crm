@@ -1,12 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const databaseService = require('../services/database.service');
-const EscrowController = require('../controllers/escrowController.updated');
-const SimpleEscrowController = require('../controllers/escrowController.simple');
+const EscrowController = require('../controllers/escrow.controller');
 
-// Database routes (use simplified controller)
-router.get('/database', SimpleEscrowController.getAllEscrows);
-router.get('/database/:id', SimpleEscrowController.getEscrowById);
+// Database routes
+router.get('/database', EscrowController.getAllEscrows);
+router.get('/database/:id', EscrowController.getEscrowById);
 
 // Helper function to transform database escrow to API response format for list view
 const transformEscrowForList = (escrow) => ({
@@ -37,8 +36,8 @@ router.get('/', async (req, res) => {
   const useDatabase = req.query.useDatabase !== 'false';
   
   if (useDatabase) {
-    // Use real database with simplified controller
-    return SimpleEscrowController.getAllEscrows(req, res);
+    // Use real database
+    return EscrowController.getAllEscrows(req, res);
   }
   
   // Fallback to mock data for backwards compatibility
@@ -239,8 +238,8 @@ router.get('/:id', async (req, res) => {
   const useDatabase = req.query.useDatabase !== 'false';
   
   if (useDatabase) {
-    // Use real database with simplified controller
-    return SimpleEscrowController.getEscrowById(req, res);
+    // Use real database
+    return EscrowController.getEscrowById(req, res);
   }
   
   // Fallback to mock data
