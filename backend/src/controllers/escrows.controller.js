@@ -1,7 +1,7 @@
 const { Pool } = require('pg');
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@postgres:5432/realestate_crm'
+  connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/real_estate_crm'
 });
 
 class SimpleEscrowController {
@@ -22,7 +22,7 @@ class SimpleEscrowController {
       const offset = (page - 1) * limit;
 
       // Build WHERE conditions
-      let whereConditions = ['e.deleted_at IS NULL'];
+      let whereConditions = [];
       let queryParams = [];
       let paramIndex = 1;
 
@@ -38,7 +38,7 @@ class SimpleEscrowController {
         paramIndex++;
       }
 
-      const whereClause = whereConditions.join(' AND ');
+      const whereClause = whereConditions.length > 0 ? whereConditions.join(' AND ') : '1=1';
 
       // Count total records
       const countQuery = `
@@ -58,25 +58,10 @@ class SimpleEscrowController {
           property_address as "propertyAddress",
           'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800' as "propertyImage",
           escrow_status as "escrowStatus",
-          transaction_type as "transactionType",
+          property_type as "transactionType",
           purchase_price as "purchasePrice",
           net_commission as "myCommission",
-          json_build_array(
-            CASE WHEN buyer_name IS NOT NULL THEN
-              json_build_object(
-                'name', buyer_name,
-                'type', 'Buyer',
-                'avatar', 'https://i.pravatar.cc/150?u=buyer' || id
-              )
-            END,
-            CASE WHEN seller_name IS NOT NULL THEN
-              json_build_object(
-                'name', seller_name,
-                'type', 'Seller',
-                'avatar', 'https://i.pravatar.cc/150?u=seller' || id
-              )
-            END
-          ) as clients,
+          '[]'::json as clients,
           closing_date as "scheduledCoeDate",
           CASE 
             WHEN closing_date IS NOT NULL 
@@ -84,7 +69,7 @@ class SimpleEscrowController {
             ELSE 0
           END as "daysToClose",
           64 as "checklistProgress",
-          priority_level as "priorityLevel",
+          'medium' as "priorityLevel",
           updated_at as "lastActivity",
           FLOOR(RANDOM() * 5 + 1)::integer as "upcomingDeadlines"
         FROM escrows e
@@ -133,7 +118,7 @@ class SimpleEscrowController {
           e.*,
           'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800' as propertyImage
         FROM escrows e
-        WHERE e.id = $1 AND e.deleted_at IS NULL
+        WHERE e.id = $1
       `;
       
       const escrowResult = await pool.query(escrowQuery, [id]);
