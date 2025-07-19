@@ -23,7 +23,7 @@ services:
   api:
     build: ./backend
     ports:
-      - "3000:3000"
+      - "5050:5050"
     environment:
       NODE_ENV: development
       DATABASE_URL: postgresql://postgres:postgres@postgres:5432/realestate_crm
