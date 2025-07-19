@@ -32,97 +32,8 @@ const transformEscrowForList = (escrow) => ({
 
 // GET /v1/escrows - List all escrows from real database
 router.get('/', async (req, res) => {
-  // Check if we should use database or mock data
-  const useDatabase = req.query.useDatabase !== 'false';
-  
-  if (useDatabase) {
-    // Use real database
-    return EscrowController.getAllEscrows(req, res);
-  }
-  
-  // Fallback to mock data for backwards compatibility
-  try {
-    const { 
-      page = 1, 
-      limit = 20, 
-      status,
-      sort = 'createdDate',
-      order = 'desc',
-      search
-    } = req.query;
-    
-    // Get all escrows from mock database
-    let escrows = databaseService.getAll('escrows');
-    
-    // Apply search filter
-    if (search) {
-      escrows = escrows.filter(escrow => 
-        escrow.propertyAddress?.toLowerCase().includes(search.toLowerCase()) ||
-        escrow.escrowNumber?.toLowerCase().includes(search.toLowerCase()) ||
-        escrow.mlsNumber?.toLowerCase().includes(search.toLowerCase())
-      );
-    }
-    
-    // Apply status filter
-    if (status) {
-      escrows = escrows.filter(escrow => 
-        escrow.escrowStatus?.toLowerCase() === status.toLowerCase()
-      );
-    }
-    
-    // Sort escrows
-    escrows.sort((a, b) => {
-      let aVal = a[sort] || '';
-      let bVal = b[sort] || '';
-      
-      // Handle date sorting
-      if (sort.includes('Date')) {
-        aVal = new Date(aVal).getTime();
-        bVal = new Date(bVal).getTime();
-      }
-      
-      // Handle numeric sorting
-      if (typeof aVal === 'number' && typeof bVal === 'number') {
-        return order === 'desc' ? bVal - aVal : aVal - bVal;
-      }
-      
-      // Handle string sorting
-      if (order === 'desc') {
-        return bVal.toString().localeCompare(aVal.toString());
-      }
-      return aVal.toString().localeCompare(bVal.toString());
-    });
-    
-    // Calculate pagination
-    const total = escrows.length;
-    const startIndex = (parseInt(page) - 1) * parseInt(limit);
-    const endIndex = startIndex + parseInt(limit);
-    const paginatedEscrows = escrows.slice(startIndex, endIndex);
-    
-    // Transform escrows for list view
-    const transformedEscrows = paginatedEscrows.map(transformEscrowForList);
-    
-    res.json({
-      success: true,
-      data: {
-        escrows: transformedEscrows,
-        pagination: {
-          total,
-          page: parseInt(page),
-          limit: parseInt(limit),
-          totalPages: Math.ceil(total / limit)
-        }
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: {
-        code: 'INTERNAL_ERROR',
-        message: 'Failed to fetch escrows'
-      }
-    });
-  }
+  // Always use real database
+  return EscrowController.getAllEscrows(req, res);
 });
 
 // GET /v1/escrows/stats - Get dashboard statistics
@@ -234,42 +145,8 @@ router.get('/stats', (req, res) => {
 
 // GET /v1/escrows/:id - Get single escrow with full details
 router.get('/:id', async (req, res) => {
-  // Check if we should use database or mock data
-  const useDatabase = req.query.useDatabase !== 'false';
-  
-  if (useDatabase) {
-    // Use real database
-    return EscrowController.getEscrowById(req, res);
-  }
-  
-  // Fallback to mock data
-  try {
-    const { id } = req.params;
-    const escrow = databaseService.getById('escrows', id);
-    
-    if (!escrow) {
-      return res.status(404).json({
-        success: false,
-        error: {
-          code: 'NOT_FOUND',
-          message: 'Escrow not found'
-        }
-      });
-    }
-    
-    res.json({
-      success: true,
-      data: escrow
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: {
-        code: 'INTERNAL_ERROR',
-        message: 'Failed to fetch escrow'
-      }
-    });
-  }
+  // Always use real database
+  return EscrowController.getEscrowById(req, res);
 });
 
 // POST /v1/escrows - Create new escrow
