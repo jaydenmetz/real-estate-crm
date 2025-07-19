@@ -151,9 +151,25 @@ const apiInstance = new ApiService();
 
 // Export specific API methods for better organization
 export const escrowsAPI = {
-  getAll: (params) => apiInstance.get('/escrows/database', params),
-  getById: (id) => apiInstance.get(`/escrows/database/${id}`),
-  getOne: (id) => apiInstance.get(`/escrows/database/${id}`), // Alias for consistency
+  // Temporarily use different endpoints for production vs development
+  getAll: (params) => {
+    const isProd = window.location.hostname === 'crm.jaydenmetz.com';
+    return isProd 
+      ? apiInstance.get('/escrows', { ...params, useDatabase: false })
+      : apiInstance.get('/escrows/database', params);
+  },
+  getById: (id) => {
+    const isProd = window.location.hostname === 'crm.jaydenmetz.com';
+    return isProd
+      ? apiInstance.get(`/escrows/${id}`, { useDatabase: false })
+      : apiInstance.get(`/escrows/database/${id}`);
+  },
+  getOne: (id) => {
+    const isProd = window.location.hostname === 'crm.jaydenmetz.com';
+    return isProd
+      ? apiInstance.get(`/escrows/${id}`, { useDatabase: false })
+      : apiInstance.get(`/escrows/database/${id}`);
+  }, // Alias for consistency
   create: (data) => apiInstance.post('/escrows', data),
   update: (id, data) => apiInstance.put(`/escrows/${id}`, data),
   delete: (id) => apiInstance.delete(`/escrows/${id}`),
