@@ -1,6 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const databaseService = require('../services/database.service');
+const EscrowController = require('../controllers/escrowController.updated');
+
+// Database routes (prioritize these over mock routes)
+router.get('/database', EscrowController.getAllEscrows);
+router.get('/database/:id', EscrowController.getEscrowById);
 
 // Helper function to transform database escrow to API response format for list view
 const transformEscrowForList = (escrow) => ({
@@ -25,8 +30,17 @@ const transformEscrowForList = (escrow) => ({
   upcomingDeadlines: escrow.activityStats?.upcomingDeadlines || 0
 });
 
-// GET /v1/escrows - List all escrows
-router.get('/', (req, res) => {
+// GET /v1/escrows - List all escrows from real database
+router.get('/', async (req, res) => {
+  // Check if we should use database or mock data
+  const useDatabase = req.query.useDatabase !== 'false';
+  
+  if (useDatabase) {
+    // Use real database
+    return EscrowController.getAllEscrows(req, res);
+  }
+  
+  // Fallback to mock data for backwards compatibility
   try {
     const { 
       page = 1, 
@@ -37,7 +51,7 @@ router.get('/', (req, res) => {
       search
     } = req.query;
     
-    // Get all escrows from database
+    // Get all escrows from mock database
     let escrows = databaseService.getAll('escrows');
     
     // Apply search filter
@@ -219,7 +233,16 @@ router.get('/stats', (req, res) => {
 });
 
 // GET /v1/escrows/:id - Get single escrow with full details
-router.get('/:id', (req, res) => {
+router.get('/:id', async (req, res) => {
+  // Check if we should use database or mock data
+  const useDatabase = req.query.useDatabase !== 'false';
+  
+  if (useDatabase) {
+    // Use real database
+    return EscrowController.getEscrowById(req, res);
+  }
+  
+  // Fallback to mock data
   try {
     const { id } = req.params;
     const escrow = databaseService.getById('escrows', id);

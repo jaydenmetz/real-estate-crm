@@ -1047,15 +1047,80 @@ const EscrowDetailMerged = () => {
   const [viewMode, setViewMode] = useState('overview'); // overview, detailed
   const [selectedImage, setSelectedImage] = useState(0);
 
+  // Transform database escrow to expected format
+  const transformDetailedEscrow = (dbData) => {
+    if (!dbData) return mockEscrowData;
+    
+    // Handle different response formats
+    const escrowData = dbData.data || dbData;
+    
+    return {
+      id: escrowData.id,
+      escrowNumber: escrowData.id,
+      propertyAddress: escrowData.property_address || escrowData.propertyAddress,
+      property: {
+        address: escrowData.property_address || escrowData.propertyAddress,
+        type: escrowData.property_type || 'Single Family',
+        sqft: 0, // Not in database yet
+        bedrooms: 0, // Not in database yet
+        bathrooms: 0, // Not in database yet
+        yearBuilt: null, // Not in database yet
+        lotSize: null, // Not in database yet
+        images: ['https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800'],
+      },
+      status: escrowData.escrow_status || escrowData.escrowStatus || 'Active',
+      listPrice: parseFloat(escrowData.purchase_price) || 0,
+      purchasePrice: parseFloat(escrowData.purchase_price) || 0,
+      downPayment: parseFloat(escrowData.down_payment) || 0,
+      loanAmount: parseFloat(escrowData.loan_amount) || 0,
+      earnestMoneyDeposit: parseFloat(escrowData.earnest_money_deposit) || 0,
+      estimatedCloseDate: escrowData.closing_date || escrowData.closingDate,
+      acceptanceDate: escrowData.acceptance_date || escrowData.acceptanceDate,
+      closeOfEscrowDate: escrowData.closing_date || escrowData.closingDate,
+      
+      // Commission info
+      commission: {
+        totalCommission: parseFloat(escrowData.gross_commission) || 0,
+        myCommission: parseFloat(escrowData.gross_commission || 0) * 0.5,
+        rate: parseFloat(escrowData.commission_percentage) || 3,
+        split: 50,
+      },
+      
+      // Participants
+      buyers: escrowData.buyers || [],
+      sellers: escrowData.sellers || [],
+      buyerAgent: escrowData.buyer_agent || null,
+      listingAgent: escrowData.listing_agent || null,
+      
+      // Other data
+      checklist: escrowData.checklist || [],
+      documents: escrowData.documents || [],
+      timeline: escrowData.timeline || [],
+      activities: escrowData.timeline || [],
+      
+      // Defaults for missing fields
+      escrowCompany: 'First American Title',
+      titleCompany: 'Chicago Title',
+      lender: 'Wells Fargo Home Mortgage',
+      escrowOfficer: {
+        name: 'Lisa Wilson',
+        email: 'lisa.wilson@firstamerican.com',
+        phone: '(619) 555-0999',
+      },
+    };
+  };
+
   // Fetch escrow data
-  const { data: escrow = mockEscrowData, isLoading } = useQuery(
+  const { data: rawData, isLoading } = useQuery(
     ['escrow', id],
     () => escrowsAPI.getOne(id),
     {
-      initialData: mockEscrowData,
       refetchInterval: 30000, // Refresh every 30 seconds for real-time updates
     }
   );
+
+  // Transform the data
+  const escrow = transformDetailedEscrow(rawData);
 
   // Calculate metrics
   const daysToClose = escrow.estimatedCloseDate 

@@ -224,6 +224,45 @@ const AnimatedButton = styled(Button)(({ theme }) => ({
 // Empty data for fresh start
 const mockEscrows = [];
 
+// Transform database escrow to frontend format
+const transformDatabaseEscrow = (dbEscrow) => {
+  // Calculate days to close
+  const calculateDaysToClose = (closingDate) => {
+    if (!closingDate) return null;
+    const close = new Date(closingDate);
+    const today = new Date();
+    const diffTime = close - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays > 0 ? diffDays : 0;
+  };
+
+  // Get primary buyer and seller names
+  const primaryBuyer = dbEscrow.primary_buyer || 
+    (dbEscrow.buyers && dbEscrow.buyers.length > 0 ? dbEscrow.buyers[0].full_name : null);
+  const primarySeller = dbEscrow.primary_seller || 
+    (dbEscrow.sellers && dbEscrow.sellers.length > 0 ? dbEscrow.sellers[0].full_name : null);
+
+  return {
+    id: dbEscrow.id,
+    escrowNumber: dbEscrow.id, // Using ID as escrow number for now
+    propertyAddress: dbEscrow.property_address || dbEscrow.propertyAddress,
+    propertyImage: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800',
+    escrowStatus: dbEscrow.escrow_status || dbEscrow.escrowStatus || 'Active',
+    propertyType: dbEscrow.property_type || 'Single Family',
+    purchasePrice: parseFloat(dbEscrow.purchase_price) || 0,
+    closingDate: dbEscrow.closing_date || dbEscrow.closingDate,
+    daysToClose: calculateDaysToClose(dbEscrow.closing_date || dbEscrow.closingDate),
+    grossCommission: parseFloat(dbEscrow.gross_commission) || 0,
+    myCommission: parseFloat(dbEscrow.gross_commission || 0) * 0.5, // Assuming 50% split
+    primaryBuyer: primaryBuyer,
+    primarySeller: primarySeller,
+    buyers: dbEscrow.buyers || [],
+    sellers: dbEscrow.sellers || [],
+    listingAgent: dbEscrow.listing_agent || null,
+    buyerAgent: dbEscrow.buyer_agent || null,
+  };
+};
+
 const EscrowsDashboard = () => {
   const [tabValue, setTabValue] = useState(0);
   const [openForm, setOpenForm] = useState(false);
@@ -280,8 +319,22 @@ const EscrowsDashboard = () => {
     }
   );
 
-  // Use mock data if API fails
-  const escrows = data?.escrows || mockEscrows;
+  // Process escrows based on data source
+  let escrows = [];
+  if (data) {
+    if (Array.isArray(data)) {
+      // Direct array response from database
+      escrows = data.map(transformDatabaseEscrow);
+    } else if (data.data && Array.isArray(data.data)) {
+      // Wrapped response { data: [...] }
+      escrows = data.data.map(transformDatabaseEscrow);
+    } else if (data.escrows) {
+      // Mock data format { escrows: [...] }
+      escrows = data.escrows;
+    }
+  } else {
+    escrows = mockEscrows;
+  }
 
   // Calculate stats
   const stats = {
