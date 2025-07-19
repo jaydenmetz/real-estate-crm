@@ -54,13 +54,13 @@ class SimpleEscrowController {
       const listQuery = `
         SELECT 
           id,
-          escrow_number as escrowNumber,
-          property_address as propertyAddress,
-          'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800' as propertyImage,
-          escrow_status as escrowStatus,
-          transaction_type as transactionType,
-          purchase_price as purchasePrice,
-          net_commission as myCommission,
+          escrow_number as "escrowNumber",
+          property_address as "propertyAddress",
+          'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800' as "propertyImage",
+          escrow_status as "escrowStatus",
+          transaction_type as "transactionType",
+          purchase_price as "purchasePrice",
+          net_commission as "myCommission",
           json_build_array(
             CASE WHEN buyer_name IS NOT NULL THEN
               json_build_object(
@@ -77,16 +77,16 @@ class SimpleEscrowController {
               )
             END
           ) as clients,
-          closing_date as scheduledCoeDate,
+          closing_date as "scheduledCoeDate",
           CASE 
             WHEN closing_date IS NOT NULL 
             THEN DATE_PART('day', closing_date::timestamp - CURRENT_TIMESTAMP)::integer
             ELSE 0
-          END as daysToClose,
-          64 as checklistProgress,
-          priority_level as priorityLevel,
-          updated_at as lastActivity,
-          FLOOR(RANDOM() * 5 + 1)::integer as upcomingDeadlines
+          END as "daysToClose",
+          64 as "checklistProgress",
+          priority_level as "priorityLevel",
+          updated_at as "lastActivity",
+          FLOOR(RANDOM() * 5 + 1)::integer as "upcomingDeadlines"
         FROM escrows e
         WHERE ${whereClause}
         ORDER BY ${sort} ${order.toUpperCase()}
