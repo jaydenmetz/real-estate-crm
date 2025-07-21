@@ -58,6 +58,7 @@ class SimpleEscrowController {
           purchase_price as "purchasePrice",
           net_commission as "myCommission",
           '[]'::json as clients,
+          acceptance_date as "acceptanceDate",
           closing_date as "scheduledCoeDate",
           CASE 
             WHEN closing_date IS NOT NULL 
