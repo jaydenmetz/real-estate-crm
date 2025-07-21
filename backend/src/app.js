@@ -482,63 +482,63 @@ apiRouter.get('/leads', async (req, res) => {
   }
 });
 
-// Escrows endpoint
-apiRouter.get('/escrows', async (req, res) => {
-  try {
-    const mockEscrows = [
-      {
-        id: '1',
-        propertyAddress: '123 Main St, Anytown, CA 12345',
-        purchasePrice: 485000,
-        buyers: ['Henderson Family'],
-        sellers: ['Smith Family'], 
-        acceptanceDate: '2025-06-15',
-        closingDate: '2025-07-15',
-        status: 'Active',
-        escrowNumber: 'ESC-2025-001',
-        titleCompany: 'First American Title',
-        lender: 'Wells Fargo Bank',
-        agent: 'You',
-        commission: 14550
-      },
-      {
-        id: '2',
-        propertyAddress: '456 Oak Ave, Anytown, CA 12345', 
-        purchasePrice: 525000,
-        buyers: ['Wilson LLC'],
-        sellers: ['Rodriguez Family'],
-        acceptanceDate: '2025-06-20',
-        closingDate: '2025-07-20',
-        status: 'Pending',
-        escrowNumber: 'ESC-2025-002', 
-        titleCompany: 'Chicago Title',
-        lender: 'Bank of America',
-        agent: 'You',
-        commission: 15750
-      }
-    ];
-
-    res.json({
-      success: true,
-      data: {
-        escrows: mockEscrows,
-        total: mockEscrows.length,
-        page: 1,
-        pages: 1
-      },
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    logger.error('Error fetching escrows:', error);
-    res.status(500).json({
-      success: false,
-      error: {
-        code: 'FETCH_ERROR', 
-        message: 'Failed to fetch escrows'
-      }
-    });
-  }
-});
+// Mock Escrows endpoint - DISABLED (using database route instead)
+// apiRouter.get('/escrows', async (req, res) => {
+//   try {
+//     const mockEscrows = [
+//       {
+//         id: '1',
+//         propertyAddress: '123 Main St, Anytown, CA 12345',
+//         purchasePrice: 485000,
+//         buyers: ['Henderson Family'],
+//         sellers: ['Smith Family'], 
+//         acceptanceDate: '2025-06-15',
+//         closingDate: '2025-07-15',
+//         status: 'Active',
+//         escrowNumber: 'ESC-2025-001',
+//         titleCompany: 'First American Title',
+//         lender: 'Wells Fargo Bank',
+//         agent: 'You',
+//         commission: 14550
+//       },
+//       {
+//         id: '2',
+//         propertyAddress: '456 Oak Ave, Anytown, CA 12345', 
+//         purchasePrice: 525000,
+//         buyers: ['Wilson LLC'],
+//         sellers: ['Rodriguez Family'],
+//         acceptanceDate: '2025-06-20',
+//         closingDate: '2025-07-20',
+//         status: 'Pending',
+//         escrowNumber: 'ESC-2025-002', 
+//         titleCompany: 'Chicago Title',
+//         lender: 'Bank of America',
+//         agent: 'You',
+//         commission: 15750
+//       }
+//     ];
+// 
+//     res.json({
+//       success: true,
+//       data: {
+//         escrows: mockEscrows,
+//         total: mockEscrows.length,
+//         page: 1,
+//         pages: 1
+//       },
+//       timestamp: new Date().toISOString()
+//     });
+//   } catch (error) {
+//     logger.error('Error fetching escrows:', error);
+//     res.status(500).json({
+//       success: false,
+//       error: {
+//         code: 'FETCH_ERROR', 
+//         message: 'Failed to fetch escrows'
+//       }
+//     });
+//   }
+// });
 
 // Listings endpoint
 apiRouter.get('/listings', async (req, res) => {
