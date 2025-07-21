@@ -95,7 +95,8 @@ class SimpleEscrowController {
         success: false,
         error: {
           code: 'SERVER_ERROR',
-          message: 'Failed to fetch escrows'
+          message: 'Failed to fetch escrows',
+          details: process.env.NODE_ENV === 'development' ? error.message : undefined
         }
       });
     }

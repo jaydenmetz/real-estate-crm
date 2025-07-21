@@ -13,10 +13,17 @@ const { initializeRedis } = require('./config/redis');
 (async () => {
   try {
     await initializeDatabase();
-    await initializeRedis();
-    console.log('✅ Database and Redis ready');
+    console.log('✅ Database ready');
+    
+    // Try to initialize Redis but don't fail if it's not available
+    try {
+      await initializeRedis();
+      console.log('✅ Redis ready');
+    } catch (redisErr) {
+      console.warn('⚠️  Redis not available, continuing without cache', redisErr.message);
+    }
   } catch (err) {
-    console.error('❌ Failed to initialize services', err);
+    console.error('❌ Failed to initialize database', err);
     process.exit(1);
   }
 })();
@@ -143,6 +150,7 @@ apiRouter.use('/ai', require('./routes/ai.routes'));
 apiRouter.use('/webhooks', require('./routes/webhooks.routes'));
 apiRouter.use('/documents', require('./routes/documents.routes'));
 apiRouter.use('/debug', require('./routes/debug'));
+apiRouter.use('/test-connection', require('./routes/test-connection'));
 
 // Financial routes
 apiRouter.use('/commissions', require('./routes/commissions.routes'));
