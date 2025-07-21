@@ -91,13 +91,26 @@ class SimpleEscrowController {
 
     } catch (error) {
       console.error('Error fetching escrows:', error);
+      
+      // Provide more detailed error information
+      const errorResponse = {
+        code: 'SERVER_ERROR',
+        message: 'Failed to fetch escrows',
+        details: {
+          errorMessage: error.message,
+          errorCode: error.code,
+          errorName: error.name
+        }
+      };
+      
+      // Add database connection info
+      if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
+        errorResponse.details.hint = 'Database connection failed - check DATABASE_URL';
+      }
+      
       res.status(500).json({
         success: false,
-        error: {
-          code: 'SERVER_ERROR',
-          message: 'Failed to fetch escrows',
-          details: process.env.NODE_ENV === 'development' ? error.message : undefined
-        }
+        error: errorResponse
       });
     }
   }

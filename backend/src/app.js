@@ -151,6 +151,7 @@ apiRouter.use('/webhooks', require('./routes/webhooks.routes'));
 apiRouter.use('/documents', require('./routes/documents.routes'));
 apiRouter.use('/debug', require('./routes/debug'));
 apiRouter.use('/test-connection', require('./routes/test-connection'));
+apiRouter.use('/simple-test', require('./routes/simple-test'));
 
 // Financial routes
 apiRouter.use('/commissions', require('./routes/commissions.routes'));
