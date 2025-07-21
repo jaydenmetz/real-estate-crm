@@ -50,7 +50,7 @@ class SimpleEscrowController {
       const listQuery = `
         SELECT 
           id,
-          escrow_number as "escrowNumber",
+          id as "escrowNumber",
           property_address as "propertyAddress",
           'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800' as "propertyImage",
           escrow_status as "escrowStatus",
@@ -148,11 +148,11 @@ class SimpleEscrowController {
       // Format the response
       const response = {
         id: escrow.id,
-        escrowNumber: escrow.escrow_number,
+        escrowNumber: escrow.escrow_number || escrow.id,
         propertyAddress: escrow.property_address,
         propertyImage: escrow.propertyImage,
         escrowStatus: escrow.escrow_status,
-        transactionType: escrow.transaction_type,
+        transactionType: escrow.property_type || 'Single Family',
         purchasePrice: parseFloat(escrow.purchase_price) || 0,
         earnestMoneyDeposit: parseFloat(escrow.earnest_money_deposit) || 0,
         downPayment: parseFloat(escrow.down_payment) || 0,
@@ -166,34 +166,11 @@ class SimpleEscrowController {
         leadSource: escrow.lead_source,
         
         // Clients array for list view compatibility
-        clients: [
-          escrow.buyer_name ? {
-            name: escrow.buyer_name,
-            type: 'Buyer',
-            email: escrow.buyer_email,
-            phone: escrow.buyer_phone,
-            avatar: `https://i.pravatar.cc/150?u=buyer${escrow.id}`
-          } : null,
-          escrow.seller_name ? {
-            name: escrow.seller_name,
-            type: 'Seller',
-            email: escrow.seller_email,
-            phone: escrow.seller_phone,
-            avatar: `https://i.pravatar.cc/150?u=seller${escrow.id}`
-          } : null
-        ].filter(Boolean),
+        clients: [],
         
         // Separate objects for detail view
-        buyer: escrow.buyer_name ? {
-          name: escrow.buyer_name,
-          email: escrow.buyer_email,
-          phone: escrow.buyer_phone
-        } : null,
-        seller: escrow.seller_name ? {
-          name: escrow.seller_name,
-          email: escrow.seller_email,
-          phone: escrow.seller_phone
-        } : null,
+        buyer: null,
+        seller: null,
         
         // Mock data for features not yet implemented
         propertyDetails: {
