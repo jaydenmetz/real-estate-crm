@@ -142,6 +142,7 @@ apiRouter.use('/analytics', require('./routes/analytics'));
 apiRouter.use('/ai', require('./routes/ai.routes'));
 apiRouter.use('/webhooks', require('./routes/webhooks.routes'));
 apiRouter.use('/documents', require('./routes/documents.routes'));
+apiRouter.use('/debug', require('./routes/debug'));
 
 // Financial routes
 apiRouter.use('/commissions', require('./routes/commissions.routes'));
