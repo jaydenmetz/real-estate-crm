@@ -47,11 +47,14 @@ class SimpleEscrowController {
 
       // Main query - simplified with data directly from escrows table
       queryParams.push(limit, offset);
+      // Add environment suffix for local development
+      const envSuffix = process.env.NODE_ENV === 'development' ? ' - LOCAL' : '';
+      
       const listQuery = `
         SELECT 
           id,
           id as "escrowNumber",
-          property_address as "propertyAddress",
+          property_address || '${envSuffix}' as "propertyAddress",
           'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800' as "propertyImage",
           escrow_status as "escrowStatus",
           property_type as "transactionType",
@@ -145,12 +148,15 @@ class SimpleEscrowController {
       }
 
       const escrow = escrowResult.rows[0];
+      
+      // Add environment suffix for local development
+      const envSuffix = process.env.NODE_ENV === 'development' ? ' - LOCAL' : '';
 
       // Format the response
       const response = {
         id: escrow.id,
         escrowNumber: escrow.escrow_number || escrow.id,
-        propertyAddress: escrow.property_address,
+        propertyAddress: escrow.property_address + envSuffix,
         propertyImage: escrow.propertyImage,
         escrowStatus: escrow.escrow_status,
         transactionType: escrow.property_type || 'Single Family',

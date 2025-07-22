@@ -6,9 +6,13 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "dev:local": "cp .env.local .env && nodemon server.js",
+    "dev:prod": "cp .env.production .env && NODE_ENV=production node server.js",
     "migrate": "node src/scripts/migrate.js",
     "migrate:create": "node src/scripts/create-migration.js",
-    "test": "jest"
+    "test": "jest",
+    "env:local": "./scripts/switch-env.sh local",
+    "env:prod": "./scripts/switch-env.sh production"
   },
   "dependencies": {
     "aws-sdk": "^2.1692.0",
