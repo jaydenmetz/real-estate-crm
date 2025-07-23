@@ -49,15 +49,24 @@ router.get('/stats', (req, res) => {
     
     const closedThisMonth = escrows.filter(e => {
       if (e.escrowStatus !== 'closed') return false;
-      const closeDate = new Date(e.actualCoeDate || e.scheduledCoeDate);
+      const dateStr = e.actualCoeDate || e.scheduledCoeDate || e.closing_date;
+      if (!dateStr) return false;
+      const closeDate = new Date(dateStr);
+      if (isNaN(closeDate.getTime())) return false;
       return closeDate.getMonth() === thisMonth && closeDate.getFullYear() === thisYear;
     }).length;
     
     const avgDaysToClose = escrows
       .filter(e => e.escrowStatus === 'closed' && e.actualCoeDate)
       .reduce((sum, e) => {
-        const openDate = new Date(e.escrowOpenDate);
-        const closeDate = new Date(e.actualCoeDate);
+        const openDateStr = e.escrowOpenDate || e.acceptanceDate || e.acceptance_date;
+        const closeDateStr = e.actualCoeDate || e.closing_date;
+        if (!openDateStr || !closeDateStr) return sum;
+        
+        const openDate = new Date(openDateStr);
+        const closeDate = new Date(closeDateStr);
+        if (isNaN(openDate.getTime()) || isNaN(closeDate.getTime())) return sum;
+        
         const days = Math.floor((closeDate - openDate) / (24 * 60 * 60 * 1000));
         return sum + days;
       }, 0) / (escrows.filter(e => e.escrowStatus === 'closed').length || 1);
@@ -68,17 +77,26 @@ router.get('/stats', (req, res) => {
     const twoMonthsFromNow = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
     
     const thisWeek = escrows.filter(e => {
-      const closeDate = new Date(e.scheduledCoeDate);
+      const dateStr = e.scheduledCoeDate || e.closing_date;
+      if (!dateStr) return false;
+      const closeDate = new Date(dateStr);
+      if (isNaN(closeDate.getTime())) return false;
       return e.escrowStatus === 'active' && closeDate <= oneWeekFromNow;
     }).length;
     
     const thisMonthPipeline = escrows.filter(e => {
-      const closeDate = new Date(e.scheduledCoeDate);
+      const dateStr = e.scheduledCoeDate || e.closing_date;
+      if (!dateStr) return false;
+      const closeDate = new Date(dateStr);
+      if (isNaN(closeDate.getTime())) return false;
       return e.escrowStatus === 'active' && closeDate <= oneMonthFromNow;
     }).length;
     
     const nextMonth = escrows.filter(e => {
-      const closeDate = new Date(e.scheduledCoeDate);
+      const dateStr = e.scheduledCoeDate || e.closing_date;
+      if (!dateStr) return false;
+      const closeDate = new Date(dateStr);
+      if (isNaN(closeDate.getTime())) return false;
       return e.escrowStatus === 'active' && closeDate > oneMonthFromNow && closeDate <= twoMonthsFromNow;
     }).length;
     
@@ -94,7 +112,10 @@ router.get('/stats', (req, res) => {
       
       const monthlyEscrows = escrows.filter(e => {
         if (e.escrowStatus !== 'closed') return false;
-        const closeDate = new Date(e.actualCoeDate || e.scheduledCoeDate);
+        const dateStr = e.actualCoeDate || e.scheduledCoeDate || e.closing_date;
+        if (!dateStr) return false;
+        const closeDate = new Date(dateStr);
+        if (isNaN(closeDate.getTime())) return false;
         return closeDate.getMonth() === trendDate.getMonth() && 
                closeDate.getFullYear() === trendDate.getFullYear();
       });
@@ -387,8 +408,12 @@ router.post('/:id/timeline', (req, res) => {
     
     escrow.timeline.push(newEvent);
     
-    // Sort timeline by date (newest first)
-    escrow.timeline.sort((a, b) => new Date(b.date) - new Date(a.date));
+    // Sort timeline by date (newest first) with safe date parsing
+    escrow.timeline.sort((a, b) => {
+      const dateA = a.date ? new Date(a.date) : new Date(0);
+      const dateB = b.date ? new Date(b.date) : new Date(0);
+      return dateB.getTime() - dateA.getTime();
+    });
     
     databaseService.update('escrows', id, escrow);
     
