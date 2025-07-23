@@ -62,8 +62,8 @@ class SimpleEscrowController {
           purchase_price as "purchasePrice",
           net_commission as "myCommission",
           '[]'::jsonb as clients,
-          TO_CHAR(acceptance_date, 'YYYY-MM-DD') as "acceptanceDate",
-          TO_CHAR(closing_date, 'YYYY-MM-DD') as "scheduledCoeDate",
+          COALESCE(TO_CHAR(acceptance_date, 'YYYY-MM-DD'), '') as "acceptanceDate",
+          COALESCE(TO_CHAR(closing_date, 'YYYY-MM-DD'), '') as "scheduledCoeDate",
           CASE 
             WHEN closing_date IS NOT NULL 
             THEN DATE_PART('day', closing_date::timestamp - CURRENT_TIMESTAMP)::integer
@@ -71,7 +71,7 @@ class SimpleEscrowController {
           END as "daysToClose",
           64 as "checklistProgress",
           'medium' as "priorityLevel",
-          TO_CHAR(updated_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as "lastActivity",
+          COALESCE(TO_CHAR(updated_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"'), TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"'), '') as "lastActivity",
           FLOOR(RANDOM() * 5 + 1)::integer as "upcomingDeadlines"
         FROM escrows e
         WHERE ${whereClause}
