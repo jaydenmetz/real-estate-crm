@@ -167,8 +167,8 @@ class SimpleEscrowController {
         commissionPercentage: parseFloat(escrow.commission_percentage) || 0,
         grossCommission: parseFloat(escrow.gross_commission) || 0,
         myCommission: parseFloat(escrow.net_commission) || 0,
-        acceptanceDate: escrow.acceptance_date,
-        scheduledCoeDate: escrow.closing_date,
+        acceptanceDate: escrow.acceptance_date ? new Date(escrow.acceptance_date).toISOString().split('T')[0] : null,
+        scheduledCoeDate: escrow.closing_date ? new Date(escrow.closing_date).toISOString().split('T')[0] : null,
         propertyType: escrow.property_type,
         leadSource: escrow.lead_source,
         
@@ -192,20 +192,20 @@ class SimpleEscrowController {
         
         timeline: [
           {
-            date: escrow.created_at,
+            date: escrow.created_at ? new Date(escrow.created_at).toISOString() : new Date().toISOString(),
             event: 'Escrow Created',
             type: 'milestone',
             icon: 'start',
             description: 'New escrow initiated'
           },
-          {
-            date: escrow.acceptance_date,
+          escrow.acceptance_date ? {
+            date: new Date(escrow.acceptance_date).toISOString(),
             event: 'Offer Accepted',
             type: 'milestone',
             icon: 'check',
             description: 'Purchase agreement signed'
-          }
-        ],
+          } : null
+        ].filter(Boolean),
         
         checklistProgress: {
           phase1: { completed: 8, total: 10, percentage: 80 },
@@ -227,8 +227,8 @@ class SimpleEscrowController {
         
         importantNotes: 'Buyer pre-approved for loan. Inspection scheduled for next week.',
         
-        created_at: escrow.created_at,
-        updated_at: escrow.updated_at
+        created_at: escrow.created_at ? new Date(escrow.created_at).toISOString() : new Date().toISOString(),
+        updated_at: escrow.updated_at ? new Date(escrow.updated_at).toISOString() : new Date().toISOString()
       };
 
       res.json({
