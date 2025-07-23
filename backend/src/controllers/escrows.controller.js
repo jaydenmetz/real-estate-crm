@@ -71,7 +71,11 @@ class SimpleEscrowController {
           END as "daysToClose",
           64 as "checklistProgress",
           'medium' as "priorityLevel",
-          COALESCE(TO_CHAR(updated_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"'), TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"'), '') as "lastActivity",
+          CASE 
+            WHEN updated_at IS NOT NULL THEN TO_CHAR(updated_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+            WHEN created_at IS NOT NULL THEN TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
+            ELSE NULL
+          END as "lastActivity",
           FLOOR(RANDOM() * 5 + 1)::integer as "upcomingDeadlines"
         FROM escrows e
         WHERE ${whereClause}

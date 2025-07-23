@@ -26,7 +26,7 @@ const transformEscrowForList = (escrow) => ({
   daysToClose: escrow.activityStats?.daysToClose || 0,
   checklistProgress: escrow.checklistProgress?.overall?.percentage || 0,
   priorityLevel: escrow.priorityLevel,
-  lastActivity: escrow.lastModifiedDate,
+  lastActivity: escrow.lastActivity || escrow.lastModifiedDate || escrow.updatedAt || escrow.createdAt || null,
   upcomingDeadlines: escrow.activityStats?.upcomingDeadlines || 0
 });
 

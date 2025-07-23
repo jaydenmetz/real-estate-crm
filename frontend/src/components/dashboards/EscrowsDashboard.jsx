@@ -260,6 +260,7 @@ const transformDatabaseEscrow = (dbEscrow) => {
     sellers: dbEscrow.sellers || [],
     listingAgent: dbEscrow.listing_agent || null,
     buyerAgent: dbEscrow.buyer_agent || null,
+    lastActivity: dbEscrow.lastActivity || dbEscrow.last_activity || null,
   };
 };
 

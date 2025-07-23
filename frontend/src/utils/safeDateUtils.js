@@ -16,8 +16,9 @@ export function safeParseDate(dateValue) {
     
     // Try to parse string
     if (typeof dateValue === 'string') {
-      // Handle empty strings
-      if (dateValue.trim() === '') return null;
+      // Handle empty strings, "null", "undefined", and other invalid strings
+      const trimmed = dateValue.trim();
+      if (trimmed === '' || trimmed === 'null' || trimmed === 'undefined') return null;
       
       // Try ISO parse first
       const parsed = parseISO(dateValue);
