@@ -170,60 +170,9 @@ router.get('/:id', async (req, res) => {
   return EscrowController.getEscrowById(req, res);
 });
 
-// POST /v1/escrows - Create new escrow
+// POST /v1/escrows - Create new escrow with sequential ID
 router.post('/', (req, res) => {
-  try {
-    // Generate escrow number
-    const escrowCount = databaseService.getAll('escrows').length;
-    const escrowNumber = `${new Date().getFullYear()}-${String(escrowCount + 1).padStart(4, '0')}`;
-    
-    // Prepare new escrow data
-    const newEscrowData = {
-      ...req.body,
-      escrowNumber,
-      escrowStatus: req.body.escrowStatus || 'active',
-      createdBy: 'jaydenmetz',
-      assignedTo: 'jaydenmetz',
-      // Set default values for required fields
-      activityStats: {
-        daysInEscrow: 0,
-        daysToClose: 30,
-        tasksCompletedToday: 0,
-        upcomingDeadlines: 0,
-        documentsUploaded: 0,
-        communicationScore: 100
-      },
-      checklistProgress: {
-        phase1: { completed: 0, total: 10, percentage: 0 },
-        phase2: { completed: 0, total: 8, percentage: 0 },
-        phase3: { completed: 0, total: 7, percentage: 0 },
-        overall: { completed: 0, total: 25, percentage: 0 }
-      },
-      timeline: [{
-        date: new Date().toISOString(),
-        event: 'Escrow Created',
-        type: 'milestone',
-        icon: 'start',
-        description: 'New escrow initiated'
-      }]
-    };
-    
-    const newEscrow = databaseService.create('escrows', newEscrowData);
-    
-    res.status(201).json({
-      success: true,
-      data: newEscrow,
-      message: 'Escrow created successfully'
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: {
-        code: 'INTERNAL_ERROR',
-        message: 'Failed to create escrow'
-      }
-    });
-  }
+  return EscrowController.createEscrow(req, res);
 });
 
 // PUT /v1/escrows/:id - Update escrow
