@@ -299,15 +299,13 @@ const EscrowCard = ({ escrow, onClick, index }) => {
                   <Box display="flex" alignItems="center" gap={1} mb={0.5}>
                     <Handshake sx={{ fontSize: 16, color: 'info.main' }} />
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {/* {safeFormatDate(escrow.acceptanceDate, 'MMM d, yyyy')} */}
-                      Acceptance Date
+                      {safeFormatDate(escrow.acceptanceDate, 'MMM d, yyyy')}
                     </Typography>
                   </Box>
                   <Box display="flex" alignItems="center" gap={1}>
                     <AccountBalance sx={{ fontSize: 16, color: 'primary.main' }} />
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {/* {safeFormatDate(escrow.scheduledCoeDate, 'MMM d, yyyy')} */}
-                      Closing Date
+                      {safeFormatDate(escrow.scheduledCoeDate, 'MMM d, yyyy')}
                     </Typography>
                   </Box>
                 </Box>
@@ -443,7 +441,7 @@ const EscrowsDashboard = () => {
         const now = new Date();
         return closeDate.getMonth() === now.getMonth() && closeDate.getFullYear() === now.getFullYear();
       }).length, */
-      avgDaysToClose: Math.round(active.reduce((sum, e) => sum + (e.daysToClose || 0), 0) / (active.length || 1)),
+      avgDaysToClose: Math.round(active.reduce((sum, e) => sum + (Number(e.daysToClose) || 0), 0) / (active.length || 1)),
     });
   };
 
@@ -454,7 +452,7 @@ const EscrowsDashboard = () => {
     
     for (let i = 5; i >= 0; i--) {
       const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthName = 'Month'; // Temporarily disabled: date.toLocaleString('default', { month: 'short' });
+      const monthName = date.toLocaleString('default', { month: 'short' });
       
       const monthEscrows = []; /* Temporarily disabled date filtering
       const monthEscrows = escrowData.filter(e => {

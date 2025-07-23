@@ -495,7 +495,7 @@ import {
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
-// import { format, formatDistanceToNow, addDays, differenceInDays, isAfter, isBefore } from 'date-fns';
+import { format, formatDistanceToNow, addDays, differenceInDays, isAfter, isBefore, isValid, parseISO } from 'date-fns';
 import { escrowsAPI, documentsAPI } from '../../services/api';
 import CountUp from 'react-countup';
 import {
@@ -1036,6 +1036,19 @@ const EscrowDetail = () => {
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const queryClient = useQueryClient();
 
+  // Safe date formatting helper
+  const safeFormat = (dateValue, formatString) => {
+    if (!dateValue) return 'N/A';
+    try {
+      const date = typeof dateValue === 'string' ? parseISO(dateValue) : dateValue;
+      if (!isValid(date)) return 'N/A';
+      return format(date, formatString);
+    } catch (error) {
+      console.warn('Date formatting error:', error);
+      return 'N/A';
+    }
+  };
+
   // State
   const [activeTab, setActiveTab] = useState(0);
   const [anchorEl, setAnchorEl] = useState(null);
@@ -1123,10 +1136,19 @@ const EscrowDetail = () => {
   const escrow = transformDetailedEscrow(rawData);
 
   // Calculate metrics
-  const daysToClose = 0; /* Temporarily disabled
-  const daysToClose = escrow.estimatedCloseDate 
-    ? differenceInDays(new Date(escrow.estimatedCloseDate), new Date())
-    : 0; */
+  const daysToClose = (() => {
+    try {
+      if (!escrow.estimatedCloseDate) return 0;
+      const closeDate = typeof escrow.estimatedCloseDate === 'string' 
+        ? parseISO(escrow.estimatedCloseDate) 
+        : escrow.estimatedCloseDate;
+      if (!isValid(closeDate)) return 0;
+      return Math.max(0, differenceInDays(closeDate, new Date()));
+    } catch (error) {
+      console.warn('Error calculating days to close:', error);
+      return 0;
+    }
+  })();
   
   const totalTasks = escrow.checklist 
     ? Object.values(escrow.checklist).reduce(
@@ -1461,7 +1483,7 @@ const EscrowDetail = () => {
               </Stack>
               <Box sx={{ mt: 1 }}>
                 <Typography variant="caption" color="text.secondary">
-                  Est. Close: {escrow.estimatedCloseDate || 'Date not available'} {/* format(new Date(escrow.estimatedCloseDate), 'MMM dd, yyyy') */}
+                  Est. Close: {safeFormat(escrow.estimatedCloseDate, 'MMM dd, yyyy')}
                 </Typography>
               </Box>
             </StatsCard>
@@ -2007,7 +2029,7 @@ const EscrowDetail = () => {
                   {(escrow.timeline || []).map((event, index) => (
                     <TimelineItem key={index}>
                       <TimelineOppositeContent color="text.secondary">
-                        {event.date || 'Date'} {/* format(new Date(event.date), 'MMM dd, yyyy') */}
+                        {safeFormat(event.date, 'MMM dd, yyyy')}
                       </TimelineOppositeContent>
                       <TimelineSeparator>
                         <TimelineDot 
@@ -2068,7 +2090,7 @@ const EscrowDetail = () => {
                             <Typography variant="caption">{doc.size}</Typography>
                             <Typography variant="caption">•</Typography>
                             <Typography variant="caption">
-                              {doc.uploadDate || 'Date'} {/* format(new Date(doc.uploadDate), 'MMM dd, yyyy') */}
+                              {safeFormat(doc.uploadDate, 'MMM dd, yyyy')}
                             </Typography>
                           </Stack>
                         }
