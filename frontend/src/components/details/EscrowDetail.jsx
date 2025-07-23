@@ -1,4 +1,4 @@
-// frontend/src/components/details/EscrowDetailMerged.jsx
+// frontend/src/components/details/EscrowDetail.jsx
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -1029,7 +1029,7 @@ const aiActivityData = [
   { time: '20:00', documents: 6, communications: 12, tasks: 5 },
 ];
 
-const EscrowDetailMerged = () => {
+const EscrowDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const theme = useTheme();
@@ -2567,4 +2567,4 @@ const EscrowDetailMerged = () => {
   );
 };
 
-export default EscrowDetailMerged;
+export default EscrowDetail;
