@@ -37,7 +37,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
-import { safeFormatDate } from '../../utils/safeDateUtils';
+import { safeFormatDate, safeParseDate } from '../../utils/safeDateUtils';
 import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5050/v1';
@@ -416,10 +416,10 @@ const EscrowsDashboard = () => {
       projectedCommission,
       closedThisMonth: escrowData.filter(e => {
         if (e.escrowStatus !== 'Closed') return false;
-        const closeDate = safeFormatDate(e.scheduledCoeDate);
+        const closeDate = safeParseDate(e.scheduledCoeDate);
         if (!closeDate) return false;
         const now = new Date();
-        return closeDate.includes(now.toLocaleString('default', { month: 'short', year: 'numeric' }));
+        return closeDate.getMonth() === now.getMonth() && closeDate.getFullYear() === now.getFullYear();
       }).length,
       avgDaysToClose: Math.round(active.reduce((sum, e) => sum + (e.daysToClose || 0), 0) / (active.length || 1)),
     });
@@ -435,8 +435,9 @@ const EscrowsDashboard = () => {
       const monthName = date.toLocaleString('default', { month: 'short' });
       
       const monthEscrows = escrowData.filter(e => {
-        const escrowDate = safeFormatDate(e.acceptanceDate);
-        return escrowDate && escrowDate.includes(monthName);
+        const escrowDate = safeParseDate(e.acceptanceDate);
+        if (!escrowDate) return false;
+        return escrowDate.getMonth() === date.getMonth() && escrowDate.getFullYear() === date.getFullYear();
       });
 
       months.push({
