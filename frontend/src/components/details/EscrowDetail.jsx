@@ -495,7 +495,7 @@ import {
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
-import { format, formatDistanceToNow, addDays, differenceInDays, isAfter, isBefore } from 'date-fns';
+// import { format, formatDistanceToNow, addDays, differenceInDays, isAfter, isBefore } from 'date-fns';
 import { escrowsAPI, documentsAPI } from '../../services/api';
 import CountUp from 'react-countup';
 import {
@@ -1060,13 +1060,13 @@ const EscrowDetail = () => {
       propertyAddress: escrowData.property_address || escrowData.propertyAddress,
       property: {
         address: escrowData.property_address || escrowData.propertyAddress,
-        type: escrowData.property_type || 'Single Family',
-        sqft: 0, // Not in database yet
-        bedrooms: 0, // Not in database yet
-        bathrooms: 0, // Not in database yet
-        yearBuilt: null, // Not in database yet
-        lotSize: null, // Not in database yet
-        images: ['https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800'],
+        type: escrowData.property_type || escrowData.propertyType || 'Single Family',
+        sqft: escrowData.propertyDetails?.sqft || 0,
+        bedrooms: escrowData.propertyDetails?.bedrooms || 0,
+        bathrooms: escrowData.propertyDetails?.bathrooms || 0,
+        yearBuilt: escrowData.propertyDetails?.yearBuilt || null,
+        lotSize: escrowData.propertyDetails?.lotSize || null,
+        images: [escrowData.propertyImage || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800'],
       },
       status: escrowData.escrow_status || escrowData.escrowStatus || 'Active',
       listPrice: parseFloat(escrowData.purchase_price) || 0,
@@ -1074,9 +1074,9 @@ const EscrowDetail = () => {
       downPayment: parseFloat(escrowData.down_payment) || 0,
       loanAmount: parseFloat(escrowData.loan_amount) || 0,
       earnestMoneyDeposit: parseFloat(escrowData.earnest_money_deposit) || 0,
-      estimatedCloseDate: escrowData.closing_date || escrowData.closingDate,
-      acceptanceDate: escrowData.acceptance_date || escrowData.acceptanceDate,
-      closeOfEscrowDate: escrowData.closing_date || escrowData.closingDate,
+      estimatedCloseDate: escrowData.scheduledCoeDate || escrowData.closing_date || escrowData.closingDate,
+      acceptanceDate: escrowData.acceptanceDate || escrowData.acceptance_date,
+      closeOfEscrowDate: escrowData.scheduledCoeDate || escrowData.closing_date || escrowData.closingDate,
       
       // Commission info
       commission: {
@@ -1123,9 +1123,10 @@ const EscrowDetail = () => {
   const escrow = transformDetailedEscrow(rawData);
 
   // Calculate metrics
+  const daysToClose = 0; /* Temporarily disabled
   const daysToClose = escrow.estimatedCloseDate 
     ? differenceInDays(new Date(escrow.estimatedCloseDate), new Date())
-    : 0;
+    : 0; */
   
   const totalTasks = escrow.checklist 
     ? Object.values(escrow.checklist).reduce(
@@ -1460,7 +1461,7 @@ const EscrowDetail = () => {
               </Stack>
               <Box sx={{ mt: 1 }}>
                 <Typography variant="caption" color="text.secondary">
-                  Est. Close: {format(new Date(escrow.estimatedCloseDate), 'MMM dd, yyyy')}
+                  Est. Close: {escrow.estimatedCloseDate || 'Date not available'} {/* format(new Date(escrow.estimatedCloseDate), 'MMM dd, yyyy') */}
                 </Typography>
               </Box>
             </StatsCard>
@@ -2006,7 +2007,7 @@ const EscrowDetail = () => {
                   {(escrow.timeline || []).map((event, index) => (
                     <TimelineItem key={index}>
                       <TimelineOppositeContent color="text.secondary">
-                        {format(new Date(event.date), 'MMM dd, yyyy')}
+                        {event.date || 'Date'} {/* format(new Date(event.date), 'MMM dd, yyyy') */}
                       </TimelineOppositeContent>
                       <TimelineSeparator>
                         <TimelineDot 
@@ -2067,7 +2068,7 @@ const EscrowDetail = () => {
                             <Typography variant="caption">{doc.size}</Typography>
                             <Typography variant="caption">•</Typography>
                             <Typography variant="caption">
-                              {format(new Date(doc.uploadDate), 'MMM dd, yyyy')}
+                              {doc.uploadDate || 'Date'} {/* format(new Date(doc.uploadDate), 'MMM dd, yyyy') */}
                             </Typography>
                           </Stack>
                         }

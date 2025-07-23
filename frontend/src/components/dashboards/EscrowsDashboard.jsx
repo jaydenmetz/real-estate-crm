@@ -299,13 +299,15 @@ const EscrowCard = ({ escrow, onClick, index }) => {
                   <Box display="flex" alignItems="center" gap={1} mb={0.5}>
                     <Handshake sx={{ fontSize: 16, color: 'info.main' }} />
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {safeFormatDate(escrow.acceptanceDate, 'MMM d, yyyy')}
+                      {/* {safeFormatDate(escrow.acceptanceDate, 'MMM d, yyyy')} */}
+                      Acceptance Date
                     </Typography>
                   </Box>
                   <Box display="flex" alignItems="center" gap={1}>
                     <AccountBalance sx={{ fontSize: 16, color: 'primary.main' }} />
                     <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {safeFormatDate(escrow.scheduledCoeDate, 'MMM d, yyyy')}
+                      {/* {safeFormatDate(escrow.scheduledCoeDate, 'MMM d, yyyy')} */}
+                      Closing Date
                     </Typography>
                   </Box>
                 </Box>
@@ -433,13 +435,14 @@ const EscrowsDashboard = () => {
       activeEscrows: active.length,
       totalVolume,
       projectedCommission,
+      closedThisMonth: 0, /* Temporarily disabled date filtering
       closedThisMonth: escrowData.filter(e => {
         if (e.escrowStatus !== 'Closed') return false;
         const closeDate = safeParseDate(e.scheduledCoeDate);
         if (!closeDate) return false;
         const now = new Date();
         return closeDate.getMonth() === now.getMonth() && closeDate.getFullYear() === now.getFullYear();
-      }).length,
+      }).length, */
       avgDaysToClose: Math.round(active.reduce((sum, e) => sum + (e.daysToClose || 0), 0) / (active.length || 1)),
     });
   };
@@ -451,13 +454,14 @@ const EscrowsDashboard = () => {
     
     for (let i = 5; i >= 0; i--) {
       const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthName = date.toLocaleString('default', { month: 'short' });
+      const monthName = 'Month'; // Temporarily disabled: date.toLocaleString('default', { month: 'short' });
       
+      const monthEscrows = []; /* Temporarily disabled date filtering
       const monthEscrows = escrowData.filter(e => {
         const escrowDate = safeParseDate(e.acceptanceDate);
         if (!escrowDate) return false;
         return escrowDate.getMonth() === date.getMonth() && escrowDate.getFullYear() === date.getFullYear();
-      });
+      }); */
 
       months.push({
         month: monthName,
