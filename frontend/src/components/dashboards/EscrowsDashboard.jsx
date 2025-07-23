@@ -383,16 +383,22 @@ const EscrowsDashboard = () => {
   const fetchEscrows = async () => {
     try {
       setLoading(true);
+      console.log('Fetching escrows from:', `${API_BASE_URL}/escrows`);
       const response = await axios.get(`${API_BASE_URL}/escrows`);
+      console.log('API Response:', response.data);
       
       if (response.data.success) {
         const escrowData = response.data.data.escrows || [];
+        console.log('Escrows found:', escrowData.length);
         setEscrows(escrowData);
         calculateStats(escrowData);
         generateChartData(escrowData);
+      } else {
+        console.error('API returned success: false', response.data);
       }
     } catch (error) {
-      console.error('Error fetching escrows:', error);
+      console.error('Error fetching escrows:', error.message);
+      console.error('Full error:', error);
     } finally {
       setLoading(false);
     }
@@ -666,14 +672,32 @@ const EscrowsDashboard = () => {
       {/* Escrow Cards */}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <AnimatePresence>
-          {escrows.map((escrow, index) => (
-            <EscrowCard
-              key={escrow.id}
-              escrow={escrow}
-              onClick={handleEscrowClick}
-              index={index}
-            />
-          ))}
+          {escrows.length === 0 ? (
+            <Paper 
+              sx={{ 
+                p: 6, 
+                textAlign: 'center',
+                background: theme => alpha(theme.palette.primary.main, 0.03),
+                border: theme => `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+              }}
+            >
+              <Typography variant="h6" color="textSecondary" gutterBottom>
+                No escrows found
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                Create your first escrow to get started
+              </Typography>
+            </Paper>
+          ) : (
+            escrows.map((escrow, index) => (
+              <EscrowCard
+                key={escrow.id}
+                escrow={escrow}
+                onClick={handleEscrowClick}
+                index={index}
+              />
+            ))
+          )}
         </AnimatePresence>
       </Box>
     </Container>
