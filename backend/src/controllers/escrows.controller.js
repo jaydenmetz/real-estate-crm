@@ -62,8 +62,8 @@ class SimpleEscrowController {
           purchase_price as "purchasePrice",
           net_commission as "myCommission",
           '[]'::jsonb as clients,
-          COALESCE(TO_CHAR(acceptance_date, 'YYYY-MM-DD'), '') as "acceptanceDate",
-          COALESCE(TO_CHAR(closing_date, 'YYYY-MM-DD'), '') as "scheduledCoeDate",
+          COALESCE(TO_CHAR(acceptance_date, 'YYYY-MM-DD'), TO_CHAR(CURRENT_DATE, 'YYYY-MM-DD')) as "acceptanceDate",
+          COALESCE(TO_CHAR(closing_date, 'YYYY-MM-DD'), TO_CHAR(CURRENT_DATE + INTERVAL '30 days', 'YYYY-MM-DD')) as "scheduledCoeDate",
           CASE 
             WHEN closing_date IS NOT NULL 
             THEN DATE_PART('day', closing_date::timestamp - CURRENT_TIMESTAMP)::integer
@@ -74,7 +74,7 @@ class SimpleEscrowController {
           CASE 
             WHEN updated_at IS NOT NULL THEN TO_CHAR(updated_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
             WHEN created_at IS NOT NULL THEN TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
-            ELSE NULL
+            ELSE TO_CHAR(NOW(), 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
           END as "lastActivity",
           FLOOR(RANDOM() * 5 + 1)::integer as "upcomingDeadlines"
         FROM escrows e
@@ -172,8 +172,8 @@ class SimpleEscrowController {
         commissionPercentage: parseFloat(escrow.commission_percentage) || 0,
         grossCommission: parseFloat(escrow.gross_commission) || 0,
         myCommission: parseFloat(escrow.net_commission) || 0,
-        acceptanceDate: escrow.acceptance_date ? new Date(escrow.acceptance_date).toISOString().split('T')[0] : '',
-        scheduledCoeDate: escrow.closing_date ? new Date(escrow.closing_date).toISOString().split('T')[0] : '',
+        acceptanceDate: escrow.acceptance_date ? new Date(escrow.acceptance_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+        scheduledCoeDate: escrow.closing_date ? new Date(escrow.closing_date).toISOString().split('T')[0] : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         propertyType: escrow.property_type,
         leadSource: escrow.lead_source,
         
