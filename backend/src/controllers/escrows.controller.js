@@ -252,7 +252,6 @@ class SimpleEscrowController {
       });
     }
   }
-}
 
   /**
    * Create a new escrow with auto-incrementing ID

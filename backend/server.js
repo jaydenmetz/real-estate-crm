@@ -1,4 +1,8 @@
-require('dotenv').config();
+// Load environment variables based on NODE_ENV
+require('dotenv').config({
+  path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env.local'
+});
+
 const express = require('express');
 const { createServer } = require('http');
 const app = require('./src/app');
