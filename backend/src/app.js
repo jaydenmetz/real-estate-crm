@@ -8,6 +8,7 @@ const logger = require('./utils/logger');
 const websocketService = require('./services/websocket.service');
 const { initializeDatabase } = require('./config/database');
 const { initializeRedis } = require('./config/redis');
+const { errorLogging, requestLogging } = require('./middleware/errorLogging');
 
 
 (async () => {
@@ -91,6 +92,9 @@ app.use(express.urlencoded({
   extended: true, 
   limit: '10mb' 
 }));
+
+// Enhanced request logging
+app.use(requestLogging);
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static('uploads'));
@@ -630,34 +634,7 @@ app.use((req, res) => {
   });
 });
 
-app.use((err, req, res, next) => {
-  logger.error('Unhandled error:', {
-    error: err.message,
-    stack: err.stack,
-    url: req.url,
-    method: req.method,
-    ip: req.ip,
-    userAgent: req.get('user-agent')
-  });
-
-  const status = err.status || err.statusCode || 500;
-  const message = err.message || 'Internal server error';
-  
-  const errorResponse = {
-    success: false,
-    error: {
-      code: err.code || 'INTERNAL_ERROR',
-      message: process.env.NODE_ENV === 'production' ? 
-        'An internal error occurred' : message
-    },
-    timestamp: new Date().toISOString()
-  };
-
-  if (process.env.NODE_ENV === 'development') {
-    errorResponse.error.stack = err.stack;
-  }
-
-  res.status(status).json(errorResponse);
-});
+// Enhanced error logging middleware
+app.use(errorLogging);
 
 module.exports = app;

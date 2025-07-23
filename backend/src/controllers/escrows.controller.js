@@ -1,4 +1,5 @@
 const { pool } = require('../config/database');
+const { asyncHandler } = require('../middleware/errorLogging');
 
 class SimpleEscrowController {
   /**
@@ -167,8 +168,8 @@ class SimpleEscrowController {
         commissionPercentage: parseFloat(escrow.commission_percentage) || 0,
         grossCommission: parseFloat(escrow.gross_commission) || 0,
         myCommission: parseFloat(escrow.net_commission) || 0,
-        acceptanceDate: escrow.acceptance_date ? new Date(escrow.acceptance_date).toISOString().split('T')[0] : null,
-        scheduledCoeDate: escrow.closing_date ? new Date(escrow.closing_date).toISOString().split('T')[0] : null,
+        acceptanceDate: escrow.acceptance_date ? new Date(escrow.acceptance_date).toISOString().split('T')[0] : '',
+        scheduledCoeDate: escrow.closing_date ? new Date(escrow.closing_date).toISOString().split('T')[0] : '',
         propertyType: escrow.property_type,
         leadSource: escrow.lead_source,
         

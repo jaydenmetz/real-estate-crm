@@ -502,6 +502,45 @@ railway logs --tail 100
 npm run env:check
 ```
 
+### Enhanced Error Logging
+
+The system now includes comprehensive error logging with:
+
+#### Features
+- **Unique Error IDs**: Each error gets a unique ID for tracking
+- **Request Context**: Captures method, URL, headers, body, user info
+- **Stack Traces**: Full stack traces in development mode
+- **Performance Tracking**: Request duration logging
+- **Detailed Error Information**: Includes error type, code, and timestamp
+
+#### Error Response Format
+```json
+{
+  "success": false,
+  "error": {
+    "code": "ERROR_CODE",
+    "message": "Human readable message",
+    "errorId": "ERR_1737656789123_abc123def",
+    "timestamp": "2025-01-23T12:00:00.000Z",
+    "details": {/* Available in development mode only */}
+  }
+}
+```
+
+#### Finding Errors
+1. Note the `errorId` from the error response
+2. Search logs for this ID to find full error details
+3. In development, error details are included in the response
+
+#### Request Logging
+All requests are logged with:
+- Method, URL, IP address
+- User agent
+- Response status code
+- Request duration
+
+This helps identify patterns and performance issues.
+
 ### Support Resources
 
 - **GitHub Issues**: Report bugs and feature requests
