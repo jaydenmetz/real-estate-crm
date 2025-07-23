@@ -18,7 +18,9 @@ import {
   Skeleton,
   useTheme,
   alpha,
+  Stack,
 } from '@mui/material';
+import { styled } from '@mui/material/styles';
 import {
   TrendingUp,
   AttachMoney,
@@ -33,6 +35,8 @@ import {
   Timer,
   AccountBalance,
   Handshake,
+  Assessment,
+  Speed,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
@@ -41,6 +45,21 @@ import { safeFormatDate, safeParseDate } from '../../utils/safeDateUtils';
 import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5050/v1';
+
+// Styled Components
+const HeroSection = styled(Box)(({ theme }) => ({
+  position: 'relative',
+  borderRadius: theme.spacing(3),
+  overflow: 'hidden',
+  background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
+  color: 'white',
+  padding: theme.spacing(6),
+  marginBottom: theme.spacing(4),
+  boxShadow: '0 20px 60px rgba(25, 118, 210, 0.3)',
+  [theme.breakpoints.down('md')]: {
+    padding: theme.spacing(4),
+  },
+}));
 
 // Enhanced animated stat card component with gradient animations
 const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, delay = 0, trend }) => {
@@ -467,22 +486,94 @@ const EscrowsDashboard = () => {
   }
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
-      {/* Hero Section */}
-      <Box mb={6}>
-        <Slide direction="down" in timeout={500}>
-          <Box>
-            <Typography variant="h3" gutterBottom sx={{ fontWeight: 'bold' }}>
-              Escrow Dashboard
-            </Typography>
-            <Typography variant="h6" color="textSecondary" gutterBottom>
-              Track and manage all your real estate transactions
-            </Typography>
-          </Box>
-        </Slide>
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+      {/* Enhanced Hero Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <HeroSection>
+          <Grid container spacing={4} alignItems="center">
+            <Grid item xs={12} md={8}>
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+              >
+                <Typography variant="h3" fontWeight="bold" gutterBottom>
+                  Escrow Dashboard
+                </Typography>
+                <Typography variant="h6" sx={{ mb: 3, opacity: 0.9 }}>
+                  Track and manage all your real estate transactions in one place
+                </Typography>
+                <Stack direction="row" spacing={2} flexWrap="wrap">
+                  <Button
+                    variant="contained"
+                    size="large"
+                    startIcon={<Add />}
+                    onClick={handleCreateNew}
+                    sx={{ 
+                      bgcolor: 'white', 
+                      color: 'primary.main',
+                      '&:hover': { 
+                        bgcolor: 'rgba(255,255,255,0.9)' 
+                      }
+                    }}
+                  >
+                    Create New Escrow
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    size="large"
+                    sx={{ 
+                      color: 'white', 
+                      borderColor: 'white',
+                      '&:hover': { 
+                        borderColor: 'white',
+                        bgcolor: 'rgba(255,255,255,0.1)' 
+                      }
+                    }}
+                    startIcon={<Assessment />}
+                  >
+                    Transaction Analytics
+                  </Button>
+                </Stack>
+              </motion.div>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
+              >
+                <Box sx={{ 
+                  bgcolor: 'rgba(255,255,255,0.1)', 
+                  borderRadius: 3, 
+                  p: 3,
+                  backdropFilter: 'blur(10px)',
+                }}>
+                  <Typography variant="h2" fontWeight="bold" sx={{ mb: 1 }}>
+                    <CountUp end={stats.activeEscrows} duration={2} />
+                  </Typography>
+                  <Typography variant="h6" sx={{ opacity: 0.9 }}>
+                    Active Escrows
+                  </Typography>
+                  <Typography variant="h4" sx={{ mt: 2, mb: 1 }}>
+                    $<CountUp end={stats.totalVolume / 1000000} duration={2.5} decimals={1} />M
+                  </Typography>
+                  <Typography variant="body1" sx={{ opacity: 0.9 }}>
+                    Total Transaction Volume
+                  </Typography>
+                </Box>
+              </motion.div>
+            </Grid>
+          </Grid>
+        </HeroSection>
+      </motion.div>
 
-        {/* Stats Cards */}
-        <Grid container spacing={3} sx={{ mt: 2 }}>
+      {/* Stats Cards */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
           <Grid item xs={12} sm={6} md={3}>
             <StatCard
               icon={Home}
@@ -540,7 +631,7 @@ const EscrowsDashboard = () => {
                 elevation={0}
                 sx={{ 
                   p: 3, 
-                  height: 320,
+                  height: 250,
                   background: theme => alpha(theme.palette.primary.main, 0.03),
                   border: theme => `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
                   position: 'relative',
@@ -604,7 +695,7 @@ const EscrowsDashboard = () => {
                 elevation={0}
                 sx={{ 
                   p: 3, 
-                  height: 320,
+                  height: 250,
                   background: theme => alpha(theme.palette.success.main, 0.03),
                   border: theme => `1px solid ${alpha(theme.palette.success.main, 0.1)}`,
                   position: 'relative',
@@ -652,7 +743,6 @@ const EscrowsDashboard = () => {
             </motion.div>
           </Grid>
         </Grid>
-      </Box>
 
       {/* Action Bar */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
