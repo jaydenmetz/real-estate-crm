@@ -4,16 +4,17 @@
 const getApiUrl = () => {
   // First check for explicit environment variable
   if (process.env.REACT_APP_API_URL) {
-    return process.env.REACT_APP_API_URL;
+    // Remove trailing slash if present
+    return process.env.REACT_APP_API_URL.replace(/\/$/, '');
   }
   
   // In production, use the production API
   if (process.env.NODE_ENV === 'production') {
-    return 'https://api.jaydenmetz.com/v1';
+    return 'https://api.jaydenmetz.com';
   }
   
   // In development, use localhost
-  return 'http://localhost:5050/v1';
+  return 'http://localhost:5050';
 };
 
 const API_BASE_URL = getApiUrl();
@@ -25,8 +26,8 @@ console.log('REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
 
 class ApiService {
   constructor() {
-    // Use the API_BASE_URL directly (it already includes /v1)
-    this.baseURL = API_BASE_URL;
+    // Backend routes are mounted at /v1
+    this.baseURL = `${API_BASE_URL}/v1`;
     this.token = localStorage.getItem('authToken');
     
     // Log initialization

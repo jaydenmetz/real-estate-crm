@@ -44,7 +44,8 @@ import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
 import { safeFormatDate, safeParseDate } from '../../utils/safeDateUtils';
 import axios from 'axios';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5050/v1';
+// Use the same API URL logic as the main API service
+const API_BASE_URL = `${process.env.REACT_APP_API_URL || 'http://localhost:5050'}/v1`;
 
 // Debug log to verify environment variables
 console.log('API_BASE_URL:', API_BASE_URL);
