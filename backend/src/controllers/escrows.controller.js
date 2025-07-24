@@ -184,7 +184,7 @@ class SimpleEscrowController {
           ORDER BY person_type, name
         `, [displayId]);
       } catch (e) {
-        console.log('escrow_people query failed, might be production schema');
+        console.log('escrow_people query failed:', e.message);
       }
       
       // Try local schema first (uses escrow_display_id)
@@ -317,8 +317,12 @@ class SimpleEscrowController {
         commissionPercentage: parseFloat(escrow.commission_percentage) || 0,
         grossCommission: parseFloat(escrow.gross_commission) || 0,
         myCommission: parseFloat(escrow.net_commission) || 0,
-        acceptanceDate: escrow.acceptance_date ? new Date(escrow.acceptance_date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-        scheduledCoeDate: escrow.closing_date ? new Date(escrow.closing_date).toISOString().split('T')[0] : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        acceptanceDate: escrow.acceptance_date ? 
+          (typeof escrow.acceptance_date === 'string' ? escrow.acceptance_date.split('T')[0] : new Date(escrow.acceptance_date).toISOString().split('T')[0]) 
+          : new Date().toISOString().split('T')[0],
+        scheduledCoeDate: escrow.closing_date ? 
+          (typeof escrow.closing_date === 'string' ? escrow.closing_date.split('T')[0] : new Date(escrow.closing_date).toISOString().split('T')[0])
+          : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         propertyType: escrow.property_type,
         leadSource: escrow.lead_source,
         
@@ -404,14 +408,18 @@ class SimpleEscrowController {
           upcomingDeadlines: checklists.filter(c => 
             !c.is_completed && c.due_date && new Date(c.due_date) > new Date()
           ).length,
-          documentsUploaded: 0, // No documents table yet
+          documentsUploaded: documentsResult.rows.length,
           communicationScore: 95
         },
         
         importantNotes: 'Buyer pre-approved for loan. Inspection scheduled for next week.',
         
-        created_at: escrow.created_at ? new Date(escrow.created_at).toISOString() : new Date().toISOString(),
-        updated_at: escrow.updated_at ? new Date(escrow.updated_at).toISOString() : new Date().toISOString()
+        created_at: escrow.created_at ? 
+          (typeof escrow.created_at === 'string' ? escrow.created_at : new Date(escrow.created_at).toISOString()) 
+          : new Date().toISOString(),
+        updated_at: escrow.updated_at ? 
+          (typeof escrow.updated_at === 'string' ? escrow.updated_at : new Date(escrow.updated_at).toISOString())
+          : new Date().toISOString()
       };
 
       res.json({
@@ -421,11 +429,13 @@ class SimpleEscrowController {
 
     } catch (error) {
       console.error('Error fetching escrow:', error);
+      console.error('Stack trace:', error.stack);
       res.status(500).json({
         success: false,
         error: {
           code: 'SERVER_ERROR',
-          message: 'Failed to fetch escrow details'
+          message: 'Failed to fetch escrow details',
+          details: process.env.NODE_ENV === 'development' ? error.message : undefined
         }
       });
     }

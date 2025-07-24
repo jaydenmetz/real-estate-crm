@@ -1,11 +1,35 @@
 const express = require('express');
 const router = express.Router();
 const databaseService = require('../services/database.service');
-const EscrowController = require('../controllers/escrows.controller');
+const SimpleEscrowController = require('../controllers/escrows.controller');
+const { pool } = require('../config/database');
+
+// Debug endpoint
+router.get('/debug/:id', async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query(
+      'SELECT numeric_id, display_id, property_address FROM escrows WHERE numeric_id = $1',
+      [id]
+    );
+    res.json({
+      success: true,
+      found: result.rows.length > 0,
+      data: result.rows[0] || null,
+      environment: process.env.NODE_ENV || 'unknown'
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+});
 
 // Database routes
-router.get('/database', EscrowController.getAllEscrows);
-router.get('/database/:id', EscrowController.getEscrowById);
+router.get('/database', SimpleEscrowController.getAllEscrows);
+router.get('/database/:id', SimpleEscrowController.getEscrowById);
 
 // Helper function to transform database escrow to API response format for list view
 const transformEscrowForList = (escrow) => ({
@@ -33,7 +57,7 @@ const transformEscrowForList = (escrow) => ({
 // GET /v1/escrows - List all escrows from real database
 router.get('/', async (req, res) => {
   // Always use real database
-  return EscrowController.getAllEscrows(req, res);
+  return SimpleEscrowController.getAllEscrows(req, res);
 });
 
 // GET /v1/escrows/stats - Get dashboard statistics
@@ -167,12 +191,12 @@ router.get('/stats', (req, res) => {
 // GET /v1/escrows/:id - Get single escrow with full details
 router.get('/:id', async (req, res) => {
   // Always use real database
-  return EscrowController.getEscrowById(req, res);
+  return SimpleEscrowController.getEscrowById(req, res);
 });
 
 // POST /v1/escrows - Create new escrow with sequential ID
 router.post('/', (req, res) => {
-  return EscrowController.createEscrow(req, res);
+  return SimpleEscrowController.createEscrow(req, res);
 });
 
 // PUT /v1/escrows/:id - Update escrow
