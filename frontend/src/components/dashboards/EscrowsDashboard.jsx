@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import NewEscrowModal from '../forms/NewEscrowModal';
 import {
   Container,
   Box,
@@ -390,6 +391,7 @@ const EscrowsDashboard = () => {
   const navigate = useNavigate();
   const [escrows, setEscrows] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showNewEscrowModal, setShowNewEscrowModal] = useState(false);
   const [stats, setStats] = useState({
     totalEscrows: 0,
     activeEscrows: 0,
@@ -481,7 +483,14 @@ const EscrowsDashboard = () => {
   };
 
   const handleCreateNew = () => {
-    navigate('/escrows/new');
+    setShowNewEscrowModal(true);
+  };
+
+  const handleNewEscrowSuccess = (escrowId) => {
+    // Refresh the escrows list
+    fetchEscrows();
+    // Navigate to the new escrow detail page
+    navigate(`/escrows/${escrowId}`);
   };
 
   if (loading) {
@@ -798,6 +807,13 @@ const EscrowsDashboard = () => {
           )}
         </AnimatePresence>
       </Box>
+
+      {/* New Escrow Modal */}
+      <NewEscrowModal
+        open={showNewEscrowModal}
+        onClose={() => setShowNewEscrowModal(false)}
+        onSuccess={handleNewEscrowSuccess}
+      />
     </Container>
   );
 };

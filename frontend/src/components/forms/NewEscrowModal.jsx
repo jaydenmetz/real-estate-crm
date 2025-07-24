@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
-  Container,
-  Paper,
-  Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
   TextField,
   Button,
   Box,
@@ -13,12 +13,14 @@ import {
   CircularProgress,
   InputAdornment,
   Divider,
+  IconButton,
+  Typography,
 } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import {
-  ArrowBack,
+  Close,
   Home,
   AttachMoney,
   CalendarToday,
@@ -26,8 +28,7 @@ import {
 } from '@mui/icons-material';
 import { escrowsAPI } from '../../services/api';
 
-const NewEscrow = () => {
-  const navigate = useNavigate();
+const NewEscrowModal = ({ open, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
@@ -92,8 +93,11 @@ const NewEscrow = () => {
       const response = await escrowsAPI.create(escrowData);
 
       if (response.success) {
-        // Navigate to the new escrow detail page
-        navigate(`/escrows/${response.data.id}`);
+        // Call success callback with the new escrow ID
+        if (onSuccess) {
+          onSuccess(response.data.id);
+        }
+        handleClose();
       } else {
         setError(response.error?.message || 'Failed to create escrow');
       }
@@ -105,30 +109,67 @@ const NewEscrow = () => {
     }
   };
 
+  const handleClose = () => {
+    if (!loading) {
+      // Reset form
+      setFormData({
+        propertyAddress: '',
+        purchasePrice: '',
+        myCommission: '',
+        acceptanceDate: new Date(),
+        scheduledCoeDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        escrowStatus: 'Active',
+        myRole: 'Listing Agent',
+        buyerName: '',
+        buyerEmail: '',
+        buyerPhone: '',
+        sellerName: '',
+        sellerEmail: '',
+        sellerPhone: '',
+      });
+      setError('');
+      onClose();
+    }
+  };
+
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Box display="flex" alignItems="center" mb={3}>
-          <Button
-            startIcon={<ArrowBack />}
-            onClick={() => navigate('/escrows')}
-            sx={{ mr: 2 }}
-          >
-            Back to Escrows
-          </Button>
-          <Typography variant="h4" fontWeight="bold">
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            maxHeight: '90vh',
+          },
+        }}
+      >
+        <DialogTitle sx={{ m: 0, p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <Typography variant="h5" fontWeight="600">
             Create New Escrow
           </Typography>
-        </Box>
+          <IconButton
+            aria-label="close"
+            onClick={handleClose}
+            disabled={loading}
+            sx={{
+              color: (theme) => theme.palette.grey[500],
+            }}
+          >
+            <Close />
+          </IconButton>
+        </DialogTitle>
 
-        {error && (
-          <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError('')}>
-            {error}
-          </Alert>
-        )}
+        <form onSubmit={handleSubmit}>
+          <DialogContent dividers sx={{ p: 3 }}>
+            {error && (
+              <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError('')}>
+                {error}
+              </Alert>
+            )}
 
-        <Paper elevation={2} sx={{ p: 4 }}>
-          <form onSubmit={handleSubmit}>
             <Grid container spacing={3}>
               {/* Property Information */}
               <Grid item xs={12}>
@@ -147,6 +188,7 @@ const NewEscrow = () => {
                   value={formData.propertyAddress}
                   onChange={handleChange('propertyAddress')}
                   placeholder="123 Main St, Los Angeles, CA 90001"
+                  autoFocus
                 />
               </Grid>
 
@@ -171,7 +213,7 @@ const NewEscrow = () => {
                   type="number"
                   value={formData.myCommission}
                   onChange={handleChange('myCommission')}
-                  helperText="Leave blank to calculate 2.5%"
+                  helperText="Leave blank for 2.5%"
                   InputProps={{
                     startAdornment: <InputAdornment position="start">$</InputAdornment>,
                   }}
@@ -201,7 +243,7 @@ const NewEscrow = () => {
                 <Divider sx={{ mb: 2 }} />
               </Grid>
 
-              <Grid item xs={12} md={4}>
+              <Grid item xs={12} md={6}>
                 <DatePicker
                   label="Acceptance Date"
                   value={formData.acceptanceDate}
@@ -210,28 +252,13 @@ const NewEscrow = () => {
                 />
               </Grid>
 
-              <Grid item xs={12} md={4}>
+              <Grid item xs={12} md={6}>
                 <DatePicker
                   label="Scheduled COE Date"
                   value={formData.scheduledCoeDate}
                   onChange={handleDateChange('scheduledCoeDate')}
                   renderInput={(params) => <TextField {...params} fullWidth required />}
                 />
-              </Grid>
-
-              <Grid item xs={12} md={4}>
-                <TextField
-                  fullWidth
-                  select
-                  label="Escrow Status"
-                  value={formData.escrowStatus}
-                  onChange={handleChange('escrowStatus')}
-                >
-                  <MenuItem value="Active">Active</MenuItem>
-                  <MenuItem value="Pending">Pending</MenuItem>
-                  <MenuItem value="Closed">Closed</MenuItem>
-                  <MenuItem value="Cancelled">Cancelled</MenuItem>
-                </TextField>
               </Grid>
 
               {/* Buyer Information */}
@@ -307,33 +334,30 @@ const NewEscrow = () => {
                   onChange={handleChange('sellerPhone')}
                 />
               </Grid>
-
-              {/* Submit Buttons */}
-              <Grid item xs={12}>
-                <Box display="flex" gap={2} justifyContent="flex-end" mt={3}>
-                  <Button
-                    variant="outlined"
-                    onClick={() => navigate('/escrows')}
-                    disabled={loading}
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    disabled={loading}
-                    startIcon={loading ? <CircularProgress size={20} /> : null}
-                  >
-                    {loading ? 'Creating...' : 'Create Escrow'}
-                  </Button>
-                </Box>
-              </Grid>
             </Grid>
-          </form>
-        </Paper>
-      </Container>
+          </DialogContent>
+
+          <DialogActions sx={{ p: 2.5, gap: 1 }}>
+            <Button
+              variant="outlined"
+              onClick={handleClose}
+              disabled={loading}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={loading}
+              startIcon={loading ? <CircularProgress size={20} /> : null}
+            >
+              {loading ? 'Creating...' : 'Create Escrow'}
+            </Button>
+          </DialogActions>
+        </form>
+      </Dialog>
     </LocalizationProvider>
   );
 };
 
-export default NewEscrow;
+export default NewEscrowModal;
