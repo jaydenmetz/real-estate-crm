@@ -1,15 +1,32 @@
 // File: frontend/src/services/api.js
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
+// Determine API URL based on environment
+const getApiUrl = () => {
+  // First check for explicit environment variable
+  if (process.env.REACT_APP_API_URL) {
+    return process.env.REACT_APP_API_URL;
+  }
+  
+  // In production, use the production API
+  if (process.env.NODE_ENV === 'production') {
+    return 'https://api.jaydenmetz.com/v1';
+  }
+  
+  // In development, use localhost
+  return 'http://localhost:5050/v1';
+};
+
+const API_BASE_URL = getApiUrl();
 
 // Log the API URL for debugging
 console.log('API Base URL:', API_BASE_URL);
 console.log('Environment:', process.env.NODE_ENV);
+console.log('REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
 
 class ApiService {
   constructor() {
-    // Backend routes are mounted at /v1, not /api/v1
-    this.baseURL = `${API_BASE_URL}/v1`;
+    // Use the API_BASE_URL directly (it already includes /v1)
+    this.baseURL = API_BASE_URL;
     this.token = localStorage.getItem('authToken');
     
     // Log initialization
