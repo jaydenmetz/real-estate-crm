@@ -1057,7 +1057,7 @@ const EscrowDetail = () => {
   const [checklistExpanded, setChecklistExpanded] = useState({});
   const [agentDetailOpen, setAgentDetailOpen] = useState(null);
   const [activityFilter, setActivityFilter] = useState('all');
-  const [viewMode, setViewMode] = useState('overview'); // overview, detailed
+  const [viewMode, setViewMode] = useState('detailed'); // Always use detailed view
   const [selectedImage, setSelectedImage] = useState(0);
 
   // Transform database escrow to expected format
@@ -1309,39 +1309,7 @@ const EscrowDetail = () => {
                   </Grid>
                 </Grid>
 
-                <Stack direction="row" spacing={2}>
-                  <ActionButton
-                    variant="contained"
-                    startIcon={<Dashboard />}
-                    onClick={() => setViewMode('overview')}
-                    sx={{
-                      background: viewMode === 'overview' ? 'white' : 'rgba(255, 255, 255, 0.2)',
-                      color: viewMode === 'overview' ? 'primary.main' : 'white',
-                      '&:hover': { 
-                        background: viewMode === 'overview' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.3)'
-                      },
-                    }}
-                  >
-                    AI Overview
-                  </ActionButton>
-                  <ActionButton
-                    variant="contained"
-                    startIcon={<Description />}
-                    onClick={() => setViewMode('detailed')}
-                    sx={{
-                      background: viewMode === 'detailed' ? 'white' : 'rgba(255, 255, 255, 0.2)',
-                      color: viewMode === 'detailed' ? 'primary.main' : 'white',
-                      '&:hover': { 
-                        background: viewMode === 'detailed' ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.3)'
-                      },
-                    }}
-                  >
-                    Detailed View
-                  </ActionButton>
-                  <IconButton onClick={handleMenuOpen} sx={{ color: 'white' }}>
-                    <MoreVert />
-                  </IconButton>
-                </Stack>
+                {/* View mode buttons removed - AI Overview is now a tab */}
               </Stack>
             </motion.div>
           </Grid>
@@ -1924,6 +1892,7 @@ const EscrowDetail = () => {
                 <Tab label="Parties" icon={<Groups />} iconPosition="start" />
                 <Tab label="Property" icon={<Home />} iconPosition="start" />
                 <Tab label="Activity" icon={<History />} iconPosition="start" />
+                <Tab label="AI Overview" icon={<AutoAwesome />} iconPosition="start" />
               </Tabs>
 
               {/* Tab Panels */}
@@ -2471,6 +2440,177 @@ const EscrowDetail = () => {
                       </ActivityCard>
                     ))}
                 </Stack>
+              </TabPanel>
+
+              {/* AI Overview Tab Panel - Tab 8 */}
+              <TabPanel hidden={activeTab !== 8}>
+                <Grid container spacing={3}>
+                  {/* AI Agents Section */}
+                  <Grid item xs={12} lg={8}>
+                    <Box>
+                      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+                        <Typography variant="h5" fontWeight="600">
+                          AI Agent Activity
+                        </Typography>
+                        <ToggleButtonGroup
+                          value="real-time"
+                          exclusive
+                          size="small"
+                        >
+                          <ToggleButton value="real-time">Real-time</ToggleButton>
+                          <ToggleButton value="24h">24h</ToggleButton>
+                          <ToggleButton value="7d">7 days</ToggleButton>
+                        </ToggleButtonGroup>
+                      </Stack>
+
+                      <Grid container spacing={2} sx={{ mb: 3 }}>
+                        {(escrow.aiAgents || []).map((agent) => (
+                          <Grid item xs={12} sm={6} key={agent.id}>
+                            <AIAgentCard 
+                              className={agent.status === 'active' ? 'active' : ''}
+                              onClick={() => handleAgentClick(agent.id)}
+                            >
+                              <Stack direction="row" spacing={2} alignItems="center">
+                                <AgentAvatar status={agent.status}>
+                                  <Tooltip title={agent.type}>
+                                    {agent.icon}
+                                  </Tooltip>
+                                </AgentAvatar>
+                                <Box flex={1}>
+                                  <Typography variant="subtitle2" fontWeight="600">
+                                    {agent.name}
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary">
+                                    {agent.currentTask}
+                                  </Typography>
+                                </Box>
+                                <StatusChip 
+                                  label={agent.status}
+                                  size="small"
+                                  status={agent.status}
+                                />
+                              </Stack>
+                              {agent.status === 'active' && (
+                                <LinearProgress 
+                                  variant="determinate" 
+                                  value={agent.progress} 
+                                  sx={{ mt: 1 }}
+                                />
+                              )}
+                            </AIAgentCard>
+                          </Grid>
+                        ))}
+                      </Grid>
+
+                      {/* Task Queue */}
+                      <Typography variant="h6" gutterBottom sx={{ mt: 4 }}>
+                        Task Queue
+                      </Typography>
+                      <List>
+                        {(escrow.taskQueue || []).map((task, index) => (
+                          <ListItem key={task.id}>
+                            <ListItemIcon>
+                              <Circle 
+                                color={task.priority === 'high' ? 'error' : 
+                                       task.priority === 'medium' ? 'warning' : 'success'} 
+                                sx={{ fontSize: 12 }}
+                              />
+                            </ListItemIcon>
+                            <ListItemText
+                              primary={task.title}
+                              secondary={`${task.agent} • Est. ${task.estimatedTime}`}
+                            />
+                            <Chip label={task.status} size="small" />
+                          </ListItem>
+                        ))}
+                      </List>
+                    </Box>
+                  </Grid>
+
+                  {/* AI Insights Section */}
+                  <Grid item xs={12} lg={4}>
+                    <Stack spacing={3}>
+                      {/* Insights Card */}
+                      <Card sx={{ borderRadius: 3 }}>
+                        <CardContent>
+                          <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+                            <Lightbulb color="warning" />
+                            <Typography variant="h6">AI Insights</Typography>
+                          </Stack>
+                          <Stack spacing={2}>
+                            {(escrow.aiInsights || []).map((insight, index) => (
+                              <Alert 
+                                key={index}
+                                severity={insight.type}
+                                icon={<AutoAwesome />}
+                              >
+                                {insight.message}
+                              </Alert>
+                            ))}
+                          </Stack>
+                        </CardContent>
+                      </Card>
+
+                      {/* Automation Stats */}
+                      <Card sx={{ borderRadius: 3 }}>
+                        <CardContent>
+                          <Typography variant="h6" gutterBottom>
+                            Automation Impact
+                          </Typography>
+                          <Stack spacing={2}>
+                            <Stack direction="row" justifyContent="space-between">
+                              <Typography variant="body2" color="text.secondary">
+                                Tasks Automated
+                              </Typography>
+                              <Typography variant="body2" fontWeight="600">
+                                {escrow.automationStats?.tasksAutomated || 0}
+                              </Typography>
+                            </Stack>
+                            <Stack direction="row" justifyContent="space-between">
+                              <Typography variant="body2" color="text.secondary">
+                                Time Saved
+                              </Typography>
+                              <Typography variant="body2" fontWeight="600">
+                                {escrow.automationStats?.timeSaved || '0 hours'}
+                              </Typography>
+                            </Stack>
+                            <Stack direction="row" justifyContent="space-between">
+                              <Typography variant="body2" color="text.secondary">
+                                Accuracy Rate
+                              </Typography>
+                              <Typography variant="body2" fontWeight="600">
+                                {escrow.automationStats?.accuracy || '0%'}
+                              </Typography>
+                            </Stack>
+                          </Stack>
+                        </CardContent>
+                      </Card>
+
+                      {/* Next Actions */}
+                      <Card sx={{ borderRadius: 3 }}>
+                        <CardContent>
+                          <Typography variant="h6" gutterBottom>
+                            Recommended Actions
+                          </Typography>
+                          <Stack spacing={1}>
+                            {(escrow.recommendedActions || []).map((action, index) => (
+                              <Button
+                                key={index}
+                                variant="outlined"
+                                fullWidth
+                                startIcon={action.icon}
+                                onClick={() => handleActionClick(action)}
+                                sx={{ justifyContent: 'flex-start' }}
+                              >
+                                {action.label}
+                              </Button>
+                            ))}
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    </Stack>
+                  </Grid>
+                </Grid>
               </TabPanel>
             </Paper>
           </Box>

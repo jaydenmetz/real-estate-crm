@@ -165,16 +165,26 @@ class SimpleEscrowController {
       
       console.log('Processing escrow:', displayId, 'Environment:', process.env.NODE_ENV);
       
-      // Get checklist data from JSONB column
+      // Get checklist data - try both formats (JSONB and individual rows)
       let checklistResult = { rows: [] };
       try {
+        // First try JSONB format (local schema)
         checklistResult = await pool.query(`
           SELECT checklist_items 
           FROM escrow_checklists 
           WHERE escrow_display_id = $1
         `, [displayId]);
       } catch (e) {
-        console.log('Checklist query failed:', e.message);
+        // Try individual rows format (production schema)
+        try {
+          checklistResult = await pool.query(`
+            SELECT * FROM escrow_checklists 
+            WHERE escrow_display_id = $1
+            ORDER BY task_order
+          `, [displayId]);
+        } catch (e2) {
+          console.log('Checklist query failed for both formats');
+        }
       }
       
       // Initialize empty arrays for helper data
@@ -255,12 +265,25 @@ class SimpleEscrowController {
       }
 
       // Process checklist data for progress calculation
-      const checklistItems = checklistResult.rows.length > 0 && checklistResult.rows[0].checklist_items 
-        ? checklistResult.rows[0].checklist_items 
-        : [];
+      let checklists = [];
       
-      // Convert JSONB checklist to expected format
-      const checklists = Array.isArray(checklistItems) ? checklistItems : [];
+      if (checklistResult.rows.length > 0) {
+        if (checklistResult.rows[0].checklist_items) {
+          // JSONB format (local)
+          checklists = checklistResult.rows[0].checklist_items;
+        } else {
+          // Individual rows format (production)
+          checklists = checklistResult.rows.map(row => ({
+            phase: row.phase,
+            task_name: row.task_name,
+            task_description: row.task_description,
+            is_completed: row.is_completed,
+            due_date: row.due_date,
+            completed_date: row.completed_date,
+            order: row.task_order
+          }));
+        }
+      }
       const checklistByPhase = {
         opening: checklists.filter(c => c.phase === 'opening'),
         processing: checklists.filter(c => c.phase === 'processing'),
