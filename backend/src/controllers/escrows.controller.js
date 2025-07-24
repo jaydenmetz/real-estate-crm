@@ -48,8 +48,8 @@ class SimpleEscrowController {
 
       // Main query - simplified with data directly from escrows table
       queryParams.push(limit, offset);
-      // Add environment suffix based on NODE_ENV
-      const envSuffix = process.env.NODE_ENV === 'development' ? ' - LOCAL' : ' - PRODUCTION';
+      // Environment suffix is now added during seeding, not here
+      const envSuffix = '';
       
       const listQuery = `
         SELECT 
@@ -231,8 +231,8 @@ class SimpleEscrowController {
       const buyer = buyerResult.rows[0] || null;
       const seller = sellerResult.rows[0] || null;
       
-      // Add environment suffix based on NODE_ENV
-      const envSuffix = process.env.NODE_ENV === 'development' ? ' - LOCAL' : ' - PRODUCTION';
+      // Environment suffix is now added during seeding, not here
+      const envSuffix = '';
 
       // Format the response
       const response = {
