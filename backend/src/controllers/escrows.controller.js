@@ -170,17 +170,32 @@ class SimpleEscrowController {
         WHERE escrow_display_id = $1
       `, [displayId]);
       
-      // Get buyer and seller info
-      const buyerResult = await pool.query(`
-        SELECT c.* FROM clients c 
-        INNER JOIN escrow_buyers eb ON c.id = eb.client_id 
-        WHERE eb.escrow_display_id = $1
+      // Get all people associated with this escrow
+      const peopleResult = await pool.query(`
+        SELECT * FROM escrow_people 
+        WHERE escrow_display_id = $1
+        ORDER BY person_type, name
       `, [displayId]);
       
-      const sellerResult = await pool.query(`
-        SELECT c.* FROM clients c 
-        INNER JOIN escrow_sellers es ON c.id = es.client_id 
-        WHERE es.escrow_display_id = $1
+      // Get timeline data
+      const timelineResult = await pool.query(`
+        SELECT * FROM escrow_timeline 
+        WHERE escrow_display_id = $1
+        ORDER BY order_index, scheduled_date
+      `, [displayId]);
+      
+      // Get financial data
+      const financialsResult = await pool.query(`
+        SELECT * FROM escrow_financials 
+        WHERE escrow_display_id = $1
+        ORDER BY order_index, item_category
+      `, [displayId]);
+      
+      // Get documents data
+      const documentsResult = await pool.query(`
+        SELECT * FROM escrow_documents 
+        WHERE escrow_display_id = $1
+        ORDER BY order_index, document_type
       `, [displayId]);
 
       // Process checklist data for progress calculation
@@ -227,9 +242,12 @@ class SimpleEscrowController {
                               (checklistProgress.phase1.total + checklistProgress.phase2.total + checklistProgress.phase3.total)) * 100) || 0
       };
 
-      // Process buyer/seller data
-      const buyer = buyerResult.rows[0] || null;
-      const seller = sellerResult.rows[0] || null;
+      // Process people data
+      const people = peopleResult.rows;
+      const buyer = people.find(p => p.person_type === 'buyer') || null;
+      const seller = people.find(p => p.person_type === 'seller') || null;
+      const buyerAgent = people.find(p => p.person_type === 'buyer_agent') || null;
+      const listingAgent = people.find(p => p.person_type === 'listing_agent') || null;
       
       // Environment suffix is now added during seeding, not here
       const envSuffix = '';
@@ -256,24 +274,63 @@ class SimpleEscrowController {
         leadSource: escrow.lead_source,
         
         // Participants
-        buyer: buyer || null,
-        seller: seller || null,
-        buyerAgent: null, // Placeholder - could be added to clients table with agent role
-        listingAgent: null, // Placeholder - could be added to clients table with agent role
-        participants: [], // Empty for now - would need to combine buyers/sellers
+        buyer: buyer,
+        seller: seller,
+        buyerAgent: buyerAgent,
+        listingAgent: listingAgent,
+        participants: people, // All people associated with this escrow
         
         // Checklist
         checklist: checklists,
         checklistProgress: checklistProgress,
         
-        // Financial details (empty arrays for now since tables don't exist)
-        financials: [],
+        // Timeline with all milestone data
+        timeline: timelineResult.rows.map(event => ({
+          id: event.id,
+          eventName: event.event_name,
+          description: event.event_description,
+          type: event.event_type,
+          scheduledDate: event.scheduled_date,
+          completedDate: event.completed_date,
+          isCompleted: event.is_completed,
+          isCritical: event.is_critical,
+          responsibleParty: event.responsible_party,
+          notes: event.notes
+        })),
         
-        // Documents (empty arrays for now since tables don't exist)
-        documents: [],
+        // Financial calculations for every dollar amount
+        financials: financialsResult.rows.map(item => ({
+          id: item.id,
+          name: item.item_name,
+          category: item.item_category,
+          amount: parseFloat(item.amount),
+          partyResponsible: item.party_responsible,
+          partyReceiving: item.party_receiving,
+          calculationBasis: item.calculation_basis,
+          isEstimate: item.is_estimate,
+          dueDate: item.due_date,
+          paidDate: item.paid_date,
+          isPaid: item.is_paid,
+          notes: item.notes
+        })),
         
-        // Timeline (empty arrays for now since tables don't exist)
-        timeline: [],
+        // Documents checklist with document links
+        documents: documentsResult.rows.map(doc => ({
+          id: doc.id,
+          name: doc.document_name,
+          type: doc.document_type,
+          status: doc.document_status,
+          isRequired: doc.is_required,
+          dueDate: doc.due_date,
+          receivedDate: doc.received_date,
+          documentUrl: doc.document_url,
+          documentId: doc.document_id,
+          uploadedBy: doc.uploaded_by,
+          signedByBuyer: doc.signed_by_buyer,
+          signedBySeller: doc.signed_by_seller,
+          signedByAgents: doc.signed_by_agents,
+          notes: doc.notes
+        })),
         
         // Property details (still using defaults for now)
         propertyDetails: {
