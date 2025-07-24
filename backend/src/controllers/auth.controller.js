@@ -240,7 +240,7 @@ class AuthController {
         error: {
           code: 'LOGIN_ERROR',
           message: 'Failed to login',
-          details: process.env.NODE_ENV === 'development' ? error.message : undefined
+          details: error.message
         }
       });
     }
