@@ -125,13 +125,13 @@ class SimpleEscrowController {
   }
 
   /**
-   * Get single escrow by ID with full details
+   * Get single escrow by ID with full details including helper tables
    */
   static async getEscrowById(req, res) {
     try {
       const { id } = req.params;
 
-      // Get escrow details - now from single table
+      // Get escrow details
       const escrowQuery = `
         SELECT 
           e.*,
@@ -153,6 +153,75 @@ class SimpleEscrowController {
       }
 
       const escrow = escrowResult.rows[0];
+      
+      // Fetch all related data in parallel
+      // Get checklist data from JSONB column
+      const checklistResult = await pool.query(`
+        SELECT checklist_items 
+        FROM escrow_checklists 
+        WHERE escrow_id = $1
+      `, [id]);
+      
+      // Get buyer and seller info
+      const buyerResult = await pool.query(`
+        SELECT c.* FROM clients c 
+        INNER JOIN escrow_buyers eb ON c.id = eb.client_id 
+        WHERE eb.escrow_id = $1
+      `, [id]);
+      
+      const sellerResult = await pool.query(`
+        SELECT c.* FROM clients c 
+        INNER JOIN escrow_sellers es ON c.id = es.client_id 
+        WHERE es.escrow_id = $1
+      `, [id]);
+
+      // Process checklist data for progress calculation
+      const checklistItems = checklistResult.rows.length > 0 && checklistResult.rows[0].checklist_items 
+        ? checklistResult.rows[0].checklist_items 
+        : [];
+      
+      // Convert JSONB checklist to expected format
+      const checklists = Array.isArray(checklistItems) ? checklistItems : [];
+      const checklistByPhase = {
+        opening: checklists.filter(c => c.phase === 'opening'),
+        processing: checklists.filter(c => c.phase === 'processing'),
+        closing: checklists.filter(c => c.phase === 'closing')
+      };
+
+      const checklistProgress = {
+        phase1: {
+          completed: checklistByPhase.opening.filter(c => c.is_completed).length,
+          total: checklistByPhase.opening.length,
+          percentage: checklistByPhase.opening.length > 0 
+            ? Math.round((checklistByPhase.opening.filter(c => c.is_completed).length / checklistByPhase.opening.length) * 100)
+            : 0
+        },
+        phase2: {
+          completed: checklistByPhase.processing.filter(c => c.is_completed).length,
+          total: checklistByPhase.processing.length,
+          percentage: checklistByPhase.processing.length > 0
+            ? Math.round((checklistByPhase.processing.filter(c => c.is_completed).length / checklistByPhase.processing.length) * 100)
+            : 0
+        },
+        phase3: {
+          completed: checklistByPhase.closing.filter(c => c.is_completed).length,
+          total: checklistByPhase.closing.length,
+          percentage: checklistByPhase.closing.length > 0
+            ? Math.round((checklistByPhase.closing.filter(c => c.is_completed).length / checklistByPhase.closing.length) * 100)
+            : 0
+        }
+      };
+
+      checklistProgress.overall = {
+        completed: checklistProgress.phase1.completed + checklistProgress.phase2.completed + checklistProgress.phase3.completed,
+        total: checklistProgress.phase1.total + checklistProgress.phase2.total + checklistProgress.phase3.total,
+        percentage: Math.round(((checklistProgress.phase1.completed + checklistProgress.phase2.completed + checklistProgress.phase3.completed) / 
+                              (checklistProgress.phase1.total + checklistProgress.phase2.total + checklistProgress.phase3.total)) * 100) || 0
+      };
+
+      // Process buyer/seller data
+      const buyer = buyerResult.rows[0] || null;
+      const seller = sellerResult.rows[0] || null;
       
       // Add environment suffix for local development
       const envSuffix = process.env.NODE_ENV === 'development' ? ' - LOCAL' : '';
@@ -177,14 +246,27 @@ class SimpleEscrowController {
         propertyType: escrow.property_type,
         leadSource: escrow.lead_source,
         
-        // Clients array for list view compatibility
-        clients: [],
+        // Participants
+        buyer: buyer || null,
+        seller: seller || null,
+        buyerAgent: null, // Placeholder - could be added to clients table with agent role
+        listingAgent: null, // Placeholder - could be added to clients table with agent role
+        participants: [], // Empty for now - would need to combine buyers/sellers
         
-        // Separate objects for detail view
-        buyer: null,
-        seller: null,
+        // Checklist
+        checklist: checklists,
+        checklistProgress: checklistProgress,
         
-        // Mock data for features not yet implemented
+        // Financial details (empty arrays for now since tables don't exist)
+        financials: [],
+        
+        // Documents (empty arrays for now since tables don't exist)
+        documents: [],
+        
+        // Timeline (empty arrays for now since tables don't exist)
+        timeline: [],
+        
+        // Property details (still using defaults for now)
         propertyDetails: {
           bedrooms: 3,
           bathrooms: 2,
@@ -195,38 +277,19 @@ class SimpleEscrowController {
           hoaFees: '$350/month'
         },
         
-        timeline: [
-          {
-            date: escrow.created_at ? new Date(escrow.created_at).toISOString() : new Date().toISOString(),
-            event: 'Escrow Created',
-            type: 'milestone',
-            icon: 'start',
-            description: 'New escrow initiated'
-          },
-          escrow.acceptance_date ? {
-            date: new Date(escrow.acceptance_date).toISOString(),
-            event: 'Offer Accepted',
-            type: 'milestone',
-            icon: 'check',
-            description: 'Purchase agreement signed'
-          } : null
-        ].filter(Boolean),
-        
-        checklistProgress: {
-          phase1: { completed: 8, total: 10, percentage: 80 },
-          phase2: { completed: 5, total: 8, percentage: 62.5 },
-          phase3: { completed: 3, total: 7, percentage: 42.8 },
-          overall: { completed: 16, total: 25, percentage: 64 }
-        },
-        
+        // Activity stats
         activityStats: {
           daysInEscrow: escrow.closing_date ? 
             Math.floor((new Date() - new Date(escrow.acceptance_date || escrow.created_at)) / (24 * 60 * 60 * 1000)) : 0,
           daysToClose: escrow.closing_date ? 
             Math.floor((new Date(escrow.closing_date) - new Date()) / (24 * 60 * 60 * 1000)) : 0,
-          tasksCompletedToday: 2,
-          upcomingDeadlines: 4,
-          documentsUploaded: 12,
+          tasksCompletedToday: checklists.filter(c => 
+            c.completed_date && new Date(c.completed_date).toDateString() === new Date().toDateString()
+          ).length,
+          upcomingDeadlines: checklists.filter(c => 
+            !c.is_completed && c.due_date && new Date(c.due_date) > new Date()
+          ).length,
+          documentsUploaded: 0, // No documents table yet
           communicationScore: 95
         },
         
@@ -254,17 +317,35 @@ class SimpleEscrowController {
   }
 
   /**
-   * Create a new escrow with auto-incrementing ID
+   * Create a new escrow with auto-incrementing ID and helper tables
    */
   static async createEscrow(req, res) {
+    const client = await pool.connect();
+    
     try {
+      await client.query('BEGIN');
+      
       const escrowData = req.body;
       
-      // Get the next ID
-      const idResult = await pool.query(
-        'SELECT COALESCE(MAX(id::integer), 0) + 1 as next_id FROM escrows WHERE deleted_at IS NULL'
+      // Get the next ID in the format ESC-YYYY-XXXX
+      const year = new Date().getFullYear();
+      const idResult = await client.query(
+        `SELECT id FROM escrows WHERE id LIKE 'ESC-${year}-%'`
       );
-      const nextId = idResult.rows[0].next_id;
+      
+      let maxNumber = 0;
+      idResult.rows.forEach(row => {
+        const parts = row.id.split('-');
+        if (parts.length === 3) {
+          const num = parseInt(parts[2]);
+          if (!isNaN(num) && num > maxNumber) {
+            maxNumber = num;
+          }
+        }
+      });
+      
+      const nextNumber = maxNumber + 1;
+      const nextId = `ESC-${year}-${nextNumber.toString().padStart(4, '0')}`;
       
       // Insert the new escrow
       const insertQuery = `
@@ -279,7 +360,7 @@ class SimpleEscrowController {
       `;
       
       const values = [
-        nextId.toString(),
+        nextId,
         escrowData.property_address,
         escrowData.escrow_status || 'Active',
         escrowData.purchase_price,
@@ -295,15 +376,65 @@ class SimpleEscrowController {
         escrowData.lead_source || 'Website'
       ];
       
-      const result = await pool.query(insertQuery, values);
+      const escrowResult = await client.query(insertQuery, values);
+      const newEscrow = escrowResult.rows[0];
       
+      // Create default checklist items
+      const defaultChecklist = [
+        // Opening Phase
+        { phase: 'opening', task_name: 'Open Escrow', task_description: 'Officially open escrow with title company', is_completed: false, due_days: 0, order: 1 },
+        { phase: 'opening', task_name: 'Earnest Money Deposit', task_description: 'Collect and deposit earnest money', is_completed: false, due_days: 3, order: 2 },
+        { phase: 'opening', task_name: 'Preliminary Title Report', task_description: 'Order and review preliminary title report', is_completed: false, due_days: 5, order: 3 },
+        { phase: 'opening', task_name: 'Property Disclosures', task_description: 'Deliver all required property disclosures', is_completed: false, due_days: 7, order: 4 },
+        { phase: 'opening', task_name: 'Home Inspection', task_description: 'Schedule and complete home inspection', is_completed: false, due_days: 10, order: 5 },
+        
+        // Processing Phase
+        { phase: 'processing', task_name: 'Loan Application', task_description: 'Submit complete loan application', is_completed: false, due_days: 5, order: 6 },
+        { phase: 'processing', task_name: 'Appraisal', task_description: 'Schedule and complete property appraisal', is_completed: false, due_days: 15, order: 7 },
+        { phase: 'processing', task_name: 'Loan Approval', task_description: 'Obtain final loan approval', is_completed: false, due_days: 25, order: 8 },
+        { phase: 'processing', task_name: 'Insurance', task_description: 'Secure homeowners insurance', is_completed: false, due_days: 20, order: 9 },
+        { phase: 'processing', task_name: 'HOA Documents', task_description: 'Review HOA documents if applicable', is_completed: false, due_days: 15, order: 10 },
+        
+        // Closing Phase
+        { phase: 'closing', task_name: 'Final Walkthrough', task_description: 'Complete final property walkthrough', is_completed: false, due_days: -2, order: 11 },
+        { phase: 'closing', task_name: 'Closing Documents', task_description: 'Review and sign closing documents', is_completed: false, due_days: -1, order: 12 },
+        { phase: 'closing', task_name: 'Fund Loan', task_description: 'Lender funds the loan', is_completed: false, due_days: 0, order: 13 },
+        { phase: 'closing', task_name: 'Record Deed', task_description: 'Record deed with county', is_completed: false, due_days: 0, order: 14 },
+        { phase: 'closing', task_name: 'Deliver Keys', task_description: 'Deliver keys to new owner', is_completed: false, due_days: 0, order: 15 }
+      ];
+      
+      // Calculate due dates based on escrow dates
+      const acceptanceDate = new Date(newEscrow.acceptance_date);
+      const closingDate = new Date(newEscrow.closing_date);
+      
+      const checklistWithDates = defaultChecklist.map(item => ({
+        ...item,
+        due_date: item.due_days >= 0 
+          ? new Date(acceptanceDate.getTime() + item.due_days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+          : new Date(closingDate.getTime() + item.due_days * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        completed_date: null
+      }));
+      
+      // Insert checklist items as JSONB
+      const checklistQuery = `
+        INSERT INTO escrow_checklists (escrow_id, checklist_items)
+        VALUES ($1, $2)
+      `;
+      await client.query(checklistQuery, [nextId, JSON.stringify(checklistWithDates)]);
+      
+      await client.query('COMMIT');
+      
+      // Return success with the new escrow ID
       res.status(201).json({
         success: true,
-        data: result.rows[0],
-        message: 'Escrow created successfully'
+        data: {
+          id: nextId,
+          message: 'Escrow created successfully with checklist items'
+        }
       });
       
     } catch (error) {
+      await client.query('ROLLBACK');
       console.error('Error creating escrow:', error);
       res.status(500).json({
         success: false,
@@ -313,6 +444,8 @@ class SimpleEscrowController {
           details: process.env.NODE_ENV === 'development' ? error.message : undefined
         }
       });
+    } finally {
+      client.release();
     }
   }
 }
