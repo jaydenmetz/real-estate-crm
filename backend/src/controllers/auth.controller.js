@@ -4,6 +4,32 @@ const { pool } = require('../config/database');
 
 class AuthController {
   /**
+   * Test endpoint
+   */
+  static async test(req, res) {
+    try {
+      const result = await pool.query('SELECT NOW() as time, COUNT(*) as count FROM users');
+      res.json({
+        success: true,
+        data: {
+          database: 'connected',
+          time: result.rows[0].time,
+          userCount: result.rows[0].count,
+          jwtSecret: process.env.JWT_SECRET ? 'configured' : 'missing'
+        }
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'TEST_ERROR',
+          message: error.message
+        }
+      });
+    }
+  }
+
+  /**
    * Register a new user
    */
   static async register(req, res) {
@@ -213,7 +239,8 @@ class AuthController {
         success: false,
         error: {
           code: 'LOGIN_ERROR',
-          message: 'Failed to login'
+          message: 'Failed to login',
+          details: process.env.NODE_ENV === 'development' ? error.message : undefined
         }
       });
     }

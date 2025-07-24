@@ -4,6 +4,7 @@ const AuthController = require('../controllers/auth.controller');
 const { authenticate } = require('../middleware/auth.middleware');
 
 // Public routes
+router.get('/test', AuthController.test);
 router.post('/register', AuthController.register);
 router.post('/login', AuthController.login);
 
