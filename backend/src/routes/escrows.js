@@ -2,34 +2,6 @@ const express = require('express');
 const router = express.Router();
 const databaseService = require('../services/database.service');
 const SimpleEscrowController = require('../controllers/escrows.controller');
-const MinimalEscrowController = require('../controllers/escrows.controller.minimal');
-const { pool } = require('../config/database');
-
-// Minimal endpoint for testing
-router.get('/minimal/:id', MinimalEscrowController.getEscrowById);
-
-// Debug endpoint
-router.get('/debug/:id', async (req, res) => {
-  const { id } = req.params;
-  try {
-    const result = await pool.query(
-      'SELECT numeric_id, display_id, property_address FROM escrows WHERE numeric_id = $1',
-      [id]
-    );
-    res.json({
-      success: true,
-      found: result.rows.length > 0,
-      data: result.rows[0] || null,
-      environment: process.env.NODE_ENV || 'unknown'
-    });
-  } catch (error) {
-    res.json({
-      success: false,
-      error: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    });
-  }
-});
 
 // Database routes
 router.get('/database', SimpleEscrowController.getAllEscrows);
