@@ -1,6 +1,5 @@
 const express = require('express');
 const router = express.Router();
-const databaseService = require('../services/database.service');
 const SimpleEscrowController = require('../controllers/escrows.controller');
 
 // Database routes
@@ -37,132 +36,7 @@ router.get('/', async (req, res) => {
 });
 
 // GET /v1/escrows/stats - Get dashboard statistics
-router.get('/stats', (req, res) => {
-  try {
-    const escrows = databaseService.getAll('escrows');
-    const stats = databaseService.getStats('escrows');
-    
-    // Calculate additional statistics
-    const now = new Date();
-    const thisMonth = now.getMonth();
-    const thisYear = now.getFullYear();
-    
-    const closedThisMonth = escrows.filter(e => {
-      if (e.escrowStatus !== 'closed') return false;
-      const dateStr = e.actualCoeDate || e.scheduledCoeDate || e.closing_date;
-      if (!dateStr) return false;
-      const closeDate = new Date(dateStr);
-      if (isNaN(closeDate.getTime())) return false;
-      return closeDate.getMonth() === thisMonth && closeDate.getFullYear() === thisYear;
-    }).length;
-    
-    const avgDaysToClose = escrows
-      .filter(e => e.escrowStatus === 'closed' && e.actualCoeDate)
-      .reduce((sum, e) => {
-        const openDateStr = e.escrowOpenDate || e.acceptanceDate || e.acceptance_date;
-        const closeDateStr = e.actualCoeDate || e.closing_date;
-        if (!openDateStr || !closeDateStr) return sum;
-        
-        const openDate = new Date(openDateStr);
-        const closeDate = new Date(closeDateStr);
-        if (isNaN(openDate.getTime()) || isNaN(closeDate.getTime())) return sum;
-        
-        const days = Math.floor((closeDate - openDate) / (24 * 60 * 60 * 1000));
-        return sum + days;
-      }, 0) / (escrows.filter(e => e.escrowStatus === 'closed').length || 1);
-    
-    // Calculate pipeline
-    const oneWeekFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-    const oneMonthFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
-    const twoMonthsFromNow = new Date(now.getTime() + 60 * 24 * 60 * 60 * 1000);
-    
-    const thisWeek = escrows.filter(e => {
-      const dateStr = e.scheduledCoeDate || e.closing_date;
-      if (!dateStr) return false;
-      const closeDate = new Date(dateStr);
-      if (isNaN(closeDate.getTime())) return false;
-      return e.escrowStatus === 'active' && closeDate <= oneWeekFromNow;
-    }).length;
-    
-    const thisMonthPipeline = escrows.filter(e => {
-      const dateStr = e.scheduledCoeDate || e.closing_date;
-      if (!dateStr) return false;
-      const closeDate = new Date(dateStr);
-      if (isNaN(closeDate.getTime())) return false;
-      return e.escrowStatus === 'active' && closeDate <= oneMonthFromNow;
-    }).length;
-    
-    const nextMonth = escrows.filter(e => {
-      const dateStr = e.scheduledCoeDate || e.closing_date;
-      if (!dateStr) return false;
-      const closeDate = new Date(dateStr);
-      if (isNaN(closeDate.getTime())) return false;
-      return e.escrowStatus === 'active' && closeDate > oneMonthFromNow && closeDate <= twoMonthsFromNow;
-    }).length;
-    
-    const projectedRevenue = escrows
-      .filter(e => e.escrowStatus === 'active')
-      .reduce((sum, e) => sum + (e.myCommission || 0), 0);
-    
-    // Generate monthly trends
-    const trends = [];
-    for (let i = 5; i >= 0; i--) {
-      const trendDate = new Date(thisYear, thisMonth - i, 1);
-      const monthName = trendDate.toLocaleString('default', { month: 'short' });
-      
-      const monthlyEscrows = escrows.filter(e => {
-        if (e.escrowStatus !== 'closed') return false;
-        const dateStr = e.actualCoeDate || e.scheduledCoeDate || e.closing_date;
-        if (!dateStr) return false;
-        const closeDate = new Date(dateStr);
-        if (isNaN(closeDate.getTime())) return false;
-        return closeDate.getMonth() === trendDate.getMonth() && 
-               closeDate.getFullYear() === trendDate.getFullYear();
-      });
-      
-      trends.push({
-        month: monthName,
-        closed: monthlyEscrows.length,
-        volume: monthlyEscrows.reduce((sum, e) => sum + (e.purchasePrice || 0), 0)
-      });
-    }
-    
-    res.json({
-      success: true,
-      data: {
-        overview: {
-          activeEscrows: stats.active,
-          pendingEscrows: stats.pending,
-          closedThisMonth,
-          totalVolume: stats.totalVolume,
-          totalCommission: stats.totalCommission,
-          avgDaysToClose: Math.round(avgDaysToClose)
-        },
-        performance: {
-          closingRate: stats.closed > 0 ? Math.round((stats.closed / stats.total) * 100) : 0,
-          avgListToSaleRatio: 98.5,
-          clientSatisfaction: 4.8,
-          onTimeClosingRate: 89
-        },
-        pipeline: {
-          thisWeek,
-          thisMonth: thisMonthPipeline,
-          nextMonth,
-          projectedRevenue
-        },
-        trends
-      }
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: {
-        code: 'INTERNAL_ERROR',
-        message: 'Failed to fetch escrow statistics'
-      }
-    });
-  }
-});
+router.get('/stats', SimpleEscrowController.getEscrowStats);
 
 // GET /v1/escrows/:id - Get single escrow with full details
 router.get('/:id', async (req, res) => {
@@ -176,36 +50,7 @@ router.post('/', (req, res) => {
 });
 
 // PUT /v1/escrows/:id - Update escrow
-router.put('/:id', (req, res) => {
-  try {
-    const { id } = req.params;
-    const updatedEscrow = databaseService.update('escrows', id, req.body);
-    
-    if (!updatedEscrow) {
-      return res.status(404).json({
-        success: false,
-        error: {
-          code: 'NOT_FOUND',
-          message: 'Escrow not found'
-        }
-      });
-    }
-    
-    res.json({
-      success: true,
-      data: updatedEscrow,
-      message: 'Escrow updated successfully'
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: {
-        code: 'INTERNAL_ERROR',
-        message: 'Failed to update escrow'
-      }
-    });
-  }
-});
+router.put('/:id', SimpleEscrowController.updateEscrow);
 
 // PATCH /v1/escrows/:id/checklist - Update checklist item
 router.patch('/:id/checklist', (req, res) => {
@@ -456,34 +301,6 @@ router.post('/:id/ai-assist', (req, res) => {
 });
 
 // DELETE /v1/escrows/:id - Delete escrow
-router.delete('/:id', (req, res) => {
-  try {
-    const { id } = req.params;
-    const deleted = databaseService.delete('escrows', id);
-    
-    if (!deleted) {
-      return res.status(404).json({
-        success: false,
-        error: {
-          code: 'NOT_FOUND',
-          message: 'Escrow not found'
-        }
-      });
-    }
-    
-    res.json({
-      success: true,
-      message: 'Escrow deleted successfully'
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: {
-        code: 'INTERNAL_ERROR',
-        message: 'Failed to delete escrow'
-      }
-    });
-  }
-});
+router.delete('/:id', SimpleEscrowController.deleteEscrow);
 
 module.exports = router;
