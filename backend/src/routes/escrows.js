@@ -2,7 +2,11 @@ const express = require('express');
 const router = express.Router();
 const databaseService = require('../services/database.service');
 const SimpleEscrowController = require('../controllers/escrows.controller');
+const MinimalEscrowController = require('../controllers/escrows.controller.minimal');
 const { pool } = require('../config/database');
+
+// Minimal endpoint for testing
+router.get('/minimal/:id', MinimalEscrowController.getEscrowById);
 
 // Debug endpoint
 router.get('/debug/:id', async (req, res) => {
@@ -190,8 +194,8 @@ router.get('/stats', (req, res) => {
 
 // GET /v1/escrows/:id - Get single escrow with full details
 router.get('/:id', async (req, res) => {
-  // Always use real database
-  return SimpleEscrowController.getEscrowById(req, res);
+  // Temporarily use minimal controller for debugging
+  return MinimalEscrowController.getEscrowById(req, res);
 });
 
 // POST /v1/escrows - Create new escrow with sequential ID
