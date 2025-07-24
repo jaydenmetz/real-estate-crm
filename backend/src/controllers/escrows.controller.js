@@ -30,7 +30,7 @@ class SimpleEscrowController {
       }
 
       if (search) {
-        whereConditions.push(`(e.property_address ILIKE $${paramIndex} OR e.id ILIKE $${paramIndex})`);
+        whereConditions.push(`(e.property_address ILIKE $${paramIndex} OR e.display_id ILIKE $${paramIndex})`);
         queryParams.push(`%${search}%`);
         paramIndex++;
       }
@@ -53,8 +53,9 @@ class SimpleEscrowController {
       
       const listQuery = `
         SELECT 
-          id,
-          id as "escrowNumber",
+          numeric_id as id,
+          display_id as "displayId",
+          display_id as "escrowNumber",
           property_address || '${envSuffix}' as "propertyAddress",
           'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800' as "propertyImage",
           escrow_status as "escrowStatus",
@@ -126,18 +127,22 @@ class SimpleEscrowController {
 
   /**
    * Get single escrow by ID with full details including helper tables
+   * Supports both numeric ID (1, 2, 3) and display ID (ESC-2025-001)
    */
   static async getEscrowById(req, res) {
     try {
       const { id } = req.params;
-
+      
+      // Determine if ID is numeric or display format
+      const isNumeric = /^\d+$/.test(id);
+      
       // Get escrow details
       const escrowQuery = `
         SELECT 
           e.*,
           'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800' as propertyImage
         FROM escrows e
-        WHERE e.id = $1
+        WHERE ${isNumeric ? 'e.numeric_id = $1::integer' : 'e.display_id = $1'}
       `;
       
       const escrowResult = await pool.query(escrowQuery, [id]);
@@ -155,25 +160,28 @@ class SimpleEscrowController {
       const escrow = escrowResult.rows[0];
       
       // Fetch all related data in parallel
+      // Use display_id for helper table queries
+      const displayId = escrow.display_id;
+      
       // Get checklist data from JSONB column
       const checklistResult = await pool.query(`
         SELECT checklist_items 
         FROM escrow_checklists 
-        WHERE escrow_id = $1
-      `, [id]);
+        WHERE escrow_display_id = $1
+      `, [displayId]);
       
       // Get buyer and seller info
       const buyerResult = await pool.query(`
         SELECT c.* FROM clients c 
         INNER JOIN escrow_buyers eb ON c.id = eb.client_id 
-        WHERE eb.escrow_id = $1
-      `, [id]);
+        WHERE eb.escrow_display_id = $1
+      `, [displayId]);
       
       const sellerResult = await pool.query(`
         SELECT c.* FROM clients c 
         INNER JOIN escrow_sellers es ON c.id = es.client_id 
-        WHERE es.escrow_id = $1
-      `, [id]);
+        WHERE es.escrow_display_id = $1
+      `, [displayId]);
 
       // Process checklist data for progress calculation
       const checklistItems = checklistResult.rows.length > 0 && checklistResult.rows[0].checklist_items 
@@ -228,8 +236,9 @@ class SimpleEscrowController {
 
       // Format the response
       const response = {
-        id: escrow.id,
-        escrowNumber: escrow.escrow_number || escrow.id,
+        id: escrow.numeric_id,  // Numeric ID for URLs
+        displayId: escrow.display_id,  // Display ID for business use
+        escrowNumber: escrow.escrow_number || escrow.display_id,
         propertyAddress: escrow.property_address + envSuffix,
         propertyImage: escrow.propertyImage,
         escrowStatus: escrow.escrow_status,
@@ -327,15 +336,15 @@ class SimpleEscrowController {
       
       const escrowData = req.body;
       
-      // Get the next ID in the format ESC-YYYY-XXXX
+      // Get the next display ID in the format ESC-YYYY-XXXX
       const year = new Date().getFullYear();
       const idResult = await client.query(
-        `SELECT id FROM escrows WHERE id LIKE 'ESC-${year}-%'`
+        `SELECT display_id FROM escrows WHERE display_id LIKE 'ESC-${year}-%'`
       );
       
       let maxNumber = 0;
       idResult.rows.forEach(row => {
-        const parts = row.id.split('-');
+        const parts = row.display_id.split('-');
         if (parts.length === 3) {
           const num = parseInt(parts[2]);
           if (!isNaN(num) && num > maxNumber) {
@@ -345,12 +354,12 @@ class SimpleEscrowController {
       });
       
       const nextNumber = maxNumber + 1;
-      const nextId = `ESC-${year}-${nextNumber.toString().padStart(4, '0')}`;
+      const displayId = `ESC-${year}-${nextNumber.toString().padStart(4, '0')}`;
       
       // Insert the new escrow
       const insertQuery = `
         INSERT INTO escrows (
-          id, property_address, escrow_status, purchase_price,
+          display_id, property_address, escrow_status, purchase_price,
           earnest_money_deposit, down_payment, loan_amount,
           commission_percentage, gross_commission, net_commission,
           acceptance_date, closing_date, property_type, lead_source,
@@ -360,7 +369,7 @@ class SimpleEscrowController {
       `;
       
       const values = [
-        nextId,
+        displayId,
         escrowData.property_address,
         escrowData.escrow_status || 'Active',
         escrowData.purchase_price,
@@ -417,18 +426,19 @@ class SimpleEscrowController {
       
       // Insert checklist items as JSONB
       const checklistQuery = `
-        INSERT INTO escrow_checklists (escrow_id, checklist_items)
+        INSERT INTO escrow_checklists (escrow_display_id, checklist_items)
         VALUES ($1, $2)
       `;
-      await client.query(checklistQuery, [nextId, JSON.stringify(checklistWithDates)]);
+      await client.query(checklistQuery, [displayId, JSON.stringify(checklistWithDates)]);
       
       await client.query('COMMIT');
       
-      // Return success with the new escrow ID
+      // Return success with both IDs
       res.status(201).json({
         success: true,
         data: {
-          id: nextId,
+          id: newEscrow.numeric_id,
+          displayId: displayId,
           message: 'Escrow created successfully with checklist items'
         }
       });
