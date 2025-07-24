@@ -195,13 +195,13 @@ class SimpleEscrowController {
           ORDER BY order_index, scheduled_date
         `, [displayId]);
       } catch (e) {
-        // Try production schema (uses numeric escrow_id)
+        // Try production schema (uses display_id as escrow_id)
         try {
           timelineResult = await pool.query(`
             SELECT * FROM escrow_timeline 
             WHERE escrow_id = $1
             ORDER BY event_date
-          `, [escrow.numeric_id]);
+          `, [displayId]);
         } catch (e2) {
           console.log('escrow_timeline query failed for both schemas');
         }
@@ -221,7 +221,7 @@ class SimpleEscrowController {
             SELECT * FROM escrow_financials 
             WHERE escrow_id = $1
             ORDER BY category
-          `, [escrow.numeric_id]);
+          `, [displayId]);
         } catch (e2) {
           console.log('escrow_financials query failed for both schemas');
         }
@@ -241,7 +241,7 @@ class SimpleEscrowController {
             SELECT * FROM escrow_documents 
             WHERE escrow_id = $1
             ORDER BY document_type
-          `, [escrow.numeric_id]);
+          `, [displayId]);
         } catch (e2) {
           console.log('escrow_documents query failed for both schemas');
         }
