@@ -114,15 +114,17 @@ class AuthController {
    */
   static async login(req, res) {
     try {
-      const { email, password } = req.body;
+      // Accept both username and email fields for compatibility
+      const { email, username, password } = req.body;
+      const loginEmail = email || username;
       
       // Validate input
-      if (!email || !password) {
+      if (!loginEmail || !password) {
         return res.status(400).json({
           success: false,
           error: {
             code: 'MISSING_CREDENTIALS',
-            message: 'Email and password are required'
+            message: 'Username/email and password are required'
           }
         });
       }
@@ -134,7 +136,7 @@ class AuthController {
         WHERE email = $1
       `;
       
-      const userResult = await pool.query(userQuery, [email.toLowerCase()]);
+      const userResult = await pool.query(userQuery, [loginEmail.toLowerCase()]);
       
       if (userResult.rows.length === 0) {
         return res.status(401).json({
