@@ -163,12 +163,19 @@ class SimpleEscrowController {
       // Use display_id for helper table queries
       const displayId = escrow.display_id;
       
+      console.log('Processing escrow:', displayId, 'Environment:', process.env.NODE_ENV);
+      
       // Get checklist data from JSONB column
-      const checklistResult = await pool.query(`
-        SELECT checklist_items 
-        FROM escrow_checklists 
-        WHERE escrow_display_id = $1
-      `, [displayId]);
+      let checklistResult = { rows: [] };
+      try {
+        checklistResult = await pool.query(`
+          SELECT checklist_items 
+          FROM escrow_checklists 
+          WHERE escrow_display_id = $1
+        `, [displayId]);
+      } catch (e) {
+        console.log('Checklist query failed:', e.message);
+      }
       
       // Initialize empty arrays for helper data
       let peopleResult = { rows: [] };
@@ -302,7 +309,9 @@ class SimpleEscrowController {
       const envSuffix = '';
 
       // Format the response
-      const response = {
+      let response;
+      try {
+        response = {
         id: escrow.numeric_id,  // Numeric ID for URLs
         displayId: escrow.display_id,  // Display ID for business use
         escrowNumber: escrow.escrow_number || escrow.display_id,
@@ -421,6 +430,11 @@ class SimpleEscrowController {
           (typeof escrow.updated_at === 'string' ? escrow.updated_at : new Date(escrow.updated_at).toISOString())
           : new Date().toISOString()
       };
+      } catch (buildError) {
+        console.error('Error building response:', buildError);
+        console.error('Error stack:', buildError.stack);
+        throw buildError;
+      }
 
       res.json({
         success: true,

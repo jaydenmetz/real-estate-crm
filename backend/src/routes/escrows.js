@@ -194,8 +194,8 @@ router.get('/stats', (req, res) => {
 
 // GET /v1/escrows/:id - Get single escrow with full details
 router.get('/:id', async (req, res) => {
-  // Temporarily use minimal controller for debugging
-  return MinimalEscrowController.getEscrowById(req, res);
+  // Back to full controller
+  return SimpleEscrowController.getEscrowById(req, res);
 });
 
 // POST /v1/escrows - Create new escrow with sequential ID
