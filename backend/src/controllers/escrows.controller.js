@@ -48,8 +48,8 @@ class SimpleEscrowController {
 
       // Main query - simplified with data directly from escrows table
       queryParams.push(limit, offset);
-      // Add environment suffix for local development
-      const envSuffix = process.env.NODE_ENV === 'development' ? ' - LOCAL' : '';
+      // Add environment suffix based on NODE_ENV
+      const envSuffix = process.env.NODE_ENV === 'development' ? ' - LOCAL' : ' - PRODUCTION';
       
       const listQuery = `
         SELECT 
@@ -231,8 +231,8 @@ class SimpleEscrowController {
       const buyer = buyerResult.rows[0] || null;
       const seller = sellerResult.rows[0] || null;
       
-      // Add environment suffix for local development
-      const envSuffix = process.env.NODE_ENV === 'development' ? ' - LOCAL' : '';
+      // Add environment suffix based on NODE_ENV
+      const envSuffix = process.env.NODE_ENV === 'development' ? ' - LOCAL' : ' - PRODUCTION';
 
       // Format the response
       const response = {
