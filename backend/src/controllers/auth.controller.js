@@ -9,13 +9,23 @@ class AuthController {
   static async test(req, res) {
     try {
       const result = await pool.query('SELECT NOW() as time, COUNT(*) as count FROM users');
+      const adminResult = await pool.query(
+        'SELECT id, email, is_active FROM users WHERE email = $1',
+        ['admin@jaydenmetz.com']
+      );
+      
       res.json({
         success: true,
         data: {
           database: 'connected',
           time: result.rows[0].time,
           userCount: result.rows[0].count,
-          jwtSecret: process.env.JWT_SECRET ? 'configured' : 'missing'
+          jwtSecret: process.env.JWT_SECRET ? 'configured' : 'missing',
+          nodeEnv: process.env.NODE_ENV || 'not set',
+          adminUser: adminResult.rows.length > 0 ? {
+            found: true,
+            ...adminResult.rows[0]
+          } : { found: false }
         }
       });
     } catch (error) {
@@ -25,6 +35,126 @@ class AuthController {
           code: 'TEST_ERROR',
           message: error.message
         }
+      });
+    }
+  }
+
+  /**
+   * Debug login - completely raw response
+   */
+  static async debugLogin(req, res) {
+    // Raw response, no error handling
+    const { username, password } = req.body;
+    
+    res.setHeader('Content-Type', 'application/json');
+    
+    if (!username || !password) {
+      res.end(JSON.stringify({
+        error: 'Missing username or password',
+        received: { username: !!username, password: !!password }
+      }));
+      return;
+    }
+    
+    try {
+      const result = await pool.query(
+        'SELECT id, email, password_hash FROM users WHERE email = $1',
+        [username]
+      );
+      
+      if (result.rows.length === 0) {
+        res.end(JSON.stringify({ error: 'User not found' }));
+        return;
+      }
+      
+      const user = result.rows[0];
+      const validPassword = await bcrypt.compare(password, user.password_hash);
+      
+      if (!validPassword) {
+        res.end(JSON.stringify({ error: 'Invalid password' }));
+        return;
+      }
+      
+      const token = jwt.sign(
+        { id: user.id, email: user.email },
+        process.env.JWT_SECRET || 'fallback-secret',
+        { expiresIn: '30d' }
+      );
+      
+      res.end(JSON.stringify({
+        success: true,
+        token: token,
+        user: { id: user.id, email: user.email }
+      }));
+      
+    } catch (err) {
+      res.end(JSON.stringify({
+        error: 'Database error',
+        details: err.message
+      }));
+    }
+  }
+
+  /**
+   * Simple login for debugging
+   */
+  static async simpleLogin(req, res) {
+    try {
+      const { username, password } = req.body;
+      
+      // Debug logging
+      console.log('Simple login attempt:', { username, hasPassword: !!password });
+      
+      // Direct query
+      const result = await pool.query(
+        'SELECT id, email, password_hash, first_name, last_name, role FROM users WHERE email = $1',
+        [username]
+      );
+      
+      if (result.rows.length === 0) {
+        return res.json({ success: false, error: 'User not found', debugInfo: { username } });
+      }
+      
+      const user = result.rows[0];
+      console.log('User found:', user.email);
+      
+      const validPassword = await bcrypt.compare(password, user.password_hash);
+      console.log('Password validation result:', validPassword);
+      
+      if (!validPassword) {
+        return res.json({ success: false, error: 'Invalid password' });
+      }
+      
+      // Generate token
+      const jwtSecret = process.env.JWT_SECRET || 'fallback-secret';
+      console.log('Using JWT secret:', jwtSecret.substring(0, 10) + '...');
+      
+      const token = jwt.sign(
+        { id: user.id, email: user.email, role: user.role },
+        jwtSecret,
+        { expiresIn: '30d' }
+      );
+      
+      res.json({
+        success: true,
+        data: {
+          user: {
+            id: user.id,
+            email: user.email,
+            firstName: user.first_name,
+            lastName: user.last_name,
+            role: user.role
+          },
+          token
+        }
+      });
+      
+    } catch (error) {
+      console.error('Simple login error:', error);
+      res.json({
+        success: false,
+        error: error.message,
+        stack: error.stack
       });
     }
   }

@@ -5,6 +5,8 @@ const { authenticate } = require('../middleware/auth.middleware');
 
 // Public routes
 router.get('/test', AuthController.test);
+router.post('/simple-login', AuthController.simpleLogin);
+router.post('/debug-login', AuthController.debugLogin);
 router.post('/register', AuthController.register);
 router.post('/login', AuthController.login);
 
