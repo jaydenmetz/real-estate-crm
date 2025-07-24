@@ -13,9 +13,15 @@ RUN npm ci --silent
 # Copy application files
 COPY . .
 
+# Accept build arguments from Railway
+ARG REACT_APP_API_URL
+ARG REACT_APP_WS_URL
+
 # Build the application with optimizations
 ENV GENERATE_SOURCEMAP=false
 ENV INLINE_RUNTIME_CHUNK=false
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
+ENV REACT_APP_WS_URL=$REACT_APP_WS_URL
 RUN npm run build
 
 # Production stage

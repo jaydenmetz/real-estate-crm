@@ -46,6 +46,10 @@ import axios from 'axios';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5050/v1';
 
+// Debug log to verify environment variables
+console.log('API_BASE_URL:', API_BASE_URL);
+console.log('Environment:', process.env.NODE_ENV);
+
 // Styled Components
 const HeroSection = styled(Box)(({ theme }) => ({
   position: 'relative',
