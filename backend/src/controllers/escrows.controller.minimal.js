@@ -12,10 +12,13 @@ class MinimalEscrowController {
       const isNumeric = /^\d+$/.test(id);
       console.log('Step 1: Getting escrow...');
       
+      // Test with the same query as the main controller
       const escrowQuery = `
-        SELECT numeric_id, display_id, property_address, escrow_status, purchase_price
-        FROM escrows 
-        WHERE ${isNumeric ? 'numeric_id = $1::integer' : 'display_id = $1'}
+        SELECT 
+          e.*,
+          'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800' as propertyImage
+        FROM escrows e
+        WHERE ${isNumeric ? 'e.numeric_id = $1::integer' : 'e.display_id = $1'}
       `;
       
       const escrowResult = await pool.query(escrowQuery, [id]);
