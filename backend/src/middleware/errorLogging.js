@@ -35,15 +35,19 @@ const errorLogging = (err, req, res, next) => {
   // Log to console and file
   logger.error('Request Error', errorDetails);
 
-  // Send detailed error in development, simplified in production
-  if (process.env.NODE_ENV === 'development') {
+  // Check if user is admin
+  const isAdmin = req.user && (req.user.role === 'admin' || req.user.role === 'system_admin');
+  
+  // Send detailed error in development or for admin users
+  if (process.env.NODE_ENV === 'development' || isAdmin) {
     res.status(err.statusCode || 500).json({
       success: false,
       error: {
         code: err.code || 'INTERNAL_ERROR',
         message: err.message,
         errorId,
-        details: errorDetails
+        details: errorDetails,
+        stack: isAdmin ? err.stack : undefined
       }
     });
   } else {

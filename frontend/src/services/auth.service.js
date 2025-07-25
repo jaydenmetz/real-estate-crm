@@ -281,7 +281,7 @@ class AuthService {
 
   // Check if user is admin
   isAdmin() {
-    return this.hasRole('admin');
+    return this.hasRole('admin') || this.hasRole('system_admin');
   }
 
   // Get API key for backend access

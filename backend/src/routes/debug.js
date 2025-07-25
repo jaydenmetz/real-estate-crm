@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { pool } = require('../config/database');
+const { authenticate } = require('../middleware/auth.middleware');
 
 // Debug endpoint to test database connection
 router.get('/test-db', async (req, res) => {
@@ -33,6 +34,98 @@ router.get('/test-db', async (req, res) => {
           name: error.name,
           code: error.code
         }
+      }
+    });
+  }
+});
+
+// Database status endpoint - admin only
+router.get('/db-status', authenticate, async (req, res) => {
+  try {
+    // Check if user is admin
+    const isAdmin = req.user && (req.user.role === 'admin' || req.user.role === 'system_admin');
+    if (!isAdmin) {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'FORBIDDEN',
+          message: 'Admin access required'
+        }
+      });
+    }
+    
+    // Check if we want Railway database status
+    const checkRailway = req.query.railway === 'true';
+    const targetPool = checkRailway && process.env.RAILWAY_DATABASE_URL ? 
+      new (require('pg').Pool)({ connectionString: process.env.RAILWAY_DATABASE_URL }) : 
+      pool;
+
+    // Get database name and basic info
+    const dbInfo = await pool.query(`
+      SELECT 
+        current_database() as database_name,
+        version() as version,
+        pg_database_size(current_database()) as size
+    `);
+
+    // Get record counts for key tables
+    const recordCounts = {};
+    const tables = ['teams', 'users', 'escrows', 'listings', 'clients', 'leads', 'appointments'];
+    
+    for (const table of tables) {
+      try {
+        const result = await pool.query(`SELECT COUNT(*) as count FROM ${table}`);
+        recordCounts[table] = parseInt(result.rows[0].count);
+      } catch (err) {
+        recordCounts[table] = 'N/A';
+      }
+    }
+
+    // Get connection stats
+    const connectionStats = await pool.query(`
+      SELECT 
+        count(*) as total,
+        count(*) FILTER (WHERE state = 'active') as active,
+        count(*) FILTER (WHERE state = 'idle') as idle
+      FROM pg_stat_activity
+      WHERE datname = current_database()
+    `);
+
+    // Format size for display
+    const sizeInBytes = parseInt(dbInfo.rows[0].size);
+    const sizeInMB = (sizeInBytes / (1024 * 1024)).toFixed(2);
+    const sizeInGB = (sizeInBytes / (1024 * 1024 * 1024)).toFixed(2);
+    
+    const sizeDisplay = sizeInGB > 1 
+      ? `${sizeInGB} GB` 
+      : `${sizeInMB} MB`;
+
+    res.json({
+      success: true,
+      data: {
+        status: 'connected',
+        database: dbInfo.rows[0].database_name,
+        environment: process.env.NODE_ENV || 'development',
+        recordCounts,
+        dbSize: {
+          size: sizeInBytes,
+          size_pretty: sizeDisplay
+        },
+        activeConnections: {
+          total: parseInt(connectionStats.rows[0].total),
+          active: parseInt(connectionStats.rows[0].active),
+          idle: parseInt(connectionStats.rows[0].idle)
+        },
+        version: dbInfo.rows[0].version.split(' ')[0] + ' ' + dbInfo.rows[0].version.split(' ')[1]
+      }
+    });
+  } catch (error) {
+    console.error('Database status error:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'DB_STATUS_ERROR',
+        message: error.message
       }
     });
   }

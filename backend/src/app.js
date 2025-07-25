@@ -210,6 +210,10 @@ apiRouter.use('/expenses', require('./routes/expenses.routes'));
 apiRouter.use('/upload', require('./routes/upload.routes'));
 apiRouter.use('/uploads', require('./routes/upload.routes'));
 
+// Profile and Settings routes
+apiRouter.use('/profiles', require('./routes/profiles'));
+apiRouter.use('/settings', require('./routes/settings'));
+
 apiRouter.get('/analytics/dashboard', async (req, res) => {
   try {
     // MOCK DASHBOARD DATA - Replace database queries

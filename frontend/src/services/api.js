@@ -37,6 +37,11 @@ class ApiService {
       environment: process.env.NODE_ENV
     });
   }
+  
+  // Method to check if token exists
+  hasToken() {
+    return !!this.token;
+  }
 
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
@@ -281,6 +286,23 @@ export const webhooksAPI = {
   test: (id) => apiInstance.post(`/webhooks/${id}/test`)
 };
 
+// Profiles API
+export const profilesAPI = {
+  getPublic: (username) => apiInstance.get(`/profiles/public/${username}`),
+  getMe: () => apiInstance.get('/profiles/me'),
+  updateMe: (data) => apiInstance.put('/profiles/me', data),
+  getStatistics: (username, period) => apiInstance.get(`/profiles/statistics/${username}`, { period })
+};
+
+// Settings API
+export const settingsAPI = {
+  get: () => apiInstance.get('/settings'),
+  update: (data) => apiInstance.put('/settings', data),
+  updateNotifications: (data) => apiInstance.put('/settings/notifications', data),
+  getTheme: () => apiInstance.get('/settings/theme'),
+  toggleTheme: () => apiInstance.post('/settings/theme/toggle')
+};
+
 // Additional Alex-specific API endpoints
 export const aiAPI = {
   getAgents: () => apiInstance.get('/ai/agents'),
@@ -307,6 +329,8 @@ export const api = {
   documentsAPI,
   communicationsAPI,
   webhooksAPI,
+  profilesAPI,
+  settingsAPI,
   // Include the raw instance methods for flexibility
   get: (...args) => apiInstance.get(...args),
   post: (...args) => apiInstance.post(...args),

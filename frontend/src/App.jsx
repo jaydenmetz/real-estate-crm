@@ -46,6 +46,10 @@ import AllNotes from './components/system/AllNotes';
 // import Calendar from './components/system/Calendar';
 // import Settings from './components/system/Settings';
 
+// Lazy load public profile
+const PublicProfile = React.lazy(() => import('./pages/PublicProfileStunning'));
+const Settings = React.lazy(() => import('./pages/Settings'));
+
 // Services
 import websocketService from './services/websocket';
 
@@ -174,6 +178,11 @@ function App() {
                   {/* Public Routes */}
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/profile/:username" element={
+                    <React.Suspense fallback={<Box sx={{ p: 4, textAlign: 'center' }}>Loading profile...</Box>}>
+                      <PublicProfile />
+                    </React.Suspense>
+                  } />
                   
                   {/* Protected Routes */}
                   <Route
@@ -226,9 +235,13 @@ function App() {
                                 {/* System Features */}
                                 <Route path="/activity-log" element={<ActivityLog />} />
                                 <Route path="/all-notes" element={<AllNotes />} />
+                                <Route path="/settings" element={
+                                  <React.Suspense fallback={<Box sx={{ p: 4, textAlign: 'center' }}>Loading settings...</Box>}>
+                                    <Settings />
+                                  </React.Suspense>
+                                } />
                                 {/* <Route path="/reports" element={<Reports />} />
-                                <Route path="/calendar" element={<Calendar />} />
-                                <Route path="/settings" element={<Settings />} /> */}
+                                <Route path="/calendar" element={<Calendar />} /> */}
                     
                                 {/* Catch all redirect */}
                                 <Route path="*" element={<Navigate to="/" />} />

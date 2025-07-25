@@ -20,6 +20,8 @@ import {
   Security,
   Help,
   Code,
+  Public,
+  Edit,
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -152,6 +154,28 @@ const UserMenu = () => {
           </ListItemIcon>
           <ListItemText>My Profile</ListItemText>
         </MenuItem>
+        
+        <MenuItem onClick={() => {
+          handleClose();
+          navigate(`/profile/${user.username}`);
+        }}>
+          <ListItemIcon>
+            <Public fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>View Public Profile</ListItemText>
+        </MenuItem>
+        
+        <MenuItem onClick={() => {
+          handleClose();
+          navigate('/settings#profile');
+        }}>
+          <ListItemIcon>
+            <Edit fontSize="small" />
+          </ListItemIcon>
+          <ListItemText>Edit Profile</ListItemText>
+        </MenuItem>
+        
+        <Divider />
         
         <MenuItem onClick={handleSettings}>
           <ListItemIcon>
