@@ -308,7 +308,17 @@ const Settings = () => {
             variant="contained"
             color="secondary"
             startIcon={<Public />}
-            onClick={() => window.open(`/profile/${user?.username}`, '_blank')}
+            onClick={() => {
+              if (user?.username) {
+                window.open(`/profile/${user.username}`, '_blank');
+              } else {
+                setSnackbar({ 
+                  open: true, 
+                  message: 'Username not found. Please refresh the page or re-login.', 
+                  severity: 'warning' 
+                });
+              }
+            }}
           >
             View Public Profile
           </Button>
@@ -322,16 +332,22 @@ const Settings = () => {
             Profile Preview
           </Typography>
           <Divider sx={{ mb: 3 }} />
-          <iframe
-            src={`/profile/${user?.username}`}
-            style={{
-              width: '100%',
-              height: '800px',
-              border: '1px solid #ddd',
-              borderRadius: '8px'
-            }}
-            title="Profile Preview"
-          />
+          {user?.username ? (
+            <iframe
+              src={`/profile/${user.username}`}
+              style={{
+                width: '100%',
+                height: '800px',
+                border: '1px solid #ddd',
+                borderRadius: '8px'
+              }}
+              title="Profile Preview"
+            />
+          ) : (
+            <Alert severity="warning">
+              Username not found. Please refresh the page or re-login.
+            </Alert>
+          )}
         </Paper>
       ) : (
         <Grid container spacing={3}>
