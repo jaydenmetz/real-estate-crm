@@ -140,7 +140,7 @@ app.post('/direct-login', express.json(), async (req, res) => {
     const { username, password } = req.body;
     
     // Test without database first
-    if (username === 'admin@jaydenmetz.com' && password === 'AdminPassword123!') {
+    if ((username === 'admin@jaydenmetz.com' || username === 'admin') && password === 'AdminPassword123!') {
       const jwt = require('jsonwebtoken');
       const token = jwt.sign(
         { id: 'test-id', email: username, role: 'admin' },

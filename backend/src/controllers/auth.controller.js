@@ -58,7 +58,7 @@ class AuthController {
     
     try {
       const result = await pool.query(
-        'SELECT id, email, password_hash FROM users WHERE email = $1',
+        'SELECT id, email, password_hash FROM users WHERE LOWER(email) = LOWER($1) OR LOWER(username) = LOWER($1)',
         [username]
       );
       
@@ -106,9 +106,9 @@ class AuthController {
       // Debug logging
       console.log('Simple login attempt:', { username, hasPassword: !!password });
       
-      // Direct query
+      // Direct query - check both email and username
       const result = await pool.query(
-        'SELECT id, email, password_hash, first_name, last_name, role FROM users WHERE email = $1',
+        'SELECT id, email, password_hash, first_name, last_name, role FROM users WHERE LOWER(email) = LOWER($1) OR LOWER(username) = LOWER($1)',
         [username]
       );
       
@@ -286,14 +286,14 @@ class AuthController {
         });
       }
       
-      // Get user by email
+      // Get user by email OR username
       const userQuery = `
         SELECT id, email, password_hash, first_name, last_name, role, is_active
         FROM users
-        WHERE email = $1
+        WHERE LOWER(email) = LOWER($1) OR LOWER(username) = LOWER($1)
       `;
       
-      const userResult = await pool.query(userQuery, [loginEmail.toLowerCase()]);
+      const userResult = await pool.query(userQuery, [loginEmail]);
       
       if (userResult.rows.length === 0) {
         return res.status(401).json({
