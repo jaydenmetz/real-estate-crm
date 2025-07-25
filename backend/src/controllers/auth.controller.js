@@ -75,9 +75,10 @@ class AuthController {
         return;
       }
       
+      // Use a hardcoded secret for now
       const token = jwt.sign(
         { id: user.id, email: user.email },
-        process.env.JWT_SECRET || 'fallback-secret',
+        '69f1e69d189afcf71dbdba8b7fa4668566ba5491a',
         { expiresIn: '30d' }
       );
       
@@ -126,7 +127,7 @@ class AuthController {
       }
       
       // Generate token
-      const jwtSecret = process.env.JWT_SECRET || 'fallback-secret';
+      const jwtSecret = process.env.JWT_SECRET || '69f1e69d189afcf71dbdba8b7fa4668566ba5491a';
       console.log('Using JWT secret:', jwtSecret.substring(0, 10) + '...');
       
       const token = jwt.sign(
@@ -228,7 +229,7 @@ class AuthController {
           email: user.email, 
           role: user.role 
         },
-        process.env.JWT_SECRET,
+        process.env.JWT_SECRET || '69f1e69d189afcf71dbdba8b7fa4668566ba5491a',
         { expiresIn: process.env.JWT_EXPIRE || '30d' }
       );
       
@@ -343,7 +344,7 @@ class AuthController {
           email: user.email, 
           role: user.role 
         },
-        process.env.JWT_SECRET,
+        process.env.JWT_SECRET || '69f1e69d189afcf71dbdba8b7fa4668566ba5491a',
         { expiresIn: process.env.JWT_EXPIRE || '30d' }
       );
       
