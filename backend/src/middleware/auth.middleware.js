@@ -23,7 +23,7 @@ const authenticate = async (req, res, next) => {
     
     try {
       // Verify token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || '69f1e69d189afcf71dbdba8b7fa4668566ba5491a');
       
       // Get user from database
       const userQuery = `
