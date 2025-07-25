@@ -78,7 +78,7 @@ class AuthController {
       // Use a hardcoded secret for now
       const token = jwt.sign(
         { id: user.id, email: user.email },
-        '69f1e69d189afcf71dbdba8b7fa4668566ba5491a',
+        '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472',
         { expiresIn: '30d' }
       );
       
@@ -127,7 +127,7 @@ class AuthController {
       }
       
       // Generate token
-      const jwtSecret = process.env.JWT_SECRET || '69f1e69d189afcf71dbdba8b7fa4668566ba5491a';
+      const jwtSecret = process.env.JWT_SECRET || '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472';
       console.log('Using JWT secret:', jwtSecret.substring(0, 10) + '...');
       
       const token = jwt.sign(
@@ -229,7 +229,7 @@ class AuthController {
           email: user.email, 
           role: user.role 
         },
-        process.env.JWT_SECRET || '69f1e69d189afcf71dbdba8b7fa4668566ba5491a',
+        process.env.JWT_SECRET || '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472',
         { expiresIn: process.env.JWT_EXPIRE || '30d' }
       );
       
@@ -344,7 +344,7 @@ class AuthController {
           email: user.email, 
           role: user.role 
         },
-        process.env.JWT_SECRET || '69f1e69d189afcf71dbdba8b7fa4668566ba5491a',
+        process.env.JWT_SECRET || '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472',
         { expiresIn: process.env.JWT_EXPIRE || '30d' }
       );
       

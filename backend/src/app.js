@@ -160,7 +160,7 @@ app.post('/direct-login', express.json(), async (req, res) => {
     
     const token = jwt.sign(
       { id: user.id, email: user.email, role: user.role },
-      '69f1e69d189afcf71dbdba8b7fa4668566ba5491a',
+      '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472',
       { expiresIn: '30d' }
     );
     
