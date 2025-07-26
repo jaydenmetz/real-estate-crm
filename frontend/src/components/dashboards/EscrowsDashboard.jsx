@@ -181,8 +181,11 @@ const EscrowCard = ({ escrow, onClick, index }) => {
   const theme = useTheme();
   const statusColors = {
     'Active': '#4caf50',
+    'active': '#4caf50',
     'Pending': '#ff9800',
+    'pending': '#ff9800',
     'Closed': '#9e9e9e',
+    'closed': '#9e9e9e',
   };
   
   const statusColor = statusColors[escrow.escrowStatus] || '#9e9e9e';
@@ -249,7 +252,7 @@ const EscrowCard = ({ escrow, onClick, index }) => {
                       WebkitTextFillColor: 'transparent',
                     }}
                   >
-                    {escrow.id}
+                    {escrow.displayId || escrow.escrowNumber}
                   </Typography>
                   <Chip
                     label={escrow.escrowStatus}
@@ -431,7 +434,7 @@ const EscrowsDashboard = () => {
   };
 
   const calculateStats = (escrowData) => {
-    const active = escrowData.filter(e => e.escrowStatus === 'Active');
+    const active = escrowData.filter(e => e.escrowStatus === 'Active' || e.escrowStatus === 'active');
     const totalVolume = active.reduce((sum, e) => sum + Number(e.purchasePrice || 0), 0);
     const projectedCommission = active.reduce((sum, e) => sum + Number(e.myCommission || 0), 0);
     
