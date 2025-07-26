@@ -53,7 +53,7 @@ class SimpleEscrowController {
       
       const listQuery = `
         SELECT 
-          numeric_id as id,
+          id::text as id,
           display_id as "displayId",
           display_id as "escrowNumber",
           property_address || '${envSuffix}' as "propertyAddress",
@@ -61,9 +61,9 @@ class SimpleEscrowController {
           escrow_status as "escrowStatus",
           property_type as "transactionType",
           purchase_price as "purchasePrice",
-          net_commission as "myCommission",
+          COALESCE(buyer_side_commission * purchase_price / 100, 0) as "myCommission",
           '[]'::jsonb as clients,
-          COALESCE(TO_CHAR(acceptance_date, 'YYYY-MM-DD'), TO_CHAR(CURRENT_DATE, 'YYYY-MM-DD')) as "acceptanceDate",
+          COALESCE(TO_CHAR(opening_date, 'YYYY-MM-DD'), TO_CHAR(CURRENT_DATE, 'YYYY-MM-DD')) as "acceptanceDate",
           COALESCE(TO_CHAR(closing_date, 'YYYY-MM-DD'), TO_CHAR(CURRENT_DATE + INTERVAL '30 days', 'YYYY-MM-DD')) as "scheduledCoeDate",
           CASE 
             WHEN closing_date IS NOT NULL 
@@ -133,8 +133,8 @@ class SimpleEscrowController {
     try {
       const { id } = req.params;
       
-      // Determine if ID is numeric or display format
-      const isNumeric = /^\d+$/.test(id);
+      // Determine if ID is UUID or display format
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
       
       // Get escrow details
       const escrowQuery = `
@@ -142,7 +142,7 @@ class SimpleEscrowController {
           e.*,
           'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800' as propertyImage
         FROM escrows e
-        WHERE ${isNumeric ? 'e.numeric_id = $1::integer' : 'e.display_id = $1'}
+        WHERE ${isUUID ? 'e.id = $1::uuid' : 'e.display_id = $1'}
       `;
       
       const escrowResult = await pool.query(escrowQuery, [id]);
@@ -335,28 +335,28 @@ class SimpleEscrowController {
       let response;
       try {
         response = {
-        id: escrow.numeric_id,  // Numeric ID for URLs
+        id: escrow.id,  // UUID for URLs
         displayId: escrow.display_id,  // Display ID for business use
-        escrowNumber: escrow.escrow_number || escrow.display_id,
+        escrowNumber: escrow.display_id,
         propertyAddress: escrow.property_address + envSuffix,
         propertyImage: escrow.propertyImage,
         escrowStatus: escrow.escrow_status,
         transactionType: escrow.property_type || 'Single Family',
         purchasePrice: parseFloat(escrow.purchase_price) || 0,
-        earnestMoneyDeposit: parseFloat(escrow.earnest_money_deposit) || 0,
-        downPayment: parseFloat(escrow.down_payment) || 0,
-        loanAmount: parseFloat(escrow.loan_amount) || 0,
-        commissionPercentage: parseFloat(escrow.commission_percentage) || 0,
-        grossCommission: parseFloat(escrow.gross_commission) || 0,
-        myCommission: parseFloat(escrow.net_commission) || 0,
-        acceptanceDate: escrow.acceptance_date ? 
-          (typeof escrow.acceptance_date === 'string' ? escrow.acceptance_date.split('T')[0] : new Date(escrow.acceptance_date).toISOString().split('T')[0]) 
+        earnestMoneyDeposit: parseFloat(escrow.earnest_money) || 0,
+        downPayment: parseFloat(escrow.down_payment) || parseFloat(escrow.purchase_price) * 0.2 || 0,
+        loanAmount: parseFloat(escrow.loan_amount) || parseFloat(escrow.purchase_price) * 0.8 || 0,
+        commissionPercentage: parseFloat(escrow.buyer_side_commission) || 2.5,
+        grossCommission: parseFloat(escrow.purchase_price) * (parseFloat(escrow.buyer_side_commission) || 2.5) / 100 || 0,
+        myCommission: parseFloat(escrow.purchase_price) * (parseFloat(escrow.buyer_side_commission) || 2.5) / 100 || 0,
+        acceptanceDate: escrow.opening_date ? 
+          (typeof escrow.opening_date === 'string' ? escrow.opening_date.split('T')[0] : new Date(escrow.opening_date).toISOString().split('T')[0]) 
           : new Date().toISOString().split('T')[0],
         scheduledCoeDate: escrow.closing_date ? 
           (typeof escrow.closing_date === 'string' ? escrow.closing_date.split('T')[0] : new Date(escrow.closing_date).toISOString().split('T')[0])
           : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         propertyType: escrow.property_type,
-        leadSource: escrow.lead_source,
+        leadSource: escrow.lead_source || 'Website',
         
         // Participants
         buyer: buyer,
@@ -431,7 +431,7 @@ class SimpleEscrowController {
         // Activity stats
         activityStats: {
           daysInEscrow: escrow.closing_date ? 
-            Math.floor((new Date() - new Date(escrow.acceptance_date || escrow.created_at)) / (24 * 60 * 60 * 1000)) : 0,
+            Math.floor((new Date() - new Date(escrow.opening_date || escrow.created_at)) / (24 * 60 * 60 * 1000)) : 0,
           daysToClose: escrow.closing_date ? 
             Math.floor((new Date(escrow.closing_date) - new Date()) / (24 * 60 * 60 * 1000)) : 0,
           tasksCompletedToday: checklists.filter(c => 
@@ -620,7 +620,7 @@ class SimpleEscrowController {
       let paramIndex = 1;
       
       Object.keys(updates).forEach(key => {
-        if (key !== 'id' && key !== 'numeric_id' && key !== 'display_id' && key !== 'created_at') {
+        if (key !== 'id' && key !== 'display_id' && key !== 'created_at') {
           updateFields.push(`${key} = $${paramIndex}`);
           values.push(updates[key]);
           paramIndex++;
@@ -638,13 +638,13 @@ class SimpleEscrowController {
       }
       
       // Determine if ID is numeric or display format
-      const isNumeric = /^\d+$/.test(id);
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
       values.push(id);
       
       const updateQuery = `
         UPDATE escrows 
         SET ${updateFields.join(', ')}, updated_at = NOW()
-        WHERE ${isNumeric ? 'numeric_id = $' + paramIndex + '::integer' : 'display_id = $' + paramIndex}
+        WHERE ${isUUID ? 'id = $' + paramIndex + '::uuid' : 'display_id = $' + paramIndex}
         RETURNING *
       `;
       
@@ -686,10 +686,10 @@ class SimpleEscrowController {
   static async deleteEscrow(req, res) {
     try {
       const { id } = req.params;
-      const isNumeric = /^\d+$/.test(id);
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
       
       const result = await pool.query(
-        `DELETE FROM escrows WHERE ${isNumeric ? 'numeric_id = $1::integer' : 'display_id = $1'} RETURNING display_id`,
+        `DELETE FROM escrows WHERE ${isUUID ? 'id = $1::uuid' : 'display_id = $1'} RETURNING display_id`,
         [id]
       );
       
@@ -755,29 +755,24 @@ class SimpleEscrowController {
       const insertQuery = `
         INSERT INTO escrows (
           display_id, property_address, escrow_status, purchase_price,
-          earnest_money_deposit, down_payment, loan_amount,
-          commission_percentage, gross_commission, net_commission,
-          acceptance_date, closing_date, property_type, lead_source,
+          earnest_money, buyer_side_commission,
+          opening_date, closing_date, property_type, transaction_type,
           created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW(), NOW())
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
         RETURNING *
       `;
       
       const values = [
         displayId,
         escrowData.property_address,
-        escrowData.escrow_status || 'Active',
+        escrowData.escrow_status || 'active',
         escrowData.purchase_price,
-        escrowData.earnest_money_deposit || escrowData.purchase_price * 0.01,
-        escrowData.down_payment || escrowData.purchase_price * 0.2,
-        escrowData.loan_amount || escrowData.purchase_price * 0.8,
-        escrowData.commission_percentage || 2.5,
-        escrowData.gross_commission || escrowData.purchase_price * (escrowData.commission_percentage || 2.5) / 100,
-        escrowData.net_commission || escrowData.purchase_price * (escrowData.commission_percentage || 2.5) / 100 * 0.5,
-        escrowData.acceptance_date || new Date().toISOString().split('T')[0],
+        escrowData.earnest_money || escrowData.purchase_price * 0.01,
+        escrowData.buyer_side_commission || 2.5,
+        escrowData.opening_date || new Date().toISOString().split('T')[0],
         escrowData.closing_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         escrowData.property_type || 'Single Family',
-        escrowData.lead_source || 'Website'
+        escrowData.transaction_type || 'purchase'
       ];
       
       const escrowResult = await client.query(insertQuery, values);
@@ -808,7 +803,7 @@ class SimpleEscrowController {
       ];
       
       // Calculate due dates based on escrow dates
-      const acceptanceDate = new Date(newEscrow.acceptance_date);
+      const acceptanceDate = new Date(newEscrow.opening_date);
       const closingDate = new Date(newEscrow.closing_date);
       
       const checklistWithDates = defaultChecklist.map(item => ({
@@ -832,7 +827,7 @@ class SimpleEscrowController {
       res.status(201).json({
         success: true,
         data: {
-          id: newEscrow.numeric_id,
+          id: newEscrow.id,
           displayId: displayId,
           message: 'Escrow created successfully with checklist items'
         }
