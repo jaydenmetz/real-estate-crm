@@ -9,30 +9,37 @@ async function detectSchema() {
   if (schemaInfo) return schemaInfo;
   
   try {
-    // Check if numeric_id column exists
+    // Check what columns exist in the escrows table
     const result = await pool.query(`
       SELECT column_name 
       FROM information_schema.columns 
       WHERE table_name = 'escrows' 
-      AND column_name IN ('numeric_id', 'net_commission', 'acceptance_date')
+      AND column_name IN ('id', 'numeric_id', 'net_commission', 'acceptance_date', 'buyer_side_commission', 'opening_date')
     `);
     
     const columns = result.rows.map(row => row.column_name);
     schemaInfo = {
+      hasId: columns.includes('id'),
       hasNumericId: columns.includes('numeric_id'),
       hasNetCommission: columns.includes('net_commission'),
-      hasAcceptanceDate: columns.includes('acceptance_date')
+      hasAcceptanceDate: columns.includes('acceptance_date'),
+      hasBuyerSideCommission: columns.includes('buyer_side_commission'),
+      hasOpeningDate: columns.includes('opening_date')
     };
     
-    console.log('Detected schema:', schemaInfo);
+    console.log('Detected schema columns:', columns);
+    console.log('Schema info:', schemaInfo);
     return schemaInfo;
   } catch (error) {
     console.error('Schema detection error:', error);
-    // Default to local schema
+    // Default to production schema if detection fails
     schemaInfo = {
-      hasNumericId: false,
-      hasNetCommission: false,
-      hasAcceptanceDate: false
+      hasId: false,
+      hasNumericId: true,
+      hasNetCommission: true,
+      hasAcceptanceDate: true,
+      hasBuyerSideCommission: false,
+      hasOpeningDate: false
     };
     return schemaInfo;
   }
@@ -90,13 +97,39 @@ class SimpleEscrowController {
       queryParams.push(limit, offset);
       const envSuffix = '';
       
-      const idField = schema.hasNumericId ? 'COALESCE(numeric_id::text, id::text)' : 'id::text';
-      const commissionField = schema.hasNetCommission 
-        ? 'COALESCE(net_commission, buyer_side_commission * purchase_price / 100, buyer_side_commission, 0)'
-        : 'COALESCE(buyer_side_commission * purchase_price / 100, buyer_side_commission, 0)';
-      const acceptanceDateField = schema.hasAcceptanceDate
-        ? 'COALESCE(TO_CHAR(acceptance_date, \'YYYY-MM-DD\'), TO_CHAR(opening_date, \'YYYY-MM-DD\'), TO_CHAR(CURRENT_DATE, \'YYYY-MM-DD\'))'
-        : 'COALESCE(TO_CHAR(opening_date, \'YYYY-MM-DD\'), TO_CHAR(CURRENT_DATE, \'YYYY-MM-DD\'))';
+      // Build field selections based on available columns
+      let idField;
+      if (schema.hasNumericId && schema.hasId) {
+        idField = 'COALESCE(numeric_id::text, id::text)';
+      } else if (schema.hasNumericId) {
+        idField = 'numeric_id::text';
+      } else if (schema.hasId) {
+        idField = 'id::text';
+      } else {
+        throw new Error('No primary key column found in escrows table');
+      }
+      
+      let commissionField;
+      if (schema.hasNetCommission && schema.hasBuyerSideCommission) {
+        commissionField = 'COALESCE(net_commission, buyer_side_commission * purchase_price / 100, buyer_side_commission, 0)';
+      } else if (schema.hasNetCommission) {
+        commissionField = 'COALESCE(net_commission, 0)';
+      } else if (schema.hasBuyerSideCommission) {
+        commissionField = 'COALESCE(buyer_side_commission * purchase_price / 100, buyer_side_commission, 0)';
+      } else {
+        commissionField = '0';
+      }
+      
+      let acceptanceDateField;
+      if (schema.hasAcceptanceDate && schema.hasOpeningDate) {
+        acceptanceDateField = 'COALESCE(TO_CHAR(acceptance_date, \'YYYY-MM-DD\'), TO_CHAR(opening_date, \'YYYY-MM-DD\'), TO_CHAR(CURRENT_DATE, \'YYYY-MM-DD\'))';
+      } else if (schema.hasAcceptanceDate) {
+        acceptanceDateField = 'COALESCE(TO_CHAR(acceptance_date, \'YYYY-MM-DD\'), TO_CHAR(CURRENT_DATE, \'YYYY-MM-DD\'))';
+      } else if (schema.hasOpeningDate) {
+        acceptanceDateField = 'COALESCE(TO_CHAR(opening_date, \'YYYY-MM-DD\'), TO_CHAR(CURRENT_DATE, \'YYYY-MM-DD\'))';
+      } else {
+        acceptanceDateField = 'TO_CHAR(CURRENT_DATE, \'YYYY-MM-DD\')';
+      }
       
       const listQuery = `
         SELECT 
@@ -188,7 +221,7 @@ class SimpleEscrowController {
       
       // Build query to handle both UUID and display ID
       let whereClause;
-      if (isUUID) {
+      if (isUUID && schema.hasId) {
         whereClause = 'e.id = $1::uuid';
       } else if (schema.hasNumericId && /^\d+$/.test(id)) {
         // If it's a numeric ID and schema supports it
@@ -397,7 +430,7 @@ class SimpleEscrowController {
       let response;
       try {
         response = {
-        id: escrow.numeric_id || escrow.id,  // Use numeric_id for production, id for local
+        id: schema.hasNumericId ? (escrow.numeric_id || escrow.id) : escrow.id,  // Use appropriate ID based on schema
         displayId: escrow.display_id,  // Display ID for business use
         escrowNumber: escrow.display_id,
         propertyAddress: escrow.property_address + envSuffix,
@@ -549,6 +582,21 @@ class SimpleEscrowController {
       const thisMonth = now.getMonth();
       const thisYear = now.getFullYear();
       
+      // Detect schema
+      const schema = await detectSchema();
+      
+      // Build commission field based on schema
+      let commissionField;
+      if (schema.hasNetCommission && schema.hasBuyerSideCommission) {
+        commissionField = 'COALESCE(net_commission, buyer_side_commission * purchase_price / 100, 0)';
+      } else if (schema.hasNetCommission) {
+        commissionField = 'COALESCE(net_commission, 0)';
+      } else if (schema.hasBuyerSideCommission) {
+        commissionField = 'COALESCE(buyer_side_commission * purchase_price / 100, 0)';
+      } else {
+        commissionField = '0';
+      }
+      
       // Get basic counts
       const statsQuery = `
         SELECT 
@@ -557,7 +605,7 @@ class SimpleEscrowController {
           COUNT(*) FILTER (WHERE escrow_status = 'Closed') as closed,
           COUNT(*) as total,
           SUM(purchase_price) as total_volume,
-          SUM(COALESCE(net_commission, buyer_side_commission * purchase_price / 100, 0)) as total_commission
+          SUM(${commissionField}) as total_commission
         FROM escrows
       `;
       const statsResult = await pool.query(statsQuery);
@@ -575,14 +623,18 @@ class SimpleEscrowController {
       const closedThisMonth = parseInt(closedThisMonthResult.rows[0].count);
       
       // Calculate average days to close
+      const startDateField = schema.hasAcceptanceDate ? 
+        (schema.hasOpeningDate ? 'COALESCE(acceptance_date, opening_date)' : 'acceptance_date') :
+        (schema.hasOpeningDate ? 'opening_date' : 'created_at');
+        
       const avgDaysQuery = `
         SELECT AVG(
-          DATE_PART('day', closing_date - COALESCE(acceptance_date, opening_date))
+          DATE_PART('day', closing_date - ${startDateField})
         ) as avg_days
         FROM escrows
         WHERE escrow_status = 'Closed'
         AND closing_date IS NOT NULL
-        AND COALESCE(acceptance_date, opening_date) IS NOT NULL
+        AND ${startDateField} IS NOT NULL
       `;
       const avgDaysResult = await pool.query(avgDaysQuery);
       const avgDaysToClose = Math.round(avgDaysResult.rows[0].avg_days || 30);
@@ -593,7 +645,7 @@ class SimpleEscrowController {
           COUNT(*) FILTER (WHERE escrow_status = 'Active' AND closing_date <= CURRENT_DATE + INTERVAL '7 days') as this_week,
           COUNT(*) FILTER (WHERE escrow_status = 'Active' AND closing_date <= CURRENT_DATE + INTERVAL '30 days') as this_month,
           COUNT(*) FILTER (WHERE escrow_status = 'Active' AND closing_date > CURRENT_DATE + INTERVAL '30 days' AND closing_date <= CURRENT_DATE + INTERVAL '60 days') as next_month,
-          SUM(COALESCE(net_commission, buyer_side_commission * purchase_price / 100, 0)) FILTER (WHERE escrow_status = 'Active') as projected_revenue
+          SUM(${commissionField}) FILTER (WHERE escrow_status = 'Active') as projected_revenue
         FROM escrows
       `;
       const pipelineResult = await pool.query(pipelineQuery);
