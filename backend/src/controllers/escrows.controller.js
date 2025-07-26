@@ -1,6 +1,43 @@
 const { pool } = require('../config/database');
 const { asyncHandler } = require('../middleware/errorLogging');
 
+// Cache for schema detection
+let schemaInfo = null;
+
+// Helper function to detect database schema
+async function detectSchema() {
+  if (schemaInfo) return schemaInfo;
+  
+  try {
+    // Check if numeric_id column exists
+    const result = await pool.query(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'escrows' 
+      AND column_name IN ('numeric_id', 'net_commission', 'acceptance_date')
+    `);
+    
+    const columns = result.rows.map(row => row.column_name);
+    schemaInfo = {
+      hasNumericId: columns.includes('numeric_id'),
+      hasNetCommission: columns.includes('net_commission'),
+      hasAcceptanceDate: columns.includes('acceptance_date')
+    };
+    
+    console.log('Detected schema:', schemaInfo);
+    return schemaInfo;
+  } catch (error) {
+    console.error('Schema detection error:', error);
+    // Default to local schema
+    schemaInfo = {
+      hasNumericId: false,
+      hasNetCommission: false,
+      hasAcceptanceDate: false
+    };
+    return schemaInfo;
+  }
+}
+
 class SimpleEscrowController {
   /**
    * Get all escrows with buyers and sellers for list view
@@ -17,6 +54,9 @@ class SimpleEscrowController {
       } = req.query;
 
       const offset = (page - 1) * limit;
+      
+      // Detect schema
+      const schema = await detectSchema();
 
       // Build WHERE conditions
       let whereConditions = [];
@@ -46,14 +86,21 @@ class SimpleEscrowController {
       const countResult = await pool.query(countQuery, queryParams);
       const totalCount = parseInt(countResult.rows[0].total);
 
-      // Main query - simplified with data directly from escrows table
+      // Build dynamic query based on schema
       queryParams.push(limit, offset);
-      // Environment suffix is now added during seeding, not here
       const envSuffix = '';
+      
+      const idField = schema.hasNumericId ? 'COALESCE(numeric_id::text, id::text)' : 'id::text';
+      const commissionField = schema.hasNetCommission 
+        ? 'COALESCE(net_commission, buyer_side_commission * purchase_price / 100, buyer_side_commission, 0)'
+        : 'COALESCE(buyer_side_commission * purchase_price / 100, buyer_side_commission, 0)';
+      const acceptanceDateField = schema.hasAcceptanceDate
+        ? 'COALESCE(TO_CHAR(acceptance_date, \'YYYY-MM-DD\'), TO_CHAR(opening_date, \'YYYY-MM-DD\'), TO_CHAR(CURRENT_DATE, \'YYYY-MM-DD\'))'
+        : 'COALESCE(TO_CHAR(opening_date, \'YYYY-MM-DD\'), TO_CHAR(CURRENT_DATE, \'YYYY-MM-DD\'))';
       
       const listQuery = `
         SELECT 
-          COALESCE(numeric_id::text, id::text) as id,
+          ${idField} as id,
           display_id as "displayId",
           display_id as "escrowNumber",
           property_address || '${envSuffix}' as "propertyAddress",
@@ -61,9 +108,9 @@ class SimpleEscrowController {
           escrow_status as "escrowStatus",
           property_type as "transactionType",
           purchase_price as "purchasePrice",
-          COALESCE(net_commission, commission_percentage * purchase_price / 100, 0) as "myCommission",
+          ${commissionField} as "myCommission",
           '[]'::jsonb as clients,
-          COALESCE(TO_CHAR(acceptance_date, 'YYYY-MM-DD'), TO_CHAR(CURRENT_DATE, 'YYYY-MM-DD')) as "acceptanceDate",
+          ${acceptanceDateField} as "acceptanceDate",
           COALESCE(TO_CHAR(closing_date, 'YYYY-MM-DD'), TO_CHAR(CURRENT_DATE + INTERVAL '30 days', 'YYYY-MM-DD')) as "scheduledCoeDate",
           CASE 
             WHEN closing_date IS NOT NULL 
@@ -133,8 +180,23 @@ class SimpleEscrowController {
     try {
       const { id } = req.params;
       
+      // Detect schema
+      const schema = await detectSchema();
+      
       // Determine if ID is UUID or display format
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      
+      // Build query to handle both UUID and display ID
+      let whereClause;
+      if (isUUID) {
+        whereClause = 'e.id = $1::uuid';
+      } else if (schema.hasNumericId && /^\d+$/.test(id)) {
+        // If it's a numeric ID and schema supports it
+        whereClause = 'e.numeric_id = $1::integer';
+      } else {
+        // Display ID
+        whereClause = 'e.display_id = $1';
+      }
       
       // Get escrow details
       const escrowQuery = `
@@ -142,7 +204,7 @@ class SimpleEscrowController {
           e.*,
           'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800' as propertyImage
         FROM escrows e
-        WHERE e.display_id = $1
+        WHERE ${whereClause}
       `;
       
       const escrowResult = await pool.query(escrowQuery, [id]);
@@ -495,7 +557,7 @@ class SimpleEscrowController {
           COUNT(*) FILTER (WHERE escrow_status = 'Closed') as closed,
           COUNT(*) as total,
           SUM(purchase_price) as total_volume,
-          SUM(net_commission) as total_commission
+          SUM(COALESCE(net_commission, buyer_side_commission * purchase_price / 100, 0)) as total_commission
         FROM escrows
       `;
       const statsResult = await pool.query(statsQuery);
@@ -515,12 +577,12 @@ class SimpleEscrowController {
       // Calculate average days to close
       const avgDaysQuery = `
         SELECT AVG(
-          DATE_PART('day', closing_date - acceptance_date)
+          DATE_PART('day', closing_date - COALESCE(acceptance_date, opening_date))
         ) as avg_days
         FROM escrows
         WHERE escrow_status = 'Closed'
         AND closing_date IS NOT NULL
-        AND acceptance_date IS NOT NULL
+        AND COALESCE(acceptance_date, opening_date) IS NOT NULL
       `;
       const avgDaysResult = await pool.query(avgDaysQuery);
       const avgDaysToClose = Math.round(avgDaysResult.rows[0].avg_days || 30);
@@ -531,7 +593,7 @@ class SimpleEscrowController {
           COUNT(*) FILTER (WHERE escrow_status = 'Active' AND closing_date <= CURRENT_DATE + INTERVAL '7 days') as this_week,
           COUNT(*) FILTER (WHERE escrow_status = 'Active' AND closing_date <= CURRENT_DATE + INTERVAL '30 days') as this_month,
           COUNT(*) FILTER (WHERE escrow_status = 'Active' AND closing_date > CURRENT_DATE + INTERVAL '30 days' AND closing_date <= CURRENT_DATE + INTERVAL '60 days') as next_month,
-          SUM(net_commission) FILTER (WHERE escrow_status = 'Active') as projected_revenue
+          SUM(COALESCE(net_commission, buyer_side_commission * purchase_price / 100, 0)) FILTER (WHERE escrow_status = 'Active') as projected_revenue
         FROM escrows
       `;
       const pipelineResult = await pool.query(pipelineQuery);

@@ -2,18 +2,20 @@
 
 // Determine API URL based on environment
 const getApiUrl = () => {
-  // First check for explicit environment variable
+  // Always use REACT_APP_API_URL if set (from .env files)
   if (process.env.REACT_APP_API_URL) {
     // Remove trailing slash if present
     return process.env.REACT_APP_API_URL.replace(/\/$/, '');
   }
   
-  // In production, use the production API
+  // Fallback logic (shouldn't be needed with proper .env files)
   if (process.env.NODE_ENV === 'production') {
+    console.warn('REACT_APP_API_URL not set, falling back to production URL');
     return 'https://api.jaydenmetz.com';
   }
   
-  // In development, use localhost
+  // Development fallback
+  console.warn('REACT_APP_API_URL not set, falling back to localhost');
   return 'http://localhost:5050';
 };
 

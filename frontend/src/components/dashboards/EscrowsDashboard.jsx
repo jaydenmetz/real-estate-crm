@@ -43,14 +43,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { safeFormatDate, safeParseDate } from '../../utils/safeDateUtils';
-import axios from 'axios';
-
-// Use the same API URL logic as the main API service
-const API_BASE_URL = `${process.env.REACT_APP_API_URL || 'http://localhost:5050'}/v1`;
-
-// Debug log to verify environment variables
-console.log('API_BASE_URL:', API_BASE_URL);
-console.log('Environment:', process.env.NODE_ENV);
+import { escrowsAPI } from '../../services/api';
 
 // Styled Components
 const HeroSection = styled(Box)(({ theme }) => ({
@@ -412,18 +405,18 @@ const EscrowsDashboard = () => {
   const fetchEscrows = async () => {
     try {
       setLoading(true);
-      console.log('Fetching escrows from:', `${API_BASE_URL}/escrows`);
-      const response = await axios.get(`${API_BASE_URL}/escrows`);
-      console.log('API Response:', response.data);
+      console.log('Fetching escrows...');
+      const response = await escrowsAPI.getAll();
+      console.log('API Response:', response);
       
-      if (response.data.success) {
-        const escrowData = response.data.data.escrows || [];
+      if (response.success) {
+        const escrowData = response.data.escrows || [];
         console.log('Escrows found:', escrowData.length);
         setEscrows(escrowData);
         calculateStats(escrowData);
         generateChartData(escrowData);
       } else {
-        console.error('API returned success: false', response.data);
+        console.error('API returned success: false', response);
       }
     } catch (error) {
       console.error('Error fetching escrows:', error.message);
