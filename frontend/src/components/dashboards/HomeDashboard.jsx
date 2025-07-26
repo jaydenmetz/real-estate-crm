@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import {
   Container,
   Grid,
@@ -224,6 +225,7 @@ const HomeDashboard = () => {
   const [activeCard, setActiveCard] = useState(null);
   const navigate = useNavigate();
   const theme = useTheme();
+  const { user } = useAuth();
 
   // Empty data for fresh start
   const stats = {
@@ -268,7 +270,7 @@ const HomeDashboard = () => {
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
               <Box>
                 <Typography variant="h3" fontWeight="bold" gutterBottom>
-                  Welcome back, Jayden! 👋
+                  Welcome back, {user?.profile?.firstName || user?.username || 'User'}! 👋
                 </Typography>
                 <Typography variant="h6" sx={{ opacity: 0.9 }}>
                   {safeFormatDate(new Date(), 'EEEE, MMMM d, yyyy')} • Let's make today productive

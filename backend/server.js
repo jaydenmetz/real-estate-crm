@@ -55,8 +55,8 @@ const createDefaultUser = async () => {
           numberFormat: 'en-US'
         },
         profile: {
-          firstName: 'Jayden',
-          lastName: 'Metz',
+          firstName: 'Admin',
+          lastName: '',
           company: 'Metz Realty Group',
           phone: '(661) 747-0853',
           licenseNumber: '02203217',
