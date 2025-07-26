@@ -53,7 +53,7 @@ class SimpleEscrowController {
       
       const listQuery = `
         SELECT 
-          id::text as id,
+          COALESCE(numeric_id::text, id::text) as id,
           display_id as "displayId",
           display_id as "escrowNumber",
           property_address || '${envSuffix}' as "propertyAddress",
@@ -61,9 +61,9 @@ class SimpleEscrowController {
           escrow_status as "escrowStatus",
           property_type as "transactionType",
           purchase_price as "purchasePrice",
-          COALESCE(buyer_side_commission * purchase_price / 100, 0) as "myCommission",
+          COALESCE(net_commission, commission_percentage * purchase_price / 100, 0) as "myCommission",
           '[]'::jsonb as clients,
-          COALESCE(TO_CHAR(opening_date, 'YYYY-MM-DD'), TO_CHAR(CURRENT_DATE, 'YYYY-MM-DD')) as "acceptanceDate",
+          COALESCE(TO_CHAR(acceptance_date, 'YYYY-MM-DD'), TO_CHAR(CURRENT_DATE, 'YYYY-MM-DD')) as "acceptanceDate",
           COALESCE(TO_CHAR(closing_date, 'YYYY-MM-DD'), TO_CHAR(CURRENT_DATE + INTERVAL '30 days', 'YYYY-MM-DD')) as "scheduledCoeDate",
           CASE 
             WHEN closing_date IS NOT NULL 
@@ -142,7 +142,7 @@ class SimpleEscrowController {
           e.*,
           'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800' as propertyImage
         FROM escrows e
-        WHERE ${isUUID ? 'e.id = $1::uuid' : 'e.display_id = $1'}
+        WHERE e.display_id = $1
       `;
       
       const escrowResult = await pool.query(escrowQuery, [id]);
@@ -335,7 +335,7 @@ class SimpleEscrowController {
       let response;
       try {
         response = {
-        id: escrow.id,  // UUID for URLs
+        id: escrow.numeric_id || escrow.id,  // Use numeric_id for production, id for local
         displayId: escrow.display_id,  // Display ID for business use
         escrowNumber: escrow.display_id,
         propertyAddress: escrow.property_address + envSuffix,
@@ -343,14 +343,14 @@ class SimpleEscrowController {
         escrowStatus: escrow.escrow_status,
         transactionType: escrow.property_type || 'Single Family',
         purchasePrice: parseFloat(escrow.purchase_price) || 0,
-        earnestMoneyDeposit: parseFloat(escrow.earnest_money) || 0,
+        earnestMoneyDeposit: parseFloat(escrow.earnest_money_deposit || escrow.earnest_money) || 0,
         downPayment: parseFloat(escrow.down_payment) || parseFloat(escrow.purchase_price) * 0.2 || 0,
         loanAmount: parseFloat(escrow.loan_amount) || parseFloat(escrow.purchase_price) * 0.8 || 0,
-        commissionPercentage: parseFloat(escrow.buyer_side_commission) || 2.5,
-        grossCommission: parseFloat(escrow.purchase_price) * (parseFloat(escrow.buyer_side_commission) || 2.5) / 100 || 0,
-        myCommission: parseFloat(escrow.purchase_price) * (parseFloat(escrow.buyer_side_commission) || 2.5) / 100 || 0,
-        acceptanceDate: escrow.opening_date ? 
-          (typeof escrow.opening_date === 'string' ? escrow.opening_date.split('T')[0] : new Date(escrow.opening_date).toISOString().split('T')[0]) 
+        commissionPercentage: parseFloat(escrow.commission_percentage || escrow.buyer_side_commission) || 2.5,
+        grossCommission: parseFloat(escrow.gross_commission) || parseFloat(escrow.purchase_price) * (parseFloat(escrow.commission_percentage || escrow.buyer_side_commission) || 2.5) / 100 || 0,
+        myCommission: parseFloat(escrow.net_commission) || parseFloat(escrow.purchase_price) * (parseFloat(escrow.commission_percentage || escrow.buyer_side_commission) || 2.5) / 100 || 0,
+        acceptanceDate: escrow.acceptance_date || escrow.opening_date ? 
+          (typeof (escrow.acceptance_date || escrow.opening_date) === 'string' ? (escrow.acceptance_date || escrow.opening_date).split('T')[0] : new Date(escrow.acceptance_date || escrow.opening_date).toISOString().split('T')[0]) 
           : new Date().toISOString().split('T')[0],
         scheduledCoeDate: escrow.closing_date ? 
           (typeof escrow.closing_date === 'string' ? escrow.closing_date.split('T')[0] : new Date(escrow.closing_date).toISOString().split('T')[0])
@@ -431,7 +431,7 @@ class SimpleEscrowController {
         // Activity stats
         activityStats: {
           daysInEscrow: escrow.closing_date ? 
-            Math.floor((new Date() - new Date(escrow.opening_date || escrow.created_at)) / (24 * 60 * 60 * 1000)) : 0,
+            Math.floor((new Date() - new Date(escrow.acceptance_date || escrow.opening_date || escrow.created_at)) / (24 * 60 * 60 * 1000)) : 0,
           daysToClose: escrow.closing_date ? 
             Math.floor((new Date(escrow.closing_date) - new Date()) / (24 * 60 * 60 * 1000)) : 0,
           tasksCompletedToday: checklists.filter(c => 
