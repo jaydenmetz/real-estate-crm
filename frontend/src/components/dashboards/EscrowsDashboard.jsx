@@ -73,6 +73,7 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
         elevation={0}
         sx={{
           height: '100%',
+          minHeight: 140,
           position: 'relative',
           overflow: 'hidden',
           background: `linear-gradient(135deg, ${alpha(color, 0.1)} 0%, ${alpha(color, 0.05)} 100%)`,
@@ -95,7 +96,7 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
           },
         }}
       >
-        <CardContent sx={{ position: 'relative', zIndex: 1 }}>
+        <CardContent sx={{ position: 'relative', zIndex: 1, p: 2.5, '&:last-child': { pb: 2.5 } }}>
           <Box display="flex" alignItems="center" justifyContent="space-between">
             <Box>
               <Typography 
@@ -173,12 +174,15 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
 const EscrowCard = ({ escrow, onClick, index }) => {
   const theme = useTheme();
   const statusColors = {
-    'Active': '#4caf50',
-    'active': '#4caf50',
+    'Active Under Contract': '#4caf50',
+    'active under contract': '#4caf50',
     'Pending': '#ff9800',
     'pending': '#ff9800',
     'Closed': '#9e9e9e',
     'closed': '#9e9e9e',
+    // Legacy support
+    'Active': '#4caf50',
+    'active': '#4caf50'
   };
   
   const statusColor = statusColors[escrow.escrowStatus] || '#9e9e9e';
@@ -427,7 +431,16 @@ const EscrowsDashboard = () => {
   };
 
   const calculateStats = (escrowData) => {
-    const active = escrowData.filter(e => e.escrowStatus === 'Active' || e.escrowStatus === 'active');
+    // Both "Active Under Contract" and "Pending" are considered active escrows
+    const active = escrowData.filter(e => 
+      e.escrowStatus === 'Active Under Contract' || 
+      e.escrowStatus === 'active under contract' ||
+      e.escrowStatus === 'Pending' || 
+      e.escrowStatus === 'pending' ||
+      // Legacy support
+      e.escrowStatus === 'Active' || 
+      e.escrowStatus === 'active'
+    );
     const totalVolume = active.reduce((sum, e) => sum + Number(e.purchasePrice || 0), 0);
     const projectedCommission = active.reduce((sum, e) => sum + Number(e.myCommission || 0), 0);
     

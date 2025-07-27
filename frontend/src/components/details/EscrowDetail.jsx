@@ -2490,11 +2490,17 @@ const EscrowDetail = () => {
                               onClick={() => handleAgentClick(agent.id)}
                             >
                               <Stack direction="row" spacing={2} alignItems="center">
-                                <AgentAvatar status={agent.status}>
+                                <Avatar 
+                                  sx={{ 
+                                    bgcolor: agent.status === 'active' ? 'success.main' : 'grey.500',
+                                    width: 40,
+                                    height: 40
+                                  }}
+                                >
                                   <Tooltip title={agent.type}>
                                     {agent.icon}
                                   </Tooltip>
-                                </AgentAvatar>
+                                </Avatar>
                                 <Box flex={1}>
                                   <Typography variant="subtitle2" fontWeight="600">
                                     {agent.name}
