@@ -527,6 +527,132 @@ import DetailPageDebugger from '../common/DetailPageDebugger';
 import NetworkMonitor from '../common/NetworkMonitor';
 import CopyButton from '../common/CopyButton';
 
+// Database Sync Status Component
+const DatabaseSyncStatus = () => {
+  const [syncStatus, setSyncStatus] = useState({
+    loading: true,
+    synced: false,
+    localCount: 0,
+    productionCount: 0,
+    lastChecked: null,
+    error: null
+  });
+
+  const checkDatabaseSync = async () => {
+    setSyncStatus(prev => ({ ...prev, loading: true, error: null }));
+    
+    try {
+      // Check local database (only in development)
+      let localCount = 0;
+      if (process.env.NODE_ENV === 'development') {
+        try {
+          const localResponse = await fetch('http://localhost:5050/v1/escrows');
+          const localData = await localResponse.json();
+          localCount = localData.success ? (localData.data.escrows || []).length : 0;
+        } catch (err) {
+          console.warn('Could not reach local database:', err);
+        }
+      }
+      
+      // Check production database
+      let productionCount = 0;
+      try {
+        const productionResponse = await fetch(`${process.env.REACT_APP_API_URL}/v1/escrows`);
+        const productionData = await productionResponse.json();
+        productionCount = productionData.success ? (productionData.data.escrows || []).length : 0;
+      } catch (err) {
+        throw new Error('Could not reach production database');
+      }
+      
+      const synced = localCount === productionCount;
+      
+      setSyncStatus({
+        loading: false,
+        synced,
+        localCount,
+        productionCount,
+        lastChecked: new Date().toISOString(),
+        error: null
+      });
+    } catch (error) {
+      setSyncStatus(prev => ({
+        ...prev,
+        loading: false,
+        error: error.message
+      }));
+    }
+  };
+
+  useEffect(() => {
+    checkDatabaseSync();
+    // Auto-refresh every 30 seconds
+    const interval = setInterval(checkDatabaseSync, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const getSyncStatusColor = () => {
+    if (syncStatus.loading) return 'info';
+    if (syncStatus.error) return 'warning';
+    return syncStatus.synced ? 'success' : 'error';
+  };
+
+  const getSyncStatusText = () => {
+    if (syncStatus.loading) return 'Checking database sync...';
+    if (syncStatus.error) return `Sync check failed: ${syncStatus.error}`;
+    if (syncStatus.synced) {
+      return `✅ Databases are synced (${syncStatus.productionCount} escrows each)`;
+    }
+    return `❌ Databases out of sync: Local(${syncStatus.localCount}) vs Production(${syncStatus.productionCount})`;
+  };
+
+  return (
+    <Paper 
+      sx={{ 
+        p: 2, 
+        mb: 2, 
+        bgcolor: syncStatus.synced ? 'success.light' : 'error.light',
+        border: '2px solid',
+        borderColor: syncStatus.synced ? 'success.main' : 'error.main'
+      }}
+    >
+      <Box display="flex" alignItems="center" justifyContent="space-between">
+        <Box display="flex" alignItems="center" gap={1}>
+          <Storage />
+          <Typography variant="h6">Database Sync Status</Typography>
+          <Chip 
+            label={getSyncStatusColor() === 'success' ? 'SYNCED' : 'OUT OF SYNC'} 
+            color={getSyncStatusColor()}
+            size="small"
+            sx={{ fontWeight: 'bold' }}
+          />
+        </Box>
+        <IconButton size="small" onClick={checkDatabaseSync} disabled={syncStatus.loading}>
+          {syncStatus.loading ? <CircularProgress size={20} /> : <Refresh />}
+        </IconButton>
+      </Box>
+      
+      <Typography variant="body2" sx={{ mt: 1 }}>
+        {getSyncStatusText()}
+      </Typography>
+      
+      {syncStatus.lastChecked && (
+        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: 'block' }}>
+          Last checked: {new Date(syncStatus.lastChecked).toLocaleTimeString()}
+        </Typography>
+      )}
+      
+      {!syncStatus.synced && !syncStatus.loading && !syncStatus.error && (
+        <Box sx={{ mt: 1 }}>
+          <Typography variant="body2" color="error.main">
+            <strong>Action needed:</strong> Local and production databases have different numbers of escrows. 
+            This could indicate data sync issues or missing records.
+          </Typography>
+        </Box>
+      )}
+    </Paper>
+  );
+};
+
 // Animations
 const fadeIn = keyframes`
   from { opacity: 0; transform: translateY(20px); }
@@ -1341,6 +1467,8 @@ const EscrowDetail = () => {
       {(user?.role === 'admin' || user?.role === 'system_admin') && (
         <Collapse in={debugExpanded}>
           <Box sx={{ mb: 3 }}>
+            {/* Database Sync Status */}
+            <DatabaseSyncStatus />
             <NetworkMonitor />
             <DetailPageDebugger 
               pageName="Escrow Detail"
