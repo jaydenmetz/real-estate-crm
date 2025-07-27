@@ -1417,29 +1417,57 @@ const EscrowDetail = () => {
                   userIsSystemAdmin: user?.username === 'admin',
                   componentsRendered: ['NetworkMonitor', 'DetailPageDebugger', 'ComprehensiveDebugSummary', 'DatabaseSyncStatus']
                 },
-                networkActivity: {
-                  note: "Network activity data from NetworkMonitor - all API requests and responses",
-                  stats: networkMonitor.getStats(),
-                  recentRequests: networkMonitor.getRequests().slice(0, 5).map(req => ({
-                    id: req.id,
-                    method: req.method,
-                    url: req.url,
-                    status: req.statusCode,
-                    success: req.success,
-                    duration: req.duration,
-                    timestamp: req.timestamp,
-                    error: req.error
-                  })),
-                  allErrors: networkMonitor.getErrors().map(req => ({
-                    method: req.method,
-                    url: req.url,
-                    error: req.error,
-                    timestamp: req.timestamp
-                  })),
-                  totalRequests: networkMonitor.getStats().total,
-                  errorCount: networkMonitor.getStats().errors,
-                  lastActivity: new Date().toISOString()
-                },
+                networkActivity: (() => {
+                  try {
+                    if (!networkMonitor || typeof networkMonitor.getStats !== 'function') {
+                      return {
+                        note: "Network monitor not available",
+                        stats: { total: 0, errors: 0 },
+                        recentRequests: [],
+                        allErrors: [],
+                        totalRequests: 0,
+                        errorCount: 0,
+                        lastActivity: new Date().toISOString()
+                      };
+                    }
+                    const stats = networkMonitor.getStats();
+                    return {
+                      note: "Network activity data from NetworkMonitor - all API requests and responses",
+                      stats: stats,
+                      recentRequests: networkMonitor.getRequests().slice(0, 5).map(req => ({
+                        id: req.id,
+                        method: req.method,
+                        url: req.url,
+                        status: req.statusCode,
+                        success: req.success,
+                        duration: req.duration,
+                        timestamp: req.timestamp,
+                        error: req.error
+                      })),
+                      allErrors: networkMonitor.getErrors().map(req => ({
+                        method: req.method,
+                        url: req.url,
+                        error: req.error,
+                        timestamp: req.timestamp
+                      })),
+                      totalRequests: stats.total,
+                      errorCount: stats.errors,
+                      lastActivity: new Date().toISOString()
+                    };
+                  } catch (error) {
+                    console.error('Error accessing networkMonitor:', error);
+                    return {
+                      note: "Error accessing network monitor",
+                      error: error.message,
+                      stats: { total: 0, errors: 0 },
+                      recentRequests: [],
+                      allErrors: [],
+                      totalRequests: 0,
+                      errorCount: 0,
+                      lastActivity: new Date().toISOString()
+                    };
+                  }
+                })(),
                 databaseSync: {
                   note: "Database sync status from DatabaseSyncStatus component - local vs production comparison",
                   warning: debugExpanded ? "Expand the debug section to see current sync status" : "Database sync status available in expanded debug section",
