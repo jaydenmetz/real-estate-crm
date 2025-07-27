@@ -24,8 +24,14 @@ import {
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  Card,
+  CardHeader,
+  CardContent,
+  Grid,
+  Fade
 } from '@mui/material';
+import { styled, keyframes, alpha } from '@mui/material/styles';
 import {
   NetworkCheck,
   Refresh,
@@ -358,80 +364,259 @@ const NetworkMonitorComponent = () => {
     </Dialog>
   );
 
+  // Styled components for stunning design
+  const NetworkCard = styled(Card)(({ theme }) => ({
+    background: `linear-gradient(135deg, 
+      ${alpha(theme.palette.info.main, 0.08)} 0%, 
+      ${alpha(theme.palette.primary.main, 0.08)} 50%, 
+      ${alpha(theme.palette.secondary.main, 0.08)} 100%
+    )`,
+    border: `2px solid ${alpha(theme.palette.info.main, 0.3)}`,
+    borderRadius: '16px',
+    boxShadow: `0 8px 32px ${alpha(theme.palette.common.black, 0.1)}`,
+    backdropFilter: 'blur(10px)',
+    transition: 'all 0.3s ease-in-out',
+    '&:hover': {
+      boxShadow: `0 12px 40px ${alpha(theme.palette.common.black, 0.15)}`,
+      transform: 'translateY(-2px)',
+    }
+  }));
+
+  const pulse = keyframes`
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
+  `;
+
+  const StatsChip = styled(Chip)(({ theme, variant: chipVariant }) => {
+    const colors = {
+      success: { bg: theme.palette.success.main, color: theme.palette.success.contrastText },
+      error: { bg: theme.palette.error.main, color: theme.palette.error.contrastText },
+      warning: { bg: theme.palette.warning.main, color: theme.palette.warning.contrastText },
+      info: { bg: theme.palette.info.main, color: theme.palette.info.contrastText },
+      primary: { bg: theme.palette.primary.main, color: theme.palette.primary.contrastText },
+    };
+    
+    const color = colors[chipVariant] || colors.primary;
+    
+    return {
+      backgroundColor: color.bg,
+      color: color.color,
+      fontWeight: 600,
+      fontSize: '0.75rem',
+      '&.loading': {
+        animation: `${pulse} 1.5s ease-in-out infinite`,
+      }
+    };
+  });
+
   return (
-    <>
-      <Paper 
-        sx={{ 
-          p: 2, 
-          mb: 3, 
-          bgcolor: 'info.light',
-          border: '2px solid',
-          borderColor: 'info.main'
-        }}
-      >
-        <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-          <Box display="flex" alignItems="center" gap={1}>
-            <NetworkCheck />
-            <Typography variant="h6">Network Activity Monitor</Typography>
-            <Chip label="Admin Debug Tool" size="small" color="warning" />
-          </Box>
-          <Box display="flex" alignItems="center" gap={1}>
-            <FormControlLabel
-              control={
-                <Switch 
-                  checked={autoRefresh} 
-                  onChange={(e) => setAutoRefresh(e.target.checked)}
-                  size="small"
-                />
-              }
-              label="Auto-refresh"
-            />
-            <IconButton size="small" onClick={handleRefresh}>
-              <Refresh />
-            </IconButton>
-            <IconButton size="small" onClick={handleClear}>
-              <Clear />
-            </IconButton>
-            <IconButton
-              size="small"
-              onClick={() => setExpanded(!expanded)}
-            >
-              {expanded ? <ExpandLess /> : <ExpandMore />}
-            </IconButton>
-          </Box>
-        </Box>
+    <Fade in timeout={600}>
+      <NetworkCard sx={{ mb: 3 }}>
+        <CardHeader
+          avatar={
+            <Box sx={{ 
+              background: 'linear-gradient(45deg, #667eea 30%, #764ba2 90%)',
+              borderRadius: '12px',
+              p: 1.5,
+              color: 'white'
+            }}>
+              <NetworkCheck />
+            </Box>
+          }
+          title={
+            <Box display="flex" alignItems="center" gap={1.5}>
+              <Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: '-0.5px' }}>
+                Network Activity Monitor
+              </Typography>
+              <Chip 
+                label="ADMIN TOOL" 
+                sx={{
+                  background: 'linear-gradient(45deg, #ff6b6b, #ee5a24)',
+                  color: 'white',
+                  fontWeight: 600,
+                  fontSize: '0.75rem'
+                }}
+                size="small"
+              />
+            </Box>
+          }
+          action={
+            <Box display="flex" alignItems="center" gap={1}>
+              <FormControlLabel
+                control={
+                  <Switch 
+                    checked={autoRefresh} 
+                    onChange={(e) => setAutoRefresh(e.target.checked)}
+                    size="small"
+                    sx={{
+                      '& .MuiSwitch-thumb': {
+                        background: 'linear-gradient(45deg, #667eea, #764ba2)',
+                      },
+                      '& .MuiSwitch-track': {
+                        backgroundColor: alpha('#667eea', 0.3),
+                      }
+                    }}
+                  />
+                }
+                label="Auto-refresh"
+                sx={{ mr: 1 }}
+              />
+              <IconButton 
+                size="small" 
+                onClick={handleRefresh}
+                sx={{
+                  background: 'linear-gradient(45deg, #74b9ff, #0984e3)',
+                  color: 'white',
+                  '&:hover': {
+                    background: 'linear-gradient(45deg, #0984e3, #74b9ff)',
+                  }
+                }}
+              >
+                <Refresh />
+              </IconButton>
+              <IconButton 
+                size="small" 
+                onClick={handleClear}
+                sx={{
+                  background: 'linear-gradient(45deg, #fd79a8, #e84393)',
+                  color: 'white',
+                  '&:hover': {
+                    background: 'linear-gradient(45deg, #e84393, #fd79a8)',
+                  }
+                }}
+              >
+                <Clear />
+              </IconButton>
+              <IconButton
+                size="small"
+                onClick={() => setExpanded(!expanded)}
+                sx={{
+                  background: 'linear-gradient(45deg, #00b894, #00cec9)',
+                  color: 'white',
+                  '&:hover': {
+                    background: 'linear-gradient(45deg, #00cec9, #00b894)',
+                  }
+                }}
+              >
+                {expanded ? <ExpandLess /> : <ExpandMore />}
+              </IconButton>
+            </Box>
+          }
+          sx={{ pb: 1 }}
+        />
 
-        {/* Stats Overview */}
-        <Box display="flex" gap={1} flexWrap="wrap" mb={2}>
-          <Chip 
-            label={`Total: ${stats.total}`} 
-            size="small" 
-            color="primary"
-          />
-          <Chip 
-            label={`Errors: ${stats.errors}`} 
-            size="small" 
-            color={stats.errors > 0 ? 'error' : 'default'}
-          />
-          <Chip 
-            label={`Error Rate: ${stats.errorRate}%`} 
-            size="small" 
-            color={stats.errorRate > 10 ? 'error' : stats.errorRate > 5 ? 'warning' : 'success'}
-          />
-          <Chip 
-            label={`Avg: ${stats.avgDuration}ms`} 
-            size="small" 
-            color={stats.avgDuration > 1000 ? 'error' : stats.avgDuration > 500 ? 'warning' : 'success'}
-          />
-          <Chip 
-            label={`Pending: ${stats.pending}`} 
-            size="small" 
-            color={stats.pending > 0 ? 'info' : 'default'}
-          />
-        </Box>
+        <CardContent>
+          {/* Stats Overview */}
+          <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+            <BugReport color="primary" />
+            Network Statistics
+          </Typography>
+          
+          <Grid container spacing={2} sx={{ mb: 3 }}>
+            <Grid item xs={6} sm={2.4}>
+              <Card sx={{ background: 'linear-gradient(135deg, rgba(63, 81, 181, 0.1), rgba(103, 58, 183, 0.1))' }}>
+                <CardContent sx={{ p: 2, textAlign: 'center', '&:last-child': { pb: 2 } }}>
+                  <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main' }}>
+                    {stats.total}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Total Requests
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            
+            <Grid item xs={6} sm={2.4}>
+              <Card sx={{ 
+                background: stats.errors > 0 
+                  ? 'linear-gradient(135deg, rgba(244, 67, 54, 0.1), rgba(233, 30, 99, 0.1))'
+                  : 'linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(139, 195, 74, 0.1))'
+              }}>
+                <CardContent sx={{ p: 2, textAlign: 'center', '&:last-child': { pb: 2 } }}>
+                  <Typography variant="h4" sx={{ 
+                    fontWeight: 700, 
+                    color: stats.errors > 0 ? 'error.main' : 'success.main'
+                  }}>
+                    {stats.errors}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Errors
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            
+            <Grid item xs={6} sm={2.4}>
+              <Card sx={{ 
+                background: stats.errorRate > 10 
+                  ? 'linear-gradient(135deg, rgba(244, 67, 54, 0.1), rgba(233, 30, 99, 0.1))'
+                  : stats.errorRate > 5 
+                    ? 'linear-gradient(135deg, rgba(255, 152, 0, 0.1), rgba(255, 193, 7, 0.1))'
+                    : 'linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(139, 195, 74, 0.1))'
+              }}>
+                <CardContent sx={{ p: 2, textAlign: 'center', '&:last-child': { pb: 2 } }}>
+                  <Typography variant="h4" sx={{ 
+                    fontWeight: 700, 
+                    color: stats.errorRate > 10 ? 'error.main' : stats.errorRate > 5 ? 'warning.main' : 'success.main'
+                  }}>
+                    {stats.errorRate}%
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Error Rate
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            
+            <Grid item xs={6} sm={2.4}>
+              <Card sx={{ 
+                background: stats.avgDuration > 1000 
+                  ? 'linear-gradient(135deg, rgba(244, 67, 54, 0.1), rgba(233, 30, 99, 0.1))'
+                  : stats.avgDuration > 500 
+                    ? 'linear-gradient(135deg, rgba(255, 152, 0, 0.1), rgba(255, 193, 7, 0.1))'
+                    : 'linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(139, 195, 74, 0.1))'
+              }}>
+                <CardContent sx={{ p: 2, textAlign: 'center', '&:last-child': { pb: 2 } }}>
+                  <Typography variant="h4" sx={{ 
+                    fontWeight: 700, 
+                    color: stats.avgDuration > 1000 ? 'error.main' : stats.avgDuration > 500 ? 'warning.main' : 'success.main'
+                  }}>
+                    {stats.avgDuration}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Avg Duration (ms)
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+            
+            <Grid item xs={6} sm={2.4}>
+              <Card sx={{ 
+                background: stats.pending > 0 
+                  ? 'linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(3, 169, 244, 0.1))'
+                  : 'linear-gradient(135deg, rgba(158, 158, 158, 0.1), rgba(189, 189, 189, 0.1))'
+              }}>
+                <CardContent sx={{ p: 2, textAlign: 'center', '&:last-child': { pb: 2 } }}>
+                  <Typography variant="h4" sx={{ 
+                    fontWeight: 700, 
+                    color: stats.pending > 0 ? 'info.main' : 'text.secondary',
+                    ...(stats.pending > 0 && {
+                      animation: `${pulse} 1.5s ease-in-out infinite`,
+                    })
+                  }}>
+                    {stats.pending}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    Pending
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
 
-        <Collapse in={expanded}>
-          <Divider sx={{ mb: 2 }} />
+          <Collapse in={expanded}>
+            <Divider sx={{ mb: 2 }} />
           
           <Tabs value={selectedTab} onChange={(e, val) => setSelectedTab(val)} sx={{ mb: 2 }}>
             <Tab 
@@ -522,11 +707,12 @@ const NetworkMonitorComponent = () => {
               </Table>
             </TableContainer>
           )}
-        </Collapse>
-      </Paper>
+          </Collapse>
+        </CardContent>
+      </NetworkCard>
 
       <RequestDetailDialog />
-    </>
+    </Fade>
   );
 };
 
