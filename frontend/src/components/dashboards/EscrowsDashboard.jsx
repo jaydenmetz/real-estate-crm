@@ -431,6 +431,18 @@ const EscrowsDashboard = () => {
   };
 
   const calculateStats = (escrowData) => {
+    // Safety check for escrowData
+    if (!escrowData || !Array.isArray(escrowData)) {
+      setStats({
+        totalEscrows: 0,
+        activeEscrows: 0,
+        totalVolume: 0,
+        projectedCommission: 0,
+        closedThisMonth: 0
+      });
+      return;
+    }
+    
     // Both "Active Under Contract" and "Pending" are considered active escrows
     const active = escrowData.filter(e => 
       e.escrowStatus === 'Active Under Contract' || 
@@ -462,6 +474,12 @@ const EscrowsDashboard = () => {
   };
 
   const generateChartData = (escrowData) => {
+    // Safety check for escrowData
+    if (!escrowData || !Array.isArray(escrowData)) {
+      setChartData([]);
+      return;
+    }
+    
     // Generate last 6 months of data
     const months = [];
     const now = new Date();
