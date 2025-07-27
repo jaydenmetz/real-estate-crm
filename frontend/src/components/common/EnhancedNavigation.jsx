@@ -21,6 +21,7 @@ import {
   List,
   ListItem,
   ListItemButton,
+  Chip,
 } from '@mui/material';
 import {
   Dashboard,
@@ -181,6 +182,26 @@ const EnhancedNavigation = () => {
               Real Estate CRM
             </Typography>
           </Box>
+
+          {/* Environment Indicator */}
+          {window.location.hostname === 'localhost' && (
+            <Chip 
+              label="LOCAL" 
+              size="small" 
+              sx={{ 
+                bgcolor: '#10B981', 
+                color: 'white',
+                fontWeight: 'bold',
+                mr: 2,
+                animation: 'pulse 2s infinite',
+                '@keyframes pulse': {
+                  '0%': { opacity: 1 },
+                  '50%': { opacity: 0.7 },
+                  '100%': { opacity: 1 },
+                }
+              }} 
+            />
+          )}
 
           {/* Desktop Navigation */}
           {!isMobile && (

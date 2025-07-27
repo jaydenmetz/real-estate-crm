@@ -522,6 +522,9 @@ const ListingsDashboard = () => {
         <Typography variant="body2" color="text.secondary" gutterBottom>
           {listing.propertyAddress.split(',').slice(1).join(',')}
         </Typography>
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+          MLS# {listing.mlsNumber}
+        </Typography>
         
         <Stack direction="row" spacing={1} sx={{ mt: 2, flexWrap: 'wrap' }}>
           <FeatureBadge>

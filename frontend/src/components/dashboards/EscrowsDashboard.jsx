@@ -260,6 +260,7 @@ const EscrowCard = ({ escrow, onClick, index }) => {
             <Grid item xs={12} md={4}>
               <Box>
                 <Box display="flex" alignItems="center" gap={1} mb={1}>
+                  <LocationOn sx={{ fontSize: 20, color: theme.palette.primary.main }} />
                   <Typography 
                     variant="h5" 
                     sx={{ 
@@ -270,7 +271,7 @@ const EscrowCard = ({ escrow, onClick, index }) => {
                       WebkitTextFillColor: 'transparent',
                     }}
                   >
-                    {escrow.displayId || escrow.escrowNumber}
+                    {escrow.propertyAddress}
                   </Typography>
                   <Chip
                     label={escrow.escrowStatus}
@@ -284,9 +285,8 @@ const EscrowCard = ({ escrow, onClick, index }) => {
                   />
                 </Box>
                 <Box display="flex" alignItems="center" gap={1}>
-                  <LocationOn sx={{ fontSize: 18, color: 'text.secondary' }} />
-                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                    {escrow.propertyAddress}
+                  <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
+                    Escrow: {escrow.displayId || escrow.escrowNumber}
                   </Typography>
                 </Box>
               </Box>
