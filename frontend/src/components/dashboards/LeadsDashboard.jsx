@@ -2068,7 +2068,7 @@ import { safeFormatDate } from '../../utils/safeDateUtils';
 import CountUp from 'react-countup';
 import { useAuth } from '../../contexts/AuthContext';
 import CopyButton from '../common/CopyButton';
-import { networkMonitor } from '../../services/networkMonitor';
+import networkMonitor from '../../services/networkMonitor';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import DataObject from '@mui/icons-material/DataObject';
