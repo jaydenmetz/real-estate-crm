@@ -2897,6 +2897,133 @@ const EscrowDetail = () => {
                 </Grid>
               </TabPanel>
             </Paper>
+
+            {/* Bottom Stats Cards */}
+            <Grid container spacing={3} sx={{ mt: 4 }}>
+              <Grid item xs={12} sm={6} md={3}>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                >
+                  <StatsCard>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center">
+                      <Box>
+                        <Typography variant="h4" fontWeight="bold" className="metric-value">
+                          ${((escrow.commission || 0) / 1000).toFixed(1)}k
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Expected Commission
+                        </Typography>
+                      </Box>
+                      <Avatar
+                        sx={{
+                          bgcolor: alpha('#4CAF50', 0.1),
+                          color: 'success.main',
+                          width: 48,
+                          height: 48,
+                        }}
+                      >
+                        <AttachMoney />
+                      </Avatar>
+                    </Stack>
+                  </StatsCard>
+                </motion.div>
+              </Grid>
+
+              <Grid item xs={12} sm={6} md={3}>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                >
+                  <StatsCard>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center">
+                      <Box>
+                        <Typography variant="h4" fontWeight="bold" className="metric-value">
+                          {escrow.tasks?.filter(t => t.status === 'completed').length || 0}/{escrow.tasks?.length || 0}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Tasks Completed
+                        </Typography>
+                      </Box>
+                      <Avatar
+                        sx={{
+                          bgcolor: alpha('#2196F3', 0.1),
+                          color: 'primary.main',
+                          width: 48,
+                          height: 48,
+                        }}
+                      >
+                        <Task />
+                      </Avatar>
+                    </Stack>
+                  </StatsCard>
+                </motion.div>
+              </Grid>
+
+              <Grid item xs={12} sm={6} md={3}>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                >
+                  <StatsCard>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center">
+                      <Box>
+                        <Typography variant="h4" fontWeight="bold" className="metric-value">
+                          {escrow.messages?.length || 0}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Messages
+                        </Typography>
+                      </Box>
+                      <Avatar
+                        sx={{
+                          bgcolor: alpha('#9C27B0', 0.1),
+                          color: 'secondary.main',
+                          width: 48,
+                          height: 48,
+                        }}
+                      >
+                        <Message />
+                      </Avatar>
+                    </Stack>
+                  </StatsCard>
+                </motion.div>
+              </Grid>
+
+              <Grid item xs={12} sm={6} md={3}>
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <StatsCard>
+                    <Stack direction="row" justifyContent="space-between" alignItems="center">
+                      <Box>
+                        <Typography variant="h4" fontWeight="bold" className="metric-value">
+                          {escrow.inspections?.filter(i => i.status === 'passed').length || 0}/{escrow.inspections?.length || 0}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Inspections Passed
+                        </Typography>
+                      </Box>
+                      <Avatar
+                        sx={{
+                          bgcolor: alpha('#FF9800', 0.1),
+                          color: 'warning.main',
+                          width: 48,
+                          height: 48,
+                        }}
+                      >
+                        <Assignment />
+                      </Avatar>
+                    </Stack>
+                  </StatsCard>
+                </motion.div>
+              </Grid>
+            </Grid>
           </Box>
         </Fade>
       )}
