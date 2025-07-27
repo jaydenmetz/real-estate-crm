@@ -817,6 +817,377 @@ const ClientDetail = () => {
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
+      {/* Stunning Debug Interface - Admin Only */}
+      {user?.username === 'admin' && (
+        <Box sx={{ mb: 4 }}>
+          {/* Summary Debug Card */}
+          <Card 
+            sx={(theme) => ({
+              background: `linear-gradient(135deg, 
+                ${alpha(theme.palette.primary.main, 0.08)} 0%, 
+                ${alpha(theme.palette.secondary.main, 0.08)} 50%, 
+                ${alpha(theme.palette.error.main, 0.08)} 100%
+              )`,
+              border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+              borderRadius: '16px',
+              boxShadow: `0 8px 32px ${alpha(theme.palette.common.black, 0.1)}`,
+              overflow: 'hidden',
+              position: 'relative',
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '4px',
+                background: `linear-gradient(90deg, 
+                  ${theme.palette.primary.main} 0%, 
+                  ${theme.palette.secondary.main} 33%, 
+                  ${theme.palette.error.main} 66%, 
+                  ${theme.palette.warning.main} 100%
+                )`,
+              }
+            })}
+          >
+            <Box sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Box
+                    sx={(theme) => ({
+                      p: 1.5,
+                      borderRadius: '12px',
+                      background: `linear-gradient(135deg, ${theme.palette.error.main}, ${theme.palette.error.dark})`,
+                      color: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: `0 4px 12px ${alpha(theme.palette.error.main, 0.3)}`
+                    })}
+                  >
+                    <BugReport />
+                  </Box>
+                  <Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: '-0.5px' }}>
+                    Debug Panel: Client Detail
+                  </Typography>
+                  <Chip 
+                    label={process.env.NODE_ENV === 'production' ? '🔴 PRODUCTION' : '🟢 LOCAL'} 
+                    sx={{
+                      background: process.env.NODE_ENV === 'production' 
+                        ? 'linear-gradient(45deg, #ff6b6b, #ee5a24)'
+                        : 'linear-gradient(45deg, #00b894, #00cec9)',
+                      color: 'white',
+                      fontWeight: 600,
+                      fontSize: '0.75rem'
+                    }}
+                  />
+                  <Chip 
+                    label="Admin Only" 
+                    sx={{
+                      background: 'linear-gradient(45deg, #fdcb6e, #e17055)',
+                      color: 'white',
+                      fontWeight: 600,
+                      fontSize: '0.75rem'
+                    }}
+                  />
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => setDebugExpanded(!debugExpanded)}
+                    startIcon={debugExpanded ? <ExpandLess /> : <ExpandMore />}
+                    sx={(theme) => ({
+                      borderColor: alpha(theme.palette.primary.main, 0.5),
+                      color: theme.palette.primary.main,
+                      '&:hover': {
+                        borderColor: theme.palette.primary.main,
+                        background: alpha(theme.palette.primary.main, 0.1)
+                      }
+                    })}
+                  >
+                    {debugExpanded ? 'Hide' : 'Show'} Debug Details
+                  </Button>
+                  <IconButton 
+                    size="small"
+                    onClick={() => {
+                      // Update network data from network monitor
+                      setNetworkData({
+                        stats: networkMonitor.getStats(),
+                        requests: networkMonitor.getRequests(),
+                        errors: networkMonitor.getErrors()
+                      });
+                      console.log('[ClientDetail] Network data refreshed');
+                    }}
+                    sx={(theme) => ({
+                      color: theme.palette.primary.main,
+                      '&:hover': {
+                        background: alpha(theme.palette.primary.main, 0.1)
+                      }
+                    })}
+                  >
+                    <Tooltip title="Refresh Network Data">
+                      <Refresh />
+                    </Tooltip>
+                  </IconButton>
+                  <CopyButton 
+                    text={JSON.stringify({
+                      pageInfo: {
+                        url: window.location.href,
+                        timestamp: new Date().toISOString(),
+                        user: user?.username,
+                        clientId: id,
+                        userAgent: navigator.userAgent,
+                        screenResolution: `${window.screen.width}x${window.screen.height}`
+                      },
+                      clientData: displayClient ? {
+                        id: displayClient.id,
+                        name: displayClient.name,
+                        type: displayClient.type,
+                        status: displayClient.status,
+                        email: displayClient.email,
+                        phone: displayClient.phone,
+                        lifetimeValue: displayClient.lifetimeValue,
+                        dateAdded: displayClient.dateAdded,
+                        lastContactDate: displayClient.lastContactDate,
+                        propertyPreferences: displayClient.propertyPreferences
+                      } : null,
+                      loadingState: {
+                        isLoading,
+                        isError,
+                        hasData: !!client,
+                        usingMockData: !client && !!displayClient
+                      },
+                      networkActivity: {
+                        stats: networkData.stats,
+                        recentRequests: networkData.requests.slice(-5),
+                        errorCount: networkData.stats.errors,
+                        allRequests: networkData.requests,
+                        allErrors: networkData.errors
+                      },
+                      browserInfo: {
+                        location: window.location,
+                        localStorage: {
+                          hasUser: !!localStorage.getItem('user'),
+                          userKeys: Object.keys(localStorage)
+                        }
+                      }
+                    }, null, 2)}
+                    label="📋 Copy Debug Summary"
+                    variant="contained"
+                    sx={{
+                      background: 'linear-gradient(45deg, #667eea, #764ba2)',
+                      '&:hover': {
+                        background: 'linear-gradient(45deg, #764ba2, #667eea)',
+                      }
+                    }}
+                  />
+                </Box>
+              </Box>
+            </Box>
+          </Card>
+
+          {/* Detailed Debug Panel */}
+          <Collapse in={debugExpanded}>
+            <Grid container spacing={3} sx={{ mt: 1 }}>
+              {/* Client Statistics */}
+              <Grid item xs={12} md={6}>
+                <Card sx={{ 
+                  background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(139, 195, 74, 0.1))',
+                  border: '1px solid rgba(76, 175, 80, 0.3)',
+                  borderRadius: '12px'
+                }}>
+                  <Box sx={{ p: 2 }}>
+                    <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Analytics /> Client Statistics
+                    </Typography>
+                    {displayClient && (
+                      <Grid container spacing={2}>
+                        <Grid item xs={6}>
+                          <Typography variant="caption" color="text.secondary">Client Type</Typography>
+                          <Typography variant="h5">{displayClient.type}</Typography>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Typography variant="caption" color="text.secondary">Status</Typography>
+                          <Typography variant="h5">{displayClient.status}</Typography>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Typography variant="caption" color="text.secondary">Lifetime Value</Typography>
+                          <Typography variant="h5">${displayClient.lifetimeValue?.toLocaleString() || 0}</Typography>
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Typography variant="caption" color="text.secondary">Interest Level</Typography>
+                          <Typography variant="h5">{displayClient.interestLevel || 'Medium'}</Typography>
+                        </Grid>
+                      </Grid>
+                    )}
+                  </Box>
+                </Card>
+              </Grid>
+
+              {/* API & Network Info */}
+              <Grid item xs={12} md={6}>
+                <Card sx={{ 
+                  background: 'linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(3, 169, 244, 0.1))',
+                  border: '1px solid rgba(33, 150, 243, 0.3)',
+                  borderRadius: '12px'
+                }}>
+                  <Box sx={{ p: 2 }}>
+                    <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <NetworkCheck /> Network & API Status
+                    </Typography>
+                    <Stack spacing={1.5}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography variant="body2">API Endpoint</Typography>
+                        <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>
+                          {process.env.REACT_APP_API_URL || 'Not configured'}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography variant="body2">Environment</Typography>
+                        <Chip 
+                          label={process.env.NODE_ENV} 
+                          size="small" 
+                          color={process.env.NODE_ENV === 'production' ? 'error' : 'success'}
+                        />
+                      </Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography variant="body2">Network Requests</Typography>
+                        <Typography variant="body2">{networkData.stats.total}</Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography variant="body2">Network Errors</Typography>
+                        <Typography variant="body2" color={networkData.stats.errors > 0 ? 'error' : 'inherit'}>
+                          {networkData.stats.errors}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography variant="body2">Error Rate</Typography>
+                        <Typography variant="body2" color={networkData.stats.errorRate > 10 ? 'error' : 'inherit'}>
+                          {networkData.stats.errorRate.toFixed(1)}%
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography variant="body2">Avg Response Time</Typography>
+                        <Typography variant="body2">
+                          {networkData.stats.avgDuration.toFixed(0)}ms
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  </Box>
+                </Card>
+              </Grid>
+
+              {/* Client Details */}
+              <Grid item xs={12} md={6}>
+                <Card sx={{ 
+                  background: 'linear-gradient(135deg, rgba(255, 152, 0, 0.1), rgba(255, 193, 7, 0.1))',
+                  border: '1px solid rgba(255, 152, 0, 0.3)',
+                  borderRadius: '12px'
+                }}>
+                  <Box sx={{ p: 2 }}>
+                    <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Storage /> Client Details
+                    </Typography>
+                    {displayClient && (
+                      <Box sx={{ 
+                        p: 2, 
+                        background: 'rgba(0,0,0,0.03)', 
+                        borderRadius: '8px',
+                        fontFamily: 'monospace',
+                        fontSize: '0.85rem'
+                      }}>
+                        <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                          ID: {displayClient.id} | Rating: {displayClient.rating}/5
+                        </Typography>
+                        <Typography variant="body2" sx={{ mt: 1 }}>
+                          {displayClient.name}
+                        </Typography>
+                        <Typography variant="body2">
+                          {displayClient.email} | {displayClient.phone}
+                        </Typography>
+                        <Typography variant="body2" sx={{ mt: 1 }}>
+                          Added: {new Date(displayClient.dateAdded).toLocaleDateString()}
+                        </Typography>
+                        <Typography variant="body2">
+                          Last Contact: {new Date(displayClient.lastContactDate).toLocaleDateString()}
+                        </Typography>
+                        <Typography variant="body2">
+                          Budget: ${displayClient.propertyPreferences?.minBudget?.toLocaleString() || 0} - ${displayClient.propertyPreferences?.maxBudget?.toLocaleString() || 0}
+                        </Typography>
+                      </Box>
+                    )}
+                  </Box>
+                </Card>
+              </Grid>
+
+              {/* Network Activity Log */}
+              <Grid item xs={12} md={6}>
+                <Card sx={{ 
+                  background: 'linear-gradient(135deg, rgba(156, 39, 176, 0.1), rgba(171, 71, 188, 0.1))',
+                  border: '1px solid rgba(156, 39, 176, 0.3)',
+                  borderRadius: '12px'
+                }}>
+                  <Box sx={{ p: 2 }}>
+                    <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <NetworkCheck /> Network Activity Log
+                      <Chip 
+                        label={`${networkData.requests.length} requests`} 
+                        size="small" 
+                        sx={{ ml: 'auto' }}
+                      />
+                    </Typography>
+                    <Box sx={{ maxHeight: 300, overflowY: 'auto' }}>
+                      <Stack spacing={1}>
+                        {networkData.requests.slice(-10).reverse().map((req, index) => (
+                          <Box 
+                            key={req.id || index}
+                            sx={{ 
+                              p: 1.5, 
+                              background: req.success ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)',
+                              borderRadius: '6px',
+                              fontSize: '0.75rem',
+                              fontFamily: 'monospace',
+                              border: `1px solid ${req.success ? 'rgba(76, 175, 80, 0.3)' : 'rgba(244, 67, 54, 0.3)'}`
+                            }}
+                          >
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                              <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                                {req.method} {req.statusCode || 'PENDING'}
+                              </Typography>
+                              <Typography variant="caption">
+                                {req.duration ? `${req.duration}ms` : 'pending...'}
+                              </Typography>
+                            </Box>
+                            <Typography variant="caption" sx={{ 
+                              display: 'block', 
+                              whiteSpace: 'nowrap', 
+                              overflow: 'hidden', 
+                              textOverflow: 'ellipsis' 
+                            }}>
+                              {req.url}
+                            </Typography>
+                            {req.error && (
+                              <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
+                                Error: {req.error}
+                              </Typography>
+                            )}
+                          </Box>
+                        ))}
+                        {networkData.requests.length === 0 && (
+                          <Typography variant="caption" color="text.secondary" align="center">
+                            No network requests yet. Refresh to see latest activity.
+                          </Typography>
+                        )}
+                      </Stack>
+                    </Box>
+                  </Box>
+                </Card>
+              </Grid>
+            </Grid>
+          </Collapse>
+        </Box>
+      )}
+
       <DetailPageDebugger 
         pageName="ClientDetail"
         id={id}
