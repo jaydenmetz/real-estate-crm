@@ -521,6 +521,8 @@ import {
   ScatterChart,
   ZAxis,
 } from 'recharts';
+import DetailPageDebugger from '../common/DetailPageDebugger';
+import NetworkMonitor from '../common/NetworkMonitor';
 
 // Animations
 const fadeIn = keyframes`
@@ -1222,6 +1224,23 @@ const EscrowDetail = () => {
 
   return (
     <Container maxWidth="xl">
+      {/* Admin Debug Tools */}
+      <NetworkMonitor />
+      <DetailPageDebugger 
+        pageName="Escrow Detail"
+        id={id}
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        data={escrow}
+        additionalInfo={{
+          displayId: escrow?.displayId,
+          hasDisplayId: !!escrow?.displayId,
+          apiEndpoint: `/escrows/${id}`,
+          queryKey: ['escrow', id]
+        }}
+      />
+      
       {/* Breadcrumbs */}
       <Breadcrumbs sx={{ mb: 3 }}>
         <Link 
