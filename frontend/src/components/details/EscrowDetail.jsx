@@ -416,6 +416,7 @@ import {
   Queue,
   QueueMusic,
   LibraryAddOutlined,
+  Lightbulb,
   ArrowBackOutlined,
   ArrowForwardOutlined,
   ArrowUpward,
