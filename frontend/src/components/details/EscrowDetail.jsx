@@ -526,6 +526,7 @@ import {
 import DetailPageDebugger from '../common/DetailPageDebugger';
 import NetworkMonitor from '../common/NetworkMonitor';
 import CopyButton from '../common/CopyButton';
+import networkMonitor from '../../services/networkMonitor';
 
 // Database Sync Status Component
 const DatabaseSyncStatus = () => {
@@ -1438,16 +1439,63 @@ const EscrowDetail = () => {
                   networkMonitorActive: true,
                   detailPageDebuggerActive: true,
                   userIsSystemAdmin: user?.username === 'admin',
-                  componentsRendered: ['NetworkMonitor', 'DetailPageDebugger', 'ComprehensiveDebugSummary']
+                  componentsRendered: ['NetworkMonitor', 'DetailPageDebugger', 'ComprehensiveDebugSummary', 'DatabaseSyncStatus']
+                },
+                networkActivity: {
+                  note: "Network activity data from NetworkMonitor - all API requests and responses",
+                  stats: networkMonitor.getStats(),
+                  recentRequests: networkMonitor.getRequests().slice(0, 5).map(req => ({
+                    id: req.id,
+                    method: req.method,
+                    url: req.url,
+                    status: req.statusCode,
+                    success: req.success,
+                    duration: req.duration,
+                    timestamp: req.timestamp,
+                    error: req.error
+                  })),
+                  allErrors: networkMonitor.getErrors().map(req => ({
+                    method: req.method,
+                    url: req.url,
+                    error: req.error,
+                    timestamp: req.timestamp
+                  })),
+                  totalRequests: networkMonitor.getStats().total,
+                  errorCount: networkMonitor.getStats().errors,
+                  lastActivity: new Date().toISOString()
+                },
+                databaseSync: {
+                  note: "Database sync status from DatabaseSyncStatus component - local vs production comparison",
+                  warning: debugExpanded ? "Expand the debug section to see current sync status" : "Database sync status available in expanded debug section",
+                  localOutOfDate: "As reported by user - local database is out of date compared to production"
                 },
                 browserInfo: {
                   location: window.location,
                   localStorage: {
                     hasUser: !!localStorage.getItem('user'),
-                    hasToken: !!localStorage.getItem('token')
+                    hasToken: !!localStorage.getItem('token'),
+                    userObject: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null
                   },
                   sessionStorage: {
                     keys: Object.keys(sessionStorage)
+                  },
+                  cookies: document.cookie || 'No cookies'
+                },
+                additionalDebugInfo: {
+                  reactQueryCache: "Check React Query DevTools for cache state",
+                  componentState: {
+                    debugExpanded,
+                    activityFilter,
+                    checklistExpanded,
+                    documentDialogOpen: !!selectedDocument
+                  },
+                  performanceMetrics: {
+                    pageLoadTime: performance.now(),
+                    memoryUsage: performance.memory ? {
+                      used: Math.round(performance.memory.usedJSHeapSize / 1024 / 1024) + 'MB',
+                      total: Math.round(performance.memory.totalJSHeapSize / 1024 / 1024) + 'MB',
+                      limit: Math.round(performance.memory.jsHeapSizeLimit / 1024 / 1024) + 'MB'
+                    } : 'Not available'
                   }
                 }
               }, null, 2)}
