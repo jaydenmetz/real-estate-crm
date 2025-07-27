@@ -1269,40 +1269,66 @@ const EscrowDetail = () => {
                   timestamp: new Date().toISOString(),
                   user: user?.username,
                   escrowId: id,
-                  displayId: escrow?.displayId
+                  displayId: escrow?.displayId,
+                  userAgent: navigator.userAgent,
+                  screenResolution: `${window.screen.width}x${window.screen.height}`
                 },
                 loadingState: {
                   isLoading,
                   isError,
                   hasData: !!escrow,
-                  errorMessage: error?.message
+                  errorMessage: error?.message,
+                  rawDataReceived: !!error?.response?.data
                 },
                 escrowData: escrow ? {
-                  id: escrow.id,
-                  displayId: escrow.displayId,
-                  status: escrow.escrowStatus,
-                  propertyAddress: escrow.propertyAddress,
-                  purchasePrice: escrow.purchasePrice,
-                  clientNames: escrow.clientNames,
-                  scheduledCoeDate: escrow.scheduledCoeDate,
-                  hasDocuments: !!(escrow.documents?.length),
-                  hasActivities: !!(escrow.recentActivity?.length),
-                  hasAIAgents: !!(escrow.aiAgents?.length),
-                  hasChecklist: !!escrow.checklist
+                  // Full escrow object for debugging
+                  fullEscrowObject: escrow,
+                  // Key fields summary
+                  summary: {
+                    id: escrow.id,
+                    displayId: escrow.displayId,
+                    status: escrow.escrowStatus,
+                    propertyAddress: escrow.propertyAddress,
+                    purchasePrice: escrow.purchasePrice,
+                    clientNames: escrow.clientNames,
+                    scheduledCoeDate: escrow.scheduledCoeDate,
+                    hasDocuments: !!(escrow.documents?.length),
+                    documentsCount: escrow.documents?.length || 0,
+                    hasActivities: !!(escrow.recentActivity?.length),
+                    activitiesCount: escrow.recentActivity?.length || 0,
+                    hasAIAgents: !!(escrow.aiAgents?.length),
+                    aiAgentsCount: escrow.aiAgents?.length || 0,
+                    hasChecklist: !!escrow.checklist,
+                    checklistSections: escrow.checklist ? Object.keys(escrow.checklist).length : 0
+                  }
                 } : null,
                 apiInfo: {
                   endpoint: `/escrows/${id}`,
                   baseURL: process.env.REACT_APP_API_URL,
-                  environment: process.env.NODE_ENV
+                  environment: process.env.NODE_ENV,
+                  queryKey: ['escrow', id],
+                  lastFetch: new Date().toISOString()
                 },
                 debugComponents: {
                   networkMonitorActive: true,
                   detailPageDebuggerActive: true,
-                  userIsAdmin: user?.role === 'admin'
+                  userIsAdmin: user?.role === 'admin',
+                  componentsRendered: ['NetworkMonitor', 'DetailPageDebugger', 'ComprehensiveDebugSummary']
+                },
+                browserInfo: {
+                  location: window.location,
+                  localStorage: {
+                    hasUser: !!localStorage.getItem('user'),
+                    hasToken: !!localStorage.getItem('token')
+                  },
+                  sessionStorage: {
+                    keys: Object.keys(sessionStorage)
+                  }
                 }
               }, null, 2)}
-              label="Copy Complete Debug Info"
+              label="📋 COPY EVERYTHING FOR TROUBLESHOOTING"
               size="large"
+              variant="contained"
             />
           </Box>
           <Typography variant="body2" color="text.secondary">
