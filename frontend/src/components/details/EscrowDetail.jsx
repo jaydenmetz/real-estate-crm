@@ -1457,9 +1457,6 @@ const EscrowDetail = () => {
             />
             </Box>
           </Box>
-          <Typography variant="body2" color="text.secondary">
-            Click "📋 COPY EVERYTHING FOR TROUBLESHOOTING" to get a comprehensive summary of page state, data, and debugging information that you can paste for troubleshooting.
-          </Typography>
         </Paper>
       )}
 
