@@ -1126,7 +1126,7 @@ const EscrowDetail = () => {
   };
 
   // Fetch escrow data
-  const { data: rawData, isLoading } = useQuery(
+  const { data: rawData, isLoading, isError, error } = useQuery(
     ['escrow', id],
     () => escrowsAPI.getOne(id),
     {
