@@ -14,13 +14,14 @@ async function detectSchema() {
       SELECT column_name 
       FROM information_schema.columns 
       WHERE table_name = 'escrows' 
-      AND column_name IN ('id', 'numeric_id', 'net_commission', 'acceptance_date', 'buyer_side_commission', 'opening_date')
+      AND column_name IN ('id', 'numeric_id', 'team_sequence_id', 'net_commission', 'acceptance_date', 'buyer_side_commission', 'opening_date')
     `);
     
     const columns = result.rows.map(row => row.column_name);
     schemaInfo = {
       hasId: columns.includes('id'),
       hasNumericId: columns.includes('numeric_id'),
+      hasTeamSequenceId: columns.includes('team_sequence_id'),
       hasNetCommission: columns.includes('net_commission'),
       hasAcceptanceDate: columns.includes('acceptance_date'),
       hasBuyerSideCommission: columns.includes('buyer_side_commission'),
@@ -36,6 +37,7 @@ async function detectSchema() {
     schemaInfo = {
       hasId: false,
       hasNumericId: true,
+      hasTeamSequenceId: true,
       hasNetCommission: true,
       hasAcceptanceDate: true,
       hasBuyerSideCommission: false,
@@ -69,18 +71,20 @@ class SimpleEscrowController {
       try {
         const idCheckQuery = `
           SELECT 
-            ${schema.hasNumericId ? 'numeric_id' : 'id'} as primary_id,
+            ${schema.hasTeamSequenceId ? 'team_sequence_id' : schema.hasNumericId ? 'numeric_id' : 'id'} as primary_id,
+            ${schema.hasNumericId ? 'numeric_id' : 'NULL'} as numeric_id,
+            ${schema.hasTeamSequenceId ? 'team_sequence_id' : 'NULL'} as team_sequence_id,
             display_id,
             property_address
           FROM escrows
-          ORDER BY ${schema.hasNumericId ? 'numeric_id' : 'id'}
+          ORDER BY ${schema.hasTeamSequenceId ? 'team_sequence_id' : schema.hasNumericId ? 'numeric_id' : 'id'}
           LIMIT 10
         `;
         const idCheckResult = await pool.query(idCheckQuery);
         console.log('\n=== Database ID Check ===');
         console.log('First 10 escrows in database:');
         idCheckResult.rows.forEach(row => {
-          console.log(`  Primary ID: ${row.primary_id}, Display ID: ${row.display_id}, Address: ${row.property_address}`);
+          console.log(`  Primary ID: ${row.primary_id}, Numeric ID: ${row.numeric_id}, Team Seq ID: ${row.team_sequence_id}, Display ID: ${row.display_id}, Address: ${row.property_address}`);
         });
         console.log('========================\n');
       } catch (err) {
@@ -121,7 +125,10 @@ class SimpleEscrowController {
       
       // Build field selections based on available columns
       let idField;
-      if (schema.hasNumericId && schema.hasId) {
+      // Prefer team_sequence_id if available (this is the sequential ID per team)
+      if (schema.hasTeamSequenceId) {
+        idField = 'team_sequence_id::text';
+      } else if (schema.hasNumericId && schema.hasId) {
         idField = 'COALESCE(numeric_id::text, id::text)';
       } else if (schema.hasNumericId) {
         idField = 'numeric_id::text';
@@ -160,6 +167,7 @@ class SimpleEscrowController {
         SELECT 
           ${idField} as id,
           ${schema.hasNumericId ? 'numeric_id' : 'NULL'} as "numeric_id",
+          ${schema.hasTeamSequenceId ? 'team_sequence_id' : 'NULL'} as "team_sequence_id",
           ${schema.hasId ? 'id' : 'NULL'} as "raw_id",
           display_id as "displayId",
           display_id as "escrowNumber",
@@ -196,14 +204,18 @@ class SimpleEscrowController {
       // Debug: Log the actual IDs being returned
       console.log('Escrows returned from database:');
       listResult.rows.forEach((escrow, index) => {
-        console.log(`  ${index + 1}. ID: ${escrow.id}, numeric_id: ${escrow.numeric_id}, raw_id: ${escrow.raw_id}, Display ID: ${escrow.displayId}, Address: ${escrow.propertyAddress}`);
+        console.log(`  ${index + 1}. ID: ${escrow.id}, numeric_id: ${escrow.numeric_id}, team_seq_id: ${escrow.team_sequence_id}, Display ID: ${escrow.displayId}, Address: ${escrow.propertyAddress}`);
       });
       console.log(`Total escrows: ${listResult.rows.length}`);
       
-      // Special check for ESC-2025-001
-      const escrow2025001 = listResult.rows.find(e => e.displayId === 'ESC-2025-001');
+      // Special check for ESC-2025-001 or ESC-2025-0001
+      const escrow2025001 = listResult.rows.find(e => e.displayId === 'ESC-2025-001' || e.displayId === 'ESC-2025-0001');
       if (escrow2025001) {
-        console.log('\n=== ESC-2025-001 Debug Info ===');
+        console.log('\n=== First Escrow Debug Info ===');
+        console.log('Display ID:', escrow2025001.displayId);
+        console.log('ID (used for navigation):', escrow2025001.id);
+        console.log('Numeric ID:', escrow2025001.numeric_id);
+        console.log('Team Sequence ID:', escrow2025001.team_sequence_id);
         console.log('Full record:', JSON.stringify(escrow2025001, null, 2));
         console.log('==============================\n');
       }
