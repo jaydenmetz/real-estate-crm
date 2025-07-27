@@ -99,6 +99,12 @@ const Office3DViewer = ({ agents = [], onAgentClick, selectedOffice = 'corporate
   useEffect(() => {
     if (!mountRef.current) return;
 
+    // Check if THREE is available
+    if (!THREE || !THREE.Scene || !THREE.WebGLRenderer) {
+      console.error('Three.js not loaded properly');
+      return;
+    }
+
     // Scene setup
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xf0f0f0);
@@ -114,12 +120,25 @@ const Office3DViewer = ({ agents = [], onAgentClick, selectedOffice = 'corporate
     cameraRef.current = camera;
 
     // Renderer setup
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    mountRef.current.appendChild(renderer.domElement);
-    rendererRef.current = renderer;
+    let renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+      
+      // Check if domElement exists before accessing it
+      if (renderer.domElement) {
+        mountRef.current.appendChild(renderer.domElement);
+        rendererRef.current = renderer;
+      } else {
+        console.error('Renderer domElement not created');
+        return;
+      }
+    } catch (error) {
+      console.error('Error creating WebGL renderer:', error);
+      return;
+    }
 
     // Lighting
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -193,11 +212,13 @@ const Office3DViewer = ({ agents = [], onAgentClick, selectedOffice = 'corporate
     };
 
     // Add event listeners
-    renderer.domElement.addEventListener('mousedown', handleMouseDown);
-    renderer.domElement.addEventListener('mousemove', handleMouseMove);
-    renderer.domElement.addEventListener('mouseup', handleMouseUp);
-    renderer.domElement.addEventListener('contextmenu', handleContextMenu);
-    renderer.domElement.addEventListener('wheel', handleWheel);
+    if (renderer && renderer.domElement) {
+      renderer.domElement.addEventListener('mousedown', handleMouseDown);
+      renderer.domElement.addEventListener('mousemove', handleMouseMove);
+      renderer.domElement.addEventListener('mouseup', handleMouseUp);
+      renderer.domElement.addEventListener('contextmenu', handleContextMenu);
+      renderer.domElement.addEventListener('wheel', handleWheel);
+    }
 
     // Animation loop
     const animate = () => {
@@ -229,16 +250,24 @@ const Office3DViewer = ({ agents = [], onAgentClick, selectedOffice = 'corporate
     // Cleanup
     return () => {
       window.removeEventListener('resize', handleResize);
-      renderer.domElement.removeEventListener('mousedown', handleMouseDown);
-      renderer.domElement.removeEventListener('mousemove', handleMouseMove);
-      renderer.domElement.removeEventListener('mouseup', handleMouseUp);
-      renderer.domElement.removeEventListener('contextmenu', handleContextMenu);
-      renderer.domElement.removeEventListener('wheel', handleWheel);
       
-      if (mountRef.current && renderer.domElement) {
-        mountRef.current.removeChild(renderer.domElement);
+      if (renderer && renderer.domElement) {
+        renderer.domElement.removeEventListener('mousedown', handleMouseDown);
+        renderer.domElement.removeEventListener('mousemove', handleMouseMove);
+        renderer.domElement.removeEventListener('mouseup', handleMouseUp);
+        renderer.domElement.removeEventListener('contextmenu', handleContextMenu);
+        renderer.domElement.removeEventListener('wheel', handleWheel);
+        
+        if (mountRef.current) {
+          try {
+            mountRef.current.removeChild(renderer.domElement);
+          } catch (e) {
+            // Already removed
+          }
+        }
+        
+        renderer.dispose();
       }
-      renderer.dispose();
     };
   }, []);
 
