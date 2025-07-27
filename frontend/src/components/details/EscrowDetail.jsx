@@ -1162,7 +1162,7 @@ const EscrowDetail = () => {
   
   const completedTasks = escrow.checklist
     ? Object.values(escrow.checklist).reduce(
-        (acc, section) => acc + Object.values(section).filter(Boolean).length,
+        (acc, section) => acc + (section ? Object.values(section).filter(Boolean).length : 0),
         0
       )
     : 0;
@@ -1998,12 +1998,12 @@ const EscrowDetail = () => {
                           <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
                             <Typography variant="body2">Documents</Typography>
                             <Typography variant="body2" fontWeight="medium">
-                              {escrow.documents.filter(d => d.status === 'Signed').length}/{escrow.documents.length}
+                              {(escrow.documents || []).filter(d => d.status === 'Signed').length}/{(escrow.documents || []).length}
                             </Typography>
                           </Box>
                           <LinearProgress 
                             variant="determinate" 
-                            value={(escrow.documents.filter(d => d.status === 'Signed').length / escrow.documents.length) * 100}
+                            value={((escrow.documents || []).filter(d => d.status === 'Signed').length / Math.max((escrow.documents || []).length, 1)) * 100}
                             sx={{ height: 6, borderRadius: 3 }}
                           />
                         </Stack>
@@ -2187,7 +2187,7 @@ const EscrowDetail = () => {
                         <Typography variant="h6">{section}</Typography>
                         <Stack direction="row" alignItems="center" spacing={1}>
                           <Chip
-                            label={`${Object.values(tasks).filter(Boolean).length}/${Object.keys(tasks).length}`}
+                            label={`${tasks ? Object.values(tasks).filter(Boolean).length : 0}/${tasks ? Object.keys(tasks).length : 0}`}
                             size="small"
                             color="primary"
                           />
@@ -2425,7 +2425,7 @@ const EscrowDetail = () => {
                 </Stack>
 
                 <Stack spacing={2}>
-                  {escrow.recentActivity
+                  {(escrow.recentActivity || [])
                     .filter(activity => activityFilter === 'all' || activity.type === activityFilter)
                     .map((activity) => (
                       <ActivityCard key={activity.id}>
