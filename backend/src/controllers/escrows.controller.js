@@ -64,6 +64,28 @@ class SimpleEscrowController {
       
       // Detect schema
       const schema = await detectSchema();
+      
+      // Debug: Check what IDs exist in the database
+      try {
+        const idCheckQuery = `
+          SELECT 
+            ${schema.hasNumericId ? 'numeric_id' : 'id'} as primary_id,
+            display_id,
+            property_address
+          FROM escrows
+          ORDER BY ${schema.hasNumericId ? 'numeric_id' : 'id'}
+          LIMIT 10
+        `;
+        const idCheckResult = await pool.query(idCheckQuery);
+        console.log('\n=== Database ID Check ===');
+        console.log('First 10 escrows in database:');
+        idCheckResult.rows.forEach(row => {
+          console.log(`  Primary ID: ${row.primary_id}, Display ID: ${row.display_id}, Address: ${row.property_address}`);
+        });
+        console.log('========================\n');
+      } catch (err) {
+        console.error('ID check query failed:', err.message);
+      }
 
       // Build WHERE conditions
       let whereConditions = [];
@@ -165,6 +187,13 @@ class SimpleEscrowController {
       `;
 
       const listResult = await pool.query(listQuery, queryParams);
+      
+      // Debug: Log the actual IDs being returned
+      console.log('Escrows returned from database:');
+      listResult.rows.forEach((escrow, index) => {
+        console.log(`  ${index + 1}. ID: ${escrow.id}, Display ID: ${escrow.displayId}, Address: ${escrow.propertyAddress}`);
+      });
+      console.log(`Total escrows: ${listResult.rows.length}`);
 
       res.json({
         success: true,
