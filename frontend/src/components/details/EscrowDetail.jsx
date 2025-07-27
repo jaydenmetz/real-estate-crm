@@ -2509,10 +2509,11 @@ const EscrowDetail = () => {
                                     {agent.currentTask}
                                   </Typography>
                                 </Box>
-                                <StatusChip 
+                                <Chip 
                                   label={agent.status}
                                   size="small"
-                                  status={agent.status}
+                                  color={agent.status === 'active' ? 'success' : 'default'}
+                                  variant={agent.status === 'active' ? 'filled' : 'outlined'}
                                 />
                               </Stack>
                               {agent.status === 'active' && (
