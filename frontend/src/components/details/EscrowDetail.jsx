@@ -525,6 +525,7 @@ import {
 } from 'recharts';
 import DetailPageDebugger from '../common/DetailPageDebugger';
 import NetworkMonitor from '../common/NetworkMonitor';
+import CopyButton from '../common/CopyButton';
 
 // Animations
 const fadeIn = keyframes`
