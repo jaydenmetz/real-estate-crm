@@ -1355,8 +1355,8 @@ const EscrowDetail = () => {
 
   return (
     <Container maxWidth="xl">
-      {/* PRIMARY DEBUG SECTION - Always Visible for Admins */}
-      {(user?.role === 'admin' || user?.role === 'system_admin') && (
+      {/* PRIMARY DEBUG SECTION - Only for System Admin */}
+      {user?.username === 'admin' && (
         <Paper 
           sx={{ 
             p: 3, 
@@ -1437,7 +1437,7 @@ const EscrowDetail = () => {
                 debugComponents: {
                   networkMonitorActive: true,
                   detailPageDebuggerActive: true,
-                  userIsAdmin: user?.role === 'admin',
+                  userIsSystemAdmin: user?.username === 'admin',
                   componentsRendered: ['NetworkMonitor', 'DetailPageDebugger', 'ComprehensiveDebugSummary']
                 },
                 browserInfo: {
@@ -1464,7 +1464,7 @@ const EscrowDetail = () => {
       )}
 
       {/* DETAILED DEBUG PANELS - Collapsible */}
-      {(user?.role === 'admin' || user?.role === 'system_admin') && (
+      {user?.username === 'admin' && (
         <Collapse in={debugExpanded}>
           <Box sx={{ mb: 3 }}>
             {/* Database Sync Status */}

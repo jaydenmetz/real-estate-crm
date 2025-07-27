@@ -57,8 +57,9 @@ const NetworkMonitorComponent = () => {
   const isAdmin = user && (user.role === 'admin' || user.role === 'system_admin');
   const showDebugInfo = user?.preferences?.showDebugInfo;
   
-  // Don't show unless admin or in development
-  if (!isAdmin && process.env.NODE_ENV !== 'development') {
+  // Only show for system admin (username 'admin') or in development
+  const isSystemAdmin = user && user.username === 'admin';
+  if (!isSystemAdmin && process.env.NODE_ENV !== 'development') {
     return null;
   }
 

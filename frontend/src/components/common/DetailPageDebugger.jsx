@@ -26,8 +26,9 @@ const DetailPageDebugger = ({
   
   const isAdmin = user && (user.role === 'admin' || user.role === 'system_admin');
   
-  // Show in development OR for admin users (always show for admin)
-  if (process.env.NODE_ENV !== 'development' && !isAdmin) {
+  // Only show for system admin (username 'admin') or in development
+  const isSystemAdmin = user && user.username === 'admin';
+  if (process.env.NODE_ENV !== 'development' && !isSystemAdmin) {
     return null;
   }
   
