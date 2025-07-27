@@ -1063,6 +1063,7 @@ const EscrowDetail = () => {
   const [checklistExpanded, setChecklistExpanded] = useState({});
   const [agentDetailOpen, setAgentDetailOpen] = useState(null);
   const [activityFilter, setActivityFilter] = useState('all');
+  const [debugExpanded, setDebugExpanded] = useState(false);
   const [viewMode, setViewMode] = useState('detailed'); // Always use detailed view
   const [selectedImage, setSelectedImage] = useState(0);
 
@@ -1228,24 +1229,7 @@ const EscrowDetail = () => {
 
   return (
     <Container maxWidth="xl">
-      {/* Admin Debug Tools */}
-      <NetworkMonitor />
-      <DetailPageDebugger 
-        pageName="Escrow Detail"
-        id={id}
-        isLoading={isLoading}
-        isError={isError}
-        error={error}
-        data={escrow}
-        additionalInfo={{
-          displayId: escrow?.displayId,
-          hasDisplayId: !!escrow?.displayId,
-          apiEndpoint: `/escrows/${id}`,
-          queryKey: ['escrow', id]
-        }}
-      />
-      
-      {/* Comprehensive Debug Summary for Easy Copy/Paste */}
+      {/* PRIMARY DEBUG SECTION - Always Visible for Admins */}
       {(user?.role === 'admin' || user?.role === 'system_admin') && (
         <Paper 
           sx={{ 
@@ -1260,9 +1244,24 @@ const EscrowDetail = () => {
             <Box display="flex" alignItems="center" gap={1}>
               <BugReport />
               <Typography variant="h6">Complete Debug Summary</Typography>
-              <Chip label="Admin Only" size="small" color="error" />
+              <Chip 
+                label={process.env.NODE_ENV === 'production' ? '🔴 PRODUCTION' : '🟢 LOCAL'} 
+                size="small" 
+                color={process.env.NODE_ENV === 'production' ? 'error' : 'success'}
+                sx={{ fontWeight: 'bold' }}
+              />
+              <Chip label="Admin Only" size="small" color="warning" />
             </Box>
-            <CopyButton 
+            <Box display="flex" alignItems="center" gap={1}>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => setDebugExpanded(!debugExpanded)}
+                startIcon={debugExpanded ? <ExpandLess /> : <ExpandMore />}
+              >
+                {debugExpanded ? 'Hide' : 'Show'} Detailed Debug
+              </Button>
+              <CopyButton 
               text={JSON.stringify({
                 pageInfo: {
                   url: window.location.href,
@@ -1330,11 +1329,35 @@ const EscrowDetail = () => {
               size="large"
               variant="contained"
             />
+            </Box>
           </Box>
           <Typography variant="body2" color="text.secondary">
-            Click "Copy Complete Debug Info" to get a comprehensive summary of page state, data, and debugging information that you can paste for troubleshooting.
+            Click "📋 COPY EVERYTHING FOR TROUBLESHOOTING" to get a comprehensive summary of page state, data, and debugging information that you can paste for troubleshooting.
           </Typography>
         </Paper>
+      )}
+
+      {/* DETAILED DEBUG PANELS - Collapsible */}
+      {(user?.role === 'admin' || user?.role === 'system_admin') && (
+        <Collapse in={debugExpanded}>
+          <Box sx={{ mb: 3 }}>
+            <NetworkMonitor />
+            <DetailPageDebugger 
+              pageName="Escrow Detail"
+              id={id}
+              isLoading={isLoading}
+              isError={isError}
+              error={error}
+              data={escrow}
+              additionalInfo={{
+                displayId: escrow?.displayId,
+                hasDisplayId: !!escrow?.displayId,
+                apiEndpoint: `/escrows/${id}`,
+                queryKey: ['escrow', id]
+              }}
+            />
+          </Box>
+        </Collapse>
       )}
       
       {/* Breadcrumbs */}
