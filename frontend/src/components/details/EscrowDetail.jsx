@@ -694,8 +694,8 @@ const rotateGlow = keyframes`
 const StatsCard = styled(Card)(({ theme }) => ({
   background: 'rgba(255, 255, 255, 0.95)',
   backdropFilter: 'blur(10px)',
-  borderRadius: theme.spacing(3),
-  padding: theme.spacing(3),
+  borderRadius: theme?.spacing?.(3) || 24,
+  padding: theme?.spacing?.(3) || 24,
   height: '100%',
   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   border: '1px solid rgba(103, 58, 183, 0.1)',
@@ -711,7 +711,7 @@ const StatsCard = styled(Card)(({ theme }) => ({
       color: 'white',
     },
     '& .metric-value': {
-      color: theme.palette.primary.main,
+      color: theme?.palette?.primary?.main || '#1976d2',
     },
   },
   '&::before': {
@@ -728,7 +728,7 @@ const StatsCard = styled(Card)(({ theme }) => ({
 
 const PropertyCard = styled(Card)(({ theme }) => ({
   position: 'relative',
-  borderRadius: theme.spacing(3),
+  borderRadius: theme?.spacing?.(3) || 24,
   overflow: 'hidden',
   height: 500,
   background: 'linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%)',
@@ -753,14 +753,14 @@ const PropertyCard = styled(Card)(({ theme }) => ({
     right: 0,
     background: 'linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%)',
     color: 'white',
-    padding: theme.spacing(4),
+    padding: theme?.spacing?.(4) || 32,
     zIndex: 10,
   },
 }));
 
 const TimelineCard = styled(Card)(({ theme }) => ({
-  marginBottom: theme.spacing(2),
-  borderRadius: theme.spacing(2),
+  marginBottom: theme?.spacing?.(2) || 16,
+  borderRadius: theme?.spacing?.(2) || 16,
   overflow: 'hidden',
   transition: 'all 0.3s ease',
   '&:hover': {
@@ -770,8 +770,8 @@ const TimelineCard = styled(Card)(({ theme }) => ({
 }));
 
 const ActionButton = styled(Button)(({ theme }) => ({
-  borderRadius: theme.spacing(3),
-  padding: theme.spacing(1.5, 4),
+  borderRadius: theme?.spacing?.(3) || 24,
+  padding: theme?.spacing?.(1.5, 4) || '12px 32px',
   fontWeight: 600,
   textTransform: 'none',
   transition: 'all 0.3s ease',
@@ -782,37 +782,37 @@ const ActionButton = styled(Button)(({ theme }) => ({
 }));
 
 const TabPanel = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(3),
+  padding: theme?.spacing?.(3) || 24,
   animation: `${fadeIn} 0.5s ease-out`,
 }));
 
 const ProcessStep = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(3),
-  borderRadius: theme.spacing(2),
-  background: alpha(theme.palette.primary.main, 0.05),
-  border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+  padding: theme?.spacing?.(3) || 24,
+  borderRadius: theme?.spacing?.(2) || 16,
+  background: alpha(theme?.palette?.primary?.main || '#1976d2', 0.05),
+  border: `2px solid ${alpha(theme?.palette?.primary?.main || '#1976d2', 0.2)}`,
   transition: 'all 0.3s ease',
   '&:hover': {
-    background: alpha(theme.palette.primary.main, 0.1),
+    background: alpha(theme?.palette?.primary?.main || '#1976d2', 0.1),
     transform: 'translateY(-4px)',
     boxShadow: '0 10px 20px rgba(103, 58, 183, 0.1)',
   },
 }));
 
 const DocumentItem = styled(ListItem)(({ theme }) => ({
-  borderRadius: theme.spacing(2),
-  marginBottom: theme.spacing(1),
+  borderRadius: theme?.spacing?.(2) || 16,
+  marginBottom: theme?.spacing?.(1) || 8,
   transition: 'all 0.3s ease',
   '&:hover': {
-    background: alpha(theme.palette.primary.main, 0.05),
+    background: alpha(theme?.palette?.primary?.main || '#1976d2', 0.05),
     transform: 'translateX(8px)',
   },
 }));
 
 const AIAgentCard = styled(Card)(({ theme }) => ({
   position: 'relative',
-  padding: theme.spacing(3),
-  borderRadius: theme.spacing(2),
+  padding: theme?.spacing?.(3) || 24,
+  borderRadius: theme?.spacing?.(2) || 16,
   background: 'linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%)',
   border: '1px solid rgba(103, 58, 183, 0.1)',
   overflow: 'hidden',
@@ -831,30 +831,30 @@ const AIAgentCard = styled(Card)(({ theme }) => ({
 }));
 
 const ActivityCard = styled(Card)(({ theme }) => ({
-  padding: theme.spacing(2),
-  marginBottom: theme.spacing(2),
-  borderRadius: theme.spacing(2),
+  padding: theme?.spacing?.(2) || 16,
+  marginBottom: theme?.spacing?.(2) || 16,
+  borderRadius: theme?.spacing?.(2) || 16,
   border: '1px solid rgba(0, 0, 0, 0.08)',
   transition: 'all 0.3s ease',
   cursor: 'pointer',
   '&:hover': {
     transform: 'translateX(8px)',
     boxShadow: '0 8px 16px rgba(0, 0, 0, 0.1)',
-    borderColor: theme.palette.primary.main,
+    borderColor: theme?.palette?.primary?.main || '#1976d2',
   },
 }));
 
 const QuickActionCard = styled(Card)(({ theme }) => ({
-  padding: theme.spacing(3),
+  padding: theme?.spacing?.(3) || 24,
   textAlign: 'center',
-  borderRadius: theme.spacing(2),
+  borderRadius: theme?.spacing?.(2) || 16,
   cursor: 'pointer',
   transition: 'all 0.3s ease',
   border: '2px solid transparent',
   '&:hover': {
     transform: 'translateY(-8px)',
     boxShadow: '0 12px 24px rgba(103, 58, 183, 0.2)',
-    borderColor: theme.palette.primary.main,
+    borderColor: theme?.palette?.primary?.main || '#1976d2',
     '& .action-icon': {
       transform: 'scale(1.2) rotate(10deg)',
       color: theme.palette.primary.main,
@@ -864,8 +864,8 @@ const QuickActionCard = styled(Card)(({ theme }) => ({
 
 const MetricChip = styled(Chip)(({ theme }) => ({
   fontWeight: 600,
-  borderRadius: theme.spacing(2),
-  padding: theme.spacing(0.5, 1),
+  borderRadius: theme?.spacing?.(2) || 16,
+  padding: theme?.spacing?.(0.5, 1) || '4px 8px',
   background: 'linear-gradient(135deg, #673AB7 0%, #512DA8 100%)',
   color: 'white',
   '& .MuiChip-icon': {
@@ -876,7 +876,7 @@ const MetricChip = styled(Chip)(({ theme }) => ({
 const GlassCard = styled(Card)(({ theme }) => ({
   background: 'rgba(255, 255, 255, 0.7)',
   backdropFilter: 'blur(20px)',
-  borderRadius: theme.spacing(3),
+  borderRadius: theme?.spacing?.(3) || 24,
   border: '1px solid rgba(255, 255, 255, 0.3)',
   boxShadow: '0 8px 32px 0 rgba(103, 58, 183, 0.1)',
   transition: 'all 0.3s ease',
@@ -888,8 +888,8 @@ const GlassCard = styled(Card)(({ theme }) => ({
 
 const MarketCard = styled(Card)(({ theme }) => ({
   position: 'relative',
-  padding: theme.spacing(3),
-  borderRadius: theme.spacing(2),
+  padding: theme?.spacing?.(3) || 24,
+  borderRadius: theme?.spacing?.(2) || 16,
   background: 'white',
   overflow: 'hidden',
   '&::before': {
@@ -1137,7 +1137,7 @@ const EscrowDetail = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isMobile = useMediaQuery(theme?.breakpoints?.down?.('sm') || '(max-width:600px)');
   const queryClient = useQueryClient();
 
   // Safe date formatting helper
@@ -1671,7 +1671,7 @@ const EscrowDetail = () => {
                   sx={{ 
                     width: 56, 
                     height: 56,
-                    bgcolor: alpha(theme.palette.primary.main, 0.1),
+                    bgcolor: alpha(theme?.palette?.primary?.main || '#1976d2', 0.1),
                     color: 'primary.main',
                     transition: 'all 0.3s ease',
                   }}
@@ -1686,7 +1686,7 @@ const EscrowDetail = () => {
                   sx={{ 
                     height: 8, 
                     borderRadius: 4,
-                    bgcolor: alpha(theme.palette.primary.main, 0.1),
+                    bgcolor: alpha(theme?.palette?.primary?.main || '#1976d2', 0.1),
                     '& .MuiLinearProgress-bar': {
                       background: 'linear-gradient(90deg, #673AB7 0%, #512DA8 100%)',
                     },
@@ -1718,7 +1718,7 @@ const EscrowDetail = () => {
                   sx={{ 
                     width: 56, 
                     height: 56,
-                    bgcolor: alpha(theme.palette.warning.main, 0.1),
+                    bgcolor: alpha(theme?.palette?.warning?.main || '#ff9800', 0.1),
                     color: 'warning.main',
                     transition: 'all 0.3s ease',
                   }}
@@ -1756,7 +1756,7 @@ const EscrowDetail = () => {
                   sx={{ 
                     width: 56, 
                     height: 56,
-                    bgcolor: alpha(theme.palette.info.main, 0.1),
+                    bgcolor: alpha(theme?.palette?.info?.main || '#2196f3', 0.1),
                     color: 'info.main',
                     transition: 'all 0.3s ease',
                   }}
@@ -1810,7 +1810,7 @@ const EscrowDetail = () => {
                   sx={{ 
                     width: 56, 
                     height: 56,
-                    bgcolor: alpha(theme.palette.success.main, 0.1),
+                    bgcolor: alpha(theme?.palette?.success?.main || '#4caf50', 0.1),
                     color: 'success.main',
                     transition: 'all 0.3s ease',
                   }}
@@ -2228,7 +2228,7 @@ const EscrowDetail = () => {
                             size={120}
                             thickness={8}
                             sx={{
-                              color: theme.palette.primary.main,
+                              color: theme?.palette?.primary?.main || '#1976d2',
                               position: 'relative',
                               '& .MuiCircularProgress-circle': {
                                 strokeLinecap: 'round',

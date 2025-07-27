@@ -57,8 +57,8 @@ const pulse = keyframes`
 // Styled Components
 const HeroWrapper = styled(Box)(({ theme }) => ({
   position: 'relative',
-  marginBottom: theme.spacing(4),
-  borderRadius: theme.spacing(3),
+  marginBottom: theme?.spacing?.(4) || 32,
+  borderRadius: theme?.spacing?.(3) || 24,
   overflow: 'hidden',
   background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
   minHeight: 320,
@@ -98,11 +98,13 @@ const HeroBackground = styled(Box)(({ theme }) => ({
 const HeroContent = styled(Box)(({ theme }) => ({
   position: 'relative',
   zIndex: 1,
-  padding: theme.spacing(6, 4),
+  padding: theme?.spacing?.(6, 4) || '48px 32px',
   color: 'white',
-  [theme.breakpoints.down('sm')]: {
-    padding: theme.spacing(4, 2),
-  },
+  ...(theme?.breakpoints?.down?.('sm') && {
+    [theme.breakpoints.down('sm')]: {
+      padding: theme?.spacing?.(4, 2) || '32px 16px',
+    },
+  }),
 }));
 
 const ShimmerEffect = styled(Box)(({ theme }) => ({
@@ -120,7 +122,7 @@ const ShimmerEffect = styled(Box)(({ theme }) => ({
 const InfoCard = styled(Card)(({ theme }) => ({
   background: 'rgba(255, 255, 255, 0.95)',
   backdropFilter: 'blur(10px)',
-  borderRadius: theme.spacing(2),
+  borderRadius: theme?.spacing?.(2) || 16,
   boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
   transition: 'all 0.3s ease',
   '&:hover': {
@@ -186,7 +188,7 @@ const DetailPageHero = ({
   aiAssistant,
 }) => {
   const theme = useTheme();
-  const statusInfo = statusConfig[status?.toLowerCase()] || { icon: null, color: theme.palette.grey[500] };
+  const statusInfo = statusConfig[status?.toLowerCase()] || { icon: null, color: theme?.palette?.grey?.[500] || '#9e9e9e' };
   
   // Determine gradient based on type or custom color
   const gradientMap = {

@@ -1529,7 +1529,6 @@ import {
   SentimentSatisfiedAlt,
   SentimentVeryDissatisfied,
   SentimentVerySatisfied,
-  Set,
   SetMeal,
   Settings,
   SettingsAccessibility,
