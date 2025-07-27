@@ -2066,6 +2066,13 @@ import { format, formatDistanceToNow, subDays, addDays, isToday, isYesterday, is
 import { leadsAPI } from '../../services/api';
 import { safeFormatDate } from '../../utils/safeDateUtils';
 import CountUp from 'react-countup';
+import { useAuth } from '../../contexts/AuthContext';
+import CopyButton from '../common/CopyButton';
+import { networkMonitor } from '../../services/networkMonitor';
+import ExpandMore from '@mui/icons-material/ExpandMore';
+import ExpandLess from '@mui/icons-material/ExpandLess';
+import DataObject from '@mui/icons-material/DataObject';
+import Analytics from '@mui/icons-material/Analytics';
 import {
   AreaChart,
   Area,
@@ -2517,6 +2524,27 @@ const LeadsDashboard = () => {
   const [selectedLeads, setSelectedLeads] = useState([]);
   const [scoreFilter, setScoreFilter] = useState([0, 100]);
   const [sourceFilter, setSourceFilter] = useState('all');
+  const [debugExpanded, setDebugExpanded] = useState(false);
+  const [networkData, setNetworkData] = useState({
+    stats: networkMonitor.getStats(),
+    requests: networkMonitor.getRequests(),
+    errors: networkMonitor.getErrors()
+  });
+  const { user } = useAuth();
+
+  // Refresh network data every 2 seconds when debug panel is expanded
+  useEffect(() => {
+    if (debugExpanded) {
+      const interval = setInterval(() => {
+        setNetworkData({
+          stats: networkMonitor.getStats(),
+          requests: networkMonitor.getRequests(),
+          errors: networkMonitor.getErrors()
+        });
+      }, 2000);
+      return () => clearInterval(interval);
+    }
+  }, [debugExpanded]);
 
   // Fetch leads
   const { data: apiResponse, isLoading } = useQuery(
@@ -2682,6 +2710,240 @@ const LeadsDashboard = () => {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: '#f5f5f5' }}>
+      {/* Debug Interface - Admin Only */}
+      {user?.username === 'admin' && (
+        <Paper 
+          sx={{ 
+            m: 2, 
+            p: 2, 
+            background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
+            color: 'white',
+            borderRadius: 2,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
+          }}
+        >
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'space-between',
+              cursor: 'pointer',
+              '&:hover': {
+                opacity: 0.9
+              }
+            }}
+            onClick={() => setDebugExpanded(!debugExpanded)}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <BugReport sx={{ color: '#10B981' }} />
+              <Typography variant="h6" fontWeight="bold">
+                Debug Interface - Leads Dashboard
+              </Typography>
+              <Chip 
+                label="ADMIN ONLY" 
+                size="small" 
+                sx={{ 
+                  bgcolor: 'error.main',
+                  color: 'white',
+                  fontWeight: 'bold'
+                }} 
+              />
+            </Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Button
+                size="small"
+                startIcon={<Refresh />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setNetworkData({
+                    stats: networkMonitor.getStats(),
+                    requests: networkMonitor.getRequests(),
+                    errors: networkMonitor.getErrors()
+                  });
+                }}
+                sx={{ 
+                  color: 'white',
+                  borderColor: 'white',
+                  '&:hover': {
+                    borderColor: '#10B981',
+                    bgcolor: 'rgba(16, 185, 129, 0.1)'
+                  }
+                }}
+                variant="outlined"
+              >
+                Refresh
+              </Button>
+              {debugExpanded ? <ExpandLess /> : <ExpandMore />}
+            </Box>
+          </Box>
+          
+          <Collapse in={debugExpanded}>
+            <Box sx={{ mt: 3 }}>
+              <Grid container spacing={3}>
+                {/* Leads Statistics */}
+                <Grid item xs={12} md={4}>
+                  <Card sx={{ bgcolor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}>
+                    <CardContent>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                        <Analytics sx={{ color: '#10B981' }} />
+                        <Typography variant="h6" sx={{ color: 'white' }}>Leads Statistics</Typography>
+                      </Box>
+                      <Box sx={{ color: 'rgba(255,255,255,0.9)' }}>
+                        <Typography variant="body2">Total Leads: {stats.total}</Typography>
+                        <Typography variant="body2">Hot Leads: {stats.hot}</Typography>
+                        <Typography variant="body2">Warm Leads: {stats.warm}</Typography>
+                        <Typography variant="body2">New This Week: {stats.newThisWeek}</Typography>
+                        <Typography variant="body2">Conversion Rate: {conversionRate}%</Typography>
+                        <Typography variant="body2">Average Score: {leadsArray.length ? Math.round(leadsArray.reduce((sum, lead) => sum + lead.score, 0) / leadsArray.length) : 0}</Typography>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                {/* Network Info */}
+                <Grid item xs={12} md={4}>
+                  <Card sx={{ bgcolor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}>
+                    <CardContent>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                        <NetworkCheck sx={{ color: '#10B981' }} />
+                        <Typography variant="h6" sx={{ color: 'white' }}>Network Info</Typography>
+                      </Box>
+                      <Box sx={{ color: 'rgba(255,255,255,0.9)' }}>
+                        <Typography variant="body2">Total Requests: {networkData.stats.totalRequests}</Typography>
+                        <Typography variant="body2">Success: {networkData.stats.successfulRequests}</Typography>
+                        <Typography variant="body2">Failed: {networkData.stats.failedRequests}</Typography>
+                        <Typography variant="body2">Pending: {networkData.stats.pendingRequests}</Typography>
+                        <Typography variant="body2">Avg Response: {networkData.stats.averageResponseTime}ms</Typography>
+                        <Typography variant="body2">Bandwidth: {networkData.stats.totalBandwidth}</Typography>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                {/* Data Sample */}
+                <Grid item xs={12} md={4}>
+                  <Card sx={{ bgcolor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}>
+                    <CardContent>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                        <DataObject sx={{ color: '#10B981' }} />
+                        <Typography variant="h6" sx={{ color: 'white' }}>Data Sample</Typography>
+                      </Box>
+                      <Box sx={{ color: 'rgba(255,255,255,0.9)' }}>
+                        <Typography variant="body2">First 3 Leads:</Typography>
+                        {leadsArray.slice(0, 3).map((lead, index) => (
+                          <Typography key={index} variant="caption" component="div" sx={{ ml: 1 }}>
+                            • {lead.name} (Score: {lead.score})
+                          </Typography>
+                        ))}
+                        <Typography variant="body2" sx={{ mt: 1 }}>Sources:</Typography>
+                        {[...new Set(leadsArray.map(l => l.source))].slice(0, 3).map((source, index) => (
+                          <Typography key={index} variant="caption" component="div" sx={{ ml: 1 }}>
+                            • {source}
+                          </Typography>
+                        ))}
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+
+                {/* Copy Debug Data */}
+                <Grid item xs={12}>
+                  <Card sx={{ bgcolor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)' }}>
+                    <CardContent>
+                      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <Typography variant="h6" sx={{ color: 'white' }}>Debug Data</Typography>
+                        <CopyButton 
+                          text={JSON.stringify({
+                            timestamp: new Date().toISOString(),
+                            user: { username: user?.username, role: user?.role },
+                            stats: {
+                              total: stats.total,
+                              hot: stats.hot,
+                              warm: stats.warm,
+                              newThisWeek: stats.newThisWeek,
+                              conversionRate: conversionRate
+                            },
+                            networkStats: networkData.stats,
+                            recentRequests: networkData.requests.slice(-5),
+                            errors: networkData.errors,
+                            leadsSample: leadsArray.slice(0, 3).map(l => ({
+                              id: l.id,
+                              name: l.name,
+                              score: l.score,
+                              stage: l.stage,
+                              source: l.source
+                            }))
+                          }, null, 2)}
+                          buttonText="Copy All Debug Data"
+                        />
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
+
+              {/* Collapsible Detailed Panels */}
+              <Box sx={{ mt: 3 }}>
+                <Accordion sx={{ bgcolor: 'rgba(255,255,255,0.05)' }}>
+                  <AccordionSummary expandIcon={<ExpandMore sx={{ color: 'white' }} />}>
+                    <Typography sx={{ color: 'white' }}>Detailed Lead Analysis</Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <Box sx={{ color: 'rgba(255,255,255,0.9)' }}>
+                      <Grid container spacing={2}>
+                        <Grid item xs={12} md={6}>
+                          <Typography variant="subtitle2" gutterBottom>Lead Stage Distribution</Typography>
+                          {['New', 'Contacted', 'Qualified', 'Viewing', 'Negotiating', 'Closed', 'Lost'].map(stage => {
+                            const count = leadsArray.filter(l => l.stage === stage).length;
+                            return (
+                              <Box key={stage} sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                                <Typography variant="body2">{stage}:</Typography>
+                                <Typography variant="body2">{count} ({stats.total ? Math.round((count / stats.total) * 100) : 0}%)</Typography>
+                              </Box>
+                            );
+                          })}
+                        </Grid>
+                        <Grid item xs={12} md={6}>
+                          <Typography variant="subtitle2" gutterBottom>Lead Score Distribution</Typography>
+                          <Typography variant="body2">0-20: {leadsArray.filter(l => l.score <= 20).length}</Typography>
+                          <Typography variant="body2">21-40: {leadsArray.filter(l => l.score > 20 && l.score <= 40).length}</Typography>
+                          <Typography variant="body2">41-60: {leadsArray.filter(l => l.score > 40 && l.score <= 60).length}</Typography>
+                          <Typography variant="body2">61-80: {leadsArray.filter(l => l.score > 60 && l.score <= 80).length}</Typography>
+                          <Typography variant="body2">81-100: {leadsArray.filter(l => l.score > 80).length}</Typography>
+                        </Grid>
+                      </Grid>
+                    </Box>
+                  </AccordionDetails>
+                </Accordion>
+
+                <Accordion sx={{ bgcolor: 'rgba(255,255,255,0.05)' }}>
+                  <AccordionSummary expandIcon={<ExpandMore sx={{ color: 'white' }} />}>
+                    <Typography sx={{ color: 'white' }}>Network Activity Log</Typography>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <Box sx={{ color: 'rgba(255,255,255,0.9)', maxHeight: 300, overflow: 'auto' }}>
+                      {networkData.requests.slice(-10).reverse().map((req, index) => (
+                        <Box key={index} sx={{ mb: 2, p: 1, bgcolor: 'rgba(0,0,0,0.3)', borderRadius: 1 }}>
+                          <Typography variant="caption" component="div">
+                            <strong>{req.method}</strong> {req.url}
+                          </Typography>
+                          <Typography variant="caption" component="div">
+                            Status: {req.status} | Duration: {req.duration}ms | Size: {req.responseSize}
+                          </Typography>
+                          <Typography variant="caption" component="div" sx={{ opacity: 0.7 }}>
+                            {new Date(req.timestamp).toLocaleTimeString()}
+                          </Typography>
+                        </Box>
+                      ))}
+                    </Box>
+                  </AccordionDetails>
+                </Accordion>
+              </Box>
+            </Box>
+          </Collapse>
+        </Paper>
+      )}
+
       {/* Hero Section */}
       <HeroSection>
         <Container maxWidth="xl">

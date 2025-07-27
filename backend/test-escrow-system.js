@@ -26,7 +26,6 @@ const colors = {
 let totalTests = 0;
 let passedTests = 0;
 let failedTests = 0;
-const testResults = [];
 
 // Logging helpers
 const log = {
