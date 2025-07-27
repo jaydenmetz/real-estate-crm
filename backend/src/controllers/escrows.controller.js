@@ -131,6 +131,9 @@ class SimpleEscrowController {
         throw new Error('No primary key column found in escrows table');
       }
       
+      console.log('Using ID field:', idField);
+      console.log('Schema info:', schema);
+      
       let commissionField;
       if (schema.hasNetCommission && schema.hasBuyerSideCommission) {
         commissionField = 'COALESCE(net_commission, buyer_side_commission * purchase_price / 100, buyer_side_commission, 0)';
@@ -156,6 +159,8 @@ class SimpleEscrowController {
       const listQuery = `
         SELECT 
           ${idField} as id,
+          ${schema.hasNumericId ? 'numeric_id' : 'NULL'} as "numeric_id",
+          ${schema.hasId ? 'id' : 'NULL'} as "raw_id",
           display_id as "displayId",
           display_id as "escrowNumber",
           property_address || '${envSuffix}' as "propertyAddress",
@@ -191,9 +196,17 @@ class SimpleEscrowController {
       // Debug: Log the actual IDs being returned
       console.log('Escrows returned from database:');
       listResult.rows.forEach((escrow, index) => {
-        console.log(`  ${index + 1}. ID: ${escrow.id}, Display ID: ${escrow.displayId}, Address: ${escrow.propertyAddress}`);
+        console.log(`  ${index + 1}. ID: ${escrow.id}, numeric_id: ${escrow.numeric_id}, raw_id: ${escrow.raw_id}, Display ID: ${escrow.displayId}, Address: ${escrow.propertyAddress}`);
       });
       console.log(`Total escrows: ${listResult.rows.length}`);
+      
+      // Special check for ESC-2025-001
+      const escrow2025001 = listResult.rows.find(e => e.displayId === 'ESC-2025-001');
+      if (escrow2025001) {
+        console.log('\n=== ESC-2025-001 Debug Info ===');
+        console.log('Full record:', JSON.stringify(escrow2025001, null, 2));
+        console.log('==============================\n');
+      }
 
       res.json({
         success: true,

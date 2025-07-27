@@ -1179,7 +1179,8 @@ const EscrowDetail = () => {
     
     return {
       id: escrowData.id,
-      escrowNumber: escrowData.id,
+      escrowNumber: escrowData.display_id || escrowData.displayId || escrowData.escrowNumber || escrowData.id,
+      displayId: escrowData.display_id || escrowData.displayId || escrowData.escrowNumber,
       propertyAddress: escrowData.property_address || escrowData.propertyAddress,
       property: {
         address: escrowData.property_address || escrowData.propertyAddress,
@@ -1571,7 +1572,7 @@ const EscrowDetail = () => {
       <DetailPageHero
         type="escrow"
         title={escrow.address}
-        subtitle={`Escrow #${escrow.escrowNumber}`}
+        subtitle={`Escrow ${escrow.displayId || escrow.escrowNumber}`}
         status={escrow.status}
         statusLabel={(escrow.status || 'UNKNOWN').toUpperCase()}
         icon={Home}
