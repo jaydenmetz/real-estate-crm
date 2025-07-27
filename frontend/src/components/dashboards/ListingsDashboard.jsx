@@ -101,6 +101,17 @@ import {
   TrendingFlat,
   KeyboardArrowUp,
   KeyboardArrowDown,
+  BugReport,
+  ExpandMore,
+  ExpandLess,
+  Storage,
+  Refresh,
+  Error as ErrorIcon,
+  Analytics,
+  DataObject,
+  NetworkCheck,
+  Info,
+  Warning,
 } from '@mui/icons-material';
 import { DataGrid } from '@mui/x-data-grid';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
@@ -111,6 +122,9 @@ import { listingsAPI } from '../../services/api';
 import ListingForm from '../forms/ListingForm';
 import StatsCard from '../common/StatsCard';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../../contexts/AuthContext';
+import CopyButton from '../common/CopyButton';
+import networkMonitor from '../../services/networkMonitor';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay } from 'swiper/modules';
 import 'swiper/css';
@@ -305,11 +319,33 @@ const ListingsDashboard = () => {
   const [priceRange, setPriceRange] = useState('all');
   const [propertyType, setPropertyType] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [debugExpanded, setDebugExpanded] = useState(false);
+  const [networkData, setNetworkData] = useState({
+    stats: networkMonitor.getStats(),
+    requests: networkMonitor.getRequests(),
+    errors: networkMonitor.getErrors()
+  });
   const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const { user } = useAuth();
+
+  // Auto-refresh network data when debug panel is expanded
+  useEffect(() => {
+    if (debugExpanded) {
+      const interval = setInterval(() => {
+        setNetworkData({
+          stats: networkMonitor.getStats(),
+          requests: networkMonitor.getRequests(),
+          errors: networkMonitor.getErrors()
+        });
+      }, 2000); // Update every 2 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [debugExpanded]);
 
   // Filter listings based on tab and other filters
   const getFilteredListings = () => {
@@ -648,6 +684,364 @@ const ListingsDashboard = () => {
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+      {/* Stunning Debug Interface - Admin Only */}
+      {user?.username === 'admin' && (
+        <Box sx={{ mb: 4 }}>
+          {/* Summary Debug Card */}
+          <Card 
+            sx={(theme) => ({
+              background: `linear-gradient(135deg, 
+                ${alpha(theme.palette.primary.main, 0.08)} 0%, 
+                ${alpha(theme.palette.secondary.main, 0.08)} 50%, 
+                ${alpha(theme.palette.error.main, 0.08)} 100%
+              )`,
+              border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+              borderRadius: '16px',
+              boxShadow: `0 8px 32px ${alpha(theme.palette.common.black, 0.1)}`,
+              overflow: 'hidden',
+              position: 'relative',
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '4px',
+                background: `linear-gradient(90deg, 
+                  ${theme.palette.primary.main} 0%, 
+                  ${theme.palette.secondary.main} 33%, 
+                  ${theme.palette.error.main} 66%, 
+                  ${theme.palette.warning.main} 100%
+                )`,
+              }
+            })}
+          >
+            <Box sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Box
+                    sx={(theme) => ({
+                      p: 1.5,
+                      borderRadius: '12px',
+                      background: `linear-gradient(135deg, ${theme.palette.error.main}, ${theme.palette.error.dark})`,
+                      color: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: `0 4px 12px ${alpha(theme.palette.error.main, 0.3)}`
+                    })}
+                  >
+                    <BugReport />
+                  </Box>
+                  <Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: '-0.5px' }}>
+                    Debug Panel: Listings Dashboard
+                  </Typography>
+                  <Chip 
+                    label={process.env.NODE_ENV === 'production' ? '🔴 PRODUCTION' : '🟢 LOCAL'} 
+                    sx={{
+                      background: process.env.NODE_ENV === 'production' 
+                        ? 'linear-gradient(45deg, #ff6b6b, #ee5a24)'
+                        : 'linear-gradient(45deg, #00b894, #00cec9)',
+                      color: 'white',
+                      fontWeight: 600,
+                      fontSize: '0.75rem'
+                    }}
+                  />
+                  <Chip 
+                    label="Admin Only" 
+                    sx={{
+                      background: 'linear-gradient(45deg, #fdcb6e, #e17055)',
+                      color: 'white',
+                      fontWeight: 600,
+                      fontSize: '0.75rem'
+                    }}
+                  />
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => setDebugExpanded(!debugExpanded)}
+                    startIcon={debugExpanded ? <ExpandLess /> : <ExpandMore />}
+                    sx={(theme) => ({
+                      borderColor: alpha(theme.palette.primary.main, 0.5),
+                      color: theme.palette.primary.main,
+                      '&:hover': {
+                        borderColor: theme.palette.primary.main,
+                        background: alpha(theme.palette.primary.main, 0.1)
+                      }
+                    })}
+                  >
+                    {debugExpanded ? 'Hide' : 'Show'} Debug Details
+                  </Button>
+                  <IconButton 
+                    size="small"
+                    onClick={() => {
+                      // Update network data from network monitor
+                      setNetworkData({
+                        stats: networkMonitor.getStats(),
+                        requests: networkMonitor.getRequests(),
+                        errors: networkMonitor.getErrors()
+                      });
+                      enqueueSnackbar('Network data refreshed', { variant: 'info' });
+                    }}
+                    sx={(theme) => ({
+                      color: theme.palette.primary.main,
+                      '&:hover': {
+                        background: alpha(theme.palette.primary.main, 0.1)
+                      }
+                    })}
+                  >
+                    <Tooltip title="Refresh Network Data">
+                      <Refresh />
+                    </Tooltip>
+                  </IconButton>
+                  <CopyButton 
+                    text={JSON.stringify({
+                      pageInfo: {
+                        url: window.location.href,
+                        timestamp: new Date().toISOString(),
+                        user: user?.username,
+                        userAgent: navigator.userAgent,
+                        screenResolution: `${window.screen.width}x${window.screen.height}`
+                      },
+                      dashboardData: {
+                        totalListings: mockListings.length,
+                        stats,
+                        listingsSample: mockListings.slice(0, 3).map(l => ({
+                          id: l.id,
+                          address: l.address,
+                          status: l.listingStatus,
+                          listPrice: l.listPrice
+                        })),
+                        loading: false,
+                        hasData: true
+                      },
+                      networkActivity: {
+                        stats: networkData.stats,
+                        recentRequests: networkData.requests.slice(-5),
+                        errorCount: networkData.stats.errors,
+                        allRequests: networkData.requests,
+                        allErrors: networkData.errors
+                      },
+                      browserInfo: {
+                        location: window.location,
+                        localStorage: {
+                          hasUser: !!localStorage.getItem('user'),
+                          userKeys: Object.keys(localStorage)
+                        }
+                      }
+                    }, null, 2)}
+                    label="📋 Copy Debug Summary"
+                    variant="contained"
+                    sx={{
+                      background: 'linear-gradient(45deg, #667eea, #764ba2)',
+                      '&:hover': {
+                        background: 'linear-gradient(45deg, #764ba2, #667eea)',
+                      }
+                    }}
+                  />
+                </Box>
+              </Box>
+            </Box>
+          </Card>
+
+          {/* Detailed Debug Panel */}
+          <Collapse in={debugExpanded}>
+            <Grid container spacing={3} sx={{ mt: 1 }}>
+              {/* Dashboard Statistics */}
+              <Grid item xs={12} md={6}>
+                <Card sx={{ 
+                  background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(139, 195, 74, 0.1))',
+                  border: '1px solid rgba(76, 175, 80, 0.3)',
+                  borderRadius: '12px'
+                }}>
+                  <Box sx={{ p: 2 }}>
+                    <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Analytics /> Dashboard Statistics
+                    </Typography>
+                    <Grid container spacing={2}>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">Total Listings</Typography>
+                        <Typography variant="h4">{mockListings.length}</Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">Active Listings</Typography>
+                        <Typography variant="h4">{stats.activeListings}</Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">Portfolio Value</Typography>
+                        <Typography variant="h5">${(stats.totalValue / 1000000).toFixed(1)}M</Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Typography variant="caption" color="text.secondary">Avg Days on Market</Typography>
+                        <Typography variant="h5">{stats.avgDaysOnMarket}</Typography>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                </Card>
+              </Grid>
+
+              {/* API & Network Info */}
+              <Grid item xs={12} md={6}>
+                <Card sx={{ 
+                  background: 'linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(3, 169, 244, 0.1))',
+                  border: '1px solid rgba(33, 150, 243, 0.3)',
+                  borderRadius: '12px'
+                }}>
+                  <Box sx={{ p: 2 }}>
+                    <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <NetworkCheck /> Network & API Status
+                    </Typography>
+                    <Stack spacing={1.5}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography variant="body2">API Endpoint</Typography>
+                        <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.85rem' }}>
+                          {process.env.REACT_APP_API_URL || 'Not configured'}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography variant="body2">Environment</Typography>
+                        <Chip 
+                          label={process.env.NODE_ENV} 
+                          size="small" 
+                          color={process.env.NODE_ENV === 'production' ? 'error' : 'success'}
+                        />
+                      </Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography variant="body2">Network Requests</Typography>
+                        <Typography variant="body2">{networkData.stats.total}</Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography variant="body2">Network Errors</Typography>
+                        <Typography variant="body2" color={networkData.stats.errors > 0 ? 'error' : 'inherit'}>
+                          {networkData.stats.errors}
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography variant="body2">Error Rate</Typography>
+                        <Typography variant="body2" color={networkData.stats.errorRate > 10 ? 'error' : 'inherit'}>
+                          {networkData.stats.errorRate.toFixed(1)}%
+                        </Typography>
+                      </Box>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                        <Typography variant="body2">Avg Response Time</Typography>
+                        <Typography variant="body2">
+                          {networkData.stats.avgDuration.toFixed(0)}ms
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  </Box>
+                </Card>
+              </Grid>
+
+              {/* Recent Listings */}
+              <Grid item xs={12} md={6}>
+                <Card sx={{ 
+                  background: 'linear-gradient(135deg, rgba(255, 152, 0, 0.1), rgba(255, 193, 7, 0.1))',
+                  border: '1px solid rgba(255, 152, 0, 0.3)',
+                  borderRadius: '12px'
+                }}>
+                  <Box sx={{ p: 2 }}>
+                    <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Storage /> Recent Listings Data
+                    </Typography>
+                    <Stack spacing={2}>
+                      {mockListings.slice(0, 3).map((listing) => (
+                        <Box 
+                          key={listing.id}
+                          sx={{ 
+                            p: 2, 
+                            background: 'rgba(0,0,0,0.03)', 
+                            borderRadius: '8px',
+                            fontFamily: 'monospace',
+                            fontSize: '0.85rem'
+                          }}
+                        >
+                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                            ID: {listing.id} | Status: {listing.listingStatus}
+                          </Typography>
+                          <Typography variant="body2">
+                            {listing.address}
+                          </Typography>
+                          <Typography variant="body2">
+                            Price: ${listing.listPrice.toLocaleString()} | DOM: {listing.daysOnMarket}
+                          </Typography>
+                        </Box>
+                      ))}
+                    </Stack>
+                  </Box>
+                </Card>
+              </Grid>
+
+              {/* Network Activity Log */}
+              <Grid item xs={12} md={6}>
+                <Card sx={{ 
+                  background: 'linear-gradient(135deg, rgba(156, 39, 176, 0.1), rgba(171, 71, 188, 0.1))',
+                  border: '1px solid rgba(156, 39, 176, 0.3)',
+                  borderRadius: '12px'
+                }}>
+                  <Box sx={{ p: 2 }}>
+                    <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <NetworkCheck /> Network Activity Log
+                      <Chip 
+                        label={`${networkData.requests.length} requests`} 
+                        size="small" 
+                        sx={{ ml: 'auto' }}
+                      />
+                    </Typography>
+                    <Box sx={{ maxHeight: 300, overflowY: 'auto' }}>
+                      <Stack spacing={1}>
+                        {networkData.requests.slice(-10).reverse().map((req, index) => (
+                          <Box 
+                            key={req.id || index}
+                            sx={{ 
+                              p: 1.5, 
+                              background: req.success ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)',
+                              borderRadius: '6px',
+                              fontSize: '0.75rem',
+                              fontFamily: 'monospace',
+                              border: `1px solid ${req.success ? 'rgba(76, 175, 80, 0.3)' : 'rgba(244, 67, 54, 0.3)'}`
+                            }}
+                          >
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
+                              <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                                {req.method} {req.statusCode || 'PENDING'}
+                              </Typography>
+                              <Typography variant="caption">
+                                {req.duration ? `${req.duration}ms` : 'pending...'}
+                              </Typography>
+                            </Box>
+                            <Typography variant="caption" sx={{ 
+                              display: 'block', 
+                              whiteSpace: 'nowrap', 
+                              overflow: 'hidden', 
+                              textOverflow: 'ellipsis' 
+                            }}>
+                              {req.url}
+                            </Typography>
+                            {req.error && (
+                              <Typography variant="caption" color="error" sx={{ display: 'block', mt: 0.5 }}>
+                                Error: {req.error}
+                              </Typography>
+                            )}
+                          </Box>
+                        ))}
+                        {networkData.requests.length === 0 && (
+                          <Typography variant="caption" color="text.secondary" align="center">
+                            No network requests yet. Refresh to see latest activity.
+                          </Typography>
+                        )}
+                      </Stack>
+                    </Box>
+                  </Box>
+                </Card>
+              </Grid>
+            </Grid>
+          </Collapse>
+        </Box>
+      )}
+
       {/* Hero Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
