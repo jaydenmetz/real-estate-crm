@@ -64,6 +64,13 @@ const NetworkMonitorComponent = () => {
   }
 
   useEffect(() => {
+    // Ensure network monitor is enabled when component mounts
+    // This helps catch cases where user auth completed after initial page load
+    if (isSystemAdmin || process.env.NODE_ENV === 'development') {
+      networkMonitor.enable();
+      console.log('🔍 NetworkMonitor component ensuring monitor is enabled');
+    }
+
     // Subscribe to network monitor updates
     const unsubscribe = networkMonitor.subscribe((newRequests) => {
       if (autoRefresh) {
@@ -75,7 +82,7 @@ const NetworkMonitorComponent = () => {
     setRequests(networkMonitor.getRequests());
 
     return unsubscribe;
-  }, [autoRefresh]);
+  }, [autoRefresh, isSystemAdmin]);
 
   const stats = networkMonitor.getStats();
   const errors = networkMonitor.getErrors();
@@ -462,9 +469,22 @@ const NetworkMonitorComponent = () => {
                   {recentRequests.length === 0 && (
                     <TableRow>
                       <TableCell colSpan={5} align="center">
-                        <Typography color="text.secondary">
-                          No network requests captured yet
-                        </Typography>
+                        <Box py={2}>
+                          <Typography color="text.secondary" gutterBottom>
+                            No network requests captured yet
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary" gutterBottom display="block">
+                            This usually means monitoring started after page load.
+                          </Typography>
+                          <Button 
+                            size="small" 
+                            variant="outlined" 
+                            onClick={() => window.location.reload()}
+                            sx={{ mt: 1 }}
+                          >
+                            Refresh Page to Capture Requests
+                          </Button>
+                        </Box>
                       </TableCell>
                     </TableRow>
                   )}

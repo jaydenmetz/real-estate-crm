@@ -11,17 +11,26 @@ class NetworkMonitor {
   }
 
   checkEnableStatus() {
-    // Enable in development or for admin users
+    // Enable in development or for system admin username
     const isDev = process.env.NODE_ENV === 'development';
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const isAdmin = user.role === 'admin' || user.role === 'system_admin';
-    const showDebugInfo = user.preferences?.showDebugInfo;
+    let user = {};
+    try {
+      user = JSON.parse(localStorage.getItem('user') || '{}');
+    } catch (e) {
+      // Silent fail
+    }
+    const isSystemAdmin = user.username === 'admin';
     
-    this.isEnabled = isDev || (isAdmin && showDebugInfo);
+    const shouldEnable = isDev || isSystemAdmin;
     
-    if (this.isEnabled) {
+    if (shouldEnable && !this.isEnabled) {
+      this.isEnabled = true;
       this.interceptFetch();
       this.interceptXHR();
+      console.log('🔍 Network Monitor enabled:', { isDev, username: user.username });
+    } else if (!shouldEnable && this.isEnabled) {
+      this.isEnabled = false;
+      console.log('🔍 Network Monitor disabled');
     }
   }
 
@@ -286,4 +295,48 @@ class NetworkMonitor {
 
 // Create and export singleton instance
 const networkMonitor = NetworkMonitor.getInstance();
+
+// Force initialization immediately if admin user is detected
+if (typeof window !== 'undefined') {
+  // Check for admin user on page load
+  const checkForAdmin = () => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      if (user.username === 'admin' || process.env.NODE_ENV === 'development') {
+        networkMonitor.enable();
+        console.log('🔍 Network Monitor enabled for admin user:', user.username);
+        return true;
+      }
+    } catch (e) {
+      // Silent fail if localStorage access fails
+    }
+    return false;
+  };
+  
+  // Check immediately
+  const enabledImmediately = checkForAdmin();
+  
+  // If not enabled immediately, set up periodic checks for auth completion
+  if (!enabledImmediately) {
+    const authCheckInterval = setInterval(() => {
+      if (checkForAdmin()) {
+        clearInterval(authCheckInterval);
+      }
+    }, 100); // Check every 100ms for up to 5 seconds
+    
+    // Clear interval after 5 seconds to avoid infinite checking
+    setTimeout(() => {
+      clearInterval(authCheckInterval);
+    }, 5000);
+  }
+  
+  // Also check when localStorage changes (user logs in)
+  window.addEventListener('storage', checkForAdmin);
+  
+  // Check when DOM is fully loaded
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', checkForAdmin);
+  }
+}
+
 export default networkMonitor;
