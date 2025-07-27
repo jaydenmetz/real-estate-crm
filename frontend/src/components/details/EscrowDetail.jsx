@@ -4,11 +4,16 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay, EffectFade, EffectCoverflow } from 'swiper/modules';
+
+// Import Swiper CSS
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/effect-fade';
 import 'swiper/css/effect-coverflow';
+
+// Fallback motion component
+const MotionDiv = motion?.div || (({ children, ...props }) => <div {...props}>{children}</div>);
 import { styled, keyframes, alpha } from '@mui/material/styles';
 import {
   Container,
@@ -1594,28 +1599,35 @@ const EscrowDetail = () => {
           }
         ]}
       >
-        <motion.div
+        <MotionDiv
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
           <PropertyCard elevation={8}>
-            <Swiper
-              modules={[Navigation, Pagination, Autoplay, EffectFade]}
-              spaceBetween={0}
-              slidesPerView={1}
-              navigation
-              pagination={{ clickable: true }}
-              autoplay={{ delay: 5000 }}
-              effect="fade"
-              onSlideChange={(swiper) => setSelectedImage(swiper.activeIndex)}
-            >
-              {(escrow.property?.images || []).map((image, index) => (
-                <SwiperSlide key={index}>
-                  <img src={image} alt={`Property ${index + 1}`} />
-                </SwiperSlide>
-              ))}
-            </Swiper>
+            {(escrow.property?.images || []).length > 0 ? (
+              <Swiper
+                modules={[Navigation, Pagination, Autoplay, EffectFade]}
+                spaceBetween={0}
+                slidesPerView={1}
+                navigation
+                pagination={{ clickable: true }}
+                autoplay={{ delay: 5000 }}
+                effect="fade"
+                onSlideChange={(swiper) => setSelectedImage(swiper.activeIndex)}
+                style={{ width: '100%', height: '100%' }}
+              >
+                {(escrow.property?.images || []).map((image, index) => (
+                  <SwiperSlide key={index}>
+                    <img src={image} alt={`Property ${index + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            ) : (
+              <Box sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'grey.200' }}>
+                <Typography variant="h6" color="text.secondary">No Images Available</Typography>
+              </Box>
+            )}
             <Box className="property-overlay">
               <Grid container spacing={2}>
                 <Grid item xs={3}>
@@ -1645,13 +1657,13 @@ const EscrowDetail = () => {
               </Grid>
             </Box>
           </PropertyCard>
-        </motion.div>
+        </MotionDiv>
       </DetailPageHero>
 
       {/* Quick Stats */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
         <Grid item xs={12} sm={6} md={3}>
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
@@ -1694,11 +1706,11 @@ const EscrowDetail = () => {
                 />
               </Box>
             </StatsCard>
-          </motion.div>
+          </MotionDiv>
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
@@ -1732,11 +1744,11 @@ const EscrowDetail = () => {
                 </Typography>
               </Box>
             </StatsCard>
-          </motion.div>
+          </MotionDiv>
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
@@ -1785,11 +1797,11 @@ const EscrowDetail = () => {
                 </Stack>
               </Box>
             </StatsCard>
-          </motion.div>
+          </MotionDiv>
         </Grid>
 
         <Grid item xs={12} sm={6} md={3}>
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 }}
@@ -1824,7 +1836,7 @@ const EscrowDetail = () => {
                 </Typography>
               </Box>
             </StatsCard>
-          </motion.div>
+          </MotionDiv>
         </Grid>
       </Grid>
 
@@ -2901,7 +2913,7 @@ const EscrowDetail = () => {
             {/* Bottom Stats Cards */}
             <Grid container spacing={3} sx={{ mt: 4 }}>
               <Grid item xs={12} sm={6} md={3}>
-                <motion.div
+                <MotionDiv
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
@@ -2928,11 +2940,11 @@ const EscrowDetail = () => {
                       </Avatar>
                     </Stack>
                   </StatsCard>
-                </motion.div>
+                </MotionDiv>
               </Grid>
 
               <Grid item xs={12} sm={6} md={3}>
-                <motion.div
+                <MotionDiv
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.2 }}
@@ -2959,11 +2971,11 @@ const EscrowDetail = () => {
                       </Avatar>
                     </Stack>
                   </StatsCard>
-                </motion.div>
+                </MotionDiv>
               </Grid>
 
               <Grid item xs={12} sm={6} md={3}>
-                <motion.div
+                <MotionDiv
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
@@ -2990,11 +3002,11 @@ const EscrowDetail = () => {
                       </Avatar>
                     </Stack>
                   </StatsCard>
-                </motion.div>
+                </MotionDiv>
               </Grid>
 
               <Grid item xs={12} sm={6} md={3}>
-                <motion.div
+                <MotionDiv
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.4 }}
@@ -3021,7 +3033,7 @@ const EscrowDetail = () => {
                       </Avatar>
                     </Stack>
                   </StatsCard>
-                </motion.div>
+                </MotionDiv>
               </Grid>
             </Grid>
           </Box>

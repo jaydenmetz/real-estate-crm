@@ -16,6 +16,9 @@ import {
 } from '@mui/material';
 import { styled, keyframes } from '@mui/material/styles';
 import { motion } from 'framer-motion';
+
+// Fallback div component if motion is not available
+const MotionDiv = motion?.div || (({ children, ...props }) => <div {...props}>{children}</div>);
 import {
   Star,
   StarBorder,
@@ -209,7 +212,7 @@ const DetailPageHero = ({
       <HeroContent>
         <Grid container spacing={4} alignItems="center">
           <Grid item xs={12} lg={children ? 7 : 12}>
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
@@ -298,15 +301,15 @@ const DetailPageHero = ({
                   )}
                   
                   {primaryAction && (
-                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <MotionDiv whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                       {primaryAction}
-                    </motion.div>
+                    </MotionDiv>
                   )}
                   
                   {secondaryAction && (
-                    <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                    <MotionDiv whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                       {secondaryAction}
-                    </motion.div>
+                    </MotionDiv>
                   )}
                   
                   {aiAssistant && (
@@ -329,7 +332,7 @@ const DetailPageHero = ({
                   <Grid container spacing={2}>
                     {infoCards.map((card, index) => (
                       <Grid item xs={12} sm={6} md={4} key={index}>
-                        <motion.div
+                        <MotionDiv
                           initial={{ opacity: 0, y: 20 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: index * 0.1 }}
@@ -355,25 +358,25 @@ const DetailPageHero = ({
                               </Box>
                             </Stack>
                           </Paper>
-                        </motion.div>
+                        </MotionDiv>
                       </Grid>
                     ))}
                   </Grid>
                 )}
               </Stack>
-            </motion.div>
+            </MotionDiv>
           </Grid>
           
           {/* Custom Content Area */}
           {children && (
             <Grid item xs={12} lg={5}>
-              <motion.div
+              <MotionDiv
                 initial={{ opacity: 0, x: 50 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.8 }}
               >
                 {children}
-              </motion.div>
+              </MotionDiv>
             </Grid>
           )}
         </Grid>
