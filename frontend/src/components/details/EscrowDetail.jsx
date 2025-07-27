@@ -789,7 +789,61 @@ const ActionButton = styled(Button)(({ theme }) => ({
 const TabPanel = styled(Box)(({ theme }) => ({
   padding: theme?.spacing?.(3) || 24,
   animation: `${fadeIn} 0.5s ease-out`,
+  height: '600px',
+  overflowY: 'auto',
+  '&::-webkit-scrollbar': {
+    width: '8px',
+  },
+  '&::-webkit-scrollbar-track': {
+    background: alpha(theme?.palette?.primary?.main || '#1976d2', 0.05),
+    borderRadius: '4px',
+  },
+  '&::-webkit-scrollbar-thumb': {
+    background: alpha(theme?.palette?.primary?.main || '#1976d2', 0.3),
+    borderRadius: '4px',
+    '&:hover': {
+      background: alpha(theme?.palette?.primary?.main || '#1976d2', 0.5),
+    },
+  },
 }));
+
+// Empty state component for tabs with no data
+const EmptyState = ({ icon: Icon, title, subtitle, actionText, onAction }) => (
+  <Box
+    sx={{
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '400px',
+      textAlign: 'center',
+      p: 4,
+    }}
+  >
+    <Avatar
+      sx={{
+        width: 80,
+        height: 80,
+        bgcolor: alpha(useTheme()?.palette?.primary?.main || '#1976d2', 0.1),
+        color: 'primary.main',
+        mb: 3,
+      }}
+    >
+      <Icon sx={{ fontSize: 48 }} />
+    </Avatar>
+    <Typography variant="h6" gutterBottom color="text.secondary">
+      {title}
+    </Typography>
+    <Typography variant="body2" color="text.disabled" sx={{ mb: 3, maxWidth: 400 }}>
+      {subtitle}
+    </Typography>
+    {actionText && onAction && (
+      <Button variant="contained" onClick={onAction} startIcon={<Add />}>
+        {actionText}
+      </Button>
+    )}
+  </Box>
+);
 
 const ProcessStep = styled(Box)(({ theme }) => ({
   padding: theme?.spacing?.(3) || 24,
@@ -1689,8 +1743,9 @@ const EscrowDetail = () => {
         </MotionDiv>
       </DetailPageHero>
 
-      {/* Quick Stats */}
+      {/* Enhanced Stats Section - Combines Overview & Property Data */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
+        {/* Financial Stats Row */}
         <Grid item xs={12} sm={6} md={3}>
           <MotionDiv
             initial={{ opacity: 0, y: 20 }}
@@ -1700,40 +1755,15 @@ const EscrowDetail = () => {
             <StatsCard>
               <Stack direction="row" justifyContent="space-between" alignItems="center">
                 <Box>
-                  <Typography variant="h4" fontWeight="bold" className="metric-value">
-                    <CountUp end={progress} suffix="%" duration={2} />
+                  <Typography variant="h4" fontWeight="bold" color="primary">
+                    ${(escrow.purchasePrice / 1000).toFixed(0)}k
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Overall Progress
+                    Purchase Price
                   </Typography>
                 </Box>
-                <Avatar 
-                  className="metric-icon"
-                  sx={{ 
-                    width: 56, 
-                    height: 56,
-                    bgcolor: alpha(theme?.palette?.primary?.main || '#1976d2', 0.1),
-                    color: 'primary.main',
-                    transition: 'all 0.3s ease',
-                  }}
-                >
-                  <TrendingUp />
-                </Avatar>
+                <AttachMoney sx={{ fontSize: 40, color: 'primary.light', opacity: 0.3 }} />
               </Stack>
-              <Box sx={{ mt: 2 }}>
-                <LinearProgress 
-                  variant="determinate" 
-                  value={progress} 
-                  sx={{ 
-                    height: 8, 
-                    borderRadius: 4,
-                    bgcolor: alpha(theme?.palette?.primary?.main || '#1976d2', 0.1),
-                    '& .MuiLinearProgress-bar': {
-                      background: 'linear-gradient(90deg, #673AB7 0%, #512DA8 100%)',
-                    },
-                  }}
-                />
-              </Box>
             </StatsCard>
           </MotionDiv>
         </Grid>
@@ -1747,31 +1777,15 @@ const EscrowDetail = () => {
             <StatsCard>
               <Stack direction="row" justifyContent="space-between" alignItems="center">
                 <Box>
-                  <Typography variant="h4" fontWeight="bold" className="metric-value">
-                    <CountUp end={daysToClose} duration={2} />
+                  <Typography variant="h4" fontWeight="bold" color="secondary">
+                    ${(escrow.myCommission / 1000).toFixed(1)}k
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Days to Close
+                    My Commission
                   </Typography>
                 </Box>
-                <Avatar 
-                  className="metric-icon"
-                  sx={{ 
-                    width: 56, 
-                    height: 56,
-                    bgcolor: alpha(theme?.palette?.warning?.main || '#ff9800', 0.1),
-                    color: 'warning.main',
-                    transition: 'all 0.3s ease',
-                  }}
-                >
-                  <CalendarToday />
-                </Avatar>
+                <MonetizationOn sx={{ fontSize: 40, color: 'secondary.light', opacity: 0.3 }} />
               </Stack>
-              <Box sx={{ mt: 1 }}>
-                <Typography variant="caption" color="text.secondary">
-                  Est. Close: {safeFormat(escrow.estimatedCloseDate, 'MMM dd, yyyy')}
-                </Typography>
-              </Box>
             </StatsCard>
           </MotionDiv>
         </Grid>
@@ -1785,46 +1799,15 @@ const EscrowDetail = () => {
             <StatsCard>
               <Stack direction="row" justifyContent="space-between" alignItems="center">
                 <Box>
-                  <Typography variant="h4" fontWeight="bold" className="metric-value">
-                    <CountUp end={escrow.documents?.length || 0} duration={2} />
+                  <Typography variant="h4" fontWeight="bold" color="info">
+                    {progress}%
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Documents
+                    Progress
                   </Typography>
                 </Box>
-                <Avatar 
-                  className="metric-icon"
-                  sx={{ 
-                    width: 56, 
-                    height: 56,
-                    bgcolor: alpha(theme?.palette?.info?.main || '#2196f3', 0.1),
-                    color: 'info.main',
-                    transition: 'all 0.3s ease',
-                  }}
-                >
-                  <Description />
-                </Avatar>
+                <AssignmentTurnedIn sx={{ fontSize: 40, color: 'info.light', opacity: 0.3 }} />
               </Stack>
-              <Box sx={{ mt: 1 }}>
-                <Stack direction="row" spacing={0.5}>
-                  {(escrow.documents || []).slice(0, 3).map((doc, idx) => (
-                    <Chip 
-                      key={idx}
-                      label={doc.type} 
-                      size="small" 
-                      variant="outlined"
-                      sx={{ fontSize: '0.7rem' }}
-                    />
-                  ))}
-                  {(escrow.documents?.length || 0) > 3 && (
-                    <Chip 
-                      label={`+${(escrow.documents?.length || 0) - 3}`} 
-                      size="small"
-                      sx={{ fontSize: '0.7rem' }}
-                    />
-                  )}
-                </Stack>
-              </Box>
             </StatsCard>
           </MotionDiv>
         </Grid>
@@ -1838,33 +1821,159 @@ const EscrowDetail = () => {
             <StatsCard>
               <Stack direction="row" justifyContent="space-between" alignItems="center">
                 <Box>
-                  <Typography variant="h4" fontWeight="bold" className="metric-value">
-                    <CountUp end={(escrow.aiAgents || []).filter(a => a.status === 'active').length} duration={2} />
-                    /{escrow.aiAgents?.length || 0}
+                  <Typography variant="h4" fontWeight="bold" color="success">
+                    {escrow.daysToClose}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Active AI Agents
+                    Days to Close
                   </Typography>
                 </Box>
-                <Avatar 
-                  className="metric-icon"
-                  sx={{ 
-                    width: 56, 
-                    height: 56,
-                    bgcolor: alpha(theme?.palette?.success?.main || '#4caf50', 0.1),
-                    color: 'success.main',
-                    transition: 'all 0.3s ease',
-                  }}
-                >
-                  <SmartToy />
-                </Avatar>
+                <Schedule sx={{ fontSize: 40, color: 'success.light', opacity: 0.3 }} />
               </Stack>
-              <Box sx={{ mt: 1 }}>
-                <Typography variant="caption" color="success.main">
-                  All systems operational
-                </Typography>
-              </Box>
             </StatsCard>
+          </MotionDiv>
+        </Grid>
+
+        {/* Property Details Row */}
+        <Grid item xs={12}>
+          <MotionDiv
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+          >
+            <Paper sx={{ 
+              p: 3, 
+              borderRadius: 3,
+              background: 'linear-gradient(135deg, rgba(103, 58, 183, 0.03) 0%, rgba(63, 81, 181, 0.03) 100%)',
+              border: '1px solid rgba(103, 58, 183, 0.1)'
+            }}>
+              <Typography variant="h6" fontWeight="600" sx={{ mb: 3 }}>
+                Property Details
+              </Typography>
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={6} md={2.4}>
+                  <Stack spacing={1}>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Home sx={{ fontSize: 20, color: 'primary.main' }} />
+                      <Typography variant="body2" color="text.secondary">Type</Typography>
+                    </Stack>
+                    <Typography variant="h6" fontWeight="500">
+                      {escrow.property?.type || 'Single Family'}
+                    </Typography>
+                  </Stack>
+                </Grid>
+                <Grid item xs={12} sm={6} md={2.4}>
+                  <Stack spacing={1}>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Bed sx={{ fontSize: 20, color: 'primary.main' }} />
+                      <Typography variant="body2" color="text.secondary">Beds/Baths</Typography>
+                    </Stack>
+                    <Typography variant="h6" fontWeight="500">
+                      {escrow.property?.bedrooms || 4} / {escrow.property?.bathrooms || 3}
+                    </Typography>
+                  </Stack>
+                </Grid>
+                <Grid item xs={12} sm={6} md={2.4}>
+                  <Stack spacing={1}>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <SquareFoot sx={{ fontSize: 20, color: 'primary.main' }} />
+                      <Typography variant="body2" color="text.secondary">Sq. Feet</Typography>
+                    </Stack>
+                    <Typography variant="h6" fontWeight="500">
+                      {((escrow.property?.sqft || 2847).toLocaleString())}
+                    </Typography>
+                  </Stack>
+                </Grid>
+                <Grid item xs={12} sm={6} md={2.4}>
+                  <Stack spacing={1}>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <CalendarMonth sx={{ fontSize: 20, color: 'primary.main' }} />
+                      <Typography variant="body2" color="text.secondary">Year Built</Typography>
+                    </Stack>
+                    <Typography variant="h6" fontWeight="500">
+                      {escrow.property?.yearBuilt || 2015}
+                    </Typography>
+                  </Stack>
+                </Grid>
+                <Grid item xs={12} sm={6} md={2.4}>
+                  <Stack spacing={1}>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Landscape sx={{ fontSize: 20, color: 'primary.main' }} />
+                      <Typography variant="body2" color="text.secondary">Lot Size</Typography>
+                    </Stack>
+                    <Typography variant="h6" fontWeight="500">
+                      {escrow.property?.lot || '7,500 sqft'}
+                    </Typography>
+                  </Stack>
+                </Grid>
+              </Grid>
+            </Paper>
+          </MotionDiv>
+        </Grid>
+
+        {/* Financial Breakdown Row */}
+        <Grid item xs={12}>
+          <MotionDiv
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+          >
+            <Paper sx={{ 
+              p: 3, 
+              borderRadius: 3,
+              background: 'linear-gradient(135deg, rgba(0, 150, 136, 0.03) 0%, rgba(76, 175, 80, 0.03) 100%)',
+              border: '1px solid rgba(0, 150, 136, 0.1)'
+            }}>
+              <Typography variant="h6" fontWeight="600" sx={{ mb: 3 }}>
+                Transaction Summary
+              </Typography>
+              <Grid container spacing={3}>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Stack spacing={1}>
+                    <Typography variant="body2" color="text.secondary">Down Payment</Typography>
+                    <Typography variant="h5" fontWeight="600" color="primary">
+                      ${(escrow.downPayment || 0).toLocaleString()}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {Math.round(((escrow.downPayment || 0) / (escrow.purchasePrice || 1)) * 100)}% of purchase price
+                    </Typography>
+                  </Stack>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Stack spacing={1}>
+                    <Typography variant="body2" color="text.secondary">Loan Amount</Typography>
+                    <Typography variant="h5" fontWeight="600" color="secondary">
+                      ${(escrow.loanAmount || 0).toLocaleString()}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {escrow.lender || 'Wells Fargo Home Mortgage'}
+                    </Typography>
+                  </Stack>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Stack spacing={1}>
+                    <Typography variant="body2" color="text.secondary">Closing Costs</Typography>
+                    <Typography variant="h5" fontWeight="600" color="info">
+                      ${(escrow.closingCosts || 0).toLocaleString()}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Estimated buyer costs
+                    </Typography>
+                  </Stack>
+                </Grid>
+                <Grid item xs={12} sm={6} md={3}>
+                  <Stack spacing={1}>
+                    <Typography variant="body2" color="text.secondary">Monthly Payment</Typography>
+                    <Typography variant="h5" fontWeight="600" color="success">
+                      ${(escrow.monthlyPayment || 0).toLocaleString()}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      Principal & Interest
+                    </Typography>
+                  </Stack>
+                </Grid>
+              </Grid>
+            </Paper>
           </MotionDiv>
         </Grid>
       </Grid>
@@ -2202,166 +2311,81 @@ const EscrowDetail = () => {
                   bgcolor: 'background.paper',
                 }}
               >
-                <Tab label="Overview" icon={<Dashboard />} iconPosition="start" />
                 <Tab label="Timeline" icon={<TimelineIcon />} iconPosition="start" />
                 <Tab label="Documents" icon={<Description />} iconPosition="start" />
                 <Tab label="Financials" icon={<AttachMoney />} iconPosition="start" />
                 <Tab label="Tasks" icon={<Task />} iconPosition="start" />
                 <Tab label="Parties" icon={<Groups />} iconPosition="start" />
-                <Tab label="Property" icon={<Home />} iconPosition="start" />
                 <Tab label="Activity" icon={<History />} iconPosition="start" />
                 <Tab label="AI Overview" icon={<AutoAwesome />} iconPosition="start" />
               </Tabs>
 
               {/* Tab Panels */}
+              {/* Timeline Tab - Index 0 */}
               <TabPanel hidden={activeTab !== 0}>
-                <Grid container spacing={3}>
-                  <Grid item xs={12} md={6}>
-                    <Card>
-                      <CardContent>
-                        <Typography variant="h6" gutterBottom>
-                          Transaction Summary
-                        </Typography>
-                        <Table>
-                          <TableBody>
-                            <TableRow>
-                              <TableCell>Purchase Price</TableCell>
-                              <TableCell align="right">
-                                <Typography variant="h6">
-                                  ${(escrow.purchasePrice || 0).toLocaleString()}
-                                </Typography>
-                              </TableCell>
-                            </TableRow>
-                            <TableRow>
-                              <TableCell>Down Payment</TableCell>
-                              <TableCell align="right">
-                                ${(escrow.downPayment || 0).toLocaleString()} ({Math.round(((escrow.downPayment || 0) / (escrow.purchasePrice || 1)) * 100)}%)
-                              </TableCell>
-                            </TableRow>
-                            <TableRow>
-                              <TableCell>Loan Amount</TableCell>
-                              <TableCell align="right">
-                                ${(escrow.loanAmount || 0).toLocaleString()}
-                              </TableCell>
-                            </TableRow>
-                            <TableRow>
-                              <TableCell>Commission</TableCell>
-                              <TableCell align="right">
-                                ${(escrow.commission || 0).toLocaleString()}
-                              </TableCell>
-                            </TableRow>
-                          </TableBody>
-                        </Table>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-
-                  <Grid item xs={12} md={6}>
-                    <Card>
-                      <CardContent>
-                        <Typography variant="h6" gutterBottom>
-                          Progress Overview
-                        </Typography>
-                        <Box sx={{ mt: 3 }}>
-                          <CircularProgress
-                            variant="determinate"
-                            value={progress}
-                            size={120}
-                            thickness={8}
-                            sx={{
-                              color: theme?.palette?.primary?.main || '#1976d2',
-                              position: 'relative',
-                              '& .MuiCircularProgress-circle': {
-                                strokeLinecap: 'round',
-                              },
-                            }}
-                          />
-                          <Box
-                            sx={{
-                              position: 'absolute',
-                              top: '50%',
-                              left: '50%',
-                              transform: 'translate(-50%, -50%)',
-                              textAlign: 'center',
-                            }}
+                {(escrow.timeline || []).length > 0 ? (
+                  <Timeline position="alternate">
+                    {escrow.timeline.map((event, index) => (
+                      <TimelineItem key={index}>
+                        <TimelineOppositeContent color="text.secondary">
+                          {safeFormat(event.date, 'MMM dd, yyyy')}
+                        </TimelineOppositeContent>
+                        <TimelineSeparator>
+                          <TimelineDot 
+                            color={
+                              event.status === 'completed' ? 'success' :
+                              event.status === 'in-progress' ? 'warning' : 'grey'
+                            }
                           >
-                            <Typography variant="h4" fontWeight="bold">
-                              {progress}%
-                            </Typography>
-                            <Typography variant="caption">Complete</Typography>
-                          </Box>
-                        </Box>
-                        
-                        <Stack spacing={1} sx={{ mt: 3 }}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                            <Typography variant="body2">Documents</Typography>
-                            <Typography variant="body2" fontWeight="medium">
-                              {(escrow.documents || []).filter(d => d.status === 'Signed').length}/{(escrow.documents || []).length}
-                            </Typography>
-                          </Box>
-                          <LinearProgress 
-                            variant="determinate" 
-                            value={((escrow.documents || []).filter(d => d.status === 'Signed').length / Math.max((escrow.documents || []).length, 1)) * 100}
-                            sx={{ height: 6, borderRadius: 3 }}
-                          />
-                        </Stack>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                </Grid>
+                            {event.icon}
+                          </TimelineDot>
+                          {index < escrow.timeline.length - 1 && <TimelineConnector />}
+                        </TimelineSeparator>
+                        <TimelineContent>
+                          <TimelineCard elevation={2}>
+                            <CardContent>
+                              <Typography variant="h6" component="span">
+                                {event.event}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary">
+                                {event.status}
+                              </Typography>
+                            </CardContent>
+                          </TimelineCard>
+                        </TimelineContent>
+                      </TimelineItem>
+                    ))}
+                  </Timeline>
+                ) : (
+                  <EmptyState
+                    icon={TimelineIcon}
+                    title="No Timeline Events Yet"
+                    subtitle="Timeline events will appear here as the escrow progresses. Add your first milestone to start tracking the escrow journey."
+                    actionText="Add First Event"
+                    onAction={() => console.log('Add timeline event')}
+                  />
+                )}
               </TabPanel>
 
+              {/* Documents Tab - Index 1 */}
               <TabPanel hidden={activeTab !== 1}>
-                <Timeline position="alternate">
-                  {(escrow.timeline || []).map((event, index) => (
-                    <TimelineItem key={index}>
-                      <TimelineOppositeContent color="text.secondary">
-                        {safeFormat(event.date, 'MMM dd, yyyy')}
-                      </TimelineOppositeContent>
-                      <TimelineSeparator>
-                        <TimelineDot 
-                          color={
-                            event.status === 'completed' ? 'success' :
-                            event.status === 'in-progress' ? 'warning' : 'grey'
-                          }
+                {(escrow.documents || []).length > 0 ? (
+                  <>
+                    <Stack spacing={2} sx={{ mb: 3 }}>
+                      <Stack direction="row" justifyContent="space-between" alignItems="center">
+                        <Typography variant="h6">Documents ({escrow.documents.length})</Typography>
+                        <Button
+                          variant="contained"
+                          startIcon={<Upload />}
+                          onClick={handleDocumentUpload}
                         >
-                          {event.icon}
-                        </TimelineDot>
-                        {index < escrow.timeline.length - 1 && <TimelineConnector />}
-                      </TimelineSeparator>
-                      <TimelineContent>
-                        <TimelineCard elevation={2}>
-                          <CardContent>
-                            <Typography variant="h6" component="span">
-                              {event.event}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {event.status}
-                            </Typography>
-                          </CardContent>
-                        </TimelineCard>
-                      </TimelineContent>
-                    </TimelineItem>
-                  ))}
-                </Timeline>
-              </TabPanel>
+                          Upload Document
+                        </Button>
+                      </Stack>
+                    </Stack>
 
-              <TabPanel hidden={activeTab !== 2}>
-                <Stack spacing={2} sx={{ mb: 3 }}>
-                  <Stack direction="row" justifyContent="space-between" alignItems="center">
-                    <Typography variant="h6">Documents ({escrow.documents.length})</Typography>
-                    <Button
-                      variant="contained"
-                      startIcon={<Upload />}
-                      onClick={handleDocumentUpload}
-                    >
-                      Upload Document
-                    </Button>
-                  </Stack>
-                </Stack>
-
-                <List>
-                  {escrow.documents.map((doc) => (
+                    <List>
+                      {escrow.documents.map((doc) => (
                     <DocumentItem key={doc.id}>
                       <ListItemIcon>
                         <Avatar sx={{ bgcolor: 'primary.main' }}>
@@ -2399,10 +2423,21 @@ const EscrowDetail = () => {
                       </ListItemSecondaryAction>
                     </DocumentItem>
                   ))}
-                </List>
+                    </List>
+                  </>
+                ) : (
+                  <EmptyState
+                    icon={Description}
+                    title="No Documents Yet"
+                    subtitle="Upload important escrow documents like purchase agreements, inspection reports, and disclosures to keep everything organized in one place."
+                    actionText="Upload First Document"
+                    onAction={handleDocumentUpload}
+                  />
+                )}
               </TabPanel>
 
-              <TabPanel hidden={activeTab !== 3}>
+              {/* Financials Tab - Index 2 */}
+              <TabPanel hidden={activeTab !== 2}>
                 <Grid container spacing={3}>
                   <Grid item xs={12}>
                     <Card>
@@ -2471,7 +2506,8 @@ const EscrowDetail = () => {
                 </Grid>
               </TabPanel>
 
-              <TabPanel hidden={activeTab !== 4}>
+              {/* Tasks Tab - Index 3 */}
+              <TabPanel hidden={activeTab !== 3}>
                 <Stack spacing={3}>
                   {escrow.checklist && Object.entries(escrow.checklist).map(([section, tasks]) => (
                     <ProcessStep key={section}>
@@ -2526,7 +2562,8 @@ const EscrowDetail = () => {
                 </Stack>
               </TabPanel>
 
-              <TabPanel hidden={activeTab !== 5}>
+              {/* Parties Tab - Index 4 */}
+              <TabPanel hidden={activeTab !== 4}>
                 <Grid container spacing={3}>
                   <Grid item xs={12} md={6}>
                     <Card>
@@ -2646,67 +2683,9 @@ const EscrowDetail = () => {
                 </Grid>
               </TabPanel>
 
-              <TabPanel hidden={activeTab !== 6}>
-                <Grid container spacing={3}>
-                  <Grid item xs={12}>
-                    <Card>
-                      <CardContent>
-                        <Typography variant="h6" gutterBottom>
-                          Property Details
-                        </Typography>
-                        <Grid container spacing={3}>
-                          <Grid item xs={12} md={6}>
-                            <Table>
-                              <TableBody>
-                                <TableRow>
-                                  <TableCell>Property Type</TableCell>
-                                  <TableCell>{escrow.property?.type || 'N/A'}</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                  <TableCell>Bedrooms</TableCell>
-                                  <TableCell>{escrow.property?.bedrooms || 0}</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                  <TableCell>Bathrooms</TableCell>
-                                  <TableCell>{escrow.property?.bathrooms || 0}</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                  <TableCell>Square Feet</TableCell>
-                                  <TableCell>{((escrow.property && escrow.property.sqft) || 0).toLocaleString()}</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                  <TableCell>Year Built</TableCell>
-                                  <TableCell>{escrow.property?.yearBuilt || 'N/A'}</TableCell>
-                                </TableRow>
-                                <TableRow>
-                                  <TableCell>Lot Size</TableCell>
-                                  <TableCell>{escrow.property?.lot || 'N/A'}</TableCell>
-                                </TableRow>
-                              </TableBody>
-                            </Table>
-                          </Grid>
-                          <Grid item xs={12} md={6}>
-                            <Box sx={{ height: 300 }}>
-                              <img 
-                                src={escrow.property?.images?.[0] || 'https://images.unsplash.com/photo-1560184897-ae75f418493e?w=400'} 
-                                alt="Property"
-                                style={{ 
-                                  width: '100%', 
-                                  height: '100%', 
-                                  objectFit: 'cover',
-                                  borderRadius: 8,
-                                }}
-                              />
-                            </Box>
-                          </Grid>
-                        </Grid>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                </Grid>
-              </TabPanel>
 
-              <TabPanel hidden={activeTab !== 7}>
+              {/* Activity Tab - Index 5 */}
+              <TabPanel hidden={activeTab !== 5}>
                 <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
                   <ToggleButtonGroup
                     value={activityFilter}
@@ -2760,8 +2739,8 @@ const EscrowDetail = () => {
                 </Stack>
               </TabPanel>
 
-              {/* AI Overview Tab Panel - Tab 8 */}
-              <TabPanel hidden={activeTab !== 8}>
+              {/* AI Overview Tab - Index 6 */}
+              <TabPanel hidden={activeTab !== 6}>
                 <Grid container spacing={3}>
                   {/* AI Agents Section */}
                   <Grid item xs={12} lg={8}>
