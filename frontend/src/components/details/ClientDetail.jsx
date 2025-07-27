@@ -1,6 +1,6 @@
 // frontend/src/components/details/ClientDetail.jsx
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   Grid,
@@ -148,9 +148,17 @@ import {
   Check,
   Close,
   Remove,
+  BugReport,
+  ExpandMore,
+  ExpandLess,
+  Storage,
+  Refresh,
+  Error as ErrorIcon,
+  Analytics,
+  DataObject,
+  NetworkCheck,
   Archive,
   Delete,
-  Refresh,
   QrCode2,
   Receipt,
   Category,
@@ -233,6 +241,9 @@ import {
   Twitter,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../../contexts/AuthContext';
+import CopyButton from '../common/CopyButton';
+import networkMonitor from '../../services/networkMonitor';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay, EffectFade } from 'swiper/modules';
 import 'swiper/css';
@@ -410,6 +421,7 @@ const ClientDetail = () => {
   const queryClient = useQueryClient();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState(0);
   const [editMode, setEditMode] = useState(false);
   const [newNote, setNewNote] = useState('');
@@ -421,11 +433,32 @@ const ClientDetail = () => {
   const [communicationDialog, setCommunicationDialog] = useState(false);
   const [communicationType, setCommunicationType] = useState('email');
   const [speedDialOpen, setSpeedDialOpen] = useState(false);
+  const [debugExpanded, setDebugExpanded] = useState(false);
+  const [networkData, setNetworkData] = useState({
+    stats: networkMonitor.getStats(),
+    requests: networkMonitor.getRequests(),
+    errors: networkMonitor.getErrors()
+  });
   const [propertyImages, setPropertyImages] = useState([
     'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800',
     'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800',
     'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800',
   ]);
+
+  // Auto-refresh network data when debug panel is expanded
+  useEffect(() => {
+    if (debugExpanded) {
+      const interval = setInterval(() => {
+        setNetworkData({
+          stats: networkMonitor.getStats(),
+          requests: networkMonitor.getRequests(),
+          errors: networkMonitor.getErrors()
+        });
+      }, 2000); // Update every 2 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [debugExpanded]);
 
   // Debug logging
   console.log('[ClientDetail] Component mounted');
