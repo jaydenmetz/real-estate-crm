@@ -496,6 +496,7 @@ import {
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
+import { useAuth } from '../../contexts/AuthContext';
 import { format, formatDistanceToNow, addDays, differenceInDays, isAfter, isBefore, isValid, parseISO } from 'date-fns';
 import { escrowsAPI, documentsAPI } from '../../services/api';
 import CountUp from 'react-countup';
@@ -1035,6 +1036,7 @@ const aiActivityData = [
 const EscrowDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const queryClient = useQueryClient();
@@ -1241,6 +1243,72 @@ const EscrowDetail = () => {
           queryKey: ['escrow', id]
         }}
       />
+      
+      {/* Comprehensive Debug Summary for Easy Copy/Paste */}
+      {(user?.role === 'admin' || user?.role === 'system_admin') && (
+        <Paper 
+          sx={{ 
+            p: 3, 
+            mb: 3, 
+            bgcolor: 'warning.light',
+            border: '2px solid',
+            borderColor: 'warning.main'
+          }}
+        >
+          <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+            <Box display="flex" alignItems="center" gap={1}>
+              <BugReport />
+              <Typography variant="h6">Complete Debug Summary</Typography>
+              <Chip label="Admin Only" size="small" color="error" />
+            </Box>
+            <CopyButton 
+              text={JSON.stringify({
+                pageInfo: {
+                  url: window.location.href,
+                  timestamp: new Date().toISOString(),
+                  user: user?.username,
+                  escrowId: id,
+                  displayId: escrow?.displayId
+                },
+                loadingState: {
+                  isLoading,
+                  isError,
+                  hasData: !!escrow,
+                  errorMessage: error?.message
+                },
+                escrowData: escrow ? {
+                  id: escrow.id,
+                  displayId: escrow.displayId,
+                  status: escrow.escrowStatus,
+                  propertyAddress: escrow.propertyAddress,
+                  purchasePrice: escrow.purchasePrice,
+                  clientNames: escrow.clientNames,
+                  scheduledCoeDate: escrow.scheduledCoeDate,
+                  hasDocuments: !!(escrow.documents?.length),
+                  hasActivities: !!(escrow.recentActivity?.length),
+                  hasAIAgents: !!(escrow.aiAgents?.length),
+                  hasChecklist: !!escrow.checklist
+                } : null,
+                apiInfo: {
+                  endpoint: `/escrows/${id}`,
+                  baseURL: process.env.REACT_APP_API_URL,
+                  environment: process.env.NODE_ENV
+                },
+                debugComponents: {
+                  networkMonitorActive: true,
+                  detailPageDebuggerActive: true,
+                  userIsAdmin: user?.role === 'admin'
+                }
+              }, null, 2)}
+              label="Copy Complete Debug Info"
+              size="large"
+            />
+          </Box>
+          <Typography variant="body2" color="text.secondary">
+            Click "Copy Complete Debug Info" to get a comprehensive summary of page state, data, and debugging information that you can paste for troubleshooting.
+          </Typography>
+        </Paper>
+      )}
       
       {/* Breadcrumbs */}
       <Breadcrumbs sx={{ mb: 3 }}>
