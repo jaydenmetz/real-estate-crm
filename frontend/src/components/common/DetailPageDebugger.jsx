@@ -134,11 +134,18 @@ const DetailPageDebugger = ({
             />
           )}
         </Box>
-        <Chip 
-          label={getStatusText()} 
-          color={getStatusColor()} 
-          size="small"
-        />
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <CopyButton 
+            text={JSON.stringify(debugInfo, null, 2)} 
+            label="Copy debug info" 
+            size="small"
+          />
+          <Chip 
+            label={getStatusText()} 
+            color={getStatusColor()} 
+            size="small"
+          />
+        </Box>
       </Box>
       
       <Divider sx={{ mb: 2 }} />
