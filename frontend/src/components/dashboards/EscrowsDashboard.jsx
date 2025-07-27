@@ -806,7 +806,7 @@ const EscrowsDashboard = () => {
       {/* Escrow Cards */}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <AnimatePresence>
-          {escrows.length === 0 ? (
+          {!escrows || !Array.isArray(escrows) || escrows.length === 0 ? (
             <Paper 
               sx={{ 
                 p: 6, 
@@ -823,7 +823,7 @@ const EscrowsDashboard = () => {
               </Typography>
             </Paper>
           ) : (
-            escrows.map((escrow, index) => (
+            (escrows || []).map((escrow, index) => (
               <EscrowCard
                 key={escrow.id}
                 escrow={escrow}
