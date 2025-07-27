@@ -31,7 +31,12 @@ import {
   CircularProgress,
   Menu,
   MenuItem,
+  Stack,
+  Collapse,
+  useTheme,
+  useMediaQuery,
 } from '@mui/material';
+import { styled, alpha } from '@mui/material/styles';
 import DetailPageDebugger from '../common/DetailPageDebugger';
 import DetailPageErrorBoundary from '../common/DetailPageErrorBoundary';
 import {
@@ -68,8 +73,22 @@ import {
   StarBorder,
   Send,
   Add,
+  BugReport,
+  ExpandMore,
+  ExpandLess,
+  Storage,
+  Refresh,
+  Error as ErrorIcon,
+  Analytics,
+  DataObject,
+  NetworkCheck,
+  Info,
+  Warning,
 } from '@mui/icons-material';
 import { format, formatDistanceToNow, isPast, differenceInMinutes } from 'date-fns';
+import { useAuth } from '../../contexts/AuthContext';
+import CopyButton from '../common/CopyButton';
+import networkMonitor from '../../services/networkMonitor';
 import api from '../../services/api';
 
 // Safe date parsing helper
@@ -120,6 +139,8 @@ const safeFormatDistanceToNow = (dateValue, options = {}, fallback = 'N/A') => {
 function AppointmentDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const theme = useTheme();
   const [appointment, setAppointment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -130,11 +151,32 @@ function AppointmentDetail() {
   const [analytics, setAnalytics] = useState(null);
   const [newNote, setNewNote] = useState('');
   const [anchorEl, setAnchorEl] = useState(null);
+  const [debugExpanded, setDebugExpanded] = useState(false);
+  const [networkData, setNetworkData] = useState({
+    stats: networkMonitor.getStats(),
+    requests: networkMonitor.getRequests(),
+    errors: networkMonitor.getErrors()
+  });
 
   // Debug logging
   console.log('[AppointmentDetail] Component mounted');
   console.log('[AppointmentDetail] ID received:', id);
   console.log('[AppointmentDetail] Window location:', window.location.href);
+
+  // Auto-refresh network data when debug panel is expanded
+  useEffect(() => {
+    if (debugExpanded) {
+      const interval = setInterval(() => {
+        setNetworkData({
+          stats: networkMonitor.getStats(),
+          requests: networkMonitor.getRequests(),
+          errors: networkMonitor.getErrors()
+        });
+      }, 2000); // Update every 2 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [debugExpanded]);
 
   // Mock data for development
   const mockAppointments = {
