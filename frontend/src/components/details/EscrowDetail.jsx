@@ -108,6 +108,7 @@ import {
   LocationOn,
   AttachMoney,
   CalendarToday,
+  MonetizationOn,
   Person,
   Phone,
   Email,
