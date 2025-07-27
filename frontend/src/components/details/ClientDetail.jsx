@@ -185,8 +185,6 @@ import {
   Comment,
   RateReview,
   Feedback,
-  BugReport,
-  Analytics,
   BarChart,
   PieChart,
   ShowChart,
