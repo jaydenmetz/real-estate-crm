@@ -81,9 +81,8 @@ class UserAwareErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       const user = authService.getCurrentUser();
-      const isAdmin = user?.role === 'admin';
-      // Show detailed error for admin users (always) or users with detailed error preference
-      const showDetailedError = isAdmin || user?.preferences?.errorDisplay === 'detailed';
+      // Only show detailed error for system admin (username 'admin')
+      const showDetailedError = user?.username === 'admin';
 
       // Friendly error page for regular users
       if (!showDetailedError) {
