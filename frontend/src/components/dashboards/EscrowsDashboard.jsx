@@ -27,6 +27,7 @@ import {
   AccordionDetails,
   LinearProgress,
   Divider,
+  Tooltip,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
@@ -402,6 +403,67 @@ const EscrowCard = ({ escrow, onClick, index }) => {
               {escrow.checklistProgress || 0}% Complete
             </Typography>
           </Box>
+          
+          {/* Database IDs Display - Small and unnoticeable */}
+          <Box 
+            sx={{ 
+              mt: 2,
+              pt: 1,
+              borderTop: '1px solid',
+              borderColor: 'divider',
+              display: 'flex',
+              gap: 0.5,
+              flexWrap: 'wrap',
+              opacity: 0.6,
+              transition: 'opacity 0.2s',
+              '&:hover': {
+                opacity: 1
+              }
+            }}
+          >
+            <Chip 
+              label={`ID: ${escrow.id}`}
+              size="small"
+              sx={{ 
+                height: '18px',
+                fontSize: '10px',
+                '& .MuiChip-label': {
+                  px: 0.75,
+                  py: 0
+                }
+              }}
+            />
+            {escrow.numeric_id && escrow.numeric_id !== escrow.id && (
+              <Chip 
+                label={`NID: ${escrow.numeric_id}`}
+                size="small"
+                sx={{ 
+                  height: '18px',
+                  fontSize: '10px',
+                  '& .MuiChip-label': {
+                    px: 0.75,
+                    py: 0
+                  }
+                }}
+              />
+            )}
+            {escrow.uuid && (
+              <Tooltip title={`UUID: ${escrow.uuid}`} arrow>
+                <Chip 
+                  label={`UUID: ${escrow.uuid.substring(0, 8)}...`}
+                  size="small"
+                  sx={{ 
+                    height: '18px',
+                    fontSize: '10px',
+                    '& .MuiChip-label': {
+                      px: 0.75,
+                      py: 0
+                    }
+                  }}
+                />
+              </Tooltip>
+            )}
+          </Box>
         </CardContent>
       </Card>
     </motion.div>
@@ -439,6 +501,15 @@ const EscrowsDashboard = () => {
       if (response.success) {
         const escrowData = response.data.escrows || [];
         console.log('Escrows found:', escrowData.length);
+        
+        // Log ID information for debugging
+        if (escrowData.length > 0) {
+          console.log('Sample escrow IDs:');
+          escrowData.slice(0, 3).forEach((esc, idx) => {
+            console.log(`  ${idx + 1}. id: ${esc.id}, displayId: ${esc.displayId}, numeric_id: ${esc.numeric_id}, uuid: ${esc.uuid}`);
+          });
+        }
+        
         setEscrows(escrowData);
         calculateStats(escrowData);
         generateChartData(escrowData);
@@ -529,6 +600,7 @@ const EscrowsDashboard = () => {
   };
 
   const handleEscrowClick = (escrowId) => {
+    console.log('Escrow clicked - ID:', escrowId);
     navigate(`/escrows/${escrowId}`);
   };
 
