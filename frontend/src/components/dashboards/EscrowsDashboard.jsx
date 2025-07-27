@@ -27,7 +27,7 @@ import {
   AccordionDetails,
   LinearProgress,
   Divider,
-  Tooltip,
+  Tooltip as MuiTooltip,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
@@ -448,7 +448,7 @@ const EscrowCard = ({ escrow, onClick, index }) => {
               />
             )}
             {escrow.uuid && (
-              <Tooltip title={`UUID: ${escrow.uuid}`} arrow>
+              <MuiTooltip title={`UUID: ${escrow.uuid}`} arrow>
                 <Chip 
                   label={`UUID: ${escrow.uuid.substring(0, 8)}...`}
                   size="small"
@@ -461,7 +461,7 @@ const EscrowCard = ({ escrow, onClick, index }) => {
                     }
                   }}
                 />
-              </Tooltip>
+              </MuiTooltip>
             )}
           </Box>
         </CardContent>
