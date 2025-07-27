@@ -16,9 +16,6 @@ import {
 } from '@mui/material';
 import { styled, keyframes } from '@mui/material/styles';
 import { motion } from 'framer-motion';
-
-// Fallback div component if motion is not available
-const MotionDiv = motion?.div || (({ children, ...props }) => <div {...props}>{children}</div>);
 import {
   Star,
   StarBorder,
@@ -38,6 +35,9 @@ import {
   Event,
   AutoAwesome,
 } from '@mui/icons-material';
+
+// Fallback div component if motion is not available
+const MotionDiv = motion?.div || (({ children, ...props }) => <div {...props}>{children}</div>);
 
 // Animations
 const shimmer = keyframes`

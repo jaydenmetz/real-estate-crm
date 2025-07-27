@@ -11,9 +11,6 @@ import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import 'swiper/css/effect-fade';
 import 'swiper/css/effect-coverflow';
-
-// Fallback motion component
-const MotionDiv = motion?.div || (({ children, ...props }) => <div {...props}>{children}</div>);
 import { styled, keyframes, alpha } from '@mui/material/styles';
 import {
   Container,
@@ -533,6 +530,9 @@ import NetworkMonitor from '../common/NetworkMonitor';
 import CopyButton from '../common/CopyButton';
 import DetailPageHero from '../common/DetailPageHero';
 import networkMonitor from '../../services/networkMonitor';
+
+// Fallback motion component - must be after all imports
+const MotionDiv = motion?.div || (({ children, ...props }) => <div {...props}>{children}</div>);
 
 // Database Sync Status Component
 const DatabaseSyncStatus = () => {
