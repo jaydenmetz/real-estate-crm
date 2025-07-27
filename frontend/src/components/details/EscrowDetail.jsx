@@ -526,6 +526,7 @@ import {
 import DetailPageDebugger from '../common/DetailPageDebugger';
 import NetworkMonitor from '../common/NetworkMonitor';
 import CopyButton from '../common/CopyButton';
+import DetailPageHero from '../common/DetailPageHero';
 import networkMonitor from '../../services/networkMonitor';
 
 // Database Sync Status Component
@@ -688,37 +689,7 @@ const rotateGlow = keyframes`
 `;
 
 // Styled Components
-const HeroSection = styled(Box)(({ theme }) => ({
-  background: 'linear-gradient(135deg, #673AB7 0%, #512DA8 100%)',
-  color: 'white',
-  padding: theme.spacing(8, 6),
-  borderRadius: theme.spacing(4),
-  position: 'relative',
-  overflow: 'hidden',
-  marginBottom: theme.spacing(4),
-  boxShadow: '0 20px 60px rgba(103, 58, 183, 0.3)',
-  '&::before': {
-    content: '""',
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: 'radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%)',
-    pointerEvents: 'none',
-  },
-  '&::after': {
-    content: '""',
-    position: 'absolute',
-    top: -100,
-    right: -100,
-    width: 300,
-    height: 300,
-    background: 'radial-gradient(circle, rgba(255, 255, 255, 0.2) 0%, transparent 70%)',
-    borderRadius: '50%',
-    animation: `${float} 6s ease-in-out infinite`,
-  },
-}));
+// HeroSection - Replaced with DetailPageHero component
 
 const StatsCard = styled(Card)(({ theme }) => ({
   background: 'rgba(255, 255, 255, 0.95)',
@@ -1564,126 +1535,118 @@ const EscrowDetail = () => {
       </Breadcrumbs>
 
       {/* Hero Section */}
-      <HeroSection>
-        <Grid container spacing={4} alignItems="center">
-          <Grid item xs={12} lg={7}>
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
+      <DetailPageHero
+        type="escrow"
+        title={escrow.address}
+        subtitle={`Escrow #${escrow.escrowNumber}`}
+        status={escrow.status}
+        statusLabel={(escrow.status || 'UNKNOWN').toUpperCase()}
+        icon={Home}
+        starred={escrow.starred}
+        onStarToggle={() => console.log('Toggle star')}
+        onEdit={() => setEditMode(true)}
+        onShare={() => console.log('Share')}
+        onPrint={() => window.print()}
+        aiAssistant={true}
+        breadcrumbs={
+          <Breadcrumbs sx={{ color: 'rgba(255,255,255,0.8)' }}>
+            <Link
+              component="button"
+              variant="body1"
+              onClick={() => navigate('/escrows')}
+              sx={{ textDecoration: 'none', color: 'inherit' }}
             >
-              <Stack spacing={3}>
-                <Box>
-                  <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
-                    <Typography variant="h3" fontWeight="bold">
-                      {escrow.address}
-                    </Typography>
-                    <Chip 
-                      label={(escrow.status || 'UNKNOWN').toUpperCase()} 
-                      color={getStatusColor(escrow.status)}
-                      size="large"
-                      sx={{ fontWeight: 600 }}
-                    />
-                  </Stack>
-                  
-                  <Stack direction="row" spacing={2} flexWrap="wrap">
-                    <MetricChip
-                      icon={<Tag />}
-                      label={`Escrow #${escrow.escrowNumber}`}
-                    />
-                    <MetricChip
-                      icon={<AttachMoney />}
-                      label={`$${(escrow.price || 0).toLocaleString()}`}
-                    />
-                    <MetricChip
-                      icon={<CalendarToday />}
-                      label={`Closes in ${daysToClose} days`}
-                    />
-                    <MetricChip
-                      icon={<Speed />}
-                      label={`${progress}% Complete`}
-                    />
-                  </Stack>
-                </Box>
-
-                <Grid container spacing={2}>
-                  <Grid item xs={12} sm={6}>
-                    <Box sx={{ opacity: 0.9 }}>
-                      <Typography variant="subtitle2" sx={{ mb: 1 }}>Buyer</Typography>
-                      <Typography variant="h6">{escrow.buyer?.name || 'TBD'}</Typography>
-                      <Typography variant="body2">Agent: {escrow.buyer?.agent || 'TBD'}</Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={12} sm={6}>
-                    <Box sx={{ opacity: 0.9 }}>
-                      <Typography variant="subtitle2" sx={{ mb: 1 }}>Seller</Typography>
-                      <Typography variant="h6">{escrow.seller?.name || 'TBD'}</Typography>
-                      <Typography variant="body2">Agent: {escrow.seller?.agent || 'TBD'}</Typography>
-                    </Box>
-                  </Grid>
+              Escrows
+            </Link>
+            <Typography sx={{ color: 'white' }}>{escrow.address}</Typography>
+          </Breadcrumbs>
+        }
+        infoCards={[
+          {
+            icon: <AttachMoney sx={{ fontSize: 24 }} />,
+            label: 'Purchase Price',
+            value: `$${(escrow.price || 0).toLocaleString()}`
+          },
+          {
+            icon: <CalendarToday sx={{ fontSize: 24 }} />,
+            label: 'Days to Close',
+            value: daysToClose
+          },
+          {
+            icon: <Speed sx={{ fontSize: 24 }} />,
+            label: 'Progress',
+            value: `${progress}%`
+          },
+          {
+            icon: <Person sx={{ fontSize: 24 }} />,
+            label: 'Buyer',
+            value: escrow.buyer?.name || 'TBD'
+          },
+          {
+            icon: <Person sx={{ fontSize: 24 }} />,
+            label: 'Seller',
+            value: escrow.seller?.name || 'TBD'
+          },
+          {
+            icon: <Groups sx={{ fontSize: 24 }} />,
+            label: 'Agents',
+            value: `${escrow.buyer?.agent || 'TBD'} / ${escrow.seller?.agent || 'TBD'}`
+          }
+        ]}
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.8, delay: 0.2 }}
+        >
+          <PropertyCard elevation={8}>
+            <Swiper
+              modules={[Navigation, Pagination, Autoplay, EffectFade]}
+              spaceBetween={0}
+              slidesPerView={1}
+              navigation
+              pagination={{ clickable: true }}
+              autoplay={{ delay: 5000 }}
+              effect="fade"
+              onSlideChange={(swiper) => setSelectedImage(swiper.activeIndex)}
+            >
+              {(escrow.property?.images || []).map((image, index) => (
+                <SwiperSlide key={index}>
+                  <img src={image} alt={`Property ${index + 1}`} />
+                </SwiperSlide>
+              ))}
+            </Swiper>
+            <Box className="property-overlay">
+              <Grid container spacing={2}>
+                <Grid item xs={3}>
+                  <Typography variant="h4" fontWeight="bold">
+                    {escrow.property?.bedrooms || 0}
+                  </Typography>
+                  <Typography variant="body2">Beds</Typography>
                 </Grid>
-
-                {/* View mode buttons removed - AI Overview is now a tab */}
-              </Stack>
-            </motion.div>
-          </Grid>
-
-          <Grid item xs={12} lg={5}>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-            >
-              <PropertyCard elevation={8}>
-                <Swiper
-                  modules={[Navigation, Pagination, Autoplay, EffectFade]}
-                  spaceBetween={0}
-                  slidesPerView={1}
-                  navigation
-                  pagination={{ clickable: true }}
-                  autoplay={{ delay: 5000 }}
-                  effect="fade"
-                  onSlideChange={(swiper) => setSelectedImage(swiper.activeIndex)}
-                >
-                  {(escrow.property?.images || []).map((image, index) => (
-                    <SwiperSlide key={index}>
-                      <img src={image} alt={`Property ${index + 1}`} />
-                    </SwiperSlide>
-                  ))}
-                </Swiper>
-                <Box className="property-overlay">
-                  <Grid container spacing={2}>
-                    <Grid item xs={3}>
-                      <Typography variant="h4" fontWeight="bold">
-                        {escrow.property?.bedrooms || 0}
-                      </Typography>
-                      <Typography variant="body2">Beds</Typography>
-                    </Grid>
-                    <Grid item xs={3}>
-                      <Typography variant="h4" fontWeight="bold">
-                        {escrow.property?.bathrooms || 0}
-                      </Typography>
-                      <Typography variant="body2">Baths</Typography>
-                    </Grid>
-                    <Grid item xs={3}>
-                      <Typography variant="h4" fontWeight="bold">
-                        {(((escrow.property && escrow.property.sqft) || 0) / 1000).toFixed(1)}k
-                      </Typography>
-                      <Typography variant="body2">Sq Ft</Typography>
-                    </Grid>
-                    <Grid item xs={3}>
-                      <Typography variant="h4" fontWeight="bold">
-                        {escrow.property?.yearBuilt || 'N/A'}
-                      </Typography>
-                      <Typography variant="body2">Built</Typography>
-                    </Grid>
-                  </Grid>
-                </Box>
-              </PropertyCard>
-            </motion.div>
-          </Grid>
-        </Grid>
-      </HeroSection>
+                <Grid item xs={3}>
+                  <Typography variant="h4" fontWeight="bold">
+                    {escrow.property?.bathrooms || 0}
+                  </Typography>
+                  <Typography variant="body2">Baths</Typography>
+                </Grid>
+                <Grid item xs={3}>
+                  <Typography variant="h4" fontWeight="bold">
+                    {(((escrow.property && escrow.property.sqft) || 0) / 1000).toFixed(1)}k
+                  </Typography>
+                  <Typography variant="body2">Sq Ft</Typography>
+                </Grid>
+                <Grid item xs={3}>
+                  <Typography variant="h4" fontWeight="bold">
+                    {escrow.property?.yearBuilt || 'N/A'}
+                  </Typography>
+                  <Typography variant="body2">Built</Typography>
+                </Grid>
+              </Grid>
+            </Box>
+          </PropertyCard>
+        </motion.div>
+      </DetailPageHero>
 
       {/* Quick Stats */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
