@@ -1457,6 +1457,9 @@ const EscrowDetail = () => {
             />
             </Box>
           </Box>
+          <Typography variant="body2" color="text.secondary">
+            Expand to see additional debug data
+          </Typography>
         </Paper>
       )}
 
