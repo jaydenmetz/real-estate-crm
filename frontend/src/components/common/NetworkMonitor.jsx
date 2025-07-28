@@ -53,6 +53,13 @@ import networkMonitor from '../../services/networkMonitor';
 
 const NetworkMonitorComponent = () => {
   const { user } = useAuth();
+  
+  // Only show for system admin (username 'admin') or in development
+  const isSystemAdmin = user && user.username === 'admin';
+  if (!isSystemAdmin && process.env.NODE_ENV !== 'development') {
+    return null;
+  }
+  
   const [requests, setRequests] = useState([]);
   const [expanded, setExpanded] = useState(false);
   const [selectedTab, setSelectedTab] = useState(0);
@@ -62,12 +69,6 @@ const NetworkMonitorComponent = () => {
   
   const isAdmin = user && (user.role === 'admin' || user.role === 'system_admin');
   const showDebugInfo = user?.preferences?.showDebugInfo;
-  
-  // Only show for system admin (username 'admin') or in development
-  const isSystemAdmin = user && user.username === 'admin';
-  if (!isSystemAdmin && process.env.NODE_ENV !== 'development') {
-    return null;
-  }
 
   useEffect(() => {
     // Ensure network monitor is enabled when component mounts
@@ -416,9 +417,10 @@ const NetworkMonitorComponent = () => {
     };
   });
 
-  return (
-    <Fade in timeout={600}>
-      <NetworkCard sx={{ mb: 3 }}>
+  try {
+    return (
+      <Fade in timeout={600}>
+        <NetworkCard sx={{ mb: 3 }}>
         <CardHeader
           avatar={
             <Box sx={{ 
@@ -460,7 +462,7 @@ const NetworkMonitorComponent = () => {
                         background: 'linear-gradient(45deg, #667eea, #764ba2)',
                       },
                       '& .MuiSwitch-track': {
-                        backgroundColor: alpha('#667eea', 0.3),
+                        backgroundColor: 'rgba(102, 126, 234, 0.3)',
                       }
                     }}
                   />
@@ -719,7 +721,15 @@ const NetworkMonitorComponent = () => {
 
       <RequestDetailDialog />
     </Fade>
-  );
+    );
+  } catch (error) {
+    console.error('NetworkMonitor render error:', error);
+    return (
+      <Alert severity="error" sx={{ mb: 2 }}>
+        NetworkMonitor component error - check console for details
+      </Alert>
+    );
+  }
 };
 
 export default NetworkMonitorComponent;
