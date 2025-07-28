@@ -160,21 +160,22 @@ function App() {
   }, []);
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={theme}>
-        <LocalizationProvider dateAdapter={AdapterDateFns}>
-          <SnackbarProvider 
-            maxSnack={3}
-            anchorOrigin={{
-              vertical: 'top',
-              horizontal: 'right',
-            }}
-            autoHideDuration={4000}
-            preventDuplicate
-          >
-            <CssBaseline />
-            <Router>
-              <AuthProvider>
+    <GlobalErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider theme={theme}>
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <SnackbarProvider 
+              maxSnack={3}
+              anchorOrigin={{
+                vertical: 'top',
+                horizontal: 'right',
+              }}
+              autoHideDuration={4000}
+              preventDuplicate
+            >
+              <CssBaseline />
+              <Router>
+                <AuthProvider>
                 <Routes>
                   {/* Public Routes */}
                   <Route path="/login" element={<LoginPage />} />
@@ -260,6 +261,7 @@ function App() {
         </LocalizationProvider>
       </ThemeProvider>
     </QueryClientProvider>
+    </GlobalErrorBoundary>
   );
 }
 
