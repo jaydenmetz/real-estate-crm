@@ -168,7 +168,7 @@ ${errorInfo?.componentStack || 'No component stack available'}`;
       );
     }
 
-    return this.props.children;
+    return this.props.children || null;
   }
 }
 

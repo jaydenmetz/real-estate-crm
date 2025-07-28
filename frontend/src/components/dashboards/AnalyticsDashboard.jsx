@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   Grid,
@@ -80,6 +80,7 @@ import {
   Treemap,
 } from 'recharts';
 import { format, subDays, subMonths, startOfMonth, endOfMonth } from 'date-fns';
+import ChartErrorBoundary from '../common/ChartErrorBoundary';
 
 // Animations
 const fadeIn = keyframes`
@@ -202,6 +203,12 @@ const AnalyticsDashboard = () => {
   const [viewType, setViewType] = useState('overview');
   const [selectedMetric, setSelectedMetric] = useState('revenue');
   const [tabValue, setTabValue] = useState(0);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
 
   // Empty data for fresh start
   const performanceData = [];
@@ -512,8 +519,10 @@ const AnalyticsDashboard = () => {
                     <ToggleButton value="commission">Commission</ToggleButton>
                   </ToggleButtonGroup>
                 </Box>
-                <ResponsiveContainer width="100%" height={300}>
-                  <AreaChart data={performanceData}>
+                <ChartErrorBoundary>
+                  {mounted && typeof window !== 'undefined' ? (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <AreaChart data={performanceData}>
                     <defs>
                       <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="5%" stopColor="#667eea" stopOpacity={0.8}/>
@@ -530,9 +539,15 @@ const AnalyticsDashboard = () => {
                       stroke="#667eea"
                       fillOpacity={1}
                       fill="url(#colorRevenue)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                  ) : (
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
+                      <Typography color="text.secondary">Loading chart...</Typography>
+                    </Box>
+                  )}
+                </ChartErrorBoundary>
               </ChartCard>
             </motion.div>
           </Grid>
@@ -607,8 +622,10 @@ const AnalyticsDashboard = () => {
                 <Typography variant="h6" fontWeight="bold" sx={{ mb: 3 }}>
                   Revenue by Source
                 </Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
+                <ChartErrorBoundary>
+                  {mounted && typeof window !== 'undefined' ? (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
                     <Pie
                       data={revenueBySource}
                       cx="50%"
@@ -622,10 +639,16 @@ const AnalyticsDashboard = () => {
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <RechartsTooltip />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
+                      <RechartsTooltip />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  ) : (
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
+                      <Typography color="text.secondary">Loading chart...</Typography>
+                    </Box>
+                  )}
+                </ChartErrorBoundary>
               </ChartCard>
             </motion.div>
           </Grid>
@@ -641,17 +664,25 @@ const AnalyticsDashboard = () => {
                 <Typography variant="h6" fontWeight="bold" sx={{ mb: 3 }}>
                   Client Acquisition Channels
                 </Typography>
-                <ResponsiveContainer width="100%" height={300}>
-                  <RechartsBarChart data={clientAcquisition}>
+                <ChartErrorBoundary>
+                  {mounted && typeof window !== 'undefined' ? (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <RechartsBarChart data={clientAcquisition}>
                     <CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.1)} />
                     <XAxis dataKey="channel" stroke={theme.palette.text.secondary} />
                     <YAxis stroke={theme.palette.text.secondary} />
                     <RechartsTooltip />
                     <Bar dataKey="leads" fill="#667eea" radius={[8, 8, 0, 0]} />
                     <Bar dataKey="conversions" fill="#764ba2" radius={[8, 8, 0, 0]} />
-                    <Legend />
-                  </RechartsBarChart>
-                </ResponsiveContainer>
+                      <Legend />
+                    </RechartsBarChart>
+                  </ResponsiveContainer>
+                  ) : (
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
+                      <Typography color="text.secondary">Loading chart...</Typography>
+                    </Box>
+                  )}
+                </ChartErrorBoundary>
               </ChartCard>
             </motion.div>
           </Grid>
@@ -674,8 +705,10 @@ const AnalyticsDashboard = () => {
                     <Chip label="Days on Market" color="default" />
                   </Stack>
                 </Box>
-                <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={marketTrends}>
+                <ChartErrorBoundary>
+                  {mounted && typeof window !== 'undefined' ? (
+                    <ResponsiveContainer width="100%" height={300}>
+                      <LineChart data={marketTrends}>
                     <CartesianGrid strokeDasharray="3 3" stroke={alpha(theme.palette.divider, 0.1)} />
                     <XAxis dataKey="month" stroke={theme.palette.text.secondary} />
                     <YAxis yAxisId="left" stroke={theme.palette.text.secondary} />
@@ -696,10 +729,16 @@ const AnalyticsDashboard = () => {
                       dataKey="inventory"
                       stroke="#764ba2"
                       strokeWidth={2}
-                      dot={{ fill: '#764ba2' }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
+                        dot={{ fill: '#764ba2' }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                  ) : (
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
+                      <Typography color="text.secondary">Loading chart...</Typography>
+                    </Box>
+                  )}
+                </ChartErrorBoundary>
               </ChartCard>
             </motion.div>
           </Grid>

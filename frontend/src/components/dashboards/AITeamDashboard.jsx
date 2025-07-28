@@ -1,7 +1,7 @@
 // Updated AITeamDashboard.jsx
 // Replace your existing AITeamDashboard component with this
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   Grid,
@@ -49,13 +49,20 @@ import { useSnackbar } from 'notistack';
 import { api } from '../../services/api';
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, BarChart, Bar, XAxis, YAxis, Tooltip as ChartTooltip } from 'recharts';
 import Office3D from './Office3D'; // Import the 3D office component
+import ChartErrorBoundary from '../common/ChartErrorBoundary';
 
 const AITeamDashboard = () => {
   const [selectedAgent, setSelectedAgent] = useState(null);
   const [viewMode, setViewMode] = useState('office');
   const [currentFloor, setCurrentFloor] = useState('buyers');
+  const [mounted, setMounted] = useState(false);
   const { enqueueSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
+
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
 
   // Fetch AI agents status
   const { data: agents, isLoading } = useQuery(
@@ -474,14 +481,22 @@ const AITeamDashboard = () => {
               <Typography variant="h6" gutterBottom>
                 Token Usage by Department
               </Typography>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={tokenUsage?.byDepartment || []}>
+              <ChartErrorBoundary>
+                {mounted && typeof window !== 'undefined' ? (
+                  <ResponsiveContainer width="100%" height={300}>
+                    <BarChart data={tokenUsage?.byDepartment || []}>
                   <XAxis dataKey="department" />
                   <YAxis />
                   <ChartTooltip />
-                  <Bar dataKey="tokens" fill="#8884d8" />
-                </BarChart>
-              </ResponsiveContainer>
+                      <Bar dataKey="tokens" fill="#8884d8" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
+                    <Typography color="text.secondary">Loading chart...</Typography>
+                  </Box>
+                )}
+              </ChartErrorBoundary>
             </Paper>
           </Grid>
 

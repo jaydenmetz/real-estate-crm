@@ -277,7 +277,7 @@ class GlobalErrorBoundary extends React.Component {
     const { children } = this.props;
 
     if (!hasError) {
-      return children;
+      return children || null;
     }
 
     const commonIssues = this.getCommonIssues();
