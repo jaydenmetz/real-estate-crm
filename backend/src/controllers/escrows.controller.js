@@ -284,14 +284,17 @@ class SimpleEscrowController {
       // Detect schema
       const schema = await detectSchema();
       
-      // Determine if ID is UUID or display format
-      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      // Determine if ID is UUID (with or without prefix) or display format
+      const isUUID = /^(escrow-)?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
       
       // Build query to handle UUID, numeric ID, or display ID
       let whereClause;
+      let queryValue = id;
+      
       if (isUUID) {
         // UUID format - use id column
-        whereClause = 'e.id = $1::uuid';
+        // Don't cast to uuid type since we might have TEXT column with prefixes
+        whereClause = 'e.id = $1';
       } else if (/^\d+$/.test(id)) {
         // Pure numeric - use numeric_id or team_sequence_id
         if (schema.hasNumericId) {
@@ -301,9 +304,12 @@ class SimpleEscrowController {
         } else {
           whereClause = 'e.display_id = $1';
         }
-      } else {
+      } else if (/^ESCROW-\d{4}-\d{4}$/i.test(id)) {
         // Display ID format (ESCROW-2025-0001)
         whereClause = 'e.display_id = $1';
+      } else {
+        // Try all three formats
+        whereClause = '(e.id = $1 OR e.display_id = $1 OR (e.numeric_id IS NOT NULL AND e.numeric_id::text = $1))';
       }
       
       // Get escrow details

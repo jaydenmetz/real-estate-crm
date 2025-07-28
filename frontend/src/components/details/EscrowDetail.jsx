@@ -1230,6 +1230,13 @@ const EscrowDetail = () => {
   const [viewMode, setViewMode] = useState('detailed'); // Always use detailed view
   const [editMode, setEditMode] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [chartError, setChartError] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+    return () => setMounted(false);
+  }, []);
 
   // Transform database escrow to expected format
   const transformDetailedEscrow = (dbData) => {
@@ -2077,8 +2084,9 @@ const EscrowDetail = () => {
                   </Grid>
 
                   {/* AI Activity Chart */}
-                  <Box sx={{ height: 300 }}>
-                    <ResponsiveContainer width="100%" height="100%">
+                  <Box sx={{ height: 300, width: '100%', position: 'relative' }}>
+                    {mounted && typeof window !== 'undefined' && aiActivityData && aiActivityData.length > 0 && (
+                      <ResponsiveContainer width="100%" height="100%">
                       <ComposedChart data={aiActivityData}>
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis dataKey="time" />
@@ -2090,6 +2098,7 @@ const EscrowDetail = () => {
                         <Area type="monotone" dataKey="tasks" stackId="1" stroke="#ffc658" fill="#ffc658" />
                       </ComposedChart>
                     </ResponsiveContainer>
+                    )}
                   </Box>
                 </Paper>
               </Grid>
@@ -2344,7 +2353,7 @@ const EscrowDetail = () => {
                               event.status === 'in-progress' ? 'warning' : 'grey'
                             }
                           >
-                            {event.icon}
+                            {event.icon || <EventNote />}
                           </TimelineDot>
                           {index < escrow.timeline.length - 1 && <TimelineConnector />}
                         </TimelineSeparator>
