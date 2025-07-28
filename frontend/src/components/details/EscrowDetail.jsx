@@ -1579,14 +1579,14 @@ const EscrowDetail = () => {
                 },
                 browserInfo: {
                   location: window.location,
-                  localStorage: {
+                  localStorage: typeof localStorage !== 'undefined' ? {
                     hasUser: !!localStorage.getItem('user'),
                     hasToken: !!localStorage.getItem('token'),
                     userObject: localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user')) : null
-                  },
-                  sessionStorage: {
+                  } : { note: 'localStorage not available' },
+                  sessionStorage: typeof sessionStorage !== 'undefined' ? {
                     keys: Object.keys(sessionStorage)
-                  },
+                  } : { note: 'sessionStorage not available' },
                   cookies: (typeof document !== 'undefined' && document.cookie) || 'No cookies'
                 },
                 additionalDebugInfo: {
@@ -1620,7 +1620,7 @@ const EscrowDetail = () => {
       )}
 
       {/* DETAILED DEBUG PANELS - Collapsible */}
-      {user?.username === 'admin' && (
+      {user?.username === 'admin' && escrow && (
         <Collapse in={debugExpanded}>
           <Box sx={{ mb: 3 }}>
             {/* Database Sync Status */}
@@ -1746,7 +1746,7 @@ const EscrowDetail = () => {
                 pagination={{ clickable: true }}
                 autoplay={{ delay: 5000 }}
                 effect="fade"
-                onSlideChange={(swiper) => setSelectedImage(swiper.activeIndex)}
+                onSlideChange={(swiper) => setSelectedImage(swiper?.activeIndex || 0)}
                 style={{ width: '100%', height: '100%' }}
               >
                 {(escrow.property?.images || []).map((image, index) => (
@@ -3218,15 +3218,16 @@ const EscrowDetail = () => {
       </Dialog>
 
       {/* Debug Panel for Admin */}
-      <DebugPanel
-        pageTitle={`Debug Panel: Escrow Detail - ${escrow.displayId || id}`}
+      {escrow && (
+        <DebugPanel
+          pageTitle={`Debug Panel: Escrow Detail - ${escrow.displayId || id}`}
         user={user}
         apiRequests={[
           {
             url: `/api/v1/escrows/${id}`,
             method: 'GET',
             status: 200,
-            duration: networkMonitor.getStats().avgDuration || 0,
+            duration: (networkMonitor && networkMonitor.getStats && networkMonitor.getStats().avgDuration) || 0,
             timestamp: new Date().toISOString(),
             response: escrow
           },
@@ -3313,6 +3314,7 @@ const EscrowDetail = () => {
           aiAgents: escrow.aiAgents || []
         }}
       />
+      )}
     </Container>
   );
 };
