@@ -538,6 +538,7 @@ import networkMonitor from '../../services/networkMonitor';
 import CopyButton from '../common/CopyButton';
 import DetailPageHero from '../common/DetailPageHero';
 import DebugPanel from '../common/DebugPanel';
+import { formatEntityId } from '../../utils/entityIdUtils';
 
 // Fallback motion component - must be after all imports
 const MotionDiv = motion?.div || (({ children, ...props }) => <div {...props}>{children}</div>);
@@ -1248,7 +1249,7 @@ const EscrowDetail = () => {
     const escrowData = dbData.data || dbData;
     
     return {
-      id: escrowData.id,
+      id: formatEntityId(escrowData.id, 'escrow'),
       escrowNumber: escrowData.display_id || escrowData.displayId || escrowData.escrowNumber || escrowData.id,
       displayId: escrowData.display_id || escrowData.displayId || escrowData.escrowNumber,
       propertyAddress: escrowData.property_address || escrowData.propertyAddress,
@@ -1475,7 +1476,7 @@ const EscrowDetail = () => {
                   url: window.location.href,
                   timestamp: new Date().toISOString(),
                   user: user?.username,
-                  escrowId: id,
+                  escrowId: formatEntityId(id, 'escrow'),
                   displayId: escrow?.displayId,
                   userAgent: navigator.userAgent,
                   screenResolution: `${window.screen.width}x${window.screen.height}`
@@ -1489,10 +1490,13 @@ const EscrowDetail = () => {
                 },
                 escrowData: escrow ? {
                   // Full escrow object for debugging
-                  fullEscrowObject: escrow,
+                  fullEscrowObject: {
+                    ...escrow,
+                    id: formatEntityId(escrow.id, 'escrow')
+                  },
                   // Key fields summary
                   summary: {
-                    id: escrow.id,
+                    id: formatEntityId(escrow.id, 'escrow'),
                     displayId: escrow.displayId,
                     status: escrow.escrowStatus,
                     propertyAddress: escrow.propertyAddress,
@@ -1510,10 +1514,10 @@ const EscrowDetail = () => {
                   }
                 } : null,
                 apiInfo: {
-                  endpoint: `/escrows/${id}`,
+                  endpoint: `/escrows/${formatEntityId(id, 'escrow')}`,
                   baseURL: process.env.REACT_APP_API_URL,
                   environment: process.env.NODE_ENV,
-                  queryKey: ['escrow', id],
+                  queryKey: ['escrow', formatEntityId(id, 'escrow')],
                   lastFetch: new Date().toISOString()
                 },
                 debugComponents: {
