@@ -1623,11 +1623,11 @@ const EscrowDetail = () => {
       {user?.username === 'admin' && escrow && (
         <Collapse in={debugExpanded}>
           <Box sx={{ mb: 3 }}>
-            {/* Testing DatabaseSyncStatus ONLY */}
+            {/* DatabaseSyncStatus - CONFIRMED SAFE */}
             <DatabaseSyncStatus />
-            {/* NetworkMonitor - DISABLED FOR TESTING */}
-            {/* <NetworkMonitor /> */}
-            {/* DetailPageDebugger - DISABLED FOR TESTING */}
+            {/* Testing NetworkMonitor NOW */}
+            <NetworkMonitor />
+            {/* DetailPageDebugger - STILL DISABLED FOR TESTING */}
             {/* <DetailPageDebugger 
               pageName="Escrow Detail"
               id={id}
