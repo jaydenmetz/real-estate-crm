@@ -366,18 +366,18 @@ const NetworkMonitorComponent = () => {
 
   // Styled components for stunning design
   const NetworkCard = styled(Card)(({ theme }) => ({
-    background: `linear-gradient(135deg, 
-      ${alpha(theme.palette.info.main, 0.08)} 0%, 
-      ${alpha(theme.palette.primary.main, 0.08)} 50%, 
-      ${alpha(theme.palette.secondary.main, 0.08)} 100%
-    )`,
-    border: `2px solid ${alpha(theme.palette.info.main, 0.3)}`,
+    background: theme?.palette ? `linear-gradient(135deg, 
+      ${alpha(theme.palette.info?.main || '#2196f3', 0.08)} 0%, 
+      ${alpha(theme.palette.primary?.main || '#1976d2', 0.08)} 50%, 
+      ${alpha(theme.palette.secondary?.main || '#dc004e', 0.08)} 100%
+    )` : 'rgba(0, 0, 0, 0.05)',
+    border: theme?.palette ? `2px solid ${alpha(theme.palette.info?.main || '#2196f3', 0.3)}` : '2px solid rgba(0, 0, 0, 0.1)',
     borderRadius: '16px',
-    boxShadow: `0 8px 32px ${alpha(theme.palette.common.black, 0.1)}`,
+    boxShadow: theme?.palette ? `0 8px 32px ${alpha(theme.palette.common?.black || '#000000', 0.1)}` : '0 8px 32px rgba(0, 0, 0, 0.1)',
     backdropFilter: 'blur(10px)',
     transition: 'all 0.3s ease-in-out',
     '&:hover': {
-      boxShadow: `0 12px 40px ${alpha(theme.palette.common.black, 0.15)}`,
+      boxShadow: theme?.palette ? `0 12px 40px ${alpha(theme.palette.common?.black || '#000000', 0.15)}` : '0 12px 40px rgba(0, 0, 0, 0.15)',
       transform: 'translateY(-2px)',
     }
   }));
@@ -389,12 +389,18 @@ const NetworkMonitorComponent = () => {
   `;
 
   const StatsChip = styled(Chip)(({ theme, variant: chipVariant }) => {
-    const colors = {
-      success: { bg: theme.palette.success.main, color: theme.palette.success.contrastText },
-      error: { bg: theme.palette.error.main, color: theme.palette.error.contrastText },
-      warning: { bg: theme.palette.warning.main, color: theme.palette.warning.contrastText },
-      info: { bg: theme.palette.info.main, color: theme.palette.info.contrastText },
-      primary: { bg: theme.palette.primary.main, color: theme.palette.primary.contrastText },
+    const colors = theme?.palette ? {
+      success: { bg: theme.palette.success?.main || '#4caf50', color: theme.palette.success?.contrastText || '#fff' },
+      error: { bg: theme.palette.error?.main || '#f44336', color: theme.palette.error?.contrastText || '#fff' },
+      warning: { bg: theme.palette.warning?.main || '#ff9800', color: theme.palette.warning?.contrastText || '#000' },
+      info: { bg: theme.palette.info?.main || '#2196f3', color: theme.palette.info?.contrastText || '#fff' },
+      primary: { bg: theme.palette.primary?.main || '#1976d2', color: theme.palette.primary?.contrastText || '#fff' },
+    } : {
+      success: { bg: '#4caf50', color: '#fff' },
+      error: { bg: '#f44336', color: '#fff' },
+      warning: { bg: '#ff9800', color: '#000' },
+      info: { bg: '#2196f3', color: '#fff' },
+      primary: { bg: '#1976d2', color: '#fff' },
     };
     
     const color = colors[chipVariant] || colors.primary;

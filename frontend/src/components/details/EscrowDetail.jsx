@@ -1623,12 +1623,10 @@ const EscrowDetail = () => {
       {user?.username === 'admin' && escrow && (
         <Collapse in={debugExpanded}>
           <Box sx={{ mb: 3 }}>
-            {/* DatabaseSyncStatus - CONFIRMED SAFE */}
+            {/* All debug components now enabled with NetworkMonitor fixed */}
             <DatabaseSyncStatus />
-            {/* Testing NetworkMonitor NOW */}
             <NetworkMonitor />
-            {/* DetailPageDebugger - STILL DISABLED FOR TESTING */}
-            {/* <DetailPageDebugger 
+            <DetailPageDebugger 
               pageName="Escrow Detail"
               id={id}
               isLoading={isLoading}
@@ -1641,7 +1639,7 @@ const EscrowDetail = () => {
                 apiEndpoint: `/escrows/${id}`,
                 queryKey: ['escrow', id]
               }}
-            /> */}
+            />
           </Box>
         </Collapse>
       )}
