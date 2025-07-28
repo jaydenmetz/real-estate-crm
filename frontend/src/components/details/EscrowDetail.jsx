@@ -1437,6 +1437,7 @@ const EscrowDetail = () => {
   return (
     <Container maxWidth="xl">
       {/* PRIMARY DEBUG SECTION - Only for System Admin */}
+      {/* TEMPORARILY COMMENTED TO DEBUG STYLE ERROR
       {user?.username === 'admin' && (
         <Paper 
           sx={{ 
@@ -1618,8 +1619,10 @@ const EscrowDetail = () => {
           </Typography>
         </Paper>
       )}
+      */}
 
       {/* DETAILED DEBUG PANELS - Collapsible */}
+      {/* TEMPORARILY COMMENTED TO DEBUG STYLE ERROR
       {user?.username === 'admin' && escrow && (
         <Collapse in={debugExpanded}>
           <Box sx={{ mb: 3 }}>
@@ -1643,6 +1646,7 @@ const EscrowDetail = () => {
           </Box>
         </Collapse>
       )}
+      */}
       
       {/* Breadcrumbs */}
       <Breadcrumbs sx={{ mb: 3 }}>
@@ -3218,6 +3222,7 @@ const EscrowDetail = () => {
       </Dialog>
 
       {/* Debug Panel for Admin */}
+      {/* TEMPORARILY COMMENTED TO DEBUG STYLE ERROR
       {escrow && (
         <DebugPanel
           pageTitle={`Debug Panel: Escrow Detail - ${escrow.displayId || id}`}
@@ -3315,6 +3320,7 @@ const EscrowDetail = () => {
         }}
       />
       )}
+      */}
     </Container>
   );
 };
