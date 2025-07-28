@@ -1437,7 +1437,7 @@ const EscrowDetail = () => {
   return (
     <Container maxWidth="xl">
       {/* PRIMARY DEBUG SECTION - Only for System Admin */}
-      {false /* TEMPORARILY DISABLED TO DEBUG STYLE ERROR */ && user?.username === 'admin' && (
+      {user?.username === 'admin' && (
         <Paper 
           sx={{ 
             p: 3, 
