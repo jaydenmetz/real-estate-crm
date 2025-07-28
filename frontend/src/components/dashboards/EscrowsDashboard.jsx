@@ -65,6 +65,7 @@ import { safeFormatDate, safeParseDate } from '../../utils/safeDateUtils';
 import { escrowsAPI } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import CopyButton from '../common/CopyButton';
+import DebugPanel from '../common/DebugPanel';
 import networkMonitor from '../../services/networkMonitor';
 
 // Styled Components
@@ -476,7 +477,6 @@ const EscrowsDashboard = () => {
   const [escrows, setEscrows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showNewEscrowModal, setShowNewEscrowModal] = useState(false);
-  const [debugExpanded, setDebugExpanded] = useState(false);
   const [stats, setStats] = useState({
     totalEscrows: 0,
     activeEscrows: 0,
@@ -930,295 +930,47 @@ const EscrowsDashboard = () => {
         </AnimatePresence>
       </Box>
 
-      {/* Stunning Debug Interface - Admin Only */}
-      {user?.username === 'admin' && (
-        <Box sx={{ mt: 4 }}>
-          {/* Summary Debug Card */}
-          <Card 
-            sx={(theme) => ({
-              background: `linear-gradient(135deg, 
-                ${alpha(theme.palette.primary.main, 0.08)} 0%, 
-                ${alpha(theme.palette.secondary.main, 0.08)} 50%, 
-                ${alpha(theme.palette.error.main, 0.08)} 100%
-              )`,
-              border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
-              borderRadius: '16px',
-              boxShadow: `0 8px 32px ${alpha(theme.palette.common.black, 0.1)}`,
-              backdropFilter: 'blur(10px)',
-              mb: 2,
-            })}
-          >
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', p: 3 }}>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                <Box sx={{ 
-                  background: 'linear-gradient(45deg, #667eea 30%, #764ba2 90%)',
-                  borderRadius: '12px',
-                  p: 1.5,
-                  color: 'white'
-                }}>
-                  <BugReport />
-                </Box>
-                <Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: '-0.5px' }}>
-                  Debug Panel: Escrows Dashboard
-                </Typography>
-                <Chip 
-                  label={process.env.NODE_ENV === 'production' ? '🔴 PRODUCTION' : '🟢 LOCAL'} 
-                  sx={{
-                    background: process.env.NODE_ENV === 'production' 
-                      ? 'linear-gradient(45deg, #ff6b6b, #ee5a24)'
-                      : 'linear-gradient(45deg, #00b894, #00cec9)',
-                    color: 'white',
-                    fontWeight: 600,
-                    fontSize: '0.75rem'
-                  }}
-                  size="small"
-                />
-              </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Button
-                  variant="outlined"
-                  size="small"
-                  onClick={() => setDebugExpanded(!debugExpanded)}
-                  startIcon={debugExpanded ? <ExpandLess /> : <ExpandMore />}
-                  sx={(theme) => ({
-                    borderColor: alpha(theme.palette.primary.main, 0.5),
-                    color: theme.palette.primary.main,
-                    '&:hover': {
-                      borderColor: theme.palette.primary.main,
-                      background: alpha(theme.palette.primary.main, 0.1)
-                    }
-                  })}
-                >
-                  {debugExpanded ? 'Hide' : 'Show'} Debug Details
-                </Button>
-                <CopyButton 
-                  text={JSON.stringify({
-                    pageInfo: {
-                      url: window.location.href,
-                      timestamp: new Date().toISOString(),
-                      user: user?.username,
-                      userAgent: navigator.userAgent,
-                      screenResolution: `${window.screen.width}x${window.screen.height}`
-                    },
-                    dashboardData: {
-                      totalEscrows: escrows.length,
-                      stats,
-                      escrowsSample: escrows.slice(0, 3).map(e => ({
-                        id: e.id,
-                        address: e.propertyAddress,
-                        status: e.escrowStatus,
-                        purchasePrice: e.purchasePrice
-                      })),
-                      loading,
-                      hasData: !!escrows.length
-                    },
-                    networkActivity: {
-                      stats: networkMonitor.getStats(),
-                      recentRequests: networkMonitor.getRequests().slice(0, 3),
-                      errorCount: networkMonitor.getStats().errors
-                    },
-                    browserInfo: {
-                      location: window.location,
-                      localStorage: {
-                        hasUser: !!localStorage.getItem('user'),
-                        userKeys: Object.keys(localStorage).filter(k => k.includes('user'))
-                      }
-                    }
-                  }, null, 2)} 
-                  label="📋 Copy Debug Summary"
-                  variant="contained"
-                  sx={{
-                    background: 'linear-gradient(45deg, #667eea, #764ba2)',
-                    '&:hover': {
-                      background: 'linear-gradient(45deg, #764ba2, #667eea)',
-                    }
-                  }}
-                />
-              </Box>
-            </Box>
-            <Typography variant="body2" color="text.secondary" sx={{ px: 3, pb: 2 }}>
-              Expand to see detailed debug information including network activity and system diagnostics
-            </Typography>
-          </Card>
-
-          {/* Detailed Debug Panel */}
-          <Collapse in={debugExpanded}>
-            <Grid container spacing={3}>
-              {/* Dashboard Statistics */}
-              <Grid item xs={12} md={6}>
-                <Card sx={{ 
-                  background: 'linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(139, 195, 74, 0.1))',
-                  border: '1px solid rgba(76, 175, 80, 0.3)',
-                  borderRadius: '12px'
-                }}>
-                  <Box sx={{ p: 2 }}>
-                    <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Assessment color="success" />
-                      Dashboard Statistics
-                    </Typography>
-                    <Grid container spacing={2}>
-                      <Grid item xs={6}>
-                        <Typography variant="caption" color="text.secondary">Total Escrows</Typography>
-                        <Typography variant="h5" sx={{ fontWeight: 600, color: 'success.main' }}>
-                          {escrows.length}
-                        </Typography>
-                      </Grid>
-                      <Grid item xs={6}>
-                        <Typography variant="caption" color="text.secondary">Active</Typography>
-                        <Typography variant="h5" sx={{ fontWeight: 600, color: 'success.main' }}>
-                          {stats.activeEscrows}
-                        </Typography>
-                      </Grid>
-                      <Grid item xs={6}>
-                        <Typography variant="caption" color="text.secondary">Total Volume</Typography>
-                        <Typography variant="h6" sx={{ fontWeight: 600, color: 'success.main' }}>
-                          ${(stats.totalVolume / 1000000).toFixed(1)}M
-                        </Typography>
-                      </Grid>
-                      <Grid item xs={6}>
-                        <Typography variant="caption" color="text.secondary">Commission</Typography>
-                        <Typography variant="h6" sx={{ fontWeight: 600, color: 'success.main' }}>
-                          ${(stats.projectedCommission / 1000).toFixed(0)}K
-                        </Typography>
-                      </Grid>
-                    </Grid>
-                  </Box>
-                </Card>
-              </Grid>
-
-              {/* Network Activity */}
-              <Grid item xs={12} md={6}>
-                <Card sx={{ 
-                  background: 'linear-gradient(135deg, rgba(33, 150, 243, 0.1), rgba(3, 169, 244, 0.1))',
-                  border: '1px solid rgba(33, 150, 243, 0.3)',
-                  borderRadius: '12px'
-                }}>
-                  <Box sx={{ p: 2 }}>
-                    <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <NetworkCheck color="info" />
-                      Network Activity
-                    </Typography>
-                    <Grid container spacing={2}>
-                      {(() => {
-                        const stats = networkMonitor.getStats();
-                        return (
-                          <>
-                            <Grid item xs={6}>
-                              <Typography variant="caption" color="text.secondary">Total Requests</Typography>
-                              <Typography variant="h5" sx={{ fontWeight: 600, color: 'info.main' }}>
-                                {stats.total}
-                              </Typography>
-                            </Grid>
-                            <Grid item xs={6}>
-                              <Typography variant="caption" color="text.secondary">Errors</Typography>
-                              <Typography variant="h5" sx={{ 
-                                fontWeight: 600, 
-                                color: stats.errors > 0 ? 'error.main' : 'info.main' 
-                              }}>
-                                {stats.errors}
-                              </Typography>
-                            </Grid>
-                            <Grid item xs={6}>
-                              <Typography variant="caption" color="text.secondary">Avg Duration</Typography>
-                              <Typography variant="h6" sx={{ fontWeight: 600, color: 'info.main' }}>
-                                {stats.avgDuration}ms
-                              </Typography>
-                            </Grid>
-                            <Grid item xs={6}>
-                              <Typography variant="caption" color="text.secondary">Success Rate</Typography>
-                              <Typography variant="h6" sx={{ fontWeight: 600, color: 'info.main' }}>
-                                {(100 - parseFloat(stats.errorRate)).toFixed(1)}%
-                              </Typography>
-                            </Grid>
-                          </>
-                        );
-                      })()}
-                    </Grid>
-                  </Box>
-                </Card>
-              </Grid>
-
-              {/* System Status */}
-              <Grid item xs={12}>
-                <Card sx={{ 
-                  background: 'linear-gradient(135deg, rgba(103, 58, 183, 0.1), rgba(63, 81, 181, 0.1))',
-                  border: '1px solid rgba(103, 58, 183, 0.3)',
-                  borderRadius: '12px'
-                }}>
-                  <Box sx={{ p: 2 }}>
-                    <Typography variant="h6" sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Analytics color="primary" />
-                      System Diagnostics
-                    </Typography>
-                    
-                    <Alert 
-                      severity={loading ? "info" : escrows.length > 0 ? "success" : "warning"}
-                      sx={{ 
-                        mb: 2,
-                        background: loading ? 'rgba(33, 150, 243, 0.1)' : escrows.length > 0 ? 'rgba(76, 175, 80, 0.1)' : 'rgba(255, 152, 0, 0.1)',
-                        border: `1px solid ${loading ? 'rgba(33, 150, 243, 0.3)' : escrows.length > 0 ? 'rgba(76, 175, 80, 0.3)' : 'rgba(255, 152, 0, 0.3)'}`
-                      }}
-                    >
-                      <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                        {loading ? "⏳ Loading Dashboard Data" : escrows.length > 0 ? "✅ Dashboard Loaded Successfully" : "⚠️ No Escrows Found"}
-                      </Typography>
-                      <Typography variant="body2">
-                        {loading ? "Fetching escrows from API..." : escrows.length > 0 ? `Loaded ${escrows.length} escrows with all statistics calculated` : "Dashboard loaded but no escrow data available"}
-                      </Typography>
-                    </Alert>
-
-                    <Accordion>
-                      <AccordionSummary expandIcon={<ExpandMore />}>
-                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
-                          🛠️ Raw Dashboard Data
-                        </Typography>
-                      </AccordionSummary>
-                      <AccordionDetails>
-                        <Box 
-                          sx={{ 
-                            background: '#1e1e1e',
-                            color: '#d4d4d4',
-                            borderRadius: '8px',
-                            p: 2,
-                            fontFamily: 'Fira Code, Monaco, Consolas, monospace',
-                            fontSize: '12px',
-                            overflow: 'auto',
-                            maxHeight: '300px',
-                            position: 'relative'
-                          }}
-                        >
-                          <pre style={{ margin: 0 }}>
-                            {JSON.stringify({
-                              escrowsCount: escrows.length,
-                              stats,
-                              chartDataPoints: chartData.length,
-                              loading,
-                              environment: process.env.NODE_ENV,
-                              timestamp: new Date().toISOString()
-                            }, null, 2)}
-                          </pre>
-                          <Box sx={{ position: 'absolute', top: 8, right: 8 }}>
-                            <CopyButton 
-                              text={JSON.stringify({ escrowsCount: escrows.length, stats, chartDataPoints: chartData.length, loading }, null, 2)}
-                              label="📋 Copy"
-                              size="small"
-                              variant="outlined"
-                              sx={{ 
-                                bgcolor: 'rgba(255, 255, 255, 0.9)',
-                                backdropFilter: 'blur(8px)'
-                              }}
-                            />
-                          </Box>
-                        </Box>
-                      </AccordionDetails>
-                    </Accordion>
-                  </Box>
-                </Card>
-              </Grid>
-            </Grid>
-          </Collapse>
-        </Box>
-      )}
+      {/* New Debug Panel - Admin Only */}
+      <DebugPanel
+        pageTitle="Debug Panel: Escrows Dashboard"
+        user={user}
+        apiRequests={[
+          {
+            url: '/api/v1/escrows',
+            method: 'GET',
+            status: 200,
+            duration: networkMonitor.getStats().avgDuration || 0,
+            timestamp: new Date().toISOString(),
+            response: { escrows: escrows.slice(0, 3), total: escrows.length, stats }
+          }
+        ]}
+        databases={[
+          {
+            name: 'PostgreSQL - Escrows',
+            recordCount: escrows.length,
+            lastSync: new Date().toISOString(),
+            status: 'connected',
+            sampleData: escrows[0]
+          },
+          {
+            name: 'Redis Cache',
+            recordCount: networkMonitor.getStats().total,
+            lastSync: new Date().toISOString(),
+            status: 'connected'
+          }
+        ]}
+        customData={{
+          dashboardStats: stats,
+          chartData: { points: chartData.length, type: 'area' },
+          filterStatus: activeFilter,
+          viewMode: view,
+          user: {
+            username: user?.username,
+            role: user?.role,
+            permissions: user?.permissions
+          }
+        }}
+      />
 
       {/* New Escrow Modal */}
       <NewEscrowModal

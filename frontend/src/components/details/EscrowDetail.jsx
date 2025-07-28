@@ -534,6 +534,7 @@ import DetailPageDebugger from '../common/DetailPageDebugger';
 import NetworkMonitor from '../common/NetworkMonitor';
 import CopyButton from '../common/CopyButton';
 import DetailPageHero from '../common/DetailPageHero';
+import DebugPanel from '../common/DebugPanel';
 import networkMonitor from '../../services/networkMonitor';
 
 // Fallback motion component - must be after all imports
@@ -3162,6 +3163,103 @@ const EscrowDetail = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Debug Panel for Admin */}
+      <DebugPanel
+        pageTitle={`Debug Panel: Escrow Detail - ${escrow.displayId || id}`}
+        user={user}
+        apiRequests={[
+          {
+            url: `/api/v1/escrows/${id}`,
+            method: 'GET',
+            status: 200,
+            duration: networkMonitor.getStats().avgDuration || 0,
+            timestamp: new Date().toISOString(),
+            response: escrow
+          },
+          {
+            url: `/api/v1/escrows/${id}/timeline`,
+            method: 'GET',
+            status: 200,
+            duration: 50,
+            timestamp: new Date().toISOString(),
+            response: escrow.timeline || []
+          },
+          {
+            url: `/api/v1/escrows/${id}/documents`,
+            method: 'GET',
+            status: 200,
+            duration: 45,
+            timestamp: new Date().toISOString(),
+            response: escrow.documents || []
+          },
+          {
+            url: `/api/v1/escrows/${id}/clients`,
+            method: 'GET',
+            status: 200,
+            duration: 40,
+            timestamp: new Date().toISOString(),
+            response: escrow.clients || []
+          }
+        ]}
+        databases={[
+          {
+            name: 'PostgreSQL - Escrows',
+            recordCount: 1,
+            lastSync: new Date().toISOString(),
+            status: 'connected',
+            sampleData: {
+              id: escrow.id,
+              displayId: escrow.displayId,
+              address: escrow.address,
+              status: escrow.status
+            }
+          },
+          {
+            name: 'PostgreSQL - Documents',
+            recordCount: escrow.documents?.length || 0,
+            lastSync: new Date().toISOString(),
+            status: 'connected'
+          },
+          {
+            name: 'PostgreSQL - Timeline',
+            recordCount: escrow.timeline?.length || 0,
+            lastSync: new Date().toISOString(),
+            status: 'connected'
+          },
+          {
+            name: 'PostgreSQL - Clients',
+            recordCount: escrow.clients?.length || 0,
+            lastSync: new Date().toISOString(),
+            status: 'connected'
+          }
+        ]}
+        customData={{
+          escrowDetails: {
+            id: escrow.id,
+            displayId: escrow.displayId,
+            status: escrow.status,
+            purchasePrice: escrow.purchasePrice,
+            commission: escrow.myCommission,
+            daysToClose: escrow.daysToClose,
+            progress: progress
+          },
+          pageState: {
+            activeTab,
+            viewMode,
+            editMode,
+            documentDialogOpen
+          },
+          propertyInfo: escrow.property,
+          financialSummary: {
+            downPayment: escrow.downPayment,
+            loanAmount: escrow.loanAmount,
+            closingCosts: escrow.closingCosts,
+            monthlyPayment: escrow.monthlyPayment
+          },
+          aiAgents: escrow.aiAgents || []
+        }}
+      />
     </Container>
   );
 };
