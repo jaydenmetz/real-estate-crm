@@ -285,7 +285,8 @@ class SimpleEscrowController {
       const schema = await detectSchema();
       
       // Determine if ID is UUID (with or without prefix) or display format
-      const isUUID = /^(escrow-)?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      // Handle both "esc" and "escrow-" prefixes
+      const isUUID = /^(esc|escrow-)?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
       
       // Build query to handle UUID, numeric ID, or display ID
       let whereClause;
@@ -834,7 +835,8 @@ class SimpleEscrowController {
       }
       
       // Determine if ID is numeric or display format
-      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      // Handle both "esc" and "escrow-" prefixes
+      const isUUID = /^(esc|escrow-)?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
       values.push(id);
       
       const updateQuery = `
