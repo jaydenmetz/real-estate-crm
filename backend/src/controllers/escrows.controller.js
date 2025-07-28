@@ -14,12 +14,13 @@ async function detectSchema() {
       SELECT column_name 
       FROM information_schema.columns 
       WHERE table_name = 'escrows' 
-      AND column_name IN ('id', 'numeric_id', 'team_sequence_id', 'net_commission', 'acceptance_date', 'buyer_side_commission', 'opening_date', 'uuid')
+      AND column_name IN ('id', 'global_id', 'numeric_id', 'team_sequence_id', 'net_commission', 'acceptance_date', 'buyer_side_commission', 'opening_date', 'uuid')
     `);
     
     const columns = result.rows.map(row => row.column_name);
     schemaInfo = {
       hasId: columns.includes('id'),
+      hasGlobalId: columns.includes('global_id'),
       hasNumericId: columns.includes('numeric_id'),
       hasTeamSequenceId: columns.includes('team_sequence_id'),
       hasNetCommission: columns.includes('net_commission'),
@@ -37,12 +38,14 @@ async function detectSchema() {
     // Default to production schema if detection fails
     schemaInfo = {
       hasId: false,
+      hasGlobalId: true,
       hasNumericId: true,
       hasTeamSequenceId: true,
       hasNetCommission: true,
       hasAcceptanceDate: true,
       hasBuyerSideCommission: false,
-      hasOpeningDate: false
+      hasOpeningDate: false,
+      hasUuid: false
     };
     return schemaInfo;
   }
@@ -54,6 +57,9 @@ class SimpleEscrowController {
    */
   static async getAllEscrows(req, res) {
     try {
+      console.log('\n=== getAllEscrows called ===');
+      console.log('Environment:', process.env.NODE_ENV);
+      console.log('Database URL exists:', !!process.env.DATABASE_URL);
       const {
         page = 1,
         limit = 20,
@@ -67,6 +73,20 @@ class SimpleEscrowController {
       
       // Detect schema
       const schema = await detectSchema();
+      
+      // Check if escrows table exists and has data
+      try {
+        const tableCheck = await pool.query(`
+          SELECT 
+            COUNT(*) as count,
+            MIN(global_id::text) as first_id,
+            MAX(global_id::text) as last_id
+          FROM escrows
+        `);
+        console.log('Escrows table check:', tableCheck.rows[0]);
+      } catch (checkError) {
+        console.error('Error checking escrows table:', checkError.message);
+      }
       
       // Debug: Check what IDs exist in the database
       try {
@@ -117,16 +137,27 @@ class SimpleEscrowController {
         FROM escrows e
         WHERE ${whereClause}
       `;
+      console.log('Count Query:', countQuery);
+      console.log('Count Query Params:', queryParams);
       const countResult = await pool.query(countQuery, queryParams);
       const totalCount = parseInt(countResult.rows[0].total);
+      console.log('Total escrows in database:', totalCount);
 
       // Build dynamic query based on schema
       queryParams.push(limit, offset);
       const envSuffix = process.env.NODE_ENV === 'development' ? ' - LOCAL' : '';
       
       // Build field selections based on available columns
-      // After migration, id should always be UUID
-      let idField = 'id::text';
+      // Check if we have id or global_id
+      let idField;
+      if (schema.hasId) {
+        idField = 'id::text';
+      } else if (schema.hasGlobalId) {
+        idField = 'global_id::text';
+      } else {
+        // Fallback to numeric id
+        idField = 'team_sequence_id::text';
+      }
       let displayIdField = 'display_id';  // Format: ESCROW-2025-0001
       
       console.log('Using ID field:', idField);
@@ -189,7 +220,10 @@ class SimpleEscrowController {
         LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
       `;
 
+      console.log('List Query:', listQuery);
+      console.log('List Query Params:', queryParams);
       const listResult = await pool.query(listQuery, queryParams);
+      console.log('Query executed, rows returned:', listResult.rows.length);
       
       // Debug: Log the actual IDs being returned
       console.log('Escrows returned from database:');
@@ -266,11 +300,23 @@ class SimpleEscrowController {
       // Build query to handle UUID, numeric ID, or display ID
       let whereClause;
       if (isUUID) {
-        // UUID format - use id column
-        whereClause = 'e.id = $1::uuid';
+        // UUID format - use id or global_id column
+        if (schema.hasId) {
+          whereClause = 'e.id = $1::uuid';
+        } else if (schema.hasGlobalId) {
+          whereClause = 'e.global_id = $1::uuid';
+        } else {
+          whereClause = 'e.display_id = $1';
+        }
       } else if (/^\d+$/.test(id)) {
-        // Pure numeric - use numeric_id
-        whereClause = 'e.numeric_id = $1::integer';
+        // Pure numeric - use numeric_id or team_sequence_id
+        if (schema.hasNumericId) {
+          whereClause = 'e.numeric_id = $1::integer';
+        } else if (schema.hasTeamSequenceId) {
+          whereClause = 'e.team_sequence_id = $1::integer';
+        } else {
+          whereClause = 'e.display_id = $1';
+        }
       } else {
         // Display ID format (ESCROW-2025-0001)
         whereClause = 'e.display_id = $1';
