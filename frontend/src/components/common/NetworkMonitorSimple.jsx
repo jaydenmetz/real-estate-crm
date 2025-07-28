@@ -88,7 +88,22 @@ const NetworkMonitorSimple = () => {
     // Group by endpoint
     const endpointStats = {};
     requests.forEach(req => {
-      const endpoint = req.url ? new URL(req.url).pathname : 'unknown';
+      let endpoint = 'unknown';
+      try {
+        if (req.url) {
+          // Handle both absolute and relative URLs
+          if (req.url.startsWith('http://') || req.url.startsWith('https://')) {
+            endpoint = new URL(req.url).pathname;
+          } else {
+            // For relative URLs, just use as-is
+            endpoint = req.url;
+          }
+        }
+      } catch (e) {
+        // If URL parsing fails, use the raw URL or 'unknown'
+        endpoint = req.url || 'unknown';
+      }
+      
       if (!endpointStats[endpoint]) {
         endpointStats[endpoint] = { count: 0, totalDuration: 0, errors: 0 };
       }
@@ -129,11 +144,25 @@ const NetworkMonitorSimple = () => {
       percentiles: { p50, p95, p99 },
       methodCounts,
       statusCodes,
-      errorDetails: errors.map(e => ({
-        ...e,
-        endpoint: e.url ? new URL(e.url).pathname : 'unknown',
-        errorType: e.error?.status || e.error?.code || 'Unknown'
-      }))
+      errorDetails: errors.map(e => {
+        let endpoint = 'unknown';
+        try {
+          if (e.url) {
+            if (e.url.startsWith('http://') || e.url.startsWith('https://')) {
+              endpoint = new URL(e.url).pathname;
+            } else {
+              endpoint = e.url;
+            }
+          }
+        } catch (err) {
+          endpoint = e.url || 'unknown';
+        }
+        return {
+          ...e,
+          endpoint,
+          errorType: e.error?.status || e.error?.code || 'Unknown'
+        };
+      })
     };
   }, [requests]);
 
@@ -161,10 +190,18 @@ const NetworkMonitorSimple = () => {
   };
 
   const formatUrl = (url) => {
+    if (!url) return 'unknown';
+    
     try {
-      const urlObj = new URL(url);
-      return urlObj.pathname;
+      // Only try to parse if it's a full URL
+      if (url.startsWith('http://') || url.startsWith('https://')) {
+        const urlObj = new URL(url);
+        return urlObj.pathname;
+      }
+      // For relative URLs, return as-is
+      return url;
     } catch {
+      // If parsing fails, return the original URL
       return url;
     }
   };
