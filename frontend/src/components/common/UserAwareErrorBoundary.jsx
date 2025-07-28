@@ -24,6 +24,19 @@ class UserAwareErrorBoundary extends React.Component {
     console.error(`[${this.props.pageName || 'App'} Error]:`, error);
     console.error('Error Info:', errorInfo);
     
+    // Enhanced error logging for debugging
+    const user = authService.getCurrentUser();
+    if (user?.username === 'admin') {
+      console.group('🔴 Admin Error Details');
+      console.error('Error Message:', error.message);
+      console.error('Error Stack:', error.stack);
+      console.error('Component Stack:', errorInfo.componentStack);
+      console.error('Props:', this.props);
+      console.error('Current User:', user);
+      console.error('Page Name:', this.props.pageName);
+      console.groupEnd();
+    }
+    
     this.setState(prevState => ({ 
       error, 
       errorInfo,
@@ -79,6 +92,12 @@ class UserAwareErrorBoundary extends React.Component {
   };
 
   render() {
+    // Safety check for children prop
+    if (!this.props.children && !this.state.hasError) {
+      console.warn('UserAwareErrorBoundary: No children provided');
+      return null;
+    }
+
     if (this.state.hasError) {
       const user = authService.getCurrentUser();
       // Only show detailed error for system admin (username 'admin')
@@ -289,7 +308,22 @@ class UserAwareErrorBoundary extends React.Component {
       );
     }
 
-    return this.props.children || null;
+    // Ensure children is properly handled
+    const { children } = this.props;
+    
+    // If children is a function (render prop), call it safely
+    if (typeof children === 'function') {
+      try {
+        return children();
+      } catch (error) {
+        console.error('Error calling children function in UserAwareErrorBoundary:', error);
+        // Trigger error boundary
+        throw error;
+      }
+    }
+    
+    // Otherwise return children as-is (or null if undefined)
+    return children || null;
   }
 }
 

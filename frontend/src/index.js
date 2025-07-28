@@ -6,28 +6,31 @@ import './styles/globals.css';
 // Initialize network monitoring as early as possible
 import './services/networkMonitor';
 
-// Force immediate network monitor initialization for production admin users
-if (typeof window !== 'undefined') {
-  try {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    if (user.username === 'admin') {
-      // Import and enable immediately for admin users
-      import('./services/networkMonitor').then(module => {
-        const networkMonitor = module.default;
-        networkMonitor.enable();
-        console.log('🔍 Production: Network Monitor force-enabled for admin user in index.js');
-      });
-    }
-  } catch (e) {
-    // Silent fail
-  }
-}
-
 // Debug environment variables in production
 console.log('🔧 Environment Debug:', {
   NODE_ENV: process.env.NODE_ENV,
   REACT_APP_API_URL: process.env.REACT_APP_API_URL,
   REACT_APP_WS_URL: process.env.REACT_APP_WS_URL
+});
+
+// Global error handler for debugging render errors
+window.addEventListener('error', (event) => {
+  if (event.error && event.error.message && event.error.message.includes("Cannot read properties of undefined (reading 'style')")) {
+    console.error('🚨 Style Error Detected:', {
+      message: event.error.message,
+      stack: event.error.stack,
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno,
+      timestamp: new Date().toISOString(),
+      user: JSON.parse(localStorage.getItem('user') || '{}')
+    });
+  }
+});
+
+// Add unhandled rejection handler
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('🚨 Unhandled Promise Rejection:', event.reason);
 });
 
 const container = document.getElementById('root');

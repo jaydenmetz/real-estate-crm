@@ -54,6 +54,9 @@ const Settings = React.lazy(() => import('./pages/Settings'));
 // Services
 import websocketService from './services/websocket';
 
+// Utils
+import { setupGlobalErrorHandlers } from './utils/globalErrorHandler';
+
 // Create enhanced theme
 const theme = createTheme({
   palette: {
@@ -118,6 +121,9 @@ const queryClient = new QueryClient({
 
 function App() {
   useEffect(() => {
+    // Setup global error handlers
+    setupGlobalErrorHandlers();
+    
     let unsubscribe = null;
     
     const initializeWebSocket = async () => {
