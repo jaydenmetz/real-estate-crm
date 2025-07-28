@@ -506,7 +506,7 @@ const EscrowsDashboard = () => {
         if (escrowData.length > 0) {
           console.log('Sample escrow IDs:');
           escrowData.slice(0, 3).forEach((esc, idx) => {
-            console.log(`  ${idx + 1}. id: ${esc.id}, displayId: ${esc.displayId}, numeric_id: ${esc.numeric_id}, uuid: ${esc.uuid}`);
+            console.log(`  ${idx + 1}. id: ${esc.id}, displayId: ${esc.displayId}, numeric_id: ${esc.numeric_id}`);
           });
         }
         

@@ -159,8 +159,6 @@ class SimpleEscrowController {
           ${idField} as id,
           ${schema.hasNumericId ? 'numeric_id' : 'NULL'} as "numeric_id",
           ${schema.hasTeamSequenceId ? 'team_sequence_id' : 'NULL'} as "team_sequence_id",
-          ${schema.hasId ? 'id' : 'NULL'} as "raw_id",
-          ${idField} as uuid,
           ${displayIdField} as "displayId",
           ${displayIdField} as "escrowNumber",
           property_address || '${envSuffix}' as "propertyAddress",
@@ -477,8 +475,7 @@ class SimpleEscrowController {
       let response;
       try {
         response = {
-        id: escrow.id,  // After migration, this will be UUID
-        uuid: escrow.uuid || escrow.id,
+        id: escrow.id,  // This IS the UUID
         numeric_id: escrow.numeric_id,  // Simple sequential number (1, 2, 3...)
         displayId: escrow.display_id,  // Display ID for business use (ESCROW-2025-0001)
         escrowNumber: escrow.display_id,
