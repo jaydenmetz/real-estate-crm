@@ -962,8 +962,8 @@ const EscrowsDashboard = () => {
         customData={{
           dashboardStats: stats,
           chartData: { points: chartData.length, type: 'area' },
-          filterStatus: activeFilter,
-          viewMode: view,
+          filterStatus: 'all',
+          viewMode: 'grid',
           user: {
             username: user?.username,
             role: user?.role,
