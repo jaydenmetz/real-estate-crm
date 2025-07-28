@@ -137,6 +137,22 @@ export const formatEntityId = (id, entityType) => {
     return id;
   }
   
+  // Special handling for IDs that start with shortened prefixes
+  // Convert "esc" to "escrow-", "list" to "listing-", etc.
+  const shortPrefixMap = {
+    'esc': 'escrow-',
+    'list': 'listing-',
+    'cli': 'client-',
+    'appt': 'appointment-',
+  };
+  
+  for (const [shortPrefix, fullPrefix] of Object.entries(shortPrefixMap)) {
+    if (id.startsWith(shortPrefix) && !id.startsWith(fullPrefix)) {
+      // Replace short prefix with full prefix
+      return fullPrefix + id.substring(shortPrefix.length);
+    }
+  }
+  
   // For UUIDs, add prefix
   return addEntityPrefix(id, entityType);
 };
