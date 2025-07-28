@@ -931,7 +931,7 @@ const EscrowsDashboard = () => {
       </Box>
 
       {/* New Debug Panel - Admin Only */}
-      {false /* TEMPORARILY DISABLED TO DEBUG STYLE ERROR */ && (
+      {(
       <DebugPanel
         pageTitle="Debug Panel: Escrows Dashboard"
         user={user}
