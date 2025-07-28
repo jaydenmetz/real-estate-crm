@@ -14,7 +14,7 @@ async function detectSchema() {
       SELECT column_name 
       FROM information_schema.columns 
       WHERE table_name = 'escrows' 
-      AND column_name IN ('id', 'numeric_id', 'team_sequence_id', 'net_commission', 'acceptance_date', 'buyer_side_commission', 'opening_date')
+      AND column_name IN ('id', 'numeric_id', 'team_sequence_id', 'net_commission', 'acceptance_date', 'buyer_side_commission', 'opening_date', 'uuid')
     `);
     
     const columns = result.rows.map(row => row.column_name);
@@ -25,7 +25,8 @@ async function detectSchema() {
       hasNetCommission: columns.includes('net_commission'),
       hasAcceptanceDate: columns.includes('acceptance_date'),
       hasBuyerSideCommission: columns.includes('buyer_side_commission'),
-      hasOpeningDate: columns.includes('opening_date')
+      hasOpeningDate: columns.includes('opening_date'),
+      hasUuid: columns.includes('uuid')
     };
     
     console.log('Detected schema columns:', columns);
@@ -121,7 +122,7 @@ class SimpleEscrowController {
 
       // Build dynamic query based on schema
       queryParams.push(limit, offset);
-      const envSuffix = '';
+      const envSuffix = process.env.NODE_ENV === 'development' ? ' - LOCAL' : '';
       
       // Build field selections based on available columns
       // After migration, id should always be UUID
@@ -159,7 +160,7 @@ class SimpleEscrowController {
           ${schema.hasNumericId ? 'numeric_id' : 'NULL'} as "numeric_id",
           ${schema.hasTeamSequenceId ? 'team_sequence_id' : 'NULL'} as "team_sequence_id",
           ${schema.hasId ? 'id' : 'NULL'} as "raw_id",
-          uuid,
+          ${idField} as uuid,
           ${displayIdField} as "displayId",
           ${displayIdField} as "escrowNumber",
           property_address || '${envSuffix}' as "propertyAddress",
@@ -469,8 +470,8 @@ class SimpleEscrowController {
       const buyerAgent = people.find(p => p.person_type === 'buyer_agent') || null;
       const listingAgent = people.find(p => p.person_type === 'listing_agent') || null;
       
-      // Environment suffix is now added during seeding, not here
-      const envSuffix = '';
+      // Environment suffix - only in development
+      const envSuffix = process.env.NODE_ENV === 'development' ? ' - LOCAL' : '';
 
       // Format the response
       let response;
