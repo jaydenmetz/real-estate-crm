@@ -1620,7 +1620,7 @@ const EscrowDetail = () => {
       )}
 
       {/* DETAILED DEBUG PANELS - Collapsible */}
-      {false /* TEMPORARILY DISABLED TO DEBUG STYLE ERROR */ && user?.username === 'admin' && escrow && (
+      {user?.username === 'admin' && escrow && (
         <Collapse in={debugExpanded}>
           <Box sx={{ mb: 3 }}>
             {/* Database Sync Status */}
