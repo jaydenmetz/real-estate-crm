@@ -1316,6 +1316,10 @@ const EscrowDetail = () => {
 
   // Transform the data
   const escrow = transformDetailedEscrow(rawData);
+  
+  // Debug log the raw and transformed data
+  console.log('Raw escrow data from API:', rawData);
+  console.log('Transformed escrow data:', escrow);
 
   // Calculate metrics
   const daysToClose = (() => {
@@ -1692,13 +1696,13 @@ const EscrowDetail = () => {
         >
           Escrows
         </Link>
-        <Typography color="text.primary">{escrow.address}</Typography>
+        <Typography color="text.primary">{escrow.propertyAddress || escrow.property?.address || 'Property'}</Typography>
       </Breadcrumbs>
 
       {/* Hero Section */}
       <DetailPageHero
         type="escrow"
-        title={escrow.address}
+        title={escrow.propertyAddress || escrow.property?.address || 'Escrow Details'}
         subtitle={`Escrow ${escrow.displayId || escrow.escrowNumber}`}
         status={escrow.status}
         statusLabel={(escrow.status || 'UNKNOWN').toUpperCase()}

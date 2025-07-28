@@ -336,6 +336,21 @@ class SimpleEscrowController {
 
       const escrow = escrowResult.rows[0];
       
+      // Debug log the raw escrow data
+      console.log('Raw escrow data from database:', {
+        id: escrow.id,
+        display_id: escrow.display_id,
+        purchase_price: escrow.purchase_price,
+        down_payment: escrow.down_payment,
+        loan_amount: escrow.loan_amount,
+        earnest_money: escrow.earnest_money,
+        earnest_money_deposit: escrow.earnest_money_deposit,
+        commission_percentage: escrow.commission_percentage,
+        buyer_side_commission: escrow.buyer_side_commission,
+        net_commission: escrow.net_commission,
+        gross_commission: escrow.gross_commission
+      });
+      
       // Fetch all related data in parallel
       // Use display_id for helper table queries
       const displayId = escrow.display_id;
