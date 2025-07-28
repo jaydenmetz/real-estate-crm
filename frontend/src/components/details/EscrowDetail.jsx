@@ -109,6 +109,7 @@ import {
   AttachMoney,
   CalendarToday,
   MonetizationOn,
+  AssignmentTurnedIn,
   Person,
   Phone,
   Email,
@@ -496,6 +497,9 @@ import {
   Archive,
   History,
   BusinessCenter,
+  Bed,
+  SquareFoot,
+  Landscape,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
