@@ -124,19 +124,9 @@ class SimpleEscrowController {
       const envSuffix = '';
       
       // Build field selections based on available columns
-      let idField;
-      // Prefer team_sequence_id if available (this is the sequential ID per team)
-      if (schema.hasTeamSequenceId) {
-        idField = 'team_sequence_id::text';
-      } else if (schema.hasNumericId && schema.hasId) {
-        idField = 'COALESCE(numeric_id::text, id::text)';
-      } else if (schema.hasNumericId) {
-        idField = 'numeric_id::text';
-      } else if (schema.hasId) {
-        idField = 'id::text';
-      } else {
-        throw new Error('No primary key column found in escrows table');
-      }
+      // After migration, id should always be UUID
+      let idField = 'id::text';
+      let displayIdField = 'display_id';  // Format: ESCROW-2025-0001
       
       console.log('Using ID field:', idField);
       console.log('Schema info:', schema);
@@ -169,8 +159,9 @@ class SimpleEscrowController {
           ${schema.hasNumericId ? 'numeric_id' : 'NULL'} as "numeric_id",
           ${schema.hasTeamSequenceId ? 'team_sequence_id' : 'NULL'} as "team_sequence_id",
           ${schema.hasId ? 'id' : 'NULL'} as "raw_id",
-          display_id as "displayId",
-          display_id as "escrowNumber",
+          uuid,
+          ${displayIdField} as "displayId",
+          ${displayIdField} as "escrowNumber",
           property_address || '${envSuffix}' as "propertyAddress",
           'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800' as "propertyImage",
           escrow_status as "escrowStatus",
@@ -273,15 +264,16 @@ class SimpleEscrowController {
       // Determine if ID is UUID or display format
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
       
-      // Build query to handle both UUID and display ID
+      // Build query to handle UUID, numeric ID, or display ID
       let whereClause;
-      if (isUUID && schema.hasId) {
+      if (isUUID) {
+        // UUID format - use id column
         whereClause = 'e.id = $1::uuid';
-      } else if (schema.hasNumericId && /^\d+$/.test(id)) {
-        // If it's a numeric ID and schema supports it
+      } else if (/^\d+$/.test(id)) {
+        // Pure numeric - use numeric_id
         whereClause = 'e.numeric_id = $1::integer';
       } else {
-        // Display ID
+        // Display ID format (ESCROW-2025-0001)
         whereClause = 'e.display_id = $1';
       }
       
@@ -484,8 +476,10 @@ class SimpleEscrowController {
       let response;
       try {
         response = {
-        id: schema.hasNumericId ? (escrow.numeric_id || escrow.id) : escrow.id,  // Use appropriate ID based on schema
-        displayId: escrow.display_id,  // Display ID for business use
+        id: escrow.id,  // After migration, this will be UUID
+        uuid: escrow.uuid || escrow.id,
+        numeric_id: escrow.numeric_id,  // Simple sequential number (1, 2, 3...)
+        displayId: escrow.display_id,  // Display ID for business use (ESCROW-2025-0001)
         escrowNumber: escrow.display_id,
         propertyAddress: escrow.property_address + envSuffix,
         propertyImage: escrow.propertyImage,
@@ -899,39 +893,23 @@ class SimpleEscrowController {
       
       const escrowData = req.body;
       
-      // Get the next display ID in the format ESC-YYYY-XXXX
-      const year = new Date().getFullYear();
-      const idResult = await client.query(
-        `SELECT display_id FROM escrows WHERE display_id LIKE 'ESC-${year}-%'`
-      );
-      
-      let maxNumber = 0;
-      idResult.rows.forEach(row => {
-        const parts = row.display_id.split('-');
-        if (parts.length === 3) {
-          const num = parseInt(parts[2]);
-          if (!isNaN(num) && num > maxNumber) {
-            maxNumber = num;
-          }
-        }
-      });
-      
-      const nextNumber = maxNumber + 1;
-      const displayId = `ESC-${year}-${nextNumber.toString().padStart(4, '0')}`;
+      // After migration, the database will automatically:
+      // - Generate UUID for id
+      // - Generate numeric_id from sequence
+      // - Generate display_id via trigger (ESCROW-2025-0001 format)
       
       // Insert the new escrow
       const insertQuery = `
         INSERT INTO escrows (
-          display_id, property_address, escrow_status, purchase_price,
+          property_address, escrow_status, purchase_price,
           earnest_money, buyer_side_commission,
           opening_date, closing_date, property_type, transaction_type,
           created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
         RETURNING *
       `;
       
       const values = [
-        displayId,
         escrowData.property_address,
         escrowData.escrow_status || 'active',
         escrowData.purchase_price,
@@ -987,16 +965,17 @@ class SimpleEscrowController {
         INSERT INTO escrow_checklists (escrow_display_id, checklist_items)
         VALUES ($1, $2)
       `;
-      await client.query(checklistQuery, [displayId, JSON.stringify(checklistWithDates)]);
+      await client.query(checklistQuery, [newEscrow.display_id, JSON.stringify(checklistWithDates)]);
       
       await client.query('COMMIT');
       
-      // Return success with both IDs
+      // Return success with all ID formats
       res.status(201).json({
         success: true,
         data: {
-          id: newEscrow.id,
-          displayId: displayId,
+          id: newEscrow.id,  // UUID
+          displayId: newEscrow.display_id,  // ESCROW-2025-0001
+          numeric_id: newEscrow.numeric_id,  // 1, 2, 3...
           message: 'Escrow created successfully with checklist items'
         }
       });

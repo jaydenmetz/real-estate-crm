@@ -1228,6 +1228,7 @@ const EscrowDetail = () => {
   const [activityFilter, setActivityFilter] = useState('all');
   const [debugExpanded, setDebugExpanded] = useState(false);
   const [viewMode, setViewMode] = useState('detailed'); // Always use detailed view
+  const [editMode, setEditMode] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
 
   // Transform database escrow to expected format
