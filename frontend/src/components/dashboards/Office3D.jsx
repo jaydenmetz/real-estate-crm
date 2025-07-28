@@ -365,7 +365,9 @@ const Office3D = ({ agents = [] }) => {
         }
       });
       
-      renderer.render(scene, camera);
+      if (renderer && scene && camera) {
+        renderer.render(scene, camera);
+      }
     };
 
     updateCamera();
@@ -373,7 +375,7 @@ const Office3D = ({ agents = [] }) => {
 
     // Handle resize
     const handleResize = () => {
-      if (!mountRef.current || !cameraRef.current) return;
+      if (!mountRef.current || !cameraRef.current || !renderer) return;
       cameraRef.current.aspect = mountRef.current.clientWidth / mountRef.current.clientHeight;
       cameraRef.current.updateProjectionMatrix();
       renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);

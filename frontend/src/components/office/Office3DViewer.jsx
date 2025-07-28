@@ -880,6 +880,11 @@ const Office3DViewer = ({ agents = [], onAgentClick, selectedOffice = 'corporate
     const mouse = new THREE.Vector2();
 
     const handleClick = (event) => {
+      if (!rendererRef.current || !rendererRef.current.domElement) {
+        console.warn('Renderer not ready for click handling');
+        return;
+      }
+      
       const rect = rendererRef.current.domElement.getBoundingClientRect();
       mouse.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
       mouse.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
@@ -918,7 +923,9 @@ const Office3DViewer = ({ agents = [], onAgentClick, selectedOffice = 'corporate
       }
     };
 
-    rendererRef.current.domElement.addEventListener('click', handleClick);
+    if (rendererRef.current?.domElement) {
+      rendererRef.current.domElement.addEventListener('click', handleClick);
+    }
 
     return () => {
       if (rendererRef.current?.domElement) {

@@ -19,6 +19,7 @@ import UserAwareErrorBoundary from './components/common/UserAwareErrorBoundary';
 // Components
 import EnhancedNavigation from './components/common/EnhancedNavigation';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import GlobalErrorBoundary from './components/common/GlobalErrorBoundary';
 
 // Dashboard Components
 import HomeDashboard from './components/dashboards/HomeDashboard';
