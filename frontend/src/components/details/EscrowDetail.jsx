@@ -531,6 +531,7 @@ import {
   ZAxis,
 } from 'recharts';
 import DetailPageDebugger from '../common/DetailPageDebugger';
+import ChartErrorBoundary from '../common/ChartErrorBoundary';
 import NetworkMonitor from '../common/NetworkMonitor';
 import CopyButton from '../common/CopyButton';
 import DetailPageHero from '../common/DetailPageHero';
@@ -1399,6 +1400,40 @@ const EscrowDetail = () => {
     return icons[eventType] || <Event />;
   };
 
+  // Handle loading state
+  if (isLoading) {
+    return (
+      <Container maxWidth="xl">
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+          <CircularProgress />
+        </Box>
+      </Container>
+    );
+  }
+
+  // Handle error state
+  if (isError || !escrow) {
+    return (
+      <Container maxWidth="xl">
+        <Paper sx={{ p: 4, textAlign: 'center' }}>
+          <Typography variant="h6" color="error" gutterBottom>
+            Error loading escrow details
+          </Typography>
+          <Typography color="text.secondary">
+            {error?.message || 'Escrow not found'}
+          </Typography>
+          <Button 
+            variant="contained" 
+            sx={{ mt: 2 }}
+            onClick={() => navigate('/escrows')}
+          >
+            Back to Escrows
+          </Button>
+        </Paper>
+      </Container>
+    );
+  }
+
   return (
     <Container maxWidth="xl">
       {/* PRIMARY DEBUG SECTION - Only for System Admin */}
@@ -2085,20 +2120,28 @@ const EscrowDetail = () => {
 
                   {/* AI Activity Chart */}
                   <Box sx={{ height: 300, width: '100%', position: 'relative' }}>
-                    {mounted && typeof window !== 'undefined' && aiActivityData && aiActivityData.length > 0 && (
-                      <ResponsiveContainer width="100%" height="100%">
-                      <ComposedChart data={aiActivityData}>
-                        <CartesianGrid strokeDasharray="3 3" />
-                        <XAxis dataKey="time" />
-                        <YAxis />
-                        <RechartsTooltip />
-                        <Legend />
-                        <Area type="monotone" dataKey="documents" stackId="1" stroke="#8884d8" fill="#8884d8" />
-                        <Area type="monotone" dataKey="communications" stackId="1" stroke="#82ca9d" fill="#82ca9d" />
-                        <Area type="monotone" dataKey="tasks" stackId="1" stroke="#ffc658" fill="#ffc658" />
-                      </ComposedChart>
-                    </ResponsiveContainer>
-                    )}
+                    <ChartErrorBoundary>
+                      {mounted && typeof window !== 'undefined' && aiActivityData && aiActivityData.length > 0 ? (
+                        <div style={{ width: '100%', height: '100%' }}>
+                          <ResponsiveContainer width="100%" height="100%">
+                            <ComposedChart data={aiActivityData}>
+                              <CartesianGrid strokeDasharray="3 3" />
+                              <XAxis dataKey="time" />
+                              <YAxis />
+                              <RechartsTooltip />
+                              <Legend />
+                              <Area type="monotone" dataKey="documents" stackId="1" stroke="#8884d8" fill="#8884d8" />
+                              <Area type="monotone" dataKey="communications" stackId="1" stroke="#82ca9d" fill="#82ca9d" />
+                              <Area type="monotone" dataKey="tasks" stackId="1" stroke="#ffc658" fill="#ffc658" />
+                            </ComposedChart>
+                          </ResponsiveContainer>
+                        </div>
+                      ) : (
+                        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                          <Typography color="text.secondary">Loading chart data...</Typography>
+                        </Box>
+                      )}
+                    </ChartErrorBoundary>
                   </Box>
                 </Paper>
               </Grid>
