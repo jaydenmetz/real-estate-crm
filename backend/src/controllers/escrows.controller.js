@@ -14,13 +14,12 @@ async function detectSchema() {
       SELECT column_name 
       FROM information_schema.columns 
       WHERE table_name = 'escrows' 
-      AND column_name IN ('id', 'global_id', 'numeric_id', 'team_sequence_id', 'net_commission', 'acceptance_date', 'buyer_side_commission', 'opening_date', 'uuid')
+      AND column_name IN ('id', 'numeric_id', 'team_sequence_id', 'net_commission', 'acceptance_date', 'buyer_side_commission', 'opening_date', 'uuid')
     `);
     
     const columns = result.rows.map(row => row.column_name);
     schemaInfo = {
       hasId: columns.includes('id'),
-      hasGlobalId: columns.includes('global_id'),
       hasNumericId: columns.includes('numeric_id'),
       hasTeamSequenceId: columns.includes('team_sequence_id'),
       hasNetCommission: columns.includes('net_commission'),
@@ -37,8 +36,7 @@ async function detectSchema() {
     console.error('Schema detection error:', error);
     // Default to production schema if detection fails
     schemaInfo = {
-      hasId: false,
-      hasGlobalId: true,
+      hasId: true,  // Production should have id column
       hasNumericId: true,
       hasTeamSequenceId: true,
       hasNetCommission: true,
@@ -79,8 +77,8 @@ class SimpleEscrowController {
         const tableCheck = await pool.query(`
           SELECT 
             COUNT(*) as count,
-            MIN(global_id::text) as first_id,
-            MAX(global_id::text) as last_id
+            MIN(id::text) as first_id,
+            MAX(id::text) as last_id
           FROM escrows
         `);
         console.log('Escrows table check:', tableCheck.rows[0]);
@@ -148,16 +146,8 @@ class SimpleEscrowController {
       const envSuffix = process.env.NODE_ENV === 'development' ? ' - LOCAL' : '';
       
       // Build field selections based on available columns
-      // Check if we have id or global_id
-      let idField;
-      if (schema.hasId) {
-        idField = 'id::text';
-      } else if (schema.hasGlobalId) {
-        idField = 'global_id::text';
-      } else {
-        // Fallback to numeric id
-        idField = 'team_sequence_id::text';
-      }
+      // Always use id as the UUID column
+      let idField = 'id::text';
       let displayIdField = 'display_id';  // Format: ESCROW-2025-0001
       
       console.log('Using ID field:', idField);
@@ -300,14 +290,8 @@ class SimpleEscrowController {
       // Build query to handle UUID, numeric ID, or display ID
       let whereClause;
       if (isUUID) {
-        // UUID format - use id or global_id column
-        if (schema.hasId) {
-          whereClause = 'e.id = $1::uuid';
-        } else if (schema.hasGlobalId) {
-          whereClause = 'e.global_id = $1::uuid';
-        } else {
-          whereClause = 'e.display_id = $1';
-        }
+        // UUID format - use id column
+        whereClause = 'e.id = $1::uuid';
       } else if (/^\d+$/.test(id)) {
         // Pure numeric - use numeric_id or team_sequence_id
         if (schema.hasNumericId) {
