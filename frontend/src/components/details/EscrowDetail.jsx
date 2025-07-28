@@ -530,9 +530,10 @@ import {
   ScatterChart,
   ZAxis,
 } from 'recharts';
-import DetailPageDebugger from '../common/DetailPageDebugger';
 import ChartErrorBoundary from '../common/ChartErrorBoundary';
 import NetworkMonitorSimple from '../common/NetworkMonitorSimple';
+import EnhancedDatabaseMonitor from '../common/EnhancedDatabaseMonitor';
+import EnhancedDetailDebugger from '../common/EnhancedDetailDebugger';
 import networkMonitor from '../../services/networkMonitor';
 import CopyButton from '../common/CopyButton';
 import DetailPageHero from '../common/DetailPageHero';
@@ -1623,10 +1624,10 @@ const EscrowDetail = () => {
       {user?.username === 'admin' && escrow && (
         <Collapse in={debugExpanded}>
           <Box sx={{ mb: 3 }}>
-            {/* All debug components with simplified NetworkMonitor */}
-            <DatabaseSyncStatus />
+            {/* Enhanced debug components with more data */}
+            <EnhancedDatabaseMonitor />
             <NetworkMonitorSimple />
-            <DetailPageDebugger 
+            <EnhancedDetailDebugger 
               pageName="Escrow Detail"
               id={id}
               isLoading={isLoading}
@@ -1635,9 +1636,28 @@ const EscrowDetail = () => {
               data={escrow}
               additionalInfo={{
                 displayId: escrow?.displayId,
+                numericId: escrow?.numeric_id,
                 hasDisplayId: !!escrow?.displayId,
                 apiEndpoint: `/escrows/${id}`,
-                queryKey: ['escrow', id]
+                queryKey: ['escrow', id],
+                propertyAddress: escrow?.propertyAddress,
+                escrowStatus: escrow?.escrowStatus,
+                purchasePrice: escrow?.purchasePrice,
+                checklistProgress: escrow?.checklistProgress,
+                daysToClose: escrow?.daysToClose,
+                parties: {
+                  buyers: escrow?.buyers?.length || 0,
+                  sellers: escrow?.sellers?.length || 0,
+                  agents: {
+                    buyer: escrow?.buyerAgent,
+                    listing: escrow?.listingAgent
+                  }
+                },
+                timeline: {
+                  acceptance: escrow?.acceptanceDate,
+                  scheduled: escrow?.scheduledCoeDate,
+                  estimated: escrow?.estimatedCloseDate
+                }
               }}
             />
           </Box>
