@@ -532,7 +532,7 @@ import {
 } from 'recharts';
 import DetailPageDebugger from '../common/DetailPageDebugger';
 import ChartErrorBoundary from '../common/ChartErrorBoundary';
-import NetworkMonitor from '../common/NetworkMonitor';
+import NetworkMonitorSimple from '../common/NetworkMonitorSimple';
 import networkMonitor from '../../services/networkMonitor';
 import CopyButton from '../common/CopyButton';
 import DetailPageHero from '../common/DetailPageHero';
@@ -1623,9 +1623,9 @@ const EscrowDetail = () => {
       {user?.username === 'admin' && escrow && (
         <Collapse in={debugExpanded}>
           <Box sx={{ mb: 3 }}>
-            {/* All debug components now enabled with NetworkMonitor fixed */}
+            {/* All debug components with simplified NetworkMonitor */}
             <DatabaseSyncStatus />
-            <NetworkMonitor />
+            <NetworkMonitorSimple />
             <DetailPageDebugger 
               pageName="Escrow Detail"
               id={id}
