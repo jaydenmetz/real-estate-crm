@@ -931,7 +931,7 @@ const EscrowsDashboard = () => {
       </Box>
 
       {/* New Debug Panel - Admin Only */}
-      {/* TEMPORARILY COMMENTED TO DEBUG STYLE ERROR
+      {false /* TEMPORARILY DISABLED TO DEBUG STYLE ERROR */ && (
       <DebugPanel
         pageTitle="Debug Panel: Escrows Dashboard"
         user={user}
@@ -972,7 +972,7 @@ const EscrowsDashboard = () => {
           }
         }}
       />
-      */}
+      )}
 
       {/* New Escrow Modal */}
       <NewEscrowModal
