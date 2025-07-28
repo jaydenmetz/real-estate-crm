@@ -64,6 +64,7 @@ import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
 import { safeFormatDate, safeParseDate } from '../../utils/safeDateUtils';
 import { escrowsAPI } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
+import { formatEntityId } from '../../utils/entityIdUtils';
 import CopyButton from '../common/CopyButton';
 import DebugPanel from '../common/DebugPanel';
 import networkMonitor from '../../services/networkMonitor';
@@ -423,7 +424,7 @@ const EscrowCard = ({ escrow, onClick, index }) => {
             }}
           >
             <Chip 
-              label={`ID: ${escrow.id}`}
+              label={`ID: ${formatEntityId(escrow.id, 'escrow')}`}
               size="small"
               sx={{ 
                 height: '18px',
