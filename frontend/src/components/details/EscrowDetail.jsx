@@ -533,10 +533,10 @@ import {
 import DetailPageDebugger from '../common/DetailPageDebugger';
 import ChartErrorBoundary from '../common/ChartErrorBoundary';
 import NetworkMonitor from '../common/NetworkMonitor';
+import networkMonitor from '../../services/networkMonitor';
 import CopyButton from '../common/CopyButton';
 import DetailPageHero from '../common/DetailPageHero';
 import DebugPanel from '../common/DebugPanel';
-import networkMonitor from '../../services/networkMonitor';
 
 // Fallback motion component - must be after all imports
 const MotionDiv = motion?.div || (({ children, ...props }) => <div {...props}>{children}</div>);
@@ -1587,7 +1587,7 @@ const EscrowDetail = () => {
                   sessionStorage: {
                     keys: Object.keys(sessionStorage)
                   },
-                  cookies: document.cookie || 'No cookies'
+                  cookies: (typeof document !== 'undefined' && document.cookie) || 'No cookies'
                 },
                 additionalDebugInfo: {
                   reactQueryCache: "Check React Query DevTools for cache state",
