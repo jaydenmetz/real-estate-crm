@@ -1264,20 +1264,20 @@ const EscrowDetail = () => {
         images: [escrowData.propertyImage || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800'],
       },
       status: escrowData.escrow_status || escrowData.escrowStatus || 'Active',
-      listPrice: parseFloat(escrowData.purchase_price) || 0,
-      purchasePrice: parseFloat(escrowData.purchase_price) || 0,
-      downPayment: parseFloat(escrowData.down_payment) || 0,
-      loanAmount: parseFloat(escrowData.loan_amount) || 0,
-      earnestMoneyDeposit: parseFloat(escrowData.earnest_money_deposit) || 0,
+      listPrice: parseFloat(escrowData.purchase_price || escrowData.purchasePrice) || 0,
+      purchasePrice: parseFloat(escrowData.purchase_price || escrowData.purchasePrice) || 0,
+      downPayment: parseFloat(escrowData.down_payment || escrowData.downPayment) || 0,
+      loanAmount: parseFloat(escrowData.loan_amount || escrowData.loanAmount) || 0,
+      earnestMoneyDeposit: parseFloat(escrowData.earnest_money_deposit || escrowData.earnestMoneyDeposit) || 0,
       estimatedCloseDate: escrowData.scheduledCoeDate || escrowData.closing_date || escrowData.closingDate,
       acceptanceDate: escrowData.acceptanceDate || escrowData.acceptance_date,
       closeOfEscrowDate: escrowData.scheduledCoeDate || escrowData.closing_date || escrowData.closingDate,
       
       // Commission info
       commission: {
-        totalCommission: parseFloat(escrowData.gross_commission) || 0,
-        myCommission: parseFloat(escrowData.gross_commission || 0) * 0.5,
-        rate: parseFloat(escrowData.commission_percentage) || 3,
+        totalCommission: parseFloat(escrowData.gross_commission || escrowData.grossCommission || escrowData.totalCommission) || 0,
+        myCommission: parseFloat(escrowData.net_commission || escrowData.netCommission || escrowData.myCommission || escrowData.gross_commission || 0) * 0.5,
+        rate: parseFloat(escrowData.commission_percentage || escrowData.commissionPercentage) || 3,
         split: 50,
       },
       
@@ -1320,6 +1320,18 @@ const EscrowDetail = () => {
       refetchOnWindowFocus: true, // Refetch when window regains focus
       onSuccess: (data) => {
         console.log('Escrow fetch successful, raw response:', data);
+        if (data && data.data) {
+          console.log('API Response Structure:', {
+            hasData: !!data.data,
+            dataKeys: Object.keys(data.data || {}),
+            purchasePrice: data.data.purchasePrice,
+            purchase_price: data.data.purchase_price,
+            myCommission: data.data.myCommission,
+            net_commission: data.data.net_commission,
+            down_payment: data.data.down_payment,
+            downPayment: data.data.downPayment
+          });
+        }
       },
       onError: (error) => {
         console.error('Escrow fetch failed:', error);
@@ -1490,24 +1502,6 @@ const EscrowDetail = () => {
                 startIcon={<Refresh />}
               >
                 Force Refresh
-              </Button>
-              <Button
-                variant="contained"
-                size="small"
-                color="info"
-                onClick={async () => {
-                  console.log('Direct API test for ID:', id);
-                  try {
-                    const result = await escrowsAPI.getOne(id);
-                    console.log('Direct API result:', result);
-                    alert('Check console for API result');
-                  } catch (error) {
-                    console.error('Direct API error:', error);
-                    alert('API Error: ' + error.message);
-                  }
-                }}
-              >
-                Test API
               </Button>
               <Button
                 variant="outlined"
