@@ -1264,29 +1264,32 @@ const EscrowDetail = () => {
         lotSize: escrowData.propertyDetails?.lotSize || null,
         images: [escrowData.propertyImage || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800'],
       },
-      status: escrowData.escrow_status || escrowData.escrowStatus || 'Active',
-      listPrice: parseFloat(escrowData.purchase_price || escrowData.purchasePrice) || 0,
-      purchasePrice: parseFloat(escrowData.purchase_price || escrowData.purchasePrice) || 0,
-      downPayment: parseFloat(escrowData.down_payment || escrowData.downPayment) || 0,
-      loanAmount: parseFloat(escrowData.loan_amount || escrowData.loanAmount) || 0,
-      earnestMoneyDeposit: parseFloat(escrowData.earnest_money_deposit || escrowData.earnestMoneyDeposit) || 0,
+      status: escrowData.escrowStatus || escrowData.escrow_status || 'Active',
+      escrowStatus: escrowData.escrowStatus || escrowData.escrow_status || 'Active',
+      listPrice: parseFloat(escrowData.purchasePrice || escrowData.purchase_price) || 0,
+      purchasePrice: parseFloat(escrowData.purchasePrice || escrowData.purchase_price) || 0,
+      downPayment: parseFloat(escrowData.downPayment || escrowData.down_payment) || 0,
+      loanAmount: parseFloat(escrowData.loanAmount || escrowData.loan_amount) || 0,
+      earnestMoneyDeposit: parseFloat(escrowData.earnestMoneyDeposit || escrowData.earnest_money_deposit) || 0,
       estimatedCloseDate: escrowData.scheduledCoeDate || escrowData.closing_date || escrowData.closingDate,
       acceptanceDate: escrowData.acceptanceDate || escrowData.acceptance_date,
       closeOfEscrowDate: escrowData.scheduledCoeDate || escrowData.closing_date || escrowData.closingDate,
       
       // Commission info
       commission: {
-        totalCommission: parseFloat(escrowData.gross_commission || escrowData.grossCommission || escrowData.totalCommission) || 0,
-        myCommission: parseFloat(escrowData.net_commission || escrowData.netCommission || escrowData.myCommission || escrowData.gross_commission || 0) * 0.5,
-        rate: parseFloat(escrowData.commission_percentage || escrowData.commissionPercentage) || 3,
+        totalCommission: parseFloat(escrowData.grossCommission || escrowData.totalCommission || escrowData.gross_commission) || 0,
+        myCommission: parseFloat(escrowData.myCommission || escrowData.netCommission || escrowData.net_commission) || 0,
+        rate: parseFloat(escrowData.commissionPercentage || escrowData.commission_percentage) || 3,
         split: 50,
       },
       
       // Participants
       buyers: escrowData.buyers || [],
       sellers: escrowData.sellers || [],
-      buyerAgent: escrowData.buyer_agent || null,
-      listingAgent: escrowData.listing_agent || null,
+      buyer: escrowData.buyer || null,
+      seller: escrowData.seller || null,
+      buyerAgent: escrowData.buyerAgent || escrowData.buyer_agent || null,
+      listingAgent: escrowData.listingAgent || escrowData.listing_agent || null,
       
       // Other data
       checklist: escrowData.checklist || [],
@@ -1347,6 +1350,19 @@ const EscrowDetail = () => {
   // Debug log the raw and transformed data
   console.log('Raw escrow data from API:', rawData);
   console.log('Transformed escrow data:', escrow);
+  
+  // Additional debug for financial fields
+  if (rawData && rawData.data) {
+    console.log('Financial data debug:', {
+      raw_purchasePrice: rawData.data.purchasePrice,
+      raw_purchase_price: rawData.data.purchase_price,
+      transformed_purchasePrice: escrow.purchasePrice,
+      raw_myCommission: rawData.data.myCommission,
+      raw_netCommission: rawData.data.netCommission,
+      raw_net_commission: rawData.data.net_commission,
+      transformed_myCommission: escrow.commission?.myCommission
+    });
+  }
 
   // Calculate metrics
   const daysToClose = (() => {
@@ -1794,7 +1810,7 @@ const EscrowDetail = () => {
           {
             icon: <Groups sx={{ fontSize: 24 }} />,
             label: 'Agents',
-            value: `${escrow.buyer?.agent || 'TBD'} / ${escrow.seller?.agent || 'TBD'}`
+            value: `${escrow.buyerAgent?.name || 'TBD'} / ${escrow.listingAgent?.name || 'TBD'}`
           }
         ]}
       >
