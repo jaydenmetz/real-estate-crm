@@ -1492,6 +1492,24 @@ const EscrowDetail = () => {
                 Force Refresh
               </Button>
               <Button
+                variant="contained"
+                size="small"
+                color="info"
+                onClick={async () => {
+                  console.log('Direct API test for ID:', id);
+                  try {
+                    const result = await escrowsAPI.getOne(id);
+                    console.log('Direct API result:', result);
+                    alert('Check console for API result');
+                  } catch (error) {
+                    console.error('Direct API error:', error);
+                    alert('API Error: ' + error.message);
+                  }
+                }}
+              >
+                Test API
+              </Button>
+              <Button
                 variant="outlined"
                 size="small"
                 onClick={() => setDebugExpanded(!debugExpanded)}

@@ -174,6 +174,11 @@ class ApiService {
 // Create the API instance
 const apiInstance = new ApiService();
 
+// Initialize with stored token if available
+if (typeof window !== 'undefined' && localStorage.getItem('authToken')) {
+  apiInstance.setToken(localStorage.getItem('authToken'));
+}
+
 // Export specific API methods for better organization
 export const escrowsAPI = {
   getAll: (params) => apiInstance.get('/escrows', params),
@@ -315,6 +320,9 @@ export const aiAPI = {
 };
 
 // Export the main API instance as default
+// Export the API instance for debugging
+window.apiInstance = apiInstance;
+
 export default apiInstance;
 
 // Also export a named api object containing all the modules
