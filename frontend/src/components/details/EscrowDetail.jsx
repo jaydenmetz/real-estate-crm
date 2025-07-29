@@ -1306,11 +1306,24 @@ const EscrowDetail = () => {
   };
 
   // Fetch escrow data
-  const { data: rawData, isLoading, isError, error } = useQuery(
+  const { data: rawData, isLoading, isError, error, refetch } = useQuery(
     ['escrow', id],
-    () => escrowsAPI.getOne(id),
+    () => {
+      console.log('Fetching escrow with ID:', id);
+      return escrowsAPI.getOne(id);
+    },
     {
       refetchInterval: 30000, // Refresh every 30 seconds for real-time updates
+      staleTime: 0, // Consider data stale immediately
+      cacheTime: 0, // Don't cache the data
+      refetchOnMount: 'always', // Always refetch when component mounts
+      refetchOnWindowFocus: true, // Refetch when window regains focus
+      onSuccess: (data) => {
+        console.log('Escrow fetch successful, raw response:', data);
+      },
+      onError: (error) => {
+        console.error('Escrow fetch failed:', error);
+      }
     }
   );
 
@@ -1466,6 +1479,18 @@ const EscrowDetail = () => {
               <Chip label="Admin Only" size="small" color="warning" />
             </Box>
             <Box display="flex" alignItems="center" gap={1}>
+              <Button
+                variant="contained"
+                size="small"
+                color="success"
+                onClick={() => {
+                  console.log('Manual refetch triggered');
+                  refetch();
+                }}
+                startIcon={<Refresh />}
+              >
+                Force Refresh
+              </Button>
               <Button
                 variant="outlined"
                 size="small"
