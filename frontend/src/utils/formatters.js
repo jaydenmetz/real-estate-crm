@@ -20,6 +20,28 @@ export function formatCurrency(amount, currency = 'USD') {
 }
 
 /**
+ * Format price with K/M suffix
+ * @param {number} price - The price value to format
+ * @param {boolean} includeDecimals - Whether to include decimal places for millions
+ * @returns {string} Formatted price string (e.g., "300k", "1.2M")
+ */
+export function formatPriceShort(price, includeDecimals = true) {
+  if (!price || price === 0) return '$0';
+  
+  const absPrice = Math.abs(price);
+  
+  if (absPrice >= 1000000) {
+    const millions = absPrice / 1000000;
+    const decimals = includeDecimals && millions < 10 ? 1 : 0;
+    return `$${millions.toFixed(decimals)}M`;
+  } else if (absPrice >= 1000) {
+    return `$${(absPrice / 1000).toFixed(0)}k`;
+  } else {
+    return `$${absPrice.toFixed(0)}`;
+  }
+}
+
+/**
  * Format date
  * @param {string|Date} date - Date to format
  * @param {string} formatString - Format string (default: 'MMM d, yyyy')
@@ -292,6 +314,7 @@ export function sortByKey(array, key, order = 'asc') {
 
 export default {
   formatCurrency,
+  formatPriceShort,
   formatDate,
   formatTime,
   formatPhone,

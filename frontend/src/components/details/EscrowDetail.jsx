@@ -507,6 +507,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { format, formatDistanceToNow, addDays, differenceInDays, isAfter, isBefore, isValid, parseISO } from 'date-fns';
 import { escrowsAPI, documentsAPI } from '../../services/api';
 import CountUp from 'react-countup';
+import { formatPriceShort } from '../../utils/formatters';
 import {
   AreaChart,
   Area,
@@ -1293,15 +1294,16 @@ const EscrowDetail = () => {
       timeline: escrowData.timeline || [],
       activities: escrowData.timeline || [],
       
-      // Defaults for missing fields
-      escrowCompany: 'First American Title',
-      titleCompany: 'Chicago Title',
-      lender: 'Wells Fargo Home Mortgage',
-      escrowOfficer: {
-        name: 'Lisa Wilson',
-        email: 'lisa.wilson@firstamerican.com',
-        phone: '(619) 555-0999',
+      // Company and officer info from API
+      escrowCompany: escrowData.escrowCompany || escrowData.escrow_company || '',
+      titleCompany: escrowData.titleCompany || escrowData.title_company || '',
+      lender: escrowData.lender || escrowData.lender_name || '',
+      escrowOfficer: escrowData.escrowOfficer || {
+        name: escrowData.escrow_officer_name || '',
+        email: escrowData.escrow_officer_email || '',
+        phone: escrowData.escrow_officer_phone || '',
       },
+      loanOfficer: escrowData.loanOfficer || null,
     };
   };
 
@@ -1870,7 +1872,7 @@ const EscrowDetail = () => {
               <Stack direction="row" justifyContent="space-between" alignItems="center">
                 <Box>
                   <Typography variant="h4" fontWeight="bold" color="primary">
-                    ${(escrow.purchasePrice / 1000).toFixed(0)}k
+                    {formatPriceShort(escrow.purchasePrice)}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Purchase Price
@@ -1892,7 +1894,7 @@ const EscrowDetail = () => {
               <Stack direction="row" justifyContent="space-between" alignItems="center">
                 <Box>
                   <Typography variant="h4" fontWeight="bold" color="secondary">
-                    ${(escrow.myCommission / 1000).toFixed(1)}k
+                    {formatPriceShort(escrow.commission?.myCommission || escrow.myCommission || 0)}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     My Commission
@@ -2363,7 +2365,7 @@ const EscrowDetail = () => {
                           <Grid item xs={6} sm={3}>
                             <Box textAlign="center">
                               <Typography variant="h4" color="primary" fontWeight="bold">
-                                ${((escrow.marketData?.medianPrice || 0) / 1000).toFixed(0)}k
+                                {formatPriceShort(escrow.marketData?.medianPrice || 0)}
                               </Typography>
                               <Typography variant="body2" color="text.secondary">
                                 Median Price

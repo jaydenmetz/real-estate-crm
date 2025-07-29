@@ -317,7 +317,7 @@ class SimpleEscrowController {
       const escrowQuery = `
         SELECT 
           e.*,
-          'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800' as propertyImage
+          COALESCE(e.property_image_url, 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800') as propertyImage
         FROM escrows e
         WHERE ${whereClause}
       `;
@@ -550,6 +550,21 @@ class SimpleEscrowController {
           : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         propertyType: escrow.property_type,
         leadSource: escrow.lead_source || 'Website',
+        
+        // Company and officer information
+        escrowCompany: escrow.escrow_company || 'First American Title',
+        escrowOfficer: {
+          name: escrow.escrow_officer_name || 'Lisa Wilson',
+          email: escrow.escrow_officer_email || 'lisa.wilson@firstamerican.com',
+          phone: escrow.escrow_officer_phone || '(619) 555-0999'
+        },
+        titleCompany: escrow.title_company || 'Chicago Title',
+        lender: escrow.lender_name || 'Wells Fargo Home Mortgage',
+        loanOfficer: escrow.loan_officer_name ? {
+          name: escrow.loan_officer_name,
+          email: escrow.loan_officer_email,
+          phone: escrow.loan_officer_phone
+        } : null,
         
         // Participants
         buyer: buyer,
