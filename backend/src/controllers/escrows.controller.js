@@ -332,334 +332,41 @@ class SimpleEscrowController {
 
       const escrow = escrowResult.rows[0];
       
-      // Debug log the raw escrow data
-      console.log('Raw escrow data from database:', {
+      // Build simplified response according to new spec
+      const response = {
         id: escrow.id,
-        display_id: escrow.display_id,
-        purchase_price: escrow.purchase_price,
-        down_payment: escrow.down_payment,
-        loan_amount: escrow.loan_amount,
-        earnest_money: escrow.earnest_money,
-        earnest_money_deposit: escrow.earnest_money_deposit,
-        commission_percentage: escrow.commission_percentage,
-        buyer_side_commission: escrow.buyer_side_commission,
-        net_commission: escrow.net_commission,
-        gross_commission: escrow.gross_commission
-      });
-      
-      // Fetch all related data in parallel
-      // Use display_id for helper table queries
-      const displayId = escrow.display_id;
-      
-      console.log('Processing escrow:', displayId, 'Environment:', process.env.NODE_ENV);
-      
-      // Get checklist data - try both formats (JSONB and individual rows)
-      let checklistResult = { rows: [] };
-      try {
-        // First try JSONB format (local schema)
-        checklistResult = await pool.query(`
-          SELECT checklist_items 
-          FROM escrow_checklists 
-          WHERE escrow_display_id = $1
-        `, [displayId]);
-      } catch (e) {
-        // Try individual rows format (production schema)
-        try {
-          checklistResult = await pool.query(`
-            SELECT * FROM escrow_checklists 
-            WHERE escrow_display_id = $1
-            ORDER BY task_order
-          `, [displayId]);
-        } catch (e2) {
-          console.log('Checklist query failed for both formats');
-        }
-      }
-      
-      // Initialize empty arrays for helper data
-      let peopleResult = { rows: [] };
-      let timelineResult = { rows: [] };
-      let financialsResult = { rows: [] };
-      let documentsResult = { rows: [] };
-      
-      // Try to get people data (only exists in local schema)
-      try {
-        peopleResult = await pool.query(`
-          SELECT * FROM escrow_people 
-          WHERE escrow_display_id = $1
-          ORDER BY person_type, name
-        `, [displayId]);
-      } catch (e) {
-        console.log('escrow_people query failed:', e.message);
-      }
-      
-      // Try local schema first (uses escrow_display_id)
-      try {
-        timelineResult = await pool.query(`
-          SELECT * FROM escrow_timeline 
-          WHERE escrow_display_id = $1
-          ORDER BY order_index, scheduled_date
-        `, [displayId]);
-      } catch (e) {
-        // Try production schema (uses display_id as escrow_id)
-        try {
-          timelineResult = await pool.query(`
-            SELECT * FROM escrow_timeline 
-            WHERE escrow_id = $1
-            ORDER BY event_date
-          `, [displayId]);
-        } catch (e2) {
-          console.log('escrow_timeline query failed for both schemas');
-        }
-      }
-      
-      // Try local schema first for financials
-      try {
-        financialsResult = await pool.query(`
-          SELECT * FROM escrow_financials 
-          WHERE escrow_display_id = $1
-          ORDER BY order_index, item_category
-        `, [displayId]);
-      } catch (e) {
-        // Try production schema
-        try {
-          financialsResult = await pool.query(`
-            SELECT * FROM escrow_financials 
-            WHERE escrow_id = $1
-            ORDER BY category
-          `, [displayId]);
-        } catch (e2) {
-          console.log('escrow_financials query failed for both schemas');
-        }
-      }
-      
-      // Try local schema first for documents
-      try {
-        documentsResult = await pool.query(`
-          SELECT * FROM escrow_documents 
-          WHERE escrow_display_id = $1
-          ORDER BY order_index, document_type
-        `, [displayId]);
-      } catch (e) {
-        // Try production schema
-        try {
-          documentsResult = await pool.query(`
-            SELECT * FROM escrow_documents 
-            WHERE escrow_id = $1
-            ORDER BY document_type
-          `, [displayId]);
-        } catch (e2) {
-          console.log('escrow_documents query failed for both schemas');
-        }
-      }
-
-      // Process checklist data for progress calculation
-      let checklists = [];
-      
-      if (checklistResult.rows.length > 0) {
-        if (checklistResult.rows[0].checklist_items) {
-          // JSONB format (local)
-          checklists = checklistResult.rows[0].checklist_items;
-        } else {
-          // Individual rows format (production)
-          checklists = checklistResult.rows.map(row => ({
-            phase: row.phase,
-            task_name: row.task_name,
-            task_description: row.task_description,
-            is_completed: row.is_completed,
-            due_date: row.due_date,
-            completed_date: row.completed_date,
-            order: row.task_order
-          }));
-        }
-      }
-      const checklistByPhase = {
-        opening: checklists.filter(c => c.phase === 'opening'),
-        processing: checklists.filter(c => c.phase === 'processing'),
-        closing: checklists.filter(c => c.phase === 'closing')
-      };
-
-      const checklistProgress = {
-        phase1: {
-          completed: checklistByPhase.opening.filter(c => c.is_completed).length,
-          total: checklistByPhase.opening.length,
-          percentage: checklistByPhase.opening.length > 0 
-            ? Math.round((checklistByPhase.opening.filter(c => c.is_completed).length / checklistByPhase.opening.length) * 100)
-            : 0
-        },
-        phase2: {
-          completed: checklistByPhase.processing.filter(c => c.is_completed).length,
-          total: checklistByPhase.processing.length,
-          percentage: checklistByPhase.processing.length > 0
-            ? Math.round((checklistByPhase.processing.filter(c => c.is_completed).length / checklistByPhase.processing.length) * 100)
-            : 0
-        },
-        phase3: {
-          completed: checklistByPhase.closing.filter(c => c.is_completed).length,
-          total: checklistByPhase.closing.length,
-          percentage: checklistByPhase.closing.length > 0
-            ? Math.round((checklistByPhase.closing.filter(c => c.is_completed).length / checklistByPhase.closing.length) * 100)
-            : 0
-        }
-      };
-
-      checklistProgress.overall = {
-        completed: checklistProgress.phase1.completed + checklistProgress.phase2.completed + checklistProgress.phase3.completed,
-        total: checklistProgress.phase1.total + checklistProgress.phase2.total + checklistProgress.phase3.total,
-        percentage: Math.round(((checklistProgress.phase1.completed + checklistProgress.phase2.completed + checklistProgress.phase3.completed) / 
-                              (checklistProgress.phase1.total + checklistProgress.phase2.total + checklistProgress.phase3.total)) * 100) || 0
-      };
-
-      // Process people data
-      const people = peopleResult.rows;
-      const buyer = people.find(p => p.person_type === 'buyer') || null;
-      const seller = people.find(p => p.person_type === 'seller') || null;
-      const buyerAgent = people.find(p => p.person_type === 'buyer_agent') || null;
-      const listingAgent = people.find(p => p.person_type === 'listing_agent') || null;
-      
-      // Environment suffix - only in development
-      const envSuffix = process.env.NODE_ENV === 'development' ? ' - LOCAL' : '';
-
-      // Format the response
-      let response;
-      try {
-        response = {
-        id: escrow.id,  // This IS the UUID
-        displayId: escrow.display_id,  // Display ID for business use (ESCROW-2025-0001)
         escrowNumber: escrow.display_id,
-        propertyAddress: escrow.property_address + envSuffix,
-        propertyImage: escrow.propertyImage,
+        propertyAddress: escrow.property_address,
         escrowStatus: escrow.escrow_status,
         purchasePrice: parseFloat(escrow.purchase_price) || 0,
-        earnestMoneyDeposit: parseFloat(escrow.earnest_money_deposit || escrow.earnest_money) || 0,
-        downPayment: parseFloat(escrow.down_payment) || parseFloat(escrow.purchase_price) * 0.2 || 0,
-        loanAmount: parseFloat(escrow.loan_amount) || parseFloat(escrow.purchase_price) * 0.8 || 0,
-        commissionPercentage: parseFloat(escrow.commission_percentage || escrow.buyer_side_commission) || 2.5,
-        grossCommission: parseFloat(escrow.gross_commission) || parseFloat(escrow.purchase_price) * (parseFloat(escrow.commission_percentage || escrow.buyer_side_commission) || 2.5) / 100 || 0,
-        myCommission: parseFloat(escrow.net_commission) || parseFloat(escrow.purchase_price) * (parseFloat(escrow.commission_percentage || escrow.buyer_side_commission) || 2.5) / 100 || 0,
-        acceptanceDate: escrow.acceptance_date || escrow.opening_date ? 
-          (typeof (escrow.acceptance_date || escrow.opening_date) === 'string' ? (escrow.acceptance_date || escrow.opening_date).split('T')[0] : new Date(escrow.acceptance_date || escrow.opening_date).toISOString().split('T')[0]) 
-          : new Date().toISOString().split('T')[0],
+        commissionPercentage: parseFloat(escrow.commission_percentage) || 3,
+        grossCommission: parseFloat(escrow.gross_commission) || 0,
+        myCommission: parseFloat(escrow.my_commission) || 0,
+        commissionAdjustments: parseFloat(escrow.commission_adjustments) || 0,
+        expenseAdjustments: parseFloat(escrow.expense_adjustments) || 0,
+        acceptanceDate: escrow.acceptance_date ? 
+          (typeof escrow.acceptance_date === 'string' ? escrow.acceptance_date.split('T')[0] : new Date(escrow.acceptance_date).toISOString().split('T')[0])
+          : null,
         scheduledCoeDate: escrow.closing_date ? 
           (typeof escrow.closing_date === 'string' ? escrow.closing_date.split('T')[0] : new Date(escrow.closing_date).toISOString().split('T')[0])
-          : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        propertyType: escrow.property_type,
-        leadSource: escrow.lead_source || 'Website',
+          : null,
+        actualCoeDate: escrow.actual_coe_date ? 
+          (typeof escrow.actual_coe_date === 'string' ? escrow.actual_coe_date.split('T')[0] : new Date(escrow.actual_coe_date).toISOString().split('T')[0])
+          : null,
+        leadSource: escrow.lead_source || 'Family',
+        transactionCoordinator: escrow.transaction_coordinator || 'Karin Munoz',
+        nhdCompany: escrow.nhd_company || 'Property ID Max',
+        avid: escrow.avid || true,
+        created_at: escrow.created_at,
+        updated_at: escrow.updated_at,
         
-        // Company and officer information
-        escrowCompany: escrow.escrow_company || 'First American Title',
-        escrowOfficer: {
-          name: escrow.escrow_officer_name || 'Lisa Wilson',
-          email: escrow.escrow_officer_email || 'lisa.wilson@firstamerican.com',
-          phone: escrow.escrow_officer_phone || '(619) 555-0999'
-        },
-        titleCompany: escrow.title_company || 'Chicago Title',
-        lender: escrow.lender_name || 'Wells Fargo Home Mortgage',
-        loanOfficer: escrow.loan_officer_name ? {
-          name: escrow.loan_officer_name,
-          email: escrow.loan_officer_email,
-          phone: escrow.loan_officer_phone
-        } : null,
-        
-        // Participants
-        buyer: buyer,
-        seller: seller,
-        buyerAgent: buyerAgent,
-        listingAgent: listingAgent,
-        participants: people, // All people associated with this escrow
-        
-        // Checklist
-        checklist: checklists,
-        checklistProgress: checklistProgress,
-        
-        // Timeline with all milestone data - handle both schemas
-        timeline: timelineResult.rows.map(event => ({
-          id: event.id,
-          eventName: event.event_name || event.event_type,
-          description: event.event_description || event.description,
-          type: event.event_type,
-          scheduledDate: event.scheduled_date || event.event_date,
-          completedDate: event.completed_date,
-          isCompleted: event.is_completed || false,
-          isCritical: event.is_critical || false,
-          responsibleParty: event.responsible_party || event.created_by,
-          notes: event.notes || (event.metadata ? JSON.stringify(event.metadata) : null)
-        })),
-        
-        // Financial calculations for every dollar amount - handle both schemas
-        financials: financialsResult.rows.map(item => ({
-          id: item.id,
-          name: item.item_name || item.description,
-          category: item.item_category || item.category,
-          amount: parseFloat(item.amount),
-          partyResponsible: item.party_responsible || item.payer,
-          partyReceiving: item.party_receiving || item.payee,
-          calculationBasis: item.calculation_basis || item.notes,
-          isEstimate: item.is_estimate || false,
-          dueDate: item.due_date,
-          paidDate: item.paid_date,
-          isPaid: item.is_paid || false,
-          notes: item.notes
-        })),
-        
-        // Documents checklist with document links - handle both schemas
-        documents: documentsResult.rows.map(doc => ({
-          id: doc.id,
-          name: doc.document_name || doc.name,
-          type: doc.document_type || doc.type,
-          status: doc.document_status || doc.status || 'pending',
-          isRequired: doc.is_required !== false,
-          dueDate: doc.due_date,
-          receivedDate: doc.received_date || doc.uploaded_at,
-          documentUrl: doc.document_url || doc.file_url,
-          documentId: doc.document_id,
-          uploadedBy: doc.uploaded_by || doc.created_by,
-          signedByBuyer: doc.signed_by_buyer || false,
-          signedBySeller: doc.signed_by_seller || false,
-          signedByAgents: doc.signed_by_agents || false,
-          notes: doc.notes
-        })),
-        
-        // Property details (still using defaults for now)
-        propertyDetails: {
-          bedrooms: 3,
-          bathrooms: 2,
-          sqft: 1850,
-          yearBuilt: 2005,
-          lotSize: '7,500 sqft',
-          propertyTax: '$8,500/year',
-          hoaFees: '$350/month'
-        },
-        
-        // Activity stats
-        activityStats: {
-          daysInEscrow: escrow.closing_date ? 
-            Math.floor((new Date() - new Date(escrow.acceptance_date || escrow.opening_date || escrow.created_at)) / (24 * 60 * 60 * 1000)) : 0,
-          daysToClose: escrow.closing_date ? 
-            Math.floor((new Date(escrow.closing_date) - new Date()) / (24 * 60 * 60 * 1000)) : 0,
-          tasksCompletedToday: checklists.filter(c => 
-            c.completed_date && new Date(c.completed_date).toDateString() === new Date().toDateString()
-          ).length,
-          upcomingDeadlines: checklists.filter(c => 
-            !c.is_completed && c.due_date && new Date(c.due_date) > new Date()
-          ).length,
-          documentsUploaded: documentsResult.rows.length,
-          communicationScore: 95
-        },
-        
-        importantNotes: 'Buyer pre-approved for loan. Inspection scheduled for next week.',
-        
-        created_at: escrow.created_at ? 
-          (typeof escrow.created_at === 'string' ? escrow.created_at : new Date(escrow.created_at).toISOString()) 
-          : new Date().toISOString(),
-        updated_at: escrow.updated_at ? 
-          (typeof escrow.updated_at === 'string' ? escrow.updated_at : new Date(escrow.updated_at).toISOString())
-          : new Date().toISOString()
+        // Add JSONB data at the bottom
+        people: escrow.people || {},
+        timeline: escrow.timeline || [],
+        financials: escrow.financials || {},
+        checklists: escrow.checklists || {},
+        documents: escrow.documents || []
       };
-      } catch (buildError) {
-        console.error('Error building response:', buildError);
-        console.error('Error stack:', buildError.stack);
-        throw buildError;
-      }
 
       res.json({
         success: true,
@@ -668,7 +375,6 @@ class SimpleEscrowController {
 
     } catch (error) {
       console.error('Error fetching escrow:', error);
-      console.error('Stack trace:', error.stack);
       res.status(500).json({
         success: false,
         error: {
@@ -1052,6 +758,379 @@ class SimpleEscrowController {
       });
     } finally {
       client.release();
+    }
+  }
+
+  /**
+   * Get escrow people/participants
+   */
+  static async getEscrowPeople(req, res) {
+    try {
+      const { id } = req.params;
+      
+      // Detect if ID is UUID format
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      
+      const query = `
+        SELECT people
+        FROM escrows
+        WHERE ${isUUID ? 'id = $1::uuid' : 'display_id = $1'}
+      `;
+      
+      const result = await pool.query(query, [id]);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Escrow not found'
+          }
+        });
+      }
+      
+      const people = result.rows[0].people || {};
+      
+      res.json({
+        success: true,
+        data: people
+      });
+      
+    } catch (error) {
+      console.error('Error fetching escrow people:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'SERVER_ERROR',
+          message: 'Failed to fetch escrow people'
+        }
+      });
+    }
+  }
+
+  /**
+   * Get escrow timeline
+   */
+  static async getEscrowTimeline(req, res) {
+    try {
+      const { id } = req.params;
+      
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      
+      const query = `
+        SELECT timeline, acceptance_date
+        FROM escrows
+        WHERE ${isUUID ? 'id = $1::uuid' : 'display_id = $1'}
+      `;
+      
+      const result = await pool.query(query, [id]);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Escrow not found'
+          }
+        });
+      }
+      
+      let timeline = result.rows[0].timeline || [];
+      
+      // If timeline is empty, generate default timeline based on acceptance date
+      if (timeline.length === 0 && result.rows[0].acceptance_date) {
+        const acceptanceDate = new Date(result.rows[0].acceptance_date);
+        timeline = [
+          {
+            date: acceptanceDate.toISOString().split('T')[0],
+            event: 'Acceptance Date',
+            status: 'completed',
+            daysFromAcceptance: 0
+          },
+          {
+            date: new Date(acceptanceDate.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            event: 'EMD Date',
+            status: 'pending',
+            daysFromAcceptance: 3
+          },
+          {
+            date: new Date(acceptanceDate.getTime() + 17 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            event: 'Contingencies Date',
+            status: 'pending',
+            daysFromAcceptance: 17
+          },
+          {
+            date: new Date(acceptanceDate.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            event: 'COE Date',
+            status: 'pending',
+            daysFromAcceptance: 30
+          }
+        ];
+      }
+      
+      res.json({
+        success: true,
+        data: timeline
+      });
+      
+    } catch (error) {
+      console.error('Error fetching escrow timeline:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'SERVER_ERROR',
+          message: 'Failed to fetch escrow timeline'
+        }
+      });
+    }
+  }
+
+  /**
+   * Get escrow financials
+   */
+  static async getEscrowFinancials(req, res) {
+    try {
+      const { id } = req.params;
+      
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      
+      const query = `
+        SELECT 
+          purchase_price,
+          earnest_money_deposit,
+          commission_percentage,
+          gross_commission,
+          my_commission,
+          commission_adjustments,
+          expense_adjustments,
+          financials,
+          expenses
+        FROM escrows
+        WHERE ${isUUID ? 'id = $1::uuid' : 'display_id = $1'}
+      `;
+      
+      const result = await pool.query(query, [id]);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Escrow not found'
+          }
+        });
+      }
+      
+      const escrow = result.rows[0];
+      const financials = escrow.financials || {};
+      const expenses = escrow.expenses || [];
+      
+      // Calculate total expenses
+      const totalExpenses = expenses.reduce((sum, expense) => sum + (expense.amount || 0), 0);
+      
+      // Build financial data response
+      const data = {
+        purchasePrice: parseFloat(escrow.purchase_price) || 0,
+        earnestMoneyDeposit: parseFloat(escrow.earnest_money_deposit) || 0,
+        commissionBreakdown: {
+          commissionPercentage: parseFloat(escrow.commission_percentage) || 3,
+          grossCommission: parseFloat(escrow.gross_commission) || 0,
+          myCommission: parseFloat(escrow.my_commission) || 0,
+          commissionAdjustments: parseFloat(escrow.commission_adjustments) || 0,
+          expenseAdjustments: parseFloat(escrow.expense_adjustments) || 0,
+          netCommission: (parseFloat(escrow.my_commission) || 0) + 
+                        (parseFloat(escrow.commission_adjustments) || 0) + 
+                        (parseFloat(escrow.expense_adjustments) || 0)
+        },
+        expenses: expenses,
+        totalExpenses: totalExpenses,
+        ...financials
+      };
+      
+      res.json({
+        success: true,
+        data: data
+      });
+      
+    } catch (error) {
+      console.error('Error fetching escrow financials:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'SERVER_ERROR',
+          message: 'Failed to fetch escrow financials'
+        }
+      });
+    }
+  }
+
+  /**
+   * Get escrow checklists
+   */
+  static async getEscrowChecklists(req, res) {
+    try {
+      const { id } = req.params;
+      
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      
+      const query = `
+        SELECT checklists
+        FROM escrows
+        WHERE ${isUUID ? 'id = $1::uuid' : 'display_id = $1'}
+      `;
+      
+      const result = await pool.query(query, [id]);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Escrow not found'
+          }
+        });
+      }
+      
+      const checklists = result.rows[0].checklists || {
+        admin: {
+          addContactsToNotion: false,
+          addContactsToPhone: false,
+          mlsStatusUpdate: false,
+          tcEmail: false,
+          tcGlideInvite: false
+        },
+        loan: {
+          le: false,
+          lockedRate: false,
+          appraisalOrdered: false,
+          appraisalReceived: false,
+          clearToClose: false,
+          cd: false,
+          loanDocsSigned: false,
+          cashToClosePaid: false,
+          loanFunded: false
+        },
+        home: {
+          emd: false,
+          homeInspectionOrdered: false,
+          homeInspectionReceived: false,
+          sellerDisclosures: false,
+          avid: false,
+          solarTransferInitiated: false,
+          rr: false,
+          cr: false,
+          vp: false,
+          recorded: false
+        }
+      };
+      
+      res.json({
+        success: true,
+        data: checklists
+      });
+      
+    } catch (error) {
+      console.error('Error fetching escrow checklists:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'SERVER_ERROR',
+          message: 'Failed to fetch escrow checklists'
+        }
+      });
+    }
+  }
+
+  /**
+   * Get escrow documents
+   */
+  static async getEscrowDocuments(req, res) {
+    try {
+      const { id } = req.params;
+      
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      
+      const query = `
+        SELECT documents
+        FROM escrows
+        WHERE ${isUUID ? 'id = $1::uuid' : 'display_id = $1'}
+      `;
+      
+      const result = await pool.query(query, [id]);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Escrow not found'
+          }
+        });
+      }
+      
+      const documents = result.rows[0].documents || [];
+      
+      res.json({
+        success: true,
+        data: documents
+      });
+      
+    } catch (error) {
+      console.error('Error fetching escrow documents:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'SERVER_ERROR',
+          message: 'Failed to fetch escrow documents'
+        }
+      });
+    }
+  }
+
+  /**
+   * Update escrow people
+   */
+  static async updateEscrowPeople(req, res) {
+    try {
+      const { id } = req.params;
+      const people = req.body;
+      
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      
+      const query = `
+        UPDATE escrows
+        SET people = $2, updated_at = NOW()
+        WHERE ${isUUID ? 'id = $1::uuid' : 'display_id = $1'}
+        RETURNING id
+      `;
+      
+      const result = await pool.query(query, [id, JSON.stringify(people)]);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Escrow not found'
+          }
+        });
+      }
+      
+      res.json({
+        success: true,
+        data: people,
+        message: 'Escrow people updated successfully'
+      });
+      
+    } catch (error) {
+      console.error('Error updating escrow people:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'SERVER_ERROR',
+          message: 'Failed to update escrow people'
+        }
+      });
     }
   }
 }

@@ -42,6 +42,26 @@ router.get('/:id', async (req, res) => {
   return SimpleEscrowController.getEscrowById(req, res);
 });
 
+// NEW ENDPOINTS FOR ESCROW DETAIL DATA
+
+// GET /v1/escrows/:id/people - Get all people associated with escrow
+router.get('/:id/people', SimpleEscrowController.getEscrowPeople);
+
+// GET /v1/escrows/:id/timeline - Get escrow timeline
+router.get('/:id/timeline', SimpleEscrowController.getEscrowTimeline);
+
+// GET /v1/escrows/:id/financials - Get escrow financial details
+router.get('/:id/financials', SimpleEscrowController.getEscrowFinancials);
+
+// GET /v1/escrows/:id/checklists - Get escrow checklists
+router.get('/:id/checklists', SimpleEscrowController.getEscrowChecklists);
+
+// GET /v1/escrows/:id/documents - Get escrow documents
+router.get('/:id/documents', SimpleEscrowController.getEscrowDocuments);
+
+// PUT /v1/escrows/:id/people - Update escrow people
+router.put('/:id/people', SimpleEscrowController.updateEscrowPeople);
+
 // POST /v1/escrows - Create new escrow with sequential ID
 router.post('/', (req, res) => {
   return SimpleEscrowController.createEscrow(req, res);
