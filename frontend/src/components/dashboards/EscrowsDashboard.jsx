@@ -64,7 +64,6 @@ import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
 import { safeFormatDate, safeParseDate } from '../../utils/safeDateUtils';
 import { escrowsAPI } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
-import { formatEntityId } from '../../utils/entityIdUtils';
 import CopyButton from '../common/CopyButton';
 import DebugPanel from '../common/DebugPanel';
 import networkMonitor from '../../services/networkMonitor';
@@ -406,66 +405,6 @@ const EscrowCard = ({ escrow, onClick, index }) => {
             </Typography>
           </Box>
           
-          {/* Database IDs Display - Small and unnoticeable */}
-          <Box 
-            sx={{ 
-              mt: 2,
-              pt: 1,
-              borderTop: '1px solid',
-              borderColor: 'divider',
-              display: 'flex',
-              gap: 0.5,
-              flexWrap: 'wrap',
-              opacity: 0.6,
-              transition: 'opacity 0.2s',
-              '&:hover': {
-                opacity: 1
-              }
-            }}
-          >
-            <Chip 
-              label={`ID: ${formatEntityId(escrow.id, 'escrow')}`}
-              size="small"
-              sx={{ 
-                height: '18px',
-                fontSize: '10px',
-                '& .MuiChip-label': {
-                  px: 0.75,
-                  py: 0
-                }
-              }}
-            />
-            {escrow.numeric_id && escrow.numeric_id !== escrow.id && (
-              <Chip 
-                label={`NID: ${escrow.numeric_id}`}
-                size="small"
-                sx={{ 
-                  height: '18px',
-                  fontSize: '10px',
-                  '& .MuiChip-label': {
-                    px: 0.75,
-                    py: 0
-                  }
-                }}
-              />
-            )}
-            {escrow.uuid && (
-              <MuiTooltip title={`UUID: ${escrow.uuid}`} arrow>
-                <Chip 
-                  label={`UUID: ${escrow.uuid.substring(0, 8)}...`}
-                  size="small"
-                  sx={{ 
-                    height: '18px',
-                    fontSize: '10px',
-                    '& .MuiChip-label': {
-                      px: 0.75,
-                      py: 0
-                    }
-                  }}
-                />
-              </MuiTooltip>
-            )}
-          </Box>
         </CardContent>
       </Card>
     </motion.div>
@@ -507,7 +446,7 @@ const EscrowsDashboard = () => {
         if (escrowData.length > 0) {
           console.log('Sample escrow IDs:');
           escrowData.slice(0, 3).forEach((esc, idx) => {
-            console.log(`  ${idx + 1}. id: ${esc.id}, displayId: ${esc.displayId}, numeric_id: ${esc.numeric_id}`);
+            console.log(`  ${idx + 1}. id: ${esc.id}, displayId: ${esc.displayId}`);
           });
         }
         
