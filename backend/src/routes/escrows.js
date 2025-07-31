@@ -13,7 +13,6 @@ const transformEscrowForList = (escrow) => ({
   propertyAddress: escrow.propertyAddress,
   propertyImage: escrow.propertyImages?.[0] || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800',
   escrowStatus: escrow.escrowStatus,
-  transactionType: escrow.transactionType,
   purchasePrice: escrow.purchasePrice,
   myCommission: escrow.myCommission,
   clients: escrow.clients?.map(c => ({ 
@@ -24,7 +23,6 @@ const transformEscrowForList = (escrow) => ({
   scheduledCoeDate: escrow.scheduledCoeDate,
   daysToClose: escrow.activityStats?.daysToClose || 0,
   checklistProgress: escrow.checklistProgress?.overall?.percentage || 0,
-  priorityLevel: escrow.priorityLevel,
   lastActivity: escrow.lastActivity || escrow.lastModifiedDate || escrow.updatedAt || escrow.createdAt || null,
   upcomingDeadlines: escrow.activityStats?.upcomingDeadlines || 0
 });

@@ -183,7 +183,6 @@ class SimpleEscrowController {
           property_address || '${envSuffix}' as "propertyAddress",
           'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800' as "propertyImage",
           escrow_status as "escrowStatus",
-          property_type as "transactionType",
           purchase_price as "purchasePrice",
           ${commissionField} as "myCommission",
           '[]'::jsonb as clients,
@@ -195,7 +194,6 @@ class SimpleEscrowController {
             ELSE 0
           END as "daysToClose",
           64 as "checklistProgress",
-          'medium' as "priorityLevel",
           CASE 
             WHEN updated_at IS NOT NULL THEN TO_CHAR(updated_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
             WHEN created_at IS NOT NULL THEN TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
@@ -531,7 +529,6 @@ class SimpleEscrowController {
         propertyAddress: escrow.property_address + envSuffix,
         propertyImage: escrow.propertyImage,
         escrowStatus: escrow.escrow_status,
-        transactionType: escrow.property_type || 'Single Family',
         purchasePrice: parseFloat(escrow.purchase_price) || 0,
         earnestMoneyDeposit: parseFloat(escrow.earnest_money_deposit || escrow.earnest_money) || 0,
         downPayment: parseFloat(escrow.down_payment) || parseFloat(escrow.purchase_price) * 0.2 || 0,

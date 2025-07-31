@@ -134,25 +134,25 @@ const StatsFullView = ({ open, onClose, stats = {}, escrows = [], showCommission
               <Divider sx={{ mb: 2 }} />
               
               <Typography variant="subtitle2" gutterBottom fontWeight="bold">
-                Priority Breakdown
+                Status Breakdown
               </Typography>
               <List dense>
                 <ListItem>
                   <ListItemIcon>
-                    <Warning sx={{ color: 'error.main', fontSize: 20 }} />
+                    <CheckCircle sx={{ color: 'success.main', fontSize: 20 }} />
                   </ListItemIcon>
                   <ListItemText 
-                    primary="High Priority" 
-                    secondary={`${getActiveEscrows().filter(e => e.priorityLevel === 'high').length} escrows`}
+                    primary="Active" 
+                    secondary={`${getActiveEscrows().length} escrows`}
                   />
                 </ListItem>
                 <ListItem>
                   <ListItemIcon>
-                    <Info sx={{ color: 'info.main', fontSize: 20 }} />
+                    <Schedule sx={{ color: 'info.main', fontSize: 20 }} />
                   </ListItemIcon>
                   <ListItemText 
-                    primary="Normal Priority" 
-                    secondary={`${getActiveEscrows().filter(e => e.priorityLevel !== 'high').length} escrows`}
+                    primary="Pending" 
+                    secondary={`${escrows.filter(e => e.escrowStatus?.toLowerCase() === 'pending').length} escrows`}
                   />
                 </ListItem>
               </List>
