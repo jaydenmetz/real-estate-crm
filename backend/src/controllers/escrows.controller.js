@@ -391,7 +391,67 @@ class SimpleEscrowController {
         
         // Add JSONB data at the bottom
         people: escrow.people || {},
-        timeline: escrow.timeline || [],
+        timeline: (() => {
+          // Build timeline object with all RPA dates
+          const storedTimeline = escrow.timeline || {};
+          
+          return {
+            // Core transaction dates
+            acceptanceDate: escrow.acceptance_date || null,
+            escrowOpenedDate: escrow.escrow_opened_date || escrow.opening_date || null,
+            closingDate: escrow.closing_date || null,
+            recordingDate: escrow.recording_date || null,
+            possessionDate: escrow.possession_date || null,
+            
+            // Inspection dates
+            inspectionPeriodEndDate: escrow.inspection_period_end_date || null,
+            physicalInspectionDate: escrow.physical_inspection_date || null,
+            termiteInspectionDate: escrow.termite_inspection_date || null,
+            sewerInspectionDate: escrow.sewer_inspection_date || null,
+            poolSpaInspectionDate: escrow.pool_spa_inspection_date || null,
+            roofInspectionDate: escrow.roof_inspection_date || null,
+            chimneyInspectionDate: escrow.chimney_inspection_date || null,
+            
+            // Disclosure dates
+            sellerDisclosuresDueDate: escrow.seller_disclosures_due_date || null,
+            sellerDisclosuresReceivedDate: escrow.seller_disclosures_received_date || null,
+            preliminaryTitleReportDate: escrow.preliminary_title_report_date || null,
+            nhdReportDate: escrow.nhd_report_date || null,
+            hoaDocumentsDueDate: escrow.hoa_documents_due_date || null,
+            hoaDocumentsReceivedDate: escrow.hoa_documents_received_date || null,
+            
+            // Loan dates
+            loanApplicationDate: escrow.loan_application_date || null,
+            loanContingencyRemovalDate: escrow.loan_contingency_removal_date || null,
+            appraisalContingencyRemovalDate: escrow.appraisal_contingency_removal_date || null,
+            appraisalOrderedDate: escrow.appraisal_ordered_date || null,
+            appraisalCompletedDate: escrow.appraisal_completed_date || null,
+            loanApprovalDate: escrow.loan_approval_date || null,
+            loanDocsOrderedDate: escrow.loan_docs_ordered_date || null,
+            loanDocsSignedDate: escrow.loan_docs_signed_date || null,
+            loanFundedDate: escrow.loan_funded_date || null,
+            
+            // Contingency removal dates
+            inspectionContingencyRemovalDate: escrow.inspection_contingency_removal_date || null,
+            allContingenciesRemovalDate: escrow.all_contingencies_removal_date || null,
+            
+            // Other important dates
+            walkThroughDate: escrow.walk_through_date || null,
+            rentBackEndDate: escrow.rent_back_end_date || null,
+            titleOrderedDate: escrow.title_ordered_date || null,
+            insuranceOrderedDate: escrow.insurance_ordered_date || null,
+            smokeAlarmInstallationDate: escrow.smoke_alarm_installation_date || null,
+            termiteCompletionDate: escrow.termite_completion_date || null,
+            repairsCompletionDate: escrow.repairs_completion_date || null,
+            finalVerificationDate: escrow.final_verification_date || null,
+            
+            // EMD date (from existing data)
+            emdDate: escrow.emd_date || null,
+            
+            // Merge any additional stored timeline data
+            ...storedTimeline
+          };
+        })(),
         financials: (() => {
           // Build financials in SkySlope Books format
           const stored = escrow.financials || {};
@@ -1014,10 +1074,15 @@ class SimpleEscrowController {
           contingencies_date,
           closing_date,
           actual_coe_date,
+          opening_date,
           -- Inspection dates
           inspection_period_end_date,
           physical_inspection_date,
           termite_inspection_date,
+          sewer_inspection_date,
+          pool_spa_inspection_date,
+          roof_inspection_date,
+          chimney_inspection_date,
           -- Disclosure dates
           seller_disclosures_due_date,
           seller_disclosures_received_date,
@@ -1032,6 +1097,7 @@ class SimpleEscrowController {
           appraisal_ordered_date,
           appraisal_completed_date,
           loan_approval_date,
+          loan_docs_ordered_date,
           loan_docs_signed_date,
           loan_funded_date,
           -- Contingency removal dates
@@ -1041,8 +1107,14 @@ class SimpleEscrowController {
           walk_through_date,
           recording_date,
           possession_date,
+          rent_back_end_date,
           escrow_opened_date,
-          title_ordered_date
+          title_ordered_date,
+          insurance_ordered_date,
+          smoke_alarm_installation_date,
+          termite_completion_date,
+          repairs_completion_date,
+          final_verification_date
         FROM escrows
         WHERE ${isUUID ? 'id = $1' : 'display_id = $1'}
       `;
@@ -1171,48 +1243,71 @@ class SimpleEscrowController {
         addTimelineEvent(new Date(acceptanceDate.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], 'Close of Escrow', 'closing', 'Target closing date');
       }
       
+      // Build timeline object with all RPA dates (same format as main escrow response)
+      const timelineData = {
+        // Core transaction dates
+        acceptanceDate: escrow.acceptance_date || null,
+        escrowOpenedDate: escrow.escrow_opened_date || escrow.opening_date || null,
+        closingDate: escrow.closing_date || null,
+        recordingDate: escrow.recording_date || null,
+        possessionDate: escrow.possession_date || null,
+        
+        // Inspection dates
+        inspectionPeriodEndDate: escrow.inspection_period_end_date || null,
+        physicalInspectionDate: escrow.physical_inspection_date || null,
+        termiteInspectionDate: escrow.termite_inspection_date || null,
+        sewerInspectionDate: escrow.sewer_inspection_date || null,
+        poolSpaInspectionDate: escrow.pool_spa_inspection_date || null,
+        roofInspectionDate: escrow.roof_inspection_date || null,
+        chimneyInspectionDate: escrow.chimney_inspection_date || null,
+        
+        // Disclosure dates
+        sellerDisclosuresDueDate: escrow.seller_disclosures_due_date || null,
+        sellerDisclosuresReceivedDate: escrow.seller_disclosures_received_date || null,
+        preliminaryTitleReportDate: escrow.preliminary_title_report_date || null,
+        nhdReportDate: escrow.nhd_report_date || null,
+        hoaDocumentsDueDate: escrow.hoa_documents_due_date || null,
+        hoaDocumentsReceivedDate: escrow.hoa_documents_received_date || null,
+        
+        // Loan dates
+        loanApplicationDate: escrow.loan_application_date || null,
+        loanContingencyRemovalDate: escrow.loan_contingency_removal_date || null,
+        appraisalContingencyRemovalDate: escrow.appraisal_contingency_removal_date || null,
+        appraisalOrderedDate: escrow.appraisal_ordered_date || null,
+        appraisalCompletedDate: escrow.appraisal_completed_date || null,
+        loanApprovalDate: escrow.loan_approval_date || null,
+        loanDocsOrderedDate: escrow.loan_docs_ordered_date || null,
+        loanDocsSignedDate: escrow.loan_docs_signed_date || null,
+        loanFundedDate: escrow.loan_funded_date || null,
+        
+        // Contingency removal dates
+        inspectionContingencyRemovalDate: escrow.inspection_contingency_removal_date || null,
+        allContingenciesRemovalDate: escrow.all_contingencies_removal_date || null,
+        
+        // Other important dates
+        walkThroughDate: escrow.walk_through_date || null,
+        rentBackEndDate: escrow.rent_back_end_date || null,
+        titleOrderedDate: escrow.title_ordered_date || null,
+        insuranceOrderedDate: escrow.insurance_ordered_date || null,
+        smokeAlarmInstallationDate: escrow.smoke_alarm_installation_date || null,
+        termiteCompletionDate: escrow.termite_completion_date || null,
+        repairsCompletionDate: escrow.repairs_completion_date || null,
+        finalVerificationDate: escrow.final_verification_date || null,
+        
+        // EMD dates
+        emdDate: escrow.emd_date || null,
+        
+        // Additional dates from the system
+        actualCoeDate: escrow.actual_coe_date || null,
+        contingenciesDate: escrow.contingencies_date || null,
+        
+        // Include any additional timeline data from JSONB
+        ...(escrow.timeline || {})
+      };
+      
       res.json({
         success: true,
-        data: {
-          timeline: timelineEvents,
-          summary: {
-            // Key milestone dates
-            acceptanceDate: escrow.acceptance_date,
-            emdDate: escrow.emd_date,
-            contingencyDates: {
-              inspection: escrow.inspection_contingency_removal_date,
-              appraisal: escrow.appraisal_contingency_removal_date,
-              loan: escrow.loan_contingency_removal_date,
-              all: escrow.all_contingencies_removal_date
-            },
-            closingDates: {
-              scheduled: escrow.closing_date,
-              actual: escrow.actual_coe_date,
-              recording: escrow.recording_date,
-              possession: escrow.possession_date
-            },
-            
-            // Days calculations
-            daysFromAcceptance: escrow.acceptance_date ? 
-              Math.floor((today - new Date(escrow.acceptance_date)) / (1000 * 60 * 60 * 24)) : null,
-            daysToClose: escrow.closing_date ? 
-              Math.floor((new Date(escrow.closing_date) - today) / (1000 * 60 * 60 * 24)) : null,
-            totalEscrowDays: escrow.acceptance_date && escrow.closing_date ?
-              Math.floor((new Date(escrow.closing_date) - new Date(escrow.acceptance_date)) / (1000 * 60 * 60 * 24)) : null,
-            
-            // Upcoming deadlines (next 7 days)
-            upcomingDeadlines: timelineEvents
-              .filter(event => {
-                const eventDate = new Date(event.date);
-                const daysUntil = Math.floor((eventDate - today) / (1000 * 60 * 60 * 24));
-                return daysUntil >= 0 && daysUntil <= 7 && event.status !== 'completed';
-              })
-              .map(event => ({
-                ...event,
-                daysUntil: Math.floor((new Date(event.date) - today) / (1000 * 60 * 60 * 24))
-              }))
-          }
-        }
+        data: timelineData
       });
       
     } catch (error) {
