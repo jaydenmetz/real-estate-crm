@@ -936,7 +936,36 @@ class SimpleEscrowController {
           emd_date,
           contingencies_date,
           closing_date,
-          actual_coe_date
+          actual_coe_date,
+          -- Inspection dates
+          inspection_period_end_date,
+          physical_inspection_date,
+          termite_inspection_date,
+          -- Disclosure dates
+          seller_disclosures_due_date,
+          seller_disclosures_received_date,
+          preliminary_title_report_date,
+          nhd_report_date,
+          hoa_documents_due_date,
+          hoa_documents_received_date,
+          -- Loan dates
+          loan_application_date,
+          loan_contingency_removal_date,
+          appraisal_contingency_removal_date,
+          appraisal_ordered_date,
+          appraisal_completed_date,
+          loan_approval_date,
+          loan_docs_signed_date,
+          loan_funded_date,
+          -- Contingency removal dates
+          inspection_contingency_removal_date,
+          all_contingencies_removal_date,
+          -- Other important dates
+          walk_through_date,
+          recording_date,
+          possession_date,
+          escrow_opened_date,
+          title_ordered_date
         FROM escrows
         WHERE ${isUUID ? 'id = $1' : 'display_id = $1'}
       `;
@@ -975,109 +1004,94 @@ class SimpleEscrowController {
         return eventDate <= today ? 'completed' : 'upcoming';
       };
       
-      // Add acceptance date
-      if (escrow.acceptance_date) {
-        timelineEvents.push({
-          date: escrow.acceptance_date,
-          event: 'Acceptance Date',
-          status: 'completed',
-          daysFromAcceptance: 0,
-          type: 'milestone'
-        });
-      }
+      // Helper to add event if date exists
+      const addTimelineEvent = (date, eventName, category, description = null) => {
+        if (date) {
+          timelineEvents.push({
+            date: date,
+            event: eventName,
+            category: category,
+            description: description,
+            status: getStatus(date),
+            daysFromAcceptance: calculateDaysFromAcceptance(date),
+            type: 'deadline'
+          });
+        }
+      };
       
-      // Add EMD date
-      if (escrow.emd_date) {
-        timelineEvents.push({
-          date: escrow.emd_date,
-          event: 'EMD Date',
-          status: getStatus(escrow.emd_date),
-          daysFromAcceptance: calculateDaysFromAcceptance(escrow.emd_date),
-          daysToEmd: escrow.acceptance_date && escrow.emd_date ? 
-            Math.floor((new Date(escrow.emd_date) - new Date(escrow.acceptance_date)) / (1000 * 60 * 60 * 24)) : null,
-          type: 'milestone'
-        });
-      }
+      // OPENING & INITIAL DATES
+      addTimelineEvent(escrow.acceptance_date, 'Acceptance Date', 'opening', 'Contract ratified by all parties');
+      addTimelineEvent(escrow.escrow_opened_date, 'Escrow Opened', 'opening', 'Escrow account opened');
+      addTimelineEvent(escrow.emd_date, 'EMD Due', 'financial', 'Earnest Money Deposit due');
+      addTimelineEvent(escrow.title_ordered_date, 'Title Ordered', 'opening', 'Title search initiated');
       
-      // Add contingencies date
-      if (escrow.contingencies_date) {
-        timelineEvents.push({
-          date: escrow.contingencies_date,
-          event: 'Contingencies Date',
-          status: getStatus(escrow.contingencies_date),
-          daysFromAcceptance: calculateDaysFromAcceptance(escrow.contingencies_date),
-          daysToContingency: Math.floor((new Date(escrow.contingencies_date) - today) / (1000 * 60 * 60 * 24)),
-          type: 'milestone'
-        });
-      }
+      // DISCLOSURE DATES
+      addTimelineEvent(escrow.seller_disclosures_due_date, 'Seller Disclosures Due', 'disclosure', 'Seller property disclosures deadline');
+      addTimelineEvent(escrow.seller_disclosures_received_date, 'Seller Disclosures Received', 'disclosure', 'Seller disclosures delivered');
+      addTimelineEvent(escrow.preliminary_title_report_date, 'Preliminary Title Report', 'disclosure', 'Title report delivered');
+      addTimelineEvent(escrow.nhd_report_date, 'NHD Report Due', 'disclosure', 'Natural Hazard Disclosure');
+      addTimelineEvent(escrow.hoa_documents_due_date, 'HOA Documents Due', 'disclosure', 'HOA docs deadline');
+      addTimelineEvent(escrow.hoa_documents_received_date, 'HOA Documents Received', 'disclosure', 'HOA docs delivered');
       
-      // Add scheduled COE date
-      if (escrow.closing_date) {
-        timelineEvents.push({
-          date: escrow.closing_date,
-          event: 'Scheduled COE Date',
-          status: getStatus(escrow.closing_date),
-          daysFromAcceptance: calculateDaysFromAcceptance(escrow.closing_date),
-          daysToCoe: Math.floor((new Date(escrow.closing_date) - today) / (1000 * 60 * 60 * 24)),
-          type: 'milestone'
-        });
-      }
+      // INSPECTION DATES
+      addTimelineEvent(escrow.physical_inspection_date, 'Home Inspection', 'inspection', 'General home inspection scheduled');
+      addTimelineEvent(escrow.termite_inspection_date, 'Termite Inspection', 'inspection', 'Pest inspection scheduled');
+      addTimelineEvent(escrow.inspection_period_end_date, 'Inspection Period Ends', 'contingency', 'Last day to complete inspections');
       
-      // Add actual COE date if different from scheduled
-      if (escrow.actual_coe_date && escrow.actual_coe_date !== escrow.closing_date) {
-        timelineEvents.push({
-          date: escrow.actual_coe_date,
-          event: 'Actual COE Date',
-          status: 'completed',
-          daysFromAcceptance: calculateDaysFromAcceptance(escrow.actual_coe_date),
-          type: 'milestone'
-        });
-      }
+      // LOAN PROCESS DATES
+      addTimelineEvent(escrow.loan_application_date, 'Loan Application', 'loan', 'Loan application submitted');
+      addTimelineEvent(escrow.appraisal_ordered_date, 'Appraisal Ordered', 'loan', 'Property appraisal ordered');
+      addTimelineEvent(escrow.appraisal_completed_date, 'Appraisal Completed', 'loan', 'Property appraisal received');
+      addTimelineEvent(escrow.loan_approval_date, 'Loan Approved', 'loan', 'Final loan approval');
+      addTimelineEvent(escrow.loan_docs_signed_date, 'Loan Docs Signed', 'loan', 'Buyer signs loan documents');
+      addTimelineEvent(escrow.loan_funded_date, 'Loan Funded', 'loan', 'Lender releases funds');
+      
+      // CONTINGENCY REMOVAL DATES
+      addTimelineEvent(escrow.inspection_contingency_removal_date, 'Remove Inspection Contingency', 'contingency', 'Inspection contingency removal deadline');
+      addTimelineEvent(escrow.appraisal_contingency_removal_date, 'Remove Appraisal Contingency', 'contingency', 'Appraisal contingency removal deadline');
+      addTimelineEvent(escrow.loan_contingency_removal_date, 'Remove Loan Contingency', 'contingency', 'Loan contingency removal deadline');
+      addTimelineEvent(escrow.all_contingencies_removal_date, 'All Contingencies Removed', 'contingency', 'All contingencies must be removed');
+      
+      // CLOSING DATES
+      addTimelineEvent(escrow.walk_through_date, 'Final Walk-Through', 'closing', 'Buyer final property inspection');
+      addTimelineEvent(escrow.closing_date, 'Scheduled Close of Escrow', 'closing', 'Target closing date');
+      addTimelineEvent(escrow.recording_date, 'Recording Date', 'closing', 'Deed records with county');
+      addTimelineEvent(escrow.actual_coe_date, 'Actual COE', 'closing', 'Transaction closed');
+      addTimelineEvent(escrow.possession_date, 'Possession Date', 'closing', 'Buyer takes possession');
       
       // Merge with any custom timeline events stored in JSONB
       if (timeline.length > 0) {
-        // Filter out any duplicate milestone events
-        const milestoneEvents = ['Acceptance Date', 'EMD Date', 'Contingencies Date', 'Scheduled COE Date', 'Actual COE Date'];
-        const customEvents = timeline.filter(event => !milestoneEvents.includes(event.event));
-        timelineEvents.push(...customEvents);
+        // Add custom events that aren't already in our RPA dates
+        const existingEventNames = timelineEvents.map(e => e.event);
+        const customEvents = timeline.filter(event => !existingEventNames.includes(event.event));
+        customEvents.forEach(event => {
+          timelineEvents.push({
+            ...event,
+            category: event.category || 'custom',
+            type: event.type || 'event',
+            status: getStatus(event.date),
+            daysFromAcceptance: calculateDaysFromAcceptance(event.date)
+          });
+        });
       }
       
       // Sort by date
       timelineEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
       
-      // If no events, generate default timeline based on acceptance date
+      // If no events, generate default RPA timeline based on acceptance date
       if (timelineEvents.length === 0 && escrow.acceptance_date) {
         const acceptanceDate = new Date(escrow.acceptance_date);
-        timelineEvents.push(
-          {
-            date: acceptanceDate.toISOString().split('T')[0],
-            event: 'Acceptance Date',
-            status: 'completed',
-            daysFromAcceptance: 0,
-            type: 'milestone'
-          },
-          {
-            date: new Date(acceptanceDate.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            event: 'EMD Date',
-            status: 'pending',
-            daysFromAcceptance: 3,
-            type: 'milestone'
-          },
-          {
-            date: new Date(acceptanceDate.getTime() + 17 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            event: 'Contingencies Date',
-            status: 'pending',
-            daysFromAcceptance: 17,
-            type: 'milestone'
-          },
-          {
-            date: new Date(acceptanceDate.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            event: 'Scheduled COE Date',
-            status: 'pending',
-            daysFromAcceptance: 30,
-            type: 'milestone'
-          }
-        );
+        
+        // Generate typical RPA timeline with standard California timeframes
+        addTimelineEvent(acceptanceDate.toISOString().split('T')[0], 'Acceptance Date', 'opening', 'Contract ratified');
+        addTimelineEvent(new Date(acceptanceDate.getTime() + 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], 'Escrow Opens', 'opening', 'Open escrow');
+        addTimelineEvent(new Date(acceptanceDate.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], 'EMD Due', 'financial', 'Deposit due');
+        addTimelineEvent(new Date(acceptanceDate.getTime() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], 'Seller Disclosures Due', 'disclosure', 'Disclosures deadline');
+        addTimelineEvent(new Date(acceptanceDate.getTime() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], 'Home Inspection', 'inspection', 'Inspection scheduled');
+        addTimelineEvent(new Date(acceptanceDate.getTime() + 17 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], 'Remove Inspection Contingency', 'contingency', 'Inspection contingency deadline');
+        addTimelineEvent(new Date(acceptanceDate.getTime() + 17 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], 'Remove Appraisal Contingency', 'contingency', 'Appraisal contingency deadline');
+        addTimelineEvent(new Date(acceptanceDate.getTime() + 21 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], 'Remove Loan Contingency', 'contingency', 'Loan contingency deadline');
+        addTimelineEvent(new Date(acceptanceDate.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], 'Close of Escrow', 'closing', 'Target closing date');
       }
       
       res.json({
@@ -1085,17 +1099,41 @@ class SimpleEscrowController {
         data: {
           timeline: timelineEvents,
           summary: {
+            // Key milestone dates
             acceptanceDate: escrow.acceptance_date,
             emdDate: escrow.emd_date,
-            contingenciesDate: escrow.contingencies_date,
-            scheduledCoeDate: escrow.closing_date,
-            actualCoeDate: escrow.actual_coe_date,
-            daysToEmd: escrow.acceptance_date && escrow.emd_date ? 
-              Math.floor((new Date(escrow.emd_date) - new Date(escrow.acceptance_date)) / (1000 * 60 * 60 * 24)) : null,
-            daysToContingency: escrow.contingencies_date ? 
-              Math.floor((new Date(escrow.contingencies_date) - today) / (1000 * 60 * 60 * 24)) : null,
-            daysToCoe: escrow.closing_date ? 
-              Math.floor((new Date(escrow.closing_date) - today) / (1000 * 60 * 60 * 24)) : null
+            contingencyDates: {
+              inspection: escrow.inspection_contingency_removal_date,
+              appraisal: escrow.appraisal_contingency_removal_date,
+              loan: escrow.loan_contingency_removal_date,
+              all: escrow.all_contingencies_removal_date
+            },
+            closingDates: {
+              scheduled: escrow.closing_date,
+              actual: escrow.actual_coe_date,
+              recording: escrow.recording_date,
+              possession: escrow.possession_date
+            },
+            
+            // Days calculations
+            daysFromAcceptance: escrow.acceptance_date ? 
+              Math.floor((today - new Date(escrow.acceptance_date)) / (1000 * 60 * 60 * 24)) : null,
+            daysToClose: escrow.closing_date ? 
+              Math.floor((new Date(escrow.closing_date) - today) / (1000 * 60 * 60 * 24)) : null,
+            totalEscrowDays: escrow.acceptance_date && escrow.closing_date ?
+              Math.floor((new Date(escrow.closing_date) - new Date(escrow.acceptance_date)) / (1000 * 60 * 60 * 24)) : null,
+            
+            // Upcoming deadlines (next 7 days)
+            upcomingDeadlines: timelineEvents
+              .filter(event => {
+                const eventDate = new Date(event.date);
+                const daysUntil = Math.floor((eventDate - today) / (1000 * 60 * 60 * 24));
+                return daysUntil >= 0 && daysUntil <= 7 && event.status !== 'completed';
+              })
+              .map(event => ({
+                ...event,
+                daysUntil: Math.floor((new Date(event.date) - today) / (1000 * 60 * 60 * 24))
+              }))
           }
         }
       });
