@@ -332,20 +332,31 @@ class SimpleEscrowController {
 
       const escrow = escrowResult.rows[0];
       
-      // Build simplified response according to new spec
+      // Build comprehensive response with all fields from Notion
       const response = {
+        // Core identifiers
         id: escrow.id,
         escrowNumber: escrow.display_id,
         propertyAddress: escrow.property_address,
         escrowStatus: escrow.escrow_status,
+        
+        // Financial fields
         purchasePrice: parseFloat(escrow.purchase_price) || 0,
         commissionPercentage: parseFloat(escrow.commission_percentage) || 3,
         grossCommission: parseFloat(escrow.gross_commission) || 0,
         myCommission: parseFloat(escrow.my_commission) || 0,
         commissionAdjustments: parseFloat(escrow.commission_adjustments) || 0,
         expenseAdjustments: parseFloat(escrow.expense_adjustments) || 0,
+        
+        // Important dates
         acceptanceDate: escrow.acceptance_date ? 
           (typeof escrow.acceptance_date === 'string' ? escrow.acceptance_date.split('T')[0] : new Date(escrow.acceptance_date).toISOString().split('T')[0])
+          : null,
+        emdDate: escrow.emd_date ? 
+          (typeof escrow.emd_date === 'string' ? escrow.emd_date.split('T')[0] : new Date(escrow.emd_date).toISOString().split('T')[0])
+          : null,
+        contingenciesDate: escrow.contingencies_date ? 
+          (typeof escrow.contingencies_date === 'string' ? escrow.contingencies_date.split('T')[0] : new Date(escrow.contingencies_date).toISOString().split('T')[0])
           : null,
         scheduledCoeDate: escrow.closing_date ? 
           (typeof escrow.closing_date === 'string' ? escrow.closing_date.split('T')[0] : new Date(escrow.closing_date).toISOString().split('T')[0])
@@ -353,10 +364,28 @@ class SimpleEscrowController {
         actualCoeDate: escrow.actual_coe_date ? 
           (typeof escrow.actual_coe_date === 'string' ? escrow.actual_coe_date.split('T')[0] : new Date(escrow.actual_coe_date).toISOString().split('T')[0])
           : null,
+          
+        // Days calculations
+        daysToCoe: escrow.closing_date ? 
+          Math.floor((new Date(escrow.closing_date) - new Date()) / (1000 * 60 * 60 * 24)) : null,
+        daysToContingency: escrow.contingencies_date ? 
+          Math.floor((new Date(escrow.contingencies_date) - new Date()) / (1000 * 60 * 60 * 24)) : null,
+        daysToEmd: escrow.acceptance_date && escrow.emd_date ? 
+          Math.floor((new Date(escrow.emd_date) - new Date(escrow.acceptance_date)) / (1000 * 60 * 60 * 24)) : null,
+        
+        // Vendor companies
         leadSource: escrow.lead_source || 'Family',
         transactionCoordinator: escrow.transaction_coordinator || 'Karin Munoz',
         nhdCompany: escrow.nhd_company || 'Property ID Max',
+        homeWarrantyCompany: escrow.home_warranty_company || null,
+        termiteInspectionCompany: escrow.termite_inspection_company || null,
+        homeInspectionCompany: escrow.home_inspection_company || null,
+        
+        // Other fields
         avid: escrow.avid || true,
+        listings: escrow.listings || [],
+        
+        // Timestamps
         created_at: escrow.created_at,
         updated_at: escrow.updated_at,
         
@@ -371,7 +400,9 @@ class SimpleEscrowController {
               addContactsToPhone: false,
               mlsStatusUpdate: false,
               tcEmail: false,
-              tcGlideInvite: false
+              tcGlideInvite: false,
+              sendToTc: false,
+              fullyExecutedAgreement: false
             },
             loan: {
               le: false,
@@ -394,7 +425,9 @@ class SimpleEscrowController {
               rr: false,
               cr: false,
               vp: false,
-              recorded: false
+              recorded: false,
+              termiteInspection: false,
+              homeWarranty: false
             }
           };
           
@@ -859,9 +892,15 @@ class SimpleEscrowController {
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
       
       const query = `
-        SELECT timeline, acceptance_date
+        SELECT 
+          timeline, 
+          acceptance_date,
+          emd_date,
+          contingencies_date,
+          closing_date,
+          actual_coe_date
         FROM escrows
-        WHERE ${isUUID ? 'id = $1::uuid' : 'display_id = $1'}
+        WHERE ${isUUID ? 'id = $1' : 'display_id = $1'}
       `;
       
       const result = await pool.query(query, [id]);
@@ -876,42 +915,151 @@ class SimpleEscrowController {
         });
       }
       
-      let timeline = result.rows[0].timeline || [];
+      const escrow = result.rows[0];
+      let timeline = escrow.timeline || [];
       
-      // If timeline is empty, generate default timeline based on acceptance date
-      if (timeline.length === 0 && result.rows[0].acceptance_date) {
-        const acceptanceDate = new Date(result.rows[0].acceptance_date);
-        timeline = [
+      // Build comprehensive timeline from database dates
+      const timelineEvents = [];
+      const today = new Date();
+      
+      // Helper to calculate days from acceptance
+      const calculateDaysFromAcceptance = (date) => {
+        if (!escrow.acceptance_date || !date) return null;
+        const acceptanceDate = new Date(escrow.acceptance_date);
+        const eventDate = new Date(date);
+        return Math.floor((eventDate - acceptanceDate) / (1000 * 60 * 60 * 24));
+      };
+      
+      // Helper to determine status
+      const getStatus = (date) => {
+        if (!date) return 'pending';
+        const eventDate = new Date(date);
+        return eventDate <= today ? 'completed' : 'upcoming';
+      };
+      
+      // Add acceptance date
+      if (escrow.acceptance_date) {
+        timelineEvents.push({
+          date: escrow.acceptance_date,
+          event: 'Acceptance Date',
+          status: 'completed',
+          daysFromAcceptance: 0,
+          type: 'milestone'
+        });
+      }
+      
+      // Add EMD date
+      if (escrow.emd_date) {
+        timelineEvents.push({
+          date: escrow.emd_date,
+          event: 'EMD Date',
+          status: getStatus(escrow.emd_date),
+          daysFromAcceptance: calculateDaysFromAcceptance(escrow.emd_date),
+          daysToEmd: escrow.acceptance_date && escrow.emd_date ? 
+            Math.floor((new Date(escrow.emd_date) - new Date(escrow.acceptance_date)) / (1000 * 60 * 60 * 24)) : null,
+          type: 'milestone'
+        });
+      }
+      
+      // Add contingencies date
+      if (escrow.contingencies_date) {
+        timelineEvents.push({
+          date: escrow.contingencies_date,
+          event: 'Contingencies Date',
+          status: getStatus(escrow.contingencies_date),
+          daysFromAcceptance: calculateDaysFromAcceptance(escrow.contingencies_date),
+          daysToContingency: Math.floor((new Date(escrow.contingencies_date) - today) / (1000 * 60 * 60 * 24)),
+          type: 'milestone'
+        });
+      }
+      
+      // Add scheduled COE date
+      if (escrow.closing_date) {
+        timelineEvents.push({
+          date: escrow.closing_date,
+          event: 'Scheduled COE Date',
+          status: getStatus(escrow.closing_date),
+          daysFromAcceptance: calculateDaysFromAcceptance(escrow.closing_date),
+          daysToCoe: Math.floor((new Date(escrow.closing_date) - today) / (1000 * 60 * 60 * 24)),
+          type: 'milestone'
+        });
+      }
+      
+      // Add actual COE date if different from scheduled
+      if (escrow.actual_coe_date && escrow.actual_coe_date !== escrow.closing_date) {
+        timelineEvents.push({
+          date: escrow.actual_coe_date,
+          event: 'Actual COE Date',
+          status: 'completed',
+          daysFromAcceptance: calculateDaysFromAcceptance(escrow.actual_coe_date),
+          type: 'milestone'
+        });
+      }
+      
+      // Merge with any custom timeline events stored in JSONB
+      if (timeline.length > 0) {
+        // Filter out any duplicate milestone events
+        const milestoneEvents = ['Acceptance Date', 'EMD Date', 'Contingencies Date', 'Scheduled COE Date', 'Actual COE Date'];
+        const customEvents = timeline.filter(event => !milestoneEvents.includes(event.event));
+        timelineEvents.push(...customEvents);
+      }
+      
+      // Sort by date
+      timelineEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
+      
+      // If no events, generate default timeline based on acceptance date
+      if (timelineEvents.length === 0 && escrow.acceptance_date) {
+        const acceptanceDate = new Date(escrow.acceptance_date);
+        timelineEvents.push(
           {
             date: acceptanceDate.toISOString().split('T')[0],
             event: 'Acceptance Date',
             status: 'completed',
-            daysFromAcceptance: 0
+            daysFromAcceptance: 0,
+            type: 'milestone'
           },
           {
             date: new Date(acceptanceDate.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
             event: 'EMD Date',
             status: 'pending',
-            daysFromAcceptance: 3
+            daysFromAcceptance: 3,
+            type: 'milestone'
           },
           {
             date: new Date(acceptanceDate.getTime() + 17 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
             event: 'Contingencies Date',
             status: 'pending',
-            daysFromAcceptance: 17
+            daysFromAcceptance: 17,
+            type: 'milestone'
           },
           {
             date: new Date(acceptanceDate.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            event: 'COE Date',
+            event: 'Scheduled COE Date',
             status: 'pending',
-            daysFromAcceptance: 30
+            daysFromAcceptance: 30,
+            type: 'milestone'
           }
-        ];
+        );
       }
       
       res.json({
         success: true,
-        data: timeline
+        data: {
+          timeline: timelineEvents,
+          summary: {
+            acceptanceDate: escrow.acceptance_date,
+            emdDate: escrow.emd_date,
+            contingenciesDate: escrow.contingencies_date,
+            scheduledCoeDate: escrow.closing_date,
+            actualCoeDate: escrow.actual_coe_date,
+            daysToEmd: escrow.acceptance_date && escrow.emd_date ? 
+              Math.floor((new Date(escrow.emd_date) - new Date(escrow.acceptance_date)) / (1000 * 60 * 60 * 24)) : null,
+            daysToContingency: escrow.contingencies_date ? 
+              Math.floor((new Date(escrow.contingencies_date) - today) / (1000 * 60 * 60 * 24)) : null,
+            daysToCoe: escrow.closing_date ? 
+              Math.floor((new Date(escrow.closing_date) - today) / (1000 * 60 * 60 * 24)) : null
+          }
+        }
       });
       
     } catch (error) {
@@ -969,10 +1117,38 @@ class SimpleEscrowController {
       // Calculate total expenses
       const totalExpenses = expenses.reduce((sum, expense) => sum + (expense.amount || 0), 0);
       
-      // Build financial data response
+      // Build financial data response matching SkySlope Books format
       const data = {
         purchasePrice: parseFloat(escrow.purchase_price) || 0,
         earnestMoneyDeposit: parseFloat(escrow.earnest_money_deposit) || 0,
+        
+        // Deal Cost Breakdown
+        dealCostBreakdown: {
+          baseCommission: parseFloat(escrow.gross_commission) || 0,
+          grossCommission: parseFloat(escrow.gross_commission) || 0,
+          grossCommissionFees: parseFloat(financials.grossCommissionFees) || 0,
+          referralFees: parseFloat(financials.referralFees) || 0,
+          adjustedGross: (parseFloat(escrow.gross_commission) || 0) - (parseFloat(financials.grossCommissionFees) || 0),
+          netCommission: parseFloat(escrow.my_commission) || 0,
+          dealExpense: parseFloat(financials.franchiseFees) || 0,
+          franchiseFees: parseFloat(financials.franchiseFees) || 0,
+          dealNet: (parseFloat(escrow.my_commission) || 0) - (parseFloat(financials.franchiseFees) || 0)
+        },
+        
+        // Agent Cost Breakdown
+        agentCostBreakdown: {
+          dealNet: (parseFloat(escrow.my_commission) || 0) - (parseFloat(financials.franchiseFees) || 0),
+          agentGCI: (parseFloat(escrow.my_commission) || 0) - (parseFloat(financials.franchiseFees) || 0),
+          agentSplit: parseFloat(financials.agentSplit?.grossAgentCommission) || 0,
+          splitPercentage: parseFloat(financials.agentSplit?.splitPercentage) || 75,
+          transactionFee: parseFloat(financials.agentSplit?.transactionFee) || 285,
+          tcFee: parseFloat(financials.agentSplit?.tcFee) || 250,
+          agent1099Income: parseFloat(financials.agentSplit?.agent1099Income) || 0,
+          excessPayment: parseFloat(financials.agentSplit?.agent1099Income) || 0,
+          agentNet: parseFloat(financials.agentSplit?.agent1099Income) || 0
+        },
+        
+        // Commission Details
         commissionBreakdown: {
           commissionPercentage: parseFloat(escrow.commission_percentage) || 3,
           grossCommission: parseFloat(escrow.gross_commission) || 0,
@@ -983,8 +1159,13 @@ class SimpleEscrowController {
                         (parseFloat(escrow.commission_adjustments) || 0) + 
                         (parseFloat(escrow.expense_adjustments) || 0)
         },
+        
+        // Expenses
         expenses: expenses,
+        expensesPaidThroughEscrow: expenses.filter(e => e.paidThroughEscrow === true),
         totalExpenses: totalExpenses,
+        
+        // Additional stored financials
         ...financials
       };
       
@@ -1039,7 +1220,9 @@ class SimpleEscrowController {
           addContactsToPhone: false,
           mlsStatusUpdate: false,
           tcEmail: false,
-          tcGlideInvite: false
+          tcGlideInvite: false,
+          sendToTc: false,
+          fullyExecutedAgreement: false
         },
         loan: {
           le: false,
@@ -1062,7 +1245,9 @@ class SimpleEscrowController {
           rr: false,
           cr: false,
           vp: false,
-          recorded: false
+          recorded: false,
+          termiteInspection: false,
+          homeWarranty: false
         }
       };
       
