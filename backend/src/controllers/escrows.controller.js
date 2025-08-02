@@ -383,7 +383,9 @@ class SimpleEscrowController {
         
         // Other fields
         avid: escrow.avid || true,
-        listings: escrow.listings || [],
+        
+        // Single listing (only if I'm the listing agent)
+        listing: escrow.listing || null,
         
         // Timestamps
         created_at: escrow.created_at,
@@ -1659,7 +1661,7 @@ class SimpleEscrowController {
       const query = `
         SELECT documents
         FROM escrows
-        WHERE ${isUUID ? 'id = $1::uuid' : 'display_id = $1'}
+        WHERE ${isUUID ? 'id = $1' : 'display_id = $1'}
       `;
       
       const result = await pool.query(query, [id]);
