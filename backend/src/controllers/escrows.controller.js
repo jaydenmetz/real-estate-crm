@@ -390,7 +390,74 @@ class SimpleEscrowController {
         updated_at: escrow.updated_at,
         
         // Add JSONB data at the bottom
-        people: escrow.people || {},
+        people: (() => {
+          // Build people object with structured contacts
+          const storedPeople = escrow.people || {};
+          
+          // Default contact structure
+          const defaultContact = {
+            id: null,
+            name: null,
+            email: null,
+            phone: null,
+            company: null,
+            license: null,
+            address: null,
+            role: null
+          };
+          
+          return {
+            // Buyer side
+            buyer: storedPeople.buyer || defaultContact,
+            buyerAgent: storedPeople.buyerAgent || defaultContact,
+            buyerBroker: storedPeople.buyerBroker || defaultContact,
+            
+            // Seller side
+            seller: storedPeople.seller || defaultContact,
+            sellerAgent: storedPeople.sellerAgent || defaultContact,
+            sellerBroker: storedPeople.sellerBroker || defaultContact,
+            
+            // Transaction professionals
+            escrowOfficer: storedPeople.escrowOfficer || defaultContact,
+            titleOfficer: storedPeople.titleOfficer || defaultContact,
+            lender: storedPeople.lender || defaultContact,
+            loanOfficer: storedPeople.loanOfficer || defaultContact,
+            
+            // Inspectors
+            homeInspector: storedPeople.homeInspector || defaultContact,
+            termiteInspector: storedPeople.termiteInspector || defaultContact,
+            roofInspector: storedPeople.roofInspector || defaultContact,
+            poolInspector: storedPeople.poolInspector || defaultContact,
+            
+            // Other professionals
+            appraiser: storedPeople.appraiser || defaultContact,
+            contractor: storedPeople.contractor || defaultContact,
+            homeWarrantyRep: storedPeople.homeWarrantyRep || defaultContact,
+            
+            // Transaction coordinator
+            transactionCoordinator: storedPeople.transactionCoordinator || {
+              ...defaultContact,
+              name: escrow.transaction_coordinator || null
+            },
+            
+            // Include any additional people from stored data
+            ...Object.keys(storedPeople).reduce((acc, key) => {
+              // Only include keys that aren't already defined above
+              const predefinedKeys = [
+                'buyer', 'buyerAgent', 'buyerBroker',
+                'seller', 'sellerAgent', 'sellerBroker',
+                'escrowOfficer', 'titleOfficer', 'lender', 'loanOfficer',
+                'homeInspector', 'termiteInspector', 'roofInspector', 'poolInspector',
+                'appraiser', 'contractor', 'homeWarrantyRep', 'transactionCoordinator'
+              ];
+              
+              if (!predefinedKeys.includes(key)) {
+                acc[key] = storedPeople[key];
+              }
+              return acc;
+            }, {})
+          };
+        })(),
         timeline: (() => {
           // Build timeline object with all RPA dates
           const storedTimeline = escrow.timeline || {};
@@ -1023,7 +1090,7 @@ class SimpleEscrowController {
       const query = `
         SELECT people
         FROM escrows
-        WHERE ${isUUID ? 'id = $1::uuid' : 'display_id = $1'}
+        WHERE ${isUUID ? 'id = $1' : 'display_id = $1'}
       `;
       
       const result = await pool.query(query, [id]);
@@ -1038,11 +1105,73 @@ class SimpleEscrowController {
         });
       }
       
-      const people = result.rows[0].people || {};
+      const storedPeople = result.rows[0].people || {};
+      
+      // Default contact structure
+      const defaultContact = {
+        id: null,
+        name: null,
+        email: null,
+        phone: null,
+        company: null,
+        license: null,
+        address: null,
+        role: null
+      };
+      
+      // Build structured people object
+      const peopleData = {
+        // Buyer side
+        buyer: storedPeople.buyer || defaultContact,
+        buyerAgent: storedPeople.buyerAgent || defaultContact,
+        buyerBroker: storedPeople.buyerBroker || defaultContact,
+        
+        // Seller side
+        seller: storedPeople.seller || defaultContact,
+        sellerAgent: storedPeople.sellerAgent || defaultContact,
+        sellerBroker: storedPeople.sellerBroker || defaultContact,
+        
+        // Transaction professionals
+        escrowOfficer: storedPeople.escrowOfficer || defaultContact,
+        titleOfficer: storedPeople.titleOfficer || defaultContact,
+        lender: storedPeople.lender || defaultContact,
+        loanOfficer: storedPeople.loanOfficer || defaultContact,
+        
+        // Inspectors
+        homeInspector: storedPeople.homeInspector || defaultContact,
+        termiteInspector: storedPeople.termiteInspector || defaultContact,
+        roofInspector: storedPeople.roofInspector || defaultContact,
+        poolInspector: storedPeople.poolInspector || defaultContact,
+        
+        // Other professionals
+        appraiser: storedPeople.appraiser || defaultContact,
+        contractor: storedPeople.contractor || defaultContact,
+        homeWarrantyRep: storedPeople.homeWarrantyRep || defaultContact,
+        
+        // Transaction coordinator (check if we need to get from escrow table)
+        transactionCoordinator: storedPeople.transactionCoordinator || defaultContact,
+        
+        // Include any additional people from stored data
+        ...Object.keys(storedPeople).reduce((acc, key) => {
+          // Only include keys that aren't already defined above
+          const predefinedKeys = [
+            'buyer', 'buyerAgent', 'buyerBroker',
+            'seller', 'sellerAgent', 'sellerBroker',
+            'escrowOfficer', 'titleOfficer', 'lender', 'loanOfficer',
+            'homeInspector', 'termiteInspector', 'roofInspector', 'poolInspector',
+            'appraiser', 'contractor', 'homeWarrantyRep', 'transactionCoordinator'
+          ];
+          
+          if (!predefinedKeys.includes(key)) {
+            acc[key] = storedPeople[key];
+          }
+          return acc;
+        }, {})
+      };
       
       res.json({
         success: true,
-        data: people
+        data: peopleData
       });
       
     } catch (error) {
