@@ -397,38 +397,121 @@ class SimpleEscrowController {
           const stored = escrow.financials || {};
           const purchasePrice = parseFloat(escrow.purchase_price) || 0;
           const commissionPercentage = parseFloat(escrow.commission_percentage) || 3;
-          const grossCommission = parseFloat(escrow.gross_commission) || (purchasePrice * (commissionPercentage / 100));
-          const myCommission = parseFloat(escrow.my_commission) || grossCommission;
+          const baseCommission = parseFloat(escrow.gross_commission) || (purchasePrice * (commissionPercentage / 100));
           
-          // Get agent split from stored data or calculate defaults
-          const agentSplit = stored.agentSplit || {
-            splitPercentage: 75,
-            grossAgentCommission: myCommission * 0.75,
-            transactionFee: 285,
-            tcFee: 250,
-            franchiseFees: myCommission * 0.0257,
-            agent1099Income: (myCommission * 0.75) - 285 - 250 - (myCommission * 0.0257)
-          };
+          // Determine if this is a Zillow referral
+          const isZillowReferral = escrow.lead_source === 'Zillow' || escrow.lead_source === 'Zillow Flex';
+          
+          // Calculate Zillow Flex fee based on price tiers
+          let zillowFlexFeePercentage = 0;
+          let grossCommissionFees = 0;
+          
+          if (isZillowReferral) {
+            if (purchasePrice >= 400000) {
+              zillowFlexFeePercentage = 40;
+            } else if (purchasePrice >= 300000) {
+              zillowFlexFeePercentage = 35;
+            } else if (purchasePrice >= 200000) {
+              zillowFlexFeePercentage = 30;
+            } else if (purchasePrice >= 100000) {
+              zillowFlexFeePercentage = 25;
+            } else {
+              zillowFlexFeePercentage = 15;
+            }
+            grossCommissionFees = baseCommission * (zillowFlexFeePercentage / 100);
+          }
+          
+          // Calculate adjusted gross after referral fees
+          const adjustedGross = baseCommission - grossCommissionFees;
+          const netCommission = adjustedGross; // Can be different if there are other adjustments
+          
+          // Calculate franchise fees (6.25% of net commission)
+          const franchiseFees = netCommission * 0.0625;
+          const dealExpense = franchiseFees; // For now, franchise fees are the only deal expense
+          
+          // Calculate deal net
+          const dealNet = netCommission - dealExpense;
+          const agentGCI = dealNet; // Agent's GCI is the deal net
+          
+          // Get YTD GCI and determine split percentage
+          const ytdGci = parseFloat(escrow.ytd_gci) || 0;
+          let splitPercentage = 70; // Default
+          
+          // Special rule for Zillow referrals - always 75%
+          if (isZillowReferral) {
+            splitPercentage = 75;
+          } else {
+            // Normal split rules based on YTD GCI
+            if (ytdGci >= 100000) {
+              splitPercentage = 100;
+            } else if (ytdGci >= 50000) {
+              splitPercentage = 80;
+            }
+          }
+          
+          // Calculate agent commission
+          const agentCommission = agentGCI * (splitPercentage / 100);
+          
+          // Standard fees
+          const transactionFee = 285;
+          const tcFee = 250;
+          
+          // Calculate 1099 income
+          const agent1099Income = agentCommission - transactionFee - tcFee;
+          const excessPayment = agent1099Income; // Same as 1099 unless there are other payments
+          const agentNet = excessPayment;
           
           return {
-            // Deal Cost Breakdown
-            dealCostBreakdown: {
-              purchasePrice: purchasePrice,
-              commissionPercentage: commissionPercentage,
-              totalCommission: grossCommission,
-              listingSideCommission: grossCommission / 2,
-              buyerSideCommission: grossCommission / 2,
-              myGrossCommission: myCommission,
-              commissionAdjustments: parseFloat(escrow.commission_adjustments) || 0,
-              expenseAdjustments: parseFloat(escrow.expense_adjustments) || 0,
-              netCommission: myCommission + (parseFloat(escrow.commission_adjustments) || 0) - (parseFloat(escrow.expense_adjustments) || 0)
-            },
+            // Base commission info
+            baseCommission: baseCommission || 0,
+            grossCommission: baseCommission || 0,
             
-            // Agent Cost Breakdown  
-            agentCostBreakdown: {
-              ...agentSplit,
-              expenses: escrow.expenses || []
-            }
+            // Referral fees section
+            grossCommissionFees: grossCommissionFees || 0,
+            zillowFlexFee: isZillowReferral ? {
+              percentage: zillowFlexFeePercentage,
+              amount: grossCommissionFees,
+              tier: purchasePrice >= 400000 ? '$400,000+' :
+                    purchasePrice >= 300000 ? '$300,000-$399,999' :
+                    purchasePrice >= 200000 ? '$200,000-$299,999' :
+                    purchasePrice >= 100000 ? '$100,000-$199,999' : '$0-$99,999'
+            } : null,
+            
+            // Adjusted amounts
+            adjustedGross: adjustedGross || 0,
+            netCommission: netCommission || 0,
+            
+            // Deal expenses
+            dealExpense: dealExpense || 0,
+            franchiseFees: franchiseFees || 0,
+            franchiseFeePercentage: 6.25,
+            
+            // Deal summary
+            dealNet: dealNet || 0,
+            agentGCI: agentGCI || 0,
+            
+            // Agent split section
+            agentName: "Jayden Metz",
+            splitPercentage: splitPercentage,
+            agentCommission: agentCommission || 0,
+            
+            // Agent fees
+            transactionFee: transactionFee || 0,
+            tcFee: tcFee || 0,
+            
+            // Agent income
+            agent1099Income: agent1099Income || 0,
+            excessPayment: excessPayment || 0,
+            agentNet: agentNet || 0,
+            
+            // Additional context
+            leadSource: escrow.lead_source || '',
+            isZillowReferral: isZillowReferral,
+            ytdGciBeforeTransaction: ytdGci || 0,
+            ytdGciAfterTransaction: (ytdGci + agentGCI) || 0,
+            
+            // Expenses array for additional costs
+            expenses: escrow.expenses || []
           };
         })(),
         checklists: (() => {
