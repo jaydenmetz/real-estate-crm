@@ -516,15 +516,6 @@ class SimpleEscrowController {
         })(),
         checklists: (() => {
           const defaultChecklists = {
-            admin: {
-              addContactsToNotion: false,
-              addContactsToPhone: false,
-              mlsStatusUpdate: false,
-              tcEmail: false,
-              tcGlideInvite: false,
-              sendToTc: false,
-              fullyExecutedAgreement: false
-            },
             loan: {
               le: false,
               lockedRate: false,
@@ -536,28 +527,31 @@ class SimpleEscrowController {
               cashToClosePaid: false,
               loanFunded: false
             },
-            home: {
-              emd: false,
+            house: {
               homeInspectionOrdered: false,
+              emd: false,
+              solarTransferInitiated: false,
+              avid: false,
               homeInspectionReceived: false,
               sellerDisclosures: false,
-              avid: false,
-              solarTransferInitiated: false,
               rr: false,
-              cr: false,
-              vp: false,
-              recorded: false,
-              termiteInspection: false,
-              homeWarranty: false
+              recorded: false
+            },
+            admin: {
+              mlsStatusUpdate: false,
+              tcEmail: false,
+              tcGlideInvite: false,
+              addContactsToPhone: false,
+              addContactsToNotion: false
             }
           };
           
           if (!escrow.checklists) return defaultChecklists;
           
           return {
-            admin: { ...defaultChecklists.admin, ...(escrow.checklists.admin || {}) },
             loan: { ...defaultChecklists.loan, ...(escrow.checklists.loan || {}) },
-            home: { ...defaultChecklists.home, ...(escrow.checklists.home || {}) }
+            house: { ...defaultChecklists.house, ...(escrow.checklists.house || escrow.checklists.home || {}) },
+            admin: { ...defaultChecklists.admin, ...(escrow.checklists.admin || {}) }
           };
         })(),
         documents: escrow.documents || []
@@ -1374,15 +1368,6 @@ class SimpleEscrowController {
       
       // Default checklist structure with all items false
       const defaultChecklists = {
-        admin: {
-          addContactsToNotion: false,
-          addContactsToPhone: false,
-          mlsStatusUpdate: false,
-          tcEmail: false,
-          tcGlideInvite: false,
-          sendToTc: false,
-          fullyExecutedAgreement: false
-        },
         loan: {
           le: false,
           lockedRate: false,
@@ -1394,28 +1379,31 @@ class SimpleEscrowController {
           cashToClosePaid: false,
           loanFunded: false
         },
-        home: {
-          emd: false,
+        house: {
           homeInspectionOrdered: false,
+          emd: false,
+          solarTransferInitiated: false,
+          avid: false,
           homeInspectionReceived: false,
           sellerDisclosures: false,
-          avid: false,
-          solarTransferInitiated: false,
           rr: false,
-          cr: false,
-          vp: false,
-          recorded: false,
-          termiteInspection: false,
-          homeWarranty: false
+          recorded: false
+        },
+        admin: {
+          mlsStatusUpdate: false,
+          tcEmail: false,
+          tcGlideInvite: false,
+          addContactsToPhone: false,
+          addContactsToNotion: false
         }
       };
       
       // Merge stored data with defaults to ensure all keys exist
       const checklists = result.rows[0].checklists ? 
         {
-          admin: { ...defaultChecklists.admin, ...(result.rows[0].checklists.admin || {}) },
           loan: { ...defaultChecklists.loan, ...(result.rows[0].checklists.loan || {}) },
-          home: { ...defaultChecklists.home, ...(result.rows[0].checklists.home || {}) }
+          house: { ...defaultChecklists.house, ...(result.rows[0].checklists.house || result.rows[0].checklists.home || {}) },
+          admin: { ...defaultChecklists.admin, ...(result.rows[0].checklists.admin || {}) }
         } : defaultChecklists;
       
       res.json({
