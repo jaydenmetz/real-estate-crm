@@ -313,7 +313,7 @@ class SimpleEscrowController {
       const escrowQuery = `
         SELECT 
           e.*,
-          COALESCE(e.property_image_url, 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800') as propertyImage
+          'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800' as propertyImage
         FROM escrows e
         WHERE ${whereClause}
       `;
@@ -392,7 +392,45 @@ class SimpleEscrowController {
         // Add JSONB data at the bottom
         people: escrow.people || {},
         timeline: escrow.timeline || [],
-        financials: escrow.financials || {},
+        financials: (() => {
+          // Build financials in SkySlope Books format
+          const stored = escrow.financials || {};
+          const purchasePrice = parseFloat(escrow.purchase_price) || 0;
+          const commissionPercentage = parseFloat(escrow.commission_percentage) || 3;
+          const grossCommission = parseFloat(escrow.gross_commission) || (purchasePrice * (commissionPercentage / 100));
+          const myCommission = parseFloat(escrow.my_commission) || grossCommission;
+          
+          // Get agent split from stored data or calculate defaults
+          const agentSplit = stored.agentSplit || {
+            splitPercentage: 75,
+            grossAgentCommission: myCommission * 0.75,
+            transactionFee: 285,
+            tcFee: 250,
+            franchiseFees: myCommission * 0.0257,
+            agent1099Income: (myCommission * 0.75) - 285 - 250 - (myCommission * 0.0257)
+          };
+          
+          return {
+            // Deal Cost Breakdown
+            dealCostBreakdown: {
+              purchasePrice: purchasePrice,
+              commissionPercentage: commissionPercentage,
+              totalCommission: grossCommission,
+              listingSideCommission: grossCommission / 2,
+              buyerSideCommission: grossCommission / 2,
+              myGrossCommission: myCommission,
+              commissionAdjustments: parseFloat(escrow.commission_adjustments) || 0,
+              expenseAdjustments: parseFloat(escrow.expense_adjustments) || 0,
+              netCommission: myCommission + (parseFloat(escrow.commission_adjustments) || 0) - (parseFloat(escrow.expense_adjustments) || 0)
+            },
+            
+            // Agent Cost Breakdown  
+            agentCostBreakdown: {
+              ...agentSplit,
+              expenses: escrow.expenses || []
+            }
+          };
+        })(),
         checklists: (() => {
           const defaultChecklists = {
             admin: {
