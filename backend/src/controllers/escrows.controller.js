@@ -364,7 +364,48 @@ class SimpleEscrowController {
         people: escrow.people || {},
         timeline: escrow.timeline || [],
         financials: escrow.financials || {},
-        checklists: escrow.checklists || {},
+        checklists: (() => {
+          const defaultChecklists = {
+            admin: {
+              addContactsToNotion: false,
+              addContactsToPhone: false,
+              mlsStatusUpdate: false,
+              tcEmail: false,
+              tcGlideInvite: false
+            },
+            loan: {
+              le: false,
+              lockedRate: false,
+              appraisalOrdered: false,
+              appraisalReceived: false,
+              clearToClose: false,
+              cd: false,
+              loanDocsSigned: false,
+              cashToClosePaid: false,
+              loanFunded: false
+            },
+            home: {
+              emd: false,
+              homeInspectionOrdered: false,
+              homeInspectionReceived: false,
+              sellerDisclosures: false,
+              avid: false,
+              solarTransferInitiated: false,
+              rr: false,
+              cr: false,
+              vp: false,
+              recorded: false
+            }
+          };
+          
+          if (!escrow.checklists) return defaultChecklists;
+          
+          return {
+            admin: { ...defaultChecklists.admin, ...(escrow.checklists.admin || {}) },
+            loan: { ...defaultChecklists.loan, ...(escrow.checklists.loan || {}) },
+            home: { ...defaultChecklists.home, ...(escrow.checklists.home || {}) }
+          };
+        })(),
         documents: escrow.documents || []
       };
 
@@ -991,7 +1032,8 @@ class SimpleEscrowController {
         });
       }
       
-      const checklists = result.rows[0].checklists || {
+      // Default checklist structure with all items false
+      const defaultChecklists = {
         admin: {
           addContactsToNotion: false,
           addContactsToPhone: false,
@@ -1023,6 +1065,14 @@ class SimpleEscrowController {
           recorded: false
         }
       };
+      
+      // Merge stored data with defaults to ensure all keys exist
+      const checklists = result.rows[0].checklists ? 
+        {
+          admin: { ...defaultChecklists.admin, ...(result.rows[0].checklists.admin || {}) },
+          loan: { ...defaultChecklists.loan, ...(result.rows[0].checklists.loan || {}) },
+          home: { ...defaultChecklists.home, ...(result.rows[0].checklists.home || {}) }
+        } : defaultChecklists;
       
       res.json({
         success: true,
@@ -1129,6 +1179,53 @@ class SimpleEscrowController {
         error: {
           code: 'SERVER_ERROR',
           message: 'Failed to update escrow people'
+        }
+      });
+    }
+  }
+
+  /**
+   * Update escrow checklists
+   */
+  static async updateEscrowChecklists(req, res) {
+    try {
+      const { id } = req.params;
+      const checklists = req.body;
+      
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      
+      const query = `
+        UPDATE escrows
+        SET checklists = $2, updated_at = NOW()
+        WHERE ${isUUID ? 'id = $1::uuid' : 'display_id = $1'}
+        RETURNING id
+      `;
+      
+      const result = await pool.query(query, [id, JSON.stringify(checklists)]);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Escrow not found'
+          }
+        });
+      }
+      
+      res.json({
+        success: true,
+        data: checklists,
+        message: 'Escrow checklists updated successfully'
+      });
+      
+    } catch (error) {
+      console.error('Error updating escrow checklists:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'SERVER_ERROR',
+          message: 'Failed to update escrow checklists'
         }
       });
     }
