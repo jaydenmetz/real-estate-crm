@@ -813,6 +813,8 @@ const formatCurrency = (value) => {
   }).format(value);
 };
 
+// Helper function to clean escrow IDs that have extra zeros
+
 const EditableField = ({ field, value, onSave, type = 'text' }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value || '');
@@ -1507,12 +1509,27 @@ const aiActivityData = [
 ];
 
 const EscrowDetail = () => {
-  const { id } = useParams();
+  const { id: routeId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme?.breakpoints?.down?.('sm') || '(max-width:600px)');
   const queryClient = useQueryClient();
+  
+  // Clean the ID by removing extra zeros if present
+  const cleanEscrowId = (inputId) => {
+    if (!inputId) return inputId;
+    // If ID has format like e4596000-6e64-4573-9d5b-a69ef33a8a53, remove the extra zeros
+    const cleaned = inputId.replace(/^([a-zA-Z]*\d{4})000(-.*)?$/, '$1$2');
+    if (cleaned !== inputId) {
+      console.log('cleanEscrowId - Cleaned ID from:', inputId, 'to:', cleaned);
+    }
+    return cleaned;
+  };
+  
+  // Clean the route ID immediately
+  const id = cleanEscrowId(routeId);
+  console.log('EscrowDetail - Using cleaned ID:', id);
 
 
   // State
@@ -1796,18 +1813,12 @@ const EscrowDetail = () => {
   const handleFieldUpdate = async (section, field, value) => {
     try {
       // Debug log the ID being used
-      console.log('handleFieldUpdate - ID from useParams:', id);
-      console.log('handleFieldUpdate - Escrow ID from data:', escrow.id);
+      console.log('handleFieldUpdate - Using cleaned ID from route:', id);
+      console.log('handleFieldUpdate - Escrow ID from data:', escrow?.id);
       
-      // Clean the ID by removing extra zeros if present
-      const cleanId = (inputId) => {
-        // If ID has format like e4596000-6e64-4573-9d5b-a69ef33a8a53, remove the extra zeros
-        return inputId.replace(/^(e\d{4})000/, '$1');
-      };
-      
-      // Use the correct ID from the escrow data if available, and clean it
-      const escrowId = cleanId(escrow.id || id);
-      console.log('handleFieldUpdate - Using cleaned ID:', escrowId);
+      // Use the already cleaned ID from the route
+      const escrowId = id;
+      console.log('handleFieldUpdate - Final escrow ID:', escrowId);
       
       let payload = {};
       
@@ -1910,13 +1921,16 @@ const EscrowDetail = () => {
     // Open the widget
     setOpenWidget(widgetName);
     
+    // Use the already cleaned ID from the route
+    const escrowId = id;
+    
     // Fetch fresh data from API
     try {
-      const response = await fetch(`https://api.jaydenmetz.com/v1/escrows/${id}`);
+      const response = await fetch(`https://api.jaydenmetz.com/v1/escrows/${escrowId}`);
       if (response.ok) {
         const data = await response.json();
         // Update the escrow data in the query cache
-        queryClient.setQueryData(['escrow', id], (oldData) => ({
+        queryClient.setQueryData(['escrow', escrowId], (oldData) => ({
           ...oldData,
           ...data.data,
         }));
