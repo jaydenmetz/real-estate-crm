@@ -1880,11 +1880,39 @@ const EscrowDetail = () => {
       
       if (response.ok) {
         const data = await response.json();
-        // Update the cache with the new data
-        queryClient.setQueryData(['escrow', escrowId], (oldData) => ({
-          ...oldData,
-          ...data.data,
-        }));
+        
+        // Update the cache with the new data - use the route ID for cache key
+        queryClient.setQueryData(['escrow', id], (oldData) => {
+          if (!oldData) return oldData;
+          
+          // For people and checklists endpoints, the response contains just that section
+          if (section === 'people' || section === 'checklists') {
+            return {
+              ...oldData,
+              data: {
+                ...oldData.data,
+                [section]: data.data
+              }
+            };
+          }
+          
+          // For other updates, merge the response
+          return {
+            ...oldData,
+            data: {
+              ...oldData.data,
+              ...data.data
+            }
+          };
+        });
+        
+        // Refetch to ensure complete data sync
+        await refetch();
+        
+        // Success - close editing mode
+        setEditingField(null);
+        setEditValues({});
+        
         console.log('Field updated successfully');
       } else {
         console.error('Failed to update field:', response.statusText);
@@ -1944,10 +1972,10 @@ const EscrowDetail = () => {
       const response = await fetch(`https://api.jaydenmetz.com/v1/escrows/${escrowId}`);
       if (response.ok) {
         const data = await response.json();
-        // Update the escrow data in the query cache
-        queryClient.setQueryData(['escrow', escrowId], (oldData) => ({
+        // Update the escrow data in the query cache - use route ID for cache key
+        queryClient.setQueryData(['escrow', id], (oldData) => ({
           ...oldData,
-          ...data.data,
+          ...data
         }));
       }
     } catch (error) {
