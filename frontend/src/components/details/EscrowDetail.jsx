@@ -505,11 +505,15 @@ import {
   Bathtub,
   Stairs,
   InsertDriveFile,
+  Check,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useAuth } from '../../contexts/AuthContext';
 import { format, formatDistanceToNow, addDays, differenceInDays, isAfter, isBefore, isValid, parseISO } from 'date-fns';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { escrowsAPI, documentsAPI } from '../../services/api';
 import CountUp from 'react-countup';
 import { formatPriceShort } from '../../utils/formatters';
@@ -738,6 +742,104 @@ const floatAnimation = keyframes`
 // Styled Components
 // HeroSection - Replaced with DetailPageHero component
 
+const EditableField = ({ field, value, onSave, type = 'text' }) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState(value || '');
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  
+  useEffect(() => {
+    setEditValue(value || '');
+  }, [value]);
+  
+  const handleSave = () => {
+    onSave(field, editValue);
+    setIsEditing(false);
+  };
+  
+  const handleCancel = () => {
+    setEditValue(value || '');
+    setIsEditing(false);
+  };
+  
+  if (isEditing) {
+    return (
+      <Stack direction="row" spacing={1} alignItems="center" sx={{ flex: 1 }}>
+        {type === 'date' ? (
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <DatePicker
+              value={editValue ? new Date(editValue) : null}
+              onChange={(newValue) => setEditValue(newValue?.toISOString())}
+              renderInput={(params) => (
+                <TextField 
+                  {...params} 
+                  size="small" 
+                  sx={{ flexGrow: 1 }}
+                  autoFocus
+                />
+              )}
+            />
+          </LocalizationProvider>
+        ) : (
+          <TextField
+            size="small"
+            value={editValue}
+            onChange={(e) => setEditValue(e.target.value)}
+            autoFocus
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleSave();
+              if (e.key === 'Escape') handleCancel();
+            }}
+            sx={{ flexGrow: 1 }}
+            type={type}
+          />
+        )}
+        <IconButton size="small" color="success" onClick={handleSave}>
+          <Check fontSize="small" />
+        </IconButton>
+        <IconButton size="small" color="error" onClick={handleCancel}>
+          <Close fontSize="small" />
+        </IconButton>
+      </Stack>
+    );
+  }
+  
+  const displayValue = () => {
+    if (!value) return 'Not set';
+    if (type === 'date') return safeFormat(value, 'MMM dd, yyyy');
+    return value;
+  };
+  
+  return (
+    <Box 
+      onClick={() => setIsEditing(true)}
+      sx={{ 
+        cursor: 'pointer',
+        flex: 1,
+        px: 1.5,
+        py: 0.5,
+        borderRadius: 1,
+        transition: 'all 0.2s',
+        border: '1px solid transparent',
+        '&:hover': { 
+          bgcolor: 'action.hover',
+          border: '1px solid',
+          borderColor: 'divider',
+        }
+      }}
+    >
+      <Typography 
+        variant="body2" 
+        sx={{ 
+          color: !value ? 'text.secondary' : 'text.primary',
+          fontStyle: !value ? 'italic' : 'normal'
+        }}
+      >
+        {displayValue()}
+      </Typography>
+    </Box>
+  );
+};
+
 const LiquidWidget = styled(Paper)(({ theme }) => ({
   position: 'relative',
   padding: theme.spacing(3),
@@ -769,36 +871,36 @@ const LiquidWidget = styled(Paper)(({ theme }) => ({
 }));
 
 const DataTooltip = styled(Box)(({ theme }) => ({
-  position: 'absolute',
+  position: 'fixed',
   top: '50%',
   left: '50%',
   transform: 'translate(-50%, -50%) scale(0)',
   background: 'rgba(255, 255, 255, 0.98)',
   backdropFilter: 'blur(20px)',
   borderRadius: theme.spacing(2),
-  padding: theme.spacing(3),
-  minWidth: 300,
-  maxWidth: 400,
-  boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
-  zIndex: 1000,
+  padding: theme.spacing(4),
+  width: '90vw',
+  maxWidth: 1200,
+  boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+  zIndex: 1300,
   opacity: 0,
   transition: 'all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
-  maxHeight: '80vh',
+  maxHeight: '85vh',
   overflowY: 'auto',
   '&.show': {
     transform: 'translate(-50%, -50%) scale(1)',
     opacity: 1,
   },
   '&::-webkit-scrollbar': {
-    width: 6,
+    width: 8,
   },
   '&::-webkit-scrollbar-track': {
     background: 'rgba(0,0,0,0.05)',
-    borderRadius: 3,
+    borderRadius: 4,
   },
   '&::-webkit-scrollbar-thumb': {
     background: theme.palette.primary.light,
-    borderRadius: 3,
+    borderRadius: 4,
   },
 }));
 
@@ -1326,6 +1428,8 @@ const EscrowDetail = () => {
   const [checklistExpanded, setChecklistExpanded] = useState({});
   const [agentDetailOpen, setAgentDetailOpen] = useState(null);
   const [hoveredWidget, setHoveredWidget] = useState(null);
+  const [editingField, setEditingField] = useState(null);
+  const [editValues, setEditValues] = useState({});
   const [activityFilter, setActivityFilter] = useState('all');
   const [debugExpanded, setDebugExpanded] = useState(false);
   const [viewMode, setViewMode] = useState('detailed'); // Always use detailed view
@@ -1545,6 +1649,60 @@ const EscrowDetail = () => {
   // Handlers
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
+  };
+  
+  const handleFieldUpdate = async (section, field, value) => {
+    try {
+      let endpoint = '';
+      let payload = {};
+      
+      if (section === 'people') {
+        endpoint = `/v1/escrows/${id}/people`;
+        const [role, fieldName] = field.split('.');
+        payload = {
+          ...escrow.people,
+          [role]: {
+            ...escrow.people?.[role],
+            [fieldName]: value
+          }
+        };
+      } else if (section === 'financials') {
+        endpoint = `/v1/escrows/${id}`;
+        payload = {
+          financials: {
+            ...escrow.financials,
+            [field]: value
+          }
+        };
+      } else if (section === 'timeline') {
+        endpoint = `/v1/escrows/${id}`;
+        payload = {
+          timeline: {
+            ...escrow.timeline,
+            [field]: value
+          }
+        };
+      }
+      
+      const response = await fetch(`${process.env.REACT_APP_API_URL}${endpoint}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      if (response.ok) {
+        queryClient.invalidateQueries(['escrow', id]);
+        // Show success message
+      } else {
+        // Show error message
+        console.error('Failed to update field');
+      }
+    } catch (error) {
+      console.error('Error updating field:', error);
+    }
   };
 
   const handleMenuOpen = (event) => {
@@ -2610,6 +2768,13 @@ const EscrowDetail = () => {
           Escrow Details
         </Typography>
         
+        {/* Backdrop for tooltips */}
+        <Backdrop 
+          open={!!hoveredWidget} 
+          onClick={() => setHoveredWidget(null)}
+          sx={{ zIndex: 1200 }}
+        />
+        
         <Grid container spacing={3}>
           {/* People Widget */}
           <Grid item xs={12} md={6}>
@@ -2682,18 +2847,40 @@ const EscrowDetail = () => {
                     {/* Buyer Details */}
                     <Box>
                       <Typography variant="subtitle2" color="primary" sx={{ mb: 1 }}>Buyer</Typography>
-                      {escrow.people?.buyer ? (
-                        <Stack spacing={0.5}>
-                          <Typography variant="body2">Name: {escrow.people.buyer.name || 'Not set'}</Typography>
-                          <Typography variant="body2">Email: {escrow.people.buyer.email || 'Not set'}</Typography>
-                          <Typography variant="body2">Phone: {escrow.people.buyer.phone || 'Not set'}</Typography>
-                          {escrow.people.buyer.address && (
-                            <Typography variant="body2">Address: {escrow.people.buyer.address}</Typography>
-                          )}
+                      <Stack spacing={0.5}>
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <Typography variant="body2" sx={{ minWidth: 80 }}>Name:</Typography>
+                          <EditableField 
+                            field="buyer.name" 
+                            value={escrow.people?.buyer?.name} 
+                            onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                          />
                         </Stack>
-                      ) : (
-                        <Typography variant="body2" color="text.secondary">No buyer information</Typography>
-                      )}
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <Typography variant="body2" sx={{ minWidth: 80 }}>Email:</Typography>
+                          <EditableField 
+                            field="buyer.email" 
+                            value={escrow.people?.buyer?.email} 
+                            onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                          />
+                        </Stack>
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <Typography variant="body2" sx={{ minWidth: 80 }}>Phone:</Typography>
+                          <EditableField 
+                            field="buyer.phone" 
+                            value={escrow.people?.buyer?.phone} 
+                            onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                          />
+                        </Stack>
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <Typography variant="body2" sx={{ minWidth: 80 }}>Address:</Typography>
+                          <EditableField 
+                            field="buyer.address" 
+                            value={escrow.people?.buyer?.address} 
+                            onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                          />
+                        </Stack>
+                      </Stack>
                     </Box>
                     
                     <Divider />
@@ -2701,18 +2888,40 @@ const EscrowDetail = () => {
                     {/* Seller Details */}
                     <Box>
                       <Typography variant="subtitle2" color="secondary" sx={{ mb: 1 }}>Seller</Typography>
-                      {escrow.people?.seller ? (
-                        <Stack spacing={0.5}>
-                          <Typography variant="body2">Name: {escrow.people.seller.name || 'Not set'}</Typography>
-                          <Typography variant="body2">Email: {escrow.people.seller.email || 'Not set'}</Typography>
-                          <Typography variant="body2">Phone: {escrow.people.seller.phone || 'Not set'}</Typography>
-                          {escrow.people.seller.address && (
-                            <Typography variant="body2">Address: {escrow.people.seller.address}</Typography>
-                          )}
+                      <Stack spacing={0.5}>
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <Typography variant="body2" sx={{ minWidth: 80 }}>Name:</Typography>
+                          <EditableField 
+                            field="seller.name" 
+                            value={escrow.people?.seller?.name} 
+                            onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                          />
                         </Stack>
-                      ) : (
-                        <Typography variant="body2" color="text.secondary">No seller information</Typography>
-                      )}
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <Typography variant="body2" sx={{ minWidth: 80 }}>Email:</Typography>
+                          <EditableField 
+                            field="seller.email" 
+                            value={escrow.people?.seller?.email} 
+                            onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                          />
+                        </Stack>
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <Typography variant="body2" sx={{ minWidth: 80 }}>Phone:</Typography>
+                          <EditableField 
+                            field="seller.phone" 
+                            value={escrow.people?.seller?.phone} 
+                            onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                          />
+                        </Stack>
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <Typography variant="body2" sx={{ minWidth: 80 }}>Address:</Typography>
+                          <EditableField 
+                            field="seller.address" 
+                            value={escrow.people?.seller?.address} 
+                            onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                          />
+                        </Stack>
+                      </Stack>
                     </Box>
                     
                     <Divider />
@@ -2909,7 +3118,7 @@ const EscrowDetail = () => {
           </Grid>
           
           {/* Timeline Widget */}
-          <Grid item xs={12} lg={4}>
+          <Grid item xs={12} md={6}>
             <LiquidWidget 
               sx={{ 
                 border: '2px solid',
@@ -2986,17 +3195,25 @@ const EscrowDetail = () => {
                                 flexShrink: 0,
                               }} 
                             />
-                            <Box sx={{ flex: 1 }}>
-                              <Typography variant="body2" fontWeight="medium">
-                                {label}
-                              </Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                {safeFormat(eventDate, 'EEEE, MMMM d, yyyy')}
+                            <Stack sx={{ flex: 1 }} spacing={0.5}>
+                              <Stack direction="row" alignItems="center" spacing={2}>
+                                <Typography variant="body2" fontWeight="medium" sx={{ minWidth: 180 }}>
+                                  {label}:
+                                </Typography>
+                                <EditableField 
+                                  field={`timeline.${eventKey}`}
+                                  value={eventDate}
+                                  onSave={(field, value) => handleFieldUpdate('timeline', eventKey, value)}
+                                  type="date"
+                                />
+                              </Stack>
+                              <Typography variant="caption" color="text.secondary" sx={{ pl: 23.5 }}>
+                                {safeFormat(eventDate, 'EEEE')}
                                 {!isPast && daysUntil > 0 && ` (in ${daysUntil} days)`}
                                 {!isPast && daysUntil === 0 && ' (Today)'}
                                 {!isPast && daysUntil < 0 && ` (${Math.abs(daysUntil)} days overdue)`}
                               </Typography>
-                            </Box>
+                            </Stack>
                             {isPast && (
                               <CheckCircle sx={{ fontSize: 18, color: 'success.main' }} />
                             )}
@@ -3019,7 +3236,7 @@ const EscrowDetail = () => {
           </Grid>
           
           {/* Financials Widget */}
-          <Grid item xs={12} lg={4}>
+          <Grid item xs={12} md={6}>
             <LiquidWidget 
               sx={{ 
                 background: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
@@ -3078,25 +3295,47 @@ const EscrowDetail = () => {
               {/* Hover Tooltip with all financial data */}
               {hoveredWidget === 'financials' && (
                 <DataTooltip className="show">
-                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                    Complete Financial Breakdown
-                  </Typography>
+                  <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                    <Typography variant="h6" fontWeight={600}>
+                      Complete Financial Breakdown
+                    </Typography>
+                    <IconButton onClick={() => setHoveredWidget(null)}>
+                      <Close />
+                    </IconButton>
+                  </Stack>
                   
                   <Stack spacing={2}>
                     <Box>
                       <Typography variant="subtitle2" color="primary" sx={{ mb: 1 }}>
                         Transaction Details
                       </Typography>
-                      <Stack spacing={0.5}>
-                        <Typography variant="body2">
-                          Purchase Price: ${(escrow.financials?.purchasePrice || 0).toLocaleString()}
-                        </Typography>
-                        <Typography variant="body2">
-                          Transaction Type: {escrow.financials?.transactionType || 'Standard Sale'}
-                        </Typography>
-                        <Typography variant="body2">
-                          Closing Date: {escrow.closingDate ? safeFormat(escrow.closingDate, 'MMM dd, yyyy') : 'TBD'}
-                        </Typography>
+                      <Stack spacing={1}>
+                        <Stack direction="row" alignItems="center" spacing={2}>
+                          <Typography variant="body2" sx={{ minWidth: 140, color: 'text.secondary' }}>Purchase Price:</Typography>
+                          <EditableField 
+                            field="financials.purchasePrice" 
+                            value={escrow.financials?.purchasePrice} 
+                            onSave={(field, value) => handleFieldUpdate('financials', 'purchasePrice', value)}
+                            type="number"
+                          />
+                        </Stack>
+                        <Stack direction="row" alignItems="center" spacing={2}>
+                          <Typography variant="body2" sx={{ minWidth: 140, color: 'text.secondary' }}>Transaction Type:</Typography>
+                          <EditableField 
+                            field="financials.transactionType" 
+                            value={escrow.financials?.transactionType} 
+                            onSave={(field, value) => handleFieldUpdate('financials', 'transactionType', value)}
+                          />
+                        </Stack>
+                        <Stack direction="row" alignItems="center" spacing={2}>
+                          <Typography variant="body2" sx={{ minWidth: 140, color: 'text.secondary' }}>Closing Date:</Typography>
+                          <EditableField 
+                            field="closingDate" 
+                            value={escrow.closingDate} 
+                            onSave={(field, value) => handleFieldUpdate('escrow', 'closingDate', value)}
+                            type="date"
+                          />
+                        </Stack>
                       </Stack>
                     </Box>
                     
@@ -3176,7 +3415,7 @@ const EscrowDetail = () => {
           </Grid>
           
           {/* Documents Widget */}
-          <Grid item xs={12} lg={4}>
+          <Grid item xs={12} md={6}>
             <LiquidWidget 
               sx={{ 
                 background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
