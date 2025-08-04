@@ -1713,9 +1713,16 @@ const EscrowDetail = () => {
 
   // Transform the data - use useMemo to ensure it updates when rawData changes
   const escrow = useMemo(() => {
+    console.log('=== ESCROW TRANSFORMATION ===');
+    console.log('Raw data:', rawData);
+    console.log('Raw data timestamp:', new Date().toISOString());
+    
     const transformed = transformDetailedEscrow(rawData);
-    console.log('Raw escrow data from API:', rawData);
-    console.log('Transformed escrow data:', transformed);
+    
+    console.log('Transformed data:', transformed);
+    console.log('Buyer name in transformed:', transformed?.people?.buyer?.name);
+    console.log('=== END TRANSFORMATION ===');
+    
     return transformed;
   }, [rawData]);
   
@@ -1897,11 +1904,17 @@ const EscrowDetail = () => {
         setEditValues({});
         
         // Force immediate refetch to get fresh data
+        console.log('Starting refetch...');
+        
+        // Invalidate first to mark data as stale
+        await queryClient.invalidateQueries(['escrow', id]);
+        
+        // Then refetch
         const refetchResult = await refetch();
         console.log('Refetch completed:', refetchResult);
         
-        // Also invalidate the query to ensure fresh data
-        await queryClient.invalidateQueries(['escrow', id]);
+        // Force a small delay to ensure React re-renders
+        await new Promise(resolve => setTimeout(resolve, 100));
         
         console.log('Field updated successfully and data refreshed');
       } else {
