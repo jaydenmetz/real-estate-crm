@@ -332,62 +332,77 @@ class SimpleEscrowController {
 
       const escrow = escrowResult.rows[0];
       
-      // Build comprehensive response with all fields from Notion
+      // Build people structure first to use for clients array
+      const peopleData = (() => {
+        const storedPeople = escrow.people || {};
+        const defaultContact = {
+          id: null,
+          name: null,
+          email: null,
+          phone: null,
+          company: null,
+          license: null,
+          address: null,
+          role: null
+        };
+        
+        return {
+          buyer: storedPeople.buyer || defaultContact,
+          buyerAgent: storedPeople.buyerAgent || defaultContact,
+          seller: storedPeople.seller || defaultContact,
+          sellerAgent: storedPeople.sellerAgent || defaultContact
+        };
+      })();
+      
+      // Build clients array for list view compatibility
+      const clients = [];
+      if (peopleData.buyer?.name) {
+        clients.push({
+          name: peopleData.buyer.name,
+          type: 'Buyer',
+          avatar: null
+        });
+      }
+      if (peopleData.seller?.name) {
+        clients.push({
+          name: peopleData.seller.name,
+          type: 'Seller',
+          avatar: null
+        });
+      }
+      
+      // Calculate checklist progress
+      const checklists = escrow.checklists || {};
+      let totalItems = 0;
+      let completedItems = 0;
+      
+      ['loan', 'house', 'admin'].forEach(category => {
+        const categoryChecklist = checklists[category] || {};
+        Object.values(categoryChecklist).forEach(value => {
+          totalItems++;
+          if (value === true) completedItems++;
+        });
+      });
+      
+      const checklistProgress = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+      
+      // Build comprehensive response organized by category
       const response = {
-        // Core identifiers
+        // Core identifiers matching GET /escrows list view
         id: escrow.id,
         escrowNumber: escrow.display_id,
+        propertyAddress: escrow.property_address,
+        propertyImage: 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800',
         escrowStatus: escrow.escrow_status,
-        
-        // Financial fields
-        commissionPercentage: parseFloat(escrow.commission_percentage) || 3,
-        grossCommission: parseFloat(escrow.gross_commission) || 0,
+        purchasePrice: parseFloat(escrow.purchase_price) || 0,
         myCommission: parseFloat(escrow.my_commission) || 0,
-        commissionAdjustments: parseFloat(escrow.commission_adjustments) || 0,
-        expenseAdjustments: parseFloat(escrow.expense_adjustments) || 0,
-        
-        // Important dates
-        acceptanceDate: escrow.acceptance_date ? 
-          (typeof escrow.acceptance_date === 'string' ? escrow.acceptance_date.split('T')[0] : new Date(escrow.acceptance_date).toISOString().split('T')[0])
-          : null,
-        emdDate: escrow.emd_date ? 
-          (typeof escrow.emd_date === 'string' ? escrow.emd_date.split('T')[0] : new Date(escrow.emd_date).toISOString().split('T')[0])
-          : null,
-        contingenciesDate: escrow.contingencies_date ? 
-          (typeof escrow.contingencies_date === 'string' ? escrow.contingencies_date.split('T')[0] : new Date(escrow.contingencies_date).toISOString().split('T')[0])
-          : null,
-        scheduledCoeDate: escrow.closing_date ? 
-          (typeof escrow.closing_date === 'string' ? escrow.closing_date.split('T')[0] : new Date(escrow.closing_date).toISOString().split('T')[0])
-          : null,
-        actualCoeDate: escrow.actual_coe_date ? 
-          (typeof escrow.actual_coe_date === 'string' ? escrow.actual_coe_date.split('T')[0] : new Date(escrow.actual_coe_date).toISOString().split('T')[0])
-          : null,
-          
-        // Days calculations
-        daysToCoe: escrow.closing_date ? 
-          Math.floor((new Date(escrow.closing_date) - new Date()) / (1000 * 60 * 60 * 24)) : null,
-        daysToContingency: escrow.contingencies_date ? 
-          Math.floor((new Date(escrow.contingencies_date) - new Date()) / (1000 * 60 * 60 * 24)) : null,
-        daysToEmd: escrow.acceptance_date && escrow.emd_date ? 
-          Math.floor((new Date(escrow.emd_date) - new Date(escrow.acceptance_date)) / (1000 * 60 * 60 * 24)) : null,
-        
-        // Vendor companies
-        leadSource: escrow.lead_source || 'Family',
-        transactionCoordinator: escrow.transaction_coordinator || 'Karin Munoz',
-        nhdCompany: escrow.nhd_company || 'Property ID Max',
-        homeWarrantyCompany: escrow.home_warranty_company || null,
-        termiteInspectionCompany: escrow.termite_inspection_company || null,
-        homeInspectionCompany: escrow.home_inspection_company || null,
-        
-        // Other fields
-        avid: escrow.avid || true,
-        
-        // Single listing (only if I'm the listing agent)
-        listing: escrow.listing || null,
-        
-        // Timestamps
-        created_at: escrow.created_at,
-        updated_at: escrow.updated_at,
+        clients: clients,
+        scheduledCoeDate: escrow.closing_date || null,
+        daysToClose: escrow.closing_date ? 
+          Math.floor((new Date(escrow.closing_date) - new Date()) / (1000 * 60 * 60 * 24)) : 0,
+        checklistProgress: checklistProgress,
+        lastActivity: escrow.updated_at || escrow.created_at || null,
+        upcomingDeadlines: 2, // Will be calculated from timeline
         
         // Add JSONB data at the bottom
         propertyDetails: (() => {
@@ -402,6 +417,15 @@ class SimpleEscrowController {
             state: escrow.state || 'CA',
             zipCode: escrow.zip_code || null,
             county: escrow.county || null,
+            
+            // Transaction team (moved from top level)
+            transactionTeam: {
+              transactionCoordinator: escrow.transaction_coordinator || 'Karin Munoz',
+              nhdCompany: escrow.nhd_company || 'Property ID Max',
+              homeWarrantyCompany: escrow.home_warranty_company || null,
+              termiteInspectionCompany: escrow.termite_inspection_company || null,
+              homeInspectionCompany: escrow.home_inspection_company || null
+            },
             
             // Property characteristics
             propertyType: escrow.property_type || 'Single Family',
@@ -580,6 +604,14 @@ class SimpleEscrowController {
             // EMD date (from existing data)
             emdDate: escrow.emd_date || null,
             
+            // Days calculations
+            daysToCoe: escrow.closing_date ? 
+              Math.floor((new Date(escrow.closing_date) - new Date()) / (1000 * 60 * 60 * 24)) : null,
+            daysToContingency: escrow.contingencies_date ? 
+              Math.floor((new Date(escrow.contingencies_date) - new Date()) / (1000 * 60 * 60 * 24)) : null,
+            daysFromAcceptance: escrow.acceptance_date ? 
+              Math.floor((new Date() - new Date(escrow.acceptance_date)) / (1000 * 60 * 60 * 24)) : null,
+            
             // Merge any additional stored timeline data
             ...storedTimeline
           };
@@ -590,6 +622,9 @@ class SimpleEscrowController {
           const purchasePrice = parseFloat(escrow.purchase_price) || 0;
           const commissionPercentage = parseFloat(escrow.commission_percentage) || 3;
           const baseCommission = parseFloat(escrow.gross_commission) || (purchasePrice * (commissionPercentage / 100));
+          const myCommission = parseFloat(escrow.my_commission) || 0;
+          const commissionAdjustments = parseFloat(escrow.commission_adjustments) || 0;
+          const expenseAdjustments = parseFloat(escrow.expense_adjustments) || 0;
           
           // Determine if this is a Zillow referral
           const isZillowReferral = escrow.lead_source === 'Zillow' || escrow.lead_source === 'Zillow Flex';
@@ -701,6 +736,12 @@ class SimpleEscrowController {
             isZillowReferral: isZillowReferral,
             ytdGciBeforeTransaction: ytdGci || 0,
             ytdGciAfterTransaction: (ytdGci + agentGCI) || 0,
+            
+            // Transaction metadata (moved from top level)
+            listing: escrow.listing || null,
+            avid: escrow.avid || true,
+            createdAt: escrow.created_at,
+            updatedAt: escrow.updated_at,
             
             // Expenses array for additional costs
             expenses: escrow.expenses || []
