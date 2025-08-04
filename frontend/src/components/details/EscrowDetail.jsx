@@ -1841,38 +1841,7 @@ const EscrowDetail = () => {
             <Typography sx={{ color: 'white' }}>{escrow.propertyAddress}</Typography>
           </Breadcrumbs>
         }
-        infoCards={[
-          {
-            icon: <AttachMoney sx={{ fontSize: 24 }} />,
-            label: 'Purchase Price',
-            value: `$${(escrow.purchasePrice || 0).toLocaleString()}`
-          },
-          {
-            icon: <CalendarToday sx={{ fontSize: 24 }} />,
-            label: 'Days to Close',
-            value: escrow.daysToClose?.toString() || '0'
-          },
-          {
-            icon: <Speed sx={{ fontSize: 24 }} />,
-            label: 'Progress',
-            value: `${escrow.checklistProgress || 0}%`
-          },
-          {
-            icon: <Person sx={{ fontSize: 24 }} />,
-            label: 'Buyer',
-            value: escrow.people?.buyer?.name || escrow.clients?.find(c => c.type === 'Buyer')?.name || 'Not Set'
-          },
-          {
-            icon: <Person sx={{ fontSize: 24 }} />,
-            label: 'Seller',
-            value: escrow.people?.seller?.name || escrow.clients?.find(c => c.type === 'Seller')?.name || 'Not Set'
-          },
-          {
-            icon: <Groups sx={{ fontSize: 24 }} />,
-            label: 'Agents',
-            value: `${escrow.people?.buyerAgent?.name || 'Not Set'} / ${escrow.people?.sellerAgent?.name || 'Not Set'}`
-          }
-        ]}
+        infoCards={[]}
       >
         <MotionDiv
           initial={{ opacity: 0, scale: 0.8 }}
