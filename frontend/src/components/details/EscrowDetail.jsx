@@ -1528,6 +1528,7 @@ const EscrowDetail = () => {
   const [checklistExpanded, setChecklistExpanded] = useState({});
   const [agentDetailOpen, setAgentDetailOpen] = useState(null);
   const [openWidget, setOpenWidget] = useState(null);
+  const [widgetAnimationClass, setWidgetAnimationClass] = useState('');
   const [editingField, setEditingField] = useState(null);
   const [editValues, setEditValues] = useState({});
   const [activityFilter, setActivityFilter] = useState('all');
@@ -1661,6 +1662,13 @@ const EscrowDetail = () => {
     };
   };
 
+  // Effect to reset animation when widget closes
+  useEffect(() => {
+    if (!openWidget) {
+      setWidgetAnimationClass('');
+    }
+  }, [openWidget]);
+  
   // Fetch escrow data
   const { data: rawData, isLoading, isError, error, refetch } = useQuery(
     ['escrow', id],
@@ -1912,12 +1920,21 @@ const EscrowDetail = () => {
   const handleWidgetClick = async (widgetName) => {
     // If clicking the same widget, close it
     if (openWidget === widgetName) {
-      setOpenWidget(null);
+      setWidgetAnimationClass(''); // Remove show class first
+      setTimeout(() => {
+        setOpenWidget(null);
+      }, 300); // Wait for animation to complete
       return;
     }
     
     // Open the widget
     setOpenWidget(widgetName);
+    setWidgetAnimationClass(''); // Reset animation class
+    
+    // Trigger animation after a small delay to ensure the element is rendered
+    setTimeout(() => {
+      setWidgetAnimationClass('show');
+    }, 10);
     
     // Use the ID as provided
     const escrowId = id;
@@ -3517,15 +3534,21 @@ const EscrowDetail = () => {
             <>
               <Backdrop 
                 open={true} 
-                onClick={() => setOpenWidget(null)}
+                onClick={() => {
+                  setWidgetAnimationClass('');
+                  setTimeout(() => setOpenWidget(null), 300);
+                }}
                 sx={{ zIndex: 1200 }}
               />
-              <DataTooltip className="show">
+              <DataTooltip className={widgetAnimationClass}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
                   <Typography variant="h6" fontWeight={600}>
                     All People & Contacts
                   </Typography>
-                  <IconButton onClick={() => setOpenWidget(null)} size="small">
+                  <IconButton onClick={() => {
+                    setWidgetAnimationClass('');
+                    setTimeout(() => setOpenWidget(null), 300);
+                  }} size="small">
                     <Close />
                   </IconButton>
                 </Stack>
@@ -3632,15 +3655,21 @@ const EscrowDetail = () => {
             <>
               <Backdrop 
                 open={true} 
-                onClick={() => setOpenWidget(null)}
+                onClick={() => {
+                  setWidgetAnimationClass('');
+                  setTimeout(() => setOpenWidget(null), 300);
+                }}
                 sx={{ zIndex: 1200 }}
               />
-              <DataTooltip className="show" sx={{ color: 'text.primary' }}>
+              <DataTooltip className={widgetAnimationClass} sx={{ color: 'text.primary' }}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
                   <Typography variant="h6" fontWeight={600}>
                     All Checklists
                   </Typography>
-                  <IconButton onClick={() => setOpenWidget(null)} size="small">
+                  <IconButton onClick={() => {
+                    setWidgetAnimationClass('');
+                    setTimeout(() => setOpenWidget(null), 300);
+                  }} size="small">
                     <Close />
                   </IconButton>
                 </Stack>
@@ -3749,15 +3778,21 @@ const EscrowDetail = () => {
             <>
               <Backdrop 
                 open={true} 
-                onClick={() => setOpenWidget(null)}
+                onClick={() => {
+                  setWidgetAnimationClass('');
+                  setTimeout(() => setOpenWidget(null), 300);
+                }}
                 sx={{ zIndex: 1200 }}
               />
-              <DataTooltip className="show" sx={{ color: 'text.primary' }}>
+              <DataTooltip className={widgetAnimationClass} sx={{ color: 'text.primary' }}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
                   <Typography variant="h6" fontWeight={600}>
                     Complete Timeline Details
                   </Typography>
-                  <IconButton onClick={() => setOpenWidget(null)} size="small">
+                  <IconButton onClick={() => {
+                    setWidgetAnimationClass('');
+                    setTimeout(() => setOpenWidget(null), 300);
+                  }} size="small">
                     <Close />
                   </IconButton>
                 </Stack>
@@ -3796,15 +3831,21 @@ const EscrowDetail = () => {
             <>
               <Backdrop 
                 open={true} 
-                onClick={() => setOpenWidget(null)}
+                onClick={() => {
+                  setWidgetAnimationClass('');
+                  setTimeout(() => setOpenWidget(null), 300);
+                }}
                 sx={{ zIndex: 1200 }}
               />
-              <DataTooltip className="show" sx={{ color: 'text.primary' }}>
+              <DataTooltip className={widgetAnimationClass} sx={{ color: 'text.primary' }}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
                   <Typography variant="h6" fontWeight={600}>
                     Complete Financial Details
                   </Typography>
-                  <IconButton onClick={() => setOpenWidget(null)} size="small">
+                  <IconButton onClick={() => {
+                    setWidgetAnimationClass('');
+                    setTimeout(() => setOpenWidget(null), 300);
+                  }} size="small">
                     <Close />
                   </IconButton>
                 </Stack>
@@ -3915,15 +3956,21 @@ const EscrowDetail = () => {
             <>
               <Backdrop 
                 open={true} 
-                onClick={() => setOpenWidget(null)}
+                onClick={() => {
+                  setWidgetAnimationClass('');
+                  setTimeout(() => setOpenWidget(null), 300);
+                }}
                 sx={{ zIndex: 1200 }}
               />
-              <DataTooltip className="show" sx={{ color: 'text.primary' }}>
+              <DataTooltip className={widgetAnimationClass} sx={{ color: 'text.primary' }}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
                   <Typography variant="h6" fontWeight={600}>
                     All Documents
                   </Typography>
-                  <IconButton onClick={() => setOpenWidget(null)} size="small">
+                  <IconButton onClick={() => {
+                    setWidgetAnimationClass('');
+                    setTimeout(() => setOpenWidget(null), 300);
+                  }} size="small">
                     <Close />
                   </IconButton>
                 </Stack>
