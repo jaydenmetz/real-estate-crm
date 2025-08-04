@@ -990,15 +990,15 @@ class SimpleEscrowController {
         });
       }
       
-      // Determine if ID is numeric or display format
-      // Handle both "esc" and "escrow-" prefixes
-      const isUUID = /^(esc|escrow-)?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      // Determine if ID is UUID-like format (including shortened versions) or display format
+      // Handle both "esc" and "escrow-" prefixes and variable length first segments
+      const isUUIDFormat = /^(esc|escrow-)?[0-9a-f]+-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
       values.push(id);
       
       const updateQuery = `
         UPDATE escrows 
         SET ${updateFields.join(', ')}, updated_at = NOW()
-        WHERE ${isUUID ? 'id = $' + paramIndex + '::uuid' : 'display_id = $' + paramIndex}
+        WHERE ${isUUIDFormat ? 'id = $' + paramIndex : 'display_id = $' + paramIndex}
         RETURNING *
       `;
       
@@ -1925,12 +1925,12 @@ class SimpleEscrowController {
       const { id } = req.params;
       const people = req.body;
       
-      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      const isUUIDFormat = /^[0-9a-f]+-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
       
       const query = `
         UPDATE escrows
         SET people = $2, updated_at = NOW()
-        WHERE ${isUUID ? 'id = $1' : 'display_id = $1'}
+        WHERE ${isUUIDFormat ? 'id = $1' : 'display_id = $1'}
         RETURNING id
       `;
       
@@ -1972,12 +1972,12 @@ class SimpleEscrowController {
       const { id } = req.params;
       const checklists = req.body;
       
-      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      const isUUIDFormat = /^[0-9a-f]+-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
       
       const query = `
         UPDATE escrows
         SET checklists = $2, updated_at = NOW()
-        WHERE ${isUUID ? 'id = $1' : 'display_id = $1'}
+        WHERE ${isUUIDFormat ? 'id = $1' : 'display_id = $1'}
         RETURNING id
       `;
       
