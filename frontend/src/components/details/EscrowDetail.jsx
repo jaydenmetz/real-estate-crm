@@ -2251,6 +2251,138 @@ const EscrowDetail = () => {
       {user?.username === 'admin' && escrow && (
         <Collapse in={debugExpanded}>
           <Box sx={{ mb: 3 }}>
+            {/* Update Tracking Debug Panel */}
+            <Paper sx={{ p: 2, mb: 2, backgroundColor: '#f5f5f5' }}>
+              <Typography variant="h6" gutterBottom>
+                🔍 Inline Edit Debug Information
+              </Typography>
+              <Divider sx={{ mb: 2 }} />
+              
+              <Grid container spacing={2}>
+                <Grid item xs={12} md={6}>
+                  <Typography variant="subtitle2" color="primary" gutterBottom>
+                    Current Data State
+                  </Typography>
+                  <Box sx={{ fontFamily: 'monospace', fontSize: '12px' }}>
+                    <div>Escrow ID: {id}</div>
+                    <div>Display ID: {escrow.escrowNumber}</div>
+                    <div>Buyer Name: {escrow.people?.buyer?.name || 'Not set'}</div>
+                    <div>Seller Name: {escrow.people?.seller?.name || 'Not set'}</div>
+                    <div>Last Activity: {escrow.lastActivity}</div>
+                    <div>Cache Key: ['escrow', '{id}']</div>
+                  </Box>
+                </Grid>
+                
+                <Grid item xs={12} md={6}>
+                  <Typography variant="subtitle2" color="primary" gutterBottom>
+                    API Endpoints Used
+                  </Typography>
+                  <Box sx={{ fontFamily: 'monospace', fontSize: '12px' }}>
+                    <div>GET: /v1/escrows/{id}</div>
+                    <div>PUT: /v1/escrows/{id}/people</div>
+                    <div>PUT: /v1/escrows/{id}/checklists</div>
+                    <div>PUT: /v1/escrows/{id} (other fields)</div>
+                  </Box>
+                </Grid>
+                
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" color="primary" gutterBottom>
+                    Update Flow Status
+                  </Typography>
+                  <Box sx={{ fontFamily: 'monospace', fontSize: '12px', whiteSpace: 'pre-wrap' }}>
+                    {`1. Click edit (pencil icon) → Field becomes editable
+2. Change value → Local state updates
+3. Click save (green check) → Shows loading spinner
+4. PUT request sent to: ${escrow.escrowNumber ? 'display_id endpoint' : 'UUID endpoint'}
+5. On success → Edit mode closes
+6. queryClient.invalidateQueries(['escrow', '${id}'])
+7. refetch() called → GET /v1/escrows/${id}
+8. useMemo recalculates escrow object
+9. UI should update with new value
+
+Raw Data Available: ${rawData ? 'YES' : 'NO'}
+Transformed Data Available: ${escrow ? 'YES' : 'NO'}
+Is Loading: ${isLoading ? 'YES' : 'NO'}
+Has Error: ${isError ? 'YES' : 'NO'}`}
+                  </Box>
+                </Grid>
+                
+                <Grid item xs={12}>
+                  <Typography variant="subtitle2" color="primary" gutterBottom>
+                    Full Debug Data (Copy This)
+                  </Typography>
+                  <Paper variant="outlined" sx={{ p: 1, backgroundColor: '#fafafa' }}>
+                    <pre style={{ fontSize: '11px', overflow: 'auto', maxHeight: '200px' }}>
+{JSON.stringify({
+  timestamp: new Date().toISOString(),
+  escrowId: id,
+  displayId: escrow.escrowNumber,
+  currentData: {
+    buyer: escrow.people?.buyer,
+    seller: escrow.people?.seller,
+    buyerAgent: escrow.people?.buyerAgent,
+    listingAgent: escrow.people?.listingAgent
+  },
+  apiEndpoints: {
+    base: 'https://api.jaydenmetz.com/v1',
+    getEscrow: `/escrows/${id}`,
+    updatePeople: `/escrows/${id}/people`,
+    updateChecklists: `/escrows/${id}/checklists`
+  },
+  reactQueryState: {
+    cacheKey: ['escrow', id],
+    isLoading,
+    isError,
+    isFetching: false,
+    dataUpdatedAt: rawData?._updatedAt || 'unknown'
+  },
+  lastUpdateFlow: 'Check console logs for detailed flow',
+  browserInfo: {
+    userAgent: navigator.userAgent,
+    timestamp: new Date().toISOString()
+  }
+}, null, 2)}
+                    </pre>
+                    <Box sx={{ mt: 1, display: 'flex', justifyContent: 'flex-end' }}>
+                      <CopyButton 
+                        text={JSON.stringify({
+                          timestamp: new Date().toISOString(),
+                          escrowId: id,
+                          displayId: escrow.escrowNumber,
+                          currentData: {
+                            buyer: escrow.people?.buyer,
+                            seller: escrow.people?.seller,
+                            buyerAgent: escrow.people?.buyerAgent,
+                            listingAgent: escrow.people?.listingAgent
+                          },
+                          apiEndpoints: {
+                            base: 'https://api.jaydenmetz.com/v1',
+                            getEscrow: `/escrows/${id}`,
+                            updatePeople: `/escrows/${id}/people`,
+                            updateChecklists: `/escrows/${id}/checklists`
+                          },
+                          reactQueryState: {
+                            cacheKey: ['escrow', id],
+                            isLoading,
+                            isError,
+                            isFetching: false,
+                            dataUpdatedAt: rawData?._updatedAt || 'unknown'
+                          },
+                          lastUpdateFlow: 'Check console logs for detailed flow',
+                          browserInfo: {
+                            userAgent: navigator.userAgent,
+                            timestamp: new Date().toISOString()
+                          }
+                        }, null, 2)}
+                        size="small"
+                        variant="contained"
+                      />
+                    </Box>
+                  </Paper>
+                </Grid>
+              </Grid>
+            </Paper>
+            
             {/* Enhanced debug components with more data */}
             <EnhancedDatabaseMonitor />
             <NetworkMonitorSimple />
