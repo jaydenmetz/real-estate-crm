@@ -500,6 +500,8 @@ import {
   Bed,
   SquareFoot,
   Landscape,
+  DirectionsCar,
+  Pool,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
@@ -1807,10 +1809,10 @@ const EscrowDetail = () => {
       {/* Hero Section */}
       <DetailPageHero
         type="escrow"
-        title={escrow.propertyAddress || escrow.property?.address || 'Escrow Details'}
-        subtitle={`Escrow ${escrow.displayId || escrow.escrowNumber}`}
-        status={escrow.status}
-        statusLabel={(escrow.status || 'UNKNOWN').toUpperCase()}
+        title={escrow.propertyAddress}
+        subtitle={`Escrow ${escrow.escrowNumber}`}
+        status={escrow.escrowStatus}
+        statusLabel={escrow.escrowStatus?.toUpperCase() || 'ACTIVE'}
         icon={Home}
         starred={escrow.starred}
         onStarToggle={() => console.log('Toggle star')}
@@ -1828,39 +1830,39 @@ const EscrowDetail = () => {
             >
               Escrows
             </Link>
-            <Typography sx={{ color: 'white' }}>{escrow.address}</Typography>
+            <Typography sx={{ color: 'white' }}>{escrow.propertyAddress}</Typography>
           </Breadcrumbs>
         }
         infoCards={[
           {
             icon: <AttachMoney sx={{ fontSize: 24 }} />,
             label: 'Purchase Price',
-            value: `$${(escrow.price || 0).toLocaleString()}`
+            value: `$${(escrow.purchasePrice || 0).toLocaleString()}`
           },
           {
             icon: <CalendarToday sx={{ fontSize: 24 }} />,
             label: 'Days to Close',
-            value: daysToClose
+            value: escrow.daysToClose?.toString() || '0'
           },
           {
             icon: <Speed sx={{ fontSize: 24 }} />,
             label: 'Progress',
-            value: `${progress}%`
+            value: `${escrow.checklistProgress || 0}%`
           },
           {
             icon: <Person sx={{ fontSize: 24 }} />,
             label: 'Buyer',
-            value: escrow.buyer?.name || 'TBD'
+            value: escrow.people?.buyer?.name || escrow.clients?.find(c => c.type === 'Buyer')?.name || 'Not Set'
           },
           {
             icon: <Person sx={{ fontSize: 24 }} />,
             label: 'Seller',
-            value: escrow.seller?.name || 'TBD'
+            value: escrow.people?.seller?.name || escrow.clients?.find(c => c.type === 'Seller')?.name || 'Not Set'
           },
           {
             icon: <Groups sx={{ fontSize: 24 }} />,
             label: 'Agents',
-            value: `${escrow.buyerAgent?.name || 'TBD'} / ${escrow.listingAgent?.name || 'TBD'}`
+            value: `${escrow.people?.buyerAgent?.name || 'Not Set'} / ${escrow.people?.sellerAgent?.name || 'Not Set'}`
           }
         ]}
       >
@@ -1870,7 +1872,7 @@ const EscrowDetail = () => {
           transition={{ duration: 0.8, delay: 0.2 }}
         >
           <PropertyCard elevation={8}>
-            {(escrow.property?.images || []).length > 0 ? (
+            {escrow.propertyImage || escrow.property?.images?.length > 0 ? (
               <Swiper
                 modules={[Navigation, Pagination, Autoplay, EffectFade]}
                 spaceBetween={0}
@@ -1882,40 +1884,54 @@ const EscrowDetail = () => {
                 onSlideChange={(swiper) => setSelectedImage(swiper?.activeIndex || 0)}
                 style={{ width: '100%', height: '100%' }}
               >
-                {(escrow.property?.images || []).map((image, index) => (
+                {[escrow.propertyImage, ...(escrow.property?.images || [])].filter(Boolean).map((image, index) => (
                   <SwiperSlide key={index}>
                     <img src={image} alt={`Property ${index + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   </SwiperSlide>
                 ))}
               </Swiper>
             ) : (
-              <Box sx={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: 'grey.200' }}>
-                <Typography variant="h6" color="text.secondary">No Images Available</Typography>
+              <Box 
+                sx={{ 
+                  width: '100%', 
+                  height: '100%', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                }}
+              >
+                <Stack alignItems="center" spacing={2}>
+                  <Home sx={{ fontSize: 80, color: 'white', opacity: 0.8 }} />
+                  <Typography variant="h5" color="white" fontWeight="600">
+                    {escrow.propertyAddress}
+                  </Typography>
+                </Stack>
               </Box>
             )}
             <Box className="property-overlay">
               <Grid container spacing={2}>
                 <Grid item xs={3}>
                   <Typography variant="h4" fontWeight="bold">
-                    {escrow.property?.bedrooms || 0}
+                    {escrow.property?.bedrooms || '-'}
                   </Typography>
                   <Typography variant="body2">Beds</Typography>
                 </Grid>
                 <Grid item xs={3}>
                   <Typography variant="h4" fontWeight="bold">
-                    {escrow.property?.bathrooms || 0}
+                    {escrow.property?.bathrooms || '-'}
                   </Typography>
                   <Typography variant="body2">Baths</Typography>
                 </Grid>
                 <Grid item xs={3}>
                   <Typography variant="h4" fontWeight="bold">
-                    {(((escrow.property && escrow.property.sqft) || 0) / 1000).toFixed(1)}k
+                    {escrow.property?.sqft ? `${(escrow.property.sqft / 1000).toFixed(1)}k` : '-'}
                   </Typography>
                   <Typography variant="body2">Sq Ft</Typography>
                 </Grid>
                 <Grid item xs={3}>
                   <Typography variant="h4" fontWeight="bold">
-                    {escrow.property?.yearBuilt || 'N/A'}
+                    {escrow.property?.yearBuilt || '-'}
                   </Typography>
                   <Typography variant="body2">Built</Typography>
                 </Grid>
@@ -2016,7 +2032,7 @@ const EscrowDetail = () => {
           </MotionDiv>
         </Grid>
 
-        {/* Property Details Row */}
+        {/* Enhanced Property Details */}
         <Grid item xs={12}>
           <MotionDiv
             initial={{ opacity: 0, y: 20 }}
@@ -2024,68 +2040,190 @@ const EscrowDetail = () => {
             transition={{ delay: 0.5 }}
           >
             <Paper sx={{ 
-              p: 3, 
+              p: 4, 
               borderRadius: 3,
-              background: 'linear-gradient(135deg, rgba(103, 58, 183, 0.03) 0%, rgba(63, 81, 181, 0.03) 100%)',
-              border: '1px solid rgba(103, 58, 183, 0.1)'
+              background: 'linear-gradient(135deg, rgba(103, 58, 183, 0.02) 0%, rgba(63, 81, 181, 0.02) 100%)',
+              border: '1px solid rgba(103, 58, 183, 0.08)',
+              position: 'relative',
+              overflow: 'hidden',
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '4px',
+                background: 'linear-gradient(90deg, #673AB7 0%, #3F51B5 100%)',
+              }
             }}>
-              <Typography variant="h6" fontWeight="600" sx={{ mb: 3 }}>
-                Property Details
-              </Typography>
-              <Grid container spacing={3}>
-                <Grid item xs={12} sm={6} md={2.4}>
-                  <Stack spacing={1}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Home sx={{ fontSize: 20, color: 'primary.main' }} />
-                      <Typography variant="body2" color="text.secondary">Type</Typography>
-                    </Stack>
-                    <Typography variant="h6" fontWeight="500">
-                      {escrow.property?.type || 'Single Family'}
-                    </Typography>
-                  </Stack>
+              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 3 }}>
+                <Typography variant="h5" fontWeight="700" color="primary">
+                  Property Overview
+                </Typography>
+                <Chip 
+                  label={`MLS# ${escrow.property?.mlsNumber || 'N/A'}`}
+                  variant="outlined"
+                  size="small"
+                  sx={{ fontWeight: 600 }}
+                />
+              </Stack>
+              
+              <Grid container spacing={4}>
+                {/* Left Column - Key Property Info */}
+                <Grid item xs={12} md={8}>
+                  <Grid container spacing={3}>
+                    <Grid item xs={6} sm={3}>
+                      <Stack spacing={1.5} alignItems="center">
+                        <Avatar sx={{ bgcolor: alpha('#673AB7', 0.1), width: 56, height: 56 }}>
+                          <Home sx={{ color: 'primary.main' }} />
+                        </Avatar>
+                        <Stack alignItems="center">
+                          <Typography variant="h5" fontWeight="700" color="primary">
+                            {escrow.property?.type || 'Single Family'}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Property Type
+                          </Typography>
+                        </Stack>
+                      </Stack>
+                    </Grid>
+                    
+                    <Grid item xs={6} sm={3}>
+                      <Stack spacing={1.5} alignItems="center">
+                        <Avatar sx={{ bgcolor: alpha('#2196F3', 0.1), width: 56, height: 56 }}>
+                          <Bed sx={{ color: 'info.main' }} />
+                        </Avatar>
+                        <Stack alignItems="center">
+                          <Typography variant="h5" fontWeight="700" color="info.main">
+                            {escrow.property?.bedrooms || '-'} / {escrow.property?.bathrooms || '-'}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Beds / Baths
+                          </Typography>
+                        </Stack>
+                      </Stack>
+                    </Grid>
+                    
+                    <Grid item xs={6} sm={3}>
+                      <Stack spacing={1.5} alignItems="center">
+                        <Avatar sx={{ bgcolor: alpha('#4CAF50', 0.1), width: 56, height: 56 }}>
+                          <SquareFoot sx={{ color: 'success.main' }} />
+                        </Avatar>
+                        <Stack alignItems="center">
+                          <Typography variant="h5" fontWeight="700" color="success.main">
+                            {escrow.property?.sqft ? escrow.property.sqft.toLocaleString() : '-'}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Square Feet
+                          </Typography>
+                        </Stack>
+                      </Stack>
+                    </Grid>
+                    
+                    <Grid item xs={6} sm={3}>
+                      <Stack spacing={1.5} alignItems="center">
+                        <Avatar sx={{ bgcolor: alpha('#FF9800', 0.1), width: 56, height: 56 }}>
+                          <CalendarMonth sx={{ color: 'warning.main' }} />
+                        </Avatar>
+                        <Stack alignItems="center">
+                          <Typography variant="h5" fontWeight="700" color="warning.main">
+                            {escrow.property?.yearBuilt || '-'}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            Year Built
+                          </Typography>
+                        </Stack>
+                      </Stack>
+                    </Grid>
+                  </Grid>
+                  
+                  {/* Additional Details */}
+                  <Divider sx={{ my: 3 }} />
+                  <Grid container spacing={2}>
+                    <Grid item xs={6} sm={4}>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Landscape sx={{ fontSize: 18, color: 'text.secondary' }} />
+                        <Typography variant="body2" color="text.secondary">Lot Size:</Typography>
+                        <Typography variant="body2" fontWeight="600">
+                          {escrow.property?.lotSize ? `${escrow.property.lotSize.toLocaleString()} sqft` : '-'}
+                        </Typography>
+                      </Stack>
+                    </Grid>
+                    <Grid item xs={6} sm={4}>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <DirectionsCar sx={{ fontSize: 18, color: 'text.secondary' }} />
+                        <Typography variant="body2" color="text.secondary">Garage:</Typography>
+                        <Typography variant="body2" fontWeight="600">
+                          {escrow.property?.garageSpaces ? `${escrow.property.garageSpaces} spaces` : '-'}
+                        </Typography>
+                      </Stack>
+                    </Grid>
+                    <Grid item xs={6} sm={4}>
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <Pool sx={{ fontSize: 18, color: 'text.secondary' }} />
+                        <Typography variant="body2" color="text.secondary">Pool:</Typography>
+                        <Typography variant="body2" fontWeight="600">
+                          {escrow.property?.pool ? 'Yes' : 'No'}
+                        </Typography>
+                      </Stack>
+                    </Grid>
+                  </Grid>
                 </Grid>
-                <Grid item xs={12} sm={6} md={2.4}>
-                  <Stack spacing={1}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Bed sx={{ fontSize: 20, color: 'primary.main' }} />
-                      <Typography variant="body2" color="text.secondary">Beds/Baths</Typography>
-                    </Stack>
-                    <Typography variant="h6" fontWeight="500">
-                      {escrow.property?.bedrooms || 4} / {escrow.property?.bathrooms || 3}
-                    </Typography>
-                  </Stack>
-                </Grid>
-                <Grid item xs={12} sm={6} md={2.4}>
-                  <Stack spacing={1}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <SquareFoot sx={{ fontSize: 20, color: 'primary.main' }} />
-                      <Typography variant="body2" color="text.secondary">Sq. Feet</Typography>
-                    </Stack>
-                    <Typography variant="h6" fontWeight="500">
-                      {((escrow.property?.sqft || 2847).toLocaleString())}
-                    </Typography>
-                  </Stack>
-                </Grid>
-                <Grid item xs={12} sm={6} md={2.4}>
-                  <Stack spacing={1}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <CalendarMonth sx={{ fontSize: 20, color: 'primary.main' }} />
-                      <Typography variant="body2" color="text.secondary">Year Built</Typography>
-                    </Stack>
-                    <Typography variant="h6" fontWeight="500">
-                      {escrow.property?.yearBuilt || 2015}
-                    </Typography>
-                  </Stack>
-                </Grid>
-                <Grid item xs={12} sm={6} md={2.4}>
-                  <Stack spacing={1}>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Landscape sx={{ fontSize: 20, color: 'primary.main' }} />
-                      <Typography variant="body2" color="text.secondary">Lot Size</Typography>
-                    </Stack>
-                    <Typography variant="h6" fontWeight="500">
-                      {escrow.property?.lot || '7,500 sqft'}
-                    </Typography>
+                
+                {/* Right Column - Location & Price */}
+                <Grid item xs={12} md={4}>
+                  <Stack spacing={3}>
+                    <Box sx={{ 
+                      p: 2.5, 
+                      borderRadius: 2, 
+                      bgcolor: alpha('#673AB7', 0.04),
+                      border: `1px solid ${alpha('#673AB7', 0.1)}`
+                    }}>
+                      <Stack spacing={2}>
+                        <Stack direction="row" spacing={1} alignItems="flex-start">
+                          <LocationOn sx={{ fontSize: 20, color: 'primary.main', mt: 0.5 }} />
+                          <Box>
+                            <Typography variant="body2" color="text.secondary" gutterBottom>
+                              Location
+                            </Typography>
+                            <Typography variant="body1" fontWeight="600">
+                              {escrow.property?.city || 'City'}, {escrow.property?.state || 'CA'} {escrow.property?.zipCode || ''}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                              {escrow.property?.county || 'County'} County
+                            </Typography>
+                          </Box>
+                        </Stack>
+                        
+                        <Divider />
+                        
+                        <Box>
+                          <Typography variant="body2" color="text.secondary" gutterBottom>
+                            Price Analysis
+                          </Typography>
+                          <Stack spacing={1}>
+                            <Stack direction="row" justifyContent="space-between">
+                              <Typography variant="body2">List Price:</Typography>
+                              <Typography variant="body2" fontWeight="600">
+                                ${escrow.property?.listPrice?.toLocaleString() || '-'}
+                              </Typography>
+                            </Stack>
+                            <Stack direction="row" justifyContent="space-between">
+                              <Typography variant="body2">Sale Price:</Typography>
+                              <Typography variant="body2" fontWeight="600" color="success.main">
+                                ${escrow.purchasePrice?.toLocaleString() || '-'}
+                              </Typography>
+                            </Stack>
+                            <Stack direction="row" justifyContent="space-between">
+                              <Typography variant="body2">$/Sq Ft:</Typography>
+                              <Typography variant="body2" fontWeight="600">
+                                ${escrow.property?.pricePerSqft || '-'}
+                              </Typography>
+                            </Stack>
+                          </Stack>
+                        </Box>
+                      </Stack>
+                    </Box>
                   </Stack>
                 </Grid>
               </Grid>
