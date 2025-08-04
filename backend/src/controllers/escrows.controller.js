@@ -1930,7 +1930,7 @@ class SimpleEscrowController {
       const query = `
         UPDATE escrows
         SET people = $2, updated_at = NOW()
-        WHERE ${isUUID ? 'id = $1::uuid' : 'display_id = $1'}
+        WHERE ${isUUID ? 'id = $1' : 'display_id = $1'}
         RETURNING id
       `;
       
@@ -1977,7 +1977,7 @@ class SimpleEscrowController {
       const query = `
         UPDATE escrows
         SET checklists = $2, updated_at = NOW()
-        WHERE ${isUUID ? 'id = $1::uuid' : 'display_id = $1'}
+        WHERE ${isUUID ? 'id = $1' : 'display_id = $1'}
         RETURNING id
       `;
       
