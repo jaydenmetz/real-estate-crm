@@ -211,7 +211,7 @@ const DetailPageHero = ({
       
       <HeroContent>
         <Grid container spacing={4} alignItems="center">
-          <Grid item xs={12} lg={children ? 7 : 12}>
+          <Grid item xs={12}>
             <MotionDiv
               initial={{ opacity: 0, x: -50 }}
               animate={{ opacity: 1, x: 0 }}
@@ -367,12 +367,12 @@ const DetailPageHero = ({
             </MotionDiv>
           </Grid>
           
-          {/* Custom Content Area */}
+          {/* Custom Content Area - Now full width below header */}
           {children && (
-            <Grid item xs={12} lg={5}>
+            <Grid item xs={12}>
               <MotionDiv
-                initial={{ opacity: 0, x: 50 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8 }}
               >
                 {children}
