@@ -822,8 +822,9 @@ const EditableField = ({ field, value, onSave, type = 'text' }) => {
   const [isSaving, setIsSaving] = useState(false);
   
   useEffect(() => {
+    console.log(`EditableField[${field}] value changed:`, value);
     setEditValue(value || '');
-  }, [value]);
+  }, [value, field]);
   
   const handleSave = async () => {
     console.log('EditableField handleSave called:', {
@@ -1700,9 +1701,10 @@ const EscrowDetail = () => {
     {
       refetchInterval: 30000, // Refresh every 30 seconds for real-time updates
       staleTime: 0, // Consider data stale immediately
-      cacheTime: 0, // Don't cache the data
+      cacheTime: 5000, // Keep in cache for 5 seconds to allow updates
       refetchOnMount: 'always', // Always refetch when component mounts
-      refetchOnWindowFocus: true, // Refetch when window regains focus
+      refetchOnWindowFocus: false, // Don't refetch on window focus
+      enabled: mounted, // Only fetch when component is mounted
       onSuccess: (data) => {
         console.log('Escrow fetch successful, raw response:', data);
         if (data && data.data) {
@@ -1729,15 +1731,22 @@ const EscrowDetail = () => {
     console.log('=== ESCROW TRANSFORMATION ===');
     console.log('Raw data:', rawData);
     console.log('Raw data timestamp:', new Date().toISOString());
+    console.log('Component mounted state:', mounted);
+    
+    if (!rawData) {
+      console.log('No raw data available, returning mock data');
+      return mockEscrowData;
+    }
     
     const transformed = transformDetailedEscrow(rawData);
     
     console.log('Transformed data:', transformed);
     console.log('Buyer name in transformed:', transformed?.people?.buyer?.name);
+    console.log('Seller name in transformed:', transformed?.people?.seller?.name);
     console.log('=== END TRANSFORMATION ===');
     
     return transformed;
-  }, [rawData]);
+  }, [rawData, mounted]);
   
   // Additional debug for financial fields
   if (rawData && rawData.data) {
@@ -1927,15 +1936,21 @@ const EscrowDetail = () => {
         // Force immediate refetch to get fresh data
         console.log('Starting refetch...');
         
-        // Invalidate first to mark data as stale
-        await queryClient.invalidateQueries(['escrow', id]);
+        // Use the actual ID from the route params, not the formatted one
+        const queryKey = ['escrow', id];
+        console.log('Invalidating query with key:', queryKey);
         
-        // Then refetch
+        // Invalidate and remove from cache completely
+        await queryClient.invalidateQueries(queryKey);
+        await queryClient.removeQueries(queryKey);
+        
+        // Then refetch immediately
         const refetchResult = await refetch();
         console.log('Refetch completed:', refetchResult);
         
-        // Force a small delay to ensure React re-renders
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Force React to re-render by setting a dummy state
+        setMounted(false);
+        setTimeout(() => setMounted(true), 50);
         
         console.log('Field updated successfully and data refreshed');
       } else {
@@ -3725,7 +3740,9 @@ Has Error: ${isError ? 'YES' : 'NO'}`}
                 }}
                 sx={{ zIndex: 1200 }}
               />
-              <DataTooltip className={widgetAnimationClass}>
+              <DataTooltip 
+                className={widgetAnimationClass}
+                key={`people-popup-${escrow.people?.buyer?.name}-${escrow.people?.seller?.name}`}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
                   <Typography variant="h6" fontWeight={600}>
                     All People & Contacts
