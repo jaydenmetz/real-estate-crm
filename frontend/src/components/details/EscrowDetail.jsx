@@ -714,8 +714,93 @@ const pulse = keyframes`
   100% { opacity: 0.6; transform: scale(1); }
 `;
 
+const liquidMorph = keyframes`
+  0% {
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+    transform: rotate(0deg);
+  }
+  50% {
+    border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
+    transform: rotate(180deg);
+  }
+  100% {
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+    transform: rotate(360deg);
+  }
+`;
+
+const floatAnimation = keyframes`
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+`;
+
 // Styled Components
 // HeroSection - Replaced with DetailPageHero component
+
+const LiquidWidget = styled(Paper)(({ theme }) => ({
+  position: 'relative',
+  padding: theme.spacing(3),
+  height: '100%',
+  borderRadius: theme.spacing(2),
+  overflow: 'hidden',
+  cursor: 'pointer',
+  transition: 'all 0.3s ease',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: -50,
+    right: -50,
+    width: 200,
+    height: 200,
+    background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
+    borderRadius: '50%',
+    animation: `${liquidMorph} 6s ease-in-out infinite`,
+    opacity: 0,
+    transition: 'opacity 0.3s ease',
+  },
+  '&:hover': {
+    transform: 'translateY(-4px)',
+    boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
+    '&::before': {
+      opacity: 1,
+    },
+  },
+}));
+
+const DataTooltip = styled(Box)(({ theme }) => ({
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%) scale(0)',
+  background: 'rgba(255, 255, 255, 0.98)',
+  backdropFilter: 'blur(20px)',
+  borderRadius: theme.spacing(2),
+  padding: theme.spacing(3),
+  minWidth: 300,
+  maxWidth: 400,
+  boxShadow: '0 10px 40px rgba(0,0,0,0.2)',
+  zIndex: 1000,
+  opacity: 0,
+  transition: 'all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+  maxHeight: '80vh',
+  overflowY: 'auto',
+  '&.show': {
+    transform: 'translate(-50%, -50%) scale(1)',
+    opacity: 1,
+  },
+  '&::-webkit-scrollbar': {
+    width: 6,
+  },
+  '&::-webkit-scrollbar-track': {
+    background: 'rgba(0,0,0,0.05)',
+    borderRadius: 3,
+  },
+  '&::-webkit-scrollbar-thumb': {
+    background: theme.palette.primary.light,
+    borderRadius: 3,
+  },
+}));
 
 const StatsCard = styled(Card)(({ theme }) => ({
   background: 'rgba(255, 255, 255, 0.95)',
@@ -1240,6 +1325,7 @@ const EscrowDetail = () => {
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [checklistExpanded, setChecklistExpanded] = useState({});
   const [agentDetailOpen, setAgentDetailOpen] = useState(null);
+  const [hoveredWidget, setHoveredWidget] = useState(null);
   const [activityFilter, setActivityFilter] = useState('all');
   const [debugExpanded, setDebugExpanded] = useState(false);
   const [viewMode, setViewMode] = useState('detailed'); // Always use detailed view
@@ -2527,13 +2613,12 @@ const EscrowDetail = () => {
         <Grid container spacing={3}>
           {/* People Widget */}
           <Grid item xs={12} md={6}>
-            <Paper 
+            <LiquidWidget 
               sx={{ 
-                p: 3, 
-                height: '100%',
-                borderRadius: 2,
                 background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
               }}
+              onMouseEnter={() => setHoveredWidget('people')}
+              onMouseLeave={() => setHoveredWidget(null)}
             >
               <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
                 <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -2546,86 +2631,157 @@ const EscrowDetail = () => {
               </Stack>
               
               <Stack spacing={2}>
-                {/* Buyer */}
-                {escrow.people?.buyer && (
+                {/* Display key people */}
+                {escrow.people?.buyer?.name && (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <Avatar sx={{ bgcolor: 'primary.main' }}>
-                      {escrow.people.buyer.name?.charAt(0) || 'B'}
+                      {escrow.people.buyer.name.charAt(0)}
                     </Avatar>
                     <Box>
                       <Typography variant="body1" fontWeight="medium">
-                        {escrow.people.buyer.name || 'Buyer'}
+                        {escrow.people.buyer.name}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        Buyer • {escrow.people.buyer.phone || 'No phone'}
+                        Buyer
                       </Typography>
                     </Box>
                   </Box>
                 )}
                 
-                {/* Seller */}
-                {escrow.people?.seller && (
+                {escrow.people?.seller?.name && (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                     <Avatar sx={{ bgcolor: 'secondary.main' }}>
-                      {escrow.people.seller.name?.charAt(0) || 'S'}
+                      {escrow.people.seller.name.charAt(0)}
                     </Avatar>
                     <Box>
                       <Typography variant="body1" fontWeight="medium">
-                        {escrow.people.seller.name || 'Seller'}
+                        {escrow.people.seller.name}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        Seller • {escrow.people.seller.phone || 'No phone'}
+                        Seller
                       </Typography>
                     </Box>
                   </Box>
                 )}
                 
-                {/* Agents */}
-                {escrow.people?.buyerAgent && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Avatar sx={{ bgcolor: 'info.main' }}>
-                      {escrow.people.buyerAgent.name?.charAt(0) || 'A'}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="body1" fontWeight="medium">
-                        {escrow.people.buyerAgent.name || 'Buyer\'s Agent'}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Buyer's Agent • {escrow.people.buyerAgent.brokerage || 'Brokerage'}
-                      </Typography>
-                    </Box>
-                  </Box>
-                )}
-                
-                {escrow.people?.listingAgent && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Avatar sx={{ bgcolor: 'warning.main' }}>
-                      {escrow.people.listingAgent.name?.charAt(0) || 'L'}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="body1" fontWeight="medium">
-                        {escrow.people.listingAgent.name || 'Listing Agent'}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Listing Agent • {escrow.people.listingAgent.brokerage || 'Brokerage'}
-                      </Typography>
-                    </Box>
-                  </Box>
+                {!escrow.people?.buyer?.name && !escrow.people?.seller?.name && (
+                  <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
+                    No people assigned yet
+                  </Typography>
                 )}
               </Stack>
-            </Paper>
+              
+              {/* Hover Tooltip with all data */}
+              {hoveredWidget === 'people' && (
+                <DataTooltip className="show">
+                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                    All People & Contacts
+                  </Typography>
+                  
+                  <Stack spacing={2}>
+                    {/* Buyer Details */}
+                    <Box>
+                      <Typography variant="subtitle2" color="primary" sx={{ mb: 1 }}>Buyer</Typography>
+                      {escrow.people?.buyer ? (
+                        <Stack spacing={0.5}>
+                          <Typography variant="body2">Name: {escrow.people.buyer.name || 'Not set'}</Typography>
+                          <Typography variant="body2">Email: {escrow.people.buyer.email || 'Not set'}</Typography>
+                          <Typography variant="body2">Phone: {escrow.people.buyer.phone || 'Not set'}</Typography>
+                          {escrow.people.buyer.address && (
+                            <Typography variant="body2">Address: {escrow.people.buyer.address}</Typography>
+                          )}
+                        </Stack>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">No buyer information</Typography>
+                      )}
+                    </Box>
+                    
+                    <Divider />
+                    
+                    {/* Seller Details */}
+                    <Box>
+                      <Typography variant="subtitle2" color="secondary" sx={{ mb: 1 }}>Seller</Typography>
+                      {escrow.people?.seller ? (
+                        <Stack spacing={0.5}>
+                          <Typography variant="body2">Name: {escrow.people.seller.name || 'Not set'}</Typography>
+                          <Typography variant="body2">Email: {escrow.people.seller.email || 'Not set'}</Typography>
+                          <Typography variant="body2">Phone: {escrow.people.seller.phone || 'Not set'}</Typography>
+                          {escrow.people.seller.address && (
+                            <Typography variant="body2">Address: {escrow.people.seller.address}</Typography>
+                          )}
+                        </Stack>
+                      ) : (
+                        <Typography variant="body2" color="text.secondary">No seller information</Typography>
+                      )}
+                    </Box>
+                    
+                    <Divider />
+                    
+                    {/* Agents */}
+                    <Box>
+                      <Typography variant="subtitle2" color="info.main" sx={{ mb: 1 }}>Agents</Typography>
+                      <Stack spacing={1}>
+                        {escrow.people?.buyerAgent && (
+                          <Box>
+                            <Typography variant="body2" fontWeight="medium">Buyer's Agent</Typography>
+                            <Typography variant="body2">Name: {escrow.people.buyerAgent.name || 'Not set'}</Typography>
+                            <Typography variant="body2">Brokerage: {escrow.people.buyerAgent.brokerage || 'Not set'}</Typography>
+                            <Typography variant="body2">License: {escrow.people.buyerAgent.license || 'Not set'}</Typography>
+                          </Box>
+                        )}
+                        
+                        {escrow.people?.listingAgent && (
+                          <Box>
+                            <Typography variant="body2" fontWeight="medium">Listing Agent</Typography>
+                            <Typography variant="body2">Name: {escrow.people.listingAgent.name || 'Not set'}</Typography>
+                            <Typography variant="body2">Brokerage: {escrow.people.listingAgent.brokerage || 'Not set'}</Typography>
+                            <Typography variant="body2">License: {escrow.people.listingAgent.license || 'Not set'}</Typography>
+                          </Box>
+                        )}
+                      </Stack>
+                    </Box>
+                    
+                    {/* Transaction Team */}
+                    {escrow.people?.transactionTeam && (
+                      <>
+                        <Divider />
+                        <Box>
+                          <Typography variant="subtitle2" color="warning.main" sx={{ mb: 1 }}>Transaction Team</Typography>
+                          <Stack spacing={0.5}>
+                            {escrow.people.transactionTeam.escrowOfficer && (
+                              <Typography variant="body2">
+                                Escrow Officer: {escrow.people.transactionTeam.escrowOfficer.name || 'Not assigned'}
+                              </Typography>
+                            )}
+                            {escrow.people.transactionTeam.titleCompany && (
+                              <Typography variant="body2">
+                                Title Company: {escrow.people.transactionTeam.titleCompany.name || 'Not assigned'}
+                              </Typography>
+                            )}
+                            {escrow.people.transactionTeam.lenderContact && (
+                              <Typography variant="body2">
+                                Lender: {escrow.people.transactionTeam.lenderContact.name || 'Not assigned'}
+                              </Typography>
+                            )}
+                          </Stack>
+                        </Box>
+                      </>
+                    )}
+                  </Stack>
+                </DataTooltip>
+              )}
+            </LiquidWidget>
           </Grid>
           
           {/* Checklist Widget */}
           <Grid item xs={12} md={6}>
-            <Paper 
+            <LiquidWidget 
               sx={{ 
-                p: 3, 
-                height: '100%',
-                borderRadius: 2,
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 color: 'white',
               }}
+              onMouseEnter={() => setHoveredWidget('checklist')}
+              onMouseLeave={() => setHoveredWidget(null)}
             >
               <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
                 <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -2690,19 +2846,77 @@ const EscrowDetail = () => {
               >
                 View All Tasks
               </Button>
-            </Paper>
+              
+              {/* Hover Tooltip with all checklist data */}
+              {hoveredWidget === 'checklist' && (
+                <DataTooltip className="show" sx={{ color: 'text.primary' }}>
+                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                    Complete Checklist Details
+                  </Typography>
+                  
+                  <Stack spacing={2}>
+                    {escrow.checklists && Object.entries(escrow.checklists).map(([section, tasks]) => {
+                      const sectionTasks = Object.entries(tasks || {});
+                      const completedCount = sectionTasks.filter(([, completed]) => completed).length;
+                      const totalCount = sectionTasks.length;
+                      
+                      return (
+                        <Box key={section}>
+                          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+                            <Typography variant="subtitle2" color="primary">
+                              {section.replace(/([A-Z])/g, ' $1').trim()}
+                            </Typography>
+                            <Chip 
+                              label={`${completedCount}/${totalCount}`} 
+                              size="small"
+                              color={completedCount === totalCount ? 'success' : 'default'}
+                            />
+                          </Stack>
+                          
+                          <Stack spacing={0.5} sx={{ pl: 2 }}>
+                            {sectionTasks.map(([task, completed]) => (
+                              <Stack key={task} direction="row" alignItems="center" spacing={1}>
+                                {completed ? (
+                                  <CheckCircle sx={{ fontSize: 16, color: 'success.main' }} />
+                                ) : (
+                                  <Box sx={{ width: 16, height: 16, border: '2px solid', borderColor: 'divider', borderRadius: '50%' }} />
+                                )}
+                                <Typography 
+                                  variant="body2" 
+                                  sx={{ 
+                                    textDecoration: completed ? 'line-through' : 'none',
+                                    color: completed ? 'text.secondary' : 'text.primary',
+                                  }}
+                                >
+                                  {task.replace(/([A-Z])/g, ' $1').trim()}
+                                </Typography>
+                              </Stack>
+                            ))}
+                          </Stack>
+                        </Box>
+                      );
+                    })}
+                    
+                    {(!escrow.checklists || Object.keys(escrow.checklists).length === 0) && (
+                      <Typography variant="body2" color="text.secondary">
+                        No checklist items available
+                      </Typography>
+                    )}
+                  </Stack>
+                </DataTooltip>
+              )}
+            </LiquidWidget>
           </Grid>
           
           {/* Timeline Widget */}
           <Grid item xs={12} lg={4}>
-            <Paper 
+            <LiquidWidget 
               sx={{ 
-                p: 3, 
-                height: '100%',
-                borderRadius: 2,
                 border: '2px solid',
                 borderColor: 'primary.light',
               }}
+              onMouseEnter={() => setHoveredWidget('timeline')}
+              onMouseLeave={() => setHoveredWidget(null)}
             >
               <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                 <EventNote sx={{ color: 'primary.main' }} />
@@ -2743,18 +2957,75 @@ const EscrowDetail = () => {
                     );
                   })}
               </Stack>
-            </Paper>
+              
+              {/* Hover Tooltip with all timeline data */}
+              {hoveredWidget === 'timeline' && (
+                <DataTooltip className="show">
+                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                    Complete Timeline
+                  </Typography>
+                  
+                  <Stack spacing={1.5}>
+                    {escrow.timeline && Object.entries(escrow.timeline)
+                      .filter(([key, date]) => date && key !== 'daysFromAcceptance' && key !== 'daysToCoe' && key !== 'daysToContingency')
+                      .sort(([, a], [, b]) => new Date(a) - new Date(b))
+                      .map(([eventKey, eventDate]) => {
+                        const isPast = new Date(eventDate) < new Date();
+                        const isToday = safeFormat(eventDate, 'yyyy-MM-dd') === safeFormat(new Date(), 'yyyy-MM-dd');
+                        const label = eventKey.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()).trim();
+                        const daysUntil = differenceInDays(new Date(eventDate), new Date());
+                        
+                        return (
+                          <Stack key={eventKey} direction="row" alignItems="center" spacing={2}>
+                            <Box 
+                              sx={{ 
+                                width: 12, 
+                                height: 12, 
+                                borderRadius: '50%', 
+                                bgcolor: isToday ? 'warning.main' : isPast ? 'success.main' : 'grey.400',
+                                flexShrink: 0,
+                              }} 
+                            />
+                            <Box sx={{ flex: 1 }}>
+                              <Typography variant="body2" fontWeight="medium">
+                                {label}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {safeFormat(eventDate, 'EEEE, MMMM d, yyyy')}
+                                {!isPast && daysUntil > 0 && ` (in ${daysUntil} days)`}
+                                {!isPast && daysUntil === 0 && ' (Today)'}
+                                {!isPast && daysUntil < 0 && ` (${Math.abs(daysUntil)} days overdue)`}
+                              </Typography>
+                            </Box>
+                            {isPast && (
+                              <CheckCircle sx={{ fontSize: 18, color: 'success.main' }} />
+                            )}
+                            {isToday && (
+                              <Chip label="Today" size="small" color="warning" />
+                            )}
+                          </Stack>
+                        );
+                      })}
+                    
+                    {(!escrow.timeline || Object.entries(escrow.timeline).filter(([key]) => key !== 'daysFromAcceptance' && key !== 'daysToCoe').length === 0) && (
+                      <Typography variant="body2" color="text.secondary">
+                        No timeline dates set
+                      </Typography>
+                    )}
+                  </Stack>
+                </DataTooltip>
+              )}
+            </LiquidWidget>
           </Grid>
           
           {/* Financials Widget */}
           <Grid item xs={12} lg={4}>
-            <Paper 
+            <LiquidWidget 
               sx={{ 
-                p: 3, 
-                height: '100%',
-                borderRadius: 2,
                 background: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
               }}
+              onMouseEnter={() => setHoveredWidget('financials')}
+              onMouseLeave={() => setHoveredWidget(null)}
             >
               <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                 <AttachMoney sx={{ color: 'warning.dark' }} />
@@ -2803,18 +3074,115 @@ const EscrowDetail = () => {
                   </Typography>
                 </Box>
               </Stack>
-            </Paper>
+              
+              {/* Hover Tooltip with all financial data */}
+              {hoveredWidget === 'financials' && (
+                <DataTooltip className="show">
+                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                    Complete Financial Breakdown
+                  </Typography>
+                  
+                  <Stack spacing={2}>
+                    <Box>
+                      <Typography variant="subtitle2" color="primary" sx={{ mb: 1 }}>
+                        Transaction Details
+                      </Typography>
+                      <Stack spacing={0.5}>
+                        <Typography variant="body2">
+                          Purchase Price: ${(escrow.financials?.purchasePrice || 0).toLocaleString()}
+                        </Typography>
+                        <Typography variant="body2">
+                          Transaction Type: {escrow.financials?.transactionType || 'Standard Sale'}
+                        </Typography>
+                        <Typography variant="body2">
+                          Closing Date: {escrow.closingDate ? safeFormat(escrow.closingDate, 'MMM dd, yyyy') : 'TBD'}
+                        </Typography>
+                      </Stack>
+                    </Box>
+                    
+                    <Divider />
+                    
+                    <Box>
+                      <Typography variant="subtitle2" color="secondary" sx={{ mb: 1 }}>
+                        Commission Calculation
+                      </Typography>
+                      <Stack spacing={0.5}>
+                        <Typography variant="body2">
+                          Commission Rate: {escrow.financials?.myCommissionRate || 2.5}%
+                        </Typography>
+                        <Typography variant="body2">
+                          Gross Commission: ${(escrow.financials?.grossCommission || 0).toLocaleString()}
+                        </Typography>
+                        <Typography variant="body2">
+                          Your Split Percentage: {escrow.financials?.splitPercentage || 60}%
+                        </Typography>
+                        <Typography variant="body2">
+                          Split Tier: {escrow.financials?.splitTier || 1}
+                        </Typography>
+                        <Typography variant="body2">
+                          Commission After Split: ${(escrow.financials?.myCommissionAfterSplit || 0).toLocaleString()}
+                        </Typography>
+                      </Stack>
+                    </Box>
+                    
+                    <Divider />
+                    
+                    <Box>
+                      <Typography variant="subtitle2" color="error" sx={{ mb: 1 }}>
+                        Fees & Deductions
+                      </Typography>
+                      <Stack spacing={0.5}>
+                        <Typography variant="body2">
+                          Franchise Fee (6.25%): -${(escrow.financials?.franchiseFee || 0).toLocaleString()}
+                        </Typography>
+                        {escrow.financials?.isZillowFlexReferral && (
+                          <>
+                            <Typography variant="body2">
+                              Zillow Flex Referral ({escrow.financials?.zillowFlexReferralPercentage}%): -${(escrow.financials?.zillowFlexReferralFee || 0).toLocaleString()}
+                            </Typography>
+                            <Typography variant="body2">
+                              Zillow Flex Commission After Close: ${(escrow.financials?.zillowFlexCommissionAfterClose || 0).toLocaleString()}
+                            </Typography>
+                          </>
+                        )}
+                        <Typography variant="body2">
+                          Total Deductions: -${((escrow.financials?.franchiseFee || 0) + (escrow.financials?.zillowFlexReferralFee || 0)).toLocaleString()}
+                        </Typography>
+                      </Stack>
+                    </Box>
+                    
+                    <Divider />
+                    
+                    <Box>
+                      <Typography variant="subtitle2" color="success" sx={{ mb: 1 }}>
+                        Net Commission Summary
+                      </Typography>
+                      <Stack spacing={0.5}>
+                        <Typography variant="body1" fontWeight="bold">
+                          My Net Commission: ${(escrow.financials?.myNetCommission || 0).toLocaleString()}
+                        </Typography>
+                        <Typography variant="body2">
+                          YTD GCI Before: ${(escrow.financials?.ytdGciBeforeTransaction || 0).toLocaleString()}
+                        </Typography>
+                        <Typography variant="body2">
+                          YTD GCI After: ${(escrow.financials?.ytdGciAfterTransaction || 0).toLocaleString()}
+                        </Typography>
+                      </Stack>
+                    </Box>
+                  </Stack>
+                </DataTooltip>
+              )}
+            </LiquidWidget>
           </Grid>
           
           {/* Documents Widget */}
           <Grid item xs={12} lg={4}>
-            <Paper 
+            <LiquidWidget 
               sx={{ 
-                p: 3, 
-                height: '100%',
-                borderRadius: 2,
                 background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
               }}
+              onMouseEnter={() => setHoveredWidget('documents')}
+              onMouseLeave={() => setHoveredWidget(null)}
             >
               <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
                 <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -2879,7 +3247,93 @@ const EscrowDetail = () => {
                   View All Documents
                 </Button>
               )}
-            </Paper>
+              
+              {/* Hover Tooltip with all documents data */}
+              {hoveredWidget === 'documents' && (
+                <DataTooltip className="show">
+                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+                    All Documents
+                  </Typography>
+                  
+                  <Stack spacing={2}>
+                    {(escrow.documents || []).length > 0 ? (
+                      <>
+                        <Typography variant="body2" color="text.secondary">
+                          Total Documents: {escrow.documents.length}
+                        </Typography>
+                        
+                        <Stack spacing={1}>
+                          {escrow.documents.map((doc) => (
+                            <Paper 
+                              key={doc.id} 
+                              sx={{ 
+                                p: 2, 
+                                display: 'flex', 
+                                alignItems: 'flex-start', 
+                                gap: 2,
+                                bgcolor: 'grey.50',
+                              }}
+                            >
+                              <InsertDriveFile sx={{ color: 'text.secondary', mt: 0.5 }} />
+                              <Box sx={{ flex: 1 }}>
+                                <Typography variant="body2" fontWeight="medium">
+                                  {doc.name}
+                                </Typography>
+                                <Stack spacing={0.5} sx={{ mt: 0.5 }}>
+                                  <Typography variant="caption" color="text.secondary">
+                                    Type: {doc.documentType || 'General'}
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary">
+                                    Size: {doc.size}
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary">
+                                    Uploaded: {safeFormat(doc.uploadedAt, 'MMM dd, yyyy h:mm a')}
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary">
+                                    By: {doc.uploadedBy || 'Unknown'}
+                                  </Typography>
+                                  {doc.url && (
+                                    <Typography variant="caption" color="primary" sx={{ cursor: 'pointer' }}>
+                                      View Document →
+                                    </Typography>
+                                  )}
+                                </Stack>
+                              </Box>
+                              <IconButton size="small">
+                                <Download fontSize="small" />
+                              </IconButton>
+                            </Paper>
+                          ))}
+                        </Stack>
+                        
+                        <Box sx={{ mt: 2, p: 2, bgcolor: 'info.light', borderRadius: 1 }}>
+                          <Typography variant="caption" color="info.dark">
+                            Tip: You can drag and drop files directly onto this widget to upload them
+                          </Typography>
+                        </Box>
+                      </>
+                    ) : (
+                      <Box sx={{ textAlign: 'center', py: 3 }}>
+                        <InsertDriveFile sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
+                        <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
+                          No documents uploaded yet
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2 }}>
+                          Upload purchase agreements, disclosures, inspection reports, and other important documents
+                        </Typography>
+                        <Button 
+                          variant="contained" 
+                          startIcon={<Upload />}
+                          onClick={handleDocumentUpload}
+                        >
+                          Upload Documents
+                        </Button>
+                      </Box>
+                    )}
+                  </Stack>
+                </DataTooltip>
+              )}
+            </LiquidWidget>
           </Grid>
         </Grid>
       </Box>
