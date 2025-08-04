@@ -697,8 +697,8 @@ const EscrowsDashboard = () => {
           </Grid>
         </Grid>
 
-        {/* Enhanced Charts */}
-        <Grid container spacing={3} sx={{ mt: 2 }}>
+        {/* Enhanced Charts - REMOVED PER USER REQUEST */}
+        {/* <Grid container spacing={3} sx={{ mt: 2 }}>
           <Grid item xs={12} md={6}>
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
@@ -820,7 +820,7 @@ const EscrowsDashboard = () => {
               </Paper>
             </motion.div>
           </Grid>
-        </Grid>
+        </Grid> */}
 
       {/* Action Bar */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
