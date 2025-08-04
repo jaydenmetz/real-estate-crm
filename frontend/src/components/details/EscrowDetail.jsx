@@ -1509,27 +1509,15 @@ const aiActivityData = [
 ];
 
 const EscrowDetail = () => {
-  const { id: routeId } = useParams();
+  const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme?.breakpoints?.down?.('sm') || '(max-width:600px)');
   const queryClient = useQueryClient();
   
-  // Clean the ID by removing extra zeros if present
-  const cleanEscrowId = (inputId) => {
-    if (!inputId) return inputId;
-    // If ID has format like e4596000-6e64-4573-9d5b-a69ef33a8a53, remove the extra zeros
-    const cleaned = inputId.replace(/^([a-zA-Z]*\d{4})000(-.*)?$/, '$1$2');
-    if (cleaned !== inputId) {
-      console.log('cleanEscrowId - Cleaned ID from:', inputId, 'to:', cleaned);
-    }
-    return cleaned;
-  };
-  
-  // Clean the route ID immediately
-  const id = cleanEscrowId(routeId);
-  console.log('EscrowDetail - Using cleaned ID:', id);
+  // Log the ID we're using
+  console.log('EscrowDetail - Using ID from route:', id);
 
 
   // State
@@ -1812,13 +1800,9 @@ const EscrowDetail = () => {
   
   const handleFieldUpdate = async (section, field, value) => {
     try {
-      // Debug log the ID being used
-      console.log('handleFieldUpdate - Using cleaned ID from route:', id);
-      console.log('handleFieldUpdate - Escrow ID from data:', escrow?.id);
-      
-      // Use the already cleaned ID from the route
+      // Use the ID as provided in the route
       const escrowId = id;
-      console.log('handleFieldUpdate - Final escrow ID:', escrowId);
+      console.log('handleFieldUpdate - Using escrow ID:', escrowId);
       
       let payload = {};
       
@@ -1921,7 +1905,7 @@ const EscrowDetail = () => {
     // Open the widget
     setOpenWidget(widgetName);
     
-    // Use the already cleaned ID from the route
+    // Use the ID as provided
     const escrowId = id;
     
     // Fetch fresh data from API
