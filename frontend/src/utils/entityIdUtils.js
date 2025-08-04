@@ -11,6 +11,9 @@
 export const addEntityPrefix = (id, entityType) => {
   if (!id) return id;
   
+  // Convert to string if it's not already
+  const idStr = String(id);
+  
   // Map entity types to prefixes
   const prefixMap = {
     escrow: 'escrow-',
@@ -38,21 +41,21 @@ export const addEntityPrefix = (id, entityType) => {
   const prefix = prefixMap[entityType.toLowerCase()] || `${entityType.toLowerCase()}-`;
   
   // Check if ID already has this prefix
-  if (id.startsWith(prefix)) {
-    return id;
+  if (idStr.startsWith(prefix)) {
+    return idStr;
   }
   
   // Check if ID has any common prefix
   const commonPrefixes = Object.values(prefixMap);
-  const hasPrefix = commonPrefixes.some(p => id.startsWith(p));
+  const hasPrefix = commonPrefixes.some(p => idStr.startsWith(p));
   
   if (hasPrefix) {
     // Already has a different prefix, don't add another
-    return id;
+    return idStr;
   }
   
   // Add the prefix
-  return `${prefix}${id}`;
+  return `${prefix}${idStr}`;
 };
 
 /**
@@ -127,14 +130,17 @@ export const getEntityTypeFromId = (id) => {
 export const formatEntityId = (id, entityType) => {
   if (!id) return '';
   
+  // Convert to string if it's not already
+  const idStr = String(id);
+  
   // For display IDs like ESCROW-2025-0001, return as-is
-  if (id.match(/^[A-Z]+-\d{4}-\d+$/)) {
-    return id;
+  if (idStr.match(/^[A-Z]+-\d{4}-\d+$/)) {
+    return idStr;
   }
   
   // For numeric IDs, return as-is
-  if (/^\d+$/.test(id)) {
-    return id;
+  if (/^\d+$/.test(idStr)) {
+    return idStr;
   }
   
   // Special handling for IDs that start with shortened prefixes
@@ -147,14 +153,14 @@ export const formatEntityId = (id, entityType) => {
   };
   
   for (const [shortPrefix, fullPrefix] of Object.entries(shortPrefixMap)) {
-    if (id.startsWith(shortPrefix) && !id.startsWith(fullPrefix)) {
+    if (idStr.startsWith(shortPrefix) && !idStr.startsWith(fullPrefix)) {
       // Replace short prefix with full prefix
-      return fullPrefix + id.substring(shortPrefix.length);
+      return fullPrefix + idStr.substring(shortPrefix.length);
     }
   }
   
   // For UUIDs, add prefix
-  return addEntityPrefix(id, entityType);
+  return addEntityPrefix(idStr, entityType);
 };
 
 /**
