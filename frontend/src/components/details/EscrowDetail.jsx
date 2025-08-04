@@ -720,29 +720,19 @@ const pulse = keyframes`
 
 const liquidMorph = keyframes`
   0% {
-    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-    transform: rotate(0deg) scale(1);
-    box-shadow: 0 15px 40px rgba(103, 58, 183, 0.3);
-  }
-  25% {
-    border-radius: 40% 60% 60% 40% / 60% 40% 60% 40%;
-    transform: rotate(90deg) scale(1.05);
-    box-shadow: 0 20px 50px rgba(103, 58, 183, 0.4);
+    border-radius: 20px;
+    transform: scale(1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   }
   50% {
-    border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
-    transform: rotate(180deg) scale(1.1);
-    box-shadow: 0 25px 60px rgba(103, 58, 183, 0.5);
-  }
-  75% {
-    border-radius: 50% 50% 40% 60% / 40% 60% 50% 50%;
-    transform: rotate(270deg) scale(1.05);
-    box-shadow: 0 20px 50px rgba(103, 58, 183, 0.4);
+    border-radius: 24px;
+    transform: scale(1.02);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
   }
   100% {
-    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-    transform: rotate(360deg) scale(1);
-    box-shadow: 0 15px 40px rgba(103, 58, 183, 0.3);
+    border-radius: 20px;
+    transform: scale(1);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
   }
 `;
 
@@ -752,22 +742,14 @@ const floatAnimation = keyframes`
   100% { transform: translateY(0px); }
 `;
 
-const blobAnimation = keyframes`
+const expandAnimation = keyframes`
   0% {
-    border-radius: 40% 60% 60% 40% / 40% 30% 70% 60%;
-    transform: rotate(0deg) translateX(0) translateY(0);
-  }
-  33% {
-    border-radius: 70% 30% 40% 60% / 60% 40% 60% 40%;
-    transform: rotate(120deg) translateX(-5px) translateY(10px);
-  }
-  66% {
-    border-radius: 30% 70% 50% 50% / 30% 70% 30% 70%;
-    transform: rotate(240deg) translateX(5px) translateY(-5px);
+    transform: scale(1);
+    opacity: 1;
   }
   100% {
-    border-radius: 40% 60% 60% 40% / 40% 30% 70% 60%;
-    transform: rotate(360deg) translateX(0) translateY(0);
+    transform: scale(1.5);
+    opacity: 0;
   }
 `;
 
@@ -818,6 +800,17 @@ const safeFormat = (dateValue, formatString) => {
     console.error('Date formatting error:', error);
     return 'N/A';
   }
+};
+
+// Helper function to format currency
+const formatCurrency = (value) => {
+  if (!value && value !== 0) return 'Not set';
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
 };
 
 const EditableField = ({ field, value, onSave, type = 'text' }) => {
@@ -922,73 +915,63 @@ const LiquidWidget = styled(Paper)(({ theme }) => ({
   position: 'relative',
   padding: theme.spacing(3),
   height: '100%',
-  minHeight: 250,
-  borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%',
+  minHeight: 280,
+  borderRadius: theme.spacing(2.5),
   overflow: 'hidden',
   cursor: 'pointer',
-  transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-  animation: `${liquidMorph} 6s ease-in-out infinite, ${colorShift} 12s ease-in-out infinite`,
+  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
   transformOrigin: 'center center',
-  boxShadow: '0 20px 50px rgba(0, 0, 0, 0.3)',
-  transform: 'scale(1) translateZ(0)',
-  willChange: 'transform, border-radius',
+  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
+  transform: 'translateZ(0)',
+  willChange: 'transform, box-shadow',
   
-  // Wave effect overlay
+  // No animation by default to prevent spinning
+  
+  // Gradient overlay for depth
   '&::before': {
     content: '""',
     position: 'absolute',
-    top: '50%',
+    top: 0,
     left: 0,
-    width: '200%',
-    height: '200%',
-    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
-    animation: `${waveAnimation} 3s linear infinite`,
-    transform: 'translateY(-50%)',
+    right: 0,
+    bottom: 0,
+    background: 'linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%)',
     pointerEvents: 'none',
   },
   
-  // Glow effect
+  // Expanding circle on click
   '&::after': {
     content: '""',
     position: 'absolute',
-    top: -20,
-    left: -20,
-    right: -20,
-    bottom: -20,
-    background: 'inherit',
-    borderRadius: 'inherit',
-    filter: 'blur(30px)',
-    opacity: 0.5,
-    zIndex: -1,
-    animation: `${blobAnimation} 8s ease-in-out infinite`,
-    animationDelay: '-3s',
-  },
-  
-  // Inner content container to maintain readability
-  '& > *': {
-    position: 'relative',
-    zIndex: 1,
+    top: '50%',
+    left: '50%',
+    width: 0,
+    height: 0,
+    borderRadius: '50%',
+    background: 'rgba(255,255,255,0.3)',
+    transform: 'translate(-50%, -50%)',
+    transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
   },
   
   '&:hover': {
-    transform: 'translateY(-10px) scale(1.05) translateZ(0)',
-    boxShadow: '0 30px 70px rgba(0, 0, 0, 0.4)',
-    animation: `${liquidMorph} 2s ease-in-out infinite, ${colorShift} 3s ease-in-out infinite`,
-    
-    '&::before': {
-      animation: `${waveAnimation} 1s linear infinite`,
-    },
-    
-    '&::after': {
-      animation: `${blobAnimation} 2s ease-in-out infinite`,
-      opacity: 0.7,
-      filter: 'blur(40px)',
-    },
+    transform: 'translateY(-2px) translateZ(0)',
+    boxShadow: '0 16px 40px rgba(0, 0, 0, 0.15)',
+    borderRadius: theme.spacing(3),
+    // Disable animation on hover to prevent spinning
+    animation: 'none',
+    // Add a subtle glow effect
+    border: '1px solid rgba(255, 255, 255, 0.2)',
   },
   
   '&:active': {
-    transform: 'translateY(-2px) scale(0.98) translateZ(0)',
-    boxShadow: '0 15px 40px rgba(0, 0, 0, 0.3)',
+    transform: 'translateY(-2px) translateZ(0)',
+    boxShadow: '0 6px 16px rgba(0, 0, 0, 0.12)',
+    
+    '&::after': {
+      width: '120%',
+      height: '120%',
+      opacity: 0,
+    },
   },
 }));
 
@@ -1840,8 +1823,30 @@ const EscrowDetail = () => {
     setAgentDetailOpen(agentDetailOpen === agentId ? null : agentId);
   };
   
-  const handleWidgetClick = (widgetName) => {
-    setOpenWidget(openWidget === widgetName ? null : widgetName);
+  const handleWidgetClick = async (widgetName) => {
+    // If clicking the same widget, close it
+    if (openWidget === widgetName) {
+      setOpenWidget(null);
+      return;
+    }
+    
+    // Open the widget
+    setOpenWidget(widgetName);
+    
+    // Fetch fresh data from API
+    try {
+      const response = await fetch(`https://api.jaydenmetz.com/v1/escrows/${id}`);
+      if (response.ok) {
+        const data = await response.json();
+        // Update the escrow data in the query cache
+        queryClient.setQueryData(['escrow', id], (oldData) => ({
+          ...oldData,
+          ...data.data,
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching escrow data:', error);
+    }
   };
 
   const handleActivityFilter = (filter) => {
@@ -2894,55 +2899,43 @@ const EscrowDetail = () => {
               }}
               onClick={() => handleWidgetClick('people')}
             >
-              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-                <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Groups sx={{ color: 'primary.main' }} />
-                  People
-                </Typography>
-                <IconButton size="small">
-                  <MoreVert />
-                </IconButton>
-              </Stack>
+              <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
+                <Groups sx={{ color: 'primary.main' }} />
+                People
+              </Typography>
               
-              <Stack spacing={2}>
-                {/* Display key people */}
-                {escrow.people?.buyer?.name && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Avatar sx={{ bgcolor: 'primary.main' }}>
-                      {escrow.people.buyer.name.charAt(0)}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="body1" fontWeight="medium">
-                        {escrow.people.buyer.name}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Buyer
-                      </Typography>
+              <Stack spacing={2.5}>
+                {/* Buyer Info */}
+                <Box>
+                  <Typography variant="subtitle2" sx={{ color: 'primary.main', fontWeight: 600, mb: 1 }}>Buyer</Typography>
+                  <Stack spacing={1}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant="body2" color="text.secondary">Name</Typography>
+                      <Typography variant="body2" fontWeight={500}>{escrow.people?.buyer?.name || 'Not set'}</Typography>
                     </Box>
-                  </Box>
-                )}
-                
-                {escrow.people?.seller?.name && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Avatar sx={{ bgcolor: 'secondary.main' }}>
-                      {escrow.people.seller.name.charAt(0)}
-                    </Avatar>
-                    <Box>
-                      <Typography variant="body1" fontWeight="medium">
-                        {escrow.people.seller.name}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Seller
-                      </Typography>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant="body2" color="text.secondary">Phone</Typography>
+                      <Typography variant="body2">{escrow.people?.buyer?.phone || 'Not set'}</Typography>
                     </Box>
-                  </Box>
-                )}
+                  </Stack>
+                </Box>
                 
-                {!escrow.people?.buyer?.name && !escrow.people?.seller?.name && (
-                  <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
-                    No people assigned yet
-                  </Typography>
-                )}
+                <Divider />
+                
+                {/* Seller Info */}
+                <Box>
+                  <Typography variant="subtitle2" sx={{ color: 'secondary.main', fontWeight: 600, mb: 1 }}>Seller</Typography>
+                  <Stack spacing={1}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant="body2" color="text.secondary">Name</Typography>
+                      <Typography variant="body2" fontWeight={500}>{escrow.people?.seller?.name || 'Not set'}</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant="body2" color="text.secondary">Phone</Typography>
+                      <Typography variant="body2">{escrow.people?.seller?.phone || 'Not set'}</Typography>
+                    </Box>
+                  </Stack>
+                </Box>
               </Stack>
               
               
@@ -2960,7 +2953,7 @@ const EscrowDetail = () => {
               <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
                 <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                   <CheckCircle />
-                  Checklist Progress
+                  Checklists
                 </Typography>
                 <Typography variant="h4" fontWeight="bold">
                   {progress}%
@@ -2982,27 +2975,41 @@ const EscrowDetail = () => {
               />
               
               <Stack spacing={1}>
-                {escrow.checklists && Object.entries(escrow.checklists).slice(0, 4).map(([section, tasks]) => {
-                  const sectionTasks = Object.entries(tasks || {});
-                  const completedCount = sectionTasks.filter(([, completed]) => completed).length;
-                  const totalCount = sectionTasks.length;
-                  
-                  return (
-                    <Box key={section} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <Typography variant="body2">
-                        {section.replace(/([A-Z])/g, ' $1').trim()}
-                      </Typography>
-                      <Chip 
-                        label={`${completedCount}/${totalCount}`} 
-                        size="small" 
-                        sx={{ 
-                          bgcolor: 'rgba(0,0,0,0.1)', 
-                          fontWeight: 'bold',
-                        }}
-                      />
-                    </Box>
-                  );
-                })}
+                {/* Loan Section */}
+                {escrow.checklists?.loan && (
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="body2">Loan</Typography>
+                    <Chip 
+                      label={`${Object.values(escrow.checklists.loan).filter(v => v).length}/${Object.keys(escrow.checklists.loan).length}`} 
+                      size="small" 
+                      sx={{ bgcolor: 'rgba(0,0,0,0.1)', fontWeight: 'bold' }}
+                    />
+                  </Box>
+                )}
+                
+                {/* House Section */}
+                {escrow.checklists?.house && (
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="body2">House</Typography>
+                    <Chip 
+                      label={`${Object.values(escrow.checklists.house).filter(v => v).length}/${Object.keys(escrow.checklists.house).length}`} 
+                      size="small" 
+                      sx={{ bgcolor: 'rgba(0,0,0,0.1)', fontWeight: 'bold' }}
+                    />
+                  </Box>
+                )}
+                
+                {/* Admin Section */}
+                {escrow.checklists?.admin && (
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Typography variant="body2">Admin</Typography>
+                    <Chip 
+                      label={`${Object.values(escrow.checklists.admin).filter(v => v).length}/${Object.keys(escrow.checklists.admin).length}`} 
+                      size="small" 
+                      sx={{ bgcolor: 'rgba(0,0,0,0.1)', fontWeight: 'bold' }}
+                    />
+                  </Box>
+                )}
               </Stack>
               
               <Button 
@@ -3017,7 +3024,7 @@ const EscrowDetail = () => {
                   }
                 }}
               >
-                View All Tasks
+                View All Checklists
               </Button>
               
               
@@ -3032,44 +3039,51 @@ const EscrowDetail = () => {
               }}
               onClick={() => handleWidgetClick('timeline')}
             >
-              <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+              <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
                 <EventNote sx={{ color: 'primary.main' }} />
                 Timeline
               </Typography>
               
-              <Stack spacing={2}>
-                {escrow.timeline && Object.entries(escrow.timeline)
-                  .filter(([key, date]) => date && key !== 'daysFromAcceptance' && key !== 'daysToCoe')
-                  .sort(([, a], [, b]) => new Date(a) - new Date(b))
-                  .slice(0, 5)
-                  .map(([eventKey, eventDate]) => {
-                    const isPast = new Date(eventDate) < new Date();
-                    const label = eventKey.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()).trim();
-                    
-                    return (
-                      <Box key={eventKey} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <Box 
-                          sx={{ 
-                            width: 8, 
-                            height: 8, 
-                            borderRadius: '50%', 
-                            bgcolor: isPast ? 'success.main' : 'grey.400',
-                          }} 
-                        />
-                        <Box sx={{ flex: 1 }}>
-                          <Typography variant="body2" fontWeight="medium">
-                            {label}
-                          </Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {safeFormat(eventDate, 'MMM dd, yyyy')}
-                          </Typography>
-                        </Box>
-                        {isPast && (
-                          <CheckCircle sx={{ fontSize: 16, color: 'success.main' }} />
-                        )}
-                      </Box>
-                    );
-                  })}
+              <Stack spacing={1.5}>
+                {/* Closing Date */}
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="body2" color="text.secondary">Closing Date</Typography>
+                  <Typography variant="body2" fontWeight={500}>
+                    {escrow.timeline?.closingDate ? safeFormat(escrow.timeline.closingDate, 'MMM dd, yyyy') : 'Not set'}
+                  </Typography>
+                </Box>
+                
+                {/* Acceptance Date */}
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="body2" color="text.secondary">Acceptance</Typography>
+                  <Typography variant="body2">
+                    {escrow.timeline?.acceptanceDate ? safeFormat(escrow.timeline.acceptanceDate, 'MMM dd, yyyy') : 'Not set'}
+                  </Typography>
+                </Box>
+                
+                {/* Inspection Date */}
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="body2" color="text.secondary">Inspection</Typography>
+                  <Typography variant="body2">
+                    {escrow.timeline?.inspectionDate ? safeFormat(escrow.timeline.inspectionDate, 'MMM dd, yyyy') : 'Not set'}
+                  </Typography>
+                </Box>
+                
+                {/* Appraisal Date */}
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="body2" color="text.secondary">Appraisal</Typography>
+                  <Typography variant="body2">
+                    {escrow.timeline?.appraisalDate ? safeFormat(escrow.timeline.appraisalDate, 'MMM dd, yyyy') : 'Not set'}
+                  </Typography>
+                </Box>
+                
+                {/* Loan Approval */}
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="body2" color="text.secondary">Loan Approval</Typography>
+                  <Typography variant="body2">
+                    {escrow.timeline?.loanApprovalDate ? safeFormat(escrow.timeline.loanApprovalDate, 'MMM dd, yyyy') : 'Not set'}
+                  </Typography>
+                </Box>
               </Stack>
               
               
@@ -3453,58 +3467,104 @@ const EscrowDetail = () => {
               <DataTooltip className="show" sx={{ color: 'text.primary' }}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
                   <Typography variant="h6" fontWeight={600}>
-                    Complete Checklist Details
+                    All Checklists
                   </Typography>
                   <IconButton onClick={() => setOpenWidget(null)} size="small">
                     <Close />
                   </IconButton>
                 </Stack>
                 
-                <Stack spacing={2}>
-                  {escrow.checklists && Object.entries(escrow.checklists).map(([section, tasks]) => {
-                    const sectionTasks = Object.entries(tasks || {});
-                    const completedCount = sectionTasks.filter(([, completed]) => completed).length;
-                    const totalCount = sectionTasks.length;
-                    
-                    return (
-                      <Box key={section}>
-                        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-                          <Typography variant="subtitle2" color="primary">
-                            {section.replace(/([A-Z])/g, ' $1').trim()}
-                          </Typography>
-                          <Chip 
-                            label={`${completedCount}/${totalCount}`} 
-                            size="small"
-                            color={completedCount === totalCount ? 'success' : 'default'}
-                          />
-                        </Stack>
-                        
-                        <Stack spacing={0.5} sx={{ pl: 2 }}>
-                          {sectionTasks.map(([task, completed]) => (
-                            <Stack key={task} direction="row" alignItems="center" spacing={1}>
+                <Stack spacing={3}>
+                  {/* Loan Section */}
+                  {escrow.checklists?.loan && (
+                    <Box>
+                      <Typography variant="subtitle1" color="primary" fontWeight={600} sx={{ mb: 2 }}>
+                        Loan
+                      </Typography>
+                      <Stack spacing={1.5}>
+                        {Object.entries(escrow.checklists.loan).map(([task, completed]) => (
+                          <Box key={task} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                               {completed ? (
-                                <CheckCircle sx={{ fontSize: 16, color: 'success.main' }} />
+                                <CheckCircle sx={{ fontSize: 20, color: 'success.main' }} />
                               ) : (
-                                <Box sx={{ width: 16, height: 16, border: '2px solid', borderColor: 'divider', borderRadius: '50%' }} />
+                                <Box sx={{ width: 20, height: 20, border: '2px solid', borderColor: 'divider', borderRadius: '50%' }} />
                               )}
-                              <Typography 
-                                variant="body2" 
-                                sx={{ 
-                                  textDecoration: completed ? 'line-through' : 'none',
-                                  color: completed ? 'text.secondary' : 'text.primary',
-                                }}
-                              >
+                              <Typography variant="body2" sx={{ textDecoration: completed ? 'line-through' : 'none' }}>
+                                {task.replace(/([A-Z])/g, ' $1').trim().toUpperCase()}
+                              </Typography>
+                            </Box>
+                            <Typography variant="caption" color="text.secondary">
+                              {completed ? 'Complete' : 'Pending'}
+                            </Typography>
+                          </Box>
+                        ))}
+                      </Stack>
+                    </Box>
+                  )}
+                  
+                  <Divider />
+                  
+                  {/* House Section */}
+                  {escrow.checklists?.house && (
+                    <Box>
+                      <Typography variant="subtitle1" color="primary" fontWeight={600} sx={{ mb: 2 }}>
+                        House
+                      </Typography>
+                      <Stack spacing={1.5}>
+                        {Object.entries(escrow.checklists.house).map(([task, completed]) => (
+                          <Box key={task} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              {completed ? (
+                                <CheckCircle sx={{ fontSize: 20, color: 'success.main' }} />
+                              ) : (
+                                <Box sx={{ width: 20, height: 20, border: '2px solid', borderColor: 'divider', borderRadius: '50%' }} />
+                              )}
+                              <Typography variant="body2" sx={{ textDecoration: completed ? 'line-through' : 'none' }}>
                                 {task.replace(/([A-Z])/g, ' $1').trim()}
                               </Typography>
-                            </Stack>
-                          ))}
-                        </Stack>
-                      </Box>
-                    );
-                  })}
+                            </Box>
+                            <Typography variant="caption" color="text.secondary">
+                              {completed ? 'Complete' : 'Pending'}
+                            </Typography>
+                          </Box>
+                        ))}
+                      </Stack>
+                    </Box>
+                  )}
                   
-                  {(!escrow.checklists || Object.keys(escrow.checklists).length === 0) && (
-                    <Typography variant="body2" color="text.secondary">
+                  <Divider />
+                  
+                  {/* Admin Section */}
+                  {escrow.checklists?.admin && (
+                    <Box>
+                      <Typography variant="subtitle1" color="primary" fontWeight={600} sx={{ mb: 2 }}>
+                        Admin
+                      </Typography>
+                      <Stack spacing={1.5}>
+                        {Object.entries(escrow.checklists.admin).map(([task, completed]) => (
+                          <Box key={task} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              {completed ? (
+                                <CheckCircle sx={{ fontSize: 20, color: 'success.main' }} />
+                              ) : (
+                                <Box sx={{ width: 20, height: 20, border: '2px solid', borderColor: 'divider', borderRadius: '50%' }} />
+                              )}
+                              <Typography variant="body2" sx={{ textDecoration: completed ? 'line-through' : 'none' }}>
+                                {task.replace(/([A-Z])/g, ' $1').trim()}
+                              </Typography>
+                            </Box>
+                            <Typography variant="caption" color="text.secondary">
+                              {completed ? 'Complete' : 'Pending'}
+                            </Typography>
+                          </Box>
+                        ))}
+                      </Stack>
+                    </Box>
+                  )}
+                  
+                  {(!escrow.checklists || (!escrow.checklists.loan && !escrow.checklists.house && !escrow.checklists.admin)) && (
+                    <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 3 }}>
                       No checklist items available
                     </Typography>
                   )}
