@@ -1741,6 +1741,53 @@ const EscrowDetail = () => {
   
   const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
+  // Calculate progress for each widget
+  const widgetProgress = {
+    people: 0,
+    checklist: progress, // Use overall checklist progress
+    timeline: 0,
+    financials: 0,
+    documents: 0
+  };
+
+  // People progress - check if key people are assigned
+  if (escrow.people) {
+    const peopleFields = [
+      escrow.people?.buyer?.name,
+      escrow.people?.buyer?.email,
+      escrow.people?.seller?.name,
+      escrow.people?.seller?.email,
+      escrow.people?.buyerAgent?.name,
+      escrow.people?.listingAgent?.name
+    ];
+    const filledPeople = peopleFields.filter(field => field && field !== 'Not set').length;
+    widgetProgress.people = Math.round((filledPeople / peopleFields.length) * 100);
+  }
+
+  // Timeline progress - check key dates
+  if (escrow.timeline) {
+    const keyDates = ['acceptanceDate', 'inspectionDate', 'appraisalDate', 
+                     'loanApprovalDate', 'closingDate'];
+    const setDates = keyDates.filter(date => escrow.timeline[date]).length;
+    widgetProgress.timeline = Math.round((setDates / keyDates.length) * 100);
+  }
+
+  // Financials progress - check key financial fields
+  if (escrow.financials) {
+    const keyFields = ['purchasePrice', 'downPayment', 'loanAmount', 
+                      'earnestMoney', 'myCommissionRate'];
+    const filledFields = keyFields.filter(field => 
+      escrow.financials[field] !== null && escrow.financials[field] !== undefined
+    ).length;
+    widgetProgress.financials = Math.round((filledFields / keyFields.length) * 100);
+  }
+
+  // Documents progress - based on document count
+  if (escrow.documents) {
+    const minRequiredDocs = 5; // Minimum expected documents
+    widgetProgress.documents = Math.min(100, Math.round((escrow.documents.length / minRequiredDocs) * 100));
+  }
+
   // Handlers
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
@@ -1748,29 +1795,41 @@ const EscrowDetail = () => {
   
   const handleFieldUpdate = async (section, field, value) => {
     try {
-      let endpoint = '';
       let payload = {};
       
       if (section === 'people') {
-        endpoint = `/v1/escrows/${id}/people`;
         const [role, fieldName] = field.split('.');
         payload = {
-          ...escrow.people,
-          [role]: {
-            ...escrow.people?.[role],
-            [fieldName]: value
+          people: {
+            ...escrow.people,
+            [role]: {
+              ...escrow.people?.[role],
+              [fieldName]: value
+            }
           }
         };
       } else if (section === 'financials') {
-        endpoint = `/v1/escrows/${id}`;
-        payload = {
-          financials: {
-            ...escrow.financials,
-            [field]: value
-          }
-        };
+        // Handle nested financials fields
+        const fieldParts = field.split('.');
+        if (fieldParts.length > 1) {
+          payload = {
+            financials: {
+              ...escrow.financials,
+              [fieldParts[0]]: {
+                ...escrow.financials?.[fieldParts[0]],
+                [fieldParts[1]]: value
+              }
+            }
+          };
+        } else {
+          payload = {
+            financials: {
+              ...escrow.financials,
+              [field]: value
+            }
+          };
+        }
       } else if (section === 'timeline') {
-        endpoint = `/v1/escrows/${id}`;
         payload = {
           timeline: {
             ...escrow.timeline,
@@ -1779,21 +1838,25 @@ const EscrowDetail = () => {
         };
       }
       
-      const response = await fetch(`${process.env.REACT_APP_API_URL}${endpoint}`, {
-        method: 'PUT',
+      // Use PATCH to update the escrow
+      const response = await fetch(`https://api.jaydenmetz.com/v1/escrows/${id}`, {
+        method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify(payload)
       });
       
       if (response.ok) {
-        queryClient.invalidateQueries(['escrow', id]);
-        // Show success message
+        const data = await response.json();
+        // Update the cache with the new data
+        queryClient.setQueryData(['escrow', id], (oldData) => ({
+          ...oldData,
+          ...data.data,
+        }));
+        console.log('Field updated successfully');
       } else {
-        // Show error message
-        console.error('Failed to update field');
+        console.error('Failed to update field:', response.statusText);
       }
     } catch (error) {
       console.error('Error updating field:', error);
@@ -2899,10 +2962,30 @@ const EscrowDetail = () => {
               }}
               onClick={() => handleWidgetClick('people')}
             >
-              <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-                <Groups sx={{ color: 'primary.main' }} />
-                People
-              </Typography>
+              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Groups sx={{ color: 'primary.main' }} />
+                  People
+                </Typography>
+                <Typography variant="h5" fontWeight="bold" color="primary">
+                  {widgetProgress.people}%
+                </Typography>
+              </Stack>
+              
+              <LinearProgress 
+                variant="determinate" 
+                value={widgetProgress.people} 
+                sx={{ 
+                  height: 8, 
+                  borderRadius: 4, 
+                  mb: 3,
+                  bgcolor: 'rgba(0,0,0,0.1)',
+                  '& .MuiLinearProgress-bar': {
+                    bgcolor: 'primary.main',
+                    borderRadius: 4,
+                  }
+                }}
+              />
               
               <Stack spacing={2.5}>
                 {/* Buyer Info */}
@@ -2955,8 +3038,8 @@ const EscrowDetail = () => {
                   <CheckCircle />
                   Checklists
                 </Typography>
-                <Typography variant="h4" fontWeight="bold">
-                  {progress}%
+                <Typography variant="h5" fontWeight="bold" color="primary">
+                  {widgetProgress.checklist}%
                 </Typography>
               </Stack>
               
@@ -3039,10 +3122,30 @@ const EscrowDetail = () => {
               }}
               onClick={() => handleWidgetClick('timeline')}
             >
-              <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 3 }}>
-                <EventNote sx={{ color: 'primary.main' }} />
-                Timeline
-              </Typography>
+              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <EventNote sx={{ color: 'primary.main' }} />
+                  Timeline
+                </Typography>
+                <Typography variant="h5" fontWeight="bold" color="primary">
+                  {widgetProgress.timeline}%
+                </Typography>
+              </Stack>
+              
+              <LinearProgress 
+                variant="determinate" 
+                value={widgetProgress.timeline} 
+                sx={{ 
+                  height: 8, 
+                  borderRadius: 4, 
+                  mb: 3,
+                  bgcolor: 'rgba(0,0,0,0.1)',
+                  '& .MuiLinearProgress-bar': {
+                    bgcolor: 'primary.main',
+                    borderRadius: 4,
+                  }
+                }}
+              />
               
               <Stack spacing={1.5}>
                 {/* Closing Date */}
@@ -3098,10 +3201,30 @@ const EscrowDetail = () => {
               }}
               onClick={() => handleWidgetClick('financials')}
             >
-              <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                <AttachMoney sx={{ color: 'warning.dark' }} />
-                Financials
-              </Typography>
+              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <AttachMoney sx={{ color: 'warning.dark' }} />
+                  Financials
+                </Typography>
+                <Typography variant="h5" fontWeight="bold" color="primary">
+                  {widgetProgress.financials}%
+                </Typography>
+              </Stack>
+              
+              <LinearProgress 
+                variant="determinate" 
+                value={widgetProgress.financials} 
+                sx={{ 
+                  height: 8, 
+                  borderRadius: 4, 
+                  mb: 2,
+                  bgcolor: 'rgba(0,0,0,0.1)',
+                  '& .MuiLinearProgress-bar': {
+                    bgcolor: 'warning.main',
+                    borderRadius: 4,
+                  }
+                }}
+              />
               
               <Stack spacing={2}>
                 <Box>
@@ -3163,12 +3286,34 @@ const EscrowDetail = () => {
                   <Description sx={{ color: 'info.main' }} />
                   Documents
                 </Typography>
+                <Typography variant="h5" fontWeight="bold" color="primary">
+                  {widgetProgress.documents}%
+                </Typography>
+              </Stack>
+              
+              <LinearProgress 
+                variant="determinate" 
+                value={widgetProgress.documents} 
+                sx={{ 
+                  height: 8, 
+                  borderRadius: 4, 
+                  mb: 2,
+                  bgcolor: 'rgba(0,0,0,0.1)',
+                  '& .MuiLinearProgress-bar': {
+                    bgcolor: 'info.main',
+                    borderRadius: 4,
+                  }
+                }}
+              />
+              
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                <Typography variant="body2" color="text.secondary">Total Files</Typography>
                 <Chip 
                   label={`${(escrow.documents || []).length} files`} 
                   size="small"
                   color="info"
                 />
-              </Stack>
+              </Box>
               
               <Stack spacing={1}>
                 {(escrow.documents || []).length > 0 ? (
