@@ -741,6 +741,37 @@ const floatAnimation = keyframes`
 // Styled Components
 // HeroSection - Replaced with DetailPageHero component
 
+// Safe date formatting helper
+const safeFormat = (dateValue, formatString) => {
+  if (!dateValue) return 'N/A';
+  try {
+    // Handle both string and Date object inputs
+    let date;
+    if (typeof dateValue === 'string') {
+      // Try to parse ISO string first
+      date = parseISO(dateValue);
+      // If invalid, try regular Date constructor
+      if (!isValid(date)) {
+        date = new Date(dateValue);
+      }
+    } else if (dateValue instanceof Date) {
+      date = dateValue;
+    } else {
+      return 'N/A';
+    }
+    
+    // Check if date is valid
+    if (!isValid(date)) {
+      return 'N/A';
+    }
+    
+    return format(date, formatString);
+  } catch (error) {
+    console.error('Date formatting error:', error);
+    return 'N/A';
+  }
+};
+
 const EditableField = ({ field, value, onSave, type = 'text' }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value || '');
@@ -1406,18 +1437,6 @@ const EscrowDetail = () => {
   const isMobile = useMediaQuery(theme?.breakpoints?.down?.('sm') || '(max-width:600px)');
   const queryClient = useQueryClient();
 
-  // Safe date formatting helper
-  const safeFormat = (dateValue, formatString) => {
-    if (!dateValue) return 'N/A';
-    try {
-      const date = typeof dateValue === 'string' ? parseISO(dateValue) : dateValue;
-      if (!isValid(date)) return 'N/A';
-      return format(date, formatString);
-    } catch (error) {
-      console.warn('Date formatting error:', error);
-      return 'N/A';
-    }
-  };
 
   // State
   const [activeTab, setActiveTab] = useState(0);
