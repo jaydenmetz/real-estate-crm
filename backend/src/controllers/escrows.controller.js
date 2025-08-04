@@ -418,15 +418,6 @@ class SimpleEscrowController {
             zipCode: escrow.zip_code || null,
             county: escrow.county || null,
             
-            // Transaction team (moved from top level)
-            transactionTeam: {
-              transactionCoordinator: escrow.transaction_coordinator || 'Karin Munoz',
-              nhdCompany: escrow.nhd_company || 'Property ID Max',
-              homeWarrantyCompany: escrow.home_warranty_company || null,
-              termiteInspectionCompany: escrow.termite_inspection_company || null,
-              homeInspectionCompany: escrow.home_inspection_company || null
-            },
-            
             // Property characteristics
             propertyType: escrow.property_type || 'Single Family',
             bedrooms: escrow.bedrooms || null,
@@ -527,6 +518,15 @@ class SimpleEscrowController {
             transactionCoordinator: storedPeople.transactionCoordinator || {
               ...defaultContact,
               name: escrow.transaction_coordinator || null
+            },
+            
+            // Transaction team vendors/companies
+            transactionTeam: {
+              transactionCoordinator: escrow.transaction_coordinator || 'Karin Munoz',
+              nhdCompany: escrow.nhd_company || 'Property ID Max',
+              homeWarrantyCompany: escrow.home_warranty_company || null,
+              termiteInspectionCompany: escrow.termite_inspection_company || null,
+              homeInspectionCompany: escrow.home_inspection_company || null
             },
             
             // Include any additional people from stored data
