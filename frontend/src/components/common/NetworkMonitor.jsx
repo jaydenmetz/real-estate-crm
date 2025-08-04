@@ -568,7 +568,7 @@ const NetworkMonitorComponent = () => {
                     fontWeight: 700, 
                     color: stats.errorRate > 10 ? 'error.main' : stats.errorRate > 5 ? 'warning.main' : 'success.main'
                   }}>
-                    {stats.errorRate}%
+                    {stats.errorRate.toFixed(1)}%
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     Error Rate

@@ -247,7 +247,7 @@ class NetworkMonitor {
       errors,
       pending,
       completed,
-      errorRate: total > 0 ? (errors / total * 100).toFixed(1) : 0,
+      errorRate: total > 0 ? (errors / total * 100) : 0, // Return as number, not string
       avgDuration: Math.round(avgDuration)
     };
   }
