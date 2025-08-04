@@ -337,11 +337,9 @@ class SimpleEscrowController {
         // Core identifiers
         id: escrow.id,
         escrowNumber: escrow.display_id,
-        propertyAddress: escrow.property_address,
         escrowStatus: escrow.escrow_status,
         
         // Financial fields
-        purchasePrice: parseFloat(escrow.purchase_price) || 0,
         commissionPercentage: parseFloat(escrow.commission_percentage) || 3,
         grossCommission: parseFloat(escrow.gross_commission) || 0,
         myCommission: parseFloat(escrow.my_commission) || 0,
@@ -392,6 +390,71 @@ class SimpleEscrowController {
         updated_at: escrow.updated_at,
         
         // Add JSONB data at the bottom
+        propertyDetails: (() => {
+          // Build comprehensive property details object
+          const storedFeatures = escrow.property_features || {};
+          const storedImages = escrow.property_images || [];
+          
+          return {
+            // Basic property info
+            address: escrow.property_address || null,
+            city: escrow.city || null,
+            state: escrow.state || 'CA',
+            zipCode: escrow.zip_code || null,
+            county: escrow.county || null,
+            
+            // Property characteristics
+            propertyType: escrow.property_type || 'Single Family',
+            bedrooms: escrow.bedrooms || null,
+            bathrooms: escrow.bathrooms || null,
+            squareFeet: escrow.square_feet || null,
+            lotSizeSqft: escrow.lot_size_sqft || null,
+            yearBuilt: escrow.year_built || null,
+            stories: escrow.stories || null,
+            garageSpaces: escrow.garage_spaces || null,
+            
+            // Property features
+            pool: escrow.pool || false,
+            spa: escrow.spa || false,
+            viewType: escrow.view_type || null,
+            architecturalStyle: escrow.architectural_style || null,
+            propertyCondition: escrow.property_condition || null,
+            zoning: escrow.zoning || null,
+            
+            // Location details
+            subdivision: escrow.subdivision || null,
+            crossStreets: escrow.cross_streets || null,
+            latitude: escrow.latitude || null,
+            longitude: escrow.longitude || null,
+            
+            // Identifiers
+            apn: escrow.apn || null,
+            mlsNumber: escrow.mls_number || null,
+            
+            // HOA information
+            hoaFee: escrow.hoa_fee || null,
+            hoaFrequency: escrow.hoa_frequency || null,
+            hoaName: escrow.hoa_name || null,
+            gatedCommunity: escrow.gated_community || false,
+            seniorCommunity: escrow.senior_community || false,
+            
+            // Listing information
+            listPrice: escrow.list_price || null,
+            listDate: escrow.list_date || null,
+            daysOnMarket: escrow.days_on_market || null,
+            previousListPrice: escrow.previous_list_price || null,
+            originalListPrice: escrow.original_list_price || null,
+            
+            // Additional features from JSONB
+            features: storedFeatures,
+            images: storedImages,
+            
+            // Pricing
+            purchasePrice: parseFloat(escrow.purchase_price) || 0,
+            pricePerSqft: escrow.square_feet && escrow.purchase_price ? 
+              Math.round(parseFloat(escrow.purchase_price) / escrow.square_feet) : null
+          };
+        })(),
         people: (() => {
           // Build people object with structured contacts
           const storedPeople = escrow.people || {};
@@ -1695,6 +1758,120 @@ class SimpleEscrowController {
     }
   }
 
+  /**
+   * Get escrow property details
+   */
+  static async getEscrowPropertyDetails(req, res) {
+    try {
+      const { id } = req.params;
+      
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      
+      const query = `
+        SELECT 
+          property_address, property_type, purchase_price,
+          bedrooms, bathrooms, square_feet, lot_size_sqft, year_built, garage_spaces, stories,
+          pool, spa, view_type, architectural_style, property_condition, zoning,
+          apn, mls_number, county, city, state, zip_code, subdivision, cross_streets,
+          latitude, longitude, hoa_fee, hoa_frequency, hoa_name, gated_community, senior_community,
+          property_features, property_images, list_price, list_date, days_on_market,
+          previous_list_price, original_list_price
+        FROM escrows
+        WHERE ${isUUID ? 'id = $1' : 'display_id = $1'}
+      `;
+      
+      const result = await pool.query(query, [id]);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Escrow not found'
+          }
+        });
+      }
+      
+      const escrow = result.rows[0];
+      const storedFeatures = escrow.property_features || {};
+      const storedImages = escrow.property_images || [];
+      
+      const propertyDetails = {
+        // Basic property info
+        address: escrow.property_address || null,
+        city: escrow.city || null,
+        state: escrow.state || 'CA',
+        zipCode: escrow.zip_code || null,
+        county: escrow.county || null,
+        
+        // Property characteristics
+        propertyType: escrow.property_type || 'Single Family',
+        bedrooms: escrow.bedrooms || null,
+        bathrooms: escrow.bathrooms || null,
+        squareFeet: escrow.square_feet || null,
+        lotSizeSqft: escrow.lot_size_sqft || null,
+        yearBuilt: escrow.year_built || null,
+        stories: escrow.stories || null,
+        garageSpaces: escrow.garage_spaces || null,
+        
+        // Property features
+        pool: escrow.pool || false,
+        spa: escrow.spa || false,
+        viewType: escrow.view_type || null,
+        architecturalStyle: escrow.architectural_style || null,
+        propertyCondition: escrow.property_condition || null,
+        zoning: escrow.zoning || null,
+        
+        // Location details
+        subdivision: escrow.subdivision || null,
+        crossStreets: escrow.cross_streets || null,
+        latitude: escrow.latitude || null,
+        longitude: escrow.longitude || null,
+        
+        // Identifiers
+        apn: escrow.apn || null,
+        mlsNumber: escrow.mls_number || null,
+        
+        // HOA information
+        hoaFee: escrow.hoa_fee || null,
+        hoaFrequency: escrow.hoa_frequency || null,
+        hoaName: escrow.hoa_name || null,
+        gatedCommunity: escrow.gated_community || false,
+        seniorCommunity: escrow.senior_community || false,
+        
+        // Listing information
+        listPrice: escrow.list_price || null,
+        listDate: escrow.list_date || null,
+        daysOnMarket: escrow.days_on_market || null,
+        previousListPrice: escrow.previous_list_price || null,
+        originalListPrice: escrow.original_list_price || null,
+        
+        // Additional features from JSONB
+        features: storedFeatures,
+        images: storedImages,
+        
+        // Pricing
+        purchasePrice: parseFloat(escrow.purchase_price) || 0,
+        pricePerSqft: escrow.square_feet && escrow.purchase_price ? 
+          Math.round(parseFloat(escrow.purchase_price) / escrow.square_feet) : null
+      };
+      
+      res.json({
+        success: true,
+        data: propertyDetails
+      });
+      
+    } catch (error) {
+      console.error('Error fetching escrow property details:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'SERVER_ERROR',
+          message: 'Failed to fetch escrow property details'
+        }
+      });
+    }
+  }
   /**
    * Update escrow people
    */

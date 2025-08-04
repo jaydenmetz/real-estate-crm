@@ -59,6 +59,9 @@ router.get('/:id/checklists', SimpleEscrowController.getEscrowChecklists);
 // GET /v1/escrows/:id/documents - Get escrow documents
 router.get('/:id/documents', SimpleEscrowController.getEscrowDocuments);
 
+// GET /v1/escrows/:id/property-details - Get property details
+router.get('/:id/property-details', SimpleEscrowController.getEscrowPropertyDetails);
+
 // PUT /v1/escrows/:id/people - Update escrow people
 router.put('/:id/people', SimpleEscrowController.updateEscrowPeople);
 
