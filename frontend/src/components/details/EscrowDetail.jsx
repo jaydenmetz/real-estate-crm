@@ -1242,71 +1242,121 @@ const EscrowDetail = () => {
     return () => setMounted(false);
   }, []);
 
-  // Transform database escrow to expected format
+  // Transform database escrow to expected format with new API structure
   const transformDetailedEscrow = (dbData) => {
     if (!dbData) return mockEscrowData;
     
     // Handle different response formats
     const escrowData = dbData.data || dbData;
     
+    // Extract data from new organized structure
+    const propertyDetails = escrowData.propertyDetails || {};
+    const people = escrowData.people || {};
+    const timeline = escrowData.timeline || {};
+    const financials = escrowData.financials || {};
+    const checklists = escrowData.checklists || {};
+    
     return {
+      // Core fields from top level (matching list view)
       id: formatEntityId(escrowData.id, 'escrow'),
-      escrowNumber: escrowData.display_id || escrowData.displayId || escrowData.escrowNumber || escrowData.id,
-      displayId: escrowData.display_id || escrowData.displayId || escrowData.escrowNumber,
-      propertyAddress: escrowData.property_address || escrowData.propertyAddress,
+      escrowNumber: escrowData.escrowNumber,
+      displayId: escrowData.escrowNumber,
+      propertyAddress: escrowData.propertyAddress,
+      propertyImage: escrowData.propertyImage,
+      status: escrowData.escrowStatus,
+      escrowStatus: escrowData.escrowStatus,
+      purchasePrice: escrowData.purchasePrice,
+      myCommission: escrowData.myCommission,
+      clients: escrowData.clients || [],
+      scheduledCoeDate: escrowData.scheduledCoeDate,
+      daysToClose: escrowData.daysToClose,
+      checklistProgress: escrowData.checklistProgress,
+      lastActivity: escrowData.lastActivity,
+      upcomingDeadlines: escrowData.upcomingDeadlines,
+      
+      // Property details for top section
       property: {
-        address: escrowData.property_address || escrowData.propertyAddress,
-        type: escrowData.property_type || escrowData.propertyType || 'Single Family',
-        sqft: escrowData.propertyDetails?.sqft || 0,
-        bedrooms: escrowData.propertyDetails?.bedrooms || 0,
-        bathrooms: escrowData.propertyDetails?.bathrooms || 0,
-        yearBuilt: escrowData.propertyDetails?.yearBuilt || null,
-        lotSize: escrowData.propertyDetails?.lotSize || null,
-        images: [escrowData.propertyImage || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800'],
+        address: propertyDetails.address || escrowData.propertyAddress,
+        type: propertyDetails.propertyType || 'Single Family',
+        sqft: propertyDetails.squareFeet || 0,
+        bedrooms: propertyDetails.bedrooms || 0,
+        bathrooms: propertyDetails.bathrooms || 0,
+        yearBuilt: propertyDetails.yearBuilt || null,
+        lotSize: propertyDetails.lotSizeSqft || null,
+        images: propertyDetails.images || [escrowData.propertyImage],
+        // Additional property info
+        city: propertyDetails.city,
+        state: propertyDetails.state,
+        zipCode: propertyDetails.zipCode,
+        county: propertyDetails.county,
+        pool: propertyDetails.pool,
+        garageSpaces: propertyDetails.garageSpaces,
+        stories: propertyDetails.stories,
+        mlsNumber: propertyDetails.mlsNumber,
+        listPrice: propertyDetails.listPrice,
+        pricePerSqft: propertyDetails.pricePerSqft,
       },
-      status: escrowData.escrowStatus || escrowData.escrow_status || 'Active',
-      escrowStatus: escrowData.escrowStatus || escrowData.escrow_status || 'Active',
-      listPrice: parseFloat(escrowData.purchasePrice || escrowData.purchase_price) || 0,
-      purchasePrice: parseFloat(escrowData.purchasePrice || escrowData.purchase_price) || 0,
-      downPayment: parseFloat(escrowData.downPayment || escrowData.down_payment) || 0,
-      loanAmount: parseFloat(escrowData.loanAmount || escrowData.loan_amount) || 0,
-      earnestMoneyDeposit: parseFloat(escrowData.earnestMoneyDeposit || escrowData.earnest_money_deposit) || 0,
-      estimatedCloseDate: escrowData.scheduledCoeDate || escrowData.closing_date || escrowData.closingDate,
-      acceptanceDate: escrowData.acceptanceDate || escrowData.acceptance_date,
-      closeOfEscrowDate: escrowData.scheduledCoeDate || escrowData.closing_date || escrowData.closingDate,
       
-      // Commission info
+      // Dates from timeline
+      acceptanceDate: timeline.acceptanceDate,
+      estimatedCloseDate: escrowData.scheduledCoeDate || timeline.closingDate,
+      closeOfEscrowDate: timeline.closingDate,
+      escrowOpenedDate: timeline.escrowOpenedDate,
+      
+      // Financial info
+      listPrice: propertyDetails.listPrice || escrowData.purchasePrice,
+      downPayment: financials.downPayment || 0,
+      loanAmount: financials.loanAmount || 0,
+      earnestMoneyDeposit: financials.earnestMoneyDeposit || 0,
+      
+      // Commission info from financials
       commission: {
-        totalCommission: parseFloat(escrowData.grossCommission || escrowData.totalCommission || escrowData.gross_commission) || 0,
-        myCommission: parseFloat(escrowData.myCommission || escrowData.netCommission || escrowData.net_commission) || 0,
-        rate: parseFloat(escrowData.commissionPercentage || escrowData.commission_percentage) || 3,
-        split: 50,
+        totalCommission: financials.grossCommission || 0,
+        myCommission: financials.agentCommission || escrowData.myCommission || 0,
+        rate: (financials.baseCommission / escrowData.purchasePrice * 100) || 3,
+        split: financials.splitPercentage || 70,
+        agentNet: financials.agentNet || 0,
+        franchiseFees: financials.franchiseFees || 0,
       },
       
-      // Participants
-      buyers: escrowData.buyers || [],
-      sellers: escrowData.sellers || [],
-      buyer: escrowData.buyer || null,
-      seller: escrowData.seller || null,
-      buyerAgent: escrowData.buyerAgent || escrowData.buyer_agent || null,
-      listingAgent: escrowData.listingAgent || escrowData.listing_agent || null,
+      // People/Participants
+      buyers: people.buyer ? [people.buyer] : [],
+      sellers: people.seller ? [people.seller] : [],
+      buyer: people.buyer || null,
+      seller: people.seller || null,
+      buyerAgent: people.buyerAgent || null,
+      listingAgent: people.sellerAgent || null,
       
-      // Other data
-      checklist: escrowData.checklist || [],
+      // Transaction team from people object
+      escrowCompany: people.transactionTeam?.escrowCompany || '',
+      titleCompany: people.transactionTeam?.titleCompany || '',
+      lender: people.lender?.name || '',
+      escrowOfficer: people.escrowOfficer || {
+        name: '',
+        email: '',
+        phone: '',
+      },
+      loanOfficer: people.loanOfficer || null,
+      transactionCoordinator: people.transactionTeam?.transactionCoordinator || '',
+      
+      // Tab data
+      checklist: checklists || {},
       documents: escrowData.documents || [],
-      timeline: escrowData.timeline || [],
-      activities: escrowData.timeline || [],
+      timeline: timeline || {},
+      activities: [],
+      financials: financials || {},
+      people: people || {},
+      propertyDetails: propertyDetails || {},
       
-      // Company and officer info from API
-      escrowCompany: escrowData.escrowCompany || escrowData.escrow_company || '',
-      titleCompany: escrowData.titleCompany || escrowData.title_company || '',
-      lender: escrowData.lender || escrowData.lender_name || '',
-      escrowOfficer: escrowData.escrowOfficer || {
-        name: escrowData.escrow_officer_name || '',
-        email: escrowData.escrow_officer_email || '',
-        phone: escrowData.escrow_officer_phone || '',
-      },
-      loanOfficer: escrowData.loanOfficer || null,
+      // Keep raw data for tabs
+      _raw: {
+        propertyDetails,
+        people,
+        timeline,
+        financials,
+        checklists,
+        documents: escrowData.documents
+      }
     };
   };
 
@@ -2465,46 +2515,61 @@ const EscrowDetail = () => {
               {/* Tab Panels */}
               {/* Timeline Tab - Index 0 */}
               <TabPanel hidden={activeTab !== 0}>
-                {(escrow.timeline || []).length > 0 ? (
+                {escrow.timeline && Object.keys(escrow.timeline).length > 0 ? (
                   <Timeline position="alternate">
-                    {escrow.timeline.map((event, index) => (
-                      <TimelineItem key={index}>
-                        <TimelineOppositeContent color="text.secondary">
-                          {safeFormat(event.date, 'MMM dd, yyyy')}
-                        </TimelineOppositeContent>
-                        <TimelineSeparator>
-                          <TimelineDot 
-                            color={
-                              event.status === 'completed' ? 'success' :
-                              event.status === 'in-progress' ? 'warning' : 'grey'
-                            }
-                          >
-                            {event.icon || <EventNote />}
-                          </TimelineDot>
-                          {index < escrow.timeline.length - 1 && <TimelineConnector />}
-                        </TimelineSeparator>
-                        <TimelineContent>
-                          <TimelineCard elevation={2}>
-                            <CardContent>
-                              <Typography variant="h6" component="span">
-                                {event.event}
-                              </Typography>
-                              <Typography variant="body2" color="text.secondary">
-                                {event.status}
-                              </Typography>
-                            </CardContent>
-                          </TimelineCard>
-                        </TimelineContent>
-                      </TimelineItem>
-                    ))}
+                    {Object.entries(escrow.timeline)
+                      .filter(([key, date]) => date && key !== 'daysFromAcceptance' && key !== 'daysToCoe' && key !== 'daysToContingency')
+                      .sort(([, a], [, b]) => new Date(a) - new Date(b))
+                      .map(([eventKey, eventDate], index, array) => {
+                        // Convert key to readable label
+                        const label = eventKey
+                          .replace(/([A-Z])/g, ' $1')
+                          .replace(/^./, str => str.toUpperCase())
+                          .replace('Date', '');
+                        
+                        // Determine status based on date
+                        const isPast = new Date(eventDate) < new Date();
+                        const isToday = safeFormat(eventDate, 'yyyy-MM-dd') === safeFormat(new Date(), 'yyyy-MM-dd');
+                        
+                        return (
+                          <TimelineItem key={eventKey}>
+                            <TimelineOppositeContent color="text.secondary">
+                              {safeFormat(eventDate, 'MMM dd, yyyy')}
+                            </TimelineOppositeContent>
+                            <TimelineSeparator>
+                              <TimelineDot 
+                                color={
+                                  isToday ? 'warning' :
+                                  isPast ? 'success' : 'grey'
+                                }
+                              >
+                                <EventNote />
+                              </TimelineDot>
+                              {index < array.length - 1 && <TimelineConnector />}
+                            </TimelineSeparator>
+                            <TimelineContent>
+                              <TimelineCard elevation={2}>
+                                <CardContent>
+                                  <Typography variant="h6" component="span">
+                                    {label}
+                                  </Typography>
+                                  <Typography variant="body2" color="text.secondary">
+                                    {isToday ? 'Today' : isPast ? 'Completed' : 'Upcoming'}
+                                  </Typography>
+                                </CardContent>
+                              </TimelineCard>
+                            </TimelineContent>
+                          </TimelineItem>
+                        );
+                      })}
                   </Timeline>
                 ) : (
                   <EmptyState
                     icon={TimelineIcon}
-                    title="No Timeline Events Yet"
-                    subtitle="Timeline events will appear here as the escrow progresses. Add your first milestone to start tracking the escrow journey."
-                    actionText="Add First Event"
-                    onAction={() => console.log('Add timeline event')}
+                    title="No Timeline Dates Set"
+                    subtitle="Timeline dates will appear here once they are scheduled. Key milestones like inspections, contingencies, and closing will be tracked."
+                    actionText="Set Timeline Dates"
+                    onAction={() => console.log('Set timeline dates')}
                   />
                 )}
               </TabPanel>
@@ -2581,14 +2646,15 @@ const EscrowDetail = () => {
               {/* Financials Tab - Index 2 */}
               <TabPanel hidden={activeTab !== 2}>
                 <Grid container spacing={3}>
-                  <Grid item xs={12}>
+                  <Grid item xs={12} md={8}>
                     <Card>
                       <CardContent>
                         <Typography variant="h6" gutterBottom>
-                          Financial Summary
+                          Commission Breakdown
                         </Typography>
                         <Table>
                           <TableBody>
+                            {/* Purchase Price & Base Commission */}
                             <TableRow>
                               <TableCell>Purchase Price</TableCell>
                               <TableCell align="right">
@@ -2598,52 +2664,145 @@ const EscrowDetail = () => {
                               </TableCell>
                             </TableRow>
                             <TableRow>
-                              <TableCell>Down Payment (20%)</TableCell>
+                              <TableCell>Gross Commission</TableCell>
                               <TableCell align="right">
-                                ${(escrow.downPayment || 0).toLocaleString()}
+                                ${(escrow.financials?.grossCommission || 0).toLocaleString()}
                               </TableCell>
                             </TableRow>
+                            
+                            {/* Referral Fees if applicable */}
+                            {escrow.financials?.grossCommissionFees > 0 && (
+                              <>
+                                <TableRow>
+                                  <TableCell sx={{ pl: 4 }}>
+                                    Referral Fee 
+                                    {escrow.financials?.zillowFlexFee && ` (${escrow.financials.zillowFlexFee.percentage}%)`}
+                                  </TableCell>
+                                  <TableCell align="right" sx={{ color: 'error.main' }}>
+                                    -${(escrow.financials?.grossCommissionFees || 0).toLocaleString()}
+                                  </TableCell>
+                                </TableRow>
+                                <TableRow>
+                                  <TableCell>Adjusted Gross</TableCell>
+                                  <TableCell align="right">
+                                    ${(escrow.financials?.adjustedGross || 0).toLocaleString()}
+                                  </TableCell>
+                                </TableRow>
+                              </>
+                            )}
+                            
                             <TableRow>
-                              <TableCell>Loan Amount</TableCell>
-                              <TableCell align="right">
-                                ${(escrow.loanAmount || 0).toLocaleString()}
+                              <TableCell sx={{ borderTop: 1, borderColor: 'divider' }}>
+                                <Typography variant="subtitle1" fontWeight="medium">
+                                  Net Commission
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="right" sx={{ borderTop: 1, borderColor: 'divider' }}>
+                                <Typography variant="subtitle1" fontWeight="medium">
+                                  ${(escrow.financials?.netCommission || 0).toLocaleString()}
+                                </Typography>
                               </TableCell>
                             </TableRow>
+                            
+                            {/* Deal Expenses */}
                             <TableRow>
-                              <TableCell>Earnest Money Deposit</TableCell>
-                              <TableCell align="right">
-                                ${(escrow.earnestMoney || 0).toLocaleString()}
+                              <TableCell sx={{ pl: 4 }}>
+                                Franchise Fees ({escrow.financials?.franchiseFeePercentage || 6.25}%)
+                              </TableCell>
+                              <TableCell align="right" sx={{ color: 'error.main' }}>
+                                -${(escrow.financials?.franchiseFees || 0).toLocaleString()}
                               </TableCell>
                             </TableRow>
-                            <Divider />
+                            
+                            <TableRow>
+                              <TableCell sx={{ borderTop: 1, borderColor: 'divider' }}>
+                                <Typography variant="subtitle1" fontWeight="medium">
+                                  Deal Net (GCI)
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="right" sx={{ borderTop: 1, borderColor: 'divider' }}>
+                                <Typography variant="subtitle1" fontWeight="medium">
+                                  ${(escrow.financials?.dealNet || 0).toLocaleString()}
+                                </Typography>
+                              </TableCell>
+                            </TableRow>
+                            
+                            {/* Agent Split */}
                             <TableRow>
                               <TableCell>
-                                <Typography variant="subtitle1" fontWeight="medium">
-                                  Total Commission (6%)
-                                </Typography>
+                                Agent Split ({escrow.financials?.splitPercentage || 70}%)
                               </TableCell>
                               <TableCell align="right">
-                                <Typography variant="subtitle1" fontWeight="medium">
-                                  ${(escrow.commission || 0).toLocaleString()}
-                                </Typography>
+                                ${(escrow.financials?.agentCommission || 0).toLocaleString()}
                               </TableCell>
                             </TableRow>
                             <TableRow>
-                              <TableCell sx={{ pl: 4 }}>Listing Agent (3%)</TableCell>
-                              <TableCell align="right">
-                                ${((escrow.commissionSplit && escrow.commissionSplit.listing) || 0).toLocaleString()}
+                              <TableCell sx={{ pl: 4 }}>Transaction Fee</TableCell>
+                              <TableCell align="right" sx={{ color: 'error.main' }}>
+                                -${(escrow.financials?.transactionFee || 0).toLocaleString()}
                               </TableCell>
                             </TableRow>
                             <TableRow>
-                              <TableCell sx={{ pl: 4 }}>Selling Agent (3%)</TableCell>
-                              <TableCell align="right">
-                                ${((escrow.commissionSplit && escrow.commissionSplit.selling) || 0).toLocaleString()}
+                              <TableCell sx={{ pl: 4 }}>TC Fee</TableCell>
+                              <TableCell align="right" sx={{ color: 'error.main' }}>
+                                -${(escrow.financials?.tcFee || 0).toLocaleString()}
+                              </TableCell>
+                            </TableRow>
+                            
+                            <TableRow>
+                              <TableCell sx={{ borderTop: 2, borderColor: 'divider' }}>
+                                <Typography variant="h6" color="success.main">
+                                  Agent Net Income
+                                </Typography>
+                              </TableCell>
+                              <TableCell align="right" sx={{ borderTop: 2, borderColor: 'divider' }}>
+                                <Typography variant="h6" color="success.main">
+                                  ${(escrow.financials?.agentNet || 0).toLocaleString()}
+                                </Typography>
                               </TableCell>
                             </TableRow>
                           </TableBody>
                         </Table>
                       </CardContent>
                     </Card>
+                  </Grid>
+                  
+                  <Grid item xs={12} md={4}>
+                    <Stack spacing={3}>
+                      <Card>
+                        <CardContent>
+                          <Typography variant="h6" gutterBottom>
+                            Transaction Details
+                          </Typography>
+                          <Stack spacing={2}>
+                            <Box>
+                              <Typography variant="body2" color="text.secondary">
+                                Lead Source
+                              </Typography>
+                              <Typography variant="body1">
+                                {escrow.financials?.leadSource || 'Direct'}
+                              </Typography>
+                            </Box>
+                            <Box>
+                              <Typography variant="body2" color="text.secondary">
+                                YTD GCI Before
+                              </Typography>
+                              <Typography variant="body1">
+                                ${(escrow.financials?.ytdGciBeforeTransaction || 0).toLocaleString()}
+                              </Typography>
+                            </Box>
+                            <Box>
+                              <Typography variant="body2" color="text.secondary">
+                                YTD GCI After
+                              </Typography>
+                              <Typography variant="body1" fontWeight="bold" color="success.main">
+                                ${(escrow.financials?.ytdGciAfterTransaction || 0).toLocaleString()}
+                              </Typography>
+                            </Box>
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    </Stack>
                   </Grid>
                 </Grid>
               </TabPanel>
@@ -2707,118 +2866,208 @@ const EscrowDetail = () => {
               {/* Parties Tab - Index 4 */}
               <TabPanel hidden={activeTab !== 4}>
                 <Grid container spacing={3}>
+                  {/* Buyer Side */}
                   <Grid item xs={12} md={6}>
-                    <Card>
-                      <CardContent>
-                        <Typography variant="h6" gutterBottom>
-                          Buyer Information
-                        </Typography>
-                        <List>
-                          <ListItem>
-                            <ListItemIcon>
-                              <Person />
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={escrow.buyer?.name || 'TBD'}
-                              secondary="Buyer"
-                            />
-                          </ListItem>
-                          <ListItem>
-                            <ListItemIcon>
-                              <Email />
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={escrow.buyer?.email || 'TBD'}
-                              secondary="Email"
-                            />
-                          </ListItem>
-                          <ListItem>
-                            <ListItemIcon>
-                              <Phone />
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={escrow.buyer?.phone || 'TBD'}
-                              secondary="Phone"
-                            />
-                          </ListItem>
-                          <Divider />
-                          <ListItem>
-                            <ListItemIcon>
-                              <BusinessCenter />
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={escrow.buyer?.agent || 'TBD'}
-                              secondary="Buyer's Agent"
-                            />
-                          </ListItem>
-                          <ListItem>
-                            <ListItemIcon>
-                              <Phone />
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={escrow.buyer?.agentPhone || 'TBD'}
-                              secondary="Agent Phone"
-                            />
-                          </ListItem>
-                        </List>
-                      </CardContent>
-                    </Card>
+                    <Stack spacing={3}>
+                      <Card>
+                        <CardContent>
+                          <Typography variant="h6" gutterBottom>
+                            Buyer
+                          </Typography>
+                          <List>
+                            <ListItem>
+                              <ListItemIcon>
+                                <Person />
+                              </ListItemIcon>
+                              <ListItemText
+                                primary={escrow.people?.buyer?.name || 'Not Set'}
+                                secondary={escrow.people?.buyer?.phone || 'No phone'}
+                              />
+                            </ListItem>
+                            {escrow.people?.buyer?.email && (
+                              <ListItem>
+                                <ListItemIcon>
+                                  <Email />
+                                </ListItemIcon>
+                                <ListItemText primary={escrow.people.buyer.email} />
+                              </ListItem>
+                            )}
+                          </List>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card>
+                        <CardContent>
+                          <Typography variant="h6" gutterBottom>
+                            Buyer's Agent
+                          </Typography>
+                          <List>
+                            <ListItem>
+                              <ListItemIcon>
+                                <BusinessCenter />
+                              </ListItemIcon>
+                              <ListItemText
+                                primary={escrow.people?.buyerAgent?.name || 'Not Set'}
+                                secondary={escrow.people?.buyerAgent?.company || 'No company'}
+                              />
+                            </ListItem>
+                            {escrow.people?.buyerAgent?.phone && (
+                              <ListItem>
+                                <ListItemIcon>
+                                  <Phone />
+                                </ListItemIcon>
+                                <ListItemText primary={escrow.people.buyerAgent.phone} />
+                              </ListItem>
+                            )}
+                            {escrow.people?.buyerAgent?.license && (
+                              <ListItem>
+                                <ListItemIcon>
+                                  <Badge />
+                                </ListItemIcon>
+                                <ListItemText primary={`License: ${escrow.people.buyerAgent.license}`} />
+                              </ListItem>
+                            )}
+                          </List>
+                        </CardContent>
+                      </Card>
+                    </Stack>
                   </Grid>
 
+                  {/* Seller Side */}
                   <Grid item xs={12} md={6}>
+                    <Stack spacing={3}>
+                      <Card>
+                        <CardContent>
+                          <Typography variant="h6" gutterBottom>
+                            Seller
+                          </Typography>
+                          <List>
+                            <ListItem>
+                              <ListItemIcon>
+                                <Person />
+                              </ListItemIcon>
+                              <ListItemText
+                                primary={escrow.people?.seller?.name || 'Not Set'}
+                                secondary={escrow.people?.seller?.phone || 'No phone'}
+                              />
+                            </ListItem>
+                            {escrow.people?.seller?.email && (
+                              <ListItem>
+                                <ListItemIcon>
+                                  <Email />
+                                </ListItemIcon>
+                                <ListItemText primary={escrow.people.seller.email} />
+                              </ListItem>
+                            )}
+                          </List>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card>
+                        <CardContent>
+                          <Typography variant="h6" gutterBottom>
+                            Seller's Agent
+                          </Typography>
+                          <List>
+                            <ListItem>
+                              <ListItemIcon>
+                                <BusinessCenter />
+                              </ListItemIcon>
+                              <ListItemText
+                                primary={escrow.people?.sellerAgent?.name || 'Not Set'}
+                                secondary={escrow.people?.sellerAgent?.company || 'No company'}
+                              />
+                            </ListItem>
+                            {escrow.people?.sellerAgent?.phone && (
+                              <ListItem>
+                                <ListItemIcon>
+                                  <Phone />
+                                </ListItemIcon>
+                                <ListItemText primary={escrow.people.sellerAgent.phone} />
+                              </ListItem>
+                            )}
+                            {escrow.people?.sellerAgent?.license && (
+                              <ListItem>
+                                <ListItemIcon>
+                                  <Badge />
+                                </ListItemIcon>
+                                <ListItemText primary={`License: ${escrow.people.sellerAgent.license}`} />
+                              </ListItem>
+                            )}
+                          </List>
+                        </CardContent>
+                      </Card>
+                    </Stack>
+                  </Grid>
+                  
+                  {/* Transaction Professionals */}
+                  <Grid item xs={12}>
                     <Card>
                       <CardContent>
                         <Typography variant="h6" gutterBottom>
-                          Seller Information
+                          Transaction Professionals
                         </Typography>
-                        <List>
-                          <ListItem>
-                            <ListItemIcon>
-                              <Person />
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={escrow.seller?.name || 'TBD'}
-                              secondary="Seller"
-                            />
-                          </ListItem>
-                          <ListItem>
-                            <ListItemIcon>
-                              <Email />
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={escrow.seller?.email || 'TBD'}
-                              secondary="Email"
-                            />
-                          </ListItem>
-                          <ListItem>
-                            <ListItemIcon>
-                              <Phone />
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={escrow.seller?.phone || 'TBD'}
-                              secondary="Phone"
-                            />
-                          </ListItem>
-                          <Divider />
-                          <ListItem>
-                            <ListItemIcon>
-                              <BusinessCenter />
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={escrow.seller?.agent || 'TBD'}
-                              secondary="Seller's Agent"
-                            />
-                          </ListItem>
-                          <ListItem>
-                            <ListItemIcon>
-                              <Phone />
-                            </ListItemIcon>
-                            <ListItemText
-                              primary={escrow.seller?.agentPhone || 'TBD'}
-                              secondary="Agent Phone"
-                            />
-                          </ListItem>
-                        </List>
+                        <Grid container spacing={3}>
+                          <Grid item xs={12} md={4}>
+                            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                              Escrow & Title
+                            </Typography>
+                            <List dense>
+                              <ListItem>
+                                <ListItemText
+                                  primary={escrow.people?.escrowOfficer?.name || 'Not Set'}
+                                  secondary="Escrow Officer"
+                                />
+                              </ListItem>
+                              <ListItem>
+                                <ListItemText
+                                  primary={escrow.people?.titleOfficer?.name || 'Not Set'}
+                                  secondary="Title Officer"
+                                />
+                              </ListItem>
+                            </List>
+                          </Grid>
+                          
+                          <Grid item xs={12} md={4}>
+                            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                              Lending
+                            </Typography>
+                            <List dense>
+                              <ListItem>
+                                <ListItemText
+                                  primary={escrow.people?.lender?.name || 'Not Set'}
+                                  secondary="Lender"
+                                />
+                              </ListItem>
+                              <ListItem>
+                                <ListItemText
+                                  primary={escrow.people?.loanOfficer?.name || 'Not Set'}
+                                  secondary="Loan Officer"
+                                />
+                              </ListItem>
+                            </List>
+                          </Grid>
+                          
+                          <Grid item xs={12} md={4}>
+                            <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                              Transaction Team
+                            </Typography>
+                            <List dense>
+                              <ListItem>
+                                <ListItemText
+                                  primary={escrow.people?.transactionTeam?.transactionCoordinator || 'Not Set'}
+                                  secondary="Transaction Coordinator"
+                                />
+                              </ListItem>
+                              <ListItem>
+                                <ListItemText
+                                  primary={escrow.people?.transactionTeam?.nhdCompany || 'Not Set'}
+                                  secondary="NHD Company"
+                                />
+                              </ListItem>
+                            </List>
+                          </Grid>
+                        </Grid>
                       </CardContent>
                     </Card>
                   </Grid>
@@ -3060,7 +3309,7 @@ const EscrowDetail = () => {
               </TabPanel>
             </Paper>
 
-            {/* Bottom Stats Cards */}
+            {/* Bottom Stats Cards - Property Specific */}
             <Grid container spacing={3} sx={{ mt: 4 }}>
               <Grid item xs={12} sm={6} md={3}>
                 <MotionDiv
@@ -3072,10 +3321,10 @@ const EscrowDetail = () => {
                     <Stack direction="row" justifyContent="space-between" alignItems="center">
                       <Box>
                         <Typography variant="h4" fontWeight="bold" className="metric-value">
-                          ${((escrow.commission || 0) / 1000).toFixed(1)}k
+                          ${escrow.property?.pricePerSqft || 0}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          Expected Commission
+                          Price per Sq Ft
                         </Typography>
                       </Box>
                       <Avatar
@@ -3086,7 +3335,7 @@ const EscrowDetail = () => {
                           height: 48,
                         }}
                       >
-                        <AttachMoney />
+                        <Assessment />
                       </Avatar>
                     </Stack>
                   </StatsCard>
@@ -3134,10 +3383,10 @@ const EscrowDetail = () => {
                     <Stack direction="row" justifyContent="space-between" alignItems="center">
                       <Box>
                         <Typography variant="h4" fontWeight="bold" className="metric-value">
-                          {escrow.messages?.length || 0}
+                          {escrow.upcomingDeadlines || 0}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                          Messages
+                          Active Deadlines
                         </Typography>
                       </Box>
                       <Avatar
@@ -3148,7 +3397,7 @@ const EscrowDetail = () => {
                           height: 48,
                         }}
                       >
-                        <Message />
+                        <Flag />
                       </Avatar>
                     </Stack>
                   </StatsCard>
