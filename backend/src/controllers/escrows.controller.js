@@ -548,69 +548,73 @@ class SimpleEscrowController {
           };
         })(),
         timeline: (() => {
-          // Build timeline object with all RPA dates
+          // Build timeline object sorted chronologically from acceptance to post-close
           const storedTimeline = escrow.timeline || {};
           
           return {
-            // Core transaction dates
+            // 1. Transaction Start
             acceptanceDate: escrow.acceptance_date || null,
             escrowOpenedDate: escrow.escrow_opened_date || escrow.opening_date || null,
-            closingDate: escrow.closing_date || null,
-            recordingDate: escrow.recording_date || null,
-            possessionDate: escrow.possession_date || null,
+            emdDate: escrow.emd_date || null,
             
-            // Inspection dates
-            inspectionPeriodEndDate: escrow.inspection_period_end_date || null,
-            physicalInspectionDate: escrow.physical_inspection_date || null,
-            termiteInspectionDate: escrow.termite_inspection_date || null,
-            sewerInspectionDate: escrow.sewer_inspection_date || null,
-            poolSpaInspectionDate: escrow.pool_spa_inspection_date || null,
-            roofInspectionDate: escrow.roof_inspection_date || null,
-            chimneyInspectionDate: escrow.chimney_inspection_date || null,
-            
-            // Disclosure dates
+            // 2. Initial Documents & Disclosures (typically first 7-10 days)
+            titleOrderedDate: escrow.title_ordered_date || null,
+            preliminaryTitleReportDate: escrow.preliminary_title_report_date || null,
             sellerDisclosuresDueDate: escrow.seller_disclosures_due_date || null,
             sellerDisclosuresReceivedDate: escrow.seller_disclosures_received_date || null,
-            preliminaryTitleReportDate: escrow.preliminary_title_report_date || null,
             nhdReportDate: escrow.nhd_report_date || null,
             hoaDocumentsDueDate: escrow.hoa_documents_due_date || null,
             hoaDocumentsReceivedDate: escrow.hoa_documents_received_date || null,
             
-            // Loan dates
+            // 3. Inspections (typically days 7-17)
+            physicalInspectionDate: escrow.physical_inspection_date || null,
+            termiteInspectionDate: escrow.termite_inspection_date || null,
+            roofInspectionDate: escrow.roof_inspection_date || null,
+            sewerInspectionDate: escrow.sewer_inspection_date || null,
+            poolSpaInspectionDate: escrow.pool_spa_inspection_date || null,
+            chimneyInspectionDate: escrow.chimney_inspection_date || null,
+            inspectionPeriodEndDate: escrow.inspection_period_end_date || null,
+            
+            // 4. Loan Process (concurrent with inspections)
             loanApplicationDate: escrow.loan_application_date || null,
-            loanContingencyRemovalDate: escrow.loan_contingency_removal_date || null,
-            appraisalContingencyRemovalDate: escrow.appraisal_contingency_removal_date || null,
             appraisalOrderedDate: escrow.appraisal_ordered_date || null,
             appraisalCompletedDate: escrow.appraisal_completed_date || null,
+            insuranceOrderedDate: escrow.insurance_ordered_date || null,
+            
+            // 5. Contingency Removals (typically days 17-21)
+            inspectionContingencyRemovalDate: escrow.inspection_contingency_removal_date || null,
+            appraisalContingencyRemovalDate: escrow.appraisal_contingency_removal_date || null,
+            loanContingencyRemovalDate: escrow.loan_contingency_removal_date || null,
+            allContingenciesRemovalDate: escrow.all_contingencies_removal_date || null,
+            
+            // 6. Repairs & Completion (if needed)
+            repairsCompletionDate: escrow.repairs_completion_date || null,
+            termiteCompletionDate: escrow.termite_completion_date || null,
+            smokeAlarmInstallationDate: escrow.smoke_alarm_installation_date || null,
+            
+            // 7. Final Loan & Closing Prep
             loanApprovalDate: escrow.loan_approval_date || null,
             loanDocsOrderedDate: escrow.loan_docs_ordered_date || null,
             loanDocsSignedDate: escrow.loan_docs_signed_date || null,
-            loanFundedDate: escrow.loan_funded_date || null,
-            
-            // Contingency removal dates
-            inspectionContingencyRemovalDate: escrow.inspection_contingency_removal_date || null,
-            allContingenciesRemovalDate: escrow.all_contingencies_removal_date || null,
-            
-            // Other important dates
-            walkThroughDate: escrow.walk_through_date || null,
-            rentBackEndDate: escrow.rent_back_end_date || null,
-            titleOrderedDate: escrow.title_ordered_date || null,
-            insuranceOrderedDate: escrow.insurance_ordered_date || null,
-            smokeAlarmInstallationDate: escrow.smoke_alarm_installation_date || null,
-            termiteCompletionDate: escrow.termite_completion_date || null,
-            repairsCompletionDate: escrow.repairs_completion_date || null,
             finalVerificationDate: escrow.final_verification_date || null,
+            walkThroughDate: escrow.walk_through_date || null,
             
-            // EMD date (from existing data)
-            emdDate: escrow.emd_date || null,
+            // 8. Closing & Recording
+            loanFundedDate: escrow.loan_funded_date || null,
+            closingDate: escrow.closing_date || null,
+            recordingDate: escrow.recording_date || null,
             
-            // Days calculations
-            daysToCoe: escrow.closing_date ? 
-              Math.floor((new Date(escrow.closing_date) - new Date()) / (1000 * 60 * 60 * 24)) : null,
-            daysToContingency: escrow.contingencies_date ? 
-              Math.floor((new Date(escrow.contingencies_date) - new Date()) / (1000 * 60 * 60 * 24)) : null,
+            // 9. Post-Close
+            possessionDate: escrow.possession_date || null,
+            rentBackEndDate: escrow.rent_back_end_date || null,
+            
+            // Key Metrics
             daysFromAcceptance: escrow.acceptance_date ? 
               Math.floor((new Date() - new Date(escrow.acceptance_date)) / (1000 * 60 * 60 * 24)) : null,
+            daysToCoe: escrow.closing_date ? 
+              Math.floor((new Date(escrow.closing_date) - new Date()) / (1000 * 60 * 60 * 24)) : null,
+            daysToContingency: escrow.all_contingencies_removal_date ? 
+              Math.floor((new Date(escrow.all_contingencies_removal_date) - new Date()) / (1000 * 60 * 60 * 24)) : null,
             
             // Merge any additional stored timeline data
             ...storedTimeline
