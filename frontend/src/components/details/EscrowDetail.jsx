@@ -1847,13 +1847,27 @@ const EscrowDetail = () => {
         };
       }
       
-      // Use PATCH to update the escrow
-      const response = await fetch(`https://api.jaydenmetz.com/v1/escrows/${escrowId}`, {
-        method: 'PATCH',
+      // Use the appropriate endpoint based on the section being updated
+      let endpoint = `https://api.jaydenmetz.com/v1/escrows/${escrowId}`;
+      let requestBody = payload;
+      
+      // For people and checklists, use specific endpoints that expect the full object
+      if (section === 'people') {
+        endpoint = `https://api.jaydenmetz.com/v1/escrows/${escrowId}/people`;
+        // Send the entire people object with the update
+        requestBody = escrow.people;
+      } else if (section === 'checklists') {
+        endpoint = `https://api.jaydenmetz.com/v1/escrows/${escrowId}/checklists`;
+        // Send the entire checklists object with the update
+        requestBody = escrow.checklists;
+      }
+      
+      const response = await fetch(endpoint, {
+        method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(requestBody)
       });
       
       if (response.ok) {
