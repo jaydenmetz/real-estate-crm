@@ -826,6 +826,12 @@ const EditableField = ({ field, value, onSave, type = 'text' }) => {
   }, [value]);
   
   const handleSave = async () => {
+    console.log('EditableField handleSave called:', {
+      field,
+      originalValue: value,
+      editValue,
+      hasChanged: value !== editValue
+    });
     setIsSaving(true);
     await onSave(field, editValue);
     setIsSaving(false);
@@ -859,7 +865,14 @@ const EditableField = ({ field, value, onSave, type = 'text' }) => {
           <TextField
             size="small"
             value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
+            onChange={(e) => {
+              console.log('EditableField onChange:', {
+                field,
+                newValue: e.target.value,
+                previousValue: editValue
+              });
+              setEditValue(e.target.value);
+            }}
             autoFocus
             onKeyDown={(e) => {
               if (e.key === 'Enter') handleSave();
@@ -1879,8 +1892,16 @@ const EscrowDetail = () => {
       // For people and checklists, use specific endpoints that expect the full object
       if (section === 'people') {
         endpoint = `https://api.jaydenmetz.com/v1/escrows/${escrowId}/people`;
-        // Send the entire people object with the update
-        requestBody = escrow.people;
+        // Send the entire people object with the update applied
+        const [role, fieldName] = field.split('.');
+        requestBody = {
+          ...escrow.people,
+          [role]: {
+            ...escrow.people[role],
+            [fieldName]: value
+          }
+        };
+        console.log('People update payload:', requestBody);
       } else if (section === 'checklists') {
         endpoint = `https://api.jaydenmetz.com/v1/escrows/${escrowId}/checklists`;
         // Send the entire checklists object with the update
