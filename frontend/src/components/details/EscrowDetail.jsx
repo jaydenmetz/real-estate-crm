@@ -504,6 +504,7 @@ import {
   Pool,
   Bathtub,
   Stairs,
+  InsertDriveFile,
 } from '@mui/icons-material';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
@@ -2516,6 +2517,372 @@ const EscrowDetail = () => {
           </Box>
         </Fade>
       ) : null}
+
+      {/* Widgets Section */}
+      <Box sx={{ mt: 4 }}>
+        <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
+          Escrow Details
+        </Typography>
+        
+        <Grid container spacing={3}>
+          {/* People Widget */}
+          <Grid item xs={12} md={6}>
+            <Paper 
+              sx={{ 
+                p: 3, 
+                height: '100%',
+                borderRadius: 2,
+                background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+              }}
+            >
+              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Groups sx={{ color: 'primary.main' }} />
+                  People
+                </Typography>
+                <IconButton size="small">
+                  <MoreVert />
+                </IconButton>
+              </Stack>
+              
+              <Stack spacing={2}>
+                {/* Buyer */}
+                {escrow.people?.buyer && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Avatar sx={{ bgcolor: 'primary.main' }}>
+                      {escrow.people.buyer.name?.charAt(0) || 'B'}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="body1" fontWeight="medium">
+                        {escrow.people.buyer.name || 'Buyer'}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Buyer • {escrow.people.buyer.phone || 'No phone'}
+                      </Typography>
+                    </Box>
+                  </Box>
+                )}
+                
+                {/* Seller */}
+                {escrow.people?.seller && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Avatar sx={{ bgcolor: 'secondary.main' }}>
+                      {escrow.people.seller.name?.charAt(0) || 'S'}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="body1" fontWeight="medium">
+                        {escrow.people.seller.name || 'Seller'}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Seller • {escrow.people.seller.phone || 'No phone'}
+                      </Typography>
+                    </Box>
+                  </Box>
+                )}
+                
+                {/* Agents */}
+                {escrow.people?.buyerAgent && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Avatar sx={{ bgcolor: 'info.main' }}>
+                      {escrow.people.buyerAgent.name?.charAt(0) || 'A'}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="body1" fontWeight="medium">
+                        {escrow.people.buyerAgent.name || 'Buyer\'s Agent'}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Buyer's Agent • {escrow.people.buyerAgent.brokerage || 'Brokerage'}
+                      </Typography>
+                    </Box>
+                  </Box>
+                )}
+                
+                {escrow.people?.listingAgent && (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Avatar sx={{ bgcolor: 'warning.main' }}>
+                      {escrow.people.listingAgent.name?.charAt(0) || 'L'}
+                    </Avatar>
+                    <Box>
+                      <Typography variant="body1" fontWeight="medium">
+                        {escrow.people.listingAgent.name || 'Listing Agent'}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Listing Agent • {escrow.people.listingAgent.brokerage || 'Brokerage'}
+                      </Typography>
+                    </Box>
+                  </Box>
+                )}
+              </Stack>
+            </Paper>
+          </Grid>
+          
+          {/* Checklist Widget */}
+          <Grid item xs={12} md={6}>
+            <Paper 
+              sx={{ 
+                p: 3, 
+                height: '100%',
+                borderRadius: 2,
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                color: 'white',
+              }}
+            >
+              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <CheckCircle />
+                  Checklist Progress
+                </Typography>
+                <Typography variant="h4" fontWeight="bold">
+                  {progress}%
+                </Typography>
+              </Stack>
+              
+              <LinearProgress 
+                variant="determinate" 
+                value={progress} 
+                sx={{ 
+                  height: 10, 
+                  borderRadius: 5, 
+                  mb: 2,
+                  bgcolor: 'rgba(255,255,255,0.3)',
+                  '& .MuiLinearProgress-bar': {
+                    bgcolor: 'white',
+                  }
+                }}
+              />
+              
+              <Stack spacing={1}>
+                {escrow.checklists && Object.entries(escrow.checklists).slice(0, 4).map(([section, tasks]) => {
+                  const sectionTasks = Object.entries(tasks || {});
+                  const completedCount = sectionTasks.filter(([, completed]) => completed).length;
+                  const totalCount = sectionTasks.length;
+                  
+                  return (
+                    <Box key={section} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant="body2">
+                        {section.replace(/([A-Z])/g, ' $1').trim()}
+                      </Typography>
+                      <Chip 
+                        label={`${completedCount}/${totalCount}`} 
+                        size="small" 
+                        sx={{ 
+                          bgcolor: 'rgba(255,255,255,0.2)', 
+                          color: 'white',
+                          fontWeight: 'bold',
+                        }}
+                      />
+                    </Box>
+                  );
+                })}
+              </Stack>
+              
+              <Button 
+                fullWidth 
+                variant="contained" 
+                sx={{ 
+                  mt: 2, 
+                  bgcolor: 'rgba(255,255,255,0.2)',
+                  color: 'white',
+                  '&:hover': {
+                    bgcolor: 'rgba(255,255,255,0.3)',
+                  }
+                }}
+              >
+                View All Tasks
+              </Button>
+            </Paper>
+          </Grid>
+          
+          {/* Timeline Widget */}
+          <Grid item xs={12} lg={4}>
+            <Paper 
+              sx={{ 
+                p: 3, 
+                height: '100%',
+                borderRadius: 2,
+                border: '2px solid',
+                borderColor: 'primary.light',
+              }}
+            >
+              <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <EventNote sx={{ color: 'primary.main' }} />
+                Timeline
+              </Typography>
+              
+              <Stack spacing={2}>
+                {escrow.timeline && Object.entries(escrow.timeline)
+                  .filter(([key, date]) => date && key !== 'daysFromAcceptance' && key !== 'daysToCoe')
+                  .sort(([, a], [, b]) => new Date(a) - new Date(b))
+                  .slice(0, 5)
+                  .map(([eventKey, eventDate]) => {
+                    const isPast = new Date(eventDate) < new Date();
+                    const label = eventKey.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()).trim();
+                    
+                    return (
+                      <Box key={eventKey} sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Box 
+                          sx={{ 
+                            width: 8, 
+                            height: 8, 
+                            borderRadius: '50%', 
+                            bgcolor: isPast ? 'success.main' : 'grey.400',
+                          }} 
+                        />
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant="body2" fontWeight="medium">
+                            {label}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {safeFormat(eventDate, 'MMM dd, yyyy')}
+                          </Typography>
+                        </Box>
+                        {isPast && (
+                          <CheckCircle sx={{ fontSize: 16, color: 'success.main' }} />
+                        )}
+                      </Box>
+                    );
+                  })}
+              </Stack>
+            </Paper>
+          </Grid>
+          
+          {/* Financials Widget */}
+          <Grid item xs={12} lg={4}>
+            <Paper 
+              sx={{ 
+                p: 3, 
+                height: '100%',
+                borderRadius: 2,
+                background: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+              }}
+            >
+              <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <AttachMoney sx={{ color: 'warning.dark' }} />
+                Financials
+              </Typography>
+              
+              <Stack spacing={2}>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">
+                    Purchase Price
+                  </Typography>
+                  <Typography variant="h5" fontWeight="bold">
+                    ${(escrow.financials?.purchasePrice || 0).toLocaleString()}
+                  </Typography>
+                </Box>
+                
+                <Divider />
+                
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2">Commission Rate</Typography>
+                  <Typography variant="body2" fontWeight="medium">
+                    {escrow.financials?.myCommissionRate || 2.5}%
+                  </Typography>
+                </Box>
+                
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2">Gross Commission</Typography>
+                  <Typography variant="body2" fontWeight="medium">
+                    ${(escrow.financials?.grossCommission || 0).toLocaleString()}
+                  </Typography>
+                </Box>
+                
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2">Split ({escrow.financials?.splitPercentage || 60}%)</Typography>
+                  <Typography variant="body2" fontWeight="medium">
+                    ${(escrow.financials?.myCommissionAfterSplit || 0).toLocaleString()}
+                  </Typography>
+                </Box>
+                
+                <Divider />
+                
+                <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body1" fontWeight="bold">Net Commission</Typography>
+                  <Typography variant="h6" fontWeight="bold" color="success.main">
+                    ${(escrow.financials?.myNetCommission || 0).toLocaleString()}
+                  </Typography>
+                </Box>
+              </Stack>
+            </Paper>
+          </Grid>
+          
+          {/* Documents Widget */}
+          <Grid item xs={12} lg={4}>
+            <Paper 
+              sx={{ 
+                p: 3, 
+                height: '100%',
+                borderRadius: 2,
+                background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+              }}
+            >
+              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Description sx={{ color: 'info.main' }} />
+                  Documents
+                </Typography>
+                <Chip 
+                  label={`${(escrow.documents || []).length} files`} 
+                  size="small"
+                  color="info"
+                />
+              </Stack>
+              
+              <Stack spacing={1}>
+                {(escrow.documents || []).length > 0 ? (
+                  escrow.documents.slice(0, 4).map((doc) => (
+                    <Paper 
+                      key={doc.id} 
+                      sx={{ 
+                        p: 1.5, 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: 1,
+                        cursor: 'pointer',
+                        '&:hover': { bgcolor: 'action.hover' }
+                      }}
+                    >
+                      <InsertDriveFile sx={{ color: 'text.secondary', fontSize: 20 }} />
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography variant="body2" noWrap>
+                          {doc.name}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {doc.size} • {safeFormat(doc.uploadedAt, 'MMM dd')}
+                        </Typography>
+                      </Box>
+                      <IconButton size="small">
+                        <Download fontSize="small" />
+                      </IconButton>
+                    </Paper>
+                  ))
+                ) : (
+                  <Box sx={{ textAlign: 'center', py: 3 }}>
+                    <InsertDriveFile sx={{ fontSize: 48, color: 'text.disabled', mb: 1 }} />
+                    <Typography variant="body2" color="text.secondary">
+                      No documents uploaded yet
+                    </Typography>
+                    <Button 
+                      variant="outlined" 
+                      size="small" 
+                      sx={{ mt: 2 }}
+                      onClick={handleDocumentUpload}
+                    >
+                      Upload First Document
+                    </Button>
+                  </Box>
+                )}
+              </Stack>
+              
+              {(escrow.documents || []).length > 4 && (
+                <Button fullWidth size="small" sx={{ mt: 2 }}>
+                  View All Documents
+                </Button>
+              )}
+            </Paper>
+          </Grid>
+        </Grid>
+      </Box>
 
       {/* Floating Speed Dial */}
       <SpeedDial
