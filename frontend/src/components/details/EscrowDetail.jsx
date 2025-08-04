@@ -721,15 +721,28 @@ const pulse = keyframes`
 const liquidMorph = keyframes`
   0% {
     border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-    transform: rotate(0deg);
+    transform: rotate(0deg) scale(1);
+    box-shadow: 0 15px 40px rgba(103, 58, 183, 0.3);
+  }
+  25% {
+    border-radius: 40% 60% 60% 40% / 60% 40% 60% 40%;
+    transform: rotate(90deg) scale(1.05);
+    box-shadow: 0 20px 50px rgba(103, 58, 183, 0.4);
   }
   50% {
     border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
-    transform: rotate(180deg);
+    transform: rotate(180deg) scale(1.1);
+    box-shadow: 0 25px 60px rgba(103, 58, 183, 0.5);
+  }
+  75% {
+    border-radius: 50% 50% 40% 60% / 40% 60% 50% 50%;
+    transform: rotate(270deg) scale(1.05);
+    box-shadow: 0 20px 50px rgba(103, 58, 183, 0.4);
   }
   100% {
     border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-    transform: rotate(360deg);
+    transform: rotate(360deg) scale(1);
+    box-shadow: 0 15px 40px rgba(103, 58, 183, 0.3);
   }
 `;
 
@@ -737,6 +750,40 @@ const floatAnimation = keyframes`
   0% { transform: translateY(0px); }
   50% { transform: translateY(-10px); }
   100% { transform: translateY(0px); }
+`;
+
+const blobAnimation = keyframes`
+  0% {
+    border-radius: 40% 60% 60% 40% / 40% 30% 70% 60%;
+    transform: rotate(0deg) translateX(0) translateY(0);
+  }
+  33% {
+    border-radius: 70% 30% 40% 60% / 60% 40% 60% 40%;
+    transform: rotate(120deg) translateX(-5px) translateY(10px);
+  }
+  66% {
+    border-radius: 30% 70% 50% 50% / 30% 70% 30% 70%;
+    transform: rotate(240deg) translateX(5px) translateY(-5px);
+  }
+  100% {
+    border-radius: 40% 60% 60% 40% / 40% 30% 70% 60%;
+    transform: rotate(360deg) translateX(0) translateY(0);
+  }
+`;
+
+const colorShift = keyframes`
+  0% { filter: hue-rotate(0deg) saturate(1); }
+  50% { filter: hue-rotate(20deg) saturate(1.2); }
+  100% { filter: hue-rotate(0deg) saturate(1); }
+`;
+
+const waveAnimation = keyframes`
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 `;
 
 // Styled Components
@@ -875,17 +922,73 @@ const LiquidWidget = styled(Paper)(({ theme }) => ({
   position: 'relative',
   padding: theme.spacing(3),
   height: '100%',
-  borderRadius: theme.spacing(2),
+  minHeight: 250,
+  borderRadius: '60% 40% 30% 70% / 60% 30% 70% 40%',
   overflow: 'hidden',
   cursor: 'pointer',
-  transition: 'all 0.3s ease',
-  '&:hover': {
-    transform: 'translateY(-2px)',
-    boxShadow: '0 10px 20px rgba(0,0,0,0.1)',
+  transition: 'all 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+  animation: `${liquidMorph} 6s ease-in-out infinite, ${colorShift} 12s ease-in-out infinite`,
+  transformOrigin: 'center center',
+  boxShadow: '0 20px 50px rgba(0, 0, 0, 0.3)',
+  transform: 'scale(1) translateZ(0)',
+  willChange: 'transform, border-radius',
+  
+  // Wave effect overlay
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: '50%',
+    left: 0,
+    width: '200%',
+    height: '200%',
+    background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)',
+    animation: `${waveAnimation} 3s linear infinite`,
+    transform: 'translateY(-50%)',
+    pointerEvents: 'none',
   },
+  
+  // Glow effect
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    top: -20,
+    left: -20,
+    right: -20,
+    bottom: -20,
+    background: 'inherit',
+    borderRadius: 'inherit',
+    filter: 'blur(30px)',
+    opacity: 0.5,
+    zIndex: -1,
+    animation: `${blobAnimation} 8s ease-in-out infinite`,
+    animationDelay: '-3s',
+  },
+  
+  // Inner content container to maintain readability
+  '& > *': {
+    position: 'relative',
+    zIndex: 1,
+  },
+  
+  '&:hover': {
+    transform: 'translateY(-10px) scale(1.05) translateZ(0)',
+    boxShadow: '0 30px 70px rgba(0, 0, 0, 0.4)',
+    animation: `${liquidMorph} 2s ease-in-out infinite, ${colorShift} 3s ease-in-out infinite`,
+    
+    '&::before': {
+      animation: `${waveAnimation} 1s linear infinite`,
+    },
+    
+    '&::after': {
+      animation: `${blobAnimation} 2s ease-in-out infinite`,
+      opacity: 0.7,
+      filter: 'blur(40px)',
+    },
+  },
+  
   '&:active': {
-    transform: 'translateY(0)',
-    boxShadow: '0 5px 10px rgba(0,0,0,0.1)',
+    transform: 'translateY(-2px) scale(0.98) translateZ(0)',
+    boxShadow: '0 15px 40px rgba(0, 0, 0, 0.3)',
   },
 }));
 
@@ -2776,24 +2879,20 @@ const EscrowDetail = () => {
       ) : null}
 
       {/* Widgets Section */}
-      <Box sx={{ mt: 4 }}>
+      <Box sx={{ mt: 4, pb: 4 }}>
         <Typography variant="h5" sx={{ mb: 3, fontWeight: 600 }}>
           Escrow Details
         </Typography>
         
         {/* Backdrop for tooltips */}
-        <Grid container spacing={3}>
+        <Grid container spacing={5} sx={{ overflow: 'visible' }}>
           {/* People Widget */}
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={6} sx={{ overflow: 'visible' }}>
             <LiquidWidget 
               sx={{ 
-                background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
               }}
               onClick={() => handleWidgetClick('people')}
-              sx={{ 
-                background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
-                cursor: 'pointer',
-              }}
             >
               <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
                 <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -2851,11 +2950,10 @@ const EscrowDetail = () => {
           </Grid>
           
           {/* Checklist Widget */}
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={6} sx={{ overflow: 'visible' }}>
             <LiquidWidget 
               sx={{ 
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                color: 'white',
+                background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
               }}
               onClick={() => handleWidgetClick('checklist')}
             >
@@ -2876,9 +2974,9 @@ const EscrowDetail = () => {
                   height: 10, 
                   borderRadius: 5, 
                   mb: 2,
-                  bgcolor: 'rgba(255,255,255,0.3)',
+                  bgcolor: 'rgba(0,0,0,0.1)',
                   '& .MuiLinearProgress-bar': {
-                    bgcolor: 'white',
+                    bgcolor: 'primary.main',
                   }
                 }}
               />
@@ -2898,8 +2996,7 @@ const EscrowDetail = () => {
                         label={`${completedCount}/${totalCount}`} 
                         size="small" 
                         sx={{ 
-                          bgcolor: 'rgba(255,255,255,0.2)', 
-                          color: 'white',
+                          bgcolor: 'rgba(0,0,0,0.1)', 
                           fontWeight: 'bold',
                         }}
                       />
@@ -2913,10 +3010,10 @@ const EscrowDetail = () => {
                 variant="contained" 
                 sx={{ 
                   mt: 2, 
-                  bgcolor: 'rgba(255,255,255,0.2)',
-                  color: 'white',
+                  bgcolor: 'rgba(0,0,0,0.1)',
+                  color: 'text.primary',
                   '&:hover': {
-                    bgcolor: 'rgba(255,255,255,0.3)',
+                    bgcolor: 'rgba(0,0,0,0.2)',
                   }
                 }}
               >
@@ -2928,11 +3025,10 @@ const EscrowDetail = () => {
           </Grid>
           
           {/* Timeline Widget */}
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={6} sx={{ overflow: 'visible' }}>
             <LiquidWidget 
               sx={{ 
-                border: '2px solid',
-                borderColor: 'primary.light',
+                background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
               }}
               onClick={() => handleWidgetClick('timeline')}
             >
@@ -2981,10 +3077,10 @@ const EscrowDetail = () => {
           </Grid>
           
           {/* Financials Widget */}
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={6} sx={{ overflow: 'visible' }}>
             <LiquidWidget 
               sx={{ 
-                background: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+                background: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
               }}
               onClick={() => handleWidgetClick('financials')}
             >
@@ -3041,10 +3137,10 @@ const EscrowDetail = () => {
           </Grid>
           
           {/* Documents Widget */}
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={6} sx={{ overflow: 'visible' }}>
             <LiquidWidget 
               sx={{ 
-                background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+                background: 'linear-gradient(135deg, #fbc2eb 0%, #a6c1ee 100%)',
               }}
               onClick={() => handleWidgetClick('documents')}
             >
