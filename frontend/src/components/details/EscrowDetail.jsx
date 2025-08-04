@@ -1800,9 +1800,9 @@ const EscrowDetail = () => {
   
   const handleFieldUpdate = async (section, field, value) => {
     try {
-      // Use the ID as provided in the route
-      const escrowId = id;
-      console.log('handleFieldUpdate - Using escrow ID:', escrowId);
+      // Use display_id for updates if available to avoid UUID casting issues
+      const escrowId = escrow?.escrowNumber || escrow?.display_id || id;
+      console.log('handleFieldUpdate - Using ID for update:', escrowId);
       
       let payload = {};
       
