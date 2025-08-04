@@ -2846,7 +2846,156 @@ const EscrowDetail = () => {
                 )}
               </Stack>
               
-              
+              {/* Click Popup with all data */}
+              {openWidget === 'people' && (
+                <DataTooltip 
+                  className="show"
+                >
+                  <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                    <Typography variant="h6" fontWeight={600}>
+                      All People & Contacts
+                    </Typography>
+                    <IconButton onClick={() => setOpenWidget(null)} size="small">
+                      <Close />
+                    </IconButton>
+                  </Stack>
+                  
+                  <Stack spacing={2}>
+                    {/* Buyer Details */}
+                    <Box>
+                      <Typography variant="subtitle2" color="primary" sx={{ mb: 1 }}>Buyer</Typography>
+                      <Stack spacing={0.5}>
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <Typography variant="body2" sx={{ minWidth: 80 }}>Name:</Typography>
+                          <EditableField 
+                            field="buyer.name" 
+                            value={escrow.people?.buyer?.name} 
+                            onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                          />
+                        </Stack>
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <Typography variant="body2" sx={{ minWidth: 80 }}>Email:</Typography>
+                          <EditableField 
+                            field="buyer.email" 
+                            value={escrow.people?.buyer?.email} 
+                            onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                          />
+                        </Stack>
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <Typography variant="body2" sx={{ minWidth: 80 }}>Phone:</Typography>
+                          <EditableField 
+                            field="buyer.phone" 
+                            value={escrow.people?.buyer?.phone} 
+                            onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                          />
+                        </Stack>
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <Typography variant="body2" sx={{ minWidth: 80 }}>Address:</Typography>
+                          <EditableField 
+                            field="buyer.address" 
+                            value={escrow.people?.buyer?.address} 
+                            onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                          />
+                        </Stack>
+                      </Stack>
+                    </Box>
+                    
+                    <Divider />
+                    
+                    {/* Seller Details */}
+                    <Box>
+                      <Typography variant="subtitle2" color="secondary" sx={{ mb: 1 }}>Seller</Typography>
+                      <Stack spacing={0.5}>
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <Typography variant="body2" sx={{ minWidth: 80 }}>Name:</Typography>
+                          <EditableField 
+                            field="seller.name" 
+                            value={escrow.people?.seller?.name} 
+                            onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                          />
+                        </Stack>
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <Typography variant="body2" sx={{ minWidth: 80 }}>Email:</Typography>
+                          <EditableField 
+                            field="seller.email" 
+                            value={escrow.people?.seller?.email} 
+                            onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                          />
+                        </Stack>
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <Typography variant="body2" sx={{ minWidth: 80 }}>Phone:</Typography>
+                          <EditableField 
+                            field="seller.phone" 
+                            value={escrow.people?.seller?.phone} 
+                            onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                          />
+                        </Stack>
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <Typography variant="body2" sx={{ minWidth: 80 }}>Address:</Typography>
+                          <EditableField 
+                            field="seller.address" 
+                            value={escrow.people?.seller?.address} 
+                            onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                          />
+                        </Stack>
+                      </Stack>
+                    </Box>
+                    
+                    <Divider />
+                    
+                    {/* Agents */}
+                    <Box>
+                      <Typography variant="subtitle2" color="info.main" sx={{ mb: 1 }}>Agents</Typography>
+                      <Stack spacing={1}>
+                        {escrow.people?.buyerAgent && (
+                          <Box>
+                            <Typography variant="body2" fontWeight="medium">Buyer's Agent</Typography>
+                            <Typography variant="body2">Name: {escrow.people.buyerAgent.name || 'Not set'}</Typography>
+                            <Typography variant="body2">Brokerage: {escrow.people.buyerAgent.brokerage || 'Not set'}</Typography>
+                            <Typography variant="body2">License: {escrow.people.buyerAgent.license || 'Not set'}</Typography>
+                          </Box>
+                        )}
+                        
+                        {escrow.people?.listingAgent && (
+                          <Box>
+                            <Typography variant="body2" fontWeight="medium">Listing Agent</Typography>
+                            <Typography variant="body2">Name: {escrow.people.listingAgent.name || 'Not set'}</Typography>
+                            <Typography variant="body2">Brokerage: {escrow.people.listingAgent.brokerage || 'Not set'}</Typography>
+                            <Typography variant="body2">License: {escrow.people.listingAgent.license || 'Not set'}</Typography>
+                          </Box>
+                        )}
+                      </Stack>
+                    </Box>
+                    
+                    {/* Transaction Team */}
+                    {escrow.people?.transactionTeam && (
+                      <>
+                        <Divider />
+                        <Box>
+                          <Typography variant="subtitle2" color="warning.main" sx={{ mb: 1 }}>Transaction Team</Typography>
+                          <Stack spacing={0.5}>
+                            {escrow.people.transactionTeam.escrowOfficer && (
+                              <Typography variant="body2">
+                                Escrow Officer: {escrow.people.transactionTeam.escrowOfficer.name || 'Not assigned'}
+                              </Typography>
+                            )}
+                            {escrow.people.transactionTeam.titleCompany && (
+                              <Typography variant="body2">
+                                Title Company: {escrow.people.transactionTeam.titleCompany.name || 'Not assigned'}
+                              </Typography>
+                            )}
+                            {escrow.people.transactionTeam.lenderContact && (
+                              <Typography variant="body2">
+                                Lender: {escrow.people.transactionTeam.lenderContact.name || 'Not assigned'}
+                              </Typography>
+                            )}
+                          </Stack>
+                        </Box>
+                      </>
+                    )}
+                  </Stack>
+                </DataTooltip>
+              )}
             </LiquidWidget>
           </Grid>
           
@@ -2923,7 +3072,72 @@ const EscrowDetail = () => {
                 View All Tasks
               </Button>
               
-              
+              {/* Click Popup with all checklist data */}
+              {openWidget === 'checklist' && (
+                <DataTooltip 
+                  className="show" 
+                  sx={{ color: 'text.primary' }}
+                >
+                  <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                    <Typography variant="h6" fontWeight={600}>
+                      Complete Checklist Details
+                    </Typography>
+                    <IconButton onClick={() => setOpenWidget(null)} size="small">
+                      <Close />
+                    </IconButton>
+                  </Stack>
+                  
+                  <Stack spacing={2}>
+                    {escrow.checklists && Object.entries(escrow.checklists).map(([section, tasks]) => {
+                      const sectionTasks = Object.entries(tasks || {});
+                      const completedCount = sectionTasks.filter(([, completed]) => completed).length;
+                      const totalCount = sectionTasks.length;
+                      
+                      return (
+                        <Box key={section}>
+                          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+                            <Typography variant="subtitle2" color="primary">
+                              {section.replace(/([A-Z])/g, ' $1').trim()}
+                            </Typography>
+                            <Chip 
+                              label={`${completedCount}/${totalCount}`} 
+                              size="small"
+                              color={completedCount === totalCount ? 'success' : 'default'}
+                            />
+                          </Stack>
+                          
+                          <Stack spacing={0.5} sx={{ pl: 2 }}>
+                            {sectionTasks.map(([task, completed]) => (
+                              <Stack key={task} direction="row" alignItems="center" spacing={1}>
+                                {completed ? (
+                                  <CheckCircle sx={{ fontSize: 16, color: 'success.main' }} />
+                                ) : (
+                                  <Box sx={{ width: 16, height: 16, border: '2px solid', borderColor: 'divider', borderRadius: '50%' }} />
+                                )}
+                                <Typography 
+                                  variant="body2" 
+                                  sx={{ 
+                                    textDecoration: completed ? 'line-through' : 'none',
+                                    color: completed ? 'text.secondary' : 'text.primary',
+                                  }}
+                                >
+                                  {task.replace(/([A-Z])/g, ' $1').trim()}
+                                </Typography>
+                              </Stack>
+                            ))}
+                          </Stack>
+                        </Box>
+                      );
+                    })}
+                    
+                    {(!escrow.checklists || Object.keys(escrow.checklists).length === 0) && (
+                      <Typography variant="body2" color="text.secondary">
+                        No checklist items available
+                      </Typography>
+                    )}
+                  </Stack>
+                </DataTooltip>
+              )}
             </LiquidWidget>
           </Grid>
           
@@ -2976,7 +3190,78 @@ const EscrowDetail = () => {
                   })}
               </Stack>
               
-              
+              {/* Click Popup with all timeline data */}
+              {openWidget === 'timeline' && (
+                <DataTooltip 
+                  className="show"
+                >
+                  <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                    <Typography variant="h6" fontWeight={600}>
+                      Complete Timeline
+                    </Typography>
+                    <IconButton onClick={() => setOpenWidget(null)} size="small">
+                      <Close />
+                    </IconButton>
+                  </Stack>
+                  
+                  <Stack spacing={1.5}>
+                    {escrow.timeline && Object.entries(escrow.timeline)
+                      .filter(([key, date]) => date && key !== 'daysFromAcceptance' && key !== 'daysToCoe' && key !== 'daysToContingency')
+                      .sort(([, a], [, b]) => new Date(a) - new Date(b))
+                      .map(([eventKey, eventDate]) => {
+                        const isPast = new Date(eventDate) < new Date();
+                        const isToday = safeFormat(eventDate, 'yyyy-MM-dd') === safeFormat(new Date(), 'yyyy-MM-dd');
+                        const label = eventKey.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()).trim();
+                        const daysUntil = differenceInDays(new Date(eventDate), new Date());
+                        
+                        return (
+                          <Stack key={eventKey} direction="row" alignItems="center" spacing={2}>
+                            <Box 
+                              sx={{ 
+                                width: 12, 
+                                height: 12, 
+                                borderRadius: '50%', 
+                                bgcolor: isToday ? 'warning.main' : isPast ? 'success.main' : 'grey.400',
+                                flexShrink: 0,
+                              }} 
+                            />
+                            <Stack sx={{ flex: 1 }} spacing={0.5}>
+                              <Stack direction="row" alignItems="center" spacing={2}>
+                                <Typography variant="body2" fontWeight="medium" sx={{ minWidth: 180 }}>
+                                  {label}:
+                                </Typography>
+                                <EditableField 
+                                  field={`timeline.${eventKey}`}
+                                  value={eventDate}
+                                  onSave={(field, value) => handleFieldUpdate('timeline', eventKey, value)}
+                                  type="date"
+                                />
+                              </Stack>
+                              <Typography variant="caption" color="text.secondary" sx={{ pl: 23.5 }}>
+                                {safeFormat(eventDate, 'EEEE')}
+                                {!isPast && daysUntil > 0 && ` (in ${daysUntil} days)`}
+                                {!isPast && daysUntil === 0 && ' (Today)'}
+                                {!isPast && daysUntil < 0 && ` (${Math.abs(daysUntil)} days overdue)`}
+                              </Typography>
+                            </Stack>
+                            {isPast && (
+                              <CheckCircle sx={{ fontSize: 18, color: 'success.main' }} />
+                            )}
+                            {isToday && (
+                              <Chip label="Today" size="small" color="warning" />
+                            )}
+                          </Stack>
+                        );
+                      })}
+                    
+                    {(!escrow.timeline || Object.entries(escrow.timeline).filter(([key]) => key !== 'daysFromAcceptance' && key !== 'daysToCoe').length === 0) && (
+                      <Typography variant="body2" color="text.secondary">
+                        No timeline dates set
+                      </Typography>
+                    )}
+                  </Stack>
+                </DataTooltip>
+              )}
             </LiquidWidget>
           </Grid>
           
@@ -3036,7 +3321,127 @@ const EscrowDetail = () => {
                 </Box>
               </Stack>
               
-              
+              {/* Click Popup with all financial data */}
+              {openWidget === 'financials' && (
+                <DataTooltip 
+                  className="show"
+                >
+                  <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                    <Typography variant="h6" fontWeight={600}>
+                      Complete Financial Breakdown
+                    </Typography>
+                    <IconButton onClick={() => setOpenWidget(null)} size="small">
+                      <Close />
+                    </IconButton>
+                  </Stack>
+                  
+                  <Stack spacing={2}>
+                    <Box>
+                      <Typography variant="subtitle2" color="primary" sx={{ mb: 1 }}>
+                        Transaction Details
+                      </Typography>
+                      <Stack spacing={1}>
+                        <Stack direction="row" alignItems="center" spacing={2}>
+                          <Typography variant="body2" sx={{ minWidth: 140, color: 'text.secondary' }}>Purchase Price:</Typography>
+                          <EditableField 
+                            field="financials.purchasePrice" 
+                            value={escrow.financials?.purchasePrice} 
+                            onSave={(field, value) => handleFieldUpdate('financials', 'purchasePrice', value)}
+                            type="number"
+                          />
+                        </Stack>
+                        <Stack direction="row" alignItems="center" spacing={2}>
+                          <Typography variant="body2" sx={{ minWidth: 140, color: 'text.secondary' }}>Transaction Type:</Typography>
+                          <EditableField 
+                            field="financials.transactionType" 
+                            value={escrow.financials?.transactionType} 
+                            onSave={(field, value) => handleFieldUpdate('financials', 'transactionType', value)}
+                          />
+                        </Stack>
+                        <Stack direction="row" alignItems="center" spacing={2}>
+                          <Typography variant="body2" sx={{ minWidth: 140, color: 'text.secondary' }}>Closing Date:</Typography>
+                          <EditableField 
+                            field="closingDate" 
+                            value={escrow.closingDate} 
+                            onSave={(field, value) => handleFieldUpdate('escrow', 'closingDate', value)}
+                            type="date"
+                          />
+                        </Stack>
+                      </Stack>
+                    </Box>
+                    
+                    <Divider />
+                    
+                    <Box>
+                      <Typography variant="subtitle2" color="secondary" sx={{ mb: 1 }}>
+                        Commission Calculation
+                      </Typography>
+                      <Stack spacing={0.5}>
+                        <Typography variant="body2">
+                          Commission Rate: {escrow.financials?.myCommissionRate || 2.5}%
+                        </Typography>
+                        <Typography variant="body2">
+                          Gross Commission: ${(escrow.financials?.grossCommission || 0).toLocaleString()}
+                        </Typography>
+                        <Typography variant="body2">
+                          Your Split Percentage: {escrow.financials?.splitPercentage || 60}%
+                        </Typography>
+                        <Typography variant="body2">
+                          Split Tier: {escrow.financials?.splitTier || 1}
+                        </Typography>
+                        <Typography variant="body2">
+                          Commission After Split: ${(escrow.financials?.myCommissionAfterSplit || 0).toLocaleString()}
+                        </Typography>
+                      </Stack>
+                    </Box>
+                    
+                    <Divider />
+                    
+                    <Box>
+                      <Typography variant="subtitle2" color="error" sx={{ mb: 1 }}>
+                        Fees & Deductions
+                      </Typography>
+                      <Stack spacing={0.5}>
+                        <Typography variant="body2">
+                          Franchise Fee (6.25%): -${(escrow.financials?.franchiseFee || 0).toLocaleString()}
+                        </Typography>
+                        {escrow.financials?.isZillowFlexReferral && (
+                          <>
+                            <Typography variant="body2">
+                              Zillow Flex Referral ({escrow.financials?.zillowFlexReferralPercentage}%): -${(escrow.financials?.zillowFlexReferralFee || 0).toLocaleString()}
+                            </Typography>
+                            <Typography variant="body2">
+                              Zillow Flex Commission After Close: ${(escrow.financials?.zillowFlexCommissionAfterClose || 0).toLocaleString()}
+                            </Typography>
+                          </>
+                        )}
+                        <Typography variant="body2">
+                          Total Deductions: -${((escrow.financials?.franchiseFee || 0) + (escrow.financials?.zillowFlexReferralFee || 0)).toLocaleString()}
+                        </Typography>
+                      </Stack>
+                    </Box>
+                    
+                    <Divider />
+                    
+                    <Box>
+                      <Typography variant="subtitle2" color="success" sx={{ mb: 1 }}>
+                        Net Commission Summary
+                      </Typography>
+                      <Stack spacing={0.5}>
+                        <Typography variant="body1" fontWeight="bold">
+                          My Net Commission: ${(escrow.financials?.myNetCommission || 0).toLocaleString()}
+                        </Typography>
+                        <Typography variant="body2">
+                          YTD GCI Before: ${(escrow.financials?.ytdGciBeforeTransaction || 0).toLocaleString()}
+                        </Typography>
+                        <Typography variant="body2">
+                          YTD GCI After: ${(escrow.financials?.ytdGciAfterTransaction || 0).toLocaleString()}
+                        </Typography>
+                      </Stack>
+                    </Box>
+                  </Stack>
+                </DataTooltip>
+              )}
             </LiquidWidget>
           </Grid>
           
@@ -3112,7 +3517,98 @@ const EscrowDetail = () => {
                 </Button>
               )}
               
-              
+              {/* Click Popup with all documents data */}
+              {openWidget === 'documents' && (
+                <DataTooltip 
+                  className="show"
+                >
+                  <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                    <Typography variant="h6" fontWeight={600}>
+                      All Documents
+                    </Typography>
+                    <IconButton onClick={() => setOpenWidget(null)} size="small">
+                      <Close />
+                    </IconButton>
+                  </Stack>
+                  
+                  <Stack spacing={2}>
+                    {(escrow.documents || []).length > 0 ? (
+                      <>
+                        <Typography variant="body2" color="text.secondary">
+                          Total Documents: {escrow.documents.length}
+                        </Typography>
+                        
+                        <Stack spacing={1}>
+                          {escrow.documents.map((doc) => (
+                            <Paper 
+                              key={doc.id} 
+                              sx={{ 
+                                p: 2, 
+                                display: 'flex', 
+                                alignItems: 'flex-start', 
+                                gap: 2,
+                                bgcolor: 'grey.50',
+                              }}
+                            >
+                              <InsertDriveFile sx={{ color: 'text.secondary', mt: 0.5 }} />
+                              <Box sx={{ flex: 1 }}>
+                                <Typography variant="body2" fontWeight="medium">
+                                  {doc.name}
+                                </Typography>
+                                <Stack spacing={0.5} sx={{ mt: 0.5 }}>
+                                  <Typography variant="caption" color="text.secondary">
+                                    Type: {doc.documentType || 'General'}
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary">
+                                    Size: {doc.size}
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary">
+                                    Uploaded: {safeFormat(doc.uploadedAt, 'MMM dd, yyyy h:mm a')}
+                                  </Typography>
+                                  <Typography variant="caption" color="text.secondary">
+                                    By: {doc.uploadedBy || 'Unknown'}
+                                  </Typography>
+                                  {doc.url && (
+                                    <Typography variant="caption" color="primary" sx={{ cursor: 'pointer' }}>
+                                      View Document →
+                                    </Typography>
+                                  )}
+                                </Stack>
+                              </Box>
+                              <IconButton size="small">
+                                <Download fontSize="small" />
+                              </IconButton>
+                            </Paper>
+                          ))}
+                        </Stack>
+                        
+                        <Box sx={{ mt: 2, p: 2, bgcolor: 'info.light', borderRadius: 1 }}>
+                          <Typography variant="caption" color="info.dark">
+                            Tip: You can drag and drop files directly onto this widget to upload them
+                          </Typography>
+                        </Box>
+                      </>
+                    ) : (
+                      <Box sx={{ textAlign: 'center', py: 3 }}>
+                        <InsertDriveFile sx={{ fontSize: 64, color: 'text.disabled', mb: 2 }} />
+                        <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
+                          No documents uploaded yet
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary" display="block" sx={{ mb: 2 }}>
+                          Upload purchase agreements, disclosures, inspection reports, and other important documents
+                        </Typography>
+                        <Button 
+                          variant="contained" 
+                          startIcon={<Upload />}
+                          onClick={handleDocumentUpload}
+                        >
+                          Upload Documents
+                        </Button>
+                      </Box>
+                    )}
+                  </Stack>
+                </DataTooltip>
+              )}
             </LiquidWidget>
           </Grid>
         </Grid>
@@ -3341,297 +3837,6 @@ const EscrowDetail = () => {
                       </Stack>
                     </Stack>
                   </Box>
-                </Stack>
-              </DataTooltip>
-            </>
-          )}
-          
-          {/* Checklist Popup */}
-          {openWidget === 'checklist' && escrow && (
-            <>
-              <Backdrop 
-                open={true} 
-                onClick={() => setOpenWidget(null)}
-                sx={{ zIndex: 1200 }}
-              />
-              <DataTooltip className="show" sx={{ color: 'text.primary' }}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-                  <Typography variant="h6" fontWeight={600}>
-                    Complete Checklist Details
-                  </Typography>
-                  <IconButton onClick={() => setOpenWidget(null)} size="small">
-                    <Close />
-                  </IconButton>
-                </Stack>
-                
-                <Stack spacing={2}>
-                  {escrow.checklists && Object.entries(escrow.checklists).map(([section, tasks]) => {
-                    const sectionTasks = Object.entries(tasks || {});
-                    const completedCount = sectionTasks.filter(([, completed]) => completed).length;
-                    const totalCount = sectionTasks.length;
-                    
-                    return (
-                      <Box key={section}>
-                        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-                          <Typography variant="subtitle2" color="primary">
-                            {section.replace(/([A-Z])/g, ' $1').trim()}
-                          </Typography>
-                          <Chip 
-                            label={`${completedCount}/${totalCount}`} 
-                            size="small"
-                            color={completedCount === totalCount ? 'success' : 'default'}
-                          />
-                        </Stack>
-                        
-                        <Stack spacing={0.5} sx={{ pl: 2 }}>
-                          {sectionTasks.map(([task, completed]) => (
-                            <Stack key={task} direction="row" alignItems="center" spacing={1}>
-                              {completed ? (
-                                <CheckCircle sx={{ fontSize: 16, color: 'success.main' }} />
-                              ) : (
-                                <Box sx={{ width: 16, height: 16, border: '2px solid', borderColor: 'divider', borderRadius: '50%' }} />
-                              )}
-                              <Typography 
-                                variant="body2" 
-                                sx={{ 
-                                  textDecoration: completed ? 'line-through' : 'none',
-                                  color: completed ? 'text.secondary' : 'text.primary',
-                                }}
-                              >
-                                {task.replace(/([A-Z])/g, ' $1').trim()}
-                              </Typography>
-                            </Stack>
-                          ))}
-                        </Stack>
-                      </Box>
-                    );
-                  })}
-                  
-                  {(!escrow.checklists || Object.keys(escrow.checklists).length === 0) && (
-                    <Typography variant="body2" color="text.secondary">
-                      No checklist items available
-                    </Typography>
-                  )}
-                </Stack>
-              </DataTooltip>
-            </>
-          )}
-          
-          {/* Timeline Popup */}
-          {openWidget === 'timeline' && escrow && (
-            <>
-              <Backdrop 
-                open={true} 
-                onClick={() => setOpenWidget(null)}
-                sx={{ zIndex: 1200 }}
-              />
-              <DataTooltip className="show" sx={{ color: 'text.primary' }}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-                  <Typography variant="h6" fontWeight={600}>
-                    Complete Timeline Details
-                  </Typography>
-                  <IconButton onClick={() => setOpenWidget(null)} size="small">
-                    <Close />
-                  </IconButton>
-                </Stack>
-                
-                <Stack spacing={2} sx={{ maxHeight: '60vh', overflowY: 'auto' }}>
-                  {escrow.timeline && Object.entries(escrow.timeline).map(([key, date]) => {
-                    if (!date) return null;
-                    return (
-                      <Stack key={key} direction="row" alignItems="center" spacing={2}>
-                        <Typography variant="body2" sx={{ minWidth: 200, color: 'text.secondary' }}>
-                          {key.replace(/([A-Z])/g, ' $1').replace(/Date$/, '').trim()}:
-                        </Typography>
-                        <EditableField 
-                          field={`timeline.${key}`} 
-                          value={date} 
-                          onSave={(field, value) => handleFieldUpdate('timeline', field, value)}
-                          type="date"
-                        />
-                      </Stack>
-                    );
-                  })}
-                  
-                  {(!escrow.timeline || Object.keys(escrow.timeline).length === 0 || 
-                    Object.values(escrow.timeline).every(v => !v)) && (
-                    <Typography variant="body2" color="text.secondary">
-                      No timeline dates set
-                    </Typography>
-                  )}
-                </Stack>
-              </DataTooltip>
-            </>
-          )}
-          
-          {/* Financials Popup */}
-          {openWidget === 'financials' && escrow && (
-            <>
-              <Backdrop 
-                open={true} 
-                onClick={() => setOpenWidget(null)}
-                sx={{ zIndex: 1200 }}
-              />
-              <DataTooltip className="show" sx={{ color: 'text.primary' }}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-                  <Typography variant="h6" fontWeight={600}>
-                    Complete Financial Details
-                  </Typography>
-                  <IconButton onClick={() => setOpenWidget(null)} size="small">
-                    <Close />
-                  </IconButton>
-                </Stack>
-                
-                <Stack spacing={2}>
-                  {/* Purchase Details */}
-                  <Box>
-                    <Typography variant="subtitle2" color="primary" sx={{ mb: 1 }}>Purchase Details</Typography>
-                    <Stack spacing={1}>
-                      <Stack direction="row" alignItems="center" spacing={2}>
-                        <Typography variant="body2" sx={{ minWidth: 150, color: 'text.secondary' }}>Purchase Price:</Typography>
-                        <EditableField 
-                          field="financials.purchasePrice" 
-                          value={escrow.financials?.purchasePrice} 
-                          onSave={(field, value) => handleFieldUpdate('financials', field, value)}
-                          type="number"
-                          formatter={formatCurrency}
-                        />
-                      </Stack>
-                      <Stack direction="row" alignItems="center" spacing={2}>
-                        <Typography variant="body2" sx={{ minWidth: 150, color: 'text.secondary' }}>Down Payment:</Typography>
-                        <EditableField 
-                          field="financials.downPayment" 
-                          value={escrow.financials?.downPayment} 
-                          onSave={(field, value) => handleFieldUpdate('financials', field, value)}
-                          type="number"
-                          formatter={formatCurrency}
-                        />
-                      </Stack>
-                      <Stack direction="row" alignItems="center" spacing={2}>
-                        <Typography variant="body2" sx={{ minWidth: 150, color: 'text.secondary' }}>Loan Amount:</Typography>
-                        <EditableField 
-                          field="financials.loanAmount" 
-                          value={escrow.financials?.loanAmount} 
-                          onSave={(field, value) => handleFieldUpdate('financials', field, value)}
-                          type="number"
-                          formatter={formatCurrency}
-                        />
-                      </Stack>
-                      <Stack direction="row" alignItems="center" spacing={2}>
-                        <Typography variant="body2" sx={{ minWidth: 150, color: 'text.secondary' }}>Earnest Money:</Typography>
-                        <EditableField 
-                          field="financials.earnestMoney" 
-                          value={escrow.financials?.earnestMoney} 
-                          onSave={(field, value) => handleFieldUpdate('financials', field, value)}
-                          type="number"
-                          formatter={formatCurrency}
-                        />
-                      </Stack>
-                    </Stack>
-                  </Box>
-                  
-                  <Divider />
-                  
-                  {/* Commission Details */}
-                  <Box>
-                    <Typography variant="subtitle2" color="primary" sx={{ mb: 1 }}>Commission Details</Typography>
-                    <Stack spacing={1}>
-                      <Stack direction="row" alignItems="center" spacing={2}>
-                        <Typography variant="body2" sx={{ minWidth: 150, color: 'text.secondary' }}>My Commission Rate:</Typography>
-                        <EditableField 
-                          field="financials.myCommissionRate" 
-                          value={escrow.financials?.myCommissionRate} 
-                          onSave={(field, value) => handleFieldUpdate('financials', field, value)}
-                          type="number"
-                          formatter={(value) => value ? `${value}%` : 'Not set'}
-                        />
-                      </Stack>
-                      <Stack direction="row" alignItems="center" spacing={2}>
-                        <Typography variant="body2" sx={{ minWidth: 150, color: 'text.secondary' }}>Total Commission:</Typography>
-                        <EditableField 
-                          field="financials.totalCommission" 
-                          value={escrow.financials?.totalCommission} 
-                          onSave={(field, value) => handleFieldUpdate('financials', field, value)}
-                          type="number"
-                          formatter={formatCurrency}
-                        />
-                      </Stack>
-                      <Stack direction="row" alignItems="center" spacing={2}>
-                        <Typography variant="body2" sx={{ minWidth: 150, color: 'text.secondary' }}>My Net Commission:</Typography>
-                        <EditableField 
-                          field="financials.myNetCommission" 
-                          value={escrow.financials?.myNetCommission} 
-                          onSave={(field, value) => handleFieldUpdate('financials', field, value)}
-                          type="number"
-                          formatter={formatCurrency}
-                        />
-                      </Stack>
-                      <Stack direction="row" alignItems="center" spacing={2}>
-                        <Typography variant="body2" sx={{ minWidth: 150, color: 'text.secondary' }}>YTD GCI After:</Typography>
-                        <EditableField 
-                          field="financials.ytdGciAfterTransaction" 
-                          value={escrow.financials?.ytdGciAfterTransaction} 
-                          onSave={(field, value) => handleFieldUpdate('financials', field, value)}
-                          type="number"
-                          formatter={formatCurrency}
-                        />
-                      </Stack>
-                    </Stack>
-                  </Box>
-                </Stack>
-              </DataTooltip>
-            </>
-          )}
-          
-          {/* Documents Popup */}
-          {openWidget === 'documents' && escrow && (
-            <>
-              <Backdrop 
-                open={true} 
-                onClick={() => setOpenWidget(null)}
-                sx={{ zIndex: 1200 }}
-              />
-              <DataTooltip className="show" sx={{ color: 'text.primary' }}>
-                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-                  <Typography variant="h6" fontWeight={600}>
-                    All Documents
-                  </Typography>
-                  <IconButton onClick={() => setOpenWidget(null)} size="small">
-                    <Close />
-                  </IconButton>
-                </Stack>
-                
-                <Stack spacing={2}>
-                  {escrow.documents && escrow.documents.length > 0 ? (
-                    escrow.documents.map((doc) => (
-                      <Paper key={doc.id} variant="outlined" sx={{ p: 2 }}>
-                        <Stack direction="row" alignItems="center" spacing={2}>
-                          <Description sx={{ color: 'primary.main' }} />
-                          <Box flex={1}>
-                            <Typography variant="body2" fontWeight={500}>
-                              {doc.name}
-                            </Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {doc.documentType} • {doc.size} • Uploaded by {doc.uploadedBy} on {safeFormat(doc.uploadedAt, 'MMM d, yyyy')}
-                            </Typography>
-                          </Box>
-                          <IconButton size="small">
-                            <CloudDownload />
-                          </IconButton>
-                        </Stack>
-                      </Paper>
-                    ))
-                  ) : (
-                    <Box sx={{ textAlign: 'center', py: 4 }}>
-                      <Description sx={{ fontSize: 48, color: 'text.disabled', mb: 2 }} />
-                      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                        No documents uploaded yet
-                      </Typography>
-                      <Button variant="outlined" startIcon={<CloudUpload />}>
-                        Upload Documents
-                      </Button>
-                    </Box>
-                  )}
                 </Stack>
               </DataTooltip>
             </>
