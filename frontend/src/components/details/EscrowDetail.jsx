@@ -1,6 +1,6 @@
 // frontend/src/components/details/EscrowDetail.jsx
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Swiper, SwiperSlide } from 'swiper/react';
@@ -1703,12 +1703,13 @@ const EscrowDetail = () => {
     }
   );
 
-  // Transform the data
-  const escrow = transformDetailedEscrow(rawData);
-  
-  // Debug log the raw and transformed data
-  console.log('Raw escrow data from API:', rawData);
-  console.log('Transformed escrow data:', escrow);
+  // Transform the data - use useMemo to ensure it updates when rawData changes
+  const escrow = useMemo(() => {
+    const transformed = transformDetailedEscrow(rawData);
+    console.log('Raw escrow data from API:', rawData);
+    console.log('Transformed escrow data:', transformed);
+    return transformed;
+  }, [rawData]);
   
   // Additional debug for financial fields
   if (rawData && rawData.data) {
@@ -1885,25 +1886,25 @@ const EscrowDetail = () => {
         queryClient.setQueryData(['escrow', id], (oldData) => {
           if (!oldData) return oldData;
           
+          // Create a new object to ensure React detects the change
+          const newData = { ...oldData };
+          
           // For people and checklists endpoints, the response contains just that section
           if (section === 'people' || section === 'checklists') {
-            return {
-              ...oldData,
-              data: {
-                ...oldData.data,
-                [section]: data.data
-              }
+            newData.data = {
+              ...oldData.data,
+              [section]: data.data
+            };
+          } else {
+            // For other updates, merge the response
+            newData.data = {
+              ...oldData.data,
+              ...data.data
             };
           }
           
-          // For other updates, merge the response
-          return {
-            ...oldData,
-            data: {
-              ...oldData.data,
-              ...data.data
-            }
-          };
+          // Force React Query to see this as a new object
+          return JSON.parse(JSON.stringify(newData));
         });
         
         // Refetch to ensure complete data sync
