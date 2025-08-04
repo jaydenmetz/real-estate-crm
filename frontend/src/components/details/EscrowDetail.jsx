@@ -1795,6 +1795,20 @@ const EscrowDetail = () => {
   
   const handleFieldUpdate = async (section, field, value) => {
     try {
+      // Debug log the ID being used
+      console.log('handleFieldUpdate - ID from useParams:', id);
+      console.log('handleFieldUpdate - Escrow ID from data:', escrow.id);
+      
+      // Clean the ID by removing extra zeros if present
+      const cleanId = (inputId) => {
+        // If ID has format like e4596000-6e64-4573-9d5b-a69ef33a8a53, remove the extra zeros
+        return inputId.replace(/^(e\d{4})000/, '$1');
+      };
+      
+      // Use the correct ID from the escrow data if available, and clean it
+      const escrowId = cleanId(escrow.id || id);
+      console.log('handleFieldUpdate - Using cleaned ID:', escrowId);
+      
       let payload = {};
       
       if (section === 'people') {
@@ -1839,7 +1853,7 @@ const EscrowDetail = () => {
       }
       
       // Use PATCH to update the escrow
-      const response = await fetch(`https://api.jaydenmetz.com/v1/escrows/${id}`, {
+      const response = await fetch(`https://api.jaydenmetz.com/v1/escrows/${escrowId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -1850,7 +1864,7 @@ const EscrowDetail = () => {
       if (response.ok) {
         const data = await response.json();
         // Update the cache with the new data
-        queryClient.setQueryData(['escrow', id], (oldData) => ({
+        queryClient.setQueryData(['escrow', escrowId], (oldData) => ({
           ...oldData,
           ...data.data,
         }));
