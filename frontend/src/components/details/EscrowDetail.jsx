@@ -878,25 +878,13 @@ const LiquidWidget = styled(Paper)(({ theme }) => ({
   overflow: 'hidden',
   cursor: 'pointer',
   transition: 'all 0.3s ease',
-  '&::before': {
-    content: '""',
-    position: 'absolute',
-    top: -50,
-    right: -50,
-    width: 200,
-    height: 200,
-    background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
-    borderRadius: '50%',
-    animation: `${liquidMorph} 6s ease-in-out infinite`,
-    opacity: 0,
-    transition: 'opacity 0.3s ease',
-  },
   '&:hover': {
-    transform: 'translateY(-4px)',
-    boxShadow: '0 20px 40px rgba(0,0,0,0.15)',
-    '&::before': {
-      opacity: 1,
-    },
+    transform: 'translateY(-2px)',
+    boxShadow: '0 10px 20px rgba(0,0,0,0.1)',
+  },
+  '&:active': {
+    transform: 'translateY(0)',
+    boxShadow: '0 5px 10px rgba(0,0,0,0.1)',
   },
 }));
 
@@ -1447,8 +1435,7 @@ const EscrowDetail = () => {
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [checklistExpanded, setChecklistExpanded] = useState({});
   const [agentDetailOpen, setAgentDetailOpen] = useState(null);
-  const [hoveredWidget, setHoveredWidget] = useState(null);
-  const [tooltipTimeout, setTooltipTimeout] = useState(null);
+  const [openWidget, setOpenWidget] = useState(null);
   const [editingField, setEditingField] = useState(null);
   const [editValues, setEditValues] = useState({});
   const [activityFilter, setActivityFilter] = useState('all');
@@ -1749,19 +1736,8 @@ const EscrowDetail = () => {
     setAgentDetailOpen(agentDetailOpen === agentId ? null : agentId);
   };
   
-  const handleWidgetMouseEnter = (widgetName) => {
-    if (tooltipTimeout) {
-      clearTimeout(tooltipTimeout);
-      setTooltipTimeout(null);
-    }
-    setHoveredWidget(widgetName);
-  };
-  
-  const handleWidgetMouseLeave = () => {
-    const timeout = setTimeout(() => {
-      setHoveredWidget(null);
-    }, 200); // Small delay to allow moving to tooltip
-    setTooltipTimeout(timeout);
+  const handleWidgetClick = (widgetName) => {
+    setOpenWidget(openWidget === widgetName ? null : widgetName);
   };
 
   const handleActivityFilter = (filter) => {
@@ -2806,8 +2782,8 @@ const EscrowDetail = () => {
         
         {/* Backdrop for tooltips */}
         <Backdrop 
-          open={!!hoveredWidget} 
-          onClick={() => setHoveredWidget(null)}
+          open={!!openWidget} 
+          onClick={() => setOpenWidget(null)}
           sx={{ zIndex: 1200 }}
         />
         
@@ -2818,8 +2794,11 @@ const EscrowDetail = () => {
               sx={{ 
                 background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
               }}
-              onMouseEnter={() => handleWidgetMouseEnter('people')}
-              onMouseLeave={handleWidgetMouseLeave}
+              onClick={() => handleWidgetClick('people')}
+              sx={{ 
+                background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+                cursor: 'pointer',
+              }}
             >
               <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
                 <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -2872,16 +2851,19 @@ const EscrowDetail = () => {
                 )}
               </Stack>
               
-              {/* Hover Tooltip with all data */}
-              {hoveredWidget === 'people' && (
+              {/* Click Popup with all data */}
+              {openWidget === 'people' && (
                 <DataTooltip 
                   className="show"
-                  onMouseEnter={() => handleWidgetMouseEnter('people')}
-                  onMouseLeave={handleWidgetMouseLeave}
                 >
-                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                    All People & Contacts
-                  </Typography>
+                  <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                    <Typography variant="h6" fontWeight={600}>
+                      All People & Contacts
+                    </Typography>
+                    <IconButton onClick={() => setOpenWidget(null)} size="small">
+                      <Close />
+                    </IconButton>
+                  </Stack>
                   
                   <Stack spacing={2}>
                     {/* Buyer Details */}
@@ -3029,8 +3011,7 @@ const EscrowDetail = () => {
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 color: 'white',
               }}
-              onMouseEnter={() => handleWidgetMouseEnter('checklist')}
-              onMouseLeave={handleWidgetMouseLeave}
+              onClick={() => handleWidgetClick('checklist')}
             >
               <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
                 <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -3096,17 +3077,20 @@ const EscrowDetail = () => {
                 View All Tasks
               </Button>
               
-              {/* Hover Tooltip with all checklist data */}
-              {hoveredWidget === 'checklist' && (
+              {/* Click Popup with all checklist data */}
+              {openWidget === 'checklist' && (
                 <DataTooltip 
                   className="show" 
                   sx={{ color: 'text.primary' }}
-                  onMouseEnter={() => handleWidgetMouseEnter('checklist')}
-                  onMouseLeave={handleWidgetMouseLeave}
                 >
-                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                    Complete Checklist Details
-                  </Typography>
+                  <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                    <Typography variant="h6" fontWeight={600}>
+                      Complete Checklist Details
+                    </Typography>
+                    <IconButton onClick={() => setOpenWidget(null)} size="small">
+                      <Close />
+                    </IconButton>
+                  </Stack>
                   
                   <Stack spacing={2}>
                     {escrow.checklists && Object.entries(escrow.checklists).map(([section, tasks]) => {
@@ -3169,8 +3153,7 @@ const EscrowDetail = () => {
                 border: '2px solid',
                 borderColor: 'primary.light',
               }}
-              onMouseEnter={() => handleWidgetMouseEnter('timeline')}
-              onMouseLeave={handleWidgetMouseLeave}
+              onClick={() => handleWidgetClick('timeline')}
             >
               <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                 <EventNote sx={{ color: 'primary.main' }} />
@@ -3212,16 +3195,19 @@ const EscrowDetail = () => {
                   })}
               </Stack>
               
-              {/* Hover Tooltip with all timeline data */}
-              {hoveredWidget === 'timeline' && (
+              {/* Click Popup with all timeline data */}
+              {openWidget === 'timeline' && (
                 <DataTooltip 
                   className="show"
-                  onMouseEnter={() => handleWidgetMouseEnter('timeline')}
-                  onMouseLeave={handleWidgetMouseLeave}
                 >
-                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                    Complete Timeline
-                  </Typography>
+                  <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                    <Typography variant="h6" fontWeight={600}>
+                      Complete Timeline
+                    </Typography>
+                    <IconButton onClick={() => setOpenWidget(null)} size="small">
+                      <Close />
+                    </IconButton>
+                  </Stack>
                   
                   <Stack spacing={1.5}>
                     {escrow.timeline && Object.entries(escrow.timeline)
@@ -3290,8 +3276,7 @@ const EscrowDetail = () => {
               sx={{ 
                 background: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
               }}
-              onMouseEnter={() => handleWidgetMouseEnter('financials')}
-              onMouseLeave={handleWidgetMouseLeave}
+              onClick={() => handleWidgetClick('financials')}
             >
               <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
                 <AttachMoney sx={{ color: 'warning.dark' }} />
@@ -3341,18 +3326,16 @@ const EscrowDetail = () => {
                 </Box>
               </Stack>
               
-              {/* Hover Tooltip with all financial data */}
-              {hoveredWidget === 'financials' && (
+              {/* Click Popup with all financial data */}
+              {openWidget === 'financials' && (
                 <DataTooltip 
                   className="show"
-                  onMouseEnter={() => handleWidgetMouseEnter('financials')}
-                  onMouseLeave={handleWidgetMouseLeave}
                 >
                   <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
                     <Typography variant="h6" fontWeight={600}>
                       Complete Financial Breakdown
                     </Typography>
-                    <IconButton onClick={() => setHoveredWidget(null)}>
+                    <IconButton onClick={() => setOpenWidget(null)} size="small">
                       <Close />
                     </IconButton>
                   </Stack>
@@ -3473,8 +3456,7 @@ const EscrowDetail = () => {
               sx={{ 
                 background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
               }}
-              onMouseEnter={() => handleWidgetMouseEnter('documents')}
-              onMouseLeave={handleWidgetMouseLeave}
+              onClick={() => handleWidgetClick('documents')}
             >
               <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
                 <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -3540,16 +3522,19 @@ const EscrowDetail = () => {
                 </Button>
               )}
               
-              {/* Hover Tooltip with all documents data */}
-              {hoveredWidget === 'documents' && (
+              {/* Click Popup with all documents data */}
+              {openWidget === 'documents' && (
                 <DataTooltip 
                   className="show"
-                  onMouseEnter={() => handleWidgetMouseEnter('documents')}
-                  onMouseLeave={handleWidgetMouseLeave}
                 >
-                  <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                    All Documents
-                  </Typography>
+                  <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                    <Typography variant="h6" fontWeight={600}>
+                      All Documents
+                    </Typography>
+                    <IconButton onClick={() => setOpenWidget(null)} size="small">
+                      <Close />
+                    </IconButton>
+                  </Stack>
                   
                   <Stack spacing={2}>
                     {(escrow.documents || []).length > 0 ? (
