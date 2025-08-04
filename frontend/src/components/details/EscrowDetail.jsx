@@ -819,13 +819,16 @@ const EditableField = ({ field, value, onSave, type = 'text' }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState(value || '');
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   useEffect(() => {
     setEditValue(value || '');
   }, [value]);
   
-  const handleSave = () => {
-    onSave(field, editValue);
+  const handleSave = async () => {
+    setIsSaving(true);
+    await onSave(field, editValue);
+    setIsSaving(false);
     setIsEditing(false);
   };
   
@@ -866,8 +869,13 @@ const EditableField = ({ field, value, onSave, type = 'text' }) => {
             type={type}
           />
         )}
-        <IconButton size="small" color="success" onClick={handleSave}>
-          <Check fontSize="small" />
+        <IconButton 
+          size="small" 
+          color="success" 
+          onClick={handleSave}
+          disabled={isSaving}
+        >
+          {isSaving ? <CircularProgress size={16} /> : <Check fontSize="small" />}
         </IconButton>
         <IconButton size="small" color="error" onClick={handleCancel}>
           <Close fontSize="small" />
@@ -1808,6 +1816,7 @@ const EscrowDetail = () => {
   };
   
   const handleFieldUpdate = async (section, field, value) => {
+    console.log('handleFieldUpdate called:', { section, field, value });
     try {
       // Use the ID as provided in the route
       const escrowId = id;
@@ -1881,45 +1890,26 @@ const EscrowDetail = () => {
       
       if (response.ok) {
         const data = await response.json();
+        console.log('Update response:', data);
         
-        // Update the cache with the new data - use the route ID for cache key
-        queryClient.setQueryData(['escrow', id], (oldData) => {
-          if (!oldData) return oldData;
-          
-          // Create a new object to ensure React detects the change
-          const newData = { ...oldData };
-          
-          // For people and checklists endpoints, the response contains just that section
-          if (section === 'people' || section === 'checklists') {
-            newData.data = {
-              ...oldData.data,
-              [section]: data.data
-            };
-          } else {
-            // For other updates, merge the response
-            newData.data = {
-              ...oldData.data,
-              ...data.data
-            };
-          }
-          
-          // Force React Query to see this as a new object
-          return JSON.parse(JSON.stringify(newData));
-        });
-        
-        // Refetch to ensure complete data sync
-        await refetch();
-        
-        // Success - close editing mode
+        // Success - close editing mode immediately
         setEditingField(null);
         setEditValues({});
         
-        console.log('Field updated successfully');
+        // Force immediate refetch to get fresh data
+        const refetchResult = await refetch();
+        console.log('Refetch completed:', refetchResult);
+        
+        // Also invalidate the query to ensure fresh data
+        await queryClient.invalidateQueries(['escrow', id]);
+        
+        console.log('Field updated successfully and data refreshed');
       } else {
         console.error('Failed to update field:', response.statusText);
       }
     } catch (error) {
       console.error('Error updating field:', error);
+      throw error; // Re-throw to let EditableField know the save failed
     }
   };
 
