@@ -14,10 +14,17 @@ export const addEntityPrefix = (id, entityType) => {
   // Convert to string if it's not already
   const idStr = String(id);
   
-  // Map entity types to prefixes
+  // NO PREFIXES - Always return the ID as-is for escrows
+  if (entityType === 'escrow' || entityType === 'escrows') {
+    // Remove any existing escrow- prefix if present
+    if (idStr.startsWith('escrow-')) {
+      return idStr.substring(7);
+    }
+    return idStr;
+  }
+  
+  // Map entity types to prefixes (keeping for other entities if needed)
   const prefixMap = {
-    escrow: 'escrow-',
-    escrows: 'escrow-',
     listing: 'listing-',
     listings: 'listing-',
     client: 'client-',
@@ -133,7 +140,7 @@ export const formatEntityId = (id, entityType) => {
   // Convert to string if it's not already
   const idStr = String(id);
   
-  // For display IDs like ESCROW-2025-0001, return as-is
+  // For display IDs like ESC-2025-0001 or ESCROW-2025-0001, return as-is
   if (idStr.match(/^[A-Z]+-\d{4}-\d+$/)) {
     return idStr;
   }
@@ -143,10 +150,17 @@ export const formatEntityId = (id, entityType) => {
     return idStr;
   }
   
+  // NO PREFIXES for escrows - strip any existing prefix
+  if (entityType === 'escrow' || entityType === 'escrows') {
+    if (idStr.startsWith('escrow-')) {
+      return idStr.substring(7);
+    }
+    return idStr;
+  }
+  
   // Special handling for IDs that start with shortened prefixes
-  // Convert "esc" to "escrow-", "list" to "listing-", etc.
+  // For non-escrow entities only
   const shortPrefixMap = {
-    'esc': 'escrow-',
     'list': 'listing-',
     'cli': 'client-',
     'appt': 'appointment-',
@@ -159,7 +173,7 @@ export const formatEntityId = (id, entityType) => {
     }
   }
   
-  // For UUIDs, add prefix
+  // For UUIDs, add prefix (but not for escrows)
   return addEntityPrefix(idStr, entityType);
 };
 
