@@ -3419,40 +3419,34 @@ Has Error: ${isError ? 'YES' : 'NO'}`}
               
               <Stack spacing={1}>
                 {/* Loan Section */}
-                {escrow.checklists?.loan && (
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="body2">Loan</Typography>
-                    <Chip 
-                      label={`${Object.values(escrow.checklists.loan).filter(v => v).length}/${Object.keys(escrow.checklists.loan).length}`} 
-                      size="small" 
-                      sx={{ bgcolor: 'rgba(0,0,0,0.1)', fontWeight: 'bold' }}
-                    />
-                  </Box>
-                )}
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="body2">Loan</Typography>
+                  <Chip 
+                    label={`${escrow.checklists?.loan ? Object.values(escrow.checklists.loan).filter(v => v).length : 0}/${escrow.checklists?.loan ? Object.keys(escrow.checklists.loan).length : 0}`} 
+                    size="small" 
+                    sx={{ bgcolor: 'rgba(0,0,0,0.1)', fontWeight: 'bold' }}
+                  />
+                </Box>
                 
                 {/* House Section */}
-                {escrow.checklists?.house && (
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="body2">House</Typography>
-                    <Chip 
-                      label={`${Object.values(escrow.checklists.house).filter(v => v).length}/${Object.keys(escrow.checklists.house).length}`} 
-                      size="small" 
-                      sx={{ bgcolor: 'rgba(0,0,0,0.1)', fontWeight: 'bold' }}
-                    />
-                  </Box>
-                )}
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="body2">House</Typography>
+                  <Chip 
+                    label={`${escrow.checklists?.house ? Object.values(escrow.checklists.house).filter(v => v).length : 0}/${escrow.checklists?.house ? Object.keys(escrow.checklists.house).length : 0}`} 
+                    size="small" 
+                    sx={{ bgcolor: 'rgba(0,0,0,0.1)', fontWeight: 'bold' }}
+                  />
+                </Box>
                 
                 {/* Admin Section */}
-                {escrow.checklists?.admin && (
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <Typography variant="body2">Admin</Typography>
-                    <Chip 
-                      label={`${Object.values(escrow.checklists.admin).filter(v => v).length}/${Object.keys(escrow.checklists.admin).length}`} 
-                      size="small" 
-                      sx={{ bgcolor: 'rgba(0,0,0,0.1)', fontWeight: 'bold' }}
-                    />
-                  </Box>
-                )}
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Typography variant="body2">Admin</Typography>
+                  <Chip 
+                    label={`${escrow.checklists?.admin ? Object.values(escrow.checklists.admin).filter(v => v).length : 0}/${escrow.checklists?.admin ? Object.keys(escrow.checklists.admin).length : 0}`} 
+                    size="small" 
+                    sx={{ bgcolor: 'rgba(0,0,0,0.1)', fontWeight: 'bold' }}
+                  />
+                </Box>
               </Stack>
               
               <Button 
@@ -3872,98 +3866,520 @@ Has Error: ${isError ? 'YES' : 'NO'}`}
                   </IconButton>
                 </Stack>
                 
-                <Stack spacing={2}>
-                  {/* Buyer Details */}
+                <Stack spacing={2} sx={{ maxHeight: '70vh', overflowY: 'auto', pr: 1 }}>
+                  {/* Primary Parties Section */}
                   <Box>
-                    <Typography variant="subtitle2" color="primary" sx={{ mb: 1 }}>Buyer</Typography>
-                    <Stack spacing={1}>
-                      <Stack direction="row" alignItems="center" spacing={2}>
-                        <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Name:</Typography>
-                        <EditableField 
-                          field="buyer.name" 
-                          value={escrow.people?.buyer?.name} 
-                          onSave={(field, value) => handleFieldUpdate('people', field, value)}
-                        />
-                      </Stack>
-                      <Stack direction="row" alignItems="center" spacing={2}>
-                        <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Email:</Typography>
-                        <EditableField 
-                          field="buyer.email" 
-                          value={escrow.people?.buyer?.email} 
-                          onSave={(field, value) => handleFieldUpdate('people', field, value)}
-                          type="email"
-                        />
-                      </Stack>
-                      <Stack direction="row" alignItems="center" spacing={2}>
-                        <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Phone:</Typography>
-                        <EditableField 
-                          field="buyer.phone" 
-                          value={escrow.people?.buyer?.phone} 
-                          onSave={(field, value) => handleFieldUpdate('people', field, value)}
-                          type="tel"
-                        />
-                      </Stack>
-                      <Stack direction="row" alignItems="center" spacing={2}>
-                        <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Address:</Typography>
-                        <EditableField 
-                          field="buyer.address" 
-                          value={escrow.people?.buyer?.address} 
-                          onSave={(field, value) => handleFieldUpdate('people', field, value)}
-                        />
-                      </Stack>
-                      <Stack direction="row" alignItems="center" spacing={2}>
-                        <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Company:</Typography>
-                        <EditableField 
-                          field="buyer.company" 
-                          value={escrow.people?.buyer?.company} 
-                          onSave={(field, value) => handleFieldUpdate('people', field, value)}
-                        />
-                      </Stack>
-                    </Stack>
+                    <Typography variant="h6" color="primary" sx={{ mb: 2, fontWeight: 600 }}>Primary Parties</Typography>
+                    
+                    {/* Buyer Details */}
+                    <Accordion defaultExpanded>
+                      <AccordionSummary expandIcon={<ExpandMore />}>
+                        <Typography variant="subtitle1" fontWeight={600}>Buyer</Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <Stack spacing={1}>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Name:</Typography>
+                            <EditableField 
+                              field="buyer.name" 
+                              value={escrow.people?.buyer?.name} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Email:</Typography>
+                            <EditableField 
+                              field="buyer.email" 
+                              value={escrow.people?.buyer?.email} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                              type="email"
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Phone:</Typography>
+                            <EditableField 
+                              field="buyer.phone" 
+                              value={escrow.people?.buyer?.phone} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                              type="tel"
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Address:</Typography>
+                            <EditableField 
+                              field="buyer.address" 
+                              value={escrow.people?.buyer?.address} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Company:</Typography>
+                            <EditableField 
+                              field="buyer.company" 
+                              value={escrow.people?.buyer?.company} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                            />
+                          </Stack>
+                        </Stack>
+                      </AccordionDetails>
+                    </Accordion>
+                    
+                    {/* Seller Details */}
+                    <Accordion defaultExpanded>
+                      <AccordionSummary expandIcon={<ExpandMore />}>
+                        <Typography variant="subtitle1" fontWeight={600}>Seller</Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <Stack spacing={1}>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Name:</Typography>
+                            <EditableField 
+                              field="seller.name" 
+                              value={escrow.people?.seller?.name} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Email:</Typography>
+                            <EditableField 
+                              field="seller.email" 
+                              value={escrow.people?.seller?.email} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                              type="email"
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Phone:</Typography>
+                            <EditableField 
+                              field="seller.phone" 
+                              value={escrow.people?.seller?.phone} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                              type="tel"
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Address:</Typography>
+                            <EditableField 
+                              field="seller.address" 
+                              value={escrow.people?.seller?.address} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                            />
+                          </Stack>
+                        </Stack>
+                      </AccordionDetails>
+                    </Accordion>
                   </Box>
                   
                   <Divider />
                   
-                  {/* Seller Details */}
+                  {/* Agents & Brokers Section */}
                   <Box>
-                    <Typography variant="subtitle2" color="secondary" sx={{ mb: 1 }}>Seller</Typography>
-                    <Stack spacing={1}>
-                      <Stack direction="row" alignItems="center" spacing={2}>
-                        <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Name:</Typography>
-                        <EditableField 
-                          field="seller.name" 
-                          value={escrow.people?.seller?.name} 
-                          onSave={(field, value) => handleFieldUpdate('people', field, value)}
-                        />
-                      </Stack>
-                      <Stack direction="row" alignItems="center" spacing={2}>
-                        <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Email:</Typography>
-                        <EditableField 
-                          field="seller.email" 
-                          value={escrow.people?.seller?.email} 
-                          onSave={(field, value) => handleFieldUpdate('people', field, value)}
-                          type="email"
-                        />
-                      </Stack>
-                      <Stack direction="row" alignItems="center" spacing={2}>
-                        <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Phone:</Typography>
-                        <EditableField 
-                          field="seller.phone" 
-                          value={escrow.people?.seller?.phone} 
-                          onSave={(field, value) => handleFieldUpdate('people', field, value)}
-                          type="tel"
-                        />
-                      </Stack>
-                      <Stack direction="row" alignItems="center" spacing={2}>
-                        <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Address:</Typography>
-                        <EditableField 
-                          field="seller.address" 
-                          value={escrow.people?.seller?.address} 
-                          onSave={(field, value) => handleFieldUpdate('people', field, value)}
-                        />
-                      </Stack>
-                    </Stack>
+                    <Typography variant="h6" color="primary" sx={{ mb: 2, fontWeight: 600 }}>Agents & Brokers</Typography>
+                    
+                    {/* Buyer Agent */}
+                    <Accordion>
+                      <AccordionSummary expandIcon={<ExpandMore />}>
+                        <Typography variant="subtitle1" fontWeight={600}>Buyer's Agent</Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <Stack spacing={1}>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Name:</Typography>
+                            <EditableField 
+                              field="buyerAgent.name" 
+                              value={escrow.people?.buyerAgent?.name} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Email:</Typography>
+                            <EditableField 
+                              field="buyerAgent.email" 
+                              value={escrow.people?.buyerAgent?.email} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                              type="email"
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Phone:</Typography>
+                            <EditableField 
+                              field="buyerAgent.phone" 
+                              value={escrow.people?.buyerAgent?.phone} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                              type="tel"
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>License:</Typography>
+                            <EditableField 
+                              field="buyerAgent.license" 
+                              value={escrow.people?.buyerAgent?.license} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Brokerage:</Typography>
+                            <EditableField 
+                              field="buyerAgent.brokerage" 
+                              value={escrow.people?.buyerAgent?.brokerage} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                            />
+                          </Stack>
+                        </Stack>
+                      </AccordionDetails>
+                    </Accordion>
+                    
+                    {/* Listing Agent */}
+                    <Accordion>
+                      <AccordionSummary expandIcon={<ExpandMore />}>
+                        <Typography variant="subtitle1" fontWeight={600}>Listing Agent</Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <Stack spacing={1}>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Name:</Typography>
+                            <EditableField 
+                              field="listingAgent.name" 
+                              value={escrow.people?.listingAgent?.name} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Email:</Typography>
+                            <EditableField 
+                              field="listingAgent.email" 
+                              value={escrow.people?.listingAgent?.email} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                              type="email"
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Phone:</Typography>
+                            <EditableField 
+                              field="listingAgent.phone" 
+                              value={escrow.people?.listingAgent?.phone} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                              type="tel"
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>License:</Typography>
+                            <EditableField 
+                              field="listingAgent.license" 
+                              value={escrow.people?.listingAgent?.license} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Brokerage:</Typography>
+                            <EditableField 
+                              field="listingAgent.brokerage" 
+                              value={escrow.people?.listingAgent?.brokerage} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                            />
+                          </Stack>
+                        </Stack>
+                      </AccordionDetails>
+                    </Accordion>
                   </Box>
+                  
+                  <Divider />
+                  
+                  {/* Transaction Services Section */}
+                  <Box>
+                    <Typography variant="h6" color="primary" sx={{ mb: 2, fontWeight: 600 }}>Transaction Services</Typography>
+                    
+                    {/* Escrow Officer */}
+                    <Accordion>
+                      <AccordionSummary expandIcon={<ExpandMore />}>
+                        <Typography variant="subtitle1" fontWeight={600}>Escrow Officer</Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <Stack spacing={1}>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Name:</Typography>
+                            <EditableField 
+                              field="escrowOfficer.name" 
+                              value={escrow.people?.escrowOfficer?.name || escrow.people?.transactionTeam?.escrowOfficer?.name} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Email:</Typography>
+                            <EditableField 
+                              field="escrowOfficer.email" 
+                              value={escrow.people?.escrowOfficer?.email || escrow.people?.transactionTeam?.escrowOfficer?.email} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                              type="email"
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Phone:</Typography>
+                            <EditableField 
+                              field="escrowOfficer.phone" 
+                              value={escrow.people?.escrowOfficer?.phone || escrow.people?.transactionTeam?.escrowOfficer?.phone} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                              type="tel"
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Company:</Typography>
+                            <EditableField 
+                              field="escrowOfficer.company" 
+                              value={escrow.people?.escrowOfficer?.company || escrow.people?.transactionTeam?.escrowOfficer?.company} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                            />
+                          </Stack>
+                        </Stack>
+                      </AccordionDetails>
+                    </Accordion>
+                    
+                    {/* Title Officer */}
+                    <Accordion>
+                      <AccordionSummary expandIcon={<ExpandMore />}>
+                        <Typography variant="subtitle1" fontWeight={600}>Title Officer</Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <Stack spacing={1}>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Name:</Typography>
+                            <EditableField 
+                              field="titleOfficer.name" 
+                              value={escrow.people?.titleOfficer?.name || escrow.people?.transactionTeam?.titleCompany?.contact} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Email:</Typography>
+                            <EditableField 
+                              field="titleOfficer.email" 
+                              value={escrow.people?.titleOfficer?.email || escrow.people?.transactionTeam?.titleCompany?.email} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                              type="email"
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Phone:</Typography>
+                            <EditableField 
+                              field="titleOfficer.phone" 
+                              value={escrow.people?.titleOfficer?.phone || escrow.people?.transactionTeam?.titleCompany?.phone} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                              type="tel"
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Company:</Typography>
+                            <EditableField 
+                              field="titleOfficer.company" 
+                              value={escrow.people?.titleOfficer?.company || escrow.people?.transactionTeam?.titleCompany?.name} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                            />
+                          </Stack>
+                        </Stack>
+                      </AccordionDetails>
+                    </Accordion>
+                    
+                    {/* Lender/Loan Officer */}
+                    <Accordion>
+                      <AccordionSummary expandIcon={<ExpandMore />}>
+                        <Typography variant="subtitle1" fontWeight={600}>Lender / Loan Officer</Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <Stack spacing={1}>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Name:</Typography>
+                            <EditableField 
+                              field="loanOfficer.name" 
+                              value={escrow.people?.loanOfficer?.name || escrow.people?.transactionTeam?.lenderContact?.name} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Email:</Typography>
+                            <EditableField 
+                              field="loanOfficer.email" 
+                              value={escrow.people?.loanOfficer?.email || escrow.people?.transactionTeam?.lenderContact?.email} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                              type="email"
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Phone:</Typography>
+                            <EditableField 
+                              field="loanOfficer.phone" 
+                              value={escrow.people?.loanOfficer?.phone || escrow.people?.transactionTeam?.lenderContact?.phone} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                              type="tel"
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Company:</Typography>
+                            <EditableField 
+                              field="loanOfficer.company" 
+                              value={escrow.people?.loanOfficer?.company || escrow.people?.transactionTeam?.lenderContact?.company} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                            />
+                          </Stack>
+                        </Stack>
+                      </AccordionDetails>
+                    </Accordion>
+                  </Box>
+                  
+                  <Divider />
+                  
+                  {/* Inspectors & Services Section */}
+                  <Box>
+                    <Typography variant="h6" color="primary" sx={{ mb: 2, fontWeight: 600 }}>Inspectors & Services</Typography>
+                    
+                    {/* Home Inspector */}
+                    <Accordion>
+                      <AccordionSummary expandIcon={<ExpandMore />}>
+                        <Typography variant="subtitle1" fontWeight={600}>Home Inspector</Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <Stack spacing={1}>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Name:</Typography>
+                            <EditableField 
+                              field="homeInspector.name" 
+                              value={escrow.people?.homeInspector?.name || escrow.people?.transactionTeam?.inspector?.name} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Email:</Typography>
+                            <EditableField 
+                              field="homeInspector.email" 
+                              value={escrow.people?.homeInspector?.email || escrow.people?.transactionTeam?.inspector?.email} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                              type="email"
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Phone:</Typography>
+                            <EditableField 
+                              field="homeInspector.phone" 
+                              value={escrow.people?.homeInspector?.phone || escrow.people?.transactionTeam?.inspector?.phone} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                              type="tel"
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Company:</Typography>
+                            <EditableField 
+                              field="homeInspector.company" 
+                              value={escrow.people?.homeInspector?.company || escrow.people?.transactionTeam?.inspector?.company} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                            />
+                          </Stack>
+                        </Stack>
+                      </AccordionDetails>
+                    </Accordion>
+                    
+                    {/* Appraiser */}
+                    <Accordion>
+                      <AccordionSummary expandIcon={<ExpandMore />}>
+                        <Typography variant="subtitle1" fontWeight={600}>Appraiser</Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <Stack spacing={1}>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Name:</Typography>
+                            <EditableField 
+                              field="appraiser.name" 
+                              value={escrow.people?.appraiser?.name || escrow.people?.transactionTeam?.appraiser?.name} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Email:</Typography>
+                            <EditableField 
+                              field="appraiser.email" 
+                              value={escrow.people?.appraiser?.email || escrow.people?.transactionTeam?.appraiser?.email} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                              type="email"
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Phone:</Typography>
+                            <EditableField 
+                              field="appraiser.phone" 
+                              value={escrow.people?.appraiser?.phone || escrow.people?.transactionTeam?.appraiser?.phone} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                              type="tel"
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Company:</Typography>
+                            <EditableField 
+                              field="appraiser.company" 
+                              value={escrow.people?.appraiser?.company || escrow.people?.transactionTeam?.appraiser?.company} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                            />
+                          </Stack>
+                        </Stack>
+                      </AccordionDetails>
+                    </Accordion>
+                    
+                    {/* Additional Inspectors if needed */}
+                    <Accordion>
+                      <AccordionSummary expandIcon={<ExpandMore />}>
+                        <Typography variant="subtitle1" fontWeight={600}>Other Inspectors</Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <Stack spacing={2}>
+                          <Typography variant="body2" color="text.secondary">
+                            Termite, Roof, Pool, and other specialty inspectors can be added here
+                          </Typography>
+                        </Stack>
+                      </AccordionDetails>
+                    </Accordion>
+                  </Box>
+                  
+                  <Divider />
+                  
+                  {/* Support Team Section */}
+                  <Box>
+                    <Typography variant="h6" color="primary" sx={{ mb: 2, fontWeight: 600 }}>Support Team</Typography>
+                    
+                    {/* Transaction Coordinator */}
+                    <Accordion>
+                      <AccordionSummary expandIcon={<ExpandMore />}>
+                        <Typography variant="subtitle1" fontWeight={600}>Transaction Coordinator</Typography>
+                      </AccordionSummary>
+                      <AccordionDetails>
+                        <Stack spacing={1}>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Name:</Typography>
+                            <EditableField 
+                              field="transactionCoordinator.name" 
+                              value={escrow.people?.transactionCoordinator?.name} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Email:</Typography>
+                            <EditableField 
+                              field="transactionCoordinator.email" 
+                              value={escrow.people?.transactionCoordinator?.email} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                              type="email"
+                            />
+                          </Stack>
+                          <Stack direction="row" alignItems="center" spacing={2}>
+                            <Typography variant="body2" sx={{ minWidth: 100, color: 'text.secondary' }}>Phone:</Typography>
+                            <EditableField 
+                              field="transactionCoordinator.phone" 
+                              value={escrow.people?.transactionCoordinator?.phone} 
+                              onSave={(field, value) => handleFieldUpdate('people', field, value)}
+                              type="tel"
+                            />
+                          </Stack>
+                        </Stack>
+                      </AccordionDetails>
+                    </Accordion>
+                  </Box>
+                  
                 </Stack>
               </DataTooltip>
             </>
