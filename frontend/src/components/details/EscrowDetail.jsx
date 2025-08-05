@@ -2525,10 +2525,10 @@ Has Error: ${isError ? 'YES' : 'NO'}`}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          {/* Use ZillowPreview if escrow has a zillowUrl, regular PropertyCard for others */}
-          {escrow.zillowUrl ? (
+          {/* Use ZillowPreview if escrow has a zillowUrl or is ESCROW-2025-0001, regular PropertyCard for others */}
+          {(escrow.zillowUrl || escrow.escrowNumber === 'ESCROW-2025-0001') ? (
             <ZillowPreview
-              url={escrow.zillowUrl}
+              url={escrow.zillowUrl || 'https://www.zillow.com/homedetails/6510-Summer-Breeze-Ln-Bakersfield-CA-93313/19056207_zpid/'}
               height={500}
               escrowData={escrow}
             />
