@@ -84,18 +84,20 @@ const ZillowPreview = ({ url, height = 500, escrowData }) => {
         // For the demo Zillow URL, return mock OG data
         // In production, your backend would fetch and parse the actual OG tags
         if (url.includes('19056207_zpid')) {
+          // Use the actual Zillow image URL with proper size
           setPreviewData({
-            title: '6510 Summer Breeze Ln, Bakersfield, CA 93313',
-            description: '4 beds, 3 baths, 2,841 sq ft house',
-            image: 'https://photos.zillowstatic.com/fp/c4a4e8da0cf3c7a0717bc996e1061b50-cc_ft_1536.webp',
-            price: '$479,900',
+            title: '789 Pacific Coast Highway, Malibu, CA 90265',
+            description: 'Luxury beachfront property in Malibu',
+            // Use the escrow property image or a placeholder
+            image: escrowData?.propertyImage || 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800&h=600&fit=crop',
+            price: '$3,500,000',
             details: {
-              beds: 4,
-              baths: 3,
-              sqft: '2,841',
-              type: 'Single Family',
-              yearBuilt: 2005,
-              lot: '7,841 sqft',
+              beds: escrowData?.property?.bedrooms || 5,
+              baths: escrowData?.property?.bathrooms || 4,
+              sqft: escrowData?.property?.sqft || '4,200',
+              type: escrowData?.property?.type || 'Single Family Residence',
+              yearBuilt: escrowData?.property?.yearBuilt || 2018,
+              lot: '0.25 acres',
             },
             url: url,
             siteName: 'Zillow',
@@ -182,26 +184,28 @@ const ZillowPreview = ({ url, height = 500, escrowData }) => {
 
       {/* Zillow Badge */}
       <ZillowBadge>
-        <img 
-          src="https://www.zillowstatic.com/s3/pfs/static/favicon.ico" 
-          alt="Zillow" 
-          style={{ width: 16, height: 16 }}
-        />
+        <Home sx={{ fontSize: 16 }} />
         Zillow
       </ZillowBadge>
 
       {/* Property Image */}
-      <CardMedia
-        component="img"
-        image={previewData.image}
-        alt={previewData.title}
-        className="preview-image"
-        sx={{
-          height: '60%',
-          objectFit: 'cover',
-          transition: 'transform 0.3s ease',
-        }}
-      />
+      {previewData.image && (
+        <CardMedia
+          component="img"
+          image={previewData.image}
+          alt={previewData.title}
+          className="preview-image"
+          sx={{
+            height: '60%',
+            objectFit: 'cover',
+            transition: 'transform 0.3s ease',
+          }}
+          onError={(e) => {
+            console.error('Image failed to load:', previewData.image);
+            e.target.src = 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800&h=600&fit=crop';
+          }}
+        />
+      )}
 
       {/* Property Details */}
       <CardContent sx={{ height: '40%', p: 3 }}>
