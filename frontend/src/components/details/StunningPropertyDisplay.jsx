@@ -301,9 +301,6 @@ const StunningPropertyDisplay = ({ escrow }) => {
 
             {/* Special features */}
             <Box sx={{ mt: 'auto' }}>
-              <Typography variant="subtitle2" fontWeight="600" gutterBottom>
-                Special Features
-              </Typography>
               <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                 {property.pool && (
                   <Chip
