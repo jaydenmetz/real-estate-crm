@@ -51,6 +51,19 @@ const ZillowPreview = ({ url, height = 500, escrowData }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    // If we have a static Zillow image URL, use it directly
+    if (escrowData?.zillowImageUrl) {
+      setPreviewData({
+        title: escrowData.propertyAddress || 'View Property on Zillow',
+        description: 'Click to view full property details on Zillow',
+        image: escrowData.zillowImageUrl,
+        url: url,
+        siteName: 'Zillow',
+      });
+      setLoading(false);
+      return;
+    }
+
     const fetchOpenGraphData = async () => {
       setLoading(true);
       setError(null);
