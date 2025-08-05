@@ -28,6 +28,8 @@ import {
   LinearProgress,
   Divider,
   Tooltip as MuiTooltip,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
@@ -417,6 +419,7 @@ const EscrowsDashboard = () => {
   const [escrows, setEscrows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showNewEscrowModal, setShowNewEscrowModal] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState('active');
   const [stats, setStats] = useState({
     totalEscrows: 0,
     activeEscrows: 0,
@@ -424,12 +427,20 @@ const EscrowsDashboard = () => {
     projectedCommission: 0,
     closedThisMonth: 0,
     avgDaysToClose: 0,
+    grossCommission: 0,
+    myCommission: 0,
   });
   const [chartData, setChartData] = useState([]);
 
   useEffect(() => {
     fetchEscrows();
   }, []);
+
+  useEffect(() => {
+    if (escrows.length > 0) {
+      calculateStats(escrows, selectedStatus);
+    }
+  }, [selectedStatus, escrows]);
 
   const fetchEscrows = async () => {
     try {
@@ -451,7 +462,7 @@ const EscrowsDashboard = () => {
         }
         
         setEscrows(escrowData);
-        calculateStats(escrowData);
+        calculateStats(escrowData, selectedStatus);
         generateChartData(escrowData);
       } else {
         console.error('API returned success: false', response);
@@ -464,7 +475,7 @@ const EscrowsDashboard = () => {
     }
   };
 
-  const calculateStats = (escrowData) => {
+  const calculateStats = (escrowData, statusFilter = 'active') => {
     // Safety check for escrowData
     if (!escrowData || !Array.isArray(escrowData)) {
       setStats({
@@ -472,38 +483,70 @@ const EscrowsDashboard = () => {
         activeEscrows: 0,
         totalVolume: 0,
         projectedCommission: 0,
-        closedThisMonth: 0
+        closedThisMonth: 0,
+        avgDaysToClose: 0,
+        grossCommission: 0,
+        myCommission: 0,
       });
       return;
     }
     
-    // Both "Active Under Contract" and "Pending" are considered active escrows
-    const active = escrowData.filter(e => 
-      e.escrowStatus === 'Active Under Contract' || 
-      e.escrowStatus === 'active under contract' ||
-      e.escrowStatus === 'Pending' || 
-      e.escrowStatus === 'pending' ||
-      // Legacy support
-      e.escrowStatus === 'Active' || 
-      e.escrowStatus === 'active'
-    );
-    const totalVolume = active.reduce((sum, e) => sum + Number(e.purchasePrice || 0), 0);
-    const projectedCommission = active.reduce((sum, e) => sum + Number(e.myCommission || 0), 0);
+    let filteredEscrows = [];
+    
+    // Filter based on selected status
+    switch (statusFilter) {
+      case 'active':
+        filteredEscrows = escrowData.filter(e => 
+          e.escrowStatus === 'Active Under Contract' || 
+          e.escrowStatus === 'active under contract' ||
+          e.escrowStatus === 'Pending' || 
+          e.escrowStatus === 'pending' ||
+          e.escrowStatus === 'Active' || 
+          e.escrowStatus === 'active'
+        );
+        break;
+      case 'closed':
+        filteredEscrows = escrowData.filter(e => 
+          e.escrowStatus === 'Closed' || 
+          e.escrowStatus === 'closed' ||
+          e.escrowStatus === 'Completed' || 
+          e.escrowStatus === 'completed'
+        );
+        break;
+      case 'cancelled':
+        filteredEscrows = escrowData.filter(e => 
+          e.escrowStatus === 'Cancelled' || 
+          e.escrowStatus === 'cancelled' ||
+          e.escrowStatus === 'Withdrawn' || 
+          e.escrowStatus === 'withdrawn' ||
+          e.escrowStatus === 'Expired' || 
+          e.escrowStatus === 'expired'
+        );
+        break;
+      default:
+        filteredEscrows = escrowData;
+    }
+    
+    // Calculate stats for filtered escrows
+    const totalVolume = filteredEscrows.reduce((sum, e) => sum + Number(e.purchasePrice || 0), 0);
+    const myCommission = filteredEscrows.reduce((sum, e) => sum + Number(e.myCommission || 0), 0);
+    
+    // Calculate gross commission (assuming 5% total commission rate if not specified)
+    const grossCommission = filteredEscrows.reduce((sum, e) => {
+      const purchasePrice = Number(e.purchasePrice || 0);
+      const commissionRate = Number(e.totalCommissionRate || 5) / 100;
+      return sum + (purchasePrice * commissionRate);
+    }, 0);
     
     setStats({
-      totalEscrows: escrowData.length,
-      activeEscrows: active.length,
+      totalEscrows: filteredEscrows.length,
+      activeEscrows: filteredEscrows.length, // For backward compatibility
       totalVolume,
-      projectedCommission,
-      closedThisMonth: 0, /* Temporarily disabled date filtering
-      closedThisMonth: escrowData.filter(e => {
-        if (e.escrowStatus !== 'Closed') return false;
-        const closeDate = safeParseDate(e.scheduledCoeDate);
-        if (!closeDate) return false;
-        const now = new Date();
-        return closeDate.getMonth() === now.getMonth() && closeDate.getFullYear() === now.getFullYear();
-      }).length, */
-      avgDaysToClose: Math.round(active.reduce((sum, e) => sum + (Number(e.daysToClose) || 0), 0) / (active.length || 1)),
+      projectedCommission: myCommission, // For backward compatibility
+      closedThisMonth: 0,
+      avgDaysToClose: Math.round(filteredEscrows.reduce((sum, e) => sum + (Number(e.daysToClose) || 0), 0) / (filteredEscrows.length || 1)),
+      grossCommission,
+      myCommission,
     });
   };
 
@@ -650,26 +693,41 @@ const EscrowsDashboard = () => {
         </HeroSection>
       </motion.div>
 
-      {/* Stats Cards */}
+      {/* Status Tabs */}
+      <Box sx={{ mb: 4 }}>
+        <Tabs
+          value={selectedStatus}
+          onChange={(e, newValue) => setSelectedStatus(newValue)}
+          sx={{
+            backgroundColor: 'background.paper',
+            borderRadius: 2,
+            boxShadow: 1,
+            '& .MuiTab-root': {
+              textTransform: 'none',
+              fontSize: '1rem',
+              fontWeight: 500,
+              minHeight: 56,
+            },
+            '& .Mui-selected': {
+              fontWeight: 700,
+            },
+          }}
+        >
+          <Tab label="Active Escrows" value="active" />
+          <Tab label="Closed Escrows" value="closed" />
+          <Tab label="Cancelled Escrows" value="cancelled" />
+        </Tabs>
+      </Box>
+
+      {/* Stats Cards */>
       <Grid container spacing={3} sx={{ mb: 4 }}>
           <Grid item xs={12} sm={6} md={3}>
             <StatCard
               icon={Home}
-              title="Total Escrows"
+              title={`Total ${selectedStatus.charAt(0).toUpperCase() + selectedStatus.slice(1)}`}
               value={stats.totalEscrows}
               color="#2196f3"
               delay={0}
-              trend={12}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard
-              icon={TrendingUp}
-              title="Active Escrows"
-              value={stats.activeEscrows}
-              color="#4caf50"
-              delay={200}
-              trend={8}
             />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
@@ -679,20 +737,28 @@ const EscrowsDashboard = () => {
               value={stats.totalVolume / 1000000}
               prefix="$"
               suffix="M"
+              color="#4caf50"
+              delay={200}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <StatCard
+              icon={TrendingUp}
+              title="Gross Commission"
+              value={stats.grossCommission}
+              prefix="$"
               color="#ff9800"
               delay={400}
-              trend={15}
             />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
             <StatCard
               icon={CheckCircle}
-              title="Projected Commission"
-              value={stats.projectedCommission}
+              title="My Commission"
+              value={stats.myCommission}
               prefix="$"
               color="#9c27b0"
               delay={600}
-              trend={10}
             />
           </Grid>
         </Grid>
@@ -825,7 +891,7 @@ const EscrowsDashboard = () => {
       {/* Action Bar */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-          All Escrows
+          {selectedStatus.charAt(0).toUpperCase() + selectedStatus.slice(1)} Escrows
         </Typography>
         <Button
           variant="contained"
@@ -841,7 +907,35 @@ const EscrowsDashboard = () => {
       {/* Escrow Cards */}
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
         <AnimatePresence>
-          {!escrows || !Array.isArray(escrows) || escrows.length === 0 ? (
+          {(() => {
+            const filteredEscrows = escrows.filter(e => {
+              switch (selectedStatus) {
+                case 'active':
+                  return e.escrowStatus === 'Active Under Contract' || 
+                         e.escrowStatus === 'active under contract' ||
+                         e.escrowStatus === 'Pending' || 
+                         e.escrowStatus === 'pending' ||
+                         e.escrowStatus === 'Active' || 
+                         e.escrowStatus === 'active';
+                case 'closed':
+                  return e.escrowStatus === 'Closed' || 
+                         e.escrowStatus === 'closed' ||
+                         e.escrowStatus === 'Completed' || 
+                         e.escrowStatus === 'completed';
+                case 'cancelled':
+                  return e.escrowStatus === 'Cancelled' || 
+                         e.escrowStatus === 'cancelled' ||
+                         e.escrowStatus === 'Withdrawn' || 
+                         e.escrowStatus === 'withdrawn' ||
+                         e.escrowStatus === 'Expired' || 
+                         e.escrowStatus === 'expired';
+                default:
+                  return true;
+              }
+            });
+            
+            if (!filteredEscrows || filteredEscrows.length === 0) {
+              return (
             <Paper 
               sx={{ 
                 p: 6, 
@@ -851,22 +945,24 @@ const EscrowsDashboard = () => {
               }}
             >
               <Typography variant="h6" color="textSecondary" gutterBottom>
-                No escrows found
+                No {selectedStatus} escrows found
               </Typography>
               <Typography variant="body2" color="textSecondary">
-                Create your first escrow to get started
+                {selectedStatus === 'active' ? 'Create a new escrow to get started' : `No ${selectedStatus} escrows in the system`}
               </Typography>
             </Paper>
-          ) : (
-            (escrows || []).map((escrow, index) => (
-              <EscrowCard
-                key={escrow.id}
-                escrow={escrow}
-                onClick={handleEscrowClick}
-                index={index}
-              />
-            ))
-          )}
+              );
+            } else {
+              return filteredEscrows.map((escrow, index) => (
+                <EscrowCard
+                  key={escrow.id}
+                  escrow={escrow}
+                  onClick={handleEscrowClick}
+                  index={index}
+                />
+              ));
+            }
+          })()}
         </AnimatePresence>
       </Box>
 
