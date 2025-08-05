@@ -179,8 +179,8 @@ const StunningPropertyDisplay = ({ escrow }) => {
               label={escrow.escrowStatus}
               sx={{
                 position: 'absolute',
-                top: 16,
-                right: 16,
+                top: 60,
+                left: 16,
                 backgroundColor: alpha(
                   escrow.escrowStatus === 'Active' ? theme.palette.success.main :
                   escrow.escrowStatus === 'Pending' ? theme.palette.warning.main :
@@ -192,26 +192,50 @@ const StunningPropertyDisplay = ({ escrow }) => {
               }}
             />
 
-            {/* Zillow link */}
-            {escrow.zillowUrl && (
-              <Tooltip title="View on Zillow">
-                <IconButton
+            {/* Zillow link button */}
+            {(escrow.zillowUrl || escrow.zillow_url) && (
+              <Tooltip title="Open in Zillow" placement="left">
+                <Box
                   component="a"
-                  href={escrow.zillowUrl}
+                  href={escrow.zillowUrl || escrow.zillow_url}
                   target="_blank"
+                  rel="noopener noreferrer"
                   sx={{
                     position: 'absolute',
-                    bottom: 16,
-                    left: 16,
-                    backgroundColor: alpha('#006AFF', 0.9),
+                    top: 16,
+                    right: 16,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    px: 2,
+                    py: 1,
+                    backgroundColor: alpha('#006AFF', 0.95),
                     color: 'white',
+                    borderRadius: 2,
+                    textDecoration: 'none',
+                    fontWeight: 600,
+                    fontSize: '0.875rem',
+                    transition: 'all 0.3s ease',
+                    boxShadow: '0 4px 12px rgba(0, 106, 255, 0.3)',
+                    border: '2px solid white',
                     '&:hover': {
-                      backgroundColor: '#006AFF',
+                      backgroundColor: '#0050CC',
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 6px 20px rgba(0, 106, 255, 0.4)',
                     },
                   }}
                 >
-                  <OpenInNew />
-                </IconButton>
+                  <Box
+                    component="svg"
+                    sx={{ width: 20, height: 20 }}
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M10 2v2H8v2h2v2H8v2h2v2H8v2h2v2H8v2h2v2H8v2h2v-2h2v2h2v-2h2v2h2v-2h2v-2h-2v-2h2v-2h-2v-2h2v-2h-2V8h2V6h-2V4h-2v2h-2V4h-2v2h-2V4h-2v2h-2V2h-2zm4 6v2h-2V8h2zm0 4v2h-2v-2h2zm0 4v2h-2v-2h2z"/>
+                  </Box>
+                  View on Zillow
+                  <OpenInNew sx={{ fontSize: 16 }} />
+                </Box>
               </Tooltip>
             )}
           </Box>
