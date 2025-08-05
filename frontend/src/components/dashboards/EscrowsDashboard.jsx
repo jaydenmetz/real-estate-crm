@@ -283,7 +283,7 @@ const EscrowCard = ({ escrow, onClick, index }) => {
           <Box 
             sx={{ 
               height: 200,
-              backgroundImage: `url(${escrow.zillowImageUrl || escrow.propertyImage || 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800'})`,
+              backgroundImage: `url(${escrow.propertyImage || 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800'})`,
               backgroundSize: 'cover',
               backgroundPosition: 'center',
               position: 'relative',
