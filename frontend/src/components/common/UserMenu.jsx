@@ -57,8 +57,9 @@ const UserMenu = () => {
 
   const getInitials = () => {
     if (!user) return '?';
-    const firstName = user.profile?.firstName || '';
-    const lastName = user.profile?.lastName || '';
+    // Check different possible user object structures
+    const firstName = user.profile?.firstName || user.firstName || '';
+    const lastName = user.profile?.lastName || user.lastName || '';
     if (firstName && lastName) {
       return `${firstName[0]}${lastName[0]}`.toUpperCase();
     }
@@ -121,7 +122,7 @@ const UserMenu = () => {
         {/* User Info */}
         <Box sx={{ px: 2, py: 1 }}>
           <Typography variant="subtitle1" fontWeight="bold">
-            {user.profile?.firstName} {user.profile?.lastName}
+            {user.profile?.firstName || user.firstName || ''} {user.profile?.lastName || user.lastName || ''}
           </Typography>
           <Typography variant="body2" color="text.secondary">
             @{user.username}

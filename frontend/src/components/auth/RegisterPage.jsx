@@ -28,6 +28,7 @@ import {
   Home,
   AppRegistration,
   ArrowBack,
+  CheckCircleOutline,
 } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
 import authService from '../../services/auth.service';
@@ -105,24 +106,8 @@ const RegisterPage = () => {
       const result = await response.json();
 
       if (result.success) {
-        // Store token and user data
-        authService.token = result.data.token;
-        authService.user = result.data.user;
-        authService.apiKey = result.data.user.apiKey;
-        
-        localStorage.setItem('crm_auth_token', result.data.token);
-        localStorage.setItem('crm_user_data', JSON.stringify(result.data.user));
-        if (result.data.user.apiKey) {
-          localStorage.setItem('crm_api_key', result.data.user.apiKey);
-        }
-        
-        authService.setAuthHeader(result.data.token);
-        
-        // Update auth context
-        login(result.data.user);
-        
-        // Navigate to dashboard
-        navigate('/', { replace: true });
+        // Show coming soon message instead of logging in
+        setActiveStep(steps.length); // Move to a new step
       } else {
         setError(result.error?.message || 'Registration failed');
       }
@@ -245,6 +230,7 @@ const RegisterPage = () => {
                     ),
                   }}
                   autoComplete="new-password"
+                  inputProps={{ 'data-form': 'register' }}
                 />
               )}
             />
@@ -275,6 +261,7 @@ const RegisterPage = () => {
                     ),
                   }}
                   autoComplete="new-password"
+                  inputProps={{ 'data-form': 'register' }}
                 />
               )}
             />
@@ -407,7 +394,35 @@ const RegisterPage = () => {
         );
 
       default:
-        return null;
+        // Coming soon message after successful registration
+        return (
+          <Box sx={{ textAlign: 'center', py: 3 }}>
+            <Box sx={{ mb: 3 }}>
+              <CheckCircleOutline sx={{ fontSize: 64, color: 'success.main' }} />
+            </Box>
+            <Typography variant="h5" gutterBottom color="success.main">
+              Registration Successful!
+            </Typography>
+            <Typography variant="body1" color="text.secondary" paragraph>
+              Thank you for registering. Your account request has been received.
+            </Typography>
+            
+            <Alert severity="info" sx={{ my: 3 }}>
+              <Typography variant="body2">
+                <strong>Account Activation Coming Soon</strong>
+              </Typography>
+              <Typography variant="body2" sx={{ mt: 1 }}>
+                We're currently setting up new accounts manually. You'll receive an email 
+                at <strong>{watch('email')}</strong> once your account is activated.
+              </Typography>
+            </Alert>
+
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
+              This typically takes 1-2 business days. If you have any questions, 
+              please contact support.
+            </Typography>
+          </Box>
+        );
     }
   };
 
@@ -465,28 +480,40 @@ const RegisterPage = () => {
 
             {/* Actions */}
             <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-              <Button
-                disabled={activeStep === 0 || loading}
-                onClick={handleBack}
-                startIcon={<ArrowBack />}
-              >
-                Back
-              </Button>
-              
-              <Button
-                variant="contained"
-                onClick={handleNext}
-                disabled={loading}
-                endIcon={activeStep === steps.length - 1 ? 
-                  (loading ? <CircularProgress size={20} /> : <AppRegistration />) : 
-                  null
-                }
-              >
-                {activeStep === steps.length - 1 ? 
-                  (loading ? 'Creating Account...' : 'Create Account') : 
-                  'Next'
-                }
-              </Button>
+              {activeStep < steps.length ? (
+                <>
+                  <Button
+                    disabled={activeStep === 0 || loading}
+                    onClick={handleBack}
+                    startIcon={<ArrowBack />}
+                  >
+                    Back
+                  </Button>
+                  
+                  <Button
+                    variant="contained"
+                    onClick={handleNext}
+                    disabled={loading}
+                    endIcon={activeStep === steps.length - 1 ? 
+                      (loading ? <CircularProgress size={20} /> : <AppRegistration />) : 
+                      null
+                    }
+                  >
+                    {activeStep === steps.length - 1 ? 
+                      (loading ? 'Creating Account...' : 'Create Account') : 
+                      'Next'
+                    }
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  variant="contained"
+                  onClick={() => navigate('/login')}
+                  sx={{ mx: 'auto' }}
+                >
+                  Return to Login
+                </Button>
+              )}
             </Box>
           </form>
 
