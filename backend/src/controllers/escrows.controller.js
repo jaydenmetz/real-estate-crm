@@ -14,7 +14,7 @@ async function detectSchema() {
       SELECT column_name 
       FROM information_schema.columns 
       WHERE table_name = 'escrows' 
-      AND column_name IN ('id', 'numeric_id', 'team_sequence_id', 'net_commission', 'acceptance_date', 'buyer_side_commission', 'opening_date', 'uuid')
+      AND column_name IN ('id', 'numeric_id', 'team_sequence_id', 'net_commission', 'my_commission', 'acceptance_date', 'buyer_side_commission', 'opening_date', 'uuid')
     `);
     
     const columns = result.rows.map(row => row.column_name);
@@ -23,6 +23,7 @@ async function detectSchema() {
       hasNumericId: columns.includes('numeric_id'),
       hasTeamSequenceId: columns.includes('team_sequence_id'),
       hasNetCommission: columns.includes('net_commission'),
+      hasMyCommission: columns.includes('my_commission'),
       hasAcceptanceDate: columns.includes('acceptance_date'),
       hasBuyerSideCommission: columns.includes('buyer_side_commission'),
       hasOpeningDate: columns.includes('opening_date'),
@@ -154,7 +155,9 @@ class SimpleEscrowController {
       console.log('Schema info:', schema);
       
       let commissionField;
-      if (schema.hasNetCommission && schema.hasBuyerSideCommission) {
+      if (schema.hasMyCommission) {
+        commissionField = 'COALESCE(my_commission, net_commission, buyer_side_commission * purchase_price / 100, buyer_side_commission, 0)';
+      } else if (schema.hasNetCommission && schema.hasBuyerSideCommission) {
         commissionField = 'COALESCE(net_commission, buyer_side_commission * purchase_price / 100, buyer_side_commission, 0)';
       } else if (schema.hasNetCommission) {
         commissionField = 'COALESCE(net_commission, 0)';
