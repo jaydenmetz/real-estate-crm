@@ -2525,13 +2525,24 @@ Has Error: ${isError ? 'YES' : 'NO'}`}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
           <PropertyCard elevation={8}>
-            {/* Hardcode Zillow URL for ESC-2025-001 */}
+            {/* Hardcode Zillow URL and image for ESC-2025-001 */}
             {(() => {
-              const zillowUrl = escrow.escrowNumber === 'ESC-2025-001' 
+              const isEscrow001 = escrow.escrowNumber === 'ESC-2025-001';
+              const zillowUrl = isEscrow001 
                 ? 'https://www.zillow.com/homedetails/6510-Summer-Breeze-Ln-Bakersfield-CA-93313/19056207_zpid/'
                 : escrow.property?.zillowUrl || null;
               
-              const propertyImageContent = escrow.propertyImage || escrow.property?.images?.length > 0 ? (
+              // For ESC-2025-001, use Zillow property image
+              // This is the actual image from the Zillow listing
+              const zillowImageUrl = isEscrow001
+                ? 'https://photos.zillowstatic.com/fp/c4a4e8da0cf3c7a0717bc996e1061b50-cc_ft_768.webp'
+                : null;
+              
+              const displayImages = isEscrow001 && zillowImageUrl
+                ? [zillowImageUrl]
+                : [escrow.propertyImage, ...(escrow.property?.images || [])].filter(Boolean);
+              
+              const propertyImageContent = displayImages.length > 0 ? (
                 <Swiper
                   modules={[Navigation, Pagination, Autoplay, EffectFade]}
                   spaceBetween={0}
@@ -2543,7 +2554,7 @@ Has Error: ${isError ? 'YES' : 'NO'}`}
                   onSlideChange={(swiper) => setSelectedImage(swiper?.activeIndex || 0)}
                   style={{ width: '100%', height: '100%' }}
                 >
-                  {[escrow.propertyImage, ...(escrow.property?.images || [])].filter(Boolean).map((image, index) => (
+                  {displayImages.map((image, index) => (
                     <SwiperSlide key={index}>
                       <img src={image} alt={`Property ${index + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </SwiperSlide>
@@ -2585,32 +2596,45 @@ Has Error: ${isError ? 'YES' : 'NO'}`}
                         }}
                       >
                         {propertyImageContent}
-                        {/* Zillow Indicator Badge */}
+                        {/* Zillow Preview Indicator - Subtle overlay */}
                         <Box
                           sx={{
                             position: 'absolute',
-                            top: 16,
-                            right: 16,
-                            backgroundColor: '#006AFF',
-                            color: 'white',
-                            padding: '8px 16px',
-                            borderRadius: '8px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1,
-                            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                            zIndex: 20,
-                            fontWeight: 600,
-                            fontSize: '14px',
-                            '&:hover': {
-                              backgroundColor: '#0054CC',
-                              transform: 'scale(1.05)',
-                            },
-                            transition: 'all 0.3s ease',
+                            bottom: 0,
+                            left: 0,
+                            right: 0,
+                            background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)',
+                            padding: '20px',
+                            zIndex: 15,
+                            pointerEvents: 'none',
                           }}
                         >
-                          <OpenInNew sx={{ fontSize: 18 }} />
-                          View on Zillow
+                          <Stack direction="row" justifyContent="space-between" alignItems="center">
+                            <Box>
+                              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.8)' }}>
+                                Property Preview from
+                              </Typography>
+                              <Typography variant="h6" sx={{ color: 'white', fontWeight: 700 }}>
+                                Zillow
+                              </Typography>
+                            </Box>
+                            <Box
+                              sx={{
+                                backgroundColor: 'rgba(0, 106, 255, 0.9)',
+                                color: 'white',
+                                padding: '6px 12px',
+                                borderRadius: '6px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 0.5,
+                                fontSize: '13px',
+                                fontWeight: 600,
+                              }}
+                            >
+                              <OpenInNew sx={{ fontSize: 16 }} />
+                              View Details
+                            </Box>
+                          </Stack>
                         </Box>
                       </a>
                     </Box>
