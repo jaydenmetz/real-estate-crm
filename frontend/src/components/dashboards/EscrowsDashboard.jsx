@@ -279,130 +279,184 @@ const EscrowCard = ({ escrow, onClick, index }) => {
         }}
       >
         <CardContent sx={{ p: 0 }}>
-          {/* Property Image Section */}
-          <Box 
-            sx={{ 
-              height: 200,
-              position: 'relative',
-              overflow: 'hidden',
-              backgroundColor: '#f5f5f5',
-            }}
-          >
-            <img
-              src={escrow.propertyImage || 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800'}
-              alt={escrow.propertyAddress}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
+          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' } }}>
+            {/* Property Image Section - Left Side */}
+            <Box 
+              sx={{ 
+                width: { xs: '100%', sm: 300, md: 340 },
+                height: { xs: 200, sm: 240 },
+                position: 'relative',
+                overflow: 'hidden',
+                backgroundColor: '#f5f5f5',
+                flexShrink: 0,
               }}
-              onError={(e) => {
-                console.error('Dashboard image failed to load:', escrow.propertyImage);
-                e.target.src = 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800';
-              }}
-            />
-            {/* Overlay gradient */}
-            <Box
-              sx={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: '60%',
-                background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)',
-              }}
-            />
-            
-            {/* Status chip */}
-            <Chip
-              label={escrow.escrowStatus}
-              size="small"
-              sx={{
-                position: 'absolute',
-                top: 16,
-                right: 16,
-                background: alpha(statusColor, 0.9),
-                color: 'white',
-                fontWeight: 600,
-              }}
-            />
-            
-            {/* Property Address */}
-            <Box sx={{ position: 'absolute', bottom: 16, left: 16, right: 16 }}>
-              <Typography 
-                variant="h5" 
-                sx={{ 
-                  fontWeight: 700,
-                  color: 'white',
-                  textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+            >
+              <img
+                src={escrow.propertyImage || 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800'}
+                alt={escrow.propertyAddress}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
                 }}
-              >
-                {escrow.propertyAddress}
-              </Typography>
-              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.8)' }}>
-                Escrow #: {escrow.escrowNumber || escrow.displayId || 'FTKE-3012500795SAM'}
-              </Typography>
-            </Box>
-          </Box>
-
-          {/* Content Section */}
-          <Box sx={{ p: 3 }}>
-            <Grid container spacing={2}>
-              {/* Purchase Price and Commission */}
-              <Grid item xs={12} sm={4}>
-                <Typography variant="caption" color="textSecondary" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>
-                  Purchase Price
-                </Typography>
-                <Typography variant="h5" sx={{ fontWeight: 700, mt: 0.5 }}>
-                  ${Number(escrow.purchasePrice).toLocaleString()}
-                </Typography>
-                <Typography variant="body2" color="success.main" sx={{ fontWeight: 600, mt: 0.5 }}>
-                  ${Number(escrow.myCommission).toLocaleString()} commission
-                </Typography>
-              </Grid>
-
-              {/* Days to Close */}
-              <Grid item xs={12} sm={4} sx={{ textAlign: 'center' }}>
-                <Box 
-                  sx={{ 
-                    display: 'inline-block',
-                    px: 3,
-                    py: 1,
-                    borderRadius: 2,
-                    background: alpha(theme.palette.primary.main, 0.1),
+                onError={(e) => {
+                  console.error('Dashboard image failed to load:', escrow.propertyImage);
+                  e.target.src = 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800';
+                }}
+              />
+              
+              {/* Overlay gradient */}
+              <Box
+                sx={{
+                  position: 'absolute',
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  height: '50%',
+                  background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)',
+                }}
+              />
+              
+              {/* Status chip */}
+              <Chip
+                label={escrow.escrowStatus}
+                size="small"
+                sx={{
+                  position: 'absolute',
+                  top: 12,
+                  right: 12,
+                  background: alpha(statusColor, 0.95),
+                  color: 'white',
+                  fontWeight: 600,
+                  fontSize: '0.75rem',
+                }}
+              />
+              
+              {/* Zillow button if URL exists */}
+              {(escrow.zillowUrl || escrow.zillow_url) && (
+                <Box
+                  component="a"
+                  href={escrow.zillowUrl || escrow.zillow_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  sx={{
+                    position: 'absolute',
+                    top: 12,
+                    left: 12,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 0.5,
+                    px: 1.5,
+                    py: 0.5,
+                    backgroundColor: alpha('#006AFF', 0.95),
+                    color: 'white',
+                    borderRadius: 1,
+                    textDecoration: 'none',
+                    fontWeight: 600,
+                    fontSize: '0.75rem',
+                    transition: 'all 0.2s ease',
+                    border: '1px solid rgba(255,255,255,0.3)',
+                    '&:hover': {
+                      backgroundColor: '#0050CC',
+                      transform: 'scale(1.05)',
+                    },
                   }}
                 >
-                  <Typography 
-                    variant="h3" 
+                  <Box
+                    component="svg"
+                    sx={{ width: 14, height: 14 }}
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M10 2v2H8v2h2v2H8v2h2v2H8v2h2v2H8v2h2v2H8v2h2v-2h2v2h2v-2h2v2h2v-2h2v-2h-2v-2h2v-2h-2v-2h2v-2h-2V8h2V6h-2V4h-2v2h-2V4h-2v2h-2V4h-2v2h-2V2h-2zm4 6v2h-2V8h2zm0 4v2h-2v-2h2zm0 4v2h-2v-2h2z"/>
+                  </Box>
+                  Zillow
+                </Box>
+              )}
+              
+              {/* Property Address */}
+              <Box sx={{ position: 'absolute', bottom: 12, left: 12, right: 12 }}>
+                <Typography 
+                  variant="h6" 
+                  sx={{ 
+                    fontWeight: 700,
+                    color: 'white',
+                    textShadow: '0 2px 4px rgba(0,0,0,0.8)',
+                    fontSize: { xs: '1rem', sm: '1.1rem' },
+                    lineHeight: 1.2,
+                    mb: 0.5,
+                  }}
+                >
+                  {escrow.propertyAddress}
+                </Typography>
+                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.9)', fontSize: '0.75rem' }}>
+                  Escrow #: {escrow.escrowNumber || escrow.displayId || 'N/A'}
+                </Typography>
+              </Box>
+            </Box>
+
+            {/* Content Section - Right Side */}
+            <Box sx={{ flex: 1, p: 3, display: 'flex', flexDirection: 'column' }}>
+              <Grid container spacing={2}>
+                {/* Purchase Price and Commission */}
+                <Grid item xs={12} md={4}>
+                  <Typography variant="caption" color="textSecondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.7rem' }}>
+                    Purchase Price
+                  </Typography>
+                  <Typography variant="h5" sx={{ fontWeight: 700, mt: 0.5 }}>
+                    ${Number(escrow.purchasePrice).toLocaleString()}
+                  </Typography>
+                  <Typography variant="body2" color="success.main" sx={{ fontWeight: 600, mt: 0.5 }}>
+                    ${Number(escrow.myCommission).toLocaleString()} commission
+                  </Typography>
+                </Grid>
+
+                {/* Days to Close */}
+                <Grid item xs={6} md={4}>
+                  <Box 
                     sx={{ 
-                      fontWeight: 700,
-                      color: escrow.daysToClose <= 7 ? 'error.main' : 'primary.main',
+                      display: 'inline-block',
+                      px: 2,
+                      py: 1,
+                      borderRadius: 2,
+                      background: alpha(theme.palette.primary.main, 0.08),
+                      width: '100%',
+                      textAlign: 'center',
                     }}
                   >
-                    {escrow.daysToClose > 0 ? escrow.daysToClose : 0}
-                  </Typography>
-                  <Typography variant="caption" color="textSecondary">
-                    days to close
-                  </Typography>
-                </Box>
-              </Grid>
+                    <Typography 
+                      variant="h3" 
+                      sx={{ 
+                        fontWeight: 700,
+                        color: escrow.daysToClose <= 7 ? 'error.main' : 'primary.main',
+                        fontSize: { xs: '2rem', md: '2.5rem' },
+                      }}
+                    >
+                      {escrow.daysToClose > 0 ? escrow.daysToClose : 0}
+                    </Typography>
+                    <Typography variant="caption" color="textSecondary">
+                      days to close
+                    </Typography>
+                  </Box>
+                </Grid>
 
-              {/* Last Activity */}
-              <Grid item xs={12} sm={4} sx={{ textAlign: 'right' }}>
-                <Typography variant="caption" color="textSecondary" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>
-                  Last Activity
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 500, mt: 0.5 }}>
-                  {safeFormatDate(escrow.lastActivity, 'MMM d, h:mm a')}
-                </Typography>
-                <Chip 
-                  label={`${escrow.upcomingDeadlines} deadlines`} 
-                  size="small" 
-                  color="warning"
-                  sx={{ mt: 0.5 }}
-                />
+                {/* Last Activity */}
+                <Grid item xs={6} md={4}>
+                  <Typography variant="caption" color="textSecondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.7rem' }}>
+                    Last Activity
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 500, mt: 0.5 }}>
+                    {safeFormatDate(escrow.lastActivity, 'MMM d, h:mm a')}
+                  </Typography>
+                  <Chip 
+                    label={`${escrow.upcomingDeadlines} deadlines`} 
+                    size="small" 
+                    color="warning"
+                    sx={{ mt: 0.5 }}
+                  />
+                </Grid>
               </Grid>
-            </Grid>
 
             {/* Timeline Progress with Milestones */}
             <Box sx={{ mt: 3, position: 'relative' }}>
@@ -501,6 +555,7 @@ const EscrowCard = ({ escrow, onClick, index }) => {
                   {safeFormatDate(escrow.scheduledCoeDate, 'MMM d')}
                 </Typography>
               </Box>
+            </Box>
             </Box>
           </Box>
         </CardContent>
