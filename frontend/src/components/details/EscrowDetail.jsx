@@ -1594,6 +1594,8 @@ const EscrowDetail = () => {
       displayId: escrowData.escrowNumber,
       propertyAddress: escrowData.propertyAddress,
       propertyImage: escrowData.propertyImage,
+      zillowUrl: escrowData.zillow_url || escrowData.zillowUrl,
+      zillow_url: escrowData.zillow_url || escrowData.zillowUrl,
       status: escrowData.escrowStatus,
       escrowStatus: escrowData.escrowStatus,
       purchasePrice: escrowData.purchasePrice,
@@ -1677,7 +1679,11 @@ const EscrowDetail = () => {
       activities: [],
       financials: financials || {},
       people: people || {},
-      propertyDetails: propertyDetails || {},
+      propertyDetails: {
+        ...propertyDetails,
+        zillowUrl: escrowData.zillow_url || escrowData.zillowUrl,
+        zillow_url: escrowData.zillow_url || escrowData.zillowUrl,
+      },
       
       // Keep raw data for tabs
       _raw: {

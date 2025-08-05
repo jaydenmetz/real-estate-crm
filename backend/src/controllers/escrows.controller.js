@@ -1035,9 +1035,26 @@ class SimpleEscrowController {
         });
       }
       
+      // Transform the response to match GET endpoint format
+      const updatedEscrow = result.rows[0];
+      
+      // Add camelCase versions of key fields for consistency
+      const transformedData = {
+        ...updatedEscrow,
+        // Transform key fields to camelCase
+        zillowUrl: updatedEscrow.zillow_url,
+        propertyImage: updatedEscrow.property_image_url,
+        escrowStatus: updatedEscrow.escrow_status,
+        propertyAddress: updatedEscrow.property_address,
+        purchasePrice: parseFloat(updatedEscrow.purchase_price) || 0,
+        myCommission: parseFloat(updatedEscrow.my_commission) || 0,
+        displayId: updatedEscrow.display_id,
+        escrowNumber: updatedEscrow.display_id,
+      };
+      
       res.json({
         success: true,
-        data: result.rows[0],
+        data: transformedData,
         message: 'Escrow updated successfully'
       });
       
