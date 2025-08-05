@@ -3211,6 +3211,109 @@ Has Error: ${isError ? 'YES' : 'NO'}`}
         
         {/* Backdrop for tooltips */}
         <Grid container spacing={5} sx={{ overflow: 'visible' }}>
+          {/* Property Details Widget */}
+          <Grid item xs={12} md={6} sx={{ overflow: 'visible' }}>
+            <LiquidWidget 
+              sx={{ 
+                background: 'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)',
+              }}
+              onClick={() => handleWidgetClick('property')}
+            >
+              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Home sx={{ color: 'success.main' }} />
+                  Property Details
+                </Typography>
+                <IconButton size="small" onClick={(e) => {
+                  e.stopPropagation();
+                  handleWidgetClick('property');
+                }}>
+                  <MoreVert />
+                </IconButton>
+              </Stack>
+              
+              <Stack spacing={2}>
+                {/* Property Address */}
+                <Box>
+                  <Typography variant="subtitle2" sx={{ color: 'success.main', fontWeight: 600, mb: 1 }}>Address & Location</Typography>
+                  <Stack spacing={1}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant="body2" color="text.secondary">Address</Typography>
+                      <Typography variant="body2" fontWeight={500}>{escrow.propertyAddress || 'Not set'}</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant="body2" color="text.secondary">City</Typography>
+                      <Typography variant="body2">{escrow.property?.city || 'Not set'}</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant="body2" color="text.secondary">State/ZIP</Typography>
+                      <Typography variant="body2">{escrow.property?.state || 'CA'} {escrow.property?.zipCode || ''}</Typography>
+                    </Box>
+                  </Stack>
+                </Box>
+                
+                <Divider />
+                
+                {/* Property Info */}
+                <Box>
+                  <Typography variant="subtitle2" sx={{ color: 'success.main', fontWeight: 600, mb: 1 }}>Property Information</Typography>
+                  <Stack spacing={1}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant="body2" color="text.secondary">Type</Typography>
+                      <Typography variant="body2">{escrow.property?.type || 'Single Family'}</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant="body2" color="text.secondary">MLS #</Typography>
+                      <Typography variant="body2">{escrow.property?.mlsNumber || 'Not set'}</Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant="body2" color="text.secondary">APN</Typography>
+                      <Typography variant="body2">{escrow.property?.apn || 'Not set'}</Typography>
+                    </Box>
+                  </Stack>
+                </Box>
+                
+                <Divider />
+                
+                {/* Property Value */}
+                <Box>
+                  <Typography variant="subtitle2" sx={{ color: 'success.main', fontWeight: 600, mb: 1 }}>Valuation</Typography>
+                  <Stack spacing={1}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant="body2" color="text.secondary">Purchase Price</Typography>
+                      <Typography variant="body2" fontWeight={600}>
+                        {formatCurrency(escrow.financials?.purchasePrice || escrow.purchasePrice)}
+                      </Typography>
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant="body2" color="text.secondary">List Price</Typography>
+                      <Typography variant="body2">{formatCurrency(escrow.property?.listPrice)}</Typography>
+                    </Box>
+                  </Stack>
+                </Box>
+              </Stack>
+              
+              <Button 
+                fullWidth 
+                variant="contained" 
+                sx={{ 
+                  mt: 2, 
+                  bgcolor: 'rgba(0,0,0,0.1)',
+                  color: 'text.primary',
+                  '&:hover': {
+                    bgcolor: 'rgba(0,0,0,0.2)',
+                  }
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleWidgetClick('property');
+                }}
+              >
+                View All Details
+              </Button>
+            </LiquidWidget>
+          </Grid>
+          
           {/* People Widget */}
           <Grid item xs={12} md={6} sx={{ overflow: 'visible' }}>
             <LiquidWidget 
@@ -3982,6 +4085,296 @@ Has Error: ${isError ? 'YES' : 'NO'}`}
                   {(!escrow.checklists || (!escrow.checklists.loan && !escrow.checklists.house && !escrow.checklists.admin)) && (
                     <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 3 }}>
                       No checklist items available
+                    </Typography>
+                  )}
+                </Stack>
+              </DataTooltip>
+            </>
+          )}
+          
+          {/* Property Details Popup */}
+          {openWidget === 'property' && escrow && (
+            <>
+              <Backdrop 
+                open={true} 
+                onClick={() => {
+                  setWidgetAnimationClass('');
+                  setTimeout(() => setOpenWidget(null), 300);
+                }}
+                sx={{ zIndex: 1200 }}
+              />
+              <DataTooltip className={widgetAnimationClass} sx={{ color: 'text.primary' }}>
+                <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                  <Typography variant="h6" fontWeight={600}>
+                    Complete Property Details
+                  </Typography>
+                  <IconButton onClick={() => {
+                    setWidgetAnimationClass('');
+                    setTimeout(() => setOpenWidget(null), 300);
+                  }} size="small">
+                    <Close />
+                  </IconButton>
+                </Stack>
+                
+                <Stack spacing={3} sx={{ maxHeight: '60vh', overflowY: 'auto' }}>
+                  {/* Address Section */}
+                  <Box>
+                    <Typography variant="subtitle2" color="primary" sx={{ mb: 1 }}>Address & Location</Typography>
+                    <Stack spacing={1}>
+                      <Stack direction="row" alignItems="center" spacing={2}>
+                        <Typography variant="body2" sx={{ minWidth: 150, color: 'text.secondary' }}>Street Address:</Typography>
+                        <EditableField 
+                          field="propertyAddress" 
+                          value={escrow.propertyAddress} 
+                          onSave={(field, value) => handleFieldUpdate('main', field, value)}
+                          type="text"
+                        />
+                      </Stack>
+                      <Stack direction="row" alignItems="center" spacing={2}>
+                        <Typography variant="body2" sx={{ minWidth: 150, color: 'text.secondary' }}>City:</Typography>
+                        <EditableField 
+                          field="property.city" 
+                          value={escrow.property?.city} 
+                          onSave={(field, value) => handleFieldUpdate('property', field, value)}
+                          type="text"
+                        />
+                      </Stack>
+                      <Stack direction="row" alignItems="center" spacing={2}>
+                        <Typography variant="body2" sx={{ minWidth: 150, color: 'text.secondary' }}>State:</Typography>
+                        <EditableField 
+                          field="property.state" 
+                          value={escrow.property?.state} 
+                          onSave={(field, value) => handleFieldUpdate('property', field, value)}
+                          type="text"
+                        />
+                      </Stack>
+                      <Stack direction="row" alignItems="center" spacing={2}>
+                        <Typography variant="body2" sx={{ minWidth: 150, color: 'text.secondary' }}>ZIP Code:</Typography>
+                        <EditableField 
+                          field="property.zipCode" 
+                          value={escrow.property?.zipCode} 
+                          onSave={(field, value) => handleFieldUpdate('property', field, value)}
+                          type="text"
+                        />
+                      </Stack>
+                      <Stack direction="row" alignItems="center" spacing={2}>
+                        <Typography variant="body2" sx={{ minWidth: 150, color: 'text.secondary' }}>County:</Typography>
+                        <EditableField 
+                          field="property.county" 
+                          value={escrow.property?.county} 
+                          onSave={(field, value) => handleFieldUpdate('property', field, value)}
+                          type="text"
+                        />
+                      </Stack>
+                    </Stack>
+                  </Box>
+                  
+                  <Divider />
+                  
+                  {/* Property Details */}
+                  <Box>
+                    <Typography variant="subtitle2" color="primary" sx={{ mb: 1 }}>Property Information</Typography>
+                    <Stack spacing={1}>
+                      <Stack direction="row" alignItems="center" spacing={2}>
+                        <Typography variant="body2" sx={{ minWidth: 150, color: 'text.secondary' }}>Property Type:</Typography>
+                        <EditableField 
+                          field="property.type" 
+                          value={escrow.property?.type} 
+                          onSave={(field, value) => handleFieldUpdate('property', field, value)}
+                          type="text"
+                        />
+                      </Stack>
+                      <Stack direction="row" alignItems="center" spacing={2}>
+                        <Typography variant="body2" sx={{ minWidth: 150, color: 'text.secondary' }}>Bedrooms:</Typography>
+                        <EditableField 
+                          field="property.bedrooms" 
+                          value={escrow.property?.bedrooms} 
+                          onSave={(field, value) => handleFieldUpdate('property', field, value)}
+                          type="number"
+                        />
+                      </Stack>
+                      <Stack direction="row" alignItems="center" spacing={2}>
+                        <Typography variant="body2" sx={{ minWidth: 150, color: 'text.secondary' }}>Bathrooms:</Typography>
+                        <EditableField 
+                          field="property.bathrooms" 
+                          value={escrow.property?.bathrooms} 
+                          onSave={(field, value) => handleFieldUpdate('property', field, value)}
+                          type="number"
+                        />
+                      </Stack>
+                      <Stack direction="row" alignItems="center" spacing={2}>
+                        <Typography variant="body2" sx={{ minWidth: 150, color: 'text.secondary' }}>Square Feet:</Typography>
+                        <EditableField 
+                          field="property.sqft" 
+                          value={escrow.property?.sqft} 
+                          onSave={(field, value) => handleFieldUpdate('property', field, value)}
+                          type="number"
+                        />
+                      </Stack>
+                      <Stack direction="row" alignItems="center" spacing={2}>
+                        <Typography variant="body2" sx={{ minWidth: 150, color: 'text.secondary' }}>Lot Size (sqft):</Typography>
+                        <EditableField 
+                          field="property.lotSize" 
+                          value={escrow.property?.lotSize} 
+                          onSave={(field, value) => handleFieldUpdate('property', field, value)}
+                          type="number"
+                        />
+                      </Stack>
+                      <Stack direction="row" alignItems="center" spacing={2}>
+                        <Typography variant="body2" sx={{ minWidth: 150, color: 'text.secondary' }}>Year Built:</Typography>
+                        <EditableField 
+                          field="property.yearBuilt" 
+                          value={escrow.property?.yearBuilt} 
+                          onSave={(field, value) => handleFieldUpdate('property', field, value)}
+                          type="number"
+                        />
+                      </Stack>
+                      <Stack direction="row" alignItems="center" spacing={2}>
+                        <Typography variant="body2" sx={{ minWidth: 150, color: 'text.secondary' }}>HOA Fees:</Typography>
+                        <EditableField 
+                          field="property.hoaFees" 
+                          value={escrow.property?.hoaFees} 
+                          onSave={(field, value) => handleFieldUpdate('property', field, value)}
+                          type="number"
+                          formatter={formatCurrency}
+                        />
+                      </Stack>
+                    </Stack>
+                  </Box>
+                  
+                  <Divider />
+                  
+                  {/* Property Identifiers */}
+                  <Box>
+                    <Typography variant="subtitle2" color="primary" sx={{ mb: 1 }}>Property Identifiers</Typography>
+                    <Stack spacing={1}>
+                      <Stack direction="row" alignItems="center" spacing={2}>
+                        <Typography variant="body2" sx={{ minWidth: 150, color: 'text.secondary' }}>MLS Number:</Typography>
+                        <EditableField 
+                          field="property.mlsNumber" 
+                          value={escrow.property?.mlsNumber} 
+                          onSave={(field, value) => handleFieldUpdate('property', field, value)}
+                          type="text"
+                        />
+                      </Stack>
+                      <Stack direction="row" alignItems="center" spacing={2}>
+                        <Typography variant="body2" sx={{ minWidth: 150, color: 'text.secondary' }}>APN:</Typography>
+                        <EditableField 
+                          field="property.apn" 
+                          value={escrow.property?.apn} 
+                          onSave={(field, value) => handleFieldUpdate('property', field, value)}
+                          type="text"
+                        />
+                      </Stack>
+                      <Stack direction="row" alignItems="center" spacing={2}>
+                        <Typography variant="body2" sx={{ minWidth: 150, color: 'text.secondary' }}>Tax ID:</Typography>
+                        <EditableField 
+                          field="property.taxId" 
+                          value={escrow.property?.taxId} 
+                          onSave={(field, value) => handleFieldUpdate('property', field, value)}
+                          type="text"
+                        />
+                      </Stack>
+                    </Stack>
+                  </Box>
+                  
+                  <Divider />
+                  
+                  {/* Valuation & Pricing */}
+                  <Box>
+                    <Typography variant="subtitle2" color="primary" sx={{ mb: 1 }}>Valuation & Pricing</Typography>
+                    <Stack spacing={1}>
+                      <Stack direction="row" alignItems="center" spacing={2}>
+                        <Typography variant="body2" sx={{ minWidth: 150, color: 'text.secondary' }}>Purchase Price:</Typography>
+                        <EditableField 
+                          field="financials.purchasePrice" 
+                          value={escrow.financials?.purchasePrice || escrow.purchasePrice} 
+                          onSave={(field, value) => handleFieldUpdate('financials', field, value)}
+                          type="number"
+                          formatter={formatCurrency}
+                        />
+                      </Stack>
+                      <Stack direction="row" alignItems="center" spacing={2}>
+                        <Typography variant="body2" sx={{ minWidth: 150, color: 'text.secondary' }}>List Price:</Typography>
+                        <EditableField 
+                          field="property.listPrice" 
+                          value={escrow.property?.listPrice} 
+                          onSave={(field, value) => handleFieldUpdate('property', field, value)}
+                          type="number"
+                          formatter={formatCurrency}
+                        />
+                      </Stack>
+                      <Stack direction="row" alignItems="center" spacing={2}>
+                        <Typography variant="body2" sx={{ minWidth: 150, color: 'text.secondary' }}>Appraised Value:</Typography>
+                        <EditableField 
+                          field="property.appraisedValue" 
+                          value={escrow.property?.appraisedValue} 
+                          onSave={(field, value) => handleFieldUpdate('property', field, value)}
+                          type="number"
+                          formatter={formatCurrency}
+                        />
+                      </Stack>
+                      <Stack direction="row" alignItems="center" spacing={2}>
+                        <Typography variant="body2" sx={{ minWidth: 150, color: 'text.secondary' }}>Property Tax:</Typography>
+                        <EditableField 
+                          field="property.propertyTax" 
+                          value={escrow.property?.propertyTax} 
+                          onSave={(field, value) => handleFieldUpdate('property', field, value)}
+                          type="number"
+                          formatter={formatCurrency}
+                        />
+                      </Stack>
+                    </Stack>
+                  </Box>
+                  
+                  <Divider />
+                  
+                  {/* Additional Details */}
+                  <Box>
+                    <Typography variant="subtitle2" color="primary" sx={{ mb: 1 }}>Additional Details</Typography>
+                    <Stack spacing={1}>
+                      <Stack direction="row" alignItems="center" spacing={2}>
+                        <Typography variant="body2" sx={{ minWidth: 150, color: 'text.secondary' }}>Zillow URL:</Typography>
+                        <EditableField 
+                          field="zillow_url" 
+                          value={escrow.zillowUrl} 
+                          onSave={(field, value) => handleFieldUpdate('main', field, value)}
+                          type="text"
+                        />
+                      </Stack>
+                      <Stack direction="row" alignItems="center" spacing={2}>
+                        <Typography variant="body2" sx={{ minWidth: 150, color: 'text.secondary' }}>School District:</Typography>
+                        <EditableField 
+                          field="property.schoolDistrict" 
+                          value={escrow.property?.schoolDistrict} 
+                          onSave={(field, value) => handleFieldUpdate('property', field, value)}
+                          type="text"
+                        />
+                      </Stack>
+                      <Stack direction="row" alignItems="center" spacing={2}>
+                        <Typography variant="body2" sx={{ minWidth: 150, color: 'text.secondary' }}>Subdivision:</Typography>
+                        <EditableField 
+                          field="property.subdivision" 
+                          value={escrow.property?.subdivision} 
+                          onSave={(field, value) => handleFieldUpdate('property', field, value)}
+                          type="text"
+                        />
+                      </Stack>
+                      <Stack direction="row" alignItems="center" spacing={2}>
+                        <Typography variant="body2" sx={{ minWidth: 150, color: 'text.secondary' }}>View Type:</Typography>
+                        <EditableField 
+                          field="property.viewType" 
+                          value={escrow.property?.viewType} 
+                          onSave={(field, value) => handleFieldUpdate('property', field, value)}
+                          type="text"
+                        />
+                      </Stack>
+                    </Stack>
+                  </Box>
+                  
+                  {(!escrow.property || Object.keys(escrow.property).length === 0) && (
+                    <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 2 }}>
+                      Click on any field to edit and add property details
                     </Typography>
                   )}
                 </Stack>
