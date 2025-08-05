@@ -205,12 +205,31 @@ const EscrowCard = ({ escrow, onClick, index }) => {
     'pending': '#ff9800',
     'Closed': '#9e9e9e',
     'closed': '#9e9e9e',
+    'Cancelled': '#f44336',
+    'cancelled': '#f44336',
     // Legacy support
     'Active': '#4caf50',
     'active': '#4caf50'
   };
   
   const statusColor = statusColors[escrow.escrowStatus] || '#9e9e9e';
+  
+  // Calculate timeline progress
+  const acceptanceDate = new Date(escrow.acceptanceDate);
+  const coeDate = new Date(escrow.scheduledCoeDate);
+  const today = new Date();
+  const totalDays = Math.floor((coeDate - acceptanceDate) / (1000 * 60 * 60 * 24));
+  const daysElapsed = Math.floor((today - acceptanceDate) / (1000 * 60 * 60 * 24));
+  const progressPercentage = Math.min(Math.max((daysElapsed / totalDays) * 100, 0), 100);
+  
+  // Define milestones
+  const milestones = [
+    { name: 'Contract Accepted', date: escrow.acceptanceDate, position: 0 },
+    { name: 'EMD Due', date: escrow.emdDate, position: 10 },
+    { name: 'Contingencies', date: escrow.contingenciesDate, position: 40 },
+    { name: 'Loan Approval', position: 70 },
+    { name: 'Closing', date: escrow.scheduledCoeDate, position: 100 }
+  ];
   
   return (
     <motion.div
@@ -230,7 +249,7 @@ const EscrowCard = ({ escrow, onClick, index }) => {
         sx={{
           cursor: 'pointer',
           position: 'relative',
-          overflow: 'hidden',
+          overflow: 'visible',
           background: theme.palette.mode === 'dark' 
             ? 'rgba(255, 255, 255, 0.05)' 
             : 'rgba(255, 255, 255, 0.9)',
@@ -259,103 +278,90 @@ const EscrowCard = ({ escrow, onClick, index }) => {
           },
         }}
       >
-        <CardContent sx={{ p: 3 }}>
-          <Grid container spacing={3} alignItems="center">
-            <Grid item xs={12} md={4}>
-              <Box>
-                <Box display="flex" alignItems="center" gap={1} mb={1}>
-                  <LocationOn sx={{ fontSize: 20, color: theme.palette.primary.main }} />
-                  <Typography 
-                    variant="h5" 
-                    sx={{ 
-                      fontWeight: 700,
-                      background: `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.dark} 100%)`,
-                      backgroundClip: 'text',
-                      WebkitBackgroundClip: 'text',
-                      WebkitTextFillColor: 'transparent',
-                    }}
-                  >
-                    {escrow.propertyAddress}
-                  </Typography>
-                  <Chip
-                    label={escrow.escrowStatus}
-                    size="small"
-                    sx={{
-                      background: alpha(statusColor, 0.1),
-                      color: statusColor,
-                      border: `1px solid ${alpha(statusColor, 0.3)}`,
-                      fontWeight: 600,
-                    }}
-                  />
-                </Box>
-                <Box display="flex" alignItems="center" gap={1}>
-                  <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 500 }}>
-                    Escrow: {escrow.displayId || escrow.escrowNumber}
-                  </Typography>
-                </Box>
-              </Box>
-            </Grid>
+        <CardContent sx={{ p: 0 }}>
+          {/* Property Image Section */}
+          <Box 
+            sx={{ 
+              height: 200,
+              backgroundImage: `url(${escrow.zillowImageUrl || escrow.propertyImage || 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800'})`,
+              backgroundSize: 'cover',
+              backgroundPosition: 'center',
+              position: 'relative',
+            }}
+          >
+            {/* Overlay gradient */}
+            <Box
+              sx={{
+                position: 'absolute',
+                bottom: 0,
+                left: 0,
+                right: 0,
+                height: '60%',
+                background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)',
+              }}
+            />
+            
+            {/* Status chip */}
+            <Chip
+              label={escrow.escrowStatus}
+              size="small"
+              sx={{
+                position: 'absolute',
+                top: 16,
+                right: 16,
+                background: alpha(statusColor, 0.9),
+                color: 'white',
+                fontWeight: 600,
+              }}
+            />
+            
+            {/* Property Address */}
+            <Box sx={{ position: 'absolute', bottom: 16, left: 16, right: 16 }}>
+              <Typography 
+                variant="h5" 
+                sx={{ 
+                  fontWeight: 700,
+                  color: 'white',
+                  textShadow: '0 2px 4px rgba(0,0,0,0.5)',
+                }}
+              >
+                {escrow.propertyAddress}
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.8)' }}>
+                Escrow #: {escrow.escrowNumber || escrow.displayId || 'FTKE-3012500795SAM'}
+              </Typography>
+            </Box>
+          </Box>
 
-            <Grid item xs={12} md={3}>
-              <Box>
+          {/* Content Section */}
+          <Box sx={{ p: 3 }}>
+            <Grid container spacing={2}>
+              {/* Purchase Price and Commission */}
+              <Grid item xs={12} sm={4}>
                 <Typography variant="caption" color="textSecondary" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>
-                  Transaction Value
+                  Purchase Price
                 </Typography>
                 <Typography variant="h5" sx={{ fontWeight: 700, mt: 0.5 }}>
                   ${Number(escrow.purchasePrice).toLocaleString()}
                 </Typography>
-                <Box display="flex" alignItems="center" gap={0.5} mt={1}>
-                  <Box
-                    sx={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: '50%',
-                      bgcolor: 'success.main',
-                      animation: 'pulse 2s infinite',
-                    }}
-                  />
-                  <Typography variant="body2" color="success.main" sx={{ fontWeight: 600 }}>
-                    ${Number(escrow.myCommission).toLocaleString()} commission
-                  </Typography>
-                </Box>
-              </Box>
-            </Grid>
-
-            <Grid item xs={12} md={3}>
-              <Box>
-                <Typography variant="caption" color="textSecondary" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>
-                  Timeline
+                <Typography variant="body2" color="success.main" sx={{ fontWeight: 600, mt: 0.5 }}>
+                  ${Number(escrow.myCommission).toLocaleString()} commission
                 </Typography>
-                <Box mt={0.5}>
-                  <Box display="flex" alignItems="center" gap={1} mb={0.5}>
-                    <Handshake sx={{ fontSize: 16, color: 'info.main' }} />
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {safeFormatDate(escrow.acceptanceDate, 'MMM d, yyyy')}
-                    </Typography>
-                  </Box>
-                  <Box display="flex" alignItems="center" gap={1}>
-                    <AccountBalance sx={{ fontSize: 16, color: 'primary.main' }} />
-                    <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                      {safeFormatDate(escrow.scheduledCoeDate, 'MMM d, yyyy')}
-                    </Typography>
-                  </Box>
-                </Box>
-              </Box>
-            </Grid>
+              </Grid>
 
-            <Grid item xs={12} md={2}>
-              <Box display="flex" flexDirection="column" alignItems="flex-end" gap={1}>
+              {/* Days to Close */}
+              <Grid item xs={12} sm={4} sx={{ textAlign: 'center' }}>
                 <Box 
                   sx={{ 
-                    textAlign: 'center',
-                    px: 2,
+                    display: 'inline-block',
+                    px: 3,
                     py: 1,
                     borderRadius: 2,
                     background: alpha(theme.palette.primary.main, 0.1),
                   }}
                 >
                   <Typography 
-                    variant="h4" 
+                    variant="h3" 
                     sx={{ 
                       fontWeight: 700,
                       color: escrow.daysToClose <= 7 ? 'error.main' : 'primary.main',
@@ -364,49 +370,127 @@ const EscrowCard = ({ escrow, onClick, index }) => {
                     {escrow.daysToClose > 0 ? escrow.daysToClose : 0}
                   </Typography>
                   <Typography variant="caption" color="textSecondary">
-                    days left
+                    days to close
                   </Typography>
                 </Box>
-                <IconButton 
-                  color="primary" 
-                  size="large"
-                  className="arrow-icon"
-                  sx={{ 
-                    transition: 'transform 0.3s ease',
-                    background: alpha(theme.palette.primary.main, 0.1),
-                  }}
-                >
-                  <ArrowForward />
-                </IconButton>
-              </Box>
-            </Grid>
-          </Grid>
+              </Grid>
 
-          {/* Progress bar */}
-          <Box sx={{ mt: 2, position: 'relative' }}>
-            <Box
-              sx={{
-                height: 4,
-                borderRadius: 2,
-                backgroundColor: alpha(statusColor, 0.1),
-                overflow: 'hidden',
-              }}
-            >
+              {/* Last Activity */}
+              <Grid item xs={12} sm={4} sx={{ textAlign: 'right' }}>
+                <Typography variant="caption" color="textSecondary" sx={{ textTransform: 'uppercase', letterSpacing: 1 }}>
+                  Last Activity
+                </Typography>
+                <Typography variant="body2" sx={{ fontWeight: 500, mt: 0.5 }}>
+                  {safeFormatDate(escrow.lastActivity, 'MMM d, h:mm a')}
+                </Typography>
+                <Chip 
+                  label={`${escrow.upcomingDeadlines} deadlines`} 
+                  size="small" 
+                  color="warning"
+                  sx={{ mt: 0.5 }}
+                />
+              </Grid>
+            </Grid>
+
+            {/* Timeline Progress with Milestones */}
+            <Box sx={{ mt: 3, position: 'relative' }}>
               <Box
                 sx={{
-                  height: '100%',
-                  width: `${escrow.checklistProgress || 0}%`,
-                  backgroundColor: statusColor,
-                  borderRadius: 2,
-                  transition: 'width 1s ease-out',
+                  height: 8,
+                  borderRadius: 4,
+                  backgroundColor: alpha(statusColor, 0.1),
+                  overflow: 'visible',
+                  position: 'relative',
                 }}
-              />
+              >
+                {/* Progress fill */}
+                <Box
+                  sx={{
+                    height: '100%',
+                    width: `${Math.min(progressPercentage, 100)}%`,
+                    backgroundColor: statusColor,
+                    borderRadius: 4,
+                    transition: 'width 1s ease-out',
+                  }}
+                />
+                
+                {/* Today marker */}
+                {progressPercentage > 0 && progressPercentage < 100 && (
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      left: `${progressPercentage}%`,
+                      top: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      width: 2,
+                      height: 20,
+                      backgroundColor: 'error.main',
+                      '&::after': {
+                        content: '"TODAY"',
+                        position: 'absolute',
+                        top: -20,
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        fontSize: 10,
+                        fontWeight: 700,
+                        color: 'error.main',
+                        whiteSpace: 'nowrap',
+                      },
+                    }}
+                  />
+                )}
+                
+                {/* Milestones */}
+                {milestones.map((milestone, idx) => (
+                  <Tooltip 
+                    key={idx} 
+                    title={
+                      <Box>
+                        <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                          {milestone.name}
+                        </Typography>
+                        {milestone.date && (
+                          <Typography variant="caption" display="block">
+                            {safeFormatDate(milestone.date, 'MMM d, yyyy')}
+                          </Typography>
+                        )}
+                      </Box>
+                    }
+                    arrow
+                  >
+                    <Box
+                      sx={{
+                        position: 'absolute',
+                        left: `${milestone.position}%`,
+                        top: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: 12,
+                        height: 12,
+                        borderRadius: '50%',
+                        backgroundColor: progressPercentage >= milestone.position ? statusColor : 'grey.300',
+                        border: '2px solid white',
+                        cursor: 'pointer',
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                          transform: 'translate(-50%, -50%) scale(1.5)',
+                        },
+                      }}
+                    />
+                  </Tooltip>
+                ))}
+              </Box>
+              
+              {/* Timeline dates */}
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
+                <Typography variant="caption" color="textSecondary">
+                  {safeFormatDate(escrow.acceptanceDate, 'MMM d')}
+                </Typography>
+                <Typography variant="caption" color="textSecondary">
+                  {safeFormatDate(escrow.scheduledCoeDate, 'MMM d')}
+                </Typography>
+              </Box>
             </Box>
-            <Typography variant="caption" color="textSecondary" sx={{ mt: 0.5, display: 'block' }}>
-              {escrow.checklistProgress || 0}% Complete
-            </Typography>
           </Box>
-          
         </CardContent>
       </Card>
     </motion.div>
