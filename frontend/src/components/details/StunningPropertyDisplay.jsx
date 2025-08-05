@@ -1,0 +1,374 @@
+import React, { useState } from 'react';
+import {
+  Box,
+  Card,
+  Typography,
+  Chip,
+  Grid,
+  IconButton,
+  Tooltip,
+  Fade,
+  useTheme,
+  alpha,
+} from '@mui/material';
+import {
+  Bed,
+  Bathtub,
+  SquareFoot,
+  CalendarToday,
+  Landscape,
+  Home,
+  AttachMoney,
+  TrendingUp,
+  LocationOn,
+  Pool,
+  DirectionsCar,
+  Stairs,
+  OpenInNew,
+  ZoomIn,
+  ZoomOut,
+} from '@mui/icons-material';
+import { motion } from 'framer-motion';
+import { formatDistanceToNow } from 'date-fns';
+
+const StunningPropertyDisplay = ({ escrow }) => {
+  const theme = useTheme();
+  const [imageScale, setImageScale] = useState(1);
+  const [imagePosition, setImagePosition] = useState({ x: 0, y: 0 });
+
+  const property = escrow.propertyDetails || {};
+  const financials = escrow.financials || {};
+
+  // Property highlights - no duplicates with widgets below
+  const highlights = [
+    {
+      icon: <Bed />,
+      label: 'Bedrooms',
+      value: property.bedrooms || '-',
+      color: theme.palette.primary.main,
+    },
+    {
+      icon: <Bathtub />,
+      label: 'Bathrooms',
+      value: property.bathrooms || '-',
+      color: theme.palette.info.main,
+    },
+    {
+      icon: <SquareFoot />,
+      label: 'Living Space',
+      value: property.squareFeet ? `${property.squareFeet.toLocaleString()} sqft` : '-',
+      color: theme.palette.success.main,
+    },
+    {
+      icon: <Landscape />,
+      label: 'Lot Size',
+      value: property.lotSizeSqft ? `${property.lotSizeSqft.toLocaleString()} sqft` : '-',
+      color: theme.palette.warning.main,
+    },
+    {
+      icon: <CalendarToday />,
+      label: 'Year Built',
+      value: property.yearBuilt || '-',
+      color: theme.palette.secondary.main,
+    },
+    {
+      icon: <AttachMoney />,
+      label: 'Price/sqft',
+      value: property.pricePerSqft ? `$${property.pricePerSqft}` : '-',
+      color: theme.palette.error.main,
+    },
+  ];
+
+  const handleMouseMove = (e) => {
+    if (imageScale > 1) {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width - 0.5) * -50;
+      const y = ((e.clientY - rect.top) / rect.height - 0.5) * -50;
+      setImagePosition({ x, y });
+    }
+  };
+
+  const handleZoomIn = () => {
+    setImageScale(Math.min(imageScale + 0.5, 3));
+  };
+
+  const handleZoomOut = () => {
+    setImageScale(Math.max(imageScale - 0.5, 1));
+    if (imageScale - 0.5 <= 1) {
+      setImagePosition({ x: 0, y: 0 });
+    }
+  };
+
+  return (
+    <Card
+      elevation={12}
+      sx={{
+        mb: 4,
+        overflow: 'hidden',
+        background: 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
+        border: '1px solid',
+        borderColor: alpha(theme.palette.primary.main, 0.1),
+      }}
+    >
+      <Grid container>
+        {/* Left side - Image */}
+        <Grid item xs={12} md={7}>
+          <Box
+            sx={{
+              position: 'relative',
+              height: { xs: 400, md: 500 },
+              overflow: 'hidden',
+              backgroundColor: '#000',
+              cursor: imageScale > 1 ? 'move' : 'default',
+            }}
+            onMouseMove={handleMouseMove}
+            onMouseLeave={() => setImagePosition({ x: 0, y: 0 })}
+          >
+            <motion.img
+              src={escrow.propertyImage || 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=1200'}
+              alt={escrow.propertyAddress}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                transform: `scale(${imageScale}) translate(${imagePosition.x}px, ${imagePosition.y}px)`,
+                transition: imageScale === 1 ? 'transform 0.3s ease' : 'none',
+              }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            />
+
+            {/* Zoom controls */}
+            <Box
+              sx={{
+                position: 'absolute',
+                bottom: 16,
+                right: 16,
+                display: 'flex',
+                gap: 1,
+                backgroundColor: alpha('#000', 0.7),
+                borderRadius: 2,
+                p: 0.5,
+              }}
+            >
+              <IconButton size="small" onClick={handleZoomOut} sx={{ color: 'white' }}>
+                <ZoomOut />
+              </IconButton>
+              <IconButton size="small" onClick={handleZoomIn} sx={{ color: 'white' }}>
+                <ZoomIn />
+              </IconButton>
+            </Box>
+
+            {/* Property type badge */}
+            <Chip
+              icon={<Home sx={{ color: 'white !important' }} />}
+              label={property.propertyType || 'Single Family'}
+              sx={{
+                position: 'absolute',
+                top: 16,
+                left: 16,
+                backgroundColor: alpha(theme.palette.primary.main, 0.9),
+                color: 'white',
+                fontWeight: 600,
+              }}
+            />
+
+            {/* Status badge */}
+            <Chip
+              label={escrow.escrowStatus}
+              sx={{
+                position: 'absolute',
+                top: 16,
+                right: 16,
+                backgroundColor: alpha(
+                  escrow.escrowStatus === 'Active' ? theme.palette.success.main :
+                  escrow.escrowStatus === 'Pending' ? theme.palette.warning.main :
+                  theme.palette.grey[600],
+                  0.9
+                ),
+                color: 'white',
+                fontWeight: 600,
+              }}
+            />
+
+            {/* Zillow link */}
+            {escrow.zillowUrl && (
+              <Tooltip title="View on Zillow">
+                <IconButton
+                  component="a"
+                  href={escrow.zillowUrl}
+                  target="_blank"
+                  sx={{
+                    position: 'absolute',
+                    bottom: 16,
+                    left: 16,
+                    backgroundColor: alpha('#006AFF', 0.9),
+                    color: 'white',
+                    '&:hover': {
+                      backgroundColor: '#006AFF',
+                    },
+                  }}
+                >
+                  <OpenInNew />
+                </IconButton>
+              </Tooltip>
+            )}
+          </Box>
+        </Grid>
+
+        {/* Right side - Property info */}
+        <Grid item xs={12} md={5}>
+          <Box sx={{ p: 4, height: '100%', display: 'flex', flexDirection: 'column' }}>
+            {/* Address and price */}
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="h4" fontWeight="700" gutterBottom>
+                {escrow.propertyAddress}
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                <LocationOn color="action" />
+                <Typography variant="body1" color="text.secondary">
+                  {property.city}, {property.state} {property.zipCode}
+                </Typography>
+              </Box>
+              <Typography variant="h3" fontWeight="800" color="primary" sx={{ mt: 2 }}>
+                ${escrow.purchasePrice?.toLocaleString()}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {property.county} County • APN: {property.apn || 'N/A'}
+              </Typography>
+            </Box>
+
+            {/* Property highlights grid */}
+            <Grid container spacing={2} sx={{ mb: 3 }}>
+              {highlights.map((highlight, index) => (
+                <Grid item xs={6} key={index}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <Box
+                      sx={{
+                        p: 2,
+                        borderRadius: 2,
+                        backgroundColor: alpha(highlight.color, 0.08),
+                        border: '1px solid',
+                        borderColor: alpha(highlight.color, 0.2),
+                        height: '100%',
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                        {React.cloneElement(highlight.icon, { 
+                          sx: { color: highlight.color, fontSize: 20 } 
+                        })}
+                        <Typography variant="caption" color="text.secondary">
+                          {highlight.label}
+                        </Typography>
+                      </Box>
+                      <Typography variant="h6" fontWeight="600">
+                        {highlight.value}
+                      </Typography>
+                    </Box>
+                  </motion.div>
+                </Grid>
+              ))}
+            </Grid>
+
+            {/* Special features */}
+            <Box sx={{ mt: 'auto' }}>
+              <Typography variant="subtitle2" fontWeight="600" gutterBottom>
+                Special Features
+              </Typography>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {property.pool && (
+                  <Chip
+                    icon={<Pool />}
+                    label="Pool"
+                    size="small"
+                    color="info"
+                    variant="outlined"
+                  />
+                )}
+                {property.spa && (
+                  <Chip
+                    icon={<Pool />}
+                    label="Spa"
+                    size="small"
+                    color="info"
+                    variant="outlined"
+                  />
+                )}
+                {property.garageSpaces && (
+                  <Chip
+                    icon={<DirectionsCar />}
+                    label={`${property.garageSpaces} Car Garage`}
+                    size="small"
+                    color="default"
+                    variant="outlined"
+                  />
+                )}
+                {property.stories && (
+                  <Chip
+                    icon={<Stairs />}
+                    label={`${property.stories} Stories`}
+                    size="small"
+                    color="default"
+                    variant="outlined"
+                  />
+                )}
+                {property.gatedCommunity && (
+                  <Chip
+                    label="Gated Community"
+                    size="small"
+                    color="success"
+                    variant="outlined"
+                  />
+                )}
+                {!property.hoaFee || property.hoaFee === '0.00' ? (
+                  <Chip
+                    label="No HOA"
+                    size="small"
+                    color="success"
+                    variant="outlined"
+                  />
+                ) : (
+                  <Chip
+                    label={`HOA: $${property.hoaFee}/mo`}
+                    size="small"
+                    color="warning"
+                    variant="outlined"
+                  />
+                )}
+              </Box>
+
+              {/* Commission highlight */}
+              <Box
+                sx={{
+                  mt: 3,
+                  p: 2,
+                  borderRadius: 2,
+                  background: `linear-gradient(135deg, ${alpha(theme.palette.success.main, 0.1)} 0%, ${alpha(theme.palette.success.main, 0.05)} 100%)`,
+                  border: '1px solid',
+                  borderColor: alpha(theme.palette.success.main, 0.3),
+                }}
+              >
+                <Typography variant="caption" color="text.secondary">
+                  Your Commission
+                </Typography>
+                <Typography variant="h5" fontWeight="700" color="success.main">
+                  ${escrow.myCommission?.toLocaleString()}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {((escrow.myCommission / escrow.purchasePrice) * 100).toFixed(2)}% of sale price
+                </Typography>
+              </Box>
+            </Box>
+          </Box>
+        </Grid>
+      </Grid>
+    </Card>
+  );
+};
+
+export default StunningPropertyDisplay;

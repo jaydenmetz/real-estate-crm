@@ -550,6 +550,8 @@ import DetailPageHero from '../common/DetailPageHero';
 import DebugPanel from '../common/DebugPanel';
 import ZillowPreview from '../common/ZillowPreview';
 import { formatEntityId } from '../../utils/entityIdUtils';
+import StunningPropertyDisplay from './StunningPropertyDisplay';
+import AllDataViewer from './AllDataViewer';
 
 // Fallback motion component - must be after all imports
 const MotionDiv = motion?.div || (({ children, ...props }) => <div {...props}>{children}</div>);
@@ -2883,6 +2885,11 @@ Has Error: ${isError ? 'YES' : 'NO'}`}
         </MotionDiv>
       </DetailPageHero>
 
+      {/* Stunning Property Display */}
+      <StunningPropertyDisplay escrow={escrow} />
+
+      {/* All Data Viewer - Full Width Editable */}
+      <AllDataViewer escrowData={escrow} onUpdate={refetch} />
 
       {/* Main Content - Conditional Rendering based on viewMode */}
       {viewMode === 'overview' ? (
