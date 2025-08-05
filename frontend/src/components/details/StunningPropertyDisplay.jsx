@@ -25,16 +25,12 @@ import {
   DirectionsCar,
   Stairs,
   OpenInNew,
-  ZoomIn,
-  ZoomOut,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
 
 const StunningPropertyDisplay = ({ escrow }) => {
   const theme = useTheme();
-  const [imageScale, setImageScale] = useState(1);
-  const [imagePosition, setImagePosition] = useState({ x: 0, y: 0 });
 
   const property = escrow.propertyDetails || {};
   const financials = escrow.financials || {};
@@ -79,25 +75,6 @@ const StunningPropertyDisplay = ({ escrow }) => {
     },
   ];
 
-  const handleMouseMove = (e) => {
-    if (imageScale > 1) {
-      const rect = e.currentTarget.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width - 0.5) * -50;
-      const y = ((e.clientY - rect.top) / rect.height - 0.5) * -50;
-      setImagePosition({ x, y });
-    }
-  };
-
-  const handleZoomIn = () => {
-    setImageScale(Math.min(imageScale + 0.5, 3));
-  };
-
-  const handleZoomOut = () => {
-    setImageScale(Math.max(imageScale - 0.5, 1));
-    if (imageScale - 0.5 <= 1) {
-      setImagePosition({ x: 0, y: 0 });
-    }
-  };
 
   return (
     <Card
@@ -119,10 +96,7 @@ const StunningPropertyDisplay = ({ escrow }) => {
               height: { xs: 400, md: 500 },
               overflow: 'hidden',
               backgroundColor: '#000',
-              cursor: imageScale > 1 ? 'move' : 'default',
             }}
-            onMouseMove={handleMouseMove}
-            onMouseLeave={() => setImagePosition({ x: 0, y: 0 })}
           >
             <motion.img
               src={escrow.propertyImage || 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=1200'}
@@ -131,34 +105,11 @@ const StunningPropertyDisplay = ({ escrow }) => {
                 width: '100%',
                 height: '100%',
                 objectFit: 'cover',
-                transform: `scale(${imageScale}) translate(${imagePosition.x}px, ${imagePosition.y}px)`,
-                transition: imageScale === 1 ? 'transform 0.3s ease' : 'none',
               }}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.5 }}
             />
-
-            {/* Zoom controls */}
-            <Box
-              sx={{
-                position: 'absolute',
-                bottom: 16,
-                right: 16,
-                display: 'flex',
-                gap: 1,
-                backgroundColor: alpha('#000', 0.7),
-                borderRadius: 2,
-                p: 0.5,
-              }}
-            >
-              <IconButton size="small" onClick={handleZoomOut} sx={{ color: 'white' }}>
-                <ZoomOut />
-              </IconButton>
-              <IconButton size="small" onClick={handleZoomIn} sx={{ color: 'white' }}>
-                <ZoomIn />
-              </IconButton>
-            </Box>
 
             {/* Property type badge */}
             <Chip
