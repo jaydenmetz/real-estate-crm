@@ -2025,12 +2025,11 @@ class SimpleEscrowController {
 
   /**
    * Get property image from Zillow
-   * Fetches Open Graph image using opengraph.xyz proxy service
+   * Efficiently fetches Open Graph image from Zillow pages
    */
   static async getEscrowImage(req, res) {
     const https = require('https');
-    const http = require('http');
-    const { URL } = require('url');
+    const zlib = require('zlib');
     
     try {
       const { id } = req.params;
@@ -2038,7 +2037,7 @@ class SimpleEscrowController {
       
       // Get escrow to find Zillow URL
       const query = `
-        SELECT zillow_url, property_image_url, property_address, display_id 
+        SELECT zillow_url, property_image_url, property_address, display_id, id
         FROM escrows 
         WHERE id = $1 OR display_id = $1
       `;
@@ -2056,178 +2055,133 @@ class SimpleEscrowController {
         return res.send('No Zillow URL');
       }
       
-      // If we already have a property image URL, return it
-      if (escrow.property_image_url && !escrow.property_image_url.includes('unsplash')) {
+      // If we already have a valid property image URL (not placeholder), return it
+      if (escrow.property_image_url && 
+          !escrow.property_image_url.includes('unsplash') && 
+          !escrow.property_image_url.includes('placeholder')) {
         return res.send(escrow.property_image_url);
       }
       
-      // Try to fetch directly from Zillow first
-      https.get(escrow.zillow_url, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.5',
-          'Accept-Encoding': 'gzip, deflate, br',
-          'Connection': 'keep-alive',
-          'Upgrade-Insecure-Requests': '1'
-        }
-      }, (zillowRes) => {
-        // Handle redirect
-        if (zillowRes.statusCode === 301 || zillowRes.statusCode === 302) {
-          const redirectUrl = zillowRes.headers.location;
-          https.get(redirectUrl, {
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36'
-            }
-          }, (redirectRes) => {
-            handleZillowResponse(redirectRes);
-          }).on('error', () => {
-            tryOpenGraphXyz();
-          });
-          return;
-        }
-        
-        handleZillowResponse(zillowRes);
-      }).on('error', (err) => {
-        console.error('Direct Zillow fetch error:', err);
-        tryOpenGraphXyz();
-      });
-      
-      // Helper function to handle Zillow response
-      const handleZillowResponse = (response) => {
-        let html = '';
-        let foundImage = false;
-        
-        response.on('data', (chunk) => {
-          html += chunk.toString();
+      // Fetch Open Graph image from Zillow
+      const fetchZillowOGImage = (url, isRedirect = false) => {
+        https.get(url, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Accept-Encoding': 'gzip, deflate',
+            'Connection': 'close'
+          },
+          timeout: 10000 // 10 second timeout
+        }, (response) => {
+          // Handle redirects
+          if ((response.statusCode === 301 || response.statusCode === 302) && response.headers.location) {
+            const redirectUrl = response.headers.location.startsWith('http') 
+              ? response.headers.location 
+              : `https://www.zillow.com${response.headers.location}`;
+            return fetchZillowOGImage(redirectUrl, true);
+          }
           
-          // Look for og:image in the accumulated HTML
-          if (!foundImage && html.length > 10000) { // Check after accumulating some data
-            const match = html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i) ||
-                         html.match(/<meta\s+content="([^"]+)"\s+property="og:image"/i);
+          if (response.statusCode !== 200) {
+            return res.send('Error parsing Open Graph');
+          }
+          
+          let chunks = [];
+          let totalSize = 0;
+          const maxSize = 100 * 1024; // Only fetch first 100KB
+          let foundImage = false;
+          
+          // Handle different encodings
+          let stream = response;
+          const encoding = response.headers['content-encoding'];
+          
+          if (encoding === 'gzip') {
+            stream = response.pipe(zlib.createGunzip());
+          } else if (encoding === 'deflate') {
+            stream = response.pipe(zlib.createInflate());
+          }
+          
+          stream.on('data', (chunk) => {
+            totalSize += chunk.length;
+            chunks.push(chunk);
             
-            if (match && match[1]) {
+            // Stop fetching after we have enough data
+            if (totalSize > maxSize || foundImage) {
+              response.destroy();
+              return;
+            }
+            
+            // Check current accumulated data for og:image
+            const html = Buffer.concat(chunks).toString('utf8');
+            const ogImageMatch = html.match(/<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']/i) ||
+                                html.match(/<meta\s+content=["']([^"']+)["']\s+property=["']og:image["']/i);
+            
+            if (ogImageMatch && ogImageMatch[1]) {
               foundImage = true;
-              let imageUrl = match[1];
+              let imageUrl = ogImageMatch[1];
               
               // Ensure it's a full URL
               if (!imageUrl.startsWith('http')) {
-                imageUrl = 'https:' + imageUrl;
+                imageUrl = imageUrl.startsWith('//') ? 'https:' + imageUrl : 'https://www.zillow.com' + imageUrl;
               }
               
-              // Update database
+              // Update database with the found image
               pool.query(
                 'UPDATE escrows SET property_image_url = $1, updated_at = NOW() WHERE id = $2',
                 [imageUrl, escrow.id]
-              ).then(() => {
-                res.send(imageUrl);
-              }).catch(err => {
+              ).catch(err => {
                 console.error('DB update error:', err);
-                res.send(imageUrl);
               });
               
+              res.send(imageUrl);
               response.destroy();
             }
-          }
-        });
-        
-        response.on('end', () => {
-          if (!foundImage) {
-            // Try one more time to find og:image in complete HTML
-            const match = html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i) ||
-                         html.match(/<meta\s+content="([^"]+)"\s+property="og:image"/i);
-            
-            if (match && match[1]) {
-              let imageUrl = match[1];
-              if (!imageUrl.startsWith('http')) {
-                imageUrl = 'https:' + imageUrl;
-              }
-              
-              pool.query(
-                'UPDATE escrows SET property_image_url = $1, updated_at = NOW() WHERE id = $2',
-                [imageUrl, escrow.id]
-              ).then(() => {
-                res.send(imageUrl);
-              }).catch(() => {
-                res.send(imageUrl);
-              });
-            } else {
-              tryOpenGraphXyz();
-            }
-          }
-        });
-        
-        response.on('error', () => {
-          tryOpenGraphXyz();
-        });
-      };
-      
-      // Fallback to opengraph.xyz API
-      const tryOpenGraphXyz = () => {
-        // Use the actual opengraph.xyz page to extract data
-        const encodedUrl = encodeURIComponent(escrow.zillow_url);
-        const ogPageUrl = `https://www.opengraph.xyz/url/${encodedUrl}`;
-        
-        https.get(ogPageUrl, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (compatible; RealEstateCRM/1.0)'
-          }
-        }, (response) => {
-          let html = '';
-          
-          response.on('data', (chunk) => {
-            html += chunk;
           });
           
-          response.on('end', () => {
-            // Look for the og:image in the page that opengraph.xyz shows
-            // They usually display it in a specific format
-            const scriptMatch = html.match(/__NEXT_DATA__[^>]+>([^<]+)<\/script>/);
-            if (scriptMatch) {
-              try {
-                const jsonData = JSON.parse(scriptMatch[1]);
-                // Navigate through the Next.js data structure
-                if (jsonData.props && jsonData.props.pageProps) {
-                  // Look for OpenGraph data in the props
-                  const findOgImage = (obj) => {
-                    if (typeof obj !== 'object' || obj === null) return null;
-                    
-                    if (obj.og_image || obj.ogImage || obj['og:image']) {
-                      return obj.og_image || obj.ogImage || obj['og:image'];
-                    }
-                    
-                    for (const key in obj) {
-                      const result = findOgImage(obj[key]);
-                      if (result) return result;
-                    }
-                    
-                    return null;
-                  };
-                  
-                  const ogImage = findOgImage(jsonData.props.pageProps);
-                  if (ogImage) {
-                    pool.query(
-                      'UPDATE escrows SET property_image_url = $1, updated_at = NOW() WHERE id = $2',
-                      [ogImage, escrow.id]
-                    ).then(() => {
-                      res.send(ogImage);
-                    }).catch(() => {
-                      res.send(ogImage);
-                    });
-                    return;
-                  }
+          stream.on('end', () => {
+            if (!foundImage && chunks.length > 0) {
+              // Final check on complete data
+              const html = Buffer.concat(chunks).toString('utf8');
+              const ogImageMatch = html.match(/<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']/i) ||
+                                  html.match(/<meta\s+content=["']([^"']+)["']\s+property=["']og:image["']/i);
+              
+              if (ogImageMatch && ogImageMatch[1]) {
+                let imageUrl = ogImageMatch[1];
+                
+                if (!imageUrl.startsWith('http')) {
+                  imageUrl = imageUrl.startsWith('//') ? 'https:' + imageUrl : 'https://www.zillow.com' + imageUrl;
                 }
-              } catch (e) {
-                console.error('Error parsing Next.js data:', e);
+                
+                // Update database
+                pool.query(
+                  'UPDATE escrows SET property_image_url = $1, updated_at = NOW() WHERE id = $2',
+                  [imageUrl, escrow.id]
+                ).catch(err => {
+                  console.error('DB update error:', err);
+                });
+                
+                res.send(imageUrl);
+              } else {
+                res.send('Error parsing Open Graph');
               }
             }
-            
+          });
+          
+          stream.on('error', (err) => {
+            console.error('Stream error:', err);
             res.send('Error parsing Open Graph');
           });
-        }).on('error', () => {
+        }).on('error', (err) => {
+          console.error('Request error:', err);
+          res.send('Error parsing Open Graph');
+        }).on('timeout', () => {
+          console.error('Request timeout');
           res.send('Error parsing Open Graph');
         });
       };
+      
+      // Start fetching
+      fetchZillowOGImage(escrow.zillow_url);
       
     } catch (error) {
       console.error('Error in getEscrowImage:', error);
