@@ -3,15 +3,11 @@ import {
   Box,
   Card,
   CardMedia,
-  CardContent,
   Typography,
   Skeleton,
   Stack,
-  Chip,
-  IconButton,
-  Tooltip,
 } from '@mui/material';
-import { OpenInNew, Home, AttachMoney } from '@mui/icons-material';
+import { OpenInNew, Home } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 
 const PreviewCard = styled(Card)(({ theme }) => ({
@@ -48,22 +44,6 @@ const PreviewOverlay = styled(Box)(({ theme }) => ({
   zIndex: 2,
 }));
 
-const ZillowBadge = styled(Box)(({ theme }) => ({
-  position: 'absolute',
-  top: 16,
-  left: 16,
-  backgroundColor: '#006AFF',
-  color: 'white',
-  padding: '4px 12px',
-  borderRadius: '4px',
-  fontSize: '12px',
-  fontWeight: 600,
-  display: 'flex',
-  alignItems: 'center',
-  gap: '4px',
-  zIndex: 3,
-  boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-}));
 
 const ZillowPreview = ({ url, height = 500, escrowData }) => {
   const [loading, setLoading] = useState(true);
@@ -226,13 +206,7 @@ const ZillowPreview = ({ url, height = 500, escrowData }) => {
         </Stack>
       </PreviewOverlay>
 
-      {/* Zillow Badge */}
-      <ZillowBadge>
-        <Home sx={{ fontSize: 16 }} />
-        Zillow
-      </ZillowBadge>
-
-      {/* Property Image */}
+      {/* Property Image - Full height */}
       {previewData.image && (
         <CardMedia
           component="img"
@@ -240,7 +214,8 @@ const ZillowPreview = ({ url, height = 500, escrowData }) => {
           alt={previewData.title}
           className="preview-image"
           sx={{
-            height: '60%',
+            height: '100%',
+            width: '100%',
             objectFit: 'cover',
             transition: 'transform 0.3s ease',
           }}
@@ -250,61 +225,6 @@ const ZillowPreview = ({ url, height = 500, escrowData }) => {
           }}
         />
       )}
-
-      {/* Property Details */}
-      <CardContent sx={{ height: '40%', p: 3 }}>
-        <Stack spacing={2}>
-          {/* Price and Address */}
-          <Box>
-            {previewData.price && (
-              <Typography variant="h4" fontWeight={700} color="primary" gutterBottom>
-                {previewData.price}
-              </Typography>
-            )}
-            <Typography variant="h6" fontWeight={600} gutterBottom>
-              {previewData.title}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {previewData.description}
-            </Typography>
-          </Box>
-
-          {/* Property Features */}
-          {previewData.details && (
-            <Stack direction="row" spacing={1} flexWrap="wrap">
-              {previewData.details.beds && (
-                <Chip 
-                  size="small" 
-                  label={`${previewData.details.beds} beds`}
-                  variant="outlined"
-                />
-              )}
-              {previewData.details.baths && (
-                <Chip 
-                  size="small" 
-                  label={`${previewData.details.baths} baths`}
-                  variant="outlined"
-                />
-              )}
-              {previewData.details.sqft && (
-                <Chip 
-                  size="small" 
-                  label={`${previewData.details.sqft} sqft`}
-                  variant="outlined"
-                />
-              )}
-              {previewData.details.type && (
-                <Chip 
-                  size="small" 
-                  label={previewData.details.type}
-                  variant="outlined"
-                  color="primary"
-                />
-              )}
-            </Stack>
-          )}
-        </Stack>
-      </CardContent>
     </PreviewCard>
   );
 };
