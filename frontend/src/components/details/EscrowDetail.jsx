@@ -1089,6 +1089,10 @@ const PropertyCard = styled(Card)(({ theme }) => ({
     width: '100%',
     height: '100%',
     objectFit: 'cover',
+    transition: 'transform 0.3s ease',
+  },
+  '& a:hover img': {
+    transform: 'scale(1.05)',
   },
   '& .property-overlay': {
     position: 'absolute',
@@ -2521,43 +2525,101 @@ Has Error: ${isError ? 'YES' : 'NO'}`}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
           <PropertyCard elevation={8}>
-            {escrow.propertyImage || escrow.property?.images?.length > 0 ? (
-              <Swiper
-                modules={[Navigation, Pagination, Autoplay, EffectFade]}
-                spaceBetween={0}
-                slidesPerView={1}
-                navigation
-                pagination={{ clickable: true }}
-                autoplay={{ delay: 5000 }}
-                effect="fade"
-                onSlideChange={(swiper) => setSelectedImage(swiper?.activeIndex || 0)}
-                style={{ width: '100%', height: '100%' }}
-              >
-                {[escrow.propertyImage, ...(escrow.property?.images || [])].filter(Boolean).map((image, index) => (
-                  <SwiperSlide key={index}>
-                    <img src={image} alt={`Property ${index + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </SwiperSlide>
-                ))}
-              </Swiper>
-            ) : (
-              <Box 
-                sx={{ 
-                  width: '100%', 
-                  height: '100%', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center', 
-                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                }}
-              >
-                <Stack alignItems="center" spacing={2}>
-                  <Home sx={{ fontSize: 80, color: 'white', opacity: 0.8 }} />
-                  <Typography variant="h5" color="white" fontWeight="600">
-                    {escrow.propertyAddress}
-                  </Typography>
-                </Stack>
-              </Box>
-            )}
+            {/* Hardcode Zillow URL for ESC-2025-001 */}
+            {(() => {
+              const zillowUrl = escrow.escrowNumber === 'ESC-2025-001' 
+                ? 'https://www.zillow.com/homedetails/6510-Summer-Breeze-Ln-Bakersfield-CA-93313/19056207_zpid/'
+                : escrow.property?.zillowUrl || null;
+              
+              const propertyImageContent = escrow.propertyImage || escrow.property?.images?.length > 0 ? (
+                <Swiper
+                  modules={[Navigation, Pagination, Autoplay, EffectFade]}
+                  spaceBetween={0}
+                  slidesPerView={1}
+                  navigation
+                  pagination={{ clickable: true }}
+                  autoplay={{ delay: 5000 }}
+                  effect="fade"
+                  onSlideChange={(swiper) => setSelectedImage(swiper?.activeIndex || 0)}
+                  style={{ width: '100%', height: '100%' }}
+                >
+                  {[escrow.propertyImage, ...(escrow.property?.images || [])].filter(Boolean).map((image, index) => (
+                    <SwiperSlide key={index}>
+                      <img src={image} alt={`Property ${index + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </SwiperSlide>
+                  ))}
+                </Swiper>
+              ) : (
+                <Box 
+                  sx={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                  }}
+                >
+                  <Stack alignItems="center" spacing={2}>
+                    <Home sx={{ fontSize: 80, color: 'white', opacity: 0.8 }} />
+                    <Typography variant="h5" color="white" fontWeight="600">
+                      {escrow.propertyAddress}
+                    </Typography>
+                  </Stack>
+                </Box>
+              );
+              
+              return (
+                <>
+                  {zillowUrl ? (
+                    <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
+                      <a 
+                        href={zillowUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        style={{ 
+                          display: 'block', 
+                          width: '100%', 
+                          height: '100%',
+                          cursor: 'pointer' 
+                        }}
+                      >
+                        {propertyImageContent}
+                        {/* Zillow Indicator Badge */}
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            top: 16,
+                            right: 16,
+                            backgroundColor: '#006AFF',
+                            color: 'white',
+                            padding: '8px 16px',
+                            borderRadius: '8px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                            zIndex: 20,
+                            fontWeight: 600,
+                            fontSize: '14px',
+                            '&:hover': {
+                              backgroundColor: '#0054CC',
+                              transform: 'scale(1.05)',
+                            },
+                            transition: 'all 0.3s ease',
+                          }}
+                        >
+                          <OpenInNew sx={{ fontSize: 18 }} />
+                          View on Zillow
+                        </Box>
+                      </a>
+                    </Box>
+                  ) : (
+                    propertyImageContent
+                  )}
+                </>
+              );
+            })()}
             <Box className="property-overlay">
               <Grid container spacing={2}>
                 <Grid item xs={3}>
