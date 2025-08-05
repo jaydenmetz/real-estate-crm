@@ -719,7 +719,7 @@ const EscrowsDashboard = () => {
         </Tabs>
       </Box>
 
-      {/* Stats Cards */>
+      {/* Stats Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
           <Grid item xs={12} sm={6} md={3}>
             <StatCard
