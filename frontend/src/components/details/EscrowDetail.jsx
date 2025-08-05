@@ -548,6 +548,7 @@ import networkMonitor from '../../services/networkMonitor';
 import CopyButton from '../common/CopyButton';
 import DetailPageHero from '../common/DetailPageHero';
 import DebugPanel from '../common/DebugPanel';
+import ZillowPreview from '../common/ZillowPreview';
 import { formatEntityId } from '../../utils/entityIdUtils';
 
 // Fallback motion component - must be after all imports
@@ -2524,25 +2525,16 @@ Has Error: ${isError ? 'YES' : 'NO'}`}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.2 }}
         >
-          <PropertyCard elevation={8}>
-            {/* Hardcode Zillow URL and image for ESC-2025-001 */}
-            {(() => {
-              const isEscrow001 = escrow.escrowNumber === 'ESC-2025-001';
-              const zillowUrl = isEscrow001 
-                ? 'https://www.zillow.com/homedetails/6510-Summer-Breeze-Ln-Bakersfield-CA-93313/19056207_zpid/'
-                : escrow.property?.zillowUrl || null;
-              
-              // For ESC-2025-001, use Zillow property image
-              // This is the actual image from the Zillow listing
-              const zillowImageUrl = isEscrow001
-                ? 'https://photos.zillowstatic.com/fp/c4a4e8da0cf3c7a0717bc996e1061b50-cc_ft_768.webp'
-                : null;
-              
-              const displayImages = isEscrow001 && zillowImageUrl
-                ? [zillowImageUrl]
-                : [escrow.propertyImage, ...(escrow.property?.images || [])].filter(Boolean);
-              
-              const propertyImageContent = displayImages.length > 0 ? (
+          {/* Use ZillowPreview for ESC-2025-001, regular PropertyCard for others */}
+          {escrow.escrowNumber === 'ESC-2025-001' ? (
+            <ZillowPreview
+              url="https://www.zillow.com/homedetails/6510-Summer-Breeze-Ln-Bakersfield-CA-93313/19056207_zpid/"
+              height={500}
+              escrowData={escrow}
+            />
+          ) : (
+            <PropertyCard elevation={8}>
+              {escrow.propertyImage || escrow.property?.images?.length > 0 ? (
                 <Swiper
                   modules={[Navigation, Pagination, Autoplay, EffectFade]}
                   spaceBetween={0}
@@ -2554,7 +2546,7 @@ Has Error: ${isError ? 'YES' : 'NO'}`}
                   onSlideChange={(swiper) => setSelectedImage(swiper?.activeIndex || 0)}
                   style={{ width: '100%', height: '100%' }}
                 >
-                  {displayImages.map((image, index) => (
+                  {[escrow.propertyImage, ...(escrow.property?.images || [])].filter(Boolean).map((image, index) => (
                     <SwiperSlide key={index}>
                       <img src={image} alt={`Property ${index + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     </SwiperSlide>
@@ -2578,101 +2570,37 @@ Has Error: ${isError ? 'YES' : 'NO'}`}
                     </Typography>
                   </Stack>
                 </Box>
-              );
-              
-              return (
-                <>
-                  {zillowUrl ? (
-                    <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
-                      <a 
-                        href={zillowUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        style={{ 
-                          display: 'block', 
-                          width: '100%', 
-                          height: '100%',
-                          cursor: 'pointer' 
-                        }}
-                      >
-                        {propertyImageContent}
-                        {/* Zillow Preview Indicator - Subtle overlay */}
-                        <Box
-                          sx={{
-                            position: 'absolute',
-                            bottom: 0,
-                            left: 0,
-                            right: 0,
-                            background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 100%)',
-                            padding: '20px',
-                            zIndex: 15,
-                            pointerEvents: 'none',
-                          }}
-                        >
-                          <Stack direction="row" justifyContent="space-between" alignItems="center">
-                            <Box>
-                              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.8)' }}>
-                                Property Preview from
-                              </Typography>
-                              <Typography variant="h6" sx={{ color: 'white', fontWeight: 700 }}>
-                                Zillow
-                              </Typography>
-                            </Box>
-                            <Box
-                              sx={{
-                                backgroundColor: 'rgba(0, 106, 255, 0.9)',
-                                color: 'white',
-                                padding: '6px 12px',
-                                borderRadius: '6px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 0.5,
-                                fontSize: '13px',
-                                fontWeight: 600,
-                              }}
-                            >
-                              <OpenInNew sx={{ fontSize: 16 }} />
-                              View Details
-                            </Box>
-                          </Stack>
-                        </Box>
-                      </a>
-                    </Box>
-                  ) : (
-                    propertyImageContent
-                  )}
-                </>
-              );
-            })()}
-            <Box className="property-overlay">
-              <Grid container spacing={2}>
-                <Grid item xs={3}>
-                  <Typography variant="h4" fontWeight="bold">
-                    {escrow.property?.bedrooms || '-'}
-                  </Typography>
-                  <Typography variant="body2">Beds</Typography>
+              )}
+              <Box className="property-overlay">
+                <Grid container spacing={2}>
+                  <Grid item xs={3}>
+                    <Typography variant="h4" fontWeight="bold">
+                      {escrow.property?.bedrooms || '-'}
+                    </Typography>
+                    <Typography variant="body2">Beds</Typography>
+                  </Grid>
+                  <Grid item xs={3}>
+                    <Typography variant="h4" fontWeight="bold">
+                      {escrow.property?.bathrooms || '-'}
+                    </Typography>
+                    <Typography variant="body2">Baths</Typography>
+                  </Grid>
+                  <Grid item xs={3}>
+                    <Typography variant="h4" fontWeight="bold">
+                      {escrow.property?.sqft ? `${(escrow.property.sqft / 1000).toFixed(1)}k` : '-'}
+                    </Typography>
+                    <Typography variant="body2">Sq Ft</Typography>
+                  </Grid>
+                  <Grid item xs={3}>
+                    <Typography variant="h4" fontWeight="bold">
+                      {escrow.property?.yearBuilt || '-'}
+                    </Typography>
+                    <Typography variant="body2">Built</Typography>
+                  </Grid>
                 </Grid>
-                <Grid item xs={3}>
-                  <Typography variant="h4" fontWeight="bold">
-                    {escrow.property?.bathrooms || '-'}
-                  </Typography>
-                  <Typography variant="body2">Baths</Typography>
-                </Grid>
-                <Grid item xs={3}>
-                  <Typography variant="h4" fontWeight="bold">
-                    {escrow.property?.sqft ? `${(escrow.property.sqft / 1000).toFixed(1)}k` : '-'}
-                  </Typography>
-                  <Typography variant="body2">Sq Ft</Typography>
-                </Grid>
-                <Grid item xs={3}>
-                  <Typography variant="h4" fontWeight="bold">
-                    {escrow.property?.yearBuilt || '-'}
-                  </Typography>
-                  <Typography variant="body2">Built</Typography>
-                </Grid>
-              </Grid>
-            </Box>
-          </PropertyCard>
+              </Box>
+            </PropertyCard>
+          )}
         </MotionDiv>
         {/* Enhanced Property Overview - Integrated below hero */}
         <MotionDiv
