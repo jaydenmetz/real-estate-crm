@@ -71,51 +71,95 @@ const ZillowPreview = ({ url, height = 500, escrowData }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    // For demo purposes, we'll simulate the OG data that would come from Zillow
-    // In production, you'd fetch this from your backend which would scrape the OG tags
     const fetchOpenGraphData = async () => {
       setLoading(true);
       setError(null);
 
       try {
-        // Simulate API delay
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Fetch actual Open Graph data from our backend
+        const token = localStorage.getItem('token');
+        const headers = {
+          'Content-Type': 'application/json',
+        };
+        
+        // Add authorization header if token exists
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`;
+        }
+        
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/v1/link-preview`, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify({ url }),
+        });
 
-        // For the demo Zillow URL, return mock OG data
-        // In production, your backend would fetch and parse the actual OG tags
-        if (url.includes('19056207_zpid')) {
-          // Use the actual Zillow image URL with proper size
-          setPreviewData({
-            title: '789 Pacific Coast Highway, Malibu, CA 90265',
-            description: 'Luxury beachfront property in Malibu',
-            // Use the escrow property image or a placeholder
-            image: escrowData?.propertyImage || 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800&h=600&fit=crop',
-            price: '$3,500,000',
-            details: {
-              beds: escrowData?.property?.bedrooms || 5,
-              baths: escrowData?.property?.bathrooms || 4,
-              sqft: escrowData?.property?.sqft || '4,200',
-              type: escrowData?.property?.type || 'Single Family Residence',
-              yearBuilt: escrowData?.property?.yearBuilt || 2018,
-              lot: '0.25 acres',
-            },
+        const result = await response.json();
+
+        if (result.success) {
+          const data = result.data;
+          
+          // Process the preview data
+          const preview = {
+            title: data.title || escrowData?.propertyAddress || 'Property Preview',
+            description: data.description || 'View property details on Zillow',
+            // If Zillow blocked us or no image, always use escrow image
+            image: (data.isBlocked || !data.image) ? 
+              (escrowData?.propertyImage || 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800&h=600&fit=crop') : 
+              data.image,
             url: url,
-            siteName: 'Zillow',
-          });
+            siteName: data.siteName || 'Zillow',
+          };
+
+          // If Zillow was blocked, use escrow data for preview
+          if (data.isBlocked) {
+            preview.title = escrowData?.propertyAddress || 'View Property on Zillow';
+            preview.price = escrowData?.purchasePrice ? `$${escrowData.purchasePrice.toLocaleString()}` : null;
+            preview.details = escrowData?.property ? {
+              beds: escrowData.property.bedrooms,
+              baths: escrowData.property.bathrooms,
+              sqft: escrowData.property.sqft,
+              type: escrowData.property.type,
+              yearBuilt: escrowData.property.yearBuilt,
+            } : null;
+          } else if (data.propertyData) {
+            // If we have property-specific data from Zillow, use it
+            preview.price = data.propertyData.price ? `$${parseInt(data.propertyData.price).toLocaleString()}` : null;
+            preview.details = {
+              beds: data.propertyData.beds,
+              baths: data.propertyData.baths,
+              sqft: data.propertyData.sqft,
+              type: data.propertyData.propertyType,
+              yearBuilt: data.propertyData.yearBuilt,
+            };
+          } else {
+            // Fallback to escrow data
+            preview.price = escrowData?.purchasePrice ? `$${escrowData.purchasePrice.toLocaleString()}` : null;
+            preview.details = escrowData?.property ? {
+              beds: escrowData.property.bedrooms,
+              baths: escrowData.property.bathrooms,
+              sqft: escrowData.property.sqft,
+              type: escrowData.property.type,
+              yearBuilt: escrowData.property.yearBuilt,
+            } : null;
+          }
+
+          setPreviewData(preview);
         } else {
-          // Fallback for other properties
-          setPreviewData({
-            title: escrowData?.propertyAddress || 'Property Preview',
-            description: 'View property details on Zillow',
-            image: escrowData?.propertyImage || null,
-            price: escrowData?.purchasePrice ? `$${escrowData.purchasePrice.toLocaleString()}` : null,
-            url: url,
-            siteName: 'Zillow',
-          });
+          throw new Error(result.error?.message || 'Failed to fetch preview');
         }
       } catch (err) {
         setError('Failed to load preview');
         console.error('Error fetching OG data:', err);
+        
+        // Fallback to basic preview
+        setPreviewData({
+          title: escrowData?.propertyAddress || 'Property Preview',
+          description: 'View property details on Zillow',
+          image: escrowData?.propertyImage || null,
+          price: escrowData?.purchasePrice ? `$${escrowData.purchasePrice.toLocaleString()}` : null,
+          url: url,
+          siteName: 'Zillow',
+        });
       } finally {
         setLoading(false);
       }

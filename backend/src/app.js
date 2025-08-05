@@ -200,6 +200,7 @@ apiRouter.use('/documents', require('./routes/documents.routes'));
 apiRouter.use('/debug', require('./routes/debug'));
 apiRouter.use('/test-connection', require('./routes/test-connection'));
 apiRouter.use('/simple-test', require('./routes/simple-test'));
+apiRouter.use('/link-preview', require('./routes/linkPreview.routes'));
 
 // Financial routes
 apiRouter.use('/commissions', require('./routes/commissions.routes'));
