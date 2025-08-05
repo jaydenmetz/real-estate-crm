@@ -3418,35 +3418,35 @@ Has Error: ${isError ? 'YES' : 'NO'}`}
               />
               
               <Stack spacing={1}>
-                {/* Loan Section */}
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="body2">Loan</Typography>
-                  <Chip 
-                    label={`${escrow.checklists?.loan ? Object.values(escrow.checklists.loan).filter(v => v).length : 0}/${escrow.checklists?.loan ? Object.keys(escrow.checklists.loan).length : 0}`} 
-                    size="small" 
-                    sx={{ bgcolor: 'rgba(0,0,0,0.1)', fontWeight: 'bold' }}
-                  />
-                </Box>
-                
-                {/* House Section */}
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="body2">House</Typography>
-                  <Chip 
-                    label={`${escrow.checklists?.house ? Object.values(escrow.checklists.house).filter(v => v).length : 0}/${escrow.checklists?.house ? Object.keys(escrow.checklists.house).length : 0}`} 
-                    size="small" 
-                    sx={{ bgcolor: 'rgba(0,0,0,0.1)', fontWeight: 'bold' }}
-                  />
-                </Box>
-                
-                {/* Admin Section */}
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Typography variant="body2">Admin</Typography>
-                  <Chip 
-                    label={`${escrow.checklists?.admin ? Object.values(escrow.checklists.admin).filter(v => v).length : 0}/${escrow.checklists?.admin ? Object.keys(escrow.checklists.admin).length : 0}`} 
-                    size="small" 
-                    sx={{ bgcolor: 'rgba(0,0,0,0.1)', fontWeight: 'bold' }}
-                  />
-                </Box>
+                {/* Display categories dynamically */}
+                {(escrow.checklists || escrow.checklist) ? (
+                  Object.entries(escrow.checklists || escrow.checklist).map(([category, items]) => (
+                    <Box key={category} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant="body2">{category}</Typography>
+                      <Chip 
+                        label={`${Object.values(items).filter(v => v).length}/${Object.keys(items).length}`} 
+                        size="small" 
+                        sx={{ bgcolor: 'rgba(0,0,0,0.1)', fontWeight: 'bold' }}
+                      />
+                    </Box>
+                  ))
+                ) : (
+                  <>
+                    {/* Default empty state */}
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant="body2">Pre-Contract</Typography>
+                      <Chip label="0/0" size="small" sx={{ bgcolor: 'rgba(0,0,0,0.1)', fontWeight: 'bold' }} />
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant="body2">Contract to Close</Typography>
+                      <Chip label="0/0" size="small" sx={{ bgcolor: 'rgba(0,0,0,0.1)', fontWeight: 'bold' }} />
+                    </Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <Typography variant="body2">Closing</Typography>
+                      <Chip label="0/0" size="small" sx={{ bgcolor: 'rgba(0,0,0,0.1)', fontWeight: 'bold' }} />
+                    </Box>
+                  </>
+                )}
               </Stack>
               
               <Button 
@@ -4410,95 +4410,80 @@ Has Error: ${isError ? 'YES' : 'NO'}`}
                 </Stack>
                 
                 <Stack spacing={3}>
-                  {/* Loan Section */}
-                  {escrow.checklists?.loan && (
-                    <Box>
-                      <Typography variant="subtitle1" color="primary" fontWeight={600} sx={{ mb: 2 }}>
-                        Loan
-                      </Typography>
-                      <Stack spacing={1.5}>
-                        {Object.entries(escrow.checklists.loan).map(([task, completed]) => (
-                          <Box key={task} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              {completed ? (
-                                <CheckCircle sx={{ fontSize: 20, color: 'success.main' }} />
-                              ) : (
-                                <Box sx={{ width: 20, height: 20, border: '2px solid', borderColor: 'divider', borderRadius: '50%' }} />
-                              )}
-                              <Typography variant="body2" sx={{ textDecoration: completed ? 'line-through' : 'none' }}>
-                                {task.replace(/([A-Z])/g, ' $1').trim().toUpperCase()}
-                              </Typography>
-                            </Box>
-                            <Typography variant="caption" color="text.secondary">
-                              {completed ? 'Complete' : 'Pending'}
-                            </Typography>
-                          </Box>
-                        ))}
-                      </Stack>
-                    </Box>
-                  )}
-                  
-                  <Divider />
-                  
-                  {/* House Section */}
-                  {escrow.checklists?.house && (
-                    <Box>
-                      <Typography variant="subtitle1" color="primary" fontWeight={600} sx={{ mb: 2 }}>
-                        House
-                      </Typography>
-                      <Stack spacing={1.5}>
-                        {Object.entries(escrow.checklists.house).map(([task, completed]) => (
-                          <Box key={task} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              {completed ? (
-                                <CheckCircle sx={{ fontSize: 20, color: 'success.main' }} />
-                              ) : (
-                                <Box sx={{ width: 20, height: 20, border: '2px solid', borderColor: 'divider', borderRadius: '50%' }} />
-                              )}
-                              <Typography variant="body2" sx={{ textDecoration: completed ? 'line-through' : 'none' }}>
-                                {task.replace(/([A-Z])/g, ' $1').trim()}
-                              </Typography>
-                            </Box>
-                            <Typography variant="caption" color="text.secondary">
-                              {completed ? 'Complete' : 'Pending'}
-                            </Typography>
-                          </Box>
-                        ))}
-                      </Stack>
-                    </Box>
-                  )}
-                  
-                  <Divider />
-                  
-                  {/* Admin Section */}
-                  {escrow.checklists?.admin && (
-                    <Box>
-                      <Typography variant="subtitle1" color="primary" fontWeight={600} sx={{ mb: 2 }}>
-                        Admin
-                      </Typography>
-                      <Stack spacing={1.5}>
-                        {Object.entries(escrow.checklists.admin).map(([task, completed]) => (
-                          <Box key={task} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              {completed ? (
-                                <CheckCircle sx={{ fontSize: 20, color: 'success.main' }} />
-                              ) : (
-                                <Box sx={{ width: 20, height: 20, border: '2px solid', borderColor: 'divider', borderRadius: '50%' }} />
-                              )}
-                              <Typography variant="body2" sx={{ textDecoration: completed ? 'line-through' : 'none' }}>
-                                {task.replace(/([A-Z])/g, ' $1').trim()}
-                              </Typography>
-                            </Box>
-                            <Typography variant="caption" color="text.secondary">
-                              {completed ? 'Complete' : 'Pending'}
-                            </Typography>
-                          </Box>
-                        ))}
-                      </Stack>
-                    </Box>
-                  )}
-                  
-                  {(!escrow.checklists || (!escrow.checklists.loan && !escrow.checklists.house && !escrow.checklists.admin)) && (
+                  {/* Check both checklists (plural) and checklist (singular) for compatibility */}
+                  {(escrow.checklists || escrow.checklist) ? (
+                    Object.entries(escrow.checklists || escrow.checklist).map(([category, items]) => {
+                      // Format category name
+                      const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1);
+                      
+                      // Define custom labels for specific fields
+                      const fieldLabels = {
+                        // Loan fields
+                        'le': 'LE (Loan Estimate)',
+                        'lockedRate': 'Rate Locked',
+                        'appraisalOrdered': 'Appraisal Ordered',
+                        'appraisalReceived': 'Appraisal Received',
+                        'clearToClose': 'Clear to Close',
+                        'cd': 'CD (Closing Disclosure)',
+                        'loanDocsSigned': 'Loan Docs Signed',
+                        'cashToClosePaid': 'Cash to Close Paid',
+                        'loanFunded': 'Loan Funded',
+                        // House fields
+                        'homeInspectionOrdered': 'Home Inspection Ordered',
+                        'emd': 'EMD (Earnest Money Deposit)',
+                        'solarTransferInitiated': 'Solar Transfer Initiated',
+                        'avid': 'AVID',
+                        'homeInspectionReceived': 'Home Inspection Received',
+                        'sellerDisclosures': 'Seller Disclosures',
+                        'rr': 'RR (Repair Request)',
+                        'recorded': 'Recorded',
+                        // Admin fields
+                        'mlsStatusUpdate': 'MLS Status Update',
+                        'tcEmail': 'TC Email',
+                        'tcGlideInvite': 'TC Glide Invite',
+                        'addContactsToPhone': 'Add Contacts to Phone',
+                        'addContactsToNotion': 'Add Contacts to Notion'
+                      };
+                      
+                      return (
+                        <Box key={category}>
+                          <Typography variant="subtitle1" color="primary" fontWeight={600} sx={{ mb: 2 }}>
+                            {categoryLabel}
+                          </Typography>
+                          <Stack spacing={1.5}>
+                            {Object.entries(items).map(([task, completed]) => {
+                              // Use custom label if available, otherwise format the field name
+                              const taskLabel = fieldLabels[task] || task
+                                .replace(/([A-Z])/g, ' $1')
+                                .replace(/^./, str => str.toUpperCase())
+                                .trim();
+                              
+                              return (
+                                <Box key={task} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    {completed ? (
+                                      <CheckCircle sx={{ fontSize: 20, color: 'success.main' }} />
+                                    ) : (
+                                      <Box sx={{ width: 20, height: 20, border: '2px solid', borderColor: 'divider', borderRadius: '50%' }} />
+                                    )}
+                                    <Typography variant="body2" sx={{ textDecoration: completed ? 'line-through' : 'none' }}>
+                                      {taskLabel}
+                                    </Typography>
+                                  </Box>
+                                  <Typography variant="caption" color="text.secondary">
+                                    {completed ? 'Complete' : 'Pending'}
+                                  </Typography>
+                                </Box>
+                              );
+                            })}
+                          </Stack>
+                          {category !== Object.keys(escrow.checklists || escrow.checklist).slice(-1)[0] && (
+                            <Divider sx={{ mt: 2 }} />
+                          )}
+                        </Box>
+                      );
+                    })
+                  ) : (
                     <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', py: 3 }}>
                       No checklist items available
                     </Typography>
