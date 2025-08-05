@@ -286,14 +286,18 @@ class SimpleEscrowController {
    */
   static async getEscrowById(req, res) {
     try {
-      const { id } = req.params;
+      let { id } = req.params;
+      
+      // Strip the "escrow-" prefix if present (we don't want it)
+      if (id.startsWith('escrow-')) {
+        id = id.substring(7);
+      }
       
       // Detect schema
       const schema = await detectSchema();
       
-      // Determine if ID is UUID (with or without prefix) or display format
-      // Handle both "esc" and "escrow-" prefixes
-      const isUUID = /^(esc|escrow-)?[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      // Determine if ID is UUID format or display format
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
       
       // Build query to handle UUID, numeric ID, or display ID
       let whereClause;
@@ -1002,10 +1006,15 @@ class SimpleEscrowController {
         });
       }
       
-      // Determine if ID is UUID-like format (including shortened versions) or display format
-      // Handle both "esc" and "escrow-" prefixes and variable length first segments
-      const isUUIDFormat = /^(esc|escrow-)?[0-9a-f]+-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-      values.push(id);
+      // Strip the "escrow-" prefix if present (we don't want it)
+      let cleanId = id;
+      if (id.startsWith('escrow-')) {
+        cleanId = id.substring(7);
+      }
+      
+      // Determine if ID is UUID format or display format
+      const isUUIDFormat = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanId);
+      values.push(cleanId);
       
       const updateQuery = `
         UPDATE escrows 
