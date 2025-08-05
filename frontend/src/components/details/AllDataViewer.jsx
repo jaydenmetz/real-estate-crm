@@ -183,7 +183,11 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
         [backendField]: finalValue
       };
 
-      await escrowsAPI.update(escrowData.id, updateData);
+      // Strip the 'escrow-' prefix if present
+      const cleanId = escrowData.id.startsWith('escrow-') ? 
+        escrowData.id.substring(7) : escrowData.id;
+      
+      await escrowsAPI.update(cleanId, updateData);
       
       setEditingField(null);
       setSavedField(path);
