@@ -431,7 +431,7 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
         { label: 'Status', value: escrowData.escrowStatus, path: 'escrowStatus' },
         { label: 'Purchase Price', value: escrowData.purchasePrice, path: 'purchasePrice', type: 'currency' },
         { label: 'My Commission', value: escrowData.myCommission, path: 'myCommission', type: 'currency' },
-        { label: 'Zillow URL', value: escrowData.zillowUrl, path: 'zillowUrl' },
+        { label: 'Zillow URL', value: escrowData.zillowUrl || escrowData.zillow_url, path: 'zillowUrl' },
         { label: 'Property Image URL', value: escrowData.propertyImage, path: 'propertyImage' },
       ],
     },
