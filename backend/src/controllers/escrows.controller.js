@@ -4,6 +4,11 @@ const { asyncHandler } = require('../middleware/errorLogging');
 // Cache for schema detection
 let schemaInfo = null;
 
+// Clear schema cache on startup to ensure fresh detection
+if (process.env.NODE_ENV === 'production') {
+  schemaInfo = null;
+}
+
 // Helper function to detect database schema
 async function detectSchema() {
   if (schemaInfo) return schemaInfo;
@@ -155,8 +160,10 @@ class SimpleEscrowController {
       console.log('Schema info:', schema);
       
       let commissionField;
-      if (schema.hasMyCommission) {
+      if (schema.hasMyCommission && schema.hasBuyerSideCommission) {
         commissionField = 'COALESCE(my_commission, net_commission, buyer_side_commission * purchase_price / 100, buyer_side_commission, 0)';
+      } else if (schema.hasMyCommission) {
+        commissionField = 'COALESCE(my_commission, net_commission, 0)';
       } else if (schema.hasNetCommission && schema.hasBuyerSideCommission) {
         commissionField = 'COALESCE(net_commission, buyer_side_commission * purchase_price / 100, buyer_side_commission, 0)';
       } else if (schema.hasNetCommission) {
