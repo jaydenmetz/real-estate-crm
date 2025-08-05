@@ -91,6 +91,15 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
       
       // Map frontend nested paths to backend flat field names
       const fieldMapping = {
+        // Basic fields
+        'zillowUrl': 'zillow_url',
+        'propertyAddress': 'property_address',
+        'propertyImage': 'property_image_url',
+        'escrowStatus': 'escrow_status',
+        'purchasePrice': 'purchase_price',
+        'myCommission': 'my_commission',
+        'escrowNumber': 'escrow_number',
+        
         // Property Details
         'propertyDetails.bedrooms': 'bedrooms',
         'propertyDetails.bathrooms': 'bathrooms',
