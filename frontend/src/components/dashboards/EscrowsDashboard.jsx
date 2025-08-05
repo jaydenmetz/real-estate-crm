@@ -13,6 +13,7 @@ import {
   Button,
   Chip,
   CircularProgress,
+  Divider,
   Fade,
   Grow,
   Slide,
@@ -673,19 +674,54 @@ const EscrowsDashboard = () => {
                   borderRadius: 3, 
                   p: 3,
                   backdropFilter: 'blur(10px)',
+                  border: '1px solid rgba(255,255,255,0.2)',
                 }}>
-                  <Typography variant="h2" fontWeight="bold" sx={{ mb: 1 }}>
-                    <CountUp end={stats.activeEscrows} duration={2} />
-                  </Typography>
-                  <Typography variant="h6" sx={{ opacity: 0.9 }}>
-                    Active Escrows
-                  </Typography>
-                  <Typography variant="h4" sx={{ mt: 2, mb: 1 }}>
-                    $<CountUp end={stats.totalVolume / 1000000} duration={2.5} decimals={1} />M
-                  </Typography>
-                  <Typography variant="body1" sx={{ opacity: 0.9 }}>
-                    Total Transaction Volume
-                  </Typography>
+                  <Stack spacing={2}>
+                    <Box>
+                      <Typography variant="overline" sx={{ opacity: 0.7, display: 'block' }}>
+                        Today's Activity
+                      </Typography>
+                      <Stack direction="row" alignItems="baseline" spacing={1}>
+                        <Typography variant="h3" fontWeight="bold">
+                          <CountUp end={3} duration={1.5} />
+                        </Typography>
+                        <Typography variant="body1" sx={{ opacity: 0.8 }}>
+                          new tasks
+                        </Typography>
+                      </Stack>
+                    </Box>
+                    <Divider sx={{ borderColor: 'rgba(255,255,255,0.2)' }} />
+                    <Box>
+                      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+                        <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                          Closing This Week
+                        </Typography>
+                        <Chip 
+                          label="2" 
+                          size="small" 
+                          sx={{ 
+                            bgcolor: 'rgba(255,255,255,0.2)', 
+                            color: 'white',
+                            fontWeight: 'bold'
+                          }} 
+                        />
+                      </Stack>
+                      <Stack direction="row" justifyContent="space-between" alignItems="center">
+                        <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                          Pending Actions
+                        </Typography>
+                        <Chip 
+                          label="5" 
+                          size="small" 
+                          sx={{ 
+                            bgcolor: 'warning.main', 
+                            color: 'white',
+                            fontWeight: 'bold'
+                          }} 
+                        />
+                      </Stack>
+                    </Box>
+                  </Stack>
                 </Box>
               </motion.div>
             </Grid>
@@ -732,23 +768,12 @@ const EscrowsDashboard = () => {
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
             <StatCard
-              icon={AttachMoney}
-              title="Total Volume"
-              value={stats.totalVolume / 1000000}
-              prefix="$"
-              suffix="M"
-              color="#4caf50"
-              delay={200}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard
               icon={TrendingUp}
               title="Gross Commission"
               value={stats.grossCommission}
               prefix="$"
               color="#ff9800"
-              delay={400}
+              delay={200}
             />
           </Grid>
           <Grid item xs={12} sm={6} md={3}>
@@ -758,6 +783,17 @@ const EscrowsDashboard = () => {
               value={stats.myCommission}
               prefix="$"
               color="#9c27b0"
+              delay={400}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <StatCard
+              icon={AttachMoney}
+              title="Total Volume"
+              value={stats.totalVolume / 1000000}
+              prefix="$"
+              suffix="M"
+              color="#4caf50"
               delay={600}
             />
           </Grid>
