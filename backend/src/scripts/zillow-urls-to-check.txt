@@ -1,0 +1,22 @@
+Zillow URLs to check on opengraph.xyz:
+
+1. 5609 Monitor St, Bakersfield:
+   https://www.zillow.com/homedetails/5609-Monitor-St-Bakersfield-CA-93307/19015640_zpid/
+
+2. 9753 Sunglow St, Pico Rivera:
+   https://www.zillow.com/homedetails/9753-Sunglow-St-Pico-Rivera-CA-90660/21102569_zpid/
+
+3. 313 Darling Point Dr, Bakersfield:
+   https://www.zillow.com/homedetails/313-Darling-Point-Dr-Bakersfield-CA-93307/300316000_zpid/
+
+For each URL:
+1. Go to https://www.opengraph.xyz/
+2. Paste the Zillow URL
+3. Look for the "og:image" field
+4. Copy the image URL (should end in .jpg)
+
+To update each property:
+node src/scripts/update-zillow-images-correct.js "ADDRESS" "IMAGE_URL"
+
+Example:
+node src/scripts/update-zillow-images-correct.js "5609 Monitor St, Bakersfield, CA 93307" "https://photos.zillowstatic.com/fp/HASH-cc_ft_1536.jpg"

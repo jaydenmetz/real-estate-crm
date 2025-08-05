@@ -2022,6 +2022,137 @@ class SimpleEscrowController {
       });
     }
   }
+
+  /**
+   * Get property image from Zillow
+   * Returns the actual image file by fetching from Zillow URL
+   */
+  static async getEscrowImage(req, res) {
+    const https = require('https');
+    const http = require('http');
+    const { URL } = require('url');
+    
+    try {
+      const { id } = req.params;
+      const pool = require('../config/database').pool;
+      
+      // Get escrow to find Zillow URL
+      const query = `
+        SELECT zillow_url, property_image_url, property_address 
+        FROM escrows 
+        WHERE id = $1 OR display_id = $1
+      `;
+      
+      const result = await pool.query(query, [id]);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Escrow not found'
+          }
+        });
+      }
+      
+      const escrow = result.rows[0];
+      
+      // If no Zillow URL, return error message
+      if (!escrow.zillow_url) {
+        return res.status(400).send('Add Zillow URL');
+      }
+      
+      // If we already have a property image URL, fetch and proxy it
+      if (escrow.property_image_url) {
+        try {
+          const imageUrl = new URL(escrow.property_image_url);
+          const protocol = imageUrl.protocol === 'https:' ? https : http;
+          
+          const proxyReq = protocol.get(escrow.property_image_url, (proxyRes) => {
+            // Set appropriate headers
+            res.set({
+              'Content-Type': proxyRes.headers['content-type'] || 'image/jpeg',
+              'Cache-Control': 'public, max-age=86400', // Cache for 1 day
+              'X-Property-Address': escrow.property_address
+            });
+            
+            // Pipe the image directly to response
+            proxyRes.pipe(res);
+          });
+          
+          proxyReq.on('error', (err) => {
+            console.error('Error fetching image:', err);
+            res.status(500).send('Error fetching image');
+          });
+          
+          return;
+        } catch (err) {
+          console.error('Invalid image URL:', err);
+          return res.status(500).send('Invalid image URL');
+        }
+      }
+      
+      // If we have Zillow URL but no image, try to fetch Open Graph image
+      // First, fetch the Zillow page to get OG image
+      const zillowUrl = new URL(escrow.zillow_url);
+      const protocol = zillowUrl.protocol === 'https:' ? https : http;
+      
+      const options = {
+        hostname: zillowUrl.hostname,
+        path: zillowUrl.pathname + zillowUrl.search,
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; RealEstateCRM/1.0)',
+          'Accept': 'text/html'
+        }
+      };
+      
+      protocol.get(options, (response) => {
+        let html = '';
+        
+        response.on('data', (chunk) => {
+          html += chunk;
+          // Stop reading after we find og:image (usually in first 50KB)
+          if (html.includes('og:image') && html.includes('content=')) {
+            response.destroy();
+          }
+        });
+        
+        response.on('end', async () => {
+          // Extract og:image URL
+          const ogImageMatch = html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i) ||
+                               html.match(/<meta\s+content="([^"]+)"\s+property="og:image"/i);
+          
+          if (ogImageMatch && ogImageMatch[1]) {
+            const imageUrl = ogImageMatch[1];
+            
+            // Update database with found image
+            await pool.query(
+              'UPDATE escrows SET property_image_url = $1 WHERE id = $2',
+              [imageUrl, id]
+            );
+            
+            // Redirect to the image
+            res.redirect(imageUrl);
+          } else {
+            res.status(404).send('No image found. Please visit opengraph.xyz to get the image URL.');
+          }
+        });
+      }).on('error', (err) => {
+        console.error('Error fetching Zillow page:', err);
+        res.status(500).send('Error fetching Zillow page');
+      });
+      
+    } catch (error) {
+      console.error('Error in getEscrowImage:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'SERVER_ERROR',
+          message: 'Failed to fetch property image'
+        }
+      });
+    }
+  }
 }
 
 module.exports = SimpleEscrowController;

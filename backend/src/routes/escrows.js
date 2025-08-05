@@ -62,6 +62,9 @@ router.get('/:id/documents', SimpleEscrowController.getEscrowDocuments);
 // GET /v1/escrows/:id/property-details - Get property details
 router.get('/:id/property-details', SimpleEscrowController.getEscrowPropertyDetails);
 
+// GET /v1/escrows/:id/image - Get property image from Zillow
+router.get('/:id/image', SimpleEscrowController.getEscrowImage);
+
 // PUT /v1/escrows/:id/people - Update escrow people
 router.put('/:id/people', SimpleEscrowController.updateEscrowPeople);
 
