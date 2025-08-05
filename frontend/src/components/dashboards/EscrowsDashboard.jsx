@@ -283,12 +283,24 @@ const EscrowCard = ({ escrow, onClick, index }) => {
           <Box 
             sx={{ 
               height: 200,
-              backgroundImage: `url(${escrow.propertyImage || 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800'})`,
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
               position: 'relative',
+              overflow: 'hidden',
+              backgroundColor: '#f5f5f5',
             }}
           >
+            <img
+              src={escrow.propertyImage || 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800'}
+              alt={escrow.propertyAddress}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+              }}
+              onError={(e) => {
+                console.error('Dashboard image failed to load:', escrow.propertyImage);
+                e.target.src = 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800';
+              }}
+            />
             {/* Overlay gradient */}
             <Box
               sx={{

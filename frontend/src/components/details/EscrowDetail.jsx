@@ -2548,7 +2548,15 @@ Has Error: ${isError ? 'YES' : 'NO'}`}
                 >
                   {[escrow.propertyImage, ...(escrow.property?.images || [])].filter(Boolean).map((image, index) => (
                     <SwiperSlide key={index}>
-                      <img src={image} alt={`Property ${index + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      <img 
+                        src={image} 
+                        alt={`Property ${index + 1}`} 
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        onError={(e) => {
+                          console.error('Image failed to load:', image);
+                          e.target.src = 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=800&q=80';
+                        }}
+                      />
                     </SwiperSlide>
                   ))}
                 </Swiper>
