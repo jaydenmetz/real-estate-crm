@@ -349,43 +349,6 @@ const StunningPropertyDisplay = ({ escrow }) => {
                     variant="outlined"
                   />
                 )}
-                {!property.hoaFee || property.hoaFee === '0.00' ? (
-                  <Chip
-                    label="No HOA"
-                    size="small"
-                    color="success"
-                    variant="outlined"
-                  />
-                ) : (
-                  <Chip
-                    label={`HOA: $${property.hoaFee}/mo`}
-                    size="small"
-                    color="warning"
-                    variant="outlined"
-                  />
-                )}
-              </Box>
-
-              {/* Commission highlight */}
-              <Box
-                sx={{
-                  mt: 3,
-                  p: 2,
-                  borderRadius: 2,
-                  background: `linear-gradient(135deg, ${alpha(theme.palette.success.main, 0.1)} 0%, ${alpha(theme.palette.success.main, 0.05)} 100%)`,
-                  border: '1px solid',
-                  borderColor: alpha(theme.palette.success.main, 0.3),
-                }}
-              >
-                <Typography variant="caption" color="text.secondary">
-                  Your Commission
-                </Typography>
-                <Typography variant="h5" fontWeight="700" color="success.main">
-                  ${escrow.myCommission?.toLocaleString()}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {((escrow.myCommission / escrow.purchasePrice) * 100).toFixed(2)}% of sale price
-                </Typography>
               </Box>
             </Box>
           </Box>
