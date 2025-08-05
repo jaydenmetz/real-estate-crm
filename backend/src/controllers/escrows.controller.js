@@ -2024,19 +2024,17 @@ class SimpleEscrowController {
   }
 
   /**
-   * Get property image from Zillow using opengraph.xyz proxy
-   * Converts Zillow URL to opengraph.xyz format and fetches the Open Graph image
+   * Get property image from database
+   * Returns the cached Zillow image URL or prompts to add one
    */
   static async getEscrowImage(req, res) {
-    const https = require('https');
-    
     try {
       const { id } = req.params;
       const pool = require('../config/database').pool;
       
-      // Get escrow to find Zillow URL
+      // Get escrow to find image URL
       const query = `
-        SELECT zillow_url, property_image_url, property_address, display_id, id
+        SELECT property_image_url, zillow_url, property_address, display_id, id
         FROM escrows 
         WHERE id = $1 OR display_id = $1
       `;
@@ -2049,87 +2047,23 @@ class SimpleEscrowController {
       
       const escrow = result.rows[0];
       
-      // If no Zillow URL, return error message
-      if (!escrow.zillow_url) {
-        return res.send('No Zillow URL');
-      }
-      
-      // If we already have a valid property image URL (not placeholder), return it
+      // If we have a valid Zillow static image URL, return it
       if (escrow.property_image_url && 
-          !escrow.property_image_url.includes('unsplash') && 
-          !escrow.property_image_url.includes('placeholder') &&
-          !escrow.property_image_url.includes('8e3f7a5b9c2d1e0f4a6b8c9d0e1f2a3b')) {
+          escrow.property_image_url.includes('zillowstatic.com')) {
         return res.send(escrow.property_image_url);
       }
       
-      // Use opengraph.xyz to get the Open Graph image
-      const encodedZillowUrl = encodeURIComponent(escrow.zillow_url);
-      const opengraphUrl = `https://www.opengraph.xyz/url/${encodedZillowUrl}`;
+      // If no Zillow URL is set, prompt to add one
+      if (!escrow.zillow_url) {
+        return res.send('No Zillow URL - please add the Zillow listing URL to this escrow');
+      }
       
-      https.get(opengraphUrl, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; RealEstateCRM/1.0)',
-          'Accept': 'application/json'
-        },
-        timeout: 10000
-      }, (response) => {
-        let data = '';
-        
-        response.on('data', (chunk) => {
-          data += chunk;
-        });
-        
-        response.on('end', () => {
-          try {
-            const ogData = JSON.parse(data);
-            
-            // Extract image URL from the response
-            let imageUrl = null;
-            
-            // Try different possible locations in the response
-            if (ogData && ogData.hybridGraph && ogData.hybridGraph.image) {
-              imageUrl = ogData.hybridGraph.image;
-            } else if (ogData && ogData.openGraph && ogData.openGraph.image) {
-              imageUrl = ogData.openGraph.image;
-            } else if (ogData && ogData.image) {
-              imageUrl = ogData.image;
-            }
-            
-            if (imageUrl) {
-              // Update database with the found image
-              pool.query(
-                'UPDATE escrows SET property_image_url = $1, updated_at = NOW() WHERE id = $2',
-                [imageUrl, escrow.id]
-              ).catch(err => {
-                console.error('DB update error:', err);
-              });
-              
-              res.send(imageUrl);
-            } else {
-              console.error('No image found in opengraph.xyz response:', ogData);
-              res.send('Error parsing Open Graph');
-            }
-          } catch (err) {
-            console.error('Error parsing opengraph.xyz response:', err);
-            res.send('Error parsing Open Graph');
-          }
-        });
-        
-        response.on('error', (err) => {
-          console.error('Response error:', err);
-          res.send('Error parsing Open Graph');
-        });
-      }).on('error', (err) => {
-        console.error('Request error:', err);
-        res.send('Error parsing Open Graph');
-      }).on('timeout', () => {
-        console.error('Request timeout');
-        res.send('Error parsing Open Graph');
-      });
+      // If we have a Zillow URL but no image, provide instructions
+      return res.send(`To get the image: 1) Go to https://www.opengraph.xyz/ 2) Paste: ${escrow.zillow_url} 3) Copy the og:image URL 4) Update the property_image_url field`);
       
     } catch (error) {
       console.error('Error in getEscrowImage:', error);
-      res.send('Error parsing Open Graph');
+      res.status(500).send('Internal server error');
     }
   }
 }
