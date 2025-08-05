@@ -128,18 +128,17 @@ const ZillowPreview = ({ url, height = 500, escrowData }) => {
           throw new Error(result.error?.message || 'Failed to fetch preview');
         }
       } catch (err) {
-        setError('Failed to load preview');
         console.error('Error fetching OG data:', err);
         
-        // Fallback to basic preview
+        // Always use fallback data instead of showing error
         setPreviewData({
           title: escrowData?.propertyAddress || 'Property Preview',
           description: 'View property details on Zillow',
-          image: escrowData?.propertyImage || null,
-          price: escrowData?.purchasePrice ? `$${escrowData.purchasePrice.toLocaleString()}` : null,
+          image: escrowData?.propertyImage || 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800&h=600&fit=crop',
           url: url,
           siteName: 'Zillow',
         });
+        setError(null); // Don't show error state
       } finally {
         setLoading(false);
       }
