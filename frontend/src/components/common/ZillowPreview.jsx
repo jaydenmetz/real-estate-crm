@@ -157,16 +157,7 @@ const ZillowPreview = ({ url, height = 500, escrowData }) => {
   if (loading) {
     return (
       <Card sx={{ height, position: 'relative' }}>
-        <Skeleton variant="rectangular" height="60%" />
-        <CardContent>
-          <Skeleton variant="text" width="80%" height={32} />
-          <Skeleton variant="text" width="60%" height={24} />
-          <Stack direction="row" spacing={2} sx={{ mt: 2 }}>
-            <Skeleton variant="rectangular" width={80} height={24} />
-            <Skeleton variant="rectangular" width={80} height={24} />
-            <Skeleton variant="rectangular" width={80} height={24} />
-          </Stack>
-        </CardContent>
+        <Skeleton variant="rectangular" height="100%" />
       </Card>
     );
   }
