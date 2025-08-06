@@ -618,32 +618,50 @@ const EscrowCard = ({ escrow, onClick, index }) => {
 
                 {/* Days to Close - Far Right */}
                 <Grid item xs={12} md={3}>
-                  <Box 
-                    sx={{ 
-                      display: 'inline-block',
-                      px: 1.5,
-                      py: 0.5,
-                      borderRadius: 2,
-                      background: alpha(theme.palette.primary.main, 0.08),
-                      width: '100%',
-                      textAlign: 'center',
-                      ml: 'auto',
-                    }}
-                  >
-                    <Typography 
-                      variant="h4" 
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                    <Box 
                       sx={{ 
-                        fontWeight: 700,
-                        color: escrow.daysToClose <= 7 ? 'error.main' : 'primary.main',
-                        fontSize: '1.8rem',
-                        lineHeight: 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        width: 75,
+                        height: 75,
+                        borderRadius: 3,
+                        background: `linear-gradient(135deg, ${alpha(escrow.daysToClose <= 7 ? theme.palette.error.main : theme.palette.primary.main, 0.1)} 0%, ${alpha(escrow.daysToClose <= 7 ? theme.palette.error.main : theme.palette.primary.main, 0.05)} 100%)`,
+                        border: `2px solid ${alpha(escrow.daysToClose <= 7 ? theme.palette.error.main : theme.palette.primary.main, 0.3)}`,
+                        boxShadow: `0 4px 12px ${alpha(escrow.daysToClose <= 7 ? theme.palette.error.main : theme.palette.primary.main, 0.15)}`,
+                        transition: 'all 0.3s ease',
+                        '&:hover': {
+                          transform: 'scale(1.05)',
+                          boxShadow: `0 6px 16px ${alpha(escrow.daysToClose <= 7 ? theme.palette.error.main : theme.palette.primary.main, 0.25)}`,
+                        },
                       }}
                     >
-                      {escrow.daysToClose > 0 ? escrow.daysToClose : 0}
-                    </Typography>
-                    <Typography variant="caption" color="textSecondary" sx={{ fontSize: '0.65rem' }}>
-                      days to close
-                    </Typography>
+                      <Typography 
+                        variant="h4" 
+                        sx={{ 
+                          fontWeight: 800,
+                          color: escrow.daysToClose <= 7 ? 'error.main' : 'primary.main',
+                          fontSize: '2rem',
+                          lineHeight: 1,
+                        }}
+                      >
+                        {escrow.daysToClose > 0 ? escrow.daysToClose : 0}
+                      </Typography>
+                      <Typography 
+                        variant="caption" 
+                        sx={{ 
+                          fontSize: '0.6rem',
+                          fontWeight: 600,
+                          color: escrow.daysToClose <= 7 ? 'error.main' : 'primary.main',
+                          opacity: 0.8,
+                          mt: 0.25,
+                        }}
+                      >
+                        DAYS
+                      </Typography>
+                    </Box>
                   </Box>
                 </Grid>
               </Grid>
