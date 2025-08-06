@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NewEscrowModal from '../forms/NewEscrowModal';
 import {
@@ -30,6 +30,7 @@ import {
   Tooltip as MuiTooltip,
   Tabs,
   Tab,
+  Checkbox,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
@@ -265,8 +266,14 @@ const MiniContactCard = ({ title, name, initials, color = '#2196f3' }) => (
 );
 
 // Enhanced escrow card component with stunning visuals
-const EscrowCard = ({ escrow, onClick, index }) => {
+const EscrowCard = ({ escrow, onClick, index, onChecklistUpdate }) => {
   const theme = useTheme();
+  const [localEscrow, setLocalEscrow] = useState(escrow);
+  
+  // Update local state when escrow prop changes
+  useEffect(() => {
+    setLocalEscrow(escrow);
+  }, [escrow]);
   const statusColors = {
     'Active Under Contract': '#4caf50',
     'active under contract': '#4caf50',
@@ -360,8 +367,8 @@ const EscrowCard = ({ escrow, onClick, index }) => {
   ].filter(Boolean); // Remove null entries
   
   // Calculate house and loan checklist progress
-  const houseChecklist = escrow.checklists?.house || {};
-  const loanChecklist = escrow.checklists?.loan || {};
+  const houseChecklist = localEscrow.checklists?.house || {};
+  const loanChecklist = localEscrow.checklists?.loan || {};
   
   const houseItems = Object.keys(houseChecklist).length;
   const houseCompleted = Object.values(houseChecklist).filter(item => item === true || item?.completed).length;
@@ -376,15 +383,37 @@ const EscrowCard = ({ escrow, onClick, index }) => {
     const items = Object.entries(checklist);
     for (const [key, value] of items) {
       if (value !== true && !value?.completed) {
-        // Format the key to be more readable
-        return key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()).trim();
+        // Return both key and formatted name
+        return {
+          key,
+          name: key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()).trim()
+        };
       }
     }
-    return 'All Complete';
+    return null;
   };
   
   const nextHouseItem = getNextPendingItem(houseChecklist);
   const nextLoanItem = getNextPendingItem(loanChecklist);
+  
+  // Handle checklist item toggle
+  const handleChecklistToggle = async (type, itemKey, e) => {
+    e.stopPropagation(); // Prevent card navigation
+    
+    const updatedChecklists = { ...localEscrow.checklists };
+    if (!updatedChecklists[type]) updatedChecklists[type] = {};
+    updatedChecklists[type][itemKey] = !updatedChecklists[type][itemKey];
+    
+    setLocalEscrow({
+      ...localEscrow,
+      checklists: updatedChecklists
+    });
+    
+    // Call API to update
+    if (onChecklistUpdate) {
+      onChecklistUpdate(escrow.id, updatedChecklists);
+    }
+  };
   
   return (
     <motion.div
@@ -399,10 +428,8 @@ const EscrowCard = ({ escrow, onClick, index }) => {
       whileHover={{ scale: 1.01 }}
     >
       <Card
-        onClick={() => onClick(escrow.id)}
         elevation={0}
         sx={{
-          cursor: 'pointer',
           position: 'relative',
           overflow: 'visible',
           background: theme.palette.mode === 'dark' 
@@ -434,7 +461,17 @@ const EscrowCard = ({ escrow, onClick, index }) => {
         }}
       >
         <CardContent sx={{ p: 0 }}>
-          <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' } }}>
+          <Box 
+            sx={{ 
+              display: 'flex', 
+              flexDirection: { xs: 'column', sm: 'row' },
+              cursor: 'pointer',
+              '&:hover': {
+                backgroundColor: alpha(theme.palette.action.hover, 0.04),
+              },
+            }}
+            onClick={() => onClick(escrow.id)}
+          >
             {/* Property Image Section - Left Side */}
             <Box 
               sx={{ 
@@ -512,9 +549,11 @@ const EscrowCard = ({ escrow, onClick, index }) => {
                     fontSize: '0.75rem',
                     transition: 'all 0.2s ease',
                     border: '1px solid rgba(255,255,255,0.3)',
+                    cursor: 'pointer',
                     '&:hover': {
                       backgroundColor: '#0050CC',
                       transform: 'scale(1.05)',
+                      boxShadow: '0 4px 12px rgba(0, 106, 255, 0.4)',
                     },
                   }}
                 >
@@ -848,95 +887,183 @@ const EscrowCard = ({ escrow, onClick, index }) => {
                 </Box>
               </Box>
               
-              {/* House and Loan Progress Bars */}
+              {/* House and Loan Checklists */}
               <Grid container spacing={1} sx={{ mt: 0.5 }}>
-                {/* House Progress */}
+                {/* House Checklist */}
                 <Grid item xs={12} md={6}>
                   <Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                      <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.25 }}>
+                      <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.65rem' }}>
                         🏠 HOUSE
                       </Typography>
-                      <Typography variant="caption" sx={{ fontWeight: 700, color: '#4caf50' }}>
+                      <Typography 
+                        variant="caption" 
+                        sx={{ 
+                          fontWeight: 700, 
+                          color: houseCompleted === houseItems ? '#4caf50' : 'text.secondary',
+                          fontSize: '0.7rem'
+                        }}
+                      >
                         {houseCompleted}/{houseItems}
                       </Typography>
                     </Box>
-                    <Box
-                      sx={{
-                        height: 6,
-                        borderRadius: 3,
-                        backgroundColor: alpha('#4caf50', 0.1),
-                        overflow: 'hidden',
-                        border: `1px solid ${alpha('#4caf50', 0.2)}`,
-                      }}
-                    >
+                    {nextHouseItem ? (
                       <Box
                         sx={{
-                          height: '100%',
-                          width: `${houseProgress}%`,
-                          background: 'linear-gradient(90deg, #4caf50 0%, #66bb6a 100%)',
-                          borderRadius: 3,
-                          transition: 'width 1s ease-out',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 0.5,
+                          p: 0.5,
+                          borderRadius: 1,
+                          backgroundColor: alpha('#4caf50', 0.05),
+                          border: `1px solid ${alpha('#4caf50', 0.2)}`,
+                          transition: 'all 0.2s ease',
+                          cursor: 'pointer',
+                          '&:hover': {
+                            backgroundColor: alpha('#4caf50', 0.1),
+                            borderColor: alpha('#4caf50', 0.4),
+                            transform: 'translateX(2px)',
+                          },
                         }}
-                      />
-                    </Box>
-                    <Typography 
-                      variant="caption" 
-                      sx={{ 
-                        display: 'block',
-                        mt: 0.5,
-                        fontSize: '9px',
-                        color: 'text.secondary',
-                        fontStyle: nextHouseItem === 'All Complete' ? 'normal' : 'italic',
-                      }}
-                    >
-                      {nextHouseItem === 'All Complete' ? '✅' : '▶'} {nextHouseItem}
-                    </Typography>
+                        onClick={(e) => handleChecklistToggle('house', nextHouseItem.key, e)}
+                      >
+                        <Checkbox
+                          size="small"
+                          checked={false}
+                          sx={{ 
+                            p: 0,
+                            color: '#4caf50',
+                            '&.Mui-checked': {
+                              color: '#4caf50',
+                            },
+                            '& .MuiSvgIcon-root': {
+                              fontSize: 14,
+                            },
+                          }}
+                        />
+                        <Typography 
+                          variant="caption" 
+                          sx={{ 
+                            fontSize: '0.65rem',
+                            color: 'text.primary',
+                            lineHeight: 1,
+                          }}
+                        >
+                          {nextHouseItem.name}
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 0.5,
+                          p: 0.5,
+                          borderRadius: 1,
+                          backgroundColor: alpha('#4caf50', 0.1),
+                        }}
+                      >
+                        <Typography 
+                          variant="caption" 
+                          sx={{ 
+                            fontSize: '0.65rem',
+                            color: '#4caf50',
+                            fontWeight: 600,
+                          }}
+                        >
+                          ✅ All Complete
+                        </Typography>
+                      </Box>
+                    )}
                   </Box>
                 </Grid>
                 
-                {/* Loan Progress */}
+                {/* Loan Checklist */}
                 <Grid item xs={12} md={6}>
                   <Box>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                      <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.25 }}>
+                      <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', fontSize: '0.65rem' }}>
                         🏦 LOAN
                       </Typography>
-                      <Typography variant="caption" sx={{ fontWeight: 700, color: '#2196f3' }}>
+                      <Typography 
+                        variant="caption" 
+                        sx={{ 
+                          fontWeight: 700, 
+                          color: loanCompleted === loanItems ? '#2196f3' : 'text.secondary',
+                          fontSize: '0.7rem'
+                        }}
+                      >
                         {loanCompleted}/{loanItems}
                       </Typography>
                     </Box>
-                    <Box
-                      sx={{
-                        height: 6,
-                        borderRadius: 3,
-                        backgroundColor: alpha('#2196f3', 0.1),
-                        overflow: 'hidden',
-                        border: `1px solid ${alpha('#2196f3', 0.2)}`,
-                      }}
-                    >
+                    {nextLoanItem ? (
                       <Box
                         sx={{
-                          height: '100%',
-                          width: `${loanProgress}%`,
-                          background: 'linear-gradient(90deg, #2196f3 0%, #42a5f5 100%)',
-                          borderRadius: 3,
-                          transition: 'width 1s ease-out',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 0.5,
+                          p: 0.5,
+                          borderRadius: 1,
+                          backgroundColor: alpha('#2196f3', 0.05),
+                          border: `1px solid ${alpha('#2196f3', 0.2)}`,
+                          transition: 'all 0.2s ease',
+                          cursor: 'pointer',
+                          '&:hover': {
+                            backgroundColor: alpha('#2196f3', 0.1),
+                            borderColor: alpha('#2196f3', 0.4),
+                            transform: 'translateX(2px)',
+                          },
                         }}
-                      />
-                    </Box>
-                    <Typography 
-                      variant="caption" 
-                      sx={{ 
-                        display: 'block',
-                        mt: 0.5,
-                        fontSize: '9px',
-                        color: 'text.secondary',
-                        fontStyle: nextLoanItem === 'All Complete' ? 'normal' : 'italic',
-                      }}
-                    >
-                      {nextLoanItem === 'All Complete' ? '✅' : '▶'} {nextLoanItem}
-                    </Typography>
+                        onClick={(e) => handleChecklistToggle('loan', nextLoanItem.key, e)}
+                      >
+                        <Checkbox
+                          size="small"
+                          checked={false}
+                          sx={{ 
+                            p: 0,
+                            color: '#2196f3',
+                            '&.Mui-checked': {
+                              color: '#2196f3',
+                            },
+                            '& .MuiSvgIcon-root': {
+                              fontSize: 14,
+                            },
+                          }}
+                        />
+                        <Typography 
+                          variant="caption" 
+                          sx={{ 
+                            fontSize: '0.65rem',
+                            color: 'text.primary',
+                            lineHeight: 1,
+                          }}
+                        >
+                          {nextLoanItem.name}
+                        </Typography>
+                      </Box>
+                    ) : (
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 0.5,
+                          p: 0.5,
+                          borderRadius: 1,
+                          backgroundColor: alpha('#2196f3', 0.1),
+                        }}
+                      >
+                        <Typography 
+                          variant="caption" 
+                          sx={{ 
+                            fontSize: '0.65rem',
+                            color: '#2196f3',
+                            fontWeight: 600,
+                          }}
+                        >
+                          ✅ All Complete
+                        </Typography>
+                      </Box>
+                    )}
                   </Box>
                 </Grid>
               </Grid>
@@ -1217,6 +1344,24 @@ const EscrowsDashboard = () => {
     fetchEscrows();
     // Navigate to the new escrow detail page
     navigate(`/escrows/${escrowId}`);
+  };
+
+  const handleChecklistUpdate = async (escrowId, updatedChecklists) => {
+    try {
+      // Update the checklist via API
+      await escrowsAPI.updateChecklist(escrowId, updatedChecklists);
+      
+      // Update local state to reflect the change
+      setEscrows(prevEscrows => 
+        prevEscrows.map(esc => 
+          esc.id === escrowId 
+            ? { ...esc, checklists: updatedChecklists }
+            : esc
+        )
+      );
+    } catch (error) {
+      console.error('Failed to update checklist:', error);
+    }
   };
 
   if (loading) {
@@ -1700,6 +1845,7 @@ const EscrowsDashboard = () => {
                   key={escrow.id}
                   escrow={escrow}
                   onClick={handleEscrowClick}
+                  onChecklistUpdate={handleChecklistUpdate}
                   index={index}
                 />
               ));
