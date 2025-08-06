@@ -11,6 +11,7 @@ import {
   InputAdornment,
   Switch,
   Divider,
+  Checkbox,
   Alert,
   Paper,
   Tooltip,
@@ -72,6 +73,85 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
     setEditingField(null);
     setTempValue('');
     setError('');
+  };
+
+  const handleBooleanToggle = async (path, currentValue) => {
+    setSaving(true);
+    setError('');
+    
+    try {
+      const newValue = !currentValue;
+      
+      // Map frontend nested paths to backend flat field names
+      const fieldMapping = {
+        'transactionDetails.avid': 'avid',
+        'propertyDetails.pool': 'pool',
+        'propertyDetails.spa': 'spa',
+        'propertyDetails.gatedCommunity': 'gated_community',
+        'propertyDetails.seniorCommunity': 'senior_community',
+        // Checklist fields are handled as nested objects
+      };
+      
+      // Build the update object
+      let updateData = {};
+      
+      // Handle checklist fields specially
+      if (path.startsWith('checklists.')) {
+        // For checklists, we need to send the entire checklist object
+        const checklistParts = path.split('.');
+        const checklistType = checklistParts[1]; // loan, house, or admin
+        const checklistItem = checklistParts[2]; // specific item
+        
+        // Get the current checklist state
+        const currentChecklist = escrowData.checklists || {};
+        const updatedChecklist = {
+          ...currentChecklist,
+          [checklistType]: {
+            ...currentChecklist[checklistType],
+            [checklistItem]: newValue
+          }
+        };
+        
+        updateData = { checklists: updatedChecklist };
+      } else {
+        // Regular field mapping
+        const backendField = fieldMapping[path] || path.split('.').pop();
+        updateData = { [backendField]: newValue };
+      }
+      
+      // Clean the escrow ID
+      const cleanId = escrowData.id.startsWith('escrow-') ? 
+        escrowData.id.substring(7) : escrowData.id;
+      
+      // Send update to backend
+      const response = await escrowsAPI.update(cleanId, updateData);
+      
+      if (response.success) {
+        setSavedField(path);
+        setTimeout(() => setSavedField(null), 2000);
+        setSuccess('Updated successfully');
+        setTimeout(() => setSuccess(''), 3000);
+        
+        // Notify parent component
+        if (onUpdate) {
+          const updatedData = { ...escrowData };
+          const pathParts = path.split('.');
+          let current = updatedData;
+          for (let i = 0; i < pathParts.length - 1; i++) {
+            if (!current[pathParts[i]]) current[pathParts[i]] = {};
+            current = current[pathParts[i]];
+          }
+          current[pathParts[pathParts.length - 1]] = newValue;
+          onUpdate(updatedData);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to update:', err);
+      setError('Failed to update');
+      setTimeout(() => setError(''), 3000);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleSave = async (path, type) => {
@@ -339,17 +419,43 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
           </Box>
         ) : (
           <>
-            <Typography
-              variant="body2"
-              sx={{ 
-                flex: 1, 
-                fontFamily: type === 'currency' || type === 'percent' ? 'inherit' : 'monospace',
-                fontWeight: type === 'currency' ? 600 : 400,
-                color: type === 'currency' ? 'success.main' : 'text.primary',
-              }}
-            >
-              {displayValue}
-            </Typography>
+            {type === 'boolean' ? (
+              <Box sx={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+                <Checkbox
+                  checked={value === true || value === 'true'}
+                  onChange={() => handleBooleanToggle(path, value === true || value === 'true')}
+                  disabled={saving}
+                  sx={{
+                    color: 'primary.main',
+                    '&.Mui-checked': {
+                      color: 'primary.main',
+                    },
+                  }}
+                />
+                <Typography
+                  variant="body2"
+                  sx={{ 
+                    ml: 1,
+                    color: value === true || value === 'true' ? 'primary.main' : 'text.secondary',
+                    fontWeight: value === true || value === 'true' ? 600 : 400,
+                  }}
+                >
+                  {value === true || value === 'true' ? 'Yes' : 'No'}
+                </Typography>
+              </Box>
+            ) : (
+              <Typography
+                variant="body2"
+                sx={{ 
+                  flex: 1, 
+                  fontFamily: type === 'currency' || type === 'percent' ? 'inherit' : 'monospace',
+                  fontWeight: type === 'currency' ? 600 : 400,
+                  color: type === 'currency' ? 'success.main' : 'text.primary',
+                }}
+              >
+                {displayValue}
+              </Typography>
+            )}
             <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
               {isSaved && (
                 <CheckCircle 
@@ -364,25 +470,29 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
                   }} 
                 />
               )}
-              <Tooltip title="Copy">
-                <IconButton
-                  size="small"
-                  onClick={() => handleCopy(value, path)}
-                  sx={{ opacity: 0.5 }}
-                >
-                  {copiedField === path ? <Check fontSize="small" /> : <ContentCopy fontSize="small" />}
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Edit">
-                <IconButton
-                  size="small"
-                  className="edit-button"
-                  onClick={() => handleEdit(path, value, type)}
-                  sx={{ opacity: 0 }}
-                >
-                  <Edit fontSize="small" />
-                </IconButton>
-              </Tooltip>
+              {type !== 'boolean' && (
+                <>
+                  <Tooltip title="Copy">
+                    <IconButton
+                      size="small"
+                      onClick={() => handleCopy(value, path)}
+                      sx={{ opacity: 0.5 }}
+                    >
+                      {copiedField === path ? <Check fontSize="small" /> : <ContentCopy fontSize="small" />}
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Edit">
+                    <IconButton
+                      size="small"
+                      className="edit-button"
+                      onClick={() => handleEdit(path, value, type)}
+                      sx={{ opacity: 0 }}
+                    >
+                      <Edit fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </>
+              )}
             </Box>
           </>
         )}
