@@ -215,21 +215,107 @@ const EscrowCard = ({ escrow, onClick, index }) => {
   const statusColor = statusColors[escrow.escrowStatus] || '#9e9e9e';
   
   // Calculate timeline progress
-  const acceptanceDate = new Date(escrow.acceptanceDate);
-  const coeDate = new Date(escrow.scheduledCoeDate);
+  const acceptanceDate = escrow.acceptanceDate ? new Date(escrow.acceptanceDate) : new Date();
+  const coeDate = escrow.scheduledCoeDate ? new Date(escrow.scheduledCoeDate) : new Date(acceptanceDate.getTime() + 30 * 24 * 60 * 60 * 1000);
   const today = new Date();
   const totalDays = Math.floor((coeDate - acceptanceDate) / (1000 * 60 * 60 * 24));
   const daysElapsed = Math.floor((today - acceptanceDate) / (1000 * 60 * 60 * 24));
   const progressPercentage = Math.min(Math.max((daysElapsed / totalDays) * 100, 0), 100);
   
-  // Define milestones
+  // Calculate proportional milestone positions based on actual dates
+  const calculatePosition = (date) => {
+    if (!date) return null;
+    const milestoneDate = new Date(date);
+    const daysFromStart = Math.floor((milestoneDate - acceptanceDate) / (1000 * 60 * 60 * 24));
+    return Math.min(Math.max((daysFromStart / totalDays) * 100, 0), 100);
+  };
+  
+  // Define milestones with dynamic positioning
   const milestones = [
-    { name: 'Contract Accepted', date: escrow.acceptanceDate, position: 0 },
-    { name: 'EMD Due', date: escrow.emdDate, position: 10 },
-    { name: 'Contingencies', date: escrow.contingenciesDate, position: 40 },
-    { name: 'Loan Approval', position: 70 },
-    { name: 'Closing', date: escrow.scheduledCoeDate, position: 100 }
-  ];
+    { 
+      name: 'Contract', 
+      date: escrow.acceptanceDate, 
+      position: 0,
+      icon: '📝',
+      completed: true
+    },
+    escrow.emdDate && { 
+      name: 'EMD', 
+      date: escrow.emdDate, 
+      position: calculatePosition(escrow.emdDate) || 10,
+      icon: '💰',
+      completed: new Date(escrow.emdDate) <= today
+    },
+    escrow.inspectionDate && { 
+      name: 'Inspection', 
+      date: escrow.inspectionDate, 
+      position: calculatePosition(escrow.inspectionDate) || 25,
+      icon: '🔍',
+      completed: new Date(escrow.inspectionDate) <= today
+    },
+    escrow.appraisalDate && { 
+      name: 'Appraisal', 
+      date: escrow.appraisalDate, 
+      position: calculatePosition(escrow.appraisalDate) || 40,
+      icon: '📊',
+      completed: new Date(escrow.appraisalDate) <= today
+    },
+    escrow.contingencyRemovalDate && { 
+      name: 'Contingencies', 
+      date: escrow.contingencyRemovalDate, 
+      position: calculatePosition(escrow.contingencyRemovalDate) || 55,
+      icon: '✅',
+      completed: new Date(escrow.contingencyRemovalDate) <= today
+    },
+    escrow.loanApprovalDate && { 
+      name: 'Loan Approval', 
+      date: escrow.loanApprovalDate, 
+      position: calculatePosition(escrow.loanApprovalDate) || 70,
+      icon: '🏦',
+      completed: new Date(escrow.loanApprovalDate) <= today
+    },
+    escrow.finalWalkthroughDate && { 
+      name: 'Final Walkthrough', 
+      date: escrow.finalWalkthroughDate, 
+      position: calculatePosition(escrow.finalWalkthroughDate) || 85,
+      icon: '👀',
+      completed: new Date(escrow.finalWalkthroughDate) <= today
+    },
+    { 
+      name: 'Closing', 
+      date: escrow.scheduledCoeDate, 
+      position: 100,
+      icon: '🏠',
+      completed: escrow.escrowStatus === 'Closed' || escrow.escrowStatus === 'closed'
+    }
+  ].filter(Boolean); // Remove null entries
+  
+  // Calculate house and loan checklist progress
+  const houseChecklist = escrow.checklists?.house || {};
+  const loanChecklist = escrow.checklists?.loan || {};
+  
+  const houseItems = Object.keys(houseChecklist).length;
+  const houseCompleted = Object.values(houseChecklist).filter(item => item === true || item?.completed).length;
+  const houseProgress = houseItems > 0 ? (houseCompleted / houseItems) * 100 : 0;
+  
+  const loanItems = Object.keys(loanChecklist).length;
+  const loanCompleted = Object.values(loanChecklist).filter(item => item === true || item?.completed).length;
+  const loanProgress = loanItems > 0 ? (loanCompleted / loanItems) * 100 : 0;
+  
+  // Find next pending items for each checklist
+  const getNextPendingItem = (checklist) => {
+    const items = Object.entries(checklist);
+    for (const [key, value] of items) {
+      if (value !== true && !value?.completed) {
+        // Format the key to be more readable
+        return key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()).trim();
+      }
+    }
+    return 'All Complete';
+  };
+  
+  const nextHouseItem = getNextPendingItem(houseChecklist);
+  const nextLoanItem = getNextPendingItem(loanChecklist);
   
   return (
     <motion.div
@@ -412,7 +498,23 @@ const EscrowCard = ({ escrow, onClick, index }) => {
                   </Typography>
                 </Grid>
 
-                {/* Days to Close */}
+                {/* Last Activity */}
+                <Grid item xs={6} md={4}>
+                  <Typography variant="caption" color="textSecondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.7rem' }}>
+                    Last Activity
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 500, mt: 0.5 }}>
+                    {safeFormatDate(escrow.lastActivity, 'MMM d, h:mm a')}
+                  </Typography>
+                  <Chip 
+                    label={`${escrow.upcomingDeadlines} deadlines`} 
+                    size="small" 
+                    color="warning"
+                    sx={{ mt: 0.5 }}
+                  />
+                </Grid>
+
+                {/* Days to Close - Far Right */}
                 <Grid item xs={6} md={4}>
                   <Box 
                     sx={{ 
@@ -423,6 +525,7 @@ const EscrowCard = ({ escrow, onClick, index }) => {
                       background: alpha(theme.palette.primary.main, 0.08),
                       width: '100%',
                       textAlign: 'center',
+                      ml: 'auto',
                     }}
                   >
                     <Typography 
@@ -440,121 +543,282 @@ const EscrowCard = ({ escrow, onClick, index }) => {
                     </Typography>
                   </Box>
                 </Grid>
-
-                {/* Last Activity */}
-                <Grid item xs={6} md={4}>
-                  <Typography variant="caption" color="textSecondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.7rem' }}>
-                    Last Activity
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 500, mt: 0.5 }}>
-                    {safeFormatDate(escrow.lastActivity, 'MMM d, h:mm a')}
-                  </Typography>
-                  <Chip 
-                    label={`${escrow.upcomingDeadlines} deadlines`} 
-                    size="small" 
-                    color="warning"
-                    sx={{ mt: 0.5 }}
-                  />
-                </Grid>
               </Grid>
 
-            {/* Timeline Progress with Milestones */}
-            <Box sx={{ mt: 3, position: 'relative' }}>
-              <Box
-                sx={{
-                  height: 8,
-                  borderRadius: 4,
-                  backgroundColor: alpha(statusColor, 0.1),
-                  overflow: 'visible',
-                  position: 'relative',
-                }}
-              >
-                {/* Progress fill */}
+            {/* Enhanced Timeline Progress with Milestones */}
+            <Box sx={{ mt: 3 }}>
+              {/* Main Timeline */}
+              <Box sx={{ position: 'relative', mb: 3 }}>
+                <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', mb: 1, display: 'block' }}>
+                  ESCROW TIMELINE
+                </Typography>
                 <Box
                   sx={{
-                    height: '100%',
-                    width: `${Math.min(progressPercentage, 100)}%`,
-                    backgroundColor: statusColor,
-                    borderRadius: 4,
-                    transition: 'width 1s ease-out',
+                    height: 12,
+                    borderRadius: 6,
+                    background: `linear-gradient(90deg, ${alpha(statusColor, 0.05)} 0%, ${alpha(statusColor, 0.1)} 100%)`,
+                    overflow: 'visible',
+                    position: 'relative',
+                    border: `1px solid ${alpha(statusColor, 0.2)}`,
                   }}
-                />
-                
-                {/* Today marker */}
-                {progressPercentage > 0 && progressPercentage < 100 && (
+                >
+                  {/* Animated progress fill */}
                   <Box
                     sx={{
-                      position: 'absolute',
-                      left: `${progressPercentage}%`,
-                      top: '50%',
-                      transform: 'translate(-50%, -50%)',
-                      width: 2,
-                      height: 20,
-                      backgroundColor: 'error.main',
+                      height: '100%',
+                      width: `${Math.min(progressPercentage, 100)}%`,
+                      background: `linear-gradient(90deg, ${statusColor} 0%, ${alpha(statusColor, 0.8)} 100%)`,
+                      borderRadius: 6,
+                      transition: 'width 1.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                      position: 'relative',
                       '&::after': {
-                        content: '"TODAY"',
+                        content: '""',
                         position: 'absolute',
-                        top: -20,
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        fontSize: 10,
-                        fontWeight: 700,
-                        color: 'error.main',
-                        whiteSpace: 'nowrap',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)',
+                        animation: 'shimmer 2s infinite',
+                      },
+                      '@keyframes shimmer': {
+                        '0%': { transform: 'translateX(-100%)' },
+                        '100%': { transform: 'translateX(100%)' },
                       },
                     }}
                   />
-                )}
-                
-                {/* Milestones */}
-                {milestones.map((milestone, idx) => (
-                  <Tooltip 
-                    key={idx} 
-                    title={
-                      <Box>
-                        <Typography variant="caption" sx={{ fontWeight: 600 }}>
-                          {milestone.name}
-                        </Typography>
-                        {milestone.date && (
-                          <Typography variant="caption" display="block">
-                            {safeFormatDate(milestone.date, 'MMM d, yyyy')}
-                          </Typography>
-                        )}
-                      </Box>
-                    }
-                    arrow
-                  >
+                  
+                  {/* Today marker with pulse animation */}
+                  {progressPercentage > 0 && progressPercentage < 100 && (
                     <Box
                       sx={{
                         position: 'absolute',
-                        left: `${milestone.position}%`,
+                        left: `${progressPercentage}%`,
                         top: '50%',
                         transform: 'translate(-50%, -50%)',
-                        width: 12,
-                        height: 12,
-                        borderRadius: '50%',
-                        backgroundColor: progressPercentage >= milestone.position ? statusColor : 'grey.300',
-                        border: '2px solid white',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s ease',
-                        '&:hover': {
-                          transform: 'translate(-50%, -50%) scale(1.5)',
-                        },
+                        zIndex: 10,
                       }}
-                    />
-                  </Tooltip>
-                ))}
+                    >
+                      <Box
+                        sx={{
+                          width: 3,
+                          height: 24,
+                          backgroundColor: '#ff4444',
+                          boxShadow: '0 0 10px rgba(255, 68, 68, 0.5)',
+                        }}
+                      />
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          top: -25,
+                          left: '50%',
+                          transform: 'translateX(-50%)',
+                          background: '#ff4444',
+                          color: 'white',
+                          padding: '2px 8px',
+                          borderRadius: 1,
+                          fontSize: 10,
+                          fontWeight: 700,
+                          whiteSpace: 'nowrap',
+                          '&::after': {
+                            content: '""',
+                            position: 'absolute',
+                            bottom: -4,
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            width: 0,
+                            height: 0,
+                            borderLeft: '4px solid transparent',
+                            borderRight: '4px solid transparent',
+                            borderTop: '4px solid #ff4444',
+                          },
+                        }}
+                      >
+                        TODAY
+                      </Box>
+                    </Box>
+                  )}
+                  
+                  {/* Enhanced Milestones */}
+                  {milestones.map((milestone, idx) => (
+                    <MuiTooltip 
+                      key={idx} 
+                      title={
+                        <Box sx={{ p: 0.5 }}>
+                          <Typography variant="caption" sx={{ fontWeight: 600, fontSize: '0.75rem' }}>
+                            {milestone.icon} {milestone.name}
+                          </Typography>
+                          {milestone.date && (
+                            <Typography variant="caption" display="block" sx={{ opacity: 0.9 }}>
+                              {safeFormatDate(milestone.date, 'MMM d, yyyy')}
+                            </Typography>
+                          )}
+                          <Typography variant="caption" display="block" sx={{ 
+                            color: milestone.completed ? '#4caf50' : '#ff9800',
+                            fontWeight: 600,
+                            mt: 0.5
+                          }}>
+                            {milestone.completed ? '✓ Completed' : '○ Pending'}
+                          </Typography>
+                        </Box>
+                      }
+                      arrow
+                      placement="top"
+                    >
+                      <Box>
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            left: `${milestone.position}%`,
+                            top: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            width: milestone.position === 0 || milestone.position === 100 ? 20 : 16,
+                            height: milestone.position === 0 || milestone.position === 100 ? 20 : 16,
+                            borderRadius: '50%',
+                            backgroundColor: milestone.completed ? statusColor : '#fff',
+                            border: `3px solid ${milestone.completed ? statusColor : alpha(statusColor, 0.3)}`,
+                            cursor: 'pointer',
+                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                            zIndex: milestone.position === 0 || milestone.position === 100 ? 5 : 3,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: milestone.position === 0 || milestone.position === 100 ? '10px' : '8px',
+                            boxShadow: milestone.completed 
+                              ? `0 0 0 4px ${alpha(statusColor, 0.2)}` 
+                              : 'none',
+                            '&:hover': {
+                              transform: 'translate(-50%, -50%) scale(1.3)',
+                              boxShadow: `0 0 0 8px ${alpha(statusColor, 0.2)}`,
+                            },
+                          }}
+                        >
+                          {milestone.icon}
+                        </Box>
+                        {/* Date label on the bar */}
+                        {milestone.date && (
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              position: 'absolute',
+                              left: `${milestone.position}%`,
+                              top: milestone.position % 20 === 0 ? -30 : 28,
+                              transform: 'translateX(-50%)',
+                              fontSize: '9px',
+                              fontWeight: 600,
+                              color: milestone.completed ? statusColor : 'text.secondary',
+                              whiteSpace: 'nowrap',
+                              opacity: 0.9,
+                            }}
+                          >
+                            {safeFormatDate(milestone.date, 'M/d')}
+                          </Typography>
+                        )}
+                      </Box>
+                    </MuiTooltip>
+                  ))}
+                </Box>
+                
+                {/* Days counter */}
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                  <Typography variant="caption" sx={{ fontWeight: 700, color: statusColor }}>
+                    Day {daysElapsed} of {totalDays}
+                  </Typography>
+                </Box>
               </Box>
               
-              {/* Timeline dates */}
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 1 }}>
-                <Typography variant="caption" color="textSecondary">
-                  {safeFormatDate(escrow.acceptanceDate, 'MMM d')}
-                </Typography>
-                <Typography variant="caption" color="textSecondary">
-                  {safeFormatDate(escrow.scheduledCoeDate, 'MMM d')}
-                </Typography>
-              </Box>
+              {/* House and Loan Progress Bars */}
+              <Grid container spacing={2}>
+                {/* House Progress */}
+                <Grid item xs={12} md={6}>
+                  <Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                      <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                        🏠 HOUSE
+                      </Typography>
+                      <Typography variant="caption" sx={{ fontWeight: 700, color: '#4caf50' }}>
+                        {houseCompleted}/{houseItems}
+                      </Typography>
+                    </Box>
+                    <Box
+                      sx={{
+                        height: 6,
+                        borderRadius: 3,
+                        backgroundColor: alpha('#4caf50', 0.1),
+                        overflow: 'hidden',
+                        border: `1px solid ${alpha('#4caf50', 0.2)}`,
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          height: '100%',
+                          width: `${houseProgress}%`,
+                          background: 'linear-gradient(90deg, #4caf50 0%, #66bb6a 100%)',
+                          borderRadius: 3,
+                          transition: 'width 1s ease-out',
+                        }}
+                      />
+                    </Box>
+                    <Typography 
+                      variant="caption" 
+                      sx={{ 
+                        display: 'block',
+                        mt: 0.5,
+                        fontSize: '10px',
+                        color: 'text.secondary',
+                        fontStyle: nextHouseItem === 'All Complete' ? 'normal' : 'italic',
+                      }}
+                    >
+                      {nextHouseItem === 'All Complete' ? '✅' : '▶'} {nextHouseItem}
+                    </Typography>
+                  </Box>
+                </Grid>
+                
+                {/* Loan Progress */}
+                <Grid item xs={12} md={6}>
+                  <Box>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                      <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary' }}>
+                        🏦 LOAN
+                      </Typography>
+                      <Typography variant="caption" sx={{ fontWeight: 700, color: '#2196f3' }}>
+                        {loanCompleted}/{loanItems}
+                      </Typography>
+                    </Box>
+                    <Box
+                      sx={{
+                        height: 6,
+                        borderRadius: 3,
+                        backgroundColor: alpha('#2196f3', 0.1),
+                        overflow: 'hidden',
+                        border: `1px solid ${alpha('#2196f3', 0.2)}`,
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          height: '100%',
+                          width: `${loanProgress}%`,
+                          background: 'linear-gradient(90deg, #2196f3 0%, #42a5f5 100%)',
+                          borderRadius: 3,
+                          transition: 'width 1s ease-out',
+                        }}
+                      />
+                    </Box>
+                    <Typography 
+                      variant="caption" 
+                      sx={{ 
+                        display: 'block',
+                        mt: 0.5,
+                        fontSize: '10px',
+                        color: 'text.secondary',
+                        fontStyle: nextLoanItem === 'All Complete' ? 'normal' : 'italic',
+                      }}
+                    >
+                      {nextLoanItem === 'All Complete' ? '✅' : '▶'} {nextLoanItem}
+                    </Typography>
+                  </Box>
+                </Grid>
+              </Grid>
             </Box>
             </Box>
           </Box>
@@ -580,6 +844,17 @@ const EscrowsDashboard = () => {
     avgDaysToClose: 0,
     grossCommission: 0,
     myCommission: 0,
+    ytdClosed: 0,
+    ytdVolume: 0,
+    ytdChange: 0,
+    monthClosed: 0,
+    monthVolume: 0,
+    monthChange: 0,
+    weekProjected: 0,
+    weekVolume: 0,
+    weekChange: 0,
+    closingThisWeek: 0,
+    pendingActions: 0,
   });
   const [chartData, setChartData] = useState([]);
 
@@ -638,6 +913,17 @@ const EscrowsDashboard = () => {
         avgDaysToClose: 0,
         grossCommission: 0,
         myCommission: 0,
+        ytdClosed: 0,
+        ytdVolume: 0,
+        ytdChange: 0,
+        monthClosed: 0,
+        monthVolume: 0,
+        monthChange: 0,
+        weekProjected: 0,
+        weekVolume: 0,
+        weekChange: 0,
+        closingThisWeek: 0,
+        pendingActions: 0,
       });
       return;
     }
@@ -689,15 +975,78 @@ const EscrowsDashboard = () => {
       return sum + (purchasePrice * commissionRate);
     }, 0);
     
+    // Calculate time-based stats
+    const now = new Date();
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    
+    // YTD Stats
+    const ytdEscrows = escrowData.filter(e => {
+      const closeDate = e.actualCoeDate || e.closingDate;
+      if (!closeDate) return false;
+      const date = new Date(closeDate);
+      return date >= startOfYear && (e.escrowStatus === 'Closed' || e.escrowStatus === 'closed');
+    });
+    const ytdClosed = ytdEscrows.length;
+    const ytdVolume = ytdEscrows.reduce((sum, e) => sum + Number(e.purchasePrice || 0), 0);
+    
+    // Calculate YTD change (mock data for now, would need last year's data)
+    const ytdChange = 15.2; // Mock: 15.2% increase
+    
+    // Monthly Stats
+    const monthEscrows = escrowData.filter(e => {
+      const closeDate = e.actualCoeDate || e.closingDate;
+      if (!closeDate) return false;
+      const date = new Date(closeDate);
+      return date >= startOfMonth && (e.escrowStatus === 'Closed' || e.escrowStatus === 'closed');
+    });
+    const monthClosed = monthEscrows.length;
+    const monthVolume = monthEscrows.reduce((sum, e) => sum + Number(e.purchasePrice || 0), 0);
+    const monthChange = -8.5; // Mock: 8.5% decrease from last month
+    
+    // Weekly Projected Stats
+    const weekEscrows = escrowData.filter(e => {
+      const closeDate = e.scheduledCoeDate || e.closingDate;
+      if (!closeDate) return false;
+      const date = new Date(closeDate);
+      return date >= startOfWeek && date <= endOfWeek && 
+        (e.escrowStatus === 'Active Under Contract' || e.escrowStatus === 'active under contract' ||
+         e.escrowStatus === 'Pending' || e.escrowStatus === 'pending');
+    });
+    const weekProjected = weekEscrows.length;
+    const weekVolume = weekEscrows.reduce((sum, e) => sum + Number(e.purchasePrice || 0), 0);
+    const weekChange = 23.8; // Mock: 23.8% increase from last week
+    
+    // Closing this week count
+    const closingThisWeek = weekEscrows.length;
+    
+    // Pending actions (mock for now)
+    const pendingActions = 5;
+    
     setStats({
       totalEscrows: filteredEscrows.length,
       activeEscrows: filteredEscrows.length, // For backward compatibility
       totalVolume,
       projectedCommission: myCommission, // For backward compatibility
-      closedThisMonth: 0,
+      closedThisMonth: monthClosed,
       avgDaysToClose: Math.round(filteredEscrows.reduce((sum, e) => sum + (Number(e.daysToClose) || 0), 0) / (filteredEscrows.length || 1)),
       grossCommission,
       myCommission,
+      ytdClosed,
+      ytdVolume,
+      ytdChange,
+      monthClosed,
+      monthVolume,
+      monthChange,
+      weekProjected,
+      weekVolume,
+      weekChange,
+      closingThisWeek,
+      pendingActions,
     });
   };
 
@@ -827,27 +1176,113 @@ const EscrowsDashboard = () => {
                   border: '1px solid rgba(255,255,255,0.2)',
                 }}>
                   <Stack spacing={2}>
+                    {/* YTD Closed */}
                     <Box>
-                      <Typography variant="overline" sx={{ opacity: 0.7, display: 'block' }}>
-                        Today's Activity
+                      <Typography variant="overline" sx={{ opacity: 0.7, display: 'block', fontSize: '0.7rem' }}>
+                        YTD Closed
                       </Typography>
-                      <Stack direction="row" alignItems="baseline" spacing={1}>
-                        <Typography variant="h3" fontWeight="bold">
-                          <CountUp end={3} duration={1.5} />
-                        </Typography>
-                        <Typography variant="body1" sx={{ opacity: 0.8 }}>
-                          new tasks
-                        </Typography>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Stack direction="row" alignItems="baseline" spacing={1}>
+                          <Typography variant="h4" fontWeight="bold">
+                            <CountUp end={stats.ytdClosed} duration={1.5} />
+                          </Typography>
+                          <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                            deals
+                          </Typography>
+                        </Stack>
+                        <Chip
+                          icon={stats.ytdChange >= 0 ? <TrendingUp sx={{ fontSize: 14 }} /> : <TrendingUp sx={{ fontSize: 14, transform: 'rotate(180deg)' }} />}
+                          label={`${Math.abs(stats.ytdChange)}%`}
+                          size="small"
+                          sx={{
+                            bgcolor: stats.ytdChange >= 0 ? alpha('#4caf50', 0.2) : alpha('#f44336', 0.2),
+                            color: stats.ytdChange >= 0 ? '#4caf50' : '#f44336',
+                            fontWeight: 'bold',
+                            border: `1px solid ${stats.ytdChange >= 0 ? '#4caf50' : '#f44336'}`,
+                          }}
+                        />
                       </Stack>
+                      <Typography variant="caption" sx={{ opacity: 0.7 }}>
+                        ${(stats.ytdVolume / 1000000).toFixed(1)}M total volume
+                      </Typography>
                     </Box>
+                    
                     <Divider sx={{ borderColor: 'rgba(255,255,255,0.2)' }} />
+                    
+                    {/* Monthly Closed */}
+                    <Box>
+                      <Typography variant="overline" sx={{ opacity: 0.7, display: 'block', fontSize: '0.7rem' }}>
+                        Monthly Closed
+                      </Typography>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Stack direction="row" alignItems="baseline" spacing={1}>
+                          <Typography variant="h4" fontWeight="bold">
+                            <CountUp end={stats.monthClosed} duration={1.5} />
+                          </Typography>
+                          <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                            deals
+                          </Typography>
+                        </Stack>
+                        <Chip
+                          icon={stats.monthChange >= 0 ? <TrendingUp sx={{ fontSize: 14 }} /> : <TrendingUp sx={{ fontSize: 14, transform: 'rotate(180deg)' }} />}
+                          label={`${Math.abs(stats.monthChange)}%`}
+                          size="small"
+                          sx={{
+                            bgcolor: stats.monthChange >= 0 ? alpha('#4caf50', 0.2) : alpha('#f44336', 0.2),
+                            color: stats.monthChange >= 0 ? '#4caf50' : '#f44336',
+                            fontWeight: 'bold',
+                            border: `1px solid ${stats.monthChange >= 0 ? '#4caf50' : '#f44336'}`,
+                          }}
+                        />
+                      </Stack>
+                      <Typography variant="caption" sx={{ opacity: 0.7 }}>
+                        ${(stats.monthVolume / 1000000).toFixed(1)}M volume
+                      </Typography>
+                    </Box>
+                    
+                    <Divider sx={{ borderColor: 'rgba(255,255,255,0.2)' }} />
+                    
+                    {/* This Week Projected */}
+                    <Box>
+                      <Typography variant="overline" sx={{ opacity: 0.7, display: 'block', fontSize: '0.7rem' }}>
+                        This Week Projected
+                      </Typography>
+                      <Stack direction="row" alignItems="center" justifyContent="space-between">
+                        <Stack direction="row" alignItems="baseline" spacing={1}>
+                          <Typography variant="h4" fontWeight="bold">
+                            <CountUp end={stats.weekProjected} duration={1.5} />
+                          </Typography>
+                          <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                            closings
+                          </Typography>
+                        </Stack>
+                        <Chip
+                          icon={stats.weekChange >= 0 ? <TrendingUp sx={{ fontSize: 14 }} /> : <TrendingUp sx={{ fontSize: 14, transform: 'rotate(180deg)' }} />}
+                          label={`${Math.abs(stats.weekChange)}%`}
+                          size="small"
+                          sx={{
+                            bgcolor: stats.weekChange >= 0 ? alpha('#4caf50', 0.2) : alpha('#f44336', 0.2),
+                            color: stats.weekChange >= 0 ? '#4caf50' : '#f44336',
+                            fontWeight: 'bold',
+                            border: `1px solid ${stats.weekChange >= 0 ? '#4caf50' : '#f44336'}`,
+                          }}
+                        />
+                      </Stack>
+                      <Typography variant="caption" sx={{ opacity: 0.7 }}>
+                        ${(stats.weekVolume / 1000000).toFixed(1)}M projected
+                      </Typography>
+                    </Box>
+                    
+                    <Divider sx={{ borderColor: 'rgba(255,255,255,0.2)' }} />
+                    
+                    {/* Quick Stats */}
                     <Box>
                       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
                         <Typography variant="body2" sx={{ opacity: 0.8 }}>
                           Closing This Week
                         </Typography>
                         <Chip 
-                          label="2" 
+                          label={stats.closingThisWeek || 0} 
                           size="small" 
                           sx={{ 
                             bgcolor: 'rgba(255,255,255,0.2)', 
@@ -861,7 +1296,7 @@ const EscrowsDashboard = () => {
                           Pending Actions
                         </Typography>
                         <Chip 
-                          label="5" 
+                          label={stats.pendingActions || 0} 
                           size="small" 
                           sx={{ 
                             bgcolor: 'warning.main', 
