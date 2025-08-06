@@ -195,6 +195,75 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
   );
 };
 
+// Helper function to get initials from name
+const getInitials = (name) => {
+  if (!name) return '?';
+  const parts = name.trim().split(' ');
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+};
+
+// Mini contact card component
+const MiniContactCard = ({ title, name, initials, color = '#2196f3' }) => (
+  <Box
+    sx={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: 1,
+      p: 0.75,
+      borderRadius: 1,
+      backgroundColor: alpha(color, 0.05),
+      border: `1px solid ${alpha(color, 0.2)}`,
+      minHeight: 36,
+    }}
+  >
+    <Box
+      sx={{
+        width: 24,
+        height: 24,
+        borderRadius: '50%',
+        backgroundColor: color,
+        color: 'white',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontSize: '10px',
+        fontWeight: 700,
+        flexShrink: 0,
+      }}
+    >
+      {initials}
+    </Box>
+    <Box sx={{ minWidth: 0, flex: 1 }}>
+      <Typography 
+        variant="caption" 
+        sx={{ 
+          fontSize: '9px',
+          color: 'text.secondary',
+          display: 'block',
+          lineHeight: 1,
+        }}
+      >
+        {title}
+      </Typography>
+      <Typography 
+        variant="caption" 
+        sx={{ 
+          fontSize: '10px',
+          fontWeight: 600,
+          display: 'block',
+          lineHeight: 1.2,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        {name || 'Not Assigned'}
+      </Typography>
+    </Box>
+  </Box>
+);
+
 // Enhanced escrow card component with stunning visuals
 const EscrowCard = ({ escrow, onClick, index }) => {
   const theme = useTheme();
@@ -486,7 +555,7 @@ const EscrowCard = ({ escrow, onClick, index }) => {
             <Box sx={{ flex: 1, p: 3, display: 'flex', flexDirection: 'column' }}>
               <Grid container spacing={2}>
                 {/* Purchase Price and Commission */}
-                <Grid item xs={12} md={4}>
+                <Grid item xs={12} md={3}>
                   <Typography variant="caption" color="textSecondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.7rem' }}>
                     Purchase Price
                   </Typography>
@@ -498,8 +567,48 @@ const EscrowCard = ({ escrow, onClick, index }) => {
                   </Typography>
                 </Grid>
 
+                {/* Contact Cards 2x2 Grid */}
+                <Grid item xs={12} md={5}>
+                  <Grid container spacing={1}>
+                    {/* Left Column - Buyer's Agent & Lender */}
+                    <Grid item xs={6}>
+                      <Stack spacing={1}>
+                        <MiniContactCard
+                          title="Buyer's Agent"
+                          name={escrow.buyerAgent || escrow.buyer_agent || escrow.people?.buyerAgent?.name}
+                          initials={getInitials(escrow.buyerAgent || escrow.buyer_agent || escrow.people?.buyerAgent?.name)}
+                          color="#4caf50"
+                        />
+                        <MiniContactCard
+                          title="Lender"
+                          name={escrow.lenderName || escrow.lender_name || escrow.loan_officer_name}
+                          initials={getInitials(escrow.lenderName || escrow.lender_name || escrow.loan_officer_name)}
+                          color="#2196f3"
+                        />
+                      </Stack>
+                    </Grid>
+                    {/* Right Column - Listing Agent & Escrow Officer */}
+                    <Grid item xs={6}>
+                      <Stack spacing={1}>
+                        <MiniContactCard
+                          title="Listing Agent"
+                          name={escrow.listingAgent || escrow.listing_agent || escrow.people?.listingAgent?.name}
+                          initials={getInitials(escrow.listingAgent || escrow.listing_agent || escrow.people?.listingAgent?.name)}
+                          color="#ff9800"
+                        />
+                        <MiniContactCard
+                          title="Escrow Officer"
+                          name={escrow.escrowOfficerName || escrow.escrow_officer_name}
+                          initials={getInitials(escrow.escrowOfficerName || escrow.escrow_officer_name)}
+                          color="#9c27b0"
+                        />
+                      </Stack>
+                    </Grid>
+                  </Grid>
+                </Grid>
+
                 {/* Last Activity */}
-                <Grid item xs={6} md={4}>
+                <Grid item xs={6} md={2}>
                   <Typography variant="caption" color="textSecondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.7rem' }}>
                     Last Activity
                   </Typography>
@@ -515,7 +624,7 @@ const EscrowCard = ({ escrow, onClick, index }) => {
                 </Grid>
 
                 {/* Days to Close - Far Right */}
-                <Grid item xs={6} md={4}>
+                <Grid item xs={6} md={2}>
                   <Box 
                     sx={{ 
                       display: 'inline-block',
