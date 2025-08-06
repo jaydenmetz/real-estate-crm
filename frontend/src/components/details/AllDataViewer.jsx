@@ -88,6 +88,8 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
       
       let response;
       
+      console.log(`Toggling ${path} from ${currentValue} to ${newValue}`);
+      
       // Handle checklist fields specially
       if (path.startsWith('checklists.')) {
         // For checklists, use the dedicated updateChecklist endpoint
@@ -98,11 +100,14 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
         // Get the current checklist state from escrowData
         const currentChecklists = escrowData.checklists || {};
         
-        console.log('Current checklists:', currentChecklists);
-        console.log(`Updating ${checklistType}.${checklistItem} to ${newValue}`);
+        console.log('Current checklists before update:', JSON.parse(JSON.stringify(currentChecklists)));
         
         // Create a deep copy of ALL existing checklist data
-        const updatedChecklists = JSON.parse(JSON.stringify(currentChecklists));
+        const updatedChecklists = {
+          loan: { ...(currentChecklists.loan || {}) },
+          house: { ...(currentChecklists.house || {}) },
+          admin: { ...(currentChecklists.admin || {}) }
+        };
         
         // Ensure the checklist type exists
         if (!updatedChecklists[checklistType]) {
@@ -117,7 +122,7 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
         // Use the dedicated checklist endpoint
         response = await escrowsAPI.updateChecklist(cleanId, updatedChecklists);
       } else {
-        // Regular field mapping
+        // Regular field mapping - these map frontend display paths to backend field names
         const fieldMapping = {
           'transactionDetails.avid': 'avid',
           'propertyDetails.pool': 'pool',
@@ -126,8 +131,16 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
           'propertyDetails.seniorCommunity': 'senior_community',
         };
         
-        const backendField = fieldMapping[path] || path.split('.').pop();
+        const backendField = fieldMapping[path];
+        
+        if (!backendField) {
+          console.error(`No field mapping found for path: ${path}`);
+          throw new Error(`Cannot update field: ${path}`);
+        }
+        
         const updateData = { [backendField]: newValue };
+        
+        console.log('Sending update:', updateData);
         
         // Use regular update endpoint
         response = await escrowsAPI.update(cleanId, updateData);
