@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Card,
@@ -50,6 +50,12 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
     financial: true,
     checklist: true,
   });
+  
+  // Keep track of local checklist state to prevent data loss during refetch
+  const [localChecklistState, setLocalChecklistState] = useState(null);
+  
+  // Use a ref to track the last escrow ID
+  const lastEscrowId = useRef(escrowData.id);
 
   const handleEdit = (path, value, type) => {
     setEditingField(path);
@@ -89,43 +95,79 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
       let response;
       
       console.log(`Toggling ${path} from ${currentValue} to ${newValue}`);
+      console.log('Path starts with propertyDetails:', path.startsWith('propertyDetails.'));
+      console.log('Path starts with checklists:', path.startsWith('checklists.'));
+      console.log('Path starts with transactionDetails:', path.startsWith('transactionDetails.'));
       
-      // Handle checklist fields specially
+      // Determine which endpoint to use based on the path
       if (path.startsWith('checklists.')) {
-        // For checklists, send as part of regular update with checklists field
+        // For checklists, we need to get the current state and update it
         const checklistParts = path.split('.');
         const checklistType = checklistParts[1]; // loan, house, or admin
         const checklistItem = checklistParts[2]; // specific item
         
-        // Get the current checklist state from escrowData
-        const currentChecklists = escrowData.checklists || {};
+        // Get the current checklist state - use local state if available, otherwise from escrowData
+        // This prevents losing checklist data during refetches
+        const currentChecklists = localChecklistState || escrowData.checklist || escrowData.checklists || {};
         
         console.log('Current checklists before update:', JSON.parse(JSON.stringify(currentChecklists)));
         
-        // Create a deep copy of ALL existing checklist data
-        const updatedChecklists = {
-          loan: { ...(currentChecklists.loan || {}) },
-          house: { ...(currentChecklists.house || {}) },
-          admin: { ...(currentChecklists.admin || {}) }
-        };
+        // Create a deep copy of ALL existing checklist data using JSON to ensure all nested properties are copied
+        const updatedChecklists = JSON.parse(JSON.stringify(currentChecklists));
         
-        // Ensure the checklist type exists
-        if (!updatedChecklists[checklistType]) {
-          updatedChecklists[checklistType] = {};
-        }
+        // Ensure all three checklist types exist with their current values
+        if (!updatedChecklists.loan) updatedChecklists.loan = currentChecklists.loan || {};
+        if (!updatedChecklists.house) updatedChecklists.house = currentChecklists.house || {};
+        if (!updatedChecklists.admin) updatedChecklists.admin = currentChecklists.admin || {};
         
-        // Update the specific item
+        // Update only the specific item that was clicked
         updatedChecklists[checklistType][checklistItem] = newValue;
         
         console.log('Updated checklists to send:', updatedChecklists);
+        console.log(`Specifically updating ${checklistType}.${checklistItem} to ${newValue}`);
         
-        // Send as regular update with checklists field
-        const updateData = { checklists: updatedChecklists };
-        response = await escrowsAPI.update(cleanId, updateData);
+        // Use the dedicated checklists endpoint
+        response = await escrowsAPI.updateChecklists(cleanId, updatedChecklists);
+        
+        // Update local checklist state
+        if (response.success) {
+          setLocalChecklistState(updatedChecklists);
+        }
+      } else if (path.startsWith('propertyDetails.')) {
+        // Handle property details updates
+        const fieldName = path.split('.')[1];
+        
+        // Map frontend field names to backend field names
+        const propertyFieldMapping = {
+          'pool': 'pool',
+          'spa': 'spa',
+          'gatedCommunity': 'gated_community',
+          'seniorCommunity': 'senior_community'
+        };
+        
+        const backendField = propertyFieldMapping[fieldName] || fieldName;
+        const updateData = { [backendField]: newValue };
+        
+        console.log('Updating property details:', updateData);
+        response = await escrowsAPI.updatePropertyDetails(cleanId, updateData);
+      } else if (path.startsWith('transactionDetails.')) {
+        // Transaction details are typically stored in various places
+        // AVID is a special case that needs to be handled
+        const fieldName = path.split('.')[1];
+        
+        if (fieldName === 'avid') {
+          // AVID is stored at the top level
+          const updateData = { avid: newValue };
+          response = await escrowsAPI.update(cleanId, updateData);
+        } else {
+          // Other transaction details might be in financials or top-level
+          const updateData = { [fieldName]: newValue };
+          response = await escrowsAPI.update(cleanId, updateData);
+        }
       } else {
-        // Regular field mapping - these map frontend display paths to backend field names
+        // Fallback to main update endpoint for other boolean fields
+        // This handles property fields that are stored as individual columns
         const fieldMapping = {
-          'transactionDetails.avid': 'avid',
           'propertyDetails.pool': 'pool',
           'propertyDetails.spa': 'spa',
           'propertyDetails.gatedCommunity': 'gated_community',
@@ -141,9 +183,7 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
         
         const updateData = { [backendField]: newValue };
         
-        console.log('Sending update:', updateData);
-        
-        // Use regular update endpoint
+        console.log('Using main update endpoint for:', updateData);
         response = await escrowsAPI.update(cleanId, updateData);
       }
       
@@ -153,17 +193,22 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
         setSuccess('Updated successfully');
         setTimeout(() => setSuccess(''), 3000);
         
-        // Notify parent component
+        // Update local data based on the type of update
         if (onUpdate) {
-          const updatedData = { ...escrowData };
-          const pathParts = path.split('.');
-          let current = updatedData;
-          for (let i = 0; i < pathParts.length - 1; i++) {
-            if (!current[pathParts[i]]) current[pathParts[i]] = {};
-            current = current[pathParts[i]];
+          // When updating non-checklist fields, we should NOT touch the checklist data
+          // The refetch will get the latest data from the server
+          
+          if (path.startsWith('checklists.')) {
+            // For checklist updates, just trigger a refetch
+            // The server has the updated checklists
+            onUpdate();
+          } else {
+            // For non-checklist updates (property fields, etc.)
+            // Also just trigger a refetch to get fresh data
+            // This ensures we don't accidentally overwrite checklist state
+            onUpdate();
           }
-          current[pathParts[pathParts.length - 1]] = newValue;
-          onUpdate(updatedData);
+        }
         }
       }
     } catch (err) {
@@ -570,6 +615,19 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
     return null;
   };
 
+  // Get the correct checklist data - use local state if available to prevent data loss
+  const checklistData = localChecklistState || escrowData.checklist || escrowData.checklists || {};
+  
+  // Sync local state with escrowData when component mounts or escrowData changes significantly
+  useEffect(() => {
+    // Only update local state if it's null or if the escrow ID has changed
+    const newChecklists = escrowData.checklist || escrowData.checklists;
+    if (newChecklists && (!localChecklistState || escrowData.id !== lastEscrowId.current)) {
+      setLocalChecklistState(newChecklists);
+      lastEscrowId.current = escrowData.id;
+    }
+  }, [escrowData.id, escrowData.checklist, escrowData.checklists]);
+  
   // Flatten all data into sections
   const allDataSections = [
     {
@@ -722,15 +780,15 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
       title: 'Checklist Status',
       key: 'checklist',
       fields: [
-        { label: 'Loan - LE', value: getValue(escrowData, ['checklists.loan.le', 'checklist.loan.le']), path: 'checklists.loan.le', type: 'boolean' },
-        { label: 'Loan - Rate Locked', value: getValue(escrowData, ['checklists.loan.lockedRate', 'checklist.loan.lockedRate']), path: 'checklists.loan.lockedRate', type: 'boolean' },
-        { label: 'Loan - Appraisal Ordered', value: getValue(escrowData, ['checklists.loan.appraisalOrdered', 'checklist.loan.appraisalOrdered']), path: 'checklists.loan.appraisalOrdered', type: 'boolean' },
-        { label: 'Loan - Clear to Close', value: getValue(escrowData, ['checklists.loan.clearToClose', 'checklist.loan.clearToClose']), path: 'checklists.loan.clearToClose', type: 'boolean' },
-        { label: 'House - EMD', value: getValue(escrowData, ['checklists.house.emd', 'checklist.house.emd']), path: 'checklists.house.emd', type: 'boolean' },
-        { label: 'House - Inspection Ordered', value: getValue(escrowData, ['checklists.house.homeInspectionOrdered', 'checklist.house.homeInspectionOrdered']), path: 'checklists.house.homeInspectionOrdered', type: 'boolean' },
-        { label: 'House - Disclosures', value: getValue(escrowData, ['checklists.house.sellerDisclosures', 'checklist.house.sellerDisclosures']), path: 'checklists.house.sellerDisclosures', type: 'boolean' },
-        { label: 'Admin - MLS Updated', value: getValue(escrowData, ['checklists.admin.mlsStatusUpdate', 'checklist.admin.mlsStatusUpdate']), path: 'checklists.admin.mlsStatusUpdate', type: 'boolean' },
-        { label: 'Admin - TC Email', value: getValue(escrowData, ['checklists.admin.tcEmail', 'checklist.admin.tcEmail']), path: 'checklists.admin.tcEmail', type: 'boolean' },
+        { label: 'Loan - LE', value: checklistData.loan?.le, path: 'checklists.loan.le', type: 'boolean' },
+        { label: 'Loan - Rate Locked', value: checklistData.loan?.lockedRate, path: 'checklists.loan.lockedRate', type: 'boolean' },
+        { label: 'Loan - Appraisal Ordered', value: checklistData.loan?.appraisalOrdered, path: 'checklists.loan.appraisalOrdered', type: 'boolean' },
+        { label: 'Loan - Clear to Close', value: checklistData.loan?.clearToClose, path: 'checklists.loan.clearToClose', type: 'boolean' },
+        { label: 'House - EMD', value: checklistData.house?.emd, path: 'checklists.house.emd', type: 'boolean' },
+        { label: 'House - Inspection Ordered', value: checklistData.house?.homeInspectionOrdered, path: 'checklists.house.homeInspectionOrdered', type: 'boolean' },
+        { label: 'House - Disclosures', value: checklistData.house?.sellerDisclosures, path: 'checklists.house.sellerDisclosures', type: 'boolean' },
+        { label: 'Admin - MLS Updated', value: checklistData.admin?.mlsStatusUpdate, path: 'checklists.admin.mlsStatusUpdate', type: 'boolean' },
+        { label: 'Admin - TC Email', value: checklistData.admin?.tcEmail, path: 'checklists.admin.tcEmail', type: 'boolean' },
       ],
     },
   ];

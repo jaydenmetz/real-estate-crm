@@ -2042,6 +2042,260 @@ class SimpleEscrowController {
   }
 
   /**
+   * Update escrow property details
+   */
+  static async updateEscrowPropertyDetails(req, res) {
+    try {
+      const { id } = req.params;
+      const propertyDetails = req.body;
+      
+      // Clean the ID
+      let cleanId = id;
+      if (id.startsWith('escrow-')) {
+        cleanId = id.substring(7);
+      }
+      
+      const isUUIDFormat = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanId);
+      
+      // Map frontend property field names to database column names
+      const propertyFieldMapping = {
+        'pool': 'pool',
+        'spa': 'spa',
+        'gatedCommunity': 'gated_community',
+        'gated_community': 'gated_community',
+        'seniorCommunity': 'senior_community',
+        'senior_community': 'senior_community',
+        'bedrooms': 'bedrooms',
+        'bathrooms': 'bathrooms',
+        'squareFeet': 'square_feet',
+        'square_feet': 'square_feet',
+        'yearBuilt': 'year_built',
+        'year_built': 'year_built',
+        'garageSpaces': 'garage_spaces',
+        'garage_spaces': 'garage_spaces',
+        'stories': 'stories',
+        'lotSize': 'lot_size_sqft',
+        'lot_size_sqft': 'lot_size_sqft',
+      };
+      
+      // Build dynamic update query for individual columns
+      const updateFields = [];
+      const values = [];
+      let paramIndex = 1;
+      
+      Object.keys(propertyDetails).forEach(key => {
+        const dbColumn = propertyFieldMapping[key] || key;
+        // Only update fields that are actual database columns
+        if (dbColumn) {
+          updateFields.push(`${dbColumn} = $${paramIndex}`);
+          values.push(propertyDetails[key]);
+          paramIndex++;
+        }
+      });
+      
+      if (updateFields.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'NO_UPDATES',
+            message: 'No valid property fields to update'
+          }
+        });
+      }
+      
+      values.push(cleanId);
+      
+      // Update individual property columns
+      const updateQuery = `
+        UPDATE escrows
+        SET ${updateFields.join(', ')}, updated_at = NOW()
+        WHERE ${isUUIDFormat ? 'id = $' + paramIndex : 'display_id = $' + paramIndex}
+        RETURNING id, bedrooms, bathrooms, square_feet, pool, spa, 
+                  gated_community, senior_community, year_built, 
+                  garage_spaces, stories, lot_size_sqft
+      `;
+      
+      const result = await pool.query(updateQuery, values);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Escrow not found'
+          }
+        });
+      }
+      
+      res.json({
+        success: true,
+        data: result.rows[0],
+        message: 'Property details updated successfully'
+      });
+      
+    } catch (error) {
+      console.error('Error updating property details:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'SERVER_ERROR',
+          message: 'Failed to update property details'
+        }
+      });
+    }
+  }
+
+  /**
+   * Update escrow financials
+   */
+  static async updateEscrowFinancials(req, res) {
+    try {
+      const { id } = req.params;
+      const financials = req.body;
+      
+      // Clean the ID
+      let cleanId = id;
+      if (id.startsWith('escrow-')) {
+        cleanId = id.substring(7);
+      }
+      
+      const isUUIDFormat = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanId);
+      
+      // First get the current escrow to preserve existing financials
+      const getCurrentQuery = `
+        SELECT financials 
+        FROM escrows 
+        WHERE ${isUUIDFormat ? 'id = $1' : 'display_id = $1'}
+      `;
+      
+      const currentResult = await pool.query(getCurrentQuery, [cleanId]);
+      
+      if (currentResult.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Escrow not found'
+          }
+        });
+      }
+      
+      // Merge new financials with existing ones - handle JSON parsing
+      let existingFinancials = currentResult.rows[0].financials || {};
+      // If it's a string, parse it
+      if (typeof existingFinancials === 'string') {
+        try {
+          existingFinancials = JSON.parse(existingFinancials);
+        } catch (e) {
+          existingFinancials = {};
+        }
+      }
+      const mergedFinancials = { ...existingFinancials, ...financials };
+      
+      // Update with merged data
+      const updateQuery = `
+        UPDATE escrows
+        SET financials = $2, updated_at = NOW()
+        WHERE ${isUUIDFormat ? 'id = $1' : 'display_id = $1'}
+        RETURNING id, financials
+      `;
+      
+      const result = await pool.query(updateQuery, [cleanId, JSON.stringify(mergedFinancials)]);
+      
+      res.json({
+        success: true,
+        data: result.rows[0].financials,
+        message: 'Financials updated successfully'
+      });
+      
+    } catch (error) {
+      console.error('Error updating financials:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'SERVER_ERROR',
+          message: 'Failed to update financials'
+        }
+      });
+    }
+  }
+
+  /**
+   * Update escrow timeline
+   */
+  static async updateEscrowTimeline(req, res) {
+    try {
+      const { id } = req.params;
+      const timeline = req.body;
+      
+      // Clean the ID
+      let cleanId = id;
+      if (id.startsWith('escrow-')) {
+        cleanId = id.substring(7);
+      }
+      
+      const isUUIDFormat = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanId);
+      
+      // First get the current escrow to preserve existing timeline
+      const getCurrentQuery = `
+        SELECT timeline 
+        FROM escrows 
+        WHERE ${isUUIDFormat ? 'id = $1' : 'display_id = $1'}
+      `;
+      
+      const currentResult = await pool.query(getCurrentQuery, [cleanId]);
+      
+      if (currentResult.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Escrow not found'
+          }
+        });
+      }
+      
+      // Merge new timeline with existing one - handle JSON parsing
+      let existingTimeline = currentResult.rows[0].timeline || {};
+      // If it's a string, parse it  
+      if (typeof existingTimeline === 'string') {
+        try {
+          existingTimeline = JSON.parse(existingTimeline);
+        } catch (e) {
+          existingTimeline = {};
+        }
+      }
+      const mergedTimeline = { ...existingTimeline, ...timeline };
+      
+      // Update with merged data
+      const updateQuery = `
+        UPDATE escrows
+        SET timeline = $2, updated_at = NOW()
+        WHERE ${isUUIDFormat ? 'id = $1' : 'display_id = $1'}
+        RETURNING id, timeline
+      `;
+      
+      const result = await pool.query(updateQuery, [cleanId, JSON.stringify(mergedTimeline)]);
+      
+      res.json({
+        success: true,
+        data: result.rows[0].timeline,
+        message: 'Timeline updated successfully'
+      });
+      
+    } catch (error) {
+      console.error('Error updating timeline:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'SERVER_ERROR',
+          message: 'Failed to update timeline'
+        }
+      });
+    }
+  }
+
+  /**
    * Get property image from database
    * Returns the cached Zillow image URL or prompts to add one
    */

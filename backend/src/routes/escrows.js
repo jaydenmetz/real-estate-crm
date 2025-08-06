@@ -71,6 +71,15 @@ router.put('/:id/people', SimpleEscrowController.updateEscrowPeople);
 // PUT /v1/escrows/:id/checklists - Update escrow checklists
 router.put('/:id/checklists', SimpleEscrowController.updateEscrowChecklists);
 
+// PUT /v1/escrows/:id/property-details - Update property details
+router.put('/:id/property-details', SimpleEscrowController.updateEscrowPropertyDetails);
+
+// PUT /v1/escrows/:id/financials - Update financial details
+router.put('/:id/financials', SimpleEscrowController.updateEscrowFinancials);
+
+// PUT /v1/escrows/:id/timeline - Update timeline dates
+router.put('/:id/timeline', SimpleEscrowController.updateEscrowTimeline);
+
 // POST /v1/escrows - Create new escrow with sequential ID
 router.post('/', (req, res) => {
   return SimpleEscrowController.createEscrow(req, res);

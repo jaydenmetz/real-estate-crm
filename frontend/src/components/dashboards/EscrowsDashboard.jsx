@@ -306,65 +306,53 @@ const EscrowCard = ({ escrow, onClick, index, onChecklistUpdate }) => {
     return Math.min(Math.max((daysFromStart / totalDays) * 100, 0), 100);
   };
   
-  // Define milestones with dynamic positioning
+  // Define 5 main milestones for every real estate transaction
+  // These are the key dates that every transaction should have
   const milestones = [
     { 
-      name: 'Contract', 
-      date: escrow.acceptanceDate, 
+      name: 'Escrow Opened', 
+      date: escrow.escrowOpenedDate || escrow.acceptanceDate,
       position: 0,
       icon: '📝',
-      completed: true
-    },
-    escrow.emdDate && { 
-      name: 'EMD', 
-      date: escrow.emdDate, 
-      position: calculatePosition(escrow.emdDate) || 10,
-      icon: '💰',
-      completed: new Date(escrow.emdDate) <= today
-    },
-    escrow.inspectionDate && { 
-      name: 'Inspection', 
-      date: escrow.inspectionDate, 
-      position: calculatePosition(escrow.inspectionDate) || 25,
-      icon: '🔍',
-      completed: new Date(escrow.inspectionDate) <= today
-    },
-    escrow.appraisalDate && { 
-      name: 'Appraisal', 
-      date: escrow.appraisalDate, 
-      position: calculatePosition(escrow.appraisalDate) || 40,
-      icon: '📊',
-      completed: new Date(escrow.appraisalDate) <= today
-    },
-    escrow.contingencyRemovalDate && { 
-      name: 'Contingencies', 
-      date: escrow.contingencyRemovalDate, 
-      position: calculatePosition(escrow.contingencyRemovalDate) || 55,
-      icon: '✅',
-      completed: new Date(escrow.contingencyRemovalDate) <= today
-    },
-    escrow.loanApprovalDate && { 
-      name: 'Loan Approval', 
-      date: escrow.loanApprovalDate, 
-      position: calculatePosition(escrow.loanApprovalDate) || 70,
-      icon: '🏦',
-      completed: new Date(escrow.loanApprovalDate) <= today
-    },
-    escrow.finalWalkthroughDate && { 
-      name: 'Final Walkthrough', 
-      date: escrow.finalWalkthroughDate, 
-      position: calculatePosition(escrow.finalWalkthroughDate) || 85,
-      icon: '👀',
-      completed: new Date(escrow.finalWalkthroughDate) <= today
+      completed: true,
+      isMain: true
     },
     { 
-      name: 'Closing', 
-      date: escrow.scheduledCoeDate, 
+      name: 'Contingencies', 
+      date: escrow.contingencyRemovalDate || escrow.contingenciesDate || 
+            (escrow.acceptanceDate && new Date(new Date(escrow.acceptanceDate).getTime() + 17 * 24 * 60 * 60 * 1000).toISOString()),
+      position: 35,
+      icon: '✅',
+      completed: escrow.contingencyRemovalDate ? new Date(escrow.contingencyRemovalDate) <= today : false,
+      isMain: true
+    },
+    { 
+      name: 'Loan Approval', 
+      date: escrow.loanApprovalDate || 
+            (escrow.acceptanceDate && new Date(new Date(escrow.acceptanceDate).getTime() + 21 * 24 * 60 * 60 * 1000).toISOString()),
+      position: 60,
+      icon: '🏦',
+      completed: escrow.loanApprovalDate ? new Date(escrow.loanApprovalDate) <= today : false,
+      isMain: true
+    },
+    { 
+      name: 'Final Walkthrough', 
+      date: escrow.finalWalkthroughDate || 
+            (escrow.scheduledCoeDate && new Date(new Date(escrow.scheduledCoeDate).getTime() - 1 * 24 * 60 * 60 * 1000).toISOString()),
+      position: 85,
+      icon: '🔍',
+      completed: escrow.finalWalkthroughDate ? new Date(escrow.finalWalkthroughDate) <= today : false,
+      isMain: true
+    },
+    { 
+      name: 'Escrow Closed', 
+      date: escrow.actualCoeDate || escrow.scheduledCoeDate,
       position: 100,
       icon: '🏠',
-      completed: escrow.escrowStatus === 'Closed' || escrow.escrowStatus === 'closed'
+      completed: escrow.escrowStatus === 'Closed' || escrow.escrowStatus === 'closed',
+      isMain: true
     }
-  ].filter(Boolean); // Remove null entries
+  ];
   
   // Calculate house and loan checklist progress
   const houseChecklist = localEscrow.checklists?.house || {};

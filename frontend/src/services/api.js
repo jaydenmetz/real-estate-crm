@@ -187,7 +187,11 @@ export const escrowsAPI = {
   create: (data) => apiInstance.post('/escrows', data),
   update: (id, data) => apiInstance.put(`/escrows/${id}`, data),
   delete: (id) => apiInstance.delete(`/escrows/${id}`),
-  updateChecklist: (id, checklist) => apiInstance.put(`/escrows/${id}/checklist`, { checklist }),
+  updateChecklists: (id, checklists) => apiInstance.put(`/escrows/${id}/checklists`, checklists),
+  updatePropertyDetails: (id, details) => apiInstance.put(`/escrows/${id}/property-details`, details),
+  updateFinancials: (id, financials) => apiInstance.put(`/escrows/${id}/financials`, financials),
+  updateTimeline: (id, timeline) => apiInstance.put(`/escrows/${id}/timeline`, timeline),
+  updatePeople: (id, people) => apiInstance.put(`/escrows/${id}/people`, people),
   getAnalytics: (id) => apiInstance.get(`/analytics/escrow/${id}`),
   addNote: (id, note) => apiInstance.post(`/escrows/${id}/notes`, note)
 };
