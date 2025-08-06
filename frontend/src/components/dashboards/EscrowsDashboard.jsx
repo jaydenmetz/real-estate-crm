@@ -214,7 +214,7 @@ const MiniContactCard = ({ title, name, initials, color = '#2196f3' }) => (
       borderRadius: 1,
       backgroundColor: alpha(color, 0.05),
       border: `1px solid ${alpha(color, 0.2)}`,
-      minHeight: 36,
+      minHeight: 32,
     }}
   >
     <Box
@@ -552,17 +552,24 @@ const EscrowCard = ({ escrow, onClick, index }) => {
             </Box>
 
             {/* Content Section - Right Side */}
-            <Box sx={{ flex: 1, p: 3, display: 'flex', flexDirection: 'column' }}>
-              <Grid container spacing={2} alignItems="center">
+            <Box sx={{ 
+              flex: 1, 
+              p: 2, 
+              display: 'flex', 
+              flexDirection: 'column',
+              height: { xs: 'auto', sm: 240 },
+              overflow: 'hidden',
+            }}>
+              <Grid container spacing={1} alignItems="center" sx={{ mb: 1 }}>
                 {/* Purchase Price and Commission */}
                 <Grid item xs={12} md={3}>
-                  <Typography variant="caption" color="textSecondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.7rem' }}>
+                  <Typography variant="caption" color="textSecondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.65rem', lineHeight: 1 }}>
                     Purchase Price
                   </Typography>
-                  <Typography variant="h5" sx={{ fontWeight: 700, mt: 0.5 }}>
+                  <Typography variant="h6" sx={{ fontWeight: 700, mt: 0.25, fontSize: '1.1rem' }}>
                     ${Number(escrow.purchasePrice).toLocaleString()}
                   </Typography>
-                  <Typography variant="body2" color="success.main" sx={{ fontWeight: 600, mt: 0.5 }}>
+                  <Typography variant="caption" color="success.main" sx={{ fontWeight: 600, fontSize: '0.7rem' }}>
                     ${Number(escrow.myCommission).toLocaleString()} commission
                   </Typography>
                 </Grid>
@@ -570,10 +577,10 @@ const EscrowCard = ({ escrow, onClick, index }) => {
                 {/* Contact Cards 2x2 Grid - Centered */}
                 <Grid item xs={12} md={6}>
                   <Box sx={{ display: 'flex', justifyContent: 'center' }}>
-                    <Grid container spacing={1} sx={{ maxWidth: 400 }}>
+                    <Grid container spacing={0.5} sx={{ maxWidth: 360 }}>
                       {/* Left Column - Buyer's Agent & Lender */}
                       <Grid item xs={6}>
-                        <Stack spacing={1}>
+                        <Stack spacing={0.5}>
                           <MiniContactCard
                             title="Buyer's Agent"
                             name={escrow.buyerAgent || escrow.buyer_agent || escrow.people?.buyerAgent?.name}
@@ -590,7 +597,7 @@ const EscrowCard = ({ escrow, onClick, index }) => {
                       </Grid>
                       {/* Right Column - Listing Agent & Escrow Officer */}
                       <Grid item xs={6}>
-                        <Stack spacing={1}>
+                        <Stack spacing={0.5}>
                           <MiniContactCard
                             title="Listing Agent"
                             name={escrow.listingAgent || escrow.listing_agent || escrow.people?.listingAgent?.name}
@@ -614,8 +621,8 @@ const EscrowCard = ({ escrow, onClick, index }) => {
                   <Box 
                     sx={{ 
                       display: 'inline-block',
-                      px: 2,
-                      py: 1,
+                      px: 1.5,
+                      py: 0.5,
                       borderRadius: 2,
                       background: alpha(theme.palette.primary.main, 0.08),
                       width: '100%',
@@ -624,16 +631,17 @@ const EscrowCard = ({ escrow, onClick, index }) => {
                     }}
                   >
                     <Typography 
-                      variant="h3" 
+                      variant="h4" 
                       sx={{ 
                         fontWeight: 700,
                         color: escrow.daysToClose <= 7 ? 'error.main' : 'primary.main',
-                        fontSize: { xs: '2rem', md: '2.5rem' },
+                        fontSize: '1.8rem',
+                        lineHeight: 1,
                       }}
                     >
                       {escrow.daysToClose > 0 ? escrow.daysToClose : 0}
                     </Typography>
-                    <Typography variant="caption" color="textSecondary">
+                    <Typography variant="caption" color="textSecondary" sx={{ fontSize: '0.65rem' }}>
                       days to close
                     </Typography>
                   </Box>
@@ -641,16 +649,16 @@ const EscrowCard = ({ escrow, onClick, index }) => {
               </Grid>
 
             {/* Enhanced Timeline Progress with Milestones */}
-            <Box sx={{ mt: 3 }}>
+            <Box sx={{ mt: 'auto', pt: 1 }}>
               {/* Main Timeline */}
-              <Box sx={{ position: 'relative', mb: 3 }}>
-                <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', mb: 1, display: 'block' }}>
+              <Box sx={{ position: 'relative', mb: 2 }}>
+                <Typography variant="caption" sx={{ fontWeight: 600, color: 'text.secondary', mb: 0.5, display: 'block', fontSize: '0.65rem' }}>
                   ESCROW TIMELINE
                 </Typography>
                 <Box
                   sx={{
-                    height: 12,
-                    borderRadius: 6,
+                    height: 8,
+                    borderRadius: 4,
                     background: `linear-gradient(90deg, ${alpha(statusColor, 0.05)} 0%, ${alpha(statusColor, 0.1)} 100%)`,
                     overflow: 'visible',
                     position: 'relative',
@@ -815,15 +823,15 @@ const EscrowCard = ({ escrow, onClick, index }) => {
                 </Box>
                 
                 {/* Days counter */}
-                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-                  <Typography variant="caption" sx={{ fontWeight: 700, color: statusColor }}>
+                <Box sx={{ display: 'flex', justifyContent: 'center', mt: 1 }}>
+                  <Typography variant="caption" sx={{ fontWeight: 700, color: statusColor, fontSize: '0.65rem' }}>
                     Day {daysElapsed} of {totalDays}
                   </Typography>
                 </Box>
               </Box>
               
               {/* House and Loan Progress Bars */}
-              <Grid container spacing={2}>
+              <Grid container spacing={1} sx={{ mt: 0.5 }}>
                 {/* House Progress */}
                 <Grid item xs={12} md={6}>
                   <Box>
@@ -859,7 +867,7 @@ const EscrowCard = ({ escrow, onClick, index }) => {
                       sx={{ 
                         display: 'block',
                         mt: 0.5,
-                        fontSize: '10px',
+                        fontSize: '9px',
                         color: 'text.secondary',
                         fontStyle: nextHouseItem === 'All Complete' ? 'normal' : 'italic',
                       }}
@@ -904,7 +912,7 @@ const EscrowCard = ({ escrow, onClick, index }) => {
                       sx={{ 
                         display: 'block',
                         mt: 0.5,
-                        fontSize: '10px',
+                        fontSize: '9px',
                         color: 'text.secondary',
                         fontStyle: nextLoanItem === 'All Complete' ? 'normal' : 'italic',
                       }}
