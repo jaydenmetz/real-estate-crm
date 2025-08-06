@@ -82,49 +82,53 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
     try {
       const newValue = !currentValue;
       
-      // Map frontend nested paths to backend flat field names
-      const fieldMapping = {
-        'transactionDetails.avid': 'avid',
-        'propertyDetails.pool': 'pool',
-        'propertyDetails.spa': 'spa',
-        'propertyDetails.gatedCommunity': 'gated_community',
-        'propertyDetails.seniorCommunity': 'senior_community',
-        // Checklist fields are handled as nested objects
-      };
-      
-      // Build the update object
-      let updateData = {};
-      
-      // Handle checklist fields specially
-      if (path.startsWith('checklists.')) {
-        // For checklists, we need to send the entire checklist object
-        const checklistParts = path.split('.');
-        const checklistType = checklistParts[1]; // loan, house, or admin
-        const checklistItem = checklistParts[2]; // specific item
-        
-        // Get the current checklist state
-        const currentChecklist = escrowData.checklists || {};
-        const updatedChecklist = {
-          ...currentChecklist,
-          [checklistType]: {
-            ...currentChecklist[checklistType],
-            [checklistItem]: newValue
-          }
-        };
-        
-        updateData = { checklists: updatedChecklist };
-      } else {
-        // Regular field mapping
-        const backendField = fieldMapping[path] || path.split('.').pop();
-        updateData = { [backendField]: newValue };
-      }
-      
       // Clean the escrow ID
       const cleanId = escrowData.id.startsWith('escrow-') ? 
         escrowData.id.substring(7) : escrowData.id;
       
-      // Send update to backend
-      const response = await escrowsAPI.update(cleanId, updateData);
+      let response;
+      
+      // Handle checklist fields specially
+      if (path.startsWith('checklists.')) {
+        // For checklists, use the dedicated updateChecklist endpoint
+        const checklistParts = path.split('.');
+        const checklistType = checklistParts[1]; // loan, house, or admin
+        const checklistItem = checklistParts[2]; // specific item
+        
+        // Get the current checklist state from escrowData
+        const currentChecklists = escrowData.checklists || {};
+        
+        // Create a deep copy and update the specific item
+        const updatedChecklists = {
+          loan: { ...(currentChecklists.loan || {}) },
+          house: { ...(currentChecklists.house || {}) },
+          admin: { ...(currentChecklists.admin || {}) },
+        };
+        
+        // Update the specific item
+        if (!updatedChecklists[checklistType]) {
+          updatedChecklists[checklistType] = {};
+        }
+        updatedChecklists[checklistType][checklistItem] = newValue;
+        
+        // Use the dedicated checklist endpoint
+        response = await escrowsAPI.updateChecklist(cleanId, updatedChecklists);
+      } else {
+        // Regular field mapping
+        const fieldMapping = {
+          'transactionDetails.avid': 'avid',
+          'propertyDetails.pool': 'pool',
+          'propertyDetails.spa': 'spa',
+          'propertyDetails.gatedCommunity': 'gated_community',
+          'propertyDetails.seniorCommunity': 'senior_community',
+        };
+        
+        const backendField = fieldMapping[path] || path.split('.').pop();
+        const updateData = { [backendField]: newValue };
+        
+        // Use regular update endpoint
+        response = await escrowsAPI.update(cleanId, updateData);
+      }
       
       if (response.success) {
         setSavedField(path);
