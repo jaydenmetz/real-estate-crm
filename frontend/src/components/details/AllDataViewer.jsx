@@ -92,7 +92,7 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
       
       // Handle checklist fields specially
       if (path.startsWith('checklists.')) {
-        // For checklists, use the dedicated updateChecklist endpoint
+        // For checklists, send as part of regular update with checklists field
         const checklistParts = path.split('.');
         const checklistType = checklistParts[1]; // loan, house, or admin
         const checklistItem = checklistParts[2]; // specific item
@@ -119,8 +119,9 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
         
         console.log('Updated checklists to send:', updatedChecklists);
         
-        // Use the dedicated checklist endpoint
-        response = await escrowsAPI.updateChecklist(cleanId, updatedChecklists);
+        // Send as regular update with checklists field
+        const updateData = { checklists: updatedChecklists };
+        response = await escrowsAPI.update(cleanId, updateData);
       } else {
         // Regular field mapping - these map frontend display paths to backend field names
         const fieldMapping = {
