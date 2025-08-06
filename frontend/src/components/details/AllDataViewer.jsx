@@ -98,18 +98,21 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
         // Get the current checklist state from escrowData
         const currentChecklists = escrowData.checklists || {};
         
-        // Create a deep copy and update the specific item
-        const updatedChecklists = {
-          loan: { ...(currentChecklists.loan || {}) },
-          house: { ...(currentChecklists.house || {}) },
-          admin: { ...(currentChecklists.admin || {}) },
-        };
+        console.log('Current checklists:', currentChecklists);
+        console.log(`Updating ${checklistType}.${checklistItem} to ${newValue}`);
         
-        // Update the specific item
+        // Create a deep copy of ALL existing checklist data
+        const updatedChecklists = JSON.parse(JSON.stringify(currentChecklists));
+        
+        // Ensure the checklist type exists
         if (!updatedChecklists[checklistType]) {
           updatedChecklists[checklistType] = {};
         }
+        
+        // Update the specific item
         updatedChecklists[checklistType][checklistItem] = newValue;
+        
+        console.log('Updated checklists to send:', updatedChecklists);
         
         // Use the dedicated checklist endpoint
         response = await escrowsAPI.updateChecklist(cleanId, updatedChecklists);
@@ -436,16 +439,6 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
                     },
                   }}
                 />
-                <Typography
-                  variant="body2"
-                  sx={{ 
-                    ml: 1,
-                    color: value === true || value === 'true' ? 'primary.main' : 'text.secondary',
-                    fontWeight: value === true || value === 'true' ? 600 : 400,
-                  }}
-                >
-                  {value === true || value === 'true' ? 'Yes' : 'No'}
-                </Typography>
               </Box>
             ) : (
               <Typography
