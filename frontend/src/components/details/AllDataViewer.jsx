@@ -209,7 +209,6 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
             onUpdate();
           }
         }
-        }
       }
     } catch (err) {
       console.error('Failed to update:', err);
