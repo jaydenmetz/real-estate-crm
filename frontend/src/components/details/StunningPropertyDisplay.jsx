@@ -99,8 +99,8 @@ const StunningPropertyDisplay = ({ escrow }) => {
             }}
           >
             <motion.img
-              src={escrow.propertyImage || 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=1200'}
-              alt={escrow.propertyAddress}
+              src={escrow.propertyImage || escrow.property_image_url || 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=1200'}
+              alt={escrow.propertyAddress || escrow.property_address}
               style={{
                 width: '100%',
                 height: '100%',

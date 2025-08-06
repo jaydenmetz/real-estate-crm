@@ -1035,26 +1035,18 @@ class SimpleEscrowController {
         });
       }
       
-      // Transform the response to match GET endpoint format
+      // Log the update for debugging
       const updatedEscrow = result.rows[0];
+      console.log('Updated escrow fields:', {
+        zillow_url: updatedEscrow.zillow_url,
+        property_image_url: updatedEscrow.property_image_url,
+        id: updatedEscrow.id
+      });
       
-      // Add camelCase versions of key fields for consistency
-      const transformedData = {
-        ...updatedEscrow,
-        // Transform key fields to camelCase
-        zillowUrl: updatedEscrow.zillow_url,
-        propertyImage: updatedEscrow.property_image_url,
-        escrowStatus: updatedEscrow.escrow_status,
-        propertyAddress: updatedEscrow.property_address,
-        purchasePrice: parseFloat(updatedEscrow.purchase_price) || 0,
-        myCommission: parseFloat(updatedEscrow.my_commission) || 0,
-        displayId: updatedEscrow.display_id,
-        escrowNumber: updatedEscrow.display_id,
-      };
-      
+      // Return the raw database row - the frontend handles both formats
       res.json({
         success: true,
-        data: transformedData,
+        data: updatedEscrow,
         message: 'Escrow updated successfully'
       });
       
