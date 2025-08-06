@@ -553,7 +553,7 @@ const EscrowCard = ({ escrow, onClick, index }) => {
 
             {/* Content Section - Right Side */}
             <Box sx={{ flex: 1, p: 3, display: 'flex', flexDirection: 'column' }}>
-              <Grid container spacing={2}>
+              <Grid container spacing={2} alignItems="center">
                 {/* Purchase Price and Commission */}
                 <Grid item xs={12} md={3}>
                   <Typography variant="caption" color="textSecondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.7rem' }}>
@@ -567,64 +567,50 @@ const EscrowCard = ({ escrow, onClick, index }) => {
                   </Typography>
                 </Grid>
 
-                {/* Contact Cards 2x2 Grid */}
-                <Grid item xs={12} md={5}>
-                  <Grid container spacing={1}>
-                    {/* Left Column - Buyer's Agent & Lender */}
-                    <Grid item xs={6}>
-                      <Stack spacing={1}>
-                        <MiniContactCard
-                          title="Buyer's Agent"
-                          name={escrow.buyerAgent || escrow.buyer_agent || escrow.people?.buyerAgent?.name}
-                          initials={getInitials(escrow.buyerAgent || escrow.buyer_agent || escrow.people?.buyerAgent?.name)}
-                          color="#4caf50"
-                        />
-                        <MiniContactCard
-                          title="Lender"
-                          name={escrow.lenderName || escrow.lender_name || escrow.loan_officer_name}
-                          initials={getInitials(escrow.lenderName || escrow.lender_name || escrow.loan_officer_name)}
-                          color="#2196f3"
-                        />
-                      </Stack>
+                {/* Contact Cards 2x2 Grid - Centered */}
+                <Grid item xs={12} md={6}>
+                  <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                    <Grid container spacing={1} sx={{ maxWidth: 400 }}>
+                      {/* Left Column - Buyer's Agent & Lender */}
+                      <Grid item xs={6}>
+                        <Stack spacing={1}>
+                          <MiniContactCard
+                            title="Buyer's Agent"
+                            name={escrow.buyerAgent || escrow.buyer_agent || escrow.people?.buyerAgent?.name}
+                            initials={getInitials(escrow.buyerAgent || escrow.buyer_agent || escrow.people?.buyerAgent?.name)}
+                            color="#4caf50"
+                          />
+                          <MiniContactCard
+                            title="Lender"
+                            name={escrow.lenderName || escrow.lender_name || escrow.loan_officer_name}
+                            initials={getInitials(escrow.lenderName || escrow.lender_name || escrow.loan_officer_name)}
+                            color="#2196f3"
+                          />
+                        </Stack>
+                      </Grid>
+                      {/* Right Column - Listing Agent & Escrow Officer */}
+                      <Grid item xs={6}>
+                        <Stack spacing={1}>
+                          <MiniContactCard
+                            title="Listing Agent"
+                            name={escrow.listingAgent || escrow.listing_agent || escrow.people?.listingAgent?.name}
+                            initials={getInitials(escrow.listingAgent || escrow.listing_agent || escrow.people?.listingAgent?.name)}
+                            color="#ff9800"
+                          />
+                          <MiniContactCard
+                            title="Escrow Officer"
+                            name={escrow.escrowOfficerName || escrow.escrow_officer_name}
+                            initials={getInitials(escrow.escrowOfficerName || escrow.escrow_officer_name)}
+                            color="#9c27b0"
+                          />
+                        </Stack>
+                      </Grid>
                     </Grid>
-                    {/* Right Column - Listing Agent & Escrow Officer */}
-                    <Grid item xs={6}>
-                      <Stack spacing={1}>
-                        <MiniContactCard
-                          title="Listing Agent"
-                          name={escrow.listingAgent || escrow.listing_agent || escrow.people?.listingAgent?.name}
-                          initials={getInitials(escrow.listingAgent || escrow.listing_agent || escrow.people?.listingAgent?.name)}
-                          color="#ff9800"
-                        />
-                        <MiniContactCard
-                          title="Escrow Officer"
-                          name={escrow.escrowOfficerName || escrow.escrow_officer_name}
-                          initials={getInitials(escrow.escrowOfficerName || escrow.escrow_officer_name)}
-                          color="#9c27b0"
-                        />
-                      </Stack>
-                    </Grid>
-                  </Grid>
-                </Grid>
-
-                {/* Last Activity */}
-                <Grid item xs={6} md={2}>
-                  <Typography variant="caption" color="textSecondary" sx={{ textTransform: 'uppercase', letterSpacing: 0.5, fontSize: '0.7rem' }}>
-                    Last Activity
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 500, mt: 0.5 }}>
-                    {safeFormatDate(escrow.lastActivity, 'MMM d, h:mm a')}
-                  </Typography>
-                  <Chip 
-                    label={`${escrow.upcomingDeadlines} deadlines`} 
-                    size="small" 
-                    color="warning"
-                    sx={{ mt: 0.5 }}
-                  />
+                  </Box>
                 </Grid>
 
                 {/* Days to Close - Far Right */}
-                <Grid item xs={6} md={2}>
+                <Grid item xs={12} md={3}>
                   <Box 
                     sx={{ 
                       display: 'inline-block',
