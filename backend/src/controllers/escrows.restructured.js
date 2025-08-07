@@ -132,16 +132,56 @@ function buildRestructuredEscrowResponse(escrow) {
 
     // People - simplified to contact references with roles
     people: {
-      buyer: people.buyer ? { contactId: people.buyer.id, role: 'buyer', name: people.buyer.name } : null,
-      buyerAgent: people.buyerAgent ? { contactId: people.buyerAgent.id, role: 'buyerAgent', name: people.buyerAgent.name } : null,
-      seller: people.seller ? { contactId: people.seller.id, role: 'seller', name: people.seller.name } : null,
-      sellerAgent: people.sellerAgent ? { contactId: people.sellerAgent.id, role: 'sellerAgent', name: people.sellerAgent.name } : null,
-      escrowOfficer: people.escrowOfficer ? { contactId: people.escrowOfficer.id, role: 'escrowOfficer', name: people.escrowOfficer.name || escrow.escrow_officer_name } : null,
-      titleOfficer: people.titleOfficer ? { contactId: people.titleOfficer.id, role: 'titleOfficer', name: people.titleOfficer.name } : null,
-      loanOfficer: people.loanOfficer ? { contactId: people.loanOfficer.id, role: 'loanOfficer', name: people.loanOfficer.name || escrow.loan_officer_name } : null,
-      homeInspector: people.homeInspector ? { contactId: people.homeInspector.id, role: 'homeInspector', name: people.homeInspector.name } : null,
-      appraiser: people.appraiser ? { contactId: people.appraiser.id, role: 'appraiser', name: people.appraiser.name } : null,
-      transactionCoordinator: people.transactionCoordinator ? { contactId: people.transactionCoordinator.id, role: 'transactionCoordinator', name: people.transactionCoordinator.name || escrow.transaction_coordinator } : null,
+      buyer: people.buyer && (people.buyer.id || people.buyer.name) ? { 
+        contactId: people.buyer.id || null, 
+        role: 'buyer', 
+        name: people.buyer.name || null 
+      } : null,
+      buyerAgent: people.buyerAgent && (people.buyerAgent.id || people.buyerAgent.name) ? { 
+        contactId: people.buyerAgent.id || null, 
+        role: 'buyerAgent', 
+        name: people.buyerAgent.name || null 
+      } : null,
+      seller: people.seller && (people.seller.id || people.seller.name) ? { 
+        contactId: people.seller.id || null, 
+        role: 'seller', 
+        name: people.seller.name || null 
+      } : null,
+      sellerAgent: people.sellerAgent && (people.sellerAgent.id || people.sellerAgent.name) ? { 
+        contactId: people.sellerAgent.id || null, 
+        role: 'sellerAgent', 
+        name: people.sellerAgent.name || null 
+      } : null,
+      escrowOfficer: (people.escrowOfficer && (people.escrowOfficer.id || people.escrowOfficer.name)) || escrow.escrow_officer_name ? { 
+        contactId: people.escrowOfficer?.id || null, 
+        role: 'escrowOfficer', 
+        name: people.escrowOfficer?.name || escrow.escrow_officer_name || null 
+      } : null,
+      titleOfficer: people.titleOfficer && (people.titleOfficer.id || people.titleOfficer.name) ? { 
+        contactId: people.titleOfficer.id || null, 
+        role: 'titleOfficer', 
+        name: people.titleOfficer.name || null 
+      } : null,
+      loanOfficer: (people.loanOfficer && (people.loanOfficer.id || people.loanOfficer.name)) || escrow.loan_officer_name ? { 
+        contactId: people.loanOfficer?.id || null, 
+        role: 'loanOfficer', 
+        name: people.loanOfficer?.name || escrow.loan_officer_name || null 
+      } : null,
+      homeInspector: people.homeInspector && (people.homeInspector.id || people.homeInspector.name) ? { 
+        contactId: people.homeInspector.id || null, 
+        role: 'homeInspector', 
+        name: people.homeInspector.name || null 
+      } : null,
+      appraiser: people.appraiser && (people.appraiser.id || people.appraiser.name) ? { 
+        contactId: people.appraiser.id || null, 
+        role: 'appraiser', 
+        name: people.appraiser.name || null 
+      } : null,
+      transactionCoordinator: (people.transactionCoordinator && (people.transactionCoordinator.id || people.transactionCoordinator.name)) || escrow.transaction_coordinator ? { 
+        contactId: people.transactionCoordinator?.id || null, 
+        role: 'transactionCoordinator', 
+        name: people.transactionCoordinator?.name || escrow.transaction_coordinator || null 
+      } : null,
     },
 
     // Cleaned up timeline
