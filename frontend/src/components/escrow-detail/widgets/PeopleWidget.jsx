@@ -90,9 +90,9 @@ const PersonCard = styled(motion.div)(({ theme, isEmpty }) => ({
   alignItems: 'center',
   padding: theme.spacing(1.5),
   marginBottom: theme.spacing(1),
-  background: isEmpty ? 'rgba(255, 255, 255, 0.03)' : 'rgba(255, 255, 255, 0.08)',
+  background: 'rgba(255, 255, 255, 0.08)',
   borderRadius: theme.spacing(1),
-  border: isEmpty ? '1px dashed rgba(255, 255, 255, 0.3)' : '1px solid transparent',
+  border: '1px solid transparent',
   transition: 'all 0.3s ease',
   cursor: 'pointer',
   '&:hover': {
@@ -304,23 +304,36 @@ function PeopleWidget({ data, expanded, onExpand, onUpdate }) {
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.3 }}
-        onClick={() => !isEmpty && toggleContactInfo(role.key)}
+        onClick={() => {
+          if (isEmpty) {
+            handleAddClick(role);
+          } else {
+            toggleContactInfo(role.key);
+          }
+        }}
       >
         <Avatar
           sx={{
             width: 36,
             height: 36,
-            bgcolor: isEmpty ? 'rgba(255, 255, 255, 0.1)' : role.color,
+            bgcolor: isEmpty ? 'transparent' : role.color,
             marginRight: 1.5,
-            fontSize: '0.875rem',
-            border: isEmpty ? '2px dashed rgba(255, 255, 255, 0.3)' : 'none',
+            fontSize: isEmpty ? '1.25rem' : '0.875rem',
+            border: isEmpty ? '2px solid rgba(255, 255, 255, 0.5)' : 'none',
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            '&:hover': {
+              bgcolor: isEmpty ? 'rgba(255, 255, 255, 0.1)' : role.color,
+              borderColor: isEmpty ? 'rgba(255, 255, 255, 0.8)' : 'transparent',
+              transform: 'scale(1.1)',
+            }
           }}
         >
-          {person?.name ? getInitials(person.name) : role.icon}
+          {isEmpty ? <AddIcon /> : (person?.name ? getInitials(person.name) : role.icon)}
         </Avatar>
         <Box flex={1}>
-          <Typography variant="body2" fontWeight={500} sx={{ opacity: isEmpty ? 0.5 : 1 }}>
-            {person?.name || role.label}
+          <Typography variant="body2" fontWeight={500} sx={{ opacity: isEmpty ? 0.6 : 1 }}>
+            {isEmpty ? `Add ${role.label}` : person?.name}
           </Typography>
           {!isEmpty && (
             <Typography variant="caption" sx={{ opacity: 0.8 }}>
@@ -353,27 +366,25 @@ function PeopleWidget({ data, expanded, onExpand, onUpdate }) {
             )}
           </AnimatePresence>
         </Box>
-        <IconButton
-          size="small"
-          sx={{ 
-            color: 'white', 
-            opacity: isEmpty ? 1 : 0.7,
-            bgcolor: isEmpty ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-            '&:hover': {
-              bgcolor: 'rgba(255, 255, 255, 0.2)',
-            }
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            if (isEmpty) {
-              handleAddClick(role);
-            } else {
+        {!isEmpty && (
+          <IconButton
+            size="small"
+            sx={{ 
+              color: 'white', 
+              opacity: 0.7,
+              bgcolor: 'transparent',
+              '&:hover': {
+                bgcolor: 'rgba(255, 255, 255, 0.2)',
+              }
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
               // Handle edit
-            }
-          }}
-        >
-          {isEmpty ? <AddIcon fontSize="small" /> : <EditIcon fontSize="small" />}
-        </IconButton>
+            }}
+          >
+            <EditIcon fontSize="small" />
+          </IconButton>
+        )}
       </PersonCard>
     );
   };
