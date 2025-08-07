@@ -117,22 +117,54 @@ function EscrowDetail() {
       setLoading(true);
       setError(null);
       
+      console.log('Fetching escrow with ID:', id);
+      
       // Fetch main escrow data
       const response = await fetch(`/v1/escrows/${id}`);
-      if (!response.ok) throw new Error('Failed to fetch escrow');
+      
+      console.log('Response status:', response.status);
+      console.log('Response headers:', response.headers);
+      
+      // Check if response is JSON
+      const contentType = response.headers.get("content-type");
+      if (!contentType || contentType.indexOf("application/json") === -1) {
+        const text = await response.text();
+        console.error('Non-JSON response:', text.substring(0, 200));
+        throw new Error('Server returned non-JSON response. The API endpoint might not exist or the backend server is not running.');
+      }
+      
+      if (!response.ok) throw new Error(`Failed to fetch escrow: ${response.status} ${response.statusText}`);
       
       const result = await response.json();
+      console.log('Escrow data received:', result);
+      
       if (!result.success) throw new Error(result.error?.message || 'Failed to fetch escrow');
       
       // Transform the data
       const transformedData = transformEscrowData(result.data);
       
       // Fetch additional endpoints in parallel for complete data
+      const fetchEndpoint = async (endpoint) => {
+        try {
+          const res = await fetch(`/v1/escrows/${id}/${endpoint}`);
+          const contentType = res.headers.get("content-type");
+          if (contentType && contentType.indexOf("application/json") !== -1) {
+            return await res.json();
+          } else {
+            console.warn(`Endpoint /v1/escrows/${id}/${endpoint} returned non-JSON response`);
+            return null;
+          }
+        } catch (error) {
+          console.warn(`Failed to fetch /v1/escrows/${id}/${endpoint}:`, error);
+          return null;
+        }
+      };
+
       const [peopleRes, timelineRes, financialsRes, checklistsRes] = await Promise.all([
-        fetch(`/v1/escrows/${id}/people`).then(r => r.json()).catch(() => null),
-        fetch(`/v1/escrows/${id}/timeline`).then(r => r.json()).catch(() => null),
-        fetch(`/v1/escrows/${id}/financials`).then(r => r.json()).catch(() => null),
-        fetch(`/v1/escrows/${id}/checklists`).then(r => r.json()).catch(() => null)
+        fetchEndpoint('people'),
+        fetchEndpoint('timeline'),
+        fetchEndpoint('financials'),
+        fetchEndpoint('checklists')
       ]);
       
       // Merge all data
