@@ -246,7 +246,6 @@ function buildRestructuredEscrowResponse(escrow) {
       splitPercentage: financials.splitPercentage || 70,
       agentCommission: financials.agentCommission || 0,
       agentNet: financials.agentNet || 0,
-      avid: escrow.avid || financials.avid || false,
       commissionAdjustments: parseFloat(escrow.commission_adjustments) || financials.commissionAdjustments || 0,
       expenseAdjustments: parseFloat(escrow.expense_adjustments) || financials.expenseAdjustments || 0,
     },
