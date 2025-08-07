@@ -6,6 +6,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay, EffectFade, EffectCoverflow } from 'swiper/modules';
 
+// Import the new stunning widgets
+import PeopleWidget from '../escrow-detail/widgets/PeopleWidget';
+import TimelineWidget from '../escrow-detail/widgets/TimelineWidget';
+import FinancialsWidget from '../escrow-detail/widgets/FinancialsWidget';
+import ChecklistWidget from '../escrow-detail/widgets/ChecklistWidget';
+
 // Import Swiper CSS
 import 'swiper/css';
 import 'swiper/css/navigation';
@@ -1568,6 +1574,7 @@ const EscrowDetail = () => {
   const [chartError, setChartError] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [tabValue, setTabValue] = useState(0); // For two-tab interface
+  const [expandedWidget, setExpandedWidget] = useState(null); // For expanding widgets
   
   useEffect(() => {
     setMounted(true);
@@ -1581,12 +1588,22 @@ const EscrowDetail = () => {
     // Handle different response formats
     const escrowData = dbData.data || dbData;
     
-    // Extract data from new organized structure
-    const propertyDetails = escrowData.propertyDetails || {};
+    // Check if this is the new restructured format
+    const hasNewStructure = escrowData.details && escrowData['property-details'];
+    
+    // Extract data based on structure
+    const details = hasNewStructure ? escrowData.details : escrowData;
+    const propertyDetails = hasNewStructure ? escrowData['property-details'] : (escrowData.propertyDetails || {});
     const people = escrowData.people || {};
     const timeline = escrowData.timeline || {};
     const financials = escrowData.financials || {};
-    const checklists = escrowData.checklists || {};
+    
+    // Handle checklists - new structure has separate checklist objects
+    const checklists = hasNewStructure ? {
+      loan: escrowData['checklist-loan'] || {},
+      house: escrowData['checklist-house'] || {},
+      admin: escrowData['checklist-admin'] || {}
+    } : (escrowData.checklists || {});
     
     return {
       // Core fields from top level (matching list view)
@@ -2615,240 +2632,63 @@ Has Error: ${isError ? 'YES' : 'NO'}`}
         </Tabs>
 
         <TabPanel value={tabValue} index={0}>
-          {/* Dashboard Tab - Widget View */}
+          {/* Dashboard Tab - Widget View with Stunning Visuals */}
           <Grid container spacing={3} sx={{ p: 3 }}>
-            {/* Details Widget */}
+            {/* People Widget with Circular Avatar Layout */}
             <Grid item xs={12} md={6}>
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Paper
-                  sx={{
-                    p: 3,
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    color: 'white',
-                    cursor: 'pointer',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    '&:hover': { boxShadow: 6 }
-                  }}
-                  onClick={() => handleWidgetClick('details')}
-                >
-                  <Typography variant="h6" gutterBottom>Transaction Details</Typography>
-                  <Box display="flex" justifyContent="space-between" alignItems="center">
-                    <Box>
-                      <Typography variant="h4">{escrow?.escrowNumber || escrow?.displayId}</Typography>
-                      <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                        {escrow?.propertyAddress}
-                      </Typography>
-                    </Box>
-                    <CircularProgress
-                      variant="determinate"
-                      value={escrow?.checklistProgress || calculateChecklistProgress({
-                        ...escrow?.['checklist-loan'],
-                        ...escrow?.['checklist-house'],
-                        ...escrow?.['checklist-admin']
-                      }) || 0}
-                      size={60}
-                      thickness={4}
-                      sx={{ color: 'white' }}
-                    />
-                  </Box>
-                  <Chip 
-                    label={escrow?.escrowStatus} 
-                    size="small"
-                    sx={{ 
-                      mt: 2,
-                      bgcolor: 'rgba(255, 255, 255, 0.2)',
-                      color: 'white'
-                    }}
-                  />
-                </Paper>
-              </motion.div>
+              <PeopleWidget 
+                data={escrow?.people}
+                expanded={expandedWidget === 'people'}
+                onExpand={() => setExpandedWidget(expandedWidget === 'people' ? null : 'people')}
+                onUpdate={(type, key, value) => {
+                  // Handle update
+                  console.log('Update people:', type, key, value);
+                }}
+              />
             </Grid>
 
-            {/* Property Details Widget */}
+            {/* Timeline Widget with Animated Progress */}
             <Grid item xs={12} md={6}>
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Paper
-                  sx={{
-                    p: 3,
-                    background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-                    color: 'white',
-                    cursor: 'pointer',
-                    '&:hover': { boxShadow: 6 }
-                  }}
-                  onClick={() => handleWidgetClick('property')}
-                >
-                  <Typography variant="h6" gutterBottom>Property Details</Typography>
-                  <Grid container spacing={2}>
-                    <Grid item xs={6}>
-                      <Box display="flex" alignItems="center" gap={1}>
-                        <Home />
-                        <Box>
-                          <Typography variant="h5">
-                            {escrow?.propertyDetails?.bedrooms || escrow?.bedrooms || 0}/{escrow?.propertyDetails?.bathrooms || escrow?.bathrooms || 0}
-                          </Typography>
-                          <Typography variant="caption">Bed/Bath</Typography>
-                        </Box>
-                      </Box>
-                    </Grid>
-                    <Grid item xs={6}>
-                      <Typography variant="h5">
-                        {(escrow?.propertyDetails?.squareFeet || escrow?.squareFeet)?.toLocaleString() || '—'}
-                      </Typography>
-                      <Typography variant="caption">Square Feet</Typography>
-                    </Grid>
-                  </Grid>
-                  <Box display="flex" gap={1} mt={2}>
-                    {(escrow?.propertyDetails?.pool || escrow?.pool) && <Chip label="Pool" size="small" sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)', color: 'white' }} />}
-                    {(escrow?.propertyDetails?.spa || escrow?.spa) && <Chip label="Spa" size="small" sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)', color: 'white' }} />}
-                    {(escrow?.propertyDetails?.gatedCommunity || escrow?.gatedCommunity) && <Chip label="Gated" size="small" sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)', color: 'white' }} />}
-                  </Box>
-                </Paper>
-              </motion.div>
+              <TimelineWidget
+                data={escrow?.timeline}
+                expanded={expandedWidget === 'timeline'}
+                onExpand={() => setExpandedWidget(expandedWidget === 'timeline' ? null : 'timeline')}
+                onUpdate={(key, value) => {
+                  // Handle update
+                  console.log('Update timeline:', key, value);
+                }}
+              />
             </Grid>
 
-            {/* Timeline Widget */}
+            {/* Financials Widget with Charts */}
             <Grid item xs={12}>
-              <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
-                <Paper
-                  sx={{
-                    p: 3,
-                    background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                    color: 'white',
-                    cursor: 'pointer',
-                    '&:hover': { boxShadow: 6 }
-                  }}
-                  onClick={() => handleWidgetClick('timeline')}
-                >
-                  <Typography variant="h6" gutterBottom>Timeline</Typography>
-                  <Box position="relative" height={60}>
-                    <LinearProgress
-                      variant="determinate"
-                      value={calculateTimelineProgress(escrow?.timeline)}
-                      sx={{
-                        height: 8,
-                        borderRadius: 4,
-                        bgcolor: 'rgba(255, 255, 255, 0.2)',
-                        '& .MuiLinearProgress-bar': {
-                          borderRadius: 4,
-                          bgcolor: 'white'
-                        }
-                      }}
-                    />
-                    <Box display="flex" justifyContent="space-between" mt={2}>
-                      <Typography variant="caption">
-                        Acceptance: {formatDate(escrow?.timeline?.acceptanceDate)}
-                      </Typography>
-                      <Typography variant="caption">
-                        COE: {formatDate(escrow?.timeline?.coeDate)}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </Paper>
-              </motion.div>
+              <FinancialsWidget
+                data={escrow?.financials || escrow}
+                expanded={expandedWidget === 'financials'}
+                onExpand={() => setExpandedWidget(expandedWidget === 'financials' ? null : 'financials')}
+                onUpdate={(key, value) => {
+                  // Handle update
+                  console.log('Update financials:', key, value);
+                }}
+              />
             </Grid>
 
-            {/* Financials Widget */}
-            <Grid item xs={12} md={8}>
-              <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
-                <Paper
-                  sx={{
-                    p: 3,
-                    background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-                    color: 'white',
-                    cursor: 'pointer',
-                    '&:hover': { boxShadow: 6 }
-                  }}
-                  onClick={() => handleWidgetClick('financials')}
-                >
-                  <Typography variant="h6" gutterBottom>Financials</Typography>
-                  <Grid container spacing={3}>
-                    <Grid item xs={4}>
-                      <Typography variant="h5">${(escrow?.purchasePrice || 0)?.toLocaleString()}</Typography>
-                      <Typography variant="caption">Purchase Price</Typography>
-                    </Grid>
-                    <Grid item xs={4}>
-                      <Typography variant="h5">${(escrow?.myCommission || 0)?.toLocaleString()}</Typography>
-                      <Typography variant="caption">My Commission</Typography>
-                    </Grid>
-                    <Grid item xs={4}>
-                      <Typography variant="h5">{escrow?.financials?.splitPercentage || 70}%</Typography>
-                      <Typography variant="caption">Split</Typography>
-                    </Grid>
-                  </Grid>
-                </Paper>
-              </motion.div>
-            </Grid>
-
-            {/* People Widget */}
-            <Grid item xs={12} md={4}>
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Paper
-                  sx={{
-                    p: 3,
-                    background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
-                    cursor: 'pointer',
-                    '&:hover': { boxShadow: 6 }
-                  }}
-                  onClick={() => handleWidgetClick('people')}
-                >
-                  <Typography variant="h6" gutterBottom>People</Typography>
-                  <Box display="flex" flexDirection="column" gap={1}>
-                    {Object.entries(escrow?.people || {}).filter(([_, person]) => person).slice(0, 3).map(([role, person]) => (
-                      <Box key={role} display="flex" alignItems="center" gap={1}>
-                        <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem' }}>
-                          {person.name?.[0]}
-                        </Avatar>
-                        <Typography variant="body2" noWrap>
-                          {person.name} ({role})
-                        </Typography>
-                      </Box>
-                    ))}
-                  </Box>
-                </Paper>
-              </motion.div>
-            </Grid>
-
-            {/* Checklist Widgets */}
+            {/* Checklist Widgets with Progress Indicators */}
             {['loan', 'house', 'admin'].map((type) => {
               // Try both old and new API structure
               const checklistData = escrow?.checklists?.[type] || escrow?.[`checklist-${type}`] || {};
               return (
                 <Grid item xs={12} md={4} key={type}>
-                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                    <Paper
-                      sx={{
-                        p: 3,
-                        background: type === 'loan' ? 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)' :
-                                   type === 'house' ? 'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)' :
-                                   'linear-gradient(135deg, #d299c2 0%, #fef9d7 100%)',
-                        cursor: 'pointer',
-                        '&:hover': { boxShadow: 6 }
-                      }}
-                      onClick={() => handleWidgetClick(`checklist-${type}`)}
-                    >
-                      <Typography variant="h6" gutterBottom>
-                        {type.charAt(0).toUpperCase() + type.slice(1)} Checklist
-                      </Typography>
-                      <Box>
-                        <LinearProgress
-                          variant="determinate"
-                          value={calculateChecklistProgress(checklistData)}
-                          sx={{
-                            height: 10,
-                            borderRadius: 5,
-                            bgcolor: 'rgba(0, 0, 0, 0.1)',
-                            '& .MuiLinearProgress-bar': {
-                              borderRadius: 5,
-                            }
-                          }}
-                        />
-                        <Typography variant="body2" sx={{ mt: 1 }}>
-                          {Object.values(checklistData).filter(v => v).length} / {Object.keys(checklistData).length} Complete
-                        </Typography>
-                      </Box>
-                    </Paper>
-                  </motion.div>
+                  <ChecklistWidget
+                    type={type}
+                    data={checklistData}
+                    expanded={expandedWidget === `checklist-${type}`}
+                    onExpand={() => setExpandedWidget(expandedWidget === `checklist-${type}` ? null : `checklist-${type}`)}
+                    onUpdate={(checklistType, key, value) => {
+                      // Handle checklist update
+                      console.log('Update checklist:', checklistType, key, value);
+                    }}
+                  />
                 </Grid>
               );
             })}
