@@ -87,7 +87,7 @@ function buildRestructuredEscrowResponse(escrow) {
       escrowOfficerPhone: escrow.escrow_officer_phone || null,
       titleCompany: escrow.title_company || null,
       transactionType: escrow.transaction_type || 'Purchase',
-      leadSource: escrow.lead_source || null,
+      leadSource: escrow.lead_source || financials.leadSource || null,
       createdAt: escrow.created_at,
       updatedAt: escrow.updated_at
     },
@@ -185,6 +185,11 @@ function buildRestructuredEscrowResponse(escrow) {
         role: 'transactionCoordinator', 
         name: people.transactionCoordinator?.name || escrow.transaction_coordinator || null 
       } : null,
+      referralAgent: (people.referralAgent && (people.referralAgent.id || people.referralAgent.name)) || escrow.referral_agent || financials.referralAgent ? {
+        contactId: people.referralAgent?.id || null,
+        role: 'referralAgent',
+        name: people.referralAgent?.name || escrow.referral_agent || financials.referralAgent || null
+      } : null,
     },
 
     // Cleaned up timeline
@@ -238,8 +243,6 @@ function buildRestructuredEscrowResponse(escrow) {
       transactionFee: financials.transactionFee || 285,
       tcFee: financials.tcFee || 250,
       referralFee: parseFloat(escrow.referral_fee) || financials.referralFee || 0,
-      referralAgent: escrow.referral_agent || financials.referralAgent || null,
-      leadSource: escrow.lead_source || financials.leadSource || null,
       splitPercentage: financials.splitPercentage || 70,
       agentCommission: financials.agentCommission || 0,
       agentNet: financials.agentNet || 0,
