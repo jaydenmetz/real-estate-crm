@@ -1593,7 +1593,7 @@ const EscrowDetail = () => {
     
     // Extract data based on structure
     const details = hasNewStructure ? escrowData.details : escrowData;
-    const propertyDetails = hasNewStructure ? escrowData['property-details'] : (escrowData.propertyDetails || {});
+    const propertyDetails = hasNewStructure ? escrowData['property-details'] : (escrowData.propertyDetails || escrowData['property-details'] || {});
     const people = escrowData.people || {};
     const timeline = escrowData.timeline || {};
     const financials = escrowData.financials || {};
@@ -1603,27 +1603,31 @@ const EscrowDetail = () => {
       loan: escrowData['checklist-loan'] || {},
       house: escrowData['checklist-house'] || {},
       admin: escrowData['checklist-admin'] || {}
-    } : (escrowData.checklists || {});
+    } : (escrowData.checklists || escrowData['checklist-loan'] ? {
+      loan: escrowData['checklist-loan'] || {},
+      house: escrowData['checklist-house'] || {},
+      admin: escrowData['checklist-admin'] || {}
+    } : {});
     
     return {
       // Core fields from top level (matching list view)
-      id: formatEntityId(escrowData.id, 'escrow'),
-      escrowNumber: escrowData.escrowNumber,
-      displayId: escrowData.escrowNumber,
-      propertyAddress: escrowData.propertyAddress,
-      propertyImage: escrowData.propertyImage,
-      zillowUrl: escrowData.zillow_url || escrowData.zillowUrl,
-      zillow_url: escrowData.zillow_url || escrowData.zillowUrl,
-      status: escrowData.escrowStatus,
-      escrowStatus: escrowData.escrowStatus,
-      purchasePrice: escrowData.purchasePrice,
-      myCommission: escrowData.myCommission,
+      id: formatEntityId(escrowData.id || details.id, 'escrow'),
+      escrowNumber: details.escrowNumber || details.displayId || escrowData.escrowNumber || `ESC-${new Date().getFullYear()}-${Math.floor(Math.random() * 9999).toString().padStart(4, '0')}`,
+      displayId: details.escrowNumber || details.displayId || escrowData.escrowNumber,
+      propertyAddress: details.propertyAddress || escrowData.propertyAddress || propertyDetails.address,
+      propertyImage: details.propertyImage || escrowData.propertyImage || propertyDetails.propertyImage,
+      zillowUrl: details.zillowUrl || escrowData.zillow_url || escrowData.zillowUrl,
+      zillow_url: details.zillowUrl || escrowData.zillow_url || escrowData.zillowUrl,
+      status: details.escrowStatus || escrowData.escrowStatus || 'Active',
+      escrowStatus: details.escrowStatus || escrowData.escrowStatus || 'Active',
+      purchasePrice: details.purchasePrice || financials.purchasePrice || escrowData.purchasePrice,
+      myCommission: details.myCommission || financials.agentSplit || financials.myCommission || escrowData.myCommission,
       clients: escrowData.clients || [],
-      scheduledCoeDate: escrowData.scheduledCoeDate,
-      daysToClose: escrowData.daysToClose,
-      checklistProgress: escrowData.checklistProgress,
-      lastActivity: escrowData.lastActivity,
-      upcomingDeadlines: escrowData.upcomingDeadlines,
+      scheduledCoeDate: details.scheduledCoeDate || timeline.coeDate || escrowData.scheduledCoeDate,
+      daysToClose: details.daysToClose || escrowData.daysToClose,
+      checklistProgress: details.checklistProgress || escrowData.checklistProgress,
+      lastActivity: details.lastActivity || escrowData.lastActivity,
+      upcomingDeadlines: details.upcomingDeadlines || escrowData.upcomingDeadlines,
       
       // Property details for top section
       property: {
@@ -1692,6 +1696,10 @@ const EscrowDetail = () => {
       
       // Tab data
       checklist: checklists || {},
+      'checklist-loan': checklists.loan || escrowData['checklist-loan'] || {},
+      'checklist-house': checklists.house || escrowData['checklist-house'] || {},
+      'checklist-admin': checklists.admin || escrowData['checklist-admin'] || {},
+      checklists: checklists || {},
       documents: escrowData.documents || [],
       timeline: timeline || {},
       activities: [],
@@ -1701,16 +1709,6 @@ const EscrowDetail = () => {
         ...propertyDetails,
         zillowUrl: escrowData.zillow_url || escrowData.zillowUrl,
         zillow_url: escrowData.zillow_url || escrowData.zillowUrl,
-      },
-      
-      // Keep raw data for tabs
-      _raw: {
-        propertyDetails,
-        people,
-        timeline,
-        financials,
-        checklists,
-        documents: escrowData.documents
       }
     };
   };

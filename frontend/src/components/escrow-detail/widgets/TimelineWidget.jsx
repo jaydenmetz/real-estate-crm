@@ -143,37 +143,47 @@ function TimelineWidget({ data, expanded, onExpand, onUpdate }) {
   
   if (!data) return null;
 
-  // Define timeline milestones
+  // Define timeline milestones - handle both old and new field names
   const milestones = [
-    { key: 'contractDate', label: 'Contract', icon: <EventIcon />, importance: 'high' },
-    { key: 'inspectionDate', label: 'Inspection', icon: <ScheduleIcon />, importance: 'medium' },
+    { key: 'acceptanceDate', altKey: 'contractDate', label: 'Contract', icon: <EventIcon />, importance: 'high' },
+    { key: 'homeInspectionDate', altKey: 'inspectionDate', label: 'Inspection', icon: <ScheduleIcon />, importance: 'medium' },
     { key: 'appraisalDate', label: 'Appraisal', icon: <TrendingIcon />, importance: 'medium' },
-    { key: 'loanApprovalDate', label: 'Loan Approval', icon: <CheckIcon />, importance: 'high' },
-    { key: 'clearToCloseDate', label: 'Clear to Close', icon: <FlagIcon />, importance: 'high' },
-    { key: 'closingDate', label: 'Closing', icon: <CheckIcon />, importance: 'critical' },
+    { key: 'loanContingencyDate', altKey: 'loanApprovalDate', label: 'Loan Approval', icon: <CheckIcon />, importance: 'high' },
+    { key: 'allContingenciesRemovalDate', altKey: 'clearToCloseDate', label: 'Clear to Close', icon: <FlagIcon />, importance: 'high' },
+    { key: 'coeDate', altKey: 'closingDate', label: 'Closing', icon: <CheckIcon />, importance: 'critical' },
   ];
 
+  // Helper to get milestone date
+  const getMilestoneDate = (milestone) => {
+    return data[milestone.key] || (milestone.altKey && data[milestone.altKey]);
+  };
+
   // Calculate timeline progress
-  const activeMilestones = milestones.filter(m => data[m.key]);
+  const activeMilestones = milestones.filter(m => getMilestoneDate(m));
   const completedMilestones = activeMilestones.filter(m => {
-    const date = new Date(data[m.key]);
+    const dateValue = getMilestoneDate(m);
+    if (!dateValue) return false;
+    const date = new Date(dateValue);
     return isBefore(date, new Date());
   });
   
-  const totalDays = data.contractDate && data.closingDate
-    ? differenceInDays(new Date(data.closingDate), new Date(data.contractDate))
+  const contractDate = data.acceptanceDate || data.contractDate;
+  const closingDate = data.coeDate || data.closingDate;
+  
+  const totalDays = contractDate && closingDate
+    ? differenceInDays(new Date(closingDate), new Date(contractDate))
     : 30;
   
-  const daysElapsed = data.contractDate
-    ? differenceInDays(new Date(), new Date(data.contractDate))
+  const daysElapsed = contractDate
+    ? differenceInDays(new Date(), new Date(contractDate))
     : 0;
   
   const progressPercentage = Math.min((daysElapsed / totalDays) * 100, 100);
 
   // Calculate milestone positions
   const getMilestonePosition = (date) => {
-    if (!data.contractDate || !date) return 0;
-    const start = new Date(data.contractDate);
+    if (!contractDate || !date) return 0;
+    const start = new Date(contractDate);
     const milestone = new Date(date);
     const days = differenceInDays(milestone, start);
     return (days / totalDays) * 100;
@@ -189,8 +199,8 @@ function TimelineWidget({ data, expanded, onExpand, onUpdate }) {
   };
 
   // Stats calculations
-  const daysToClose = data.closingDate
-    ? differenceInDays(new Date(data.closingDate), new Date())
+  const daysToClose = closingDate
+    ? differenceInDays(new Date(closingDate), new Date())
     : null;
   
   const completionRate = (completedMilestones.length / milestones.length) * 100;
@@ -311,7 +321,7 @@ function TimelineWidget({ data, expanded, onExpand, onUpdate }) {
           />
           
           {milestones.map((milestone, index) => {
-            const date = data[milestone.key];
+            const date = getMilestoneDate(milestone);
             const position = getMilestonePosition(date);
             const status = getMilestoneStatus(date);
             
@@ -380,7 +390,7 @@ function TimelineWidget({ data, expanded, onExpand, onUpdate }) {
 
       {/* Hover Details */}
       <AnimatePresence>
-        {hoveredMilestone && data[hoveredMilestone] && (
+        {hoveredMilestone && milestones.find(m => m.key === hoveredMilestone) && getMilestoneDate(milestones.find(m => m.key === hoveredMilestone)) && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -392,7 +402,7 @@ function TimelineWidget({ data, expanded, onExpand, onUpdate }) {
                 {milestones.find(m => m.key === hoveredMilestone)?.label}
               </Typography>
               <Typography variant="body2">
-                {format(new Date(data[hoveredMilestone]), 'MMMM d, yyyy')}
+                {format(new Date(getMilestoneDate(milestones.find(m => m.key === hoveredMilestone))), 'MMMM d, yyyy')}
               </Typography>
             </StatCard>
           </motion.div>
