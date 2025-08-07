@@ -100,15 +100,26 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
       console.log('Path starts with transactionDetails:', path.startsWith('transactionDetails.'));
       
       // Determine which endpoint to use based on the path
-      if (path.startsWith('checklists.')) {
-        // For checklists, we need to get the current state and update it
+      // Handle new flattened checklist structure
+      if (path.startsWith('checklist-loan.') || path.startsWith('checklist-house.') || path.startsWith('checklist-admin.')) {
+        // Extract checklist type and item from the new structure
+        const [checklistKey, checklistItem] = path.split('.');
+        const checklistType = checklistKey.replace('checklist-', ''); // Remove prefix to get loan/house/admin
+        
+        console.log('Updating checklist:', checklistType, checklistItem, newValue);
+      } else if (path.startsWith('checklists.')) {
+        // For backward compatibility with old structure
         const checklistParts = path.split('.');
         const checklistType = checklistParts[1]; // loan, house, or admin
         const checklistItem = checklistParts[2]; // specific item
         
-        // Get the current checklist state - use local state if available, otherwise from escrowData
-        // This prevents losing checklist data during refetches
-        const currentChecklists = localChecklistState || escrowData.checklist || escrowData.checklists || {};
+        // Get the current checklist state from the new flattened structure
+        // Build checklists object from the new structure
+        const currentChecklists = localChecklistState || {
+          loan: escrowData['checklist-loan'] || {},
+          house: escrowData['checklist-house'] || {},
+          admin: escrowData['checklist-admin'] || {}
+        } || escrowData.checklist || escrowData.checklists || {};
         
         console.log('Current checklists before update:', JSON.parse(JSON.stringify(currentChecklists)));
         
@@ -133,8 +144,25 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
         if (response.success) {
           setLocalChecklistState(updatedChecklists);
         }
+      } else if (path.startsWith('property-details.')) {
+        // Handle property details updates with new naming
+        const fieldName = path.split('.')[1];
+        
+        // Map frontend field names to backend field names
+        const propertyFieldMapping = {
+          'pool': 'pool',
+          'spa': 'spa',
+          'gatedCommunity': 'gated_community',
+          'seniorCommunity': 'senior_community'
+        };
+        
+        const backendField = propertyFieldMapping[fieldName] || fieldName;
+        const updateData = { [backendField]: newValue };
+        
+        console.log('Updating property-details:', updateData);
+        response = await escrowsAPI.updatePropertyDetails(cleanId, updateData);
       } else if (path.startsWith('propertyDetails.')) {
-        // Handle property details updates
+        // Handle old property details structure for backward compatibility
         const fieldName = path.split('.')[1];
         
         // Map frontend field names to backend field names
@@ -150,9 +178,13 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
         
         console.log('Updating property details:', updateData);
         response = await escrowsAPI.updatePropertyDetails(cleanId, updateData);
+      } else if (path.startsWith('details.')) {
+        // Handle core details fields from new structure
+        const fieldName = path.split('.')[1];
+        const updateData = { [fieldName]: newValue };
+        response = await escrowsAPI.update(cleanId, updateData);
       } else if (path.startsWith('transactionDetails.')) {
-        // Transaction details are typically stored in various places
-        // AVID is a special case that needs to be handled
+        // Handle old transaction details structure for backward compatibility
         const fieldName = path.split('.')[1];
         
         if (fieldName === 'avid') {
@@ -236,7 +268,16 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
       
       // Map frontend nested paths to backend flat field names
       const fieldMapping = {
-        // Basic fields
+        // Core details fields (new structure)
+        'details.zillowUrl': 'zillow_url',
+        'details.propertyAddress': 'property_address',
+        'details.propertyImage': 'property_image_url',
+        'details.escrowStatus': 'escrow_status',
+        'details.purchasePrice': 'purchase_price',
+        'details.myCommission': 'my_commission',
+        'details.escrowNumber': 'escrow_number',
+        
+        // Basic fields (backward compatibility)
         'zillowUrl': 'zillow_url',
         'propertyAddress': 'property_address',
         'propertyImage': 'property_image_url',
@@ -245,7 +286,17 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
         'myCommission': 'my_commission',
         'escrowNumber': 'escrow_number',
         
-        // Property Details
+        // Property Details (new structure)
+        'property-details.bedrooms': 'bedrooms',
+        'property-details.bathrooms': 'bathrooms',
+        'property-details.squareFeet': 'square_feet',
+        'property-details.yearBuilt': 'year_built',
+        'property-details.pool': 'pool',
+        'property-details.spa': 'spa',
+        'property-details.gatedCommunity': 'gated_community',
+        'property-details.seniorCommunity': 'senior_community',
+        
+        // Property Details (backward compatibility)
         'propertyDetails.bedrooms': 'bedrooms',
         'propertyDetails.bathrooms': 'bathrooms',
         'propertyDetails.squareFeet': 'square_feet',

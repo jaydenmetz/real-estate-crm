@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Checklist Update</title>
+</head>
+<body>
+    <h1>Test Checklist Update</h1>
+    <div id="status"></div>
+    <button onclick="testUpdate()">Test Update</button>
+    
+    <script>
+        const API_URL = 'https://api.jaydenmetz.com/v1';
+        const ESCROW_ID = '70656a01-2182-4371-8a7c-c00a19f2cfda';
+        
+        async function testUpdate() {
+            const status = document.getElementById('status');
+            
+            try {
+                // First get current checklists
+                status.innerHTML = 'Getting current checklists...';
+                const getResponse = await fetch(`${API_URL}/escrows/${ESCROW_ID}`);
+                const escrowData = await getResponse.json();
+                
+                const currentChecklists = escrowData.data.checklists || {};
+                console.log('Current checklists:', currentChecklists);
+                status.innerHTML += '<br>Current checklists: ' + JSON.stringify(currentChecklists, null, 2);
+                
+                // Make a deep copy and toggle one item
+                const updatedChecklists = JSON.parse(JSON.stringify(currentChecklists));
+                
+                // Toggle loan.le
+                const currentValue = updatedChecklists.loan?.le || false;
+                updatedChecklists.loan = updatedChecklists.loan || {};
+                updatedChecklists.loan.le = !currentValue;
+                
+                console.log('Sending updated checklists:', updatedChecklists);
+                status.innerHTML += '<br><br>Toggling loan.le from ' + currentValue + ' to ' + !currentValue;
+                
+                // Update using the dedicated endpoint
+                const updateResponse = await fetch(`${API_URL}/escrows/${ESCROW_ID}/checklists`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(updatedChecklists)
+                });
+                
+                const updateResult = await updateResponse.json();
+                console.log('Update result:', updateResult);
+                
+                if (updateResult.success) {
+                    status.innerHTML += '<br><br>✅ Update successful!';
+                    
+                    // Verify the update
+                    const verifyResponse = await fetch(`${API_URL}/escrows/${ESCROW_ID}`);
+                    const verifyData = await verifyResponse.json();
+                    const newChecklists = verifyData.data.checklists || {};
+                    
+                    // Check if all fields are preserved
+                    let allPreserved = true;
+                    for (const category in currentChecklists) {
+                        for (const field in currentChecklists[category]) {
+                            if (category === 'loan' && field === 'le') continue; // This should have changed
+                            if (newChecklists[category]?.[field] !== currentChecklists[category][field]) {
+                                allPreserved = false;
+                                status.innerHTML += `<br>❌ Field ${category}.${field} was not preserved!`;
+                            }
+                        }
+                    }
+                    
+                    if (allPreserved) {
+                        status.innerHTML += '<br>✅ All other fields preserved!';
+                    }
+                    
+                    status.innerHTML += '<br><br>New checklists: ' + JSON.stringify(newChecklists, null, 2);
+                } else {
+                    status.innerHTML += '<br><br>❌ Update failed: ' + JSON.stringify(updateResult.error);
+                }
+                
+            } catch (error) {
+                status.innerHTML += '<br><br>❌ Error: ' + error.message;
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>
