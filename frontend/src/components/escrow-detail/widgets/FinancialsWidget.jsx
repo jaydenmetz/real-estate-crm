@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Box,
@@ -60,7 +60,7 @@ const StatCard = styled(Paper)(({ theme, gradient }) => ({
 const AnimatedNumber = ({ value, prefix = '', suffix = '', decimals = 0 }) => {
   const [displayValue, setDisplayValue] = useState(0);
   
-  React.useEffect(() => {
+  useEffect(() => {
     const duration = 1000;
     const steps = 30;
     const stepDuration = duration / steps;
