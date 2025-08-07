@@ -304,36 +304,24 @@ function PeopleWidget({ data, expanded, onExpand, onUpdate }) {
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.3 }}
-        onClick={() => {
-          if (isEmpty) {
-            handleAddClick(role);
-          } else {
-            toggleContactInfo(role.key);
-          }
-        }}
+        onClick={() => !isEmpty && toggleContactInfo(role.key)}
       >
         <Avatar
           sx={{
             width: 36,
             height: 36,
-            bgcolor: isEmpty ? 'transparent' : role.color,
+            bgcolor: isEmpty ? 'rgba(255, 255, 255, 0.1)' : role.color,
             marginRight: 1.5,
-            fontSize: isEmpty ? '1.25rem' : '0.875rem',
-            border: isEmpty ? '2px solid rgba(255, 255, 255, 0.5)' : 'none',
-            cursor: 'pointer',
+            fontSize: '0.875rem',
+            cursor: isEmpty ? 'default' : 'pointer',
             transition: 'all 0.3s ease',
-            '&:hover': {
-              bgcolor: isEmpty ? 'rgba(255, 255, 255, 0.1)' : role.color,
-              borderColor: isEmpty ? 'rgba(255, 255, 255, 0.8)' : 'transparent',
-              transform: 'scale(1.1)',
-            }
           }}
         >
-          {isEmpty ? <AddIcon /> : (person?.name ? getInitials(person.name) : role.icon)}
+          {isEmpty ? role.icon : (person?.name ? getInitials(person.name) : role.icon)}
         </Avatar>
         <Box flex={1}>
           <Typography variant="body2" fontWeight={500} sx={{ opacity: isEmpty ? 0.6 : 1 }}>
-            {isEmpty ? `Add ${role.label}` : person?.name}
+            {isEmpty ? role.label : person?.name}
           </Typography>
           {!isEmpty && (
             <Typography variant="caption" sx={{ opacity: 0.8 }}>
@@ -366,25 +354,31 @@ function PeopleWidget({ data, expanded, onExpand, onUpdate }) {
             )}
           </AnimatePresence>
         </Box>
-        {!isEmpty && (
-          <IconButton
-            size="small"
-            sx={{ 
-              color: 'white', 
-              opacity: 0.7,
-              bgcolor: 'transparent',
-              '&:hover': {
-                bgcolor: 'rgba(255, 255, 255, 0.2)',
-              }
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
+        <IconButton
+          size="small"
+          sx={{ 
+            color: 'white', 
+            bgcolor: isEmpty ? 'transparent' : 'transparent',
+            border: isEmpty ? '2px solid rgba(255, 255, 255, 0.5)' : 'none',
+            width: 32,
+            height: 32,
+            '&:hover': {
+              bgcolor: 'rgba(255, 255, 255, 0.2)',
+              borderColor: isEmpty ? 'rgba(255, 255, 255, 0.8)' : 'transparent',
+              transform: 'scale(1.1)',
+            }
+          }}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (isEmpty) {
+              handleAddClick(role);
+            } else {
               // Handle edit
-            }}
-          >
-            <EditIcon fontSize="small" />
-          </IconButton>
-        )}
+            }
+          }}
+        >
+          {isEmpty ? <AddIcon fontSize="small" /> : <EditIcon fontSize="small" />}
+        </IconButton>
       </PersonCard>
     );
   };
