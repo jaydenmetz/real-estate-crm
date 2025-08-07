@@ -46,7 +46,11 @@ import {
   ShoppingCart as BuyIcon,
   Search as SearchIcon,
   Close as CloseIcon,
-  Check as CheckIcon
+  Check as CheckIcon,
+  BugReport as BugIcon,
+  Description as DocumentIcon,
+  Security as WarrantyIcon,
+  AdminPanelSettings as AdminIcon
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 
@@ -73,7 +77,7 @@ const PartySection = styled(Box)(({ theme }) => ({
   borderRadius: theme.spacing(1.5),
   padding: theme.spacing(2),
   border: '1px solid rgba(255, 255, 255, 0.2)',
-  minHeight: 200,
+  minHeight: 180,
   transition: 'all 0.3s ease',
   '&:hover': {
     background: 'rgba(255, 255, 255, 0.15)',
@@ -156,6 +160,10 @@ const mockContacts = [
   { id: 6, name: 'Emily Davis', email: 'emily.d@title.com', phone: '(555) 678-9012', type: 'title' },
   { id: 7, name: 'Chris Wilson', email: 'chris.w@inspect.com', phone: '(555) 789-0123', type: 'inspector' },
   { id: 8, name: 'Lisa Anderson', email: 'lisa.a@appraise.com', phone: '(555) 890-1234', type: 'appraiser' },
+  { id: 9, name: 'Amy Chen', email: 'amy.c@tcservices.com', phone: '(555) 901-2345', type: 'tc' },
+  { id: 10, name: 'Robert Lee', email: 'robert.l@pestcontrol.com', phone: '(555) 012-3456', type: 'termite' },
+  { id: 11, name: 'Maria Garcia', email: 'maria.g@nhd.com', phone: '(555) 123-4567', type: 'nhd' },
+  { id: 12, name: 'David Kim', email: 'david.k@warranty.com', phone: '(555) 234-5678', type: 'warranty' },
 ];
 
 // Helper function to get role icon
@@ -164,15 +172,19 @@ const getRoleIcon = (role) => {
     buyer: <BuyIcon />,
     seller: <SellIcon />,
     buyerAgent: <BusinessIcon />,
+    buyerTC: <AssignmentIcon />,
     sellerAgent: <BusinessIcon />,
+    listingTC: <AssignmentIcon />,
+    loanOfficer: <MoneyIcon />,
     escrowOfficer: <AccountBalanceIcon />,
     titleOfficer: <GavelIcon />,
-    loanOfficer: <MoneyIcon />,
     homeInspector: <BuildIcon />,
+    termiteInspector: <BugIcon />,
+    nhdRep: <DocumentIcon />,
+    homeWarrantyRep: <WarrantyIcon />,
     appraiser: <AssignmentIcon />,
     photographer: <CameraIcon />,
     contractor: <EngineeringIcon />,
-    transactionCoordinator: <AssignmentIcon />,
     referralAgent: <BusinessIcon />
   };
   return icons[role] || <PersonIcon />;
@@ -193,34 +205,46 @@ function PeopleWidget({ data, expanded, onExpand, onUpdate }) {
   
   if (!data) data = {}; // Initialize empty data if null
 
-  // Define all roles with buyer party on left, seller party on right
+  // Define all roles - buyer party on left, seller party on right
   const buyerPartyRoles = [
     { key: 'buyer', label: 'Buyer', icon: <BuyIcon />, color: '#00d4ff' },
     { key: 'buyerAgent', label: 'Buyer\'s Agent', icon: <BusinessIcon />, color: '#4facfe' },
-    { key: 'loanOfficer', label: 'Loan Officer', icon: <MoneyIcon />, color: '#00f2fe' },
+    { key: 'buyerTC', label: 'Buyer\'s TC', icon: <AssignmentIcon />, color: '#00f2fe' },
   ];
 
   const sellerPartyRoles = [
     { key: 'seller', label: 'Seller', icon: <SellIcon />, color: '#667eea' },
     { key: 'sellerAgent', label: 'Listing Agent', icon: <BusinessIcon />, color: '#764ba2' },
-    { key: 'escrowOfficer', label: 'Escrow Officer', icon: <AccountBalanceIcon />, color: '#9c27b0' },
+    { key: 'listingTC', label: 'Listing TC', icon: <AssignmentIcon />, color: '#9c27b0' },
+  ];
+
+  // Vendors section includes lender and escrow officer at top
+  const primaryVendorRoles = [
+    { key: 'loanOfficer', label: 'Lender / Loan Officer', icon: <MoneyIcon />, color: '#ffd700' },
+    { key: 'escrowOfficer', label: 'Escrow Officer', icon: <AccountBalanceIcon />, color: '#ff9800' },
     { key: 'titleOfficer', label: 'Title Officer', icon: <GavelIcon />, color: '#8e44ad' },
   ];
 
-  const vendorRoles = [
+  // Additional vendor roles that can be added
+  const additionalVendorRoles = [
     { key: 'homeInspector', label: 'Home Inspector', icon: <BuildIcon />, color: '#4ecdc4' },
-    { key: 'appraiser', label: 'Appraiser', icon: <AssignmentIcon />, color: '#44a8b3' },
-    { key: 'photographer', label: 'Photographer', icon: <CameraIcon />, color: '#f093fb' },
-    { key: 'contractor', label: 'Contractor', icon: <EngineeringIcon />, color: '#f5576c' },
-    { key: 'transactionCoordinator', label: 'Transaction Coordinator', icon: <AssignmentIcon />, color: '#ffd700' },
-    { key: 'referralAgent', label: 'Referral Agent', icon: <BusinessIcon />, color: '#00ff88' },
+    { key: 'termiteInspector', label: 'Termite Inspector', icon: <BugIcon />, color: '#44a8b3' },
+    { key: 'nhdRep', label: 'NHD Representative', icon: <DocumentIcon />, color: '#f093fb' },
+    { key: 'homeWarrantyRep', label: 'Home Warranty Rep', icon: <WarrantyIcon />, color: '#f5576c' },
+    { key: 'appraiser', label: 'Appraiser', icon: <AssignmentIcon />, color: '#00ff88' },
+    { key: 'photographer', label: 'Photographer', icon: <CameraIcon />, color: '#e91e63' },
+    { key: 'contractor', label: 'Contractor', icon: <EngineeringIcon />, color: '#607d8b' },
   ];
+
+  // Get any additional vendor roles that have been added
+  const addedVendorRoles = additionalVendorRoles.filter(role => data[role.key]);
 
   // Count filled positions
   const buyerPartyCount = buyerPartyRoles.filter(role => data[role.key]).length;
   const sellerPartyCount = sellerPartyRoles.filter(role => data[role.key]).length;
-  const vendorCount = vendorRoles.filter(role => data[role.key]).length;
-  const totalPeople = buyerPartyCount + sellerPartyCount + vendorCount;
+  const primaryVendorCount = primaryVendorRoles.filter(role => data[role.key]).length;
+  const additionalVendorCount = addedVendorRoles.length;
+  const totalPeople = buyerPartyCount + sellerPartyCount + primaryVendorCount + additionalVendorCount;
 
   const toggleContactInfo = (key) => {
     setShowContactInfo(prev => ({
@@ -259,8 +283,18 @@ function PeopleWidget({ data, expanded, onExpand, onUpdate }) {
     setSelectedRole(null);
   };
 
+  const handleAddVendor = () => {
+    // Show a list of vendor types to add
+    const availableVendors = additionalVendorRoles.filter(role => !data[role.key]);
+    if (availableVendors.length > 0) {
+      // For simplicity, just add the first available vendor type
+      // In production, show a menu to select which vendor type to add
+      handleAddClick(availableVendors[0]);
+    }
+  };
+
   const renderPerson = (role) => {
-    const person = data[role.key];
+    const person = data[role.key] || (role.key === 'buyerTC' && data.transactionCoordinator) || (role.key === 'listingTC' && data.listingTransactionCoordinator);
     const isEmpty = !person;
 
     return (
@@ -374,12 +408,12 @@ function PeopleWidget({ data, expanded, onExpand, onUpdate }) {
               People & Contacts
             </Typography>
             <Typography variant="body2" sx={{ opacity: 0.9 }}>
-              {totalPeople} of {buyerPartyRoles.length + sellerPartyRoles.length + vendorRoles.length} positions filled
+              {totalPeople} contacts added • Click to view details
             </Typography>
           </Box>
           <Chip
             icon={<GroupsIcon />}
-            label={`${totalPeople} Added`}
+            label={`${totalPeople} Active`}
             sx={{ 
               bgcolor: 'rgba(255, 255, 255, 0.2)',
               color: 'white',
@@ -415,17 +449,88 @@ function PeopleWidget({ data, expanded, onExpand, onUpdate }) {
         <Collapse in={expanded}>
           <Box mt={3}>
             <Divider sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)', my: 2 }} />
-            <PartySection>
+            
+            {/* Primary Vendors */}
+            <PartySection sx={{ mb: 2 }}>
               <SectionTitle>
-                <BuildIcon /> Vendors & Services
+                <AccountBalanceIcon /> Primary Vendors
               </SectionTitle>
               <Grid container spacing={1}>
-                {vendorRoles.map(role => (
-                  <Grid item xs={12} sm={6} key={role.key}>
+                {primaryVendorRoles.map(role => (
+                  <Grid item xs={12} key={role.key}>
                     {renderPerson(role)}
                   </Grid>
                 ))}
               </Grid>
+            </PartySection>
+
+            {/* Additional Services */}
+            <PartySection>
+              <SectionTitle>
+                <BuildIcon /> Additional Services
+              </SectionTitle>
+              
+              {/* Show added vendor roles */}
+              {addedVendorRoles.length > 0 ? (
+                <Grid container spacing={1}>
+                  {addedVendorRoles.map(role => (
+                    <Grid item xs={12} sm={6} key={role.key}>
+                      {renderPerson(role)}
+                    </Grid>
+                  ))}
+                </Grid>
+              ) : (
+                <Typography variant="body2" sx={{ opacity: 0.6, textAlign: 'center', py: 2 }}>
+                  No additional services added yet
+                </Typography>
+              )}
+              
+              {/* Add Service Button */}
+              <Button
+                fullWidth
+                variant="outlined"
+                startIcon={<AddIcon />}
+                sx={{
+                  mt: 2,
+                  borderColor: 'rgba(255, 255, 255, 0.5)',
+                  color: 'white',
+                  '&:hover': {
+                    borderColor: 'white',
+                    bgcolor: 'rgba(255, 255, 255, 0.1)'
+                  }
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAddVendor();
+                }}
+              >
+                Add Service Provider
+              </Button>
+              
+              {/* Quick Add Buttons for Common Services */}
+              <Box mt={2} display="flex" flexWrap="wrap" gap={1}>
+                {additionalVendorRoles
+                  .filter(role => !data[role.key])
+                  .slice(0, 4)
+                  .map(role => (
+                    <Chip
+                      key={role.key}
+                      label={`+ ${role.label}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAddClick(role);
+                      }}
+                      sx={{
+                        bgcolor: 'rgba(255, 255, 255, 0.1)',
+                        color: 'white',
+                        cursor: 'pointer',
+                        '&:hover': {
+                          bgcolor: 'rgba(255, 255, 255, 0.2)',
+                        }
+                      }}
+                    />
+                  ))}
+              </Box>
             </PartySection>
           </Box>
         </Collapse>
@@ -434,21 +539,21 @@ function PeopleWidget({ data, expanded, onExpand, onUpdate }) {
         <Box mt={3} display="flex" justifyContent="space-around">
           <Box textAlign="center">
             <Typography variant="h6" fontWeight="bold">
-              {buyerPartyCount}/{buyerPartyRoles.length}
+              {buyerPartyCount}/3
             </Typography>
             <Typography variant="caption">Buyer Side</Typography>
           </Box>
           <Divider orientation="vertical" flexItem sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)' }} />
           <Box textAlign="center">
             <Typography variant="h6" fontWeight="bold">
-              {sellerPartyCount}/{sellerPartyRoles.length}
+              {sellerPartyCount}/3
             </Typography>
             <Typography variant="caption">Seller Side</Typography>
           </Box>
           <Divider orientation="vertical" flexItem sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)' }} />
           <Box textAlign="center">
             <Typography variant="h6" fontWeight="bold">
-              {vendorCount}/{vendorRoles.length}
+              {primaryVendorCount + additionalVendorCount}
             </Typography>
             <Typography variant="caption">Vendors</Typography>
           </Box>
