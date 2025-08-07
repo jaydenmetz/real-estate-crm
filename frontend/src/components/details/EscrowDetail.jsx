@@ -2635,21 +2635,25 @@ Has Error: ${isError ? 'YES' : 'NO'}`}
                   <Typography variant="h6" gutterBottom>Transaction Details</Typography>
                   <Box display="flex" justifyContent="space-between" alignItems="center">
                     <Box>
-                      <Typography variant="h4">{escrow?.details?.escrowNumber}</Typography>
+                      <Typography variant="h4">{escrow?.escrowNumber || escrow?.displayId}</Typography>
                       <Typography variant="body2" sx={{ opacity: 0.9 }}>
-                        {escrow?.details?.propertyAddress}
+                        {escrow?.propertyAddress}
                       </Typography>
                     </Box>
                     <CircularProgress
                       variant="determinate"
-                      value={escrow?.details?.checklistProgress || 0}
+                      value={escrow?.checklistProgress || calculateChecklistProgress({
+                        ...escrow?.['checklist-loan'],
+                        ...escrow?.['checklist-house'],
+                        ...escrow?.['checklist-admin']
+                      }) || 0}
                       size={60}
                       thickness={4}
                       sx={{ color: 'white' }}
                     />
                   </Box>
                   <Chip 
-                    label={escrow?.details?.escrowStatus} 
+                    label={escrow?.escrowStatus} 
                     size="small"
                     sx={{ 
                       mt: 2,
@@ -2681,7 +2685,7 @@ Has Error: ${isError ? 'YES' : 'NO'}`}
                         <Home />
                         <Box>
                           <Typography variant="h5">
-                            {escrow?.['property-details']?.bedrooms || 0}/{escrow?.['property-details']?.bathrooms || 0}
+                            {escrow?.propertyDetails?.bedrooms || escrow?.bedrooms || 0}/{escrow?.propertyDetails?.bathrooms || escrow?.bathrooms || 0}
                           </Typography>
                           <Typography variant="caption">Bed/Bath</Typography>
                         </Box>
@@ -2689,15 +2693,15 @@ Has Error: ${isError ? 'YES' : 'NO'}`}
                     </Grid>
                     <Grid item xs={6}>
                       <Typography variant="h5">
-                        {escrow?.['property-details']?.squareFeet?.toLocaleString() || '—'}
+                        {(escrow?.propertyDetails?.squareFeet || escrow?.squareFeet)?.toLocaleString() || '—'}
                       </Typography>
                       <Typography variant="caption">Square Feet</Typography>
                     </Grid>
                   </Grid>
                   <Box display="flex" gap={1} mt={2}>
-                    {escrow?.['property-details']?.pool && <Chip label="Pool" size="small" sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)', color: 'white' }} />}
-                    {escrow?.['property-details']?.spa && <Chip label="Spa" size="small" sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)', color: 'white' }} />}
-                    {escrow?.['property-details']?.gatedCommunity && <Chip label="Gated" size="small" sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)', color: 'white' }} />}
+                    {(escrow?.propertyDetails?.pool || escrow?.pool) && <Chip label="Pool" size="small" sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)', color: 'white' }} />}
+                    {(escrow?.propertyDetails?.spa || escrow?.spa) && <Chip label="Spa" size="small" sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)', color: 'white' }} />}
+                    {(escrow?.propertyDetails?.gatedCommunity || escrow?.gatedCommunity) && <Chip label="Gated" size="small" sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)', color: 'white' }} />}
                   </Box>
                 </Paper>
               </motion.div>
@@ -2760,15 +2764,15 @@ Has Error: ${isError ? 'YES' : 'NO'}`}
                   <Typography variant="h6" gutterBottom>Financials</Typography>
                   <Grid container spacing={3}>
                     <Grid item xs={4}>
-                      <Typography variant="h5">${escrow?.financials?.purchasePrice?.toLocaleString()}</Typography>
+                      <Typography variant="h5">${(escrow?.purchasePrice || 0)?.toLocaleString()}</Typography>
                       <Typography variant="caption">Purchase Price</Typography>
                     </Grid>
                     <Grid item xs={4}>
-                      <Typography variant="h5">${escrow?.financials?.agentNet?.toLocaleString()}</Typography>
-                      <Typography variant="caption">Agent Net</Typography>
+                      <Typography variant="h5">${(escrow?.myCommission || 0)?.toLocaleString()}</Typography>
+                      <Typography variant="caption">My Commission</Typography>
                     </Grid>
                     <Grid item xs={4}>
-                      <Typography variant="h5">{escrow?.financials?.splitPercentage}%</Typography>
+                      <Typography variant="h5">{escrow?.financials?.splitPercentage || 70}%</Typography>
                       <Typography variant="caption">Split</Typography>
                     </Grid>
                   </Grid>
@@ -2806,44 +2810,48 @@ Has Error: ${isError ? 'YES' : 'NO'}`}
             </Grid>
 
             {/* Checklist Widgets */}
-            {['loan', 'house', 'admin'].map((type) => (
-              <Grid item xs={12} md={4} key={type}>
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Paper
-                    sx={{
-                      p: 3,
-                      background: type === 'loan' ? 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)' :
-                                 type === 'house' ? 'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)' :
-                                 'linear-gradient(135deg, #d299c2 0%, #fef9d7 100%)',
-                      cursor: 'pointer',
-                      '&:hover': { boxShadow: 6 }
-                    }}
-                    onClick={() => handleWidgetClick(`checklist-${type}`)}
-                  >
-                    <Typography variant="h6" gutterBottom>
-                      {type.charAt(0).toUpperCase() + type.slice(1)} Checklist
-                    </Typography>
-                    <Box>
-                      <LinearProgress
-                        variant="determinate"
-                        value={calculateChecklistProgress(escrow?.[`checklist-${type}`])}
-                        sx={{
-                          height: 10,
-                          borderRadius: 5,
-                          bgcolor: 'rgba(0, 0, 0, 0.1)',
-                          '& .MuiLinearProgress-bar': {
-                            borderRadius: 5,
-                          }
-                        }}
-                      />
-                      <Typography variant="body2" sx={{ mt: 1 }}>
-                        {Object.values(escrow?.[`checklist-${type}`] || {}).filter(v => v).length} / {Object.keys(escrow?.[`checklist-${type}`] || {}).length} Complete
+            {['loan', 'house', 'admin'].map((type) => {
+              // Try both old and new API structure
+              const checklistData = escrow?.checklists?.[type] || escrow?.[`checklist-${type}`] || {};
+              return (
+                <Grid item xs={12} md={4} key={type}>
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Paper
+                      sx={{
+                        p: 3,
+                        background: type === 'loan' ? 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)' :
+                                   type === 'house' ? 'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)' :
+                                   'linear-gradient(135deg, #d299c2 0%, #fef9d7 100%)',
+                        cursor: 'pointer',
+                        '&:hover': { boxShadow: 6 }
+                      }}
+                      onClick={() => handleWidgetClick(`checklist-${type}`)}
+                    >
+                      <Typography variant="h6" gutterBottom>
+                        {type.charAt(0).toUpperCase() + type.slice(1)} Checklist
                       </Typography>
-                    </Box>
-                  </Paper>
-                </motion.div>
-              </Grid>
-            ))}
+                      <Box>
+                        <LinearProgress
+                          variant="determinate"
+                          value={calculateChecklistProgress(checklistData)}
+                          sx={{
+                            height: 10,
+                            borderRadius: 5,
+                            bgcolor: 'rgba(0, 0, 0, 0.1)',
+                            '& .MuiLinearProgress-bar': {
+                              borderRadius: 5,
+                            }
+                          }}
+                        />
+                        <Typography variant="body2" sx={{ mt: 1 }}>
+                          {Object.values(checklistData).filter(v => v).length} / {Object.keys(checklistData).length} Complete
+                        </Typography>
+                      </Box>
+                    </Paper>
+                  </motion.div>
+                </Grid>
+              );
+            })}
           </Grid>
         </TabPanel>
 
