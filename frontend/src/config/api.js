@@ -5,7 +5,7 @@ const API_CONFIG = {
     timeout: 30000
   },
   production: {
-    baseURL: 'https://api.jaydenmetz.com',
+    baseURL: 'https://crm.jaydenmetz.com',
     timeout: 30000
   }
 };
