@@ -1567,6 +1567,7 @@ const EscrowDetail = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [chartError, setChartError] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [tabValue, setTabValue] = useState(0); // For two-tab interface
   
   useEffect(() => {
     setMounted(true);
@@ -1996,6 +1997,46 @@ const EscrowDetail = () => {
 
   const handleAgentClick = (agentId) => {
     setAgentDetailOpen(agentDetailOpen === agentId ? null : agentId);
+  };
+
+  // Helper functions for two-tab interface
+  const calculateTimelineProgress = (timeline) => {
+    if (!timeline) return 0;
+    const totalDates = Object.keys(timeline).length;
+    const completedDates = Object.values(timeline).filter(date => date).length;
+    return totalDates > 0 ? Math.round((completedDates / totalDates) * 100) : 0;
+  };
+
+  const calculateChecklistProgress = (checklist) => {
+    if (!checklist) return 0;
+    const total = Object.keys(checklist).length;
+    const completed = Object.values(checklist).filter(v => v === true).length;
+    return total > 0 ? Math.round((completed / total) * 100) : 0;
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '—';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    } catch {
+      return '—';
+    }
+  };
+
+  // TabPanel component for tab content
+  const TabPanel = ({ children, value, index, ...other }) => {
+    return (
+      <div
+        role="tabpanel"
+        hidden={value !== index}
+        id={`tabpanel-${index}`}
+        aria-labelledby={`tab-${index}`}
+        {...other}
+      >
+        {value === index && <Box>{children}</Box>}
+      </div>
+    );
   };
   
   const handleWidgetClick = async (widgetName) => {
@@ -2532,8 +2573,285 @@ Has Error: ${isError ? 'YES' : 'NO'}`}
       {/* Stunning Property Display */}
       <StunningPropertyDisplay escrow={escrow} />
 
-      {/* All Data Viewer - Full Width Editable */}
-      <AllDataViewer escrowData={escrow} onUpdate={refetch} />
+      {/* Two-Tab Interface: Dashboard & Data Editor */}
+      <Paper 
+        sx={{ 
+          mt: 3, 
+          mb: 3,
+          background: theme.palette.mode === 'dark' 
+            ? 'rgba(30, 30, 30, 0.8)'
+            : 'rgba(255, 255, 255, 0.9)',
+          backdropFilter: 'blur(20px)',
+          borderRadius: 2,
+          overflow: 'hidden',
+          boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.37)',
+        }}
+      >
+        <Tabs
+          value={tabValue}
+          onChange={(e, newValue) => setTabValue(newValue)}
+          sx={{
+            borderBottom: 1,
+            borderColor: 'divider',
+            bgcolor: theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.3)' : 'rgba(255, 255, 255, 0.5)',
+            '& .MuiTabs-indicator': {
+              height: 3,
+              background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
+            }
+          }}
+        >
+          <Tab 
+            icon={<Dashboard />} 
+            iconPosition="start" 
+            label="Dashboard" 
+            sx={{ textTransform: 'none', fontWeight: 600 }}
+          />
+          <Tab 
+            icon={<Edit />} 
+            iconPosition="start" 
+            label="Data Editor" 
+            sx={{ textTransform: 'none', fontWeight: 600 }}
+          />
+        </Tabs>
+
+        <TabPanel value={tabValue} index={0}>
+          {/* Dashboard Tab - Widget View */}
+          <Grid container spacing={3} sx={{ p: 3 }}>
+            {/* Details Widget */}
+            <Grid item xs={12} md={6}>
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Paper
+                  sx={{
+                    p: 3,
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    color: 'white',
+                    cursor: 'pointer',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    '&:hover': { boxShadow: 6 }
+                  }}
+                  onClick={() => handleWidgetClick('details')}
+                >
+                  <Typography variant="h6" gutterBottom>Transaction Details</Typography>
+                  <Box display="flex" justifyContent="space-between" alignItems="center">
+                    <Box>
+                      <Typography variant="h4">{escrow?.details?.escrowNumber}</Typography>
+                      <Typography variant="body2" sx={{ opacity: 0.9 }}>
+                        {escrow?.details?.propertyAddress}
+                      </Typography>
+                    </Box>
+                    <CircularProgress
+                      variant="determinate"
+                      value={escrow?.details?.checklistProgress || 0}
+                      size={60}
+                      thickness={4}
+                      sx={{ color: 'white' }}
+                    />
+                  </Box>
+                  <Chip 
+                    label={escrow?.details?.escrowStatus} 
+                    size="small"
+                    sx={{ 
+                      mt: 2,
+                      bgcolor: 'rgba(255, 255, 255, 0.2)',
+                      color: 'white'
+                    }}
+                  />
+                </Paper>
+              </motion.div>
+            </Grid>
+
+            {/* Property Details Widget */}
+            <Grid item xs={12} md={6}>
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Paper
+                  sx={{
+                    p: 3,
+                    background: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+                    color: 'white',
+                    cursor: 'pointer',
+                    '&:hover': { boxShadow: 6 }
+                  }}
+                  onClick={() => handleWidgetClick('property')}
+                >
+                  <Typography variant="h6" gutterBottom>Property Details</Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <Box display="flex" alignItems="center" gap={1}>
+                        <Home />
+                        <Box>
+                          <Typography variant="h5">
+                            {escrow?.['property-details']?.bedrooms || 0}/{escrow?.['property-details']?.bathrooms || 0}
+                          </Typography>
+                          <Typography variant="caption">Bed/Bath</Typography>
+                        </Box>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Typography variant="h5">
+                        {escrow?.['property-details']?.squareFeet?.toLocaleString() || '—'}
+                      </Typography>
+                      <Typography variant="caption">Square Feet</Typography>
+                    </Grid>
+                  </Grid>
+                  <Box display="flex" gap={1} mt={2}>
+                    {escrow?.['property-details']?.pool && <Chip label="Pool" size="small" sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)', color: 'white' }} />}
+                    {escrow?.['property-details']?.spa && <Chip label="Spa" size="small" sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)', color: 'white' }} />}
+                    {escrow?.['property-details']?.gatedCommunity && <Chip label="Gated" size="small" sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)', color: 'white' }} />}
+                  </Box>
+                </Paper>
+              </motion.div>
+            </Grid>
+
+            {/* Timeline Widget */}
+            <Grid item xs={12}>
+              <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                <Paper
+                  sx={{
+                    p: 3,
+                    background: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                    color: 'white',
+                    cursor: 'pointer',
+                    '&:hover': { boxShadow: 6 }
+                  }}
+                  onClick={() => handleWidgetClick('timeline')}
+                >
+                  <Typography variant="h6" gutterBottom>Timeline</Typography>
+                  <Box position="relative" height={60}>
+                    <LinearProgress
+                      variant="determinate"
+                      value={calculateTimelineProgress(escrow?.timeline)}
+                      sx={{
+                        height: 8,
+                        borderRadius: 4,
+                        bgcolor: 'rgba(255, 255, 255, 0.2)',
+                        '& .MuiLinearProgress-bar': {
+                          borderRadius: 4,
+                          bgcolor: 'white'
+                        }
+                      }}
+                    />
+                    <Box display="flex" justifyContent="space-between" mt={2}>
+                      <Typography variant="caption">
+                        Acceptance: {formatDate(escrow?.timeline?.acceptanceDate)}
+                      </Typography>
+                      <Typography variant="caption">
+                        COE: {formatDate(escrow?.timeline?.coeDate)}
+                      </Typography>
+                    </Box>
+                  </Box>
+                </Paper>
+              </motion.div>
+            </Grid>
+
+            {/* Financials Widget */}
+            <Grid item xs={12} md={8}>
+              <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                <Paper
+                  sx={{
+                    p: 3,
+                    background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                    color: 'white',
+                    cursor: 'pointer',
+                    '&:hover': { boxShadow: 6 }
+                  }}
+                  onClick={() => handleWidgetClick('financials')}
+                >
+                  <Typography variant="h6" gutterBottom>Financials</Typography>
+                  <Grid container spacing={3}>
+                    <Grid item xs={4}>
+                      <Typography variant="h5">${escrow?.financials?.purchasePrice?.toLocaleString()}</Typography>
+                      <Typography variant="caption">Purchase Price</Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="h5">${escrow?.financials?.agentNet?.toLocaleString()}</Typography>
+                      <Typography variant="caption">Agent Net</Typography>
+                    </Grid>
+                    <Grid item xs={4}>
+                      <Typography variant="h5">{escrow?.financials?.splitPercentage}%</Typography>
+                      <Typography variant="caption">Split</Typography>
+                    </Grid>
+                  </Grid>
+                </Paper>
+              </motion.div>
+            </Grid>
+
+            {/* People Widget */}
+            <Grid item xs={12} md={4}>
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Paper
+                  sx={{
+                    p: 3,
+                    background: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+                    cursor: 'pointer',
+                    '&:hover': { boxShadow: 6 }
+                  }}
+                  onClick={() => handleWidgetClick('people')}
+                >
+                  <Typography variant="h6" gutterBottom>People</Typography>
+                  <Box display="flex" flexDirection="column" gap={1}>
+                    {Object.entries(escrow?.people || {}).filter(([_, person]) => person).slice(0, 3).map(([role, person]) => (
+                      <Box key={role} display="flex" alignItems="center" gap={1}>
+                        <Avatar sx={{ width: 24, height: 24, fontSize: '0.75rem' }}>
+                          {person.name?.[0]}
+                        </Avatar>
+                        <Typography variant="body2" noWrap>
+                          {person.name} ({role})
+                        </Typography>
+                      </Box>
+                    ))}
+                  </Box>
+                </Paper>
+              </motion.div>
+            </Grid>
+
+            {/* Checklist Widgets */}
+            {['loan', 'house', 'admin'].map((type) => (
+              <Grid item xs={12} md={4} key={type}>
+                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                  <Paper
+                    sx={{
+                      p: 3,
+                      background: type === 'loan' ? 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)' :
+                                 type === 'house' ? 'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)' :
+                                 'linear-gradient(135deg, #d299c2 0%, #fef9d7 100%)',
+                      cursor: 'pointer',
+                      '&:hover': { boxShadow: 6 }
+                    }}
+                    onClick={() => handleWidgetClick(`checklist-${type}`)}
+                  >
+                    <Typography variant="h6" gutterBottom>
+                      {type.charAt(0).toUpperCase() + type.slice(1)} Checklist
+                    </Typography>
+                    <Box>
+                      <LinearProgress
+                        variant="determinate"
+                        value={calculateChecklistProgress(escrow?.[`checklist-${type}`])}
+                        sx={{
+                          height: 10,
+                          borderRadius: 5,
+                          bgcolor: 'rgba(0, 0, 0, 0.1)',
+                          '& .MuiLinearProgress-bar': {
+                            borderRadius: 5,
+                          }
+                        }}
+                      />
+                      <Typography variant="body2" sx={{ mt: 1 }}>
+                        {Object.values(escrow?.[`checklist-${type}`] || {}).filter(v => v).length} / {Object.keys(escrow?.[`checklist-${type}`] || {}).length} Complete
+                      </Typography>
+                    </Box>
+                  </Paper>
+                </motion.div>
+              </Grid>
+            ))}
+          </Grid>
+        </TabPanel>
+
+        <TabPanel value={tabValue} index={1}>
+          {/* Data Editor Tab */}
+          <AllDataViewer escrowData={escrow} onUpdate={refetch} />
+        </TabPanel>
+      </Paper>
 
       {/* Main Content - Conditional Rendering based on viewMode */}
       {viewMode === 'overview' ? (
