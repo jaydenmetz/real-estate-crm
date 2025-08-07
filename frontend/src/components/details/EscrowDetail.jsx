@@ -11,17 +11,20 @@ import {
   Alert,
   Breadcrumbs,
   Link,
-  Paper
+  Paper,
+  Button
 } from '@mui/material';
 import {
   Home as HomeIcon,
   Dashboard as DashboardIcon,
-  DataObject as DataIcon
+  DataObject as DataIcon,
+  BugReport as BugIcon
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 
 // Import API configuration
-import { apiCall } from '../../config/api';
+import { apiCall, API_BASE_URL } from '../../config/api';
+import { testApiConnection, testEscrowEndpoint } from '../../utils/testApi';
 
 // Import components
 import HeroHeader from '../escrow-detail/HeroHeader';
@@ -124,6 +127,8 @@ function EscrowDetail() {
       setErrorDetails(null);
       
       console.log('Fetching escrow with ID:', id);
+      console.log('API Base URL:', API_BASE_URL);
+      console.log('Environment:', process.env.NODE_ENV);
       
       // Fetch main escrow data using the API configuration
       const result = await apiCall(`/v1/escrows/${id}`);
@@ -226,10 +231,34 @@ function EscrowDetail() {
     return (
       <PageContainer>
         <Container maxWidth="xl">
+          <Box mb={2} display="flex" gap={2}>
+            <Button
+              variant="contained"
+              startIcon={<BugIcon />}
+              onClick={async () => {
+                console.log('Running API diagnostics...');
+                const healthTest = await testApiConnection();
+                console.log('Health test result:', healthTest);
+                const escrowTest = await testEscrowEndpoint(id);
+                console.log('Escrow test result:', escrowTest);
+              }}
+              sx={{ 
+                bgcolor: '#764ba2',
+                '&:hover': { bgcolor: '#5a3a80' }
+              }}
+            >
+              Run API Diagnostics
+            </Button>
+          </Box>
           <DebugError
             error={error}
             apiEndpoint={`/v1/escrows/${id}`}
-            additionalInfo={errorDetails}
+            additionalInfo={{
+              ...errorDetails,
+              apiBaseUrl: API_BASE_URL,
+              environment: process.env.NODE_ENV,
+              reactAppApiUrl: process.env.REACT_APP_API_URL
+            }}
             onRetry={() => fetchEscrowData()}
           />
         </Container>

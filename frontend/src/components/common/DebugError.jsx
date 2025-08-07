@@ -106,7 +106,7 @@ function DebugError({
     environment: process.env.NODE_ENV,
     apiBaseUrl: window.location.hostname === 'localhost' 
       ? 'http://localhost:5050' 
-      : 'https://crm.jaydenmetz.com',
+      : 'https://api.jaydenmetz.com',
     currentUrl: window.location.href,
     userAgent: navigator.userAgent,
     timestamp: new Date().toISOString()

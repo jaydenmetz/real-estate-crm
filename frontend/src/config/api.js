@@ -1,24 +1,20 @@
 // API Configuration
 const API_CONFIG = {
   development: {
-    baseURL: 'http://localhost:5050',
+    baseURL: process.env.REACT_APP_API_URL || 'http://localhost:5050',
     timeout: 30000
   },
   production: {
-    baseURL: 'https://crm.jaydenmetz.com',
+    baseURL: process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com',
     timeout: 30000
   }
 };
 
-// Determine environment
-const isDevelopment = process.env.NODE_ENV === 'development' || 
-                     window.location.hostname === 'localhost' ||
-                     window.location.hostname === '127.0.0.1';
-
-// Get API base URL
-export const API_BASE_URL = isDevelopment 
-  ? API_CONFIG.development.baseURL 
-  : API_CONFIG.production.baseURL;
+// Get API base URL - prioritize REACT_APP_API_URL from environment
+export const API_BASE_URL = process.env.REACT_APP_API_URL || 
+  (process.env.NODE_ENV === 'development' 
+    ? 'http://localhost:5050' 
+    : 'https://api.jaydenmetz.com');
 
 // Helper function to build API URLs
 export const apiUrl = (path) => {
