@@ -28,7 +28,8 @@ import {
   CalendarToday as CalendarIcon,
   AttachMoney as MoneyIcon,
   Home as HomeIcon,
-  Assignment as ChecklistIcon
+  Assignment as ChecklistIcon,
+  Assignment
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -101,6 +102,9 @@ function AllDataEditor({ data, onUpdate, isSaving }) {
       timeline: { ...data.timeline },
       financials: { ...data.financials },
       checklists: { ...data.checklists },
+      checklistLoan: { ...data.checklists?.loan },
+      checklistHouse: { ...data.checklists?.house },
+      checklistAdmin: { ...data.checklists?.admin },
       propertyDetails: {
         bedrooms: data.bedrooms,
         bathrooms: data.bathrooms,
@@ -155,9 +159,20 @@ function AllDataEditor({ data, onUpdate, isSaving }) {
 
   const handleCancelEdit = (section) => {
     // Reset form data for this section
+    let resetData = {};
+    if (section === 'checklistLoan') {
+      resetData = { ...data.checklists?.loan || {} };
+    } else if (section === 'checklistHouse') {
+      resetData = { ...data.checklists?.house || {} };
+    } else if (section === 'checklistAdmin') {
+      resetData = { ...data.checklists?.admin || {} };
+    } else {
+      resetData = { ...data[section] || {} };
+    }
+    
     setFormData(prev => ({
       ...prev,
-      [section]: { ...data[section] || {} }
+      [section]: resetData
     }));
     setEditingSections(prev => ({ ...prev, [section]: false }));
   };
@@ -189,7 +204,7 @@ function AllDataEditor({ data, onUpdate, isSaving }) {
               <Box display="flex" gap={1}>
                 <IconButton 
                   size="small" 
-                  onClick={() => handleSaveSection('details', '')}
+                  onClick={() => handleSaveSection('details', 'details')}
                   disabled={isSaving}
                 >
                   <CheckIcon color="success" />
@@ -279,7 +294,7 @@ function AllDataEditor({ data, onUpdate, isSaving }) {
           <SectionHeader>
             <SectionTitle>
               <PersonIcon />
-              People & Contacts
+              People
             </SectionTitle>
             {!editingSections.people ? (
               <IconButton size="small" onClick={() => handleEditSection('people')}>
@@ -546,126 +561,156 @@ function AllDataEditor({ data, onUpdate, isSaving }) {
           </FieldGrid>
         </SectionCard>
 
-        {/* Checklists Section */}
+        {/* Loan Checklist Section */}
         <SectionCard>
           <SectionHeader>
             <SectionTitle>
               <ChecklistIcon />
-              Checklists
+              Loan & Financing Checklist
             </SectionTitle>
-            {!editingSections.checklists ? (
-              <IconButton size="small" onClick={() => handleEditSection('checklists')}>
+            {!editingSections.checklistLoan ? (
+              <IconButton size="small" onClick={() => handleEditSection('checklistLoan')}>
                 <EditIcon />
               </IconButton>
             ) : (
               <Box display="flex" gap={1}>
                 <IconButton 
                   size="small" 
-                  onClick={() => handleSaveSection('checklists', 'checklists')}
+                  onClick={() => handleSaveSection('checklistLoan', 'checklist-loan')}
                   disabled={isSaving}
                 >
                   <CheckIcon color="success" />
                 </IconButton>
-                <IconButton size="small" onClick={() => handleCancelEdit('checklists')}>
+                <IconButton size="small" onClick={() => handleCancelEdit('checklistLoan')}>
                   <CloseIcon color="error" />
                 </IconButton>
               </Box>
             )}
           </SectionHeader>
 
-          <Grid container spacing={3}>
-            {/* Loan Checklist */}
-            <Grid item xs={12} md={4}>
-              <Typography variant="subtitle1" fontWeight={600} color="#667eea" gutterBottom>
-                Loan & Financing
-              </Typography>
-              <Box>
-                {['le', 'lockedRate', 'appraisalOrdered', 'appraisalReceived', 'clearToClose', 
-                  'cd', 'loanDocsSigned', 'cashToClosePaid', 'loanFunded'].map((item) => (
-                  <FormControlLabel
-                    key={item}
-                    control={
-                      <Checkbox
-                        checked={formData.checklists?.loan?.[item] || false}
-                        onChange={(e) => handleFieldChange('checklists', 'loan', {
-                          ...formData.checklists?.loan,
-                          [item]: e.target.checked
-                        })}
-                        disabled={!editingSections.checklists}
-                        sx={{ 
-                          color: '#764ba2',
-                          '&.Mui-checked': { color: '#764ba2' }
-                        }}
-                      />
-                    }
-                    label={formatFieldLabel(item)}
-                    sx={{ display: 'block', mb: 0.5 }}
-                  />
-                ))}
-              </Box>
-            </Grid>
+          <Grid container spacing={2}>
+            {['le', 'lockedRate', 'appraisalOrdered', 'appraisalReceived', 'clearToClose', 
+              'cd', 'loanDocsSigned', 'cashToClosePaid', 'loanFunded'].map((item) => (
+              <Grid item xs={12} sm={6} md={4} key={item}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.checklistLoan?.[item] || formData.checklists?.loan?.[item] || false}
+                      onChange={(e) => handleFieldChange('checklistLoan', item, e.target.checked)}
+                      disabled={!editingSections.checklistLoan}
+                      sx={{ 
+                        color: '#764ba2',
+                        '&.Mui-checked': { color: '#764ba2' }
+                      }}
+                    />
+                  }
+                  label={formatFieldLabel(item)}
+                  sx={{ display: 'block' }}
+                />
+              </Grid>
+            ))}
+          </Grid>
+        </SectionCard>
 
-            {/* House Checklist */}
-            <Grid item xs={12} md={4}>
-              <Typography variant="subtitle1" fontWeight={600} color="#764ba2" gutterBottom>
-                Property & Inspections
-              </Typography>
-              <Box>
-                {['homeInspectionOrdered', 'emd', 'solarTransferInitiated', 'avid', 
-                  'homeInspectionReceived', 'sellerDisclosures', 'rr', 'recorded'].map((item) => (
-                  <FormControlLabel
-                    key={item}
-                    control={
-                      <Checkbox
-                        checked={formData.checklists?.house?.[item] || false}
-                        onChange={(e) => handleFieldChange('checklists', 'house', {
-                          ...formData.checklists?.house,
-                          [item]: e.target.checked
-                        })}
-                        disabled={!editingSections.checklists}
-                        sx={{ 
-                          color: '#764ba2',
-                          '&.Mui-checked': { color: '#764ba2' }
-                        }}
-                      />
-                    }
-                    label={formatFieldLabel(item)}
-                    sx={{ display: 'block', mb: 0.5 }}
-                  />
-                ))}
+        {/* House Checklist Section */}
+        <SectionCard>
+          <SectionHeader>
+            <SectionTitle>
+              <HomeIcon />
+              Property & Inspections Checklist
+            </SectionTitle>
+            {!editingSections.checklistHouse ? (
+              <IconButton size="small" onClick={() => handleEditSection('checklistHouse')}>
+                <EditIcon />
+              </IconButton>
+            ) : (
+              <Box display="flex" gap={1}>
+                <IconButton 
+                  size="small" 
+                  onClick={() => handleSaveSection('checklistHouse', 'checklist-house')}
+                  disabled={isSaving}
+                >
+                  <CheckIcon color="success" />
+                </IconButton>
+                <IconButton size="small" onClick={() => handleCancelEdit('checklistHouse')}>
+                  <CloseIcon color="error" />
+                </IconButton>
               </Box>
-            </Grid>
+            )}
+          </SectionHeader>
 
-            {/* Admin Checklist */}
-            <Grid item xs={12} md={4}>
-              <Typography variant="subtitle1" fontWeight={600} color="#8b5cf6" gutterBottom>
-                Administrative
-              </Typography>
-              <Box>
-                {['mlsStatusUpdate', 'tcEmail', 'tcGlideInvite', 'addContactsToPhone', 
-                  'addContactsToNotion'].map((item) => (
-                  <FormControlLabel
-                    key={item}
-                    control={
-                      <Checkbox
-                        checked={formData.checklists?.admin?.[item] || false}
-                        onChange={(e) => handleFieldChange('checklists', 'admin', {
-                          ...formData.checklists?.admin,
-                          [item]: e.target.checked
-                        })}
-                        disabled={!editingSections.checklists}
-                        sx={{ 
-                          color: '#764ba2',
-                          '&.Mui-checked': { color: '#764ba2' }
-                        }}
-                      />
-                    }
-                    label={formatFieldLabel(item)}
-                    sx={{ display: 'block', mb: 0.5 }}
-                  />
-                ))}
+          <Grid container spacing={2}>
+            {['homeInspectionOrdered', 'emd', 'solarTransferInitiated', 'avid', 
+              'homeInspectionReceived', 'sellerDisclosures', 'rr', 'recorded'].map((item) => (
+              <Grid item xs={12} sm={6} md={4} key={item}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.checklistHouse?.[item] || formData.checklists?.house?.[item] || false}
+                      onChange={(e) => handleFieldChange('checklistHouse', item, e.target.checked)}
+                      disabled={!editingSections.checklistHouse}
+                      sx={{ 
+                        color: '#764ba2',
+                        '&.Mui-checked': { color: '#764ba2' }
+                      }}
+                    />
+                  }
+                  label={formatFieldLabel(item)}
+                  sx={{ display: 'block' }}
+                />
+              </Grid>
+            ))}
+          </Grid>
+        </SectionCard>
+
+        {/* Admin Checklist Section */}
+        <SectionCard>
+          <SectionHeader>
+            <SectionTitle>
+              <Assignment />
+              Administrative Checklist
+            </SectionTitle>
+            {!editingSections.checklistAdmin ? (
+              <IconButton size="small" onClick={() => handleEditSection('checklistAdmin')}>
+                <EditIcon />
+              </IconButton>
+            ) : (
+              <Box display="flex" gap={1}>
+                <IconButton 
+                  size="small" 
+                  onClick={() => handleSaveSection('checklistAdmin', 'checklist-admin')}
+                  disabled={isSaving}
+                >
+                  <CheckIcon color="success" />
+                </IconButton>
+                <IconButton size="small" onClick={() => handleCancelEdit('checklistAdmin')}>
+                  <CloseIcon color="error" />
+                </IconButton>
               </Box>
-            </Grid>
+            )}
+          </SectionHeader>
+
+          <Grid container spacing={2}>
+            {['mlsStatusUpdate', 'tcEmail', 'tcGlideInvite', 'addContactsToPhone', 
+              'addContactsToNotion'].map((item) => (
+              <Grid item xs={12} sm={6} md={4} key={item}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={formData.checklistAdmin?.[item] || formData.checklists?.admin?.[item] || false}
+                      onChange={(e) => handleFieldChange('checklistAdmin', item, e.target.checked)}
+                      disabled={!editingSections.checklistAdmin}
+                      sx={{ 
+                        color: '#764ba2',
+                        '&.Mui-checked': { color: '#764ba2' }
+                      }}
+                    />
+                  }
+                  label={formatFieldLabel(item)}
+                  sx={{ display: 'block' }}
+                />
+              </Grid>
+            ))}
           </Grid>
         </SectionCard>
 
