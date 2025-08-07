@@ -10,7 +10,13 @@ import {
   Button,
   Tooltip,
   Grid,
-  Paper
+  Paper,
+  Divider,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  ListItemSecondaryAction
 } from '@mui/material';
 import {
   Person as PersonIcon,
@@ -22,13 +28,21 @@ import {
   ExpandMore as ExpandMoreIcon,
   Edit as EditIcon,
   Add as AddIcon,
-  AttachMoney as MoneyIcon
+  AttachMoney as MoneyIcon,
+  Gavel as GavelIcon,
+  Build as BuildIcon,
+  Assignment as AssignmentIcon,
+  CameraAlt as CameraIcon,
+  Engineering as EngineeringIcon,
+  Groups as GroupsIcon,
+  Sell as SellIcon,
+  ShoppingCart as BuyIcon
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 
 // Styled components
-const WidgetCard = styled(motion.div)(({ theme, gradient }) => ({
-  background: gradient || 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+const WidgetCard = styled(motion.div)(({ theme }) => ({
+  background: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
   borderRadius: theme.spacing(2),
   padding: theme.spacing(3),
   color: 'white',
@@ -43,320 +57,364 @@ const WidgetCard = styled(motion.div)(({ theme, gradient }) => ({
   }
 }));
 
-const CircularLayout = styled(Box)(({ theme }) => ({
-  position: 'relative',
-  width: 250,
-  height: 250,
-  margin: '0 auto',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-}));
-
-const PersonAvatar = styled(motion.div)(({ theme, angle, radius = 100 }) => {
-  const x = Math.cos((angle * Math.PI) / 180) * radius;
-  const y = Math.sin((angle * Math.PI) / 180) * radius;
-  
-  return {
-    position: 'absolute',
-    transform: `translate(${x}px, ${y}px)`,
-    transition: 'all 0.3s ease',
-  };
-});
-
-const RoleBadge = styled(Chip)(({ theme, rolecolor }) => ({
-  position: 'absolute',
-  bottom: -5,
-  left: '50%',
-  transform: 'translateX(-50%)',
-  fontSize: '0.625rem',
-  height: 20,
-  backgroundColor: rolecolor,
-  color: 'white',
-  fontWeight: 'bold',
-  '& .MuiChip-label': {
-    padding: '0 6px',
+const PartySection = styled(Box)(({ theme }) => ({
+  background: 'rgba(255, 255, 255, 0.1)',
+  backdropFilter: 'blur(10px)',
+  borderRadius: theme.spacing(1.5),
+  padding: theme.spacing(2),
+  border: '1px solid rgba(255, 255, 255, 0.2)',
+  minHeight: 200,
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    background: 'rgba(255, 255, 255, 0.15)',
+    transform: 'translateY(-2px)',
   }
 }));
 
-const ContactCard = styled(Paper)(({ theme }) => ({
-  padding: theme.spacing(2),
-  background: 'rgba(255, 255, 255, 0.1)',
-  backdropFilter: 'blur(10px)',
+const PersonCard = styled(motion.div)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  padding: theme.spacing(1.5),
+  marginBottom: theme.spacing(1),
+  background: 'rgba(255, 255, 255, 0.05)',
   borderRadius: theme.spacing(1),
-  marginBottom: theme.spacing(2),
-  border: '1px solid rgba(255, 255, 255, 0.2)',
+  transition: 'all 0.3s ease',
+  cursor: 'pointer',
+  '&:hover': {
+    background: 'rgba(255, 255, 255, 0.1)',
+    transform: 'translateX(4px)',
+  }
 }));
 
-const ConnectionLine = styled('svg')(({ theme }) => ({
-  position: 'absolute',
-  top: 0,
-  left: 0,
-  width: '100%',
-  height: '100%',
-  pointerEvents: 'none',
-  zIndex: 0,
+const SectionTitle = styled(Typography)(({ theme }) => ({
+  fontWeight: 600,
+  marginBottom: theme.spacing(2),
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(1),
+  textTransform: 'uppercase',
+  fontSize: '0.875rem',
+  letterSpacing: '0.05em',
+  opacity: 0.9,
 }));
+
+const ContactInfo = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.spacing(0.5),
+  marginTop: theme.spacing(0.5),
+  paddingLeft: theme.spacing(5),
+  fontSize: '0.75rem',
+  opacity: 0.8,
+}));
+
+const FloatingIcon = styled(motion.div)(({ theme }) => ({
+  position: 'absolute',
+  opacity: 0.1,
+  pointerEvents: 'none',
+}));
+
+// Helper function to get role icon
+const getRoleIcon = (role) => {
+  const icons = {
+    buyer: <BuyIcon />,
+    seller: <SellIcon />,
+    buyerAgent: <BusinessIcon />,
+    sellerAgent: <BusinessIcon />,
+    escrowOfficer: <AccountBalanceIcon />,
+    titleOfficer: <GavelIcon />,
+    loanOfficer: <MoneyIcon />,
+    homeInspector: <BuildIcon />,
+    appraiser: <AssignmentIcon />,
+    photographer: <CameraIcon />,
+    contractor: <EngineeringIcon />,
+    transactionCoordinator: <AssignmentIcon />,
+    referralAgent: <BusinessIcon />
+  };
+  return icons[role] || <PersonIcon />;
+};
+
+// Helper function to get initials
+const getInitials = (name) => {
+  if (!name) return '?';
+  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+};
+
+// Helper function to format role label
+const formatRoleLabel = (role) => {
+  const labels = {
+    buyer: 'Buyer',
+    seller: 'Seller',
+    buyerAgent: 'Buyer\'s Agent',
+    sellerAgent: 'Listing Agent',
+    escrowOfficer: 'Escrow Officer',
+    titleOfficer: 'Title Officer',
+    loanOfficer: 'Loan Officer',
+    homeInspector: 'Home Inspector',
+    appraiser: 'Appraiser',
+    photographer: 'Photographer',
+    contractor: 'Contractor',
+    transactionCoordinator: 'Transaction Coordinator',
+    referralAgent: 'Referral Agent'
+  };
+  return labels[role] || role;
+};
 
 function PeopleWidget({ data, expanded, onExpand, onUpdate }) {
   const [selectedPerson, setSelectedPerson] = useState(null);
+  const [showContactInfo, setShowContactInfo] = useState({});
   
   if (!data) return null;
 
-  // Define people with their roles and positions
-  const peopleConfig = [
-    { key: 'buyer', label: 'Buyer', icon: <PersonIcon />, angle: 0, color: '#4caf50' },
-    { key: 'seller', label: 'Seller', icon: <PersonIcon />, angle: 60, color: '#2196f3' },
-    { key: 'buyerAgent', label: 'Buyer Agent', icon: <BusinessIcon />, angle: 120, color: '#ff9800' },
-    { key: 'sellerAgent', label: 'Seller Agent', icon: <BusinessIcon />, angle: 180, color: '#f44336' },
-    { key: 'escrowOfficer', label: 'Escrow', icon: <AccountBalanceIcon />, angle: 240, color: '#9c27b0' },
-    { key: 'referralAgent', label: 'Referral', icon: <MoneyIcon />, angle: 300, color: '#00bcd4' },
-  ];
+  // Organize people by party - using consistent color palette
+  const buyerParty = [
+    { key: 'buyer', data: data.buyer, role: 'Buyer', color: '#00d4ff' },
+    { key: 'buyerAgent', data: data.buyerAgent, role: 'Buyer\'s Agent', color: '#4facfe' },
+    { key: 'loanOfficer', data: data.loanOfficer, role: 'Loan Officer', color: '#00f2fe' },
+  ].filter(p => p.data);
 
-  const activePeople = peopleConfig.filter(config => data[config.key]);
+  const sellerParty = [
+    { key: 'seller', data: data.seller, role: 'Seller', color: '#667eea' },
+    { key: 'sellerAgent', data: data.sellerAgent, role: 'Listing Agent', color: '#764ba2' },
+    { key: 'escrowOfficer', data: data.escrowOfficer, role: 'Escrow Officer', color: '#9c27b0' },
+    { key: 'titleOfficer', data: data.titleOfficer, role: 'Title Officer', color: '#8e44ad' },
+  ].filter(p => p.data);
 
-  const getInitials = (name) => {
-    if (!name) return '?';
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  const vendors = [
+    { key: 'homeInspector', data: data.homeInspector, role: 'Home Inspector', color: '#4ecdc4' },
+    { key: 'appraiser', data: data.appraiser, role: 'Appraiser', color: '#44a8b3' },
+    { key: 'photographer', data: data.photographer, role: 'Photographer', color: '#f093fb' },
+    { key: 'contractor', data: data.contractor, role: 'Contractor', color: '#f5576c' },
+    { key: 'transactionCoordinator', data: data.transactionCoordinator, role: 'TC', color: '#ffd700' },
+    { key: 'referralAgent', data: data.referralAgent, role: 'Referral', color: '#00ff88' },
+  ].filter(p => p.data);
+
+  const totalPeople = buyerParty.length + sellerParty.length + vendors.length;
+
+  const toggleContactInfo = (key) => {
+    setShowContactInfo(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
   };
+
+  const renderPerson = (person) => (
+    <PersonCard
+      key={person.key}
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.3 }}
+      onClick={() => toggleContactInfo(person.key)}
+    >
+      <Avatar
+        sx={{
+          width: 36,
+          height: 36,
+          bgcolor: person.color,
+          marginRight: 1.5,
+          fontSize: '0.875rem'
+        }}
+      >
+        {person.data.name ? getInitials(person.data.name) : getRoleIcon(person.key)}
+      </Avatar>
+      <Box flex={1}>
+        <Typography variant="body2" fontWeight={500}>
+          {person.data.name || 'Not specified'}
+        </Typography>
+        <Typography variant="caption" sx={{ opacity: 0.8 }}>
+          {person.role}
+        </Typography>
+        <AnimatePresence>
+          {showContactInfo[person.key] && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ContactInfo>
+                {person.data.email && (
+                  <Box display="flex" alignItems="center" gap={0.5}>
+                    <EmailIcon sx={{ fontSize: 14 }} />
+                    <Typography variant="caption">{person.data.email}</Typography>
+                  </Box>
+                )}
+                {person.data.phone && (
+                  <Box display="flex" alignItems="center" gap={0.5}>
+                    <PhoneIcon sx={{ fontSize: 14 }} />
+                    <Typography variant="caption">{person.data.phone}</Typography>
+                  </Box>
+                )}
+              </ContactInfo>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </Box>
+      <IconButton
+        size="small"
+        sx={{ color: 'white', opacity: 0.7 }}
+        onClick={(e) => {
+          e.stopPropagation();
+          // Handle edit
+        }}
+      >
+        <EditIcon fontSize="small" />
+      </IconButton>
+    </PersonCard>
+  );
 
   return (
     <WidgetCard
-      gradient="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"
       onClick={onExpand}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
     >
+      {/* Floating Background Icons */}
+      <FloatingIcon
+        animate={{
+          y: [-20, 20],
+          rotate: [0, 360],
+        }}
+        transition={{
+          duration: 20,
+          repeat: Infinity,
+          repeatType: 'reverse',
+        }}
+        style={{ top: 10, right: 10 }}
+      >
+        <GroupsIcon sx={{ fontSize: 100 }} />
+      </FloatingIcon>
+
       {/* Header */}
       <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={3}>
         <Box>
           <Typography variant="h5" fontWeight="bold" gutterBottom>
-            People
+            People & Contacts
           </Typography>
           <Typography variant="body2" sx={{ opacity: 0.9 }}>
-            {activePeople.length} participants
+            {totalPeople} participants • Click names for contact info
           </Typography>
         </Box>
-        <IconButton
-          size="small"
-          sx={{ color: 'white' }}
-          onClick={(e) => {
-            e.stopPropagation();
-            // Handle add person
+        <Chip
+          icon={<GroupsIcon />}
+          label={`${totalPeople} Total`}
+          sx={{ 
+            bgcolor: 'rgba(255, 255, 255, 0.2)',
+            color: 'white',
+            fontWeight: 'bold'
           }}
-        >
-          <AddIcon />
-        </IconButton>
+        />
       </Box>
 
-      {/* Circular Avatar Layout */}
-      <CircularLayout>
-        {/* Connection Lines */}
-        <ConnectionLine viewBox="0 0 250 250">
-          {activePeople.map((person, index) => {
-            const nextPerson = activePeople[(index + 1) % activePeople.length];
-            const x1 = 125 + Math.cos((person.angle * Math.PI) / 180) * 100;
-            const y1 = 125 + Math.sin((person.angle * Math.PI) / 180) * 100;
-            const x2 = 125 + Math.cos((nextPerson.angle * Math.PI) / 180) * 100;
-            const y2 = 125 + Math.sin((nextPerson.angle * Math.PI) / 180) * 100;
-            
-            return (
-              <motion.line
-                key={`line-${person.key}`}
-                x1={x1}
-                y1={y1}
-                x2={x2}
-                y2={y2}
-                stroke="rgba(255, 255, 255, 0.2)"
-                strokeWidth="2"
-                strokeDasharray="5,5"
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: 1 }}
-                transition={{ duration: 1, delay: index * 0.1 }}
-              />
-            );
-          })}
-        </ConnectionLine>
+      {/* Main Content - Two Column Layout */}
+      <Grid container spacing={2}>
+        {/* Buyer Party */}
+        <Grid item xs={12} md={6}>
+          <PartySection>
+            <SectionTitle>
+              <BuyIcon /> Buyer Side
+            </SectionTitle>
+            {buyerParty.length > 0 ? (
+              buyerParty.map(renderPerson)
+            ) : (
+              <Typography variant="body2" sx={{ opacity: 0.6, textAlign: 'center', py: 2 }}>
+                No buyer party members added
+              </Typography>
+            )}
+          </PartySection>
+        </Grid>
 
-        {/* Center Icon */}
-        <Box
-          sx={{
-            width: 60,
-            height: 60,
-            borderRadius: '50%',
-            background: 'rgba(255, 255, 255, 0.2)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1,
-          }}
-        >
-          <HomeIcon sx={{ fontSize: 30 }} />
-        </Box>
+        {/* Seller Party */}
+        <Grid item xs={12} md={6}>
+          <PartySection>
+            <SectionTitle>
+              <SellIcon /> Seller Side
+            </SectionTitle>
+            {sellerParty.length > 0 ? (
+              sellerParty.map(renderPerson)
+            ) : (
+              <Typography variant="body2" sx={{ opacity: 0.6, textAlign: 'center', py: 2 }}>
+                No seller party members added
+              </Typography>
+            )}
+          </PartySection>
+        </Grid>
+      </Grid>
 
-        {/* People Avatars */}
-        {activePeople.map((person, index) => {
-          const personData = data[person.key];
-          if (!personData) return null;
-
-          return (
-            <PersonAvatar
-              key={person.key}
-              angle={person.angle}
-              radius={100}
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ delay: index * 0.1, type: 'spring' }}
-              whileHover={{ scale: 1.2 }}
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedPerson(person.key);
-              }}
-            >
-              <Tooltip title={personData.name || person.label}>
-                <Box position="relative">
-                  <Avatar
-                    sx={{
-                      width: 50,
-                      height: 50,
-                      bgcolor: person.color,
-                      border: '3px solid white',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    {personData.name ? getInitials(personData.name) : person.icon}
-                  </Avatar>
-                  <RoleBadge
-                    label={person.label}
-                    size="small"
-                    rolecolor={person.color}
-                  />
-                </Box>
-              </Tooltip>
-            </PersonAvatar>
-          );
-        })}
-      </CircularLayout>
-
-      {/* Selected Person Details */}
-      <AnimatePresence>
-        {selectedPerson && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            style={{ marginTop: 24 }}
-          >
-            <ContactCard>
-              <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-                <Typography variant="h6">
-                  {data[selectedPerson]?.name || 'Unknown'}
-                </Typography>
-                <IconButton
-                  size="small"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedPerson(null);
-                  }}
-                >
-                  <ExpandMoreIcon />
-                </IconButton>
-              </Box>
-              
-              <Grid container spacing={2}>
-                {data[selectedPerson]?.email && (
-                  <Grid item xs={12}>
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <EmailIcon fontSize="small" />
-                      <Typography variant="body2">
-                        {data[selectedPerson].email}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                )}
-                {data[selectedPerson]?.phone && (
-                  <Grid item xs={12}>
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <PhoneIcon fontSize="small" />
-                      <Typography variant="body2">
-                        {data[selectedPerson].phone}
-                      </Typography>
-                    </Box>
-                  </Grid>
-                )}
-              </Grid>
-            </ContactCard>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Expanded Content */}
+      {/* Vendors Section - Expandable */}
       <Collapse in={expanded}>
         <Box mt={3}>
-          <Typography variant="h6" gutterBottom>
-            All Contacts
-          </Typography>
-          {peopleConfig.map((person) => {
-            const personData = data[person.key];
-            if (!personData) return null;
-
-            return (
-              <ContactCard key={person.key}>
-                <Grid container alignItems="center" spacing={2}>
-                  <Grid item>
-                    <Avatar sx={{ bgcolor: person.color }}>
-                      {personData.name ? getInitials(personData.name) : person.icon}
-                    </Avatar>
+          <Divider sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)', my: 2 }} />
+          <PartySection>
+            <SectionTitle>
+              <BuildIcon /> Vendors & Services
+            </SectionTitle>
+            {vendors.length > 0 ? (
+              <Grid container spacing={1}>
+                {vendors.map(vendor => (
+                  <Grid item xs={12} sm={6} key={vendor.key}>
+                    {renderPerson(vendor)}
                   </Grid>
-                  <Grid item xs>
-                    <Typography variant="subtitle2">
-                      {personData.name || 'Not specified'}
-                    </Typography>
-                    <Typography variant="caption" sx={{ opacity: 0.8 }}>
-                      {person.label}
-                    </Typography>
-                  </Grid>
-                  <Grid item>
-                    <IconButton
-                      size="small"
-                      sx={{ color: 'white' }}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        // Handle edit
-                      }}
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                  </Grid>
-                </Grid>
-              </ContactCard>
-            );
-          })}
-
-          {/* Add New Contact Button */}
-          <Button
-            fullWidth
-            variant="outlined"
-            startIcon={<AddIcon />}
-            sx={{
-              mt: 2,
-              borderColor: 'rgba(255, 255, 255, 0.5)',
-              color: 'white',
-              '&:hover': {
-                borderColor: 'white',
-                bgcolor: 'rgba(255, 255, 255, 0.1)'
-              }
-            }}
-            onClick={(e) => {
-              e.stopPropagation();
-              // Handle add new contact
-            }}
-          >
-            Add Contact
-          </Button>
+                ))}
+              </Grid>
+            ) : (
+              <Typography variant="body2" sx={{ opacity: 0.6, textAlign: 'center', py: 2 }}>
+                No vendors added yet
+              </Typography>
+            )}
+            
+            {/* Add Vendor Button */}
+            <Button
+              fullWidth
+              variant="outlined"
+              startIcon={<AddIcon />}
+              sx={{
+                mt: 2,
+                borderColor: 'rgba(255, 255, 255, 0.5)',
+                color: 'white',
+                '&:hover': {
+                  borderColor: 'white',
+                  bgcolor: 'rgba(255, 255, 255, 0.1)'
+                }
+              }}
+              onClick={(e) => {
+                e.stopPropagation();
+                // Handle add vendor
+              }}
+            >
+              Add Vendor
+            </Button>
+          </PartySection>
         </Box>
       </Collapse>
+
+      {/* Quick Stats */}
+      <Box mt={3} display="flex" justifyContent="space-around">
+        <Box textAlign="center">
+          <Typography variant="h6" fontWeight="bold">
+            {buyerParty.length}
+          </Typography>
+          <Typography variant="caption">Buyer Side</Typography>
+        </Box>
+        <Divider orientation="vertical" flexItem sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)' }} />
+        <Box textAlign="center">
+          <Typography variant="h6" fontWeight="bold">
+            {sellerParty.length}
+          </Typography>
+          <Typography variant="caption">Seller Side</Typography>
+        </Box>
+        {vendors.length > 0 && (
+          <>
+            <Divider orientation="vertical" flexItem sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)' }} />
+            <Box textAlign="center">
+              <Typography variant="h6" fontWeight="bold">
+                {vendors.length}
+              </Typography>
+              <Typography variant="caption">Vendors</Typography>
+            </Box>
+          </>
+        )}
+      </Box>
 
       {/* Expand Indicator */}
       <Box display="flex" justifyContent="center" mt={2}>
