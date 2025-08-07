@@ -6,9 +6,7 @@ import {
   Avatar,
   Chip,
   IconButton,
-  Collapse,
   Button,
-  Tooltip,
   Grid,
   Paper,
   Divider,
@@ -19,7 +17,6 @@ import {
   DialogContent,
   DialogActions,
   List,
-  ListItem,
   ListItemAvatar,
   ListItemText,
   ListItemButton,
@@ -30,9 +27,7 @@ import {
   Business as BusinessIcon,
   Email as EmailIcon,
   Phone as PhoneIcon,
-  Home as HomeIcon,
   AccountBalance as AccountBalanceIcon,
-  ExpandMore as ExpandMoreIcon,
   Edit as EditIcon,
   Add as AddIcon,
   AttachMoney as MoneyIcon,
@@ -49,8 +44,7 @@ import {
   Check as CheckIcon,
   BugReport as BugIcon,
   Description as DocumentIcon,
-  Security as WarrantyIcon,
-  AdminPanelSettings as AdminIcon
+  Security as WarrantyIcon
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 
@@ -62,71 +56,63 @@ const WidgetCard = styled(motion.div)(({ theme }) => ({
   color: 'white',
   position: 'relative',
   overflow: 'hidden',
-  cursor: 'pointer',
   transition: 'all 0.3s ease',
   boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2)',
-  '&:hover': {
-    transform: 'translateY(-5px)',
-    boxShadow: '0 15px 40px rgba(0, 0, 0, 0.3)',
+}));
+
+const SectionDivider = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  marginTop: theme.spacing(2),
+  marginBottom: theme.spacing(1.5),
+  '&::before, &::after': {
+    content: '""',
+    flex: 1,
+    height: 1,
+    background: 'rgba(255, 255, 255, 0.2)',
+  },
+  '& > *': {
+    margin: `0 ${theme.spacing(2)}`,
+    fontSize: '0.875rem',
+    fontWeight: 600,
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+    opacity: 0.9,
   }
 }));
 
-const PartySection = styled(Box)(({ theme }) => ({
-  background: 'rgba(255, 255, 255, 0.1)',
-  backdropFilter: 'blur(10px)',
-  borderRadius: theme.spacing(1.5),
-  padding: theme.spacing(2),
-  border: '1px solid rgba(255, 255, 255, 0.2)',
-  minHeight: 180,
-  transition: 'all 0.3s ease',
-  '&:hover': {
-    background: 'rgba(255, 255, 255, 0.15)',
-    transform: 'translateY(-2px)',
-  }
-}));
-
-const PersonCard = styled(motion.div)(({ theme, isEmpty }) => ({
+const PersonRow = styled(motion.div)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   padding: theme.spacing(1.5),
   marginBottom: theme.spacing(1),
   background: 'rgba(255, 255, 255, 0.08)',
   borderRadius: theme.spacing(1),
-  border: '1px solid transparent',
   transition: 'all 0.3s ease',
-  cursor: 'pointer',
   '&:hover': {
     background: 'rgba(255, 255, 255, 0.12)',
-    transform: 'translateX(4px)',
   }
 }));
 
-const SectionTitle = styled(Typography)(({ theme }) => ({
-  fontWeight: 600,
-  marginBottom: theme.spacing(2),
-  display: 'flex',
-  alignItems: 'center',
-  gap: theme.spacing(1),
-  textTransform: 'uppercase',
+const RoleLabel = styled(Typography)(({ theme }) => ({
+  minWidth: 150,
   fontSize: '0.875rem',
-  letterSpacing: '0.05em',
+  fontWeight: 500,
   opacity: 0.9,
+  marginRight: theme.spacing(2),
 }));
 
 const ContactInfo = styled(Box)(({ theme }) => ({
   display: 'flex',
-  flexDirection: 'column',
-  gap: theme.spacing(0.5),
-  marginTop: theme.spacing(0.5),
-  paddingLeft: theme.spacing(5),
-  fontSize: '0.75rem',
-  opacity: 0.8,
-}));
-
-const FloatingIcon = styled(motion.div)(({ theme }) => ({
-  position: 'absolute',
-  opacity: 0.1,
-  pointerEvents: 'none',
+  alignItems: 'center',
+  gap: theme.spacing(2),
+  fontSize: '0.8rem',
+  opacity: 0.85,
+  '& > div': {
+    display: 'flex',
+    alignItems: 'center',
+    gap: theme.spacing(0.5),
+  }
 }));
 
 const SearchDialog = styled(Dialog)(({ theme }) => ({
@@ -185,7 +171,6 @@ const getRoleIcon = (role) => {
     appraiser: <AssignmentIcon />,
     photographer: <CameraIcon />,
     contractor: <EngineeringIcon />,
-    referralAgent: <BusinessIcon />
   };
   return icons[role] || <PersonIcon />;
 };
@@ -197,7 +182,6 @@ const getInitials = (name) => {
 };
 
 function PeopleWidget({ data, expanded, onExpand, onUpdate }) {
-  const [showContactInfo, setShowContactInfo] = useState({});
   const [searchDialogOpen, setSearchDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedRole, setSelectedRole] = useState(null);
@@ -205,53 +189,33 @@ function PeopleWidget({ data, expanded, onExpand, onUpdate }) {
   
   if (!data) data = {}; // Initialize empty data if null
 
-  // Define all roles - buyer party on left, seller party on right
-  const buyerPartyRoles = [
+  // Define all roles organized by section
+  const buyerRoles = [
     { key: 'buyer', label: 'Buyer', icon: <BuyIcon />, color: '#00d4ff' },
     { key: 'buyerAgent', label: 'Buyer\'s Agent', icon: <BusinessIcon />, color: '#4facfe' },
     { key: 'buyerTC', label: 'Buyer\'s TC', icon: <AssignmentIcon />, color: '#00f2fe' },
   ];
 
-  const sellerPartyRoles = [
+  const sellerRoles = [
     { key: 'seller', label: 'Seller', icon: <SellIcon />, color: '#667eea' },
     { key: 'sellerAgent', label: 'Listing Agent', icon: <BusinessIcon />, color: '#764ba2' },
     { key: 'listingTC', label: 'Listing TC', icon: <AssignmentIcon />, color: '#9c27b0' },
   ];
 
-  // Vendors section includes lender and escrow officer at top
-  const primaryVendorRoles = [
-    { key: 'loanOfficer', label: 'Lender / Loan Officer', icon: <MoneyIcon />, color: '#ffd700' },
+  const vendorRoles = [
+    { key: 'loanOfficer', label: 'Lender', icon: <MoneyIcon />, color: '#ffd700' },
     { key: 'escrowOfficer', label: 'Escrow Officer', icon: <AccountBalanceIcon />, color: '#ff9800' },
     { key: 'titleOfficer', label: 'Title Officer', icon: <GavelIcon />, color: '#8e44ad' },
-  ];
-
-  // Additional vendor roles that can be added
-  const additionalVendorRoles = [
     { key: 'homeInspector', label: 'Home Inspector', icon: <BuildIcon />, color: '#4ecdc4' },
     { key: 'termiteInspector', label: 'Termite Inspector', icon: <BugIcon />, color: '#44a8b3' },
-    { key: 'nhdRep', label: 'NHD Representative', icon: <DocumentIcon />, color: '#f093fb' },
-    { key: 'homeWarrantyRep', label: 'Home Warranty Rep', icon: <WarrantyIcon />, color: '#f5576c' },
+    { key: 'nhdRep', label: 'NHD Rep', icon: <DocumentIcon />, color: '#f093fb' },
+    { key: 'homeWarrantyRep', label: 'Home Warranty', icon: <WarrantyIcon />, color: '#f5576c' },
     { key: 'appraiser', label: 'Appraiser', icon: <AssignmentIcon />, color: '#00ff88' },
-    { key: 'photographer', label: 'Photographer', icon: <CameraIcon />, color: '#e91e63' },
-    { key: 'contractor', label: 'Contractor', icon: <EngineeringIcon />, color: '#607d8b' },
   ];
 
-  // Get any additional vendor roles that have been added
-  const addedVendorRoles = additionalVendorRoles.filter(role => data[role.key]);
-
   // Count filled positions
-  const buyerPartyCount = buyerPartyRoles.filter(role => data[role.key]).length;
-  const sellerPartyCount = sellerPartyRoles.filter(role => data[role.key]).length;
-  const primaryVendorCount = primaryVendorRoles.filter(role => data[role.key]).length;
-  const additionalVendorCount = addedVendorRoles.length;
-  const totalPeople = buyerPartyCount + sellerPartyCount + primaryVendorCount + additionalVendorCount;
-
-  const toggleContactInfo = (key) => {
-    setShowContactInfo(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
-  };
+  const totalPositions = buyerRoles.length + sellerRoles.length + vendorRoles.length;
+  const filledPositions = [...buyerRoles, ...sellerRoles, ...vendorRoles].filter(role => data[role.key]).length;
 
   const handleAddClick = (role) => {
     setSelectedRole(role);
@@ -283,142 +247,113 @@ function PeopleWidget({ data, expanded, onExpand, onUpdate }) {
     setSelectedRole(null);
   };
 
-  const handleAddVendor = () => {
-    // Show a list of vendor types to add
-    const availableVendors = additionalVendorRoles.filter(role => !data[role.key]);
-    if (availableVendors.length > 0) {
-      // For simplicity, just add the first available vendor type
-      // In production, show a menu to select which vendor type to add
-      handleAddClick(availableVendors[0]);
-    }
-  };
-
   const renderPerson = (role) => {
-    const person = data[role.key] || (role.key === 'buyerTC' && data.transactionCoordinator) || (role.key === 'listingTC' && data.listingTransactionCoordinator);
+    const person = data[role.key] || 
+                  (role.key === 'buyerTC' && data.transactionCoordinator) || 
+                  (role.key === 'listingTC' && data.listingTransactionCoordinator);
     const isEmpty = !person;
 
     return (
-      <PersonCard
+      <PersonRow
         key={role.key}
-        isEmpty={isEmpty}
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.3 }}
-        onClick={() => !isEmpty && toggleContactInfo(role.key)}
       >
-        <Avatar
-          sx={{
-            width: 36,
-            height: 36,
-            bgcolor: isEmpty ? 'rgba(255, 255, 255, 0.1)' : role.color,
-            marginRight: 1.5,
-            fontSize: '0.875rem',
-            cursor: isEmpty ? 'default' : 'pointer',
-            transition: 'all 0.3s ease',
-          }}
-        >
-          {isEmpty ? role.icon : (person?.name ? getInitials(person.name) : role.icon)}
-        </Avatar>
-        <Box flex={1}>
-          <Typography variant="body2" fontWeight={500} sx={{ opacity: isEmpty ? 0.6 : 1 }}>
-            {isEmpty ? role.label : person?.name}
-          </Typography>
-          {!isEmpty && (
-            <Typography variant="caption" sx={{ opacity: 0.8 }}>
-              {role.label}
-            </Typography>
-          )}
-          <AnimatePresence>
-            {showContactInfo[role.key] && person && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-              >
+        <RoleLabel>{role.label}</RoleLabel>
+        
+        {isEmpty ? (
+          <>
+            <Box flex={1} />
+            <IconButton
+              size="small"
+              sx={{ 
+                color: 'white', 
+                border: '2px solid rgba(255, 255, 255, 0.5)',
+                width: 32,
+                height: 32,
+                '&:hover': {
+                  bgcolor: 'rgba(255, 255, 255, 0.2)',
+                  borderColor: 'rgba(255, 255, 255, 0.8)',
+                  transform: 'scale(1.1)',
+                }
+              }}
+              onClick={() => handleAddClick(role)}
+            >
+              <AddIcon fontSize="small" />
+            </IconButton>
+          </>
+        ) : (
+          <>
+            <Avatar
+              sx={{
+                width: 32,
+                height: 32,
+                bgcolor: role.color,
+                fontSize: '0.75rem',
+                marginRight: 1.5,
+              }}
+            >
+              {getInitials(person.name)}
+            </Avatar>
+            <Box flex={1}>
+              <Typography variant="body2" fontWeight={500}>
+                {person.name}
+              </Typography>
+              {(person.email || person.phone) && (
                 <ContactInfo>
                   {person.email && (
-                    <Box display="flex" alignItems="center" gap={0.5}>
+                    <Box>
                       <EmailIcon sx={{ fontSize: 14 }} />
                       <Typography variant="caption">{person.email}</Typography>
                     </Box>
                   )}
                   {person.phone && (
-                    <Box display="flex" alignItems="center" gap={0.5}>
+                    <Box>
                       <PhoneIcon sx={{ fontSize: 14 }} />
                       <Typography variant="caption">{person.phone}</Typography>
                     </Box>
                   )}
                 </ContactInfo>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </Box>
-        <IconButton
-          size="small"
-          sx={{ 
-            color: 'white', 
-            bgcolor: isEmpty ? 'transparent' : 'transparent',
-            border: isEmpty ? '2px solid rgba(255, 255, 255, 0.5)' : 'none',
-            width: 32,
-            height: 32,
-            '&:hover': {
-              bgcolor: 'rgba(255, 255, 255, 0.2)',
-              borderColor: isEmpty ? 'rgba(255, 255, 255, 0.8)' : 'transparent',
-              transform: 'scale(1.1)',
-            }
-          }}
-          onClick={(e) => {
-            e.stopPropagation();
-            if (isEmpty) {
-              handleAddClick(role);
-            } else {
-              // Handle edit
-            }
-          }}
-        >
-          {isEmpty ? <AddIcon fontSize="small" /> : <EditIcon fontSize="small" />}
-        </IconButton>
-      </PersonCard>
+              )}
+            </Box>
+            <IconButton
+              size="small"
+              sx={{ 
+                color: 'white', 
+                opacity: 0.7,
+                '&:hover': {
+                  bgcolor: 'rgba(255, 255, 255, 0.2)',
+                }
+              }}
+              onClick={() => {
+                // Handle edit
+              }}
+            >
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </>
+        )}
+      </PersonRow>
     );
   };
 
   return (
     <>
-      <WidgetCard
-        onClick={onExpand}
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-      >
-        {/* Floating Background Icons */}
-        <FloatingIcon
-          animate={{
-            y: [-20, 20],
-            rotate: [0, 360],
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            repeatType: 'reverse',
-          }}
-          style={{ top: 10, right: 10 }}
-        >
-          <GroupsIcon sx={{ fontSize: 100 }} />
-        </FloatingIcon>
-
+      <WidgetCard>
         {/* Header */}
-        <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={3}>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
           <Box>
             <Typography variant="h5" fontWeight="bold" gutterBottom>
               People & Contacts
             </Typography>
             <Typography variant="body2" sx={{ opacity: 0.9 }}>
-              {totalPeople} contacts added • Click to view details
+              {filledPositions} of {totalPositions} positions filled
             </Typography>
           </Box>
           <Chip
             icon={<GroupsIcon />}
-            label={`${totalPeople} Active`}
+            label={`${filledPositions}/${totalPositions}`}
             sx={{ 
               bgcolor: 'rgba(255, 255, 255, 0.2)',
               color: 'white',
@@ -427,156 +362,23 @@ function PeopleWidget({ data, expanded, onExpand, onUpdate }) {
           />
         </Box>
 
-        {/* Main Content - Two Column Layout */}
-        <Grid container spacing={2}>
-          {/* Buyer Party */}
-          <Grid item xs={12} md={6}>
-            <PartySection>
-              <SectionTitle>
-                <BuyIcon /> Buyer Side
-              </SectionTitle>
-              {buyerPartyRoles.map(renderPerson)}
-            </PartySection>
-          </Grid>
+        {/* Buyer Section */}
+        <SectionDivider>
+          <span>Buyer</span>
+        </SectionDivider>
+        {buyerRoles.map(renderPerson)}
 
-          {/* Seller Party */}
-          <Grid item xs={12} md={6}>
-            <PartySection>
-              <SectionTitle>
-                <SellIcon /> Seller Side
-              </SectionTitle>
-              {sellerPartyRoles.map(renderPerson)}
-            </PartySection>
-          </Grid>
-        </Grid>
+        {/* Seller Section */}
+        <SectionDivider>
+          <span>Seller</span>
+        </SectionDivider>
+        {sellerRoles.map(renderPerson)}
 
-        {/* Vendors Section - Expandable */}
-        <Collapse in={expanded}>
-          <Box mt={3}>
-            <Divider sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)', my: 2 }} />
-            
-            {/* Primary Vendors */}
-            <PartySection sx={{ mb: 2 }}>
-              <SectionTitle>
-                <AccountBalanceIcon /> Primary Vendors
-              </SectionTitle>
-              <Grid container spacing={1}>
-                {primaryVendorRoles.map(role => (
-                  <Grid item xs={12} key={role.key}>
-                    {renderPerson(role)}
-                  </Grid>
-                ))}
-              </Grid>
-            </PartySection>
-
-            {/* Additional Services */}
-            <PartySection>
-              <SectionTitle>
-                <BuildIcon /> Additional Services
-              </SectionTitle>
-              
-              {/* Show added vendor roles */}
-              {addedVendorRoles.length > 0 ? (
-                <Grid container spacing={1}>
-                  {addedVendorRoles.map(role => (
-                    <Grid item xs={12} sm={6} key={role.key}>
-                      {renderPerson(role)}
-                    </Grid>
-                  ))}
-                </Grid>
-              ) : (
-                <Typography variant="body2" sx={{ opacity: 0.6, textAlign: 'center', py: 2 }}>
-                  No additional services added yet
-                </Typography>
-              )}
-              
-              {/* Add Service Button */}
-              <Button
-                fullWidth
-                variant="outlined"
-                startIcon={<AddIcon />}
-                sx={{
-                  mt: 2,
-                  borderColor: 'rgba(255, 255, 255, 0.5)',
-                  color: 'white',
-                  '&:hover': {
-                    borderColor: 'white',
-                    bgcolor: 'rgba(255, 255, 255, 0.1)'
-                  }
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleAddVendor();
-                }}
-              >
-                Add Service Provider
-              </Button>
-              
-              {/* Quick Add Buttons for Common Services */}
-              <Box mt={2} display="flex" flexWrap="wrap" gap={1}>
-                {additionalVendorRoles
-                  .filter(role => !data[role.key])
-                  .slice(0, 4)
-                  .map(role => (
-                    <Chip
-                      key={role.key}
-                      label={`+ ${role.label}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleAddClick(role);
-                      }}
-                      sx={{
-                        bgcolor: 'rgba(255, 255, 255, 0.1)',
-                        color: 'white',
-                        cursor: 'pointer',
-                        '&:hover': {
-                          bgcolor: 'rgba(255, 255, 255, 0.2)',
-                        }
-                      }}
-                    />
-                  ))}
-              </Box>
-            </PartySection>
-          </Box>
-        </Collapse>
-
-        {/* Quick Stats */}
-        <Box mt={3} display="flex" justifyContent="space-around">
-          <Box textAlign="center">
-            <Typography variant="h6" fontWeight="bold">
-              {buyerPartyCount}/3
-            </Typography>
-            <Typography variant="caption">Buyer Side</Typography>
-          </Box>
-          <Divider orientation="vertical" flexItem sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)' }} />
-          <Box textAlign="center">
-            <Typography variant="h6" fontWeight="bold">
-              {sellerPartyCount}/3
-            </Typography>
-            <Typography variant="caption">Seller Side</Typography>
-          </Box>
-          <Divider orientation="vertical" flexItem sx={{ bgcolor: 'rgba(255, 255, 255, 0.2)' }} />
-          <Box textAlign="center">
-            <Typography variant="h6" fontWeight="bold">
-              {primaryVendorCount + additionalVendorCount}
-            </Typography>
-            <Typography variant="caption">Vendors</Typography>
-          </Box>
-        </Box>
-
-        {/* Expand Indicator */}
-        <Box display="flex" justifyContent="center" mt={2}>
-          <IconButton
-            size="small"
-            sx={{ 
-              color: 'white', 
-              transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)', 
-              transition: 'transform 0.3s' 
-            }}
-          >
-            <ExpandMoreIcon />
-          </IconButton>
-        </Box>
+        {/* Vendors Section */}
+        <SectionDivider>
+          <span>Vendors</span>
+        </SectionDivider>
+        {vendorRoles.map(renderPerson)}
       </WidgetCard>
 
       {/* Search Dialog */}
