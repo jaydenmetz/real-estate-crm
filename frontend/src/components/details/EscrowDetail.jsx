@@ -20,6 +20,9 @@ import {
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 
+// Import API configuration
+import { apiCall } from '../../config/api';
+
 // Import components
 import HeroHeader from '../escrow-detail/HeroHeader';
 import PeopleWidgetCompact from '../escrow-detail/widgets/PeopleWidgetCompact';
@@ -27,6 +30,7 @@ import TimelineWidgetCompact from '../escrow-detail/widgets/TimelineWidgetCompac
 import FinancialsWidgetCompact from '../escrow-detail/widgets/FinancialsWidgetCompact';
 import ChecklistWidgetCompact from '../escrow-detail/widgets/ChecklistWidgetCompact';
 import AllDataEditor from '../escrow-detail/AllDataEditor';
+import DebugError from '../common/DebugError';
 
 // Styled components
 const PageContainer = styled(Box)(({ theme }) => ({
@@ -105,6 +109,7 @@ function EscrowDetail() {
   const [escrowData, setEscrowData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [errorDetails, setErrorDetails] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
 
   // Fetch escrow data
@@ -116,29 +121,18 @@ function EscrowDetail() {
     try {
       setLoading(true);
       setError(null);
+      setErrorDetails(null);
       
       console.log('Fetching escrow with ID:', id);
       
-      // Fetch main escrow data
-      const response = await fetch(`/v1/escrows/${id}`);
+      // Fetch main escrow data using the API configuration
+      const result = await apiCall(`/v1/escrows/${id}`);
       
-      console.log('Response status:', response.status);
-      console.log('Response headers:', response.headers);
-      
-      // Check if response is JSON
-      const contentType = response.headers.get("content-type");
-      if (!contentType || contentType.indexOf("application/json") === -1) {
-        const text = await response.text();
-        console.error('Non-JSON response:', text.substring(0, 200));
-        throw new Error('Server returned non-JSON response. The API endpoint might not exist or the backend server is not running.');
-      }
-      
-      if (!response.ok) throw new Error(`Failed to fetch escrow: ${response.status} ${response.statusText}`);
-      
-      const result = await response.json();
       console.log('Escrow data received:', result);
       
-      if (!result.success) throw new Error(result.error?.message || 'Failed to fetch escrow');
+      if (!result.success) {
+        throw new Error(result.error?.message || 'Failed to fetch escrow');
+      }
       
       // Transform the data
       const transformedData = transformEscrowData(result.data);
@@ -146,14 +140,8 @@ function EscrowDetail() {
       // Fetch additional endpoints in parallel for complete data
       const fetchEndpoint = async (endpoint) => {
         try {
-          const res = await fetch(`/v1/escrows/${id}/${endpoint}`);
-          const contentType = res.headers.get("content-type");
-          if (contentType && contentType.indexOf("application/json") !== -1) {
-            return await res.json();
-          } else {
-            console.warn(`Endpoint /v1/escrows/${id}/${endpoint} returned non-JSON response`);
-            return null;
-          }
+          const res = await apiCall(`/v1/escrows/${id}/${endpoint}`);
+          return res;
         } catch (error) {
           console.warn(`Failed to fetch /v1/escrows/${id}/${endpoint}:`, error);
           return null;
@@ -179,7 +167,14 @@ function EscrowDetail() {
       setEscrowData(completeData);
     } catch (err) {
       console.error('Error fetching escrow:', err);
-      setError(err.message);
+      setError(err);
+      setErrorDetails({
+        apiEndpoint: `/v1/escrows/${id}`,
+        errorMessage: err.message,
+        errorStack: err.stack,
+        timestamp: new Date().toISOString(),
+        escrowId: id
+      });
     } finally {
       setLoading(false);
     }
@@ -190,18 +185,14 @@ function EscrowDetail() {
     try {
       setIsSaving(true);
       
-      const response = await fetch(`/v1/escrows/${id}/${endpoint}`, {
+      const result = await apiCall(`/v1/escrows/${id}/${endpoint}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify(data)
       });
       
-      if (!response.ok) throw new Error(`Failed to update ${endpoint}`);
-      
-      const result = await response.json();
-      if (!result.success) throw new Error(result.error?.message || `Failed to update ${endpoint}`);
+      if (!result.success) {
+        throw new Error(result.error?.message || `Failed to update ${endpoint}`);
+      }
       
       // Refresh data after successful update
       await fetchEscrowData();
@@ -235,9 +226,12 @@ function EscrowDetail() {
     return (
       <PageContainer>
         <Container maxWidth="xl">
-          <Alert severity="error" sx={{ mt: 4 }}>
-            {error}
-          </Alert>
+          <DebugError
+            error={error}
+            apiEndpoint={`/v1/escrows/${id}`}
+            additionalInfo={errorDetails}
+            onRetry={() => fetchEscrowData()}
+          />
         </Container>
       </PageContainer>
     );
