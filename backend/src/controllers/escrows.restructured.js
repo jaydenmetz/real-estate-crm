@@ -248,36 +248,37 @@ function buildRestructuredEscrowResponse(escrow) {
       expenseAdjustments: parseFloat(escrow.expense_adjustments) || financials.expenseAdjustments || 0,
     },
 
-    // Flattened checklists
-    'checklist-loan': checklists.loan || {
-      le: false,
-      lockedRate: false,
-      appraisalOrdered: false,
-      appraisalReceived: false,
-      clearToClose: false,
-      cd: false,
-      loanDocsSigned: false,
-      cashToClosePaid: false,
-      loanFunded: false
+    // Flattened checklists - maintaining specific order
+    'checklist-loan': {
+      le: checklists.loan?.le || false,
+      lockedRate: checklists.loan?.lockedRate || false,
+      appraisalOrdered: checklists.loan?.appraisalOrdered || false,
+      appraisalReceived: checklists.loan?.appraisalReceived || false,
+      clearToClose: checklists.loan?.clearToClose || false,
+      cd: checklists.loan?.cd || false,
+      loanDocsSigned: checklists.loan?.loanDocsSigned || false,
+      cashToClosePaid: checklists.loan?.cashToClosePaid || false,
+      loanFunded: checklists.loan?.loanFunded || false
     },
 
-    'checklist-house': checklists.house || {
-      homeInspectionOrdered: false,
-      emd: false,
-      solarTransferInitiated: false,
-      avid: false,
-      homeInspectionReceived: false,
-      sellerDisclosures: false,
-      rr: false,
-      recorded: false
+    'checklist-house': {
+      homeInspectionOrdered: checklists.house?.homeInspectionOrdered || false,
+      emd: checklists.house?.emd || false,
+      solarTransferInitiated: checklists.house?.solarTransferInitiated || false,
+      avid: checklists.house?.avid || false,
+      homeInspectionReceived: checklists.house?.homeInspectionReceived || false,
+      sellerDisclosures: checklists.house?.sellerDisclosures || false,
+      rr: checklists.house?.rr || false,
+      cr: checklists.house?.cr || false,  // Added CR field
+      recorded: checklists.house?.recorded || false
     },
 
-    'checklist-admin': checklists.admin || {
-      mlsStatusUpdate: false,
-      tcEmail: false,
-      tcGlideInvite: false,
-      addContactsToPhone: false,
-      addContactsToNotion: false
+    'checklist-admin': {
+      mlsStatusUpdate: checklists.admin?.mlsStatusUpdate || false,
+      tcEmail: checklists.admin?.tcEmail || false,
+      tcGlideInvite: checklists.admin?.tcGlideInvite || false,
+      addContactsToPhone: checklists.admin?.addContactsToPhone || false,
+      addContactsToNotion: checklists.admin?.addContactsToNotion || false
     },
 
     // Documents array
