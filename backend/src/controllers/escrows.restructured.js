@@ -225,12 +225,9 @@ function buildRestructuredEscrowResponse(escrow) {
       contingenciesDate: escrow.contingencies_date || timeline.contingenciesDate || null,
     },
 
-    // Financials
+    // Financials (without earnestMoneyDeposit, downPayment, loanAmount - those are in details)
     financials: {
       purchasePrice: parseFloat(escrow.purchase_price) || financials.purchasePrice || 0,
-      earnestMoneyDeposit: parseFloat(escrow.earnest_money_deposit) || financials.earnestMoneyDeposit || 0,
-      downPayment: parseFloat(escrow.down_payment) || financials.downPayment || 0,
-      loanAmount: parseFloat(escrow.loan_amount) || financials.loanAmount || 0,
       baseCommission: financials.baseCommission || parseFloat(escrow.gross_commission) || 0,
       grossCommission: financials.grossCommission || parseFloat(escrow.gross_commission) || 0,
       myCommission: parseFloat(escrow.my_commission) || financials.myCommission || 0,
