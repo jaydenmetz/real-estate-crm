@@ -2,6 +2,10 @@ const express = require('express');
 const router = express.Router();
 const SimpleEscrowController = require('../controllers/escrows.controller');
 
+// Mount health check routes
+const healthRoutes = require('./escrows-health');
+router.use('/', healthRoutes);
+
 // Database routes
 router.get('/database', SimpleEscrowController.getAllEscrows);
 router.get('/database/:id', SimpleEscrowController.getEscrowById);

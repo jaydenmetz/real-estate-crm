@@ -74,7 +74,7 @@ const corsOptions = {
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Team-ID'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Team-ID', 'X-API-Key', 'API-Key'],
   exposedHeaders: ['X-Total-Count', 'X-Page-Count'],
   optionsSuccessStatus: 200
 };
@@ -181,26 +181,32 @@ app.get('/ws/status', (req, res) => {
   });
 });
 
+// Import authentication middleware
+const { authenticate } = require('./middleware/apiKey.middleware');
+
 const apiRouter = express.Router();
 apiRouter.use(rateLimit);
 
-// Auth routes (no authentication required)
+// Public routes (no authentication required)
 apiRouter.use('/auth', require('./routes/auth').router);
 
-// Protected routes - comment out authenticateToken for now to avoid breaking existing functionality
-apiRouter.use('/escrows', require('./routes/escrows'));
-apiRouter.use('/listings', require('./routes/listings'));
-apiRouter.use('/clients', require('./routes/clients'));
-apiRouter.use('/appointments', require('./routes/appointments'));
-apiRouter.use('/leads', require('./routes/leads'));
-apiRouter.use('/analytics', require('./routes/analytics'));
-apiRouter.use('/ai', require('./routes/ai.routes'));
-apiRouter.use('/webhooks', require('./routes/webhooks.routes'));
-apiRouter.use('/documents', require('./routes/documents.routes'));
-apiRouter.use('/debug', require('./routes/debug'));
-apiRouter.use('/test-connection', require('./routes/test-connection'));
-apiRouter.use('/simple-test', require('./routes/simple-test'));
-apiRouter.use('/link-preview', require('./routes/linkPreview.routes'));
+// API key management (requires JWT auth)
+apiRouter.use('/api-keys', require('./routes/apiKeys'));
+
+// Protected routes - now with authentication enabled
+apiRouter.use('/escrows', authenticate, require('./routes/escrows'));
+apiRouter.use('/listings', authenticate, require('./routes/listings'));
+apiRouter.use('/clients', authenticate, require('./routes/clients'));
+apiRouter.use('/appointments', authenticate, require('./routes/appointments'));
+apiRouter.use('/leads', authenticate, require('./routes/leads'));
+apiRouter.use('/analytics', authenticate, require('./routes/analytics'));
+apiRouter.use('/ai', authenticate, require('./routes/ai.routes'));
+apiRouter.use('/webhooks', require('./routes/webhooks.routes')); // Webhooks don't need auth
+apiRouter.use('/documents', authenticate, require('./routes/documents.routes'));
+apiRouter.use('/debug', authenticate, require('./routes/debug'));
+apiRouter.use('/test-connection', require('./routes/test-connection')); // Test endpoint doesn't need auth
+apiRouter.use('/simple-test', require('./routes/simple-test')); // Test endpoint doesn't need auth
+apiRouter.use('/link-preview', authenticate, require('./routes/linkPreview.routes'));
 
 // Financial routes
 apiRouter.use('/commissions', require('./routes/commissions.routes'));

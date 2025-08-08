@@ -27,7 +27,8 @@ import { apiCall, API_BASE_URL } from '../../config/api';
 import { testApiConnection, testEscrowEndpoint } from '../../utils/testApi';
 
 // Import components
-import HeroHeader from '../escrow-detail/HeroHeader';
+import HeroHeaderCompact from '../escrow-detail/HeroHeaderCompact';
+import PropertyImageSection from '../escrow-detail/PropertyImageSection';
 import PeopleWidgetCompact from '../escrow-detail/widgets/PeopleWidgetCompact';
 import TimelineWidgetCompact from '../escrow-detail/widgets/TimelineWidgetCompact';
 import FinancialsWidgetCompact from '../escrow-detail/widgets/FinancialsWidgetCompact';
@@ -315,7 +316,10 @@ function EscrowDetail() {
         </Breadcrumbs>
 
         {/* Hero Header */}
-        <HeroHeader data={escrowData} onUpdate={handleDataUpdate} />
+        <HeroHeaderCompact data={escrowData} />
+
+        {/* Property Image Section */}
+        <PropertyImageSection data={escrowData} />
 
         {/* Tabs */}
         <StyledTabs value={activeTab} onChange={handleTabChange}>

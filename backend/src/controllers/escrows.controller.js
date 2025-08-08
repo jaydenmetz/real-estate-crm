@@ -65,6 +65,8 @@ class SimpleEscrowController {
       console.log('\n=== getAllEscrows called ===');
       console.log('Environment:', process.env.NODE_ENV);
       console.log('Database URL exists:', !!process.env.DATABASE_URL);
+      console.log('User:', req.user?.email, 'Team:', req.user?.teamId);
+      
       const {
         page = 1,
         limit = 20,
@@ -73,6 +75,11 @@ class SimpleEscrowController {
         order = 'desc',
         search
       } = req.query;
+      
+      // Get user context for filtering
+      const userId = req.user?.id;
+      const teamId = req.user?.teamId;
+      const userRole = req.user?.role;
 
       const offset = (page - 1) * limit;
       
