@@ -4,11 +4,11 @@ const { pool } = require('../config/database');
 class ApiKeyService {
   /**
    * Generate a new API key
-   * Format: crm_live_XXXXXXXXXXXXXXXXXXXXXXXXXXXX (40 chars total)
+   * Format: bhhs_XXXXXXXXXXXXXXXXXXXXXXXXXXXX (36 chars total)
    */
   static generateApiKey() {
-    const prefix = process.env.NODE_ENV === 'production' ? 'crm_live_' : 'crm_test_';
-    const randomBytes = crypto.randomBytes(24).toString('hex');
+    const prefix = 'bhhs_'; // Berkshire Hathaway HomeServices prefix
+    const randomBytes = crypto.randomBytes(32).toString('hex');
     return prefix + randomBytes;
   }
 
