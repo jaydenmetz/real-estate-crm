@@ -806,12 +806,14 @@ class SimpleEscrowController {
     } catch (error) {
       await client.query('ROLLBACK');
       console.error('Error creating escrow:', error);
+      console.error('Error details:', error.message);
+      console.error('Error stack:', error.stack);
       res.status(500).json({
         success: false,
         error: {
           code: 'CREATE_ERROR',
           message: 'Failed to create escrow',
-          details: process.env.NODE_ENV === 'development' ? error.message : undefined
+          details: error.message // Always include error message for debugging
         }
       });
     } finally {
