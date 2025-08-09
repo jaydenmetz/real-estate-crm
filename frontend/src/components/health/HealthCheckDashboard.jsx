@@ -216,11 +216,7 @@ const HealthCheckDashboard = () => {
 
   const runAllTests = useCallback(async () => {
     setLoading(true);
-    let API_URL = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
-    // Ensure API URL has /v1 suffix
-    if (!API_URL.endsWith('/v1')) {
-      API_URL = API_URL.replace(/\/$/, '') + '/v1';
-    }
+    const API_URL = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com/v1';
     
     // Get auth token - try multiple locations
     const token = localStorage.getItem('crm_auth_token') || 
@@ -366,49 +362,36 @@ const HealthCheckDashboard = () => {
     testSuite.push(dbTest);
     setTests([...testSuite]);
 
-    // Test 5: Response Time Check
-    const responseTimeTest = {
-      name: 'Response Time',
-      description: 'Verify API responds within acceptable time',
+    // Test 5: Full CRUD Operations
+    const crudTest = {
+      name: 'CRUD Operations',
+      description: 'Test create, read, update, delete operations',
       status: 'pending',
-      curl: `curl -X GET "${API_URL}/listings?limit=1" -H "Authorization: Bearer ${token}"`,
+      curl: `curl -X GET "${API_URL}/escrows/health" -H "X-API-Key: ${apiKey || 'YOUR_API_KEY'}"`,
       response: null,
-      error: null,
-      responseTime: null
+      error: null
     };
 
-    if (token) {
-      const startTime = Date.now();
+    if (apiKey || token) {
       try {
-        const response = await fetch(`${API_URL}/listings?limit=1`, {
-          headers: { 'Authorization': `Bearer ${token}` }
+        const response = await fetch(`${API_URL}/escrows/health`, {
+          headers: authHeader
         });
         const data = await response.json();
-        const responseTime = Date.now() - startTime;
-        responseTimeTest.responseTime = responseTime;
-        
-        // Consider < 500ms as good, < 1000ms as acceptable
-        if (responseTime < 500) {
-          responseTimeTest.status = 'success';
-          responseTimeTest.response = { ...data, responseTime: `${responseTime}ms (Excellent)` };
-        } else if (responseTime < 1000) {
-          responseTimeTest.status = 'success';
-          responseTimeTest.response = { ...data, responseTime: `${responseTime}ms (Good)` };
-        } else {
-          responseTimeTest.status = 'failed';
-          responseTimeTest.error = `Response time too slow: ${responseTime}ms`;
-          responseTimeTest.response = data;
+        crudTest.status = response.ok && data.success ? 'success' : 'failed';
+        crudTest.response = data;
+        if (!response.ok || !data.success) {
+          crudTest.error = data.error?.message || 'CRUD operations test failed';
         }
       } catch (error) {
-        responseTimeTest.status = 'failed';
-        responseTimeTest.error = error.message;
-        responseTimeTest.responseTime = Date.now() - startTime;
+        crudTest.status = 'failed';
+        crudTest.error = error.message;
       }
     } else {
-      responseTimeTest.status = 'failed';
-      responseTimeTest.error = 'No authentication available';
+      crudTest.status = 'failed';
+      crudTest.error = 'No authentication available';
     }
-    testSuite.push(responseTimeTest);
+    testSuite.push(crudTest);
     setTests([...testSuite]);
 
     // Test 6: Security Check (Should Fail)
@@ -436,44 +419,6 @@ const HealthCheckDashboard = () => {
     }
     testSuite.push(securityTest);
     setTests([...testSuite]);
-
-    // Test 7: Core API Endpoints (Non-Escrow)
-    const coreEndpoints = [
-      { name: 'Listings API', path: '/listings', description: 'Property listings management' },
-      { name: 'Clients API', path: '/clients', description: 'Client relationship management' },
-      { name: 'Appointments API', path: '/appointments', description: 'Appointment scheduling system' },
-      { name: 'Leads API', path: '/leads', description: 'Lead tracking and nurturing' }
-    ];
-
-    if (token) {
-      for (const endpoint of coreEndpoints) {
-        const coreTest = {
-          name: endpoint.name,
-          description: endpoint.description,
-          status: 'pending',
-          curl: `curl -X GET "${API_URL}${endpoint.path}" -H "Authorization: Bearer ${token}"`,
-          response: null,
-          error: null
-        };
-
-        try {
-          const response = await fetch(`${API_URL}${endpoint.path}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          const data = await response.json();
-          coreTest.status = response.ok && data.success ? 'success' : 'failed';
-          coreTest.response = data;
-          if (!response.ok || !data.success) {
-            coreTest.error = data.error?.message || `Failed to fetch ${endpoint.path}`;
-          }
-        } catch (error) {
-          coreTest.status = 'failed';
-          coreTest.error = error.message;
-        }
-        testSuite.push(coreTest);
-        setTests([...testSuite]);
-      }
-    }
 
     setLoading(false);
     setLastRefresh(new Date().toLocaleString());
@@ -524,10 +469,10 @@ const HealthCheckDashboard = () => {
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
             <Box>
               <Typography variant="h4" fontWeight="bold" gutterBottom>
-                System Health Dashboard
+                API Health Check Dashboard
               </Typography>
               <Typography variant="body2" color="textSecondary">
-                General system health check for authentication, database, and core APIs • Last refresh: {lastRefresh || 'Loading...'}
+                Auto-refreshes on page reload • Last refresh: {lastRefresh || 'Loading...'}
               </Typography>
             </Box>
             <Box display="flex" gap={1}>

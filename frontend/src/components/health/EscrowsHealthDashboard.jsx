@@ -113,10 +113,6 @@ const TestItem = ({ test }) => {
     // Clean up the curl command for better readability
     let formatted = test.curl;
     
-    // Remove the token from display for cleaner view
-    formatted = formatted.replace(/Bearer [^\s"]+/, 'Bearer YOUR_TOKEN');
-    formatted = formatted.replace(/X-API-Key: [^\s"]+/, 'X-API-Key: YOUR_API_KEY');
-    
     // Split into multiple lines for readability
     formatted = formatted
       .replace(' -X ', ' \\\n  -X ')
@@ -1441,8 +1437,8 @@ const EscrowsHealthDashboard = () => {
               </Paper>
             </Grid>
             <Grid item xs={12} sm={3}>
-              <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#ffebee' }}>
-                <Typography variant="h4" fontWeight="bold" color="#f44336">
+              <Paper sx={{ p: 2, textAlign: 'center', bgcolor: failedCount === 0 ? '#e8f5e9' : '#ffebee' }}>
+                <Typography variant="h4" fontWeight="bold" color={failedCount === 0 ? '#4caf50' : '#f44336'}>
                   {failedCount}
                 </Typography>
                 <Typography variant="body2" color="textSecondary">Failed</Typography>
