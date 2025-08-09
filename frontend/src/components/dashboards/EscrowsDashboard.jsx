@@ -1371,8 +1371,7 @@ const EscrowsDashboard = () => {
           pending: escrows.filter(e => e.escrow_status === 'pending').length,
           closed: escrows.filter(e => e.escrow_status === 'closed').length,
           loading,
-          selectedStatus,
-          searchTerm
+          selectedStatus
         }}
       />
       <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
