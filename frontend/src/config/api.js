@@ -20,6 +20,13 @@ export const API_BASE_URL = process.env.REACT_APP_API_URL ||
 export const apiUrl = (path) => {
   // Remove leading slash if present
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  
+  // If API_BASE_URL already includes /v1 and path starts with /v1, remove duplicate
+  if (API_BASE_URL.includes('/v1') && cleanPath.startsWith('/v1')) {
+    return `${API_BASE_URL}${cleanPath.substring(3)}`; // Remove '/v1' from path
+  }
+  
+  // If API_BASE_URL doesn't have /v1 but path needs it, keep as is
   return `${API_BASE_URL}${cleanPath}`;
 };
 

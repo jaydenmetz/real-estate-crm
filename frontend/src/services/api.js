@@ -28,8 +28,8 @@ console.log('REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
 
 class ApiService {
   constructor() {
-    // Backend routes are mounted at /v1
-    this.baseURL = `${API_BASE_URL}/v1`;
+    // If API_BASE_URL already includes /v1, use it as is, otherwise append /v1
+    this.baseURL = API_BASE_URL.includes('/v1') ? API_BASE_URL : `${API_BASE_URL}/v1`;
     this.token = localStorage.getItem('authToken');
     
     // Log initialization

@@ -87,7 +87,9 @@ const RegisterPage = () => {
     setError('');
 
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com'}/v1/auth/register`, {
+      const apiUrl = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
+      const endpoint = apiUrl.includes('/v1') ? `${apiUrl}/auth/register` : `${apiUrl}/v1/auth/register`;
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

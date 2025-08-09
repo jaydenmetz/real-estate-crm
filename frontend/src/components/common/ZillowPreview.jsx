@@ -80,7 +80,9 @@ const ZillowPreview = ({ url, height = 500, escrowData }) => {
           headers['Authorization'] = `Bearer ${token}`;
         }
         
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/v1/link-preview`, {
+        const apiUrl = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
+        const endpoint = apiUrl.includes('/v1') ? `${apiUrl}/link-preview` : `${apiUrl}/v1/link-preview`;
+        const response = await fetch(endpoint, {
           method: 'POST',
           headers,
           body: JSON.stringify({ url }),
