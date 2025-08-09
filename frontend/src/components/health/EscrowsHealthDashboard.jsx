@@ -331,7 +331,7 @@ const EscrowsHealthDashboard = () => {
       method: 'GET',
       endpoint: '/escrows',
       status: 'pending',
-      curl: `curl -X GET "${API_URL}/escrows" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}"`,
+      curl: `curl -X GET "${API_URL}/escrows" -H "Authorization: Bearer ${token}"`,
       response: null,
       error: null,
       responseTime: null
@@ -365,7 +365,7 @@ const EscrowsHealthDashboard = () => {
       method: 'GET',
       endpoint: '/escrows?page=1&limit=5',
       status: 'pending',
-      curl: `curl -X GET "${API_URL}/escrows?page=1&limit=5" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}"`,
+      curl: `curl -X GET "${API_URL}/escrows?page=1&limit=5" -H "Authorization: Bearer ${token}"`,
       response: null,
       error: null,
       responseTime: null
@@ -403,7 +403,7 @@ const EscrowsHealthDashboard = () => {
         method: 'GET',
         endpoint: `/escrows/${existingEscrowId}`,
         status: 'pending',
-        curl: `curl -X GET "${API_URL}/escrows/${existingEscrowId}" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}"`,
+        curl: `curl -X GET "${API_URL}/escrows/${existingEscrowId}" -H "Authorization: Bearer ${token}"`,
         response: null,
         error: null,
         responseTime: null
@@ -454,7 +454,7 @@ const EscrowsHealthDashboard = () => {
           method: 'GET',
           endpoint: `/escrows/${existingEscrowId}/${sub.endpoint}`,
           status: 'pending',
-          curl: `curl -X GET "${API_URL}/escrows/${existingEscrowId}/${sub.endpoint}" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}"`,
+          curl: `curl -X GET "${API_URL}/escrows/${existingEscrowId}/${sub.endpoint}" -H "Authorization: Bearer ${token}"`,
           response: null,
           error: null,
           responseTime: null
