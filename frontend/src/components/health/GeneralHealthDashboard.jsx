@@ -424,6 +424,105 @@ const HealthCheckDashboard = () => {
     testSuite.push(securityTest);
     setTests([...testSuite]);
 
+    // Test 7: Escrow Sub-Endpoints
+    if (token) {
+      // First get an existing escrow ID to test with
+      let testEscrowId = null;
+      try {
+        const escrowsResponse = await fetch(`${API_URL}/escrows?limit=1`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const escrowsData = await escrowsResponse.json();
+        if (escrowsData.success && escrowsData.data?.escrows?.length > 0) {
+          testEscrowId = escrowsData.data.escrows[0].id;
+        }
+      } catch (error) {
+        console.error('Failed to get test escrow ID:', error);
+      }
+
+      if (testEscrowId) {
+        // Test all 9 sub-endpoints
+        const subEndpoints = [
+          { name: 'Details Endpoint', path: 'details', description: 'Core escrow information' },
+          { name: 'Property Details', path: 'property-details', description: 'Property information' },
+          { name: 'People Endpoint', path: 'people', description: 'All parties involved' },
+          { name: 'Timeline Endpoint', path: 'timeline', description: 'Important dates' },
+          { name: 'Financials Endpoint', path: 'financials', description: 'Commission details' },
+          { name: 'Loan Checklist', path: 'checklist-loan', description: 'Loan checklist items' },
+          { name: 'House Checklist', path: 'checklist-house', description: 'House checklist items' },
+          { name: 'Admin Checklist', path: 'checklist-admin', description: 'Admin checklist items' },
+          { name: 'Documents Endpoint', path: 'documents', description: 'Associated documents' }
+        ];
+
+        for (const endpoint of subEndpoints) {
+          const subTest = {
+            name: endpoint.name,
+            description: `GET /escrows/:id/${endpoint.path} - ${endpoint.description}`,
+            status: 'pending',
+            curl: `curl -X GET "${API_URL}/escrows/${testEscrowId}/${endpoint.path}" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}"`,
+            response: null,
+            error: null
+          };
+
+          try {
+            const response = await fetch(`${API_URL}/escrows/${testEscrowId}/${endpoint.path}`, {
+              headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await response.json();
+            subTest.status = response.ok && data.success ? 'success' : 'failed';
+            subTest.response = data;
+            if (!response.ok || !data.success) {
+              subTest.error = data.error?.message || `Failed to fetch ${endpoint.path}`;
+            }
+          } catch (error) {
+            subTest.status = 'failed';
+            subTest.error = error.message;
+          }
+          testSuite.push(subTest);
+          setTests([...testSuite]);
+        }
+      }
+    }
+
+    // Test 8: Other Core Endpoints
+    const coreEndpoints = [
+      { name: 'Listings API', path: '/listings', description: 'Property listings endpoint' },
+      { name: 'Clients API', path: '/clients', description: 'Client management endpoint' },
+      { name: 'Appointments API', path: '/appointments', description: 'Appointment scheduling endpoint' },
+      { name: 'Leads API', path: '/leads', description: 'Lead tracking endpoint' },
+      { name: 'Stats API', path: '/escrows/stats', description: 'Dashboard statistics endpoint' }
+    ];
+
+    if (token) {
+      for (const endpoint of coreEndpoints) {
+        const coreTest = {
+          name: endpoint.name,
+          description: endpoint.description,
+          status: 'pending',
+          curl: `curl -X GET "${API_URL}${endpoint.path}" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}"`,
+          response: null,
+          error: null
+        };
+
+        try {
+          const response = await fetch(`${API_URL}${endpoint.path}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const data = await response.json();
+          coreTest.status = response.ok && data.success ? 'success' : 'failed';
+          coreTest.response = data;
+          if (!response.ok || !data.success) {
+            coreTest.error = data.error?.message || `Failed to fetch ${endpoint.path}`;
+          }
+        } catch (error) {
+          coreTest.status = 'failed';
+          coreTest.error = error.message;
+        }
+        testSuite.push(coreTest);
+        setTests([...testSuite]);
+      }
+    }
+
     setLoading(false);
     setLastRefresh(new Date().toLocaleString());
   }, []);
@@ -473,10 +572,10 @@ const HealthCheckDashboard = () => {
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
             <Box>
               <Typography variant="h4" fontWeight="bold" gutterBottom>
-                API Health Check Dashboard
+                System Health Dashboard
               </Typography>
               <Typography variant="body2" color="textSecondary">
-                Auto-refreshes on page reload • Last refresh: {lastRefresh || 'Loading...'}
+                Comprehensive API health check including all escrow sub-endpoints • Last refresh: {lastRefresh || 'Loading...'}
               </Typography>
             </Box>
             <Box display="flex" gap={1}>
