@@ -366,36 +366,49 @@ const HealthCheckDashboard = () => {
     testSuite.push(dbTest);
     setTests([...testSuite]);
 
-    // Test 5: Full CRUD Operations
-    const crudTest = {
-      name: 'CRUD Operations',
-      description: 'Test create, read, update, delete operations',
+    // Test 5: Response Time Check
+    const responseTimeTest = {
+      name: 'Response Time',
+      description: 'Verify API responds within acceptable time',
       status: 'pending',
-      curl: `curl -X GET "${API_URL}/escrows/health" -H "X-API-Key: ${apiKey || 'YOUR_API_KEY'}"`,
+      curl: `curl -X GET "${API_URL}/listings?limit=1" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}"`,
       response: null,
-      error: null
+      error: null,
+      responseTime: null
     };
 
-    if (apiKey || token) {
+    if (token) {
+      const startTime = Date.now();
       try {
-        const response = await fetch(`${API_URL}/escrows/health`, {
-          headers: authHeader
+        const response = await fetch(`${API_URL}/listings?limit=1`, {
+          headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
-        crudTest.status = response.ok && data.success ? 'success' : 'failed';
-        crudTest.response = data;
-        if (!response.ok || !data.success) {
-          crudTest.error = data.error?.message || 'CRUD operations test failed';
+        const responseTime = Date.now() - startTime;
+        responseTimeTest.responseTime = responseTime;
+        
+        // Consider < 500ms as good, < 1000ms as acceptable
+        if (responseTime < 500) {
+          responseTimeTest.status = 'success';
+          responseTimeTest.response = { ...data, responseTime: `${responseTime}ms (Excellent)` };
+        } else if (responseTime < 1000) {
+          responseTimeTest.status = 'success';
+          responseTimeTest.response = { ...data, responseTime: `${responseTime}ms (Good)` };
+        } else {
+          responseTimeTest.status = 'failed';
+          responseTimeTest.error = `Response time too slow: ${responseTime}ms`;
+          responseTimeTest.response = data;
         }
       } catch (error) {
-        crudTest.status = 'failed';
-        crudTest.error = error.message;
+        responseTimeTest.status = 'failed';
+        responseTimeTest.error = error.message;
+        responseTimeTest.responseTime = Date.now() - startTime;
       }
     } else {
-      crudTest.status = 'failed';
-      crudTest.error = 'No authentication available';
+      responseTimeTest.status = 'failed';
+      responseTimeTest.error = 'No authentication available';
     }
-    testSuite.push(crudTest);
+    testSuite.push(responseTimeTest);
     setTests([...testSuite]);
 
     // Test 6: Security Check (Should Fail)
@@ -424,73 +437,12 @@ const HealthCheckDashboard = () => {
     testSuite.push(securityTest);
     setTests([...testSuite]);
 
-    // Test 7: Escrow Sub-Endpoints
-    if (token) {
-      // First get an existing escrow ID to test with
-      let testEscrowId = null;
-      try {
-        const escrowsResponse = await fetch(`${API_URL}/escrows?limit=1`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const escrowsData = await escrowsResponse.json();
-        if (escrowsData.success && escrowsData.data?.escrows?.length > 0) {
-          testEscrowId = escrowsData.data.escrows[0].id;
-        }
-      } catch (error) {
-        console.error('Failed to get test escrow ID:', error);
-      }
-
-      if (testEscrowId) {
-        // Test all 9 sub-endpoints
-        const subEndpoints = [
-          { name: 'Details Endpoint', path: 'details', description: 'Core escrow information' },
-          { name: 'Property Details', path: 'property-details', description: 'Property information' },
-          { name: 'People Endpoint', path: 'people', description: 'All parties involved' },
-          { name: 'Timeline Endpoint', path: 'timeline', description: 'Important dates' },
-          { name: 'Financials Endpoint', path: 'financials', description: 'Commission details' },
-          { name: 'Loan Checklist', path: 'checklist-loan', description: 'Loan checklist items' },
-          { name: 'House Checklist', path: 'checklist-house', description: 'House checklist items' },
-          { name: 'Admin Checklist', path: 'checklist-admin', description: 'Admin checklist items' },
-          { name: 'Documents Endpoint', path: 'documents', description: 'Associated documents' }
-        ];
-
-        for (const endpoint of subEndpoints) {
-          const subTest = {
-            name: endpoint.name,
-            description: `GET /escrows/:id/${endpoint.path} - ${endpoint.description}`,
-            status: 'pending',
-            curl: `curl -X GET "${API_URL}/escrows/${testEscrowId}/${endpoint.path}" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}"`,
-            response: null,
-            error: null
-          };
-
-          try {
-            const response = await fetch(`${API_URL}/escrows/${testEscrowId}/${endpoint.path}`, {
-              headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await response.json();
-            subTest.status = response.ok && data.success ? 'success' : 'failed';
-            subTest.response = data;
-            if (!response.ok || !data.success) {
-              subTest.error = data.error?.message || `Failed to fetch ${endpoint.path}`;
-            }
-          } catch (error) {
-            subTest.status = 'failed';
-            subTest.error = error.message;
-          }
-          testSuite.push(subTest);
-          setTests([...testSuite]);
-        }
-      }
-    }
-
-    // Test 8: Other Core Endpoints
+    // Test 7: Core API Endpoints (Non-Escrow)
     const coreEndpoints = [
-      { name: 'Listings API', path: '/listings', description: 'Property listings endpoint' },
-      { name: 'Clients API', path: '/clients', description: 'Client management endpoint' },
-      { name: 'Appointments API', path: '/appointments', description: 'Appointment scheduling endpoint' },
-      { name: 'Leads API', path: '/leads', description: 'Lead tracking endpoint' },
-      { name: 'Stats API', path: '/escrows/stats', description: 'Dashboard statistics endpoint' }
+      { name: 'Listings API', path: '/listings', description: 'Property listings management' },
+      { name: 'Clients API', path: '/clients', description: 'Client relationship management' },
+      { name: 'Appointments API', path: '/appointments', description: 'Appointment scheduling system' },
+      { name: 'Leads API', path: '/leads', description: 'Lead tracking and nurturing' }
     ];
 
     if (token) {
@@ -575,7 +527,7 @@ const HealthCheckDashboard = () => {
                 System Health Dashboard
               </Typography>
               <Typography variant="body2" color="textSecondary">
-                Comprehensive API health check including all escrow sub-endpoints • Last refresh: {lastRefresh || 'Loading...'}
+                General system health check for authentication, database, and core APIs • Last refresh: {lastRefresh || 'Loading...'}
               </Typography>
             </Box>
             <Box display="flex" gap={1}>
