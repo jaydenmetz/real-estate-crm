@@ -293,7 +293,7 @@ function EscrowDetail() {
           buyer: escrowData?.buyer_name,
           seller: escrowData?.seller_name,
           closing_date: escrowData?.closing_date,
-          tab: value,
+          tab: activeTab,
           loading,
           error: error?.message
         }}
