@@ -758,6 +758,8 @@ class SimpleEscrowController {
       const escrowResult = await client.query(insertQuery, values);
       const newEscrow = escrowResult.rows[0];
       
+      // Skip checklist creation for now - table doesn't exist in production
+      /*
       // Create default checklist items
       const defaultChecklist = [
         // Opening Phase
@@ -800,16 +802,17 @@ class SimpleEscrowController {
         VALUES ($1, $2)
       `;
       await client.query(checklistQuery, [newEscrow.display_id, JSON.stringify(checklistWithDates)]);
+      */
       
       await client.query('COMMIT');
       
-      // Return success with UUID only
+      // Return success
       res.status(201).json({
         success: true,
         data: {
-          id: newEscrow.id,  // UUID
-          displayId: newEscrow.display_id,  // ESCROW-2025-0001
-          message: 'Escrow created successfully with checklist items'
+          id: newEscrow.id || newEscrow.display_id,  // Use display_id if UUID not generated
+          displayId: newEscrow.display_id,  // ESC-2025-NNNN
+          message: 'Escrow created successfully'
         }
       });
       
