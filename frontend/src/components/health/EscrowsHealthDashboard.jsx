@@ -428,6 +428,55 @@ const EscrowsHealthDashboard = () => {
       grouped.GET.push(getByIdTest);
       allTests.push(getByIdTest);
       setGroupedTests({...grouped});
+
+      // ========================================
+      // GET SUB-ENDPOINTS - Test all the detail endpoints
+      // ========================================
+
+      // Array of sub-endpoints to test
+      const subEndpoints = [
+        { name: 'Get People', endpoint: 'people', description: 'Retrieve buyers, sellers, and agents' },
+        { name: 'Get Timeline', endpoint: 'timeline', description: 'Retrieve important dates and milestones' },
+        { name: 'Get Financials', endpoint: 'financials', description: 'Retrieve commission and financial details' },
+        { name: 'Get Checklists', endpoint: 'checklists', description: 'Retrieve all checklist items' },
+        { name: 'Get Documents', endpoint: 'documents', description: 'Retrieve associated documents' },
+        { name: 'Get Property Details', endpoint: 'property-details', description: 'Retrieve detailed property information' }
+      ];
+
+      for (const sub of subEndpoints) {
+        const subTest = {
+          name: sub.name,
+          description: sub.description,
+          method: 'GET',
+          endpoint: `/escrows/${existingEscrowId}/${sub.endpoint}`,
+          status: 'pending',
+          curl: `curl -X GET "${API_URL}/escrows/${existingEscrowId}/${sub.endpoint}" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}"`,
+          response: null,
+          error: null,
+          responseTime: null
+        };
+
+        const startTime = Date.now();
+        try {
+          const response = await fetch(`${API_URL}/escrows/${existingEscrowId}/${sub.endpoint}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const data = await response.json();
+          subTest.responseTime = Date.now() - startTime;
+          subTest.status = response.ok && data.success ? 'success' : 'failed';
+          subTest.response = data;
+          if (!response.ok || !data.success) {
+            subTest.error = data.error?.message || `Failed to fetch ${sub.endpoint}`;
+          }
+        } catch (error) {
+          subTest.status = 'failed';
+          subTest.error = error.message;
+          subTest.responseTime = Date.now() - startTime;
+        }
+        grouped.GET.push(subTest);
+        allTests.push(subTest);
+        setGroupedTests({...grouped});
+      }
     }
 
     // ========================================
@@ -511,7 +560,7 @@ const EscrowsHealthDashboard = () => {
       };
 
       const updateTest = {
-        name: 'Update Escrow',
+        name: 'Update Escrow by ID',
         description: 'Update basic escrow information',
         method: 'PUT',
         endpoint: `/escrows/${createdEscrowId}`,
@@ -549,58 +598,7 @@ const EscrowsHealthDashboard = () => {
       allTests.push(updateTest);
       setGroupedTests({...grouped});
 
-      // PUT Test 2: Update checklists
-      const checklistData = {
-        loan: {
-          preApproval: { checked: true, date: new Date().toISOString() },
-          loanApplication: { checked: true, date: new Date().toISOString() }
-        },
-        house: {
-          inspection: { checked: false },
-          appraisal: { checked: false }
-        }
-      };
-
-      const updateChecklistTest = {
-        name: 'Update Checklists',
-        description: 'Update escrow checklist items',
-        method: 'PUT',
-        endpoint: `/escrows/${createdEscrowId}/checklists`,
-        status: 'pending',
-        curl: `curl -X PUT "${API_URL}/escrows/${createdEscrowId}/checklists" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}" -H "Content-Type: application/json" -d '${JSON.stringify(checklistData, null, 2)}'`,
-        requestBody: checklistData,
-        response: null,
-        error: null,
-        responseTime: null
-      };
-
-      const startTime6 = Date.now();
-      try {
-        const response = await fetch(`${API_URL}/escrows/${createdEscrowId}/checklists`, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(checklistData)
-        });
-        const data = await response.json();
-        updateChecklistTest.responseTime = Date.now() - startTime6;
-        updateChecklistTest.status = response.ok && data.success ? 'success' : 'failed';
-        updateChecklistTest.response = data;
-        if (!response.ok || !data.success) {
-          updateChecklistTest.error = data.error?.message || 'Failed to update checklists';
-        }
-      } catch (error) {
-        updateChecklistTest.status = 'failed';
-        updateChecklistTest.error = error.message;
-        updateChecklistTest.responseTime = Date.now() - startTime6;
-      }
-      grouped.PUT.push(updateChecklistTest);
-      allTests.push(updateChecklistTest);
-      setGroupedTests({...grouped});
-
-      // PUT Test 3: Update people
+      // PUT Test 2: Update people
       const peopleData = {
         buyers: [
           { name: 'Test Buyer', email: 'buyer@test.com', phone: '555-0001' }
@@ -626,7 +624,7 @@ const EscrowsHealthDashboard = () => {
         responseTime: null
       };
 
-      const startTime7 = Date.now();
+      const startTime6 = Date.now();
       try {
         const response = await fetch(`${API_URL}/escrows/${createdEscrowId}/people`, {
           method: 'PUT',
@@ -637,7 +635,7 @@ const EscrowsHealthDashboard = () => {
           body: JSON.stringify(peopleData)
         });
         const data = await response.json();
-        updatePeopleTest.responseTime = Date.now() - startTime7;
+        updatePeopleTest.responseTime = Date.now() - startTime6;
         updatePeopleTest.status = response.ok && data.success ? 'success' : 'failed';
         updatePeopleTest.response = data;
         if (!response.ok || !data.success) {
@@ -646,10 +644,217 @@ const EscrowsHealthDashboard = () => {
       } catch (error) {
         updatePeopleTest.status = 'failed';
         updatePeopleTest.error = error.message;
-        updatePeopleTest.responseTime = Date.now() - startTime7;
+        updatePeopleTest.responseTime = Date.now() - startTime6;
       }
       grouped.PUT.push(updatePeopleTest);
       allTests.push(updatePeopleTest);
+      setGroupedTests({...grouped});
+
+      // PUT Test 3: Update timeline
+      const timelineData = {
+        emdDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        inspectionContingencyDate: new Date(Date.now() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        appraisalContingencyDate: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        loanContingencyDate: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      };
+
+      const updateTimelineTest = {
+        name: 'Update Timeline',
+        description: 'Update escrow timeline dates',
+        method: 'PUT',
+        endpoint: `/escrows/${createdEscrowId}/timeline`,
+        status: 'pending',
+        curl: `curl -X PUT "${API_URL}/escrows/${createdEscrowId}/timeline" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}" -H "Content-Type: application/json" -d '${JSON.stringify(timelineData, null, 2)}'`,
+        requestBody: timelineData,
+        response: null,
+        error: null,
+        responseTime: null
+      };
+
+      const startTime7 = Date.now();
+      try {
+        const response = await fetch(`${API_URL}/escrows/${createdEscrowId}/timeline`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(timelineData)
+        });
+        const data = await response.json();
+        updateTimelineTest.responseTime = Date.now() - startTime7;
+        updateTimelineTest.status = response.ok && data.success ? 'success' : 'failed';
+        updateTimelineTest.response = data;
+        if (!response.ok || !data.success) {
+          updateTimelineTest.error = data.error?.message || 'Failed to update timeline';
+        }
+      } catch (error) {
+        updateTimelineTest.status = 'failed';
+        updateTimelineTest.error = error.message;
+        updateTimelineTest.responseTime = Date.now() - startTime7;
+      }
+      grouped.PUT.push(updateTimelineTest);
+      allTests.push(updateTimelineTest);
+      setGroupedTests({...grouped});
+
+      // PUT Test 4: Update financials
+      const financialsData = {
+        commissionPercentage: 3,
+        baseCommission: 16500,
+        grossCommission: 16500,
+        franchiseFeePercentage: 6,
+        splitPercentage: 80,
+        transactionFee: 395
+      };
+
+      const updateFinancialsTest = {
+        name: 'Update Financials',
+        description: 'Update commission and financial details',
+        method: 'PUT',
+        endpoint: `/escrows/${createdEscrowId}/financials`,
+        status: 'pending',
+        curl: `curl -X PUT "${API_URL}/escrows/${createdEscrowId}/financials" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}" -H "Content-Type: application/json" -d '${JSON.stringify(financialsData, null, 2)}'`,
+        requestBody: financialsData,
+        response: null,
+        error: null,
+        responseTime: null
+      };
+
+      const startTime8 = Date.now();
+      try {
+        const response = await fetch(`${API_URL}/escrows/${createdEscrowId}/financials`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(financialsData)
+        });
+        const data = await response.json();
+        updateFinancialsTest.responseTime = Date.now() - startTime8;
+        updateFinancialsTest.status = response.ok && data.success ? 'success' : 'failed';
+        updateFinancialsTest.response = data;
+        if (!response.ok || !data.success) {
+          updateFinancialsTest.error = data.error?.message || 'Failed to update financials';
+        }
+      } catch (error) {
+        updateFinancialsTest.status = 'failed';
+        updateFinancialsTest.error = error.message;
+        updateFinancialsTest.responseTime = Date.now() - startTime8;
+      }
+      grouped.PUT.push(updateFinancialsTest);
+      allTests.push(updateFinancialsTest);
+      setGroupedTests({...grouped});
+
+      // PUT Test 5: Update checklists
+      const checklistData = {
+        loan: {
+          preApproval: { checked: true, date: new Date().toISOString() },
+          loanApplication: { checked: true, date: new Date().toISOString() },
+          le: true,
+          lockedRate: true
+        },
+        house: {
+          inspection: { checked: false },
+          appraisal: { checked: false },
+          emd: true,
+          homeInspectionOrdered: true
+        },
+        admin: {
+          mlsStatusUpdate: true,
+          tcEmail: true,
+          addContactsToPhone: false
+        }
+      };
+
+      const updateChecklistTest = {
+        name: 'Update Checklists',
+        description: 'Update loan, house, and admin checklists',
+        method: 'PUT',
+        endpoint: `/escrows/${createdEscrowId}/checklists`,
+        status: 'pending',
+        curl: `curl -X PUT "${API_URL}/escrows/${createdEscrowId}/checklists" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}" -H "Content-Type: application/json" -d '${JSON.stringify(checklistData, null, 2)}'`,
+        requestBody: checklistData,
+        response: null,
+        error: null,
+        responseTime: null
+      };
+
+      const startTime9 = Date.now();
+      try {
+        const response = await fetch(`${API_URL}/escrows/${createdEscrowId}/checklists`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(checklistData)
+        });
+        const data = await response.json();
+        updateChecklistTest.responseTime = Date.now() - startTime9;
+        updateChecklistTest.status = response.ok && data.success ? 'success' : 'failed';
+        updateChecklistTest.response = data;
+        if (!response.ok || !data.success) {
+          updateChecklistTest.error = data.error?.message || 'Failed to update checklists';
+        }
+      } catch (error) {
+        updateChecklistTest.status = 'failed';
+        updateChecklistTest.error = error.message;
+        updateChecklistTest.responseTime = Date.now() - startTime9;
+      }
+      grouped.PUT.push(updateChecklistTest);
+      allTests.push(updateChecklistTest);
+      setGroupedTests({...grouped});
+
+      // PUT Test 6: Update property details
+      const propertyDetailsData = {
+        bedrooms: 4,
+        bathrooms: 2.5,
+        squareFeet: 2500,
+        yearBuilt: 2015,
+        lotSizeSqft: 7500,
+        propertyType: 'Single Family',
+        pool: true,
+        garageSpaces: 2
+      };
+
+      const updatePropertyDetailsTest = {
+        name: 'Update Property Details',
+        description: 'Update property specifications',
+        method: 'PUT',
+        endpoint: `/escrows/${createdEscrowId}/property-details`,
+        status: 'pending',
+        curl: `curl -X PUT "${API_URL}/escrows/${createdEscrowId}/property-details" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}" -H "Content-Type: application/json" -d '${JSON.stringify(propertyDetailsData, null, 2)}'`,
+        requestBody: propertyDetailsData,
+        response: null,
+        error: null,
+        responseTime: null
+      };
+
+      const startTime10 = Date.now();
+      try {
+        const response = await fetch(`${API_URL}/escrows/${createdEscrowId}/property-details`, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(propertyDetailsData)
+        });
+        const data = await response.json();
+        updatePropertyDetailsTest.responseTime = Date.now() - startTime10;
+        updatePropertyDetailsTest.status = response.ok && data.success ? 'success' : 'failed';
+        updatePropertyDetailsTest.response = data;
+        if (!response.ok || !data.success) {
+          updatePropertyDetailsTest.error = data.error?.message || 'Failed to update property details';
+        }
+      } catch (error) {
+        updatePropertyDetailsTest.status = 'failed';
+        updatePropertyDetailsTest.error = error.message;
+        updatePropertyDetailsTest.responseTime = Date.now() - startTime10;
+      }
+      grouped.PUT.push(updatePropertyDetailsTest);
+      allTests.push(updatePropertyDetailsTest);
       setGroupedTests({...grouped});
 
       // ========================================
@@ -658,7 +863,7 @@ const EscrowsHealthDashboard = () => {
 
       // DELETE Test: Delete the test escrow
       const deleteTest = {
-        name: 'Delete Escrow',
+        name: 'Delete Escrow by ID',
         description: 'Remove the test escrow from database',
         method: 'DELETE',
         endpoint: `/escrows/${createdEscrowId}`,
@@ -669,14 +874,14 @@ const EscrowsHealthDashboard = () => {
         responseTime: null
       };
 
-      const startTime8 = Date.now();
+      const startTime11 = Date.now();
       try {
         const response = await fetch(`${API_URL}/escrows/${createdEscrowId}`, {
           method: 'DELETE',
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
-        deleteTest.responseTime = Date.now() - startTime8;
+        deleteTest.responseTime = Date.now() - startTime11;
         deleteTest.status = response.ok && data.success ? 'success' : 'failed';
         deleteTest.response = data;
         if (!response.ok || !data.success) {
@@ -687,7 +892,7 @@ const EscrowsHealthDashboard = () => {
       } catch (error) {
         deleteTest.status = 'failed';
         deleteTest.error = error.message;
-        deleteTest.responseTime = Date.now() - startTime8;
+        deleteTest.responseTime = Date.now() - startTime11;
       }
       grouped.DELETE.push(deleteTest);
       allTests.push(deleteTest);
@@ -706,13 +911,13 @@ const EscrowsHealthDashboard = () => {
         responseTime: null
       };
 
-      const startTime9 = Date.now();
+      const startTime12 = Date.now();
       try {
         const response = await fetch(`${API_URL}/escrows/${createdEscrowId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
-        verifyDeleteTest.responseTime = Date.now() - startTime9;
+        verifyDeleteTest.responseTime = Date.now() - startTime12;
         // This should fail (404) for the test to pass
         verifyDeleteTest.status = response.status === 404 || (data.success === false && data.error?.code === 'NOT_FOUND') ? 'success' : 'failed';
         verifyDeleteTest.response = data;
@@ -722,7 +927,7 @@ const EscrowsHealthDashboard = () => {
       } catch (error) {
         verifyDeleteTest.status = 'failed';
         verifyDeleteTest.error = error.message;
-        verifyDeleteTest.responseTime = Date.now() - startTime9;
+        verifyDeleteTest.responseTime = Date.now() - startTime12;
       }
       grouped.GET.push(verifyDeleteTest);
       allTests.push(verifyDeleteTest);
