@@ -4,12 +4,11 @@ const { pool } = require('../config/database');
 class ApiKeyService {
   /**
    * Generate a new API key
-   * Format: bhhs_XXXXXXXXXXXXXXXXXXXXXXXXXXXX (36 chars total)
+   * Format: 64 character random hex string
    */
   static generateApiKey() {
-    const prefix = 'bhhs_'; // Berkshire Hathaway HomeServices prefix
     const randomBytes = crypto.randomBytes(32).toString('hex');
-    return prefix + randomBytes;
+    return randomBytes;
   }
 
   /**
@@ -43,7 +42,7 @@ class ApiKeyService {
       // Generate new API key
       const apiKey = this.generateApiKey();
       const keyHash = this.hashApiKey(apiKey);
-      const keyPrefix = apiKey.substring(0, 15) + '...'; // Store first 15 chars for identification
+      const keyPrefix = apiKey.substring(0, 8) + '...' + apiKey.substring(apiKey.length - 4); // Store first 8 and last 4 chars for identification
 
       // Calculate expiration date if specified
       let expiresAt = null;
