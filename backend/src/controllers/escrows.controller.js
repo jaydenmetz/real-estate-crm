@@ -717,7 +717,7 @@ class SimpleEscrowController {
         loan_officer_email: escrowData.loan_officer_email,
         loan_officer_phone: escrowData.loan_officer_phone,
         title_company: escrowData.title_company,
-        transaction_type: escrowData.transaction_type,
+        // transaction_type doesn't exist in database, skip it
         lead_source: escrowData.lead_source
       };
       
@@ -1913,7 +1913,10 @@ class SimpleEscrowController {
         'garage_spaces': 'garage_spaces',
         'stories': 'stories',
         'lotSize': 'lot_size_sqft',
+        'lotSizeSqft': 'lot_size_sqft',  // Add this mapping
         'lot_size_sqft': 'lot_size_sqft',
+        'propertyType': 'property_type',  // Add this mapping
+        'property_type': 'property_type',
       };
       
       // Build dynamic update query for individual columns
@@ -1977,7 +1980,8 @@ class SimpleEscrowController {
         success: false,
         error: {
           code: 'SERVER_ERROR',
-          message: 'Failed to update property details'
+          message: 'Failed to update property details',
+          details: error.message
         }
       });
     }
