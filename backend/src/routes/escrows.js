@@ -48,6 +48,9 @@ router.get('/:id', async (req, res) => {
 
 // NEW ENDPOINTS FOR ESCROW DETAIL DATA
 
+// GET /v1/escrows/:id/details - Get core escrow details
+router.get('/:id/details', SimpleEscrowController.getEscrowDetails);
+
 // GET /v1/escrows/:id/people - Get all people associated with escrow
 router.get('/:id/people', SimpleEscrowController.getEscrowPeople);
 
@@ -57,8 +60,14 @@ router.get('/:id/timeline', SimpleEscrowController.getEscrowTimeline);
 // GET /v1/escrows/:id/financials - Get escrow financial details
 router.get('/:id/financials', SimpleEscrowController.getEscrowFinancials);
 
-// GET /v1/escrows/:id/checklists - Get escrow checklists
-router.get('/:id/checklists', SimpleEscrowController.getEscrowChecklists);
+// GET /v1/escrows/:id/checklist-loan - Get loan checklist
+router.get('/:id/checklist-loan', SimpleEscrowController.getEscrowChecklistLoan);
+
+// GET /v1/escrows/:id/checklist-house - Get house checklist
+router.get('/:id/checklist-house', SimpleEscrowController.getEscrowChecklistHouse);
+
+// GET /v1/escrows/:id/checklist-admin - Get admin checklist
+router.get('/:id/checklist-admin', SimpleEscrowController.getEscrowChecklistAdmin);
 
 // GET /v1/escrows/:id/documents - Get escrow documents
 router.get('/:id/documents', SimpleEscrowController.getEscrowDocuments);
@@ -69,11 +78,11 @@ router.get('/:id/property-details', SimpleEscrowController.getEscrowPropertyDeta
 // GET /v1/escrows/:id/image - Get property image from Zillow
 router.get('/:id/image', SimpleEscrowController.getEscrowImage);
 
+// PUT /v1/escrows/:id/details - Update core escrow details
+router.put('/:id/details', SimpleEscrowController.updateEscrowDetails);
+
 // PUT /v1/escrows/:id/people - Update escrow people
 router.put('/:id/people', SimpleEscrowController.updateEscrowPeople);
-
-// PUT /v1/escrows/:id/checklists - Update escrow checklists
-router.put('/:id/checklists', SimpleEscrowController.updateEscrowChecklists);
 
 // PUT /v1/escrows/:id/property-details - Update property details
 router.put('/:id/property-details', SimpleEscrowController.updateEscrowPropertyDetails);
@@ -84,6 +93,18 @@ router.put('/:id/financials', SimpleEscrowController.updateEscrowFinancials);
 // PUT /v1/escrows/:id/timeline - Update timeline dates
 router.put('/:id/timeline', SimpleEscrowController.updateEscrowTimeline);
 
+// PUT /v1/escrows/:id/checklist-loan - Update loan checklist
+router.put('/:id/checklist-loan', SimpleEscrowController.updateEscrowChecklistLoan);
+
+// PUT /v1/escrows/:id/checklist-house - Update house checklist
+router.put('/:id/checklist-house', SimpleEscrowController.updateEscrowChecklistHouse);
+
+// PUT /v1/escrows/:id/checklist-admin - Update admin checklist
+router.put('/:id/checklist-admin', SimpleEscrowController.updateEscrowChecklistAdmin);
+
+// PUT /v1/escrows/:id/documents - Update documents
+router.put('/:id/documents', SimpleEscrowController.updateEscrowDocuments);
+
 // POST /v1/escrows - Create new escrow with sequential ID
 router.post('/', (req, res) => {
   return SimpleEscrowController.createEscrow(req, res);
@@ -92,236 +113,8 @@ router.post('/', (req, res) => {
 // PUT /v1/escrows/:id - Update escrow
 router.put('/:id', SimpleEscrowController.updateEscrow);
 
-// PATCH /v1/escrows/:id/checklist - Update checklist item
-router.patch('/:id/checklist', (req, res) => {
-  try {
-    const { id } = req.params;
-    const { itemId, checked } = req.body;
-    
-    const escrow = databaseService.getById('escrows', id);
-    if (!escrow) {
-      return res.status(404).json({
-        success: false,
-        error: {
-          code: 'NOT_FOUND',
-          message: 'Escrow not found'
-        }
-      });
-    }
-    
-    // Update checklist item
-    if (!escrow.checklists) {
-      escrow.checklists = {};
-    }
-    escrow.checklists[itemId] = checked;
-    
-    // Update checklist progress
-    // This is a simplified version - in production you'd calculate based on actual checklist structure
-    const totalItems = Object.keys(escrow.checklists).length || 1;
-    const completedItems = Object.values(escrow.checklists).filter(v => v === true).length;
-    const percentage = Math.round((completedItems / totalItems) * 100);
-    
-    escrow.checklistProgress.overall = {
-      completed: completedItems,
-      total: totalItems,
-      percentage
-    };
-    
-    databaseService.update('escrows', id, escrow);
-    
-    res.json({
-      success: true,
-      data: {
-        itemId,
-        checked,
-        completedAt: checked ? new Date().toISOString() : null,
-        completedBy: 'Jayden Metz'
-      },
-      message: 'Checklist item updated'
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: {
-        code: 'INTERNAL_ERROR',
-        message: 'Failed to update checklist'
-      }
-    });
-  }
-});
 
-// POST /v1/escrows/:id/documents - Upload document
-router.post('/:id/documents', (req, res) => {
-  try {
-    const { id } = req.params;
-    const { documentType, name } = req.body;
-    
-    const escrow = databaseService.getById('escrows', id);
-    if (!escrow) {
-      return res.status(404).json({
-        success: false,
-        error: {
-          code: 'NOT_FOUND',
-          message: 'Escrow not found'
-        }
-      });
-    }
-    
-    // Add document to escrow
-    if (!escrow.documents) {
-      escrow.documents = [];
-    }
-    
-    const newDocument = {
-      id: `doc_${Date.now()}`,
-      escrowId: id,
-      documentType,
-      name,
-      uploadedAt: new Date().toISOString(),
-      uploadedBy: 'Jayden Metz',
-      size: '2.4 MB',
-      url: 'https://example.com/document.pdf'
-    };
-    
-    escrow.documents.push(newDocument);
-    
-    // Update document count in activity stats
-    if (escrow.activityStats) {
-      escrow.activityStats.documentsUploaded = escrow.documents.length;
-    }
-    
-    databaseService.update('escrows', id, escrow);
-    
-    res.json({
-      success: true,
-      data: newDocument,
-      message: 'Document uploaded successfully'
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: {
-        code: 'INTERNAL_ERROR',
-        message: 'Failed to upload document'
-      }
-    });
-  }
-});
 
-// POST /v1/escrows/:id/timeline - Add timeline event
-router.post('/:id/timeline', (req, res) => {
-  try {
-    const { id } = req.params;
-    const { event, description, type, icon } = req.body;
-    
-    const escrow = databaseService.getById('escrows', id);
-    if (!escrow) {
-      return res.status(404).json({
-        success: false,
-        error: {
-          code: 'NOT_FOUND',
-          message: 'Escrow not found'
-        }
-      });
-    }
-    
-    // Add timeline event
-    if (!escrow.timeline) {
-      escrow.timeline = [];
-    }
-    
-    const newEvent = {
-      id: Date.now(),
-      date: new Date().toISOString(),
-      event,
-      description,
-      type: type || 'update',
-      icon: icon || 'event',
-      createdBy: 'Jayden Metz'
-    };
-    
-    escrow.timeline.push(newEvent);
-    
-    // Sort timeline by date (newest first) with safe date parsing
-    escrow.timeline.sort((a, b) => {
-      const dateA = a.date ? new Date(a.date) : new Date(0);
-      const dateB = b.date ? new Date(b.date) : new Date(0);
-      return dateB.getTime() - dateA.getTime();
-    });
-    
-    databaseService.update('escrows', id, escrow);
-    
-    res.json({
-      success: true,
-      data: newEvent,
-      message: 'Timeline event added'
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: {
-        code: 'INTERNAL_ERROR',
-        message: 'Failed to add timeline event'
-      }
-    });
-  }
-});
-
-// POST /v1/escrows/:id/notes - Add note
-router.post('/:id/notes', (req, res) => {
-  try {
-    const { id } = req.params;
-    const { content, type = 'general' } = req.body;
-    
-    const escrow = databaseService.getById('escrows', id);
-    if (!escrow) {
-      return res.status(404).json({
-        success: false,
-        error: {
-          code: 'NOT_FOUND',
-          message: 'Escrow not found'
-        }
-      });
-    }
-    
-    // Add note to escrow
-    if (!escrow.notes) {
-      escrow.notes = [];
-    }
-    
-    const newNote = {
-      id: `note_${Date.now()}`,
-      escrowId: id,
-      content,
-      type,
-      createdAt: new Date().toISOString(),
-      createdBy: 'Jayden Metz'
-    };
-    
-    escrow.notes.push(newNote);
-    
-    // Update importantNotes if this is marked as important
-    if (type === 'important') {
-      escrow.importantNotes = content;
-    }
-    
-    databaseService.update('escrows', id, escrow);
-    
-    res.json({
-      success: true,
-      data: newNote,
-      message: 'Note added successfully'
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: {
-        code: 'INTERNAL_ERROR',
-        message: 'Failed to add note'
-      }
-    });
-  }
-});
 
 // POST /v1/escrows/:id/ai-assist - AI assistance endpoint
 router.post('/:id/ai-assist', (req, res) => {

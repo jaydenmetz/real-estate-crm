@@ -1043,6 +1043,383 @@ class SimpleEscrowController {
   }
 
   /**
+   * Get loan checklist only
+   */
+  static async getEscrowChecklistLoan(req, res) {
+    try {
+      const { id } = req.params;
+      
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      
+      const query = `
+        SELECT * FROM escrows
+        WHERE ${isUUID ? 'id = $1' : 'display_id = $1'}
+      `;
+      
+      const result = await pool.query(query, [id]);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Escrow not found'
+          }
+        });
+      }
+      
+      const escrow = result.rows[0];
+      const fullResponse = buildRestructuredEscrowResponse(escrow);
+      
+      res.json({
+        success: true,
+        data: fullResponse['checklist-loan']
+      });
+      
+    } catch (error) {
+      console.error('Error fetching loan checklist:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'SERVER_ERROR',
+          message: 'Failed to fetch loan checklist'
+        }
+      });
+    }
+  }
+
+  /**
+   * Update loan checklist
+   */
+  static async updateEscrowChecklistLoan(req, res) {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      
+      // Get current checklists
+      const getQuery = `
+        SELECT checklists FROM escrows
+        WHERE ${isUUID ? 'id = $1' : 'display_id = $1'}
+      `;
+      
+      const getResult = await pool.query(getQuery, [id]);
+      
+      if (getResult.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Escrow not found'
+          }
+        });
+      }
+      
+      // Update loan checklist
+      let checklists = getResult.rows[0].checklists || {};
+      checklists.loan = { ...checklists.loan, ...updates };
+      
+      const updateQuery = `
+        UPDATE escrows 
+        SET checklists = $1, updated_at = NOW()
+        WHERE ${isUUID ? 'id = $2' : 'display_id = $2'}
+        RETURNING *
+      `;
+      
+      const result = await pool.query(updateQuery, [JSON.stringify(checklists), id]);
+      const fullResponse = buildRestructuredEscrowResponse(result.rows[0]);
+      
+      res.json({
+        success: true,
+        data: fullResponse['checklist-loan'],
+        message: 'Loan checklist updated successfully'
+      });
+      
+    } catch (error) {
+      console.error('Error updating loan checklist:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'UPDATE_ERROR',
+          message: 'Failed to update loan checklist'
+        }
+      });
+    }
+  }
+
+  /**
+   * Get house checklist only
+   */
+  static async getEscrowChecklistHouse(req, res) {
+    try {
+      const { id } = req.params;
+      
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      
+      const query = `
+        SELECT * FROM escrows
+        WHERE ${isUUID ? 'id = $1' : 'display_id = $1'}
+      `;
+      
+      const result = await pool.query(query, [id]);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Escrow not found'
+          }
+        });
+      }
+      
+      const escrow = result.rows[0];
+      const fullResponse = buildRestructuredEscrowResponse(escrow);
+      
+      res.json({
+        success: true,
+        data: fullResponse['checklist-house']
+      });
+      
+    } catch (error) {
+      console.error('Error fetching house checklist:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'SERVER_ERROR',
+          message: 'Failed to fetch house checklist'
+        }
+      });
+    }
+  }
+
+  /**
+   * Update house checklist
+   */
+  static async updateEscrowChecklistHouse(req, res) {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      
+      // Get current checklists
+      const getQuery = `
+        SELECT checklists FROM escrows
+        WHERE ${isUUID ? 'id = $1' : 'display_id = $1'}
+      `;
+      
+      const getResult = await pool.query(getQuery, [id]);
+      
+      if (getResult.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Escrow not found'
+          }
+        });
+      }
+      
+      // Update house checklist
+      let checklists = getResult.rows[0].checklists || {};
+      checklists.house = { ...checklists.house, ...updates };
+      
+      const updateQuery = `
+        UPDATE escrows 
+        SET checklists = $1, updated_at = NOW()
+        WHERE ${isUUID ? 'id = $2' : 'display_id = $2'}
+        RETURNING *
+      `;
+      
+      const result = await pool.query(updateQuery, [JSON.stringify(checklists), id]);
+      const fullResponse = buildRestructuredEscrowResponse(result.rows[0]);
+      
+      res.json({
+        success: true,
+        data: fullResponse['checklist-house'],
+        message: 'House checklist updated successfully'
+      });
+      
+    } catch (error) {
+      console.error('Error updating house checklist:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'UPDATE_ERROR',
+          message: 'Failed to update house checklist'
+        }
+      });
+    }
+  }
+
+  /**
+   * Get admin checklist only
+   */
+  static async getEscrowChecklistAdmin(req, res) {
+    try {
+      const { id } = req.params;
+      
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      
+      const query = `
+        SELECT * FROM escrows
+        WHERE ${isUUID ? 'id = $1' : 'display_id = $1'}
+      `;
+      
+      const result = await pool.query(query, [id]);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Escrow not found'
+          }
+        });
+      }
+      
+      const escrow = result.rows[0];
+      const fullResponse = buildRestructuredEscrowResponse(escrow);
+      
+      res.json({
+        success: true,
+        data: fullResponse['checklist-admin']
+      });
+      
+    } catch (error) {
+      console.error('Error fetching admin checklist:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'SERVER_ERROR',
+          message: 'Failed to fetch admin checklist'
+        }
+      });
+    }
+  }
+
+  /**
+   * Update admin checklist
+   */
+  static async updateEscrowChecklistAdmin(req, res) {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      
+      // Get current checklists
+      const getQuery = `
+        SELECT checklists FROM escrows
+        WHERE ${isUUID ? 'id = $1' : 'display_id = $1'}
+      `;
+      
+      const getResult = await pool.query(getQuery, [id]);
+      
+      if (getResult.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Escrow not found'
+          }
+        });
+      }
+      
+      // Update admin checklist
+      let checklists = getResult.rows[0].checklists || {};
+      checklists.admin = { ...checklists.admin, ...updates };
+      
+      const updateQuery = `
+        UPDATE escrows 
+        SET checklists = $1, updated_at = NOW()
+        WHERE ${isUUID ? 'id = $2' : 'display_id = $2'}
+        RETURNING *
+      `;
+      
+      const result = await pool.query(updateQuery, [JSON.stringify(checklists), id]);
+      const fullResponse = buildRestructuredEscrowResponse(result.rows[0]);
+      
+      res.json({
+        success: true,
+        data: fullResponse['checklist-admin'],
+        message: 'Admin checklist updated successfully'
+      });
+      
+    } catch (error) {
+      console.error('Error updating admin checklist:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'UPDATE_ERROR',
+          message: 'Failed to update admin checklist'
+        }
+      });
+    }
+  }
+
+  /**
+   * Update escrow documents
+   */
+  static async updateEscrowDocuments(req, res) {
+    try {
+      const { id } = req.params;
+      const documents = req.body;
+      
+      if (!Array.isArray(documents)) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'INVALID_INPUT',
+            message: 'Documents must be an array'
+          }
+        });
+      }
+      
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      
+      const updateQuery = `
+        UPDATE escrows 
+        SET documents = $1, updated_at = NOW()
+        WHERE ${isUUID ? 'id = $2' : 'display_id = $2'}
+        RETURNING *
+      `;
+      
+      const result = await pool.query(updateQuery, [JSON.stringify(documents), id]);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Escrow not found'
+          }
+        });
+      }
+      
+      const fullResponse = buildRestructuredEscrowResponse(result.rows[0]);
+      
+      res.json({
+        success: true,
+        data: fullResponse.documents,
+        message: 'Documents updated successfully'
+      });
+      
+    } catch (error) {
+      console.error('Error updating documents:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'UPDATE_ERROR',
+          message: 'Failed to update documents'
+        }
+      });
+    }
+  }
+
+  /**
    * Get escrow documents
    */
   static async getEscrowDocuments(req, res) {
@@ -1083,6 +1460,153 @@ class SimpleEscrowController {
         error: {
           code: 'SERVER_ERROR',
           message: 'Failed to fetch escrow documents'
+        }
+      });
+    }
+  }
+
+  /**
+   * Get escrow details (core information only)
+   */
+  static async getEscrowDetails(req, res) {
+    try {
+      const { id } = req.params;
+      
+      // Detect if ID is UUID format
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      
+      // Get the full escrow record
+      const query = `
+        SELECT * FROM escrows
+        WHERE ${isUUID ? 'id = $1' : 'display_id = $1'}
+      `;
+      
+      const result = await pool.query(query, [id]);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Escrow not found'
+          }
+        });
+      }
+      
+      const escrow = result.rows[0];
+      
+      // Use the same response builder as getEscrowById
+      const fullResponse = buildRestructuredEscrowResponse(escrow);
+      
+      // Return just the details section
+      res.json({
+        success: true,
+        data: fullResponse.details
+      });
+      
+    } catch (error) {
+      console.error('Error fetching escrow details:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'SERVER_ERROR',
+          message: 'Failed to fetch escrow details'
+        }
+      });
+    }
+  }
+
+  /**
+   * Update escrow details
+   */
+  static async updateEscrowDetails(req, res) {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      
+      // Map details fields to database columns
+      const fieldMapping = {
+        escrowNumber: 'display_id',
+        propertyAddress: 'property_address',
+        propertyImage: 'property_image_url',
+        zillowUrl: 'zillow_url',
+        escrowStatus: 'escrow_status',
+        purchasePrice: 'purchase_price',
+        earnestMoneyDeposit: 'earnest_money_deposit',
+        downPayment: 'down_payment',
+        loanAmount: 'loan_amount',
+        myCommission: 'my_commission',
+        scheduledCoeDate: 'closing_date',
+        escrowCompany: 'escrow_company',
+        escrowOfficerName: 'escrow_officer_name',
+        escrowOfficerEmail: 'escrow_officer_email',
+        escrowOfficerPhone: 'escrow_officer_phone',
+        titleCompany: 'title_company',
+        transactionType: 'transaction_type',
+        leadSource: 'lead_source'
+      };
+      
+      // Build update query
+      const updateFields = [];
+      const values = [];
+      let paramIndex = 1;
+      
+      Object.keys(updates).forEach(key => {
+        if (fieldMapping[key] && key !== 'id' && key !== 'escrowNumber') {
+          updateFields.push(`${fieldMapping[key]} = $${paramIndex}`);
+          values.push(updates[key]);
+          paramIndex++;
+        }
+      });
+      
+      if (updateFields.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'NO_UPDATES',
+            message: 'No valid fields to update'
+          }
+        });
+      }
+      
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      values.push(id);
+      
+      const updateQuery = `
+        UPDATE escrows 
+        SET ${updateFields.join(', ')}, updated_at = NOW()
+        WHERE ${isUUID ? 'id = $' + paramIndex : 'display_id = $' + paramIndex}
+        RETURNING *
+      `;
+      
+      const result = await pool.query(updateQuery, values);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Escrow not found'
+          }
+        });
+      }
+      
+      // Return updated details using the response builder
+      const fullResponse = buildRestructuredEscrowResponse(result.rows[0]);
+      
+      res.json({
+        success: true,
+        data: fullResponse.details,
+        message: 'Escrow details updated successfully'
+      });
+      
+    } catch (error) {
+      console.error('Error updating escrow details:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'UPDATE_ERROR',
+          message: 'Failed to update escrow details'
         }
       });
     }
