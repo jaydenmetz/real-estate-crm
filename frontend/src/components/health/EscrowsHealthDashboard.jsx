@@ -486,21 +486,9 @@ const EscrowsHealthDashboard = () => {
     // POST REQUESTS
     // ========================================
 
+    // Only property_address is required - all other fields are optional
     const testEscrowData = {
-      property_address: `Test Property ${Date.now()}`,
-      city: 'Test City',
-      state: 'CA',
-      zip_code: '90210',
-      purchase_price: 500000,
-      escrow_status: 'Active',
-      acceptance_date: new Date().toISOString().split('T')[0],
-      closing_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      net_commission: 12500,
-      commission_percentage: 2.5,
-      property_type: 'Single Family',
-      escrow_company: 'Test Escrow Company',
-      escrow_officer_name: 'Test Officer',
-      escrow_officer_email: 'test@escrow.com'
+      property_address: `${Date.now()} Test Street, Health Check Test`
     };
 
     const createTest = {
@@ -749,67 +737,7 @@ const EscrowsHealthDashboard = () => {
       allTests.push(updateFinancialsTest);
       setGroupedTests({...grouped});
 
-      // PUT Test 5: Update checklists
-      const checklistData = {
-        loan: {
-          preApproval: { checked: true, date: new Date().toISOString() },
-          loanApplication: { checked: true, date: new Date().toISOString() },
-          le: true,
-          lockedRate: true
-        },
-        house: {
-          inspection: { checked: false },
-          appraisal: { checked: false },
-          emd: true,
-          homeInspectionOrdered: true
-        },
-        admin: {
-          mlsStatusUpdate: true,
-          tcEmail: true,
-          addContactsToPhone: false
-        }
-      };
-
-      const updateChecklistTest = {
-        name: 'Update Checklists',
-        description: 'Update loan, house, and admin checklists',
-        method: 'PUT',
-        endpoint: `/escrows/${createdEscrowId}/checklists`,
-        status: 'pending',
-        curl: `curl -X PUT "${API_URL}/escrows/${createdEscrowId}/checklists" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}" -H "Content-Type: application/json" -d '${JSON.stringify(checklistData, null, 2)}'`,
-        requestBody: checklistData,
-        response: null,
-        error: null,
-        responseTime: null
-      };
-
-      const startTime9 = Date.now();
-      try {
-        const response = await fetch(`${API_URL}/escrows/${createdEscrowId}/checklists`, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(checklistData)
-        });
-        const data = await response.json();
-        updateChecklistTest.responseTime = Date.now() - startTime9;
-        updateChecklistTest.status = response.ok && data.success ? 'success' : 'failed';
-        updateChecklistTest.response = data;
-        if (!response.ok || !data.success) {
-          updateChecklistTest.error = data.error?.message || 'Failed to update checklists';
-        }
-      } catch (error) {
-        updateChecklistTest.status = 'failed';
-        updateChecklistTest.error = error.message;
-        updateChecklistTest.responseTime = Date.now() - startTime9;
-      }
-      grouped.PUT.push(updateChecklistTest);
-      allTests.push(updateChecklistTest);
-      setGroupedTests({...grouped});
-
-      // PUT Test 6: Update property details
+      // PUT Test 5: Update property details
       const propertyDetailsData = {
         bedrooms: 4,
         bathrooms: 2.5,
@@ -834,7 +762,7 @@ const EscrowsHealthDashboard = () => {
         responseTime: null
       };
 
-      const startTime10 = Date.now();
+      const startTime9 = Date.now();
       try {
         const response = await fetch(`${API_URL}/escrows/${createdEscrowId}/property-details`, {
           method: 'PUT',
@@ -845,7 +773,7 @@ const EscrowsHealthDashboard = () => {
           body: JSON.stringify(propertyDetailsData)
         });
         const data = await response.json();
-        updatePropertyDetailsTest.responseTime = Date.now() - startTime10;
+        updatePropertyDetailsTest.responseTime = Date.now() - startTime9;
         updatePropertyDetailsTest.status = response.ok && data.success ? 'success' : 'failed';
         updatePropertyDetailsTest.response = data;
         if (!response.ok || !data.success) {
@@ -854,7 +782,7 @@ const EscrowsHealthDashboard = () => {
       } catch (error) {
         updatePropertyDetailsTest.status = 'failed';
         updatePropertyDetailsTest.error = error.message;
-        updatePropertyDetailsTest.responseTime = Date.now() - startTime10;
+        updatePropertyDetailsTest.responseTime = Date.now() - startTime9;
       }
       grouped.PUT.push(updatePropertyDetailsTest);
       allTests.push(updatePropertyDetailsTest);

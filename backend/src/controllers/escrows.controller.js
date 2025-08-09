@@ -663,44 +663,87 @@ class SimpleEscrowController {
       
       const escrowData = req.body;
       
+      // Validate required field
+      if (!escrowData.property_address) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'property_address is required'
+          }
+        });
+      }
+      
       // After migration, the database will automatically:
       // - Generate UUID for id
       // - Generate numeric_id from sequence
       // - Generate display_id via trigger (ESCROW-2025-0001 format)
       
-      // Insert the new escrow - using correct column names for production schema
+      // Build dynamic query with only provided fields
+      const fields = ['property_address'];
+      const values = [escrowData.property_address];
+      const placeholders = ['$1'];
+      let paramIndex = 2;
+      
+      // Add optional fields if provided
+      const optionalFields = {
+        city: escrowData.city,
+        state: escrowData.state,
+        zip_code: escrowData.zip_code,
+        escrow_status: escrowData.escrow_status,
+        purchase_price: escrowData.purchase_price,
+        earnest_money_deposit: escrowData.earnest_money_deposit,
+        commission_percentage: escrowData.commission_percentage,
+        net_commission: escrowData.net_commission || escrowData.my_commission,
+        acceptance_date: escrowData.acceptance_date,
+        closing_date: escrowData.closing_date,
+        property_type: escrowData.property_type,
+        escrow_company: escrowData.escrow_company,
+        escrow_officer_name: escrowData.escrow_officer_name,
+        escrow_officer_email: escrowData.escrow_officer_email,
+        escrow_officer_phone: escrowData.escrow_officer_phone,
+        loan_officer_name: escrowData.loan_officer_name,
+        loan_officer_email: escrowData.loan_officer_email,
+        loan_officer_phone: escrowData.loan_officer_phone,
+        title_company: escrowData.title_company,
+        transaction_type: escrowData.transaction_type,
+        lead_source: escrowData.lead_source
+      };
+      
+      // Add fields that are actually provided
+      for (const [field, value] of Object.entries(optionalFields)) {
+        if (value !== undefined && value !== null) {
+          fields.push(field);
+          values.push(value);
+          placeholders.push(`$${paramIndex}`);
+          paramIndex++;
+        }
+      }
+      
+      // Add user info if available
+      if (req.user?.id) {
+        fields.push('created_by');
+        values.push(req.user.id);
+        placeholders.push(`$${paramIndex}`);
+        paramIndex++;
+      }
+      
+      if (req.user?.teamId) {
+        fields.push('team_id');
+        values.push(req.user.teamId);
+        placeholders.push(`$${paramIndex}`);
+        paramIndex++;
+      }
+      
+      // Add timestamps
+      fields.push('created_at', 'updated_at');
+      placeholders.push('NOW()', 'NOW()');
+      
       const insertQuery = `
-        INSERT INTO escrows (
-          property_address, city, state, zip_code,
-          escrow_status, purchase_price,
-          earnest_money_deposit, commission_percentage, net_commission,
-          acceptance_date, closing_date, property_type,
-          escrow_company, escrow_officer_name, escrow_officer_email,
-          created_by, team_id,
-          created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW(), NOW())
+        INSERT INTO escrows (${fields.join(', ')})
+        VALUES (${placeholders.join(', ')})
         RETURNING *
       `;
-      
-      const values = [
-        escrowData.property_address,
-        escrowData.city || 'Unknown',
-        escrowData.state || 'CA',
-        escrowData.zip_code || '00000',
-        escrowData.escrow_status || 'Active',
-        escrowData.purchase_price,
-        escrowData.earnest_money_deposit || escrowData.earnest_money || escrowData.purchase_price * 0.01,
-        escrowData.commission_percentage || 2.5,
-        escrowData.net_commission || escrowData.my_commission || (escrowData.purchase_price * 0.025),
-        escrowData.acceptance_date || escrowData.opening_date || new Date().toISOString().split('T')[0],
-        escrowData.closing_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        escrowData.property_type || 'Single Family',
-        escrowData.escrow_company || null,
-        escrowData.escrow_officer_name || null,
-        escrowData.escrow_officer_email || null,
-        req.user?.id || null,
-        req.user?.teamId || null
-      ];
       
       const escrowResult = await client.query(insertQuery, values);
       const newEscrow = escrowResult.rows[0];
