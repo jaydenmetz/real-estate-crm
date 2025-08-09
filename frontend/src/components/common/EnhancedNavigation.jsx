@@ -84,7 +84,8 @@ const EnhancedNavigation = () => {
     { path: '/all-notes', label: 'All Notes', icon: <Article /> },
     { path: '/reports', label: 'Reports', icon: <Assessment /> },
     { path: '/calendar', label: 'Calendar', icon: <CalendarMonth /> },
-    { path: '/escrows/health', label: 'API Health Check', icon: <HealthAndSafety /> },
+    { path: '/health', label: 'System Health', icon: <HealthAndSafety /> },
+    { path: '/escrows/health', label: 'Escrows API Test', icon: <HealthAndSafety /> },
   ];
 
   // Mock notifications

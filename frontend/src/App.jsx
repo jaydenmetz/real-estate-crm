@@ -43,7 +43,8 @@ import ExpenseDashboard from './components/dashboards/ExpenseDashboard';
 // System Components
 import ActivityLog from './components/system/ActivityLog';
 import AllNotes from './components/system/AllNotes';
-import HealthCheckDashboard from './components/health/HealthCheckDashboard';
+import GeneralHealthDashboard from './components/health/GeneralHealthDashboard';
+import EscrowsHealthDashboard from './components/health/EscrowsHealthDashboard';
 // import Reports from './components/system/Reports';
 // import Calendar from './components/system/Calendar';
 // import Settings from './components/system/Settings';
@@ -220,9 +221,12 @@ function App() {
                                   </UserAwareErrorBoundary>
                                 } />
                     
+                                {/* Health Check */}
+                                <Route path="/health" element={<GeneralHealthDashboard />} />
+                                
                                 {/* Main Features */}
                                 <Route path="/escrows" element={<EscrowsDashboard />} />
-                                <Route path="/escrows/health" element={<HealthCheckDashboard />} />
+                                <Route path="/escrows/health" element={<EscrowsHealthDashboard />} />
                                 <Route path="/escrows/:id" element={<EscrowDetail />} />
                     
                                 <Route path="/listings" element={<ListingsDashboard />} />
