@@ -216,7 +216,11 @@ const HealthCheckDashboard = () => {
 
   const runAllTests = useCallback(async () => {
     setLoading(true);
-    const API_URL = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com/v1';
+    let API_URL = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
+    // Ensure API URL has /v1 suffix
+    if (!API_URL.endsWith('/v1')) {
+      API_URL = API_URL.replace(/\/$/, '') + '/v1';
+    }
     
     // Get auth token - try multiple locations
     const token = localStorage.getItem('crm_auth_token') || 
