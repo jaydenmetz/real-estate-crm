@@ -892,58 +892,12 @@ class SimpleEscrowController {
     try {
       const { id } = req.params;
       
+      // Detect if ID is UUID format
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
       
+      // Get the full escrow record
       const query = `
-        SELECT 
-          timeline, 
-          acceptance_date,
-          emd_date,
-          contingencies_date,
-          closing_date,
-          actual_coe_date,
-          opening_date,
-          -- Inspection dates
-          inspection_period_end_date,
-          physical_inspection_date,
-          termite_inspection_date,
-          sewer_inspection_date,
-          pool_spa_inspection_date,
-          roof_inspection_date,
-          chimney_inspection_date,
-          -- Disclosure dates
-          seller_disclosures_due_date,
-          seller_disclosures_received_date,
-          preliminary_title_report_date,
-          nhd_report_date,
-          hoa_documents_due_date,
-          hoa_documents_received_date,
-          -- Loan dates
-          loan_application_date,
-          loan_contingency_removal_date,
-          appraisal_contingency_removal_date,
-          appraisal_ordered_date,
-          appraisal_completed_date,
-          loan_approval_date,
-          loan_docs_ordered_date,
-          loan_docs_signed_date,
-          loan_funded_date,
-          -- Contingency removal dates
-          inspection_contingency_removal_date,
-          all_contingencies_removal_date,
-          -- Other important dates
-          walk_through_date,
-          recording_date,
-          possession_date,
-          rent_back_end_date,
-          escrow_opened_date,
-          title_ordered_date,
-          insurance_ordered_date,
-          smoke_alarm_installation_date,
-          termite_completion_date,
-          repairs_completion_date,
-          final_verification_date
-        FROM escrows
+        SELECT * FROM escrows
         WHERE ${isUUID ? 'id = $1' : 'display_id = $1'}
       `;
       
@@ -960,182 +914,14 @@ class SimpleEscrowController {
       }
       
       const escrow = result.rows[0];
-      let timeline = escrow.timeline || [];
       
-      // Build comprehensive timeline from database dates
-      const timelineEvents = [];
-      const today = new Date();
+      // Use the same response builder as getEscrowById
+      const fullResponse = buildRestructuredEscrowResponse(escrow);
       
-      // Helper to calculate days from acceptance
-      const calculateDaysFromAcceptance = (date) => {
-        if (!escrow.acceptance_date || !date) return null;
-        const acceptanceDate = new Date(escrow.acceptance_date);
-        const eventDate = new Date(date);
-        return Math.floor((eventDate - acceptanceDate) / (1000 * 60 * 60 * 24));
-      };
-      
-      // Helper to determine status
-      const getStatus = (date) => {
-        if (!date) return 'pending';
-        const eventDate = new Date(date);
-        return eventDate <= today ? 'completed' : 'upcoming';
-      };
-      
-      // Helper to add event if date exists
-      const addTimelineEvent = (date, eventName, category, description = null) => {
-        if (date) {
-          timelineEvents.push({
-            date: date,
-            event: eventName,
-            category: category,
-            description: description,
-            status: getStatus(date),
-            daysFromAcceptance: calculateDaysFromAcceptance(date),
-            type: 'deadline'
-          });
-        }
-      };
-      
-      // OPENING & INITIAL DATES
-      addTimelineEvent(escrow.acceptance_date, 'Acceptance Date', 'opening', 'Contract ratified by all parties');
-      addTimelineEvent(escrow.escrow_opened_date, 'Escrow Opened', 'opening', 'Escrow account opened');
-      addTimelineEvent(escrow.emd_date, 'EMD Due', 'financial', 'Earnest Money Deposit due');
-      addTimelineEvent(escrow.title_ordered_date, 'Title Ordered', 'opening', 'Title search initiated');
-      
-      // DISCLOSURE DATES
-      addTimelineEvent(escrow.seller_disclosures_due_date, 'Seller Disclosures Due', 'disclosure', 'Seller property disclosures deadline');
-      addTimelineEvent(escrow.seller_disclosures_received_date, 'Seller Disclosures Received', 'disclosure', 'Seller disclosures delivered');
-      addTimelineEvent(escrow.preliminary_title_report_date, 'Preliminary Title Report', 'disclosure', 'Title report delivered');
-      addTimelineEvent(escrow.nhd_report_date, 'NHD Report Due', 'disclosure', 'Natural Hazard Disclosure');
-      addTimelineEvent(escrow.hoa_documents_due_date, 'HOA Documents Due', 'disclosure', 'HOA docs deadline');
-      addTimelineEvent(escrow.hoa_documents_received_date, 'HOA Documents Received', 'disclosure', 'HOA docs delivered');
-      
-      // INSPECTION DATES
-      addTimelineEvent(escrow.physical_inspection_date, 'Home Inspection', 'inspection', 'General home inspection scheduled');
-      addTimelineEvent(escrow.termite_inspection_date, 'Termite Inspection', 'inspection', 'Pest inspection scheduled');
-      addTimelineEvent(escrow.inspection_period_end_date, 'Inspection Period Ends', 'contingency', 'Last day to complete inspections');
-      
-      // LOAN PROCESS DATES
-      addTimelineEvent(escrow.loan_application_date, 'Loan Application', 'loan', 'Loan application submitted');
-      addTimelineEvent(escrow.appraisal_ordered_date, 'Appraisal Ordered', 'loan', 'Property appraisal ordered');
-      addTimelineEvent(escrow.appraisal_completed_date, 'Appraisal Completed', 'loan', 'Property appraisal received');
-      addTimelineEvent(escrow.loan_approval_date, 'Loan Approved', 'loan', 'Final loan approval');
-      addTimelineEvent(escrow.loan_docs_signed_date, 'Loan Docs Signed', 'loan', 'Buyer signs loan documents');
-      addTimelineEvent(escrow.loan_funded_date, 'Loan Funded', 'loan', 'Lender releases funds');
-      
-      // CONTINGENCY REMOVAL DATES
-      addTimelineEvent(escrow.inspection_contingency_removal_date, 'Remove Inspection Contingency', 'contingency', 'Inspection contingency removal deadline');
-      addTimelineEvent(escrow.appraisal_contingency_removal_date, 'Remove Appraisal Contingency', 'contingency', 'Appraisal contingency removal deadline');
-      addTimelineEvent(escrow.loan_contingency_removal_date, 'Remove Loan Contingency', 'contingency', 'Loan contingency removal deadline');
-      addTimelineEvent(escrow.all_contingencies_removal_date, 'All Contingencies Removed', 'contingency', 'All contingencies must be removed');
-      
-      // CLOSING DATES
-      addTimelineEvent(escrow.walk_through_date, 'Final Walk-Through', 'closing', 'Buyer final property inspection');
-      addTimelineEvent(escrow.closing_date, 'Scheduled Close of Escrow', 'closing', 'Target closing date');
-      addTimelineEvent(escrow.recording_date, 'Recording Date', 'closing', 'Deed records with county');
-      addTimelineEvent(escrow.actual_coe_date, 'Actual COE', 'closing', 'Transaction closed');
-      addTimelineEvent(escrow.possession_date, 'Possession Date', 'closing', 'Buyer takes possession');
-      
-      // Merge with any custom timeline events stored in JSONB
-      if (timeline.length > 0) {
-        // Add custom events that aren't already in our RPA dates
-        const existingEventNames = timelineEvents.map(e => e.event);
-        const customEvents = timeline.filter(event => !existingEventNames.includes(event.event));
-        customEvents.forEach(event => {
-          timelineEvents.push({
-            ...event,
-            category: event.category || 'custom',
-            type: event.type || 'event',
-            status: getStatus(event.date),
-            daysFromAcceptance: calculateDaysFromAcceptance(event.date)
-          });
-        });
-      }
-      
-      // Sort by date
-      timelineEvents.sort((a, b) => new Date(a.date) - new Date(b.date));
-      
-      // If no events, generate default RPA timeline based on acceptance date
-      if (timelineEvents.length === 0 && escrow.acceptance_date) {
-        const acceptanceDate = new Date(escrow.acceptance_date);
-        
-        // Generate typical RPA timeline with standard California timeframes
-        addTimelineEvent(acceptanceDate.toISOString().split('T')[0], 'Acceptance Date', 'opening', 'Contract ratified');
-        addTimelineEvent(new Date(acceptanceDate.getTime() + 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], 'Escrow Opens', 'opening', 'Open escrow');
-        addTimelineEvent(new Date(acceptanceDate.getTime() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], 'EMD Due', 'financial', 'Deposit due');
-        addTimelineEvent(new Date(acceptanceDate.getTime() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], 'Seller Disclosures Due', 'disclosure', 'Disclosures deadline');
-        addTimelineEvent(new Date(acceptanceDate.getTime() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], 'Home Inspection', 'inspection', 'Inspection scheduled');
-        addTimelineEvent(new Date(acceptanceDate.getTime() + 17 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], 'Remove Inspection Contingency', 'contingency', 'Inspection contingency deadline');
-        addTimelineEvent(new Date(acceptanceDate.getTime() + 17 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], 'Remove Appraisal Contingency', 'contingency', 'Appraisal contingency deadline');
-        addTimelineEvent(new Date(acceptanceDate.getTime() + 21 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], 'Remove Loan Contingency', 'contingency', 'Loan contingency deadline');
-        addTimelineEvent(new Date(acceptanceDate.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], 'Close of Escrow', 'closing', 'Target closing date');
-      }
-      
-      // Build timeline object with all RPA dates (same format as main escrow response)
-      const timelineData = {
-        // Core transaction dates
-        acceptanceDate: escrow.acceptance_date || null,
-        escrowOpenedDate: escrow.escrow_opened_date || escrow.opening_date || null,
-        closingDate: escrow.closing_date || null,
-        recordingDate: escrow.recording_date || null,
-        possessionDate: escrow.possession_date || null,
-        
-        // Inspection dates
-        inspectionPeriodEndDate: escrow.inspection_period_end_date || null,
-        physicalInspectionDate: escrow.physical_inspection_date || null,
-        termiteInspectionDate: escrow.termite_inspection_date || null,
-        sewerInspectionDate: escrow.sewer_inspection_date || null,
-        poolSpaInspectionDate: escrow.pool_spa_inspection_date || null,
-        roofInspectionDate: escrow.roof_inspection_date || null,
-        chimneyInspectionDate: escrow.chimney_inspection_date || null,
-        
-        // Disclosure dates
-        sellerDisclosuresDueDate: escrow.seller_disclosures_due_date || null,
-        sellerDisclosuresReceivedDate: escrow.seller_disclosures_received_date || null,
-        preliminaryTitleReportDate: escrow.preliminary_title_report_date || null,
-        nhdReportDate: escrow.nhd_report_date || null,
-        hoaDocumentsDueDate: escrow.hoa_documents_due_date || null,
-        hoaDocumentsReceivedDate: escrow.hoa_documents_received_date || null,
-        
-        // Loan dates
-        loanApplicationDate: escrow.loan_application_date || null,
-        loanContingencyRemovalDate: escrow.loan_contingency_removal_date || null,
-        appraisalContingencyRemovalDate: escrow.appraisal_contingency_removal_date || null,
-        appraisalOrderedDate: escrow.appraisal_ordered_date || null,
-        appraisalCompletedDate: escrow.appraisal_completed_date || null,
-        loanApprovalDate: escrow.loan_approval_date || null,
-        loanDocsOrderedDate: escrow.loan_docs_ordered_date || null,
-        loanDocsSignedDate: escrow.loan_docs_signed_date || null,
-        loanFundedDate: escrow.loan_funded_date || null,
-        
-        // Contingency removal dates
-        inspectionContingencyRemovalDate: escrow.inspection_contingency_removal_date || null,
-        allContingenciesRemovalDate: escrow.all_contingencies_removal_date || null,
-        
-        // Other important dates
-        walkThroughDate: escrow.walk_through_date || null,
-        rentBackEndDate: escrow.rent_back_end_date || null,
-        titleOrderedDate: escrow.title_ordered_date || null,
-        insuranceOrderedDate: escrow.insurance_ordered_date || null,
-        smokeAlarmInstallationDate: escrow.smoke_alarm_installation_date || null,
-        termiteCompletionDate: escrow.termite_completion_date || null,
-        repairsCompletionDate: escrow.repairs_completion_date || null,
-        finalVerificationDate: escrow.final_verification_date || null,
-        
-        // EMD dates
-        emdDate: escrow.emd_date || null,
-        
-        // Additional dates from the system
-        actualCoeDate: escrow.actual_coe_date || null,
-        contingenciesDate: escrow.contingencies_date || null,
-        
-        // Include any additional timeline data from JSONB
-        ...(escrow.timeline || {})
-      };
-      
+      // Return just the timeline section
       res.json({
         success: true,
-        data: timelineData
+        data: fullResponse.timeline
       });
       
     } catch (error) {
@@ -1157,21 +943,13 @@ class SimpleEscrowController {
     try {
       const { id } = req.params;
       
+      // Detect if ID is UUID format
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
       
+      // Get the full escrow record
       const query = `
-        SELECT 
-          purchase_price,
-          earnest_money_deposit,
-          commission_percentage,
-          gross_commission,
-          my_commission,
-          commission_adjustments,
-          expense_adjustments,
-          financials,
-          expenses
-        FROM escrows
-        WHERE ${isUUID ? 'id = $1::uuid' : 'display_id = $1'}
+        SELECT * FROM escrows
+        WHERE ${isUUID ? 'id = $1' : 'display_id = $1'}
       `;
       
       const result = await pool.query(query, [id]);
@@ -1187,67 +965,14 @@ class SimpleEscrowController {
       }
       
       const escrow = result.rows[0];
-      const financials = escrow.financials || {};
-      const expenses = escrow.expenses || [];
       
-      // Calculate total expenses
-      const totalExpenses = expenses.reduce((sum, expense) => sum + (expense.amount || 0), 0);
+      // Use the same response builder as getEscrowById
+      const fullResponse = buildRestructuredEscrowResponse(escrow);
       
-      // Build financial data response matching SkySlope Books format
-      const data = {
-        purchasePrice: parseFloat(escrow.purchase_price) || 0,
-        earnestMoneyDeposit: parseFloat(escrow.earnest_money_deposit) || 0,
-        
-        // Deal Cost Breakdown
-        dealCostBreakdown: {
-          baseCommission: parseFloat(escrow.gross_commission) || 0,
-          grossCommission: parseFloat(escrow.gross_commission) || 0,
-          grossCommissionFees: parseFloat(financials.grossCommissionFees) || 0,
-          referralFees: parseFloat(financials.referralFees) || 0,
-          adjustedGross: (parseFloat(escrow.gross_commission) || 0) - (parseFloat(financials.grossCommissionFees) || 0),
-          netCommission: parseFloat(escrow.my_commission) || 0,
-          dealExpense: parseFloat(financials.franchiseFees) || 0,
-          franchiseFees: parseFloat(financials.franchiseFees) || 0,
-          dealNet: (parseFloat(escrow.my_commission) || 0) - (parseFloat(financials.franchiseFees) || 0)
-        },
-        
-        // Agent Cost Breakdown
-        agentCostBreakdown: {
-          dealNet: (parseFloat(escrow.my_commission) || 0) - (parseFloat(financials.franchiseFees) || 0),
-          agentGCI: (parseFloat(escrow.my_commission) || 0) - (parseFloat(financials.franchiseFees) || 0),
-          agentSplit: parseFloat(financials.agentSplit?.grossAgentCommission) || 0,
-          splitPercentage: parseFloat(financials.agentSplit?.splitPercentage) || 75,
-          transactionFee: parseFloat(financials.agentSplit?.transactionFee) || 285,
-          tcFee: parseFloat(financials.agentSplit?.tcFee) || 250,
-          agent1099Income: parseFloat(financials.agentSplit?.agent1099Income) || 0,
-          excessPayment: parseFloat(financials.agentSplit?.agent1099Income) || 0,
-          agentNet: parseFloat(financials.agentSplit?.agent1099Income) || 0
-        },
-        
-        // Commission Details
-        commissionBreakdown: {
-          commissionPercentage: parseFloat(escrow.commission_percentage) || 3,
-          grossCommission: parseFloat(escrow.gross_commission) || 0,
-          myCommission: parseFloat(escrow.my_commission) || 0,
-          commissionAdjustments: parseFloat(escrow.commission_adjustments) || 0,
-          expenseAdjustments: parseFloat(escrow.expense_adjustments) || 0,
-          netCommission: (parseFloat(escrow.my_commission) || 0) + 
-                        (parseFloat(escrow.commission_adjustments) || 0) + 
-                        (parseFloat(escrow.expense_adjustments) || 0)
-        },
-        
-        // Expenses
-        expenses: expenses,
-        expensesPaidThroughEscrow: expenses.filter(e => e.paidThroughEscrow === true),
-        totalExpenses: totalExpenses,
-        
-        // Additional stored financials
-        ...financials
-      };
-      
+      // Return just the financials section
       res.json({
         success: true,
-        data: data
+        data: fullResponse.financials
       });
       
     } catch (error) {
@@ -1269,12 +994,13 @@ class SimpleEscrowController {
     try {
       const { id } = req.params;
       
+      // Detect if ID is UUID format
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
       
+      // Get the full escrow record
       const query = `
-        SELECT checklists
-        FROM escrows
-        WHERE ${isUUID ? 'id = $1::uuid' : 'display_id = $1'}
+        SELECT * FROM escrows
+        WHERE ${isUUID ? 'id = $1' : 'display_id = $1'}
       `;
       
       const result = await pool.query(query, [id]);
@@ -1289,49 +1015,19 @@ class SimpleEscrowController {
         });
       }
       
-      // Default checklist structure with all items false
-      const defaultChecklists = {
-        loan: {
-          le: false,
-          lockedRate: false,
-          appraisalOrdered: false,
-          appraisalReceived: false,
-          clearToClose: false,
-          cd: false,
-          loanDocsSigned: false,
-          cashToClosePaid: false,
-          loanFunded: false
-        },
-        house: {
-          homeInspectionOrdered: false,
-          emd: false,
-          solarTransferInitiated: false,
-          avid: false,
-          homeInspectionReceived: false,
-          sellerDisclosures: false,
-          rr: false,
-          recorded: false
-        },
-        admin: {
-          mlsStatusUpdate: false,
-          tcEmail: false,
-          tcGlideInvite: false,
-          addContactsToPhone: false,
-          addContactsToNotion: false
-        }
-      };
+      const escrow = result.rows[0];
       
-      // Merge stored data with defaults to ensure all keys exist
-      const checklists = result.rows[0].checklists ? 
-        {
-          loan: { ...defaultChecklists.loan, ...(result.rows[0].checklists.loan || {}) },
-          house: { ...defaultChecklists.house, ...(result.rows[0].checklists.house || result.rows[0].checklists.home || {}) },
-          admin: { ...defaultChecklists.admin, ...(result.rows[0].checklists.admin || {}) }
-        } : defaultChecklists;
+      // Use the same response builder as getEscrowById
+      const fullResponse = buildRestructuredEscrowResponse(escrow);
       
+      // Return the checklist sections with the correct format
       res.json({
         success: true,
-        data: checklists
+        data: {
+          'checklist-loan': fullResponse['checklist-loan'],
+          'checklist-house': fullResponse['checklist-house'],
+          'checklist-admin': fullResponse['checklist-admin']
+        }
       });
       
     } catch (error) {
