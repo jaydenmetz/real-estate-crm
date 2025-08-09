@@ -122,7 +122,7 @@ app.get('/health', (req, res) => {
   const healthData = {
     status: 'healthy',
     timestamp: new Date().toISOString(),
-    version: process.env.API_VERSION || '1.0.0',
+    version: process.env.API_VERSION || '1.0.1',
     websocket: {
       status: websocketService.io ? 'running' : 'not_initialized',
       connections: websocketService.getConnectionCount()
