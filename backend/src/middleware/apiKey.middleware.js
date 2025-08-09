@@ -55,9 +55,9 @@ const authenticateApiKey = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.error('API Key authentication error:', error);
+    console.error('API Key authentication error:', error.message, error.stack);
     
-    if (error.message.includes('expired')) {
+    if (error.message && error.message.includes('expired')) {
       return res.status(401).json({
         success: false,
         error: {

@@ -95,7 +95,7 @@ class ApiKeyService {
         t.name as team_name
       FROM api_keys ak
       JOIN users u ON ak.user_id = u.id
-      LEFT JOIN teams t ON ak.team_id = t.id
+      LEFT JOIN teams t ON ak.team_id = t.team_id
       WHERE ak.key_hash = $1
     `, [keyHash]);
 
