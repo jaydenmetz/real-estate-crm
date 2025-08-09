@@ -35,7 +35,7 @@ import FinancialsWidgetCompact from '../escrow-detail/widgets/FinancialsWidgetCo
 import ChecklistWidgetCompact from '../escrow-detail/widgets/ChecklistWidgetCompact';
 import AllDataEditor from '../escrow-detail/AllDataEditor';
 import DebugError from '../common/DebugError';
-import DebugCard from '../common/DebugCard';
+import DebugCardWithApiTests from '../common/DebugCardWithApiTests';
 
 // Styled components
 const PageContainer = styled(Box)(({ theme }) => ({
@@ -282,7 +282,7 @@ function EscrowDetail() {
 
   return (
     <PageContainer>
-      <DebugCard 
+      <DebugCardWithApiTests 
         pageType="escrow-detail" 
         pageData={{
           id: escrowData?.id,
