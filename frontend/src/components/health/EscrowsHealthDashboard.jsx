@@ -15,7 +15,8 @@ import {
   Tooltip,
   Snackbar,
   Alert,
-  Divider
+  Divider,
+  Stack
 } from '@mui/material';
 import {
   CheckCircle as CheckIcon,
@@ -33,6 +34,17 @@ const PageContainer = styled(Box)(({ theme }) => ({
   minHeight: '100vh',
   paddingTop: theme.spacing(3),
   paddingBottom: theme.spacing(3)
+}));
+
+const SectionHeader = styled(Typography)(({ theme }) => ({
+  fontWeight: 'bold',
+  color: theme.palette.primary.dark,
+  marginTop: theme.spacing(3),
+  marginBottom: theme.spacing(2),
+  padding: theme.spacing(1, 2),
+  backgroundColor: 'rgba(255, 255, 255, 0.9)',
+  borderRadius: theme.spacing(1),
+  display: 'inline-block'
 }));
 
 const TestCard = styled(Card)(({ status }) => ({
@@ -98,17 +110,19 @@ const TestItem = ({ test }) => {
   const formatCurl = () => {
     if (!test.curl) return '';
     
-    // Format curl command for readability
-    const parts = test.curl.split(' ');
-    let formatted = 'curl';
+    // Clean up the curl command for better readability
+    let formatted = test.curl;
     
-    for (let i = 1; i < parts.length; i++) {
-      if (parts[i].startsWith('-')) {
-        formatted += ' \\\n  ' + parts[i];
-      } else {
-        formatted += ' ' + parts[i];
-      }
-    }
+    // Remove the token from display for cleaner view
+    formatted = formatted.replace(/Bearer [^\s"]+/, 'Bearer YOUR_TOKEN');
+    formatted = formatted.replace(/X-API-Key: [^\s"]+/, 'X-API-Key: YOUR_API_KEY');
+    
+    // Split into multiple lines for readability
+    formatted = formatted
+      .replace(' -X ', ' \\\n  -X ')
+      .replace(' -H ', ' \\\n  -H ')
+      .replace(/ -H /g, ' \\\n  -H ')
+      .replace(' -d ', ' \\\n  -d ');
     
     return formatted;
   };
@@ -120,6 +134,18 @@ const TestItem = ({ test }) => {
       const parsed = typeof test.response === 'string' 
         ? JSON.parse(test.response) 
         : test.response;
+      
+      // For successful GET requests, show a simplified version
+      if (test.status === 'success' && test.method === 'GET' && parsed.data?.escrows) {
+        return JSON.stringify({
+          success: parsed.success,
+          data: {
+            escrows: `[${parsed.data.escrows.length} escrows]`,
+            pagination: parsed.data.pagination
+          }
+        }, null, 2);
+      }
+      
       return JSON.stringify(parsed, null, 2);
     } catch {
       return test.response;
@@ -266,10 +292,18 @@ const EscrowsHealthDashboard = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [testEscrowId, setTestEscrowId] = useState(null);
+  const [groupedTests, setGroupedTests] = useState({
+    GET: [],
+    POST: [],
+    PUT: [],
+    DELETE: []
+  });
 
   const runAllTests = useCallback(async () => {
     setLoading(true);
     setTests([]);
+    setGroupedTests({ GET: [], POST: [], PUT: [], DELETE: [] });
+    
     let API_URL = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
     // Ensure API URL has /v1 suffix
     if (!API_URL.endsWith('/v1')) {
@@ -281,13 +315,18 @@ const EscrowsHealthDashboard = () => {
                  localStorage.getItem('authToken') ||
                  localStorage.getItem('token');
 
-    const testSuite = [];
+    const allTests = [];
+    const grouped = { GET: [], POST: [], PUT: [], DELETE: [] };
     let createdEscrowId = null;
 
-    // Test 1: GET all escrows
+    // ========================================
+    // GET REQUESTS - Run these first
+    // ========================================
+
+    // GET Test 1: Get all escrows
     const getAllTest = {
-      name: 'Get All Escrows',
-      description: 'Fetch all escrows from the database',
+      name: 'List All Escrows',
+      description: 'Retrieve all escrows from the database',
       method: 'GET',
       endpoint: '/escrows',
       status: 'pending',
@@ -314,12 +353,13 @@ const EscrowsHealthDashboard = () => {
       getAllTest.error = error.message;
       getAllTest.responseTime = Date.now() - startTime1;
     }
-    testSuite.push(getAllTest);
-    setTests([...testSuite]);
+    grouped.GET.push(getAllTest);
+    allTests.push(getAllTest);
+    setGroupedTests({...grouped});
 
-    // Test 2: GET escrows with pagination
+    // GET Test 2: Get with pagination
     const getPaginatedTest = {
-      name: 'Get Escrows with Pagination',
+      name: 'List with Pagination',
       description: 'Test pagination parameters (page=1, limit=5)',
       method: 'GET',
       endpoint: '/escrows?page=1&limit=5',
@@ -347,10 +387,53 @@ const EscrowsHealthDashboard = () => {
       getPaginatedTest.error = error.message;
       getPaginatedTest.responseTime = Date.now() - startTime2;
     }
-    testSuite.push(getPaginatedTest);
-    setTests([...testSuite]);
+    grouped.GET.push(getPaginatedTest);
+    allTests.push(getPaginatedTest);
+    setGroupedTests({...grouped});
 
-    // Test 3: POST - Create test escrow
+    // GET Test 3: Get first escrow by ID (if any exist)
+    let existingEscrowId = null;
+    if (getAllTest.status === 'success' && getAllTest.response?.data?.escrows?.length > 0) {
+      existingEscrowId = getAllTest.response.data.escrows[0].id;
+      
+      const getByIdTest = {
+        name: 'Get Escrow by ID',
+        description: 'Retrieve a specific escrow using its ID',
+        method: 'GET',
+        endpoint: `/escrows/${existingEscrowId}`,
+        status: 'pending',
+        curl: `curl -X GET "${API_URL}/escrows/${existingEscrowId}" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}"`,
+        response: null,
+        error: null,
+        responseTime: null
+      };
+
+      const startTime3 = Date.now();
+      try {
+        const response = await fetch(`${API_URL}/escrows/${existingEscrowId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        getByIdTest.responseTime = Date.now() - startTime3;
+        getByIdTest.status = response.ok && data.success ? 'success' : 'failed';
+        getByIdTest.response = data;
+        if (!response.ok || !data.success) {
+          getByIdTest.error = data.error?.message || 'Failed to fetch escrow';
+        }
+      } catch (error) {
+        getByIdTest.status = 'failed';
+        getByIdTest.error = error.message;
+        getByIdTest.responseTime = Date.now() - startTime3;
+      }
+      grouped.GET.push(getByIdTest);
+      allTests.push(getByIdTest);
+      setGroupedTests({...grouped});
+    }
+
+    // ========================================
+    // POST REQUESTS
+    // ========================================
+
     const testEscrowData = {
       property_address: `Test Property ${Date.now()}`,
       city: 'Test City',
@@ -369,19 +452,19 @@ const EscrowsHealthDashboard = () => {
     };
 
     const createTest = {
-      name: 'Create Test Escrow',
-      description: 'Create a new test escrow record',
+      name: 'Create New Escrow',
+      description: 'Create a test escrow record',
       method: 'POST',
       endpoint: '/escrows',
       status: 'pending',
-      curl: `curl -X POST "${API_URL}/escrows" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}" -H "Content-Type: application/json" -d '${JSON.stringify(testEscrowData)}'`,
+      curl: `curl -X POST "${API_URL}/escrows" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}" -H "Content-Type: application/json" -d '${JSON.stringify(testEscrowData, null, 2)}'`,
       requestBody: testEscrowData,
       response: null,
       error: null,
       responseTime: null
     };
 
-    const startTime3 = Date.now();
+    const startTime4 = Date.now();
     if (token) {
       try {
         const response = await fetch(`${API_URL}/escrows`, {
@@ -393,7 +476,7 @@ const EscrowsHealthDashboard = () => {
           body: JSON.stringify(testEscrowData)
         });
         const data = await response.json();
-        createTest.responseTime = Date.now() - startTime3;
+        createTest.responseTime = Date.now() - startTime4;
         createTest.status = response.ok && data.success ? 'success' : 'failed';
         createTest.response = data;
         if (data.success && data.data) {
@@ -405,51 +488,22 @@ const EscrowsHealthDashboard = () => {
       } catch (error) {
         createTest.status = 'failed';
         createTest.error = error.message;
-        createTest.responseTime = Date.now() - startTime3;
+        createTest.responseTime = Date.now() - startTime4;
       }
     } else {
       createTest.status = 'failed';
       createTest.error = 'No authentication token available';
     }
-    testSuite.push(createTest);
-    setTests([...testSuite]);
+    grouped.POST.push(createTest);
+    allTests.push(createTest);
+    setGroupedTests({...grouped});
 
-    // Continue with tests if we created an escrow
+    // ========================================
+    // PUT REQUESTS - Only if POST succeeded
+    // ========================================
+
     if (createdEscrowId) {
-      // Test 4: GET single escrow
-      const getSingleTest = {
-        name: 'Get Single Escrow',
-        description: 'Fetch the test escrow by ID',
-        method: 'GET',
-        endpoint: `/escrows/${createdEscrowId}`,
-        status: 'pending',
-        curl: `curl -X GET "${API_URL}/escrows/${createdEscrowId}" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}"`,
-        response: null,
-        error: null,
-        responseTime: null
-      };
-
-      const startTime4 = Date.now();
-      try {
-        const response = await fetch(`${API_URL}/escrows/${createdEscrowId}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        getSingleTest.responseTime = Date.now() - startTime4;
-        getSingleTest.status = response.ok && data.success ? 'success' : 'failed';
-        getSingleTest.response = data;
-        if (!response.ok || !data.success) {
-          getSingleTest.error = data.error?.message || 'Failed to fetch escrow';
-        }
-      } catch (error) {
-        getSingleTest.status = 'failed';
-        getSingleTest.error = error.message;
-        getSingleTest.responseTime = Date.now() - startTime4;
-      }
-      testSuite.push(getSingleTest);
-      setTests([...testSuite]);
-
-      // Test 5: PUT - Update escrow
+      // PUT Test 1: Update escrow basic info
       const updateData = {
         purchase_price: 550000,
         escrow_status: 'Pending',
@@ -458,11 +512,11 @@ const EscrowsHealthDashboard = () => {
 
       const updateTest = {
         name: 'Update Escrow',
-        description: 'Update the test escrow with new data',
+        description: 'Update basic escrow information',
         method: 'PUT',
         endpoint: `/escrows/${createdEscrowId}`,
         status: 'pending',
-        curl: `curl -X PUT "${API_URL}/escrows/${createdEscrowId}" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}" -H "Content-Type: application/json" -d '${JSON.stringify(updateData)}'`,
+        curl: `curl -X PUT "${API_URL}/escrows/${createdEscrowId}" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}" -H "Content-Type: application/json" -d '${JSON.stringify(updateData, null, 2)}'`,
         requestBody: updateData,
         response: null,
         error: null,
@@ -491,10 +545,11 @@ const EscrowsHealthDashboard = () => {
         updateTest.error = error.message;
         updateTest.responseTime = Date.now() - startTime5;
       }
-      testSuite.push(updateTest);
-      setTests([...testSuite]);
+      grouped.PUT.push(updateTest);
+      allTests.push(updateTest);
+      setGroupedTests({...grouped});
 
-      // Test 6: PUT - Update checklists
+      // PUT Test 2: Update checklists
       const checklistData = {
         loan: {
           preApproval: { checked: true, date: new Date().toISOString() },
@@ -507,12 +562,12 @@ const EscrowsHealthDashboard = () => {
       };
 
       const updateChecklistTest = {
-        name: 'Update Escrow Checklists',
-        description: 'Update the test escrow checklists',
+        name: 'Update Checklists',
+        description: 'Update escrow checklist items',
         method: 'PUT',
         endpoint: `/escrows/${createdEscrowId}/checklists`,
         status: 'pending',
-        curl: `curl -X PUT "${API_URL}/escrows/${createdEscrowId}/checklists" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}" -H "Content-Type: application/json" -d '${JSON.stringify(checklistData)}'`,
+        curl: `curl -X PUT "${API_URL}/escrows/${createdEscrowId}/checklists" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}" -H "Content-Type: application/json" -d '${JSON.stringify(checklistData, null, 2)}'`,
         requestBody: checklistData,
         response: null,
         error: null,
@@ -541,10 +596,11 @@ const EscrowsHealthDashboard = () => {
         updateChecklistTest.error = error.message;
         updateChecklistTest.responseTime = Date.now() - startTime6;
       }
-      testSuite.push(updateChecklistTest);
-      setTests([...testSuite]);
+      grouped.PUT.push(updateChecklistTest);
+      allTests.push(updateChecklistTest);
+      setGroupedTests({...grouped});
 
-      // Test 7: PUT - Update people
+      // PUT Test 3: Update people
       const peopleData = {
         buyers: [
           { name: 'Test Buyer', email: 'buyer@test.com', phone: '555-0001' }
@@ -558,12 +614,12 @@ const EscrowsHealthDashboard = () => {
       };
 
       const updatePeopleTest = {
-        name: 'Update Escrow People',
+        name: 'Update People',
         description: 'Update buyers, sellers, and agents',
         method: 'PUT',
         endpoint: `/escrows/${createdEscrowId}/people`,
         status: 'pending',
-        curl: `curl -X PUT "${API_URL}/escrows/${createdEscrowId}/people" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}" -H "Content-Type: application/json" -d '${JSON.stringify(peopleData)}'`,
+        curl: `curl -X PUT "${API_URL}/escrows/${createdEscrowId}/people" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}" -H "Content-Type: application/json" -d '${JSON.stringify(peopleData, null, 2)}'`,
         requestBody: peopleData,
         response: null,
         error: null,
@@ -592,13 +648,18 @@ const EscrowsHealthDashboard = () => {
         updatePeopleTest.error = error.message;
         updatePeopleTest.responseTime = Date.now() - startTime7;
       }
-      testSuite.push(updatePeopleTest);
-      setTests([...testSuite]);
+      grouped.PUT.push(updatePeopleTest);
+      allTests.push(updatePeopleTest);
+      setGroupedTests({...grouped});
 
-      // Test 8: DELETE - Delete test escrow
+      // ========================================
+      // DELETE REQUESTS
+      // ========================================
+
+      // DELETE Test: Delete the test escrow
       const deleteTest = {
-        name: 'Delete Test Escrow',
-        description: 'Clean up by deleting the test escrow',
+        name: 'Delete Escrow',
+        description: 'Remove the test escrow from database',
         method: 'DELETE',
         endpoint: `/escrows/${createdEscrowId}`,
         status: 'pending',
@@ -628,13 +689,14 @@ const EscrowsHealthDashboard = () => {
         deleteTest.error = error.message;
         deleteTest.responseTime = Date.now() - startTime8;
       }
-      testSuite.push(deleteTest);
-      setTests([...testSuite]);
+      grouped.DELETE.push(deleteTest);
+      allTests.push(deleteTest);
+      setGroupedTests({...grouped});
 
-      // Test 9: Verify deletion
+      // Verify deletion with a GET request
       const verifyDeleteTest = {
         name: 'Verify Deletion',
-        description: 'Confirm the test escrow no longer exists',
+        description: 'Confirm escrow no longer exists (should return 404)',
         method: 'GET',
         endpoint: `/escrows/${createdEscrowId}`,
         status: 'pending',
@@ -662,10 +724,12 @@ const EscrowsHealthDashboard = () => {
         verifyDeleteTest.error = error.message;
         verifyDeleteTest.responseTime = Date.now() - startTime9;
       }
-      testSuite.push(verifyDeleteTest);
-      setTests([...testSuite]);
+      grouped.GET.push(verifyDeleteTest);
+      allTests.push(verifyDeleteTest);
+      setGroupedTests({...grouped});
     }
 
+    setTests(allTests);
     setLoading(false);
     setLastRefresh(new Date().toLocaleString());
   }, []);
@@ -861,9 +925,53 @@ const EscrowsHealthDashboard = () => {
 
         <Fade in={!loading}>
           <Box>
-            {tests.map((test, index) => (
-              <TestItem key={index} test={test} />
-            ))}
+            {/* GET Requests Section */}
+            {groupedTests.GET.length > 0 && (
+              <>
+                <SectionHeader variant="h5">
+                  GET Requests ({groupedTests.GET.filter(t => t.status === 'success').length}/{groupedTests.GET.length})
+                </SectionHeader>
+                {groupedTests.GET.map((test, index) => (
+                  <TestItem key={`get-${index}`} test={test} />
+                ))}
+              </>
+            )}
+
+            {/* POST Requests Section */}
+            {groupedTests.POST.length > 0 && (
+              <>
+                <SectionHeader variant="h5">
+                  POST Requests ({groupedTests.POST.filter(t => t.status === 'success').length}/{groupedTests.POST.length})
+                </SectionHeader>
+                {groupedTests.POST.map((test, index) => (
+                  <TestItem key={`post-${index}`} test={test} />
+                ))}
+              </>
+            )}
+
+            {/* PUT Requests Section */}
+            {groupedTests.PUT.length > 0 && (
+              <>
+                <SectionHeader variant="h5">
+                  PUT Requests ({groupedTests.PUT.filter(t => t.status === 'success').length}/{groupedTests.PUT.length})
+                </SectionHeader>
+                {groupedTests.PUT.map((test, index) => (
+                  <TestItem key={`put-${index}`} test={test} />
+                ))}
+              </>
+            )}
+
+            {/* DELETE Requests Section */}
+            {groupedTests.DELETE.length > 0 && (
+              <>
+                <SectionHeader variant="h5">
+                  DELETE Requests ({groupedTests.DELETE.filter(t => t.status === 'success').length}/{groupedTests.DELETE.length})
+                </SectionHeader>
+                {groupedTests.DELETE.map((test, index) => (
+                  <TestItem key={`delete-${index}`} test={test} />
+                ))}
+              </>
+            )}
           </Box>
         </Fade>
       </Container>
