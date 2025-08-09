@@ -11,14 +11,18 @@ import {
   IconButton,
   Collapse,
   Chip,
-  Fade
+  Fade,
+  Tooltip,
+  Snackbar,
+  Alert
 } from '@mui/material';
 import {
   CheckCircle as CheckIcon,
   Cancel as ErrorIcon,
   ExpandMore as ExpandIcon,
   ContentCopy as CopyIcon,
-  Refresh as RefreshIcon
+  Refresh as RefreshIcon,
+  Download as DownloadIcon
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 
@@ -207,6 +211,8 @@ const HealthCheckDashboard = () => {
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(null);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState('');
 
   const runAllTests = useCallback(async () => {
     setLoading(true);
@@ -426,6 +432,36 @@ const HealthCheckDashboard = () => {
   const successCount = tests.filter(t => t.status === 'success').length;
   const failedCount = tests.filter(t => t.status === 'failed').length;
 
+  const copyAllData = () => {
+    const allData = {
+      dashboard: 'API Health Check Dashboard',
+      lastRefresh: lastRefresh || 'Not yet refreshed',
+      summary: {
+        totalTests: tests.length,
+        passed: successCount,
+        failed: failedCount
+      },
+      tests: tests.map(test => ({
+        name: test.name,
+        description: test.description,
+        status: test.status,
+        curl: test.curl,
+        response: test.response,
+        error: test.error
+      }))
+    };
+
+    const formattedData = JSON.stringify(allData, null, 2);
+    navigator.clipboard.writeText(formattedData).then(() => {
+      setSnackbarMessage('All test data copied to clipboard!');
+      setSnackbarOpen(true);
+    }).catch(err => {
+      console.error('Failed to copy:', err);
+      setSnackbarMessage('Failed to copy data to clipboard');
+      setSnackbarOpen(true);
+    });
+  };
+
   return (
     <PageContainer>
       <Container maxWidth="lg">
@@ -439,16 +475,32 @@ const HealthCheckDashboard = () => {
                 Auto-refreshes on page reload • Last refresh: {lastRefresh || 'Loading...'}
               </Typography>
             </Box>
-            <IconButton 
-              onClick={runAllTests} 
-              disabled={loading}
-              sx={{ 
-                backgroundColor: '#f5f5f5',
-                '&:hover': { backgroundColor: '#e0e0e0' }
-              }}
-            >
-              <RefreshIcon />
-            </IconButton>
+            <Box display="flex" gap={1}>
+              <Tooltip title="Copy All Data">
+                <IconButton 
+                  onClick={copyAllData} 
+                  disabled={loading || tests.length === 0}
+                  sx={{ 
+                    backgroundColor: '#f5f5f5',
+                    '&:hover': { backgroundColor: '#e0e0e0' }
+                  }}
+                >
+                  <CopyIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Refresh Tests">
+                <IconButton 
+                  onClick={runAllTests} 
+                  disabled={loading}
+                  sx={{ 
+                    backgroundColor: '#f5f5f5',
+                    '&:hover': { backgroundColor: '#e0e0e0' }
+                  }}
+                >
+                  <RefreshIcon />
+                </IconButton>
+              </Tooltip>
+            </Box>
           </Box>
 
           <Grid container spacing={2}>
@@ -487,6 +539,17 @@ const HealthCheckDashboard = () => {
           </Box>
         </Fade>
       </Container>
+      
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setSnackbarOpen(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert onClose={() => setSnackbarOpen(false)} severity="success" sx={{ width: '100%' }}>
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </PageContainer>
   );
 };
