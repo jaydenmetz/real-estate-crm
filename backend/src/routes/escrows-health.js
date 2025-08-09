@@ -27,10 +27,10 @@ router.get('/health', authenticate, async (req, res) => {
       const createResult = await pool.query(`
         INSERT INTO escrows (
           property_address, city, state, zip_code, 
-          purchase_price, escrow_status, open_date, 
-          scheduled_close_date, display_id, created_by, team_id,
-          buyer_name, seller_name, listing_price, net_commission
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+          purchase_price, escrow_status, acceptance_date, 
+          closing_date, display_id, created_by, team_id,
+          net_commission
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
         RETURNING id, display_id
       `, [
         `${testPrefix} Test Property`,
@@ -38,15 +38,12 @@ router.get('/health', authenticate, async (req, res) => {
         'CA',
         '90210',
         100000,
-        'active',
+        'Active',
         new Date(),
         new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         `${testPrefix}-001`,
         req.user.id,
         req.user.teamId,
-        'Test Buyer',
-        'Test Seller',
-        100000,
         3000
       ]);
 
