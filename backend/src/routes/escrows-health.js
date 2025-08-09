@@ -28,8 +28,9 @@ router.get('/health', authenticate, async (req, res) => {
         INSERT INTO escrows (
           property_address, city, state, zip_code, 
           purchase_price, escrow_status, open_date, 
-          scheduled_close_date, display_id, created_by, team_id
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+          scheduled_close_date, display_id, created_by, team_id,
+          buyer_name, seller_name, listing_price, net_commission
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
         RETURNING id, display_id
       `, [
         `${testPrefix} Test Property`,
@@ -42,7 +43,11 @@ router.get('/health', authenticate, async (req, res) => {
         new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
         `${testPrefix}-001`,
         req.user.id,
-        req.user.teamId
+        req.user.teamId,
+        'Test Buyer',
+        'Test Seller',
+        100000,
+        3000
       ]);
 
       testEscrowId = createResult.rows[0].id;
