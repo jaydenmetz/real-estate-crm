@@ -44,6 +44,7 @@ import {
   AttachMoney,
   Receipt,
   AccountBalanceWallet,
+  HealthAndSafety,
 } from '@mui/icons-material';
 import UserMenu from './UserMenu';
 
@@ -83,6 +84,7 @@ const EnhancedNavigation = () => {
     { path: '/all-notes', label: 'All Notes', icon: <Article /> },
     { path: '/reports', label: 'Reports', icon: <Assessment /> },
     { path: '/calendar', label: 'Calendar', icon: <CalendarMonth /> },
+    { path: '/escrows/health', label: 'API Health Check', icon: <HealthAndSafety /> },
   ];
 
   // Mock notifications
