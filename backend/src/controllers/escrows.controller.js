@@ -621,7 +621,7 @@ class SimpleEscrowController {
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
       
       const result = await pool.query(
-        `DELETE FROM escrows WHERE ${isUUID ? 'id = $1::uuid' : 'display_id = $1'} RETURNING display_id`,
+        `DELETE FROM escrows WHERE ${isUUID ? 'id = $1' : 'display_id = $1'} RETURNING display_id`,
         [id]
       );
       
@@ -646,7 +646,8 @@ class SimpleEscrowController {
         success: false,
         error: {
           code: 'DELETE_ERROR',
-          message: 'Failed to delete escrow'
+          message: 'Failed to delete escrow',
+          details: error.message
         }
       });
     }
