@@ -668,27 +668,38 @@ class SimpleEscrowController {
       // - Generate numeric_id from sequence
       // - Generate display_id via trigger (ESCROW-2025-0001 format)
       
-      // Insert the new escrow
+      // Insert the new escrow - using correct column names for production schema
       const insertQuery = `
         INSERT INTO escrows (
-          property_address, escrow_status, purchase_price,
-          earnest_money, buyer_side_commission,
-          opening_date, closing_date, property_type, transaction_type,
+          property_address, city, state, zip_code,
+          escrow_status, purchase_price,
+          earnest_money_deposit, commission_percentage, net_commission,
+          acceptance_date, closing_date, property_type,
+          escrow_company, escrow_officer_name, escrow_officer_email,
+          created_by, team_id,
           created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW(), NOW())
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW(), NOW())
         RETURNING *
       `;
       
       const values = [
         escrowData.property_address,
-        escrowData.escrow_status || 'active',
+        escrowData.city || 'Unknown',
+        escrowData.state || 'CA',
+        escrowData.zip_code || '00000',
+        escrowData.escrow_status || 'Active',
         escrowData.purchase_price,
-        escrowData.earnest_money || escrowData.purchase_price * 0.01,
-        escrowData.buyer_side_commission || 2.5,
-        escrowData.opening_date || new Date().toISOString().split('T')[0],
+        escrowData.earnest_money_deposit || escrowData.earnest_money || escrowData.purchase_price * 0.01,
+        escrowData.commission_percentage || 2.5,
+        escrowData.net_commission || escrowData.my_commission || (escrowData.purchase_price * 0.025),
+        escrowData.acceptance_date || escrowData.opening_date || new Date().toISOString().split('T')[0],
         escrowData.closing_date || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         escrowData.property_type || 'Single Family',
-        escrowData.transaction_type || 'purchase'
+        escrowData.escrow_company || null,
+        escrowData.escrow_officer_name || null,
+        escrowData.escrow_officer_email || null,
+        req.user?.id || null,
+        req.user?.teamId || null
       ];
       
       const escrowResult = await client.query(insertQuery, values);
@@ -719,7 +730,7 @@ class SimpleEscrowController {
       ];
       
       // Calculate due dates based on escrow dates
-      const acceptanceDate = new Date(newEscrow.opening_date);
+      const acceptanceDate = new Date(newEscrow.acceptance_date || newEscrow.opening_date || new Date());
       const closingDate = new Date(newEscrow.closing_date);
       
       const checklistWithDates = defaultChecklist.map(item => ({
