@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Box,
   Container,
@@ -10,13 +10,12 @@ import {
   Chip,
   Grid,
   Alert,
-  Divider,
   Paper,
   IconButton,
-  Tooltip,
   Collapse,
   TextField,
-  InputAdornment
+  InputAdornment,
+  Skeleton
 } from '@mui/material';
 import {
   CheckCircle as CheckIcon,
@@ -27,7 +26,6 @@ import {
   Security as SecurityIcon,
   Speed as SpeedIcon,
   Storage as DatabaseIcon,
-  Key as KeyIcon,
   VpnKey as ApiKeyIcon,
   ContentCopy as CopyIcon,
   Visibility as ShowIcon,
@@ -79,7 +77,7 @@ const StatusChip = styled(Chip)(({ status }) => ({
   })
 }));
 
-const PulseAnimation = styled(Box)(({ theme }) => ({
+const PulseAnimation = styled(Box)(() => ({
   '@keyframes pulse': {
     '0%': {
       boxShadow: '0 0 0 0 rgba(33, 150, 243, 0.7)'
@@ -168,6 +166,7 @@ const HealthCheckDashboard = () => {
   const [jwtToken, setJwtToken] = useState('');
   const [summary, setSummary] = useState(null);
   const [lastRun, setLastRun] = useState(null);
+  const [hasRun, setHasRun] = useState(false);
 
   useEffect(() => {
     // Get JWT token from localStorage
@@ -176,6 +175,14 @@ const HealthCheckDashboard = () => {
       setJwtToken(token);
     }
   }, []);
+
+  // Auto-run tests on mount and when JWT token is available
+  useEffect(() => {
+    if (jwtToken && !hasRun && !isRunning) {
+      runTests();
+      setHasRun(true);
+    }
+  }, [jwtToken]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const runTests = async () => {
     setIsRunning(true);
@@ -377,8 +384,11 @@ const HealthCheckDashboard = () => {
                 <Typography variant="body1" color="textSecondary">
                   Comprehensive testing suite for API authentication and endpoints
                 </Typography>
+                <Typography variant="caption" color="primary" display="block" mt={1}>
+                  <strong>Auto-runs on page load • Refresh page to re-test</strong>
+                </Typography>
                 {lastRun && (
-                  <Typography variant="caption" color="textSecondary" display="block" mt={1}>
+                  <Typography variant="caption" color="textSecondary" display="block" mt={0.5}>
                     Last run: {lastRun}
                   </Typography>
                 )}
@@ -387,7 +397,7 @@ const HealthCheckDashboard = () => {
                 <Button
                   variant="contained"
                   size="large"
-                  startIcon={isRunning ? <RefreshIcon /> : <RunIcon />}
+                  startIcon={isRunning ? <RefreshIcon /> : hasRun ? <RefreshIcon /> : <RunIcon />}
                   onClick={runTests}
                   disabled={isRunning || !jwtToken}
                   sx={{
@@ -398,7 +408,7 @@ const HealthCheckDashboard = () => {
                     fontSize: '1.1rem'
                   }}
                 >
-                  {isRunning ? 'Running Tests...' : 'Run All Tests'}
+                  {isRunning ? 'Running Tests...' : hasRun ? 'Re-run Tests' : 'Run All Tests'}
                 </Button>
               </Grid>
             </Grid>
@@ -406,6 +416,12 @@ const HealthCheckDashboard = () => {
             {!jwtToken && (
               <Alert severity="warning" sx={{ mt: 2 }}>
                 Please log in first to run health checks
+              </Alert>
+            )}
+            
+            {isRunning && !summary && (
+              <Alert severity="info" sx={{ mt: 2 }}>
+                Running automated health checks...
               </Alert>
             )}
 
@@ -463,9 +479,26 @@ const HealthCheckDashboard = () => {
         )}
 
         <AnimatePresence>
-          {tests.map((test, index) => (
-            <TestResult key={test.name} test={test} index={index} />
-          ))}
+          {tests.length === 0 && isRunning ? (
+            // Show skeleton loaders while initializing
+            <>
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <Card key={i} sx={{ mb: 2 }}>
+                  <CardContent>
+                    <Box display="flex" alignItems="center" gap={2}>
+                      <Skeleton variant="circular" width={24} height={24} />
+                      <Skeleton variant="text" width={200} height={32} />
+                      <Skeleton variant="rectangular" width={80} height={24} sx={{ borderRadius: 2 }} />
+                    </Box>
+                  </CardContent>
+                </Card>
+              ))}
+            </>
+          ) : (
+            tests.map((test, index) => (
+              <TestResult key={test.name} test={test} index={index} />
+            ))
+          )}
         </AnimatePresence>
 
         {apiKey && (
