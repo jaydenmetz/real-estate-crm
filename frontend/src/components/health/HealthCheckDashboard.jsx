@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import {
   Box,
   Container,
@@ -159,6 +160,7 @@ const TestResult = ({ test, index }) => {
 };
 
 const HealthCheckDashboard = () => {
+  const { isAuthenticated } = useAuth();
   const [tests, setTests] = useState([]);
   const [isRunning, setIsRunning] = useState(false);
   const [apiKey, setApiKey] = useState('');
@@ -169,12 +171,21 @@ const HealthCheckDashboard = () => {
   const [hasRun, setHasRun] = useState(false);
 
   useEffect(() => {
-    // Get JWT token from localStorage
-    const token = localStorage.getItem('token');
+    // Get JWT token from localStorage using the correct key
+    const token = localStorage.getItem('crm_auth_token');
     if (token) {
       setJwtToken(token);
+    } else if (isAuthenticated) {
+      // If authenticated through context but token not in expected location
+      // Try to get it from the auth service
+      const authToken = localStorage.getItem('crm_auth_token') || 
+                       localStorage.getItem('token') ||
+                       sessionStorage.getItem('crm_auth_token');
+      if (authToken) {
+        setJwtToken(authToken);
+      }
     }
-  }, []);
+  }, [isAuthenticated]);
 
   // Auto-run tests on mount and when JWT token is available
   useEffect(() => {
@@ -413,9 +424,11 @@ const HealthCheckDashboard = () => {
               </Grid>
             </Grid>
 
-            {!jwtToken && (
+            {!jwtToken && !isRunning && (
               <Alert severity="warning" sx={{ mt: 2 }}>
-                Please log in first to run health checks
+                {isAuthenticated 
+                  ? 'Initializing authentication token...' 
+                  : 'Please log in first to run health checks'}
               </Alert>
             )}
             
