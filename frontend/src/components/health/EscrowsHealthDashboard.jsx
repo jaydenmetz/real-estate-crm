@@ -292,6 +292,7 @@ const EscrowsHealthDashboard = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [testEscrowId, setTestEscrowId] = useState(null);
+  const [testEscrowIds, setTestEscrowIds] = useState([]);
   const [groupedTests, setGroupedTests] = useState({
     GET: [],
     POST: [],
@@ -483,29 +484,30 @@ const EscrowsHealthDashboard = () => {
     }
 
     // ========================================
-    // POST REQUESTS
+    // POST REQUESTS - 3 Different Tests
     // ========================================
+    const createdEscrowIds = [];
 
-    // Only property_address is required - all other fields are optional
-    const testEscrowData = {
-      property_address: `${Date.now()} Test Street, Health Check Test`
+    // POST Test 1: Minimal (Address Only)
+    const minimalEscrowData = {
+      property_address: `${Date.now()} Minimal Test St, Suite 1`
     };
 
-    const createTest = {
-      name: 'Create New Escrow',
-      description: 'Create a test escrow record',
+    const createMinimalTest = {
+      name: 'Create Escrow (Minimal)',
+      description: 'Test with only required field (property_address)',
       method: 'POST',
       endpoint: '/escrows',
       status: 'pending',
-      curl: `curl -X POST "${API_URL}/escrows" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}" -H "Content-Type: application/json" -d '${JSON.stringify(testEscrowData, null, 2)}'`,
-      requestBody: testEscrowData,
+      curl: `curl -X POST "${API_URL}/escrows" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(minimalEscrowData, null, 2)}'`,
+      requestBody: minimalEscrowData,
       response: null,
       error: null,
       responseTime: null
     };
 
-    const startTime4 = Date.now();
     if (token) {
+      const startTimeMinimal = Date.now();
       try {
         const response = await fetch(`${API_URL}/escrows`, {
           method: 'POST',
@@ -513,36 +515,175 @@ const EscrowsHealthDashboard = () => {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(testEscrowData)
+          body: JSON.stringify(minimalEscrowData)
         });
         const data = await response.json();
-        createTest.responseTime = Date.now() - startTime4;
-        createTest.status = response.ok && data.success ? 'success' : 'failed';
-        createTest.response = data;
+        createMinimalTest.responseTime = Date.now() - startTimeMinimal;
+        createMinimalTest.status = response.ok && data.success ? 'success' : 'failed';
+        createMinimalTest.response = data;
         if (data.success && data.data) {
-          createdEscrowId = data.data.id;
-          setTestEscrowId(createdEscrowId);
+          createdEscrowIds.push(data.data.id);
         } else {
-          createTest.error = data.error?.message || 'Failed to create escrow';
+          createMinimalTest.error = data.error?.message || 'Failed to create minimal escrow';
         }
       } catch (error) {
-        createTest.status = 'failed';
-        createTest.error = error.message;
-        createTest.responseTime = Date.now() - startTime4;
+        createMinimalTest.status = 'failed';
+        createMinimalTest.error = error.message;
+        createMinimalTest.responseTime = Date.now() - startTimeMinimal;
       }
     } else {
-      createTest.status = 'failed';
-      createTest.error = 'No authentication token available';
+      createMinimalTest.status = 'failed';
+      createMinimalTest.error = 'No authentication token available';
     }
-    grouped.POST.push(createTest);
-    allTests.push(createTest);
+    grouped.POST.push(createMinimalTest);
+    allTests.push(createMinimalTest);
     setGroupedTests({...grouped});
 
+    // POST Test 2: Basic (Most Important Fields)
+    const basicEscrowData = {
+      property_address: `${Date.now()} Basic Test Ave, Unit 2`,
+      city: 'Los Angeles',
+      state: 'CA',
+      zip_code: '90001',
+      purchase_price: 750000,
+      escrow_status: 'Active',
+      closing_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+    };
+
+    const createBasicTest = {
+      name: 'Create Escrow (Basic)',
+      description: 'Test with essential fields',
+      method: 'POST',
+      endpoint: '/escrows',
+      status: 'pending',
+      curl: `curl -X POST "${API_URL}/escrows" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(basicEscrowData, null, 2)}'`,
+      requestBody: basicEscrowData,
+      response: null,
+      error: null,
+      responseTime: null
+    };
+
+    if (token) {
+      const startTimeBasic = Date.now();
+      try {
+        const response = await fetch(`${API_URL}/escrows`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(basicEscrowData)
+        });
+        const data = await response.json();
+        createBasicTest.responseTime = Date.now() - startTimeBasic;
+        createBasicTest.status = response.ok && data.success ? 'success' : 'failed';
+        createBasicTest.response = data;
+        if (data.success && data.data) {
+          createdEscrowIds.push(data.data.id);
+        } else {
+          createBasicTest.error = data.error?.message || 'Failed to create basic escrow';
+        }
+      } catch (error) {
+        createBasicTest.status = 'failed';
+        createBasicTest.error = error.message;
+        createBasicTest.responseTime = Date.now() - startTimeBasic;
+      }
+    } else {
+      createBasicTest.status = 'failed';
+      createBasicTest.error = 'No authentication token available';
+    }
+    grouped.POST.push(createBasicTest);
+    allTests.push(createBasicTest);
+    setGroupedTests({...grouped});
+
+    // POST Test 3: Full (All Fields)
+    const fullEscrowData = {
+      property_address: `${Date.now()} Full Test Blvd, Suite 3`,
+      city: 'San Francisco',
+      state: 'CA',
+      zip_code: '94105',
+      purchase_price: 1250000,
+      earnest_money_deposit: 50000,
+      commission_percentage: 2.5,
+      net_commission: 31250,
+      escrow_status: 'Active',
+      acceptance_date: new Date().toISOString().split('T')[0],
+      closing_date: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      property_type: 'Condo',
+      escrow_company: 'Premier Escrow Services',
+      escrow_officer_name: 'Jane Smith',
+      escrow_officer_email: 'jane@premierescrow.com',
+      escrow_officer_phone: '(555) 123-4567',
+      loan_officer_name: 'John Doe',
+      loan_officer_email: 'john@lender.com',
+      loan_officer_phone: '(555) 987-6543',
+      title_company: 'First American Title',
+      transaction_type: 'Purchase',
+      lead_source: 'Zillow'
+    };
+
+    const createFullTest = {
+      name: 'Create Escrow (Full)',
+      description: 'Test with all available fields',
+      method: 'POST',
+      endpoint: '/escrows',
+      status: 'pending',
+      curl: `curl -X POST "${API_URL}/escrows" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(fullEscrowData, null, 2)}'`,
+      requestBody: fullEscrowData,
+      response: null,
+      error: null,
+      responseTime: null
+    };
+
+    if (token) {
+      const startTimeFull = Date.now();
+      try {
+        const response = await fetch(`${API_URL}/escrows`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(fullEscrowData)
+        });
+        const data = await response.json();
+        createFullTest.responseTime = Date.now() - startTimeFull;
+        createFullTest.status = response.ok && data.success ? 'success' : 'failed';
+        createFullTest.response = data;
+        if (data.success && data.data) {
+          createdEscrowIds.push(data.data.id);
+        } else {
+          createFullTest.error = data.error?.message || 'Failed to create full escrow';
+        }
+      } catch (error) {
+        createFullTest.status = 'failed';
+        createFullTest.error = error.message;
+        createFullTest.responseTime = Date.now() - startTimeFull;
+      }
+    } else {
+      createFullTest.status = 'failed';
+      createFullTest.error = 'No authentication token available';
+    }
+    grouped.POST.push(createFullTest);
+    allTests.push(createFullTest);
+    setGroupedTests({...grouped});
+
+    // Set the first created escrow as the primary one for testing
+    if (createdEscrowIds.length > 0) {
+      createdEscrowId = createdEscrowIds[0];
+      setTestEscrowId(createdEscrowId);
+      setTestEscrowIds(createdEscrowIds);
+    }
+
     // ========================================
-    // PUT REQUESTS - Only if POST succeeded
+    // PUT REQUESTS - Use different test escrows for comprehensive testing
     // ========================================
 
-    if (createdEscrowId) {
+    if (createdEscrowIds.length > 0) {
+      // Use different escrows for different tests
+      const escrowForBasicUpdate = createdEscrowIds[0] || null;
+      const escrowForDetailTests = createdEscrowIds[1] || createdEscrowIds[0] || null;
+      const escrowForChecklistTests = createdEscrowIds[2] || createdEscrowIds[0] || null;
       // PUT Test 1: Update escrow basic info
       const updateData = {
         purchase_price: 550000,
@@ -554,9 +695,9 @@ const EscrowsHealthDashboard = () => {
         name: 'Update Escrow by ID',
         description: 'Update basic escrow information',
         method: 'PUT',
-        endpoint: `/escrows/${createdEscrowId}`,
+        endpoint: `/escrows/${escrowForBasicUpdate}`,
         status: 'pending',
-        curl: `curl -X PUT "${API_URL}/escrows/${createdEscrowId}" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}" -H "Content-Type: application/json" -d '${JSON.stringify(updateData, null, 2)}'`,
+        curl: `curl -X PUT "${API_URL}/escrows/${escrowForBasicUpdate}" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(updateData, null, 2)}'`,
         requestBody: updateData,
         response: null,
         error: null,
@@ -565,7 +706,7 @@ const EscrowsHealthDashboard = () => {
 
       const startTime5 = Date.now();
       try {
-        const response = await fetch(`${API_URL}/escrows/${createdEscrowId}`, {
+        const response = await fetch(`${API_URL}/escrows/${escrowForBasicUpdate}`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -606,9 +747,9 @@ const EscrowsHealthDashboard = () => {
         name: 'Update People',
         description: 'Update buyers, sellers, and agents',
         method: 'PUT',
-        endpoint: `/escrows/${createdEscrowId}/people`,
+        endpoint: `/escrows/${escrowForBasicUpdate}/people`,
         status: 'pending',
-        curl: `curl -X PUT "${API_URL}/escrows/${createdEscrowId}/people" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}" -H "Content-Type: application/json" -d '${JSON.stringify(peopleData, null, 2)}'`,
+        curl: `curl -X PUT "${API_URL}/escrows/${escrowForBasicUpdate}/people" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(peopleData, null, 2)}'`,
         requestBody: peopleData,
         response: null,
         error: null,
@@ -617,7 +758,7 @@ const EscrowsHealthDashboard = () => {
 
       const startTime6 = Date.now();
       try {
-        const response = await fetch(`${API_URL}/escrows/${createdEscrowId}/people`, {
+        const response = await fetch(`${API_URL}/escrows/${escrowForBasicUpdate}/people`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -653,9 +794,9 @@ const EscrowsHealthDashboard = () => {
         name: 'Update Timeline',
         description: 'Update escrow timeline dates',
         method: 'PUT',
-        endpoint: `/escrows/${createdEscrowId}/timeline`,
+        endpoint: `/escrows/${escrowForDetailTests}/timeline`,
         status: 'pending',
-        curl: `curl -X PUT "${API_URL}/escrows/${createdEscrowId}/timeline" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}" -H "Content-Type: application/json" -d '${JSON.stringify(timelineData, null, 2)}'`,
+        curl: `curl -X PUT "${API_URL}/escrows/${escrowForDetailTests}/timeline" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(timelineData, null, 2)}'`,
         requestBody: timelineData,
         response: null,
         error: null,
@@ -664,7 +805,7 @@ const EscrowsHealthDashboard = () => {
 
       const startTime7 = Date.now();
       try {
-        const response = await fetch(`${API_URL}/escrows/${createdEscrowId}/timeline`, {
+        const response = await fetch(`${API_URL}/escrows/${escrowForDetailTests}/timeline`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -702,9 +843,9 @@ const EscrowsHealthDashboard = () => {
         name: 'Update Financials',
         description: 'Update commission and financial details',
         method: 'PUT',
-        endpoint: `/escrows/${createdEscrowId}/financials`,
+        endpoint: `/escrows/${escrowForDetailTests}/financials`,
         status: 'pending',
-        curl: `curl -X PUT "${API_URL}/escrows/${createdEscrowId}/financials" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}" -H "Content-Type: application/json" -d '${JSON.stringify(financialsData, null, 2)}'`,
+        curl: `curl -X PUT "${API_URL}/escrows/${escrowForDetailTests}/financials" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(financialsData, null, 2)}'`,
         requestBody: financialsData,
         response: null,
         error: null,
@@ -713,7 +854,7 @@ const EscrowsHealthDashboard = () => {
 
       const startTime8 = Date.now();
       try {
-        const response = await fetch(`${API_URL}/escrows/${createdEscrowId}/financials`, {
+        const response = await fetch(`${API_URL}/escrows/${escrowForDetailTests}/financials`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -753,9 +894,9 @@ const EscrowsHealthDashboard = () => {
         name: 'Update Property Details',
         description: 'Update property specifications',
         method: 'PUT',
-        endpoint: `/escrows/${createdEscrowId}/property-details`,
+        endpoint: `/escrows/${escrowForDetailTests}/property-details`,
         status: 'pending',
-        curl: `curl -X PUT "${API_URL}/escrows/${createdEscrowId}/property-details" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}" -H "Content-Type: application/json" -d '${JSON.stringify(propertyDetailsData, null, 2)}'`,
+        curl: `curl -X PUT "${API_URL}/escrows/${escrowForDetailTests}/property-details" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(propertyDetailsData, null, 2)}'`,
         requestBody: propertyDetailsData,
         response: null,
         error: null,
@@ -764,7 +905,7 @@ const EscrowsHealthDashboard = () => {
 
       const startTime9 = Date.now();
       try {
-        const response = await fetch(`${API_URL}/escrows/${createdEscrowId}/property-details`, {
+        const response = await fetch(`${API_URL}/escrows/${escrowForDetailTests}/property-details`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -802,9 +943,9 @@ const EscrowsHealthDashboard = () => {
         name: 'Update Details',
         description: 'Update core escrow details',
         method: 'PUT',
-        endpoint: `/escrows/${createdEscrowId}/details`,
+        endpoint: `/escrows/${escrowForDetailTests}/details`,
         status: 'pending',
-        curl: `curl -X PUT "${API_URL}/escrows/${createdEscrowId}/details" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}" -H "Content-Type: application/json" -d '${JSON.stringify(detailsData, null, 2)}'`,
+        curl: `curl -X PUT "${API_URL}/escrows/${escrowForDetailTests}/details" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(detailsData, null, 2)}'`,
         requestBody: detailsData,
         response: null,
         error: null,
@@ -813,7 +954,7 @@ const EscrowsHealthDashboard = () => {
 
       const startTimeDetails = Date.now();
       try {
-        const response = await fetch(`${API_URL}/escrows/${createdEscrowId}/details`, {
+        const response = await fetch(`${API_URL}/escrows/${escrowForDetailTests}/details`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -850,9 +991,9 @@ const EscrowsHealthDashboard = () => {
         name: 'Update Loan Checklist',
         description: 'Update loan checklist items',
         method: 'PUT',
-        endpoint: `/escrows/${createdEscrowId}/checklist-loan`,
+        endpoint: `/escrows/${escrowForChecklistTests}/checklist-loan`,
         status: 'pending',
-        curl: `curl -X PUT "${API_URL}/escrows/${createdEscrowId}/checklist-loan" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}" -H "Content-Type: application/json" -d '${JSON.stringify(loanChecklistData, null, 2)}'`,
+        curl: `curl -X PUT "${API_URL}/escrows/${escrowForChecklistTests}/checklist-loan" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(loanChecklistData, null, 2)}'`,
         requestBody: loanChecklistData,
         response: null,
         error: null,
@@ -861,7 +1002,7 @@ const EscrowsHealthDashboard = () => {
 
       const startTimeLoan = Date.now();
       try {
-        const response = await fetch(`${API_URL}/escrows/${createdEscrowId}/checklist-loan`, {
+        const response = await fetch(`${API_URL}/escrows/${escrowForChecklistTests}/checklist-loan`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -898,9 +1039,9 @@ const EscrowsHealthDashboard = () => {
         name: 'Update House Checklist',
         description: 'Update house checklist items',
         method: 'PUT',
-        endpoint: `/escrows/${createdEscrowId}/checklist-house`,
+        endpoint: `/escrows/${escrowForChecklistTests}/checklist-house`,
         status: 'pending',
-        curl: `curl -X PUT "${API_URL}/escrows/${createdEscrowId}/checklist-house" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}" -H "Content-Type: application/json" -d '${JSON.stringify(houseChecklistData, null, 2)}'`,
+        curl: `curl -X PUT "${API_URL}/escrows/${escrowForChecklistTests}/checklist-house" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(houseChecklistData, null, 2)}'`,
         requestBody: houseChecklistData,
         response: null,
         error: null,
@@ -909,7 +1050,7 @@ const EscrowsHealthDashboard = () => {
 
       const startTimeHouse = Date.now();
       try {
-        const response = await fetch(`${API_URL}/escrows/${createdEscrowId}/checklist-house`, {
+        const response = await fetch(`${API_URL}/escrows/${escrowForChecklistTests}/checklist-house`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -946,9 +1087,9 @@ const EscrowsHealthDashboard = () => {
         name: 'Update Admin Checklist',
         description: 'Update admin checklist items',
         method: 'PUT',
-        endpoint: `/escrows/${createdEscrowId}/checklist-admin`,
+        endpoint: `/escrows/${escrowForChecklistTests}/checklist-admin`,
         status: 'pending',
-        curl: `curl -X PUT "${API_URL}/escrows/${createdEscrowId}/checklist-admin" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}" -H "Content-Type: application/json" -d '${JSON.stringify(adminChecklistData, null, 2)}'`,
+        curl: `curl -X PUT "${API_URL}/escrows/${escrowForChecklistTests}/checklist-admin" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(adminChecklistData, null, 2)}'`,
         requestBody: adminChecklistData,
         response: null,
         error: null,
@@ -957,7 +1098,7 @@ const EscrowsHealthDashboard = () => {
 
       const startTimeAdmin = Date.now();
       try {
-        const response = await fetch(`${API_URL}/escrows/${createdEscrowId}/checklist-admin`, {
+        const response = await fetch(`${API_URL}/escrows/${escrowForChecklistTests}/checklist-admin`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -1003,9 +1144,9 @@ const EscrowsHealthDashboard = () => {
         name: 'Update Documents',
         description: 'Update documents array',
         method: 'PUT',
-        endpoint: `/escrows/${createdEscrowId}/documents`,
+        endpoint: `/escrows/${escrowForChecklistTests}/documents`,
         status: 'pending',
-        curl: `curl -X PUT "${API_URL}/escrows/${createdEscrowId}/documents" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}" -H "Content-Type: application/json" -d '${JSON.stringify(documentsData, null, 2)}'`,
+        curl: `curl -X PUT "${API_URL}/escrows/${escrowForChecklistTests}/documents" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(documentsData, null, 2)}'`,
         requestBody: documentsData,
         response: null,
         error: null,
@@ -1014,7 +1155,7 @@ const EscrowsHealthDashboard = () => {
 
       const startTimeDocs = Date.now();
       try {
-        const response = await fetch(`${API_URL}/escrows/${createdEscrowId}/documents`, {
+        const response = await fetch(`${API_URL}/escrows/${escrowForChecklistTests}/documents`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -1039,80 +1180,87 @@ const EscrowsHealthDashboard = () => {
       setGroupedTests({...grouped});
 
       // ========================================
-      // DELETE REQUESTS
+      // DELETE REQUESTS - Clean up ALL test escrows
       // ========================================
 
-      // DELETE Test: Delete the test escrow
-      const deleteTest = {
-        name: 'Delete Escrow by ID',
-        description: 'Remove the test escrow from database',
-        method: 'DELETE',
-        endpoint: `/escrows/${createdEscrowId}`,
-        status: 'pending',
-        curl: `curl -X DELETE "${API_URL}/escrows/${createdEscrowId}" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}"`,
-        response: null,
-        error: null,
-        responseTime: null
-      };
-
-      const startTime11 = Date.now();
-      try {
-        const response = await fetch(`${API_URL}/escrows/${createdEscrowId}`, {
+      // Delete all 3 created test escrows
+      for (let i = 0; i < createdEscrowIds.length; i++) {
+        const escrowId = createdEscrowIds[i];
+        const deleteTest = {
+          name: `Delete Test Escrow ${i + 1}`,
+          description: i === 0 ? 'Delete minimal escrow' : i === 1 ? 'Delete basic escrow' : 'Delete full escrow',
           method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        deleteTest.responseTime = Date.now() - startTime11;
-        deleteTest.status = response.ok && data.success ? 'success' : 'failed';
-        deleteTest.response = data;
-        if (!response.ok || !data.success) {
-          deleteTest.error = data.error?.message || 'Failed to delete escrow';
-        } else {
-          setTestEscrowId(null);
-        }
-      } catch (error) {
-        deleteTest.status = 'failed';
-        deleteTest.error = error.message;
-        deleteTest.responseTime = Date.now() - startTime11;
-      }
-      grouped.DELETE.push(deleteTest);
-      allTests.push(deleteTest);
-      setGroupedTests({...grouped});
+          endpoint: `/escrows/${escrowId}`,
+          status: 'pending',
+          curl: `curl -X DELETE "${API_URL}/escrows/${escrowId}" -H "Authorization: Bearer ${token}"`,
+          response: null,
+          error: null,
+          responseTime: null
+        };
 
-      // Verify deletion with a GET request
-      const verifyDeleteTest = {
-        name: 'Verify Deletion',
-        description: 'Confirm escrow no longer exists (should return 404)',
-        method: 'GET',
-        endpoint: `/escrows/${createdEscrowId}`,
-        status: 'pending',
-        curl: `curl -X GET "${API_URL}/escrows/${createdEscrowId}" -H "Authorization: Bearer ${token || 'YOUR_JWT_TOKEN'}"`,
-        response: null,
-        error: null,
-        responseTime: null
-      };
-
-      const startTime12 = Date.now();
-      try {
-        const response = await fetch(`${API_URL}/escrows/${createdEscrowId}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        verifyDeleteTest.responseTime = Date.now() - startTime12;
-        // This should fail (404) for the test to pass
-        verifyDeleteTest.status = response.status === 404 || (data.success === false && data.error?.code === 'NOT_FOUND') ? 'success' : 'failed';
-        verifyDeleteTest.response = data;
-        if (response.ok && data.success) {
-          verifyDeleteTest.error = 'Escrow still exists after deletion';
+        const startTimeDelete = Date.now();
+        try {
+          const response = await fetch(`${API_URL}/escrows/${escrowId}`, {
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const data = await response.json();
+          deleteTest.responseTime = Date.now() - startTimeDelete;
+          deleteTest.status = response.ok && data.success ? 'success' : 'failed';
+          deleteTest.response = data;
+          if (!response.ok || !data.success) {
+            deleteTest.error = data.error?.message || 'Failed to delete escrow';
+          }
+        } catch (error) {
+          deleteTest.status = 'failed';
+          deleteTest.error = error.message;
+          deleteTest.responseTime = Date.now() - startTimeDelete;
         }
-      } catch (error) {
-        verifyDeleteTest.status = 'failed';
-        verifyDeleteTest.error = error.message;
-        verifyDeleteTest.responseTime = Date.now() - startTime12;
+        grouped.DELETE.push(deleteTest);
+        allTests.push(deleteTest);
+        setGroupedTests({...grouped});
       }
-      grouped.GET.push(verifyDeleteTest);
-      allTests.push(verifyDeleteTest);
-      setGroupedTests({...grouped});
+
+      // Clear the test escrow IDs after deletion
+      setTestEscrowId(null);
+      setTestEscrowIds([]);
+
+      // Verify all escrows were deleted
+      if (createdEscrowIds.length > 0) {
+        const verifyDeleteTest = {
+          name: 'Verify All Deletions',
+          description: 'Confirm all test escrows no longer exist (should return 404)',
+          method: 'GET',
+          endpoint: `/escrows/${createdEscrowIds[0]}`,
+          status: 'pending',
+          curl: `curl -X GET "${API_URL}/escrows/${createdEscrowIds[0]}" -H "Authorization: Bearer ${token}"`,
+          response: null,
+          error: null,
+          responseTime: null
+        };
+
+        const startTimeVerify = Date.now();
+        try {
+          const response = await fetch(`${API_URL}/escrows/${createdEscrowIds[0]}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const data = await response.json();
+          verifyDeleteTest.responseTime = Date.now() - startTimeVerify;
+          // This should fail (404) for the test to pass
+          verifyDeleteTest.status = response.status === 404 || (data.success === false && data.error?.code === 'NOT_FOUND') ? 'success' : 'failed';
+          verifyDeleteTest.response = data;
+          if (response.ok && data.success) {
+            verifyDeleteTest.error = 'Escrow still exists after deletion';
+          }
+        } catch (error) {
+          verifyDeleteTest.status = 'failed';
+          verifyDeleteTest.error = error.message;
+          verifyDeleteTest.responseTime = Date.now() - startTimeVerify;
+        }
+        grouped.GET.push(verifyDeleteTest);
+        allTests.push(verifyDeleteTest);
+        setGroupedTests({...grouped});
+      }
     }
 
     setTests(allTests);
@@ -1120,10 +1268,12 @@ const EscrowsHealthDashboard = () => {
     setLastRefresh(new Date().toLocaleString());
   }, []);
 
-  // Clean up any test escrow on unmount
+  // Clean up any test escrows on unmount
   useEffect(() => {
     return () => {
-      if (testEscrowId) {
+      const escrowsToDelete = testEscrowIds.length > 0 ? testEscrowIds : (testEscrowId ? [testEscrowId] : []);
+      
+      if (escrowsToDelete.length > 0) {
         const token = localStorage.getItem('crm_auth_token') || 
                      localStorage.getItem('authToken') ||
                      localStorage.getItem('token');
@@ -1133,16 +1283,18 @@ const EscrowsHealthDashboard = () => {
           API_URL = API_URL.replace(/\/$/, '') + '/v1';
         }
         
-        // Clean up test escrow if it exists
-        fetch(`${API_URL}/escrows/${testEscrowId}`, {
-          method: 'DELETE',
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-        }).catch(() => {
-          // Ignore cleanup errors
+        // Clean up all test escrows
+        escrowsToDelete.forEach(escrowId => {
+          fetch(`${API_URL}/escrows/${escrowId}`, {
+            method: 'DELETE',
+            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+          }).catch(() => {
+            // Ignore cleanup errors
+          });
         });
       }
     };
-  }, [testEscrowId]);
+  }, [testEscrowId, testEscrowIds]);
 
   // Run tests on mount
   useEffect(() => {
