@@ -25,6 +25,7 @@ import {
   Download as DownloadIcon
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
+import DebugCard from '../common/DebugCard';
 
 const PageContainer = styled(Box)(({ theme }) => ({
   background: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
@@ -129,7 +130,7 @@ const TestItem = ({ test }) => {
   };
 
   return (
-    <TestCard status={test.status}>
+    <TestCard status={test.status} data-testid="test-result" data-status={test.status === 'success' ? 'passed' : test.status === 'failed' ? 'failed' : 'pending'}>
       <CardContent onClick={() => setExpanded(!expanded)} sx={{ cursor: 'pointer' }}>
         <Box display="flex" alignItems="center" justifyContent="space-between">
           <Box display="flex" alignItems="center" gap={2}>
@@ -464,6 +465,16 @@ const HealthCheckDashboard = () => {
 
   return (
     <PageContainer>
+      <DebugCard 
+        pageType="health" 
+        pageData={{
+          tests: tests.length,
+          passed: passedCount,
+          failed: failedCount,
+          lastRefresh,
+          loading
+        }}
+      />
       <Container maxWidth="lg">
         <Paper sx={{ p: 3, mb: 3, background: 'white' }}>
           <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>

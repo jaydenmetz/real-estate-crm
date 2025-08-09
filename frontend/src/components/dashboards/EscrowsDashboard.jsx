@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NewEscrowModal from '../forms/NewEscrowModal';
+import DebugCard from '../common/DebugCard';
 import {
   Container,
   Box,
@@ -1361,14 +1362,27 @@ const EscrowsDashboard = () => {
   }
 
   return (
-    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-      {/* Enhanced Hero Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <HeroSection>
+    <>
+      <DebugCard 
+        pageType="escrows" 
+        pageData={{
+          total: escrows.length,
+          active: escrows.filter(e => e.escrow_status === 'active').length,
+          pending: escrows.filter(e => e.escrow_status === 'pending').length,
+          closed: escrows.filter(e => e.escrow_status === 'closed').length,
+          loading,
+          selectedStatus,
+          searchTerm
+        }}
+      />
+      <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+        {/* Enhanced Hero Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <HeroSection>
           <Grid container spacing={4} alignItems="center">
             <Grid item xs={12} md={8}>
               <motion.div
@@ -1892,7 +1906,8 @@ const EscrowsDashboard = () => {
         onClose={() => setShowNewEscrowModal(false)}
         onSuccess={handleNewEscrowSuccess}
       />
-    </Container>
+      </Container>
+    </>
   );
 };
 
