@@ -686,19 +686,22 @@ class SimpleEscrowController {
       const nextNumber = (maxNumberResult.rows[0]?.max_number || 0) + 1;
       const displayId = `ESC-${year}-${String(nextNumber).padStart(4, '0')}`;
       
-      // Build dynamic query with only provided fields
-      const fields = ['property_address', 'display_id'];
-      const values = [escrowData.property_address, displayId];
-      const placeholders = ['$1', '$2'];
-      let paramIndex = 3;
+      // Build dynamic query with required fields
+      const fields = ['property_address', 'display_id', 'purchase_price', 'escrow_status'];
+      const values = [
+        escrowData.property_address, 
+        displayId,
+        escrowData.purchase_price || 0,  // Default to 0 if not provided
+        escrowData.escrow_status || 'Active'  // Default to Active
+      ];
+      const placeholders = ['$1', '$2', '$3', '$4'];
+      let paramIndex = 5;
       
       // Add optional fields if provided
       const optionalFields = {
         city: escrowData.city,
         state: escrowData.state,
         zip_code: escrowData.zip_code,
-        escrow_status: escrowData.escrow_status,
-        purchase_price: escrowData.purchase_price,
         earnest_money_deposit: escrowData.earnest_money_deposit,
         commission_percentage: escrowData.commission_percentage,
         net_commission: escrowData.net_commission || escrowData.my_commission,
