@@ -32,13 +32,27 @@ export const apiUrl = (path) => {
 
 // Helper function for API calls with better error handling
 export const apiCall = async (url, options = {}) => {
+  // Get authentication token from multiple possible locations
+  const token = localStorage.getItem('crm_auth_token') || 
+                localStorage.getItem('authToken') ||
+                localStorage.getItem('token') ||
+                sessionStorage.getItem('crm_auth_token') ||
+                sessionStorage.getItem('token');
+  
+  const headers = {
+    'Content-Type': 'application/json',
+    ...options.headers
+  };
+  
+  // Add authentication header if token exists
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  
   try {
     const response = await fetch(apiUrl(url), {
       ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-      }
+      headers
     });
 
     const contentType = response.headers.get('content-type');

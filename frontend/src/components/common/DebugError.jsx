@@ -101,19 +101,77 @@ function DebugError({
     return JSON.stringify(obj, null, 2);
   };
 
+  // Get authentication info
+  const authInfo = {
+    hasJWTToken: !!localStorage.getItem('crm_auth_token') || !!localStorage.getItem('authToken'),
+    hasAPIKey: !!localStorage.getItem('crm_api_key'),
+    tokenLocations: {
+      crm_auth_token: !!localStorage.getItem('crm_auth_token'),
+      authToken: !!localStorage.getItem('authToken'),
+      token: !!localStorage.getItem('token'),
+      sessionToken: !!sessionStorage.getItem('crm_auth_token')
+    },
+    user: JSON.parse(localStorage.getItem('crm_user_data') || localStorage.getItem('user') || '{}')
+  };
+
   // Get environment info
   const envInfo = {
     environment: process.env.NODE_ENV,
     apiBaseUrl: window.location.hostname === 'localhost' 
       ? 'http://localhost:5050' 
       : 'https://api.jaydenmetz.com',
+    reactAppApiUrl: process.env.REACT_APP_API_URL,
     currentUrl: window.location.href,
     userAgent: navigator.userAgent,
+    timestamp: new Date().toISOString(),
+    authentication: authInfo
+  };
+
+  // Prepare complete debug data
+  const completeDebugData = {
+    error: {
+      message: error?.message,
+      stack: error?.stack,
+      name: error?.name
+    },
+    api: {
+      endpoint: apiEndpoint,
+      fullUrl: `${envInfo.apiBaseUrl}${apiEndpoint}`,
+      method: 'GET'
+    },
+    authentication: authInfo,
+    environment: envInfo,
+    request: requestData,
+    response: responseData,
+    additionalInfo: additionalInfo,
     timestamp: new Date().toISOString()
   };
 
   return (
-    <DebugContainer elevation={3}>
+    <DebugContainer elevation={3} sx={{ position: 'relative' }}>
+      {/* Copy Button in Top Right */}
+      <Box sx={{ position: 'absolute', top: 16, right: 16, zIndex: 10 }}>
+        <Button
+          variant="contained"
+          startIcon={<CopyIcon />}
+          onClick={() => copyToClipboard(JSON.stringify(completeDebugData, null, 2), 'complete')}
+          sx={{ 
+            bgcolor: '#764ba2',
+            '&:hover': { bgcolor: '#5a3a80' }
+          }}
+        >
+          Copy All
+        </Button>
+        {copiedSection === 'complete' && (
+          <Chip 
+            label="Copied!" 
+            size="small" 
+            color="success"
+            sx={{ position: 'absolute', top: 45, right: 0 }}
+          />
+        )}
+      </Box>
+      
       <ErrorHeader>
         <ErrorIcon sx={{ fontSize: 32, color: '#ff6b6b' }} />
         <Box flex={1}>
@@ -131,7 +189,8 @@ function DebugError({
             onClick={onRetry}
             sx={{ 
               bgcolor: '#764ba2',
-              '&:hover': { bgcolor: '#5a3a80' }
+              '&:hover': { bgcolor: '#5a3a80' },
+              mr: 12 // Add margin to avoid overlap with copy button
             }}
           >
             Retry
@@ -259,6 +318,48 @@ function DebugError({
         </AccordionDetails>
       </Accordion>
 
+      {/* Authentication Status */}
+      <Accordion sx={{ bgcolor: '#2d2d2d', mb: 1 }}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#9ca3af' }} />}>
+          <Typography sx={{ color: authInfo.hasJWTToken ? '#10b981' : '#ff6b6b', fontWeight: 600 }}>
+            🔐 Authentication Status: {authInfo.hasJWTToken ? 'Token Found' : 'No Token Found'}
+          </Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <InfoRow>
+            <span className="label">JWT Token:</span>
+            <span className="value" style={{ color: authInfo.hasJWTToken ? '#10b981' : '#ff6b6b' }}>
+              {authInfo.hasJWTToken ? '✓ Present' : '✗ Missing'}
+            </span>
+          </InfoRow>
+          <InfoRow>
+            <span className="label">API Key:</span>
+            <span className="value" style={{ color: authInfo.hasAPIKey ? '#10b981' : '#ff6b6b' }}>
+              {authInfo.hasAPIKey ? '✓ Present' : '✗ Missing'}
+            </span>
+          </InfoRow>
+          <InfoRow>
+            <span className="label">User:</span>
+            <span className="value">
+              {authInfo.user?.username || authInfo.user?.email || 'Not logged in'}
+            </span>
+          </InfoRow>
+          <Box mt={2}>
+            <Typography variant="subtitle2" sx={{ color: '#9ca3af', mb: 1 }}>
+              Token Locations Checked:
+            </Typography>
+            <CodeBlock>
+              <pre>{JSON.stringify(authInfo.tokenLocations, null, 2)}</pre>
+            </CodeBlock>
+          </Box>
+          {!authInfo.hasJWTToken && (
+            <Alert severity="warning" sx={{ mt: 2 }}>
+              No authentication token found. Please try logging in again.
+            </Alert>
+          )}
+        </AccordionDetails>
+      </Accordion>
+
       {/* Environment Info */}
       <Accordion sx={{ bgcolor: '#2d2d2d', mb: 1 }}>
         <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#9ca3af' }} />}>
@@ -268,12 +369,30 @@ function DebugError({
           </Typography>
         </AccordionSummary>
         <AccordionDetails>
-          {Object.entries(envInfo).map(([key, value]) => (
-            <InfoRow key={key}>
-              <span className="label">{key}:</span>
-              <span className="value">{value}</span>
-            </InfoRow>
-          ))}
+          <InfoRow>
+            <span className="label">Environment:</span>
+            <span className="value">{envInfo.environment}</span>
+          </InfoRow>
+          <InfoRow>
+            <span className="label">API Base URL:</span>
+            <span className="value">{envInfo.apiBaseUrl}</span>
+          </InfoRow>
+          <InfoRow>
+            <span className="label">React App API URL:</span>
+            <span className="value">{envInfo.reactAppApiUrl || 'Not set'}</span>
+          </InfoRow>
+          <InfoRow>
+            <span className="label">Current URL:</span>
+            <span className="value">{envInfo.currentUrl}</span>
+          </InfoRow>
+          <InfoRow>
+            <span className="label">User Agent:</span>
+            <span className="value" style={{ fontSize: '0.75rem' }}>{envInfo.userAgent}</span>
+          </InfoRow>
+          <InfoRow>
+            <span className="label">Timestamp:</span>
+            <span className="value">{envInfo.timestamp}</span>
+          </InfoRow>
         </AccordionDetails>
       </Accordion>
 
