@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Container,
@@ -208,7 +208,7 @@ const HealthCheckDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState(null);
 
-  const runAllTests = async () => {
+  const runAllTests = useCallback(async () => {
     setLoading(true);
     const API_URL = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com/v1';
     
@@ -416,12 +416,12 @@ const HealthCheckDashboard = () => {
 
     setLoading(false);
     setLastRefresh(new Date().toLocaleString());
-  };
+  }, []);
 
   // Run tests on mount and refresh
   useEffect(() => {
     runAllTests();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [runAllTests]);
 
   const successCount = tests.filter(t => t.status === 'success').length;
   const failedCount = tests.filter(t => t.status === 'failed').length;
