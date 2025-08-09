@@ -674,16 +674,23 @@ class SimpleEscrowController {
         });
       }
       
-      // After migration, the database will automatically:
-      // - Generate UUID for id
-      // - Generate numeric_id from sequence
-      // - Generate display_id via trigger (ESCROW-2025-0001 format)
+      // Generate display_id manually since trigger might not be set up
+      const year = new Date().getFullYear();
+      
+      // Get the next number for display_id
+      const maxNumberResult = await client.query(
+        "SELECT MAX(CAST(SUBSTRING(display_id FROM 'ESC-[0-9]+-([0-9]+)') AS INTEGER)) as max_number FROM escrows WHERE display_id LIKE $1",
+        [`ESC-${year}-%`]
+      );
+      
+      const nextNumber = (maxNumberResult.rows[0]?.max_number || 0) + 1;
+      const displayId = `ESC-${year}-${String(nextNumber).padStart(4, '0')}`;
       
       // Build dynamic query with only provided fields
-      const fields = ['property_address'];
-      const values = [escrowData.property_address];
-      const placeholders = ['$1'];
-      let paramIndex = 2;
+      const fields = ['property_address', 'display_id'];
+      const values = [escrowData.property_address, displayId];
+      const placeholders = ['$1', '$2'];
+      let paramIndex = 3;
       
       // Add optional fields if provided
       const optionalFields = {
