@@ -2182,6 +2182,87 @@ class SimpleEscrowController {
   }
 
   /**
+   * Update checklist item for an escrow
+   */
+  static async updateChecklist(req, res) {
+    try {
+      const { id } = req.params;
+      const { item, value, note } = req.body;
+      const pool = require('../config/database').pool;
+      
+      // Parse the item to get category and key
+      const [category, key] = item.split('.');
+      
+      // Get current checklist
+      const getQuery = `
+        SELECT checklists 
+        FROM escrows 
+        WHERE id = $1 OR display_id = $1
+      `;
+      
+      const currentResult = await pool.query(getQuery, [id]);
+      
+      if (currentResult.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Escrow not found'
+          }
+        });
+      }
+      
+      // Update the specific checklist item
+      let checklists = currentResult.rows[0].checklists || {};
+      if (typeof checklists === 'string') {
+        try {
+          checklists = JSON.parse(checklists);
+        } catch (e) {
+          checklists = {};
+        }
+      }
+      
+      // Ensure the category exists
+      if (!checklists[category]) {
+        checklists[category] = {};
+      }
+      
+      // Update the item
+      checklists[category][key] = {
+        completed: value,
+        note: note || '',
+        updatedAt: new Date().toISOString()
+      };
+      
+      // Save back to database
+      const updateQuery = `
+        UPDATE escrows
+        SET checklists = $2, updated_at = NOW()
+        WHERE id = $1 OR display_id = $1
+        RETURNING id, checklists
+      `;
+      
+      const result = await pool.query(updateQuery, [id, JSON.stringify(checklists)]);
+      
+      res.json({
+        success: true,
+        data: result.rows[0].checklists,
+        message: 'Checklist updated successfully'
+      });
+      
+    } catch (error) {
+      console.error('Error updating checklist:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'SERVER_ERROR',
+          message: 'Failed to update checklist'
+        }
+      });
+    }
+  }
+
+  /**
    * Get escrow timeline events
    */
   static async getEscrowTimeline(req, res) {

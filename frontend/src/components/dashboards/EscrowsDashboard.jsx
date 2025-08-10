@@ -69,7 +69,6 @@ import { safeFormatDate, safeParseDate } from '../../utils/safeDateUtils';
 import { escrowsAPI } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import CopyButton from '../common/CopyButton';
-import DebugCard from '../common/DebugCard';
 import networkMonitor from '../../services/networkMonitor';
 
 // Styled Components
