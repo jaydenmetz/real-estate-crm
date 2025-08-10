@@ -383,26 +383,36 @@ class AuthController {
    * Emergency login endpoint - bypasses bcrypt for testing
    */
   static async emergencyLogin(req, res) {
-    try {
-      const { email, password } = req.body;
-      
-      // For emergency admin access only
-      if (email === 'admin@jaydenmetz.com' && password === 'AdminPassword123!') {
-        // Direct query for admin user
-        const result = await pool.query(
-          'SELECT id, email, username, first_name, last_name, role FROM users WHERE email = $1',
-          ['admin@jaydenmetz.com']
-        );
+    // Don't use try-catch to avoid errorLogging middleware catching
+    const { email, password } = req.body;
+    
+    // Log request received
+    console.log('Emergency login attempt:', { email, hasPassword: !!password });
+    
+    // For emergency admin access only
+    if (email === 'admin@jaydenmetz.com' && password === 'AdminPassword123!') {
+      // Direct query for admin user
+      pool.query(
+        'SELECT id, email, username, first_name, last_name, role FROM users WHERE email = $1',
+        ['admin@jaydenmetz.com']
+      ).then(result => {
+        console.log('Query result:', { rowCount: result.rows.length });
         
         if (result.rows.length > 0) {
           const user = result.rows[0];
+          console.log('User found:', user.email);
           
           // Generate token
+          const jwtSecret = process.env.JWT_SECRET || '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472';
+          console.log('Using JWT secret (first 10 chars):', jwtSecret.substring(0, 10));
+          
           const token = jwt.sign(
             { id: user.id, email: user.email, role: user.role },
-            process.env.JWT_SECRET || '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472',
+            jwtSecret,
             { expiresIn: '30d' }
           );
+          
+          console.log('Token generated successfully');
           
           return res.json({
             success: true,
@@ -418,23 +428,35 @@ class AuthController {
               token
             }
           });
+        } else {
+          console.log('No user found in database');
+          return res.status(404).json({
+            success: false,
+            error: {
+              code: 'USER_NOT_FOUND',
+              message: 'Admin user not found in database'
+            }
+          });
         }
-      }
-      
+      }).catch(dbError => {
+        console.error('Database error in emergency login:', dbError);
+        return res.status(500).json({
+          success: false,
+          error: {
+            code: 'DB_ERROR',
+            message: dbError.message,
+            stack: dbError.stack
+          }
+        });
+      });
+    } else {
+      console.log('Invalid credentials provided');
       return res.status(401).json({
         success: false,
         error: {
           code: 'INVALID_CREDENTIALS',
-          message: 'Invalid credentials'
-        }
-      });
-      
-    } catch (error) {
-      return res.status(500).json({
-        success: false,
-        error: {
-          code: 'EMERGENCY_LOGIN_ERROR',
-          message: error.message
+          message: 'Invalid credentials',
+          received: { email, hasPassword: !!password }
         }
       });
     }
