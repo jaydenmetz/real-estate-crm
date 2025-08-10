@@ -192,6 +192,10 @@ apiRouter.use('/auth', require('./routes/auth').router);
 apiRouter.use('/health', require('./routes/health'));
 
 // Super simple test endpoint for debugging (bypass all middleware)
+apiRouter.get('/test-endpoint', (req, res) => {
+  res.json({ success: true, message: 'Test endpoint works' });
+});
+
 apiRouter.post('/test-login', (req, res) => {
   const { email, password } = req.body;
   console.log('Test login:', { email, hasPassword: !!password });
