@@ -226,15 +226,16 @@ class AuthController {
       
       const user = result.rows[0];
       
-      // Generate JWT token
+      // Generate JWT token - ensure we use the same secret everywhere
+      const jwtSecret = '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472';
       const token = jwt.sign(
         { 
           id: user.id, 
           email: user.email, 
           role: user.role 
         },
-        process.env.JWT_SECRET || '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472',
-        { expiresIn: process.env.JWT_EXPIRE || '30d' }
+        jwtSecret,
+        { expiresIn: '30d' }
       );
       
       await client.query('COMMIT');
@@ -341,15 +342,16 @@ class AuthController {
         [user.id]
       );
       
-      // Generate JWT token
+      // Generate JWT token - ensure we use the same secret everywhere
+      const jwtSecret = '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472';
       const token = jwt.sign(
         { 
           id: user.id, 
           email: user.email, 
           role: user.role 
         },
-        process.env.JWT_SECRET || '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472',
-        { expiresIn: process.env.JWT_EXPIRE || '30d' }
+        jwtSecret,
+        { expiresIn: '30d' }
       );
       
       res.json({

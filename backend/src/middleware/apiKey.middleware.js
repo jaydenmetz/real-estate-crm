@@ -13,24 +13,6 @@ const authenticateApiKey = async (req, res, next) => {
       return next();
     }
 
-    // Check for test API key first (temporary for debugging)
-    if (apiKey === 'test_api_key_3f8a2b1c9d5e7f0a4b6c8d2e4f6a8b0c1d3e5f7a9b1c3d5e7f9a0b2c4d6e8f0a') {
-      // Set up test user context
-      req.user = {
-        id: '65483115-0e3e-43f3-8a4a-488a6f0df017',
-        email: 'admin@jaydenmetz.com',
-        name: 'System Admin',
-        firstName: 'System',
-        lastName: 'Admin',
-        role: 'system_admin',
-        teamId: null,
-        teamName: null,
-        apiKeyId: 'test-key',
-        permissions: '*',
-        authMethod: 'api_key'
-      };
-      return next();
-    }
 
     // Validate API key
     const userData = await ApiKeyService.validateApiKey(apiKey);

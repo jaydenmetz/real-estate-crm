@@ -97,28 +97,14 @@ class ApiService {
       }
 
       if (!response.ok) {
-        // Handle authentication errors by automatically setting test API key
-        if (response.status === 401 && !this.apiKey) {
-          console.warn('Authentication failed, automatically applying test API key for debugging');
-          const TEST_API_KEY = 'test_api_key_3f8a2b1c9d5e7f0a4b6c8d2e4f6a8b0c1d3e5f7a9b1c3d5e7f9a0b2c4d6e8f0a';
-          localStorage.setItem('test_api_key', TEST_API_KEY);
-          
-          // Show notification to user if possible
-          if (typeof window !== 'undefined' && window.alert) {
-            console.log('Test API key has been automatically applied. The page will now work properly.');
-          }
-          
-          // Retry the request with the test API key
-          this.apiKey = TEST_API_KEY;
-          config.headers['X-API-Key'] = TEST_API_KEY;
-          delete config.headers.Authorization; // Remove invalid JWT
-          
-          const retryResponse = await fetch(url, config);
-          if (retryResponse.ok) {
-            const text = await retryResponse.text();
-            console.log('Request succeeded with test API key');
-            return text ? JSON.parse(text) : null;
-          }
+        // Log authentication errors for debugging
+        if (response.status === 401) {
+          console.error('Authentication failed:', {
+            url,
+            hasToken: !!this.token,
+            hasApiKey: !!this.apiKey,
+            status: response.status
+          });
         }
         
         // Handle 404 specifically

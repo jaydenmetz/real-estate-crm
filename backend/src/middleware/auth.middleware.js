@@ -22,8 +22,9 @@ const authenticate = async (req, res, next) => {
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
     
     try {
-      // Verify token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472');
+      // Verify token - use hardcoded secret to ensure consistency
+      const jwtSecret = '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472';
+      const decoded = jwt.verify(token, jwtSecret);
       
       // Get user from database
       const userQuery = `
