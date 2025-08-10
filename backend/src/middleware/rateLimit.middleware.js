@@ -1,9 +1,9 @@
 const rateLimit = require('express-rate-limit');
 
-// Much more generous rate limiting for development
+// More generous rate limiting
 const limiter = rateLimit({
-  windowMs: 1 * 60 * 1000, // 1 minute
-  max: process.env.NODE_ENV === 'production' ? 100 : 1000, // 1000 requests per minute in dev
+  windowMs: 1 * 60 * 1000, // 1 minute window
+  max: process.env.NODE_ENV === 'production' ? 500 : 2000, // 500 requests per minute in prod, 2000 in dev
   message: {
     success: false,
     error: {
@@ -13,9 +13,17 @@ const limiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  skipSuccessfulRequests: true, // Don't count successful requests
   skip: (req) => {
-    // Skip rate limiting for health checks and WebSocket
-    return req.path === '/health' || req.path.includes('/ws/');
+    // Skip rate limiting for health checks, auth, and WebSocket
+    const skipPaths = ['/health', '/ws/', '/auth/', '/api-keys'];
+    return skipPaths.some(path => req.path.includes(path));
+  },
+  keyGenerator: (req) => {
+    // Use a combination of IP and user ID if authenticated
+    const userId = req.user?.id || 'anonymous';
+    const ip = req.ip || req.connection.remoteAddress;
+    return `${ip}-${userId}`;
   }
 });
 
