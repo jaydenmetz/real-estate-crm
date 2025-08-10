@@ -130,8 +130,10 @@ class SimpleEscrowController {
       let paramIndex = 1;
 
       if (status && status !== 'all') {
+        // Normalize status to match database values (capitalize first letter)
+        const normalizedStatus = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
         whereConditions.push(`e.escrow_status = $${paramIndex}`);
-        queryParams.push(status);
+        queryParams.push(normalizedStatus);
         paramIndex++;
       }
 
