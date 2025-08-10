@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { debounce } from 'lodash';
-import escrowsAPI from '../../../services/api';
+import { escrowsAPI } from '../../../services/api';
 
 export function useEscrowData(escrowId) {
   const queryClient = useQueryClient();
@@ -13,7 +13,7 @@ export function useEscrowData(escrowId) {
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['escrow-details', escrowId],
     queryFn: async () => {
-      const response = await escrowsAPI.getEscrowById(escrowId);
+      const response = await escrowsAPI.getById(escrowId);
       if (response.success) {
         originalDataRef.current = JSON.parse(JSON.stringify(response.data));
         return response.data;
