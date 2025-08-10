@@ -21,10 +21,12 @@ const getApiUrl = () => {
 
 const API_BASE_URL = getApiUrl();
 
-// Log the API URL for debugging
-console.log('API Base URL:', API_BASE_URL);
-console.log('Environment:', process.env.NODE_ENV);
-console.log('REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
+// Log the API URL for debugging (only in development)
+if (process.env.NODE_ENV === 'development') {
+  console.log('API Base URL:', API_BASE_URL);
+  console.log('Environment:', process.env.NODE_ENV);
+  console.log('REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
+}
 
 class ApiService {
   constructor() {
@@ -36,12 +38,14 @@ class ApiService {
                  localStorage.getItem('authToken') || 
                  localStorage.getItem('token');
     
-    // Log initialization
-    console.log('API Service initialized:', {
-      baseURL: this.baseURL,
-      hasToken: !!this.token,
-      environment: process.env.NODE_ENV
-    });
+    // Log initialization (only in development)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('API Service initialized:', {
+        baseURL: this.baseURL,
+        hasToken: !!this.token,
+        environment: process.env.NODE_ENV
+      });
+    }
   }
   
   // Method to check if token exists
@@ -71,12 +75,16 @@ class ApiService {
     }
 
     try {
-      console.log(`API Request: ${config.method || 'GET'} ${url}`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`API Request: ${config.method || 'GET'} ${url}`);
+      }
       
       const response = await fetch(url, config);
 
-      // Log response details for debugging
-      console.log(`API Response: ${response.status} ${response.statusText}`);
+      // Log response details for debugging (only in development)
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`API Response: ${response.status} ${response.statusText}`);
+      }
 
       if (!response.ok) {
         // Handle 404 specifically
