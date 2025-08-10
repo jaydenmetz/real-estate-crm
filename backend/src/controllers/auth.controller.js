@@ -405,9 +405,11 @@ class AuthController {
           const user = result.rows[0];
           console.log('User found:', user.email);
           
-          // Generate token
-          const jwtSecret = process.env.JWT_SECRET || '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472';
+          // Generate token - check for Railway-specific JWT_SECRET first
+          const jwtSecret = process.env.JWT_SECRET || process.env.RAILWAY_JWT_SECRET || '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472';
           console.log('Using JWT secret (first 10 chars):', jwtSecret.substring(0, 10));
+          console.log('JWT_SECRET env var:', process.env.JWT_SECRET ? 'Set' : 'Not set');
+          console.log('RAILWAY_JWT_SECRET env var:', process.env.RAILWAY_JWT_SECRET ? 'Set' : 'Not set');
           
           const token = jwt.sign(
             { id: user.id, email: user.email, role: user.role },

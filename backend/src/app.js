@@ -746,7 +746,6 @@ app.use((req, res) => {
 });
 
 // Enhanced error logging middleware
-// TEMPORARILY DISABLED for debugging
-// app.use(errorLogging);
+app.use(errorLogging);
 
 module.exports = app;
