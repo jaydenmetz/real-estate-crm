@@ -195,7 +195,7 @@ apiRouter.use('/api-keys', require('./routes/apiKeys'));
 
 // API Routes - Using professional .routes.js files with built-in auth
 // Each route file handles its own authentication and validation
-apiRouter.use('/escrows', require('./routes/escrows.routes'));
+apiRouter.use('/escrows', require('./routes/escrows')); // Using working escrows.js
 apiRouter.use('/listings', require('./routes/listings.routes'));
 apiRouter.use('/clients', require('./routes/clients.routes'));
 apiRouter.use('/appointments', require('./routes/appointments.routes'));
