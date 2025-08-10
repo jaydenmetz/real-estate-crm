@@ -27,7 +27,7 @@ router.get('/', requirePermission('listings'), listingsController.getListings);
 router.get('/:id', requirePermission('listings'), listingsController.getListing);
 router.post('/', requirePermission('listings'), createValidation, handleValidationErrors, listingsController.createListing);
 router.put('/:id', requirePermission('listings'), updateValidation, handleValidationErrors, listingsController.updateListing);
-router.post('/:id/price-reduction', requirePermission('listings'), listingsController.priceReduction);
+router.post('/:id/price-reduction', requirePermission('listings'), listingsController.recordPriceChange);
 router.post('/:id/showings', requirePermission('listings'), listingsController.logShowing);
 
 module.exports = router;

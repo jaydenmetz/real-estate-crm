@@ -30,7 +30,7 @@ router.get('/', requirePermission('leads'), leadsController.getLeads);
 router.get('/:id', requirePermission('leads'), leadsController.getLead);
 router.post('/', requirePermission('leads'), createValidation, handleValidationErrors, leadsController.createLead);
 router.put('/:id', requirePermission('leads'), updateValidation, handleValidationErrors, leadsController.updateLead);
-router.post('/:id/convert', requirePermission('leads'), leadsController.convertLead);
-router.post('/:id/activities', requirePermission('leads'), leadsController.logActivity);
+router.post('/:id/convert', requirePermission('leads'), leadsController.convertToClient);
+router.post('/:id/activities', requirePermission('leads'), leadsController.recordActivity);
 
 module.exports = router;
