@@ -14,6 +14,8 @@ class AuthController {
         ['admin@jaydenmetz.com']
       );
       
+      const jwtSecret = process.env.JWT_SECRET || '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472';
+      
       res.json({
         success: true,
         data: {
@@ -21,6 +23,7 @@ class AuthController {
           time: result.rows[0].time,
           userCount: result.rows[0].count,
           jwtSecret: process.env.JWT_SECRET ? 'configured' : 'missing',
+          jwtSecretFirst10: jwtSecret.substring(0, 10),
           nodeEnv: process.env.NODE_ENV || 'not set',
           adminUser: adminResult.rows.length > 0 ? {
             found: true,
