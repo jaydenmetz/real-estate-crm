@@ -243,6 +243,11 @@ let mockListings = [
 ];
 
 class ListingMock {
+  // Alias for compatibility with Mongoose-style queries
+  static async find(filters = {}) {
+    return this.findAll(filters);
+  }
+  
   static async findAll(filters = {}) {
     try {
       let filtered = [...mockListings];

@@ -203,6 +203,11 @@ let mockAppointments = [
 ];
 
 class AppointmentMock {
+  // Alias for compatibility with Mongoose-style queries
+  static async find(filters = {}) {
+    return this.findAll(filters);
+  }
+  
   static async findAll(filters = {}) {
     try {
       let filtered = [...mockAppointments];

@@ -151,7 +151,7 @@ const requireRole = (...allowedRoles) => {
 };
 
 /**
- * Require specific permissions (future implementation)
+ * Require specific permissions
  */
 const requirePermission = (permission) => {
   return (req, res, next) => {
@@ -165,8 +165,22 @@ const requirePermission = (permission) => {
       });
     }
     
-    // TODO: Implement permission checking
-    // For now, just check if user is authenticated
+    // Check if user has the required permission
+    // If user has permissions object (from API key), check it
+    if (req.user.permissions && typeof req.user.permissions === 'object') {
+      const resourcePermissions = req.user.permissions[permission];
+      if (!resourcePermissions || !Array.isArray(resourcePermissions) || resourcePermissions.length === 0) {
+        return res.status(403).json({
+          success: false,
+          error: {
+            code: 'INSUFFICIENT_PERMISSIONS',
+            message: `You do not have permission to access ${permission}`
+          }
+        });
+      }
+    }
+    
+    // For JWT auth or if no permissions object, allow access (backward compatibility)
     next();
   };
 };

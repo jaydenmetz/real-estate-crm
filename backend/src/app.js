@@ -189,6 +189,7 @@ apiRouter.use(rateLimit);
 
 // Public routes (no authentication required)
 apiRouter.use('/auth', require('./routes/auth').router);
+apiRouter.use('/health', require('./routes/health'));
 
 // API key management (requires JWT auth)
 apiRouter.use('/api-keys', require('./routes/apiKeys'));

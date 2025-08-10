@@ -2,7 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const leadsController = require('../controllers/leads.controller');
-const { authenticate, requirePermission } = require('../middleware/auth.middleware');
+const { authenticate } = require('../middleware/apiKey.middleware');
+const { requirePermission } = require('../middleware/auth.middleware');
 const handleValidationErrors = require('../middleware/validation.middleware');
 
 // All routes require authentication
