@@ -30,7 +30,11 @@ class ApiService {
   constructor() {
     // If API_BASE_URL already includes /v1, use it as is, otherwise append /v1
     this.baseURL = API_BASE_URL.includes('/v1') ? API_BASE_URL : `${API_BASE_URL}/v1`;
-    this.token = localStorage.getItem('authToken');
+    
+    // Try multiple token locations
+    this.token = localStorage.getItem('crm_auth_token') || 
+                 localStorage.getItem('authToken') || 
+                 localStorage.getItem('token');
     
     // Log initialization
     console.log('API Service initialized:', {
@@ -46,6 +50,11 @@ class ApiService {
   }
 
   async request(endpoint, options = {}) {
+    // Refresh token from localStorage in case it was updated elsewhere
+    this.token = localStorage.getItem('crm_auth_token') || 
+                 localStorage.getItem('authToken') || 
+                 localStorage.getItem('token');
+    
     const url = `${this.baseURL}${endpoint}`;
     
     const config = {
@@ -70,6 +79,14 @@ class ApiService {
       console.log(`API Response: ${response.status} ${response.statusText}`);
 
       if (!response.ok) {
+        // Handle 404 specifically
+        if (response.status === 404) {
+          const error = new Error('Endpoint not found');
+          error.status = 404;
+          error.response = response;
+          throw error;
+        }
+        
         // Try to get error details from response
         let errorMessage = `API Error: ${response.status} ${response.statusText}`;
         try {
@@ -146,9 +163,13 @@ class ApiService {
   setToken(token) {
     this.token = token;
     if (token) {
+      // Store in multiple locations for compatibility
       localStorage.setItem('authToken', token);
+      localStorage.setItem('crm_auth_token', token);
     } else {
       localStorage.removeItem('authToken');
+      localStorage.removeItem('crm_auth_token');
+      localStorage.removeItem('token');
     }
   }
 
