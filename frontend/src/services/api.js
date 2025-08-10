@@ -329,6 +329,10 @@ window.apiInstance = apiInstance;
 
 export default apiInstance;
 
+// Export API_BASE_URL and apiCall for backward compatibility
+export { API_BASE_URL };
+export const apiCall = (endpoint, options = {}) => apiInstance.request(endpoint, options);
+
 // Also export a named api object containing all the modules
 export const api = {
   escrowsAPI,
