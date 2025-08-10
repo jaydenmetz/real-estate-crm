@@ -382,8 +382,8 @@ class AuthController {
   /**
    * Emergency login endpoint - bypasses bcrypt for testing
    */
-  static async emergencyLogin(req, res) {
-    // Don't use try-catch to avoid errorLogging middleware catching
+  static emergencyLogin(req, res) {
+    // No async to avoid middleware issues
     const { email, password } = req.body;
     
     // Log request received
@@ -414,7 +414,7 @@ class AuthController {
           
           console.log('Token generated successfully');
           
-          return res.json({
+          res.json({
             success: true,
             data: {
               user: {
@@ -430,7 +430,7 @@ class AuthController {
           });
         } else {
           console.log('No user found in database');
-          return res.status(404).json({
+          res.status(404).json({
             success: false,
             error: {
               code: 'USER_NOT_FOUND',
@@ -440,7 +440,7 @@ class AuthController {
         }
       }).catch(dbError => {
         console.error('Database error in emergency login:', dbError);
-        return res.status(500).json({
+        res.status(500).json({
           success: false,
           error: {
             code: 'DB_ERROR',
@@ -451,7 +451,7 @@ class AuthController {
       });
     } else {
       console.log('Invalid credentials provided');
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         error: {
           code: 'INVALID_CREDENTIALS',
