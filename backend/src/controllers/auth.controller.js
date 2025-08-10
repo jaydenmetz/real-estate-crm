@@ -390,7 +390,7 @@ class AuthController {
     console.log('Emergency login attempt:', { email, hasPassword: !!password });
     
     // For emergency admin access only
-    if (email === 'admin@jaydenmetz.com' && password === 'AdminPassword123!') {
+    if (email === 'admin@jaydenmetz.com' && (password === 'AdminPassword123!' || password === 'AdminPassword123')) {
       // Direct query for admin user
       pool.query(
         'SELECT id, email, username, first_name, last_name, role FROM users WHERE email = $1',
