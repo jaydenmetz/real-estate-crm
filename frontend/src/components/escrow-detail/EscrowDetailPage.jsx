@@ -42,8 +42,9 @@ import ChecklistWidget from './widgets/ChecklistWidget';
 // Import Data Editor components
 import DataEditorView from './data-editor/DataEditorView';
 
-// Import Debug Panel
+// Import Debug Panels
 import EscrowDebugPanel from './EscrowDebugPanel';
+import EscrowErrorDebugPanel from '../common/EscrowErrorDebugPanel';
 
 // Styled components with glassmorphism
 const StyledContainer = styled(Container)(({ theme }) => ({
@@ -188,8 +189,8 @@ function EscrowDetailPage() {
     return (
       <StyledContainer maxWidth={false}>
         {isAdmin ? (
-          <Box sx={{ maxWidth: 1400, margin: '0 auto', p: 2 }}>
-            <EscrowDebugPanel error={error} escrowId={escrowId} />
+          <Box sx={{ maxWidth: 1600, margin: '0 auto', p: 2 }}>
+            <EscrowErrorDebugPanel error={error} escrowId={id} />
           </Box>
         ) : (
           <GlassCard sx={{ p: 4, textAlign: 'center' }}>
