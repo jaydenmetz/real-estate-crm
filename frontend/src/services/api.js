@@ -38,11 +38,15 @@ class ApiService {
                  localStorage.getItem('authToken') || 
                  localStorage.getItem('token');
     
+    // Check for test API key
+    this.apiKey = localStorage.getItem('test_api_key');
+    
     // Log initialization (only in development)
     if (process.env.NODE_ENV === 'development') {
       console.log('API Service initialized:', {
         baseURL: this.baseURL,
         hasToken: !!this.token,
+        hasApiKey: !!this.apiKey,
         environment: process.env.NODE_ENV
       });
     }
@@ -59,6 +63,9 @@ class ApiService {
                  localStorage.getItem('authToken') || 
                  localStorage.getItem('token');
     
+    // Check for test API key
+    this.apiKey = localStorage.getItem('test_api_key');
+    
     const url = `${this.baseURL}${endpoint}`;
     
     const config = {
@@ -70,7 +77,10 @@ class ApiService {
       credentials: 'include', // Important for CORS with credentials
     };
 
-    if (this.token) {
+    // Use API key if available, otherwise use token
+    if (this.apiKey) {
+      config.headers['X-API-Key'] = this.apiKey;
+    } else if (this.token) {
       config.headers.Authorization = `Bearer ${this.token}`;
     }
 

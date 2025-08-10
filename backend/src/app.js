@@ -196,6 +196,30 @@ apiRouter.get('/test-endpoint', (req, res) => {
   res.json({ success: true, message: 'Test endpoint works' });
 });
 
+// Hardcoded API key for testing
+const TEST_API_KEY = 'test_api_key_3f8a2b1c9d5e7f0a4b6c8d2e4f6a8b0c1d3e5f7a9b1c3d5e7f9a0b2c4d6e8f0a';
+
+apiRouter.get('/test-escrows', (req, res) => {
+  const apiKey = req.headers['x-api-key'] || req.headers['api-key'];
+  
+  if (apiKey === TEST_API_KEY) {
+    res.json({
+      success: true,
+      data: {
+        escrows: [
+          { id: 'ESC-2025-001', property_address: '123 Test St' },
+          { id: 'ESC-2025-002', property_address: '456 Test Ave' }
+        ]
+      }
+    });
+  } else {
+    res.status(401).json({
+      success: false,
+      error: { message: 'Invalid API key' }
+    });
+  }
+});
+
 apiRouter.post('/test-login', (req, res) => {
   const { email, password } = req.body;
   console.log('Test login:', { email, hasPassword: !!password });
