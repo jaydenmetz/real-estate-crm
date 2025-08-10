@@ -42,6 +42,9 @@ import ChecklistWidget from './widgets/ChecklistWidget';
 // Import Data Editor components
 import DataEditorView from './data-editor/DataEditorView';
 
+// Import Debug Panel
+import EscrowDebugPanel from './EscrowDebugPanel';
+
 // Styled components with glassmorphism
 const StyledContainer = styled(Container)(({ theme }) => ({
   paddingTop: theme.spacing(3),
@@ -177,21 +180,32 @@ function EscrowDetailPage() {
   }
 
   if (error) {
+    // Check if user is admin for debug panel
+    const userStr = localStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : null;
+    const isAdmin = user && (user.role === 'admin' || user.role === 'system_admin');
+    
     return (
       <StyledContainer maxWidth={false}>
-        <GlassCard sx={{ p: 4, textAlign: 'center' }}>
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error.message || 'Failed to load escrow details'}
-          </Alert>
-          <Box>
-            <IconButton onClick={() => navigate('/escrows')} sx={{ mr: 2 }}>
-              <ArrowBackIcon />
-            </IconButton>
-            <IconButton onClick={handleRefresh}>
-              <RefreshIcon />
-            </IconButton>
+        {isAdmin ? (
+          <Box sx={{ maxWidth: 1400, margin: '0 auto', p: 2 }}>
+            <EscrowDebugPanel error={error} escrowId={escrowId} />
           </Box>
-        </GlassCard>
+        ) : (
+          <GlassCard sx={{ p: 4, textAlign: 'center' }}>
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error.message || 'Failed to load escrow details'}
+            </Alert>
+            <Box>
+              <IconButton onClick={() => navigate('/escrows')} sx={{ mr: 2 }}>
+                <ArrowBackIcon />
+              </IconButton>
+              <IconButton onClick={handleRefresh}>
+                <RefreshIcon />
+              </IconButton>
+            </Box>
+          </GlassCard>
+        )}
       </StyledContainer>
     );
   }
