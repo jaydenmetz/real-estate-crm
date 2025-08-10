@@ -191,6 +191,27 @@ apiRouter.use(rateLimit);
 apiRouter.use('/auth', require('./routes/auth').router);
 apiRouter.use('/health', require('./routes/health'));
 
+// Super simple test endpoint for debugging (bypass all middleware)
+apiRouter.post('/test-login', (req, res) => {
+  const { email, password } = req.body;
+  console.log('Test login:', { email, hasPassword: !!password });
+  
+  if (email === 'admin@jaydenmetz.com' && password === 'AdminPassword123!') {
+    res.json({
+      success: true,
+      data: {
+        token: 'test-token-12345',
+        user: { email: 'admin@jaydenmetz.com' }
+      }
+    });
+  } else {
+    res.status(401).json({
+      success: false,
+      error: { message: 'Invalid credentials' }
+    });
+  }
+});
+
 // API key management (requires JWT auth)
 apiRouter.use('/api-keys', require('./routes/apiKeys'));
 
