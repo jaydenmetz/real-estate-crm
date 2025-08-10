@@ -29,7 +29,7 @@ import {
   Tooltip,
   Alert,
 } from '@mui/material';
-import DetailPageDebugger from '../common/DetailPageDebugger';
+import DebugCard from '../common/DebugCard';
 import DetailPageErrorBoundary from '../common/DetailPageErrorBoundary';
 import {
   Timeline,
@@ -310,7 +310,7 @@ const LeadDetail = () => {
 
   return (
     <Container maxWidth="xl">
-      <DetailPageDebugger 
+      <DebugCard 
         pageName="LeadDetail"
         id={id}
         isLoading={isLoading}

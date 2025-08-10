@@ -549,11 +549,11 @@ import {
 import ChartErrorBoundary from '../common/ChartErrorBoundary';
 import NetworkMonitorSimple from '../common/NetworkMonitorSimple';
 import EnhancedDatabaseMonitor from '../common/EnhancedDatabaseMonitor';
-import EnhancedDetailDebugger from '../common/EnhancedDetailDebugger';
+import DebugCard from '../common/DebugCard';
 import networkMonitor from '../../services/networkMonitor';
 import CopyButton from '../common/CopyButton';
 import DetailPageHero from '../common/DetailPageHero';
-import DebugPanel from '../common/DebugPanel';
+import DebugCard from '../common/DebugCard';
 import ZillowPreview from '../common/ZillowPreview';
 import { formatEntityId } from '../../utils/entityIdUtils';
 import StunningPropertyDisplay from './StunningPropertyDisplay';
@@ -2491,7 +2491,7 @@ Has Error: ${isError ? 'YES' : 'NO'}`}
             {/* Enhanced debug components with more data */}
             <EnhancedDatabaseMonitor />
             <NetworkMonitorSimple />
-            <EnhancedDetailDebugger 
+            <DebugCard 
               pageName="Escrow Detail"
               id={id}
               isLoading={isLoading}
@@ -4849,7 +4849,7 @@ Has Error: ${isError ? 'YES' : 'NO'}`}
 
       {/* Debug Panel for Admin */}
       {false /* TEMPORARILY DISABLED TO DEBUG STYLE ERROR */ && escrow && (
-        <DebugPanel
+        <DebugCard
           pageTitle={`Debug Panel: Escrow Detail - ${escrow.displayId || id}`}
         user={user}
         apiRequests={[

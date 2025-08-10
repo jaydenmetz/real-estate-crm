@@ -37,7 +37,7 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import { styled, alpha } from '@mui/material/styles';
-import DetailPageDebugger from '../common/DetailPageDebugger';
+import DebugCard from '../common/DebugCard';
 import DetailPageErrorBoundary from '../common/DetailPageErrorBoundary';
 import {
   Timeline,
@@ -834,7 +834,7 @@ function AppointmentDetail() {
         </Box>
       )}
 
-      <DetailPageDebugger 
+      <DebugCard 
         pageName="AppointmentDetail"
         id={id}
         isLoading={loading}

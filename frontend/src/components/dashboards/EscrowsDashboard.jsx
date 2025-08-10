@@ -69,7 +69,7 @@ import { safeFormatDate, safeParseDate } from '../../utils/safeDateUtils';
 import { escrowsAPI } from '../../services/api';
 import { useAuth } from '../../contexts/AuthContext';
 import CopyButton from '../common/CopyButton';
-import DebugPanel from '../common/DebugPanel';
+import DebugCard from '../common/DebugCard';
 import networkMonitor from '../../services/networkMonitor';
 
 // Styled Components
@@ -1857,7 +1857,7 @@ const EscrowsDashboard = () => {
 
       {/* New Debug Panel - Admin Only */}
       {(
-      <DebugPanel
+      <DebugCard
         pageTitle="Debug Panel: Escrows Dashboard"
         user={user}
         apiRequests={[

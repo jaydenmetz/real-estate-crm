@@ -70,7 +70,7 @@ import {
   Switch,
 } from '@mui/material';
 import { styled, alpha, keyframes } from '@mui/material/styles';
-import DetailPageDebugger from '../common/DetailPageDebugger';
+import DebugCard from '../common/DebugCard';
 import DetailPageErrorBoundary from '../common/DetailPageErrorBoundary';
 import {
   Timeline,
@@ -1186,7 +1186,7 @@ const ClientDetail = () => {
         </Box>
       )}
 
-      <DetailPageDebugger 
+      <DebugCard 
         pageName="ClientDetail"
         id={id}
         isLoading={isLoading}

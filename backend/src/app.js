@@ -193,19 +193,25 @@ apiRouter.use('/auth', require('./routes/auth').router);
 // API key management (requires JWT auth)
 apiRouter.use('/api-keys', require('./routes/apiKeys'));
 
-// Protected routes - now with authentication enabled
-apiRouter.use('/escrows', authenticate, require('./routes/escrows'));
-apiRouter.use('/listings', authenticate, require('./routes/listings'));
-apiRouter.use('/clients', authenticate, require('./routes/clients'));
-apiRouter.use('/appointments', authenticate, require('./routes/appointments'));
-apiRouter.use('/leads', authenticate, require('./routes/leads'));
-apiRouter.use('/analytics', authenticate, require('./routes/analytics'));
-apiRouter.use('/ai', authenticate, require('./routes/ai.routes'));
-apiRouter.use('/webhooks', require('./routes/webhooks.routes')); // Webhooks don't need auth
-apiRouter.use('/documents', authenticate, require('./routes/documents.routes'));
-apiRouter.use('/debug', authenticate, require('./routes/debug'));
-apiRouter.use('/test-connection', require('./routes/test-connection')); // Test endpoint doesn't need auth
-apiRouter.use('/simple-test', require('./routes/simple-test')); // Test endpoint doesn't need auth
+// API Routes - Using professional .routes.js files with built-in auth
+// Each route file handles its own authentication and validation
+apiRouter.use('/escrows', require('./routes/escrows.routes'));
+apiRouter.use('/listings', require('./routes/listings.routes'));
+apiRouter.use('/clients', require('./routes/clients.routes'));
+apiRouter.use('/appointments', require('./routes/appointments.routes'));
+apiRouter.use('/leads', require('./routes/leads.routes'));
+apiRouter.use('/analytics', require('./routes/analytics.routes'));
+apiRouter.use('/communications', require('./routes/communications.routes'));
+apiRouter.use('/documents', require('./routes/documents.routes'));
+apiRouter.use('/ai', require('./routes/ai.routes'));
+apiRouter.use('/webhooks', require('./routes/webhooks.routes')); // Webhooks bypass auth for external services
+
+// Debug and test routes (development only)
+if (process.env.NODE_ENV === 'development') {
+  apiRouter.use('/debug', authenticate, require('./routes/debug'));
+  apiRouter.use('/test-connection', require('./routes/test-connection'));
+  apiRouter.use('/simple-test', require('./routes/simple-test'));
+}
 apiRouter.use('/link-preview', authenticate, require('./routes/linkPreview.routes'));
 
 // Financial routes

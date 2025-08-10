@@ -23,7 +23,7 @@ import {
 import { styled } from '@mui/material/styles';
 
 // Import API configuration
-import { apiCall, API_BASE_URL } from '../../config/api';
+import { apiCall, API_BASE_URL } from 'services/api';
 import { testApiConnection, testEscrowEndpoint } from '../../utils/testApi';
 
 // Import components
@@ -35,7 +35,7 @@ import FinancialsWidgetCompact from '../escrow-detail/widgets/FinancialsWidgetCo
 import ChecklistWidgetCompact from '../escrow-detail/widgets/ChecklistWidgetCompact';
 import AllDataEditor from '../escrow-detail/AllDataEditor';
 import DebugError from '../common/DebugError';
-import DebugCardWithApiTests from '../common/DebugCardWithApiTests';
+import DebugCard from '../common/DebugCard';
 
 // Styled components
 const PageContainer = styled(Box)(({ theme }) => ({
@@ -282,7 +282,7 @@ function EscrowDetail() {
 
   return (
     <PageContainer>
-      <DebugCardWithApiTests 
+      <DebugCard 
         pageType="escrow-detail" 
         pageData={{
           id: escrowData?.id,
