@@ -58,11 +58,17 @@ const AdminErrorDisplay = ({ error, errorId }) => {
   };
   
   return (
-    <Paper elevation={3} sx={{ p: 2, bgcolor: 'error.light', color: 'error.contrastText' }}>
+    <Paper elevation={3} sx={{ 
+      p: 2, 
+      bgcolor: '#ffffff',
+      border: '1px solid',
+      borderColor: 'error.main',
+      color: 'text.primary'
+    }}>
       <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
         <Box display="flex" alignItems="center" gap={1}>
-          <BugReport />
-          <Typography variant="h6">Debug Error Information</Typography>
+          <BugReport sx={{ color: 'error.main' }} />
+          <Typography variant="h6" sx={{ color: 'text.primary' }}>Debug Error Information</Typography>
           <Chip 
             label="Admin Only" 
             size="small" 
@@ -74,14 +80,14 @@ const AdminErrorDisplay = ({ error, errorId }) => {
           <IconButton 
             size="small" 
             onClick={handleCopyError}
-            sx={{ color: 'inherit' }}
+            sx={{ color: 'primary.main' }}
           >
             {copied ? <CheckCircle /> : <ContentCopy />}
           </IconButton>
           <IconButton
             size="small"
             onClick={() => setExpanded(!expanded)}
-            sx={{ color: 'inherit' }}
+            sx={{ color: 'action.active' }}
           >
             {expanded ? <ExpandLess /> : <ExpandMore />}
           </IconButton>
@@ -103,7 +109,7 @@ const AdminErrorDisplay = ({ error, errorId }) => {
             <Typography variant="subtitle2" sx={{ opacity: 0.8 }}>
               Error Code:
             </Typography>
-            <Chip label={error.code} size="small" sx={{ bgcolor: 'rgba(0,0,0,0.2)' }} />
+            <Chip label={error.code} size="small" variant="outlined" color="error" />
           </Box>
         )}
         
@@ -120,7 +126,7 @@ const AdminErrorDisplay = ({ error, errorId }) => {
       </Stack>
       
       <Collapse in={expanded}>
-        <Divider sx={{ my: 2, borderColor: 'rgba(0,0,0,0.2)' }} />
+        <Divider sx={{ my: 2, borderColor: 'divider' }} />
         
         {error.details && (
           <Box mb={2}>
@@ -130,12 +136,15 @@ const AdminErrorDisplay = ({ error, errorId }) => {
             <Paper 
               sx={{ 
                 p: 1, 
-                bgcolor: 'rgba(0,0,0,0.1)',
+                bgcolor: '#f5f5f5',
+                border: '1px solid',
+                borderColor: 'divider',
                 maxHeight: 200,
                 overflowY: 'auto'
               }}
+              elevation={0}
             >
-              <pre style={{ margin: 0, fontSize: '0.85rem' }}>
+              <pre style={{ margin: 0, fontSize: '0.85rem', color: '#333' }}>
                 {JSON.stringify(error.details, null, 2)}
               </pre>
             </Paper>
@@ -150,16 +159,20 @@ const AdminErrorDisplay = ({ error, errorId }) => {
             <Paper 
               sx={{ 
                 p: 1, 
-                bgcolor: 'rgba(0,0,0,0.1)',
+                bgcolor: '#f5f5f5',
+                border: '1px solid',
+                borderColor: 'divider',
                 maxHeight: 300,
                 overflowY: 'auto'
               }}
+              elevation={0}
             >
               <pre style={{ 
                 margin: 0, 
                 fontSize: '0.75rem',
                 whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word'
+                wordBreak: 'break-word',
+                color: '#333'
               }}>
                 {error.stack}
               </pre>
