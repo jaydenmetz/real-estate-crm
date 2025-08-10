@@ -31,6 +31,6 @@ router.get('/:id', requirePermission('appointments'), appointmentsController.get
 router.post('/', requirePermission('appointments'), createValidation, handleValidationErrors, appointmentsController.createAppointment);
 router.put('/:id', requirePermission('appointments'), updateValidation, handleValidationErrors, appointmentsController.updateAppointment);
 router.post('/:id/cancel', requirePermission('appointments'), appointmentsController.cancelAppointment);
-router.post('/:id/complete', requirePermission('appointments'), appointmentsController.completeAppointment);
+router.post('/:id/complete', requirePermission('appointments'), appointmentsController.markComplete);
 
 module.exports = router;

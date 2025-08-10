@@ -33,6 +33,6 @@ router.post('/', requirePermission('clients'), createValidation, handleValidatio
 router.put('/:id', requirePermission('clients'), updateValidation, handleValidationErrors, clientsController.updateClient);
 router.delete('/:id', requirePermission('clients'), clientsController.deleteClient);
 router.post('/:id/notes', requirePermission('clients'), clientsController.addNote);
-router.patch('/:id/tags', requirePermission('clients'), clientsController.updateTags);
+router.patch('/:id/tags', requirePermission('clients'), clientsController.bulkUpdateTags);
 
 module.exports = router;
