@@ -380,6 +380,67 @@ class AuthController {
   }
 
   /**
+   * Emergency login endpoint - bypasses bcrypt for testing
+   */
+  static async emergencyLogin(req, res) {
+    try {
+      const { email, password } = req.body;
+      
+      // For emergency admin access only
+      if (email === 'admin@jaydenmetz.com' && password === 'AdminPassword123!') {
+        // Direct query for admin user
+        const result = await pool.query(
+          'SELECT id, email, username, first_name, last_name, role FROM users WHERE email = $1',
+          ['admin@jaydenmetz.com']
+        );
+        
+        if (result.rows.length > 0) {
+          const user = result.rows[0];
+          
+          // Generate token
+          const token = jwt.sign(
+            { id: user.id, email: user.email, role: user.role },
+            process.env.JWT_SECRET || '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472',
+            { expiresIn: '30d' }
+          );
+          
+          return res.json({
+            success: true,
+            data: {
+              user: {
+                id: user.id,
+                email: user.email,
+                username: user.username,
+                firstName: user.first_name,
+                lastName: user.last_name,
+                role: user.role
+              },
+              token
+            }
+          });
+        }
+      }
+      
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: 'INVALID_CREDENTIALS',
+          message: 'Invalid credentials'
+        }
+      });
+      
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        error: {
+          code: 'EMERGENCY_LOGIN_ERROR',
+          message: error.message
+        }
+      });
+    }
+  }
+
+  /**
    * Get current user profile
    */
   static async getProfile(req, res) {
