@@ -2731,7 +2731,11 @@ class SimpleEscrowController {
 
 // Export the correct controller methods for the routes
 module.exports = {
-  // Existing methods
+  // Direct exports for escrows.js route file
+  getAllEscrows: SimpleEscrowController.getAllEscrows,
+  getEscrowById: SimpleEscrowController.getEscrowById,
+  
+  // Existing methods (aliased)
   getEscrows: SimpleEscrowController.getAllEscrows,
   getEscrow: SimpleEscrowController.getEscrowById,
   createEscrow: SimpleEscrowController.createEscrow,
