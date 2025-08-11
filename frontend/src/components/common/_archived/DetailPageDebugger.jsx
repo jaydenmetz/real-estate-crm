@@ -5,7 +5,7 @@ import { styled, keyframes, alpha } from '@mui/material/styles';
 import CopyButton from './CopyButton';
 import { getSafeTimestamp } from '../../utils/safeDateUtils';
 import { useAuth } from '../../contexts/AuthContext';
-import apiInstance from '../../services/api.service.service.service';
+import apiInstance from '../../services/api.service';
 
 const DetailPageDebugger = ({ 
   pageName, 

@@ -29,7 +29,7 @@ import {
   CheckCircle
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
-import apiInstance from '../../services/api.service.service.service';
+import apiInstance from '../../services/api.service';
 
 const TeamSelector = ({ open, onClose, onSelectTeam }) => {
   const { user } = useAuth();

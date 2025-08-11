@@ -38,7 +38,7 @@ import {
   LocationOn,
   Add,
 } from '@mui/icons-material';
-import { escrowsAPI } from '../../services/api.service.service.service';
+import { escrowsAPI } from '../../services/api.service';
 import { debounce } from 'lodash';
 
 const NewEscrowModal = ({ open, onClose, onSuccess }) => {

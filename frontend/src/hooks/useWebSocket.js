@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useQueryClient } from 'react-query';
-import websocketService from '../services/websocket.service.service';
+import websocketService from '../services/websocket.service';
 
 export const useWebSocket = () => {
   const [connectionStatus, setConnectionStatus] = useState('disconnected');

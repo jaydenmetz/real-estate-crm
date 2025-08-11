@@ -67,7 +67,7 @@ import {
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { format } from 'date-fns';
-import { leadsAPI } from '../../services/api.service.service.service';
+import { leadsAPI } from '../../services/api.service';
 
 // Safe date parsing helper
 const safeParseDate = (dateValue) => {

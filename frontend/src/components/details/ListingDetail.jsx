@@ -158,7 +158,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import CopyButton from '../common/CopyButton';
-import networkMonitor from '../../services/networkMonitor.service.service';
+import networkMonitor from '../../services/networkMonitor.service';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay, EffectFade, Thumbs } from 'swiper/modules';
 import 'swiper/css';
@@ -170,7 +170,7 @@ import CountUp from 'react-countup';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useSnackbar } from 'notistack';
 import { format, differenceInDays, parseISO, isValid } from 'date-fns';
-import { listingsAPI } from '../../services/api.service.service.service';
+import { listingsAPI } from '../../services/api.service';
 import ListingForm from '../forms/ListingForm';
 import {
   LineChart,

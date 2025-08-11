@@ -28,7 +28,7 @@ import {
   ExpandLess,
   CheckCircle,
 } from '@mui/icons-material';
-import { escrowsAPI } from '../../services/api.service.service.service';
+import { escrowsAPI } from '../../services/api.service';
 import { format, parseISO, isValid } from 'date-fns';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';

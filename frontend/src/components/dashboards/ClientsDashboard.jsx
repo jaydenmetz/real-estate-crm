@@ -145,12 +145,12 @@ import { useSnackbar } from 'notistack';
 import { format } from 'date-fns';
 import { safeFormatDate } from '../../utils/safeDateUtils';
 import { useNavigate } from 'react-router-dom';
-import { clientsAPI } from '../../services/api.service.service.service';
+import { clientsAPI } from '../../services/api.service';
 import ClientForm from '../forms/ClientForm';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import CopyButton from '../common/CopyButton';
-import networkMonitor from '../../services/networkMonitor.service.service';
+import networkMonitor from '../../services/networkMonitor.service';
 import CountUp from 'react-countup';
 import {
   AreaChart,

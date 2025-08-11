@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
-import { appointmentsAPI } from '../../services/api.service.service.service';
+import { appointmentsAPI } from '../../services/api.service';
 import { useSnackbar } from 'notistack';
 
 const AppointmentForm = ({ open, onClose, appointment, onSuccess }) => {

@@ -32,7 +32,7 @@ import {
   CheckCircle,
   Warning,
 } from '@mui/icons-material';
-import { escrowsAPI } from '../../services/api.service.service.service';
+import { escrowsAPI } from '../../services/api.service';
 import { format } from 'date-fns';
 
 const ComprehensiveDataEditor = ({ escrowData, onUpdate }) => {

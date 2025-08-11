@@ -58,7 +58,7 @@ import { useQuery } from 'react-query';
 import { useSnackbar } from 'notistack';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../../services/api.service.service.service';
+import { api } from '../../services/api.service';
 // Note: Chart.js imports are commented out for now
 // To enable charts, install: npm install react-chartjs-2 chart.js
 // import { 

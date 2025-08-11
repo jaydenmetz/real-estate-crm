@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { debounce } from 'lodash';
-import { escrowsAPI } from '../../../services/api.service.service.service';
+import { escrowsAPI } from '../../../services/api.service';
 
 export function useEscrowData(escrowId) {
   const queryClient = useQueryClient();

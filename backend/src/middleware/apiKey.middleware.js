@@ -1,4 +1,4 @@
-const ApiKeyService = require('../services/api.service.serviceKey.service');
+const ApiKeyService = require('../services/apiKey.service');
 
 /**
  * Authenticate requests using API Key
