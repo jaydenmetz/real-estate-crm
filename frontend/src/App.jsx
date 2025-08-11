@@ -23,7 +23,6 @@ import GlobalErrorBoundary from './components/common/GlobalErrorBoundary';
 
 // Dashboard Components
 import HomeDashboard from './components/dashboards/HomeDashboard';
-import AIAgentsDashboardSimple from './components/dashboards/AIAgentsDashboardSimple';
 import EscrowsDashboard from './components/dashboards/EscrowsDashboard';
 import EscrowDetail from './components/details/EscrowDetail';
 import ListingsDashboard from './components/dashboards/ListingsDashboard';
@@ -214,12 +213,6 @@ function App() {
                                   </UserAwareErrorBoundary>
                                 } />
                                 
-                                {/* AI Agents - moved to separate route */}
-                                <Route path="/ai-agents" element={
-                                  <UserAwareErrorBoundary pageName="AI Agents Dashboard">
-                                    <AIAgentsDashboardSimple />
-                                  </UserAwareErrorBoundary>
-                                } />
                     
                                 {/* Health Check */}
                                 <Route path="/health" element={<GeneralHealthDashboard />} />

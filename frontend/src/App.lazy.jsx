@@ -2,7 +2,6 @@
 import { lazy } from 'react';
 
 // Dashboard Components
-export const AIAgentsDashboardSimple = lazy(() => import('./components/dashboards/AIAgentsDashboardSimple'));
 export const EscrowsDashboard = lazy(() => import('./components/dashboards/EscrowsDashboard'));
 export const ListingsDashboard = lazy(() => import('./components/dashboards/ListingsDashboard'));
 export const ClientsDashboard = lazy(() => import('./components/dashboards/ClientsDashboard'));

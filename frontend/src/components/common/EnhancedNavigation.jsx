@@ -30,7 +30,6 @@ import {
   People,
   Event,
   TrendingUp,
-  SmartToy,
   MoreVert,
   Notifications,
   Settings,
@@ -79,7 +78,6 @@ const EnhancedNavigation = () => {
     { path: '/commissions', label: 'Commission tracking', icon: <AttachMoney /> },
     { path: '/invoices', label: 'Invoice management', icon: <Receipt /> },
     { path: '/expenses', label: 'Expense tracking', icon: <AccountBalanceWallet /> },
-    { path: '/ai-agents', label: 'AI Agents', icon: <SmartToy /> },
     { path: '/activity-log', label: 'Activity Log', icon: <Timeline /> },
     { path: '/all-notes', label: 'All Notes', icon: <Article /> },
     { path: '/reports', label: 'Reports', icon: <Assessment /> },
@@ -179,7 +177,7 @@ const EnhancedNavigation = () => {
             }}
           >
             <Avatar sx={{ bgcolor: 'white', color: 'primary.main', mr: 1 }}>
-              <SmartToy />
+              <Business />
             </Avatar>
             <Typography variant="h6" component="div" sx={{ display: { xs: 'none', sm: 'block' } }}>
               Real Estate CRM

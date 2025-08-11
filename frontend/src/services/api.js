@@ -351,13 +351,6 @@ export const propertiesAPI = {
   search: (query) => apiInstance.get('/properties/search', { address: query })
 };
 
-export const aiAgentsAPI = {
-  getAll: () => apiInstance.get('/ai/agents'),
-  getById: (id) => apiInstance.get(`/ai/agents/${id}`),
-  updateStatus: (id, enabled) => apiInstance.patch(`/ai/agents/${id}`, { enabled }),
-  getActivities: (agentId) => apiInstance.get(`/ai/activities`, { agentId }),
-  triggerAgent: (agentId, task) => apiInstance.post(`/ai/agents/${agentId}/trigger`, { task })
-};
 
 export const analyticsAPI = {
   getDashboard: () => apiInstance.get('/analytics/dashboard'),
@@ -409,14 +402,6 @@ export const settingsAPI = {
   toggleTheme: () => apiInstance.post('/settings/theme/toggle')
 };
 
-// Additional Alex-specific API endpoints
-export const aiAPI = {
-  getAgents: () => apiInstance.get('/ai/agents'),
-  toggleAgent: (id, enabled) => apiInstance.patch(`/ai/agents/${id}/toggle`, { enabled }),
-  getTokenUsage: () => apiInstance.get('/ai/token-usage'),
-  getDailyBrief: () => apiInstance.get('/ai/alex/daily-briefing'),
-  getUrgentTasks: () => apiInstance.get('/ai/alex/urgent-tasks'),
-};
 
 // Export the main API instance as default
 // Export the API instance for debugging
@@ -436,8 +421,6 @@ export const api = {
   appointmentsAPI,
   leadsAPI,
   propertiesAPI,
-  aiAgentsAPI,
-  aiAPI,
   analyticsAPI,
   documentsAPI,
   communicationsAPI,
