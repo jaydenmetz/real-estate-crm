@@ -1,5 +1,5 @@
 const { pool } = require('../config/database');
-const { asyncHandler } = require('../middleware/errorLogging.middleware.middleware');
+const { asyncHandler } = require('../middleware/errorLogging.middleware');
 const { buildRestructuredEscrowResponse } = require('./../helpers/escrows.helper');
 
 // Cache for schema detection
