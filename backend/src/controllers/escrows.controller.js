@@ -2672,32 +2672,32 @@ class SimpleEscrowController {
 //       };
 //       
 //       notes.push(newNote);
-      
-      // Update escrow with new notes
-      const updateQuery = `
-        UPDATE escrows 
-        SET notes = $1, updated_at = CURRENT_TIMESTAMP
-        WHERE id = $2
-        RETURNING id
-      `;
-      
-      await pool.query(updateQuery, [JSON.stringify(notes), escrow.id]);
-      
-      res.json({
-        success: true,
-        data: {
-          note: newNote,
-          totalNotes: notes.length
-        }
-      });
-    } catch (error) {
-      console.error('Error in addEscrowNote:', error);
-      res.status(500).json({
-        success: false,
-        error: { code: 'SERVER_ERROR', message: 'Failed to add note' }
-      });
-    }
-  }
+//       
+//       // Update escrow with new notes
+//       const updateQuery = `
+//         UPDATE escrows 
+//         SET notes = $1, updated_at = CURRENT_TIMESTAMP
+//         WHERE id = $2
+//         RETURNING id
+//       `;
+//       
+//       await pool.query(updateQuery, [JSON.stringify(notes), escrow.id]);
+//       
+//       res.json({
+//         success: true,
+//         data: {
+//           note: newNote,
+//           totalNotes: notes.length
+//         }
+//       });
+//     } catch (error) {
+//       console.error('Error in addEscrowNote:', error);
+//       res.status(500).json({
+//         success: false,
+//         error: { code: 'SERVER_ERROR', message: 'Failed to add note' }
+//       });
+//     }
+//   }
 }
 
 // Export the correct controller methods for the routes
