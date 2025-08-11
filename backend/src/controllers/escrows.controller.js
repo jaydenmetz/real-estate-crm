@@ -2264,440 +2264,440 @@ class SimpleEscrowController {
     }
   }
 
-  /**
-   * Get escrow timeline events
-   */
-  static async getEscrowTimeline(req, res) {
-    try {
-      const { id } = req.params;
-      const pool = require('../config/database').pool;
-      
-      // Get escrow to ensure it exists
-      const escrowQuery = `
-        SELECT id, acceptance_date, opening_date, closing_date, 
-               contingency_removal_date, appraisal_date, inspection_date,
-               loan_approval_date, final_walkthrough_date
-        FROM escrows 
-        WHERE id = $1 OR display_id = $1
-      `;
-      
-      const escrowResult = await pool.query(escrowQuery, [id]);
-      
-      if (escrowResult.rows.length === 0) {
-        return res.status(404).json({
-          success: false,
-          error: { code: 'NOT_FOUND', message: 'Escrow not found' }
-        });
-      }
-      
-      const escrow = escrowResult.rows[0];
-      
-      // Build timeline events from escrow dates
-      const timeline = [];
-      const addEvent = (date, title, type, status) => {
-        if (date) {
-          timeline.push({
-            date: date,
-            title: title,
-            type: type,
-            status: new Date(date) < new Date() ? 'completed' : 'upcoming',
-            description: ''
-          });
-        }
-      };
-      
-      addEvent(escrow.acceptance_date, 'Offer Accepted', 'milestone', 'completed');
-      addEvent(escrow.opening_date, 'Escrow Opened', 'milestone', 'completed');
-      addEvent(escrow.inspection_date, 'Property Inspection', 'inspection', 'pending');
-      addEvent(escrow.appraisal_date, 'Property Appraisal', 'appraisal', 'pending');
-      addEvent(escrow.contingency_removal_date, 'Contingency Removal', 'milestone', 'pending');
-      addEvent(escrow.loan_approval_date, 'Loan Approval', 'financing', 'pending');
-      addEvent(escrow.final_walkthrough_date, 'Final Walkthrough', 'inspection', 'pending');
-      addEvent(escrow.closing_date, 'Closing Date', 'milestone', 'pending');
-      
-      // Sort by date
-      timeline.sort((a, b) => new Date(a.date) - new Date(b.date));
-      
-      res.json({
-        success: true,
-        data: {
-          timeline: timeline,
-          escrowId: escrow.id
-        }
-      });
-    } catch (error) {
-      console.error('Error in getEscrowTimeline:', error);
-      res.status(500).json({
-        success: false,
-        error: { code: 'SERVER_ERROR', message: 'Failed to fetch timeline' }
-      });
-    }
-  }
-
-  /**
-   * Get escrow people (buyers, sellers, agents, etc.)
-   */
-  static async getEscrowPeople(req, res) {
-    try {
-      const { id } = req.params;
-      const pool = require('../config/database').pool;
-      
-      // Get escrow with all people fields
-      const query = `
-        SELECT 
-          buyer_name, buyer_email, buyer_phone,
-          seller_name, seller_email, seller_phone,
-          buyer_agent_name, buyer_agent_email, buyer_agent_phone,
-          seller_agent_name, seller_agent_email, seller_agent_phone,
-          escrow_officer_name, escrow_officer_email, escrow_officer_phone,
-          title_company_name, title_company_contact
-        FROM escrows 
-        WHERE id = $1 OR display_id = $1
-      `;
-      
-      const result = await pool.query(query, [id]);
-      
-      if (result.rows.length === 0) {
-        return res.status(404).json({
-          success: false,
-          error: { code: 'NOT_FOUND', message: 'Escrow not found' }
-        });
-      }
-      
-      const escrow = result.rows[0];
-      
-      const people = {
-        buyers: [],
-        sellers: [],
-        agents: [],
-        escrowOfficers: [],
-        other: []
-      };
-      
-      // Add buyers
-      if (escrow.buyer_name) {
-        people.buyers.push({
-          name: escrow.buyer_name,
-          email: escrow.buyer_email,
-          phone: escrow.buyer_phone,
-          role: 'Buyer'
-        });
-      }
-      
-      // Add sellers
-      if (escrow.seller_name) {
-        people.sellers.push({
-          name: escrow.seller_name,
-          email: escrow.seller_email,
-          phone: escrow.seller_phone,
-          role: 'Seller'
-        });
-      }
-      
-      // Add agents
-      if (escrow.buyer_agent_name) {
-        people.agents.push({
-          name: escrow.buyer_agent_name,
-          email: escrow.buyer_agent_email,
-          phone: escrow.buyer_agent_phone,
-          role: 'Buyer\'s Agent'
-        });
-      }
-      
-      if (escrow.seller_agent_name) {
-        people.agents.push({
-          name: escrow.seller_agent_name,
-          email: escrow.seller_agent_email,
-          phone: escrow.seller_agent_phone,
-          role: 'Seller\'s Agent'
-        });
-      }
-      
-      // Add escrow officer
-      if (escrow.escrow_officer_name) {
-        people.escrowOfficers.push({
-          name: escrow.escrow_officer_name,
-          email: escrow.escrow_officer_email,
-          phone: escrow.escrow_officer_phone,
-          role: 'Escrow Officer'
-        });
-      }
-      
-      // Add title company
-      if (escrow.title_company_name) {
-        people.other.push({
-          name: escrow.title_company_name,
-          email: escrow.title_company_contact,
-          phone: '',
-          role: 'Title Company'
-        });
-      }
-      
-      res.json({
-        success: true,
-        data: people
-      });
-    } catch (error) {
-      console.error('Error in getEscrowPeople:', error);
-      res.status(500).json({
-        success: false,
-        error: { code: 'SERVER_ERROR', message: 'Failed to fetch people' }
-      });
-    }
-  }
-
-  /**
-   * Get escrow financial information
-   */
-  static async getEscrowFinancials(req, res) {
-    try {
-      const { id } = req.params;
-      const pool = require('../config/database').pool;
-      
-      // Get escrow financials
-      const query = `
-        SELECT 
-          purchase_price, earnest_money_amount, down_payment_amount,
-          loan_amount, commission_rate, buyer_side_commission,
-          seller_side_commission, escrow_fees, title_insurance_cost,
-          inspection_cost, appraisal_cost, home_warranty_cost,
-          closing_costs, seller_concessions, property_tax,
-          hoa_fees, insurance_premium
-        FROM escrows 
-        WHERE id = $1 OR display_id = $1
-      `;
-      
-      const result = await pool.query(query, [id]);
-      
-      if (result.rows.length === 0) {
-        return res.status(404).json({
-          success: false,
-          error: { code: 'NOT_FOUND', message: 'Escrow not found' }
-        });
-      }
-      
-      const escrow = result.rows[0];
-      
-      const financials = {
-        purchasePrice: escrow.purchase_price || 0,
-        financing: {
-          earnestMoney: escrow.earnest_money_amount || 0,
-          downPayment: escrow.down_payment_amount || 0,
-          loanAmount: escrow.loan_amount || 0,
-          downPaymentPercent: escrow.purchase_price ? 
-            ((escrow.down_payment_amount || 0) / escrow.purchase_price * 100).toFixed(2) : 0
-        },
-        commissions: {
-          totalRate: escrow.commission_rate || 0,
-          buyerSide: escrow.buyer_side_commission || 0,
-          sellerSide: escrow.seller_side_commission || 0,
-          totalAmount: escrow.purchase_price && escrow.commission_rate ? 
-            (escrow.purchase_price * (escrow.commission_rate / 100)) : 0
-        },
-        costs: {
-          escrowFees: escrow.escrow_fees || 0,
-          titleInsurance: escrow.title_insurance_cost || 0,
-          inspection: escrow.inspection_cost || 0,
-          appraisal: escrow.appraisal_cost || 0,
-          homeWarranty: escrow.home_warranty_cost || 0,
-          closingCosts: escrow.closing_costs || 0,
-          sellerConcessions: escrow.seller_concessions || 0
-        },
-        recurring: {
-          propertyTax: escrow.property_tax || 0,
-          hoaFees: escrow.hoa_fees || 0,
-          insurance: escrow.insurance_premium || 0
-        }
-      };
-      
-      res.json({
-        success: true,
-        data: financials
-      });
-    } catch (error) {
-      console.error('Error in getEscrowFinancials:', error);
-      res.status(500).json({
-        success: false,
-        error: { code: 'SERVER_ERROR', message: 'Failed to fetch financials' }
-      });
-    }
-  }
-
-  /**
-   * Get escrow checklists
-   */
-  static async getEscrowChecklists(req, res) {
-    try {
-      const { id } = req.params;
-      const pool = require('../config/database').pool;
-      
-      // Get escrow checklists
-      const query = `
-        SELECT checklists
-        FROM escrows 
-        WHERE id = $1 OR display_id = $1
-      `;
-      
-      const result = await pool.query(query, [id]);
-      
-      if (result.rows.length === 0) {
-        return res.status(404).json({
-          success: false,
-          error: { code: 'NOT_FOUND', message: 'Escrow not found' }
-        });
-      }
-      
-      const escrow = result.rows[0];
-      
-      // Default checklists structure
-      const defaultChecklists = {
-        buyer: {
-          initialDeposit: false,
-          loanApplication: false,
-          homeInspection: false,
-          insurance: false,
-          finalWalkthrough: false
-        },
-        seller: {
-          propertyDisclosures: false,
-          repairs: false,
-          utilities: false,
-          cleanProperty: false,
-          keys: false
-        },
-        escrow: {
-          openEscrow: false,
-          titleSearch: false,
-          preliminaryReport: false,
-          clearTitle: false,
-          closingDocuments: false
-        }
-      };
-      
-      const checklists = escrow.checklists || defaultChecklists;
-      
-      res.json({
-        success: true,
-        data: checklists
-      });
-    } catch (error) {
-      console.error('Error in getEscrowChecklists:', error);
-      res.status(500).json({
-        success: false,
-        error: { code: 'SERVER_ERROR', message: 'Failed to fetch checklists' }
-      });
-    }
-  }
-
-  /**
-   * Get escrow notes
-   */
-  static async getEscrowNotes(req, res) {
-    try {
-      const { id } = req.params;
-      const pool = require('../config/database').pool;
-      
-      // Get escrow to ensure it exists
-      const escrowQuery = `
-        SELECT id, notes
-        FROM escrows 
-        WHERE id = $1 OR display_id = $1
-      `;
-      
-      const result = await pool.query(escrowQuery, [id]);
-      
-      if (result.rows.length === 0) {
-        return res.status(404).json({
-          success: false,
-          error: { code: 'NOT_FOUND', message: 'Escrow not found' }
-        });
-      }
-      
-      const escrow = result.rows[0];
-      
-      // Parse notes if they're stored as JSON, otherwise create default structure
-      let notes = [];
-      if (escrow.notes) {
-        if (typeof escrow.notes === 'string') {
-          try {
-            notes = JSON.parse(escrow.notes);
-          } catch (e) {
-            // If not JSON, treat as single note
-            notes = [{
-              id: '1',
-              content: escrow.notes,
-              createdAt: new Date().toISOString(),
-              createdBy: 'System',
-              type: 'general'
-            }];
-          }
-        } else if (Array.isArray(escrow.notes)) {
-          notes = escrow.notes;
-        }
-      }
-      
-      res.json({
-        success: true,
-        data: {
-          notes: notes,
-          count: notes.length
-        }
-      });
-    } catch (error) {
-      console.error('Error in getEscrowNotes:', error);
-      res.status(500).json({
-        success: false,
-        error: { code: 'SERVER_ERROR', message: 'Failed to fetch notes' }
-      });
-    }
-  }
-
-  /**
-   * Add a note to escrow
-   */
-  static async addEscrowNote(req, res) {
-    try {
-      const { id } = req.params;
-      const { note, type = 'general' } = req.body;
-      const pool = require('../config/database').pool;
-      
-      // Get current notes
-      const escrowQuery = `
-        SELECT id, notes
-        FROM escrows 
-        WHERE id = $1 OR display_id = $1
-      `;
-      
-      const result = await pool.query(escrowQuery, [id]);
-      
-      if (result.rows.length === 0) {
-        return res.status(404).json({
-          success: false,
-          error: { code: 'NOT_FOUND', message: 'Escrow not found' }
-        });
-      }
-      
-      const escrow = result.rows[0];
-      
-      // Parse existing notes
-      let notes = [];
-      if (escrow.notes) {
-        if (typeof escrow.notes === 'string') {
-          try {
-            notes = JSON.parse(escrow.notes);
-          } catch (e) {
-            notes = [];
-          }
-        } else if (Array.isArray(escrow.notes)) {
-          notes = escrow.notes;
-        }
-      }
-      
-      // Add new note
-      const newNote = {
-        id: Date.now().toString(),
-        content: note,
-        type: type,
+//   /**
+//    * Get escrow timeline events
+//    */
+//   static async getEscrowTimeline(req, res) {
+//     try {
+//       const { id } = req.params;
+//       const pool = require('../config/database').pool;
+//       
+//       // Get escrow to ensure it exists
+//       const escrowQuery = `
+//         SELECT id, acceptance_date, opening_date, closing_date, 
+//                contingency_removal_date, appraisal_date, inspection_date,
+//                loan_approval_date, final_walkthrough_date
+//         FROM escrows 
+//         WHERE id = $1 OR display_id = $1
+//       `;
+//       
+//       const escrowResult = await pool.query(escrowQuery, [id]);
+//       
+//       if (escrowResult.rows.length === 0) {
+//         return res.status(404).json({
+//           success: false,
+//           error: { code: 'NOT_FOUND', message: 'Escrow not found' }
+//         });
+//       }
+//       
+//       const escrow = escrowResult.rows[0];
+//       
+//       // Build timeline events from escrow dates
+//       const timeline = [];
+//       const addEvent = (date, title, type, status) => {
+//         if (date) {
+//           timeline.push({
+//             date: date,
+//             title: title,
+//             type: type,
+//             status: new Date(date) < new Date() ? 'completed' : 'upcoming',
+//             description: ''
+//           });
+//         }
+//       };
+//       
+//       addEvent(escrow.acceptance_date, 'Offer Accepted', 'milestone', 'completed');
+//       addEvent(escrow.opening_date, 'Escrow Opened', 'milestone', 'completed');
+//       addEvent(escrow.inspection_date, 'Property Inspection', 'inspection', 'pending');
+//       addEvent(escrow.appraisal_date, 'Property Appraisal', 'appraisal', 'pending');
+//       addEvent(escrow.contingency_removal_date, 'Contingency Removal', 'milestone', 'pending');
+//       addEvent(escrow.loan_approval_date, 'Loan Approval', 'financing', 'pending');
+//       addEvent(escrow.final_walkthrough_date, 'Final Walkthrough', 'inspection', 'pending');
+//       addEvent(escrow.closing_date, 'Closing Date', 'milestone', 'pending');
+//       
+//       // Sort by date
+//       timeline.sort((a, b) => new Date(a.date) - new Date(b.date));
+//       
+//       res.json({
+//         success: true,
+//         data: {
+//           timeline: timeline,
+//           escrowId: escrow.id
+//         }
+//       });
+//     } catch (error) {
+//       console.error('Error in getEscrowTimeline:', error);
+//       res.status(500).json({
+//         success: false,
+//         error: { code: 'SERVER_ERROR', message: 'Failed to fetch timeline' }
+//       });
+//     }
+//   }
+// 
+//   /**
+//    * Get escrow people (buyers, sellers, agents, etc.)
+//    */
+//   static async getEscrowPeople(req, res) {
+//     try {
+//       const { id } = req.params;
+//       const pool = require('../config/database').pool;
+//       
+//       // Get escrow with all people fields
+//       const query = `
+//         SELECT 
+//           buyer_name, buyer_email, buyer_phone,
+//           seller_name, seller_email, seller_phone,
+//           buyer_agent_name, buyer_agent_email, buyer_agent_phone,
+//           seller_agent_name, seller_agent_email, seller_agent_phone,
+//           escrow_officer_name, escrow_officer_email, escrow_officer_phone,
+//           title_company_name, title_company_contact
+//         FROM escrows 
+//         WHERE id = $1 OR display_id = $1
+//       `;
+//       
+//       const result = await pool.query(query, [id]);
+//       
+//       if (result.rows.length === 0) {
+//         return res.status(404).json({
+//           success: false,
+//           error: { code: 'NOT_FOUND', message: 'Escrow not found' }
+//         });
+//       }
+//       
+//       const escrow = result.rows[0];
+//       
+//       const people = {
+//         buyers: [],
+//         sellers: [],
+//         agents: [],
+//         escrowOfficers: [],
+//         other: []
+//       };
+//       
+//       // Add buyers
+//       if (escrow.buyer_name) {
+//         people.buyers.push({
+//           name: escrow.buyer_name,
+//           email: escrow.buyer_email,
+//           phone: escrow.buyer_phone,
+//           role: 'Buyer'
+//         });
+//       }
+//       
+//       // Add sellers
+//       if (escrow.seller_name) {
+//         people.sellers.push({
+//           name: escrow.seller_name,
+//           email: escrow.seller_email,
+//           phone: escrow.seller_phone,
+//           role: 'Seller'
+//         });
+//       }
+//       
+//       // Add agents
+//       if (escrow.buyer_agent_name) {
+//         people.agents.push({
+//           name: escrow.buyer_agent_name,
+//           email: escrow.buyer_agent_email,
+//           phone: escrow.buyer_agent_phone,
+//           role: 'Buyer\'s Agent'
+//         });
+//       }
+//       
+//       if (escrow.seller_agent_name) {
+//         people.agents.push({
+//           name: escrow.seller_agent_name,
+//           email: escrow.seller_agent_email,
+//           phone: escrow.seller_agent_phone,
+//           role: 'Seller\'s Agent'
+//         });
+//       }
+//       
+//       // Add escrow officer
+//       if (escrow.escrow_officer_name) {
+//         people.escrowOfficers.push({
+//           name: escrow.escrow_officer_name,
+//           email: escrow.escrow_officer_email,
+//           phone: escrow.escrow_officer_phone,
+//           role: 'Escrow Officer'
+//         });
+//       }
+//       
+//       // Add title company
+//       if (escrow.title_company_name) {
+//         people.other.push({
+//           name: escrow.title_company_name,
+//           email: escrow.title_company_contact,
+//           phone: '',
+//           role: 'Title Company'
+//         });
+//       }
+//       
+//       res.json({
+//         success: true,
+//         data: people
+//       });
+//     } catch (error) {
+//       console.error('Error in getEscrowPeople:', error);
+//       res.status(500).json({
+//         success: false,
+//         error: { code: 'SERVER_ERROR', message: 'Failed to fetch people' }
+//       });
+//     }
+//   }
+// 
+//   /**
+//    * Get escrow financial information
+//    */
+//   static async getEscrowFinancials(req, res) {
+//     try {
+//       const { id } = req.params;
+//       const pool = require('../config/database').pool;
+//       
+//       // Get escrow financials
+//       const query = `
+//         SELECT 
+//           purchase_price, earnest_money_amount, down_payment_amount,
+//           loan_amount, commission_rate, buyer_side_commission,
+//           seller_side_commission, escrow_fees, title_insurance_cost,
+//           inspection_cost, appraisal_cost, home_warranty_cost,
+//           closing_costs, seller_concessions, property_tax,
+//           hoa_fees, insurance_premium
+//         FROM escrows 
+//         WHERE id = $1 OR display_id = $1
+//       `;
+//       
+//       const result = await pool.query(query, [id]);
+//       
+//       if (result.rows.length === 0) {
+//         return res.status(404).json({
+//           success: false,
+//           error: { code: 'NOT_FOUND', message: 'Escrow not found' }
+//         });
+//       }
+//       
+//       const escrow = result.rows[0];
+//       
+//       const financials = {
+//         purchasePrice: escrow.purchase_price || 0,
+//         financing: {
+//           earnestMoney: escrow.earnest_money_amount || 0,
+//           downPayment: escrow.down_payment_amount || 0,
+//           loanAmount: escrow.loan_amount || 0,
+//           downPaymentPercent: escrow.purchase_price ? 
+//             ((escrow.down_payment_amount || 0) / escrow.purchase_price * 100).toFixed(2) : 0
+//         },
+//         commissions: {
+//           totalRate: escrow.commission_rate || 0,
+//           buyerSide: escrow.buyer_side_commission || 0,
+//           sellerSide: escrow.seller_side_commission || 0,
+//           totalAmount: escrow.purchase_price && escrow.commission_rate ? 
+//             (escrow.purchase_price * (escrow.commission_rate / 100)) : 0
+//         },
+//         costs: {
+//           escrowFees: escrow.escrow_fees || 0,
+//           titleInsurance: escrow.title_insurance_cost || 0,
+//           inspection: escrow.inspection_cost || 0,
+//           appraisal: escrow.appraisal_cost || 0,
+//           homeWarranty: escrow.home_warranty_cost || 0,
+//           closingCosts: escrow.closing_costs || 0,
+//           sellerConcessions: escrow.seller_concessions || 0
+//         },
+//         recurring: {
+//           propertyTax: escrow.property_tax || 0,
+//           hoaFees: escrow.hoa_fees || 0,
+//           insurance: escrow.insurance_premium || 0
+//         }
+//       };
+//       
+//       res.json({
+//         success: true,
+//         data: financials
+//       });
+//     } catch (error) {
+//       console.error('Error in getEscrowFinancials:', error);
+//       res.status(500).json({
+//         success: false,
+//         error: { code: 'SERVER_ERROR', message: 'Failed to fetch financials' }
+//       });
+//     }
+//   }
+// 
+//   /**
+//    * Get escrow checklists
+//    */
+//   static async getEscrowChecklists(req, res) {
+//     try {
+//       const { id } = req.params;
+//       const pool = require('../config/database').pool;
+//       
+//       // Get escrow checklists
+//       const query = `
+//         SELECT checklists
+//         FROM escrows 
+//         WHERE id = $1 OR display_id = $1
+//       `;
+//       
+//       const result = await pool.query(query, [id]);
+//       
+//       if (result.rows.length === 0) {
+//         return res.status(404).json({
+//           success: false,
+//           error: { code: 'NOT_FOUND', message: 'Escrow not found' }
+//         });
+//       }
+//       
+//       const escrow = result.rows[0];
+//       
+//       // Default checklists structure
+//       const defaultChecklists = {
+//         buyer: {
+//           initialDeposit: false,
+//           loanApplication: false,
+//           homeInspection: false,
+//           insurance: false,
+//           finalWalkthrough: false
+//         },
+//         seller: {
+//           propertyDisclosures: false,
+//           repairs: false,
+//           utilities: false,
+//           cleanProperty: false,
+//           keys: false
+//         },
+//         escrow: {
+//           openEscrow: false,
+//           titleSearch: false,
+//           preliminaryReport: false,
+//           clearTitle: false,
+//           closingDocuments: false
+//         }
+//       };
+//       
+//       const checklists = escrow.checklists || defaultChecklists;
+//       
+//       res.json({
+//         success: true,
+//         data: checklists
+//       });
+//     } catch (error) {
+//       console.error('Error in getEscrowChecklists:', error);
+//       res.status(500).json({
+//         success: false,
+//         error: { code: 'SERVER_ERROR', message: 'Failed to fetch checklists' }
+//       });
+//     }
+//   }
+// 
+//   /**
+//    * Get escrow notes
+//    */
+//   static async getEscrowNotes(req, res) {
+//     try {
+//       const { id } = req.params;
+//       const pool = require('../config/database').pool;
+//       
+//       // Get escrow to ensure it exists
+//       const escrowQuery = `
+//         SELECT id, notes
+//         FROM escrows 
+//         WHERE id = $1 OR display_id = $1
+//       `;
+//       
+//       const result = await pool.query(escrowQuery, [id]);
+//       
+//       if (result.rows.length === 0) {
+//         return res.status(404).json({
+//           success: false,
+//           error: { code: 'NOT_FOUND', message: 'Escrow not found' }
+//         });
+//       }
+//       
+//       const escrow = result.rows[0];
+//       
+//       // Parse notes if they're stored as JSON, otherwise create default structure
+//       let notes = [];
+//       if (escrow.notes) {
+//         if (typeof escrow.notes === 'string') {
+//           try {
+//             notes = JSON.parse(escrow.notes);
+//           } catch (e) {
+//             // If not JSON, treat as single note
+//             notes = [{
+//               id: '1',
+//               content: escrow.notes,
+//               createdAt: new Date().toISOString(),
+//               createdBy: 'System',
+//               type: 'general'
+//             }];
+//           }
+//         } else if (Array.isArray(escrow.notes)) {
+//           notes = escrow.notes;
+//         }
+//       }
+//       
+//       res.json({
+//         success: true,
+//         data: {
+//           notes: notes,
+//           count: notes.length
+//         }
+//       });
+//     } catch (error) {
+//       console.error('Error in getEscrowNotes:', error);
+//       res.status(500).json({
+//         success: false,
+//         error: { code: 'SERVER_ERROR', message: 'Failed to fetch notes' }
+//       });
+//     }
+//   }
+// 
+//   /**
+//    * Add a note to escrow
+//    */
+//   static async addEscrowNote(req, res) {
+//     try {
+//       const { id } = req.params;
+//       const { note, type = 'general' } = req.body;
+//       const pool = require('../config/database').pool;
+//       
+//       // Get current notes
+//       const escrowQuery = `
+//         SELECT id, notes
+//         FROM escrows 
+//         WHERE id = $1 OR display_id = $1
+//       `;
+//       
+//       const result = await pool.query(escrowQuery, [id]);
+//       
+//       if (result.rows.length === 0) {
+//         return res.status(404).json({
+//           success: false,
+//           error: { code: 'NOT_FOUND', message: 'Escrow not found' }
+//         });
+//       }
+//       
+//       const escrow = result.rows[0];
+//       
+//       // Parse existing notes
+//       let notes = [];
+//       if (escrow.notes) {
+//         if (typeof escrow.notes === 'string') {
+//           try {
+//             notes = JSON.parse(escrow.notes);
+//           } catch (e) {
+//             notes = [];
+//           }
+//         } else if (Array.isArray(escrow.notes)) {
+//           notes = escrow.notes;
+//         }
+//       }
+//       
+//       // Add new note
+//       const newNote = {
+//         id: Date.now().toString(),
+//         content: note,
+//         type: type,
         createdAt: new Date().toISOString(),
         createdBy: req.user?.username || 'System'
       };
