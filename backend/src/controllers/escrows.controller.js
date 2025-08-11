@@ -2667,11 +2667,11 @@ class SimpleEscrowController {
 //         id: Date.now().toString(),
 //         content: note,
 //         type: type,
-        createdAt: new Date().toISOString(),
-        createdBy: req.user?.username || 'System'
-      };
-      
-      notes.push(newNote);
+//         createdAt: new Date().toISOString(),
+//         createdBy: req.user?.username || 'System'
+//       };
+//       
+//       notes.push(newNote);
       
       // Update escrow with new notes
       const updateQuery = `
