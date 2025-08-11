@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { getLinkPreview } = require('../controllers/linkPreview.controller');
-const { authenticateToken } = require('./auth');
+const { authenticate } = require('../middleware/auth.middleware');
 const { body, validationResult } = require('express-validator');
 
 // Validation middleware
