@@ -4,7 +4,8 @@ const express = require('express');
 const { body, param, query } = require('express-validator');
 const router = express.Router();
 const escrowsController = require('../controllers/escrows.controller');
-const { authenticate, requirePermission } = require('../middleware/auth.middleware');
+const { authenticate } = require('../middleware/apiKey.middleware');
+const { requirePermission } = require('../middleware/auth.middleware');
 const validationMiddleware = require('../middleware/validation.middleware');
 
 // All routes require authentication and escrows permission
@@ -148,5 +149,54 @@ router.post(
   validationMiddleware,
   escrowsController.addEscrowNote
 );
+
+// Health check endpoints
+// GET /v1/escrows/health/auth - Test authentication
+router.get('/health/auth', authenticate, async (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      authenticated: true,
+      user: req.user?.email,
+      userId: req.user?.id,
+      teamId: req.user?.teamId,
+      role: req.user?.role,
+      authMethod: req.user?.authMethod,
+      permissions: req.user?.permissions
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
+// GET /v1/escrows/health/db - Test database connection
+router.get('/health/db', authenticate, async (req, res) => {
+  try {
+    const { pool } = require('../config/database');
+    const result = await pool.query('SELECT NOW() as time, current_database() as database');
+    
+    res.json({
+      success: true,
+      data: {
+        connected: true,
+        database: result.rows[0].database,
+        serverTime: result.rows[0].time,
+        totalConnections: pool.totalCount,
+        idleConnections: pool.idleCount,
+        waitingConnections: pool.waitingCount
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('Database health check failed:', error);
+    res.status(503).json({
+      success: false,
+      error: {
+        code: 'DB_CONNECTION_ERROR',
+        message: 'Database connection failed',
+        details: error.message
+      }
+    });
+  }
+});
 
 module.exports = router;
