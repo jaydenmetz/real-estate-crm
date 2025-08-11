@@ -1450,6 +1450,62 @@ class SimpleEscrowController {
   }
 
   /**
+   * Get escrow notes
+   */
+  static async getEscrowNotes(req, res) {
+    try {
+      const { id } = req.params;
+      
+      // Detect if ID is UUID format
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      
+      // Get the escrow record
+      const query = `
+        SELECT id, display_id, notes FROM escrows
+        WHERE ${isUUID ? 'id = $1' : 'display_id = $1'}
+      `;
+      
+      const result = await pool.query(query, [id]);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Escrow not found'
+          }
+        });
+      }
+      
+      const escrow = result.rows[0];
+      
+      // Parse notes if they exist
+      let notes = [];
+      if (escrow.notes) {
+        try {
+          notes = typeof escrow.notes === 'string' ? JSON.parse(escrow.notes) : escrow.notes;
+        } catch (e) {
+          notes = [];
+        }
+      }
+      
+      res.json({
+        success: true,
+        data: notes
+      });
+    } catch (error) {
+      console.error('Error fetching escrow notes:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'SERVER_ERROR',
+          message: 'Failed to fetch escrow notes'
+        }
+      });
+    }
+  }
+
+  /**
    * Get escrow documents
    */
   static async getEscrowDocuments(req, res) {

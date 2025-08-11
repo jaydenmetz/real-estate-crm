@@ -1,5 +1,5 @@
 // Authentication service for handling login, logout, and token management
-import apiInstance from './api';
+import apiInstance from './api.service';
 
 const TOKEN_KEY = 'crm_auth_token';
 const USER_KEY = 'crm_user_data';
