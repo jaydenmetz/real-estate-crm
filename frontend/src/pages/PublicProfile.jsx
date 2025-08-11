@@ -43,7 +43,7 @@ import {
   Groups,
   AttachMoney
 } from '@mui/icons-material';
-import apiInstance, { api } from '../services/api';
+import apiInstance, { api } from '../services/api.service.service';
 
 // Custom styled components
 const HeroSection = ({ children }) => {

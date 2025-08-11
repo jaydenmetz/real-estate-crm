@@ -57,7 +57,7 @@ import { useQuery } from 'react-query';
 import { useSnackbar } from 'notistack';
 import { format, differenceInDays } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../../services/api';
+import { api } from '../../services/api.service.service.service';
 
 // Styled Components
 const StyledCard = styled(Card)(({ theme }) => ({

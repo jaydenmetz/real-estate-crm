@@ -5,10 +5,10 @@ const helmet = require('helmet');
 const cors = require('cors');
 const rateLimit = require('./middleware/rateLimit.middleware');
 const logger = require('./utils/logger');
-const websocketService = require('./services/websocket.service');
+const websocketService = require('./services/websocket.service.service');
 const { initializeDatabase } = require('./config/database');
 const { initializeRedis } = require('./config/redis');
-const { errorLogging, requestLogging } = require('./middleware/errorLogging');
+const { errorLogging, requestLogging } = require('./middleware/errorLogging.middleware');
 
 
 (async () => {
@@ -188,8 +188,8 @@ const apiRouter = express.Router();
 apiRouter.use(rateLimit);
 
 // Public routes (no authentication required)
-apiRouter.use('/auth', require('./routes/auth').router);
-apiRouter.use('/health', require('./routes/health'));
+apiRouter.use('/auth', require('./routes/auth.routes').router);
+apiRouter.use('/health', require('./routes/health.routes'));
 
 // Super simple test endpoint for debugging (bypass all middleware)
 apiRouter.get('/test-endpoint', (req, res) => {
@@ -241,7 +241,7 @@ apiRouter.post('/test-login', (req, res) => {
 });
 
 // API key management (requires JWT auth)
-apiRouter.use('/api-keys', require('./routes/apiKeys'));
+apiRouter.use('/api-keys', require('./routes/apiKeys.routes'));
 
 // API Routes - Using professional .routes.js files with built-in auth
 // Each route file handles its own authentication and validation
@@ -258,7 +258,7 @@ apiRouter.use('/webhooks', require('./routes/webhooks.routes')); // Webhooks byp
 
 // Debug and test routes (development only)
 if (process.env.NODE_ENV === 'development') {
-  apiRouter.use('/debug', authenticate, require('./routes/debug'));
+  apiRouter.use('/debug', authenticate, require('./routes/debug.routes'));
   apiRouter.use('/test-connection', require('./routes/test-connection'));
   apiRouter.use('/simple-test', require('./routes/simple-test'));
 }
@@ -274,8 +274,8 @@ apiRouter.use('/upload', require('./routes/upload.routes'));
 apiRouter.use('/uploads', require('./routes/upload.routes'));
 
 // Profile and Settings routes
-apiRouter.use('/profiles', require('./routes/profiles'));
-apiRouter.use('/settings', require('./routes/settings'));
+apiRouter.use('/profiles', require('./routes/profiles.routes'));
+apiRouter.use('/settings', require('./routes/settings.routes'));
 
 apiRouter.get('/analytics/dashboard', async (req, res) => {
   try {

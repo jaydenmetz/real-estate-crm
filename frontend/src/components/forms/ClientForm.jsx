@@ -10,7 +10,7 @@ import {
   MenuItem,
 } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
-import { clientsAPI } from '../../services/api';
+import { clientsAPI } from '../../services/api.service.service.service';
 import { useSnackbar } from 'notistack';
 
 const ClientForm = ({ open, onClose, client, onSuccess }) => {

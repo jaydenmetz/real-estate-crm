@@ -4,7 +4,7 @@ import App from './App';
 import './styles/globals.css';
 
 // Initialize network monitoring as early as possible
-import './services/networkMonitor';
+import './services/networkMonitor.service';
 
 // Debug environment variables in production
 console.log('🔧 Environment Debug:', {

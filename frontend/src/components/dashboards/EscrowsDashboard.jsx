@@ -66,10 +66,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { safeFormatDate, safeParseDate } from '../../utils/safeDateUtils';
-import { escrowsAPI } from '../../services/api';
+import { escrowsAPI } from '../../services/api.service.service.service';
 import { useAuth } from '../../contexts/AuthContext';
 import CopyButton from '../common/CopyButton';
-import networkMonitor from '../../services/networkMonitor';
+import networkMonitor from '../../services/networkMonitor.service.service';
 
 // Styled Components
 const HeroSection = styled(Box)(({ theme }) => ({

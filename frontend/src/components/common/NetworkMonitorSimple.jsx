@@ -50,7 +50,7 @@ import {
   DataUsage
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
-import networkMonitor from '../../services/networkMonitor';
+import networkMonitor from '../../services/networkMonitor.service.service';
 import CopyButton from './CopyButton';
 
 const NetworkMonitorSimple = () => {

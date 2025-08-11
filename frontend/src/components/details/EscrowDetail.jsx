@@ -23,7 +23,7 @@ import {
 import { styled } from '@mui/material/styles';
 
 // Import API configuration
-import { apiCall, API_BASE_URL } from '../../services/api';
+import { apiCall, API_BASE_URL } from '../../services/api.service';
 import { testApiConnection, testEscrowEndpoint } from '../../utils/testApi';
 
 // Import components

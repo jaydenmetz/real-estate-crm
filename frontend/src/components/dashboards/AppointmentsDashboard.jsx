@@ -179,12 +179,12 @@ import { useSnackbar } from 'notistack';
 import { format } from 'date-fns';
 import { safeFormatDate } from '../../utils/safeDateUtils';
 import { useNavigate } from 'react-router-dom';
-import { appointmentsAPI } from '../../services/api';
+import { appointmentsAPI } from '../../services/api.service.service.service';
 import AppointmentForm from '../forms/AppointmentForm';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import CopyButton from '../common/CopyButton';
-import networkMonitor from '../../services/networkMonitor';
+import networkMonitor from '../../services/networkMonitor.service.service';
 import CountUp from 'react-countup';
 import {
   AreaChart,

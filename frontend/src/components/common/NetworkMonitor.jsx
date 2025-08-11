@@ -49,7 +49,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../../contexts/AuthContext';
 import CopyButton from './CopyButton';
-import networkMonitor from '../../services/networkMonitor';
+import networkMonitor from '../../services/networkMonitor.service.service';
 
 const NetworkMonitorComponent = () => {
   const { user } = useAuth();

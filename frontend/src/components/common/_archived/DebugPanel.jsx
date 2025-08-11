@@ -61,7 +61,7 @@ import {
 import { alpha, styled } from '@mui/material/styles';
 import { format } from 'date-fns';
 import CopyButton from './CopyButton';
-import networkMonitor from '../../services/networkMonitor';
+import networkMonitor from '../../services/networkMonitor.service.service';
 
 const StyledAccordion = styled(Accordion)(({ theme }) => ({
   background: alpha(theme.palette.background.paper, 0.8),

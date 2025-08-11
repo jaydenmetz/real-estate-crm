@@ -53,7 +53,7 @@ const PublicProfile = React.lazy(() => import('./pages/PublicProfileStunning'));
 const Settings = React.lazy(() => import('./pages/Settings'));
 
 // Services
-import websocketService from './services/websocket';
+import websocketService from './services/websocket.service';
 
 // Utils
 import { setupGlobalErrorHandlers } from './utils/globalErrorHandler';

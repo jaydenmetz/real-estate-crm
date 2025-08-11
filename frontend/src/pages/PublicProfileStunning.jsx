@@ -77,7 +77,7 @@ import {
   PolarRadiusAxis,
   Radar
 } from 'recharts';
-import apiInstance, { api } from '../services/api';
+import apiInstance, { api } from '../services/api.service.service';
 
 // Animation variants
 const containerVariants = {

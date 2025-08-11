@@ -1,5 +1,5 @@
 // Simple API test utility
-import { API_BASE_URL, apiCall } from '../services/api';
+import { API_BASE_URL, apiCall } from '../services/api.service.service';
 
 export const testApiConnection = async () => {
   console.log('Testing API connection...');

@@ -58,7 +58,7 @@ import { useQuery } from 'react-query';
 import { safeFormatDate, getSafeTimestamp } from '../../utils/safeDateUtils';
 import { format, formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
-import api from '../../services/api';
+import api from '../../services/api.service.service.service';
 
 // Animations
 const fadeIn = keyframes`

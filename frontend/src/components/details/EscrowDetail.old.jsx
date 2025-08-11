@@ -520,7 +520,7 @@ import { format, formatDistanceToNow, addDays, differenceInDays, isAfter, isBefo
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { escrowsAPI, documentsAPI } from '../../services/api';
+import { escrowsAPI, documentsAPI } from '../../services/api.service.service.service';
 import CountUp from 'react-countup';
 import { formatPriceShort } from '../../utils/formatters';
 import {
@@ -550,7 +550,7 @@ import ChartErrorBoundary from '../common/ChartErrorBoundary';
 import NetworkMonitorSimple from '../common/NetworkMonitorSimple';
 import EnhancedDatabaseMonitor from '../common/EnhancedDatabaseMonitor';
 import DebugCard from '../common/DebugCard';
-import networkMonitor from '../../services/networkMonitor';
+import networkMonitor from '../../services/networkMonitor.service.service';
 import CopyButton from '../common/CopyButton';
 import DetailPageHero from '../common/DetailPageHero';
 import DebugCard from '../common/DebugCard';
