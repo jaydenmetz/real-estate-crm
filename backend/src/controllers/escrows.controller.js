@@ -1506,6 +1506,87 @@ class SimpleEscrowController {
   }
 
   /**
+   * Add a note to escrow
+   */
+  static async addEscrowNote(req, res) {
+    try {
+      const { id } = req.params;
+      const { note, type = 'general' } = req.body;
+      
+      // Detect if ID is UUID format
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      
+      // Get the escrow record
+      const query = `
+        SELECT id, display_id, notes FROM escrows
+        WHERE ${isUUID ? 'id = $1' : 'display_id = $1'}
+      `;
+      
+      const result = await pool.query(query, [id]);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Escrow not found'
+          }
+        });
+      }
+      
+      const escrow = result.rows[0];
+      
+      // Parse existing notes
+      let notes = [];
+      if (escrow.notes) {
+        try {
+          notes = typeof escrow.notes === 'string' ? JSON.parse(escrow.notes) : escrow.notes;
+        } catch (e) {
+          notes = [];
+        }
+      }
+      
+      // Add new note
+      const newNote = {
+        id: Date.now().toString(),
+        content: note,
+        type: type,
+        createdAt: new Date().toISOString(),
+        createdBy: req.user?.username || 'System'
+      };
+      
+      notes.push(newNote);
+      
+      // Update escrow with new notes
+      const updateQuery = `
+        UPDATE escrows 
+        SET notes = $1, updated_at = CURRENT_TIMESTAMP
+        WHERE id = $2
+        RETURNING id
+      `;
+      
+      await pool.query(updateQuery, [JSON.stringify(notes), escrow.id]);
+      
+      res.json({
+        success: true,
+        data: {
+          note: newNote,
+          totalNotes: notes.length
+        }
+      });
+    } catch (error) {
+      console.error('Error adding escrow note:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'SERVER_ERROR',
+          message: 'Failed to add note'
+        }
+      });
+    }
+  }
+
+  /**
    * Get escrow documents
    */
   static async getEscrowDocuments(req, res) {
