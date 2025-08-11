@@ -842,20 +842,47 @@ class SimpleEscrowController {
    */
   static async getEscrowPeople(req, res) {
     try {
-      const { id } = req.params;
+      let { id } = req.params;
       
-      // Detect if ID is UUID format
+      // Strip the "escrow-" prefix if present
+      if (id.startsWith('escrow-')) {
+        id = id.substring(7);
+      }
+      
+      // Detect schema
+      const schema = await detectSchema();
+      
+      // Determine if ID is UUID format or display format
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
       
-      const query = `
-        SELECT people
-        FROM escrows
-        WHERE ${isUUID ? 'id = $1' : 'display_id = $1'}
+      // Build query to handle UUID, numeric ID, or display ID
+      let whereClause;
+      if (isUUID) {
+        whereClause = 'e.id = $1';
+      } else if (/^\d+$/.test(id)) {
+        if (schema.hasNumericId) {
+          whereClause = 'e.numeric_id = $1::integer';
+        } else if (schema.hasTeamSequenceId) {
+          whereClause = 'e.team_sequence_id = $1::integer';
+        } else {
+          whereClause = 'e.display_id = $1';
+        }
+      } else {
+        whereClause = '(e.id = $1 OR e.display_id = $1 OR (e.numeric_id IS NOT NULL AND e.numeric_id::text = $1))';
+      }
+      
+      // Get escrow details
+      const escrowQuery = `
+        SELECT 
+          e.*,
+          'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800' as propertyImage
+        FROM escrows e
+        WHERE ${whereClause}
       `;
       
-      const result = await pool.query(query, [id]);
+      const escrowResult = await pool.query(escrowQuery, [id]);
       
-      if (result.rows.length === 0) {
+      if (escrowResult.rows.length === 0) {
         return res.status(404).json({
           success: false,
           error: {
@@ -865,73 +892,15 @@ class SimpleEscrowController {
         });
       }
       
-      const storedPeople = result.rows[0].people || {};
+      const escrow = escrowResult.rows[0];
       
-      // Default contact structure
-      const defaultContact = {
-        id: null,
-        name: null,
-        email: null,
-        phone: null,
-        company: null,
-        license: null,
-        address: null,
-        role: null
-      };
+      // Build the full response using the existing function
+      const fullResponse = buildRestructuredEscrowResponse(escrow);
       
-      // Build structured people object
-      const peopleData = {
-        // Buyer side
-        buyer: storedPeople.buyer || defaultContact,
-        buyerAgent: storedPeople.buyerAgent || defaultContact,
-        buyerBroker: storedPeople.buyerBroker || defaultContact,
-        
-        // Seller side
-        seller: storedPeople.seller || defaultContact,
-        sellerAgent: storedPeople.sellerAgent || defaultContact,
-        sellerBroker: storedPeople.sellerBroker || defaultContact,
-        
-        // Transaction professionals
-        escrowOfficer: storedPeople.escrowOfficer || defaultContact,
-        titleOfficer: storedPeople.titleOfficer || defaultContact,
-        lender: storedPeople.lender || defaultContact,
-        loanOfficer: storedPeople.loanOfficer || defaultContact,
-        
-        // Inspectors
-        homeInspector: storedPeople.homeInspector || defaultContact,
-        termiteInspector: storedPeople.termiteInspector || defaultContact,
-        roofInspector: storedPeople.roofInspector || defaultContact,
-        poolInspector: storedPeople.poolInspector || defaultContact,
-        
-        // Other professionals
-        appraiser: storedPeople.appraiser || defaultContact,
-        contractor: storedPeople.contractor || defaultContact,
-        homeWarrantyRep: storedPeople.homeWarrantyRep || defaultContact,
-        
-        // Transaction coordinator (check if we need to get from escrow table)
-        transactionCoordinator: storedPeople.transactionCoordinator || defaultContact,
-        
-        // Include any additional people from stored data
-        ...Object.keys(storedPeople).reduce((acc, key) => {
-          // Only include keys that aren't already defined above
-          const predefinedKeys = [
-            'buyer', 'buyerAgent', 'buyerBroker',
-            'seller', 'sellerAgent', 'sellerBroker',
-            'escrowOfficer', 'titleOfficer', 'lender', 'loanOfficer',
-            'homeInspector', 'termiteInspector', 'roofInspector', 'poolInspector',
-            'appraiser', 'contractor', 'homeWarrantyRep', 'transactionCoordinator'
-          ];
-          
-          if (!predefinedKeys.includes(key)) {
-            acc[key] = storedPeople[key];
-          }
-          return acc;
-        }, {})
-      };
-      
+      // Return just the people section
       res.json({
         success: true,
-        data: peopleData
+        data: fullResponse.people
       });
       
     } catch (error) {
