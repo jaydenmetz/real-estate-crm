@@ -112,8 +112,8 @@ const authenticate = async (req, res, next) => {
   return res.status(401).json({
     success: false,
     error: {
-      code: 'NO_AUTH',
-      message: 'No authentication provided. Use API Key (X-API-Key header) or Bearer token (Authorization header)'
+      code: 'NO_AUTH_TOKEN',
+      message: 'No authentication token provided'
     }
   });
 };
