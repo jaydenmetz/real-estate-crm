@@ -1,5 +1,6 @@
 // Mock Client model for development and testing
 const logger = require('../utils/logger');
+const MockQueryBuilder = require('./MockQueryBuilder');
 
 // Comprehensive mock clients data
 let mockClients = [
@@ -166,9 +167,13 @@ let mockClients = [
 ];
 
 class ClientMock {
-  // Alias for compatibility with Mongoose-style queries
-  static async find(filters = {}) {
-    return this.findAll(filters);
+  // Mongoose-style query builder
+  static find(filters = {}) {
+    const query = new MockQueryBuilder(this, mockClients);
+    if (filters) {
+      Object.assign(query.filters, filters);
+    }
+    return query;
   }
   
   static async findAll(filters = {}) {
