@@ -42,12 +42,13 @@ router.get(
 router.post(
   '/',
   [
-    body('propertyAddress').notEmpty().withMessage('Property address is required'),
-    body('purchasePrice').isNumeric().withMessage('Purchase price must be a number'),
-    body('buyers').isArray({ min: 1 }).withMessage('Buyers must be a non-empty array'),
-    body('sellers').isArray({ min: 1 }).withMessage('Sellers must be a non-empty array'),
-    body('acceptanceDate').isISO8601().withMessage('Invalid acceptance date'),
-    body('closingDate').isISO8601().withMessage('Invalid closing date')
+    // Support both camelCase and snake_case field names
+    body(['propertyAddress', 'property_address']).notEmpty().withMessage('Property address is required'),
+    body(['purchasePrice', 'purchase_price']).optional().isNumeric().withMessage('Purchase price must be a number'),
+    body(['buyers']).optional().isArray({ min: 1 }).withMessage('Buyers must be a non-empty array'),
+    body(['sellers']).optional().isArray({ min: 1 }).withMessage('Sellers must be a non-empty array'),
+    body(['acceptanceDate', 'acceptance_date']).optional().isISO8601().withMessage('Invalid acceptance date'),
+    body(['closingDate', 'closing_date']).optional().isISO8601().withMessage('Invalid closing date')
   ],
   validationMiddleware,
   escrowsController.createEscrow
@@ -126,6 +127,66 @@ router.get(
   ],
   validationMiddleware,
   escrowsController.getEscrowChecklists
+);
+
+// GET /v1/escrows/:id/details
+router.get(
+  '/:id/details',
+  [
+    param('id').notEmpty().withMessage('Escrow ID is required')
+  ],
+  validationMiddleware,
+  escrowsController.getEscrowDetails
+);
+
+// GET /v1/escrows/:id/property-details
+router.get(
+  '/:id/property-details',
+  [
+    param('id').notEmpty().withMessage('Escrow ID is required')
+  ],
+  validationMiddleware,
+  escrowsController.getEscrowPropertyDetails
+);
+
+// GET /v1/escrows/:id/checklist-loan
+router.get(
+  '/:id/checklist-loan',
+  [
+    param('id').notEmpty().withMessage('Escrow ID is required')
+  ],
+  validationMiddleware,
+  escrowsController.getEscrowChecklistLoan
+);
+
+// GET /v1/escrows/:id/checklist-house
+router.get(
+  '/:id/checklist-house',
+  [
+    param('id').notEmpty().withMessage('Escrow ID is required')
+  ],
+  validationMiddleware,
+  escrowsController.getEscrowChecklistHouse
+);
+
+// GET /v1/escrows/:id/checklist-admin
+router.get(
+  '/:id/checklist-admin',
+  [
+    param('id').notEmpty().withMessage('Escrow ID is required')
+  ],
+  validationMiddleware,
+  escrowsController.getEscrowChecklistAdmin
+);
+
+// GET /v1/escrows/:id/documents
+router.get(
+  '/:id/documents',
+  [
+    param('id').notEmpty().withMessage('Escrow ID is required')
+  ],
+  validationMiddleware,
+  escrowsController.getEscrowDocuments
 );
 
 // GET /v1/escrows/:id/notes
