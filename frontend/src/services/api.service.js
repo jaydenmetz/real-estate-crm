@@ -109,9 +109,15 @@ class ApiService {
           localStorage.removeItem('crm_auth_token');
           localStorage.removeItem('authToken');
           localStorage.removeItem('user');
-          // Redirect to login page
-          window.location.href = '/login';
-          return;
+          // Throw auth error before redirecting
+          const authError = new Error('Authentication required');
+          authError.status = 401;
+          authError.response = response;
+          // Redirect to login page after a brief delay
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 100);
+          throw authError;
         }
         
         // Handle 404 specifically
