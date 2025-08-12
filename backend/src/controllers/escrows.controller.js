@@ -533,6 +533,16 @@ class SimpleEscrowController {
       const { id } = req.params;
       const updates = req.body;
       
+      // Map camelCase fields to snake_case for database
+      const fieldMapping = {
+        'propertyAddress': 'property_address',
+        'purchasePrice': 'purchase_price',
+        'closingDate': 'closing_date',
+        'acceptanceDate': 'acceptance_date',
+        'escrowStatus': 'escrow_status',
+        'zipCode': 'zip_code'
+      };
+      
       // Build dynamic update query
       const updateFields = [];
       const values = [];
@@ -540,7 +550,9 @@ class SimpleEscrowController {
       
       Object.keys(updates).forEach(key => {
         if (key !== 'id' && key !== 'display_id' && key !== 'created_at') {
-          updateFields.push(`${key} = $${paramIndex}`);
+          // Use snake_case field name for database, but keep the value
+          const dbFieldName = fieldMapping[key] || key;
+          updateFields.push(`${dbFieldName} = $${paramIndex}`);
           values.push(updates[key]);
           paramIndex++;
         }
