@@ -2857,5 +2857,13 @@ module.exports = {
   getEscrowFinancials: SimpleEscrowController.getEscrowFinancials,
   getEscrowChecklists: SimpleEscrowController.getEscrowChecklists,
   getEscrowNotes: SimpleEscrowController.getEscrowNotes,
-  addEscrowNote: SimpleEscrowController.addEscrowNote
+  addEscrowNote: SimpleEscrowController.addEscrowNote,
+  
+  // Additional detail endpoints
+  getEscrowDetails: SimpleEscrowController.getEscrowDetails,
+  getEscrowPropertyDetails: SimpleEscrowController.getEscrowPropertyDetails,
+  getEscrowChecklistLoan: SimpleEscrowController.getEscrowChecklistLoan,
+  getEscrowChecklistHouse: SimpleEscrowController.getEscrowChecklistHouse,
+  getEscrowChecklistAdmin: SimpleEscrowController.getEscrowChecklistAdmin,
+  getEscrowDocuments: SimpleEscrowController.getEscrowDocuments
 };
