@@ -666,8 +666,11 @@ class SimpleEscrowController {
       
       const escrowData = req.body;
       
+      // Check for property address in both formats (middleware normalizes to camelCase)
+      const propertyAddress = escrowData.propertyAddress || escrowData.property_address;
+      
       // Validate required field
-      if (!escrowData.property_address) {
+      if (!propertyAddress) {
         return res.status(400).json({
           success: false,
           error: {
@@ -692,24 +695,24 @@ class SimpleEscrowController {
       // Build dynamic query with required fields
       const fields = ['property_address', 'display_id', 'purchase_price', 'escrow_status'];
       const values = [
-        escrowData.property_address, 
+        propertyAddress,  // Use the normalized property address
         displayId,
-        escrowData.purchase_price || 0,  // Default to 0 if not provided
-        escrowData.escrow_status || 'Active'  // Default to Active
+        escrowData.purchasePrice || escrowData.purchase_price || 0,  // Check both formats
+        escrowData.escrowStatus || escrowData.escrow_status || 'Active'  // Check both formats
       ];
       const placeholders = ['$1', '$2', '$3', '$4'];
       let paramIndex = 5;
       
-      // Add optional fields if provided
+      // Add optional fields if provided (check both camelCase and snake_case)
       const optionalFields = {
         city: escrowData.city,
         state: escrowData.state,
-        zip_code: escrowData.zip_code,
+        zip_code: escrowData.zipCode || escrowData.zip_code,
         earnest_money_deposit: escrowData.earnest_money_deposit,
         commission_percentage: escrowData.commission_percentage,
         net_commission: escrowData.net_commission || escrowData.my_commission,
-        acceptance_date: escrowData.acceptance_date,
-        closing_date: escrowData.closing_date,
+        acceptance_date: escrowData.acceptanceDate || escrowData.acceptance_date,
+        closing_date: escrowData.closingDate || escrowData.closing_date,
         property_type: escrowData.property_type,
         escrow_company: escrowData.escrow_company,
         escrow_officer_name: escrowData.escrow_officer_name,

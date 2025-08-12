@@ -245,7 +245,11 @@ apiRouter.use('/api-keys', require('./routes/apiKeys.routes'));
 
 // API Routes - Using professional .routes.js files with built-in auth
 // Each route file handles its own authentication and validation
-apiRouter.use('/escrows', require('./routes/escrows.routes'));
+// Escrows routes - including health checks
+const escrowsRouter = express.Router();
+escrowsRouter.use('/', require('./routes/escrows.routes'));
+escrowsRouter.use('/', require('./routes/escrows-health.routes')); // Health endpoints at /escrows/health/*
+apiRouter.use('/escrows', escrowsRouter);
 apiRouter.use('/listings', require('./routes/listings.routes'));
 apiRouter.use('/clients', require('./routes/clients.routes'));
 apiRouter.use('/appointments', require('./routes/appointments.routes'));
