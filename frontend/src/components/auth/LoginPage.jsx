@@ -34,6 +34,7 @@ import {
 import { useForm, Controller } from 'react-hook-form';
 import authService from '../../services/auth.service';
 import { useAuth } from '../../contexts/AuthContext';
+import { createApiKey } from '../../utils/auth';
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -63,6 +64,15 @@ const LoginPage = () => {
       if (result.success) {
         // Update auth context
         login(result.user);
+        
+        // Try to create an API key for more reliable authentication
+        try {
+          const apiKeyResult = await createApiKey('Web Session', 365);
+          console.log('API key created for session:', apiKeyResult.key_prefix);
+        } catch (apiKeyError) {
+          // API key creation failed, but JWT login succeeded
+          console.warn('Could not create API key, using JWT only:', apiKeyError);
+        }
         
         // Navigate to previous page or default dashboard
         navigate(from, { replace: true });

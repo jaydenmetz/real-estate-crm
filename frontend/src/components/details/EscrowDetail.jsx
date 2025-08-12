@@ -133,7 +133,7 @@ function EscrowDetail() {
       console.log('Environment:', process.env.NODE_ENV);
       
       // Fetch main escrow data using the API configuration
-      const result = await apiCall(`/v1/escrows/${id}`);
+      const result = await apiCall(`escrows/${id}`);
       
       console.log('Escrow data received:', result);
       
@@ -147,10 +147,10 @@ function EscrowDetail() {
       // Fetch additional endpoints in parallel for complete data
       const fetchEndpoint = async (endpoint) => {
         try {
-          const res = await apiCall(`/v1/escrows/${id}/${endpoint}`);
+          const res = await apiCall(`escrows/${id}/${endpoint}`);
           return res;
         } catch (error) {
-          console.warn(`Failed to fetch /v1/escrows/${id}/${endpoint}:`, error);
+          console.warn(`Failed to fetch /escrows/${id}/${endpoint}:`, error);
           return null;
         }
       };
@@ -176,7 +176,7 @@ function EscrowDetail() {
       console.error('Error fetching escrow:', err);
       setError(err);
       setErrorDetails({
-        apiEndpoint: `/v1/escrows/${id}`,
+        apiEndpoint: `/escrows/${id}`,
         errorMessage: err.message,
         errorStack: err.stack,
         timestamp: new Date().toISOString(),
@@ -192,7 +192,7 @@ function EscrowDetail() {
     try {
       setIsSaving(true);
       
-      const result = await apiCall(`/v1/escrows/${id}/${endpoint}`, {
+      const result = await apiCall(`escrows/${id}/${endpoint}`, {
         method: 'PUT',
         body: JSON.stringify(data)
       });
@@ -254,7 +254,7 @@ function EscrowDetail() {
           </Box>
           <DebugError
             error={error}
-            apiEndpoint={`/v1/escrows/${id}`}
+            apiEndpoint={`/escrows/${id}`}
             additionalInfo={{
               ...errorDetails,
               apiBaseUrl: API_BASE_URL,

@@ -33,13 +33,9 @@ class ApiService {
     // If API_BASE_URL already includes /v1, use it as is, otherwise append /v1
     this.baseURL = API_BASE_URL.includes('/v1') ? API_BASE_URL : `${API_BASE_URL}/v1`;
     
-    // Try multiple token locations
-    this.token = localStorage.getItem('crm_auth_token') || 
-                 localStorage.getItem('authToken') || 
-                 localStorage.getItem('token');
-    
-    // Check for test API key
-    this.apiKey = localStorage.getItem('test_api_key');
+    // Get authentication tokens
+    this.token = localStorage.getItem('authToken');
+    this.apiKey = localStorage.getItem('apiKey');
     
     // Log initialization (only in development)
     if (process.env.NODE_ENV === 'development') {
@@ -58,13 +54,9 @@ class ApiService {
   }
 
   async request(endpoint, options = {}) {
-    // Refresh token from localStorage in case it was updated elsewhere
-    this.token = localStorage.getItem('crm_auth_token') || 
-                 localStorage.getItem('authToken') || 
-                 localStorage.getItem('token');
-    
-    // Check for test API key
-    this.apiKey = localStorage.getItem('test_api_key');
+    // Refresh authentication from localStorage
+    this.token = localStorage.getItem('authToken');
+    this.apiKey = localStorage.getItem('apiKey');
     
     const url = `${this.baseURL}${endpoint}`;
     
@@ -77,7 +69,7 @@ class ApiService {
       credentials: 'include', // Important for CORS with credentials
     };
 
-    // Use API key if available, otherwise use token
+    // Add authentication header - support both API key and JWT
     if (this.apiKey) {
       config.headers['X-API-Key'] = this.apiKey;
     } else if (this.token) {
@@ -105,9 +97,9 @@ class ApiService {
             hasApiKey: !!this.apiKey,
             status: response.status
           });
-          // Clear invalid token
-          localStorage.removeItem('crm_auth_token');
+          // Clear invalid authentication
           localStorage.removeItem('authToken');
+          localStorage.removeItem('apiKey');
           localStorage.removeItem('user');
           // Throw auth error before redirecting
           const authError = new Error('Authentication required');
@@ -204,13 +196,19 @@ class ApiService {
   setToken(token) {
     this.token = token;
     if (token) {
-      // Store in multiple locations for compatibility
       localStorage.setItem('authToken', token);
-      localStorage.setItem('crm_auth_token', token);
     } else {
       localStorage.removeItem('authToken');
-      localStorage.removeItem('crm_auth_token');
-      localStorage.removeItem('token');
+    }
+  }
+
+  // Set API key
+  setApiKey(apiKey) {
+    this.apiKey = apiKey;
+    if (apiKey) {
+      localStorage.setItem('apiKey', apiKey);
+    } else {
+      localStorage.removeItem('apiKey');
     }
   }
 
@@ -379,6 +377,9 @@ export default apiInstance;
 // Export API_BASE_URL and apiCall for backward compatibility
 export { API_BASE_URL };
 export const apiCall = (endpoint, options = {}) => apiInstance.request(endpoint, options);
+
+// Export setApiKey method for external use
+export const setApiKey = (apiKey) => apiInstance.setApiKey(apiKey);
 
 // Also export a named api object containing all the modules
 export const api = {

@@ -39,7 +39,7 @@ export const testEscrowEndpoint = async (escrowId) => {
   console.log('Testing escrow endpoint...');
   
   try {
-    const result = await apiCall(`/v1/escrows/${escrowId}`);
+    const result = await apiCall(`/escrows/${escrowId}`);
     console.log('Escrow fetch successful:', result);
     return { success: true, data: result };
   } catch (error) {
