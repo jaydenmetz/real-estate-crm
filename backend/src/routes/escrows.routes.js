@@ -42,14 +42,38 @@ router.get(
 router.post(
   '/',
   [
-    // Support both camelCase and snake_case field names
-    body(['propertyAddress', 'property_address']).notEmpty().withMessage('Property address is required'),
-    body(['purchasePrice', 'purchase_price']).optional().isNumeric().withMessage('Purchase price must be a number'),
-    body(['buyers']).optional().isArray({ min: 1 }).withMessage('Buyers must be a non-empty array'),
-    body(['sellers']).optional().isArray({ min: 1 }).withMessage('Sellers must be a non-empty array'),
-    body(['acceptanceDate', 'acceptance_date']).optional().isISO8601().withMessage('Invalid acceptance date'),
-    body(['closingDate', 'closing_date']).optional().isISO8601().withMessage('Invalid closing date')
+    // Support both camelCase and snake_case field names using oneOf
+    body('propertyAddress').optional().notEmpty(),
+    body('property_address').optional().notEmpty(),
+    body('purchasePrice').optional().isNumeric(),
+    body('purchase_price').optional().isNumeric(),
+    body('buyers').optional().isArray({ min: 1 }),
+    body('sellers').optional().isArray({ min: 1 }),
+    body('acceptanceDate').optional().isISO8601(),
+    body('acceptance_date').optional().isISO8601(),
+    body('closingDate').optional().isISO8601(),
+    body('closing_date').optional().isISO8601(),
+    body('escrow_status').optional().isString(),
+    body('escrowStatus').optional().isString(),
+    body('city').optional().isString(),
+    body('state').optional().isString(),
+    body('zip_code').optional().isString(),
+    body('zipCode').optional().isString()
   ],
+  // Custom middleware to ensure at least one address field is provided
+  (req, res, next) => {
+    if (!req.body.propertyAddress && !req.body.property_address) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Property address is required',
+          details: [{ field: 'property_address', message: 'Property address is required' }]
+        }
+      });
+    }
+    next();
+  },
   validationMiddleware,
   escrowsController.createEscrow
 );
@@ -210,54 +234,5 @@ router.post(
   validationMiddleware,
   escrowsController.addEscrowNote
 );
-
-// Health check endpoints
-// GET /v1/escrows/health/auth - Test authentication
-router.get('/health/auth', authenticate, async (req, res) => {
-  res.json({
-    success: true,
-    data: {
-      authenticated: true,
-      user: req.user?.email,
-      userId: req.user?.id,
-      teamId: req.user?.teamId,
-      role: req.user?.role,
-      authMethod: req.user?.authMethod,
-      permissions: req.user?.permissions
-    },
-    timestamp: new Date().toISOString()
-  });
-});
-
-// GET /v1/escrows/health/db - Test database connection
-router.get('/health/db', authenticate, async (req, res) => {
-  try {
-    const { pool } = require('../config/database');
-    const result = await pool.query('SELECT NOW() as time, current_database() as database');
-    
-    res.json({
-      success: true,
-      data: {
-        connected: true,
-        database: result.rows[0].database,
-        serverTime: result.rows[0].time,
-        totalConnections: pool.totalCount,
-        idleConnections: pool.idleCount,
-        waitingConnections: pool.waitingCount
-      },
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('Database health check failed:', error);
-    res.status(503).json({
-      success: false,
-      error: {
-        code: 'DB_CONNECTION_ERROR',
-        message: 'Database connection failed',
-        details: error.message
-      }
-    });
-  }
-});
 
 module.exports = router;
