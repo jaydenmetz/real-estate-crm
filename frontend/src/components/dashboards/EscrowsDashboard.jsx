@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NewEscrowModal from '../forms/NewEscrowModal';
 import DebugCard from '../common/DebugCard';
+import EscrowCardOptimized from '../common/EscrowCardOptimized';
+import EscrowCompactCard from '../common/EscrowCompactCard';
 import {
   Container,
   Box,
@@ -32,6 +34,8 @@ import {
   Tabs,
   Tab,
   Checkbox,
+  ToggleButton,
+  ToggleButtonGroup,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
@@ -61,6 +65,9 @@ import {
   NetworkCheck,
   Info,
   Warning,
+  ViewModule,
+  ViewList,
+  ViewAgenda,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
@@ -1071,6 +1078,7 @@ const EscrowsDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [showNewEscrowModal, setShowNewEscrowModal] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState('active');
+  const [viewMode, setViewMode] = useState('optimized'); // 'optimized', 'compact', 'detailed'
   const [stats, setStats] = useState({
     totalEscrows: 0,
     activeEscrows: 0,
@@ -1775,24 +1783,58 @@ const EscrowsDashboard = () => {
           </Grid>
         </Grid> */}
 
-      {/* Action Bar */}
+      {/* Action Bar with View Toggle */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
           {selectedStatus.charAt(0).toUpperCase() + selectedStatus.slice(1)} Escrows
         </Typography>
-        <Button
-          variant="contained"
-          color="primary"
-          startIcon={<Add />}
-          onClick={handleCreateNew}
-          size="large"
-        >
-          Create New Escrow
-        </Button>
+        <Stack direction="row" spacing={2} alignItems="center">
+          <ToggleButtonGroup
+            value={viewMode}
+            exclusive
+            onChange={(e, newView) => newView && setViewMode(newView)}
+            size="small"
+            sx={{
+              '& .MuiToggleButton-root': {
+                px: 2,
+                py: 0.5,
+                textTransform: 'none',
+                fontWeight: 500,
+              },
+            }}
+          >
+            <ToggleButton value="optimized" aria-label="optimized view">
+              <ViewModule sx={{ mr: 1, fontSize: 18 }} />
+              Optimized
+            </ToggleButton>
+            <ToggleButton value="compact" aria-label="compact view">
+              <ViewList sx={{ mr: 1, fontSize: 18 }} />
+              Compact
+            </ToggleButton>
+            <ToggleButton value="detailed" aria-label="detailed view">
+              <ViewAgenda sx={{ mr: 1, fontSize: 18 }} />
+              Detailed
+            </ToggleButton>
+          </ToggleButtonGroup>
+          <Button
+            variant="contained"
+            color="primary"
+            startIcon={<Add />}
+            onClick={handleCreateNew}
+            size="large"
+          >
+            Create New Escrow
+          </Button>
+        </Stack>
       </Box>
 
       {/* Escrow Cards */}
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <Box sx={{ 
+        display: viewMode === 'optimized' ? 'grid' : 'flex',
+        flexDirection: 'column',
+        gridTemplateColumns: viewMode === 'optimized' ? 'repeat(auto-fill, minmax(400px, 1fr))' : undefined,
+        gap: 2 
+      }}>
         <AnimatePresence>
           {(() => {
             const filteredEscrows = escrows.filter(e => {
@@ -1829,6 +1871,7 @@ const EscrowsDashboard = () => {
                 textAlign: 'center',
                 background: theme => alpha(theme.palette.primary.main, 0.03),
                 border: theme => `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                gridColumn: '1 / -1',
               }}
             >
               <Typography variant="h6" color="textSecondary" gutterBottom>
@@ -1840,15 +1883,45 @@ const EscrowsDashboard = () => {
             </Paper>
               );
             } else {
-              return filteredEscrows.map((escrow, index) => (
-                <EscrowCard
-                  key={escrow.id}
-                  escrow={escrow}
-                  onClick={handleEscrowClick}
-                  onChecklistUpdate={handleChecklistUpdate}
-                  index={index}
-                />
-              ));
+              return filteredEscrows.map((escrow, index) => {
+                // Choose component based on view mode
+                if (viewMode === 'optimized') {
+                  return (
+                    <EscrowCardOptimized
+                      key={escrow.id}
+                      escrow={escrow}
+                      index={index}
+                      showCommission={true}
+                      onQuickAction={(action, escrowData) => {
+                        if (action === 'view') {
+                          handleEscrowClick(escrowData.id);
+                        }
+                        // Handle other quick actions here
+                      }}
+                    />
+                  );
+                } else if (viewMode === 'compact') {
+                  return (
+                    <EscrowCompactCard
+                      key={escrow.id}
+                      escrow={escrow}
+                      index={index}
+                      showCommission={true}
+                    />
+                  );
+                } else {
+                  // Detailed view - use original card
+                  return (
+                    <EscrowCard
+                      key={escrow.id}
+                      escrow={escrow}
+                      onClick={handleEscrowClick}
+                      onChecklistUpdate={handleChecklistUpdate}
+                      index={index}
+                    />
+                  );
+                }
+              });
             }
           })()}
         </AnimatePresence>
