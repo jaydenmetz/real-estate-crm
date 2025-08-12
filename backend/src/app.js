@@ -123,6 +123,7 @@ app.get('/health', (req, res) => {
     status: 'healthy',
     timestamp: new Date().toISOString(),
     version: process.env.API_VERSION || '1.0.1',
+    deployment: 'v1.0.1-escrow-fix',
     websocket: {
       status: websocketService.io ? 'running' : 'not_initialized',
       connections: websocketService.getConnectionCount()

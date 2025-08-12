@@ -97,53 +97,7 @@ class ApiService {
       }
 
       if (!response.ok) {
-        // Handle authentication errors - auto re-login with emergency endpoint
-        if (response.status === 401 && this.token && !this.apiKey) {
-          console.warn('JWT token is invalid, attempting emergency re-login...');
-          
-          try {
-            // Try emergency login to get a new token
-            const loginResponse = await fetch(`${this.baseURL}/auth/emergency-login`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                email: 'admin@jaydenmetz.com',
-                password: 'AdminPassword123'
-              })
-            });
-            
-            if (loginResponse.ok) {
-              const loginData = await loginResponse.json();
-              if (loginData.success && loginData.data.token) {
-                // Save new token
-                const newToken = loginData.data.token;
-                localStorage.setItem('crm_auth_token', newToken);
-                localStorage.setItem('authToken', newToken);
-                this.token = newToken;
-                
-                // Update user data
-                if (loginData.data.user) {
-                  localStorage.setItem('user', JSON.stringify(loginData.data.user));
-                }
-                
-                console.log('Emergency re-login successful, retrying request...');
-                
-                // Retry the original request with new token
-                config.headers.Authorization = `Bearer ${newToken}`;
-                const retryResponse = await fetch(url, config);
-                
-                if (retryResponse.ok) {
-                  const text = await retryResponse.text();
-                  return text ? JSON.parse(text) : null;
-                }
-              }
-            }
-          } catch (reloginError) {
-            console.error('Emergency re-login failed:', reloginError);
-          }
-        }
-        
-        // Log authentication errors for debugging
+        // Handle authentication errors properly
         if (response.status === 401) {
           console.error('Authentication failed:', {
             url,
@@ -151,6 +105,13 @@ class ApiService {
             hasApiKey: !!this.apiKey,
             status: response.status
           });
+          // Clear invalid token
+          localStorage.removeItem('crm_auth_token');
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('user');
+          // Redirect to login page
+          window.location.href = '/login';
+          return;
         }
         
         // Handle 404 specifically
