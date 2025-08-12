@@ -1,6 +1,6 @@
 {
   "name": "real-estate-crm-api",
-  "version": "1.0.1",
+  "version": "1.0.0",
   "description": "Real Estate CRM API with AI Agent Integration",
   "main": "server.js",
   "scripts": {
