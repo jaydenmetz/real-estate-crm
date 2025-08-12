@@ -585,6 +585,9 @@ class SimpleEscrowController {
         RETURNING *
       `;
       
+      console.log('Update query:', updateQuery);
+      console.log('Update values:', values);
+      
       const result = await client.query(updateQuery, values);
       
       if (result.rows.length === 0) {
@@ -2880,5 +2883,17 @@ module.exports = {
   getEscrowChecklistLoan: SimpleEscrowController.getEscrowChecklistLoan,
   getEscrowChecklistHouse: SimpleEscrowController.getEscrowChecklistHouse,
   getEscrowChecklistAdmin: SimpleEscrowController.getEscrowChecklistAdmin,
-  getEscrowDocuments: SimpleEscrowController.getEscrowDocuments
+  getEscrowDocuments: SimpleEscrowController.getEscrowDocuments,
+  
+  // Update methods for specific sections
+  updateEscrowDetails: SimpleEscrowController.updateEscrowDetails,
+  updateEscrowPeople: SimpleEscrowController.updateEscrowPeople,
+  updateEscrowTimeline: SimpleEscrowController.updateEscrowTimeline,
+  updateEscrowFinancials: SimpleEscrowController.updateEscrowFinancials,
+  updateEscrowPropertyDetails: SimpleEscrowController.updateEscrowPropertyDetails,
+  updateEscrowChecklistLoan: SimpleEscrowController.updateEscrowChecklistLoan,
+  updateEscrowChecklistHouse: SimpleEscrowController.updateEscrowChecklistHouse,
+  updateEscrowChecklistAdmin: SimpleEscrowController.updateEscrowChecklistAdmin,
+  updateEscrowDocuments: SimpleEscrowController.updateEscrowDocuments,
+  updateEscrowChecklists: SimpleEscrowController.updateEscrowChecklists
 };

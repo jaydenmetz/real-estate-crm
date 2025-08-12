@@ -252,4 +252,97 @@ router.post(
   escrowsController.addEscrowNote
 );
 
+// Additional PUT endpoints for updating specific escrow sections
+
+// PUT /v1/escrows/:id/details
+router.put(
+  '/:id/details',
+  [
+    param('id').notEmpty().withMessage('Escrow ID is required')
+  ],
+  validationMiddleware,
+  escrowsController.updateEscrowDetails
+);
+
+// PUT /v1/escrows/:id/people
+router.put(
+  '/:id/people',
+  [
+    param('id').notEmpty().withMessage('Escrow ID is required')
+  ],
+  validationMiddleware,
+  escrowsController.updateEscrowPeople
+);
+
+// PUT /v1/escrows/:id/timeline
+router.put(
+  '/:id/timeline',
+  [
+    param('id').notEmpty().withMessage('Escrow ID is required')
+  ],
+  validationMiddleware,
+  escrowsController.updateEscrowTimeline || escrowsController.updateEscrow
+);
+
+// PUT /v1/escrows/:id/financials
+router.put(
+  '/:id/financials',
+  [
+    param('id').notEmpty().withMessage('Escrow ID is required')
+  ],
+  validationMiddleware,
+  escrowsController.updateEscrowFinancials
+);
+
+// PUT /v1/escrows/:id/property-details
+router.put(
+  '/:id/property-details',
+  [
+    param('id').notEmpty().withMessage('Escrow ID is required')
+  ],
+  validationMiddleware,
+  escrowsController.updateEscrowPropertyDetails
+);
+
+// PUT /v1/escrows/:id/checklist-loan
+router.put(
+  '/:id/checklist-loan',
+  [
+    param('id').notEmpty().withMessage('Escrow ID is required')
+  ],
+  validationMiddleware,
+  escrowsController.updateEscrowChecklistLoan
+);
+
+// PUT /v1/escrows/:id/checklist-house
+router.put(
+  '/:id/checklist-house',
+  [
+    param('id').notEmpty().withMessage('Escrow ID is required')
+  ],
+  validationMiddleware,
+  escrowsController.updateEscrowChecklistHouse
+);
+
+// PUT /v1/escrows/:id/checklist-admin
+router.put(
+  '/:id/checklist-admin',
+  [
+    param('id').notEmpty().withMessage('Escrow ID is required')
+  ],
+  validationMiddleware,
+  escrowsController.updateEscrowChecklistAdmin
+);
+
+// PUT /v1/escrows/:id/documents
+router.put(
+  '/:id/documents',
+  [
+    param('id').notEmpty().withMessage('Escrow ID is required'),
+    body().isArray().withMessage('Documents must be an array')
+  ],
+  validationMiddleware,
+  escrowsController.updateEscrowDocuments
+);
+
 module.exports = router;
