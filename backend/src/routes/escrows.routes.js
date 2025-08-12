@@ -41,39 +41,42 @@ router.get(
 // POST /v1/escrows
 router.post(
   '/',
-  [
-    // Support both camelCase and snake_case field names using oneOf
-    body('propertyAddress').optional().notEmpty(),
-    body('property_address').optional().notEmpty(),
-    body('purchasePrice').optional().isNumeric(),
-    body('purchase_price').optional().isNumeric(),
-    body('buyers').optional().isArray({ min: 1 }),
-    body('sellers').optional().isArray({ min: 1 }),
-    body('acceptanceDate').optional().isISO8601(),
-    body('acceptance_date').optional().isISO8601(),
-    body('closingDate').optional().isISO8601(),
-    body('closing_date').optional().isISO8601(),
-    body('escrow_status').optional().isString(),
-    body('escrowStatus').optional().isString(),
-    body('city').optional().isString(),
-    body('state').optional().isString(),
-    body('zip_code').optional().isString(),
-    body('zipCode').optional().isString()
-  ],
-  // Custom middleware to ensure at least one address field is provided
+  // Custom middleware to normalize field names before validation
   (req, res, next) => {
-    if (!req.body.propertyAddress && !req.body.property_address) {
-      return res.status(400).json({
-        success: false,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Property address is required',
-          details: [{ field: 'property_address', message: 'Property address is required' }]
-        }
-      });
+    // Normalize snake_case to camelCase if needed
+    if (req.body.property_address && !req.body.propertyAddress) {
+      req.body.propertyAddress = req.body.property_address;
+    }
+    if (req.body.purchase_price && !req.body.purchasePrice) {
+      req.body.purchasePrice = req.body.purchase_price;
+    }
+    if (req.body.acceptance_date && !req.body.acceptanceDate) {
+      req.body.acceptanceDate = req.body.acceptance_date;
+    }
+    if (req.body.closing_date && !req.body.closingDate) {
+      req.body.closingDate = req.body.closing_date;
+    }
+    if (req.body.escrow_status && !req.body.escrowStatus) {
+      req.body.escrowStatus = req.body.escrow_status;
+    }
+    if (req.body.zip_code && !req.body.zipCode) {
+      req.body.zipCode = req.body.zip_code;
     }
     next();
   },
+  [
+    // Now validate only camelCase fields
+    body('propertyAddress').notEmpty().withMessage('Property address is required'),
+    body('purchasePrice').optional().isNumeric().withMessage('Purchase price must be a number'),
+    body('buyers').optional().isArray({ min: 1 }).withMessage('Buyers must be an array'),
+    body('sellers').optional().isArray({ min: 1 }).withMessage('Sellers must be an array'),
+    body('acceptanceDate').optional().isISO8601().withMessage('Invalid acceptance date'),
+    body('closingDate').optional().isISO8601().withMessage('Invalid closing date'),
+    body('escrowStatus').optional().isString().withMessage('Escrow status must be a string'),
+    body('city').optional().isString().withMessage('City must be a string'),
+    body('state').optional().isString().withMessage('State must be a string'),
+    body('zipCode').optional().isString().withMessage('Zip code must be a string')
+  ],
   validationMiddleware,
   escrowsController.createEscrow
 );
@@ -81,10 +84,24 @@ router.post(
 // PUT /v1/escrows/:id
 router.put(
   '/:id',
+  // Normalize field names before validation
+  (req, res, next) => {
+    if (req.body.purchase_price && !req.body.purchasePrice) {
+      req.body.purchasePrice = req.body.purchase_price;
+    }
+    if (req.body.closing_date && !req.body.closingDate) {
+      req.body.closingDate = req.body.closing_date;
+    }
+    if (req.body.escrow_status && !req.body.escrowStatus) {
+      req.body.escrowStatus = req.body.escrow_status;
+    }
+    next();
+  },
   [
     param('id').notEmpty().withMessage('Escrow ID is required'),
     body('purchasePrice').optional().isNumeric().withMessage('Purchase price must be a number'),
-    body('closingDate').optional().isISO8601().withMessage('Invalid closing date')
+    body('closingDate').optional().isISO8601().withMessage('Invalid closing date'),
+    body('escrowStatus').optional().isString().withMessage('Escrow status must be a string')
   ],
   validationMiddleware,
   escrowsController.updateEscrow
