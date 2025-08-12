@@ -7,7 +7,7 @@
 ## Authentication
 All endpoints require authentication using either:
 1. **Bearer Token**: `Authorization: Bearer <token>`
-2. **API Key**: `X-API-Key: <api_key>` or `?api_key=<api_key>`
+2. **API Key**: `X-API-Key: <api_key>`
 
 ## Response Format
 All responses follow this structure:
@@ -29,7 +29,7 @@ All responses follow this structure:
 ### Authentication
 
 #### POST /auth/register
-Create a new user account (automatically assigns admin role).
+Create a new user account.
 
 **Request Body:**
 ```json
@@ -54,9 +54,8 @@ Create a new user account (automatically assigns admin role).
       "id": "string",
       "username": "string",
       "email": "string",
-      "role": "admin",
-      "apiKey": "string",
-      "preferences": {},
+      "role": "string",
+      "permissions": [],
       "profile": {}
     }
   }
@@ -83,10 +82,11 @@ List all escrows with pagination and filtering.
 **Query Parameters:**
 - `page` (number): Page number (default: 1)
 - `limit` (number): Items per page (default: 20, max: 100)
-- `status` (string): Filter by status (active, pending, closed, cancelled)
-- `sort` (string): Sort field (default: createdDate)
-- `order` (string): Sort order (asc, desc)
-- `search` (string): Search in address and escrow number
+- `status` (string): Filter by status
+- `minPrice` (number): Minimum purchase price filter
+- `maxPrice` (number): Maximum purchase price filter
+- `closingDateStart` (ISO 8601): Start date for closing date range
+- `closingDateEnd` (ISO 8601): End date for closing date range
 
 **Response:**
 ```json
@@ -96,20 +96,30 @@ List all escrows with pagination and filtering.
     "escrows": [
       {
         "id": "string",
+        "displayId": "string",
         "escrowNumber": "string",
         "propertyAddress": "string",
-        "propertyImage": "string",
+        "city": "string",
+        "state": "string",
+        "zipCode": "string",
         "escrowStatus": "string",
-        "transactionType": "string",
         "purchasePrice": number,
         "myCommission": number,
-        "clients": [],
+        "acceptanceDate": "ISO date",
+        "closingDate": "ISO date",
         "scheduledCoeDate": "ISO date",
         "daysToClose": number,
         "checklistProgress": number,
-        "priorityLevel": "string",
-        "lastActivity": "ISO date",
-        "upcomingDeadlines": number
+        "buyers": [],
+        "sellers": [],
+        "buyerAgent": "string",
+        "listingAgent": "string",
+        "escrowOfficerName": "string",
+        "checklists": {
+          "loan": {},
+          "house": {},
+          "admin": {}
+        }
       }
     ],
     "pagination": {
@@ -122,190 +132,41 @@ List all escrows with pagination and filtering.
 }
 ```
 
-#### GET /escrows/stats
-Get dashboard statistics and analytics.
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "overview": {
-      "activeEscrows": number,
-      "pendingEscrows": number,
-      "closedThisMonth": number,
-      "totalVolume": number,
-      "totalCommission": number,
-      "avgDaysToClose": number
-    },
-    "performance": {
-      "closingRate": number,
-      "avgListToSaleRatio": number,
-      "clientSatisfaction": number,
-      "onTimeClosingRate": number
-    },
-    "pipeline": {
-      "thisWeek": number,
-      "thisMonth": number,
-      "nextMonth": number,
-      "projectedRevenue": number
-    },
-    "trends": []
-  }
-}
-```
-
 #### GET /escrows/:id
-Get comprehensive escrow details.
+Get detailed escrow information.
 
 **Response:**
 ```json
 {
   "success": true,
   "data": {
-    // Core Information
     "id": "string",
+    "displayId": "string",
     "escrowNumber": "string",
     "propertyAddress": "string",
+    "city": "string",
+    "state": "string",
+    "zipCode": "string",
+    "county": "string",
     "escrowStatus": "string",
-    "transactionType": "string",
-    "escrowOpenDate": "ISO date",
-    "scheduledCoeDate": "ISO date",
-    "actualCoeDate": "ISO date",
-    "mlsNumber": "string",
-    "propertyType": "string",
-    
-    // Property Details
-    "propertyImages": ["url1", "url2", "url3"],
-    "bedrooms": number,
-    "bathrooms": number,
-    "squareFootage": number,
-    "lotSize": number,
-    "yearBuilt": number,
-    "propertyDescription": "string",
-    
-    // Financial Details
     "purchasePrice": number,
-    "listPrice": number,
-    "loanAmount": number,
-    "downPaymentAmount": number,
-    "downPaymentPercentage": number,
-    "commissionPercentageBuySide": number,
-    "commissionPercentageListSide": number,
-    "grossCommission": number,
     "myCommission": number,
-    "commissionSplit": number,
-    "commissionAdjustments": number,
-    "commissionAdjustmentNotes": "string",
-    "referralFee": number,
-    "transactionCoordinatorFee": number,
-    "homeWarrantyCost": number,
-    "expenseAdjustments": number,
-    "totalExpenses": number,
-    "netCommission": number,
-    "cashToClose": number,
-    "vpExpensesPaidThroughEscrow": number,
-    
-    // Relations
-    "clients": [],
-    "leadSource": {},
-    "listing": {},
-    "propertyInquiries": [],
-    "appointments": [],
-    "openHouse": {},
-    "transactionCoordinator": {},
-    "buyerAgent": {},
-    "listingAgent": {},
-    "loanOfficer": {},
-    "escrowOfficer": {},
-    "titleOfficer": {},
-    "homeInspector": {},
-    "termiteInspector": {},
-    "homeWarrantyCompany": {},
-    "nhdCompany": {},
-    "appraiser": {},
-    
-    // Important Dates & Deadlines
     "acceptanceDate": "ISO date",
-    "emdDueDate": "ISO date",
-    "emdReceivedDate": "ISO date",
-    "inspectionPeriodEndDate": "ISO date",
-    "contingencyRemovalDate": "ISO date",
-    "loanContingencyDate": "ISO date",
-    "appraisalContingencyDate": "ISO date",
-    "allContingenciesRemovedDate": "ISO date",
-    "loanApprovalDate": "ISO date",
-    "clearToCloseDate": "ISO date",
-    "signingDate": "ISO date",
-    "fundingDate": "ISO date",
-    "recordingDate": "ISO date",
-    "possessionDate": "ISO date",
-    
-    // Checklist Progress
-    "checklistProgress": {
-      "phase1": { "completed": number, "total": number, "percentage": number },
-      "phase2": { "completed": number, "total": number, "percentage": number },
-      "phase3": { "completed": number, "total": number, "percentage": number },
-      "overall": { "completed": number, "total": number, "percentage": number }
-    },
+    "closingDate": "ISO date",
+    "scheduledCoeDate": "ISO date",
+    "escrowOfficerName": "string",
+    "escrowOfficerEmail": "string",
+    "escrowOfficerPhone": "string",
+    "escrowCompanyName": "string",
+    "titleOfficerName": "string",
+    "loanOfficerName": "string",
+    "buyers": [],
+    "sellers": [],
+    "buyerAgent": "string",
+    "listingAgent": "string",
     "checklists": {},
-    
-    // Document Tracking
-    "purchaseAgreementStatus": "string",
-    "counterOffers": number,
-    "addendums": [],
-    "sellerDisclosuresStatus": "string",
-    "inspectionReportsStatus": "string",
-    "repairRequestsStatus": "string",
-    "titleReportStatus": "string",
-    "hoaDocumentsStatus": "string",
-    "loanDocumentsStatus": "string",
-    "closingDocumentsStatus": "string",
-    
-    // Communication Log
-    "lastClientContactDate": "ISO date",
-    "nextFollowUpDate": "ISO date",
-    "importantNotes": "string",
-    "specialInstructions": "string",
-    "redFlags": "string",
-    
-    // Analytics Fields
-    "leadSourceType": "string",
-    "marketingCampaign": "string",
-    "totalMarketingCost": number,
-    "timeFromLeadToContract": number,
-    "timeFromContractToClose": number,
-    "clientSatisfactionScore": number,
-    "wouldReferScore": number,
-    
-    // System Fields
-    "createdDate": "ISO date",
-    "lastModifiedDate": "ISO date",
-    "createdBy": "string",
-    "assignedTo": "string",
-    "tags": [],
-    "priorityLevel": "string",
-    "archivedStatus": boolean,
-    
-    // Timeline & Activity
-    "timeline": [],
-    "activityStats": {
-      "daysInEscrow": number,
-      "daysToClose": number,
-      "tasksCompletedToday": number,
-      "upcomingDeadlines": number,
-      "documentsUploaded": number,
-      "communicationScore": number
-    },
-    
-    // Market Comparison
-    "marketComparison": {
-      "avgDaysOnMarket": number,
-      "avgSalePrice": number,
-      "pricePerSqft": number,
-      "neighborhoodTrend": "string",
-      "similarProperties": []
-    }
+    "createdAt": "ISO date",
+    "updatedAt": "ISO date"
   }
 }
 ```
@@ -313,8 +174,41 @@ Get comprehensive escrow details.
 #### POST /escrows
 Create a new escrow.
 
+**Request Body:**
+```json
+{
+  "propertyAddress": "string (required)",
+  "purchasePrice": number,
+  "buyers": ["string"],
+  "sellers": ["string"],
+  "acceptanceDate": "ISO date",
+  "closingDate": "ISO date",
+  "escrowStatus": "string",
+  "city": "string",
+  "state": "string",
+  "zipCode": "string"
+}
+```
+
+**Note:** Both snake_case and camelCase field names are accepted.
+
 #### PUT /escrows/:id
 Update an existing escrow.
+
+**Request Body:**
+```json
+{
+  "purchasePrice": number,
+  "closingDate": "ISO date",
+  "escrowStatus": "string",
+  "escrowOfficerName": "string"
+}
+```
+
+**Note:** Both snake_case and camelCase field names are accepted.
+
+#### DELETE /escrows/:id
+Delete an escrow.
 
 #### PATCH /escrows/:id/checklist
 Update a checklist item.
@@ -322,30 +216,46 @@ Update a checklist item.
 **Request Body:**
 ```json
 {
-  "itemId": "string",
-  "checked": boolean
+  "item": "string (required)",
+  "value": boolean,
+  "note": "string"
 }
 ```
 
-#### POST /escrows/:id/documents
-Upload a document to an escrow.
+### Escrow Sub-Resources
 
-**Request Body (multipart/form-data):**
-- `document`: File
-- `documentType`: string
-- `name`: string
+#### GET /escrows/:id/timeline
+Get escrow timeline events.
 
-#### POST /escrows/:id/timeline
-Add a timeline event.
+#### GET /escrows/:id/people
+Get all people associated with the escrow.
 
-**Request Body:**
-```json
-{
-  "event": "string",
-  "description": "string",
-  "type": "milestone|inspection|financial|task"
-}
-```
+#### GET /escrows/:id/financials
+Get financial details for the escrow.
+
+#### GET /escrows/:id/checklists
+Get all checklists for the escrow.
+
+#### GET /escrows/:id/details
+Get comprehensive escrow details.
+
+#### GET /escrows/:id/property-details
+Get property-specific details.
+
+#### GET /escrows/:id/checklist-loan
+Get loan checklist items.
+
+#### GET /escrows/:id/checklist-house
+Get house/property checklist items.
+
+#### GET /escrows/:id/checklist-admin
+Get administrative checklist items.
+
+#### GET /escrows/:id/documents
+Get documents associated with the escrow.
+
+#### GET /escrows/:id/notes
+Get notes for the escrow.
 
 #### POST /escrows/:id/notes
 Add a note to an escrow.
@@ -353,19 +263,64 @@ Add a note to an escrow.
 **Request Body:**
 ```json
 {
-  "content": "string",
-  "type": "general|important|warning"
+  "note": "string (required)",
+  "type": "string"
 }
 ```
 
-#### POST /escrows/:id/ai-assist
-Request AI assistance for various tasks.
+### Escrow Updates
+
+#### PUT /escrows/:id/details
+Update escrow details.
+
+#### PUT /escrows/:id/people
+Update people associated with the escrow.
+
+#### PUT /escrows/:id/timeline
+Update timeline events.
+
+#### PUT /escrows/:id/financials
+Update financial information.
+
+#### PUT /escrows/:id/property-details
+Update property details.
+
+#### PUT /escrows/:id/checklist-loan
+Update loan checklist.
+
+#### PUT /escrows/:id/checklist-house
+Update house checklist.
+
+#### PUT /escrows/:id/checklist-admin
+Update admin checklist.
+
+#### PUT /escrows/:id/documents
+Update documents list.
+
+### Health Check Endpoints
+
+#### GET /escrows/health
+Comprehensive health check that tests all CRUD operations.
+
+#### GET /escrows/health/auth
+Test authentication system.
+
+#### GET /escrows/health/db
+Test database connectivity.
+
+### API Keys
+
+#### GET /api-keys
+List all API keys for the authenticated user.
+
+#### POST /api-keys
+Create a new API key.
 
 **Request Body:**
 ```json
 {
-  "action": "draft_email|update_checklist|schedule_calls|generate_timeline|ai_insights",
-  "context": {}
+  "name": "string",
+  "expiresInDays": number
 }
 ```
 
@@ -374,57 +329,101 @@ Request AI assistance for various tasks.
 {
   "success": true,
   "data": {
-    "action": "string",
-    "status": "processing",
-    "message": "AI assistant is working on your request",
-    "estimatedTime": "30 seconds",
-    "endpoint": "/v1/ai-team/exec-assistant/endpoint"
+    "id": "string",
+    "key": "64-character-hex-string",
+    "keyPrefix": "first-8-chars",
+    "name": "string",
+    "expiresAt": "ISO date"
   }
 }
 ```
 
-#### DELETE /escrows/:id
-Delete an escrow (soft delete).
+#### PUT /api-keys/:id/revoke
+Revoke an API key.
 
-## AI Team Integration
+#### DELETE /api-keys/:id
+Delete an API key.
 
-### POST /ai-team/exec-assistant/endpoint
-Main endpoint for AI executive assistant tasks.
+### Other Resources
 
-**Request Body:**
-```json
-{
-  "escrowId": "string",
-  "action": "string",
-  "context": {
-    "escrowStatus": "string",
-    "daysToClose": number,
-    "checklistProgress": {},
-    "additionalData": {}
-  }
-}
-```
+#### Clients
+- GET /clients
+- GET /clients/:id
+- POST /clients
+- PUT /clients/:id
+- DELETE /clients/:id
+- POST /clients/:id/notes
+- PATCH /clients/:id/tags
 
-**Supported Actions:**
-- `draft_email`: Generate follow-up emails
-- `update_checklist`: Intelligently update checklist items
-- `schedule_calls`: Schedule and prepare for calls
-- `generate_timeline`: Create optimized timeline
-- `ai_insights`: Provide transaction insights and recommendations
+#### Listings
+- GET /listings
+- GET /listings/:id
+- POST /listings
+- PUT /listings/:id
+- POST /listings/:id/price-reduction
+- POST /listings/:id/showings
+
+#### Commissions
+- GET /commissions
+- GET /commissions/stats
+- GET /commissions/:id
+- POST /commissions
+- PUT /commissions/:id
+- PATCH /commissions/:id/status
+- DELETE /commissions/:id
+
+#### Invoices
+- GET /invoices
+- GET /invoices/stats
+- GET /invoices/:id
+- GET /invoices/:id/download
+- POST /invoices
+- PUT /invoices/:id
+- POST /invoices/:id/payment
+- POST /invoices/:id/reminder
+- DELETE /invoices/:id
+
+#### Documents
+- GET /documents
+- GET /documents/:id
+- POST /documents
+- PUT /documents/:id
+- DELETE /documents/:id
+
+#### Uploads
+- POST /upload/document
+- POST /upload/image
+- GET /upload/:filename
+- GET /upload/metadata/:id
+- DELETE /upload/:id
+- GET /upload/stats/summary
+
+#### Settings
+- GET /settings
+- PUT /settings
+- PUT /settings/notifications
+- GET /settings/theme
+- POST /settings/theme/toggle
+
+#### Communications
+- GET /communications
+- POST /communications
+- GET /communications/:id
+- PUT /communications/:id
+- DELETE /communications/:id
 
 ## Error Codes
 
 - `NO_AUTH`: No authentication provided
 - `INVALID_TOKEN`: Token is invalid or expired
+- `INVALID_API_KEY`: API key is invalid or revoked
 - `SESSION_EXPIRED`: Session has expired
 - `MISSING_FIELDS`: Required fields are missing
-- `INVALID_USERNAME`: Username format is invalid
-- `INVALID_EMAIL`: Email format is invalid
-- `WEAK_PASSWORD`: Password doesn't meet requirements
-- `USERNAME_EXISTS`: Username is already taken
-- `EMAIL_EXISTS`: Email is already registered
-- `USER_NOT_FOUND`: User not found
+- `VALIDATION_ERROR`: Input validation failed
+- `NOT_FOUND`: Resource not found
+- `PERMISSION_DENIED`: Insufficient permissions
 - `SERVER_ERROR`: Internal server error
+- `DATABASE_ERROR`: Database operation failed
 
 ## Rate Limiting
 
@@ -432,23 +431,32 @@ Main endpoint for AI executive assistant tasks.
 - 20 requests per minute per IP for unauthenticated users
 - 1000 requests per hour per user token
 
-## Webhooks
+## Field Name Convention
 
-Configure webhooks to receive real-time updates:
-
-```json
-{
-  "url": "https://your-domain.com/webhook",
-  "events": ["escrow.created", "escrow.updated", "escrow.closed"],
-  "secret": "your-webhook-secret"
-}
-```
+The API accepts both snake_case and camelCase field names for compatibility:
+- `property_address` or `propertyAddress`
+- `purchase_price` or `purchasePrice`
+- `closing_date` or `closingDate`
+- `escrow_status` or `escrowStatus`
+- `escrow_officer_name` or `escrowOfficerName`
 
 ## Best Practices
 
-1. **Pagination**: Always use pagination for list endpoints
-2. **Caching**: Cache responses with appropriate TTL
+1. **Authentication**: Always include authentication headers
+2. **Pagination**: Use pagination for list endpoints to improve performance
 3. **Error Handling**: Implement exponential backoff for retries
-4. **Security**: Never expose API keys in client-side code
-5. **Compression**: Enable gzip compression for responses
-6. **Monitoring**: Track API usage and performance metrics
+4. **Field Names**: Use camelCase for new implementations
+5. **API Keys**: Store API keys securely, never in client-side code
+6. **Monitoring**: Track API usage and response times
+
+## Testing
+
+Test endpoints are available for development:
+- GET /debug/test-db - Test database connectivity
+- GET /debug/db-status - Get database status (requires auth)
+
+## Support
+
+For API support and issues:
+- GitHub Issues: https://github.com/jaydenmetz/real-estate-crm/issues
+- Documentation: https://api.jaydenmetz.com/docs
