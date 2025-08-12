@@ -8,6 +8,7 @@ let schemaInfo = null;
 // Clear schema cache on startup to ensure fresh detection
 if (process.env.NODE_ENV === 'production') {
   schemaInfo = null;
+  console.log('Production environment detected - clearing schema cache');
 }
 
 // Helper function to detect database schema
