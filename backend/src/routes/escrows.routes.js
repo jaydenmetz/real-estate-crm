@@ -84,16 +84,23 @@ router.post(
 // PUT /v1/escrows/:id
 router.put(
   '/:id',
-  // Normalize field names before validation
+  // Normalize field names before validation (remove snake_case versions after copying)
   (req, res, next) => {
     if (req.body.purchase_price && !req.body.purchasePrice) {
       req.body.purchasePrice = req.body.purchase_price;
+      delete req.body.purchase_price;
     }
     if (req.body.closing_date && !req.body.closingDate) {
       req.body.closingDate = req.body.closing_date;
+      delete req.body.closing_date;
     }
     if (req.body.escrow_status && !req.body.escrowStatus) {
       req.body.escrowStatus = req.body.escrow_status;
+      delete req.body.escrow_status;
+    }
+    if (req.body.escrow_officer_name && !req.body.escrowOfficerName) {
+      req.body.escrowOfficerName = req.body.escrow_officer_name;
+      delete req.body.escrow_officer_name;
     }
     next();
   },

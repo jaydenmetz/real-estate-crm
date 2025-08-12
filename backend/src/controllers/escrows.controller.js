@@ -540,6 +540,7 @@ class SimpleEscrowController {
         'closingDate': 'closing_date',
         'acceptanceDate': 'acceptance_date',
         'escrowStatus': 'escrow_status',
+        'escrowOfficerName': 'escrow_officer_name',
         'zipCode': 'zip_code'
       };
       
