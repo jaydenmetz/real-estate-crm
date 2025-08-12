@@ -57,7 +57,7 @@ async function detectSchema() {
   }
 }
 
-class SimpleEscrowController {
+class EscrowController {
   /**
    * Get all escrows with buyers and sellers for list view
    */
@@ -2860,42 +2860,42 @@ class SimpleEscrowController {
 // Export the correct controller methods for the routes
 module.exports = {
   // Direct exports for escrows.js route file
-  getAllEscrows: SimpleEscrowController.getAllEscrows,
-  getEscrowById: SimpleEscrowController.getEscrowById,
+  getAllEscrows: EscrowController.getAllEscrows,
+  getEscrowById: EscrowController.getEscrowById,
   
   // Existing methods (aliased)
-  getEscrows: SimpleEscrowController.getAllEscrows,
-  getEscrow: SimpleEscrowController.getEscrowById,
-  createEscrow: SimpleEscrowController.createEscrow,
-  updateEscrow: SimpleEscrowController.updateEscrow,
-  deleteEscrow: SimpleEscrowController.deleteEscrow,
-  updateChecklist: SimpleEscrowController.updateChecklist,
+  getEscrows: EscrowController.getAllEscrows,
+  getEscrow: EscrowController.getEscrowById,
+  createEscrow: EscrowController.createEscrow,
+  updateEscrow: EscrowController.updateEscrow,
+  deleteEscrow: EscrowController.deleteEscrow,
+  updateChecklist: EscrowController.updateChecklist,
   
   // New detail methods
-  getEscrowTimeline: SimpleEscrowController.getEscrowTimeline,
-  getEscrowPeople: SimpleEscrowController.getEscrowPeople,
-  getEscrowFinancials: SimpleEscrowController.getEscrowFinancials,
-  getEscrowChecklists: SimpleEscrowController.getEscrowChecklists,
-  getEscrowNotes: SimpleEscrowController.getEscrowNotes,
-  addEscrowNote: SimpleEscrowController.addEscrowNote,
+  getEscrowTimeline: EscrowController.getEscrowTimeline,
+  getEscrowPeople: EscrowController.getEscrowPeople,
+  getEscrowFinancials: EscrowController.getEscrowFinancials,
+  getEscrowChecklists: EscrowController.getEscrowChecklists,
+  getEscrowNotes: EscrowController.getEscrowNotes,
+  addEscrowNote: EscrowController.addEscrowNote,
   
   // Additional detail endpoints
-  getEscrowDetails: SimpleEscrowController.getEscrowDetails,
-  getEscrowPropertyDetails: SimpleEscrowController.getEscrowPropertyDetails,
-  getEscrowChecklistLoan: SimpleEscrowController.getEscrowChecklistLoan,
-  getEscrowChecklistHouse: SimpleEscrowController.getEscrowChecklistHouse,
-  getEscrowChecklistAdmin: SimpleEscrowController.getEscrowChecklistAdmin,
-  getEscrowDocuments: SimpleEscrowController.getEscrowDocuments,
+  getEscrowDetails: EscrowController.getEscrowDetails,
+  getEscrowPropertyDetails: EscrowController.getEscrowPropertyDetails,
+  getEscrowChecklistLoan: EscrowController.getEscrowChecklistLoan,
+  getEscrowChecklistHouse: EscrowController.getEscrowChecklistHouse,
+  getEscrowChecklistAdmin: EscrowController.getEscrowChecklistAdmin,
+  getEscrowDocuments: EscrowController.getEscrowDocuments,
   
   // Update methods for specific sections
-  updateEscrowDetails: SimpleEscrowController.updateEscrowDetails,
-  updateEscrowPeople: SimpleEscrowController.updateEscrowPeople,
-  updateEscrowTimeline: SimpleEscrowController.updateEscrowTimeline,
-  updateEscrowFinancials: SimpleEscrowController.updateEscrowFinancials,
-  updateEscrowPropertyDetails: SimpleEscrowController.updateEscrowPropertyDetails,
-  updateEscrowChecklistLoan: SimpleEscrowController.updateEscrowChecklistLoan,
-  updateEscrowChecklistHouse: SimpleEscrowController.updateEscrowChecklistHouse,
-  updateEscrowChecklistAdmin: SimpleEscrowController.updateEscrowChecklistAdmin,
-  updateEscrowDocuments: SimpleEscrowController.updateEscrowDocuments,
-  updateEscrowChecklists: SimpleEscrowController.updateEscrowChecklists
+  updateEscrowDetails: EscrowController.updateEscrowDetails,
+  updateEscrowPeople: EscrowController.updateEscrowPeople,
+  updateEscrowTimeline: EscrowController.updateEscrowTimeline,
+  updateEscrowFinancials: EscrowController.updateEscrowFinancials,
+  updateEscrowPropertyDetails: EscrowController.updateEscrowPropertyDetails,
+  updateEscrowChecklistLoan: EscrowController.updateEscrowChecklistLoan,
+  updateEscrowChecklistHouse: EscrowController.updateEscrowChecklistHouse,
+  updateEscrowChecklistAdmin: EscrowController.updateEscrowChecklistAdmin,
+  updateEscrowDocuments: EscrowController.updateEscrowDocuments,
+  updateEscrowChecklists: EscrowController.updateEscrowChecklists
 };
