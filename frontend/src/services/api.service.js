@@ -58,7 +58,9 @@ class ApiService {
     this.token = localStorage.getItem('authToken');
     this.apiKey = localStorage.getItem('apiKey');
     
-    const url = `${this.baseURL}${endpoint}`;
+    // Ensure endpoint starts with /
+    const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+    const url = `${this.baseURL}${normalizedEndpoint}`;
     
     const config = {
       ...options,
@@ -384,7 +386,11 @@ export default apiInstance;
 
 // Export API_BASE_URL and apiCall for backward compatibility
 export { API_BASE_URL };
-export const apiCall = (endpoint, options = {}) => apiInstance.request(endpoint, options);
+export const apiCall = (endpoint, options = {}) => {
+  // Ensure endpoint starts with /
+  const normalizedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  return apiInstance.request(normalizedEndpoint, options);
+};
 
 // Export setApiKey method for external use
 export const setApiKey = (apiKey) => apiInstance.setApiKey(apiKey);
