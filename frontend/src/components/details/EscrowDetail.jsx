@@ -12,7 +12,8 @@ import {
   Breadcrumbs,
   Link,
   Paper,
-  Button
+  Button,
+  Stack
 } from '@mui/material';
 import {
   Home as HomeIcon,
@@ -27,12 +28,12 @@ import { apiCall, API_BASE_URL } from '../../services/api.service';
 import { testApiConnection, testEscrowEndpoint } from '../../utils/testApi';
 
 // Import components
-import HeroHeaderCompact from '../escrow-detail/HeroHeaderCompact';
-import PropertyImageSection from '../escrow-detail/PropertyImageSection';
-import PeopleWidgetCompact from '../escrow-detail/widgets/PeopleWidgetCompact';
-import TimelineWidgetCompact from '../escrow-detail/widgets/TimelineWidgetCompact';
-import FinancialsWidgetCompact from '../escrow-detail/widgets/FinancialsWidgetCompact';
-import ChecklistWidgetCompact from '../escrow-detail/widgets/ChecklistWidgetCompact';
+import EscrowCardOptimized from '../common/EscrowCardOptimized';
+import PropertyHeroWidget from '../escrow-detail/PropertyHeroWidget';
+import PeopleWidget from '../escrow-detail/PeopleWidget';
+import TimelineWidget from '../escrow-detail/TimelineWidget';
+import FinancialsWidget from '../escrow-detail/FinancialsWidget';
+import ChecklistsWidget from '../escrow-detail/ChecklistsWidget';
 import AllDataEditor from '../escrow-detail/AllDataEditor';
 import DebugError from '../common/DebugError';
 import DebugCard from '../common/DebugCard';
@@ -332,11 +333,21 @@ function EscrowDetail() {
           </Typography>
         </Breadcrumbs>
 
-        {/* Hero Header */}
-        <HeroHeaderCompact data={escrowData} />
+        {/* Escrow Card Header */}
+        <Box sx={{ mb: 3 }}>
+          <EscrowCardOptimized 
+            escrow={escrowData} 
+            showCommission={false}
+            onQuickAction={(action) => {
+              if (action === 'edit') {
+                setActiveTab(1); // Switch to All Data tab
+              }
+            }}
+          />
+        </Box>
 
-        {/* Property Image Section */}
-        <PropertyImageSection data={escrowData} />
+        {/* Property Hero Widget */}
+        <PropertyHeroWidget data={escrowData} />
 
         {/* Tabs */}
         <StyledTabs value={activeTab} onChange={handleTabChange}>
@@ -346,27 +357,41 @@ function EscrowDetail() {
 
         {/* Tab Panels */}
         <TabPanel value={activeTab} index={0}>
-          <Grid container spacing={2}>
+          <Stack spacing={3}>
             {/* People Widget */}
-            <Grid item xs={12}>
-              <PeopleWidgetCompact data={escrowData.people} />
-            </Grid>
+            <PeopleWidget 
+              data={escrowData.people || escrowData} 
+              onEdit={(section) => handleDataUpdate(section, escrowData[section])}
+            />
 
             {/* Timeline Widget */}
-            <Grid item xs={12}>
-              <TimelineWidgetCompact data={escrowData.timeline || escrowData} />
-            </Grid>
+            <TimelineWidget 
+              data={escrowData.timeline || escrowData} 
+              onEdit={(section) => handleDataUpdate(section, escrowData[section])}
+            />
 
             {/* Financials Widget */}
-            <Grid item xs={12}>
-              <FinancialsWidgetCompact data={escrowData.financials || escrowData} />
-            </Grid>
+            <FinancialsWidget 
+              data={escrowData.financials || escrowData} 
+              onEdit={(section) => handleDataUpdate(section, escrowData[section])}
+            />
 
-            {/* Checklist Widget */}
-            <Grid item xs={12}>
-              <ChecklistWidgetCompact data={escrowData.checklists} />
-            </Grid>
-          </Grid>
+            {/* Checklists Widget */}
+            <ChecklistsWidget 
+              data={escrowData.checklists || escrowData} 
+              onEdit={(section) => handleDataUpdate(section, escrowData[section])}
+              onToggleItem={async (category, item, value) => {
+                const updatedChecklists = {
+                  ...escrowData.checklists,
+                  [category]: {
+                    ...escrowData.checklists?.[category],
+                    [item]: value
+                  }
+                };
+                await handleDataUpdate('checklists', updatedChecklists);
+              }}
+            />
+          </Stack>
         </TabPanel>
 
         <TabPanel value={activeTab} index={1}>
