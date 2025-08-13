@@ -164,43 +164,46 @@ class AuthService {
 
   // Verify current token
   async verify() {
-    if (!this.token) {
-      return { success: false, error: 'No token found' };
-    }
-
-    try {
-      const response = await apiInstance.get('/auth/verify');
-      
-      if (response.success && response.data) {
-        // Update user data with fresh data from server
-        this.user = response.data.user;
-        localStorage.setItem(USER_KEY, JSON.stringify(response.data.user));
+    // Refresh tokens from localStorage
+    this.token = localStorage.getItem(TOKEN_KEY);
+    this.apiKey = localStorage.getItem(API_KEY_KEY);
+    this.user = this.getStoredUser();
+    
+    // If we have a stored user and either token or API key, consider it valid
+    // This prevents unnecessary logout on page navigation
+    if (this.user && (this.token || this.apiKey)) {
+      // Optionally verify with server (but don't logout on failure)
+      try {
+        const response = await apiInstance.get('/auth/verify');
         
-        return {
-          success: true,
-          user: response.data.user
-        };
+        if (response.success && response.data) {
+          // Update user data with fresh data from server
+          this.user = response.data.user;
+          localStorage.setItem(USER_KEY, JSON.stringify(response.data.user));
+        }
+      } catch (error) {
+        // If verification fails but we have stored auth, keep user logged in
+        console.warn('Token verification failed, using cached auth:', error.message);
+        // Only logout if it's a clear authentication failure
+        if (error.status === 401 && !this.apiKey) {
+          // No API key fallback, so logout
+          await this.logout();
+          return {
+            success: false,
+            error: 'Authentication expired'
+          };
+        }
       }
       
-      // Token is invalid, clear it
-      await this.logout();
+      // Return success if we have user data
       return {
-        success: false,
-        error: 'Invalid token'
-      };
-    } catch (error) {
-      console.error('Token verification error:', error);
-      
-      // If it's a 401/403, clear the token
-      if (error.status === 401 || error.status === 403) {
-        await this.logout();
-      }
-      
-      return {
-        success: false,
-        error: error.message || 'Failed to verify token'
+        success: true,
+        user: this.user
       };
     }
+    
+    // No auth found
+    return { success: false, error: 'No authentication found' };
   }
 
   // Update user preferences
@@ -269,12 +272,27 @@ class AuthService {
 
   // Get current user
   getCurrentUser() {
+    // Always get fresh from localStorage
+    if (!this.user) {
+      this.user = this.getStoredUser();
+    }
     return this.user;
   }
 
   // Check if user is authenticated
   isAuthenticated() {
-    return !!this.token && !!this.user;
+    // Check localStorage for tokens if not in memory
+    if (!this.token) {
+      this.token = localStorage.getItem(TOKEN_KEY);
+    }
+    if (!this.apiKey) {
+      this.apiKey = localStorage.getItem(API_KEY_KEY);
+    }
+    if (!this.user) {
+      this.user = this.getStoredUser();
+    }
+    // User is authenticated if they have either a JWT token or API key
+    return (!!this.token || !!this.apiKey) && !!this.user;
   }
 
   // Check if user has specific role

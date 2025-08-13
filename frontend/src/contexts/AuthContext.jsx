@@ -13,35 +13,35 @@ export const useAuth = () => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(authService.getCurrentUser());
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Don't block on load
   const [isAuthenticated, setIsAuthenticated] = useState(authService.isAuthenticated());
 
   // Verify token on mount and when returning to app
   useEffect(() => {
     const verifyAuth = async () => {
-      // Skip if no token
-      if (!authService.token) {
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const result = await authService.verify();
-        if (result.success) {
-          setUser(result.user);
-          setIsAuthenticated(true);
-        } else {
-          // Token invalid, clear auth state
-          setUser(null);
-          setIsAuthenticated(false);
+      // Check if user is authenticated
+      const isAuth = authService.isAuthenticated();
+      const currentUser = authService.getCurrentUser();
+      
+      // Update state immediately with stored values
+      setIsAuthenticated(isAuth);
+      setUser(currentUser);
+      
+      // Only verify with server if we have auth
+      if (isAuth) {
+        try {
+          const result = await authService.verify();
+          if (result.success) {
+            setUser(result.user);
+            setIsAuthenticated(true);
+          }
+          // Don't clear auth on verify failure - let the service handle it
+        } catch (error) {
+          console.warn('Auth verification failed, keeping cached auth:', error);
         }
-      } catch (error) {
-        console.error('Auth verification error:', error);
-        setUser(null);
-        setIsAuthenticated(false);
-      } finally {
-        setLoading(false);
       }
+      
+      setLoading(false);
     };
 
     verifyAuth();
