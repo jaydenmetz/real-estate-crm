@@ -97,18 +97,26 @@ class ApiService {
             hasApiKey: !!this.apiKey,
             status: response.status
           });
-          // Clear invalid authentication
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('apiKey');
-          localStorage.removeItem('user');
-          // Throw auth error before redirecting
+          
+          // Don't redirect if we're already on the login page or calling auth endpoints
+          const isAuthEndpoint = url.includes('/auth/');
+          const isLoginPage = window.location.pathname === '/login';
+          
+          if (!isAuthEndpoint && !isLoginPage) {
+            // Clear invalid authentication
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('apiKey');
+            localStorage.removeItem('user');
+            // Redirect to login page after a brief delay
+            setTimeout(() => {
+              window.location.href = '/login';
+            }, 100);
+          }
+          
+          // Throw auth error
           const authError = new Error('Authentication required');
           authError.status = 401;
           authError.response = response;
-          // Redirect to login page after a brief delay
-          setTimeout(() => {
-            window.location.href = '/login';
-          }, 100);
           throw authError;
         }
         

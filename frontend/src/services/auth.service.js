@@ -1,9 +1,9 @@
 // Authentication service for handling login, logout, and token management
 import apiInstance from './api.service';
 
-const TOKEN_KEY = 'crm_auth_token';
-const USER_KEY = 'crm_user_data';
-const API_KEY_KEY = 'crm_api_key';
+const TOKEN_KEY = 'authToken';  // Match what api.service.js expects
+const USER_KEY = 'user';  // Match what api.service.js expects
+const API_KEY_KEY = 'apiKey';  // Match what api.service.js expects
 
 class AuthService {
   constructor() {
@@ -31,11 +31,7 @@ class AuthService {
   // Set authorization header
   setAuthHeader(token) {
     if (token) {
-      apiInstance.token = token;
-      // Also set default headers for axios if using it directly
-      if (window.axios) {
-        window.axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      }
+      apiInstance.setToken(token);
     }
   }
 
@@ -50,17 +46,20 @@ class AuthService {
         // Store token and user data
         this.token = token;
         this.user = user;
-        this.apiKey = user.apiKey;
         
         // Save to localStorage for persistence
         localStorage.setItem(TOKEN_KEY, token);
         localStorage.setItem(USER_KEY, JSON.stringify(user));
-        if (user.apiKey) {
-          localStorage.setItem(API_KEY_KEY, user.apiKey);
-        }
         
         // Set auth header
-        this.setAuthHeader(token);
+        apiInstance.setToken(token);
+        
+        // If user has an API key, store it
+        if (user?.apiKey) {
+          this.apiKey = user.apiKey;
+          localStorage.setItem(API_KEY_KEY, user.apiKey);
+          apiInstance.setApiKey(user.apiKey);
+        }
         
         return {
           success: true,
@@ -97,17 +96,20 @@ class AuthService {
         // Store token and user data
         this.token = token;
         this.user = user;
-        this.apiKey = user.apiKey;
         
         // Save to localStorage for persistence
         localStorage.setItem(TOKEN_KEY, token);
         localStorage.setItem(USER_KEY, JSON.stringify(user));
-        if (user.apiKey) {
-          localStorage.setItem(API_KEY_KEY, user.apiKey);
-        }
         
         // Set auth header
-        this.setAuthHeader(token);
+        apiInstance.setToken(token);
+        
+        // If user has an API key, store it
+        if (user?.apiKey) {
+          this.apiKey = user.apiKey;
+          localStorage.setItem(API_KEY_KEY, user.apiKey);
+          apiInstance.setApiKey(user.apiKey);
+        }
         
         return {
           success: true,
@@ -140,10 +142,13 @@ class AuthService {
       // Continue with local logout even if API fails
     }
 
-    // Clear local storage
+    // Clear local storage - also clear old keys for compatibility
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     localStorage.removeItem(API_KEY_KEY);
+    localStorage.removeItem('crm_auth_token');  // Clear old key
+    localStorage.removeItem('crm_user_data');  // Clear old key
+    localStorage.removeItem('crm_api_key');  // Clear old key
     
     // Clear instance variables
     this.token = null;
@@ -151,10 +156,8 @@ class AuthService {
     this.apiKey = null;
     
     // Clear auth header
-    apiInstance.token = null;
-    if (window.axios) {
-      delete window.axios.defaults.headers.common['Authorization'];
-    }
+    apiInstance.setToken(null);
+    apiInstance.setApiKey(null);
     
     return { success: true };
   }
