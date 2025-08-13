@@ -35,13 +35,13 @@ import {
   Refresh,
   ExpandMore,
   ExpandLess,
-  Database,
   Cloud,
   Lock,
   Timer,
   TrendingUp,
   DataUsage,
-  Psychology
+  Psychology,
+  Dashboard as DashboardIcon
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import { apiCall } from '../../services/api.service';
@@ -220,7 +220,7 @@ const SystemHealthDashboard = ({ initialTab = 0 }) => {
       {/* Tabs */}
       <Paper sx={{ mb: 3 }}>
         <Tabs value={activeTab} onChange={(e, v) => setActiveTab(v)}>
-          <Tab icon={<Dashboard />} label="Overview" />
+          <Tab icon={<DashboardIcon />} label="Overview" />
           <Tab icon={<Storage />} label="PostgreSQL" />
           <Tab icon={<Memory />} label="Redis Cache" />
           <Tab icon={<Lock />} label="Authentication" />
@@ -236,7 +236,7 @@ const SystemHealthDashboard = ({ initialTab = 0 }) => {
             <StatusCard status={healthData.checks.postgresql?.status}>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                  <Database color="primary" />
+                  <Storage color="primary" />
                   <Typography variant="h6">PostgreSQL Database</Typography>
                 </Box>
                 <List dense>
@@ -656,7 +656,5 @@ const SystemHealthDashboard = ({ initialTab = 0 }) => {
   );
 };
 
-// Import missing icon
-const Dashboard = () => <DataUsage />;
 
 export default SystemHealthDashboard;
