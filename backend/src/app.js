@@ -189,7 +189,7 @@ apiRouter.use(rateLimit);
 
 // Public routes (no authentication required)
 apiRouter.use('/auth', require('./routes/auth.routes').router);
-apiRouter.use('/health', require('./routes/health.routes'));
+apiRouter.use('/health', require('./routes/system-health.routes')); // Comprehensive system health checks
 
 // Super simple test endpoint for debugging (bypass all middleware)
 apiRouter.get('/test-endpoint', (req, res) => {
