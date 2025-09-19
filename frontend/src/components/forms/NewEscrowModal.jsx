@@ -105,7 +105,8 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
   const fetchAddressSuggestions = debounce(async (input) => {
     if (hasValidGoogleKey) return; // Skip if using Google Places
 
-    if (input.length < 3) {
+    // Allow searching even with 2 characters for street numbers
+    if (input.length < 2) {
       setAddressSuggestions([]);
       return;
     }
@@ -119,7 +120,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         `q=${encodeURIComponent(searchQuery)}&` +
         `format=json&` +
         `countrycodes=us&` +
-        `limit=10&` +
+        `limit=15&` +  // Increase limit to get more results
         `addressdetails=1&` +
         `viewbox=-119.2,35.5,-118.8,35.2&` +  // Bakersfield area bounding box
         `bounded=0`  // Prefer results in box but don't exclude others
@@ -134,25 +135,48 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         return;
       }
 
-      const suggestions = data.map(item => ({
-        label: item.display_name,
-        value: {
-          address: item.address?.house_number ?
-            `${item.address.house_number} ${item.address.road || item.name || ''}`.trim() :
-            (item.address?.road || item.name || ''),
-          // Better city extraction - check multiple fields
-          city: item.address?.city ||
-                item.address?.town ||
-                item.address?.village ||
-                item.address?.hamlet ||
-                'Bakersfield',  // Default to Bakersfield if no city found
-          state: item.address?.state || 'CA',
-          zipCode: item.address?.postcode || '',
-          county: item.address?.county?.replace(' County', '') || 'Kern',
-          lat: item.lat,
-          lon: item.lon,
-        }
-      }));
+      const suggestions = data
+        .filter(item => {
+          // Only include results that have a road/street name
+          return item.address?.road || item.name;
+        })
+        .map(item => {
+          // Build the street address
+          const streetNumber = item.address?.house_number || '';
+          const streetName = item.address?.road || item.name || '';
+          const fullAddress = streetNumber ?
+            `${streetNumber} ${streetName}`.trim() :
+            streetName;
+
+          // Get city name from various fields
+          const city = item.address?.city ||
+                      item.address?.town ||
+                      item.address?.village ||
+                      item.address?.hamlet ||
+                      'Bakersfield';
+
+          const state = item.address?.state || 'California';
+          const stateAbbr = state === 'California' ? 'CA' : state;
+          const zipCode = item.address?.postcode || '';
+
+          // Create a shorter display label
+          const shortLabel = fullAddress ?
+            `${fullAddress}, ${city}, ${stateAbbr} ${zipCode}`.trim() :
+            item.display_name;
+
+          return {
+            label: shortLabel,
+            value: {
+              address: fullAddress,
+              city: city,
+              state: stateAbbr,
+              zipCode: zipCode,
+              county: item.address?.county?.replace(' County', '') || 'Kern',
+              lat: item.lat,
+              lon: item.lon,
+            }
+          };
+        });
 
       setAddressSuggestions(suggestions);
     } catch (error) {
@@ -330,16 +354,11 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
               return typeof option === 'string' ? option : option.label || '';
             }}
             renderOption={(props, option) => (
-              <Box component="li" {...props}>
+              <Box component="li" {...props} sx={{ py: 1.5 }}>
                 <LocationOn sx={{ mr: 2, flexShrink: 0, color: 'action.active' }} />
-                <Box>
-                  <Typography variant="body2">
-                    {option.value?.address || ''}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {option.value?.city}, {option.value?.state} {option.value?.zipCode}
-                  </Typography>
-                </Box>
+                <Typography variant="body2">
+                  {option.label}
+                </Typography>
               </Box>
             )}
             renderInput={(params) => (
@@ -361,7 +380,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
                     </>
                   ),
                 }}
-                helperText="Start typing to search for addresses"
+                helperText="Enter street number and name (e.g., '325 Flower' or 'Flower Street')"
               />
             )}
           />
