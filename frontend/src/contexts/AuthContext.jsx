@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import authService from '../services/auth.service';
 
 const AuthContext = createContext(null);
@@ -16,17 +16,29 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(false); // Don't block on load
   const [isAuthenticated, setIsAuthenticated] = useState(authService.isAuthenticated());
 
+  // Track last verification time to prevent excessive API calls
+  const lastVerifyRef = useRef(0);
+  const VERIFY_COOLDOWN = 5 * 60 * 1000; // 5 minutes between verifications
+  const FOCUS_DEBOUNCE = 30 * 1000; // 30 seconds minimum between focus verifications
+
   // Verify token on mount and when returning to app
   useEffect(() => {
-    const verifyAuth = async () => {
+    const verifyAuth = async (force = false) => {
+      // Check cooldown unless forced
+      const now = Date.now();
+      if (!force && now - lastVerifyRef.current < VERIFY_COOLDOWN) {
+        // Skip verification if we recently verified
+        return;
+      }
+
       // Check if user is authenticated
       const isAuth = authService.isAuthenticated();
       const currentUser = authService.getCurrentUser();
-      
+
       // Update state immediately with stored values
       setIsAuthenticated(isAuth);
       setUser(currentUser);
-      
+
       // Only verify with server if we have auth
       if (isAuth) {
         try {
@@ -34,27 +46,61 @@ export const AuthProvider = ({ children }) => {
           if (result.success) {
             setUser(result.user);
             setIsAuthenticated(true);
+            lastVerifyRef.current = now; // Update last verify time on success
           }
           // Don't clear auth on verify failure - let the service handle it
         } catch (error) {
-          console.warn('Auth verification failed, keeping cached auth:', error);
+          // Silently fail - don't spam console with verification failures
+          // The user is still logged in with cached credentials
         }
       }
-      
+
       setLoading(false);
     };
 
-    verifyAuth();
+    // Initial verification
+    verifyAuth(true);
 
-    // Re-verify when window regains focus (user returns to tab)
+    // Re-verify when window regains focus (but not too often)
+    let focusTimeout;
     const handleFocus = () => {
-      if (authService.isAuthenticated()) {
-        verifyAuth();
+      // Clear any pending timeout
+      if (focusTimeout) clearTimeout(focusTimeout);
+
+      // Debounce focus events to prevent rapid-fire verifications
+      focusTimeout = setTimeout(() => {
+        const now = Date.now();
+        if (authService.isAuthenticated() && now - lastVerifyRef.current >= FOCUS_DEBOUNCE) {
+          verifyAuth();
+        }
+      }, 1000); // Wait 1 second after focus before verifying
+    };
+
+    // Only verify on visibility change (tab switch), not regular focus
+    const handleVisibilityChange = () => {
+      if (!document.hidden && authService.isAuthenticated()) {
+        const now = Date.now();
+        if (now - lastVerifyRef.current >= VERIFY_COOLDOWN) {
+          verifyAuth();
+        }
       }
     };
 
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
+    // Use visibility API instead of focus for better control
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Periodic verification every 15 minutes while active
+    const intervalId = setInterval(() => {
+      if (!document.hidden && authService.isAuthenticated()) {
+        verifyAuth();
+      }
+    }, 15 * 60 * 1000); // 15 minutes
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (focusTimeout) clearTimeout(focusTimeout);
+      clearInterval(intervalId);
+    };
   }, []);
 
   // Login function
