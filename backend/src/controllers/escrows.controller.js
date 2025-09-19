@@ -2978,6 +2978,8 @@ module.exports = {
   getEscrow: EscrowController.getEscrowById,
   createEscrow: EscrowController.createEscrow,
   updateEscrow: EscrowController.updateEscrow,
+  archiveEscrow: EscrowController.archiveEscrow,
+  restoreEscrow: EscrowController.restoreEscrow,
   deleteEscrow: EscrowController.deleteEscrow,
   updateChecklist: EscrowController.updateChecklist,
   
