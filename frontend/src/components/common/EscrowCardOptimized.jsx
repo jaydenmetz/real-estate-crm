@@ -31,12 +31,15 @@ import {
   Groups,
   Visibility,
   MoreVert,
+  Archive as ArchiveIcon,
+  Restore as RestoreIcon,
+  DeleteForever as DeleteForeverIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { format, differenceInDays, isValid } from 'date-fns';
 
-const EscrowCardOptimized = ({ escrow, index = 0, showCommission = true, onQuickAction }) => {
+const EscrowCardOptimized = ({ escrow, index = 0, showCommission = true, onQuickAction, isArchived = false }) => {
   const navigate = useNavigate();
   const theme = useTheme();
   const [expanded, setExpanded] = useState(false);
@@ -289,7 +292,7 @@ const EscrowCardOptimized = ({ escrow, index = 0, showCommission = true, onQuick
                       <IconButton
                         size="small"
                         onClick={(e) => handleQuickAction('view', e)}
-                        sx={{ 
+                        sx={{
                           bgcolor: alpha(theme.palette.primary.main, 0.1),
                           '&:hover': { bgcolor: alpha(theme.palette.primary.main, 0.2) },
                         }}
@@ -297,6 +300,47 @@ const EscrowCardOptimized = ({ escrow, index = 0, showCommission = true, onQuick
                         <Visibility fontSize="small" />
                       </IconButton>
                     </Tooltip>
+                    {!isArchived ? (
+                      <Tooltip title="Archive">
+                        <IconButton
+                          size="small"
+                          onClick={(e) => handleQuickAction('archive', e)}
+                          sx={{
+                            bgcolor: alpha('#ff9800', 0.1),
+                            '&:hover': { bgcolor: alpha('#ff9800', 0.2) },
+                          }}
+                        >
+                          <ArchiveIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    ) : (
+                      <>
+                        <Tooltip title="Restore">
+                          <IconButton
+                            size="small"
+                            onClick={(e) => handleQuickAction('restore', e)}
+                            sx={{
+                              bgcolor: alpha('#4caf50', 0.1),
+                              '&:hover': { bgcolor: alpha('#4caf50', 0.2) },
+                            }}
+                          >
+                            <RestoreIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Delete Permanently">
+                          <IconButton
+                            size="small"
+                            onClick={(e) => handleQuickAction('delete', e)}
+                            sx={{
+                              bgcolor: alpha('#f44336', 0.1),
+                              '&:hover': { bgcolor: alpha('#f44336', 0.2) },
+                            }}
+                          >
+                            <DeleteForeverIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      </>
+                    )}
                     <Tooltip title="More Options">
                       <IconButton
                         size="small"
