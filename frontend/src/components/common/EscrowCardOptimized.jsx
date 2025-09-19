@@ -250,7 +250,7 @@ const EscrowCardOptimized = ({ escrow, index = 0, showCommission = true, onQuick
 
           {/* Main Content */}
           <CardContent sx={{ flex: 1, p: 2, pb: 1, position: 'relative' }}>
-            {/* Archive/Delete Icon - Top Right Corner */}
+            {/* Archive/Delete/Restore Icons - Top Right Corner */}
             <Box
               className="quick-actions no-navigate"
               sx={{
@@ -260,6 +260,8 @@ const EscrowCardOptimized = ({ escrow, index = 0, showCommission = true, onQuick
                 opacity: 0,
                 transition: 'opacity 0.2s',
                 zIndex: 15,  // Higher than Past Due badge
+                display: 'flex',
+                gap: 1,
               }}
             >
               {!isArchived ? (
@@ -280,22 +282,46 @@ const EscrowCardOptimized = ({ escrow, index = 0, showCommission = true, onQuick
                   <DeleteOutline sx={{ fontSize: 20 }} />
                 </IconButton>
               ) : (
-                <IconButton
-                  size="small"
-                  onClick={(e) => handleQuickAction('restore', e)}
-                  sx={{
-                    bgcolor: 'background.paper',
-                    boxShadow: 2,
-                    '&:hover': {
-                      bgcolor: alpha('#4caf50', 0.1),
-                      '& .MuiSvgIcon-root': {
-                        color: '#4caf50',
-                      }
-                    },
-                  }}
-                >
-                  <RestoreIcon sx={{ fontSize: 20 }} />
-                </IconButton>
+                <>
+                  {/* Restore Button - Green */}
+                  <Tooltip title="Restore to Active">
+                    <IconButton
+                      size="small"
+                      onClick={(e) => handleQuickAction('restore', e)}
+                      sx={{
+                        bgcolor: '#4caf50',
+                        boxShadow: 2,
+                        '&:hover': {
+                          bgcolor: '#45a049',
+                        },
+                      }}
+                    >
+                      <RestoreIcon sx={{ fontSize: 20, color: 'white' }} />
+                    </IconButton>
+                  </Tooltip>
+                  {/* Permanent Delete - Red */}
+                  <Tooltip title="⚠️ Permanently Delete - This cannot be undone!">
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        if (window.confirm('⚠️ WARNING: This will permanently delete this escrow and cannot be undone. Are you sure?')) {
+                          handleQuickAction('delete', e);
+                        } else {
+                          e.stopPropagation();
+                        }
+                      }}
+                      sx={{
+                        bgcolor: '#f44336',
+                        boxShadow: 2,
+                        '&:hover': {
+                          bgcolor: '#da190b',
+                        },
+                      }}
+                    >
+                      <DeleteForeverIcon sx={{ fontSize: 20, color: 'white' }} />
+                    </IconButton>
+                  </Tooltip>
+                </>
               )}
             </Box>
 
