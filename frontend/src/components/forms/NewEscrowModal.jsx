@@ -109,13 +109,18 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
 
     setLoadingAddress(true);
     try {
+      // Add Bakersfield, CA to help with local searches
+      const searchQuery = input.includes(',') ? input : `${input}, Bakersfield, CA`;
       const response = await fetch(
         `https://nominatim.openstreetmap.org/search?` +
-        `q=${encodeURIComponent(input)}&` +
+        `q=${encodeURIComponent(searchQuery)}&` +
         `format=json&` +
         `countrycodes=us&` +
+        `state=California&` +
         `limit=5&` +
-        `addressdetails=1`
+        `addressdetails=1&` +
+        `bounded=1&` +
+        `viewbox=-119.2,35.5,-118.8,35.2`  // Bakersfield area bounding box
       );
 
       const data = await response.json();
