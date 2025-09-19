@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -20,7 +20,6 @@ import {
   Search,
 } from '@mui/icons-material';
 import { escrowsAPI } from '../../services/api.service';
-import { debounce } from 'lodash';
 
 const NewEscrowModal = ({ open, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
@@ -31,6 +30,8 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
   const [manualEntry, setManualEntry] = useState(false);
   const [addressSearchText, setAddressSearchText] = useState('');
   const addressInputRef = useRef(null);
+  const abortControllerRef = useRef(null);
+  const searchTimeoutRef = useRef(null);
 
   const [formData, setFormData] = useState({
     propertyAddress: '',
@@ -101,15 +102,37 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
     }
   }, [open, hasValidGoogleKey]);
 
-  // Fallback to Nominatim if no Google API key
-  const fetchAddressSuggestions = debounce(async (input) => {
+  // Cleanup on unmount or modal close
+  useEffect(() => {
+    return () => {
+      // Cancel any pending requests when component unmounts
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      // Clear any pending timeouts
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Fallback to Nominatim if no Google API key - with request cancellation
+  const fetchAddressSuggestions = useCallback(async (input) => {
     if (hasValidGoogleKey) return; // Skip if using Google Places
+
+    // Cancel previous request if it exists
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
 
     // Allow searching even with 2 characters for street numbers
     if (input.length < 2) {
       setAddressSuggestions([]);
       return;
     }
+
+    // Create new abort controller for this request
+    abortControllerRef.current = new AbortController();
 
     setLoadingAddress(true);
     try {
@@ -123,7 +146,8 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         `limit=15&` +  // Increase limit to get more results
         `addressdetails=1&` +
         `viewbox=-119.2,35.5,-118.8,35.2&` +  // Bakersfield area bounding box
-        `bounded=0`  // Prefer results in box but don't exclude others
+        `bounded=0`,  // Prefer results in box but don't exclude others
+        { signal: abortControllerRef.current.signal }
       );
 
       const data = await response.json();
@@ -180,11 +204,34 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
 
       setAddressSuggestions(suggestions);
     } catch (error) {
-      console.error('Error fetching address suggestions:', error);
+      // Don't log abort errors (they're expected when canceling)
+      if (error.name !== 'AbortError') {
+        console.error('Error fetching address suggestions:', error);
+      }
+      // Clear suggestions on error unless it was an abort
+      if (error.name !== 'AbortError') {
+        setAddressSuggestions([]);
+      }
     } finally {
-      setLoadingAddress(false);
+      // Only set loading false if this wasn't aborted
+      if (!abortControllerRef.current?.signal.aborted) {
+        setLoadingAddress(false);
+      }
     }
-  }, 100); // Reduced from 300ms to 100ms for faster response
+  }, [hasValidGoogleKey]);
+
+  // Debounced version with cancellation
+  const debouncedFetchSuggestions = useCallback((input) => {
+    // Clear any existing timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    // Set new timeout for debounce
+    searchTimeoutRef.current = setTimeout(() => {
+      fetchAddressSuggestions(input);
+    }, 50); // Very short debounce - just to batch rapid keystrokes
+  }, [fetchAddressSuggestions]);
 
   const handleAddressSelect = (event, value) => {
     if (value && typeof value === 'object' && value.value) {
@@ -346,7 +393,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
               if (reason === 'input') {
                 setFormData({ ...formData, propertyAddress: value });
                 setSelectedAddress(null);
-                fetchAddressSuggestions(value);
+                debouncedFetchSuggestions(value);
               }
             }}
             onChange={handleAddressSelect}
