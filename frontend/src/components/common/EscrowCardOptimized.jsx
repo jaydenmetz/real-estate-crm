@@ -156,7 +156,7 @@ const EscrowCardOptimized = ({ escrow, index = 0, showCommission = true, onQuick
             sx={{
               position: 'absolute',
               top: 12,
-              right: 12,
+              left: 12,
               zIndex: 10,
               display: 'flex',
               alignItems: 'center',
@@ -259,6 +259,7 @@ const EscrowCardOptimized = ({ escrow, index = 0, showCommission = true, onQuick
                 right: 8,
                 opacity: 0,
                 transition: 'opacity 0.2s',
+                zIndex: 15,  // Higher than Past Due badge
               }}
             >
               {!isArchived ? (
