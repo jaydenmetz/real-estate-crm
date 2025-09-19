@@ -295,6 +295,13 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
           )}
         </Box>
 
+        {/* Debug info */}
+        {!hasValidGoogleKey && addressSuggestions.length > 0 && (
+          <Typography variant="caption" color="text.secondary">
+            Found {addressSuggestions.length} suggestions
+          </Typography>
+        )}
+
         {/* Address input based on mode */}
         {!manualEntry ? (
           // Search mode
@@ -314,14 +321,17 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             helperText="Start typing to search for addresses"
           />
         ) : (
+          <>
+          {console.log('Current addressSuggestions:', addressSuggestions)}
           <Autocomplete
             freeSolo
+            disablePortal
             options={addressSuggestions}
             loading={loadingAddress}
             value={selectedAddress}
             inputValue={addressSearchText}
-            open={addressSuggestions.length > 0}
             onInputChange={(event, value, reason) => {
+              console.log('onInputChange triggered:', value, reason);
               setAddressSearchText(value);
               if (reason === 'input') {
                 setFormData({ ...formData, propertyAddress: value });
@@ -335,19 +345,22 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             isOptionEqualToValue={(option, value) => {
               return option.label === value?.label;
             }}
-            renderOption={(props, option) => (
-              <Box component="li" {...props}>
-                <LocationOn sx={{ mr: 2, flexShrink: 0, color: 'action.active' }} />
-                <Box>
-                  <Typography variant="body2">
-                    {option.value.address}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {option.value.city}, {option.value.state} {option.value.zipCode}
-                  </Typography>
+            renderOption={(props, option) => {
+              console.log('Rendering option:', option);
+              return (
+                <Box component="li" {...props}>
+                  <LocationOn sx={{ mr: 2, flexShrink: 0, color: 'action.active' }} />
+                  <Box>
+                    <Typography variant="body2">
+                      {option.value?.address || 'No address'}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {option.value?.city || 'No city'}, {option.value?.state || 'No state'} {option.value?.zipCode || ''}
+                    </Typography>
+                  </Box>
                 </Box>
-              </Box>
-            )}
+              );
+            }}
             renderInput={(params) => (
               <TextField
                 {...params}
@@ -371,6 +384,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
               />
             )}
           />
+          </>
         )
         ) : (
           // Manual entry mode
