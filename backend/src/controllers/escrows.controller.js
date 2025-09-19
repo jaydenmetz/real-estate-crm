@@ -130,6 +130,14 @@ class EscrowController {
       let queryParams = [];
       let paramIndex = 1;
 
+      // Handle archived filter
+      if (req.query.archived === 'true') {
+        whereConditions.push(`e.deleted_at IS NOT NULL`);
+      } else if (req.query.archived !== 'all') {
+        // By default, don't show archived escrows
+        whereConditions.push(`e.deleted_at IS NULL`);
+      }
+
       if (status && status !== 'all') {
         // Normalize status to match database values (capitalize first letter)
         const normalizedStatus = status.charAt(0).toUpperCase() + status.slice(1).toLowerCase();
@@ -634,38 +642,140 @@ class EscrowController {
   /**
    * Delete an escrow
    */
-  static async deleteEscrow(req, res) {
+  /**
+   * Archive (soft delete) an escrow
+   */
+  static async archiveEscrow(req, res) {
     try {
       const { id } = req.params;
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-      
+
       const result = await pool.query(
-        `DELETE FROM escrows WHERE ${isUUID ? 'id = $1' : 'display_id = $1'} RETURNING display_id`,
+        `UPDATE escrows
+         SET deleted_at = CURRENT_TIMESTAMP,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE ${isUUID ? 'id = $1' : 'display_id = $1'}
+         AND deleted_at IS NULL
+         RETURNING display_id`,
         [id]
       );
-      
+
       if (result.rows.length === 0) {
         return res.status(404).json({
           success: false,
           error: {
             code: 'NOT_FOUND',
-            message: 'Escrow not found'
+            message: 'Escrow not found or already archived'
           }
         });
       }
-      
+
       res.json({
         success: true,
-        message: 'Escrow deleted successfully'
+        message: 'Escrow archived successfully',
+        data: { displayId: result.rows[0].display_id }
       });
-      
+
     } catch (error) {
-      console.error('Error deleting escrow:', error);
+      console.error('Error archiving escrow:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'ARCHIVE_ERROR',
+          message: 'Failed to archive escrow',
+          details: error.message
+        }
+      });
+    }
+  }
+
+  /**
+   * Restore an archived escrow
+   */
+  static async restoreEscrow(req, res) {
+    try {
+      const { id } = req.params;
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+      const result = await pool.query(
+        `UPDATE escrows
+         SET deleted_at = NULL,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE ${isUUID ? 'id = $1' : 'display_id = $1'}
+         AND deleted_at IS NOT NULL
+         RETURNING display_id`,
+        [id]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Escrow not found in archives'
+          }
+        });
+      }
+
+      res.json({
+        success: true,
+        message: 'Escrow restored successfully',
+        data: { displayId: result.rows[0].display_id }
+      });
+
+    } catch (error) {
+      console.error('Error restoring escrow:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'RESTORE_ERROR',
+          message: 'Failed to restore escrow',
+          details: error.message
+        }
+      });
+    }
+  }
+
+  /**
+   * Permanently delete an escrow (hard delete)
+   */
+  static async deleteEscrow(req, res) {
+    try {
+      const { id } = req.params;
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
+      // Only allow permanent delete of archived escrows
+      const result = await pool.query(
+        `DELETE FROM escrows
+         WHERE ${isUUID ? 'id = $1' : 'display_id = $1'}
+         AND deleted_at IS NOT NULL
+         RETURNING display_id`,
+        [id]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Escrow not found in archives. Only archived escrows can be permanently deleted.'
+          }
+        });
+      }
+
+      res.json({
+        success: true,
+        message: 'Escrow permanently deleted',
+        data: { displayId: result.rows[0].display_id }
+      });
+
+    } catch (error) {
+      console.error('Error permanently deleting escrow:', error);
       res.status(500).json({
         success: false,
         error: {
           code: 'DELETE_ERROR',
-          message: 'Failed to delete escrow',
+          message: 'Failed to permanently delete escrow',
           details: error.message
         }
       });

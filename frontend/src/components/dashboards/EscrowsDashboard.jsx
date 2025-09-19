@@ -68,6 +68,10 @@ import {
   ViewModule,
   ViewList,
   ViewAgenda,
+  Delete as DeleteIcon,
+  Archive as ArchiveIcon,
+  Restore as RestoreIcon,
+  DeleteForever as DeleteForeverIcon,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
@@ -273,10 +277,11 @@ const MiniContactCard = ({ title, name, initials, color = '#2196f3' }) => (
 );
 
 // Enhanced escrow card component with stunning visuals
-const EscrowCard = ({ escrow, onClick, index, onChecklistUpdate }) => {
+const EscrowCard = ({ escrow, onClick, index, onChecklistUpdate, onArchive, onRestore, onDelete, isArchived }) => {
   const theme = useTheme();
   const [localEscrow, setLocalEscrow] = useState(escrow);
-  
+  const [archiving, setArchiving] = useState(false);
+
   // Update local state when escrow prop changes
   useEffect(() => {
     setLocalEscrow(escrow);
@@ -511,13 +516,70 @@ const EscrowCard = ({ escrow, onClick, index, onChecklistUpdate }) => {
                 sx={{
                   position: 'absolute',
                   top: 12,
-                  right: 12,
+                  right: isArchived ? 60 : 12,
                   background: alpha(statusColor, 0.95),
                   color: 'white',
                   fontWeight: 600,
                   fontSize: '0.75rem',
                 }}
               />
+
+              {/* Archive/Delete buttons */}
+              {!isArchived ? (
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setArchiving(true);
+                    onArchive && onArchive(escrow.id);
+                  }}
+                  disabled={archiving}
+                  sx={{
+                    position: 'absolute',
+                    top: 8,
+                    right: 8,
+                    backgroundColor: alpha('#ff9800', 0.1),
+                    '&:hover': {
+                      backgroundColor: alpha('#ff9800', 0.2),
+                    },
+                  }}
+                >
+                  {archiving ? <CircularProgress size={20} /> : <ArchiveIcon fontSize="small" />}
+                </IconButton>
+              ) : (
+                <Box sx={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 0.5 }}>
+                  <IconButton
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onRestore && onRestore(escrow.id);
+                    }}
+                    sx={{
+                      backgroundColor: alpha('#4caf50', 0.1),
+                      '&:hover': {
+                        backgroundColor: alpha('#4caf50', 0.2),
+                      },
+                    }}
+                  >
+                    <RestoreIcon fontSize="small" />
+                  </IconButton>
+                  <IconButton
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDelete && onDelete(escrow.id);
+                    }}
+                    sx={{
+                      backgroundColor: alpha('#f44336', 0.1),
+                      '&:hover': {
+                        backgroundColor: alpha('#f44336', 0.2),
+                      },
+                    }}
+                  >
+                    <DeleteForeverIcon fontSize="small" />
+                  </IconButton>
+                </Box>
+              )}
               
               {/* Zillow button if URL exists */}
               {(escrow.zillowUrl || escrow.zillow_url) && (
@@ -1075,10 +1137,12 @@ const EscrowsDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [escrows, setEscrows] = useState([]);
+  const [archivedEscrows, setArchivedEscrows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showNewEscrowModal, setShowNewEscrowModal] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState('active');
   const [viewMode, setViewMode] = useState('optimized'); // 'optimized', 'compact', 'detailed'
+  const [archivedCount, setArchivedCount] = useState(0);
   const [stats, setStats] = useState({
     totalEscrows: 0,
     activeEscrows: 0,
@@ -1116,22 +1180,24 @@ const EscrowsDashboard = () => {
     try {
       setLoading(true);
       console.log('Fetching escrows...');
-      const response = await escrowsAPI.getAll();
+
+      // Fetch active escrows
+      const response = await escrowsAPI.getAll({ archived: 'false' });
       console.log('API Response:', response);
-      
+
+      // Fetch archived escrows
+      const archivedResponse = await escrowsAPI.getAll({ archived: 'true' });
+
       if (response.success) {
         const escrowData = response.data.escrows || [];
-        console.log('Escrows found:', escrowData.length);
-        
-        // Log ID information for debugging
-        if (escrowData.length > 0) {
-          console.log('Sample escrow IDs:');
-          escrowData.slice(0, 3).forEach((esc, idx) => {
-            console.log(`  ${idx + 1}. id: ${esc.id}, displayId: ${esc.displayId}`);
-          });
-        }
-        
+        const archivedData = archivedResponse.success ? archivedResponse.data.escrows || [] : [];
+
+        console.log('Active escrows found:', escrowData.length);
+        console.log('Archived escrows found:', archivedData.length);
+
         setEscrows(escrowData);
+        setArchivedEscrows(archivedData);
+        setArchivedCount(archivedData.length);
         calculateStats(escrowData, selectedStatus);
         generateChartData(escrowData);
       } else {
@@ -1346,17 +1412,67 @@ const EscrowsDashboard = () => {
     try {
       // Update the checklist via API
       await escrowsAPI.updateChecklist(escrowId, updatedChecklists);
-      
+
       // Update local state to reflect the change
-      setEscrows(prevEscrows => 
-        prevEscrows.map(esc => 
-          esc.id === escrowId 
+      setEscrows(prevEscrows =>
+        prevEscrows.map(esc =>
+          esc.id === escrowId
             ? { ...esc, checklists: updatedChecklists }
             : esc
         )
       );
     } catch (error) {
       console.error('Failed to update checklist:', error);
+    }
+  };
+
+  const handleArchive = async (escrowId) => {
+    try {
+      const response = await escrowsAPI.archive(escrowId);
+      if (response.success) {
+        // Move escrow from active to archived
+        const archivedEscrow = escrows.find(e => e.id === escrowId);
+        if (archivedEscrow) {
+          setEscrows(prev => prev.filter(e => e.id !== escrowId));
+          setArchivedEscrows(prev => [...prev, archivedEscrow]);
+          setArchivedCount(prev => prev + 1);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to archive escrow:', error);
+    }
+  };
+
+  const handleRestore = async (escrowId) => {
+    try {
+      const response = await escrowsAPI.restore(escrowId);
+      if (response.success) {
+        // Move escrow from archived to active
+        const restoredEscrow = archivedEscrows.find(e => e.id === escrowId);
+        if (restoredEscrow) {
+          setArchivedEscrows(prev => prev.filter(e => e.id !== escrowId));
+          setEscrows(prev => [...prev, restoredEscrow]);
+          setArchivedCount(prev => Math.max(0, prev - 1));
+        }
+      }
+    } catch (error) {
+      console.error('Failed to restore escrow:', error);
+    }
+  };
+
+  const handlePermanentDelete = async (escrowId) => {
+    if (!window.confirm('Are you sure you want to permanently delete this escrow? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await escrowsAPI.delete(escrowId);
+      if (response.success) {
+        setArchivedEscrows(prev => prev.filter(e => e.id !== escrowId));
+        setArchivedCount(prev => Math.max(0, prev - 1));
+      }
+    } catch (error) {
+      console.error('Failed to permanently delete escrow:', error);
     }
   };
 
@@ -1611,6 +1727,13 @@ const EscrowsDashboard = () => {
           <Tab label="Active Escrows" value="active" />
           <Tab label="Closed Escrows" value="closed" />
           <Tab label="Cancelled Escrows" value="cancelled" />
+          <Tab
+            label={`Archived Escrows${archivedCount > 0 ? ` (${archivedCount})` : ''}`}
+            value="archived"
+            sx={{
+              color: selectedStatus === 'archived' ? 'warning.main' : 'text.secondary'
+            }}
+          />
         </Tabs>
       </Box>
 
@@ -1829,34 +1952,107 @@ const EscrowsDashboard = () => {
       </Box>
 
       {/* Escrow Cards */}
-      <Box sx={{ 
+      <Box sx={{
         display: viewMode === 'optimized' ? 'grid' : 'flex',
         flexDirection: 'column',
         gridTemplateColumns: viewMode === 'optimized' ? 'repeat(auto-fill, minmax(400px, 1fr))' : undefined,
-        gap: 2 
+        gap: 2
       }}>
         <AnimatePresence>
           {(() => {
+            // If archived tab is selected, show archived escrows
+            if (selectedStatus === 'archived') {
+              if (!archivedEscrows || archivedEscrows.length === 0) {
+                return (
+                  <Paper
+                    sx={{
+                      p: 6,
+                      textAlign: 'center',
+                      background: theme => alpha(theme.palette.warning.main, 0.03),
+                      border: theme => `1px solid ${alpha(theme.palette.warning.main, 0.1)}`,
+                      gridColumn: '1 / -1',
+                    }}
+                  >
+                    <Typography variant="h6" color="textSecondary" gutterBottom>
+                      No archived escrows
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      Archived escrows will appear here
+                    </Typography>
+                  </Paper>
+                );
+              }
+
+              return archivedEscrows.map((escrow, index) => {
+                if (viewMode === 'optimized') {
+                  return (
+                    <EscrowCardOptimized
+                      key={escrow.id}
+                      escrow={escrow}
+                      index={index}
+                      showCommission={true}
+                      isArchived={true}
+                      onQuickAction={(action, escrowData) => {
+                        if (action === 'view') {
+                          handleEscrowClick(escrowData.id);
+                        } else if (action === 'restore') {
+                          handleRestore(escrowData.id);
+                        } else if (action === 'delete') {
+                          handlePermanentDelete(escrowData.id);
+                        }
+                      }}
+                    />
+                  );
+                } else if (viewMode === 'compact') {
+                  return (
+                    <EscrowCompactCard
+                      key={escrow.id}
+                      escrow={escrow}
+                      index={index}
+                      showCommission={true}
+                      isArchived={true}
+                      onRestore={() => handleRestore(escrow.id)}
+                      onDelete={() => handlePermanentDelete(escrow.id)}
+                    />
+                  );
+                } else {
+                  return (
+                    <EscrowCard
+                      key={escrow.id}
+                      escrow={escrow}
+                      onClick={handleEscrowClick}
+                      onChecklistUpdate={handleChecklistUpdate}
+                      onRestore={handleRestore}
+                      onDelete={handlePermanentDelete}
+                      isArchived={true}
+                      index={index}
+                    />
+                  );
+                }
+              });
+            }
+
+            // Otherwise show regular escrows filtered by status
             const filteredEscrows = escrows.filter(e => {
               switch (selectedStatus) {
                 case 'active':
-                  return e.escrowStatus === 'Active Under Contract' || 
+                  return e.escrowStatus === 'Active Under Contract' ||
                          e.escrowStatus === 'active under contract' ||
-                         e.escrowStatus === 'Pending' || 
+                         e.escrowStatus === 'Pending' ||
                          e.escrowStatus === 'pending' ||
-                         e.escrowStatus === 'Active' || 
+                         e.escrowStatus === 'Active' ||
                          e.escrowStatus === 'active';
                 case 'closed':
-                  return e.escrowStatus === 'Closed' || 
+                  return e.escrowStatus === 'Closed' ||
                          e.escrowStatus === 'closed' ||
-                         e.escrowStatus === 'Completed' || 
+                         e.escrowStatus === 'Completed' ||
                          e.escrowStatus === 'completed';
                 case 'cancelled':
-                  return e.escrowStatus === 'Cancelled' || 
+                  return e.escrowStatus === 'Cancelled' ||
                          e.escrowStatus === 'cancelled' ||
-                         e.escrowStatus === 'Withdrawn' || 
+                         e.escrowStatus === 'Withdrawn' ||
                          e.escrowStatus === 'withdrawn' ||
-                         e.escrowStatus === 'Expired' || 
+                         e.escrowStatus === 'Expired' ||
                          e.escrowStatus === 'expired';
                 default:
                   return true;
@@ -1895,8 +2091,9 @@ const EscrowsDashboard = () => {
                       onQuickAction={(action, escrowData) => {
                         if (action === 'view') {
                           handleEscrowClick(escrowData.id);
+                        } else if (action === 'archive') {
+                          handleArchive(escrowData.id);
                         }
-                        // Handle other quick actions here
                       }}
                     />
                   );
@@ -1917,6 +2114,8 @@ const EscrowsDashboard = () => {
                       escrow={escrow}
                       onClick={handleEscrowClick}
                       onChecklistUpdate={handleChecklistUpdate}
+                      onArchive={handleArchive}
+                      isArchived={false}
                       index={index}
                     />
                   );

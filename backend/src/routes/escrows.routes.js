@@ -114,7 +114,27 @@ router.put(
   escrowsController.updateEscrow
 );
 
-// DELETE /v1/escrows/:id
+// Archive (soft delete) escrow - PUT /v1/escrows/:id/archive
+router.put(
+  '/:id/archive',
+  [
+    param('id').notEmpty().withMessage('Escrow ID is required')
+  ],
+  validationMiddleware,
+  escrowsController.archiveEscrow
+);
+
+// Restore archived escrow - PUT /v1/escrows/:id/restore
+router.put(
+  '/:id/restore',
+  [
+    param('id').notEmpty().withMessage('Escrow ID is required')
+  ],
+  validationMiddleware,
+  escrowsController.restoreEscrow
+);
+
+// Permanently delete escrow (only archived ones) - DELETE /v1/escrows/:id
 router.delete(
   '/:id',
   [
