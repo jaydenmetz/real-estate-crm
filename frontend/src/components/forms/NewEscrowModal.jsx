@@ -28,6 +28,8 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
   const [addressSuggestions, setAddressSuggestions] = useState([]);
   const [loadingAddress, setLoadingAddress] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState(null);
+  const [manualEntry, setManualEntry] = useState(false);
+  const [addressSearchText, setAddressSearchText] = useState('');
   const addressInputRef = useRef(null);
 
   const [formData, setFormData] = useState({
@@ -163,6 +165,17 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Validate that either an address was selected or manual entry is complete
+    if (!manualEntry && !selectedAddress) {
+      setError('Please select an address from the suggestions or choose "Enter address manually"');
+      return;
+    }
+
+    if (manualEntry && (!formData.propertyAddress || !formData.city || !formData.state || !formData.zipCode)) {
+      setError('Please fill in all address fields');
+      return;
+    }
+
     if (!formData.propertyAddress) {
       setError('Please select or enter a property address');
       return;
@@ -219,6 +232,8 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
       });
       setSelectedAddress(null);
       setAddressSuggestions([]);
+      setManualEntry(false);
+      setAddressSearchText('');
       setError('');
       onClose();
     }
@@ -228,11 +243,43 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
     return (
       <Box>
         <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-          Enter the property address to quickly create a new escrow. You can add more details after creation.
+          Search for the property address or enter it manually.
         </Typography>
 
-        {/* Google Places or Nominatim Autocomplete */}
-        {GOOGLE_API_KEY ? (
+        {/* Toggle for manual entry */}
+        <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Button
+            size="small"
+            variant={manualEntry ? 'contained' : 'outlined'}
+            onClick={() => {
+              setManualEntry(!manualEntry);
+              setSelectedAddress(null);
+              if (!manualEntry) {
+                // Clear form when switching to manual
+                setFormData({
+                  propertyAddress: '',
+                  city: '',
+                  state: 'CA',
+                  zipCode: '',
+                  county: '',
+                });
+              }
+            }}
+            startIcon={<LocationOn />}
+          >
+            {manualEntry ? 'Search for Address' : 'Enter Address Manually'}
+          </Button>
+          {!manualEntry && addressSearchText && !selectedAddress && (
+            <Typography variant="caption" color="error">
+              Please select an address from the list
+            </Typography>
+          )}
+        </Box>
+
+        {/* Address input based on mode */}
+        {!manualEntry ? (
+          // Search mode
+          GOOGLE_API_KEY ? (
           <TextField
             inputRef={addressInputRef}
             fullWidth
@@ -245,7 +292,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             InputProps={{
               startAdornment: <LocationOn sx={{ mr: 1, color: 'action.active' }} />,
             }}
-            helperText="Full address with street number, street name, city, state, and zip"
+            helperText="Start typing to search for addresses"
           />
         ) : (
           <Autocomplete
@@ -253,6 +300,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             options={addressSuggestions}
             loading={loadingAddress}
             onInputChange={(event, value) => {
+              setAddressSearchText(value);
               setFormData({ ...formData, propertyAddress: value });
               fetchAddressSuggestions(value);
             }}
@@ -276,14 +324,60 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
                     </>
                   ),
                 }}
-                helperText="Full address with street number, street name, city, state, and zip"
+                helperText="Start typing to search for addresses"
               />
             )}
           />
+        )
+        ) : (
+          // Manual entry mode
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              fullWidth
+              label="Street Address"
+              placeholder="e.g., 325 Flower Street"
+              value={formData.propertyAddress}
+              onChange={(e) => setFormData({ ...formData, propertyAddress: e.target.value })}
+              required
+              variant="outlined"
+            />
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                label="City"
+                placeholder="Bakersfield"
+                value={formData.city}
+                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                required
+                sx={{ flex: 2 }}
+              />
+              <TextField
+                label="State"
+                value={formData.state}
+                onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                required
+                sx={{ flex: 1 }}
+              />
+              <TextField
+                label="ZIP Code"
+                placeholder="93301"
+                value={formData.zipCode}
+                onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
+                required
+                sx={{ flex: 1 }}
+              />
+            </Box>
+            <TextField
+              fullWidth
+              label="County (optional)"
+              placeholder="Kern"
+              value={formData.county}
+              onChange={(e) => setFormData({ ...formData, county: e.target.value })}
+            />
+          </Box>
         )}
 
         {/* Show parsed address details if available */}
-        {(formData.city || formData.state || formData.zipCode) && (
+        {!manualEntry && selectedAddress && (formData.city || formData.state || formData.zipCode) && (
           <Paper
             elevation={0}
             sx={{
