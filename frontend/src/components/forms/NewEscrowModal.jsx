@@ -184,7 +184,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
     } finally {
       setLoadingAddress(false);
     }
-  }, 300);
+  }, 100); // Reduced from 300ms to 100ms for faster response
 
   const handleAddressSelect = (event, value) => {
     if (value && typeof value === 'object' && value.value) {
