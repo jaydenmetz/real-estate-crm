@@ -125,16 +125,29 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
       );
 
       const data = await response.json();
+
+      // Handle error responses
+      if (data.error) {
+        console.error('Nominatim error:', data.error);
+        setAddressSuggestions([]);
+        return;
+      }
+
       const suggestions = data.map(item => ({
         label: item.display_name,
         value: {
           address: item.address?.house_number ?
             `${item.address.house_number} ${item.address.road || ''}`.trim() :
             item.address?.road || '',
-          city: item.address?.city || item.address?.town || item.address?.village || '',
+          // Better city extraction - check multiple fields
+          city: item.address?.city ||
+                item.address?.town ||
+                item.address?.village ||
+                item.address?.hamlet ||
+                'Bakersfield',  // Default to Bakersfield if no city found
           state: item.address?.state || 'CA',
           zipCode: item.address?.postcode || '',
-          county: item.address?.county || '',
+          county: item.address?.county?.replace(' County', '') || 'Kern',
           lat: item.lat,
           lon: item.lon,
         }
@@ -149,7 +162,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
   }, 300);
 
   const handleAddressSelect = (event, value) => {
-    if (value && value.value) {
+    if (value && typeof value === 'object' && value.value) {
       setFormData({
         propertyAddress: value.value.address,
         city: value.value.city,
@@ -158,6 +171,10 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         county: value.value.county,
       });
       setSelectedAddress(value);
+      setAddressSearchText(value.label);
+    } else if (typeof value === 'string') {
+      // User typed something custom
+      setSelectedAddress(null);
     }
   };
 
@@ -298,12 +315,35 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             freeSolo
             options={addressSuggestions}
             loading={loadingAddress}
-            onInputChange={(event, value) => {
+            value={selectedAddress}
+            inputValue={addressSearchText}
+            onInputChange={(event, value, reason) => {
               setAddressSearchText(value);
-              setFormData({ ...formData, propertyAddress: value });
-              fetchAddressSuggestions(value);
+              if (reason === 'input') {
+                setFormData({ ...formData, propertyAddress: value });
+                fetchAddressSuggestions(value);
+              }
             }}
             onChange={handleAddressSelect}
+            getOptionLabel={(option) => {
+              return typeof option === 'string' ? option : option.label || '';
+            }}
+            isOptionEqualToValue={(option, value) => {
+              return option.label === value?.label;
+            }}
+            renderOption={(props, option) => (
+              <Box component="li" {...props}>
+                <LocationOn sx={{ mr: 2, flexShrink: 0, color: 'action.active' }} />
+                <Box>
+                  <Typography variant="body2">
+                    {option.value.address}
+                  </Typography>
+                  <Typography variant="caption" color="text.secondary">
+                    {option.value.city}, {option.value.state} {option.value.zipCode}
+                  </Typography>
+                </Box>
+              </Box>
+            )}
             renderInput={(params) => (
               <TextField
                 {...params}
