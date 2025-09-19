@@ -136,7 +136,6 @@ function App() {
           unsubscribe = websocketService.on('connection', (data) => {
             if (data.status === 'connected') {
               console.log('✅ WebSocket connected successfully');
-              websocketService.send('ai:requestTeamStatus');
             } else if (data.status === 'failed') {
               console.error('❌ WebSocket connection failed:', data.error);
             }

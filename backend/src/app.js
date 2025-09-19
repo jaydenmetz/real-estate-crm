@@ -257,14 +257,12 @@ apiRouter.use('/leads', require('./routes/leads.routes'));
 apiRouter.use('/analytics', require('./routes/analytics.routes'));
 apiRouter.use('/communications', require('./routes/communications.routes'));
 apiRouter.use('/documents', require('./routes/documents.routes'));
-apiRouter.use('/ai', require('./routes/ai.routes'));
 apiRouter.use('/webhooks', require('./routes/webhooks.routes')); // Webhooks bypass auth for external services
 
 // Debug and test routes (development only)
 if (process.env.NODE_ENV === 'development') {
   apiRouter.use('/debug', authenticate, require('./routes/debug.routes'));
-  apiRouter.use('/test-connection', require('./routes/test-connection'));
-  apiRouter.use('/simple-test', require('./routes/simple-test'));
+  // Removed missing test routes
 }
 apiRouter.use('/link-preview', authenticate, require('./routes/linkPreview.routes'));
 

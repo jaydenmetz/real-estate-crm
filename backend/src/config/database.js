@@ -1,14 +1,12 @@
 const { Pool } = require('pg');
 const logger = require('../utils/logger');
 
-// Use Railway database URL in production, local DATABASE_URL in development
-const connectionString = process.env.NODE_ENV === 'production' 
-  ? (process.env.RAILWAY_DATABASE_URL || process.env.DATABASE_URL)
-  : process.env.DATABASE_URL;
+// Use Railway database URL for both production and development
+const connectionString = process.env.DATABASE_URL;
 
 const pool = new Pool({
   connectionString: connectionString,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  ssl: connectionString && connectionString.includes('railway') ? { rejectUnauthorized: false } : false,
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,
