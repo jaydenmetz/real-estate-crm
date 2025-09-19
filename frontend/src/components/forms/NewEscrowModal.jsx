@@ -138,8 +138,8 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         label: item.display_name,
         value: {
           address: item.address?.house_number ?
-            `${item.address.house_number} ${item.address.road || ''}`.trim() :
-            item.address?.road || '',
+            `${item.address.house_number} ${item.address.road || item.name || ''}`.trim() :
+            (item.address?.road || item.name || ''),
           // Better city extraction - check multiple fields
           city: item.address?.city ||
                 item.address?.town ||
@@ -154,6 +154,8 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         }
       }));
 
+      console.log('Mapped suggestions:', suggestions);
+      console.log('Setting addressSuggestions to:', suggestions.length, 'items');
       setAddressSuggestions(suggestions);
     } catch (error) {
       console.error('Error fetching address suggestions:', error);
@@ -318,6 +320,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             loading={loadingAddress}
             value={selectedAddress}
             inputValue={addressSearchText}
+            open={addressSuggestions.length > 0}
             onInputChange={(event, value, reason) => {
               setAddressSearchText(value);
               if (reason === 'input') {
