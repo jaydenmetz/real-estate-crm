@@ -251,53 +251,52 @@ const EscrowCardOptimized = ({ escrow, index = 0, showCommission = true, onQuick
           {/* Main Content */}
           <CardContent sx={{ flex: 1, p: 2, pb: 1, position: 'relative' }}>
             {/* Archive/Delete Icon - Top Right Corner */}
-            {!isArchived ? (
-              <IconButton
-                size="small"
-                className="quick-actions no-navigate"
-                onClick={(e) => handleQuickAction('archive', e)}
-                sx={{
-                  position: 'absolute',
-                  top: 8,
-                  right: 8,
-                  opacity: 0,
-                  transition: 'opacity 0.2s',
-                  bgcolor: alpha('#fff', 0.9),
-                  boxShadow: 1,
-                  '&:hover': {
-                    bgcolor: alpha('#ff9800', 0.1),
-                    '& .MuiSvgIcon-root': {
-                      color: '#ff9800',
-                    }
-                  },
-                }}
-              >
-                <DeleteOutline sx={{ fontSize: 18, color: 'text.secondary' }} />
-              </IconButton>
-            ) : (
-              <IconButton
-                size="small"
-                className="quick-actions no-navigate"
-                onClick={(e) => handleQuickAction('restore', e)}
-                sx={{
-                  position: 'absolute',
-                  top: 8,
-                  right: 8,
-                  opacity: 0,
-                  transition: 'opacity 0.2s',
-                  bgcolor: alpha('#4caf50', 0.1),
-                  boxShadow: 1,
-                  '&:hover': {
-                    bgcolor: alpha('#4caf50', 0.2),
-                    '& .MuiSvgIcon-root': {
-                      color: '#4caf50',
-                    }
-                  },
-                }}
-              >
-                <RestoreIcon sx={{ fontSize: 18, color: '#4caf50' }} />
-              </IconButton>
-            )}
+            <Box
+              className="quick-actions no-navigate"
+              sx={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                opacity: 0,
+                transition: 'opacity 0.2s',
+              }}
+            >
+              {!isArchived ? (
+                <IconButton
+                  size="small"
+                  onClick={(e) => handleQuickAction('archive', e)}
+                  sx={{
+                    bgcolor: 'background.paper',
+                    boxShadow: 2,
+                    '&:hover': {
+                      bgcolor: alpha('#ff9800', 0.1),
+                      '& .MuiSvgIcon-root': {
+                        color: '#ff9800',
+                      }
+                    },
+                  }}
+                >
+                  <DeleteOutline sx={{ fontSize: 20 }} />
+                </IconButton>
+              ) : (
+                <IconButton
+                  size="small"
+                  onClick={(e) => handleQuickAction('restore', e)}
+                  sx={{
+                    bgcolor: 'background.paper',
+                    boxShadow: 2,
+                    '&:hover': {
+                      bgcolor: alpha('#4caf50', 0.1),
+                      '& .MuiSvgIcon-root': {
+                        color: '#4caf50',
+                      }
+                    },
+                  }}
+                >
+                  <RestoreIcon sx={{ fontSize: 20 }} />
+                </IconButton>
+              )}
+            </Box>
 
             <Stack spacing={1.5}>
               {/* Header: Address & ID */}
