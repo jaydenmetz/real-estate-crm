@@ -309,11 +309,17 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
 
   // Load Google Maps API if needed
   useEffect(() => {
-    if (GOOGLE_API_KEY && !window.google) {
+    if (GOOGLE_API_KEY && GOOGLE_API_KEY !== 'YOUR_GOOGLE_API_KEY_HERE' && !window.google) {
       const script = document.createElement('script');
       script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_API_KEY}&libraries=places`;
       script.async = true;
       script.defer = true;
+      script.onload = () => {
+        console.log('Google Maps API loaded successfully');
+      };
+      script.onerror = () => {
+        console.error('Failed to load Google Maps API');
+      };
       document.head.appendChild(script);
     }
   }, [GOOGLE_API_KEY]);
