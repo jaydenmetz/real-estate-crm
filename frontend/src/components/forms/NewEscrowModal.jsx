@@ -42,9 +42,10 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
 
   // Use Google Places Autocomplete if API key is available
   const GOOGLE_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
+  const hasValidGoogleKey = GOOGLE_API_KEY && GOOGLE_API_KEY !== 'YOUR_GOOGLE_API_KEY_HERE';
 
   useEffect(() => {
-    if (open && GOOGLE_API_KEY && window.google && addressInputRef.current) {
+    if (open && hasValidGoogleKey && window.google && addressInputRef.current) {
       const autocomplete = new window.google.maps.places.Autocomplete(addressInputRef.current, {
         types: ['address'],
         componentRestrictions: { country: 'us' }
@@ -98,11 +99,11 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         window.google.maps.event.clearInstanceListeners(autocomplete);
       };
     }
-  }, [open, GOOGLE_API_KEY]);
+  }, [open, hasValidGoogleKey]);
 
   // Fallback to Nominatim if no Google API key
   const fetchAddressSuggestions = debounce(async (input) => {
-    if (GOOGLE_API_KEY) return; // Skip if using Google Places
+    if (hasValidGoogleKey) return; // Skip if using Google Places
 
     if (input.length < 3) {
       setAddressSuggestions([]);
@@ -295,7 +296,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         {/* Address input based on mode */}
         {!manualEntry ? (
           // Search mode
-          GOOGLE_API_KEY ? (
+          hasValidGoogleKey ? (
           <TextField
             inputRef={addressInputRef}
             fullWidth
@@ -447,7 +448,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
 
   // Load Google Maps API if needed
   useEffect(() => {
-    if (GOOGLE_API_KEY && GOOGLE_API_KEY !== 'YOUR_GOOGLE_API_KEY_HERE' && !window.google) {
+    if (hasValidGoogleKey && !window.google) {
       const script = document.createElement('script');
       script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_API_KEY}&libraries=places`;
       script.async = true;
@@ -460,7 +461,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
       };
       document.head.appendChild(script);
     }
-  }, [GOOGLE_API_KEY]);
+  }, [hasValidGoogleKey]);
 
   return (
     <Dialog
