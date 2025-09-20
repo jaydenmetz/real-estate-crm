@@ -186,25 +186,26 @@ function DebugCard({ pageType = 'dashboard', pageData = {} }) {
     setTestingInProgress(true);
     const tests = [];
     const API_URL = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
-    const token = localStorage.getItem('crm_auth_token') || 
+    const token = localStorage.getItem('crm_auth_token') ||
                  localStorage.getItem('authToken') ||
                  localStorage.getItem('token');
+    const apiKey = localStorage.getItem('apiKey');
     
     // Test 1: Get Escrow Details
     const escrowTest = {
       name: 'Get Escrow Details',
       description: `Fetch escrow data for ID: ${pageData.id}`,
       status: 'pending',
-      curl: `curl -X GET "${API_URL}/v1/escrows/${pageData.id}" -H "Authorization: Bearer ${token ? '***' : 'NO_TOKEN'}"`,
+      curl: `curl -X GET "${API_URL}/v1/escrows/${pageData.id}" -H "X-API-Key: ${apiKey ? '***' : 'NO_API_KEY'}"`,
       response: null,
       error: null,
       latency: 0
     };
-    
+
     try {
       const startTime = Date.now();
       const response = await fetch(`${API_URL}/v1/escrows/${pageData.id}`, {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        headers: apiKey ? { 'X-API-Key': apiKey } : {}
       });
       escrowTest.latency = Date.now() - startTime;
       const data = await response.json();
@@ -224,7 +225,7 @@ function DebugCard({ pageType = 'dashboard', pageData = {} }) {
       name: 'Get Escrow Timeline',
       description: 'Fetch timeline events for the escrow',
       status: 'pending',
-      curl: `curl -X GET "${API_URL}/v1/escrows/${pageData.id}/timeline" -H "Authorization: Bearer ${token ? '***' : 'NO_TOKEN'}"`,
+      curl: `curl -X GET "${API_URL}/v1/escrows/${pageData.id}/timeline" -H "X-API-Key: ${apiKey ? '***' : 'NO_API_KEY'}"`,
       response: null,
       error: null,
       latency: 0
@@ -233,13 +234,19 @@ function DebugCard({ pageType = 'dashboard', pageData = {} }) {
     try {
       const startTime = Date.now();
       const response = await fetch(`${API_URL}/v1/escrows/${pageData.id}/timeline`, {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        headers: apiKey ? { 'X-API-Key': apiKey } : {}
       });
       timelineTest.latency = Date.now() - startTime;
       const data = await response.json();
       timelineTest.status = response.ok && data.success ? 'success' : 'failed';
       timelineTest.response = data;
-      if (!response.ok || !data.success) {
+      if (!response.ok) {
+        if (response.status === 404) {
+          timelineTest.error = 'Endpoint not found - feature may not be implemented yet';
+        } else {
+          timelineTest.error = data.error?.message || `HTTP ${response.status} - Failed to fetch timeline`;
+        }
+      } else if (!data.success) {
         timelineTest.error = data.error?.message || 'Failed to fetch timeline';
       }
     } catch (error) {
@@ -253,7 +260,7 @@ function DebugCard({ pageType = 'dashboard', pageData = {} }) {
       name: 'Get Escrow People',
       description: 'Fetch people associated with the escrow',
       status: 'pending',
-      curl: `curl -X GET "${API_URL}/v1/escrows/${pageData.id}/people" -H "Authorization: Bearer ${token ? '***' : 'NO_TOKEN'}"`,
+      curl: `curl -X GET "${API_URL}/v1/escrows/${pageData.id}/people" -H "X-API-Key: ${apiKey ? '***' : 'NO_API_KEY'}"`,
       response: null,
       error: null,
       latency: 0
@@ -262,7 +269,7 @@ function DebugCard({ pageType = 'dashboard', pageData = {} }) {
     try {
       const startTime = Date.now();
       const response = await fetch(`${API_URL}/v1/escrows/${pageData.id}/people`, {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        headers: apiKey ? { 'X-API-Key': apiKey } : {}
       });
       peopleTest.latency = Date.now() - startTime;
       const data = await response.json();
@@ -282,7 +289,7 @@ function DebugCard({ pageType = 'dashboard', pageData = {} }) {
       name: 'Get Escrow Financials',
       description: 'Fetch financial information for the escrow',
       status: 'pending',
-      curl: `curl -X GET "${API_URL}/v1/escrows/${pageData.id}/financials" -H "Authorization: Bearer ${token ? '***' : 'NO_TOKEN'}"`,
+      curl: `curl -X GET "${API_URL}/v1/escrows/${pageData.id}/financials" -H "X-API-Key: ${apiKey ? '***' : 'NO_API_KEY'}"`,
       response: null,
       error: null,
       latency: 0
@@ -291,7 +298,7 @@ function DebugCard({ pageType = 'dashboard', pageData = {} }) {
     try {
       const startTime = Date.now();
       const response = await fetch(`${API_URL}/v1/escrows/${pageData.id}/financials`, {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        headers: apiKey ? { 'X-API-Key': apiKey } : {}
       });
       financialsTest.latency = Date.now() - startTime;
       const data = await response.json();
@@ -311,7 +318,7 @@ function DebugCard({ pageType = 'dashboard', pageData = {} }) {
       name: 'Get Escrow Checklists',
       description: 'Fetch checklists for the escrow',
       status: 'pending',
-      curl: `curl -X GET "${API_URL}/v1/escrows/${pageData.id}/checklists" -H "Authorization: Bearer ${token ? '***' : 'NO_TOKEN'}"`,
+      curl: `curl -X GET "${API_URL}/v1/escrows/${pageData.id}/checklists" -H "X-API-Key: ${apiKey ? '***' : 'NO_API_KEY'}"`,
       response: null,
       error: null,
       latency: 0
@@ -320,7 +327,7 @@ function DebugCard({ pageType = 'dashboard', pageData = {} }) {
     try {
       const startTime = Date.now();
       const response = await fetch(`${API_URL}/v1/escrows/${pageData.id}/checklists`, {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        headers: apiKey ? { 'X-API-Key': apiKey } : {}
       });
       checklistsTest.latency = Date.now() - startTime;
       const data = await response.json();
@@ -340,7 +347,7 @@ function DebugCard({ pageType = 'dashboard', pageData = {} }) {
       name: 'Get Escrow Documents',
       description: 'Fetch documents associated with the escrow',
       status: 'pending',
-      curl: `curl -X GET "${API_URL}/v1/documents?entityType=escrow&entityId=${pageData.id}" -H "Authorization: Bearer ${token ? '***' : 'NO_TOKEN'}"`,
+      curl: `curl -X GET "${API_URL}/v1/documents?entityType=escrow&entityId=${pageData.id}" -H "X-API-Key: ${apiKey ? '***' : 'NO_API_KEY'}"`,
       response: null,
       error: null,
       latency: 0
@@ -349,7 +356,7 @@ function DebugCard({ pageType = 'dashboard', pageData = {} }) {
     try {
       const startTime = Date.now();
       const response = await fetch(`${API_URL}/v1/documents?entityType=escrow&entityId=${pageData.id}`, {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        headers: apiKey ? { 'X-API-Key': apiKey } : {}
       });
       documentsTest.latency = Date.now() - startTime;
       const data = await response.json();
@@ -369,7 +376,7 @@ function DebugCard({ pageType = 'dashboard', pageData = {} }) {
       name: 'Get Escrow Notes',
       description: 'Fetch notes for the escrow',
       status: 'pending',
-      curl: `curl -X GET "${API_URL}/v1/escrows/${pageData.id}/notes" -H "Authorization: Bearer ${token ? '***' : 'NO_TOKEN'}"`,
+      curl: `curl -X GET "${API_URL}/v1/escrows/${pageData.id}/notes" -H "X-API-Key: ${apiKey ? '***' : 'NO_API_KEY'}"`,
       response: null,
       error: null,
       latency: 0
@@ -378,7 +385,7 @@ function DebugCard({ pageType = 'dashboard', pageData = {} }) {
     try {
       const startTime = Date.now();
       const response = await fetch(`${API_URL}/v1/escrows/${pageData.id}/notes`, {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+        headers: apiKey ? { 'X-API-Key': apiKey } : {}
       });
       notesTest.latency = Date.now() - startTime;
       const data = await response.json();
