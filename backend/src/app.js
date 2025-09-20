@@ -2,8 +2,11 @@ require('dotenv').config();
 
 const express = require('express');
 const helmet = require('helmet');
+const compression = require('compression');
 const cors = require('cors');
-const rateLimit = require('./middleware/rateLimit.middleware');
+const { apiRateLimiter, authRateLimiter } = require('./middleware/enhancedRateLimit.middleware');
+const { preventSQLInjection } = require('./middleware/sqlInjectionPrevention.middleware');
+const { auditLog } = require('./middleware/auditLog.middleware');
 const logger = require('./utils/logger');
 const websocketService = require('./services/websocket.service');
 const { initializeDatabase } = require('./config/database');
@@ -36,16 +39,37 @@ if (process.env.NODE_ENV === 'production') {
   app.set('trust proxy', true);
 }
 
+// Enable compression for all responses
+app.use(compression({
+  filter: (req, res) => {
+    if (req.headers['x-no-compression']) {
+      return false;
+    }
+    return compression.filter(req, res);
+  },
+  level: 6 // Balanced compression level
+}));
+
+// Enhanced security headers
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      connectSrc: ["'self'", "ws:", "wss:"],
-      scriptSrc: ["'self'", "'unsafe-inline'"],
+      connectSrc: ["'self'", "wss:", "https:"],
+      scriptSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "https:"],
+      fontSrc: ["'self'", "https:", "data:"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: [],
     },
   },
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true
+  },
+  referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
 }));
 
 const corsOptions = {
@@ -93,8 +117,10 @@ app.use(express.urlencoded({
   limit: '10mb' 
 }));
 
-// Enhanced request logging
-app.use(requestLogging);
+// Security middleware stack
+app.use(preventSQLInjection); // SQL injection prevention
+app.use(requestLogging); // Request logging
+app.use(auditLog()); // Audit logging for compliance
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static('uploads'));
@@ -185,10 +211,10 @@ app.get('/ws/status', (req, res) => {
 const { authenticate } = require('./middleware/apiKey.middleware');
 
 const apiRouter = express.Router();
-apiRouter.use(rateLimit);
+apiRouter.use(apiRateLimiter); // Enhanced rate limiting
 
-// Public routes (no authentication required)
-apiRouter.use('/auth', require('./routes/auth.routes').router);
+// Public routes with auth-specific rate limiting
+apiRouter.use('/auth', authRateLimiter, require('./routes/auth.routes').router);
 apiRouter.use('/health', require('./routes/system-health.routes')); // Comprehensive system health checks
 
 // Super simple test endpoint for debugging (bypass all middleware)
@@ -196,29 +222,9 @@ apiRouter.get('/test-endpoint', (req, res) => {
   res.json({ success: true, message: 'Test endpoint works' });
 });
 
-// Hardcoded API key for testing
-const TEST_API_KEY = 'test_api_key_3f8a2b1c9d5e7f0a4b6c8d2e4f6a8b0c1d3e5f7a9b1c3d5e7f9a0b2c4d6e8f0a';
+// API key validation moved to environment variables
 
-apiRouter.get('/test-escrows', (req, res) => {
-  const apiKey = req.headers['x-api-key'] || req.headers['api-key'];
-  
-  if (apiKey === TEST_API_KEY) {
-    res.json({
-      success: true,
-      data: {
-        escrows: [
-          { id: 'ESC-2025-001', property_address: '123 Test St' },
-          { id: 'ESC-2025-002', property_address: '456 Test Ave' }
-        ]
-      }
-    });
-  } else {
-    res.status(401).json({
-      success: false,
-      error: { message: 'Invalid API key' }
-    });
-  }
-});
+// Test endpoint removed for security
 
 apiRouter.post('/test-login', (req, res) => {
   const { email, password } = req.body;

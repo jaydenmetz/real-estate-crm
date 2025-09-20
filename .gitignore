@@ -58,5 +58,17 @@ public/uploads/
 .env.*
 !.env.example
 !.env.production.example
+.env.generated
+.env.vault
+.env.me
+
+# Security files - CRITICAL
+*.key
+*.pem
+*.crt
+*.cer
+private/
+secrets/
+credentials/
 all-code.txt
 combine.sh
