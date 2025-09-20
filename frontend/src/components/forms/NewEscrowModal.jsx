@@ -123,7 +123,8 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
     }
 
     // Clear suggestions immediately if input is too short
-    if (!input || input.length < 2) {
+    // Allow single digit for address numbers
+    if (!input || input.length < 1) {
       setAddressSuggestions([]);
       setLoadingAddress(false);
       return;
@@ -143,15 +144,21 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         let searchQuery;
         const cleanInput = input.trim();
 
-        // Check if input is ONLY numbers (like "325")
+        // Check if input is ONLY numbers (like "325" or "3")
         const isOnlyNumbers = /^\d+$/.test(cleanInput);
-        // Check if input starts with number and has text (like "325 flow")
-        const startsWithNumber = /^\d+\s+\w+/.test(cleanInput);
+        // Check if input starts with number and has text (like "325 flow" or "325 F")
+        const startsWithNumber = /^\d+\s+/.test(cleanInput);
+        // Check if it's a number with a single letter (common in Bakersfield like "325 F")
+        const isNumberPlusSingleLetter = /^\d+\s+[A-Za-z]$/.test(cleanInput);
 
         if (isOnlyNumbers) {
           // Just numbers - we need to search for all streets with this number
           // Nominatim doesn't handle this well, so we'll try with common street names
           searchQuery = `${input} *, Bakersfield, CA`;
+        } else if (isNumberPlusSingleLetter) {
+          // Special case for Bakersfield's lettered streets (like "325 F")
+          // Add "Street" to help Nominatim find it
+          searchQuery = `${input} Street, Bakersfield, CA`;
         } else if (startsWithNumber) {
           // Has number and partial street name - search as-is
           searchQuery = input.includes(',') ? input : `${input}, Bakersfield, CA`;
@@ -198,8 +205,41 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
           // Try common street suffixes
           const streetTypes = ['street', 'drive', 'avenue', 'road', 'court', 'lane', 'way', 'boulevard', 'circle', 'place'];
 
+          // Special handling for number + single letter (like "325 F")
+          if (isNumberPlusSingleLetter) {
+            // Try just "Street" and "Avenue" for lettered streets
+            const letterStreetTypes = ['Street', 'Avenue'];
+            for (const streetType of letterStreetTypes) {
+              if (controller.signal.aborted) break;
+
+              const fallbackQuery = `${input} ${streetType}, Bakersfield, CA`;
+              const fallbackResponse = await fetch(
+                `https://nominatim.openstreetmap.org/search?` +
+                `q=${encodeURIComponent(fallbackQuery)}&` +
+                `format=json&` +
+                `countrycodes=us&` +
+                `limit=5&` +
+                `addressdetails=1&` +
+                `viewbox=-119.2,35.5,-118.8,35.2&` +
+                `bounded=1`,
+                {
+                  signal: controller.signal,
+                  headers: {
+                    'Cache-Control': 'no-cache',
+                  }
+                }
+              );
+
+              if (!controller.signal.aborted) {
+                const fallbackData = await fallbackResponse.json();
+                if (fallbackData && fallbackData.length > 0) {
+                  data = [...data, ...fallbackData];
+                }
+              }
+            }
+          }
           // If it's only numbers, try common Bakersfield street names with that number
-          if (isOnlyNumbers) {
+          else if (isOnlyNumbers) {
             // Common Bakersfield streets to try with the number
             const commonStreets = ['Flower', 'California', 'Oak', 'Chester', 'Union', 'H', 'F', 'Ming', 'White', 'Rosedale', 'Coffee', 'Olive', 'Panama'];
 
