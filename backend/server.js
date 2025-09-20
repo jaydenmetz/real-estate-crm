@@ -1,7 +1,5 @@
-// Load environment variables based on NODE_ENV
-require('dotenv').config({
-  path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env.local'
-});
+// Load environment variables
+require('dotenv').config();
 
 const express = require('express');
 const { createServer } = require('http');
@@ -25,16 +23,20 @@ cronService.start();
 // Create default admin user on startup
 const createDefaultUser = async () => {
   try {
-    // Check if this is the first run (no users exist)
+    // Skip user creation if auth routes don't exist
+    logger.info('Skipping default user creation - using database users');
+    return;
+
+    /* Disabled - using database for users
     const authRoute = require('./src/routes/auth');
     const users = authRoute.users || {};
-    
+
     if (Object.keys(users).length === 0) {
       // Create Jayden Metz's account
       const passwordHash = await bcrypt.hash('Password123!', 10);
       const userId = 'user_default_admin';
       const apiKey = `jm_live_k3y_${Buffer.from('jaydenmetz:admin').toString('base64')}`;
-      
+
       const defaultUser = {
         id: userId,
         username: 'jaydenmetz',
@@ -48,6 +50,7 @@ const createDefaultUser = async () => {
           defaultDashboard: 'ai-agents',
           theme: 'light',
           emailNotifications: true,
+    */
           twoFactorEnabled: false,
           errorDisplay: 'detailed',
           timezone: 'America/Los_Angeles',
