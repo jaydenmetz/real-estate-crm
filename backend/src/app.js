@@ -4,6 +4,7 @@ const express = require('express');
 const helmet = require('helmet');
 const compression = require('compression');
 const cors = require('cors');
+const Sentry = require('@sentry/node');
 const { apiRateLimiter, authRateLimiter } = require('./middleware/enhancedRateLimit.middleware');
 const { preventSQLInjection } = require('./middleware/sqlInjectionPrevention.middleware');
 const { auditLog } = require('./middleware/auditLog.middleware');
@@ -270,6 +271,32 @@ if (process.env.NODE_ENV === 'development') {
   apiRouter.use('/debug', authenticate, require('./routes/debug.routes'));
   // Removed missing test routes
 }
+
+// Sentry test endpoint (available in all environments for testing)
+apiRouter.get('/debug-sentry', (req, res) => {
+  try {
+    // This will trigger a test error for Sentry
+    throw new Error('🧪 Sentry test error - This is a test error to verify Sentry is working correctly!');
+  } catch (error) {
+    // Let Sentry capture it and return a response
+    if (typeof Sentry !== 'undefined') {
+      Sentry.captureException(error, {
+        tags: { type: 'test-error' },
+        level: 'error',
+        user: req.user || { id: 'anonymous' }
+      });
+    }
+
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'SENTRY_TEST',
+        message: 'Sentry test error triggered successfully! Check your Sentry dashboard.'
+      },
+      timestamp: new Date().toISOString()
+    });
+  }
+});
 apiRouter.use('/link-preview', authenticate, require('./routes/linkPreview.routes'));
 
 // Financial routes
