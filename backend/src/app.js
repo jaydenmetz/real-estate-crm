@@ -742,7 +742,9 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Sentry error handler (must be before any other error middleware)
-Sentry.setupExpressErrorHandler(app);
+if (typeof Sentry !== 'undefined' && Sentry.setupExpressErrorHandler) {
+  Sentry.setupExpressErrorHandler(app);
+}
 
 app.use((req, res) => {
   res.status(404).json({
