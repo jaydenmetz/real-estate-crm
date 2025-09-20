@@ -55,6 +55,8 @@ const createDefaultUser = async () => {
           theme: 'light',
           emailNotifications: true,
     */
+    // Rest of commented out code
+    /*
           twoFactorEnabled: false,
           errorDisplay: 'detailed',
           timezone: 'America/Los_Angeles',
@@ -70,14 +72,15 @@ const createDefaultUser = async () => {
           photo: null
         }
       };
-      
+
       // Store the user
       users['jaydenmetz'] = defaultUser;
-      
+
       logger.info('✅ Default admin user created successfully');
       logger.info('📧 Username: jaydenmetz');
       logger.info('🔒 Use the password you configured to login');
     }
+    */
   } catch (error) {
     logger.error('Failed to create default user:', error);
   }
