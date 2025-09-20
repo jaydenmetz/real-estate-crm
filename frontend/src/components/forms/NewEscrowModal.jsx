@@ -20,8 +20,10 @@ import {
   Search,
 } from '@mui/icons-material';
 import { escrowsAPI } from '../../services/api.service';
+import { useAuth } from '../../contexts/AuthContext';
 
 const NewEscrowModal = ({ open, onClose, onSuccess }) => {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [addressSuggestions, setAddressSuggestions] = useState([]);
@@ -32,10 +34,18 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
   const addressInputRef = useRef(null);
   const abortControllerRef = useRef(null);
 
+  // Get user's location preferences with fallback to Bakersfield
+  const userCity = user?.home_city || 'Bakersfield';
+  const userState = user?.home_state || 'CA';
+  const userLat = user?.home_lat || 35.3733;
+  const userLng = user?.home_lng || -119.0187;
+  const licensedStates = user?.licensed_states || ['CA'];
+  const searchRadius = user?.search_radius_miles || 50;
+
   const [formData, setFormData] = useState({
     propertyAddress: '',
     city: '',
-    state: 'CA',
+    state: userState,
     zipCode: '',
     county: '',
   });
@@ -140,6 +150,15 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
     // Execute async fetch without await to avoid blocking
     (async () => {
       try {
+        // Calculate bounding box around user's location (in degrees, roughly)
+        // 1 degree latitude ≈ 69 miles, 1 degree longitude ≈ 55 miles (at 35° latitude)
+        const latRadius = searchRadius / 69;
+        const lngRadius = searchRadius / 55;
+        const minLat = userLat - latRadius;
+        const maxLat = userLat + latRadius;
+        const minLng = userLng - lngRadius;
+        const maxLng = userLng + lngRadius;
+
         // Smart query building for better partial matches
         let searchQuery;
         const cleanInput = input.trim();
@@ -148,23 +167,22 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         const isOnlyNumbers = /^\d+$/.test(cleanInput);
         // Check if input starts with number and has text (like "325 flow" or "325 F")
         const startsWithNumber = /^\d+\s+/.test(cleanInput);
-        // Check if it's a number with a single letter (common in Bakersfield like "325 F")
+        // Check if it's a number with a single letter (common for lettered streets like "325 F")
         const isNumberPlusSingleLetter = /^\d+\s+[A-Za-z]$/.test(cleanInput);
 
         if (isOnlyNumbers) {
-          // Just numbers - we need to search for all streets with this number
-          // Nominatim doesn't handle this well, so we'll try with common street names
-          searchQuery = `${input} *, Bakersfield, CA`;
+          // Just numbers - search with user's city
+          searchQuery = `${input} *, ${userCity}, ${userState}`;
         } else if (isNumberPlusSingleLetter) {
-          // Special case for Bakersfield's lettered streets (like "325 F")
+          // Special case for lettered streets (like "325 F")
           // Add "Street" to help Nominatim find it
-          searchQuery = `${input} Street, Bakersfield, CA`;
+          searchQuery = `${input} Street, ${userCity}, ${userState}`;
         } else if (startsWithNumber) {
           // Has number and partial street name - search as-is
-          searchQuery = input.includes(',') ? input : `${input}, Bakersfield, CA`;
+          searchQuery = input.includes(',') ? input : `${input}, ${userCity}, ${userState}`;
         } else {
           // Just street name (no numbers) - search as-is first
-          searchQuery = `${input}, Bakersfield, CA`;
+          searchQuery = `${input}, ${userCity}, ${userState}`;
         }
 
         // Try primary search
@@ -175,7 +193,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
           `countrycodes=us&` +
           `limit=15&` +  // Increase limit for partial matches
           `addressdetails=1&` +
-          `viewbox=-119.2,35.5,-118.8,35.2&` +  // Bakersfield area bounding box
+          `viewbox=${minLng},${maxLat},${maxLng},${minLat}&` +  // Dynamic bounding box
           `bounded=0`,  // Prefer results in box but don't exclude others
           {
             signal: controller.signal,
@@ -212,7 +230,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             for (const streetType of letterStreetTypes) {
               if (controller.signal.aborted) break;
 
-              const fallbackQuery = `${input} ${streetType}, Bakersfield, CA`;
+              const fallbackQuery = `${input} ${streetType}, ${userCity}, ${userState}`;
               const fallbackResponse = await fetch(
                 `https://nominatim.openstreetmap.org/search?` +
                 `q=${encodeURIComponent(fallbackQuery)}&` +
@@ -220,7 +238,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
                 `countrycodes=us&` +
                 `limit=5&` +
                 `addressdetails=1&` +
-                `viewbox=-119.2,35.5,-118.8,35.2&` +
+                `viewbox=${minLng},${maxLat},${maxLng},${minLat}&` +
                 `bounded=1`,
                 {
                   signal: controller.signal,
@@ -238,10 +256,10 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
               }
             }
           }
-          // If it's only numbers, try common Bakersfield street names with that number
+          // If it's only numbers, try common street names in user's city with that number
           else if (isOnlyNumbers) {
-            // Common Bakersfield streets to try with the number
-            const commonStreets = ['Flower', 'California', 'Oak', 'Chester', 'Union', 'H', 'F', 'Ming', 'White', 'Rosedale', 'Coffee', 'Olive', 'Panama'];
+            // Common street names to try with the number (generic names that exist in most cities)
+            const commonStreets = ['Main', 'First', 'Second', 'Oak', 'Elm', 'Park', 'Washington', 'Lincoln', 'Market', 'Church', 'State', 'Center'];
 
             for (const streetName of commonStreets) {
               if (controller.signal.aborted) break;
@@ -250,7 +268,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
               for (const streetType of streetTypes.slice(0, 3)) { // Just try street, drive, avenue for numbers
                 if (controller.signal.aborted) break;
 
-                const fallbackQuery = `${input} ${streetName} ${streetType}, Bakersfield, CA`;
+                const fallbackQuery = `${input} ${streetName} ${streetType}, ${userCity}, ${userState}`;
 
                 const fallbackResponse = await fetch(
                   `https://nominatim.openstreetmap.org/search?` +
@@ -259,8 +277,8 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
                   `countrycodes=us&` +
                   `limit=2&` +  // Just 2 per combination
                   `addressdetails=1&` +
-                  `viewbox=-119.2,35.5,-118.8,35.2&` +
-                  `bounded=1`,  // Strict to Bakersfield area for number searches
+                  `viewbox=${minLng},${maxLat},${maxLng},${minLat}&` +
+                  `bounded=1`,  // Strict to user's area for number searches
                   {
                     signal: controller.signal,
                     headers: {
@@ -282,7 +300,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             for (const streetType of streetTypes) {
               if (controller.signal.aborted) break;
 
-              const fallbackQuery = `${input} ${streetType}, Bakersfield, CA`;
+              const fallbackQuery = `${input} ${streetType}, ${userCity}, ${userState}`;
 
               const fallbackResponse = await fetch(
                 `https://nominatim.openstreetmap.org/search?` +
@@ -291,7 +309,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
                 `countrycodes=us&` +
                 `limit=5&` +  // Limit per street type
                 `addressdetails=1&` +
-                `viewbox=-119.2,35.5,-118.8,35.2&` +
+                `viewbox=${minLng},${maxLat},${maxLng},${minLat}&` +
                 `bounded=0`,
                 {
                   signal: controller.signal,
@@ -331,10 +349,10 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
                         item.address?.town ||
                         item.address?.village ||
                         item.address?.hamlet ||
-                        'Bakersfield';
+                        userCity;
 
-            const state = item.address?.state || 'California';
-            const stateAbbr = state === 'California' ? 'CA' : state;
+            const state = item.address?.state || userState;
+            const stateAbbr = state.length > 2 ? userState : state;
             const zipCode = item.address?.postcode || '';
 
             const label = `${fullAddress}, ${city}, ${stateAbbr} ${zipCode}`.trim();
@@ -348,7 +366,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
                   city: city,
                   state: stateAbbr,
                   zipCode: zipCode,
-                  county: item.address?.county?.replace(' County', '') || 'Kern',
+                  county: item.address?.county?.replace(' County', '') || '',
                   lat: item.lat,
                   lon: item.lon,
                 }

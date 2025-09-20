@@ -536,7 +536,19 @@ class AuthController {
     
     try {
       const userId = req.user.id;
-      const { firstName, lastName, currentPassword, newPassword } = req.body;
+      const {
+        firstName,
+        lastName,
+        currentPassword,
+        newPassword,
+        homeCity,
+        homeState,
+        homeZip,
+        homeLat,
+        homeLng,
+        licensedStates,
+        searchRadiusMiles
+      } = req.body;
       
       const updates = [];
       const values = [];
@@ -554,7 +566,50 @@ class AuthController {
         values.push(lastName);
         paramIndex++;
       }
-      
+
+      // Location preferences
+      if (homeCity) {
+        updates.push(`home_city = $${paramIndex}`);
+        values.push(homeCity);
+        paramIndex++;
+      }
+
+      if (homeState) {
+        updates.push(`home_state = $${paramIndex}`);
+        values.push(homeState);
+        paramIndex++;
+      }
+
+      if (homeZip) {
+        updates.push(`home_zip = $${paramIndex}`);
+        values.push(homeZip);
+        paramIndex++;
+      }
+
+      if (homeLat !== undefined) {
+        updates.push(`home_lat = $${paramIndex}`);
+        values.push(homeLat);
+        paramIndex++;
+      }
+
+      if (homeLng !== undefined) {
+        updates.push(`home_lng = $${paramIndex}`);
+        values.push(homeLng);
+        paramIndex++;
+      }
+
+      if (licensedStates) {
+        updates.push(`licensed_states = $${paramIndex}`);
+        values.push(licensedStates);
+        paramIndex++;
+      }
+
+      if (searchRadiusMiles !== undefined) {
+        updates.push(`search_radius_miles = $${paramIndex}`);
+        values.push(searchRadiusMiles);
+        paramIndex++;
+      }
+
       // Handle password change
       if (newPassword) {
         if (!currentPassword) {
@@ -612,10 +667,12 @@ class AuthController {
       values.push(userId);
       
       const updateQuery = `
-        UPDATE users 
+        UPDATE users
         SET ${updates.join(', ')}
         WHERE id = $${paramIndex}
-        RETURNING id, email, first_name, last_name, role, is_active
+        RETURNING id, email, first_name, last_name, role, is_active,
+                  home_city, home_state, home_zip, home_lat, home_lng,
+                  licensed_states, search_radius_miles
       `;
       
       const result = await client.query(updateQuery, values);
@@ -629,7 +686,14 @@ class AuthController {
           firstName: user.first_name,
           lastName: user.last_name,
           role: user.role,
-          isActive: user.is_active
+          isActive: user.is_active,
+          home_city: user.home_city,
+          home_state: user.home_state,
+          home_zip: user.home_zip,
+          home_lat: user.home_lat,
+          home_lng: user.home_lng,
+          licensed_states: user.licensed_states,
+          search_radius_miles: user.search_radius_miles
         },
         message: 'Profile updated successfully'
       });
