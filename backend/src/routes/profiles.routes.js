@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { pool } = require('../config/database');
 const { authenticate, optionalAuth } = require('../middleware/auth.middleware');
+const { authenticateApiKey } = require('../middleware/apiKey.middleware');
+const { authenticateAny } = require('../middleware/combinedAuth.middleware');
 
 // Get public profile by username
 router.get('/public/:username', optionalAuth, async (req, res) => {
@@ -158,19 +160,27 @@ router.get('/public/:username', optionalAuth, async (req, res) => {
   }
 });
 
-// Get own profile (authenticated)
-router.get('/me', authenticate, async (req, res) => {
+// Get own profile (authenticated - accepts both JWT and API key)
+router.get('/me', authenticateAny, async (req, res) => {
   try {
     const userId = req.user.id;
     
+    // Simplified query that only uses the users table
     const profileQuery = `
-      SELECT 
-        u.*,
-        p.*,
-        s.*
+      SELECT
+        u.id,
+        u.username,
+        u.email,
+        u.first_name,
+        u.last_name,
+        u.role,
+        u.team_id,
+        u.created_at,
+        u.updated_at,
+        u.is_active,
+        t.name as team_name
       FROM users u
-      LEFT JOIN user_profiles p ON u.id = p.user_id
-      LEFT JOIN user_settings s ON u.id = s.user_id
+      LEFT JOIN teams t ON u.team_id = t.id
       WHERE u.id = $1
     `;
     
@@ -203,8 +213,8 @@ router.get('/me', authenticate, async (req, res) => {
   }
 });
 
-// Update profile
-router.put('/me', authenticate, async (req, res) => {
+// Update profile (accepts both JWT and API key)
+router.put('/me', authenticateAny, async (req, res) => {
   try {
     const userId = req.user.id;
     const updates = req.body;
