@@ -28,8 +28,8 @@ Sentry.init({
   replaysSessionSampleRate: 0.1, // 10% of sessions
   replaysOnErrorSampleRate: 1.0, // 100% of sessions with errors
 
-  // Send default PII for better debugging
-  sendDefaultPii: false, // Privacy-first
+  // Send default PII for better debugging (includes IP addresses)
+  sendDefaultPii: true, // Enable for better error context
 
   integrations: [
     Sentry.browserTracingIntegration(),
