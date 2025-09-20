@@ -42,17 +42,12 @@ Sentry.init({
 
   // Before send hook for filtering
   beforeSend(event, hint) {
-    // Don't send events in development unless explicitly testing
-    if (process.env.NODE_ENV === 'development' && !window.SENTRY_TEST_MODE) {
-      console.log('Sentry event suppressed in development:', event);
-      return null;
-    }
-
     // Filter out non-critical network errors
     if (event.exception?.values?.[0]?.value?.includes('Load failed')) {
       return null;
     }
 
+    // Always send errors to Sentry (removed development filter)
     return event;
   },
 
