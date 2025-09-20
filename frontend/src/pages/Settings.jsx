@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import * as Sentry from '@sentry/react';
 import {
   Box,
   Container,
@@ -388,6 +389,7 @@ const Settings = () => {
                 <Tab icon={<Notifications />} label="Notifications" />
                 <Tab icon={<Palette />} label="Appearance" />
                 <Tab icon={<Security />} label="Privacy" />
+                <Tab icon={<WorkspacePremium />} label="Developer" />
               </Tabs>
             </Paper>
           </Grid>
@@ -885,6 +887,99 @@ const Settings = () => {
                 >
                   Save Privacy Settings
                 </Button>
+              </TabPanel>
+
+              {/* Developer Tab */}
+              <TabPanel value={activeTab} index={6}>
+                <Typography variant="h5" gutterBottom>
+                  Developer Tools
+                </Typography>
+                <Divider sx={{ mb: 3 }} />
+
+                <Alert severity="warning" sx={{ mb: 3 }}>
+                  These tools are for testing and debugging purposes only.
+                </Alert>
+
+                <Card sx={{ mb: 3 }}>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      🔍 Sentry Error Tracking Test
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" paragraph>
+                      Click the button below to trigger a test error that will be sent to Sentry.
+                      This helps verify that error tracking is working correctly.
+                    </Typography>
+                    <Stack direction="row" spacing={2}>
+                      <Button
+                        variant="contained"
+                        color="error"
+                        onClick={() => {
+                          throw new Error('This is your first Sentry error!');
+                        }}
+                        startIcon={<WorkspacePremium />}
+                      >
+                        Break the World (Frontend)
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        onClick={async () => {
+                          try {
+                            const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com'}/v1/debug-sentry`);
+                            const data = await response.text();
+                            setSnackbar({
+                              open: true,
+                              message: 'Backend error triggered! Check Sentry dashboard.',
+                              severity: 'info'
+                            });
+                          } catch (error) {
+                            setSnackbar({
+                              open: true,
+                              message: 'Backend test endpoint called!',
+                              severity: 'success'
+                            });
+                          }
+                        }}
+                      >
+                        Test Backend Error
+                      </Button>
+                    </Stack>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      📊 System Information
+                    </Typography>
+                    <List dense>
+                      <ListItem>
+                        <ListItemText
+                          primary="Environment"
+                          secondary={process.env.NODE_ENV}
+                        />
+                      </ListItem>
+                      <ListItem>
+                        <ListItemText
+                          primary="API URL"
+                          secondary={process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com'}
+                        />
+                      </ListItem>
+                      <ListItem>
+                        <ListItemText
+                          primary="Sentry Enabled"
+                          secondary={process.env.REACT_APP_SENTRY_DSN ? 'Yes ✅' : 'No ❌'}
+                        />
+                      </ListItem>
+                      <ListItem>
+                        <ListItemText
+                          primary="User ID"
+                          secondary={user?.id || 'Not logged in'}
+                        />
+                      </ListItem>
+                    </List>
+                  </CardContent>
+                </Card>
               </TabPanel>
             </Paper>
           </Grid>
