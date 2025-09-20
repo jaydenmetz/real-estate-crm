@@ -4,12 +4,11 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const appointmentsController = require('../controllers/appointments.controller');
-const { authenticate } = require('../middleware/apiKey.middleware');
-const { requirePermission } = require('../middleware/auth.middleware');
+const { authenticateAny } = require('../middleware/combinedAuth.middleware');
 const handleValidationErrors = require('../middleware/validation.middleware');
 
 // All routes require authentication
-router.use(authenticate);
+router.use(authenticateAny);
 
 // Validation rules
 const createValidation = [
@@ -27,11 +26,11 @@ const updateValidation = [
 ];
 
 // Routes
-router.get('/', requirePermission('appointments'), appointmentsController.getAppointments);
-router.get('/:id', requirePermission('appointments'), appointmentsController.getAppointment);
-router.post('/', requirePermission('appointments'), createValidation, handleValidationErrors, appointmentsController.createAppointment);
-router.put('/:id', requirePermission('appointments'), updateValidation, handleValidationErrors, appointmentsController.updateAppointment);
-router.post('/:id/cancel', requirePermission('appointments'), appointmentsController.cancelAppointment);
-router.post('/:id/complete', requirePermission('appointments'), appointmentsController.markComplete);
+router.get('/', appointmentsController.getAppointments);
+router.get('/:id', appointmentsController.getAppointment);
+router.post('/', createValidation, handleValidationErrors, appointmentsController.createAppointment);
+router.put('/:id', updateValidation, handleValidationErrors, appointmentsController.updateAppointment);
+router.post('/:id/cancel', appointmentsController.cancelAppointment);
+router.post('/:id/complete', appointmentsController.markComplete);
 
 module.exports = router;

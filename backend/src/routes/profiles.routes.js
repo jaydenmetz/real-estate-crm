@@ -177,10 +177,8 @@ router.get('/me', authenticateAny, async (req, res) => {
         u.team_id,
         u.created_at,
         u.updated_at,
-        u.is_active,
-        t.name as team_name
+        u.is_active
       FROM users u
-      LEFT JOIN teams t ON u.team_id = t.id
       WHERE u.id = $1
     `;
     
@@ -358,18 +356,22 @@ router.get('/statistics/:username', async (req, res) => {
         break;
     }
     
-    // Get statistics
+    // Get statistics with safer query
     const statsQuery = `
-      SELECT 
+      SELECT
         COUNT(*) FILTER (WHERE transaction_type = 'sale') as total_sales,
         COUNT(*) FILTER (WHERE transaction_type = 'purchase') as total_purchases,
-        SUM(purchase_price) FILTER (WHERE transaction_type = 'sale') as sales_volume,
-        AVG(EXTRACT(DAY FROM closing_date - opening_date)) as avg_escrow_days,
+        SUM(COALESCE(purchase_price, 0)) FILTER (WHERE transaction_type = 'sale') as sales_volume,
+        AVG(CASE
+          WHEN closing_date IS NOT NULL AND opening_date IS NOT NULL
+          THEN EXTRACT(DAY FROM closing_date - opening_date)
+          ELSE 0
+        END) as avg_escrow_days,
         COUNT(DISTINCT city) as cities_served,
         COUNT(DISTINCT EXTRACT(MONTH FROM closing_date)) as active_months
       FROM escrows
-      WHERE 
-        team_id = (SELECT team_id FROM users WHERE id = $1)
+      WHERE
+        team_id IN (SELECT team_id FROM users WHERE id = $1)
         AND escrow_status = 'closed'
         ${dateFilter}
     `;
