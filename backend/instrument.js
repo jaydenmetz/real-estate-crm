@@ -13,18 +13,8 @@ if (process.env.SENTRY_DSN) {
   tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
   // profilesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0, // Profiling disabled
 
-  // Integrations
-  integrations: [
-    // Express auto-instrumentation
-    new Sentry.Integrations.Http({ tracing: true }),
-    new Sentry.Integrations.Express({
-      app: true,
-      router: true,
-      middleware: true
-    }),
-    // Postgres tracking
-    new Sentry.Integrations.Postgres(),
-  ],
+  // Basic setup without integrations for now
+  // integrations: [],
 
   // Performance monitoring
   enableTracing: true,
