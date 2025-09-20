@@ -4,10 +4,14 @@ import * as Sentry from "@sentry/react";
 import App from './App';
 import './styles/globals.css';
 
+// Debug: Log the DSN to verify it's loaded
+console.log('🔍 Sentry DSN from env:', process.env.REACT_APP_SENTRY_DSN);
+
 // Initialize Sentry before anything else
 Sentry.init({
-  dsn: process.env.REACT_APP_SENTRY_DSN, // Set in Railway environment variables
+  dsn: process.env.REACT_APP_SENTRY_DSN || 'https://2d2e91e606017090b37b82c997bd3eb9@o4510050439200768.ingest.us.sentry.io/4510050490253312',
   environment: process.env.NODE_ENV || 'development',
+  debug: true, // Enable debug mode to see what's happening
 
   // Release configuration for release health
   release: process.env.REACT_APP_VERSION || 'real-estate-crm@1.0.0',
