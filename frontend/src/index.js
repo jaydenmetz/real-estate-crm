@@ -4,14 +4,17 @@ import * as Sentry from "@sentry/react";
 import App from './App';
 import './styles/globals.css';
 
-// Debug: Log the DSN to verify it's loaded
-console.log('🔍 Sentry DSN from env:', process.env.REACT_APP_SENTRY_DSN);
+// HARDCODED DSN - Railway env vars not working during build
+const SENTRY_DSN = 'https://2d2e91e606017090b37b82c997bd3eb9@o4510050439200768.ingest.us.sentry.io/4510050490253312';
+
+// Debug: Log to verify
+console.log('🔍 Sentry DSN:', SENTRY_DSN);
 
 // Initialize Sentry before anything else
 Sentry.init({
-  dsn: process.env.REACT_APP_SENTRY_DSN || 'https://2d2e91e606017090b37b82c997bd3eb9@o4510050439200768.ingest.us.sentry.io/4510050490253312',
+  dsn: SENTRY_DSN, // Hardcoded to ensure it works
   environment: process.env.NODE_ENV || 'development',
-  debug: true, // Enable debug mode to see what's happening
+  debug: false, // Disable debug mode in production
 
   // Release configuration for release health
   release: process.env.REACT_APP_VERSION || 'real-estate-crm@1.0.0',
@@ -70,6 +73,9 @@ Sentry.init({
 
 // Initialize network monitoring as early as possible
 import './services/networkMonitor.service';
+
+// Make Sentry globally available for debugging
+window.Sentry = Sentry;
 
 // Debug environment variables in development only
 if (process.env.NODE_ENV !== 'production') {
