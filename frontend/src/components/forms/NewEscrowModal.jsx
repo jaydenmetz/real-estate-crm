@@ -139,21 +139,37 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
     // Execute async fetch without await to avoid blocking
     (async () => {
       try {
-        // Add Bakersfield, CA to help with local searches if not already specified
-        const searchQuery = input.includes(',') ? input : `${input}, Bakersfield, CA`;
+        // Smart query building for better partial matches
+        let searchQuery;
+        const cleanInput = input.trim().toLowerCase();
 
+        // Check if input looks like it starts with a number (street address)
+        const startsWithNumber = /^\d+/.test(cleanInput);
+
+        if (startsWithNumber) {
+          // If it starts with a number, search as-is with city
+          searchQuery = input.includes(',') ? input : `${input}, Bakersfield, CA`;
+        } else {
+          // For partial street names, try multiple strategies
+          // For "flow" we want to find "Flower Street"
+          // Nominatim doesn't support true wildcards, but we can be creative
+
+          // First try: assume it's the start of a street name
+          searchQuery = `${input}, Bakersfield, CA`;
+        }
+
+        // Try primary search
         const response = await fetch(
           `https://nominatim.openstreetmap.org/search?` +
           `q=${encodeURIComponent(searchQuery)}&` +
           `format=json&` +
           `countrycodes=us&` +
-          `limit=10&` +  // Reduced for faster response
+          `limit=15&` +  // Increase limit for partial matches
           `addressdetails=1&` +
           `viewbox=-119.2,35.5,-118.8,35.2&` +  // Bakersfield area bounding box
           `bounded=0`,  // Prefer results in box but don't exclude others
           {
             signal: controller.signal,
-            // Add cache control for faster responses
             headers: {
               'Cache-Control': 'no-cache',
             }
@@ -163,7 +179,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         // Check if this request was aborted before processing
         if (controller.signal.aborted) return;
 
-        const data = await response.json();
+        let data = await response.json();
 
         // Handle error responses
         if (data.error) {
@@ -175,10 +191,53 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
           return;
         }
 
+        // If no results and input is partial street name, try different variations
+        if (data.length === 0 && !startsWithNumber && !input.includes(',')) {
+          // Try common street suffixes
+          const streetTypes = ['street', 'drive', 'avenue', 'road', 'court', 'lane', 'way', 'boulevard'];
+
+          for (const streetType of streetTypes) {
+            if (controller.signal.aborted) break;
+
+            const fallbackQuery = `${input} ${streetType}, Bakersfield, CA`;
+
+            const fallbackResponse = await fetch(
+              `https://nominatim.openstreetmap.org/search?` +
+              `q=${encodeURIComponent(fallbackQuery)}&` +
+              `format=json&` +
+              `countrycodes=us&` +
+              `limit=5&` +  // Limit per street type
+              `addressdetails=1&` +
+              `viewbox=-119.2,35.5,-118.8,35.2&` +
+              `bounded=0`,
+              {
+                signal: controller.signal,
+                headers: {
+                  'Cache-Control': 'no-cache',
+                }
+              }
+            );
+
+            if (!controller.signal.aborted) {
+              const fallbackData = await fallbackResponse.json();
+              if (fallbackData && fallbackData.length > 0) {
+                // Combine results from different street types
+                data = [...data, ...fallbackData];
+              }
+            }
+          }
+        }
+
         // Process results FAST
-        const suggestions = data
-          .filter(item => item.address?.road || item.name)
-          .map(item => {
+        const uniqueAddresses = new Map();
+
+        // Process and deduplicate results
+        data
+          .filter(item => {
+            // More lenient filtering - include results that have any address component
+            return item.address?.road || item.address?.house_number || item.name || item.address?.street;
+          })
+          .forEach(item => {
             const streetNumber = item.address?.house_number || '';
             const streetName = item.address?.road || item.name || '';
             const fullAddress = streetNumber ?
@@ -195,19 +254,27 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             const stateAbbr = state === 'California' ? 'CA' : state;
             const zipCode = item.address?.postcode || '';
 
-            return {
-              label: `${fullAddress}, ${city}, ${stateAbbr} ${zipCode}`.trim(),
-              value: {
-                address: fullAddress,
-                city: city,
-                state: stateAbbr,
-                zipCode: zipCode,
-                county: item.address?.county?.replace(' County', '') || 'Kern',
-                lat: item.lat,
-                lon: item.lon,
-              }
-            };
+            const label = `${fullAddress}, ${city}, ${stateAbbr} ${zipCode}`.trim();
+
+            // Use label as key to avoid duplicates
+            if (!uniqueAddresses.has(label)) {
+              uniqueAddresses.set(label, {
+                label: label,
+                value: {
+                  address: fullAddress,
+                  city: city,
+                  state: stateAbbr,
+                  zipCode: zipCode,
+                  county: item.address?.county?.replace(' County', '') || 'Kern',
+                  lat: item.lat,
+                  lon: item.lon,
+                }
+              });
+            }
           });
+
+        // Convert to array and limit results
+        const suggestions = Array.from(uniqueAddresses.values()).slice(0, 15);
 
         // Only update if this request wasn't aborted
         if (!controller.signal.aborted) {
