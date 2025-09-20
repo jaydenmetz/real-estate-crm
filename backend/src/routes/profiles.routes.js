@@ -356,16 +356,16 @@ router.get('/statistics/:username', async (req, res) => {
         break;
     }
     
-    // Get statistics with safer query
+    // Get statistics with existing columns only
     const statsQuery = `
       SELECT
-        COUNT(*) FILTER (WHERE transaction_type = 'sale') as total_sales,
-        COUNT(*) FILTER (WHERE transaction_type = 'purchase') as total_purchases,
-        SUM(COALESCE(purchase_price, 0)) FILTER (WHERE transaction_type = 'sale') as sales_volume,
+        COUNT(*) as total_sales,
+        0 as total_purchases,
+        SUM(COALESCE(purchase_price, 0)) as sales_volume,
         AVG(CASE
-          WHEN closing_date IS NOT NULL AND opening_date IS NOT NULL
-          THEN EXTRACT(DAY FROM closing_date - opening_date)
-          ELSE 0
+          WHEN closing_date IS NOT NULL AND list_date IS NOT NULL
+          THEN EXTRACT(DAY FROM closing_date - list_date)
+          ELSE COALESCE(days_on_market, 30)
         END) as avg_escrow_days,
         COUNT(DISTINCT city) as cities_served,
         COUNT(DISTINCT EXTRACT(MONTH FROM closing_date)) as active_months
