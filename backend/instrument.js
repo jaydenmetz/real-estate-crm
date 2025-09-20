@@ -1,20 +1,20 @@
 const Sentry = require("@sentry/node");
-const { nodeProfilingIntegration } = require("@sentry/profiling-node");
+// Profiling removed - not needed for basic error tracking
+// const { nodeProfilingIntegration } = require("@sentry/profiling-node");
 
-// Initialize Sentry before anything else
-Sentry.init({
-  dsn: process.env.SENTRY_DSN, // Set in Railway environment variables
+// Initialize Sentry before anything else (if DSN is provided)
+if (process.env.SENTRY_DSN) {
+  Sentry.init({
+    dsn: process.env.SENTRY_DSN, // Set in Railway environment variables
 
   environment: process.env.NODE_ENV || 'development',
 
   // Set sampling rates
   tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
-  profilesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+  // profilesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0, // Profiling disabled
 
   // Integrations
   integrations: [
-    // Add profiling
-    nodeProfilingIntegration(),
     // Express auto-instrumentation
     new Sentry.Integrations.Http({ tracing: true }),
     new Sentry.Integrations.Express({
@@ -76,6 +76,9 @@ Sentry.init({
     'Failed to fetch',
     'ResizeObserver loop limit exceeded',
   ],
-});
+  });
 
-console.log('✅ Sentry instrumentation initialized');
+  console.log('✅ Sentry instrumentation initialized');
+} else {
+  console.log('ℹ️ Sentry not configured (no DSN provided)');
+}
