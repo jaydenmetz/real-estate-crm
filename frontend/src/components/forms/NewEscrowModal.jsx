@@ -31,7 +31,6 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
   const [addressSearchText, setAddressSearchText] = useState('');
   const addressInputRef = useRef(null);
   const abortControllerRef = useRef(null);
-  const searchTimeoutRef = useRef(null);
 
   const [formData, setFormData] = useState({
     propertyAddress: '',
@@ -108,130 +107,126 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
       // Cancel any pending requests when component unmounts
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
-      }
-      // Clear any pending timeouts
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
+        abortControllerRef.current = null;
       }
     };
   }, []);
 
-  // Fallback to Nominatim if no Google API key - with request cancellation
-  const fetchAddressSuggestions = useCallback(async (input) => {
+  // Fallback to Nominatim if no Google API key - ZERO DELAY implementation
+  const fetchAddressSuggestions = useCallback((input) => {
     if (hasValidGoogleKey) return; // Skip if using Google Places
 
-    // Cancel previous request if it exists
+    // Cancel ANY previous request immediately
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
+      abortControllerRef.current = null;
     }
 
-    // Allow searching even with 2 characters for street numbers
-    if (input.length < 2) {
+    // Clear suggestions immediately if input is too short
+    if (!input || input.length < 2) {
       setAddressSuggestions([]);
+      setLoadingAddress(false);
       return;
     }
 
     // Create new abort controller for this request
-    abortControllerRef.current = new AbortController();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
+    // Start loading immediately (optimistic UI)
     setLoadingAddress(true);
-    try {
-      // Add Bakersfield, CA to help with local searches if not already specified
-      const searchQuery = input.includes(',') ? input : `${input}, Bakersfield, CA`;
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?` +
-        `q=${encodeURIComponent(searchQuery)}&` +
-        `format=json&` +
-        `countrycodes=us&` +
-        `limit=15&` +  // Increase limit to get more results
-        `addressdetails=1&` +
-        `viewbox=-119.2,35.5,-118.8,35.2&` +  // Bakersfield area bounding box
-        `bounded=0`,  // Prefer results in box but don't exclude others
-        { signal: abortControllerRef.current.signal }
-      );
 
-      const data = await response.json();
+    // Execute async fetch without await to avoid blocking
+    (async () => {
+      try {
+        // Add Bakersfield, CA to help with local searches if not already specified
+        const searchQuery = input.includes(',') ? input : `${input}, Bakersfield, CA`;
 
-      // Handle error responses
-      if (data.error) {
-        console.error('Nominatim error:', data.error);
-        setAddressSuggestions([]);
-        return;
-      }
-
-      const suggestions = data
-        .filter(item => {
-          // Only include results that have a road/street name
-          return item.address?.road || item.name;
-        })
-        .map(item => {
-          // Build the street address
-          const streetNumber = item.address?.house_number || '';
-          const streetName = item.address?.road || item.name || '';
-          const fullAddress = streetNumber ?
-            `${streetNumber} ${streetName}`.trim() :
-            streetName;
-
-          // Get city name from various fields
-          const city = item.address?.city ||
-                      item.address?.town ||
-                      item.address?.village ||
-                      item.address?.hamlet ||
-                      'Bakersfield';
-
-          const state = item.address?.state || 'California';
-          const stateAbbr = state === 'California' ? 'CA' : state;
-          const zipCode = item.address?.postcode || '';
-
-          // Create a shorter display label
-          const shortLabel = fullAddress ?
-            `${fullAddress}, ${city}, ${stateAbbr} ${zipCode}`.trim() :
-            item.display_name;
-
-          return {
-            label: shortLabel,
-            value: {
-              address: fullAddress,
-              city: city,
-              state: stateAbbr,
-              zipCode: zipCode,
-              county: item.address?.county?.replace(' County', '') || 'Kern',
-              lat: item.lat,
-              lon: item.lon,
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?` +
+          `q=${encodeURIComponent(searchQuery)}&` +
+          `format=json&` +
+          `countrycodes=us&` +
+          `limit=10&` +  // Reduced for faster response
+          `addressdetails=1&` +
+          `viewbox=-119.2,35.5,-118.8,35.2&` +  // Bakersfield area bounding box
+          `bounded=0`,  // Prefer results in box but don't exclude others
+          {
+            signal: controller.signal,
+            // Add cache control for faster responses
+            headers: {
+              'Cache-Control': 'no-cache',
             }
-          };
-        });
+          }
+        );
 
-      setAddressSuggestions(suggestions);
-    } catch (error) {
-      // Don't log abort errors (they're expected when canceling)
-      if (error.name !== 'AbortError') {
-        console.error('Error fetching address suggestions:', error);
+        // Check if this request was aborted before processing
+        if (controller.signal.aborted) return;
+
+        const data = await response.json();
+
+        // Handle error responses
+        if (data.error) {
+          console.error('Nominatim error:', data.error);
+          if (!controller.signal.aborted) {
+            setAddressSuggestions([]);
+            setLoadingAddress(false);
+          }
+          return;
+        }
+
+        // Process results FAST
+        const suggestions = data
+          .filter(item => item.address?.road || item.name)
+          .map(item => {
+            const streetNumber = item.address?.house_number || '';
+            const streetName = item.address?.road || item.name || '';
+            const fullAddress = streetNumber ?
+              `${streetNumber} ${streetName}`.trim() :
+              streetName;
+
+            const city = item.address?.city ||
+                        item.address?.town ||
+                        item.address?.village ||
+                        item.address?.hamlet ||
+                        'Bakersfield';
+
+            const state = item.address?.state || 'California';
+            const stateAbbr = state === 'California' ? 'CA' : state;
+            const zipCode = item.address?.postcode || '';
+
+            return {
+              label: `${fullAddress}, ${city}, ${stateAbbr} ${zipCode}`.trim(),
+              value: {
+                address: fullAddress,
+                city: city,
+                state: stateAbbr,
+                zipCode: zipCode,
+                county: item.address?.county?.replace(' County', '') || 'Kern',
+                lat: item.lat,
+                lon: item.lon,
+              }
+            };
+          });
+
+        // Only update if this request wasn't aborted
+        if (!controller.signal.aborted) {
+          setAddressSuggestions(suggestions);
+          setLoadingAddress(false);
+        }
+      } catch (error) {
+        // Silently ignore abort errors
+        if (error.name !== 'AbortError') {
+          console.error('Error fetching address suggestions:', error);
+          if (!controller.signal.aborted) {
+            setAddressSuggestions([]);
+            setLoadingAddress(false);
+          }
+        }
       }
-      // Clear suggestions on error unless it was an abort
-      if (error.name !== 'AbortError') {
-        setAddressSuggestions([]);
-      }
-    } finally {
-      // Only set loading false if this wasn't aborted
-      if (!abortControllerRef.current?.signal.aborted) {
-        setLoadingAddress(false);
-      }
-    }
+    })(); // Execute immediately
   }, [hasValidGoogleKey]);
 
-  // Debounced version with cancellation
-  const debouncedFetchSuggestions = useCallback((input) => {
-    // Clear any existing timeout
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-
-    // Set new timeout for debounce
-    searchTimeoutRef.current = setTimeout(() => {
-      fetchAddressSuggestions(input);
-    }, 50); // Very short debounce - just to batch rapid keystrokes
-  }, [fetchAddressSuggestions]);
 
   const handleAddressSelect = (event, value) => {
     if (value && typeof value === 'object' && value.value) {
@@ -393,7 +388,8 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
               if (reason === 'input') {
                 setFormData({ ...formData, propertyAddress: value });
                 setSelectedAddress(null);
-                debouncedFetchSuggestions(value);
+                // Call directly - NO DEBOUNCE for instant response
+                fetchAddressSuggestions(value);
               }
             }}
             onChange={handleAddressSelect}
