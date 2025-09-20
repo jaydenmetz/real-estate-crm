@@ -141,20 +141,22 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
       try {
         // Smart query building for better partial matches
         let searchQuery;
-        const cleanInput = input.trim().toLowerCase();
+        const cleanInput = input.trim();
 
-        // Check if input looks like it starts with a number (street address)
-        const startsWithNumber = /^\d+/.test(cleanInput);
+        // Check if input is ONLY numbers (like "325")
+        const isOnlyNumbers = /^\d+$/.test(cleanInput);
+        // Check if input starts with number and has text (like "325 flow")
+        const startsWithNumber = /^\d+\s+\w+/.test(cleanInput);
 
-        if (startsWithNumber) {
-          // If it starts with a number, search as-is with city
+        if (isOnlyNumbers) {
+          // Just numbers - we need to search for all streets with this number
+          // Nominatim doesn't handle this well, so we'll try with common street names
+          searchQuery = `${input} *, Bakersfield, CA`;
+        } else if (startsWithNumber) {
+          // Has number and partial street name - search as-is
           searchQuery = input.includes(',') ? input : `${input}, Bakersfield, CA`;
         } else {
-          // For partial street names, try multiple strategies
-          // For "flow" we want to find "Flower Street"
-          // Nominatim doesn't support true wildcards, but we can be creative
-
-          // First try: assume it's the start of a street name
+          // Just street name (no numbers) - search as-is first
           searchQuery = `${input}, Bakersfield, CA`;
         }
 
@@ -191,38 +193,79 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
           return;
         }
 
-        // If no results and input is partial street name, try different variations
-        if (data.length === 0 && !startsWithNumber && !input.includes(',')) {
+        // If no results, try different search strategies based on input type
+        if (data.length === 0 && !input.includes(',')) {
           // Try common street suffixes
-          const streetTypes = ['street', 'drive', 'avenue', 'road', 'court', 'lane', 'way', 'boulevard'];
+          const streetTypes = ['street', 'drive', 'avenue', 'road', 'court', 'lane', 'way', 'boulevard', 'circle', 'place'];
 
-          for (const streetType of streetTypes) {
-            if (controller.signal.aborted) break;
+          // If it's only numbers, try common Bakersfield street names with that number
+          if (isOnlyNumbers) {
+            // Common Bakersfield streets to try with the number
+            const commonStreets = ['Flower', 'California', 'Oak', 'Chester', 'Union', 'H', 'F', 'Ming', 'White', 'Rosedale', 'Coffee', 'Olive', 'Panama'];
 
-            const fallbackQuery = `${input} ${streetType}, Bakersfield, CA`;
+            for (const streetName of commonStreets) {
+              if (controller.signal.aborted) break;
 
-            const fallbackResponse = await fetch(
-              `https://nominatim.openstreetmap.org/search?` +
-              `q=${encodeURIComponent(fallbackQuery)}&` +
-              `format=json&` +
-              `countrycodes=us&` +
-              `limit=5&` +  // Limit per street type
-              `addressdetails=1&` +
-              `viewbox=-119.2,35.5,-118.8,35.2&` +
-              `bounded=0`,
-              {
-                signal: controller.signal,
-                headers: {
-                  'Cache-Control': 'no-cache',
+              // Try with different street types
+              for (const streetType of streetTypes.slice(0, 3)) { // Just try street, drive, avenue for numbers
+                if (controller.signal.aborted) break;
+
+                const fallbackQuery = `${input} ${streetName} ${streetType}, Bakersfield, CA`;
+
+                const fallbackResponse = await fetch(
+                  `https://nominatim.openstreetmap.org/search?` +
+                  `q=${encodeURIComponent(fallbackQuery)}&` +
+                  `format=json&` +
+                  `countrycodes=us&` +
+                  `limit=2&` +  // Just 2 per combination
+                  `addressdetails=1&` +
+                  `viewbox=-119.2,35.5,-118.8,35.2&` +
+                  `bounded=1`,  // Strict to Bakersfield area for number searches
+                  {
+                    signal: controller.signal,
+                    headers: {
+                      'Cache-Control': 'no-cache',
+                    }
+                  }
+                );
+
+                if (!controller.signal.aborted) {
+                  const fallbackData = await fallbackResponse.json();
+                  if (fallbackData && fallbackData.length > 0) {
+                    data = [...data, ...fallbackData];
+                  }
                 }
               }
-            );
+            }
+          } else if (!startsWithNumber) {
+            // For partial street names (not starting with numbers)
+            for (const streetType of streetTypes) {
+              if (controller.signal.aborted) break;
 
-            if (!controller.signal.aborted) {
-              const fallbackData = await fallbackResponse.json();
-              if (fallbackData && fallbackData.length > 0) {
-                // Combine results from different street types
-                data = [...data, ...fallbackData];
+              const fallbackQuery = `${input} ${streetType}, Bakersfield, CA`;
+
+              const fallbackResponse = await fetch(
+                `https://nominatim.openstreetmap.org/search?` +
+                `q=${encodeURIComponent(fallbackQuery)}&` +
+                `format=json&` +
+                `countrycodes=us&` +
+                `limit=5&` +  // Limit per street type
+                `addressdetails=1&` +
+                `viewbox=-119.2,35.5,-118.8,35.2&` +
+                `bounded=0`,
+                {
+                  signal: controller.signal,
+                  headers: {
+                    'Cache-Control': 'no-cache',
+                  }
+                }
+              );
+
+              if (!controller.signal.aborted) {
+                const fallbackData = await fallbackResponse.json();
+                if (fallbackData && fallbackData.length > 0) {
+                  data = [...data, ...fallbackData];
+                }
               }
             }
           }
