@@ -3,12 +3,19 @@
 # Cloud Backup Script - Uploads to GitHub Releases as backup storage
 # FREE and reliable using GitHub as backup storage
 
-# Configuration
-DB_HOST="ballast.proxy.rlwy.net"
-DB_PORT="20017"
-DB_USER="postgres"
-DB_NAME="railway"
-DB_PASSWORD="ueLIWnvALZWVbRdnOmpLGsrrukeGLGQQ"
+# Configuration - Load from environment variables
+DB_HOST="${DATABASE_HOST:-localhost}"
+DB_PORT="${DATABASE_PORT:-5432}"
+DB_USER="${DATABASE_USER:-postgres}"
+DB_NAME="${DATABASE_NAME:-railway}"
+DB_PASSWORD="${DATABASE_PASSWORD}"
+
+# Check if password is set
+if [ -z "$DB_PASSWORD" ]; then
+    echo "❌ Error: DATABASE_PASSWORD environment variable not set!"
+    echo "📝 Set it with: export DATABASE_PASSWORD='your-password'"
+    exit 1
+fi
 
 # GitHub Configuration
 GITHUB_REPO="jaydenmetz/real-estate-crm"

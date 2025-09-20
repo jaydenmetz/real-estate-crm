@@ -9,12 +9,18 @@ const execAsync = promisify(exec);
 class BackupService {
   constructor() {
     this.config = {
-      host: process.env.DATABASE_HOST || 'ballast.proxy.rlwy.net',
-      port: process.env.DATABASE_PORT || '20017',
+      host: process.env.DATABASE_HOST,
+      port: process.env.DATABASE_PORT || '5432',
       user: process.env.DATABASE_USER || 'postgres',
       database: process.env.DATABASE_NAME || 'railway',
-      password: process.env.DATABASE_PASSWORD || 'ueLIWnvALZWVbRdnOmpLGsrrukeGLGQQ'
+      password: process.env.DATABASE_PASSWORD
     };
+
+    // Validate required environment variables
+    if (!this.config.password || !this.config.host) {
+      logger.error('⚠️ Database credentials not configured in environment variables');
+      logger.error('Please set DATABASE_HOST and DATABASE_PASSWORD in Railway environment');
+    }
 
     this.backupDir = path.join(process.cwd(), 'backups');
   }

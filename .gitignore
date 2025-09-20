@@ -72,3 +72,10 @@ secrets/
 credentials/
 all-code.txt
 combine.sh
+
+# Backup files and credentials
+backend/scripts/.env
+backend/backups/*.sql
+backend/backups/*.sql.gz
+*.backup
+*.dump
