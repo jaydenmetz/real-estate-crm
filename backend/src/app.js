@@ -741,6 +741,9 @@ if (process.env.NODE_ENV === 'production') {
   app.use(express.static('public'));
 }
 
+// Sentry error handler (must be before any other error middleware)
+Sentry.setupExpressErrorHandler(app);
+
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -755,5 +758,18 @@ app.use((req, res) => {
 
 // Enhanced error logging middleware
 app.use(errorLogging);
+
+// Final error handler with Sentry
+app.use(function onError(err, req, res, next) {
+  res.statusCode = 500;
+  res.json({
+    success: false,
+    error: {
+      code: 'INTERNAL_ERROR',
+      message: process.env.NODE_ENV === 'production' ? 'An error occurred' : err.message,
+      sentryId: res.sentry
+    }
+  });
+});
 
 module.exports = app;

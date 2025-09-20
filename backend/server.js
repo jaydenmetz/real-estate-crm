@@ -1,8 +1,12 @@
+// IMPORTANT: Sentry must be initialized first
+require('./instrument.js');
+
 // Load environment variables
 require('dotenv').config();
 
 const express = require('express');
 const { createServer } = require('http');
+const Sentry = require('@sentry/node');
 const app = require('./src/app');
 const logger = require('./src/utils/logger');
 const websocketService = require('./src/services/websocket.service');
