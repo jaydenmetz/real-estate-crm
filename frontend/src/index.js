@@ -9,8 +9,20 @@ Sentry.init({
   dsn: process.env.REACT_APP_SENTRY_DSN, // Set in Railway environment variables
   environment: process.env.NODE_ENV || 'development',
 
+  // Release configuration for release health
+  release: process.env.REACT_APP_VERSION || 'real-estate-crm@1.0.0',
+
+  // Session tracking for release health
+  autoSessionTracking: true, // Enable automatic session tracking
+  sessionTrackingIntervalMillis: 30000, // Session heartbeat interval (30 seconds)
+
   // Performance Monitoring
   tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+  tracePropagationTargets: [
+    'localhost',
+    'api.jaydenmetz.com',
+    /^https:\/\/api\.jaydenmetz\.com\/api/,
+  ],
 
   // Session Replay
   replaysSessionSampleRate: 0.1, // 10% of sessions
@@ -24,8 +36,25 @@ Sentry.init({
     Sentry.replayIntegration({
       maskAllText: true,
       maskAllInputs: true,
+      blockAllMedia: true,
     }),
   ],
+
+  // Before send hook for filtering
+  beforeSend(event, hint) {
+    // Don't send events in development unless explicitly testing
+    if (process.env.NODE_ENV === 'development' && !window.SENTRY_TEST_MODE) {
+      console.log('Sentry event suppressed in development:', event);
+      return null;
+    }
+
+    // Filter out non-critical network errors
+    if (event.exception?.values?.[0]?.value?.includes('Load failed')) {
+      return null;
+    }
+
+    return event;
+  },
 
   // Ignore specific errors
   ignoreErrors: [
@@ -34,6 +63,9 @@ Sentry.init({
     'Non-Error promise rejection captured',
     'NetworkError',
     'Failed to fetch',
+    'Load failed',
+    'AbortError',
+    'Network request failed',
   ],
 });
 

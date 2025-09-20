@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import authService from '../services/auth.service';
+import * as Sentry from '@sentry/react';
 
 const AuthContext = createContext(null);
 
@@ -47,12 +48,32 @@ export const AuthProvider = ({ children }) => {
             setUser(result.user);
             setIsAuthenticated(true);
             lastVerifyRef.current = now; // Update last verify time on success
+
+            // Set Sentry user context
+            if (result.user) {
+              Sentry.setUser({
+                id: result.user.id,
+                email: result.user.email,
+                username: result.user.username,
+                ip_address: '{{auto}}',
+              });
+              Sentry.setContext('user_details', {
+                role: result.user.role,
+                team: result.user.teamName,
+                firstName: result.user.firstName,
+                lastName: result.user.lastName,
+              });
+            }
           }
           // Don't clear auth on verify failure - let the service handle it
         } catch (error) {
           // Silently fail - don't spam console with verification failures
           // The user is still logged in with cached credentials
         }
+      } else {
+        // Clear Sentry context if not authenticated
+        Sentry.setUser(null);
+        Sentry.setContext('user_details', null);
       }
 
       setLoading(false);
@@ -107,6 +128,24 @@ export const AuthProvider = ({ children }) => {
   const login = useCallback((userData) => {
     setUser(userData);
     setIsAuthenticated(true);
+
+    // Set Sentry user context for better error tracking
+    if (userData) {
+      Sentry.setUser({
+        id: userData.id,
+        email: userData.email,
+        username: userData.username,
+        ip_address: '{{auto}}', // Sentry will capture IP automatically
+      });
+
+      // Set additional context
+      Sentry.setContext('user_details', {
+        role: userData.role,
+        team: userData.teamName,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+      });
+    }
   }, []);
 
   // Logout function
@@ -116,6 +155,10 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setUser(null);
       setIsAuthenticated(false);
+
+      // Clear Sentry user context
+      Sentry.setUser(null);
+      Sentry.setContext('user_details', null);
     }
   }, []);
 
