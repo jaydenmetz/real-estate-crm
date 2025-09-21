@@ -7,7 +7,7 @@ import CopyButton from './CopyButton';
 class ErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { hasError: false, error: null, errorInfo: null };
+    this.state = { hasError: false, error: null, errorInfo: null, eventId: null };
   }
 
   static getDerivedStateFromError(error) {
@@ -17,8 +17,8 @@ class ErrorBoundary extends React.Component {
   componentDidCatch(error, errorInfo) {
     console.error('Error caught by boundary:', error, errorInfo);
 
-    // Send error to Sentry with React context
-    Sentry.captureException(error, {
+    // Send error to Sentry with React context and get event ID
+    const eventId = Sentry.captureException(error, {
       contexts: {
         react: {
           componentStack: errorInfo.componentStack
@@ -33,7 +33,8 @@ class ErrorBoundary extends React.Component {
 
     this.setState({
       error: error,
-      errorInfo: errorInfo
+      errorInfo: errorInfo,
+      eventId: eventId
     });
   }
 
@@ -94,13 +95,45 @@ class ErrorBoundary extends React.Component {
                 </Box>
               </Box>
             )}
-            <Button 
-              variant="contained" 
-              onClick={() => window.location.reload()}
-              sx={{ mt: 3 }}
-            >
-              Reload Page
-            </Button>
+            <Box sx={{ display: 'flex', gap: 2, justifyContent: 'center', mt: 3 }}>
+              <Button
+                variant="contained"
+                onClick={() => window.location.reload()}
+              >
+                Reload Page
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  // Show Sentry user feedback dialog
+                  const user = JSON.parse(localStorage.getItem('user') || '{}');
+                  const eventId = this.state.eventId;
+
+                  if (eventId && window.Sentry) {
+                    Sentry.showReportDialog({
+                      eventId: eventId,
+                      user: {
+                        email: user.email || '',
+                        name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'User'
+                      },
+                      title: 'It looks like we're having issues',
+                      subtitle: 'Our team has been notified',
+                      subtitle2: 'If you'd like to help, tell us what happened below',
+                      labelName: 'Name',
+                      labelEmail: 'Email',
+                      labelComments: 'What happened?',
+                      labelClose: 'Close',
+                      labelSubmit: 'Submit',
+                      errorGeneric: 'An unknown error occurred while submitting your report. Please try again.',
+                      errorFormEntry: 'Some fields were invalid. Please correct the errors and try again.',
+                      successMessage: 'Your feedback has been sent. Thank you!'
+                    });
+                  }
+                }}
+              >
+                Report Issue
+              </Button>
+            </Box>
           </Paper>
         </Box>
       );

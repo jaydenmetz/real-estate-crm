@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import SentryHealthCheck from './SentryHealthCheck';
 import {
   Container,
   Grid,
@@ -41,7 +42,8 @@ import {
   TrendingUp,
   DataUsage,
   Psychology,
-  Dashboard as DashboardIcon
+  Dashboard as DashboardIcon,
+  BugReport
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import { apiCall } from '../../services/api.service';
@@ -219,12 +221,13 @@ const SystemHealthDashboard = ({ initialTab = 0 }) => {
 
       {/* Tabs */}
       <Paper sx={{ mb: 3 }}>
-        <Tabs value={activeTab} onChange={(e, v) => setActiveTab(v)}>
+        <Tabs value={activeTab} onChange={(e, v) => setActiveTab(v)} variant="scrollable" scrollButtons="auto">
           <Tab icon={<DashboardIcon />} label="Overview" />
           <Tab icon={<Storage />} label="PostgreSQL" />
           <Tab icon={<Memory />} label="Redis Cache" />
           <Tab icon={<Lock />} label="Authentication" />
           <Tab icon={<Speed />} label="System Resources" />
+          <Tab icon={<BugReport />} label="Error Tracking" />
         </Tabs>
       </Paper>
 
@@ -649,6 +652,15 @@ const SystemHealthDashboard = ({ initialTab = 0 }) => {
                 </Stack>
               </CardContent>
             </Card>
+          </Grid>
+        </Grid>
+      )}
+
+      {/* Sentry Error Tracking Tab */}
+      {activeTab === 5 && (
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <SentryHealthCheck />
           </Grid>
         </Grid>
       )}
