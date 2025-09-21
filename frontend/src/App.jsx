@@ -1,6 +1,7 @@
 // File: frontend/src/App.jsx
 import React, { useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigationType } from 'react-router-dom';
+import * as Sentry from '@sentry/react';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { SnackbarProvider } from 'notistack';
@@ -120,6 +121,33 @@ const queryClient = new QueryClient({
   },
 });
 
+// Component to track navigation breadcrumbs
+function NavigationTracker() {
+  const location = useLocation();
+  const navigationType = useNavigationType();
+
+  useEffect(() => {
+    // Add breadcrumb for navigation
+    Sentry.addBreadcrumb({
+      category: 'navigation',
+      message: `Navigated to ${location.pathname}`,
+      level: 'info',
+      data: {
+        from: window.previousPath || 'initial',
+        to: location.pathname,
+        navigationType,
+        search: location.search,
+        hash: location.hash
+      }
+    });
+
+    // Store current path for next navigation
+    window.previousPath = location.pathname;
+  }, [location, navigationType]);
+
+  return null;
+}
+
 function App() {
   useEffect(() => {
     // Setup global error handlers
@@ -181,6 +209,7 @@ function App() {
             >
               <CssBaseline />
               <Router>
+                <NavigationTracker />
                 <AuthProvider>
                 <Routes>
                   {/* Public Routes */}

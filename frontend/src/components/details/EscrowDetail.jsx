@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import * as Sentry from '@sentry/react';
 import {
   Container,
   Box,
@@ -120,7 +121,28 @@ function EscrowDetail() {
 
   // Fetch escrow data
   useEffect(() => {
+    // Set Sentry context for this escrow
+    if (id) {
+      Sentry.setContext('escrow', {
+        escrow_id: id,
+        view_type: 'detail',
+        timestamp: new Date().toISOString()
+      });
+
+      Sentry.addBreadcrumb({
+        category: 'escrow',
+        message: `Viewing escrow ${id}`,
+        level: 'info',
+        data: { escrow_id: id }
+      });
+    }
+
     fetchEscrowData();
+
+    // Clean up context when component unmounts
+    return () => {
+      Sentry.setContext('escrow', null);
+    };
   }, [id]);
 
   const fetchEscrowData = async () => {

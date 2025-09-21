@@ -1,4 +1,5 @@
 // File: frontend/src/services/api.js
+import * as Sentry from '@sentry/react';
 
 // Determine API URL based on environment
 const getApiUrl = () => {
@@ -54,6 +55,18 @@ class ApiService {
   }
 
   async request(endpoint, options = {}) {
+    // Add breadcrumb for API call
+    Sentry.addBreadcrumb({
+      category: 'api',
+      message: `${options.method || 'GET'} ${endpoint}`,
+      level: 'info',
+      data: {
+        endpoint,
+        method: options.method || 'GET',
+        hasAuth: !!(this.token || this.apiKey)
+      }
+    });
+
     // Refresh authentication from localStorage
     this.token = localStorage.getItem('authToken');
     this.apiKey = localStorage.getItem('apiKey');
@@ -157,6 +170,20 @@ class ApiService {
         error: error.message,
         status: error.status
       });
+
+      // Capture API errors to Sentry with context
+      Sentry.captureException(error, {
+        tags: {
+          api_endpoint: endpoint,
+          api_method: config.method || 'GET',
+          api_status: error.status || 'unknown'
+        },
+        extra: {
+          url,
+          hasAuth: !!(this.token || this.apiKey)
+        }
+      });
+
       throw error;
     }
   }

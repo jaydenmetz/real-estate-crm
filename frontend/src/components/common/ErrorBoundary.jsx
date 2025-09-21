@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Typography, Button, Paper } from '@mui/material';
 import { Error as ErrorIcon } from '@mui/icons-material';
+import * as Sentry from '@sentry/react';
 import CopyButton from './CopyButton';
 
 class ErrorBoundary extends React.Component {
@@ -15,6 +16,21 @@ class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     console.error('Error caught by boundary:', error, errorInfo);
+
+    // Send error to Sentry with React context
+    Sentry.captureException(error, {
+      contexts: {
+        react: {
+          componentStack: errorInfo.componentStack
+        }
+      },
+      tags: {
+        component: 'ErrorBoundary',
+        location: window.location.pathname
+      },
+      level: 'error'
+    });
+
     this.setState({
       error: error,
       errorInfo: errorInfo
