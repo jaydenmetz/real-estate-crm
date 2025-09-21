@@ -237,21 +237,17 @@ const SentryHealthCheck = () => {
     setTestResults({ ...results });
 
     try {
-      const transaction = Sentry.startTransaction({
-        op: 'test',
-        name: 'HealthCheck.testTransaction',
-      });
-
-      const span = transaction.startChild({
-        op: 'test',
-        description: 'Test span for health check',
-      });
-
-      // Simulate some work
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      span.finish();
-      transaction.finish();
+      // Use startSpan for Sentry v8
+      await Sentry.startSpan(
+        {
+          op: 'test',
+          name: 'HealthCheck.testTransaction',
+        },
+        async () => {
+          // Simulate some work
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      );
 
       results.performance = {
         name: 'Performance Monitoring',
