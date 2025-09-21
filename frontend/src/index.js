@@ -28,7 +28,7 @@ Sentry.init({
   tracePropagationTargets: [
     'localhost',
     'api.jaydenmetz.com',
-    /^https:\/\/api\.jaydenmetz\.com\/api/,
+    /^https:\/\/api\.jaydenmetz\.com\/v1/,
   ],
 
   // Session Replay
