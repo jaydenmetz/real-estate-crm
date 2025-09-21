@@ -1179,12 +1179,49 @@ const EscrowsHealthDashboard = () => {
       // DELETE REQUESTS - Clean up ALL test escrows
       // ========================================
 
-      // Delete all 3 created test escrows
+      // Archive then delete all 3 created test escrows
       for (let i = 0; i < createdEscrowIds.length; i++) {
         const escrowId = createdEscrowIds[i];
+
+        // Step 1: Archive the escrow first
+        const archiveTest = {
+          name: `Archive Test Escrow ${i + 1}`,
+          description: i === 0 ? 'Archive minimal escrow' : i === 1 ? 'Archive basic escrow' : 'Archive full escrow',
+          method: 'PUT',
+          endpoint: `/escrows/${escrowId}/archive`,
+          status: 'pending',
+          curl: `curl -X PUT "${API_URL}/escrows/${escrowId}/archive" -H "Authorization: Bearer ${token}"`,
+          response: null,
+          error: null,
+          responseTime: null
+        };
+
+        const startTimeArchive = Date.now();
+        try {
+          const response = await fetch(`${API_URL}/escrows/${escrowId}/archive`, {
+            method: 'PUT',
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const data = await response.json();
+          archiveTest.responseTime = Date.now() - startTimeArchive;
+          archiveTest.status = response.ok && data.success ? 'success' : 'failed';
+          archiveTest.response = data;
+          if (!response.ok || !data.success) {
+            archiveTest.error = data.error?.message || 'Failed to archive escrow';
+          }
+        } catch (error) {
+          archiveTest.status = 'failed';
+          archiveTest.error = error.message;
+          archiveTest.responseTime = Date.now() - startTimeArchive;
+        }
+        grouped.PUT.push(archiveTest);
+        allTests.push(archiveTest);
+        setGroupedTests({...grouped});
+
+        // Step 2: Delete the archived escrow
         const deleteTest = {
-          name: `Delete Test Escrow ${i + 1}`,
-          description: i === 0 ? 'Delete minimal escrow' : i === 1 ? 'Delete basic escrow' : 'Delete full escrow',
+          name: `Delete Archived Escrow ${i + 1}`,
+          description: i === 0 ? 'Delete archived minimal escrow' : i === 1 ? 'Delete archived basic escrow' : 'Delete archived full escrow',
           method: 'DELETE',
           endpoint: `/escrows/${escrowId}`,
           status: 'pending',
@@ -1280,13 +1317,21 @@ const EscrowsHealthDashboard = () => {
         }
         
         // Clean up all test escrows
-        escrowsToDelete.forEach(escrowId => {
-          fetch(`${API_URL}/escrows/${escrowId}`, {
-            method: 'DELETE',
-            headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-          }).catch(() => {
+        escrowsToDelete.forEach(async escrowId => {
+          try {
+            // Archive first
+            await fetch(`${API_URL}/escrows/${escrowId}/archive`, {
+              method: 'PUT',
+              headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+            });
+            // Then delete
+            await fetch(`${API_URL}/escrows/${escrowId}`, {
+              method: 'DELETE',
+              headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+            });
+          } catch (error) {
             // Ignore cleanup errors
-          });
+          }
         });
       }
     };
