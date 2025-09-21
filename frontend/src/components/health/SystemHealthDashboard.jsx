@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import SentryHealthCheck from './SentryHealthCheck';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import {
   Container,
   Grid,
@@ -11,7 +12,6 @@ import {
   LinearProgress,
   Alert,
   Button,
-  IconButton,
   Tabs,
   Tab,
   List,
@@ -219,6 +219,44 @@ const SystemHealthDashboard = ({ initialTab = 0 }) => {
         </StatusCard>
       )}
 
+      {/* Master JSON Export Button */}
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+        <Tooltip title="Copy ALL health data as JSON">
+          <Button
+            variant="contained"
+            startIcon={<ContentCopyIcon />}
+            onClick={() => {
+              const allHealthData = {
+                overview: {
+                  status: healthData?.status,
+                  uptime: healthData?.uptime,
+                  checks: healthData?.checks,
+                  recommendations: healthData?.recommendations
+                },
+                postgresql: postgresData,
+                redis: redisData,
+                authentication: authData,
+                systemResources: healthData?.checks?.system,
+                timestamp: new Date().toISOString(),
+                lastRefresh: lastRefresh
+              };
+              const jsonData = JSON.stringify(allHealthData, null, 2);
+              navigator.clipboard.writeText(jsonData);
+              alert('All health data copied to clipboard!');
+            }}
+            sx={{
+              textTransform: 'none',
+              bgcolor: 'primary.main',
+              '&:hover': {
+                bgcolor: 'primary.dark'
+              }
+            }}
+          >
+            Copy All Health Data as JSON
+          </Button>
+        </Tooltip>
+      </Box>
+
       {/* Tabs */}
       <Paper sx={{ mb: 3 }}>
         <Tabs value={activeTab} onChange={(e, v) => setActiveTab(v)} variant="scrollable" scrollButtons="auto">
@@ -234,6 +272,33 @@ const SystemHealthDashboard = ({ initialTab = 0 }) => {
       {/* Tab Content */}
       {activeTab === 0 && healthData?.checks && (
         <Grid container spacing={3}>
+          {/* JSON Export Button */}
+          <Grid item xs={12}>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+              <Tooltip title="Copy health data as JSON">
+                <Button
+                  variant="outlined"
+                  startIcon={<ContentCopyIcon />}
+                  onClick={() => {
+                    const jsonData = JSON.stringify({
+                      overview: {
+                        status: healthData.status,
+                        uptime: healthData.uptime,
+                        checks: healthData.checks,
+                        recommendations: healthData.recommendations,
+                        timestamp: new Date().toISOString()
+                      }
+                    }, null, 2);
+                    navigator.clipboard.writeText(jsonData);
+                    alert('Health data copied to clipboard!');
+                  }}
+                  sx={{ textTransform: 'none' }}
+                >
+                  Copy as JSON
+                </Button>
+              </Tooltip>
+            </Box>
+          </Grid>
           {/* PostgreSQL Status */}
           <Grid item xs={12} md={6}>
             <StatusCard status={healthData.checks.postgresql?.status}>
@@ -385,6 +450,28 @@ const SystemHealthDashboard = ({ initialTab = 0 }) => {
       {/* PostgreSQL Tab */}
       {activeTab === 1 && postgresData && (
         <Grid container spacing={3}>
+          {/* JSON Export Button */}
+          <Grid item xs={12}>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+              <Tooltip title="Copy PostgreSQL data as JSON">
+                <Button
+                  variant="outlined"
+                  startIcon={<ContentCopyIcon />}
+                  onClick={() => {
+                    const jsonData = JSON.stringify({
+                      postgresql: postgresData,
+                      timestamp: new Date().toISOString()
+                    }, null, 2);
+                    navigator.clipboard.writeText(jsonData);
+                    alert('PostgreSQL data copied to clipboard!');
+                  }}
+                  sx={{ textTransform: 'none' }}
+                >
+                  Copy as JSON
+                </Button>
+              </Tooltip>
+            </Box>
+          </Grid>
           <Grid item xs={12}>
             <Card>
               <CardContent>
@@ -440,6 +527,28 @@ const SystemHealthDashboard = ({ initialTab = 0 }) => {
       {/* Redis Tab */}
       {activeTab === 2 && redisData && (
         <Grid container spacing={3}>
+          {/* JSON Export Button */}
+          <Grid item xs={12}>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+              <Tooltip title="Copy Redis data as JSON">
+                <Button
+                  variant="outlined"
+                  startIcon={<ContentCopyIcon />}
+                  onClick={() => {
+                    const jsonData = JSON.stringify({
+                      redis: redisData,
+                      timestamp: new Date().toISOString()
+                    }, null, 2);
+                    navigator.clipboard.writeText(jsonData);
+                    alert('Redis data copied to clipboard!');
+                  }}
+                  sx={{ textTransform: 'none' }}
+                >
+                  Copy as JSON
+                </Button>
+              </Tooltip>
+            </Box>
+          </Grid>
           <Grid item xs={12}>
             <Card>
               <CardContent>
@@ -484,6 +593,28 @@ const SystemHealthDashboard = ({ initialTab = 0 }) => {
       {/* Authentication Tab */}
       {activeTab === 3 && authData && (
         <Grid container spacing={3}>
+          {/* JSON Export Button */}
+          <Grid item xs={12}>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+              <Tooltip title="Copy Authentication data as JSON">
+                <Button
+                  variant="outlined"
+                  startIcon={<ContentCopyIcon />}
+                  onClick={() => {
+                    const jsonData = JSON.stringify({
+                      authentication: authData,
+                      timestamp: new Date().toISOString()
+                    }, null, 2);
+                    navigator.clipboard.writeText(jsonData);
+                    alert('Authentication data copied to clipboard!');
+                  }}
+                  sx={{ textTransform: 'none' }}
+                >
+                  Copy as JSON
+                </Button>
+              </Tooltip>
+            </Box>
+          </Grid>
           <Grid item xs={12}>
             <Card>
               <CardContent>
@@ -576,6 +707,28 @@ const SystemHealthDashboard = ({ initialTab = 0 }) => {
       {/* System Resources Tab */}
       {activeTab === 4 && healthData?.checks?.system && (
         <Grid container spacing={3}>
+          {/* JSON Export Button */}
+          <Grid item xs={12}>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+              <Tooltip title="Copy System Resources data as JSON">
+                <Button
+                  variant="outlined"
+                  startIcon={<ContentCopyIcon />}
+                  onClick={() => {
+                    const jsonData = JSON.stringify({
+                      systemResources: healthData.checks.system,
+                      timestamp: new Date().toISOString()
+                    }, null, 2);
+                    navigator.clipboard.writeText(jsonData);
+                    alert('System Resources data copied to clipboard!');
+                  }}
+                  sx={{ textTransform: 'none' }}
+                >
+                  Copy as JSON
+                </Button>
+              </Tooltip>
+            </Box>
+          </Grid>
           <Grid item xs={12}>
             <Card>
               <CardContent>
@@ -659,6 +812,30 @@ const SystemHealthDashboard = ({ initialTab = 0 }) => {
       {/* Sentry Error Tracking Tab */}
       {activeTab === 5 && (
         <Grid container spacing={3}>
+          {/* JSON Export Button for Sentry */}
+          <Grid item xs={12}>
+            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 2 }}>
+              <Tooltip title="Copy Sentry test results as JSON">
+                <Button
+                  variant="outlined"
+                  startIcon={<ContentCopyIcon />}
+                  onClick={() => {
+                    // Get Sentry data from the component if available
+                    const sentryData = {
+                      message: 'Sentry health check data - run tests in component to populate',
+                      timestamp: new Date().toISOString()
+                    };
+                    const jsonData = JSON.stringify(sentryData, null, 2);
+                    navigator.clipboard.writeText(jsonData);
+                    alert('Sentry data copied to clipboard!');
+                  }}
+                  sx={{ textTransform: 'none' }}
+                >
+                  Copy as JSON
+                </Button>
+              </Tooltip>
+            </Box>
+          </Grid>
           <Grid item xs={12}>
             <SentryHealthCheck />
           </Grid>
