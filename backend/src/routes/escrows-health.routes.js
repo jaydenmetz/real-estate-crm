@@ -202,21 +202,54 @@ router.get('/health', authenticate, async (req, res) => {
       }
       results.tests.push(permissionTest);
 
-      // Test 7: Delete test escrow
-      const deleteTest = { name: 'DELETE_ESCROW', status: 'pending', error: null };
+      // Test 7: Archive test escrow (soft delete)
+      const archiveTest = { name: 'ARCHIVE_ESCROW', status: 'pending', error: null };
       try {
-        const deleteResult = await pool.query(`
-          DELETE FROM escrows
+        const archiveResult = await pool.query(`
+          UPDATE escrows
+          SET deleted_at = CURRENT_TIMESTAMP,
+              escrow_status = 'Archived'
           WHERE id = $1 AND (created_by = $2 OR team_id = $3)
-          RETURNING id
+          AND deleted_at IS NULL
+          RETURNING id, deleted_at
         `, [testEscrowId, req.user.id, req.user.teamId]);
 
-        if (deleteResult.rows.length > 0) {
-          deleteTest.status = 'passed';
-          deleteTest.message = 'Test escrow cleaned up successfully';
+        if (archiveResult.rows.length > 0) {
+          archiveTest.status = 'passed';
+          archiveTest.message = 'Test escrow archived successfully';
+          archiveTest.archivedAt = archiveResult.rows[0].deleted_at;
         } else {
-          deleteTest.status = 'failed';
-          deleteTest.error = 'Could not delete test escrow';
+          archiveTest.status = 'failed';
+          archiveTest.error = 'Could not archive test escrow - may already be archived';
+        }
+      } catch (error) {
+        archiveTest.status = 'failed';
+        archiveTest.error = error.message;
+      }
+      results.tests.push(archiveTest);
+
+      // Test 8: Permanently delete archived escrow
+      const deleteTest = { name: 'DELETE_ARCHIVED_ESCROW', status: 'pending', error: null };
+      try {
+        // Only delete if archive succeeded
+        if (archiveTest.status === 'passed') {
+          const deleteResult = await pool.query(`
+            DELETE FROM escrows
+            WHERE id = $1 AND (created_by = $2 OR team_id = $3)
+            AND deleted_at IS NOT NULL
+            RETURNING id
+          `, [testEscrowId, req.user.id, req.user.teamId]);
+
+          if (deleteResult.rows.length > 0) {
+            deleteTest.status = 'passed';
+            deleteTest.message = 'Test escrow permanently deleted successfully';
+          } else {
+            deleteTest.status = 'failed';
+            deleteTest.error = 'Could not permanently delete archived escrow';
+          }
+        } else {
+          deleteTest.status = 'skipped';
+          deleteTest.message = 'Skipped because archive failed';
         }
       } catch (error) {
         deleteTest.status = 'failed';
@@ -246,9 +279,16 @@ router.get('/health', authenticate, async (req, res) => {
     });
 
   } catch (error) {
-    // Clean up test escrow if it exists
+    // Clean up test escrow if it exists (force delete regardless of state)
     if (testEscrowId) {
       try {
+        // First try to archive if not already archived
+        await pool.query(`
+          UPDATE escrows SET deleted_at = CURRENT_TIMESTAMP
+          WHERE id = $1 AND deleted_at IS NULL
+        `, [testEscrowId]);
+
+        // Then permanently delete
         await pool.query(`
           DELETE FROM escrows WHERE id = $1
         `, [testEscrowId]);

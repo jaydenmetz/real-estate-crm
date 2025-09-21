@@ -1460,15 +1460,36 @@ const EscrowsDashboard = () => {
     }
   };
 
-  const handlePermanentDelete = async (escrowId) => {
-    if (!window.confirm('Are you sure you want to permanently delete this escrow? This action cannot be undone.')) {
+  const handlePermanentDelete = async (escrowId, skipConfirmation = false) => {
+    // Check if running in test mode (can be set via window or query param)
+    const isTestMode = window.location.search.includes('testMode=true') ||
+                       window.__ESCROW_TEST_MODE__ === true ||
+                       skipConfirmation === true;
+
+    // Single confirmation dialog unless in test mode
+    if (!isTestMode && !window.confirm('Are you sure you want to permanently delete this escrow? This action cannot be undone.')) {
       return;
     }
 
     try {
+      // Check if escrow is already archived
+      const escrowToDelete = archivedEscrows.find(e => e.id === escrowId) ||
+                             escrows.find(e => e.id === escrowId);
+
+      // If not archived, archive first
+      if (escrowToDelete && !escrowToDelete.deleted_at) {
+        const archiveResponse = await escrowsAPI.archive(escrowId);
+        if (!archiveResponse.success) {
+          console.error('Failed to archive escrow before deletion');
+          return;
+        }
+      }
+
+      // Now permanently delete the archived escrow
       const response = await escrowsAPI.delete(escrowId);
       if (response.success) {
         setArchivedEscrows(prev => prev.filter(e => e.id !== escrowId));
+        setEscrows(prev => prev.filter(e => e.id !== escrowId));
         setArchivedCount(prev => Math.max(0, prev - 1));
       }
     } catch (error) {
