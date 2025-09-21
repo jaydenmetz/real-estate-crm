@@ -269,20 +269,34 @@ router.get('/postgres', async (req, res) => {
     diagnostics.connections = connections.rows;
 
     // Table sizes
-    const tableSizes = await pool.query(`
-      SELECT 
-        schemaname,
-        tablename,
-        pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) as size,
-        n_tup_ins as inserts,
-        n_tup_upd as updates,
-        n_tup_del as deletes
-      FROM pg_stat_user_tables
-      ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC
-      LIMIT 10
-    `);
-
-    diagnostics.largestTables = tableSizes.rows;
+    try {
+      const tableSizes = await pool.query(`
+        SELECT
+          schemaname,
+          tablename,
+          pg_size_pretty(pg_total_relation_size(schemaname||'.'||tablename)) as size,
+          n_tup_ins as inserts,
+          n_tup_upd as updates,
+          n_tup_del as deletes
+        FROM pg_stat_user_tables
+        WHERE schemaname = 'public'
+        ORDER BY pg_total_relation_size(schemaname||'.'||tablename) DESC
+        LIMIT 10
+      `);
+      diagnostics.largestTables = tableSizes.rows;
+    } catch (e) {
+      // Fallback to simpler query
+      const tableSizes = await pool.query(`
+        SELECT
+          tablename,
+          pg_size_pretty(pg_total_relation_size(tablename::regclass)) as size
+        FROM pg_tables
+        WHERE schemaname = 'public'
+        ORDER BY pg_total_relation_size(tablename::regclass) DESC
+        LIMIT 10
+      `);
+      diagnostics.largestTables = tableSizes.rows;
+    }
 
     // Slow queries (if pg_stat_statements is available)
     try {
@@ -303,20 +317,24 @@ router.get('/postgres', async (req, res) => {
     }
 
     // Index usage
-    const indexUsage = await pool.query(`
-      SELECT 
-        schemaname,
-        tablename,
-        indexname,
-        idx_scan as scans,
-        idx_tup_read as tuples_read,
-        idx_tup_fetch as tuples_fetched
-      FROM pg_stat_user_indexes
-      ORDER BY idx_scan DESC
-      LIMIT 10
-    `);
-
-    diagnostics.indexUsage = indexUsage.rows;
+    try {
+      const indexUsage = await pool.query(`
+        SELECT
+          schemaname,
+          tablename,
+          indexname,
+          idx_scan as scans,
+          idx_tup_read as tuples_read,
+          idx_tup_fetch as tuples_fetched
+        FROM pg_stat_user_indexes
+        WHERE schemaname = 'public'
+        ORDER BY idx_scan DESC
+        LIMIT 10
+      `);
+      diagnostics.indexUsage = indexUsage.rows;
+    } catch (e) {
+      diagnostics.indexUsage = 'Index statistics not available';
+    }
 
     res.json({
       success: true,
@@ -324,9 +342,11 @@ router.get('/postgres', async (req, res) => {
       timestamp: new Date().toISOString()
     });
   } catch (error) {
+    console.error('PostgreSQL health check error:', error);
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });
