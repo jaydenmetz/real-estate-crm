@@ -1,12 +1,10 @@
 const { Pool } = require('pg');
 const logger = require('../utils/logger');
+const secureConfig = require('./secure.config');
 
-// Use Railway database URL for both production and development
-const connectionString = process.env.DATABASE_URL;
-
+// Use secure configuration for database connection
 const pool = new Pool({
-  connectionString: connectionString,
-  ssl: connectionString && connectionString.includes('railway') ? { rejectUnauthorized: false } : false,
+  ...secureConfig.database,
   max: 20,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 2000,

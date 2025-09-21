@@ -5,9 +5,8 @@ const helmet = require('helmet');
 const compression = require('compression');
 const cors = require('cors');
 const Sentry = require('@sentry/node');
-const { apiRateLimiter, authRateLimiter } = require('./middleware/enhancedRateLimit.middleware');
-const { preventSQLInjection } = require('./middleware/sqlInjectionPrevention.middleware');
-const { auditLog } = require('./middleware/auditLog.middleware');
+const { apiLimiter, authLimiter, strictLimiter, healthCheckLimiter, helmet: helmetConfig } = require('./middleware/security.middleware');
+const { escrowValidationRules, validate, sanitizeRequestBody } = require('./middleware/validation.middleware');
 const logger = require('./utils/logger');
 const websocketService = require('./services/websocket.service');
 const { initializeDatabase } = require('./config/database');
@@ -51,27 +50,8 @@ app.use(compression({
   level: 6 // Balanced compression level
 }));
 
-// Enhanced security headers
-app.use(helmet({
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self'"],
-      connectSrc: ["'self'", "wss:", "https:"],
-      scriptSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
-      imgSrc: ["'self'", "data:", "https:"],
-      fontSrc: ["'self'", "https:", "data:"],
-      objectSrc: ["'none'"],
-      upgradeInsecureRequests: [],
-    },
-  },
-  hsts: {
-    maxAge: 31536000,
-    includeSubDomains: true,
-    preload: true
-  },
-  referrerPolicy: { policy: 'strict-origin-when-cross-origin' }
-}));
+// Enhanced security headers from security middleware
+app.use(helmetConfig);
 
 const corsOptions = {
   origin: function (origin, callback) {
@@ -119,9 +99,10 @@ app.use(express.urlencoded({
 }));
 
 // Security middleware stack
-app.use(preventSQLInjection); // SQL injection prevention
-app.use(requestLogging); // Request logging
-app.use(auditLog()); // Audit logging for compliance
+app.use(sanitizeRequestBody); // XSS prevention via input sanitization
+if (typeof requestLogging !== 'undefined') {
+  app.use(requestLogging); // Request logging if available
+}
 
 // Serve static files from uploads directory
 app.use('/uploads', express.static('uploads'));
@@ -161,44 +142,7 @@ app.get('/health', (req, res) => {
   res.json(healthData);
 });
 
-// Direct test login endpoint - bypasses all middleware
-app.post('/direct-login', express.json(), async (req, res) => {
-  try {
-    const { username, password } = req.body;
-    
-    // Test without database first
-    if ((username === 'admin@jaydenmetz.com' || username === 'admin') && password === 'AdminPassword123!') {
-      const jwt = require('jsonwebtoken');
-      const token = jwt.sign(
-        { id: 'test-id', email: username, role: 'admin' },
-        '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472',
-        { expiresIn: '30d' }
-      );
-      
-      return res.json({
-        success: true,
-        data: {
-          token,
-          user: {
-            id: 'test-id',
-            email: username,
-            firstName: 'Admin',
-            lastName: 'User',
-            role: 'admin'
-          }
-        }
-      });
-    }
-    
-    res.json({ error: 'Invalid credentials' });
-    
-  } catch (error) {
-    res.json({ 
-      error: 'Server error', 
-      details: error.message
-    });
-  }
-});
+// Direct login endpoint removed for security
 
 app.get('/ws/status', (req, res) => {
   res.json({
@@ -212,11 +156,11 @@ app.get('/ws/status', (req, res) => {
 const { authenticate } = require('./middleware/apiKey.middleware');
 
 const apiRouter = express.Router();
-apiRouter.use(apiRateLimiter); // Enhanced rate limiting
+apiRouter.use(apiLimiter); // API rate limiting
 
 // Public routes with auth-specific rate limiting
-apiRouter.use('/auth', authRateLimiter, require('./routes/auth.routes').router);
-apiRouter.use('/health', require('./routes/system-health.routes')); // Comprehensive system health checks
+apiRouter.use('/auth', authLimiter, require('./routes/auth.routes').router);
+apiRouter.use('/health', healthCheckLimiter, require('./routes/system-health.routes')); // Comprehensive system health checks
 
 // Super simple test endpoint for debugging (bypass all middleware)
 apiRouter.get('/test-endpoint', (req, res) => {
@@ -227,25 +171,7 @@ apiRouter.get('/test-endpoint', (req, res) => {
 
 // Test endpoint removed for security
 
-apiRouter.post('/test-login', (req, res) => {
-  const { email, password } = req.body;
-  console.log('Test login:', { email, hasPassword: !!password });
-  
-  if (email === 'admin@jaydenmetz.com' && password === 'AdminPassword123!') {
-    res.json({
-      success: true,
-      data: {
-        token: 'test-token-12345',
-        user: { email: 'admin@jaydenmetz.com' }
-      }
-    });
-  } else {
-    res.status(401).json({
-      success: false,
-      error: { message: 'Invalid credentials' }
-    });
-  }
-});
+// Test login endpoint removed for security
 
 // API key management (requires JWT auth)
 apiRouter.use('/api-keys', require('./routes/apiKeys.routes'));
