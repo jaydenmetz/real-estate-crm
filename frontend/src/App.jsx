@@ -43,7 +43,7 @@ import ExpenseDashboard from './components/dashboards/ExpenseDashboard';
 // System Components
 import ActivityLog from './components/system/ActivityLog';
 import AllNotes from './components/system/AllNotes';
-import SystemHealthDashboard from './components/health/SystemHealthDashboard';
+import SystemHealthDashboard from './components/health/SystemHealthDashboard2';
 import EscrowsHealthDashboard from './components/health/EscrowsHealthDashboard';
 // import Reports from './components/system/Reports';
 // import Calendar from './components/system/Calendar';
