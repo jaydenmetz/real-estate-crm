@@ -824,6 +824,9 @@ exports.trackAnalytics = async (req, res) => {
 };
 
 // Archive listing (soft delete)
+// This endpoint is used by the health dashboard to test archive functionality
+// Sets deleted_at timestamp and changes status to 'Cancelled'
+// Only archives if not already archived (deleted_at IS NULL)
 exports.archiveListing = async (req, res) => {
   try {
     const { id } = req.params;
@@ -831,13 +834,14 @@ exports.archiveListing = async (req, res) => {
     const teamId = req.user.teamId;
 
     // Archive the listing with permission check
+    // Note: Uses listing_agent_id column for ownership check
     const archiveQuery = `
       UPDATE listings
       SET
         deleted_at = CURRENT_TIMESTAMP,
         listing_status = 'Cancelled'
       WHERE id = $1
-      AND (created_by = $2 OR team_id = $3)
+      AND (listing_agent_id = $2 OR team_id = $3)
       AND deleted_at IS NULL
       RETURNING id, property_address, deleted_at, listing_status
     `;
@@ -877,18 +881,22 @@ exports.archiveListing = async (req, res) => {
 };
 
 // Delete listing (hard delete - only after archiving)
+// This endpoint is used by the health dashboard to test delete functionality
+// Enforces archive-before-delete workflow for data safety
+// Will only delete if listing has been archived (deleted_at IS NOT NULL)
 exports.deleteListing = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
     const teamId = req.user.teamId;
 
-    // First check if the listing is archived
+    // First check if the listing exists and is archived
+    // Note: Uses listing_agent_id column for ownership check
     const checkQuery = `
       SELECT id, property_address, deleted_at
       FROM listings
       WHERE id = $1
-      AND (created_by = $2 OR team_id = $3)
+      AND (listing_agent_id = $2 OR team_id = $3)
     `;
 
     const checkResult = await query(checkQuery, [id, userId, teamId]);
@@ -917,7 +925,7 @@ exports.deleteListing = async (req, res) => {
     const deleteQuery = `
       DELETE FROM listings
       WHERE id = $1
-      AND (created_by = $2 OR team_id = $3)
+      AND (listing_agent_id = $2 OR team_id = $3)
       AND deleted_at IS NOT NULL
       RETURNING id, property_address
     `;

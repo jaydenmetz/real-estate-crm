@@ -28,8 +28,13 @@ router.get('/', requirePermission('listings'), listingsController.getListings);
 router.get('/:id', requirePermission('listings'), listingsController.getListing);
 router.post('/', requirePermission('listings'), createValidation, validate, listingsController.createListing);
 router.put('/:id', requirePermission('listings'), updateValidation, validate, listingsController.updateListing);
+
+// Archive and Delete endpoints - Added for health dashboard testing
+// Archive endpoint: Soft deletes by setting deleted_at timestamp
 router.put('/:id/archive', requirePermission('listings'), listingsController.archiveListing);
+// Delete endpoint: Hard delete - only works if listing is already archived
 router.delete('/:id', requirePermission('listings'), listingsController.deleteListing);
+
 router.post('/:id/price-reduction', requirePermission('listings'), listingsController.recordPriceChange);
 router.post('/:id/showings', requirePermission('listings'), listingsController.logShowing);
 
