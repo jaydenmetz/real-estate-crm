@@ -19,7 +19,11 @@ import {
   TableHead,
   TableRow,
   Snackbar,
-  Divider
+  Divider,
+  List,
+  ListItem,
+  ListItemIcon,
+  ListItemText
 } from '@mui/material';
 import {
   PlayArrow as PlayArrowIcon,
@@ -34,7 +38,9 @@ import {
   AttachMoney as MoneyIcon,
   Schedule as ScheduleIcon,
   Assessment as AssessmentIcon,
-  Gavel as GavelIcon
+  Speed as SpeedIcon,
+  Security as SecurityIcon,
+  Storage as StorageIcon
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import { useNavigate } from 'react-router-dom';
@@ -90,27 +96,40 @@ const MetricCard = styled(Paper)(({ theme, color }) => ({
   }
 }));
 
+const TestResultRow = styled(TableRow)(({ status }) => ({
+  '& .MuiTableCell-root': {
+    ...(status === 'passed' && {
+      backgroundColor: 'rgba(76, 175, 80, 0.1)'
+    }),
+    ...(status === 'failed' && {
+      backgroundColor: 'rgba(244, 67, 54, 0.1)'
+    }),
+    ...(status === 'skipped' && {
+      backgroundColor: 'rgba(255, 152, 0, 0.1)'
+    })
+  }
+}));
+
 function ListingsHealthDashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState('');
   const [healthData, setHealthData] = useState(null);
+  const [testResults, setTestResults] = useState(null);
   const [expandedSections, setExpandedSections] = useState({
-    database: true,
-    crud: true,
-    analytics: true,
-    compliance: true
+    tests: true,
+    database: false,
+    analytics: false,
+    compliance: false
   });
 
-  const [testResults, setTestResults] = useState({
-    database: null,
-    crud: null,
-    analytics: null,
-    compliance: null
-  });
+  const [dbHealth, setDbHealth] = useState(null);
+  const [analyticsData, setAnalyticsData] = useState(null);
+  const [complianceData, setComplianceData] = useState(null);
 
-  const fetchHealthData = useCallback(async () => {
+  // Automatically run all tests on mount
+  const runAllHealthChecks = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -128,17 +147,35 @@ function ListingsHealthDashboard() {
         headers['X-API-Key'] = apiKey;
       }
 
-      const response = await fetch(`${API_URL}/listings/health`, { headers });
+      // Run main health check
+      const healthResponse = await fetch(`${API_URL}/listings/health`, { headers });
+      if (!healthResponse.ok) {
+        throw new Error(`Health check failed: ${healthResponse.status}`);
+      }
+      const healthData = await healthResponse.json();
+      setTestResults(healthData.data);
 
-      if (!response.ok) {
-        throw new Error(`Health check failed: ${response.status}`);
+      // Run database check
+      const dbResponse = await fetch(`${API_URL}/listings/health/db`, { headers });
+      if (dbResponse.ok) {
+        const dbData = await dbResponse.json();
+        setDbHealth(dbData.data);
       }
 
-      const data = await response.json();
-      setHealthData(data.data);
+      // Run analytics
+      const analyticsResponse = await fetch(`${API_URL}/listings/health/analytics`, { headers });
+      if (analyticsResponse.ok) {
+        const analytics = await analyticsResponse.json();
+        setAnalyticsData(analytics.data);
+      }
 
-      // Auto-run all tests
-      await runAllTests(headers);
+      // Run compliance check
+      const complianceResponse = await fetch(`${API_URL}/listings/health/compliance`, { headers });
+      if (complianceResponse.ok) {
+        const compliance = await complianceResponse.json();
+        setComplianceData(compliance.data);
+      }
+
     } catch (err) {
       setError(err.message);
     } finally {
@@ -146,70 +183,19 @@ function ListingsHealthDashboard() {
     }
   }, []);
 
-  const runAllTests = async (headers) => {
-    const tests = ['db', 'crud', 'analytics', 'compliance'];
-
-    for (const test of tests) {
-      try {
-        const response = await fetch(`${API_URL}/listings/health/${test}`, { headers });
-        const data = await response.json();
-
-        setTestResults(prev => ({
-          ...prev,
-          [test === 'db' ? 'database' : test]: data.success ? data.data : { error: data.error }
-        }));
-      } catch (err) {
-        setTestResults(prev => ({
-          ...prev,
-          [test === 'db' ? 'database' : test]: { error: err.message }
-        }));
-      }
-    }
-  };
-
-  const runCRUDTest = async () => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const token = localStorage.getItem('token');
-      const apiKey = localStorage.getItem('apiKey');
-
-      const headers = {
-        'Content-Type': 'application/json'
-      };
-
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      } else if (apiKey) {
-        headers['X-API-Key'] = apiKey;
-      }
-
-      const response = await fetch(`${API_URL}/listings/health/crud?testMode=false`, { headers });
-      const data = await response.json();
-
-      if (data.success) {
-        setTestResults(prev => ({ ...prev, crud: data.data }));
-        setSuccessMessage('CRUD test completed successfully!');
-      } else {
-        throw new Error(data.error?.message || 'CRUD test failed');
-      }
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  // Copy all data to clipboard
   const copyToClipboard = () => {
     const dataToExport = {
-      health: healthData,
+      timestamp: new Date().toISOString(),
       tests: testResults,
-      timestamp: new Date().toISOString()
+      database: dbHealth,
+      analytics: analyticsData,
+      compliance: complianceData
     };
 
-    navigator.clipboard.writeText(JSON.stringify(dataToExport, null, 2));
-    setSuccessMessage('Health data copied to clipboard!');
+    navigator.clipboard.writeText(JSON.stringify(dataToExport, null, 2))
+      .then(() => setSuccessMessage('Health data copied to clipboard!'))
+      .catch(err => setError('Failed to copy to clipboard'));
   };
 
   const toggleSection = (section) => {
@@ -219,26 +205,30 @@ function ListingsHealthDashboard() {
     }));
   };
 
-  const getStatusIcon = (status) => {
+  const getTestIcon = (status) => {
     switch (status) {
-      case 'healthy':
-      case 'compliant':
-      case 'connected':
-        return <CheckCircleIcon color="success" />;
-      case 'degraded':
-      case 'warning':
+      case 'passed':
+        return <CheckCircleIcon style={{ color: '#4caf50' }} />;
+      case 'failed':
+        return <ErrorIcon style={{ color: '#f44336' }} />;
+      case 'skipped':
         return <WarningIcon style={{ color: '#ff9800' }} />;
-      case 'critical':
-      case 'non-compliant':
-        return <ErrorIcon color="error" />;
       default:
-        return <WarningIcon color="disabled" />;
+        return <CircularProgress size={20} />;
     }
   };
 
+  const getOverallStatus = () => {
+    if (!testResults?.summary) return 'unknown';
+    if (testResults.summary.failed > 0) return 'critical';
+    if (testResults.summary.skipped > 2) return 'degraded';
+    return 'healthy';
+  };
+
   const getHealthScore = () => {
-    if (!healthData) return 0;
-    return healthData.score || 0;
+    if (!testResults?.summary) return 0;
+    const { total, passed } = testResults.summary;
+    return total > 0 ? Math.round((passed / total) * 100) : 0;
   };
 
   const getHealthColor = (score) => {
@@ -247,9 +237,10 @@ function ListingsHealthDashboard() {
     return '#f44336';
   };
 
+  // Run tests on component mount
   useEffect(() => {
-    fetchHealthData();
-  }, [fetchHealthData]);
+    runAllHealthChecks();
+  }, [runAllHealthChecks]);
 
   return (
     <PageContainer>
@@ -269,23 +260,23 @@ function ListingsHealthDashboard() {
                   variant="outlined"
                   startIcon={<ContentCopyIcon />}
                   onClick={copyToClipboard}
-                  disabled={!healthData}
+                  disabled={!testResults}
                 >
-                  Export JSON
+                  Copy JSON
                 </Button>
                 <Button
                   variant="contained"
                   startIcon={<RefreshIcon />}
-                  onClick={fetchHealthData}
+                  onClick={runAllHealthChecks}
                   disabled={loading}
                 >
-                  Refresh
+                  Refresh All
                 </Button>
               </Box>
             </Box>
 
             {/* Overall Health Score */}
-            {healthData && (
+            {testResults && (
               <Box display="flex" alignItems="center" gap={3}>
                 <Box position="relative" display="inline-flex">
                   <CircularProgress
@@ -312,161 +303,183 @@ function ListingsHealthDashboard() {
                 </Box>
                 <Box>
                   <StatusChip
-                    label={healthData.overall_health?.toUpperCase()}
-                    status={healthData.overall_health}
+                    label={getOverallStatus().toUpperCase()}
+                    status={getOverallStatus()}
                     size="large"
                   />
                   <Typography variant="caption" display="block" mt={1}>
-                    Last checked: {new Date(healthData.timestamp).toLocaleString()}
+                    Last checked: {new Date(testResults.timestamp).toLocaleString()}
                   </Typography>
+                  {testResults.user && (
+                    <Typography variant="caption" display="block">
+                      User: {testResults.user} ({testResults.authMethod})
+                    </Typography>
+                  )}
                 </Box>
               </Box>
             )}
           </CardContent>
         </StyledCard>
 
-        {/* Metrics Summary */}
-        {healthData?.metrics && (
+        {/* Test Summary Cards */}
+        {testResults?.summary && (
           <Grid container spacing={2} mb={3}>
             <Grid item xs={12} sm={6} md={3}>
-              <MetricCard color="#2196f3">
-                <HomeIcon fontSize="large" style={{ color: '#2196f3' }} />
+              <MetricCard color="#4caf50">
+                <CheckCircleIcon fontSize="large" style={{ color: '#4caf50' }} />
                 <Typography variant="h4" fontWeight="bold">
-                  {healthData.metrics.active || 0}
+                  {testResults.summary.passed}
                 </Typography>
                 <Typography variant="body2" color="textSecondary">
-                  Active Listings
+                  Tests Passed
                 </Typography>
               </MetricCard>
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
-              <MetricCard color="#4caf50">
-                <MoneyIcon fontSize="large" style={{ color: '#4caf50' }} />
+              <MetricCard color="#f44336">
+                <ErrorIcon fontSize="large" style={{ color: '#f44336' }} />
                 <Typography variant="h4" fontWeight="bold">
-                  ${Math.round(healthData.metrics.avg_price / 1000)}K
+                  {testResults.summary.failed}
                 </Typography>
                 <Typography variant="body2" color="textSecondary">
-                  Avg. Price
+                  Tests Failed
                 </Typography>
               </MetricCard>
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
               <MetricCard color="#ff9800">
-                <ScheduleIcon fontSize="large" style={{ color: '#ff9800' }} />
+                <WarningIcon fontSize="large" style={{ color: '#ff9800' }} />
                 <Typography variant="h4" fontWeight="bold">
-                  {healthData.metrics.avg_dom || 0}
+                  {testResults.summary.skipped}
                 </Typography>
                 <Typography variant="body2" color="textSecondary">
-                  Avg. Days on Market
+                  Tests Skipped
                 </Typography>
               </MetricCard>
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
-              <MetricCard color="#9c27b0">
-                <AssessmentIcon fontSize="large" style={{ color: '#9c27b0' }} />
+              <MetricCard color="#2196f3">
+                <SpeedIcon fontSize="large" style={{ color: '#2196f3' }} />
                 <Typography variant="h4" fontWeight="bold">
-                  {healthData.metrics.total_listings || 0}
+                  {testResults.summary.executionTime}ms
                 </Typography>
                 <Typography variant="body2" color="textSecondary">
-                  Total Listings
+                  Execution Time
                 </Typography>
               </MetricCard>
             </Grid>
           </Grid>
         )}
 
-        {/* Database Health */}
+        {/* Test Results Table */}
         <StyledCard>
           <CardContent>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
               <Typography variant="h6" fontWeight="bold">
-                Database Health
+                Automated Test Results
               </Typography>
+              <IconButton onClick={() => toggleSection('tests')} size="small">
+                {expandedSections.tests ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+              </IconButton>
+            </Box>
+
+            <Collapse in={expandedSections.tests}>
+              {testResults?.tests && (
+                <Table size="small">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell width="40">Status</TableCell>
+                      <TableCell>Test Name</TableCell>
+                      <TableCell>Details</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {testResults.tests.map((test, index) => (
+                      <TestResultRow key={index} status={test.status}>
+                        <TableCell>{getTestIcon(test.status)}</TableCell>
+                        <TableCell>
+                          <Typography fontWeight={test.status === 'failed' ? 'bold' : 'normal'}>
+                            {test.name.replace(/_/g, ' ')}
+                          </Typography>
+                        </TableCell>
+                        <TableCell>
+                          {test.error && (
+                            <Typography variant="caption" color="error">
+                              {test.error}
+                            </Typography>
+                          )}
+                          {test.message && (
+                            <Typography variant="caption">
+                              {test.message}
+                            </Typography>
+                          )}
+                          {test.listingId && (
+                            <Typography variant="caption">
+                              Listing ID: {test.listingId}
+                            </Typography>
+                          )}
+                          {test.mlsNumber && (
+                            <Typography variant="caption">
+                              MLS: {test.mlsNumber}
+                            </Typography>
+                          )}
+                        </TableCell>
+                      </TestResultRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </Collapse>
+          </CardContent>
+        </StyledCard>
+
+        {/* Database Health */}
+        <StyledCard>
+          <CardContent>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+              <Box display="flex" alignItems="center" gap={2}>
+                <StorageIcon />
+                <Typography variant="h6" fontWeight="bold">
+                  Database Health
+                </Typography>
+              </Box>
               <IconButton onClick={() => toggleSection('database')} size="small">
                 {expandedSections.database ? <ExpandLessIcon /> : <ExpandMoreIcon />}
               </IconButton>
             </Box>
 
             <Collapse in={expandedSections.database}>
-              {testResults.database && (
+              {dbHealth && (
                 <Box>
-                  <Box display="flex" alignItems="center" gap={2} mb={2}>
-                    {getStatusIcon(testResults.database.status)}
-                    <StatusChip
-                      label={testResults.database.status?.toUpperCase() || 'UNKNOWN'}
-                      status={testResults.database.status}
-                    />
-                    {testResults.database.latency_ms && (
-                      <Typography variant="body2" color="textSecondary">
-                        Latency: {testResults.database.latency_ms}ms
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} sm={4}>
+                      <Typography variant="body2" color="textSecondary">Status</Typography>
+                      <Box display="flex" alignItems="center" gap={1}>
+                        {dbHealth.status === 'connected' ? (
+                          <CheckCircleIcon style={{ color: '#4caf50' }} />
+                        ) : (
+                          <ErrorIcon style={{ color: '#f44336' }} />
+                        )}
+                        <Typography variant="h6">{dbHealth.status}</Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                      <Typography variant="body2" color="textSecondary">Latency</Typography>
+                      <Typography variant="h6">{dbHealth.latency || 'N/A'}ms</Typography>
+                    </Grid>
+                    <Grid item xs={12} sm={4}>
+                      <Typography variant="body2" color="textSecondary">Connections</Typography>
+                      <Typography variant="h6">
+                        {dbHealth.connections?.total_connections || 'N/A'}
                       </Typography>
-                    )}
-                  </Box>
-                  {testResults.database.connections && (
-                    <Typography variant="body2">
-                      Connections: {testResults.database.connections.total_connections} total, {testResults.database.connections.active_queries} active
-                    </Typography>
-                  )}
-                  {testResults.database.version && (
-                    <Typography variant="caption" color="textSecondary">
-                      {testResults.database.version}
+                    </Grid>
+                  </Grid>
+                  {dbHealth.database && (
+                    <Typography variant="caption" color="textSecondary" display="block" mt={2}>
+                      {dbHealth.database.version}
                     </Typography>
                   )}
                 </Box>
-              )}
-            </Collapse>
-          </CardContent>
-        </StyledCard>
-
-        {/* CRUD Operations */}
-        <StyledCard>
-          <CardContent>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-              <Typography variant="h6" fontWeight="bold">
-                CRUD Operations Test
-              </Typography>
-              <Box display="flex" gap={2}>
-                <Button
-                  variant="contained"
-                  startIcon={<PlayArrowIcon />}
-                  onClick={runCRUDTest}
-                  disabled={loading}
-                  size="small"
-                >
-                  Run Test
-                </Button>
-                <IconButton onClick={() => toggleSection('crud')} size="small">
-                  {expandedSections.crud ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                </IconButton>
-              </Box>
-            </Box>
-
-            <Collapse in={expandedSections.crud}>
-              {testResults.crud && (
-                <Table size="small">
-                  <TableHead>
-                    <TableRow>
-                      <TableCell>Operation</TableCell>
-                      <TableCell>Status</TableCell>
-                      <TableCell>Time (ms)</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {Object.entries(testResults.crud.operations || {}).map(([op, success]) => (
-                      <TableRow key={op}>
-                        <TableCell>{op.toUpperCase()}</TableCell>
-                        <TableCell>
-                          {success ? (
-                            <CheckCircleIcon color="success" fontSize="small" />
-                          ) : (
-                            <ErrorIcon color="error" fontSize="small" />
-                          )}
-                        </TableCell>
-                        <TableCell>{testResults.crud.timings?.[op] || '-'}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
               )}
             </Collapse>
           </CardContent>
@@ -476,54 +489,68 @@ function ListingsHealthDashboard() {
         <StyledCard>
           <CardContent>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-              <Typography variant="h6" fontWeight="bold">
-                Listing Analytics
-              </Typography>
+              <Box display="flex" alignItems="center" gap={2}>
+                <AssessmentIcon />
+                <Typography variant="h6" fontWeight="bold">
+                  Listing Analytics
+                </Typography>
+              </Box>
               <IconButton onClick={() => toggleSection('analytics')} size="small">
                 {expandedSections.analytics ? <ExpandLessIcon /> : <ExpandMoreIcon />}
               </IconButton>
             </Box>
 
             <Collapse in={expandedSections.analytics}>
-              {testResults.analytics && (
+              {analyticsData && (
                 <Grid container spacing={2}>
-                  {testResults.analytics.inventory && (
+                  {analyticsData.inventory && (
                     <>
                       <Grid item xs={6} md={3}>
                         <Typography variant="body2" color="textSecondary">Active</Typography>
-                        <Typography variant="h6">{testResults.analytics.inventory.active_listings || 0}</Typography>
+                        <Typography variant="h6">{analyticsData.inventory.active_listings || 0}</Typography>
                       </Grid>
                       <Grid item xs={6} md={3}>
                         <Typography variant="body2" color="textSecondary">Pending</Typography>
-                        <Typography variant="h6">{testResults.analytics.inventory.pending_listings || 0}</Typography>
+                        <Typography variant="h6">{analyticsData.inventory.pending_listings || 0}</Typography>
                       </Grid>
                       <Grid item xs={6} md={3}>
                         <Typography variant="body2" color="textSecondary">Sold</Typography>
-                        <Typography variant="h6">{testResults.analytics.inventory.sold_listings || 0}</Typography>
+                        <Typography variant="h6">{analyticsData.inventory.sold_listings || 0}</Typography>
                       </Grid>
                       <Grid item xs={6} md={3}>
                         <Typography variant="body2" color="textSecondary">New This Week</Typography>
-                        <Typography variant="h6">{testResults.analytics.inventory.new_this_week || 0}</Typography>
+                        <Typography variant="h6">{analyticsData.inventory.new_this_week || 0}</Typography>
                       </Grid>
                     </>
                   )}
 
-                  <Grid item xs={12}>
-                    <Divider sx={{ my: 2 }} />
-                  </Grid>
-
-                  {testResults.analytics.property_types && (
-                    <Grid item xs={12}>
-                      <Typography variant="subtitle2" fontWeight="bold" mb={1}>
-                        Property Type Distribution
-                      </Typography>
-                      {testResults.analytics.property_types.map((type, index) => (
-                        <Box key={index} display="flex" justifyContent="space-between" mb={1}>
-                          <Typography variant="body2">{type.property_type || 'Unknown'}</Typography>
-                          <Chip label={type.count} size="small" />
-                        </Box>
-                      ))}
-                    </Grid>
+                  {analyticsData.pricing && (
+                    <>
+                      <Grid item xs={12}>
+                        <Divider sx={{ my: 2 }} />
+                        <Typography variant="subtitle2" fontWeight="bold" mb={1}>
+                          Pricing Metrics
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6} md={3}>
+                        <Typography variant="body2" color="textSecondary">Avg Price</Typography>
+                        <Typography variant="h6">
+                          ${Math.round((analyticsData.pricing.avg_active_price || 0) / 1000)}K
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6} md={3}>
+                        <Typography variant="body2" color="textSecondary">Median Price</Typography>
+                        <Typography variant="h6">
+                          ${Math.round((analyticsData.pricing.median_active_price || 0) / 1000)}K
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6} md={3}>
+                        <Typography variant="body2" color="textSecondary">$/SqFt</Typography>
+                        <Typography variant="h6">
+                          ${Math.round(analyticsData.pricing.avg_price_per_sqft || 0)}
+                        </Typography>
+                      </Grid>
+                    </>
                   )}
                 </Grid>
               )}
@@ -535,56 +562,87 @@ function ListingsHealthDashboard() {
         <StyledCard>
           <CardContent>
             <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-              <Typography variant="h6" fontWeight="bold">
-                Compliance Check
-              </Typography>
+              <Box display="flex" alignItems="center" gap={2}>
+                <SecurityIcon />
+                <Typography variant="h6" fontWeight="bold">
+                  Compliance Check
+                </Typography>
+              </Box>
               <IconButton onClick={() => toggleSection('compliance')} size="small">
                 {expandedSections.compliance ? <ExpandLessIcon /> : <ExpandMoreIcon />}
               </IconButton>
             </Box>
 
             <Collapse in={expandedSections.compliance}>
-              {testResults.compliance && (
+              {complianceData && (
                 <Box>
                   <Box display="flex" alignItems="center" gap={2} mb={2}>
-                    {getStatusIcon(testResults.compliance.status)}
+                    {complianceData.status === 'compliant' ? (
+                      <CheckCircleIcon style={{ color: '#4caf50' }} />
+                    ) : (
+                      <WarningIcon style={{ color: '#ff9800' }} />
+                    )}
                     <StatusChip
-                      label={testResults.compliance.status?.toUpperCase() || 'UNKNOWN'}
-                      status={testResults.compliance.status}
+                      label={complianceData.status?.toUpperCase() || 'UNKNOWN'}
+                      status={complianceData.status === 'compliant' ? 'healthy' : 'degraded'}
                     />
-                    {testResults.compliance.issues > 0 && (
+                    {complianceData.issues > 0 && (
                       <Typography variant="body2" color="error">
-                        {testResults.compliance.issues} issues found
+                        {complianceData.issues} issues found
                       </Typography>
                     )}
                   </Box>
 
-                  {testResults.compliance.details && (
-                    <Box>
-                      {testResults.compliance.details.missing_required_fields?.length > 0 && (
-                        <Alert severity="warning" sx={{ mb: 2 }}>
-                          <Typography variant="subtitle2">
-                            Listings with missing fields: {testResults.compliance.details.missing_required_fields.length}
-                          </Typography>
-                        </Alert>
+                  {complianceData.details && (
+                    <List dense>
+                      {complianceData.details.missing_required_fields?.length > 0 && (
+                        <ListItem>
+                          <ListItemIcon>
+                            <WarningIcon color="warning" />
+                          </ListItemIcon>
+                          <ListItemText
+                            primary="Missing Required Fields"
+                            secondary={`${complianceData.details.missing_required_fields.length} listings have incomplete data`}
+                          />
+                        </ListItem>
                       )}
 
-                      {testResults.compliance.details.expired_listings?.count > 0 && (
-                        <Alert severity="warning" sx={{ mb: 2 }}>
-                          <Typography variant="subtitle2">
-                            Expired active listings: {testResults.compliance.details.expired_listings.count}
-                          </Typography>
-                        </Alert>
+                      {complianceData.details.expired_listings?.count > 0 && (
+                        <ListItem>
+                          <ListItemIcon>
+                            <ErrorIcon color="error" />
+                          </ListItemIcon>
+                          <ListItemText
+                            primary="Expired Active Listings"
+                            secondary={`${complianceData.details.expired_listings.count} listings over 180 days old`}
+                          />
+                        </ListItem>
                       )}
 
-                      {testResults.compliance.details.stale_listings?.count > 0 && (
-                        <Alert severity="info" sx={{ mb: 2 }}>
-                          <Typography variant="subtitle2">
-                            Stale listings (no updates in 30 days): {testResults.compliance.details.stale_listings.count}
-                          </Typography>
-                        </Alert>
+                      {complianceData.details.stale_listings?.count > 0 && (
+                        <ListItem>
+                          <ListItemIcon>
+                            <WarningIcon style={{ color: '#ff9800' }} />
+                          </ListItemIcon>
+                          <ListItemText
+                            primary="Stale Listings"
+                            secondary={`${complianceData.details.stale_listings.count} listings not updated in 30+ days`}
+                          />
+                        </ListItem>
                       )}
-                    </Box>
+
+                      {complianceData.details.price_anomalies?.length > 0 && (
+                        <ListItem>
+                          <ListItemIcon>
+                            <WarningIcon style={{ color: '#ff9800' }} />
+                          </ListItemIcon>
+                          <ListItemText
+                            primary="Price Anomalies"
+                            secondary={`${complianceData.details.price_anomalies.length} listings with unusual pricing`}
+                          />
+                        </ListItem>
+                      )}
+                    </List>
                   )}
                 </Box>
               )}

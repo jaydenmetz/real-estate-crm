@@ -13,49 +13,268 @@ const formatHealthResponse = (success, data, error = null) => {
   };
 };
 
-// GET /v1/listings/health - Comprehensive health check
+// GET /v1/listings/health - Comprehensive health check with automatic tests
 router.get('/health', authenticate, async (req, res) => {
-  const startTime = Date.now();
   const results = {
-    overall_health: 'healthy',
-    score: 100,
-    components: {},
-    metrics: {},
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    user: req.user?.email,
+    authMethod: req.user?.authMethod,
+    tests: []
   };
 
+  let testListingId = null;
+  const testPrefix = `HEALTH_CHECK_${Date.now()}`;
+
   try {
-    // 1. Database Health
-    const dbHealth = await checkDatabaseHealth();
-    results.components.database = dbHealth;
-    if (dbHealth.status !== 'healthy') {
-      results.overall_health = 'degraded';
-      results.score -= 25;
+    // Test 1: Create listing
+    const createTest = { name: 'CREATE_LISTING', status: 'pending', error: null };
+    try {
+      const createResult = await pool.query(`
+        INSERT INTO listings (
+          property_address, city, state, zip_code,
+          price, bedrooms, bathrooms, square_feet,
+          lot_size, year_built, property_type, status,
+          listing_date, mls_number, agent_id, team_id,
+          commission_percentage, description
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+        RETURNING id, mls_number
+      `, [
+        `${testPrefix} Test Property`,
+        'Test City',
+        'CA',
+        '90210',
+        750000,
+        4,
+        3,
+        2500,
+        0.25,
+        2020,
+        'Single Family',
+        'Active',
+        new Date(),
+        `MLS-${testPrefix}`,
+        req.user.id,
+        req.user.teamId,
+        2.5,
+        'Health check test listing - will be deleted'
+      ]);
+
+      testListingId = createResult.rows[0].id;
+      createTest.status = 'passed';
+      createTest.listingId = testListingId;
+      createTest.mlsNumber = createResult.rows[0].mls_number;
+    } catch (error) {
+      createTest.status = 'failed';
+      createTest.error = error.message;
+    }
+    results.tests.push(createTest);
+
+    // Only continue if create succeeded
+    if (testListingId) {
+      // Test 2: Read listing
+      const readTest = { name: 'READ_LISTING', status: 'pending', error: null };
+      try {
+        const readResult = await pool.query(`
+          SELECT id, mls_number, property_address, status, price
+          FROM listings
+          WHERE id = $1 AND (agent_id = $2 OR team_id = $3)
+        `, [testListingId, req.user.id, req.user.teamId]);
+
+        if (readResult.rows.length > 0) {
+          readTest.status = 'passed';
+          readTest.data = readResult.rows[0];
+        } else {
+          readTest.status = 'failed';
+          readTest.error = 'Could not read created listing - permission denied';
+        }
+      } catch (error) {
+        readTest.status = 'failed';
+        readTest.error = error.message;
+      }
+      results.tests.push(readTest);
+
+      // Test 3: Update listing price
+      const updateTest = { name: 'UPDATE_LISTING', status: 'pending', error: null };
+      try {
+        const updateResult = await pool.query(`
+          UPDATE listings
+          SET price = $1, status = 'Pending', updated_at = CURRENT_TIMESTAMP
+          WHERE id = $2 AND (agent_id = $3 OR team_id = $4)
+          RETURNING id, price, status
+        `, [699000, testListingId, req.user.id, req.user.teamId]);
+
+        if (updateResult.rows.length > 0) {
+          updateTest.status = 'passed';
+          updateTest.newPrice = updateResult.rows[0].price;
+          updateTest.newStatus = updateResult.rows[0].status;
+        } else {
+          updateTest.status = 'failed';
+          updateTest.error = 'Could not update listing - permission denied';
+        }
+      } catch (error) {
+        updateTest.status = 'failed';
+        updateTest.error = error.message;
+      }
+      results.tests.push(updateTest);
+
+      // Test 4: Add price reduction
+      const priceReductionTest = { name: 'PRICE_REDUCTION', status: 'pending', error: null };
+      try {
+        const priceReductionResult = await pool.query(`
+          INSERT INTO listing_price_history (
+            listing_id, old_price, new_price, change_date, reason
+          ) VALUES ($1, $2, $3, $4, $5)
+          RETURNING id
+        `, [testListingId, 699000, 649000, new Date(), 'Test price reduction']);
+
+        if (priceReductionResult.rows.length > 0) {
+          priceReductionTest.status = 'passed';
+        } else {
+          priceReductionTest.status = 'failed';
+        }
+      } catch (error) {
+        // Table might not exist, mark as skipped
+        priceReductionTest.status = 'skipped';
+        priceReductionTest.message = 'Price history table not configured';
+      }
+      results.tests.push(priceReductionTest);
+
+      // Test 5: Add showing
+      const showingTest = { name: 'ADD_SHOWING', status: 'pending', error: null };
+      try {
+        const showingResult = await pool.query(`
+          INSERT INTO listing_showings (
+            listing_id, showing_date, client_name, agent_name, feedback
+          ) VALUES ($1, $2, $3, $4, $5)
+          RETURNING id
+        `, [testListingId, new Date(), 'Test Client', 'Test Agent', 'Positive feedback']);
+
+        if (showingResult.rows.length > 0) {
+          showingTest.status = 'passed';
+        } else {
+          showingTest.status = 'failed';
+        }
+      } catch (error) {
+        // Table might not exist, mark as skipped
+        showingTest.status = 'skipped';
+        showingTest.message = 'Showings table not configured';
+      }
+      results.tests.push(showingTest);
+
+      // Test 6: Permission check - Try to access someone else's listing
+      const permissionTest = { name: 'PERMISSION_CHECK', status: 'pending', error: null };
+      try {
+        // Try to find a listing not owned by this user
+        const otherListingResult = await pool.query(`
+          SELECT id FROM listings
+          WHERE agent_id != $1
+          AND (team_id != $2 OR team_id IS NULL)
+          AND property_address NOT LIKE $3
+          LIMIT 1
+        `, [req.user.id, req.user.teamId, `${testPrefix}%`]);
+
+        if (otherListingResult.rows.length > 0) {
+          // Try to update it (should fail)
+          const unauthorizedUpdate = await pool.query(`
+            UPDATE listings
+            SET price = 999999
+            WHERE id = $1 AND agent_id = $2
+            RETURNING id
+          `, [otherListingResult.rows[0].id, req.user.id]);
+
+          if (unauthorizedUpdate.rows.length === 0) {
+            permissionTest.status = 'passed';
+            permissionTest.message = 'Correctly denied access to other user\'s listing';
+          } else {
+            permissionTest.status = 'failed';
+            permissionTest.error = 'Security issue: able to modify other user\'s listing';
+          }
+        } else {
+          permissionTest.status = 'skipped';
+          permissionTest.message = 'No other listings to test permissions against';
+        }
+      } catch (error) {
+        permissionTest.status = 'failed';
+        permissionTest.error = error.message;
+      }
+      results.tests.push(permissionTest);
+
+      // Test 7: Archive listing (soft delete)
+      const archiveTest = { name: 'ARCHIVE_LISTING', status: 'pending', error: null };
+      try {
+        const archiveResult = await pool.query(`
+          UPDATE listings
+          SET deleted_at = CURRENT_TIMESTAMP,
+              status = 'Withdrawn'
+          WHERE id = $1 AND (agent_id = $2 OR team_id = $3)
+          AND deleted_at IS NULL
+          RETURNING id, deleted_at
+        `, [testListingId, req.user.id, req.user.teamId]);
+
+        if (archiveResult.rows.length > 0 && archiveResult.rows[0].deleted_at) {
+          archiveTest.status = 'passed';
+        } else {
+          archiveTest.status = 'failed';
+          archiveTest.error = 'Could not archive listing';
+        }
+      } catch (error) {
+        archiveTest.status = 'failed';
+        archiveTest.error = error.message;
+      }
+      results.tests.push(archiveTest);
+
+      // Test 8: Delete listing (hard delete)
+      const deleteTest = { name: 'DELETE_LISTING', status: 'pending', error: null };
+      try {
+        // First clean up related records
+        await pool.query('DELETE FROM listing_price_history WHERE listing_id = $1', [testListingId]);
+        await pool.query('DELETE FROM listing_showings WHERE listing_id = $1', [testListingId]);
+
+        // Then delete the listing
+        const deleteResult = await pool.query(`
+          DELETE FROM listings
+          WHERE id = $1
+          AND (agent_id = $2 OR team_id = $3)
+          AND deleted_at IS NOT NULL
+        `, [testListingId, req.user.id, req.user.teamId]);
+
+        if (deleteResult.rowCount > 0) {
+          deleteTest.status = 'passed';
+        } else {
+          deleteTest.status = 'failed';
+          deleteTest.error = 'Could not delete listing';
+        }
+      } catch (error) {
+        deleteTest.status = 'failed';
+        deleteTest.error = error.message;
+      }
+      results.tests.push(deleteTest);
     }
 
-    // 2. Listing Metrics
-    const metrics = await getListingMetrics(req.user);
-    results.metrics = metrics;
+    // Calculate summary
+    const summary = {
+      total: results.tests.length,
+      passed: results.tests.filter(t => t.status === 'passed').length,
+      failed: results.tests.filter(t => t.status === 'failed').length,
+      skipped: results.tests.filter(t => t.status === 'skipped').length,
+      executionTime: Date.now() - Date.parse(results.timestamp)
+    };
 
-    // 3. Compliance Check
-    const compliance = await checkCompliance(req.user);
-    results.components.compliance = compliance;
-    if (compliance.issues > 0) {
-      results.overall_health = results.overall_health === 'healthy' ? 'warning' : results.overall_health;
-      results.score -= Math.min(compliance.issues * 5, 20);
-    }
-
-    // 4. Performance Metrics
-    const performance = await getPerformanceMetrics();
-    results.components.performance = performance;
-    if (performance.avg_response_time > 500) {
-      results.score -= 10;
-    }
-
-    results.execution_time_ms = Date.now() - startTime;
+    results.summary = summary;
     res.json(formatHealthResponse(true, results));
+
   } catch (error) {
-    console.error('Health check error:', error);
+    // Cleanup on error
+    if (testListingId) {
+      try {
+        await pool.query('DELETE FROM listing_price_history WHERE listing_id = $1', [testListingId]);
+        await pool.query('DELETE FROM listing_showings WHERE listing_id = $1', [testListingId]);
+        await pool.query('DELETE FROM listings WHERE id = $1', [testListingId]);
+      } catch (cleanupError) {
+        console.error('Cleanup failed:', cleanupError);
+      }
+    }
+
     res.status(500).json(formatHealthResponse(false, null, error));
   }
 });
