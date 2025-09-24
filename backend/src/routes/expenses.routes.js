@@ -3,7 +3,7 @@ const router = express.Router();
 const { body } = require('express-validator');
 const expensesController = require('../controllers/expenses.controller');
 const { authenticate, requirePermission } = require('../middleware/auth.middleware');
-const handleValidationErrors = require('../middleware/validation.middleware');
+const { validate } = require('../middleware/validation.middleware');
 
 // All routes require authentication
 router.use(authenticate);
@@ -54,10 +54,10 @@ router.get('/stats', requirePermission('expenses'), expensesController.getStats)
 router.get('/categories', requirePermission('expenses'), expensesController.getCategories);
 router.get('/', requirePermission('expenses'), expensesController.getExpenses);
 router.get('/:id', requirePermission('expenses'), expensesController.getExpense);
-router.post('/', requirePermission('expenses'), createValidation, handleValidationErrors, expensesController.createExpense);
-router.post('/report', requirePermission('expenses'), reportValidation, handleValidationErrors, expensesController.generateReport);
-router.put('/:id', requirePermission('expenses'), updateValidation, handleValidationErrors, expensesController.updateExpense);
-router.post('/:id/receipt', requirePermission('expenses'), receiptValidation, handleValidationErrors, expensesController.uploadReceipt);
+router.post('/', requirePermission('expenses'), createValidation, validate, expensesController.createExpense);
+router.post('/report', requirePermission('expenses'), reportValidation, validate, expensesController.generateReport);
+router.put('/:id', requirePermission('expenses'), updateValidation, validate, expensesController.updateExpense);
+router.post('/:id/receipt', requirePermission('expenses'), receiptValidation, validate, expensesController.uploadReceipt);
 router.patch('/:id/approve', requirePermission('expenses'), expensesController.approveExpense);
 router.delete('/:id', requirePermission('expenses'), expensesController.deleteExpense);
 

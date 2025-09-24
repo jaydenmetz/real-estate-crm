@@ -3,7 +3,7 @@ const router = express.Router();
 const { body } = require('express-validator');
 const commissionsController = require('../controllers/commissions.controller');
 const { authenticate, requirePermission } = require('../middleware/auth.middleware');
-const handleValidationErrors = require('../middleware/validation.middleware');
+const { validate } = require('../middleware/validation.middleware');
 
 // All routes require authentication
 router.use(authenticate);
@@ -42,9 +42,9 @@ const statusUpdateValidation = [
 router.get('/stats', requirePermission('commissions'), commissionsController.getStats);
 router.get('/', requirePermission('commissions'), commissionsController.getCommissions);
 router.get('/:id', requirePermission('commissions'), commissionsController.getCommission);
-router.post('/', requirePermission('commissions'), createValidation, handleValidationErrors, commissionsController.createCommission);
-router.put('/:id', requirePermission('commissions'), updateValidation, handleValidationErrors, commissionsController.updateCommission);
-router.patch('/:id/status', requirePermission('commissions'), statusUpdateValidation, handleValidationErrors, commissionsController.updateStatus);
+router.post('/', requirePermission('commissions'), createValidation, validate, commissionsController.createCommission);
+router.put('/:id', requirePermission('commissions'), updateValidation, validate, commissionsController.updateCommission);
+router.patch('/:id/status', requirePermission('commissions'), statusUpdateValidation, validate, commissionsController.updateStatus);
 router.delete('/:id', requirePermission('commissions'), commissionsController.deleteCommission);
 
 module.exports = router;

@@ -3,7 +3,7 @@ const router = express.Router();
 const { body } = require('express-validator');
 const webhooksController = require('../controllers/webhooks.controller');
 const { authenticate, requireRole } = require('../middleware/auth.middleware');
-const handleValidationErrors = require('../middleware/validation.middleware');
+const { validate } = require('../middleware/validation.middleware');
 
 // All routes require authentication
 router.use(authenticate);
@@ -17,7 +17,7 @@ const registerValidation = [
 
 // Routes
 router.get('/', requireRole('master', 'executive'), webhooksController.getWebhooks);
-router.post('/', requireRole('master', 'executive'), registerValidation, handleValidationErrors, webhooksController.register);
+router.post('/', requireRole('master', 'executive'), registerValidation, validate, webhooksController.register);
 router.delete('/:id', requireRole('master', 'executive'), webhooksController.deleteWebhook);
 
 module.exports = router;

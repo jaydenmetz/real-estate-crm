@@ -4,7 +4,7 @@ const { body } = require('express-validator');
 const listingsController = require('../controllers/listings.controller');
 const { authenticate } = require('../middleware/apiKey.middleware');
 const { requirePermission } = require('../middleware/auth.middleware');
-const handleValidationErrors = require('../middleware/validation.middleware');
+const { validate } = require('../middleware/validation.middleware');
 
 // All routes require authentication
 router.use(authenticate);
@@ -26,8 +26,8 @@ const updateValidation = [
 // Routes
 router.get('/', requirePermission('listings'), listingsController.getListings);
 router.get('/:id', requirePermission('listings'), listingsController.getListing);
-router.post('/', requirePermission('listings'), createValidation, handleValidationErrors, listingsController.createListing);
-router.put('/:id', requirePermission('listings'), updateValidation, handleValidationErrors, listingsController.updateListing);
+router.post('/', requirePermission('listings'), createValidation, validate, listingsController.createListing);
+router.put('/:id', requirePermission('listings'), updateValidation, validate, listingsController.updateListing);
 router.post('/:id/price-reduction', requirePermission('listings'), listingsController.recordPriceChange);
 router.post('/:id/showings', requirePermission('listings'), listingsController.logShowing);
 

@@ -3,7 +3,7 @@ const router = express.Router();
 const { body } = require('express-validator');
 const invoicesController = require('../controllers/invoices.controller');
 const { authenticate, requirePermission } = require('../middleware/auth.middleware');
-const handleValidationErrors = require('../middleware/validation.middleware');
+const { validate } = require('../middleware/validation.middleware');
 
 // All routes require authentication
 router.use(authenticate);
@@ -45,9 +45,9 @@ router.get('/stats', requirePermission('invoices'), invoicesController.getStats)
 router.get('/', requirePermission('invoices'), invoicesController.getInvoices);
 router.get('/:id', requirePermission('invoices'), invoicesController.getInvoice);
 router.get('/:id/download', requirePermission('invoices'), invoicesController.downloadInvoice);
-router.post('/', requirePermission('invoices'), createValidation, handleValidationErrors, invoicesController.createInvoice);
-router.put('/:id', requirePermission('invoices'), updateValidation, handleValidationErrors, invoicesController.updateInvoice);
-router.post('/:id/payment', requirePermission('invoices'), paymentValidation, handleValidationErrors, invoicesController.recordPayment);
+router.post('/', requirePermission('invoices'), createValidation, validate, invoicesController.createInvoice);
+router.put('/:id', requirePermission('invoices'), updateValidation, validate, invoicesController.updateInvoice);
+router.post('/:id/payment', requirePermission('invoices'), paymentValidation, validate, invoicesController.recordPayment);
 router.post('/:id/reminder', requirePermission('invoices'), invoicesController.sendReminder);
 router.delete('/:id', requirePermission('invoices'), invoicesController.deleteInvoice);
 

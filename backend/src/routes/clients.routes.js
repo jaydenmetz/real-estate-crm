@@ -4,7 +4,7 @@ const router = express.Router();
 const { body } = require('express-validator');
 const clientsController = require('../controllers/clients.controller');
 const { authenticateAny } = require('../middleware/combinedAuth.middleware');
-const handleValidationErrors = require('../middleware/validation.middleware');
+const { validate } = require('../middleware/validation.middleware');
 
 // All routes require authentication
 router.use(authenticateAny);
@@ -29,8 +29,8 @@ const updateValidation = [
 // Routes (removed requirePermission middleware that doesn't exist)
 router.get('/', clientsController.getClients);
 router.get('/:id', clientsController.getClient);
-router.post('/', createValidation, handleValidationErrors, clientsController.createClient);
-router.put('/:id', updateValidation, handleValidationErrors, clientsController.updateClient);
+router.post('/', createValidation, validate, clientsController.createClient);
+router.put('/:id', updateValidation, validate, clientsController.updateClient);
 router.delete('/:id', clientsController.deleteClient);
 router.post('/:id/notes', clientsController.addNote);
 router.patch('/:id/tags', clientsController.bulkUpdateTags);
