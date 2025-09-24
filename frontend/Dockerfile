@@ -1,5 +1,5 @@
 # Multi-stage build for optimized deployment
-FROM node:18-alpine AS builder
+FROM node:18.20.5-alpine3.20 AS builder
 
 # Set working directory
 WORKDIR /app
@@ -25,7 +25,7 @@ ENV REACT_APP_WS_URL=$REACT_APP_WS_URL
 RUN npm run build
 
 # Production stage
-FROM node:18-alpine AS runner
+FROM node:18.20.5-alpine3.20 AS runner
 
 # Install serve globally
 RUN npm install -g serve
