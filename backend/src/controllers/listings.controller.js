@@ -826,3 +826,139 @@ exports.trackAnalytics = async (req, res) => {
     });
   }
 };
+
+// Archive listing (soft delete)
+exports.archiveListing = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const teamId = req.user.teamId;
+
+    // Archive the listing with permission check
+    const archiveQuery = `
+      UPDATE listings
+      SET
+        deleted_at = CURRENT_TIMESTAMP,
+        listing_status = 'Cancelled'
+      WHERE id = $1
+      AND (created_by = $2 OR team_id = $3)
+      AND deleted_at IS NULL
+      RETURNING id, property_address, deleted_at, listing_status
+    `;
+
+    const result = await query(archiveQuery, [id, userId, teamId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Listing not found or already archived'
+        }
+      });
+    }
+
+    logger.info('Listing archived', {
+      listingId: id,
+      archivedBy: req.user?.email || 'unknown'
+    });
+
+    res.json({
+      success: true,
+      data: result.rows[0],
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('Error archiving listing:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'ARCHIVE_ERROR',
+        message: 'Failed to archive listing'
+      }
+    });
+  }
+};
+
+// Delete listing (hard delete - only after archiving)
+exports.deleteListing = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.user.id;
+    const teamId = req.user.teamId;
+
+    // First check if the listing is archived
+    const checkQuery = `
+      SELECT id, property_address, deleted_at
+      FROM listings
+      WHERE id = $1
+      AND (created_by = $2 OR team_id = $3)
+    `;
+
+    const checkResult = await query(checkQuery, [id, userId, teamId]);
+
+    if (checkResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Listing not found'
+        }
+      });
+    }
+
+    if (!checkResult.rows[0].deleted_at) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'NOT_ARCHIVED',
+          message: 'Listing must be archived before deletion'
+        }
+      });
+    }
+
+    // Permanently delete the listing
+    const deleteQuery = `
+      DELETE FROM listings
+      WHERE id = $1
+      AND (created_by = $2 OR team_id = $3)
+      AND deleted_at IS NOT NULL
+      RETURNING id, property_address
+    `;
+
+    const result = await query(deleteQuery, [id, userId, teamId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'DELETE_FAILED',
+          message: 'Failed to delete listing'
+        }
+      });
+    }
+
+    logger.info('Listing permanently deleted', {
+      listingId: id,
+      deletedBy: req.user?.email || 'unknown'
+    });
+
+    res.json({
+      success: true,
+      data: {
+        id: result.rows[0].id,
+        message: `Listing ${result.rows[0].property_address} permanently deleted`
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('Error deleting listing:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'DELETE_ERROR',
+        message: 'Failed to delete listing'
+      }
+    });
+  }
+};
