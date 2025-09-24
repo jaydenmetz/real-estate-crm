@@ -570,7 +570,6 @@ const ListingsHealthDashboard = () => {
       description: 'Beautiful test property with all amenities',
       commissionPercentage: 2.5,
       propertyAmenities: ['Pool', 'Garage', 'Garden'],
-      showingInstructions: 'Call listing agent for appointment',
       virtualTourUrl: 'https://example.com/tour',
       source: 'MLS',
       sellers: [
@@ -644,8 +643,7 @@ const ListingsHealthDashboard = () => {
       // PUT Test 1: Update listing basic info
       const updateData = {
         listPrice: 695000,
-        listingStatus: 'Pending',
-        showingInstructions: 'Updated showing instructions'
+        listingStatus: 'Pending'
       };
 
       const updateTest = {
@@ -689,8 +687,7 @@ const ListingsHealthDashboard = () => {
 
       // PUT Test 2: Price reduction
       const priceReductionData = {
-        listPrice: 599000,
-        priceReductionDate: new Date().toISOString()
+        listPrice: 599000
       };
 
       const priceReductionTest = {
