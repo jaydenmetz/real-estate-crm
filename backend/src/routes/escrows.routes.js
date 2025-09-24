@@ -6,7 +6,7 @@ const router = express.Router();
 const escrowsController = require('../controllers/escrows.controller');
 const { authenticate } = require('../middleware/apiKey.middleware');
 const { requirePermission } = require('../middleware/auth.middleware');
-const validationMiddleware = require('../middleware/validation.middleware');
+const { validate, escrowValidationRules, paginationValidationRules, idValidationRules } = require('../middleware/validation.middleware');
 
 // All routes require authentication and escrows permission
 router.use(authenticate);
@@ -24,7 +24,7 @@ router.get(
     query('page').optional().isInt({ min: 1 }).withMessage('Page must be an integer').toInt(),
     query('limit').optional().isInt({ min: 1 }).withMessage('Limit must be an integer').toInt()
   ],
-  validationMiddleware,
+  validate,
   escrowsController.getEscrows
 );
 
@@ -34,7 +34,7 @@ router.get(
   [
     param('id').notEmpty().withMessage('Escrow ID is required')
   ],
-  validationMiddleware,
+  validate,
   escrowsController.getEscrow
 );
 
@@ -77,7 +77,7 @@ router.post(
     body('state').optional().isString().withMessage('State must be a string'),
     body('zipCode').optional().isString().withMessage('Zip code must be a string')
   ],
-  validationMiddleware,
+  validate,
   escrowsController.createEscrow
 );
 
@@ -110,7 +110,7 @@ router.put(
     body('closingDate').optional().isISO8601().withMessage('Invalid closing date'),
     body('escrowStatus').optional().isString().withMessage('Escrow status must be a string')
   ],
-  validationMiddleware,
+  validate,
   escrowsController.updateEscrow
 );
 
@@ -120,7 +120,7 @@ router.put(
   [
     param('id').notEmpty().withMessage('Escrow ID is required')
   ],
-  validationMiddleware,
+  validate,
   escrowsController.archiveEscrow
 );
 
@@ -130,7 +130,7 @@ router.put(
   [
     param('id').notEmpty().withMessage('Escrow ID is required')
   ],
-  validationMiddleware,
+  validate,
   escrowsController.restoreEscrow
 );
 
@@ -140,7 +140,7 @@ router.delete(
   [
     param('id').notEmpty().withMessage('Escrow ID is required')
   ],
-  validationMiddleware,
+  validate,
   escrowsController.deleteEscrow
 );
 
@@ -153,7 +153,7 @@ router.patch(
     body('value').isBoolean().withMessage('Value must be boolean'),
     body('note').optional().isString().withMessage('Note must be a string')
   ],
-  validationMiddleware,
+  validate,
   escrowsController.updateChecklist
 );
 
@@ -163,7 +163,7 @@ router.get(
   [
     param('id').notEmpty().withMessage('Escrow ID is required')
   ],
-  validationMiddleware,
+  validate,
   escrowsController.getEscrowTimeline
 );
 
@@ -173,7 +173,7 @@ router.get(
   [
     param('id').notEmpty().withMessage('Escrow ID is required')
   ],
-  validationMiddleware,
+  validate,
   escrowsController.getEscrowPeople
 );
 
@@ -183,7 +183,7 @@ router.get(
   [
     param('id').notEmpty().withMessage('Escrow ID is required')
   ],
-  validationMiddleware,
+  validate,
   escrowsController.getEscrowFinancials
 );
 
@@ -193,7 +193,7 @@ router.get(
   [
     param('id').notEmpty().withMessage('Escrow ID is required')
   ],
-  validationMiddleware,
+  validate,
   escrowsController.getEscrowChecklists
 );
 
@@ -203,7 +203,7 @@ router.get(
   [
     param('id').notEmpty().withMessage('Escrow ID is required')
   ],
-  validationMiddleware,
+  validate,
   escrowsController.getEscrowDetails
 );
 
@@ -213,7 +213,7 @@ router.get(
   [
     param('id').notEmpty().withMessage('Escrow ID is required')
   ],
-  validationMiddleware,
+  validate,
   escrowsController.getEscrowPropertyDetails
 );
 
@@ -223,7 +223,7 @@ router.get(
   [
     param('id').notEmpty().withMessage('Escrow ID is required')
   ],
-  validationMiddleware,
+  validate,
   escrowsController.getEscrowChecklistLoan
 );
 
@@ -233,7 +233,7 @@ router.get(
   [
     param('id').notEmpty().withMessage('Escrow ID is required')
   ],
-  validationMiddleware,
+  validate,
   escrowsController.getEscrowChecklistHouse
 );
 
@@ -243,7 +243,7 @@ router.get(
   [
     param('id').notEmpty().withMessage('Escrow ID is required')
   ],
-  validationMiddleware,
+  validate,
   escrowsController.getEscrowChecklistAdmin
 );
 
@@ -253,7 +253,7 @@ router.get(
   [
     param('id').notEmpty().withMessage('Escrow ID is required')
   ],
-  validationMiddleware,
+  validate,
   escrowsController.getEscrowDocuments
 );
 
@@ -263,7 +263,7 @@ router.get(
   [
     param('id').notEmpty().withMessage('Escrow ID is required')
   ],
-  validationMiddleware,
+  validate,
   escrowsController.getEscrowNotes
 );
 
@@ -275,7 +275,7 @@ router.post(
     body('note').notEmpty().withMessage('Note content is required'),
     body('type').optional().isString().withMessage('Note type must be a string')
   ],
-  validationMiddleware,
+  validate,
   escrowsController.addEscrowNote
 );
 
@@ -287,7 +287,7 @@ router.put(
   [
     param('id').notEmpty().withMessage('Escrow ID is required')
   ],
-  validationMiddleware,
+  validate,
   escrowsController.updateEscrowDetails
 );
 
@@ -297,7 +297,7 @@ router.put(
   [
     param('id').notEmpty().withMessage('Escrow ID is required')
   ],
-  validationMiddleware,
+  validate,
   escrowsController.updateEscrowPeople
 );
 
@@ -307,7 +307,7 @@ router.put(
   [
     param('id').notEmpty().withMessage('Escrow ID is required')
   ],
-  validationMiddleware,
+  validate,
   escrowsController.updateEscrowTimeline || escrowsController.updateEscrow
 );
 
@@ -317,7 +317,7 @@ router.put(
   [
     param('id').notEmpty().withMessage('Escrow ID is required')
   ],
-  validationMiddleware,
+  validate,
   escrowsController.updateEscrowFinancials
 );
 
@@ -327,7 +327,7 @@ router.put(
   [
     param('id').notEmpty().withMessage('Escrow ID is required')
   ],
-  validationMiddleware,
+  validate,
   escrowsController.updateEscrowPropertyDetails
 );
 
@@ -337,7 +337,7 @@ router.put(
   [
     param('id').notEmpty().withMessage('Escrow ID is required')
   ],
-  validationMiddleware,
+  validate,
   escrowsController.updateEscrowChecklistLoan
 );
 
@@ -347,7 +347,7 @@ router.put(
   [
     param('id').notEmpty().withMessage('Escrow ID is required')
   ],
-  validationMiddleware,
+  validate,
   escrowsController.updateEscrowChecklistHouse
 );
 
@@ -357,7 +357,7 @@ router.put(
   [
     param('id').notEmpty().withMessage('Escrow ID is required')
   ],
-  validationMiddleware,
+  validate,
   escrowsController.updateEscrowChecklistAdmin
 );
 
@@ -368,7 +368,7 @@ router.put(
     param('id').notEmpty().withMessage('Escrow ID is required'),
     body().isArray().withMessage('Documents must be an array')
   ],
-  validationMiddleware,
+  validate,
   escrowsController.updateEscrowDocuments
 );
 
