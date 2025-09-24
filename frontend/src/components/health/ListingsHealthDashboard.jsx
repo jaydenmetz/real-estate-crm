@@ -434,7 +434,11 @@ const ListingsHealthDashboard = () => {
 
     // POST Test 1: Minimal (Address Only)
     const minimalListingData = {
-      property_address: `${Date.now()} Minimal Test St, Suite 1`
+      propertyAddress: `${Date.now()} Minimal Test St, Suite 1`,
+      listPrice: 500000,
+      sellers: [],
+      listingDate: new Date().toISOString(),
+      propertyType: 'Single Family'
     };
 
     const createMinimalTest = {
@@ -485,16 +489,20 @@ const ListingsHealthDashboard = () => {
 
     // POST Test 2: Basic (Most Important Fields)
     const basicListingData = {
-      property_address: `${Date.now()} Basic Test Ave, Unit 2`,
+      propertyAddress: `${Date.now()} Basic Test Ave, Unit 2`,
       city: 'Los Angeles',
       state: 'CA',
-      zip_code: '90001',
-      price: 750000,
+      zipCode: '90001',
+      listPrice: 750000,
       bedrooms: 3,
       bathrooms: 2,
-      square_feet: 2000,
-      status: 'Active',
-      listing_date: new Date().toISOString().split('T')[0]
+      squareFeet: 2000,
+      listingStatus: 'Active',
+      listingDate: new Date().toISOString(),
+      propertyType: 'Condo',
+      sellers: [
+        { name: 'Test Seller', email: 'seller@test.com' }
+      ]
     };
 
     const createBasicTest = {
@@ -545,26 +553,30 @@ const ListingsHealthDashboard = () => {
 
     // POST Test 3: Full (All Fields)
     const fullListingData = {
-      property_address: `${Date.now()} Full Test Blvd, Suite 3`,
+      propertyAddress: `${Date.now()} Full Test Blvd, Suite 3`,
       city: 'San Francisco',
       state: 'CA',
-      zip_code: '94105',
-      price: 1250000,
+      zipCode: '94105',
+      listPrice: 1250000,
       bedrooms: 4,
       bathrooms: 3,
-      square_feet: 3000,
-      lot_size: 0.35,
-      year_built: 2020,
-      property_type: 'Single Family',
-      status: 'Active',
-      listing_date: new Date().toISOString().split('T')[0],
-      mls_number: `MLS-${Date.now()}`,
+      squareFeet: 3000,
+      lotSize: 0.35,
+      yearBuilt: 2020,
+      propertyType: 'Single Family',
+      listingStatus: 'Active',
+      listingDate: new Date().toISOString(),
+      mlsNumber: `MLS-${Date.now()}`,
       description: 'Beautiful test property with all amenities',
-      commission_percentage: 2.5,
-      property_amenities: ['Pool', 'Garage', 'Garden'],
-      showing_instructions: 'Call listing agent for appointment',
-      virtual_tour_url: 'https://example.com/tour',
-      source: 'MLS'
+      commissionPercentage: 2.5,
+      propertyAmenities: ['Pool', 'Garage', 'Garden'],
+      showingInstructions: 'Call listing agent for appointment',
+      virtualTourUrl: 'https://example.com/tour',
+      source: 'MLS',
+      sellers: [
+        { name: 'John Doe', email: 'john@test.com', phone: '555-1234' },
+        { name: 'Jane Doe', email: 'jane@test.com', phone: '555-5678' }
+      ]
     };
 
     const createFullTest = {
@@ -631,9 +643,9 @@ const ListingsHealthDashboard = () => {
 
       // PUT Test 1: Update listing basic info
       const updateData = {
-        price: 695000,
-        status: 'Pending',
-        showing_instructions: 'Updated showing instructions'
+        listPrice: 695000,
+        listingStatus: 'Pending',
+        showingInstructions: 'Updated showing instructions'
       };
 
       const updateTest = {
@@ -677,8 +689,8 @@ const ListingsHealthDashboard = () => {
 
       // PUT Test 2: Price reduction
       const priceReductionData = {
-        price: 599000,
-        price_reduction_date: new Date().toISOString().split('T')[0]
+        listPrice: 599000,
+        priceReductionDate: new Date().toISOString()
       };
 
       const priceReductionTest = {
@@ -726,8 +738,8 @@ const ListingsHealthDashboard = () => {
           {
             date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
             time: '14:00',
-            agent_name: 'John Smith',
-            client_name: 'Jane Doe',
+            agentName: 'John Smith',
+            clientName: 'Jane Doe',
             feedback: 'Client loved the property'
           }
         ]
