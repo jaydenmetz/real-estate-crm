@@ -45,6 +45,7 @@ import ActivityLog from './components/system/ActivityLog';
 import AllNotes from './components/system/AllNotes';
 import SystemHealthDashboard from './components/health/SystemHealthDashboard3';
 import EscrowsHealthDashboard from './components/health/EscrowsHealthDashboard';
+import ListingsHealthDashboard from './components/health/ListingsHealthDashboard';
 // import Reports from './components/system/Reports';
 // import Calendar from './components/system/Calendar';
 // import Settings from './components/system/Settings';
@@ -255,6 +256,7 @@ function App() {
                                 <Route path="/escrows/:id" element={<EscrowDetail />} />
                     
                                 <Route path="/listings" element={<ListingsDashboard />} />
+                                <Route path="/listings/health" element={<ListingsHealthDashboard />} />
                                 <Route path="/listings/:id" element={<ListingDetail />} />
                     
                                 <Route path="/clients" element={<ClientsDashboard />} />

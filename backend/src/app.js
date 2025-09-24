@@ -183,7 +183,12 @@ const escrowsRouter = express.Router();
 escrowsRouter.use('/', require('./routes/escrows.routes'));
 escrowsRouter.use('/', require('./routes/escrows-health.routes')); // Health endpoints at /escrows/health/*
 apiRouter.use('/escrows', escrowsRouter);
-apiRouter.use('/listings', require('./routes/listings.routes'));
+
+// Listings routes - including health checks
+const listingsRouter = express.Router();
+listingsRouter.use('/', require('./routes/listings.routes'));
+listingsRouter.use('/', require('./routes/listings-health.routes')); // Health endpoints at /listings/health/*
+apiRouter.use('/listings', listingsRouter);
 apiRouter.use('/clients', require('./routes/clients.routes'));
 apiRouter.use('/appointments', require('./routes/appointments.routes'));
 apiRouter.use('/leads', require('./routes/leads.routes'));
