@@ -729,26 +729,22 @@ const ListingsHealthDashboard = () => {
       allTests.push(priceReductionTest);
       setGroupedTests({...grouped});
 
-      // PUT Test 3: Add showing
+      // POST Test for showings endpoint
       const showingData = {
-        showings: [
-          {
-            date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-            time: '14:00',
-            agentName: 'John Smith',
-            clientName: 'Jane Doe',
-            feedback: 'Client loved the property'
-          }
-        ]
+        date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        time: '14:00',
+        agentName: 'John Smith',
+        clientName: 'Jane Doe',
+        feedback: 'Client loved the property'
       };
 
       const addShowingTest = {
         name: 'Add Showing',
         description: 'Test adding a showing to the listing',
-        method: 'PUT',
-        endpoint: `/listings/${listingForDetailTests}`,
+        method: 'POST',
+        endpoint: `/listings/${listingForDetailTests}/showings`,
         status: 'pending',
-        curl: `curl -X PUT "${API_URL}/listings/${listingForDetailTests}" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(showingData, null, 2)}'`,
+        curl: `curl -X POST "${API_URL}/listings/${listingForDetailTests}/showings" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(showingData, null, 2)}'`,
         requestBody: showingData,
         response: null,
         error: null,
@@ -757,8 +753,8 @@ const ListingsHealthDashboard = () => {
 
       const startTime7 = Date.now();
       try {
-        const response = await fetch(`${API_URL}/listings/${listingForDetailTests}`, {
-          method: 'PUT',
+        const response = await fetch(`${API_URL}/listings/${listingForDetailTests}/showings`, {
+          method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -777,7 +773,7 @@ const ListingsHealthDashboard = () => {
         addShowingTest.error = error.message;
         addShowingTest.responseTime = Date.now() - startTime7;
       }
-      grouped.PUT.push(addShowingTest);
+      grouped.POST.push(addShowingTest);
       allTests.push(addShowingTest);
       setGroupedTests({...grouped});
 
