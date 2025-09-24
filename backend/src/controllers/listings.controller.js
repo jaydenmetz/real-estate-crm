@@ -343,7 +343,9 @@ exports.updateListing = async (req, res) => {
         virtualTourLink: 'virtual_tour_link',
         professionalPhotos: 'professional_photos',
         dronePhotos: 'drone_photos',
-        videoWalkthrough: 'video_walkthrough'
+        videoWalkthrough: 'video_walkthrough',
+        showingInstructions: 'showing_instructions',
+        priceReductionDate: 'price_reduction_date'
       };
 
       const column = columnMap[key] || key;
@@ -395,21 +397,15 @@ exports.updateListing = async (req, res) => {
       });
     }
 
-    // If price changed, record it in price history
+    // If price changed, log it
     if (priceChanged) {
-      await query(
-        `INSERT INTO listing_price_history (listing_id, old_price, new_price, reason, created_by)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [id, oldPrice, newPrice, updates.priceChangeReason || 'Price updated', req.user?.id || null]
-      );
-
-      // Recalculate commission amounts if needed
-      const commissionQuery = `
-        UPDATE listings 
-        SET updated_at = CURRENT_TIMESTAMP
-        WHERE id = $1
-      `;
-      await query(commissionQuery, [id]);
+      logger.info('Listing price updated', {
+        listingId: id,
+        oldPrice,
+        newPrice,
+        reason: updates.priceChangeReason || 'Price updated',
+        updatedBy: req.user?.email || 'unknown'
+      });
     }
 
     // Emit real-time update
