@@ -578,13 +578,13 @@ const AppointmentsHealthDashboard = () => {
 
     // PUT Test 1: Update appointment time
     const updateData = {
-      startTime: '16:00',
-      duration: 45
+      location: 'Updated Location - Conference Room B',
+      status: 'confirmed'
     };
 
     const updateTest = {
       name: 'Update Appointment by ID',
-      description: 'Update appointment time and duration',
+      description: 'Update appointment location and status',
       method: 'PUT',
       endpoint: `/appointments/${createdAppointmentIds[0]}`,
       status: 'pending',
