@@ -14,7 +14,7 @@ const createValidation = [
   body('firstName').notEmpty().withMessage('First name is required'),
   body('lastName').notEmpty().withMessage('Last name is required'),
   body('email').optional().isEmail().withMessage('Valid email is required'),
-  body('clientType').optional().isIn(['Buyer', 'Seller', 'Both', 'Investor', 'Referral']),
+  body('clientType').optional().isIn(['Buyer', 'Seller', 'Both', 'Investor', 'Referral', 'buyer', 'seller', 'both', 'investor', 'referral']),
   body('phone').optional().isString().withMessage('Invalid phone number')
 ];
 
@@ -22,7 +22,7 @@ const updateValidation = [
   body('firstName').optional().notEmpty(),
   body('lastName').optional().notEmpty(),
   body('email').optional().isEmail(),
-  body('clientType').optional().isIn(['Buyer', 'Seller', 'Both', 'Investor', 'Referral']),
+  body('clientType').optional().isIn(['Buyer', 'Seller', 'Both', 'Investor', 'Referral', 'buyer', 'seller', 'both', 'investor', 'referral']),
   body('status').optional().isIn(['active', 'inactive', 'archived'])
 ];
 

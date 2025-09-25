@@ -3,7 +3,7 @@
 const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
-const appointmentsController = require('../controllers/appointments.controller');
+const appointmentsController = require('../controllers/appointments.controller.simple');
 const { authenticate } = require('../middleware/apiKey.middleware');
 const { validate } = require('../middleware/validation.middleware');
 
@@ -13,16 +13,17 @@ router.use(authenticate);
 // Validation rules
 const createValidation = [
   body('title').notEmpty().withMessage('Title is required'),
-  body('appointmentType').isIn(['Listing Presentation', 'Buyer Consultation', 'Property Showing', 'Open House', 'Closing', 'Inspection', 'Other']),
-  body('date').isISO8601().withMessage('Invalid date'),
-  body('startTime').notEmpty().withMessage('Start time is required'),
+  body('appointmentType').optional().isIn(['Listing Presentation', 'Buyer Consultation', 'Property Showing', 'Open House', 'Closing', 'Inspection', 'Other', 'meeting']),
+  body('startDate').optional().isISO8601().withMessage('Invalid start date'),
+  body('endDate').optional().isISO8601().withMessage('Invalid end date'),
   body('duration').optional().isInt({ min: 15, max: 480 })
 ];
 
 const updateValidation = [
   body('title').optional().notEmpty(),
-  body('date').optional().isISO8601(),
-  body('startTime').optional().notEmpty()
+  body('startDate').optional().isISO8601(),
+  body('endDate').optional().isISO8601(),
+  body('status').optional().isString()
 ];
 
 // Routes
@@ -35,7 +36,7 @@ router.post('/:id/complete', appointmentsController.markComplete);
 
 // Archive and Delete endpoints - Added for health dashboard testing
 // Archive endpoint: Soft deletes by setting status to 'cancelled'
-router.put('/:id/archive', appointmentsController.archiveAppointment || appointmentsController.cancelAppointment);
+router.put('/:id/archive', appointmentsController.archiveAppointment);
 // Delete endpoint: Hard delete
 router.delete('/:id', appointmentsController.deleteAppointment);
 

@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
-const leadsController = require('../controllers/leads.controller');
+const leadsController = require('../controllers/leads.controller.simple');
 const { authenticate } = require('../middleware/apiKey.middleware');
 const { requirePermission } = require('../middleware/auth.middleware');
 const { validate } = require('../middleware/validation.middleware');
@@ -13,17 +13,17 @@ router.use(authenticate);
 const createValidation = [
   body('firstName').notEmpty().withMessage('First name is required'),
   body('lastName').notEmpty().withMessage('Last name is required'),
-  body('leadSource').notEmpty().withMessage('Lead source is required'),
-  body('leadType').isIn(['Buyer', 'Seller', 'Both', 'Investor']),
+  body('leadSource').optional().isString().withMessage('Lead source is required'),
+  body('leadType').optional().isIn(['Buyer', 'Seller', 'Both', 'Investor', 'buyer', 'seller', 'both', 'investor']),
   body('email').optional().isEmail().withMessage('Invalid email'),
-  body('phone').optional().isMobilePhone('any').withMessage('Invalid phone number')
+  body('phone').optional().isString().withMessage('Invalid phone number')
 ];
 
 const updateValidation = [
   body('firstName').optional().notEmpty(),
   body('lastName').optional().notEmpty(),
-  body('leadType').optional().isIn(['Buyer', 'Seller', 'Both', 'Investor']),
-  body('leadStatus').optional().isIn(['New', 'Contacted', 'Qualified', 'Nurture', 'Appointment Set', 'Met', 'Converted', 'Lost'])
+  body('leadType').optional().isIn(['Buyer', 'Seller', 'Both', 'Investor', 'buyer', 'seller', 'both', 'investor']),
+  body('status').optional().isString()
 ];
 
 // Routes
@@ -36,7 +36,7 @@ router.post('/:id/activities', requirePermission('leads'), leadsController.recor
 
 // Archive and Delete endpoints - Added for health dashboard testing
 // Archive endpoint: Soft deletes by setting status to 'archived'
-router.put('/:id/archive', requirePermission('leads'), leadsController.archiveLead || leadsController.deleteLead);
+router.put('/:id/archive', requirePermission('leads'), leadsController.archiveLead);
 // Delete endpoint: Hard delete
 router.delete('/:id', requirePermission('leads'), leadsController.deleteLead);
 
