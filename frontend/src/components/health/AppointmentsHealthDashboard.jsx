@@ -163,48 +163,59 @@ const TestItem = ({ test }) => {
 
   return (
     <TestCard status={test.status}>
-      <CardContent sx={{ pb: expanded ? 2 : 2, '&:last-child': { pb: 2 } }}>
-        <Box display="flex" alignItems="flex-start" justifyContent="space-between">
-          <Box display="flex" alignItems="flex-start" gap={2}>
+      <CardContent onClick={() => setExpanded(!expanded)} sx={{ cursor: 'pointer' }}>
+        <Box display="flex" alignItems="center" justifyContent="space-between">
+          <Box display="flex" alignItems="center" gap={2}>
             <StatusIcon status={test.status} />
             <Box>
               <Typography variant="h6" fontWeight="bold">
                 {test.name}
               </Typography>
-              <Typography variant="body2" color="textSecondary" mb={1}>
+              <Typography variant="body2" color="textSecondary">
                 {test.description}
               </Typography>
-              <Stack direction="row" spacing={1} alignItems="center">
-                <Chip
-                  label={test.method}
-                  size="small"
-                  color={
-                    test.method === 'GET' ? 'info' :
-                    test.method === 'POST' ? 'success' :
-                    test.method === 'PUT' ? 'warning' :
-                    test.method === 'DELETE' ? 'error' :
-                    'default'
-                  }
-                />
-                <Chip
-                  label={test.endpoint}
-                  size="small"
-                  variant="outlined"
-                />
-                {test.responseTime && (
+              {test.method && test.endpoint && (
+                <Box display="flex" gap={1} mt={0.5}>
                   <Chip
-                    label={`${test.responseTime}ms`}
+                    label={test.method}
                     size="small"
-                    variant="outlined"
-                    color={test.responseTime < 200 ? 'success' : 'warning'}
+                    sx={{
+                      fontWeight: 'bold',
+                      backgroundColor:
+                        test.method === 'GET' ? '#2196f3' :
+                        test.method === 'POST' ? '#4caf50' :
+                        test.method === 'PUT' ? '#ff9800' :
+                        test.method === 'DELETE' ? '#f44336' : '#9e9e9e',
+                      color: 'white'
+                    }}
                   />
-                )}
-              </Stack>
+                  <Typography variant="caption" sx={{ alignSelf: 'center', fontFamily: 'monospace' }}>
+                    {test.endpoint}
+                  </Typography>
+                </Box>
+              )}
             </Box>
           </Box>
-          <ExpandButton expanded={expanded} onClick={() => setExpanded(!expanded)}>
-            <ExpandIcon />
-          </ExpandButton>
+          <Box display="flex" alignItems="center" gap={1}>
+            <Chip
+              label={test.status === 'success' ? 'PASSED' : test.status === 'failed' ? 'FAILED' : 'PENDING'}
+              size="small"
+              sx={{
+                fontWeight: 'bold',
+                backgroundColor: test.status === 'success' ? '#4caf50' :
+                                test.status === 'failed' ? '#f44336' : '#9e9e9e',
+                color: 'white'
+              }}
+            />
+            {test.responseTime && (
+              <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                {test.responseTime}ms
+              </Typography>
+            )}
+            <ExpandButton expanded={expanded}>
+              <ExpandIcon />
+            </ExpandButton>
+          </Box>
         </Box>
       </CardContent>
 
