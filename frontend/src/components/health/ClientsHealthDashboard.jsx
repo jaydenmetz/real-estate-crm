@@ -163,58 +163,70 @@ const TestItem = ({ test }) => {
 
   return (
     <TestCard status={test.status}>
-      <CardContent sx={{ pb: expanded ? 2 : 2, '&:last-child': { pb: 2 } }}>
-        <Box display="flex" alignItems="flex-start" justifyContent="space-between">
-          <Box display="flex" alignItems="flex-start" gap={2}>
+      <CardContent onClick={() => setExpanded(!expanded)} sx={{ cursor: 'pointer' }}>
+        <Box display="flex" alignItems="center" justifyContent="space-between">
+          <Box display="flex" alignItems="center" gap={2}>
             <StatusIcon status={test.status} />
             <Box>
               <Typography variant="h6" fontWeight="bold">
                 {test.name}
               </Typography>
-              <Typography variant="body2" color="textSecondary" mb={1}>
+              <Typography variant="body2" color="textSecondary">
                 {test.description}
               </Typography>
-              <Stack direction="row" spacing={1} alignItems="center">
-                <Chip
-                  label={test.method}
-                  size="small"
-                  color={
-                    test.method === 'GET' ? 'info' :
-                    test.method === 'POST' ? 'success' :
-                    test.method === 'PUT' ? 'warning' :
-                    test.method === 'DELETE' ? 'error' :
-                    'default'
-                  }
-                />
-                <Chip
-                  label={test.endpoint}
-                  size="small"
-                  variant="outlined"
-                />
-                {test.responseTime && (
+              {test.method && test.endpoint && (
+                <Box display="flex" gap={1} mt={0.5}>
                   <Chip
-                    label={`${test.responseTime}ms`}
+                    label={test.method}
                     size="small"
-                    variant="outlined"
-                    color={test.responseTime < 200 ? 'success' : 'warning'}
+                    sx={{
+                      fontWeight: 'bold',
+                      backgroundColor:
+                        test.method === 'GET' ? '#2196f3' :
+                        test.method === 'POST' ? '#4caf50' :
+                        test.method === 'PUT' ? '#ff9800' :
+                        test.method === 'DELETE' ? '#f44336' : '#9e9e9e',
+                      color: 'white'
+                    }}
                   />
-                )}
-              </Stack>
+                  <Typography variant="caption" sx={{ alignSelf: 'center', fontFamily: 'monospace' }}>
+                    {test.endpoint}
+                  </Typography>
+                </Box>
+              )}
             </Box>
           </Box>
-          <ExpandButton expanded={expanded} onClick={() => setExpanded(!expanded)}>
-            <ExpandIcon />
-          </ExpandButton>
+          <Box display="flex" alignItems="center" gap={1}>
+            <Chip
+              label={test.status === 'success' ? 'PASSED' : test.status === 'failed' ? 'FAILED' : 'PENDING'}
+              size="small"
+              sx={{
+                backgroundColor: test.status === 'success' ? '#4caf50' :
+                               test.status === 'failed' ? '#f44336' : '#9e9e9e',
+                color: 'white',
+                fontWeight: 'bold'
+              }}
+            />
+            {test.responseTime && (
+              <Chip
+                label={`${test.responseTime}ms`}
+                size="small"
+                variant="outlined"
+              />
+            )}
+            <ExpandButton expanded={expanded}>
+              <ExpandIcon />
+            </ExpandButton>
+          </Box>
         </Box>
       </CardContent>
 
       <Collapse in={expanded}>
-        <Divider />
-        <Box p={3} bgcolor="background.default">
+        <Box sx={{ px: 2, pb: 2 }}>
           {test.curl && (
             <>
-              <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
-                cURL Command:
+              <Typography variant="subtitle2" sx={{ mt: 2, mb: 1, fontWeight: 'bold' }}>
+                CURL Request:
               </Typography>
               <CodeBlock>
                 <CopyButton size="small" onClick={() => copyToClipboard(test.curl)}>
@@ -234,7 +246,7 @@ const TestItem = ({ test }) => {
                 <CopyButton size="small" onClick={() => copyToClipboard(formatRequestBody())}>
                   <CopyIcon fontSize="small" />
                 </CopyButton>
-                <pre style={{ margin: 0, color: '#9cdcfe' }}>{formatRequestBody()}</pre>
+                <pre style={{ margin: 0 }}>{formatRequestBody()}</pre>
               </CodeBlock>
             </>
           )}
@@ -248,9 +260,7 @@ const TestItem = ({ test }) => {
                 <CopyButton size="small" onClick={() => copyToClipboard(formatResponse())}>
                   <CopyIcon fontSize="small" />
                 </CopyButton>
-                <pre style={{ margin: 0, color: test.status === 'success' ? '#b5cea8' : '#f48771' }}>
-                  {formatResponse()}
-                </pre>
+                <pre style={{ margin: 0 }}>{formatResponse()}</pre>
               </CodeBlock>
             </>
           )}
@@ -297,7 +307,7 @@ const ClientsHealthDashboard = () => {
       API_URL = API_URL.replace(/\/$/, '') + '/v1';
     }
 
-    // Get auth token - check multiple possible keys
+    // Get auth token
     const token = localStorage.getItem('crm_auth_token') ||
                  localStorage.getItem('authToken') ||
                  localStorage.getItem('token');
@@ -305,7 +315,6 @@ const ClientsHealthDashboard = () => {
     const allTests = [];
     const grouped = { GET: [], POST: [], PUT: [], DELETE: [] };
     let createdClientId = null;
-    const createdClientIds = [];
 
     // ========================================
     // GET REQUESTS - Run these first
@@ -345,8 +354,8 @@ const ClientsHealthDashboard = () => {
     allTests.push(getAllTest);
     setGroupedTests({...grouped});
 
-    // GET Test 2: Get clients with pagination
-    const paginationTest = {
+    // GET Test 2: Get with pagination
+    const getPaginatedTest = {
       name: 'List with Pagination',
       description: 'Test pagination parameters (page=1, limit=5)',
       method: 'GET',
@@ -364,37 +373,75 @@ const ClientsHealthDashboard = () => {
         headers: token ? { 'Authorization': `Bearer ${token}` } : {}
       });
       const data = await response.json();
-      paginationTest.responseTime = Date.now() - startTime2;
-      paginationTest.status = response.ok && data.success ? 'success' : 'failed';
-      paginationTest.response = data;
+      getPaginatedTest.responseTime = Date.now() - startTime2;
+      getPaginatedTest.status = response.ok && data.success ? 'success' : 'failed';
+      getPaginatedTest.response = data;
       if (!response.ok || !data.success) {
-        paginationTest.error = data.error?.message || 'Failed to fetch clients with pagination';
+        getPaginatedTest.error = data.error?.message || 'Pagination failed';
       }
     } catch (error) {
-      paginationTest.status = 'failed';
-      paginationTest.error = error.message;
-      paginationTest.responseTime = Date.now() - startTime2;
+      getPaginatedTest.status = 'failed';
+      getPaginatedTest.error = error.message;
+      getPaginatedTest.responseTime = Date.now() - startTime2;
     }
-    grouped.GET.push(paginationTest);
-    allTests.push(paginationTest);
+    grouped.GET.push(getPaginatedTest);
+    allTests.push(getPaginatedTest);
     setGroupedTests({...grouped});
 
-    // ========================================
-    // POST REQUESTS - Create test clients
-    // ========================================
+    // GET Test 3: Get first client by ID (if any exist)
+    let existingClientId = null;
+    if (getAllTest.status === 'success' && getAllTest.response?.data?.clients?.length > 0) {
+      existingClientId = getAllTest.response.data.clients[0].id;
 
-    // POST Test 1: Create Buyer Client (Minimal)
+      const getByIdTest = {
+        name: 'Get Client by ID',
+        description: 'Retrieve a specific client using its ID',
+        method: 'GET',
+        endpoint: `/clients/${existingClientId}`,
+        status: 'pending',
+        curl: `curl -X GET "${API_URL}/clients/${existingClientId}" -H "Authorization: Bearer ${token}"`,
+        response: null,
+        error: null,
+        responseTime: null
+      };
+
+      const startTime3 = Date.now();
+      try {
+        const response = await fetch(`${API_URL}/clients/${existingClientId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        getByIdTest.responseTime = Date.now() - startTime3;
+        getByIdTest.status = response.ok && data.success ? 'success' : 'failed';
+        getByIdTest.response = data;
+        if (!response.ok || !data.success) {
+          getByIdTest.error = data.error?.message || 'Failed to fetch client';
+        }
+      } catch (error) {
+        getByIdTest.status = 'failed';
+        getByIdTest.error = error.message;
+        getByIdTest.responseTime = Date.now() - startTime3;
+      }
+      grouped.GET.push(getByIdTest);
+      allTests.push(getByIdTest);
+      setGroupedTests({...grouped});
+    }
+
+    // ========================================
+    // POST REQUESTS - 3 Different Tests
+    // ========================================
+    const createdClientIds = [];
+
+    // POST Test 1: Minimal (Name Only)
     const minimalClientData = {
-      firstName: 'Test',
-      lastName: `Buyer_${Date.now()}`,
-      email: `testbuyer_${Date.now()}@test.com`,
-      clientType: 'Buyer',
-      phone: '555-0001'
+      firstName: `Test`,
+      lastName: `Client_${Date.now()}`,
+      clientType: 'Buyer'
     };
 
     const createMinimalTest = {
       name: 'Create Client (Minimal)',
-      description: 'Test with only required fields (buyer)',
+      description: 'Test with only required fields (firstName, lastName, clientType)',
       method: 'POST',
       endpoint: '/clients',
       status: 'pending',
@@ -421,7 +468,7 @@ const ClientsHealthDashboard = () => {
         createMinimalTest.status = response.ok && data.success ? 'success' : 'failed';
         createMinimalTest.response = data;
         if (data.success && data.data) {
-          createdClientIds.push(data.data.id || data.data._id);
+          createdClientIds.push(data.data.id);
         } else {
           createMinimalTest.error = data.error?.message || 'Failed to create minimal client';
         }
@@ -438,20 +485,24 @@ const ClientsHealthDashboard = () => {
     allTests.push(createMinimalTest);
     setGroupedTests({...grouped});
 
-    // POST Test 2: Create Seller Client (Basic)
+    // POST Test 2: Basic (Most Important Fields)
     const basicClientData = {
-      firstName: 'Test',
-      lastName: `Seller_${Date.now()}`,
-      email: `testseller_${Date.now()}@test.com`,
+      firstName: `Basic`,
+      lastName: `Test_${Date.now()}`,
+      email: `basic${Date.now()}@test.com`,
+      phone: '555-0100',
       clientType: 'Seller',
+      address: '123 Main St',
+      city: 'Los Angeles',
+      state: 'CA',
+      zipCode: '90001',
       clientStatus: 'Active',
-      phone: '555-0002',
-      address: '123 Main St, Los Angeles, CA 90001'
+      status: 'Active'
     };
 
     const createBasicTest = {
       name: 'Create Client (Basic)',
-      description: 'Test with essential fields (seller)',
+      description: 'Test with essential fields',
       method: 'POST',
       endpoint: '/clients',
       status: 'pending',
@@ -478,7 +529,7 @@ const ClientsHealthDashboard = () => {
         createBasicTest.status = response.ok && data.success ? 'success' : 'failed';
         createBasicTest.response = data;
         if (data.success && data.data) {
-          createdClientIds.push(data.data.id || data.data._id);
+          createdClientIds.push(data.data.id);
         } else {
           createBasicTest.error = data.error?.message || 'Failed to create basic client';
         }
@@ -495,21 +546,32 @@ const ClientsHealthDashboard = () => {
     allTests.push(createBasicTest);
     setGroupedTests({...grouped});
 
-    // POST Test 3: Create Both Type Client (Full)
+    // POST Test 3: Full (All Fields)
     const fullClientData = {
-      firstName: 'Test',
-      lastName: `Both_${Date.now()}`,
-      email: `testboth_${Date.now()}@test.com`,
+      firstName: `Full`,
+      lastName: `Test_${Date.now()}`,
+      email: `full${Date.now()}@test.com`,
+      phone: '555-0200',
+      alternativePhone: '555-0201',
       clientType: 'Both',
-      clientStatus: 'Active',
-      phone: '555-0003',
-      address: '456 Oak Ave, Beverly Hills, CA 90210',
-      notes: 'VIP client looking to sell current home and buy new property'
+      status: 'Active',
+      address: '456 Oak Avenue',
+      city: 'San Francisco',
+      state: 'CA',
+      zipCode: '94105',
+      occupation: 'Software Engineer',
+      preapprovalAmount: 850000,
+      priceRange: '$800,000 - $950,000',
+      preferredAreas: ['Mission District', 'SOMA', 'Potrero Hill'],
+      propertyTypes: ['Condo', 'Townhouse'],
+      source: 'Referral',
+      notes: 'Looking for modern condo with home office space',
+      tags: ['Tech Professional', 'First Time Buyer', 'Pre-approved']
     };
 
     const createFullTest = {
       name: 'Create Client (Full)',
-      description: 'Test with all available fields (buyer & seller)',
+      description: 'Test with all available fields',
       method: 'POST',
       endpoint: '/clients',
       status: 'pending',
@@ -536,7 +598,7 @@ const ClientsHealthDashboard = () => {
         createFullTest.status = response.ok && data.success ? 'success' : 'failed';
         createFullTest.response = data;
         if (data.success && data.data) {
-          createdClientIds.push(data.data.id || data.data._id);
+          createdClientIds.push(data.data.id);
         } else {
           createFullTest.error = data.error?.message || 'Failed to create full client';
         }
@@ -553,35 +615,45 @@ const ClientsHealthDashboard = () => {
     allTests.push(createFullTest);
     setGroupedTests({...grouped});
 
+    // Set the first created client as the primary one for testing
+    if (createdClientIds.length > 0) {
+      createdClientId = createdClientIds[0];
+      setTestClientId(createdClientId);
+      setTestClientIds(createdClientIds);
+    }
+
     // ========================================
-    // PUT REQUESTS - Update clients
+    // PUT REQUESTS - Use different test clients for comprehensive testing
     // ========================================
 
-    // Store created IDs for cleanup
-    setTestClientIds(createdClientIds);
+    if (createdClientIds.length > 0) {
+      // Use different clients for different tests
+      const clientForBasicUpdate = createdClientIds[0] || null;
+      const clientForDetailTests = createdClientIds[1] || createdClientIds[0] || null;
 
-    // PUT Test 1: Update client status
-    const updateData = {
-      clientStatus: 'Past Client'
-    };
+      // PUT Test 1: Update client basic info
+      const updateData = {
+        phone: '555-9999',
+        status: 'Inactive',
+        notes: 'Updated contact information'
+      };
 
-    const updateTest = {
-      name: 'Update Client by ID',
-      description: 'Update client status',
-      method: 'PUT',
-      endpoint: `/clients/${createdClientIds[0]}`,
-      status: 'pending',
-      curl: `curl -X PUT "${API_URL}/clients/${createdClientIds[0]}" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(updateData, null, 2)}'`,
-      requestBody: updateData,
-      response: null,
-      error: null,
-      responseTime: null
-    };
+      const updateTest = {
+        name: 'Update Client by ID',
+        description: 'Update basic client information',
+        method: 'PUT',
+        endpoint: `/clients/${clientForBasicUpdate}`,
+        status: 'pending',
+        curl: `curl -X PUT "${API_URL}/clients/${clientForBasicUpdate}" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(updateData, null, 2)}'`,
+        requestBody: updateData,
+        response: null,
+        error: null,
+        responseTime: null
+      };
 
-    if (createdClientIds[0]) {
       const startTime5 = Date.now();
       try {
-        const response = await fetch(`${API_URL}/clients/${createdClientIds[0]}`, {
+        const response = await fetch(`${API_URL}/clients/${clientForBasicUpdate}`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -601,87 +673,76 @@ const ClientsHealthDashboard = () => {
         updateTest.error = error.message;
         updateTest.responseTime = Date.now() - startTime5;
       }
-    } else {
-      updateTest.status = 'failed';
-      updateTest.error = 'No client ID available for update';
-    }
-    grouped.PUT.push(updateTest);
-    allTests.push(updateTest);
-    setGroupedTests({...grouped});
+      grouped.PUT.push(updateTest);
+      allTests.push(updateTest);
+      setGroupedTests({...grouped});
 
-    // PUT Test 2: Update contact info
-    const contactUpdateData = {
-      phone: '555-9999',
-      address: '789 New Address, Updated City, CA 90210'
-    };
+      // PUT Test 2: Update client type
+      const clientTypeUpdateData = {
+        clientType: 'Both'
+      };
 
-    const contactUpdateTest = {
-      name: 'Update Contact Info',
-      description: 'Test updating phone and address',
-      method: 'PUT',
-      endpoint: `/clients/${createdClientIds[0]}`,
-      status: 'pending',
-      curl: `curl -X PUT "${API_URL}/clients/${createdClientIds[0]}" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(contactUpdateData, null, 2)}'`,
-      requestBody: contactUpdateData,
-      response: null,
-      error: null,
-      responseTime: null
-    };
+      const clientTypeUpdateTest = {
+        name: 'Update Client Type',
+        description: 'Change client from Buyer/Seller to Both',
+        method: 'PUT',
+        endpoint: `/clients/${clientForBasicUpdate}`,
+        status: 'pending',
+        curl: `curl -X PUT "${API_URL}/clients/${clientForBasicUpdate}" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(clientTypeUpdateData, null, 2)}'`,
+        requestBody: clientTypeUpdateData,
+        response: null,
+        error: null,
+        responseTime: null
+      };
 
-    if (createdClientIds[0]) {
       const startTime6 = Date.now();
       try {
-        const response = await fetch(`${API_URL}/clients/${createdClientIds[0]}`, {
+        const response = await fetch(`${API_URL}/clients/${clientForBasicUpdate}`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
           },
-          body: JSON.stringify(contactUpdateData)
+          body: JSON.stringify(clientTypeUpdateData)
         });
         const data = await response.json();
-        contactUpdateTest.responseTime = Date.now() - startTime6;
-        contactUpdateTest.status = response.ok && data.success ? 'success' : 'failed';
-        contactUpdateTest.response = data;
+        clientTypeUpdateTest.responseTime = Date.now() - startTime6;
+        clientTypeUpdateTest.status = response.ok && data.success ? 'success' : 'failed';
+        clientTypeUpdateTest.response = data;
         if (!response.ok || !data.success) {
-          contactUpdateTest.error = data.error?.message || 'Failed to update contact info';
+          clientTypeUpdateTest.error = data.error?.message || 'Failed to update client type';
         }
       } catch (error) {
-        contactUpdateTest.status = 'failed';
-        contactUpdateTest.error = error.message;
-        contactUpdateTest.responseTime = Date.now() - startTime6;
+        clientTypeUpdateTest.status = 'failed';
+        clientTypeUpdateTest.error = error.message;
+        clientTypeUpdateTest.responseTime = Date.now() - startTime6;
       }
-    } else {
-      contactUpdateTest.status = 'failed';
-      contactUpdateTest.error = 'No client ID available for update';
-    }
-    grouped.PUT.push(contactUpdateTest);
-    allTests.push(contactUpdateTest);
-    setGroupedTests({...grouped});
+      grouped.PUT.push(clientTypeUpdateTest);
+      allTests.push(clientTypeUpdateTest);
+      setGroupedTests({...grouped});
 
-    // POST Test: Add notes
-    const noteData = {
-      note: 'Test note from health dashboard',
-      type: 'general'
-    };
+      // POST Test for notes endpoint
+      const noteData = {
+        note: 'Test note - Client interested in waterfront properties',
+        type: 'follow-up'
+      };
 
-    const addNoteTest = {
-      name: 'Add Client Note',
-      description: 'Test adding a note to client record',
-      method: 'POST',
-      endpoint: `/clients/${createdClientIds[1]}/notes`,
-      status: 'pending',
-      curl: `curl -X POST "${API_URL}/clients/${createdClientIds[1]}/notes" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(noteData, null, 2)}'`,
-      requestBody: noteData,
-      response: null,
-      error: null,
-      responseTime: null
-    };
+      const addNoteTest = {
+        name: 'Add Client Note',
+        description: 'Test adding a note to the client',
+        method: 'POST',
+        endpoint: `/clients/${clientForDetailTests}/notes`,
+        status: 'pending',
+        curl: `curl -X POST "${API_URL}/clients/${clientForDetailTests}/notes" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(noteData, null, 2)}'`,
+        requestBody: noteData,
+        response: null,
+        error: null,
+        responseTime: null
+      };
 
-    if (createdClientIds[1]) {
       const startTime7 = Date.now();
       try {
-        const response = await fetch(`${API_URL}/clients/${createdClientIds[1]}/notes`, {
+        const response = await fetch(`${API_URL}/clients/${clientForDetailTests}/notes`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -701,293 +762,387 @@ const ClientsHealthDashboard = () => {
         addNoteTest.error = error.message;
         addNoteTest.responseTime = Date.now() - startTime7;
       }
-    } else {
-      addNoteTest.status = 'failed';
-      addNoteTest.error = 'No client ID available for note';
-    }
-    grouped.POST.push(addNoteTest);
-    allTests.push(addNoteTest);
-    setGroupedTests({...grouped});
+      grouped.POST.push(addNoteTest);
+      allTests.push(addNoteTest);
+      setGroupedTests({...grouped});
 
-    // ========================================
-    // DELETE REQUESTS - Clean up test clients
-    // ========================================
+      // ========================================
+      // DELETE REQUESTS - Clean up ALL test clients
+      // ========================================
 
-    // Archive and delete all created test clients
-    for (let i = 0; i < createdClientIds.length; i++) {
-      const clientId = createdClientIds[i];
-      if (!clientId) continue;
+      // Archive then delete all 3 created test clients
+      for (let i = 0; i < createdClientIds.length; i++) {
+        const clientId = createdClientIds[i];
 
-      // Archive client
-      const archiveTest = {
-        name: `Archive Test Client ${i + 1}`,
-        description: `Archive ${i === 0 ? 'buyer' : i === 1 ? 'seller' : 'both'} client`,
-        method: 'PUT',
-        endpoint: `/clients/${clientId}/archive`,
-        status: 'pending',
-        curl: `curl -X PUT "${API_URL}/clients/${clientId}/archive" -H "Authorization: Bearer ${token}"`,
-        response: null,
-        error: null,
-        responseTime: null
-      };
-
-      const startTimeArchive = Date.now();
-      try {
-        const response = await fetch(`${API_URL}/clients/${clientId}/archive`, {
+        // Step 1: Archive the client first
+        const archiveTest = {
+          name: `Archive Test Client ${i + 1}`,
+          description: i === 0 ? 'Archive minimal client' : i === 1 ? 'Archive basic client' : 'Archive full client',
           method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        const data = await response.json();
-        archiveTest.responseTime = Date.now() - startTimeArchive;
-        archiveTest.status = response.ok && data.success ? 'success' : 'failed';
-        archiveTest.response = data;
-        if (!response.ok || !data.success) {
-          archiveTest.error = data.error?.message || 'Failed to archive client';
-        }
-      } catch (error) {
-        archiveTest.status = 'failed';
-        archiveTest.error = error.message;
-        archiveTest.responseTime = Date.now() - startTimeArchive;
-      }
-      grouped.PUT.push(archiveTest);
-      allTests.push(archiveTest);
-      setGroupedTests({...grouped});
+          endpoint: `/clients/${clientId}/archive`,
+          status: 'pending',
+          curl: `curl -X PUT "${API_URL}/clients/${clientId}/archive" -H "Authorization: Bearer ${token}"`,
+          response: null,
+          error: null,
+          responseTime: null
+        };
 
-      // Delete archived client
-      const deleteTest = {
-        name: `Delete Archived Client ${i + 1}`,
-        description: `Delete archived ${i === 0 ? 'buyer' : i === 1 ? 'seller' : 'both'} client`,
-        method: 'DELETE',
-        endpoint: `/clients/${clientId}`,
-        status: 'pending',
-        curl: `curl -X DELETE "${API_URL}/clients/${clientId}" -H "Authorization: Bearer ${token}"`,
-        response: null,
-        error: null,
-        responseTime: null
-      };
-
-      const startTimeDelete = Date.now();
-      try {
-        const response = await fetch(`${API_URL}/clients/${clientId}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        const data = await response.json();
-        deleteTest.responseTime = Date.now() - startTimeDelete;
-        deleteTest.status = response.ok && data.success ? 'success' : 'failed';
-        deleteTest.response = data;
-        if (!response.ok || !data.success) {
-          deleteTest.error = data.error?.message || 'Failed to delete client';
-        }
-      } catch (error) {
-        deleteTest.status = 'failed';
-        deleteTest.error = error.message;
-        deleteTest.responseTime = Date.now() - startTimeDelete;
-      }
-      grouped.DELETE.push(deleteTest);
-      allTests.push(deleteTest);
-      setGroupedTests({...grouped});
-    }
-
-    // Final verification test
-    const verifyTest = {
-      name: 'Verify All Deletions',
-      description: 'Confirm all test clients no longer exist (should return 404)',
-      method: 'GET',
-      endpoint: `/clients/${createdClientIds[0]}`,
-      status: 'pending',
-      curl: `curl -X GET "${API_URL}/clients/${createdClientIds[0]}" -H "Authorization: Bearer ${token}"`,
-      response: null,
-      error: null,
-      responseTime: null
-    };
-
-    if (createdClientIds[0]) {
-      const startTime10 = Date.now();
-      try {
-        const response = await fetch(`${API_URL}/clients/${createdClientIds[0]}`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        const data = await response.json();
-        verifyTest.responseTime = Date.now() - startTime10;
-        // Should fail with 404
-        verifyTest.status = !response.ok && response.status === 404 ? 'success' : 'failed';
-        verifyTest.response = data;
-        if (response.ok) {
-          verifyTest.error = 'Client still exists after deletion';
-        }
-      } catch (error) {
-        verifyTest.status = 'failed';
-        verifyTest.error = error.message;
-        verifyTest.responseTime = Date.now() - startTime10;
-      }
-    }
-    grouped.GET.push(verifyTest);
-    allTests.push(verifyTest);
-
-    setTests(allTests);
-    setGroupedTests(grouped);
-    setLastRefresh(new Date().toLocaleString());
-    setLoading(false);
-  }, []);
-
-  // Cleanup function for test clients
-  const cleanupTestClients = async () => {
-    const clientsToDelete = testClientIds.length > 0 ? testClientIds : (testClientId ? [testClientId] : []);
-
-    if (clientsToDelete.length > 0) {
-      const token = localStorage.getItem('crm_auth_token') ||
-                   localStorage.getItem('authToken') ||
-                   localStorage.getItem('token');
-
-      let API_URL = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
-      if (!API_URL.endsWith('/v1')) {
-        API_URL = API_URL.replace(/\/$/, '') + '/v1';
-      }
-
-      for (const clientId of clientsToDelete) {
-        if (!clientId) continue;
-
+        const startTimeArchive = Date.now();
         try {
-          // First archive
-          await fetch(`${API_URL}/clients/${clientId}/archive`, {
+          const response = await fetch(`${API_URL}/clients/${clientId}/archive`, {
             method: 'PUT',
             headers: { 'Authorization': `Bearer ${token}` }
           });
+          const data = await response.json();
+          archiveTest.responseTime = Date.now() - startTimeArchive;
+          archiveTest.status = response.ok && data.success ? 'success' : 'failed';
+          archiveTest.response = data;
+          if (!response.ok || !data.success) {
+            archiveTest.error = data.error?.message || 'Failed to archive client';
+          }
+        } catch (error) {
+          archiveTest.status = 'failed';
+          archiveTest.error = error.message;
+          archiveTest.responseTime = Date.now() - startTimeArchive;
+        }
+        grouped.PUT.push(archiveTest);
+        allTests.push(archiveTest);
+        setGroupedTests({...grouped});
 
-          // Then delete
-          await fetch(`${API_URL}/clients/${clientId}`, {
+        // Step 2: Delete the archived client
+        const deleteTest = {
+          name: `Delete Archived Client ${i + 1}`,
+          description: i === 0 ? 'Delete archived minimal client' : i === 1 ? 'Delete archived basic client' : 'Delete archived full client',
+          method: 'DELETE',
+          endpoint: `/clients/${clientId}`,
+          status: 'pending',
+          curl: `curl -X DELETE "${API_URL}/clients/${clientId}" -H "Authorization: Bearer ${token}"`,
+          response: null,
+          error: null,
+          responseTime: null
+        };
+
+        const startTimeDelete = Date.now();
+        try {
+          const response = await fetch(`${API_URL}/clients/${clientId}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
           });
+          const data = await response.json();
+          deleteTest.responseTime = Date.now() - startTimeDelete;
+          deleteTest.status = response.ok && data.success ? 'success' : 'failed';
+          deleteTest.response = data;
+          if (!response.ok || !data.success) {
+            deleteTest.error = data.error?.message || 'Failed to delete client';
+          }
         } catch (error) {
-          console.error('Error cleaning up test client:', error);
+          deleteTest.status = 'failed';
+          deleteTest.error = error.message;
+          deleteTest.responseTime = Date.now() - startTimeDelete;
         }
+        grouped.DELETE.push(deleteTest);
+        allTests.push(deleteTest);
+        setGroupedTests({...grouped});
       }
 
-      setSnackbarMessage(`Cleaned up ${clientsToDelete.length} test client(s)`);
-      setSnackbarOpen(true);
-      setTestClientIds([]);
+      // Clear the test client IDs after deletion
       setTestClientId(null);
-      await runAllTests();
-    }
-  };
+      setTestClientIds([]);
 
+      // Verify all clients were deleted
+      if (createdClientIds.length > 0) {
+        const verifyDeleteTest = {
+          name: 'Verify All Deletions',
+          description: 'Confirm all test clients no longer exist (should return 404)',
+          method: 'GET',
+          endpoint: `/clients/${createdClientIds[0]}`,
+          status: 'pending',
+          curl: `curl -X GET "${API_URL}/clients/${createdClientIds[0]}" -H "Authorization: Bearer ${token}"`,
+          response: null,
+          error: null,
+          responseTime: null
+        };
+
+        const startTimeVerify = Date.now();
+        try {
+          const response = await fetch(`${API_URL}/clients/${createdClientIds[0]}`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          const data = await response.json();
+          verifyDeleteTest.responseTime = Date.now() - startTimeVerify;
+          // This should fail (404) for the test to pass
+          verifyDeleteTest.status = response.status === 404 || (data.success === false && data.error?.code === 'NOT_FOUND') ? 'success' : 'failed';
+          verifyDeleteTest.response = data;
+          if (response.ok && data.success) {
+            verifyDeleteTest.error = 'Client still exists after deletion';
+          }
+        } catch (error) {
+          verifyDeleteTest.status = 'failed';
+          verifyDeleteTest.error = error.message;
+          verifyDeleteTest.responseTime = Date.now() - startTimeVerify;
+        }
+        grouped.GET.push(verifyDeleteTest);
+        allTests.push(verifyDeleteTest);
+        setGroupedTests({...grouped});
+      }
+    }
+
+    setTests(allTests);
+    setLoading(false);
+    setLastRefresh(new Date().toLocaleString());
+  }, []);
+
+  // Clean up any test clients on unmount
+  useEffect(() => {
+    return () => {
+      const clientsToDelete = testClientIds.length > 0 ? testClientIds : (testClientId ? [testClientId] : []);
+
+      if (clientsToDelete.length > 0) {
+        const token = localStorage.getItem('crm_auth_token') ||
+                     localStorage.getItem('authToken') ||
+                     localStorage.getItem('token');
+
+        let API_URL = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
+        if (!API_URL.endsWith('/v1')) {
+          API_URL = API_URL.replace(/\/$/, '') + '/v1';
+        }
+
+        // Clean up all test clients
+        clientsToDelete.forEach(async clientId => {
+          try {
+            // Archive first
+            await fetch(`${API_URL}/clients/${clientId}/archive`, {
+              method: 'PUT',
+              headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+            });
+            // Then delete
+            await fetch(`${API_URL}/clients/${clientId}`, {
+              method: 'DELETE',
+              headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+            });
+          } catch (error) {
+            // Ignore cleanup errors
+          }
+        });
+      }
+    };
+  }, [testClientId, testClientIds]);
+
+  // Run tests on mount
   useEffect(() => {
     runAllTests();
   }, [runAllTests]);
 
-  const totalTests = tests.length;
-  const passedTests = tests.filter(t => t.status === 'success').length;
-  const failedTests = tests.filter(t => t.status === 'failed').length;
+  const successCount = tests.filter(t => t.status === 'success').length;
+  const failedCount = tests.filter(t => t.status === 'failed').length;
+
+  const copyAllData = () => {
+    const allData = {
+      dashboard: 'Clients API Health Check',
+      lastRefresh: lastRefresh || 'Not yet refreshed',
+      summary: {
+        totalTests: tests.length,
+        passed: successCount,
+        failed: failedCount
+      },
+      tests: tests.map(test => ({
+        name: test.name,
+        description: test.description,
+        method: test.method,
+        endpoint: test.endpoint,
+        status: test.status,
+        responseTime: test.responseTime,
+        curl: test.curl,
+        requestBody: test.requestBody,
+        response: test.response,
+        error: test.error
+      }))
+    };
+
+    const formattedData = JSON.stringify(allData, null, 2);
+    navigator.clipboard.writeText(formattedData).then(() => {
+      setSnackbarMessage('All test data copied to clipboard!');
+      setSnackbarOpen(true);
+    }).catch(err => {
+      console.error('Failed to copy:', err);
+      setSnackbarMessage('Failed to copy data to clipboard');
+      setSnackbarOpen(true);
+    });
+  };
 
   return (
     <PageContainer>
       <Container maxWidth="lg">
-        <Fade in timeout={800}>
-          <Paper elevation={3} sx={{ p: 4, borderRadius: 3, background: 'rgba(255,255,255,0.98)' }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
-              <Box>
-                <Typography variant="h4" fontWeight="bold" color="primary">
-                  Clients API Health Check
+        <Paper sx={{ p: 3, mb: 3, background: 'white' }}>
+          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+            <Box>
+              <Typography variant="h4" fontWeight="bold" gutterBottom>
+                Clients API Health Check
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                Comprehensive testing of all client endpoints • Last refresh: {lastRefresh || 'Loading...'}
+              </Typography>
+              <Box display="flex" alignItems="center" gap={2} mt={1}>
+                <Typography variant="h2" fontWeight="bold" color={failedCount === 0 ? '#4caf50' : '#f44336'}>
+                  {successCount}/{tests.length}
                 </Typography>
-                {lastRefresh && (
-                  <Typography variant="caption" color="textSecondary">
-                    Last refresh: {lastRefresh}
-                  </Typography>
-                )}
+                <Typography variant="body1" color="textSecondary">
+                  Tests Passing
+                </Typography>
               </Box>
-              <Stack direction="row" spacing={2}>
-                {testClientIds.length > 0 && (
-                  <Tooltip title="Clean Up Test Clients">
-                    <IconButton
-                      onClick={cleanupTestClients}
-                      sx={{
-                        bgcolor: 'error.light',
-                        color: 'error.dark',
-                        '&:hover': { bgcolor: 'error.main', color: 'white' }
-                      }}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Tooltip>
-                )}
-                <Tooltip title="Refresh Tests">
+            </Box>
+            <Box display="flex" gap={1}>
+              <Tooltip title="Copy All Data">
+                <IconButton
+                  onClick={copyAllData}
+                  disabled={loading || tests.length === 0}
+                  sx={{
+                    backgroundColor: '#f5f5f5',
+                    '&:hover': { backgroundColor: '#e0e0e0' }
+                  }}
+                >
+                  <CopyIcon />
+                </IconButton>
+              </Tooltip>
+              <Tooltip title="Refresh Tests">
+                <IconButton
+                  onClick={runAllTests}
+                  disabled={loading}
+                  sx={{
+                    backgroundColor: '#f5f5f5',
+                    '&:hover': { backgroundColor: '#e0e0e0' }
+                  }}
+                >
+                  <RefreshIcon />
+                </IconButton>
+              </Tooltip>
+              {testClientId && (
+                <Tooltip title="Clean Up Test Client">
                   <IconButton
-                    onClick={runAllTests}
-                    disabled={loading}
+                    onClick={async () => {
+                      const token = localStorage.getItem('crm_auth_token') ||
+                                   localStorage.getItem('authToken') ||
+                                   localStorage.getItem('token');
+
+                      let API_URL = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
+                      if (!API_URL.endsWith('/v1')) {
+                        API_URL = API_URL.replace(/\/$/, '') + '/v1';
+                      }
+
+                      try {
+                        await fetch(`${API_URL}/clients/${testClientId}`, {
+                          method: 'DELETE',
+                          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                        });
+                        setTestClientId(null);
+                        setSnackbarMessage('Test client cleaned up');
+                        setSnackbarOpen(true);
+                      } catch (error) {
+                        setSnackbarMessage('Failed to clean up test client');
+                        setSnackbarOpen(true);
+                      }
+                    }}
                     sx={{
-                      bgcolor: 'primary.light',
-                      color: 'primary.dark',
-                      '&:hover': { bgcolor: 'primary.main', color: 'white' }
+                      backgroundColor: '#ffebee',
+                      color: '#f44336',
+                      '&:hover': { backgroundColor: '#ffcdd2' }
                     }}
                   >
-                    <RefreshIcon />
+                    <DeleteIcon />
                   </IconButton>
                 </Tooltip>
-              </Stack>
+              )}
             </Box>
+          </Box>
 
-            {loading && <LinearProgress sx={{ mb: 3 }} />}
+          <Divider sx={{ my: 2 }} />
 
-            <Grid container spacing={3} sx={{ mb: 4 }}>
-              <Grid item xs={12} sm={4}>
-                <Card>
-                  <CardContent>
-                    <Typography variant="h3" fontWeight="bold" color="primary.main">
-                      {totalTests}
-                    </Typography>
-                    <Typography variant="subtitle2" color="textSecondary">
-                      Total Tests
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <Card sx={{ bgcolor: passedTests > 0 ? '#e8f5e9' : undefined }}>
-                  <CardContent>
-                    <Typography variant="h3" fontWeight="bold" color="success.main">
-                      {passedTests}
-                    </Typography>
-                    <Typography variant="subtitle2" color="textSecondary">
-                      Passed
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
-              <Grid item xs={12} sm={4}>
-                <Card sx={{ bgcolor: failedTests > 0 ? '#ffebee' : undefined }}>
-                  <CardContent>
-                    <Typography variant="h3" fontWeight="bold" color="error.main">
-                      {failedTests}
-                    </Typography>
-                    <Typography variant="subtitle2" color="textSecondary">
-                      Failed
-                    </Typography>
-                  </CardContent>
-                </Card>
-              </Grid>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={3}>
+              <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#f5f5f5' }}>
+                <Typography variant="h4" fontWeight="bold">{tests.length}</Typography>
+                <Typography variant="body2" color="textSecondary">Total Tests</Typography>
+              </Paper>
             </Grid>
+            <Grid item xs={12} sm={3}>
+              <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#e8f5e9' }}>
+                <Typography variant="h4" fontWeight="bold" color="#4caf50">
+                  {successCount}
+                </Typography>
+                <Typography variant="body2" color="textSecondary">Passed</Typography>
+              </Paper>
+            </Grid>
+            <Grid item xs={12} sm={3}>
+              <Paper sx={{ p: 2, textAlign: 'center', bgcolor: failedCount === 0 ? '#e8f5e9' : '#ffebee' }}>
+                <Typography variant="h4" fontWeight="bold" color={failedCount === 0 ? '#4caf50' : '#f44336'}>
+                  {failedCount}
+                </Typography>
+                <Typography variant="body2" color="textSecondary">Failed</Typography>
+              </Paper>
+            </Grid>
+            <Grid item xs={12} sm={3}>
+              <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#e3f2fd' }}>
+                <Typography variant="h4" fontWeight="bold" color="#2196f3">
+                  {tests.reduce((acc, t) => acc + (t.responseTime || 0), 0)}ms
+                </Typography>
+                <Typography variant="body2" color="textSecondary">Total Time</Typography>
+              </Paper>
+            </Grid>
+          </Grid>
+        </Paper>
 
-            {Object.entries(groupedTests).map(([method, methodTests]) => (
-              methodTests.length > 0 && (
-                <Box key={method} mb={3}>
-                  <SectionHeader variant="h6">
-                    {method} Requests ({methodTests.filter(t => t.status === 'success').length}/{methodTests.length})
-                  </SectionHeader>
-                  {methodTests.map((test, index) => (
-                    <TestItem key={`${method}-${index}`} test={test} />
-                  ))}
-                </Box>
-              )
-            ))}
-          </Paper>
+        {loading && <LinearProgress sx={{ mb: 2 }} />}
+
+        <Fade in={!loading}>
+          <Box>
+            {/* GET Requests Section */}
+            {groupedTests.GET.length > 0 && (
+              <>
+                <SectionHeader variant="h5">
+                  GET Requests ({groupedTests.GET.filter(t => t.status === 'success').length}/{groupedTests.GET.length})
+                </SectionHeader>
+                {groupedTests.GET.map((test, index) => (
+                  <TestItem key={`get-${index}`} test={test} />
+                ))}
+              </>
+            )}
+
+            {/* POST Requests Section */}
+            {groupedTests.POST.length > 0 && (
+              <>
+                <SectionHeader variant="h5">
+                  POST Requests ({groupedTests.POST.filter(t => t.status === 'success').length}/{groupedTests.POST.length})
+                </SectionHeader>
+                {groupedTests.POST.map((test, index) => (
+                  <TestItem key={`post-${index}`} test={test} />
+                ))}
+              </>
+            )}
+
+            {/* PUT Requests Section */}
+            {groupedTests.PUT.length > 0 && (
+              <>
+                <SectionHeader variant="h5">
+                  PUT Requests ({groupedTests.PUT.filter(t => t.status === 'success').length}/{groupedTests.PUT.length})
+                </SectionHeader>
+                {groupedTests.PUT.map((test, index) => (
+                  <TestItem key={`put-${index}`} test={test} />
+                ))}
+              </>
+            )}
+
+            {/* DELETE Requests Section */}
+            {groupedTests.DELETE.length > 0 && (
+              <>
+                <SectionHeader variant="h5">
+                  DELETE Requests ({groupedTests.DELETE.filter(t => t.status === 'success').length}/{groupedTests.DELETE.length})
+                </SectionHeader>
+                {groupedTests.DELETE.map((test, index) => (
+                  <TestItem key={`delete-${index}`} test={test} />
+                ))}
+              </>
+            )}
+          </Box>
         </Fade>
       </Container>
 
@@ -995,9 +1150,9 @@ const ClientsHealthDashboard = () => {
         open={snackbarOpen}
         autoHideDuration={3000}
         onClose={() => setSnackbarOpen(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert onClose={() => setSnackbarOpen(false)} severity="success">
+        <Alert onClose={() => setSnackbarOpen(false)} severity="success" sx={{ width: '100%' }}>
           {snackbarMessage}
         </Alert>
       </Snackbar>
