@@ -582,7 +582,7 @@ const LeadsHealthDashboard = () => {
 
     // PUT Test 1: Update lead status
     const updateData = {
-      leadStatus: 'Contacted',
+      status: 'contacted',
       notes: 'Initial contact made, scheduled follow-up'
     };
 
@@ -632,9 +632,8 @@ const LeadsHealthDashboard = () => {
 
     // PUT Test 2: Qualify lead
     const qualifyData = {
-      leadStatus: 'Qualified',
-      budget: '500000-750000',
-      preQualified: true
+      status: 'qualified',
+      notes: 'Lead qualified - budget confirmed at 500k-750k'
     };
 
     const qualifyTest = {
