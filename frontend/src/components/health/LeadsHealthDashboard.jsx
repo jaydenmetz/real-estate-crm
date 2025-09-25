@@ -902,6 +902,31 @@ const LeadsHealthDashboard = () => {
     setLoading(false);
   }, []);
 
+  const copyAllData = () => {
+    const testData = {
+      timestamp: new Date().toISOString(),
+      endpoint: 'leads',
+      summary: {
+        total: tests.length,
+        passed: tests.filter(t => t.status === 'success').length,
+        failed: tests.filter(t => t.status === 'failed').length
+      },
+      tests: tests.map(test => ({
+        name: test.name,
+        method: test.method,
+        endpoint: test.endpoint,
+        status: test.status,
+        responseTime: test.responseTime,
+        response: test.response,
+        error: test.error
+      }))
+    };
+
+    navigator.clipboard.writeText(JSON.stringify(testData, null, 2));
+    setSnackbarMessage('Test data copied to clipboard');
+    setSnackbarOpen(true);
+  };
+
   // Cleanup function for test leads
   const cleanupTestLeads = async () => {
     const leadsToDelete = testLeadIds.length > 0 ? testLeadIds : (testLeadId ? [testLeadId] : []);
@@ -942,95 +967,107 @@ const LeadsHealthDashboard = () => {
     runAllTests();
   }, [runAllTests]);
 
-  const totalTests = tests.length;
-  const passedTests = tests.filter(t => t.status === 'success').length;
-  const failedTests = tests.filter(t => t.status === 'failed').length;
+  const successCount = tests.filter(t => t.status === 'success').length;
+  const failedCount = tests.filter(t => t.status === 'failed').length;
 
   return (
     <PageContainer>
       <Container maxWidth="lg">
         <Fade in timeout={800}>
           <Paper elevation={3} sx={{ p: 4, borderRadius: 3, background: 'rgba(255,255,255,0.98)' }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={4}>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
               <Box>
-                <Typography variant="h4" fontWeight="bold" color="primary">
-                  Leads API Health Check
+                <Typography variant="h3" fontWeight="bold" gutterBottom>
+                  Leads API Health Dashboard
                 </Typography>
-                {lastRefresh && (
-                  <Typography variant="caption" color="textSecondary">
-                    Last refresh: {lastRefresh}
+                <Typography variant="body2" color="textSecondary">
+                  Comprehensive testing of all lead endpoints • Last refresh: {lastRefresh || 'Loading...'}
+                </Typography>
+                <Box display="flex" alignItems="center" gap={2} mt={1}>
+                  <Typography variant="h2" fontWeight="bold" color={failedCount === 0 ? '#4caf50' : '#f44336'}>
+                    {successCount}/{tests.length}
                   </Typography>
-                )}
+                  <Typography variant="body1" color="textSecondary">
+                    Tests Passing
+                  </Typography>
+                </Box>
               </Box>
-              <Stack direction="row" spacing={2}>
-                {testLeadIds.length > 0 && (
-                  <Tooltip title="Clean Up Test Leads">
+              <Box display="flex" gap={1}>
+                <Tooltip title="Copy All Data">
+                  <IconButton
+                    onClick={copyAllData}
+                    disabled={loading || tests.length === 0}
+                    sx={{
+                      backgroundColor: '#f5f5f5',
+                      '&:hover': { backgroundColor: '#e0e0e0' }
+                    }}
+                  >
+                    <CopyIcon />
+                  </IconButton>
+                </Tooltip>
+                <Tooltip title="Refresh Tests">
+                  <IconButton
+                    onClick={runAllTests}
+                    disabled={loading}
+                    sx={{
+                      backgroundColor: '#f5f5f5',
+                      '&:hover': { backgroundColor: '#e0e0e0' }
+                    }}
+                  >
+                    <RefreshIcon />
+                  </IconButton>
+                </Tooltip>
+                {testLeadId && (
+                  <Tooltip title="Clean Up Test Lead">
                     <IconButton
                       onClick={cleanupTestLeads}
                       sx={{
-                        bgcolor: 'error.light',
-                        color: 'error.dark',
-                        '&:hover': { bgcolor: 'error.main', color: 'white' }
+                        backgroundColor: '#ffebee',
+                        color: '#f44336',
+                        '&:hover': { backgroundColor: '#ffcdd2' }
                       }}
                     >
                       <DeleteIcon />
                     </IconButton>
                   </Tooltip>
                 )}
-                <Tooltip title="Refresh Tests">
-                  <IconButton
-                    onClick={runAllTests}
-                    disabled={loading}
-                    sx={{
-                      bgcolor: 'primary.light',
-                      color: 'primary.dark',
-                      '&:hover': { bgcolor: 'primary.main', color: 'white' }
-                    }}
-                  >
-                    <RefreshIcon />
-                  </IconButton>
-                </Tooltip>
-              </Stack>
+              </Box>
             </Box>
 
-            {loading && <LinearProgress sx={{ mb: 3 }} />}
+            <Divider sx={{ my: 2 }} />
 
-            <Grid container spacing={3} sx={{ mb: 4 }}>
-              <Grid item xs={12} sm={4}>
-                <Card>
-                  <CardContent>
-                    <Typography variant="h3" fontWeight="bold" color="primary.main">
-                      {totalTests}
-                    </Typography>
-                    <Typography variant="subtitle2" color="textSecondary">
-                      Total Tests
-                    </Typography>
-                  </CardContent>
-                </Card>
+            {loading && <LinearProgress sx={{ mb: 2 }} />}
+
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={3}>
+                <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#f5f5f5' }}>
+                  <Typography variant="h4" fontWeight="bold">{tests.length}</Typography>
+                  <Typography variant="body2" color="textSecondary">Total Tests</Typography>
+                </Paper>
               </Grid>
-              <Grid item xs={12} sm={4}>
-                <Card sx={{ bgcolor: passedTests > 0 ? '#e8f5e9' : undefined }}>
-                  <CardContent>
-                    <Typography variant="h3" fontWeight="bold" color="success.main">
-                      {passedTests}
-                    </Typography>
-                    <Typography variant="subtitle2" color="textSecondary">
-                      Passed
-                    </Typography>
-                  </CardContent>
-                </Card>
+              <Grid item xs={12} sm={3}>
+                <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#e8f5e9' }}>
+                  <Typography variant="h4" fontWeight="bold" color="#4caf50">
+                    {successCount}
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">Passed</Typography>
+                </Paper>
               </Grid>
-              <Grid item xs={12} sm={4}>
-                <Card sx={{ bgcolor: failedTests > 0 ? '#ffebee' : undefined }}>
-                  <CardContent>
-                    <Typography variant="h3" fontWeight="bold" color="error.main">
-                      {failedTests}
-                    </Typography>
-                    <Typography variant="subtitle2" color="textSecondary">
-                      Failed
-                    </Typography>
-                  </CardContent>
-                </Card>
+              <Grid item xs={12} sm={3}>
+                <Paper sx={{ p: 2, textAlign: 'center', bgcolor: failedCount === 0 ? '#e8f5e9' : '#ffebee' }}>
+                  <Typography variant="h4" fontWeight="bold" color={failedCount === 0 ? '#4caf50' : '#f44336'}>
+                    {failedCount}
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">Failed</Typography>
+                </Paper>
+              </Grid>
+              <Grid item xs={12} sm={3}>
+                <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#e3f2fd' }}>
+                  <Typography variant="h4" fontWeight="bold" color="#2196f3">
+                    {tests.reduce((acc, t) => acc + (t.responseTime || 0), 0)}ms
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">Total Time</Typography>
+                </Paper>
               </Grid>
             </Grid>
 
