@@ -494,6 +494,63 @@ exports.updateClient = async (req, res) => {
   }
 };
 
+// Archive client - soft delete by setting status to 'Archived'
+exports.archiveClient = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Archive the client
+    const archivedClient = await Client.findByIdAndUpdate(
+      id,
+      {
+        status: 'Archived',
+        clientStatus: 'Archived',
+        archivedAt: new Date(),
+        updatedAt: new Date()
+      },
+      { new: true }
+    );
+
+    if (!archivedClient) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Client not found'
+        }
+      });
+    }
+
+    // Emit real-time update
+    const io = req.app.get('io');
+    if (io) {
+      io.to('clients').emit('client:archived', { id });
+    }
+
+    res.json({
+      success: true,
+      data: {
+        id: archivedClient._id || archivedClient.id,
+        firstName: archivedClient.firstName,
+        lastName: archivedClient.lastName,
+        status: archivedClient.status || archivedClient.clientStatus,
+        archivedAt: archivedClient.archivedAt
+      },
+      message: 'Client archived successfully',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('Error archiving client:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'ARCHIVE_ERROR',
+        message: 'Failed to archive client'
+      }
+    });
+  }
+};
+
 // DELETE /api/v1/clients/:id
 exports.deleteClient = async (req, res) => {
   try {

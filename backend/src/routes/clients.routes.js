@@ -31,7 +31,13 @@ router.get('/', clientsController.getClients);
 router.get('/:id', clientsController.getClient);
 router.post('/', createValidation, validate, clientsController.createClient);
 router.put('/:id', updateValidation, validate, clientsController.updateClient);
+
+// Archive and Delete endpoints - Added for health dashboard testing
+// Archive endpoint: Soft deletes by setting status to 'archived'
+router.put('/:id/archive', clientsController.archiveClient);
+// Delete endpoint: Hard delete - only works if client is already archived
 router.delete('/:id', clientsController.deleteClient);
+
 router.post('/:id/notes', clientsController.addNote);
 router.patch('/:id/tags', clientsController.bulkUpdateTags);
 

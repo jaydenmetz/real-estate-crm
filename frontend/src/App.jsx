@@ -46,6 +46,7 @@ import AllNotes from './components/system/AllNotes';
 import SystemHealthDashboard from './components/health/SystemHealthDashboard3';
 import EscrowsHealthDashboard from './components/health/EscrowsHealthDashboard';
 import ListingsHealthDashboard from './components/health/ListingsHealthDashboard';
+import ClientsHealthDashboard from './components/health/ClientsHealthDashboard';
 // import Reports from './components/system/Reports';
 // import Calendar from './components/system/Calendar';
 // import Settings from './components/system/Settings';
@@ -260,6 +261,7 @@ function App() {
                                 <Route path="/listings/:id" element={<ListingDetail />} />
                     
                                 <Route path="/clients" element={<ClientsDashboard />} />
+                                <Route path="/clients/health" element={<ClientsHealthDashboard />} />
                                 <Route path="/clients/:id" element={<ClientDetail />} />
                     
                                 <Route path="/appointments" element={<AppointmentsDashboard />} />
