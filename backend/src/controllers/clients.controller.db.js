@@ -419,6 +419,147 @@ class ClientsController {
       });
     }
   }
+
+  /**
+   * Archive a client (soft delete)
+   */
+  static async archiveClient(req, res) {
+    try {
+      const { id } = req.params;
+
+      const updateQuery = `
+        UPDATE clients
+        SET status = 'archived',
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = $1
+        RETURNING *
+      `;
+
+      const result = await pool.query(updateQuery, [id]);
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Client not found'
+          }
+        });
+      }
+
+      res.json({
+        success: true,
+        data: result.rows[0]
+      });
+    } catch (error) {
+      console.error('Archive client error:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'ARCHIVE_ERROR',
+          message: 'Failed to archive client'
+        }
+      });
+    }
+  }
+
+  /**
+   * Add note to client
+   */
+  static async addNote(req, res) {
+    try {
+      const { id } = req.params;
+      const { note } = req.body;
+
+      // Get current notes
+      const getQuery = `
+        SELECT notes FROM clients WHERE id = $1
+      `;
+      const getResult = await pool.query(getQuery, [id]);
+
+      if (getResult.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Client not found'
+          }
+        });
+      }
+
+      // Append new note
+      const currentNotes = getResult.rows[0].notes || '';
+      const newNotes = currentNotes ? `${currentNotes}\n\n${new Date().toISOString()}: ${note}` : `${new Date().toISOString()}: ${note}`;
+
+      const updateQuery = `
+        UPDATE clients
+        SET notes = $1,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = $2
+        RETURNING *
+      `;
+
+      const result = await pool.query(updateQuery, [newNotes, id]);
+
+      res.json({
+        success: true,
+        data: result.rows[0]
+      });
+    } catch (error) {
+      console.error('Add note error:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'ADD_NOTE_ERROR',
+          message: 'Failed to add note'
+        }
+      });
+    }
+  }
+
+  /**
+   * Bulk update tags
+   */
+  static async bulkUpdateTags(req, res) {
+    try {
+      const { id } = req.params;
+      const { tags } = req.body;
+
+      const updateQuery = `
+        UPDATE clients
+        SET tags = $1,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = $2
+        RETURNING *
+      `;
+
+      const result = await pool.query(updateQuery, [JSON.stringify(tags), id]);
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Client not found'
+          }
+        });
+      }
+
+      res.json({
+        success: true,
+        data: result.rows[0]
+      });
+    } catch (error) {
+      console.error('Update tags error:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'UPDATE_TAGS_ERROR',
+          message: 'Failed to update tags'
+        }
+      });
+    }
+  }
 }
 
 module.exports = ClientsController;

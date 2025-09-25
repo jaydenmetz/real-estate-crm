@@ -2,7 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
-const clientsController = require('../controllers/clients.controller');
+const clientsController = require('../controllers/clients.controller.simple');
 const { authenticate } = require('../middleware/apiKey.middleware');
 const { validate } = require('../middleware/validation.middleware');
 
@@ -15,7 +15,7 @@ const createValidation = [
   body('lastName').notEmpty().withMessage('Last name is required'),
   body('email').isEmail().withMessage('Valid email is required'),
   body('clientType').isIn(['Buyer', 'Seller', 'Both', 'Investor', 'Referral']),
-  body('phone').optional().isMobilePhone('any').withMessage('Invalid phone number')
+  body('phone').optional().isString().withMessage('Invalid phone number')
 ];
 
 const updateValidation = [
@@ -27,8 +27,8 @@ const updateValidation = [
 ];
 
 // Routes (removed requirePermission middleware that doesn't exist)
-router.get('/', clientsController.getClients);
-router.get('/:id', clientsController.getClient);
+router.get('/', clientsController.getAllClients);
+router.get('/:id', clientsController.getClientById);
 router.post('/', createValidation, validate, clientsController.createClient);
 router.put('/:id', updateValidation, validate, clientsController.updateClient);
 
