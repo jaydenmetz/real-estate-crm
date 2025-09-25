@@ -4,11 +4,11 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const appointmentsController = require('../controllers/appointments.controller');
-const { authenticateAny } = require('../middleware/combinedAuth.middleware');
+const { authenticate } = require('../middleware/apiKey.middleware');
 const { validate } = require('../middleware/validation.middleware');
 
 // All routes require authentication
-router.use(authenticateAny);
+router.use(authenticate);
 
 // Validation rules
 const createValidation = [
