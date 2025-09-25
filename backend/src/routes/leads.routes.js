@@ -34,4 +34,10 @@ router.put('/:id', requirePermission('leads'), updateValidation, validate, leads
 router.post('/:id/convert', requirePermission('leads'), leadsController.convertToClient);
 router.post('/:id/activities', requirePermission('leads'), leadsController.recordActivity);
 
+// Archive and Delete endpoints - Added for health dashboard testing
+// Archive endpoint: Soft deletes by setting status to 'archived'
+router.put('/:id/archive', requirePermission('leads'), leadsController.archiveLead || leadsController.deleteLead);
+// Delete endpoint: Hard delete
+router.delete('/:id', requirePermission('leads'), leadsController.deleteLead);
+
 module.exports = router;

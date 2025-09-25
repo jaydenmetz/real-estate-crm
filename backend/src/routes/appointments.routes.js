@@ -33,4 +33,10 @@ router.put('/:id', updateValidation, validate, appointmentsController.updateAppo
 router.post('/:id/cancel', appointmentsController.cancelAppointment);
 router.post('/:id/complete', appointmentsController.markComplete);
 
+// Archive and Delete endpoints - Added for health dashboard testing
+// Archive endpoint: Soft deletes by setting status to 'cancelled'
+router.put('/:id/archive', appointmentsController.archiveAppointment || appointmentsController.cancelAppointment);
+// Delete endpoint: Hard delete
+router.delete('/:id', appointmentsController.deleteAppointment);
+
 module.exports = router;

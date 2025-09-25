@@ -47,6 +47,8 @@ import SystemHealthDashboard from './components/health/SystemHealthDashboard3';
 import EscrowsHealthDashboard from './components/health/EscrowsHealthDashboard';
 import ListingsHealthDashboard from './components/health/ListingsHealthDashboard';
 import ClientsHealthDashboard from './components/health/ClientsHealthDashboard';
+import AppointmentsHealthDashboard from './components/health/AppointmentsHealthDashboard';
+import LeadsHealthDashboard from './components/health/LeadsHealthDashboard';
 // import Reports from './components/system/Reports';
 // import Calendar from './components/system/Calendar';
 // import Settings from './components/system/Settings';
@@ -265,9 +267,11 @@ function App() {
                                 <Route path="/clients/:id" element={<ClientDetail />} />
                     
                                 <Route path="/appointments" element={<AppointmentsDashboard />} />
+                                <Route path="/appointments/health" element={<AppointmentsHealthDashboard />} />
                                 <Route path="/appointments/:id" element={<AppointmentDetail />} />
                     
                                 <Route path="/leads" element={<LeadsDashboard />} />
+                                <Route path="/leads/health" element={<LeadsHealthDashboard />} />
                                 <Route path="/leads/:id" element={<LeadDetail />} />
                     
                                 {/* Financial Management */}
