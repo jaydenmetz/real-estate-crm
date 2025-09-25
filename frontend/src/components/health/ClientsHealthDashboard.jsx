@@ -496,8 +496,7 @@ const ClientsHealthDashboard = () => {
       city: 'Los Angeles',
       state: 'CA',
       zipCode: '90001',
-      clientStatus: 'Active',
-      status: 'Active'
+      status: 'active'
     };
 
     const createBasicTest = {
@@ -554,7 +553,7 @@ const ClientsHealthDashboard = () => {
       phone: '555-0200',
       alternativePhone: '555-0201',
       clientType: 'Both',
-      status: 'Active',
+      status: 'active',
       address: '456 Oak Avenue',
       city: 'San Francisco',
       state: 'CA',

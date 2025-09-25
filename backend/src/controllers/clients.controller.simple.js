@@ -163,10 +163,10 @@ class ClientsController {
       const {
         firstName,
         lastName,
-        email,
+        email = `client_${Date.now()}@example.com`,
         phone,
         clientType = 'buyer',
-        status = 'active',
+        status,
         address,
         city,
         state,
@@ -229,7 +229,7 @@ class ClientsController {
       const clientValues = [
         contactId,
         clientType.toLowerCase(),
-        status,
+        status ? status.toLowerCase() : 'active',
         req.user.teamId || req.user.team_id,
         req.user.id
       ];
