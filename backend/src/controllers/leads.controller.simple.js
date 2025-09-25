@@ -29,7 +29,7 @@ class LeadsController {
       }
 
       if (status && status !== 'all') {
-        whereConditions.push(`status = $${paramIndex}`);
+        whereConditions.push(`lead_status = $${paramIndex}`);
         queryParams.push(status);
         paramIndex++;
       }
@@ -158,12 +158,11 @@ class LeadsController {
           email,
           phone,
           lead_source,
-          lead_type,
-          status,
+          lead_status,
           notes,
           team_id,
-          assigned_to
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          assigned_agent_id
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         RETURNING *
       `;
 
@@ -173,7 +172,6 @@ class LeadsController {
         email,
         phone,
         leadSource,
-        leadType,
         status,
         notes,
         req.user.teamId || req.user.team_id,
@@ -236,12 +234,8 @@ class LeadsController {
         values.push(phone);
       }
       if (status) {
-        updates.push(`status = $${valueIndex++}`);
+        updates.push(`lead_status = $${valueIndex++}`);
         values.push(status);
-      }
-      if (leadType) {
-        updates.push(`lead_type = $${valueIndex++}`);
-        values.push(leadType);
       }
       if (notes !== undefined) {
         updates.push(`notes = $${valueIndex++}`);
@@ -305,7 +299,7 @@ class LeadsController {
 
       // Check if lead is archived
       const checkQuery = `
-        SELECT status FROM leads WHERE id = $1
+        SELECT lead_status FROM leads WHERE id = $1
       `;
 
       const checkResult = await pool.query(checkQuery, [id]);
@@ -320,7 +314,7 @@ class LeadsController {
         });
       }
 
-      if (checkResult.rows[0].status !== 'archived') {
+      if (checkResult.rows[0].lead_status !== 'archived') {
         return res.status(400).json({
           success: false,
           error: {
@@ -363,7 +357,7 @@ class LeadsController {
 
       const updateQuery = `
         UPDATE leads
-        SET status = 'archived',
+        SET lead_status = 'archived',
             updated_at = CURRENT_TIMESTAMP
         WHERE id = $1
         RETURNING *
@@ -406,7 +400,7 @@ class LeadsController {
     const { id } = req.params;
     const { agentId } = req.body;
     const updateQuery = `
-      UPDATE leads SET assigned_to = $2, updated_at = CURRENT_TIMESTAMP
+      UPDATE leads SET assigned_agent_id = $2, updated_at = CURRENT_TIMESTAMP
       WHERE id = $1 RETURNING *
     `;
     const result = await pool.query(updateQuery, [id, agentId]);
@@ -417,7 +411,7 @@ class LeadsController {
     const { id } = req.params;
     const { score } = req.body;
     const updateQuery = `
-      UPDATE leads SET score = $2, updated_at = CURRENT_TIMESTAMP
+      UPDATE leads SET lead_score = $2, updated_at = CURRENT_TIMESTAMP
       WHERE id = $1 RETURNING *
     `;
     const result = await pool.query(updateQuery, [id, score]);
@@ -440,7 +434,7 @@ class LeadsController {
     const { leadIds, agentId } = req.body;
     const updateQuery = `
       UPDATE leads
-      SET assigned_to = $2, updated_at = CURRENT_TIMESTAMP
+      SET assigned_agent_id = $2, updated_at = CURRENT_TIMESTAMP
       WHERE id = ANY($1) RETURNING *
     `;
     const result = await pool.query(updateQuery, [leadIds, agentId]);
@@ -451,7 +445,7 @@ class LeadsController {
     const { leadIds, status } = req.body;
     const updateQuery = `
       UPDATE leads
-      SET status = $2, updated_at = CURRENT_TIMESTAMP
+      SET lead_status = $2, updated_at = CURRENT_TIMESTAMP
       WHERE id = ANY($1) RETURNING *
     `;
     const result = await pool.query(updateQuery, [leadIds, status]);

@@ -16,9 +16,16 @@ class ClientsController {
       const offset = (page - 1) * limit;
 
       // Build WHERE conditions
-      let whereConditions = [`co.team_id = $1`];
-      let queryParams = [req.user.teamId || req.user.team_id];
-      let paramIndex = 2;
+      let whereConditions = [];
+      let queryParams = [];
+      let paramIndex = 1;
+
+      // Only filter by team if user has one
+      if (req.user.teamId || req.user.team_id) {
+        whereConditions.push(`(co.team_id = $${paramIndex} OR co.team_id IS NULL)`);
+        queryParams.push(req.user.teamId || req.user.team_id);
+        paramIndex++;
+      }
 
       if (status && status !== 'all') {
         whereConditions.push(`cl.status = $${paramIndex}`);
@@ -120,7 +127,7 @@ class ClientsController {
           co.tags
         FROM clients cl
         JOIN contacts co ON cl.contact_id = co.id
-        WHERE cl.id = $1 AND co.team_id = $2
+        WHERE cl.id = $1 AND (co.team_id = $2 OR co.team_id IS NULL)
       `;
 
       const result = await pool.query(query, [id, req.user.teamId || req.user.team_id]);
@@ -293,7 +300,7 @@ class ClientsController {
         SELECT cl.*, co.id as contact_id
         FROM clients cl
         JOIN contacts co ON cl.contact_id = co.id
-        WHERE cl.id = $1 AND co.team_id = $2
+        WHERE cl.id = $1 AND (co.team_id = $2 OR co.team_id IS NULL)
       `;
 
       const getResult = await client.query(getQuery, [id, req.user.teamId || req.user.team_id]);
@@ -431,7 +438,7 @@ class ClientsController {
         SELECT cl.status
         FROM clients cl
         JOIN contacts co ON cl.contact_id = co.id
-        WHERE cl.id = $1 AND co.team_id = $2
+        WHERE cl.id = $1 AND (co.team_id = $2 OR co.team_id IS NULL)
       `;
 
       const checkResult = await pool.query(checkQuery, [id, req.user.teamId || req.user.team_id]);
@@ -495,7 +502,7 @@ class ClientsController {
         FROM contacts co
         WHERE cl.contact_id = co.id
           AND cl.id = $1
-          AND co.team_id = $2
+          AND (co.team_id = $2 OR co.team_id IS NULL)
         RETURNING cl.*
       `;
 
@@ -540,7 +547,7 @@ class ClientsController {
         SELECT co.id as contact_id, co.notes
         FROM clients cl
         JOIN contacts co ON cl.contact_id = co.id
-        WHERE cl.id = $1 AND co.team_id = $2
+        WHERE cl.id = $1 AND (co.team_id = $2 OR co.team_id IS NULL)
       `;
 
       const getResult = await pool.query(getQuery, [id, req.user.teamId || req.user.team_id]);
@@ -598,7 +605,7 @@ class ClientsController {
         SELECT co.id as contact_id
         FROM clients cl
         JOIN contacts co ON cl.contact_id = co.id
-        WHERE cl.id = $1 AND co.team_id = $2
+        WHERE cl.id = $1 AND (co.team_id = $2 OR co.team_id IS NULL)
       `;
 
       const getResult = await pool.query(getQuery, [id, req.user.teamId || req.user.team_id]);

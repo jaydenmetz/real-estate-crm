@@ -57,7 +57,7 @@ class AppointmentsController {
         SELECT *
         FROM appointments
         ${whereClause}
-        ORDER BY start_date DESC
+        ORDER BY appointment_date DESC
         LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
       `;
 
@@ -147,22 +147,29 @@ class AppointmentsController {
         INSERT INTO appointments (
           title,
           description,
-          start_date,
-          end_date,
+          appointment_date,
+          start_time,
+          end_time,
           location,
           appointment_type,
           status,
           team_id,
-          created_by
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+          agent_id
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         RETURNING *
       `;
+
+      // Parse dates and times
+      const appointmentDate = startDate ? new Date(startDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+      const startTime = startDate ? new Date(startDate).toISOString().split('T')[1].substring(0, 8) : '10:00:00';
+      const endTime = endDate ? new Date(endDate).toISOString().split('T')[1].substring(0, 8) : '11:00:00';
 
       const values = [
         title,
         description,
-        startDate || new Date().toISOString(),
-        endDate || new Date(Date.now() + 3600000).toISOString(),
+        appointmentDate,
+        startTime,
+        endTime,
         location,
         appointmentType,
         status,
@@ -217,12 +224,14 @@ class AppointmentsController {
         values.push(description);
       }
       if (startDate) {
-        updates.push(`start_date = $${valueIndex++}`);
-        values.push(startDate);
+        updates.push(`appointment_date = $${valueIndex++}`);
+        values.push(new Date(startDate).toISOString().split('T')[0]);
+        updates.push(`start_time = $${valueIndex++}`);
+        values.push(new Date(startDate).toISOString().split('T')[1].substring(0, 8));
       }
       if (endDate) {
-        updates.push(`end_date = $${valueIndex++}`);
-        values.push(endDate);
+        updates.push(`end_time = $${valueIndex++}`);
+        values.push(new Date(endDate).toISOString().split('T')[1].substring(0, 8));
       }
       if (location !== undefined) {
         updates.push(`location = $${valueIndex++}`);
@@ -455,7 +464,7 @@ class AppointmentsController {
   static async getUpcoming(req, res) {
     const query = `
       SELECT * FROM appointments
-      WHERE start_date > CURRENT_TIMESTAMP
+      WHERE appointment_date >= CURRENT_DATE
       ORDER BY start_date ASC
       LIMIT 20
     `;
@@ -466,7 +475,7 @@ class AppointmentsController {
   static async getOverdue(req, res) {
     const query = `
       SELECT * FROM appointments
-      WHERE end_date < CURRENT_TIMESTAMP AND status = 'scheduled'
+      WHERE appointment_date < CURRENT_DATE AND status = 'scheduled'
       ORDER BY end_date DESC
       LIMIT 20
     `;
