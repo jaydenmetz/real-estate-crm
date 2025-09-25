@@ -72,7 +72,7 @@ const createRateLimiter = (options = {}) => {
  */
 const strictRateLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5 // Only 5 requests per 15 minutes
+  max: 20 // Allow 20 requests per 15 minutes for sensitive operations
 });
 
 /**
@@ -80,7 +80,7 @@ const strictRateLimiter = createRateLimiter({
  */
 const authRateLimiter = createRateLimiter({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10 // 10 auth attempts per 15 minutes
+  max: 30 // Allow 30 auth attempts per 15 minutes (more reasonable for development/testing)
 });
 
 /**

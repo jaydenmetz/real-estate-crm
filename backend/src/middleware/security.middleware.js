@@ -3,7 +3,7 @@ const helmet = require('helmet');
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: 500, // limit each IP to 500 requests per 15 minutes (more reasonable for API usage)
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
@@ -11,7 +11,7 @@ const apiLimiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // limit login attempts
+  max: 30, // Allow 30 login attempts per 15 minutes (more reasonable for testing/development)
   message: 'Too many authentication attempts, please try again later.',
   skipSuccessfulRequests: true,
   standardHeaders: true,
@@ -20,7 +20,7 @@ const authLimiter = rateLimit({
 
 const strictLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 10, // limit to 10 requests per minute for sensitive operations
+  max: 30, // Allow 30 requests per minute for sensitive operations
   message: 'Too many requests, please slow down.',
   standardHeaders: true,
   legacyHeaders: false,
@@ -28,7 +28,7 @@ const strictLimiter = rateLimit({
 
 const healthCheckLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 5, // limit health checks to 5 per minute
+  max: 20, // Allow 20 health checks per minute (for dashboard testing)
   message: 'Too many health check requests.',
   standardHeaders: true,
   legacyHeaders: false,
