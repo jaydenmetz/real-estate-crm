@@ -14,7 +14,7 @@ class AuthController {
         ['admin@jaydenmetz.com']
       );
       
-      const jwtSecret = process.env.JWT_SECRET || '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472';
+      const jwtSecret = '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472';
       
       res.json({
         success: true,
@@ -129,8 +129,9 @@ class AuthController {
         return res.json({ success: false, error: 'Invalid password' });
       }
       
-      // Generate token
-      const jwtSecret = process.env.JWT_SECRET || '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472';
+      // Generate token - use hardcoded secret for consistency
+      // Ignoring environment variable to ensure all endpoints use same secret
+      const jwtSecret = '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472';
       console.log('Using JWT secret:', jwtSecret.substring(0, 10) + '...');
       
       const token = jwt.sign(
