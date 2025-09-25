@@ -136,12 +136,17 @@ const authenticateAny = async (req, res, next) => {
     });
 
   } catch (error) {
-    console.error('Authentication error:', error);
+    console.error('Authentication error details:', {
+      error: error.message,
+      stack: error.stack,
+      name: error.name,
+      code: error.code
+    });
     return res.status(500).json({
       success: false,
       error: {
         code: 'AUTH_ERROR',
-        message: 'Authentication failed'
+        message: `Authentication failed: ${error.message}`
       }
     });
   }
