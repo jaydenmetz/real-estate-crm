@@ -72,7 +72,7 @@ const authenticateAny = async (req, res, next) => {
           WHERE u.id = $1 AND u.is_active = true
         `;
 
-        const userResult = await pool.query(userQuery, [decoded.userId]);
+        const userResult = await pool.query(userQuery, [decoded.id || decoded.userId]);
 
         if (userResult.rows.length === 0) {
           return res.status(401).json({
