@@ -633,7 +633,7 @@ const ClientsHealthDashboard = () => {
       // PUT Test 1: Update client basic info
       const updateData = {
         phone: '555-9999',
-        status: 'Inactive',
+        status: 'inactive',
         notes: 'Updated contact information'
       };
 
