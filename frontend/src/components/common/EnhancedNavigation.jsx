@@ -51,10 +51,11 @@ const EnhancedNavigation = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  
+
   const [otherDataAnchor, setOtherDataAnchor] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notificationAnchor, setNotificationAnchor] = useState(null);
+  const [brandMenuAnchor, setBrandMenuAnchor] = useState(null);
 
   const handleOtherDataClick = (event) => {
     setOtherDataAnchor(event.currentTarget);
@@ -160,13 +161,12 @@ const EnhancedNavigation = () => {
             </IconButton>
           )}
 
-          {/* Logo/Brand - CLICKABLE TO VIRTUAL OFFICE */}
-          <Box 
-            component={NavLink}
-            to="/"
-            sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
+          {/* Logo/Brand - DROPDOWN MENU */}
+          <Box
+            onClick={(e) => setBrandMenuAnchor(e.currentTarget)}
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
               mr: 3,
               textDecoration: 'none',
               color: 'inherit',
@@ -343,6 +343,43 @@ const EnhancedNavigation = () => {
           sx={{ justifyContent: 'center' }}
         >
           View All Notifications
+        </MenuItem>
+      </Menu>
+
+      {/* Brand Dropdown Menu */}
+      <Menu
+        anchorEl={brandMenuAnchor}
+        open={Boolean(brandMenuAnchor)}
+        onClose={() => setBrandMenuAnchor(null)}
+        onClick={() => setBrandMenuAnchor(null)}
+      >
+        <MenuItem
+          onClick={() => {
+            navigate('/');
+            setBrandMenuAnchor(null);
+          }}
+        >
+          <ListItemIcon><Dashboard /></ListItemIcon>
+          <ListItemText primary="Home Dashboard" />
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            navigate('/health/overview');
+            setBrandMenuAnchor(null);
+          }}
+        >
+          <ListItemIcon><HealthAndSafety /></ListItemIcon>
+          <ListItemText primary="System Health" />
+        </MenuItem>
+        <Divider />
+        <MenuItem
+          onClick={() => {
+            navigate('/settings');
+            setBrandMenuAnchor(null);
+          }}
+        >
+          <ListItemIcon><Settings /></ListItemIcon>
+          <ListItemText primary="Settings" />
         </MenuItem>
       </Menu>
 

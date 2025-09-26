@@ -44,6 +44,7 @@ import ExpenseDashboard from './components/dashboards/ExpenseDashboard';
 import ActivityLog from './components/system/ActivityLog';
 import AllNotes from './components/system/AllNotes';
 import SystemHealthDashboard from './components/health/SystemHealthDashboard3';
+import HealthOverviewDashboard from './components/health/HealthOverviewDashboard';
 import EscrowsHealthDashboard from './components/health/EscrowsHealthDashboard';
 import ListingsHealthDashboard from './components/health/ListingsHealthDashboard';
 import ClientsHealthDashboard from './components/health/ClientsHealthDashboard';
@@ -248,6 +249,7 @@ function App() {
                     
                                 {/* Health Check */}
                                 <Route path="/health" element={<SystemHealthDashboard />} />
+                                <Route path="/health/overview" element={<HealthOverviewDashboard />} />
                                 <Route path="/health/postgres" element={<SystemHealthDashboard initialTab={1} />} />
                                 <Route path="/health/redis" element={<SystemHealthDashboard initialTab={2} />} />
                                 <Route path="/health/auth" element={<SystemHealthDashboard initialTab={3} />} />
