@@ -12,10 +12,10 @@ router.use(authenticate);
 // Validation rules
 const createValidation = [
   body('propertyAddress').notEmpty().withMessage('Property address is required'),
-  body('listPrice').isNumeric().withMessage('List price must be a number'),
-  body('sellers').isArray().withMessage('Sellers must be an array'),
-  body('listingDate').isISO8601().withMessage('Invalid listing date'),
-  body('propertyType').isIn(['Single Family', 'Condo', 'Townhouse', 'Multi-Family', 'Land', 'Commercial'])
+  body('listPrice').optional().isNumeric().withMessage('List price must be a number'),
+  body('sellers').optional().isArray().withMessage('Sellers must be an array'),
+  body('listingDate').optional().isISO8601().withMessage('Invalid listing date'),
+  body('propertyType').optional().isIn(['Single Family', 'Condo', 'Townhouse', 'Multi-Family', 'Land', 'Commercial'])
 ];
 
 const updateValidation = [

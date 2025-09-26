@@ -400,16 +400,13 @@ const ListingsHealthDashboard = () => {
 
     // Core POST: Create minimal listing
     const minimalListingData = {
-      address: `${Date.now()} Test Street`,
-      city: 'Test City',
-      state: 'CA',
-      zip_code: '90210',
-      price: 500000,
+      propertyAddress: `${Date.now()} Test Street`,
+      listPrice: 500000,
+      propertyType: 'Single Family',
       bedrooms: 3,
       bathrooms: 2,
-      square_feet: 1500,
-      property_type: 'Single Family',
-      listing_status: 'active'
+      squareFootage: 1500,
+      listingStatus: 'Active'
     };
 
     const createMinimalTest = {
@@ -487,8 +484,8 @@ const ListingsHealthDashboard = () => {
     // Core PUT: Update listing
     if (createdListingId) {
       const updateData = {
-        price: 550000,
-        listing_status: 'pending'
+        listPrice: 550000,
+        listingStatus: 'Pending'
       };
 
       const updateTest = {
@@ -817,16 +814,13 @@ const ListingsHealthDashboard = () => {
       endpoint: '/listings',
       status: 'pending',
       requestBody: {
-        address: `123 O'Brien & Co. Street #456`,
-        city: 'San Francisco',
-        state: 'CA',
-        zip_code: '94102',
-        price: 750000,
+        propertyAddress: `123 O'Brien & Co. Street #456`,
+        listPrice: 750000,
+        propertyType: 'Condo',
         bedrooms: 2,
         bathrooms: 2,
-        square_feet: 1200,
-        property_type: 'Condo',
-        listing_status: 'active',
+        squareFootage: 1200,
+        listingStatus: 'Active',
         description: `José García's property with Müller-Smith`
       }
     };
@@ -864,16 +858,13 @@ const ListingsHealthDashboard = () => {
       endpoint: '/listings',
       status: 'pending',
       requestBody: {
-        address: 'Expensive Property Test',
-        city: 'Beverly Hills',
-        state: 'CA',
-        zip_code: '90210',
-        price: 999999999,
+        propertyAddress: 'Expensive Property Test',
+        listPrice: 999999999,
+        propertyType: 'Single Family',
         bedrooms: 10,
         bathrooms: 15,
-        square_feet: 25000,
-        property_type: 'Mansion',
-        listing_status: 'active'
+        squareFootage: 25000,
+        listingStatus: 'Active'
       }
     };
 
@@ -910,19 +901,14 @@ const ListingsHealthDashboard = () => {
       endpoint: '/listings',
       status: 'pending',
       requestBody: {
-        address: 'Empty Fields Test',
-        city: 'Los Angeles',
-        state: 'CA',
-        zip_code: '90001',
-        price: 400000,
+        propertyAddress: 'Empty Fields Test',
+        listPrice: 400000,
+        propertyType: 'Single Family',
         bedrooms: 3,
         bathrooms: 2,
-        square_feet: 1500,
-        property_type: 'Single Family',
-        listing_status: 'active',
-        description: '',
-        agent_name: '',
-        agent_email: ''
+        squareFootage: 1500,
+        listingStatus: 'Active',
+        description: ''
       }
     };
 
