@@ -191,7 +191,10 @@ const Settings = () => {
   // Fetch API Keys - Direct fetch to bypass global error handlers
   const fetchApiKeys = async () => {
     try {
-      const token = localStorage.getItem('authToken') || localStorage.getItem('crm_auth_token');
+      const token = localStorage.getItem('crm_auth_token') ||
+                    localStorage.getItem('authToken') ||
+                    localStorage.getItem('token') ||
+                    localStorage.getItem('TOKEN_KEY');
       if (!token) {
         setApiKeys([]);
         return { data: [] };
@@ -209,9 +212,13 @@ const Settings = () => {
       if (response.ok) {
         const data = await response.json();
         return data;
+      } else if (response.status === 404) {
+        // Endpoint not found
+        console.log('API Keys endpoint not found');
+        return { data: [] };
       } else {
-        // Don't throw error, just return empty
-        console.log('API Keys not available:', response.status);
+        // Other errors (401, 403, 500) - endpoint exists but there's an issue
+        console.log('API Keys fetch error:', response.status);
         return { data: [] };
       }
     } catch (error) {
@@ -1073,7 +1080,10 @@ const Settings = () => {
                             onClick={async () => {
                               if (window.confirm(`Are you sure you want to revoke the key "${apiKey.name}"?`)) {
                                 try {
-                                  const token = localStorage.getItem('authToken') || localStorage.getItem('crm_auth_token');
+                                  const token = localStorage.getItem('crm_auth_token') ||
+                    localStorage.getItem('authToken') ||
+                    localStorage.getItem('token') ||
+                    localStorage.getItem('TOKEN_KEY');
                                   const API_URL = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
                                   const response = await fetch(`${API_URL}/v1/api-keys/${apiKey.id}`, {
                                     method: 'DELETE',
@@ -1138,7 +1148,10 @@ const Settings = () => {
                       variant="contained"
                       onClick={async () => {
                         try {
-                          const token = localStorage.getItem('authToken') || localStorage.getItem('crm_auth_token');
+                          const token = localStorage.getItem('crm_auth_token') ||
+                    localStorage.getItem('authToken') ||
+                    localStorage.getItem('token') ||
+                    localStorage.getItem('TOKEN_KEY');
                           const API_URL = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
                           const response = await fetch(`${API_URL}/v1/api-keys`, {
                             method: 'POST',
