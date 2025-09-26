@@ -173,7 +173,7 @@ apiRouter.get('/test-endpoint', (req, res) => {
 
 // Test login endpoint removed for security
 
-// API key management (requires JWT auth)
+// API key management routes (requires JWT authentication)
 apiRouter.use('/api-keys', require('./routes/apiKeys.routes'));
 
 // API Routes - Using professional .routes.js files with built-in auth
