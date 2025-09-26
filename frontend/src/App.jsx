@@ -45,8 +45,10 @@ import ActivityLog from './components/system/ActivityLog';
 import AllNotes from './components/system/AllNotes';
 import SystemHealthDashboard from './components/health/SystemHealthDashboard3';
 import EscrowsHealthDashboard from './components/health/EscrowsHealthDashboard';
+import EscrowsHealthDashboardEnhanced from './components/health/EscrowsHealthDashboardEnhanced';
 import ListingsHealthDashboard from './components/health/ListingsHealthDashboard';
 import ClientsHealthDashboard from './components/health/ClientsHealthDashboard';
+import ClientsHealthDashboardEnhanced from './components/health/ClientsHealthDashboardEnhanced';
 import AppointmentsHealthDashboard from './components/health/AppointmentsHealthDashboard';
 import LeadsHealthDashboard from './components/health/LeadsHealthDashboard';
 // import Reports from './components/system/Reports';
@@ -256,6 +258,7 @@ function App() {
                                 {/* Main Features */}
                                 <Route path="/escrows" element={<EscrowsDashboard />} />
                                 <Route path="/escrows/health" element={<EscrowsHealthDashboard />} />
+                                <Route path="/escrows/health/enhanced" element={<EscrowsHealthDashboardEnhanced />} />
                                 <Route path="/escrows/:id" element={<EscrowDetail />} />
                     
                                 <Route path="/listings" element={<ListingsDashboard />} />
@@ -264,6 +267,7 @@ function App() {
                     
                                 <Route path="/clients" element={<ClientsDashboard />} />
                                 <Route path="/clients/health" element={<ClientsHealthDashboard />} />
+                                <Route path="/clients/health/enhanced" element={<ClientsHealthDashboardEnhanced />} />
                                 <Route path="/clients/:id" element={<ClientDetail />} />
                     
                                 <Route path="/appointments" element={<AppointmentsDashboard />} />
