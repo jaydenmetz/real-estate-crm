@@ -69,7 +69,7 @@ import {
 } from '@mui/icons-material';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useNavigate } from 'react-router-dom';
-import { api } from '../services/api.service';
+import { api, apiKeysAPI } from '../services/api.service';
 import { useAuth } from '../contexts/AuthContext';
 
 // Tab panel component
