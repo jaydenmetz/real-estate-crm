@@ -188,18 +188,41 @@ const Settings = () => {
   const [createdKey, setCreatedKey] = useState(null);
   const [copySuccess, setCopySuccess] = useState({});
 
-  // Fetch API Keys
-  const { data: apiKeysData, refetch: refetchApiKeys, isLoading: apiKeysLoading } = useQuery(
-    'myApiKeys',
-    async () => {
-      try {
-        return await api.apiKeysAPI.getAll();
-      } catch (error) {
-        // If endpoint doesn't exist or user lacks permission, return empty
-        console.log('API Keys endpoint not available or no permission');
+  // Fetch API Keys - Direct fetch to bypass global error handlers
+  const fetchApiKeys = async () => {
+    try {
+      const token = localStorage.getItem('authToken') || localStorage.getItem('crm_auth_token');
+      if (!token) {
+        setApiKeys([]);
         return { data: [] };
       }
-    },
+
+      const API_URL = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
+      const response = await fetch(`${API_URL}/v1/api-keys`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        return data;
+      } else {
+        // Don't throw error, just return empty
+        console.log('API Keys not available:', response.status);
+        return { data: [] };
+      }
+    } catch (error) {
+      console.log('Failed to fetch API keys:', error);
+      return { data: [] };
+    }
+  };
+
+  const { data: apiKeysData, refetch: refetchApiKeys, isLoading: apiKeysLoading } = useQuery(
+    'myApiKeys',
+    fetchApiKeys,
     {
       onSuccess: (response) => {
         if (response?.data) {
@@ -207,15 +230,13 @@ const Settings = () => {
         }
       },
       onError: (error) => {
-        console.error('Failed to fetch API keys:', error);
-        // Don't log out user if API keys endpoint fails
-        // Just show empty state
+        // Silent fail - don't log out
         setApiKeys([]);
       },
-      retry: false, // Don't retry on error
-      enabled: activeTab === 6, // Only fetch when API Keys tab is active
-      staleTime: 60000, // Consider data fresh for 1 minute
-      cacheTime: 300000 // Keep in cache for 5 minutes
+      retry: false,
+      enabled: activeTab === 6,
+      staleTime: 60000,
+      cacheTime: 300000
     }
   );
 
