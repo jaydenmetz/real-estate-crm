@@ -550,7 +550,20 @@ class EscrowController {
         'acceptanceDate': 'acceptance_date',
         'escrowStatus': 'escrow_status',
         'escrowOfficerName': 'escrow_officer_name',
-        'zipCode': 'zip_code'
+        'escrowOfficerEmail': 'escrow_officer_email',
+        'escrowOfficerPhone': 'escrow_officer_phone',
+        'escrowCompany': 'escrow_company',
+        'zipCode': 'zip_code',
+        'earnestMoneyDeposit': 'earnest_money_deposit',
+        'commissionPercentage': 'commission_percentage',
+        'netCommission': 'net_commission',
+        'myCommission': 'net_commission',
+        'propertyType': 'property_type',
+        'leadSource': 'lead_source',
+        'titleCompany': 'title_company',
+        'loanOfficerName': 'loan_officer_name',
+        'loanOfficerEmail': 'loan_officer_email',
+        'loanOfficerPhone': 'loan_officer_phone'
       };
       
       // Build dynamic update query
@@ -790,12 +803,23 @@ class EscrowController {
     
     try {
       await client.query('BEGIN');
-      
+
       const escrowData = req.body;
-      
+
+      // Check if body is empty or not an object
+      if (!escrowData || typeof escrowData !== 'object' || Object.keys(escrowData).length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Request body cannot be empty'
+          }
+        });
+      }
+
       // Check for property address in both formats (middleware normalizes to camelCase)
       const propertyAddress = escrowData.propertyAddress || escrowData.property_address;
-      
+
       // Validate required field
       if (!propertyAddress) {
         return res.status(400).json({
