@@ -200,7 +200,12 @@ const Settings = () => {
       },
       onError: (error) => {
         console.error('Failed to fetch API keys:', error);
-      }
+        // Don't log out user if API keys endpoint fails
+        // Just show empty state
+        setApiKeys([]);
+      },
+      retry: false, // Don't retry on error
+      enabled: activeTab === 6 // Only fetch when API Keys tab is active
     }
   );
 
