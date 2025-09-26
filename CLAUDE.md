@@ -60,11 +60,19 @@ Database: railway
 
 ## Authentication System
 
-### API Key Authentication
+### Dual Authentication Support
+- **JWT Tokens**: For native app usage (login sessions)
+- **API Keys**: For external API access and integrations
+
+### API Key Features
 - No prefixes - clean 64-character hex strings
-- Stored with SHA-256 hashing
+- Stored with SHA-256 hashing in database
 - Support for expiration and revocation
 - User/team scoped permissions
+- Management UI in Settings page (/settings#api-keys)
+- Dropdown selection in health dashboards
+- Secure one-time display of new keys
+- Usage tracking (created_at, last_used_at, expires_at)
 
 ### Endpoints Requiring Authentication
 All `/v1/*` endpoints except:
@@ -128,10 +136,35 @@ PGPASSWORD=ueLIWnvALZWVbRdnOmpLGsrrukeGLGQQ psql -h ballast.proxy.rlwy.net -p 20
 - Rate limiting enabled
 - CORS configured for production domains
 
-### Health Check Endpoints
-- `/v1/escrows/health` - Full CRUD test (creates/updates/deletes test data)
-- `/v1/escrows/health/auth` - Authentication verification
-- `/v1/escrows/health/db` - Database connectivity
+### Health Check System
+
+#### Comprehensive Health Dashboards
+- **System Overview**: `/health/overview` - All modules at a glance
+- **Module-Specific**: `/[module]/health` - Detailed testing per module
+  - Escrows: 29 comprehensive tests
+  - Listings: 26 tests
+  - Clients: 15 tests
+  - Appointments: 15 tests
+  - Leads: 14 tests
+
+#### Test Categories
+- **CORE**: Critical CRUD operations
+- **FILTERS**: Search and pagination
+- **ERROR**: Error handling validation
+- **EDGE**: Edge cases and limits
+- **PERFORMANCE**: Concurrent requests and speed
+- **WORKFLOW**: Business logic flows
+
+#### Dual Authentication Testing
+- JWT tab for session-based testing
+- API Key tab for external API testing
+- Identical test suites for both auth methods
+- Copy test results for debugging
+
+### Health Check API Endpoints
+- `/v1/[module]/health` - Full CRUD test suite
+- `/v1/[module]/health/auth` - Authentication verification
+- `/v1/[module]/health/db` - Database connectivity
 
 ## Database Schema
 
@@ -158,7 +191,11 @@ real-estate-crm/
 │   │   ├── routes/            # API endpoints
 │   │   │   ├── apiKeys.js     # API key management
 │   │   │   ├── escrows.js     # Escrow CRUD + health
-│   │   │   └── escrows-health.js  # Health check endpoints
+│   │   │   ├── escrows-health.js  # Health check endpoints
+│   │   │   ├── listings.js    # Listings endpoints
+│   │   │   ├── clients.js     # Clients endpoints
+│   │   │   ├── appointments.js # Appointments endpoints
+│   │   │   └── leads.js       # Leads endpoints
 │   │   └── services/          # Business logic
 │   │       ├── apiKey.service.js   # API key operations
 │   │       └── broker.service.js   # Broker management
@@ -166,7 +203,20 @@ real-estate-crm/
 │   └── test-api-auth.sh      # API testing script
 └── frontend/
     └── src/
-        └── components/        # React components
+        ├── components/
+        │   ├── health/        # Health check dashboards
+        │   │   ├── HealthOverviewDashboard.jsx
+        │   │   ├── EscrowsHealthDashboard.jsx
+        │   │   ├── ListingsHealthDashboard.jsx
+        │   │   ├── ClientsHealthDashboard.jsx
+        │   │   ├── AppointmentsHealthDashboard.jsx
+        │   │   └── LeadsHealthDashboard.jsx
+        │   └── common/        # Shared components
+        ├── services/
+        │   ├── api.service.js # API client with all modules
+        │   └── healthCheck.service.js # Health check service
+        └── pages/
+            └── Settings.jsx   # Settings with API key management
 ```
 
 ## Testing
@@ -181,11 +231,42 @@ Tests:
 - API key creation
 - API key authentication
 - Database connectivity
-- Full escrow CRUD operations
+- Full CRUD operations for all modules
 - Permission enforcement
 - Key revocation
 
+### Health Dashboard Testing
+1. Navigate to `/health/overview` for system-wide testing
+2. Click on any module card to drill down
+3. Switch between JWT and API Key authentication
+4. Run comprehensive test suites
+5. Copy results for debugging with structured JSON
+
 ## Common Tasks
+
+### API Key Management
+
+#### Via Settings UI
+1. Navigate to Settings page (`/settings`)
+2. Click on "API Keys" tab
+3. Create, view, or revoke keys
+
+#### Via API
+```bash
+# Create key
+curl -X POST https://api.jaydenmetz.com/v1/api-keys \
+  -H "Authorization: Bearer YOUR_JWT" \
+  -H "Content-Type: application/json" \
+  -d '{"name": "Production Key", "expiresInDays": 365}'
+
+# List keys
+curl https://api.jaydenmetz.com/v1/api-keys \
+  -H "Authorization: Bearer YOUR_JWT"
+
+# Revoke key
+curl -X DELETE https://api.jaydenmetz.com/v1/api-keys/KEY_ID \
+  -H "Authorization: Bearer YOUR_JWT"
+```
 
 ### Create New User
 ```sql
@@ -232,6 +313,10 @@ git push origin main
 4. **Railway deploys automatically** - From GitHub pushes
 5. **Use existing tables** - Brokers system uses existing teams/users
 6. **Test with test-api-auth.sh** - Comprehensive testing script
+7. **API Key Security** - Keys shown only once on creation
+8. **Health Dashboards** - Comprehensive testing with dual auth support
+9. **Settings Page** - Central hub for profile, notifications, and API keys
+10. **Copy Debug Data** - All health checks provide structured JSON for debugging
 
 ## Support Users
 
