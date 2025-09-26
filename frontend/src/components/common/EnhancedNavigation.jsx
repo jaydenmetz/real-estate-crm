@@ -371,16 +371,6 @@ const EnhancedNavigation = () => {
           <ListItemIcon><HealthAndSafety /></ListItemIcon>
           <ListItemText primary="System Health" />
         </MenuItem>
-        <Divider />
-        <MenuItem
-          onClick={() => {
-            navigate('/settings');
-            setBrandMenuAnchor(null);
-          }}
-        >
-          <ListItemIcon><Settings /></ListItemIcon>
-          <ListItemText primary="Settings" />
-        </MenuItem>
       </Menu>
 
     </>
