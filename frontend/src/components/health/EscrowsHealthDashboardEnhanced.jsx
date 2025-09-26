@@ -31,7 +31,9 @@ import {
   Warning as WarningIcon,
   Speed as SpeedIcon,
   Search as SearchIcon,
-  BugReport as BugIcon
+  BugReport as BugIcon,
+  Add as AddIcon,
+  Edit as EditIcon
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 
@@ -1190,22 +1192,20 @@ const EscrowsHealthDashboardEnhanced = () => {
 
   const tabCategories = [
     { label: 'All Tests', key: 'ALL', icon: <PlayIcon /> },
-    { label: 'Core CRUD', key: 'CORE', icon: <CheckIcon /> },
-    { label: 'Filters & Search', key: 'FILTERS', icon: <SearchIcon /> },
-    { label: 'Error Handling', key: 'ERROR', icon: <BugIcon /> },
-    { label: 'Edge Cases', key: 'EDGE', icon: <WarningIcon /> },
-    { label: 'Performance', key: 'PERFORMANCE', icon: <SpeedIcon /> },
-    { label: 'Workflow', key: 'WORKFLOW', icon: <CheckIcon /> }
+    { label: 'GET', key: 'GET', icon: <SearchIcon />, color: '#2196f3' },
+    { label: 'POST', key: 'POST', icon: <AddIcon />, color: '#4caf50' },
+    { label: 'PUT', key: 'PUT', icon: <EditIcon />, color: '#ff9800' },
+    { label: 'DELETE', key: 'DELETE', icon: <DeleteIcon />, color: '#f44336' }
   ];
 
   const getTestsForTab = (tabIndex) => {
     if (tabIndex === 0) return tests; // All tests
-    const category = tabCategories[tabIndex].key;
-    return groupedTests[category] || [];
+    const method = tabCategories[tabIndex].key;
+    return tests.filter(t => t.method === method);
   };
 
   const getCategoryStats = (category) => {
-    const categoryTests = groupedTests[category] || [];
+    const categoryTests = category === 'ALL' ? tests : tests.filter(t => t.method === category);
     return {
       total: categoryTests.length,
       passed: categoryTests.filter(t => t.status === 'success').length,
@@ -1330,20 +1330,35 @@ const EscrowsHealthDashboardEnhanced = () => {
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mt: 3 }}>
               <Tabs value={currentTab} onChange={(e, v) => setCurrentTab(v)} variant="scrollable" scrollButtons="auto">
                 {tabCategories.map((cat, idx) => {
-                  const stats = idx === 0 ? null : getCategoryStats(cat.key);
+                  const stats = getCategoryStats(cat.key);
                   return (
                     <Tab
                       key={cat.key}
+                      sx={{
+                        ...(cat.color && currentTab === idx ? {
+                          backgroundColor: `${cat.color}15`,
+                          borderBottom: `3px solid ${cat.color}`
+                        } : {})
+                      }}
                       label={
                         <Box display="flex" alignItems="center" gap={1}>
-                          {cat.icon}
-                          <span>{cat.label}</span>
+                          <Box sx={{ color: cat.color || 'inherit' }}>
+                            {cat.icon}
+                          </Box>
+                          <span style={{ color: cat.color || 'inherit', fontWeight: currentTab === idx ? 'bold' : 'normal' }}>
+                            {cat.label}
+                          </span>
                           {stats && stats.total > 0 && (
                             <Chip
                               size="small"
                               label={`${stats.passed}/${stats.total}`}
-                              color={stats.failed > 0 ? 'error' : stats.warnings > 0 ? 'warning' : 'success'}
-                              sx={{ ml: 1, height: 20 }}
+                              sx={{
+                                ml: 1,
+                                height: 20,
+                                backgroundColor: stats.failed > 0 ? '#f44336' : stats.warnings > 0 ? '#ff9800' : '#4caf50',
+                                color: 'white',
+                                fontWeight: 'bold'
+                              }}
                             />
                           )}
                         </Box>
@@ -1358,19 +1373,23 @@ const EscrowsHealthDashboardEnhanced = () => {
               <Box sx={{ mt: 3 }}>
                 {currentTab === 0 && (
                   <>
-                    {/* Show all tests grouped by category */}
-                    {Object.entries(groupedTests).map(([category, categoryTests]) => (
-                      categoryTests.length > 0 && (
-                        <Box key={category} mb={3}>
-                          <SectionHeader variant="h6">
-                            {category} Tests ({categoryTests.filter(t => t.status === 'success').length}/{categoryTests.length})
+                    {/* Show all tests grouped by HTTP method */}
+                    {['GET', 'POST', 'PUT', 'DELETE'].map((method) => {
+                      const methodTests = tests.filter(t => t.method === method);
+                      const methodColor = method === 'GET' ? '#2196f3' :
+                                         method === 'POST' ? '#4caf50' :
+                                         method === 'PUT' ? '#ff9800' : '#f44336';
+                      return methodTests.length > 0 && (
+                        <Box key={method} mb={3}>
+                          <SectionHeader variant="h6" sx={{ backgroundColor: `${methodColor}15`, borderLeft: `4px solid ${methodColor}` }}>
+                            {method} Requests ({methodTests.filter(t => t.status === 'success').length}/{methodTests.length})
                           </SectionHeader>
-                          {categoryTests.map((test, index) => (
-                            <TestItem key={`${category}-${index}`} test={test} />
+                          {methodTests.map((test, index) => (
+                            <TestItem key={`${method}-${index}`} test={test} />
                           ))}
                         </Box>
-                      )
-                    ))}
+                      );
+                    })}
                   </>
                 )}
                 {currentTab > 0 && (
