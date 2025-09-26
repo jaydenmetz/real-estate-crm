@@ -189,9 +189,17 @@ const Settings = () => {
   const [copySuccess, setCopySuccess] = useState({});
 
   // Fetch API Keys
-  const { data: apiKeysData, refetch: refetchApiKeys } = useQuery(
+  const { data: apiKeysData, refetch: refetchApiKeys, isLoading: apiKeysLoading } = useQuery(
     'myApiKeys',
-    () => api.apiKeysAPI.getAll(),
+    async () => {
+      try {
+        return await api.apiKeysAPI.getAll();
+      } catch (error) {
+        // If endpoint doesn't exist or user lacks permission, return empty
+        console.log('API Keys endpoint not available or no permission');
+        return { data: [] };
+      }
+    },
     {
       onSuccess: (response) => {
         if (response?.data) {
@@ -205,7 +213,9 @@ const Settings = () => {
         setApiKeys([]);
       },
       retry: false, // Don't retry on error
-      enabled: activeTab === 6 // Only fetch when API Keys tab is active
+      enabled: activeTab === 6, // Only fetch when API Keys tab is active
+      staleTime: 60000, // Consider data fresh for 1 minute
+      cacheTime: 300000 // Keep in cache for 5 minutes
     }
   );
 
