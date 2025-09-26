@@ -33,7 +33,11 @@ import {
   InputLabel,
   Select,
   MenuItem,
-  Autocomplete
+  Autocomplete,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions
 } from '@mui/material';
 import {
   Person,
@@ -57,7 +61,11 @@ import {
   TrendingUp,
   LocationOn,
   School,
-  WorkspacePremium
+  WorkspacePremium,
+  Key,
+  ContentCopy,
+  Visibility,
+  VisibilityOff
 } from '@mui/icons-material';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useNavigate } from 'react-router-dom';
@@ -170,6 +178,31 @@ const Settings = () => {
     { label: 'Average Response Time', value: '< 1 hour', icon: 'speed' },
     { label: 'Repeat Clients', value: '65%', icon: 'people' }
   ]);
+
+  // API Keys state
+  const [apiKeys, setApiKeys] = useState([]);
+  const [showFullKey, setShowFullKey] = useState({});
+  const [newKeyDialog, setNewKeyDialog] = useState(false);
+  const [newKeyName, setNewKeyName] = useState('');
+  const [newKeyExpiry, setNewKeyExpiry] = useState(365);
+  const [createdKey, setCreatedKey] = useState(null);
+  const [copySuccess, setCopySuccess] = useState({});
+
+  // Fetch API Keys
+  const { data: apiKeysData, refetch: refetchApiKeys } = useQuery(
+    'myApiKeys',
+    () => api.apiKeysAPI.getAll(),
+    {
+      onSuccess: (response) => {
+        if (response?.data) {
+          setApiKeys(response.data);
+        }
+      },
+      onError: (error) => {
+        console.error('Failed to fetch API keys:', error);
+      }
+    }
+  );
 
   // Update profile mutation
   const updateProfileMutation = useMutation(
@@ -389,6 +422,7 @@ const Settings = () => {
                 <Tab icon={<Notifications />} label="Notifications" />
                 <Tab icon={<Palette />} label="Appearance" />
                 <Tab icon={<Security />} label="Privacy" />
+                <Tab icon={<Key />} label="API Keys" />
                 <Tab icon={<WorkspacePremium />} label="Developer" />
               </Tabs>
             </Paper>
@@ -889,8 +923,242 @@ const Settings = () => {
                 </Button>
               </TabPanel>
 
-              {/* Developer Tab */}
+              {/* API Keys Tab */}
               <TabPanel value={activeTab} index={6}>
+                <Typography variant="h5" gutterBottom>
+                  API Key Management
+                </Typography>
+                <Divider sx={{ mb: 3 }} />
+
+                <Alert severity="info" sx={{ mb: 3 }}>
+                  API keys allow you to access the CRM API programmatically. Keep your keys secure and never share them publicly.
+                </Alert>
+
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 3 }}>
+                  <Typography variant="h6">
+                    Your API Keys
+                  </Typography>
+                  <Button
+                    variant="contained"
+                    startIcon={<Add />}
+                    onClick={() => setNewKeyDialog(true)}
+                  >
+                    Create New Key
+                  </Button>
+                </Box>
+
+                {apiKeys.length === 0 ? (
+                  <Paper sx={{ p: 3, textAlign: 'center' }}>
+                    <Key sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
+                    <Typography variant="h6" gutterBottom>
+                      No API Keys Yet
+                    </Typography>
+                    <Typography color="text.secondary" paragraph>
+                      Create your first API key to start using the CRM API
+                    </Typography>
+                    <Button
+                      variant="contained"
+                      startIcon={<Add />}
+                      onClick={() => setNewKeyDialog(true)}
+                    >
+                      Create Your First Key
+                    </Button>
+                  </Paper>
+                ) : (
+                  <List>
+                    {apiKeys.map((apiKey) => (
+                      <ListItem key={apiKey.id} sx={{ bgcolor: 'background.paper', mb: 1, borderRadius: 1, border: 1, borderColor: 'divider' }}>
+                        <ListItemIcon>
+                          <Key color={apiKey.is_active ? 'primary' : 'disabled'} />
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Typography variant="subtitle1" fontWeight="bold">
+                                {apiKey.name || 'Unnamed Key'}
+                              </Typography>
+                              {!apiKey.is_active && (
+                                <Chip label="Revoked" size="small" color="error" />
+                              )}
+                              {apiKey.expires_at && new Date(apiKey.expires_at) < new Date() && (
+                                <Chip label="Expired" size="small" color="warning" />
+                              )}
+                            </Box>
+                          }
+                          secondary={
+                            <Box>
+                              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1 }}>
+                                <Typography
+                                  component="code"
+                                  sx={{
+                                    fontFamily: 'monospace',
+                                    bgcolor: 'grey.100',
+                                    p: 0.5,
+                                    borderRadius: 1,
+                                    fontSize: '0.875rem'
+                                  }}
+                                >
+                                  {showFullKey[apiKey.id]
+                                    ? apiKey.key || `${apiKey.key_prefix}${'*'.repeat(48)}`
+                                    : `${apiKey.key_prefix}${'*'.repeat(48)}`}
+                                </Typography>
+                                <IconButton
+                                  size="small"
+                                  onClick={() => setShowFullKey({ ...showFullKey, [apiKey.id]: !showFullKey[apiKey.id] })}
+                                >
+                                  {showFullKey[apiKey.id] ? <VisibilityOff /> : <Visibility />}
+                                </IconButton>
+                                <IconButton
+                                  size="small"
+                                  onClick={() => {
+                                    const keyToCopy = apiKey.key || `${apiKey.key_prefix}${'*'.repeat(48)}`;
+                                    navigator.clipboard.writeText(keyToCopy);
+                                    setCopySuccess({ ...copySuccess, [apiKey.id]: true });
+                                    setTimeout(() => {
+                                      setCopySuccess({ ...copySuccess, [apiKey.id]: false });
+                                    }, 2000);
+                                  }}
+                                >
+                                  <ContentCopy color={copySuccess[apiKey.id] ? 'success' : 'inherit'} />
+                                </IconButton>
+                              </Box>
+                              <Typography variant="caption" color="text.secondary">
+                                Created: {new Date(apiKey.created_at).toLocaleDateString()} •
+                                {apiKey.expires_at ? `Expires: ${new Date(apiKey.expires_at).toLocaleDateString()}` : 'No expiration'} •
+                                Last used: {apiKey.last_used_at ? new Date(apiKey.last_used_at).toLocaleDateString() : 'Never'}
+                              </Typography>
+                            </Box>
+                          }
+                        />
+                        <ListItemSecondaryAction>
+                          <IconButton
+                            edge="end"
+                            color="error"
+                            onClick={async () => {
+                              if (window.confirm(`Are you sure you want to revoke the key "${apiKey.name}"?`)) {
+                                try {
+                                  await api.apiKeysAPI.revoke(apiKey.id);
+                                  refetchApiKeys();
+                                  setSnackbar({ open: true, message: 'API key revoked successfully', severity: 'success' });
+                                } catch (error) {
+                                  setSnackbar({ open: true, message: 'Failed to revoke API key', severity: 'error' });
+                                }
+                              }
+                            }}
+                            disabled={!apiKey.is_active}
+                          >
+                            <Delete />
+                          </IconButton>
+                        </ListItemSecondaryAction>
+                      </ListItem>
+                    ))}
+                  </List>
+                )}
+
+                {/* Create New Key Dialog */}
+                <Dialog open={newKeyDialog} onClose={() => setNewKeyDialog(false)} maxWidth="sm" fullWidth>
+                  <DialogTitle>Create New API Key</DialogTitle>
+                  <DialogContent>
+                    <TextField
+                      fullWidth
+                      label="Key Name"
+                      value={newKeyName}
+                      onChange={(e) => setNewKeyName(e.target.value)}
+                      placeholder="e.g., Production API Key"
+                      margin="normal"
+                      helperText="Give your key a descriptive name to remember its purpose"
+                    />
+                    <TextField
+                      fullWidth
+                      type="number"
+                      label="Expiry (days)"
+                      value={newKeyExpiry}
+                      onChange={(e) => setNewKeyExpiry(parseInt(e.target.value))}
+                      margin="normal"
+                      helperText="Number of days until this key expires (0 for no expiration)"
+                    />
+                  </DialogContent>
+                  <DialogActions>
+                    <Button onClick={() => {
+                      setNewKeyDialog(false);
+                      setNewKeyName('');
+                      setNewKeyExpiry(365);
+                    }}>
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="contained"
+                      onClick={async () => {
+                        try {
+                          const response = await api.apiKeysAPI.create({
+                            name: newKeyName,
+                            expiresInDays: newKeyExpiry
+                          });
+                          if (response?.data?.key) {
+                            setCreatedKey(response.data.key);
+                            refetchApiKeys();
+                            setNewKeyDialog(false);
+                            setNewKeyName('');
+                            setNewKeyExpiry(365);
+                          }
+                        } catch (error) {
+                          setSnackbar({ open: true, message: 'Failed to create API key', severity: 'error' });
+                        }
+                      }}
+                      disabled={!newKeyName}
+                    >
+                      Create Key
+                    </Button>
+                  </DialogActions>
+                </Dialog>
+
+                {/* Show Created Key Dialog */}
+                <Dialog open={!!createdKey} onClose={() => setCreatedKey(null)} maxWidth="md" fullWidth>
+                  <DialogTitle>API Key Created Successfully</DialogTitle>
+                  <DialogContent>
+                    <Alert severity="warning" sx={{ mb: 2 }}>
+                      Save this key now! For security reasons, you won't be able to see it again.
+                    </Alert>
+                    <Box sx={{ p: 2, bgcolor: 'grey.100', borderRadius: 1, mb: 2 }}>
+                      <Typography variant="subtitle2" gutterBottom>Your new API key:</Typography>
+                      <Typography
+                        component="code"
+                        sx={{
+                          fontFamily: 'monospace',
+                          display: 'block',
+                          p: 1,
+                          bgcolor: 'white',
+                          border: 1,
+                          borderColor: 'divider',
+                          borderRadius: 1,
+                          wordBreak: 'break-all'
+                        }}
+                      >
+                        {createdKey}
+                      </Typography>
+                    </Box>
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      startIcon={<ContentCopy />}
+                      onClick={() => {
+                        navigator.clipboard.writeText(createdKey);
+                        setSnackbar({ open: true, message: 'API key copied to clipboard', severity: 'success' });
+                      }}
+                    >
+                      Copy to Clipboard
+                    </Button>
+                  </DialogContent>
+                  <DialogActions>
+                    <Button variant="contained" onClick={() => setCreatedKey(null)}>
+                      Done
+                    </Button>
+                  </DialogActions>
+                </Dialog>
+              </TabPanel>
+
+              {/* Developer Tab */}
+              <TabPanel value={activeTab} index={7}>
                 <Typography variant="h5" gutterBottom>
                   Developer Tools
                 </Typography>

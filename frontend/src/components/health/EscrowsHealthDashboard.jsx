@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useQuery } from 'react-query';
+import { api } from '../../services/api.service';
 import {
   Box,
   Container,
@@ -20,7 +22,11 @@ import {
   Tabs,
   Tab,
   TextField,
-  Button
+  Button,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel
 } from '@mui/material';
 import {
   CheckCircle as CheckIcon,
@@ -351,6 +357,7 @@ const TestResult = ({ test }) => {
 const EscrowsHealthDashboard = () => {
   const [authTab, setAuthTab] = useState(0); // 0 = JWT, 1 = API Key
   const [apiKey, setApiKey] = useState('');
+  const [apiKeys, setApiKeys] = useState([]);
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(null);

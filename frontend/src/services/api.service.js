@@ -406,6 +406,14 @@ export const settingsAPI = {
   toggleTheme: () => apiInstance.post('/settings/theme/toggle')
 };
 
+// API Keys API
+export const apiKeysAPI = {
+  getAll: () => apiInstance.get('/api-keys'),
+  create: (data) => apiInstance.post('/api-keys', data),
+  revoke: (id) => apiInstance.delete(`/api-keys/${id}`),
+  update: (id, data) => apiInstance.put(`/api-keys/${id}`, data)
+};
+
 
 // Export the main API instance as default
 // Export the API instance for debugging
@@ -438,6 +446,7 @@ export const api = {
   webhooksAPI,
   profilesAPI,
   settingsAPI,
+  apiKeysAPI,
   // Include the raw instance methods for flexibility
   get: (...args) => apiInstance.get(...args),
   post: (...args) => apiInstance.post(...args),
