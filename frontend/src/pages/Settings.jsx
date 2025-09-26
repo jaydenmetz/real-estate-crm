@@ -191,68 +191,31 @@ const Settings = () => {
   // Fetch API Keys - Direct fetch to bypass global error handlers
   const fetchApiKeys = async () => {
     try {
-      // Check all possible token locations
-      const token = localStorage.getItem('crm_auth_token') ||
-                    localStorage.getItem('authToken') ||
-                    localStorage.getItem('token') ||
-                    localStorage.getItem('TOKEN_KEY');
-
-      // Debug logging
-      console.log('Checking for JWT token:', {
-        'crm_auth_token': localStorage.getItem('crm_auth_token'),
-        'authToken': localStorage.getItem('authToken'),
-        'token': localStorage.getItem('token'),
-        'found': !!token,
-        'tokenPreview': token ? token.substring(0, 20) + '...' : 'none'
-      });
-
-      if (!token) {
-        console.log('No JWT token found in localStorage');
-        setApiKeys([]);
-        return { data: [] };
-      }
-
-      const API_URL = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
-      const fullUrl = `${API_URL}/v1/api-keys`;
-      console.log('Fetching API keys from:', fullUrl);
-
-      const response = await fetch(fullUrl, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      console.log('API Keys response:', {
-        status: response.status,
-        statusText: response.statusText,
-        ok: response.ok
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('API Keys fetched successfully:', data);
-        return data;
-      } else if (response.status === 404) {
-        // Endpoint not found
-        console.error('API Keys endpoint not found (404)');
-        setSnackbar({ open: true, message: 'API Keys endpoint not found', severity: 'error' });
-        return { data: [] };
-      } else if (response.status === 401) {
-        // Authentication error
-        console.error('Authentication failed (401) - Invalid or expired token');
-        setSnackbar({ open: true, message: 'Authentication failed - please log in again', severity: 'warning' });
-        return { data: [] };
-      } else {
-        // Other errors
-        const errorText = await response.text();
-        console.error(`API Keys fetch error (${response.status}):`, errorText);
-        return { data: [] };
-      }
+      // Use the API service which has correct URL and auth handling
+      const response = await apiKeysAPI.getAll();
+      console.log('API Keys fetched successfully:', response);
+      return response;
     } catch (error) {
       console.error('Failed to fetch API keys:', error);
-      setSnackbar({ open: true, message: 'Network error fetching API keys', severity: 'error' });
+
+      // Handle specific error cases
+      if (error.status === 404) {
+        console.error('API Keys endpoint not found');
+        if (activeTab === 6) {
+          setSnackbar({ open: true, message: 'API Keys feature not available', severity: 'warning' });
+        }
+      } else if (error.status === 401) {
+        console.error('Authentication required for API keys');
+        // Don't show error if user is not on API keys tab
+        if (activeTab === 6) {
+          setSnackbar({ open: true, message: 'Please log in to manage API keys', severity: 'info' });
+        }
+      } else if (activeTab === 6) {
+        // Only show generic error if user is on API keys tab
+        setSnackbar({ open: true, message: 'Failed to load API keys', severity: 'error' });
+      }
+
+      setApiKeys([]);
       return { data: [] };
     }
   };
@@ -1110,25 +1073,11 @@ const Settings = () => {
                             onClick={async () => {
                               if (window.confirm(`Are you sure you want to revoke the key "${apiKey.name}"?`)) {
                                 try {
-                                  const token = localStorage.getItem('crm_auth_token') ||
-                    localStorage.getItem('authToken') ||
-                    localStorage.getItem('token') ||
-                    localStorage.getItem('TOKEN_KEY');
-                                  const API_URL = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
-                                  const response = await fetch(`${API_URL}/v1/api-keys/${apiKey.id}`, {
-                                    method: 'DELETE',
-                                    headers: {
-                                      'Authorization': `Bearer ${token}`,
-                                      'Content-Type': 'application/json'
-                                    }
-                                  });
-                                  if (response.ok) {
-                                    refetchApiKeys();
-                                    setSnackbar({ open: true, message: 'API key revoked successfully', severity: 'success' });
-                                  } else {
-                                    setSnackbar({ open: true, message: 'Failed to revoke API key', severity: 'error' });
-                                  }
+                                  await apiKeysAPI.revoke(apiKey.id);
+                                  refetchApiKeys();
+                                  setSnackbar({ open: true, message: 'API key revoked successfully', severity: 'success' });
                                 } catch (error) {
+                                  console.error('Failed to revoke API key:', error);
                                   setSnackbar({ open: true, message: 'Failed to revoke API key', severity: 'error' });
                                 }
                               }
@@ -1178,42 +1127,25 @@ const Settings = () => {
                       variant="contained"
                       onClick={async () => {
                         try {
-                          const token = localStorage.getItem('crm_auth_token') ||
-                    localStorage.getItem('authToken') ||
-                    localStorage.getItem('token') ||
-                    localStorage.getItem('TOKEN_KEY');
-                          const API_URL = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
-                          const response = await fetch(`${API_URL}/v1/api-keys`, {
-                            method: 'POST',
-                            headers: {
-                              'Authorization': `Bearer ${token}`,
-                              'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify({
-                              name: newKeyName,
-                              expiresInDays: newKeyExpiry
-                            })
+                          const response = await apiKeysAPI.create({
+                            name: newKeyName,
+                            expiresInDays: newKeyExpiry
                           });
 
-                          if (response.ok) {
-                            const data = await response.json();
-                            if (data?.data?.key) {
-                              setCreatedKey(data.data.key);
-                              refetchApiKeys();
-                              setNewKeyDialog(false);
-                              setNewKeyName('');
-                              setNewKeyExpiry(365);
-                            } else {
-                              setSnackbar({ open: true, message: 'API key created but no key returned', severity: 'warning' });
-                            }
+                          if (response?.data?.key) {
+                            setCreatedKey(response.data.key);
+                            refetchApiKeys();
+                            setNewKeyDialog(false);
+                            setNewKeyName('');
+                            setNewKeyExpiry(365);
+                            setSnackbar({ open: true, message: 'API key created successfully', severity: 'success' });
                           } else {
-                            const errorData = await response.json().catch(() => ({}));
-                            const errorMessage = errorData?.error?.message || 'Failed to create API key';
-                            setSnackbar({ open: true, message: errorMessage, severity: 'error' });
+                            setSnackbar({ open: true, message: 'API key created but no key returned', severity: 'warning' });
                           }
                         } catch (error) {
                           console.error('Error creating API key:', error);
-                          setSnackbar({ open: true, message: 'Failed to create API key', severity: 'error' });
+                          const errorMessage = error?.message || 'Failed to create API key';
+                          setSnackbar({ open: true, message: errorMessage, severity: 'error' });
                         }
                       }}
                       disabled={!newKeyName}
