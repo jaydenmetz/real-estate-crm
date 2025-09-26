@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useQuery } from 'react-query';
-import { api } from '../../services/api.service';
+import { api, apiKeysAPI } from '../../services/api.service';
 import {
   Box,
   Container,
@@ -26,7 +26,8 @@ import {
   Select,
   MenuItem,
   FormControl,
-  InputLabel
+  InputLabel,
+  CircularProgress
 } from '@mui/material';
 import {
   CheckCircle as CheckIcon,
@@ -358,6 +359,7 @@ const EscrowsHealthDashboard = () => {
   const [authTab, setAuthTab] = useState(0); // 0 = JWT, 1 = API Key
   const [apiKey, setApiKey] = useState('');
   const [apiKeys, setApiKeys] = useState([]);
+  const [apiKeysLoading, setApiKeysLoading] = useState(false);
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(null);
@@ -532,6 +534,21 @@ const EscrowsHealthDashboard = () => {
     setSnackbarOpen(true);
   };
 
+  const fetchApiKeys = useCallback(async () => {
+    setApiKeysLoading(true);
+    try {
+      const response = await apiKeysAPI.getAll();
+      if (response?.data) {
+        setApiKeys(response.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch API keys:', error);
+      setApiKeys([]);
+    } finally {
+      setApiKeysLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (authTab === 0) {
       // Auto-run tests for JWT if token exists
@@ -541,8 +558,11 @@ const EscrowsHealthDashboard = () => {
       if (token) {
         runAllTests();
       }
+    } else if (authTab === 1) {
+      // Fetch API keys when switching to API Key tab
+      fetchApiKeys();
     }
-  }, [authTab]);
+  }, [authTab, fetchApiKeys]);
 
   const totalTests = tests.length;
   const passedTests = tests.filter(t => t.status === 'success').length;
@@ -602,20 +622,49 @@ const EscrowsHealthDashboard = () => {
                   API Key
                 </Typography>
                 <Typography variant="body2" color="textSecondary" mb={1}>
-                  Enter an API key for external API access. This allows HTTP requests from anywhere.
+                  Select an API key or paste your own. API keys allow external access.
                 </Typography>
-                <TextField
-                  fullWidth
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  placeholder="Enter your API key..."
-                  variant="outlined"
-                  size="small"
-                  type="password"
-                  InputProps={{
-                    startAdornment: <KeyIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                  }}
-                />
+                {apiKeysLoading ? (
+                  <Box display="flex" alignItems="center" justifyContent="center" p={2}>
+                    <CircularProgress size={24} />
+                  </Box>
+                ) : (
+                  <Box>
+                    <FormControl fullWidth size="small">
+                      <InputLabel>Select API Key</InputLabel>
+                      <Select
+                        value={apiKey}
+                        label="Select API Key"
+                        onChange={(e) => setApiKey(e.target.value)}
+                      >
+                        <MenuItem value="">
+                          <em>None - Enter manually below</em>
+                        </MenuItem>
+                        {apiKeys.map((key) => (
+                          <MenuItem key={key.id} value={key.key || key.key_prefix}>
+                            {key.name} ({key.key_prefix})
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+                    <TextField
+                      fullWidth
+                      value={apiKey}
+                      onChange={(e) => setApiKey(e.target.value)}
+                      placeholder="Or paste your full API key here..."
+                      variant="outlined"
+                      size="small"
+                      type="password"
+                      sx={{ mt: 2 }}
+                      InputProps={{
+                        startAdornment: <KeyIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                      }}
+                    />
+                    <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
+                      Note: We only store key prefixes. You need the full 64-character key.
+                    </Typography>
+                  </Box>
+                )}
               </Box>
             )}
           </AuthInputBox>
