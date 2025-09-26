@@ -191,17 +191,32 @@ const Settings = () => {
   // Fetch API Keys - Direct fetch to bypass global error handlers
   const fetchApiKeys = async () => {
     try {
+      // Check all possible token locations
       const token = localStorage.getItem('crm_auth_token') ||
                     localStorage.getItem('authToken') ||
                     localStorage.getItem('token') ||
                     localStorage.getItem('TOKEN_KEY');
+
+      // Debug logging
+      console.log('Checking for JWT token:', {
+        'crm_auth_token': localStorage.getItem('crm_auth_token'),
+        'authToken': localStorage.getItem('authToken'),
+        'token': localStorage.getItem('token'),
+        'found': !!token,
+        'tokenPreview': token ? token.substring(0, 20) + '...' : 'none'
+      });
+
       if (!token) {
+        console.log('No JWT token found in localStorage');
         setApiKeys([]);
         return { data: [] };
       }
 
       const API_URL = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
-      const response = await fetch(`${API_URL}/v1/api-keys`, {
+      const fullUrl = `${API_URL}/v1/api-keys`;
+      console.log('Fetching API keys from:', fullUrl);
+
+      const response = await fetch(fullUrl, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -209,20 +224,35 @@ const Settings = () => {
         }
       });
 
+      console.log('API Keys response:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+
       if (response.ok) {
         const data = await response.json();
+        console.log('API Keys fetched successfully:', data);
         return data;
       } else if (response.status === 404) {
         // Endpoint not found
-        console.log('API Keys endpoint not found');
+        console.error('API Keys endpoint not found (404)');
+        setSnackbar({ open: true, message: 'API Keys endpoint not found', severity: 'error' });
+        return { data: [] };
+      } else if (response.status === 401) {
+        // Authentication error
+        console.error('Authentication failed (401) - Invalid or expired token');
+        setSnackbar({ open: true, message: 'Authentication failed - please log in again', severity: 'warning' });
         return { data: [] };
       } else {
-        // Other errors (401, 403, 500) - endpoint exists but there's an issue
-        console.log('API Keys fetch error:', response.status);
+        // Other errors
+        const errorText = await response.text();
+        console.error(`API Keys fetch error (${response.status}):`, errorText);
         return { data: [] };
       }
     } catch (error) {
-      console.log('Failed to fetch API keys:', error);
+      console.error('Failed to fetch API keys:', error);
+      setSnackbar({ open: true, message: 'Network error fetching API keys', severity: 'error' });
       return { data: [] };
     }
   };
