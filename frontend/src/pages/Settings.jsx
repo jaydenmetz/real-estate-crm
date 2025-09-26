@@ -1073,9 +1073,21 @@ const Settings = () => {
                             onClick={async () => {
                               if (window.confirm(`Are you sure you want to revoke the key "${apiKey.name}"?`)) {
                                 try {
-                                  await api.apiKeysAPI.revoke(apiKey.id);
-                                  refetchApiKeys();
-                                  setSnackbar({ open: true, message: 'API key revoked successfully', severity: 'success' });
+                                  const token = localStorage.getItem('authToken') || localStorage.getItem('crm_auth_token');
+                                  const API_URL = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
+                                  const response = await fetch(`${API_URL}/v1/api-keys/${apiKey.id}`, {
+                                    method: 'DELETE',
+                                    headers: {
+                                      'Authorization': `Bearer ${token}`,
+                                      'Content-Type': 'application/json'
+                                    }
+                                  });
+                                  if (response.ok) {
+                                    refetchApiKeys();
+                                    setSnackbar({ open: true, message: 'API key revoked successfully', severity: 'success' });
+                                  } else {
+                                    setSnackbar({ open: true, message: 'Failed to revoke API key', severity: 'error' });
+                                  }
                                 } catch (error) {
                                   setSnackbar({ open: true, message: 'Failed to revoke API key', severity: 'error' });
                                 }
@@ -1126,18 +1138,38 @@ const Settings = () => {
                       variant="contained"
                       onClick={async () => {
                         try {
-                          const response = await api.apiKeysAPI.create({
-                            name: newKeyName,
-                            expiresInDays: newKeyExpiry
+                          const token = localStorage.getItem('authToken') || localStorage.getItem('crm_auth_token');
+                          const API_URL = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
+                          const response = await fetch(`${API_URL}/v1/api-keys`, {
+                            method: 'POST',
+                            headers: {
+                              'Authorization': `Bearer ${token}`,
+                              'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                              name: newKeyName,
+                              expiresInDays: newKeyExpiry
+                            })
                           });
-                          if (response?.data?.key) {
-                            setCreatedKey(response.data.key);
-                            refetchApiKeys();
-                            setNewKeyDialog(false);
-                            setNewKeyName('');
-                            setNewKeyExpiry(365);
+
+                          if (response.ok) {
+                            const data = await response.json();
+                            if (data?.data?.key) {
+                              setCreatedKey(data.data.key);
+                              refetchApiKeys();
+                              setNewKeyDialog(false);
+                              setNewKeyName('');
+                              setNewKeyExpiry(365);
+                            } else {
+                              setSnackbar({ open: true, message: 'API key created but no key returned', severity: 'warning' });
+                            }
+                          } else {
+                            const errorData = await response.json().catch(() => ({}));
+                            const errorMessage = errorData?.error?.message || 'Failed to create API key';
+                            setSnackbar({ open: true, message: errorMessage, severity: 'error' });
                           }
                         } catch (error) {
+                          console.error('Error creating API key:', error);
                           setSnackbar({ open: true, message: 'Failed to create API key', severity: 'error' });
                         }
                       }}
