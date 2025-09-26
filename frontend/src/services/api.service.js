@@ -113,11 +113,14 @@ class ApiService {
             status: response.status
           });
           
-          // Don't redirect if we're already on the login page or calling auth endpoints
+          // Don't redirect if we're already on the login page, calling auth endpoints, or api-keys
           const isAuthEndpoint = url.includes('/auth/');
+          const isApiKeysEndpoint = url.includes('/api-keys');
           const isLoginPage = window.location.pathname === '/login';
-          
-          if (!isAuthEndpoint && !isLoginPage) {
+          const isSettingsPage = window.location.pathname === '/settings';
+
+          // Only redirect to login for true authentication failures, not missing endpoints
+          if (!isAuthEndpoint && !isApiKeysEndpoint && !isLoginPage && !isSettingsPage) {
             // Clear invalid authentication
             localStorage.removeItem('authToken');
             localStorage.removeItem('apiKey');
