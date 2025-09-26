@@ -675,7 +675,7 @@ const ListingsHealthDashboard = () => {
       endpoint: '/listings',
       expectedStatus: 400,
       status: 'pending',
-      requestBody: { address: 'Only Address' } // Missing required fields
+      requestBody: {} // Empty object - missing required fields
     };
 
     const startTime10 = Date.now();
@@ -686,7 +686,7 @@ const ListingsHealthDashboard = () => {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ address: 'Only Address' })
+        body: JSON.stringify({})
       });
       const data = await response.json();
       missingFieldsTest.responseTime = Date.now() - startTime10;

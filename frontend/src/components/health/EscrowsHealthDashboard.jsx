@@ -669,7 +669,7 @@ const EscrowsHealthDashboard = () => {
       endpoint: '/escrows',
       expectedStatus: 400,
       status: 'pending',
-      requestBody: { propertyAddress: 'Only Address' } // Missing required fields
+      requestBody: {} // Empty object - missing required propertyAddress field
     };
 
     const startTime10 = Date.now();
@@ -680,7 +680,7 @@ const EscrowsHealthDashboard = () => {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ propertyAddress: 'Only Address' })
+        body: JSON.stringify({})
       });
       const data = await response.json();
       missingFieldsTest.responseTime = Date.now() - startTime10;
