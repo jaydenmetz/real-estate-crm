@@ -2,12 +2,20 @@
 // This ensures the system health overview runs the same tests as individual health pages
 
 export class HealthCheckService {
-  constructor(apiUrl, token) {
+  constructor(apiUrl, authValue, authType = 'jwt') {
     this.API_URL = apiUrl;
     if (!this.API_URL.endsWith('/v1')) {
       this.API_URL = this.API_URL.replace(/\/$/, '') + '/v1';
     }
-    this.token = token;
+    this.authValue = authValue;
+    this.authType = authType; // 'jwt' or 'apikey'
+
+    // Set appropriate headers based on auth type
+    if (authType === 'apikey') {
+      this.authHeaders = { 'X-API-Key': authValue };
+    } else {
+      this.authHeaders = { 'Authorization': `Bearer ${authValue}` };
+    }
   }
 
   // Run comprehensive health checks for Escrows (29 tests)
@@ -467,7 +475,7 @@ export class HealthCheckService {
     try {
       const options = {
         method,
-        headers: this.token ? { 'Authorization': `Bearer ${this.token}` } : {}
+        headers: { ...this.authHeaders }
       };
 
       if (body && method !== 'GET') {
@@ -512,7 +520,7 @@ export class HealthCheckService {
     for (let i = 0; i < count; i++) {
       promises.push(
         fetch(`${this.API_URL}${endpoint}`, {
-          headers: this.token ? { 'Authorization': `Bearer ${this.token}` } : {}
+          headers: { ...this.authHeaders }
         })
       );
     }
