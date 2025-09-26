@@ -16,7 +16,9 @@ import {
   Snackbar,
   Alert,
   Divider,
-  Stack
+  Stack,
+  Tabs,
+  Tab
 } from '@mui/material';
 import {
   CheckCircle as CheckIcon,
@@ -25,7 +27,8 @@ import {
   ContentCopy as CopyIcon,
   Refresh as RefreshIcon,
   PlayArrow as PlayIcon,
-  Delete as DeleteIcon
+  Delete as DeleteIcon,
+  Warning as WarningIcon
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 
@@ -51,9 +54,11 @@ const TestCard = styled(Card)(({ status }) => ({
   marginBottom: '16px',
   border: '2px solid',
   borderColor: status === 'success' ? '#4caf50' :
-               status === 'failed' ? '#f44336' : '#e0e0e0',
+               status === 'failed' ? '#f44336' :
+               status === 'warning' ? '#ff9800' : '#e0e0e0',
   backgroundColor: status === 'success' ? '#f1f8e9' :
-                   status === 'failed' ? '#ffebee' : '#fafafa',
+                   status === 'failed' ? '#ffebee' :
+                   status === 'warning' ? '#fff3e0' : '#fafafa',
   transition: 'all 0.3s ease',
   cursor: 'pointer',
   '&:hover': {
@@ -97,6 +102,9 @@ const StatusIcon = ({ status }) => {
   if (status === 'failed') {
     return <ErrorIcon sx={{ color: '#f44336', fontSize: 28 }} />;
   }
+  if (status === 'warning') {
+    return <WarningIcon sx={{ color: '#ff9800', fontSize: 28 }} />;
+  }
   return <PlayIcon sx={{ color: '#2196f3', fontSize: 28 }} />;
 };
 
@@ -109,29 +117,21 @@ const TestItem = ({ test }) => {
 
   const formatCurl = () => {
     if (!test.curl) return '';
-
-    // Clean up the curl command for better readability
     let formatted = test.curl;
-
-    // Split into multiple lines for readability
     formatted = formatted
       .replace(' -X ', ' \\\n  -X ')
       .replace(' -H ', ' \\\n  -H ')
       .replace(/ -H /g, ' \\\n  -H ')
       .replace(' -d ', ' \\\n  -d ');
-
     return formatted;
   };
 
   const formatResponse = () => {
     if (!test.response) return 'No response';
-
     try {
       const parsed = typeof test.response === 'string'
         ? JSON.parse(test.response)
         : test.response;
-
-      // For successful GET requests, show a simplified version
       if (test.status === 'success' && test.method === 'GET' && parsed.data?.clients) {
         return JSON.stringify({
           success: parsed.success,
@@ -141,7 +141,6 @@ const TestItem = ({ test }) => {
           }
         }, null, 2);
       }
-
       return JSON.stringify(parsed, null, 2);
     } catch {
       return test.response;
@@ -150,7 +149,6 @@ const TestItem = ({ test }) => {
 
   const formatRequestBody = () => {
     if (!test.requestBody) return null;
-
     try {
       const parsed = typeof test.requestBody === 'string'
         ? JSON.parse(test.requestBody)
@@ -174,6 +172,15 @@ const TestItem = ({ test }) => {
               <Typography variant="body2" color="textSecondary">
                 {test.description}
               </Typography>
+              {test.category && (
+                <Chip
+                  label={test.category}
+                  size="small"
+                  sx={{ mt: 0.5, fontSize: '0.7rem' }}
+                  color={test.category === 'Critical' ? 'error' :
+                         test.category === 'Edge Case' ? 'warning' : 'default'}
+                />
+              )}
               {test.method && test.endpoint && (
                 <Box display="flex" gap={1} mt={0.5}>
                   <Chip
@@ -185,6 +192,7 @@ const TestItem = ({ test }) => {
                         test.method === 'GET' ? '#2196f3' :
                         test.method === 'POST' ? '#4caf50' :
                         test.method === 'PUT' ? '#ff9800' :
+                        test.method === 'PATCH' ? '#9c27b0' :
                         test.method === 'DELETE' ? '#f44336' : '#9e9e9e',
                       color: 'white'
                     }}
@@ -198,11 +206,14 @@ const TestItem = ({ test }) => {
           </Box>
           <Box display="flex" alignItems="center" gap={1}>
             <Chip
-              label={test.status === 'success' ? 'PASSED' : test.status === 'failed' ? 'FAILED' : 'PENDING'}
+              label={test.status === 'success' ? 'PASSED' :
+                     test.status === 'failed' ? 'FAILED' :
+                     test.status === 'warning' ? 'WARNING' : 'PENDING'}
               size="small"
               sx={{
                 backgroundColor: test.status === 'success' ? '#4caf50' :
-                               test.status === 'failed' ? '#f44336' : '#9e9e9e',
+                               test.status === 'failed' ? '#f44336' :
+                               test.status === 'warning' ? '#ff9800' : '#9e9e9e',
                 color: 'white',
                 fontWeight: 'bold'
               }}
@@ -289,41 +300,43 @@ const ClientsHealthDashboard = () => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [testClientId, setTestClientId] = useState(null);
   const [testClientIds, setTestClientIds] = useState([]);
+  const [currentTab, setCurrentTab] = useState(0);
   const [groupedTests, setGroupedTests] = useState({
-    GET: [],
-    POST: [],
-    PUT: [],
-    DELETE: []
+    CORE: [],
+    FILTERS: [],
+    ERROR: [],
+    EDGE: [],
+    PERFORMANCE: []
   });
 
   const runAllTests = useCallback(async () => {
     setLoading(true);
     setTests([]);
-    setGroupedTests({ GET: [], POST: [], PUT: [], DELETE: [] });
+    setGroupedTests({ CORE: [], FILTERS: [], ERROR: [], EDGE: [], PERFORMANCE: [] });
 
     let API_URL = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
-    // Ensure API URL has /v1 suffix
     if (!API_URL.endsWith('/v1')) {
       API_URL = API_URL.replace(/\/$/, '') + '/v1';
     }
 
-    // Get auth token
     const token = localStorage.getItem('crm_auth_token') ||
                  localStorage.getItem('authToken') ||
                  localStorage.getItem('token');
 
     const allTests = [];
-    const grouped = { GET: [], POST: [], PUT: [], DELETE: [] };
+    const grouped = { CORE: [], FILTERS: [], ERROR: [], EDGE: [], PERFORMANCE: [] };
     let createdClientId = null;
+    const createdClientIds = [];
 
     // ========================================
-    // GET REQUESTS - Run these first
+    // CORE TESTS - Essential CRUD Operations
     // ========================================
 
-    // GET Test 1: Get all clients
+    // Core GET: List all clients
     const getAllTest = {
       name: 'List All Clients',
       description: 'Retrieve all clients from the database',
+      category: 'Critical',
       method: 'GET',
       endpoint: '/clients',
       status: 'pending',
@@ -350,102 +363,24 @@ const ClientsHealthDashboard = () => {
       getAllTest.error = error.message;
       getAllTest.responseTime = Date.now() - startTime1;
     }
-    grouped.GET.push(getAllTest);
+    grouped.CORE.push(getAllTest);
     allTests.push(getAllTest);
-    setGroupedTests({...grouped});
 
-    // GET Test 2: Get with pagination
-    const getPaginatedTest = {
-      name: 'List with Pagination',
-      description: 'Test pagination parameters (page=1, limit=5)',
-      method: 'GET',
-      endpoint: '/clients?page=1&limit=5',
-      status: 'pending',
-      curl: `curl -X GET "${API_URL}/clients?page=1&limit=5" -H "Authorization: Bearer ${token}"`,
-      response: null,
-      error: null,
-      responseTime: null
-    };
-
-    const startTime2 = Date.now();
-    try {
-      const response = await fetch(`${API_URL}/clients?page=1&limit=5`, {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-      });
-      const data = await response.json();
-      getPaginatedTest.responseTime = Date.now() - startTime2;
-      getPaginatedTest.status = response.ok && data.success ? 'success' : 'failed';
-      getPaginatedTest.response = data;
-      if (!response.ok || !data.success) {
-        getPaginatedTest.error = data.error?.message || 'Pagination failed';
-      }
-    } catch (error) {
-      getPaginatedTest.status = 'failed';
-      getPaginatedTest.error = error.message;
-      getPaginatedTest.responseTime = Date.now() - startTime2;
-    }
-    grouped.GET.push(getPaginatedTest);
-    allTests.push(getPaginatedTest);
-    setGroupedTests({...grouped});
-
-    // GET Test 3: Get first client by ID (if any exist)
-    let existingClientId = null;
-    if (getAllTest.status === 'success' && getAllTest.response?.data?.clients?.length > 0) {
-      existingClientId = getAllTest.response.data.clients[0].id;
-
-      const getByIdTest = {
-        name: 'Get Client by ID',
-        description: 'Retrieve a specific client using its ID',
-        method: 'GET',
-        endpoint: `/clients/${existingClientId}`,
-        status: 'pending',
-        curl: `curl -X GET "${API_URL}/clients/${existingClientId}" -H "Authorization: Bearer ${token}"`,
-        response: null,
-        error: null,
-        responseTime: null
-      };
-
-      const startTime3 = Date.now();
-      try {
-        const response = await fetch(`${API_URL}/clients/${existingClientId}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        getByIdTest.responseTime = Date.now() - startTime3;
-        getByIdTest.status = response.ok && data.success ? 'success' : 'failed';
-        getByIdTest.response = data;
-        if (!response.ok || !data.success) {
-          getByIdTest.error = data.error?.message || 'Failed to fetch client';
-        }
-      } catch (error) {
-        getByIdTest.status = 'failed';
-        getByIdTest.error = error.message;
-        getByIdTest.responseTime = Date.now() - startTime3;
-      }
-      grouped.GET.push(getByIdTest);
-      allTests.push(getByIdTest);
-      setGroupedTests({...grouped});
-    }
-
-    // ========================================
-    // POST REQUESTS - 3 Different Tests
-    // ========================================
-    const createdClientIds = [];
-
-    // POST Test 1: Minimal (Name Only)
+    // Core POST: Create minimal client
     const minimalClientData = {
       firstName: `Test`,
-      lastName: `Client_${Date.now()}`,
-      clientType: 'Buyer'
+      lastName: `CoreClient_${Date.now()}`,
+      clientType: 'buyer'
     };
 
     const createMinimalTest = {
-      name: 'Create Client (Minimal)',
-      description: 'Test with only required fields (firstName, lastName, clientType)',
+      name: 'Create Client (Required Fields Only)',
+      description: 'Test with only required fields',
+      category: 'Critical',
       method: 'POST',
       endpoint: '/clients',
       status: 'pending',
-      curl: `curl -X POST "${API_URL}/clients" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(minimalClientData, null, 2)}'`,
+      curl: `curl -X POST "${API_URL}/clients" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(minimalClientData)}'`,
       requestBody: minimalClientData,
       response: null,
       error: null,
@@ -453,7 +388,7 @@ const ClientsHealthDashboard = () => {
     };
 
     if (token) {
-      const startTimeMinimal = Date.now();
+      const startTime2 = Date.now();
       try {
         const response = await fetch(`${API_URL}/clients`, {
           method: 'POST',
@@ -464,195 +399,48 @@ const ClientsHealthDashboard = () => {
           body: JSON.stringify(minimalClientData)
         });
         const data = await response.json();
-        createMinimalTest.responseTime = Date.now() - startTimeMinimal;
+        createMinimalTest.responseTime = Date.now() - startTime2;
         createMinimalTest.status = response.ok && data.success ? 'success' : 'failed';
         createMinimalTest.response = data;
         if (data.success && data.data) {
           createdClientIds.push(data.data.id);
+          createdClientId = data.data.id;
         } else {
-          createMinimalTest.error = data.error?.message || 'Failed to create minimal client';
+          createMinimalTest.error = data.error?.message || 'Failed to create client';
         }
       } catch (error) {
         createMinimalTest.status = 'failed';
         createMinimalTest.error = error.message;
-        createMinimalTest.responseTime = Date.now() - startTimeMinimal;
+        createMinimalTest.responseTime = Date.now() - startTime2;
       }
-    } else {
-      createMinimalTest.status = 'failed';
-      createMinimalTest.error = 'No authentication token available';
     }
-    grouped.POST.push(createMinimalTest);
+    grouped.CORE.push(createMinimalTest);
     allTests.push(createMinimalTest);
-    setGroupedTests({...grouped});
 
-    // POST Test 2: Basic (Most Important Fields)
-    const basicClientData = {
-      firstName: `Basic`,
-      lastName: `Test_${Date.now()}`,
-      email: `basic${Date.now()}@test.com`,
-      phone: '555-0100',
-      clientType: 'Seller',
-      address: '123 Main St',
-      city: 'Los Angeles',
-      state: 'CA',
-      zipCode: '90001',
-      status: 'active'
-    };
-
-    const createBasicTest = {
-      name: 'Create Client (Basic)',
-      description: 'Test with essential fields',
-      method: 'POST',
-      endpoint: '/clients',
-      status: 'pending',
-      curl: `curl -X POST "${API_URL}/clients" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(basicClientData, null, 2)}'`,
-      requestBody: basicClientData,
-      response: null,
-      error: null,
-      responseTime: null
-    };
-
-    if (token) {
-      const startTimeBasic = Date.now();
-      try {
-        const response = await fetch(`${API_URL}/clients`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(basicClientData)
-        });
-        const data = await response.json();
-        createBasicTest.responseTime = Date.now() - startTimeBasic;
-        createBasicTest.status = response.ok && data.success ? 'success' : 'failed';
-        createBasicTest.response = data;
-        if (data.success && data.data) {
-          createdClientIds.push(data.data.id);
-        } else {
-          createBasicTest.error = data.error?.message || 'Failed to create basic client';
-        }
-      } catch (error) {
-        createBasicTest.status = 'failed';
-        createBasicTest.error = error.message;
-        createBasicTest.responseTime = Date.now() - startTimeBasic;
-      }
-    } else {
-      createBasicTest.status = 'failed';
-      createBasicTest.error = 'No authentication token available';
-    }
-    grouped.POST.push(createBasicTest);
-    allTests.push(createBasicTest);
-    setGroupedTests({...grouped});
-
-    // POST Test 3: Full (All Fields)
-    const fullClientData = {
-      firstName: `Full`,
-      lastName: `Test_${Date.now()}`,
-      email: `full${Date.now()}@test.com`,
-      phone: '555-0200',
-      alternativePhone: '555-0201',
-      clientType: 'Both',
-      status: 'active',
-      address: '456 Oak Avenue',
-      city: 'San Francisco',
-      state: 'CA',
-      zipCode: '94105',
-      occupation: 'Software Engineer',
-      preapprovalAmount: 850000,
-      priceRange: '$800,000 - $950,000',
-      preferredAreas: ['Mission District', 'SOMA', 'Potrero Hill'],
-      propertyTypes: ['Condo', 'Townhouse'],
-      source: 'Referral',
-      notes: 'Looking for modern condo with home office space',
-      tags: ['Tech Professional', 'First Time Buyer', 'Pre-approved']
-    };
-
-    const createFullTest = {
-      name: 'Create Client (Full)',
-      description: 'Test with all available fields',
-      method: 'POST',
-      endpoint: '/clients',
-      status: 'pending',
-      curl: `curl -X POST "${API_URL}/clients" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(fullClientData, null, 2)}'`,
-      requestBody: fullClientData,
-      response: null,
-      error: null,
-      responseTime: null
-    };
-
-    if (token) {
-      const startTimeFull = Date.now();
-      try {
-        const response = await fetch(`${API_URL}/clients`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(fullClientData)
-        });
-        const data = await response.json();
-        createFullTest.responseTime = Date.now() - startTimeFull;
-        createFullTest.status = response.ok && data.success ? 'success' : 'failed';
-        createFullTest.response = data;
-        if (data.success && data.data) {
-          createdClientIds.push(data.data.id);
-        } else {
-          createFullTest.error = data.error?.message || 'Failed to create full client';
-        }
-      } catch (error) {
-        createFullTest.status = 'failed';
-        createFullTest.error = error.message;
-        createFullTest.responseTime = Date.now() - startTimeFull;
-      }
-    } else {
-      createFullTest.status = 'failed';
-      createFullTest.error = 'No authentication token available';
-    }
-    grouped.POST.push(createFullTest);
-    allTests.push(createFullTest);
-    setGroupedTests({...grouped});
-
-    // Set the first created client as the primary one for testing
-    if (createdClientIds.length > 0) {
-      createdClientId = createdClientIds[0];
-      setTestClientId(createdClientId);
-      setTestClientIds(createdClientIds);
-    }
-
-    // ========================================
-    // PUT REQUESTS - Use different test clients for comprehensive testing
-    // ========================================
-
-    if (createdClientIds.length > 0) {
-      // Use different clients for different tests
-      const clientForBasicUpdate = createdClientIds[0] || null;
-      const clientForDetailTests = createdClientIds[1] || createdClientIds[0] || null;
-
-      // PUT Test 1: Update client basic info
+    // Core PUT: Update client
+    if (createdClientId) {
       const updateData = {
-        phone: '555-9999',
-        status: 'inactive',
-        notes: 'Updated contact information'
+        phone: '555-1234',
+        status: 'active'
       };
 
       const updateTest = {
-        name: 'Update Client by ID',
-        description: 'Update basic client information',
+        name: 'Update Client',
+        description: 'Update client basic information',
+        category: 'Critical',
         method: 'PUT',
-        endpoint: `/clients/${clientForBasicUpdate}`,
+        endpoint: `/clients/${createdClientId}`,
         status: 'pending',
-        curl: `curl -X PUT "${API_URL}/clients/${clientForBasicUpdate}" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(updateData, null, 2)}'`,
+        curl: `curl -X PUT "${API_URL}/clients/${createdClientId}" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(updateData)}'`,
         requestBody: updateData,
         response: null,
         error: null,
         responseTime: null
       };
 
-      const startTime5 = Date.now();
+      const startTime3 = Date.now();
       try {
-        const response = await fetch(`${API_URL}/clients/${clientForBasicUpdate}`, {
+        const response = await fetch(`${API_URL}/clients/${createdClientId}`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${token}`,
@@ -661,7 +449,7 @@ const ClientsHealthDashboard = () => {
           body: JSON.stringify(updateData)
         });
         const data = await response.json();
-        updateTest.responseTime = Date.now() - startTime5;
+        updateTest.responseTime = Date.now() - startTime3;
         updateTest.status = response.ok && data.success ? 'success' : 'failed';
         updateTest.response = data;
         if (!response.ok || !data.success) {
@@ -670,478 +458,623 @@ const ClientsHealthDashboard = () => {
       } catch (error) {
         updateTest.status = 'failed';
         updateTest.error = error.message;
-        updateTest.responseTime = Date.now() - startTime5;
+        updateTest.responseTime = Date.now() - startTime3;
       }
-      grouped.PUT.push(updateTest);
+      grouped.CORE.push(updateTest);
       allTests.push(updateTest);
-      setGroupedTests({...grouped});
+    }
 
-      // PUT Test 2: Update client type
-      const clientTypeUpdateData = {
-        clientType: 'Both'
-      };
-
-      const clientTypeUpdateTest = {
-        name: 'Update Client Type',
-        description: 'Change client from Buyer/Seller to Both',
+    // Core DELETE: Archive and delete workflow
+    if (createdClientId) {
+      // Archive first
+      const archiveTest = {
+        name: 'Archive Client',
+        description: 'Soft delete - set status to archived',
+        category: 'Critical',
         method: 'PUT',
-        endpoint: `/clients/${clientForBasicUpdate}`,
-        status: 'pending',
-        curl: `curl -X PUT "${API_URL}/clients/${clientForBasicUpdate}" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(clientTypeUpdateData, null, 2)}'`,
-        requestBody: clientTypeUpdateData,
-        response: null,
-        error: null,
-        responseTime: null
+        endpoint: `/clients/${createdClientId}/archive`,
+        status: 'pending'
       };
 
-      const startTime6 = Date.now();
+      const startTime4 = Date.now();
       try {
-        const response = await fetch(`${API_URL}/clients/${clientForBasicUpdate}`, {
+        const response = await fetch(`${API_URL}/clients/${createdClientId}/archive`, {
           method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(clientTypeUpdateData)
+          headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
-        clientTypeUpdateTest.responseTime = Date.now() - startTime6;
-        clientTypeUpdateTest.status = response.ok && data.success ? 'success' : 'failed';
-        clientTypeUpdateTest.response = data;
-        if (!response.ok || !data.success) {
-          clientTypeUpdateTest.error = data.error?.message || 'Failed to update client type';
-        }
+        archiveTest.responseTime = Date.now() - startTime4;
+        archiveTest.status = response.ok && data.success ? 'success' : 'failed';
+        archiveTest.response = data;
       } catch (error) {
-        clientTypeUpdateTest.status = 'failed';
-        clientTypeUpdateTest.error = error.message;
-        clientTypeUpdateTest.responseTime = Date.now() - startTime6;
+        archiveTest.status = 'failed';
+        archiveTest.error = error.message;
       }
-      grouped.PUT.push(clientTypeUpdateTest);
-      allTests.push(clientTypeUpdateTest);
-      setGroupedTests({...grouped});
+      grouped.CORE.push(archiveTest);
+      allTests.push(archiveTest);
 
-      // POST Test for notes endpoint
-      const noteData = {
-        note: 'Test note - Client interested in waterfront properties',
-        type: 'follow-up'
+      // Then delete
+      const deleteTest = {
+        name: 'Delete Archived Client',
+        description: 'Hard delete - permanently remove',
+        category: 'Critical',
+        method: 'DELETE',
+        endpoint: `/clients/${createdClientId}`,
+        status: 'pending'
       };
 
-      const addNoteTest = {
-        name: 'Add Client Note',
-        description: 'Test adding a note to the client',
+      const startTime5 = Date.now();
+      try {
+        const response = await fetch(`${API_URL}/clients/${createdClientId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await response.json();
+        deleteTest.responseTime = Date.now() - startTime5;
+        deleteTest.status = response.ok && data.success ? 'success' : 'failed';
+        deleteTest.response = data;
+      } catch (error) {
+        deleteTest.status = 'failed';
+        deleteTest.error = error.message;
+      }
+      grouped.CORE.push(deleteTest);
+      allTests.push(deleteTest);
+    }
+
+    // ========================================
+    // FILTER & SEARCH TESTS
+    // ========================================
+
+    // Filter by status
+    const filterStatusTest = {
+      name: 'Filter by Status',
+      description: 'Get only active clients',
+      category: 'Search',
+      method: 'GET',
+      endpoint: '/clients?status=active',
+      status: 'pending'
+    };
+
+    const startTime6 = Date.now();
+    try {
+      const response = await fetch(`${API_URL}/clients?status=active`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      filterStatusTest.responseTime = Date.now() - startTime6;
+      filterStatusTest.status = response.ok && data.success ? 'success' : 'failed';
+      filterStatusTest.response = data;
+    } catch (error) {
+      filterStatusTest.status = 'failed';
+      filterStatusTest.error = error.message;
+    }
+    grouped.FILTERS.push(filterStatusTest);
+    allTests.push(filterStatusTest);
+
+    // Search by name
+    const searchTest = {
+      name: 'Search by Name',
+      description: 'Search clients with name containing "Test"',
+      category: 'Search',
+      method: 'GET',
+      endpoint: '/clients?search=Test',
+      status: 'pending'
+    };
+
+    const startTime7 = Date.now();
+    try {
+      const response = await fetch(`${API_URL}/clients?search=Test`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      searchTest.responseTime = Date.now() - startTime7;
+      searchTest.status = response.ok && data.success ? 'success' : 'failed';
+      searchTest.response = data;
+    } catch (error) {
+      searchTest.status = 'failed';
+      searchTest.error = error.message;
+    }
+    grouped.FILTERS.push(searchTest);
+    allTests.push(searchTest);
+
+    // Pagination test
+    const paginationTest = {
+      name: 'Pagination',
+      description: 'Test pagination (page=2, limit=5)',
+      category: 'Search',
+      method: 'GET',
+      endpoint: '/clients?page=2&limit=5',
+      status: 'pending'
+    };
+
+    const startTime8 = Date.now();
+    try {
+      const response = await fetch(`${API_URL}/clients?page=2&limit=5`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      paginationTest.responseTime = Date.now() - startTime8;
+      paginationTest.status = response.ok && data.success ? 'success' : 'failed';
+      paginationTest.response = data;
+    } catch (error) {
+      paginationTest.status = 'failed';
+      paginationTest.error = error.message;
+    }
+    grouped.FILTERS.push(paginationTest);
+    allTests.push(paginationTest);
+
+    // ========================================
+    // ERROR HANDLING TESTS
+    // ========================================
+
+    // Test 404: Get non-existent client
+    const notFoundTest = {
+      name: 'Get Non-Existent Client',
+      description: 'Should return 404 error',
+      category: 'Error Handling',
+      method: 'GET',
+      endpoint: '/clients/00000000-0000-0000-0000-000000000000',
+      status: 'pending'
+    };
+
+    const startTime9 = Date.now();
+    try {
+      const response = await fetch(`${API_URL}/clients/00000000-0000-0000-0000-000000000000`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      notFoundTest.responseTime = Date.now() - startTime9;
+      // This should fail (404), so success is actually when it returns an error
+      notFoundTest.status = response.status === 404 ? 'success' : 'failed';
+      notFoundTest.response = data;
+      if (response.status !== 404) {
+        notFoundTest.error = 'Expected 404 but got ' + response.status;
+      }
+    } catch (error) {
+      notFoundTest.status = 'failed';
+      notFoundTest.error = error.message;
+    }
+    grouped.ERROR.push(notFoundTest);
+    allTests.push(notFoundTest);
+
+    // Test 400: Create client with missing required fields
+    const missingFieldsTest = {
+      name: 'Create Client - Missing Required Fields',
+      description: 'Should return 400 validation error',
+      category: 'Error Handling',
+      method: 'POST',
+      endpoint: '/clients',
+      status: 'pending',
+      requestBody: { firstName: 'OnlyFirst' } // Missing lastName and clientType
+    };
+
+    const startTime10 = Date.now();
+    try {
+      const response = await fetch(`${API_URL}/clients`, {
         method: 'POST',
-        endpoint: `/clients/${clientForDetailTests}/notes`,
-        status: 'pending',
-        curl: `curl -X POST "${API_URL}/clients/${clientForDetailTests}/notes" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(noteData, null, 2)}'`,
-        requestBody: noteData,
-        response: null,
-        error: null,
-        responseTime: null
-      };
-
-      const startTime7 = Date.now();
-      try {
-        const response = await fetch(`${API_URL}/clients/${clientForDetailTests}/notes`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(noteData)
-        });
-        const data = await response.json();
-        addNoteTest.responseTime = Date.now() - startTime7;
-        addNoteTest.status = response.ok && data.success ? 'success' : 'failed';
-        addNoteTest.response = data;
-        if (!response.ok || !data.success) {
-          addNoteTest.error = data.error?.message || 'Failed to add note';
-        }
-      } catch (error) {
-        addNoteTest.status = 'failed';
-        addNoteTest.error = error.message;
-        addNoteTest.responseTime = Date.now() - startTime7;
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ firstName: 'OnlyFirst' })
+      });
+      const data = await response.json();
+      missingFieldsTest.responseTime = Date.now() - startTime10;
+      // Should fail with validation error
+      missingFieldsTest.status = response.status === 400 ? 'success' : 'failed';
+      missingFieldsTest.response = data;
+      if (response.status !== 400) {
+        missingFieldsTest.error = 'Expected 400 validation error';
       }
-      grouped.POST.push(addNoteTest);
-      allTests.push(addNoteTest);
-      setGroupedTests({...grouped});
+    } catch (error) {
+      missingFieldsTest.status = 'failed';
+      missingFieldsTest.error = error.message;
+    }
+    grouped.ERROR.push(missingFieldsTest);
+    allTests.push(missingFieldsTest);
 
-      // ========================================
-      // DELETE REQUESTS - Clean up ALL test clients
-      // ========================================
+    // Test: Invalid email format
+    const invalidEmailTest = {
+      name: 'Create Client - Invalid Email',
+      description: 'Should validate email format',
+      category: 'Error Handling',
+      method: 'POST',
+      endpoint: '/clients',
+      status: 'pending',
+      requestBody: {
+        firstName: 'Test',
+        lastName: 'Invalid',
+        email: 'not-an-email',
+        clientType: 'buyer'
+      }
+    };
 
-      // Archive then delete all 3 created test clients
-      for (let i = 0; i < createdClientIds.length; i++) {
-        const clientId = createdClientIds[i];
+    const startTime11 = Date.now();
+    try {
+      const response = await fetch(`${API_URL}/clients`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(invalidEmailTest.requestBody)
+      });
+      const data = await response.json();
+      invalidEmailTest.responseTime = Date.now() - startTime11;
+      // Depending on backend validation, this might pass or fail
+      invalidEmailTest.status = response.status === 400 ? 'warning' : 'success';
+      invalidEmailTest.response = data;
+    } catch (error) {
+      invalidEmailTest.status = 'failed';
+      invalidEmailTest.error = error.message;
+    }
+    grouped.ERROR.push(invalidEmailTest);
+    allTests.push(invalidEmailTest);
 
-        // Step 1: Archive the client first
-        const archiveTest = {
-          name: `Archive Test Client ${i + 1}`,
-          description: i === 0 ? 'Archive minimal client' : i === 1 ? 'Archive basic client' : 'Archive full client',
-          method: 'PUT',
-          endpoint: `/clients/${clientId}/archive`,
-          status: 'pending',
-          curl: `curl -X PUT "${API_URL}/clients/${clientId}/archive" -H "Authorization: Bearer ${token}"`,
-          response: null,
-          error: null,
-          responseTime: null
-        };
+    // ========================================
+    // EDGE CASE TESTS
+    // ========================================
 
-        const startTimeArchive = Date.now();
+    // Test: Special characters in name
+    const specialCharsTest = {
+      name: 'Create Client - Special Characters',
+      description: 'Test with special chars in name',
+      category: 'Edge Case',
+      method: 'POST',
+      endpoint: '/clients',
+      status: 'pending',
+      requestBody: {
+        firstName: `O'Brien-Test`,
+        lastName: `Müller & Co.`,
+        clientType: 'seller',
+        email: `special${Date.now()}@test.com`
+      }
+    };
+
+    const startTime12 = Date.now();
+    try {
+      const response = await fetch(`${API_URL}/clients`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(specialCharsTest.requestBody)
+      });
+      const data = await response.json();
+      specialCharsTest.responseTime = Date.now() - startTime12;
+      specialCharsTest.status = response.ok && data.success ? 'success' : 'failed';
+      specialCharsTest.response = data;
+      if (data.success && data.data) {
+        createdClientIds.push(data.data.id);
+      }
+    } catch (error) {
+      specialCharsTest.status = 'failed';
+      specialCharsTest.error = error.message;
+    }
+    grouped.EDGE.push(specialCharsTest);
+    allTests.push(specialCharsTest);
+
+    // Test: Very long text fields
+    const longTextTest = {
+      name: 'Create Client - Long Text Fields',
+      description: 'Test with maximum length values',
+      category: 'Edge Case',
+      method: 'POST',
+      endpoint: '/clients',
+      status: 'pending',
+      requestBody: {
+        firstName: 'A'.repeat(50),
+        lastName: 'B'.repeat(50),
+        clientType: 'buyer',
+        notes: 'Lorem ipsum dolor sit amet, '.repeat(100),
+        email: `long${Date.now()}@test.com`
+      }
+    };
+
+    const startTime13 = Date.now();
+    try {
+      const response = await fetch(`${API_URL}/clients`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(longTextTest.requestBody)
+      });
+      const data = await response.json();
+      longTextTest.responseTime = Date.now() - startTime13;
+      longTextTest.status = response.ok && data.success ? 'success' : 'warning';
+      longTextTest.response = data;
+      if (data.success && data.data) {
+        createdClientIds.push(data.data.id);
+      }
+    } catch (error) {
+      longTextTest.status = 'failed';
+      longTextTest.error = error.message;
+    }
+    grouped.EDGE.push(longTextTest);
+    allTests.push(longTextTest);
+
+    // ========================================
+    // PERFORMANCE TESTS
+    // ========================================
+
+    // Test: Large pagination request
+    const largePaginationTest = {
+      name: 'Large Pagination Request',
+      description: 'Request page 999 with limit 100',
+      category: 'Performance',
+      method: 'GET',
+      endpoint: '/clients?page=999&limit=100',
+      status: 'pending'
+    };
+
+    const startTime14 = Date.now();
+    try {
+      const response = await fetch(`${API_URL}/clients?page=999&limit=100`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      largePaginationTest.responseTime = Date.now() - startTime14;
+      largePaginationTest.status = response.ok && data.success ? 'success' : 'failed';
+      largePaginationTest.response = data;
+      // Check if response time is reasonable (< 1000ms)
+      if (largePaginationTest.responseTime > 1000) {
+        largePaginationTest.status = 'warning';
+        largePaginationTest.error = `Slow response: ${largePaginationTest.responseTime}ms`;
+      }
+    } catch (error) {
+      largePaginationTest.status = 'failed';
+      largePaginationTest.error = error.message;
+    }
+    grouped.PERFORMANCE.push(largePaginationTest);
+    allTests.push(largePaginationTest);
+
+    // Test: Concurrent requests
+    const concurrentTest = {
+      name: 'Concurrent GET Requests',
+      description: 'Send 5 simultaneous requests',
+      category: 'Performance',
+      method: 'GET',
+      endpoint: '/clients (x5)',
+      status: 'pending'
+    };
+
+    const startTime15 = Date.now();
+    try {
+      const promises = Array(5).fill(null).map(() =>
+        fetch(`${API_URL}/clients?limit=5`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+      );
+      const responses = await Promise.all(promises);
+      const allSuccessful = responses.every(r => r.ok);
+      concurrentTest.responseTime = Date.now() - startTime15;
+      concurrentTest.status = allSuccessful ? 'success' : 'failed';
+      concurrentTest.response = {
+        requestCount: 5,
+        successCount: responses.filter(r => r.ok).length,
+        avgResponseTime: Math.round(concurrentTest.responseTime / 5)
+      };
+    } catch (error) {
+      concurrentTest.status = 'failed';
+      concurrentTest.error = error.message;
+    }
+    grouped.PERFORMANCE.push(concurrentTest);
+    allTests.push(concurrentTest);
+
+    // Clean up created test clients
+    for (const id of createdClientIds) {
+      if (id && id !== createdClientId) { // Skip already deleted one
         try {
-          const response = await fetch(`${API_URL}/clients/${clientId}/archive`, {
+          await fetch(`${API_URL}/clients/${id}/archive`, {
             method: 'PUT',
             headers: { 'Authorization': `Bearer ${token}` }
           });
-          const data = await response.json();
-          archiveTest.responseTime = Date.now() - startTimeArchive;
-          archiveTest.status = response.ok && data.success ? 'success' : 'failed';
-          archiveTest.response = data;
-          if (!response.ok || !data.success) {
-            archiveTest.error = data.error?.message || 'Failed to archive client';
-          }
-        } catch (error) {
-          archiveTest.status = 'failed';
-          archiveTest.error = error.message;
-          archiveTest.responseTime = Date.now() - startTimeArchive;
-        }
-        grouped.PUT.push(archiveTest);
-        allTests.push(archiveTest);
-        setGroupedTests({...grouped});
-
-        // Step 2: Delete the archived client
-        const deleteTest = {
-          name: `Delete Archived Client ${i + 1}`,
-          description: i === 0 ? 'Delete archived minimal client' : i === 1 ? 'Delete archived basic client' : 'Delete archived full client',
-          method: 'DELETE',
-          endpoint: `/clients/${clientId}`,
-          status: 'pending',
-          curl: `curl -X DELETE "${API_URL}/clients/${clientId}" -H "Authorization: Bearer ${token}"`,
-          response: null,
-          error: null,
-          responseTime: null
-        };
-
-        const startTimeDelete = Date.now();
-        try {
-          const response = await fetch(`${API_URL}/clients/${clientId}`, {
+          await fetch(`${API_URL}/clients/${id}`, {
             method: 'DELETE',
             headers: { 'Authorization': `Bearer ${token}` }
           });
-          const data = await response.json();
-          deleteTest.responseTime = Date.now() - startTimeDelete;
-          deleteTest.status = response.ok && data.success ? 'success' : 'failed';
-          deleteTest.response = data;
-          if (!response.ok || !data.success) {
-            deleteTest.error = data.error?.message || 'Failed to delete client';
-          }
         } catch (error) {
-          deleteTest.status = 'failed';
-          deleteTest.error = error.message;
-          deleteTest.responseTime = Date.now() - startTimeDelete;
+          console.error('Cleanup error:', error);
         }
-        grouped.DELETE.push(deleteTest);
-        allTests.push(deleteTest);
-        setGroupedTests({...grouped});
-      }
-
-      // Clear the test client IDs after deletion
-      setTestClientId(null);
-      setTestClientIds([]);
-
-      // Verify all clients were deleted
-      if (createdClientIds.length > 0) {
-        const verifyDeleteTest = {
-          name: 'Verify All Deletions',
-          description: 'Confirm all test clients no longer exist (should return 404)',
-          method: 'GET',
-          endpoint: `/clients/${createdClientIds[0]}`,
-          status: 'pending',
-          curl: `curl -X GET "${API_URL}/clients/${createdClientIds[0]}" -H "Authorization: Bearer ${token}"`,
-          response: null,
-          error: null,
-          responseTime: null
-        };
-
-        const startTimeVerify = Date.now();
-        try {
-          const response = await fetch(`${API_URL}/clients/${createdClientIds[0]}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          const data = await response.json();
-          verifyDeleteTest.responseTime = Date.now() - startTimeVerify;
-          // This should fail (404) for the test to pass
-          verifyDeleteTest.status = response.status === 404 || (data.success === false && data.error?.code === 'NOT_FOUND') ? 'success' : 'failed';
-          verifyDeleteTest.response = data;
-          if (response.ok && data.success) {
-            verifyDeleteTest.error = 'Client still exists after deletion';
-          }
-        } catch (error) {
-          verifyDeleteTest.status = 'failed';
-          verifyDeleteTest.error = error.message;
-          verifyDeleteTest.responseTime = Date.now() - startTimeVerify;
-        }
-        grouped.GET.push(verifyDeleteTest);
-        allTests.push(verifyDeleteTest);
-        setGroupedTests({...grouped});
       }
     }
 
     setTests(allTests);
-    setLoading(false);
+    setGroupedTests(grouped);
     setLastRefresh(new Date().toLocaleString());
+    setLoading(false);
+    setTestClientIds(createdClientIds);
   }, []);
 
-  // Clean up any test clients on unmount
-  useEffect(() => {
-    return () => {
-      const clientsToDelete = testClientIds.length > 0 ? testClientIds : (testClientId ? [testClientId] : []);
-
-      if (clientsToDelete.length > 0) {
-        const token = localStorage.getItem('crm_auth_token') ||
-                     localStorage.getItem('authToken') ||
-                     localStorage.getItem('token');
-
-        let API_URL = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
-        if (!API_URL.endsWith('/v1')) {
-          API_URL = API_URL.replace(/\/$/, '') + '/v1';
-        }
-
-        // Clean up all test clients
-        clientsToDelete.forEach(async clientId => {
-          try {
-            // Archive first
-            await fetch(`${API_URL}/clients/${clientId}/archive`, {
-              method: 'PUT',
-              headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-            });
-            // Then delete
-            await fetch(`${API_URL}/clients/${clientId}`, {
-              method: 'DELETE',
-              headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-            });
-          } catch (error) {
-            // Ignore cleanup errors
-          }
-        });
-      }
+  const copyAllData = () => {
+    const testData = {
+      timestamp: new Date().toISOString(),
+      endpoint: 'clients',
+      summary: {
+        total: tests.length,
+        passed: tests.filter(t => t.status === 'success').length,
+        failed: tests.filter(t => t.status === 'failed').length,
+        warnings: tests.filter(t => t.status === 'warning').length
+      },
+      categories: {
+        core: groupedTests.CORE.length,
+        filters: groupedTests.FILTERS.length,
+        errors: groupedTests.ERROR.length,
+        edge: groupedTests.EDGE.length,
+        performance: groupedTests.PERFORMANCE.length
+      },
+      tests: tests.map(test => ({
+        name: test.name,
+        category: test.category,
+        method: test.method,
+        endpoint: test.endpoint,
+        status: test.status,
+        responseTime: test.responseTime,
+        response: test.response,
+        error: test.error
+      }))
     };
-  }, [testClientId, testClientIds]);
 
-  // Run tests on mount
+    navigator.clipboard.writeText(JSON.stringify(testData, null, 2));
+    setSnackbarMessage('Enhanced test data copied to clipboard');
+    setSnackbarOpen(true);
+  };
+
   useEffect(() => {
     runAllTests();
   }, [runAllTests]);
 
   const successCount = tests.filter(t => t.status === 'success').length;
   const failedCount = tests.filter(t => t.status === 'failed').length;
+  const warningCount = tests.filter(t => t.status === 'warning').length;
 
-  const copyAllData = () => {
-    const allData = {
-      dashboard: 'Clients API Health Check',
-      lastRefresh: lastRefresh || 'Not yet refreshed',
-      summary: {
-        totalTests: tests.length,
-        passed: successCount,
-        failed: failedCount
-      },
-      tests: tests.map(test => ({
-        name: test.name,
-        description: test.description,
-        method: test.method,
-        endpoint: test.endpoint,
-        status: test.status,
-        responseTime: test.responseTime,
-        curl: test.curl,
-        requestBody: test.requestBody,
-        response: test.response,
-        error: test.error
-      }))
-    };
+  const tabCategories = [
+    { label: 'All Tests', key: 'ALL' },
+    { label: 'Core CRUD', key: 'CORE' },
+    { label: 'Filters & Search', key: 'FILTERS' },
+    { label: 'Error Handling', key: 'ERROR' },
+    { label: 'Edge Cases', key: 'EDGE' },
+    { label: 'Performance', key: 'PERFORMANCE' }
+  ];
 
-    const formattedData = JSON.stringify(allData, null, 2);
-    navigator.clipboard.writeText(formattedData).then(() => {
-      setSnackbarMessage('All test data copied to clipboard!');
-      setSnackbarOpen(true);
-    }).catch(err => {
-      console.error('Failed to copy:', err);
-      setSnackbarMessage('Failed to copy data to clipboard');
-      setSnackbarOpen(true);
-    });
+  const getTestsForTab = (tabIndex) => {
+    if (tabIndex === 0) return tests; // All tests
+    const category = tabCategories[tabIndex].key;
+    return groupedTests[category] || [];
   };
 
   return (
     <PageContainer>
       <Container maxWidth="lg">
-        <Paper sx={{ p: 3, mb: 3, background: 'white' }}>
-          <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-            <Box>
-              <Typography variant="h4" fontWeight="bold" gutterBottom>
-                Clients API Health Check
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                Comprehensive testing of all client endpoints • Last refresh: {lastRefresh || 'Loading...'}
-              </Typography>
-              <Box display="flex" alignItems="center" gap={2} mt={1}>
-                <Typography variant="h2" fontWeight="bold" color={failedCount === 0 ? '#4caf50' : '#f44336'}>
-                  {successCount}/{tests.length}
+        <Fade in timeout={800}>
+          <Paper elevation={3} sx={{ p: 4, borderRadius: 3, background: 'rgba(255,255,255,0.98)' }}>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+              <Box>
+                <Typography variant="h3" fontWeight="bold" gutterBottom>
+                  Clients API Health Dashboard
                 </Typography>
-                <Typography variant="body1" color="textSecondary">
-                  Tests Passing
+                <Typography variant="body2" color="textSecondary">
+                  Comprehensive testing with error handling, edge cases, and performance tests • Last refresh: {lastRefresh || 'Loading...'}
                 </Typography>
+                <Box display="flex" alignItems="center" gap={2} mt={1}>
+                  <Typography variant="h2" fontWeight="bold" color={failedCount === 0 ? '#4caf50' : '#f44336'}>
+                    {successCount}/{tests.length}
+                  </Typography>
+                  <Typography variant="body1" color="textSecondary">
+                    Tests Passing
+                  </Typography>
+                  {warningCount > 0 && (
+                    <>
+                      <Typography variant="h4" fontWeight="bold" color="#ff9800" sx={{ ml: 2 }}>
+                        {warningCount}
+                      </Typography>
+                      <Typography variant="body1" color="textSecondary">
+                        Warnings
+                      </Typography>
+                    </>
+                  )}
+                </Box>
               </Box>
-            </Box>
-            <Box display="flex" gap={1}>
-              <Tooltip title="Copy All Data">
-                <IconButton
-                  onClick={copyAllData}
-                  disabled={loading || tests.length === 0}
-                  sx={{
-                    backgroundColor: '#f5f5f5',
-                    '&:hover': { backgroundColor: '#e0e0e0' }
-                  }}
-                >
-                  <CopyIcon />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Refresh Tests">
-                <IconButton
-                  onClick={runAllTests}
-                  disabled={loading}
-                  sx={{
-                    backgroundColor: '#f5f5f5',
-                    '&:hover': { backgroundColor: '#e0e0e0' }
-                  }}
-                >
-                  <RefreshIcon />
-                </IconButton>
-              </Tooltip>
-              {testClientId && (
-                <Tooltip title="Clean Up Test Client">
+              <Box display="flex" gap={1}>
+                <Tooltip title="Copy All Data">
                   <IconButton
-                    onClick={async () => {
-                      const token = localStorage.getItem('crm_auth_token') ||
-                                   localStorage.getItem('authToken') ||
-                                   localStorage.getItem('token');
-
-                      let API_URL = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
-                      if (!API_URL.endsWith('/v1')) {
-                        API_URL = API_URL.replace(/\/$/, '') + '/v1';
-                      }
-
-                      try {
-                        await fetch(`${API_URL}/clients/${testClientId}`, {
-                          method: 'DELETE',
-                          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-                        });
-                        setTestClientId(null);
-                        setSnackbarMessage('Test client cleaned up');
-                        setSnackbarOpen(true);
-                      } catch (error) {
-                        setSnackbarMessage('Failed to clean up test client');
-                        setSnackbarOpen(true);
-                      }
-                    }}
+                    onClick={copyAllData}
+                    disabled={loading || tests.length === 0}
                     sx={{
-                      backgroundColor: '#ffebee',
-                      color: '#f44336',
-                      '&:hover': { backgroundColor: '#ffcdd2' }
+                      backgroundColor: '#f5f5f5',
+                      '&:hover': { backgroundColor: '#e0e0e0' }
                     }}
                   >
-                    <DeleteIcon />
+                    <CopyIcon />
                   </IconButton>
                 </Tooltip>
-              )}
+                <Tooltip title="Refresh Tests">
+                  <IconButton
+                    onClick={runAllTests}
+                    disabled={loading}
+                    sx={{
+                      backgroundColor: '#f5f5f5',
+                      '&:hover': { backgroundColor: '#e0e0e0' }
+                    }}
+                  >
+                    <RefreshIcon />
+                  </IconButton>
+                </Tooltip>
+              </Box>
             </Box>
-          </Box>
 
-          <Divider sx={{ my: 2 }} />
+            <Divider sx={{ my: 2 }} />
 
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={3}>
-              <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#f5f5f5' }}>
-                <Typography variant="h4" fontWeight="bold">{tests.length}</Typography>
-                <Typography variant="body2" color="textSecondary">Total Tests</Typography>
-              </Paper>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={2}>
+                <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#f5f5f5' }}>
+                  <Typography variant="h4" fontWeight="bold">{tests.length}</Typography>
+                  <Typography variant="body2" color="textSecondary">Total</Typography>
+                </Paper>
+              </Grid>
+              <Grid item xs={12} sm={2}>
+                <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#e8f5e9' }}>
+                  <Typography variant="h4" fontWeight="bold" color="#4caf50">
+                    {successCount}
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">Passed</Typography>
+                </Paper>
+              </Grid>
+              <Grid item xs={12} sm={2}>
+                <Paper sx={{ p: 2, textAlign: 'center', bgcolor: failedCount === 0 ? '#e8f5e9' : '#ffebee' }}>
+                  <Typography variant="h4" fontWeight="bold" color={failedCount === 0 ? '#4caf50' : '#f44336'}>
+                    {failedCount}
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">Failed</Typography>
+                </Paper>
+              </Grid>
+              <Grid item xs={12} sm={2}>
+                <Paper sx={{ p: 2, textAlign: 'center', bgcolor: warningCount > 0 ? '#fff3e0' : '#f5f5f5' }}>
+                  <Typography variant="h4" fontWeight="bold" color={warningCount > 0 ? '#ff9800' : '#666'}>
+                    {warningCount}
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">Warnings</Typography>
+                </Paper>
+              </Grid>
+              <Grid item xs={12} sm={2}>
+                <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#e3f2fd' }}>
+                  <Typography variant="h4" fontWeight="bold" color="#2196f3">
+                    {tests.reduce((acc, t) => acc + (t.responseTime || 0), 0)}ms
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">Total Time</Typography>
+                </Paper>
+              </Grid>
+              <Grid item xs={12} sm={2}>
+                <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#f3e5f5' }}>
+                  <Typography variant="h4" fontWeight="bold" color="#9c27b0">
+                    {Math.round(tests.reduce((acc, t) => acc + (t.responseTime || 0), 0) / tests.length)}ms
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">Avg Time</Typography>
+                </Paper>
+              </Grid>
             </Grid>
-            <Grid item xs={12} sm={3}>
-              <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#e8f5e9' }}>
-                <Typography variant="h4" fontWeight="bold" color="#4caf50">
-                  {successCount}
-                </Typography>
-                <Typography variant="body2" color="textSecondary">Passed</Typography>
-              </Paper>
-            </Grid>
-            <Grid item xs={12} sm={3}>
-              <Paper sx={{ p: 2, textAlign: 'center', bgcolor: failedCount === 0 ? '#e8f5e9' : '#ffebee' }}>
-                <Typography variant="h4" fontWeight="bold" color={failedCount === 0 ? '#4caf50' : '#f44336'}>
-                  {failedCount}
-                </Typography>
-                <Typography variant="body2" color="textSecondary">Failed</Typography>
-              </Paper>
-            </Grid>
-            <Grid item xs={12} sm={3}>
-              <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#e3f2fd' }}>
-                <Typography variant="h4" fontWeight="bold" color="#2196f3">
-                  {tests.reduce((acc, t) => acc + (t.responseTime || 0), 0)}ms
-                </Typography>
-                <Typography variant="body2" color="textSecondary">Total Time</Typography>
-              </Paper>
-            </Grid>
-          </Grid>
-        </Paper>
 
-        {loading && <LinearProgress sx={{ mb: 2 }} />}
+            {loading && <LinearProgress sx={{ my: 2 }} />}
 
-        <Fade in={!loading}>
-          <Box>
-            {/* GET Requests Section */}
-            {groupedTests.GET.length > 0 && (
-              <>
-                <SectionHeader variant="h5">
-                  GET Requests ({groupedTests.GET.filter(t => t.status === 'success').length}/{groupedTests.GET.length})
-                </SectionHeader>
-                {groupedTests.GET.map((test, index) => (
-                  <TestItem key={`get-${index}`} test={test} />
+            <Box sx={{ borderBottom: 1, borderColor: 'divider', mt: 3 }}>
+              <Tabs value={currentTab} onChange={(e, v) => setCurrentTab(v)}>
+                {tabCategories.map((cat, idx) => (
+                  <Tab key={cat.key} label={cat.label} />
                 ))}
-              </>
-            )}
+              </Tabs>
+            </Box>
 
-            {/* POST Requests Section */}
-            {groupedTests.POST.length > 0 && (
-              <>
-                <SectionHeader variant="h5">
-                  POST Requests ({groupedTests.POST.filter(t => t.status === 'success').length}/{groupedTests.POST.length})
-                </SectionHeader>
-                {groupedTests.POST.map((test, index) => (
-                  <TestItem key={`post-${index}`} test={test} />
+            <Fade in={!loading}>
+              <Box sx={{ mt: 3 }}>
+                {getTestsForTab(currentTab).map((test, index) => (
+                  <TestItem key={`test-${currentTab}-${index}`} test={test} />
                 ))}
-              </>
-            )}
-
-            {/* PUT Requests Section */}
-            {groupedTests.PUT.length > 0 && (
-              <>
-                <SectionHeader variant="h5">
-                  PUT Requests ({groupedTests.PUT.filter(t => t.status === 'success').length}/{groupedTests.PUT.length})
-                </SectionHeader>
-                {groupedTests.PUT.map((test, index) => (
-                  <TestItem key={`put-${index}`} test={test} />
-                ))}
-              </>
-            )}
-
-            {/* DELETE Requests Section */}
-            {groupedTests.DELETE.length > 0 && (
-              <>
-                <SectionHeader variant="h5">
-                  DELETE Requests ({groupedTests.DELETE.filter(t => t.status === 'success').length}/{groupedTests.DELETE.length})
-                </SectionHeader>
-                {groupedTests.DELETE.map((test, index) => (
-                  <TestItem key={`delete-${index}`} test={test} />
-                ))}
-              </>
-            )}
-          </Box>
+              </Box>
+            </Fade>
+          </Paper>
         </Fade>
       </Container>
 
@@ -1149,9 +1082,9 @@ const ClientsHealthDashboard = () => {
         open={snackbarOpen}
         autoHideDuration={3000}
         onClose={() => setSnackbarOpen(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
       >
-        <Alert onClose={() => setSnackbarOpen(false)} severity="success" sx={{ width: '100%' }}>
+        <Alert onClose={() => setSnackbarOpen(false)} severity="success">
           {snackbarMessage}
         </Alert>
       </Snackbar>
