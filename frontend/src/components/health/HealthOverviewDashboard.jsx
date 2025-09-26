@@ -96,186 +96,80 @@ const HealthOverviewDashboard = () => {
   const runFullHealthCheck = async (module) => {
     setRefreshing(prev => ({ ...prev, [module.key]: true }));
 
-    let API_URL_BASE = API_URL;
-    if (!API_URL_BASE.endsWith('/v1')) {
-      API_URL_BASE = API_URL_BASE.replace(/\/$/, '') + '/v1';
-    }
-
     const token = localStorage.getItem('crm_auth_token') ||
                   localStorage.getItem('authToken') ||
                   localStorage.getItem('token');
 
-    const allTests = [];
-    const grouped = { CORE: [], FILTERS: [], ERROR: [], EDGE: [], PERFORMANCE: [], WORKFLOW: [] };
-    let createdId = null;
-    const createdIds = [];
-
     try {
-      // Core GET: List all
-      const getAllTest = {
-        name: 'List All',
-        category: 'Critical',
-        method: 'GET',
-        endpoint: module.endpoint,
-        status: 'pending'
+      // Import and use the comprehensive health check service
+      const { HealthCheckService } = await import('../../services/healthCheck.service');
+      const healthService = new HealthCheckService(API_URL, token);
+
+      let tests = [];
+
+      // Run comprehensive tests for each module
+      switch (module.key) {
+        case 'escrows':
+          tests = await healthService.runEscrowsHealthCheck();
+          break;
+        case 'listings':
+          tests = await healthService.runListingsHealthCheck();
+          break;
+        case 'clients':
+          tests = await healthService.runClientsHealthCheck();
+          break;
+        case 'appointments':
+          tests = await healthService.runAppointmentsHealthCheck();
+          break;
+        case 'leads':
+          tests = await healthService.runLeadsHealthCheck();
+          break;
+        default:
+          console.error(`Unknown module: ${module.key}`);
+      }
+
+      // Group tests by category
+      const grouped = {
+        CORE: [],
+        FILTERS: [],
+        ERROR: [],
+        EDGE: [],
+        PERFORMANCE: [],
+        WORKFLOW: []
       };
 
-      const startTime1 = Date.now();
-      try {
-        const response = await fetch(`${API_URL_BASE}${module.endpoint}`, {
-          headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-        });
-        const data = await response.json();
-        getAllTest.responseTime = Date.now() - startTime1;
-        getAllTest.status = response.ok && data.success ? 'success' : 'failed';
-        getAllTest.response = data;
-      } catch (error) {
-        getAllTest.status = 'failed';
-        getAllTest.error = error.message;
-      }
-      grouped.CORE.push(getAllTest);
-      allTests.push(getAllTest);
-
-      // Core POST: Create minimal
-      let minimalData = {};
-      if (module.key === 'escrows') {
-        minimalData = { propertyAddress: `${Date.now()} Test Lane` };
-      } else if (module.key === 'listings') {
-        minimalData = {
-          propertyAddress: `${Date.now()} Test Street`,
-          listPrice: 500000,
-          propertyType: 'Single Family'
-        };
-      } else if (module.key === 'clients') {
-        minimalData = {
-          firstName: 'Test',
-          lastName: `Client_${Date.now()}`,
-          email: `client_${Date.now()}@example.com`
-        };
-      } else if (module.key === 'appointments') {
-        minimalData = {
-          title: `Test Appointment ${Date.now()}`,
-          startTime: new Date().toISOString(),
-          endTime: new Date(Date.now() + 3600000).toISOString()
-        };
-      } else if (module.key === 'leads') {
-        minimalData = {
-          firstName: 'Test',
-          lastName: `Lead_${Date.now()}`,
-          email: `lead_${Date.now()}@example.com`,
-          source: 'Website'
-        };
-      }
-
-      const createTest = {
-        name: 'Create (Minimal)',
-        category: 'Critical',
-        method: 'POST',
-        endpoint: module.endpoint,
-        status: 'pending',
-        requestBody: minimalData
-      };
-
-      const startTime2 = Date.now();
-      try {
-        const response = await fetch(`${API_URL_BASE}${module.endpoint}`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(minimalData)
-        });
-        const data = await response.json();
-        createTest.responseTime = Date.now() - startTime2;
-        createTest.status = response.ok && data.success ? 'success' : 'failed';
-        createTest.response = data;
-        if (data.success && data.data) {
-          createdId = data.data.id || data.data._id;
-          createdIds.push(createdId);
-        }
-      } catch (error) {
-        createTest.status = 'failed';
-        createTest.error = error.message;
-      }
-      grouped.CORE.push(createTest);
-      allTests.push(createTest);
-
-      // Error handling test
-      const errorTest = {
-        name: 'Get Non-Existent',
-        category: 'Error Handling',
-        method: 'GET',
-        endpoint: `${module.endpoint}/00000000-0000-0000-0000-000000000000`,
-        status: 'pending'
-      };
-
-      const startTime3 = Date.now();
-      try {
-        const response = await fetch(`${API_URL_BASE}${module.endpoint}/00000000-0000-0000-0000-000000000000`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        errorTest.responseTime = Date.now() - startTime3;
-        errorTest.status = !response.ok && data.error ? 'success' : 'failed';
-        errorTest.response = data;
-      } catch (error) {
-        errorTest.status = 'failed';
-        errorTest.error = error.message;
-      }
-      grouped.ERROR.push(errorTest);
-      allTests.push(errorTest);
-
-      // Cleanup created items
-      for (const id of createdIds) {
-        if (module.key === 'escrows' || module.key === 'listings') {
-          try {
-            await fetch(`${API_URL_BASE}${module.endpoint}/${id}/archive`, {
-              method: 'PUT',
-              headers: { 'Authorization': `Bearer ${token}` }
-            });
-            await fetch(`${API_URL_BASE}${module.endpoint}/${id}`, {
-              method: 'DELETE',
-              headers: { 'Authorization': `Bearer ${token}` }
-            });
-          } catch (e) {
-            console.error('Cleanup error:', e);
-          }
-        } else if (module.key === 'clients') {
-          try {
-            await fetch(`${API_URL_BASE}${module.endpoint}/${id}`, {
-              method: 'DELETE',
-              headers: { 'Authorization': `Bearer ${token}` }
-            });
-          } catch (e) {
-            console.error('Cleanup error:', e);
-          }
-        }
-      }
+      tests.forEach(test => {
+        if (test.category === 'Critical') grouped.CORE.push(test);
+        else if (test.category === 'Search') grouped.FILTERS.push(test);
+        else if (test.category === 'Error Handling') grouped.ERROR.push(test);
+        else if (test.category === 'Edge Case') grouped.EDGE.push(test);
+        else if (test.category === 'Performance') grouped.PERFORMANCE.push(test);
+        else if (test.category === 'Workflow') grouped.WORKFLOW.push(test);
+      });
 
       // Calculate summary
-      const passed = allTests.filter(t => t.status === 'success').length;
-      const failed = allTests.filter(t => t.status === 'failed').length;
-      const warnings = allTests.filter(t => t.status === 'warning').length;
+      const passed = tests.filter(t => t.status === 'success').length;
+      const failed = tests.filter(t => t.status === 'failed').length;
+      const warnings = tests.filter(t => t.status === 'warning').length;
 
       const result = {
         timestamp: new Date().toISOString(),
         endpoint: module.key,
         summary: {
-          total: allTests.length,
+          total: tests.length,
           passed,
           failed,
           warnings
         },
         categories: {
           core: grouped.CORE.filter(t => t.status === 'success').length,
-          filters: 0,
+          filters: grouped.FILTERS.filter(t => t.status === 'success').length,
           errors: grouped.ERROR.filter(t => t.status === 'success').length,
-          edge: 0,
-          performance: 0,
-          workflow: 0
+          edge: grouped.EDGE.filter(t => t.status === 'success').length,
+          performance: grouped.PERFORMANCE.filter(t => t.status === 'success').length,
+          workflow: grouped.WORKFLOW.filter(t => t.status === 'success').length
         },
-        tests: allTests
+        tests
       };
 
       setTestResults(prev => ({ ...prev, [module.key]: result }));
