@@ -1035,8 +1035,8 @@ const Settings = () => {
                                   }}
                                 >
                                   {showFullKey[apiKey.id]
-                                    ? apiKey.key || `${apiKey.key_prefix}${'*'.repeat(48)}`
-                                    : `${apiKey.key_prefix}${'*'.repeat(48)}`}
+                                    ? apiKey.key || apiKey.key_prefix
+                                    : apiKey.key_prefix}
                                 </Typography>
                                 <IconButton
                                   size="small"
@@ -1047,7 +1047,7 @@ const Settings = () => {
                                 <IconButton
                                   size="small"
                                   onClick={() => {
-                                    const keyToCopy = apiKey.key || `${apiKey.key_prefix}${'*'.repeat(48)}`;
+                                    const keyToCopy = apiKey.key || apiKey.key_prefix;
                                     navigator.clipboard.writeText(keyToCopy);
                                     setCopySuccess({ ...copySuccess, [apiKey.id]: true });
                                     setTimeout(() => {
