@@ -643,16 +643,30 @@ const EscrowsHealthDashboard = () => {
                   </Box>
                 ) : (
                   <Box>
-                    <Alert severity="info" sx={{ mb: 2 }}>
-                      <Typography variant="body2">
-                        Your saved API keys (for reference):
-                      </Typography>
-                      {apiKeys.map((key) => (
-                        <Typography key={key.id} variant="caption" display="block" sx={{ mt: 0.5 }}>
-                          • {key.name}: {key.key_prefix}
-                        </Typography>
-                      ))}
-                    </Alert>
+                    <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+                      <InputLabel>Select API Key to Use</InputLabel>
+                      <Select
+                        value=""
+                        label="Select API Key to Use"
+                        displayEmpty
+                        renderValue={() => apiKey ? `Using key: ${apiKey.substring(0, 12)}...${apiKey.slice(-4)}` : "Select a key reference"}
+                      >
+                        <MenuItem value="" disabled>
+                          <em>Your saved API keys (select to see prefix)</em>
+                        </MenuItem>
+                        {apiKeys.map((key) => (
+                          <MenuItem key={key.id} value="">
+                            <Box>
+                              <Typography variant="body2">{key.name}</Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                Prefix: {key.key_prefix} • Created: {new Date(key.created_at).toLocaleDateString()}
+                              </Typography>
+                            </Box>
+                          </MenuItem>
+                        ))}
+                      </Select>
+                    </FormControl>
+
                     <TextField
                       fullWidth
                       value={apiKey}
@@ -666,9 +680,16 @@ const EscrowsHealthDashboard = () => {
                       }}
                       helperText="Enter the complete API key (64 hex characters). We only store prefixes for security."
                     />
+
                     {apiKey && apiKey.length !== 64 && (
                       <Alert severity="warning" sx={{ mt: 1 }}>
                         API key should be exactly 64 characters. Current: {apiKey.length}
+                      </Alert>
+                    )}
+
+                    {apiKey && apiKey.length === 64 && (
+                      <Alert severity="success" sx={{ mt: 1 }}>
+                        ✓ Valid API key length
                       </Alert>
                     )}
                   </Box>
