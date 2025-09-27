@@ -247,13 +247,8 @@ function App() {
                                 } />
                                 
                     
-                                {/* Health Check */}
-                                <Route path="/health" element={<SystemHealthDashboard />} />
-                                <Route path="/health/overview" element={<HealthOverviewDashboard />} />
-                                <Route path="/health/postgres" element={<SystemHealthDashboard initialTab={1} />} />
-                                <Route path="/health/redis" element={<SystemHealthDashboard initialTab={2} />} />
-                                <Route path="/health/auth" element={<SystemHealthDashboard initialTab={3} />} />
-                                <Route path="/health/system" element={<SystemHealthDashboard initialTab={4} />} />
+                                {/* Health Check - Main system health page */}
+                                <Route path="/health" element={<HealthOverviewDashboard />} />
                                 
                                 {/* Main Features */}
                                 <Route path="/escrows" element={<EscrowsDashboard />} />

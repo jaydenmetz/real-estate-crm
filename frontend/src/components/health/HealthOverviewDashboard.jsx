@@ -100,6 +100,12 @@ const HealthOverviewDashboard = () => {
                   localStorage.getItem('authToken') ||
                   localStorage.getItem('token');
 
+    if (!token) {
+      console.error('No authentication token found');
+      setRefreshing(prev => ({ ...prev, [module.key]: false }));
+      return;
+    }
+
     try {
       // Import and use the comprehensive health check service
       const { HealthCheckService } = await import('../../services/healthCheck.service');
@@ -204,12 +210,32 @@ const HealthOverviewDashboard = () => {
 
   useEffect(() => {
     const fetchAllHealth = async () => {
+      // Check if user is authenticated
+      const token = localStorage.getItem('crm_auth_token') ||
+                    localStorage.getItem('authToken') ||
+                    localStorage.getItem('token');
+
+      if (!token) {
+        console.warn('No authentication token found. Please log in to run health checks.');
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
+
+      // Run tests for each module with a small delay to avoid rate limiting
       for (const module of modules) {
         await runFullHealthCheck(module);
+        // Add a small delay between module tests to avoid rate limiting
+        if (modules.indexOf(module) < modules.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 500)); // 500ms delay
+        }
       }
+
       setLoading(false);
     };
+
+    // Start tests automatically
     fetchAllHealth();
   }, []);
 
@@ -621,11 +647,33 @@ const HealthOverviewDashboard = () => {
     );
   };
 
+  const token = localStorage.getItem('crm_auth_token') ||
+                localStorage.getItem('authToken') ||
+                localStorage.getItem('token');
+
+  if (!token) {
+    return (
+      <Container maxWidth={false} sx={{ py: 4 }}>
+        <Alert severity="warning" sx={{ mb: 3 }}>
+          <Typography fontWeight="bold" mb={1}>Authentication Required</Typography>
+          <Typography variant="body2">
+            Please log in to run health checks. The system requires authentication to prevent rate limiting and ensure secure access to API endpoints.
+          </Typography>
+        </Alert>
+      </Container>
+    );
+  }
+
   if (loading && Object.keys(healthData).length === 0) {
     return (
       <Container maxWidth={false} sx={{ py: 4 }}>
         <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
-          <CircularProgress size={60} />
+          <Box textAlign="center">
+            <CircularProgress size={60} sx={{ mb: 2 }} />
+            <Typography variant="body1" color="textSecondary">
+              Running comprehensive health checks for all modules...
+            </Typography>
+          </Box>
         </Box>
       </Container>
     );
@@ -644,6 +692,27 @@ const HealthOverviewDashboard = () => {
             </Typography>
           </Box>
           <Box display="flex" gap={2} alignItems="center">
+            <Button
+              variant="contained"
+              startIcon={loading ? <CircularProgress size={20} sx={{ color: 'white' }} /> : <RefreshIcon />}
+              onClick={async () => {
+                setLoading(true);
+                for (const module of modules) {
+                  await runFullHealthCheck(module);
+                  if (modules.indexOf(module) < modules.length - 1) {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                  }
+                }
+                setLoading(false);
+              }}
+              disabled={loading}
+              sx={{
+                backgroundColor: '#4caf50',
+                '&:hover': { backgroundColor: '#388e3c' }
+              }}
+            >
+              {loading ? 'Running Tests...' : 'Refresh All Tests'}
+            </Button>
             <Button
               variant="contained"
               startIcon={<CopyIcon />}
