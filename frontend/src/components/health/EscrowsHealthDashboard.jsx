@@ -684,21 +684,11 @@ const EscrowsHealthDashboard = () => {
             {authTab === 0 ? (
               <Box>
                 <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                  JWT Token (from login session)
+                  JWT Authentication
                 </Typography>
                 <Typography variant="body2" color="textSecondary" mb={1}>
-                  Using the JWT token from your current login session. This is how users interact with the app natively.
+                  Using the JWT token from your current login session. Tests will run automatically using your session credentials.
                 </Typography>
-                <TextField
-                  fullWidth
-                  value={getAuthDisplay()}
-                  disabled
-                  variant="outlined"
-                  size="small"
-                  InputProps={{
-                    startAdornment: <KeyIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                  }}
-                />
               </Box>
             ) : (
               <Box>
