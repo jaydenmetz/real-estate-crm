@@ -631,8 +631,10 @@ const EscrowsHealthDashboard = () => {
       if (token) {
         runAllTests();
       }
+    } else if (authTab === 1) {
+      // Auto-run tests for API Key tab with temporary key
+      runAllTests();
     }
-    // For API Key tab, user must manually click "Run All Tests" to create temporary key and test
   }, [authTab]);
 
   const totalTests = tests.length;
@@ -693,7 +695,7 @@ const EscrowsHealthDashboard = () => {
                   API Key Testing
                 </Typography>
                 <Typography variant="body2" color="textSecondary" mb={1}>
-                  Click "Run All Tests" to automatically create a temporary test API key, run tests, and delete it.
+                  Automatically creating a temporary test API key, running tests, and deleting it when complete.
                 </Typography>
                 {testApiKey && (
                   <Alert severity="info" sx={{ mb: 2 }}>
