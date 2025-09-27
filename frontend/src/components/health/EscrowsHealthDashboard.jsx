@@ -643,39 +643,34 @@ const EscrowsHealthDashboard = () => {
                   </Box>
                 ) : (
                   <Box>
-                    <FormControl fullWidth size="small">
-                      <InputLabel>Select API Key</InputLabel>
-                      <Select
-                        value={apiKey}
-                        label="Select API Key"
-                        onChange={(e) => setApiKey(e.target.value)}
-                      >
-                        <MenuItem value="">
-                          <em>None - Enter manually below</em>
-                        </MenuItem>
-                        {apiKeys.map((key) => (
-                          <MenuItem key={key.id} value={key.key || key.key_prefix}>
-                            {key.name} ({key.key_prefix})
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
+                    <Alert severity="info" sx={{ mb: 2 }}>
+                      <Typography variant="body2">
+                        Your saved API keys (for reference):
+                      </Typography>
+                      {apiKeys.map((key) => (
+                        <Typography key={key.id} variant="caption" display="block" sx={{ mt: 0.5 }}>
+                          • {key.name}: {key.key_prefix}
+                        </Typography>
+                      ))}
+                    </Alert>
                     <TextField
                       fullWidth
                       value={apiKey}
                       onChange={(e) => setApiKey(e.target.value)}
-                      placeholder="Or paste your full API key here..."
+                      placeholder="Paste your full 64-character API key here..."
                       variant="outlined"
                       size="small"
-                      type="password"
-                      sx={{ mt: 2 }}
+                      sx={{ mb: 1 }}
                       InputProps={{
                         startAdornment: <KeyIcon sx={{ mr: 1, color: 'text.secondary' }} />
                       }}
+                      helperText="Enter the complete API key (64 hex characters). We only store prefixes for security."
                     />
-                    <Typography variant="caption" color="textSecondary" sx={{ mt: 1, display: 'block' }}>
-                      Note: We only store key prefixes. You need the full 64-character key.
-                    </Typography>
+                    {apiKey && apiKey.length !== 64 && (
+                      <Alert severity="warning" sx={{ mt: 1 }}>
+                        API key should be exactly 64 characters. Current: {apiKey.length}
+                      </Alert>
+                    )}
                   </Box>
                 )}
               </Box>
