@@ -413,7 +413,8 @@ export const settingsAPI = {
 export const apiKeysAPI = {
   getAll: () => apiInstance.get('/api-keys'),
   create: (data) => apiInstance.post('/api-keys', data),
-  revoke: (id) => apiInstance.delete(`/api-keys/${id}`),
+  delete: (id) => apiInstance.delete(`/api-keys/${id}`), // Add delete method
+  revoke: (id) => apiInstance.delete(`/api-keys/${id}`), // Keep revoke for backward compatibility
   update: (id, data) => apiInstance.put(`/api-keys/${id}`, data)
 };
 

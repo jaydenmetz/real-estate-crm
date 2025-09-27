@@ -386,8 +386,10 @@ const EscrowsHealthDashboard = () => {
 
   const handleAuthTabChange = (event, newValue) => {
     setAuthTab(newValue);
-    // Clear tests when switching tabs
+    // Clear tests and test API key when switching tabs
     setTests([]);
+    setTestApiKey(null);
+    setTestApiKeyId(null);
     setGroupedTests({
       CORE: [],
       FILTERS: [],
@@ -422,53 +424,62 @@ const EscrowsHealthDashboard = () => {
     }
   };
 
-  const runAllTests = useCallback(async () => {
+  const runAllTests = useCallback(async (forceNewKey = true) => {
     setLoading(true);
     setTests([]);
     setGroupedTests({ CORE: [], FILTERS: [], ERROR: [], EDGE: [], PERFORMANCE: [], WORKFLOW: [] });
-
-    // Clear any existing test API key
-    setTestApiKey(null);
-    setTestApiKeyId(null);
 
     let API_URL = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
     if (!API_URL.endsWith('/v1')) {
       API_URL = API_URL.replace(/\/$/, '') + '/v1';
     }
 
-    // For API Key tab, create a temporary test API key
+    // For API Key tab, create or reuse a temporary test API key
     let authHeaders = getAuthHeader();
     let authDisplay = getAuthDisplay();
-    let temporaryApiKey = null;
-    let temporaryApiKeyId = null;
+    let temporaryApiKey = testApiKey; // Use existing if available
+    let temporaryApiKeyId = testApiKeyId;
 
     if (authTab === 1) {
-      // Create a temporary test API key
-      try {
-        const response = await apiKeysAPI.create({
-          name: `Test Key - ${new Date().toISOString()}`,
-          expiresInDays: 1 // Expires in 1 day
-        });
-
-        if (response?.data?.key) {
-          temporaryApiKey = response.data.key;
-          temporaryApiKeyId = response.data.id;
-          setTestApiKey(temporaryApiKey);
-          setTestApiKeyId(temporaryApiKeyId);
-
-          // Use the temporary key for testing
-          authHeaders = { 'X-API-Key': temporaryApiKey };
-          authDisplay = `${temporaryApiKey.substring(0, 20)}...`;
-        } else {
-          throw new Error('Failed to create test API key');
+      // Create a new test API key only if we don't have one or if forced
+      if (!temporaryApiKey || forceNewKey) {
+        // Clear any existing test API key if forcing new
+        if (forceNewKey && testApiKeyId) {
+          try {
+            await apiKeysAPI.delete(testApiKeyId);
+          } catch (err) {
+            console.log('Could not delete previous test key:', err);
+          }
+          setTestApiKey(null);
+          setTestApiKeyId(null);
         }
-      } catch (error) {
-        console.error('Failed to create test API key:', error);
-        setSnackbarMessage('Failed to create test API key: ' + error.message);
-        setSnackbarOpen(true);
-        setLoading(false);
-        return;
+
+        try {
+          const response = await apiKeysAPI.create({
+            name: `Test Key - ${new Date().toISOString()}`,
+            expiresInDays: 1 // Expires in 1 day
+          });
+
+          if (response?.data?.key) {
+            temporaryApiKey = response.data.key;
+            temporaryApiKeyId = response.data.id;
+            setTestApiKey(temporaryApiKey);
+            setTestApiKeyId(temporaryApiKeyId);
+          } else {
+            throw new Error('Failed to create test API key');
+          }
+        } catch (error) {
+          console.error('Failed to create test API key:', error);
+          setSnackbarMessage('Failed to create test API key: ' + error.message);
+          setSnackbarOpen(true);
+          setLoading(false);
+          return;
+        }
       }
+
+      // Use the temporary key for testing
+      authHeaders = { 'X-API-Key': temporaryApiKey };
+      authDisplay = `${temporaryApiKey.substring(0, 20)}...`;
     } else if (authTab === 0 && !authHeaders.Authorization) {
       setSnackbarMessage('Please log in to get a JWT token');
       setSnackbarOpen(true);
@@ -629,11 +640,11 @@ const EscrowsHealthDashboard = () => {
                    localStorage.getItem('authToken') ||
                    localStorage.getItem('token');
       if (token) {
-        runAllTests();
+        runAllTests(true);
       }
     } else if (authTab === 1) {
-      // Auto-run tests for API Key tab with temporary key
-      runAllTests();
+      // Auto-run tests for API Key tab with new temporary key
+      runAllTests(true);
     }
   }, [authTab]);
 
@@ -759,19 +770,19 @@ const EscrowsHealthDashboard = () => {
             <Grid item xs={12} sm={3}>
               <Paper elevation={2} sx={{ p: 2, textAlign: 'center' }}>
                 <Stack direction="row" spacing={1} justifyContent="center">
-                  <Tooltip title="Run All Tests">
+                  <Tooltip title={authTab === 1 ? "Run All Tests (New API Key)" : "Run All Tests"}>
                     <IconButton
                       color="primary"
-                      onClick={runAllTests}
+                      onClick={() => runAllTests(true)} // Force new key for API tests
                       disabled={loading}
                     >
                       <PlayIcon />
                     </IconButton>
                   </Tooltip>
-                  <Tooltip title="Refresh">
+                  <Tooltip title={authTab === 1 ? "Refresh (Reuse API Key)" : "Refresh Tests"}>
                     <IconButton
                       color="default"
-                      onClick={runAllTests}
+                      onClick={() => runAllTests(false)} // Reuse existing key if available
                       disabled={loading}
                     >
                       <RefreshIcon />
