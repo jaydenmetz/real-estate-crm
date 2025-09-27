@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useQuery } from 'react-query';
+import { api, apiKeysAPI } from '../../services/api.service';
 import {
   Box,
   Container,
@@ -18,7 +20,14 @@ import {
   Divider,
   Stack,
   Tabs,
-  Tab
+  Tab,
+  TextField,
+  Button,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  CircularProgress
 } from '@mui/material';
 import {
   CheckCircle as CheckIcon,
@@ -28,7 +37,15 @@ import {
   Refresh as RefreshIcon,
   PlayArrow as PlayIcon,
   Delete as DeleteIcon,
-  Warning as WarningIcon
+  Warning as WarningIcon,
+  Speed as SpeedIcon,
+  Search as SearchIcon,
+  BugReport as BugIcon,
+  Add as AddIcon,
+  Edit as EditIcon,
+  VpnKey as ApiKeyIcon,
+  Token as JwtIcon,
+  Key as KeyIcon
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 
@@ -60,7 +77,6 @@ const TestCard = styled(Card)(({ status }) => ({
                    status === 'failed' ? '#ffebee' :
                    status === 'warning' ? '#fff3e0' : '#fafafa',
   transition: 'all 0.3s ease',
-  cursor: 'pointer',
   '&:hover': {
     transform: 'translateY(-2px)',
     boxShadow: '0 4px 20px rgba(0,0,0,0.12)'
@@ -95,68 +111,139 @@ const CopyButton = styled(IconButton)({
   }
 });
 
-const StatusIcon = ({ status }) => {
-  if (status === 'success') {
-    return <CheckIcon sx={{ color: '#4caf50', fontSize: 28 }} />;
+const StyledTabs = styled(Tabs)(({ theme }) => ({
+  backgroundColor: 'white',
+  borderRadius: theme.spacing(1),
+  marginBottom: theme.spacing(3),
+  '& .MuiTabs-indicator': {
+    backgroundColor: theme.palette.primary.main,
+    height: 3
   }
-  if (status === 'failed') {
-    return <ErrorIcon sx={{ color: '#f44336', fontSize: 28 }} />;
+}));
+
+const StyledTab = styled(Tab)(({ theme }) => ({
+  textTransform: 'none',
+  fontWeight: 600,
+  fontSize: '1rem',
+  marginRight: theme.spacing(1),
+  minHeight: 64,
+  '&.Mui-selected': {
+    color: theme.palette.primary.main
   }
-  if (status === 'warning') {
-    return <WarningIcon sx={{ color: '#ff9800', fontSize: 28 }} />;
-  }
-  return <PlayIcon sx={{ color: '#2196f3', fontSize: 28 }} />;
+}));
+
+const AuthInputBox = styled(Box)(({ theme }) => ({
+  backgroundColor: 'white',
+  borderRadius: theme.spacing(1),
+  padding: theme.spacing(2),
+  marginBottom: theme.spacing(3),
+  border: '1px solid #e0e0e0'
+}));
+
+const TestSection = ({ title, tests, icon: Icon, expanded, onToggle }) => {
+  if (!tests || tests.length === 0) return null;
+
+  const passedCount = tests.filter(t => t.status === 'success').length;
+  const failedCount = tests.filter(t => t.status === 'failed').length;
+  const warningCount = tests.filter(t => t.status === 'warning').length;
+
+  return (
+    <Box mb={3}>
+      <Paper
+        elevation={3}
+        onClick={onToggle}
+        sx={{
+          p: 2,
+          cursor: 'pointer',
+          backgroundColor: '#f5f5f5',
+          '&:hover': { backgroundColor: '#eeeeee' }
+        }}
+      >
+        <Box display="flex" alignItems="center" justifyContent="space-between">
+          <Box display="flex" alignItems="center" gap={1}>
+            {Icon && <Icon />}
+            <Typography variant="h6" fontWeight="bold">
+              {title}
+            </Typography>
+            <Chip label={`${tests.length} tests`} size="small" />
+            {passedCount > 0 && (
+              <Chip
+                icon={<CheckIcon />}
+                label={passedCount}
+                size="small"
+                color="success"
+                variant="outlined"
+              />
+            )}
+            {failedCount > 0 && (
+              <Chip
+                icon={<ErrorIcon />}
+                label={failedCount}
+                size="small"
+                color="error"
+                variant="outlined"
+              />
+            )}
+            {warningCount > 0 && (
+              <Chip
+                icon={<WarningIcon />}
+                label={warningCount}
+                size="small"
+                color="warning"
+                variant="outlined"
+              />
+            )}
+          </Box>
+          <ExpandButton expanded={expanded}>
+            <ExpandIcon />
+          </ExpandButton>
+        </Box>
+      </Paper>
+      <Collapse in={expanded}>
+        <Box mt={2}>
+          {tests.map((test, index) => (
+            <TestResult key={index} test={test} />
+          ))}
+        </Box>
+      </Collapse>
+    </Box>
+  );
 };
 
-const TestItem = ({ test }) => {
-  const [expanded, setExpanded] = useState(false);
+const TestResult = ({ test }) => {
+  const [expanded, setExpanded] = useState(false); // Individual tests start collapsed
+  const [copySuccess, setCopySuccess] = useState(false);
+
+  const getIcon = () => {
+    switch(test.status) {
+      case 'success': return <CheckIcon sx={{ color: '#4caf50' }} />;
+      case 'failed': return <ErrorIcon sx={{ color: '#f44336' }} />;
+      case 'warning': return <WarningIcon sx={{ color: '#ff9800' }} />;
+      default: return null;
+    }
+  };
+
+  const getMethodColor = (method) => {
+    switch(method) {
+      case 'GET': return 'success';
+      case 'POST': return 'primary';
+      case 'PUT': return 'warning';
+      case 'DELETE': return 'error';
+      default: return 'default';
+    }
+  };
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
-  };
-
-  const formatCurl = () => {
-    if (!test.curl) return '';
-    let formatted = test.curl;
-    formatted = formatted
-      .replace(' -X ', ' \\\n  -X ')
-      .replace(' -H ', ' \\\n  -H ')
-      .replace(/ -H /g, ' \\\n  -H ')
-      .replace(' -d ', ' \\\n  -d ');
-    return formatted;
+    setCopySuccess(true);
+    setTimeout(() => setCopySuccess(false), 2000);
   };
 
   const formatResponse = () => {
-    if (!test.response) return 'No response';
-    try {
-      const parsed = typeof test.response === 'string'
-        ? JSON.parse(test.response)
-        : test.response;
-      if (test.status === 'success' && test.method === 'GET' && parsed.data?.clients) {
-        return JSON.stringify({
-          success: parsed.success,
-          data: {
-            clients: `[${parsed.data.clients.length} clients]`,
-            pagination: parsed.data.pagination
-          }
-        }, null, 2);
-      }
-      return JSON.stringify(parsed, null, 2);
-    } catch {
-      return test.response;
+    if (test.response) {
+      return JSON.stringify(test.response, null, 2);
     }
-  };
-
-  const formatRequestBody = () => {
-    if (!test.requestBody) return null;
-    try {
-      const parsed = typeof test.requestBody === 'string'
-        ? JSON.parse(test.requestBody)
-        : test.requestBody;
-      return JSON.stringify(parsed, null, 2);
-    } catch {
-      return test.requestBody;
-    }
+    return '';
   };
 
   return (
@@ -164,86 +251,66 @@ const TestItem = ({ test }) => {
       <CardContent onClick={() => setExpanded(!expanded)} sx={{ cursor: 'pointer' }}>
         <Box display="flex" alignItems="center" justifyContent="space-between">
           <Box display="flex" alignItems="center" gap={2}>
-            <StatusIcon status={test.status} />
-            <Box>
-              <Typography variant="h6" fontWeight="bold">
-                {test.name}
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                {test.description}
-              </Typography>
-              {test.category && (
-                <Chip
-                  label={test.category}
-                  size="small"
-                  sx={{ mt: 0.5, fontSize: '0.7rem' }}
-                  color={test.category === 'Critical' ? 'error' :
-                         test.category === 'Edge Case' ? 'warning' : 'default'}
-                />
-              )}
-              {test.method && test.endpoint && (
-                <Box display="flex" gap={1} mt={0.5}>
-                  <Chip
-                    label={test.method}
-                    size="small"
-                    sx={{
-                      fontWeight: 'bold',
-                      backgroundColor:
-                        test.method === 'GET' ? '#2196f3' :
-                        test.method === 'POST' ? '#4caf50' :
-                        test.method === 'PUT' ? '#ff9800' :
-                        test.method === 'PATCH' ? '#9c27b0' :
-                        test.method === 'DELETE' ? '#f44336' : '#9e9e9e',
-                      color: 'white'
-                    }}
-                  />
-                  <Typography variant="caption" sx={{ alignSelf: 'center', fontFamily: 'monospace' }}>
-                    {test.endpoint}
-                  </Typography>
-                </Box>
-              )}
-            </Box>
-          </Box>
-          <Box display="flex" alignItems="center" gap={1}>
+            {getIcon()}
+            <Typography variant="subtitle1" fontWeight="bold">
+              {test.name}
+            </Typography>
             <Chip
-              label={test.status === 'success' ? 'PASSED' :
-                     test.status === 'failed' ? 'FAILED' :
-                     test.status === 'warning' ? 'WARNING' : 'PENDING'}
+              label={test.method}
               size="small"
-              sx={{
-                backgroundColor: test.status === 'success' ? '#4caf50' :
-                               test.status === 'failed' ? '#f44336' :
-                               test.status === 'warning' ? '#ff9800' : '#9e9e9e',
-                color: 'white',
-                fontWeight: 'bold'
-              }}
+              color={getMethodColor(test.method)}
+            />
+            <Chip
+              label={test.category}
+              size="small"
+              variant="outlined"
             />
             {test.responseTime && (
               <Chip
+                icon={<SpeedIcon />}
                 label={`${test.responseTime}ms`}
                 size="small"
                 variant="outlined"
+                color={test.responseTime < 200 ? 'success' : test.responseTime < 500 ? 'warning' : 'error'}
               />
             )}
-            <ExpandButton expanded={expanded}>
-              <ExpandIcon />
-            </ExpandButton>
           </Box>
+          <ExpandButton expanded={expanded}>
+            <ExpandIcon />
+          </ExpandButton>
         </Box>
+
+        {test.description && (
+          <Typography variant="body2" color="textSecondary" mt={1}>
+            {test.description}
+          </Typography>
+        )}
       </CardContent>
 
       <Collapse in={expanded}>
-        <Box sx={{ px: 2, pb: 2 }}>
+        <Box
+          sx={{ p: 2, backgroundColor: 'rgba(0,0,0,0.02)' }}
+          onClick={(e) => e.stopPropagation()}>
+          <Typography variant="subtitle2" gutterBottom fontWeight="bold">
+            Endpoint:
+          </Typography>
+          <Typography variant="body2" component="code" sx={{ fontFamily: 'monospace' }}>
+            {test.endpoint}
+          </Typography>
+
           {test.curl && (
             <>
               <Typography variant="subtitle2" sx={{ mt: 2, mb: 1, fontWeight: 'bold' }}>
-                CURL Request:
+                cURL Command:
               </Typography>
               <CodeBlock>
-                <CopyButton size="small" onClick={() => copyToClipboard(test.curl)}>
+                <CopyButton size="small" onClick={(e) => {
+                  e.stopPropagation();
+                  copyToClipboard(test.curl);
+                }}>
                   <CopyIcon fontSize="small" />
                 </CopyButton>
-                <pre style={{ margin: 0 }}>{formatCurl()}</pre>
+                <pre style={{ margin: 0 }}>{test.curl}</pre>
               </CodeBlock>
             </>
           )}
@@ -254,10 +321,13 @@ const TestItem = ({ test }) => {
                 Request Body:
               </Typography>
               <CodeBlock>
-                <CopyButton size="small" onClick={() => copyToClipboard(formatRequestBody())}>
+                <CopyButton size="small" onClick={(e) => {
+                  e.stopPropagation();
+                  copyToClipboard(JSON.stringify(test.requestBody, null, 2));
+                }}>
                   <CopyIcon fontSize="small" />
                 </CopyButton>
-                <pre style={{ margin: 0 }}>{formatRequestBody()}</pre>
+                <pre style={{ margin: 0 }}>{JSON.stringify(test.requestBody, null, 2)}</pre>
               </CodeBlock>
             </>
           )}
@@ -268,7 +338,10 @@ const TestItem = ({ test }) => {
                 Response:
               </Typography>
               <CodeBlock>
-                <CopyButton size="small" onClick={() => copyToClipboard(formatResponse())}>
+                <CopyButton size="small" onClick={(e) => {
+                  e.stopPropagation();
+                  copyToClipboard(formatResponse());
+                }}>
                   <CopyIcon fontSize="small" />
                 </CopyButton>
                 <pre style={{ margin: 0 }}>{formatResponse()}</pre>
@@ -293,8 +366,11 @@ const TestItem = ({ test }) => {
 };
 
 const ClientsHealthDashboard = () => {
+  const [authTab, setAuthTab] = useState(0); // 0 = JWT, 1 = API Key
+  const [testApiKey, setTestApiKey] = useState(null); // Store the full test API key
+  const [testApiKeyId, setTestApiKeyId] = useState(null); // Store the ID for deletion
   const [tests, setTests] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -306,788 +382,519 @@ const ClientsHealthDashboard = () => {
     FILTERS: [],
     ERROR: [],
     EDGE: [],
-    PERFORMANCE: []
+    PERFORMANCE: [],
+    WORKFLOW: []
+  });
+  const [expandedSections, setExpandedSections] = useState({
+    CORE: true,
+    FILTERS: true,
+    ERROR: true,
+    EDGE: true,
+    PERFORMANCE: true,
+    WORKFLOW: true
   });
 
-  const runAllTests = useCallback(async () => {
+  const handleAuthTabChange = (event, newValue) => {
+    setAuthTab(newValue);
+    // Clear tests and test API key when switching tabs
+    setTests([]);
+    setTestApiKey(null);
+    setTestApiKeyId(null);
+    setGroupedTests({
+      CORE: [],
+      FILTERS: [],
+      ERROR: [],
+      EDGE: [],
+      PERFORMANCE: [],
+      WORKFLOW: []
+    });
+    // Keep sections expanded when switching tabs
+    setExpandedSections({
+      CORE: true,
+      FILTERS: true,
+      ERROR: true,
+      EDGE: true,
+      PERFORMANCE: true,
+      WORKFLOW: true
+    });
+  };
+
+  const getAuthHeader = () => {
+    if (authTab === 0) {
+      // JWT Authentication
+      const token = localStorage.getItem('crm_auth_token') ||
+                   localStorage.getItem('authToken') ||
+                   localStorage.getItem('token');
+      return token ? { 'Authorization': `Bearer ${token}` } : {};
+    } else {
+      // API Key Authentication - will be set during test run
+      return testApiKey ? { 'X-API-Key': testApiKey } : {};
+    }
+  };
+
+  const getAuthDisplay = () => {
+    if (authTab === 0) {
+      const token = localStorage.getItem('crm_auth_token') ||
+                   localStorage.getItem('authToken') ||
+                   localStorage.getItem('token');
+      return token ? `Bearer ${token.substring(0, 20)}...` : 'No JWT token found';
+    } else {
+      return testApiKey ? `${testApiKey.substring(0, 20)}...` : 'No API key yet';
+    }
+  };
+
+  const runAllTests = useCallback(async (forceNewKey = true) => {
     setLoading(true);
     setTests([]);
-    setGroupedTests({ CORE: [], FILTERS: [], ERROR: [], EDGE: [], PERFORMANCE: [] });
+    setGroupedTests({ CORE: [], FILTERS: [], ERROR: [], EDGE: [], PERFORMANCE: [], WORKFLOW: [] });
 
     let API_URL = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
     if (!API_URL.endsWith('/v1')) {
       API_URL = API_URL.replace(/\/$/, '') + '/v1';
     }
 
-    const token = localStorage.getItem('crm_auth_token') ||
-                 localStorage.getItem('authToken') ||
-                 localStorage.getItem('token');
+    // For API Key tab, create or reuse a temporary test API key
+    let authHeaders = getAuthHeader();
+    let authDisplay = getAuthDisplay();
+    let temporaryApiKey = testApiKey; // Use existing if available
+    let temporaryApiKeyId = testApiKeyId;
+
+    if (authTab === 1) {
+      // Create a new test API key only if we don't have one or if forced
+      if (!temporaryApiKey || forceNewKey) {
+        // Clear any existing test API key if forcing new
+        if (forceNewKey && testApiKeyId) {
+          try {
+            await apiKeysAPI.delete(testApiKeyId);
+          } catch (err) {
+            console.log('Could not delete previous test key:', err);
+          }
+          setTestApiKey(null);
+          setTestApiKeyId(null);
+        }
+
+        try {
+          const response = await apiKeysAPI.create({
+            name: `Test Key - ${new Date().toISOString()}`,
+            expiresInDays: 1 // Expires in 1 day
+          });
+
+          if (response?.data?.key) {
+            temporaryApiKey = response.data.key;
+            temporaryApiKeyId = response.data.id;
+            setTestApiKey(temporaryApiKey);
+            setTestApiKeyId(temporaryApiKeyId);
+          } else {
+            throw new Error('Failed to create test API key');
+          }
+        } catch (error) {
+          console.error('Failed to create test API key:', error);
+          setSnackbarMessage('Failed to create test API key: ' + error.message);
+          setSnackbarOpen(true);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Use the temporary key for testing
+      authHeaders = { 'X-API-Key': temporaryApiKey };
+      authDisplay = `${temporaryApiKey.substring(0, 20)}...`;
+    } else if (authTab === 0 && !authHeaders.Authorization) {
+      setSnackbarMessage('Please log in to get a JWT token');
+      setSnackbarOpen(true);
+      setLoading(false);
+      return;
+    }
 
     const allTests = [];
-    const grouped = { CORE: [], FILTERS: [], ERROR: [], EDGE: [], PERFORMANCE: [] };
+    const grouped = { CORE: [], FILTERS: [], ERROR: [], EDGE: [], PERFORMANCE: [], WORKFLOW: [] };
     let createdClientId = null;
     const createdClientIds = [];
 
-    // ========================================
-    // CORE TESTS - Essential CRUD Operations
-    // ========================================
+    // Helper function to create curl command based on auth type
+    const createCurlCommand = (method, endpoint, body = null) => {
+      let curlCmd = `curl -X ${method} "${API_URL}${endpoint}"`;
 
-    // Core GET: List all clients
-    const getAllTest = {
-      name: 'List All Clients',
-      description: 'Retrieve all clients from the database',
-      category: 'Critical',
-      method: 'GET',
-      endpoint: '/clients',
-      status: 'pending',
-      curl: `curl -X GET "${API_URL}/clients" -H "Authorization: Bearer ${token}"`,
-      response: null,
-      error: null,
-      responseTime: null
+      if (authTab === 0) {
+        curlCmd += ` -H "Authorization: ${authDisplay}"`;
+      } else {
+        curlCmd += ` -H "X-API-Key: ${authDisplay}"`;
+      }
+
+      if (body) {
+        curlCmd += ` -H "Content-Type: application/json" -d '${JSON.stringify(body)}'`;
+      }
+
+      return curlCmd;
     };
 
-    const startTime1 = Date.now();
+    // Import and use the comprehensive health check service
     try {
-      const response = await fetch(`${API_URL}/clients`, {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+      const { HealthCheckService } = await import('../../services/healthCheck.service');
+
+      // Extract auth value and determine type
+      const authValue = authTab === 0
+        ? authHeaders.Authorization?.replace('Bearer ', '')
+        : authHeaders['X-API-Key'];
+      const authType = authTab === 0 ? 'jwt' : 'apikey';
+
+      const healthService = new HealthCheckService(API_URL, authValue, authType);
+
+      const tests = await healthService.runClientsHealthCheck();
+
+      // Update curl commands based on auth type
+      tests.forEach(test => {
+        test.curl = createCurlCommand(test.method, test.endpoint, test.requestBody);
+        test.authType = authTab === 0 ? 'JWT' : 'API Key';
       });
-      const data = await response.json();
-      getAllTest.responseTime = Date.now() - startTime1;
-      getAllTest.status = response.ok && data.success ? 'success' : 'failed';
-      getAllTest.response = data;
-      if (!response.ok || !data.success) {
-        getAllTest.error = data.error?.message || 'Failed to fetch clients';
-      }
-    } catch (error) {
-      getAllTest.status = 'failed';
-      getAllTest.error = error.message;
-      getAllTest.responseTime = Date.now() - startTime1;
-    }
-    grouped.CORE.push(getAllTest);
-    allTests.push(getAllTest);
 
-    // Core POST: Create minimal client
-    const minimalClientData = {
-      firstName: `Test`,
-      lastName: `CoreClient_${Date.now()}`,
-      clientType: 'buyer'
-    };
-
-    const createMinimalTest = {
-      name: 'Create Client (Required Fields Only)',
-      description: 'Test with only required fields',
-      category: 'Critical',
-      method: 'POST',
-      endpoint: '/clients',
-      status: 'pending',
-      curl: `curl -X POST "${API_URL}/clients" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(minimalClientData)}'`,
-      requestBody: minimalClientData,
-      response: null,
-      error: null,
-      responseTime: null
-    };
-
-    if (token) {
-      const startTime2 = Date.now();
-      try {
-        const response = await fetch(`${API_URL}/clients`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(minimalClientData)
-        });
-        const data = await response.json();
-        createMinimalTest.responseTime = Date.now() - startTime2;
-        createMinimalTest.status = response.ok && data.success ? 'success' : 'failed';
-        createMinimalTest.response = data;
-        if (data.success && data.data) {
-          createdClientIds.push(data.data.id);
-          createdClientId = data.data.id;
-        } else {
-          createMinimalTest.error = data.error?.message || 'Failed to create client';
-        }
-      } catch (error) {
-        createMinimalTest.status = 'failed';
-        createMinimalTest.error = error.message;
-        createMinimalTest.responseTime = Date.now() - startTime2;
-      }
-    }
-    grouped.CORE.push(createMinimalTest);
-    allTests.push(createMinimalTest);
-
-    // Core PUT: Update client
-    if (createdClientId) {
-      const updateData = {
-        phone: '555-1234',
-        status: 'active'
-      };
-
-      const updateTest = {
-        name: 'Update Client',
-        description: 'Update client basic information',
-        category: 'Critical',
-        method: 'PUT',
-        endpoint: `/clients/${createdClientId}`,
-        status: 'pending',
-        curl: `curl -X PUT "${API_URL}/clients/${createdClientId}" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(updateData)}'`,
-        requestBody: updateData,
-        response: null,
-        error: null,
-        responseTime: null
-      };
-
-      const startTime3 = Date.now();
-      try {
-        const response = await fetch(`${API_URL}/clients/${createdClientId}`, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(updateData)
-        });
-        const data = await response.json();
-        updateTest.responseTime = Date.now() - startTime3;
-        updateTest.status = response.ok && data.success ? 'success' : 'failed';
-        updateTest.response = data;
-        if (!response.ok || !data.success) {
-          updateTest.error = data.error?.message || 'Failed to update client';
-        }
-      } catch (error) {
-        updateTest.status = 'failed';
-        updateTest.error = error.message;
-        updateTest.responseTime = Date.now() - startTime3;
-      }
-      grouped.CORE.push(updateTest);
-      allTests.push(updateTest);
-    }
-
-    // Core DELETE: Archive and delete workflow
-    if (createdClientId) {
-      // Archive first
-      const archiveTest = {
-        name: 'Archive Client',
-        description: 'Soft delete - set status to archived',
-        category: 'Critical',
-        method: 'PUT',
-        endpoint: `/clients/${createdClientId}/archive`,
-        status: 'pending'
-      };
-
-      const startTime4 = Date.now();
-      try {
-        const response = await fetch(`${API_URL}/clients/${createdClientId}/archive`, {
-          method: 'PUT',
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        archiveTest.responseTime = Date.now() - startTime4;
-        archiveTest.status = response.ok && data.success ? 'success' : 'failed';
-        archiveTest.response = data;
-      } catch (error) {
-        archiveTest.status = 'failed';
-        archiveTest.error = error.message;
-      }
-      grouped.CORE.push(archiveTest);
-      allTests.push(archiveTest);
-
-      // Then delete
-      const deleteTest = {
-        name: 'Delete Archived Client',
-        description: 'Hard delete - permanently remove',
-        category: 'Critical',
-        method: 'DELETE',
-        endpoint: `/clients/${createdClientId}`,
-        status: 'pending'
-      };
-
-      const startTime5 = Date.now();
-      try {
-        const response = await fetch(`${API_URL}/clients/${createdClientId}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        deleteTest.responseTime = Date.now() - startTime5;
-        deleteTest.status = response.ok && data.success ? 'success' : 'failed';
-        deleteTest.response = data;
-      } catch (error) {
-        deleteTest.status = 'failed';
-        deleteTest.error = error.message;
-      }
-      grouped.CORE.push(deleteTest);
-      allTests.push(deleteTest);
-    }
-
-    // ========================================
-    // FILTER & SEARCH TESTS
-    // ========================================
-
-    // Filter by status
-    const filterStatusTest = {
-      name: 'Filter by Status',
-      description: 'Get only active clients',
-      category: 'Search',
-      method: 'GET',
-      endpoint: '/clients?status=active',
-      status: 'pending'
-    };
-
-    const startTime6 = Date.now();
-    try {
-      const response = await fetch(`${API_URL}/clients?status=active`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+      // Group tests by category
+      tests.forEach(test => {
+        if (test.category === 'Critical') grouped.CORE.push(test);
+        else if (test.category === 'Search') grouped.FILTERS.push(test);
+        else if (test.category === 'Error Handling') grouped.ERROR.push(test);
+        else if (test.category === 'Edge Case') grouped.EDGE.push(test);
+        else if (test.category === 'Performance') grouped.PERFORMANCE.push(test);
+        else if (test.category === 'Workflow') grouped.WORKFLOW.push(test);
+        allTests.push(test);
       });
-      const data = await response.json();
-      filterStatusTest.responseTime = Date.now() - startTime6;
-      filterStatusTest.status = response.ok && data.success ? 'success' : 'failed';
-      filterStatusTest.response = data;
-    } catch (error) {
-      filterStatusTest.status = 'failed';
-      filterStatusTest.error = error.message;
-    }
-    grouped.FILTERS.push(filterStatusTest);
-    allTests.push(filterStatusTest);
 
-    // Search by name
-    const searchTest = {
-      name: 'Search by Name',
-      description: 'Search clients with name containing "Test"',
-      category: 'Search',
-      method: 'GET',
-      endpoint: '/clients?search=Test',
-      status: 'pending'
-    };
+      setTests(allTests);
+      setGroupedTests(grouped);
+      setLastRefresh(new Date());
 
-    const startTime7 = Date.now();
-    try {
-      const response = await fetch(`${API_URL}/clients?search=Test`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+      // Ensure sections remain expanded after tests load
+      setExpandedSections({
+        CORE: true,
+        FILTERS: true,
+        ERROR: true,
+        EDGE: true,
+        PERFORMANCE: true,
+        WORKFLOW: true
       });
-      const data = await response.json();
-      searchTest.responseTime = Date.now() - startTime7;
-      searchTest.status = response.ok && data.success ? 'success' : 'failed';
-      searchTest.response = data;
-    } catch (error) {
-      searchTest.status = 'failed';
-      searchTest.error = error.message;
-    }
-    grouped.FILTERS.push(searchTest);
-    allTests.push(searchTest);
 
-    // Pagination test
-    const paginationTest = {
-      name: 'Pagination',
-      description: 'Test pagination (page=2, limit=5)',
-      category: 'Search',
-      method: 'GET',
-      endpoint: '/clients?page=2&limit=5',
-      status: 'pending'
-    };
-
-    const startTime8 = Date.now();
-    try {
-      const response = await fetch(`${API_URL}/clients?page=2&limit=5`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
-      paginationTest.responseTime = Date.now() - startTime8;
-      paginationTest.status = response.ok && data.success ? 'success' : 'failed';
-      paginationTest.response = data;
-    } catch (error) {
-      paginationTest.status = 'failed';
-      paginationTest.error = error.message;
-    }
-    grouped.FILTERS.push(paginationTest);
-    allTests.push(paginationTest);
-
-    // ========================================
-    // ERROR HANDLING TESTS
-    // ========================================
-
-    // Test 404: Get non-existent client
-    const notFoundTest = {
-      name: 'Get Non-Existent Client',
-      description: 'Should return 404 error',
-      category: 'Error Handling',
-      method: 'GET',
-      endpoint: '/clients/00000000-0000-0000-0000-000000000000',
-      status: 'pending'
-    };
-
-    const startTime9 = Date.now();
-    try {
-      const response = await fetch(`${API_URL}/clients/00000000-0000-0000-0000-000000000000`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
-      notFoundTest.responseTime = Date.now() - startTime9;
-      // This should fail (404), so success is actually when it returns an error
-      notFoundTest.status = response.status === 404 ? 'success' : 'failed';
-      notFoundTest.response = data;
-      if (response.status !== 404) {
-        notFoundTest.error = 'Expected 404 but got ' + response.status;
-      }
-    } catch (error) {
-      notFoundTest.status = 'failed';
-      notFoundTest.error = error.message;
-    }
-    grouped.ERROR.push(notFoundTest);
-    allTests.push(notFoundTest);
-
-    // Test 400: Create client with missing required fields
-    const missingFieldsTest = {
-      name: 'Create Client - Missing Required Fields',
-      description: 'Should return 400 validation error',
-      category: 'Error Handling',
-      method: 'POST',
-      endpoint: '/clients',
-      status: 'pending',
-      requestBody: { firstName: 'OnlyFirst' } // Missing lastName and clientType
-    };
-
-    const startTime10 = Date.now();
-    try {
-      const response = await fetch(`${API_URL}/clients`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ firstName: 'OnlyFirst' })
-      });
-      const data = await response.json();
-      missingFieldsTest.responseTime = Date.now() - startTime10;
-      // Should fail with validation error
-      missingFieldsTest.status = response.status === 400 ? 'success' : 'failed';
-      missingFieldsTest.response = data;
-      if (response.status !== 400) {
-        missingFieldsTest.error = 'Expected 400 validation error';
-      }
-    } catch (error) {
-      missingFieldsTest.status = 'failed';
-      missingFieldsTest.error = error.message;
-    }
-    grouped.ERROR.push(missingFieldsTest);
-    allTests.push(missingFieldsTest);
-
-    // Test: Invalid email format
-    const invalidEmailTest = {
-      name: 'Create Client - Invalid Email',
-      description: 'Should validate email format',
-      category: 'Error Handling',
-      method: 'POST',
-      endpoint: '/clients',
-      status: 'pending',
-      requestBody: {
-        firstName: 'Test',
-        lastName: 'Invalid',
-        email: 'not-an-email',
-        clientType: 'buyer'
-      }
-    };
-
-    const startTime11 = Date.now();
-    try {
-      const response = await fetch(`${API_URL}/clients`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(invalidEmailTest.requestBody)
-      });
-      const data = await response.json();
-      invalidEmailTest.responseTime = Date.now() - startTime11;
-      // Depending on backend validation, this might pass or fail
-      invalidEmailTest.status = response.status === 400 ? 'warning' : 'success';
-      invalidEmailTest.response = data;
-    } catch (error) {
-      invalidEmailTest.status = 'failed';
-      invalidEmailTest.error = error.message;
-    }
-    grouped.ERROR.push(invalidEmailTest);
-    allTests.push(invalidEmailTest);
-
-    // ========================================
-    // EDGE CASE TESTS
-    // ========================================
-
-    // Test: Special characters in name
-    const specialCharsTest = {
-      name: 'Create Client - Special Characters',
-      description: 'Test with special chars in name',
-      category: 'Edge Case',
-      method: 'POST',
-      endpoint: '/clients',
-      status: 'pending',
-      requestBody: {
-        firstName: `O'Brien-Test`,
-        lastName: `Müller & Co.`,
-        clientType: 'seller',
-        email: `special${Date.now()}@test.com`
-      }
-    };
-
-    const startTime12 = Date.now();
-    try {
-      const response = await fetch(`${API_URL}/clients`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(specialCharsTest.requestBody)
-      });
-      const data = await response.json();
-      specialCharsTest.responseTime = Date.now() - startTime12;
-      specialCharsTest.status = response.ok && data.success ? 'success' : 'failed';
-      specialCharsTest.response = data;
-      if (data.success && data.data) {
-        createdClientIds.push(data.data.id);
-      }
-    } catch (error) {
-      specialCharsTest.status = 'failed';
-      specialCharsTest.error = error.message;
-    }
-    grouped.EDGE.push(specialCharsTest);
-    allTests.push(specialCharsTest);
-
-    // Test: Very long text fields
-    const longTextTest = {
-      name: 'Create Client - Long Text Fields',
-      description: 'Test with maximum length values',
-      category: 'Edge Case',
-      method: 'POST',
-      endpoint: '/clients',
-      status: 'pending',
-      requestBody: {
-        firstName: 'A'.repeat(50),
-        lastName: 'B'.repeat(50),
-        clientType: 'buyer',
-        notes: 'Lorem ipsum dolor sit amet, '.repeat(100),
-        email: `long${Date.now()}@test.com`
-      }
-    };
-
-    const startTime13 = Date.now();
-    try {
-      const response = await fetch(`${API_URL}/clients`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(longTextTest.requestBody)
-      });
-      const data = await response.json();
-      longTextTest.responseTime = Date.now() - startTime13;
-      longTextTest.status = response.ok && data.success ? 'success' : 'warning';
-      longTextTest.response = data;
-      if (data.success && data.data) {
-        createdClientIds.push(data.data.id);
-      }
-    } catch (error) {
-      longTextTest.status = 'failed';
-      longTextTest.error = error.message;
-    }
-    grouped.EDGE.push(longTextTest);
-    allTests.push(longTextTest);
-
-    // ========================================
-    // PERFORMANCE TESTS
-    // ========================================
-
-    // Test: Large pagination request
-    const largePaginationTest = {
-      name: 'Large Pagination Request',
-      description: 'Request page 999 with limit 100',
-      category: 'Performance',
-      method: 'GET',
-      endpoint: '/clients?page=999&limit=100',
-      status: 'pending'
-    };
-
-    const startTime14 = Date.now();
-    try {
-      const response = await fetch(`${API_URL}/clients?page=999&limit=100`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
-      largePaginationTest.responseTime = Date.now() - startTime14;
-      largePaginationTest.status = response.ok && data.success ? 'success' : 'failed';
-      largePaginationTest.response = data;
-      // Check if response time is reasonable (< 1000ms)
-      if (largePaginationTest.responseTime > 1000) {
-        largePaginationTest.status = 'warning';
-        largePaginationTest.error = `Slow response: ${largePaginationTest.responseTime}ms`;
-      }
-    } catch (error) {
-      largePaginationTest.status = 'failed';
-      largePaginationTest.error = error.message;
-    }
-    grouped.PERFORMANCE.push(largePaginationTest);
-    allTests.push(largePaginationTest);
-
-    // Test: Concurrent requests
-    const concurrentTest = {
-      name: 'Concurrent GET Requests',
-      description: 'Send 5 simultaneous requests',
-      category: 'Performance',
-      method: 'GET',
-      endpoint: '/clients (x5)',
-      status: 'pending'
-    };
-
-    const startTime15 = Date.now();
-    try {
-      const promises = Array(5).fill(null).map(() =>
-        fetch(`${API_URL}/clients?limit=5`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-      );
-      const responses = await Promise.all(promises);
-      const allSuccessful = responses.every(r => r.ok);
-      concurrentTest.responseTime = Date.now() - startTime15;
-      concurrentTest.status = allSuccessful ? 'success' : 'failed';
-      concurrentTest.response = {
-        requestCount: 5,
-        successCount: responses.filter(r => r.ok).length,
-        avgResponseTime: Math.round(concurrentTest.responseTime / 5)
-      };
-    } catch (error) {
-      concurrentTest.status = 'failed';
-      concurrentTest.error = error.message;
-    }
-    grouped.PERFORMANCE.push(concurrentTest);
-    allTests.push(concurrentTest);
-
-    // Clean up created test clients
-    for (const id of createdClientIds) {
-      if (id && id !== createdClientId) { // Skip already deleted one
+      // If we created a temporary API key, delete it after tests complete
+      if (authTab === 1 && temporaryApiKeyId) {
         try {
-          await fetch(`${API_URL}/clients/${id}/archive`, {
-            method: 'PUT',
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          await fetch(`${API_URL}/clients/${id}`, {
+          await apiKeysAPI.delete(temporaryApiKeyId);
+
+          // Add a test result showing the deletion
+          const deletionTest = {
+            name: 'Delete Test API Key',
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-        } catch (error) {
-          console.error('Cleanup error:', error);
+            endpoint: `/api-keys/${temporaryApiKeyId}`,
+            category: 'Cleanup',
+            status: 'success',
+            description: 'Temporary test API key has been deleted',
+            response: { success: true, message: 'Test API key deleted successfully' },
+            curl: `curl -X DELETE "${API_URL}/api-keys/${temporaryApiKeyId}" -H "Authorization: Bearer YOUR_JWT_TOKEN"`,
+            authType: 'JWT'
+          };
+
+          allTests.push(deletionTest);
+          setTests([...allTests]);
+        } catch (deleteError) {
+          console.error('Failed to delete test API key:', deleteError);
+
+          // Add a test result showing the deletion failure
+          const deletionTest = {
+            name: 'Delete Test API Key',
+            method: 'DELETE',
+            endpoint: `/api-keys/${temporaryApiKeyId}`,
+            category: 'Cleanup',
+            status: 'failed',
+            description: 'Failed to delete temporary test API key',
+            error: deleteError.message,
+            curl: `curl -X DELETE "${API_URL}/api-keys/${temporaryApiKeyId}" -H "Authorization: Bearer YOUR_JWT_TOKEN"`,
+            authType: 'JWT'
+          };
+
+          allTests.push(deletionTest);
+          setTests([...allTests]);
         }
       }
+    } catch (error) {
+      console.error('Test execution failed:', error);
+      setSnackbarMessage('Failed to run tests: ' + error.message);
+      setSnackbarOpen(true);
     }
 
-    setTests(allTests);
-    setGroupedTests(grouped);
-    setLastRefresh(new Date().toLocaleString());
     setLoading(false);
-    setTestClientIds(createdClientIds);
-  }, []);
+  }, [authTab]);
 
-  const copyAllData = () => {
-    const testData = {
-      timestamp: new Date().toISOString(),
-      endpoint: 'clients',
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  const copyFullReport = () => {
+    const report = {
+      timestamp: lastRefresh?.toISOString(),
+      authentication: {
+        type: authTab === 0 ? 'JWT' : 'API Key',
+        details: authTab === 0
+          ? {
+              method: 'Bearer Token (JWT)',
+              tokenPresent: !!localStorage.getItem('authToken'),
+              tokenPreview: localStorage.getItem('authToken')?.substring(0, 20) + '...'
+            }
+          : {
+              method: 'X-API-Key Header',
+              keyUsed: testApiKey ? `${testApiKey.substring(0, 12)}...${testApiKey.slice(-4)}` : 'None',
+              temporaryKey: true
+            }
+      },
+      endpoint: '/clients',
       summary: {
         total: tests.length,
         passed: tests.filter(t => t.status === 'success').length,
         failed: tests.filter(t => t.status === 'failed').length,
         warnings: tests.filter(t => t.status === 'warning').length
       },
-      categories: {
-        core: groupedTests.CORE.length,
-        filters: groupedTests.FILTERS.length,
-        errors: groupedTests.ERROR.length,
-        edge: groupedTests.EDGE.length,
-        performance: groupedTests.PERFORMANCE.length
-      },
-      tests: tests.map(test => ({
-        name: test.name,
-        category: test.category,
-        method: test.method,
-        endpoint: test.endpoint,
-        status: test.status,
-        responseTime: test.responseTime,
-        response: test.response,
-        error: test.error
-      }))
+      tests: tests
     };
 
-    navigator.clipboard.writeText(JSON.stringify(testData, null, 2));
-    setSnackbarMessage('Enhanced test data copied to clipboard');
+    navigator.clipboard.writeText(JSON.stringify(report, null, 2));
+    setSnackbarMessage('Full report with authentication details copied to clipboard!');
     setSnackbarOpen(true);
   };
 
+
   useEffect(() => {
-    runAllTests();
-  }, [runAllTests]);
+    if (authTab === 0) {
+      // Auto-run tests for JWT if token exists
+      const token = localStorage.getItem('crm_auth_token') ||
+                   localStorage.getItem('authToken') ||
+                   localStorage.getItem('token');
+      if (token) {
+        runAllTests(true);
+      }
+    } else if (authTab === 1) {
+      // Auto-run tests for API Key tab with new temporary key
+      runAllTests(true);
+    }
+  }, [authTab]);
 
-  const successCount = tests.filter(t => t.status === 'success').length;
-  const failedCount = tests.filter(t => t.status === 'failed').length;
-  const warningCount = tests.filter(t => t.status === 'warning').length;
-
-  const tabCategories = [
-    { label: 'All Tests', key: 'ALL' },
-    { label: 'Core CRUD', key: 'CORE' },
-    { label: 'Filters & Search', key: 'FILTERS' },
-    { label: 'Error Handling', key: 'ERROR' },
-    { label: 'Edge Cases', key: 'EDGE' },
-    { label: 'Performance', key: 'PERFORMANCE' }
-  ];
-
-  const getTestsForTab = (tabIndex) => {
-    if (tabIndex === 0) return tests; // All tests
-    const category = tabCategories[tabIndex].key;
-    return groupedTests[category] || [];
-  };
+  const totalTests = tests.length;
+  const passedTests = tests.filter(t => t.status === 'success').length;
+  const failedTests = tests.filter(t => t.status === 'failed').length;
+  const warningTests = tests.filter(t => t.status === 'warning').length;
+  const successRate = totalTests > 0 ? Math.round((passedTests / totalTests) * 100) : 0;
 
   return (
     <PageContainer>
-      <Container maxWidth="lg">
-        <Fade in timeout={800}>
-          <Paper elevation={3} sx={{ p: 4, borderRadius: 3, background: 'rgba(255,255,255,0.98)' }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+      <Container maxWidth="xl">
+        <Paper elevation={3} sx={{ p: 3, mb: 3, backgroundColor: 'rgba(255, 255, 255, 0.98)' }}>
+          <Typography variant="h4" gutterBottom fontWeight="bold">
+            Clients API Health Dashboard
+          </Typography>
+          <Typography variant="body1" color="textSecondary" mb={3}>
+            Comprehensive health checks for the Clients API with dual authentication support
+          </Typography>
+
+          {/* Authentication Tabs */}
+          <StyledTabs value={authTab} onChange={handleAuthTabChange}>
+            <StyledTab
+              icon={<JwtIcon />}
+              label="JWT Authentication"
+              iconPosition="start"
+            />
+            <StyledTab
+              icon={<ApiKeyIcon />}
+              label="API Key Authentication"
+              iconPosition="start"
+            />
+          </StyledTabs>
+
+          {/* Authentication Input - Only show for API Key tab */}
+          {authTab === 1 ? (
+            <AuthInputBox>
               <Box>
-                <Typography variant="h3" fontWeight="bold" gutterBottom>
-                  Clients API Health Dashboard
+                <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                  API Key Testing
+                </Typography>
+                <Typography variant="body2" color="textSecondary" mb={1}>
+                  Automatically creating a temporary test API key, running tests, and deleting it when complete.
+                </Typography>
+                {testApiKey && (
+                  <Alert severity="info" sx={{ mb: 2 }}>
+                    <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                      Test API Key (Full):
+                    </Typography>
+                    <TextField
+                      fullWidth
+                      multiline
+                      rows={2}
+                      value={testApiKey}
+                      variant="outlined"
+                      size="small"
+                      sx={{
+                        mt: 1,
+                        '& .MuiInputBase-input': {
+                          fontFamily: 'monospace',
+                          fontSize: '0.85rem',
+                          wordBreak: 'break-all',
+                          whiteSpace: 'pre-wrap'
+                        }
+                      }}
+                      InputProps={{
+                        readOnly: true
+                      }}
+                    />
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                      This temporary key was created for testing and will be deleted after tests complete.
+                    </Typography>
+                  </Alert>
+                )}
+              </Box>
+            </AuthInputBox>
+          ) : null}
+
+          {/* Stats Overview */}
+          <Grid container spacing={3} mb={3}>
+            <Grid item xs={12} sm={3}>
+              <Paper elevation={2} sx={{ p: 2, textAlign: 'center' }}>
+                <Typography variant="h3" fontWeight="bold" color={successRate === 100 ? 'success.main' : successRate >= 80 ? 'warning.main' : 'error.main'}>
+                  {successRate}%
                 </Typography>
                 <Typography variant="body2" color="textSecondary">
-                  Comprehensive testing with error handling, edge cases, and performance tests • Last refresh: {lastRefresh || 'Loading...'}
+                  Success Rate
                 </Typography>
-                <Box display="flex" alignItems="center" gap={2} mt={1}>
-                  <Typography variant="h2" fontWeight="bold" color={failedCount === 0 ? '#4caf50' : '#f44336'}>
-                    {successCount}/{tests.length}
-                  </Typography>
-                  <Typography variant="body1" color="textSecondary">
-                    Tests Passing
-                  </Typography>
-                  {warningCount > 0 && (
-                    <>
-                      <Typography variant="h4" fontWeight="bold" color="#ff9800" sx={{ ml: 2 }}>
-                        {warningCount}
-                      </Typography>
-                      <Typography variant="body1" color="textSecondary">
-                        Warnings
-                      </Typography>
-                    </>
-                  )}
-                </Box>
-              </Box>
-              <Box display="flex" gap={1}>
-                <Tooltip title="Copy All Data">
-                  <IconButton
-                    onClick={copyAllData}
-                    disabled={loading || tests.length === 0}
-                    sx={{
-                      backgroundColor: '#f5f5f5',
-                      '&:hover': { backgroundColor: '#e0e0e0' }
-                    }}
-                  >
-                    <CopyIcon />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Refresh Tests">
-                  <IconButton
-                    onClick={runAllTests}
-                    disabled={loading}
-                    sx={{
-                      backgroundColor: '#f5f5f5',
-                      '&:hover': { backgroundColor: '#e0e0e0' }
-                    }}
-                  >
-                    <RefreshIcon />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-            </Box>
-
-            <Divider sx={{ my: 2 }} />
-
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={2}>
-                <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#f5f5f5' }}>
-                  <Typography variant="h4" fontWeight="bold">{tests.length}</Typography>
-                  <Typography variant="body2" color="textSecondary">Total</Typography>
-                </Paper>
-              </Grid>
-              <Grid item xs={12} sm={2}>
-                <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#e8f5e9' }}>
-                  <Typography variant="h4" fontWeight="bold" color="#4caf50">
-                    {successCount}
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary">Passed</Typography>
-                </Paper>
-              </Grid>
-              <Grid item xs={12} sm={2}>
-                <Paper sx={{ p: 2, textAlign: 'center', bgcolor: failedCount === 0 ? '#e8f5e9' : '#ffebee' }}>
-                  <Typography variant="h4" fontWeight="bold" color={failedCount === 0 ? '#4caf50' : '#f44336'}>
-                    {failedCount}
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary">Failed</Typography>
-                </Paper>
-              </Grid>
-              <Grid item xs={12} sm={2}>
-                <Paper sx={{ p: 2, textAlign: 'center', bgcolor: warningCount > 0 ? '#fff3e0' : '#f5f5f5' }}>
-                  <Typography variant="h4" fontWeight="bold" color={warningCount > 0 ? '#ff9800' : '#666'}>
-                    {warningCount}
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary">Warnings</Typography>
-                </Paper>
-              </Grid>
-              <Grid item xs={12} sm={2}>
-                <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#e3f2fd' }}>
-                  <Typography variant="h4" fontWeight="bold" color="#2196f3">
-                    {tests.reduce((acc, t) => acc + (t.responseTime || 0), 0)}ms
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary">Total Time</Typography>
-                </Paper>
-              </Grid>
-              <Grid item xs={12} sm={2}>
-                <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#f3e5f5' }}>
-                  <Typography variant="h4" fontWeight="bold" color="#9c27b0">
-                    {Math.round(tests.reduce((acc, t) => acc + (t.responseTime || 0), 0) / tests.length)}ms
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary">Avg Time</Typography>
-                </Paper>
-              </Grid>
+              </Paper>
             </Grid>
+            <Grid item xs={12} sm={3}>
+              <Paper elevation={2} sx={{ p: 2, textAlign: 'center' }}>
+                <Typography variant="h3" fontWeight="bold">
+                  {totalTests}
+                </Typography>
+                <Typography variant="body2" color="textSecondary">
+                  Total Tests
+                </Typography>
+              </Paper>
+            </Grid>
+            <Grid item xs={12} sm={3}>
+              <Paper elevation={2} sx={{ p: 2, textAlign: 'center' }}>
+                <Stack direction="row" spacing={1} justifyContent="center">
+                  <Chip icon={<CheckIcon />} label={passedTests} color="success" />
+                  <Chip icon={<ErrorIcon />} label={failedTests} color="error" />
+                  {warningTests > 0 && <Chip icon={<WarningIcon />} label={warningTests} color="warning" />}
+                </Stack>
+                <Typography variant="body2" color="textSecondary" mt={1}>
+                  Test Results
+                </Typography>
+              </Paper>
+            </Grid>
+            <Grid item xs={12} sm={3}>
+              <Paper elevation={2} sx={{ p: 2, textAlign: 'center' }}>
+                <Stack direction="row" spacing={1} justifyContent="center">
+                  <Tooltip title={authTab === 1 ? "Run All Tests (New API Key)" : "Run All Tests"}>
+                    <IconButton
+                      color="primary"
+                      onClick={() => runAllTests(true)} // Force new key for API tests
+                      disabled={loading}
+                    >
+                      <PlayIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title={authTab === 1 ? "Refresh (Reuse API Key)" : "Refresh Tests"}>
+                    <IconButton
+                      color="default"
+                      onClick={() => runAllTests(false)} // Reuse existing key if available
+                      disabled={loading}
+                    >
+                      <RefreshIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Copy Report">
+                    <IconButton
+                      color="default"
+                      onClick={copyFullReport}
+                      disabled={tests.length === 0}
+                    >
+                      <CopyIcon />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+                <Typography variant="body2" color="textSecondary">
+                  Actions
+                </Typography>
+              </Paper>
+            </Grid>
+          </Grid>
 
-            {loading && <LinearProgress sx={{ my: 2 }} />}
-
-            <Box sx={{ borderBottom: 1, borderColor: 'divider', mt: 3 }}>
-              <Tabs value={currentTab} onChange={(e, v) => setCurrentTab(v)}>
-                {tabCategories.map((cat, idx) => (
-                  <Tab key={cat.key} label={cat.label} />
-                ))}
-              </Tabs>
+          {loading && (
+            <Box mb={3}>
+              <LinearProgress />
+              <Typography variant="body2" color="textSecondary" align="center" mt={1}>
+                Running tests with {authTab === 0 ? 'JWT' : 'API Key'} authentication...
+              </Typography>
             </Box>
+          )}
 
-            <Fade in={!loading}>
-              <Box sx={{ mt: 3 }}>
-                {getTestsForTab(currentTab).map((test, index) => (
-                  <TestItem key={`test-${currentTab}-${index}`} test={test} />
-                ))}
-              </Box>
-            </Fade>
-          </Paper>
-        </Fade>
+          {/* Test Categories */}
+          <TestSection
+            title="Core Operations"
+            tests={groupedTests.CORE}
+            icon={AddIcon}
+            expanded={expandedSections.CORE}
+            onToggle={() => toggleSection('CORE')}
+          />
+          <TestSection
+            title="Search & Filters"
+            tests={groupedTests.FILTERS}
+            icon={SearchIcon}
+            expanded={expandedSections.FILTERS}
+            onToggle={() => toggleSection('FILTERS')}
+          />
+          <TestSection
+            title="Error Handling"
+            tests={groupedTests.ERROR}
+            icon={BugIcon}
+            expanded={expandedSections.ERROR}
+            onToggle={() => toggleSection('ERROR')}
+          />
+          <TestSection
+            title="Edge Cases"
+            tests={groupedTests.EDGE}
+            icon={WarningIcon}
+            expanded={expandedSections.EDGE}
+            onToggle={() => toggleSection('EDGE')}
+          />
+          <TestSection
+            title="Performance"
+            tests={groupedTests.PERFORMANCE}
+            icon={SpeedIcon}
+            expanded={expandedSections.PERFORMANCE}
+            onToggle={() => toggleSection('PERFORMANCE')}
+          />
+          <TestSection
+            title="Workflows"
+            tests={groupedTests.WORKFLOW}
+            icon={EditIcon}
+            expanded={expandedSections.WORKFLOW}
+            onToggle={() => toggleSection('WORKFLOW')}
+          />
+
+          {lastRefresh && (
+            <Typography variant="caption" color="textSecondary" display="block" mt={3} textAlign="center">
+              Last refreshed: {lastRefresh.toLocaleString()} ({authTab === 0 ? 'JWT' : 'API Key'} Mode)
+            </Typography>
+          )}
+        </Paper>
+
+        <Snackbar
+          open={snackbarOpen}
+          autoHideDuration={6000}
+          onClose={() => setSnackbarOpen(false)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert onClose={() => setSnackbarOpen(false)} severity="success" sx={{ width: '100%' }}>
+            {snackbarMessage}
+          </Alert>
+        </Snackbar>
       </Container>
-
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={3000}
-        onClose={() => setSnackbarOpen(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert onClose={() => setSnackbarOpen(false)} severity="success">
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
     </PageContainer>
   );
 };

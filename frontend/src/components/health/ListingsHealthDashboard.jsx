@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useQuery } from 'react-query';
+import { api, apiKeysAPI } from '../../services/api.service';
 import {
   Box,
   Container,
@@ -18,7 +20,14 @@ import {
   Divider,
   Stack,
   Tabs,
-  Tab
+  Tab,
+  TextField,
+  Button,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  CircularProgress
 } from '@mui/material';
 import {
   CheckCircle as CheckIcon,
@@ -33,7 +42,10 @@ import {
   Search as SearchIcon,
   BugReport as BugIcon,
   Add as AddIcon,
-  Edit as EditIcon
+  Edit as EditIcon,
+  VpnKey as ApiKeyIcon,
+  Token as JwtIcon,
+  Key as KeyIcon
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 
@@ -65,7 +77,6 @@ const TestCard = styled(Card)(({ status }) => ({
                    status === 'failed' ? '#ffebee' :
                    status === 'warning' ? '#fff3e0' : '#fafafa',
   transition: 'all 0.3s ease',
-  cursor: 'pointer',
   '&:hover': {
     transform: 'translateY(-2px)',
     boxShadow: '0 4px 20px rgba(0,0,0,0.12)'
@@ -100,85 +111,139 @@ const CopyButton = styled(IconButton)({
   }
 });
 
-const CategoryIcon = ({ category }) => {
-  switch(category) {
-    case 'Critical':
-      return <ErrorIcon sx={{ color: '#f44336', fontSize: 20 }} />;
-    case 'Search':
-      return <SearchIcon sx={{ color: '#2196f3', fontSize: 20 }} />;
-    case 'Error Handling':
-      return <BugIcon sx={{ color: '#ff5722', fontSize: 20 }} />;
-    case 'Edge Case':
-      return <WarningIcon sx={{ color: '#ff9800', fontSize: 20 }} />;
-    case 'Performance':
-      return <SpeedIcon sx={{ color: '#9c27b0', fontSize: 20 }} />;
-    default:
-      return null;
+const StyledTabs = styled(Tabs)(({ theme }) => ({
+  backgroundColor: 'white',
+  borderRadius: theme.spacing(1),
+  marginBottom: theme.spacing(3),
+  '& .MuiTabs-indicator': {
+    backgroundColor: theme.palette.primary.main,
+    height: 3
   }
+}));
+
+const StyledTab = styled(Tab)(({ theme }) => ({
+  textTransform: 'none',
+  fontWeight: 600,
+  fontSize: '1rem',
+  marginRight: theme.spacing(1),
+  minHeight: 64,
+  '&.Mui-selected': {
+    color: theme.palette.primary.main
+  }
+}));
+
+const AuthInputBox = styled(Box)(({ theme }) => ({
+  backgroundColor: 'white',
+  borderRadius: theme.spacing(1),
+  padding: theme.spacing(2),
+  marginBottom: theme.spacing(3),
+  border: '1px solid #e0e0e0'
+}));
+
+const TestSection = ({ title, tests, icon: Icon, expanded, onToggle }) => {
+  if (!tests || tests.length === 0) return null;
+
+  const passedCount = tests.filter(t => t.status === 'success').length;
+  const failedCount = tests.filter(t => t.status === 'failed').length;
+  const warningCount = tests.filter(t => t.status === 'warning').length;
+
+  return (
+    <Box mb={3}>
+      <Paper
+        elevation={3}
+        onClick={onToggle}
+        sx={{
+          p: 2,
+          cursor: 'pointer',
+          backgroundColor: '#f5f5f5',
+          '&:hover': { backgroundColor: '#eeeeee' }
+        }}
+      >
+        <Box display="flex" alignItems="center" justifyContent="space-between">
+          <Box display="flex" alignItems="center" gap={1}>
+            {Icon && <Icon />}
+            <Typography variant="h6" fontWeight="bold">
+              {title}
+            </Typography>
+            <Chip label={`${tests.length} tests`} size="small" />
+            {passedCount > 0 && (
+              <Chip
+                icon={<CheckIcon />}
+                label={passedCount}
+                size="small"
+                color="success"
+                variant="outlined"
+              />
+            )}
+            {failedCount > 0 && (
+              <Chip
+                icon={<ErrorIcon />}
+                label={failedCount}
+                size="small"
+                color="error"
+                variant="outlined"
+              />
+            )}
+            {warningCount > 0 && (
+              <Chip
+                icon={<WarningIcon />}
+                label={warningCount}
+                size="small"
+                color="warning"
+                variant="outlined"
+              />
+            )}
+          </Box>
+          <ExpandButton expanded={expanded}>
+            <ExpandIcon />
+          </ExpandButton>
+        </Box>
+      </Paper>
+      <Collapse in={expanded}>
+        <Box mt={2}>
+          {tests.map((test, index) => (
+            <TestResult key={index} test={test} />
+          ))}
+        </Box>
+      </Collapse>
+    </Box>
+  );
 };
 
-const StatusIcon = ({ status }) => {
-  if (status === 'success') {
-    return <CheckIcon sx={{ color: '#4caf50', fontSize: 28 }} />;
-  }
-  if (status === 'failed') {
-    return <ErrorIcon sx={{ color: '#f44336', fontSize: 28 }} />;
-  }
-  if (status === 'warning') {
-    return <WarningIcon sx={{ color: '#ff9800', fontSize: 28 }} />;
-  }
-  return <PlayIcon sx={{ color: '#2196f3', fontSize: 28 }} />;
-};
+const TestResult = ({ test }) => {
+  const [expanded, setExpanded] = useState(false); // Individual tests start collapsed
+  const [copySuccess, setCopySuccess] = useState(false);
 
-const TestItem = ({ test }) => {
-  const [expanded, setExpanded] = useState(false);
+  const getIcon = () => {
+    switch(test.status) {
+      case 'success': return <CheckIcon sx={{ color: '#4caf50' }} />;
+      case 'failed': return <ErrorIcon sx={{ color: '#f44336' }} />;
+      case 'warning': return <WarningIcon sx={{ color: '#ff9800' }} />;
+      default: return null;
+    }
+  };
+
+  const getMethodColor = (method) => {
+    switch(method) {
+      case 'GET': return 'success';
+      case 'POST': return 'primary';
+      case 'PUT': return 'warning';
+      case 'DELETE': return 'error';
+      default: return 'default';
+    }
+  };
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
-  };
-
-  const formatCurl = () => {
-    if (!test.curl) return '';
-    let formatted = test.curl;
-    formatted = formatted
-      .replace(' -X ', ' \\\n  -X ')
-      .replace(' -H ', ' \\\n  -H ')
-      .replace(/ -H /g, ' \\\n  -H ')
-      .replace(' -d ', ' \\\n  -d ');
-    return formatted;
+    setCopySuccess(true);
+    setTimeout(() => setCopySuccess(false), 2000);
   };
 
   const formatResponse = () => {
-    if (!test.response) return 'No response';
-    try {
-      const parsed = typeof test.response === 'string'
-        ? JSON.parse(test.response)
-        : test.response;
-      if (test.status === 'success' && test.method === 'GET' && parsed.data?.listings) {
-        return JSON.stringify({
-          success: parsed.success,
-          data: {
-            listings: `[${parsed.data.listings.length} listings]`,
-            pagination: parsed.data.pagination
-          }
-        }, null, 2);
-      }
-      return JSON.stringify(parsed, null, 2);
-    } catch {
-      return test.response;
+    if (test.response) {
+      return JSON.stringify(test.response, null, 2);
     }
-  };
-
-  const formatRequestBody = () => {
-    if (!test.requestBody) return null;
-    try {
-      const parsed = typeof test.requestBody === 'string'
-        ? JSON.parse(test.requestBody)
-        : test.requestBody;
-      return JSON.stringify(parsed, null, 2);
-    } catch {
-      return test.requestBody;
-    }
+    return '';
   };
 
   return (
@@ -186,95 +251,66 @@ const TestItem = ({ test }) => {
       <CardContent onClick={() => setExpanded(!expanded)} sx={{ cursor: 'pointer' }}>
         <Box display="flex" alignItems="center" justifyContent="space-between">
           <Box display="flex" alignItems="center" gap={2}>
-            <StatusIcon status={test.status} />
-            <Box>
-              <Typography variant="h6" fontWeight="bold">
-                {test.name}
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                {test.description}
-              </Typography>
-              {test.category && (
-                <Box display="flex" alignItems="center" gap={1} mt={0.5}>
-                  <CategoryIcon category={test.category} />
-                  <Chip
-                    label={test.category}
-                    size="small"
-                    sx={{ fontSize: '0.7rem' }}
-                    color={test.category === 'Critical' ? 'error' :
-                           test.category === 'Edge Case' ? 'warning' : 'default'}
-                  />
-                </Box>
-              )}
-              {test.method && test.endpoint && (
-                <Box display="flex" gap={1} mt={0.5}>
-                  <Chip
-                    label={test.method}
-                    size="small"
-                    sx={{
-                      fontWeight: 'bold',
-                      backgroundColor:
-                        test.method === 'GET' ? '#2196f3' :
-                        test.method === 'POST' ? '#4caf50' :
-                        test.method === 'PUT' ? '#ff9800' :
-                        test.method === 'DELETE' ? '#f44336' : '#9e9e9e',
-                      color: 'white'
-                    }}
-                  />
-                  <Typography variant="caption" sx={{ alignSelf: 'center', fontFamily: 'monospace' }}>
-                    {test.endpoint}
-                  </Typography>
-                </Box>
-              )}
-            </Box>
-          </Box>
-          <Box display="flex" alignItems="center" gap={1}>
+            {getIcon()}
+            <Typography variant="subtitle1" fontWeight="bold">
+              {test.name}
+            </Typography>
             <Chip
-              label={test.status === 'success' ? 'PASSED' :
-                     test.status === 'failed' ? 'FAILED' :
-                     test.status === 'warning' ? 'WARNING' : 'PENDING'}
+              label={test.method}
               size="small"
-              sx={{
-                backgroundColor: test.status === 'success' ? '#4caf50' :
-                               test.status === 'failed' ? '#f44336' :
-                               test.status === 'warning' ? '#ff9800' : '#9e9e9e',
-                color: 'white',
-                fontWeight: 'bold'
-              }}
+              color={getMethodColor(test.method)}
+            />
+            <Chip
+              label={test.category}
+              size="small"
+              variant="outlined"
             />
             {test.responseTime && (
               <Chip
+                icon={<SpeedIcon />}
                 label={`${test.responseTime}ms`}
                 size="small"
                 variant="outlined"
-                color={test.responseTime > 1000 ? 'warning' : 'default'}
+                color={test.responseTime < 200 ? 'success' : test.responseTime < 500 ? 'warning' : 'error'}
               />
             )}
-            <ExpandButton expanded={expanded}>
-              <ExpandIcon />
-            </ExpandButton>
           </Box>
+          <ExpandButton expanded={expanded}>
+            <ExpandIcon />
+          </ExpandButton>
         </Box>
+
+        {test.description && (
+          <Typography variant="body2" color="textSecondary" mt={1}>
+            {test.description}
+          </Typography>
+        )}
       </CardContent>
 
       <Collapse in={expanded}>
-        <Box sx={{ px: 2, pb: 2 }}>
-          {test.expectedStatus && (
-            <Typography variant="subtitle2" sx={{ mt: 2, mb: 1, color: '#666' }}>
-              Expected Status: {test.expectedStatus}
-            </Typography>
-          )}
+        <Box
+          sx={{ p: 2, backgroundColor: 'rgba(0,0,0,0.02)' }}
+          onClick={(e) => e.stopPropagation()}>
+          <Typography variant="subtitle2" gutterBottom fontWeight="bold">
+            Endpoint:
+          </Typography>
+          <Typography variant="body2" component="code" sx={{ fontFamily: 'monospace' }}>
+            {test.endpoint}
+          </Typography>
 
           {test.curl && (
             <>
               <Typography variant="subtitle2" sx={{ mt: 2, mb: 1, fontWeight: 'bold' }}>
-                CURL Request:
+                cURL Command:
               </Typography>
               <CodeBlock>
-                <CopyButton size="small" onClick={() => copyToClipboard(test.curl)}>
+                <CopyButton size="small" onClick={(e) => {
+                  e.stopPropagation();
+                  copyToClipboard(test.curl);
+                }}>
                   <CopyIcon fontSize="small" />
                 </CopyButton>
-                <pre style={{ margin: 0 }}>{formatCurl()}</pre>
+                <pre style={{ margin: 0 }}>{test.curl}</pre>
               </CodeBlock>
             </>
           )}
@@ -285,10 +321,13 @@ const TestItem = ({ test }) => {
                 Request Body:
               </Typography>
               <CodeBlock>
-                <CopyButton size="small" onClick={() => copyToClipboard(formatRequestBody())}>
+                <CopyButton size="small" onClick={(e) => {
+                  e.stopPropagation();
+                  copyToClipboard(JSON.stringify(test.requestBody, null, 2));
+                }}>
                   <CopyIcon fontSize="small" />
                 </CopyButton>
-                <pre style={{ margin: 0 }}>{formatRequestBody()}</pre>
+                <pre style={{ margin: 0 }}>{JSON.stringify(test.requestBody, null, 2)}</pre>
               </CodeBlock>
             </>
           )}
@@ -299,7 +338,10 @@ const TestItem = ({ test }) => {
                 Response:
               </Typography>
               <CodeBlock>
-                <CopyButton size="small" onClick={() => copyToClipboard(formatResponse())}>
+                <CopyButton size="small" onClick={(e) => {
+                  e.stopPropagation();
+                  copyToClipboard(formatResponse());
+                }}>
                   <CopyIcon fontSize="small" />
                 </CopyButton>
                 <pre style={{ margin: 0 }}>{formatResponse()}</pre>
@@ -324,8 +366,11 @@ const TestItem = ({ test }) => {
 };
 
 const ListingsHealthDashboard = () => {
+  const [authTab, setAuthTab] = useState(0); // 0 = JWT, 1 = API Key
+  const [testApiKey, setTestApiKey] = useState(null); // Store the full test API key
+  const [testApiKeyId, setTestApiKeyId] = useState(null); // Store the ID for deletion
   const [tests, setTests] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
@@ -340,8 +385,65 @@ const ListingsHealthDashboard = () => {
     PERFORMANCE: [],
     WORKFLOW: []
   });
+  const [expandedSections, setExpandedSections] = useState({
+    CORE: true,
+    FILTERS: true,
+    ERROR: true,
+    EDGE: true,
+    PERFORMANCE: true,
+    WORKFLOW: true
+  });
 
-  const runAllTests = useCallback(async () => {
+  const handleAuthTabChange = (event, newValue) => {
+    setAuthTab(newValue);
+    // Clear tests and test API key when switching tabs
+    setTests([]);
+    setTestApiKey(null);
+    setTestApiKeyId(null);
+    setGroupedTests({
+      CORE: [],
+      FILTERS: [],
+      ERROR: [],
+      EDGE: [],
+      PERFORMANCE: [],
+      WORKFLOW: []
+    });
+    // Keep sections expanded when switching tabs
+    setExpandedSections({
+      CORE: true,
+      FILTERS: true,
+      ERROR: true,
+      EDGE: true,
+      PERFORMANCE: true,
+      WORKFLOW: true
+    });
+  };
+
+  const getAuthHeader = () => {
+    if (authTab === 0) {
+      // JWT Authentication
+      const token = localStorage.getItem('crm_auth_token') ||
+                   localStorage.getItem('authToken') ||
+                   localStorage.getItem('token');
+      return token ? { 'Authorization': `Bearer ${token}` } : {};
+    } else {
+      // API Key Authentication - will be set during test run
+      return testApiKey ? { 'X-API-Key': testApiKey } : {};
+    }
+  };
+
+  const getAuthDisplay = () => {
+    if (authTab === 0) {
+      const token = localStorage.getItem('crm_auth_token') ||
+                   localStorage.getItem('authToken') ||
+                   localStorage.getItem('token');
+      return token ? `Bearer ${token.substring(0, 20)}...` : 'No JWT token found';
+    } else {
+      return testApiKey ? `${testApiKey.substring(0, 20)}...` : 'No API key yet';
+    }
+  };
+
+  const runAllTests = useCallback(async (forceNewKey = true) => {
     setLoading(true);
     setTests([]);
     setGroupedTests({ CORE: [], FILTERS: [], ERROR: [], EDGE: [], PERFORMANCE: [], WORKFLOW: [] });
@@ -351,1090 +453,448 @@ const ListingsHealthDashboard = () => {
       API_URL = API_URL.replace(/\/$/, '') + '/v1';
     }
 
-    const token = localStorage.getItem('crm_auth_token') ||
-                 localStorage.getItem('authToken') ||
-                 localStorage.getItem('token');
+    // For API Key tab, create or reuse a temporary test API key
+    let authHeaders = getAuthHeader();
+    let authDisplay = getAuthDisplay();
+    let temporaryApiKey = testApiKey; // Use existing if available
+    let temporaryApiKeyId = testApiKeyId;
+
+    if (authTab === 1) {
+      // Create a new test API key only if we don't have one or if forced
+      if (!temporaryApiKey || forceNewKey) {
+        // Clear any existing test API key if forcing new
+        if (forceNewKey && testApiKeyId) {
+          try {
+            await apiKeysAPI.delete(testApiKeyId);
+          } catch (err) {
+            console.log('Could not delete previous test key:', err);
+          }
+          setTestApiKey(null);
+          setTestApiKeyId(null);
+        }
+
+        try {
+          const response = await apiKeysAPI.create({
+            name: `Test Key - ${new Date().toISOString()}`,
+            expiresInDays: 1 // Expires in 1 day
+          });
+
+          if (response?.data?.key) {
+            temporaryApiKey = response.data.key;
+            temporaryApiKeyId = response.data.id;
+            setTestApiKey(temporaryApiKey);
+            setTestApiKeyId(temporaryApiKeyId);
+          } else {
+            throw new Error('Failed to create test API key');
+          }
+        } catch (error) {
+          console.error('Failed to create test API key:', error);
+          setSnackbarMessage('Failed to create test API key: ' + error.message);
+          setSnackbarOpen(true);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Use the temporary key for testing
+      authHeaders = { 'X-API-Key': temporaryApiKey };
+      authDisplay = `${temporaryApiKey.substring(0, 20)}...`;
+    } else if (authTab === 0 && !authHeaders.Authorization) {
+      setSnackbarMessage('Please log in to get a JWT token');
+      setSnackbarOpen(true);
+      setLoading(false);
+      return;
+    }
 
     const allTests = [];
     const grouped = { CORE: [], FILTERS: [], ERROR: [], EDGE: [], PERFORMANCE: [], WORKFLOW: [] };
     let createdListingId = null;
     const createdListingIds = [];
 
-    // ========================================
-    // CORE TESTS - Essential CRUD Operations
-    // ========================================
+    // Helper function to create curl command based on auth type
+    const createCurlCommand = (method, endpoint, body = null) => {
+      let curlCmd = `curl -X ${method} "${API_URL}${endpoint}"`;
 
-    // Core GET: List all listings
-    const getAllTest = {
-      name: 'List All Listings',
-      description: 'Retrieve all listings from the database',
-      category: 'Critical',
-      method: 'GET',
-      endpoint: '/listings',
-      status: 'pending',
-      curl: `curl -X GET "${API_URL}/listings" -H "Authorization: Bearer ${token}"`,
-      response: null,
-      error: null,
-      responseTime: null
-    };
-
-    const startTime1 = Date.now();
-    try {
-      const response = await fetch(`${API_URL}/listings`, {
-        headers: token ? { 'Authorization': `Bearer ${token}` } : {}
-      });
-      const data = await response.json();
-      getAllTest.responseTime = Date.now() - startTime1;
-      getAllTest.status = response.ok && data.success ? 'success' : 'failed';
-      getAllTest.response = data;
-      if (!response.ok || !data.success) {
-        getAllTest.error = data.error?.message || 'Failed to fetch listings';
-      }
-    } catch (error) {
-      getAllTest.status = 'failed';
-      getAllTest.error = error.message;
-      getAllTest.responseTime = Date.now() - startTime1;
-    }
-    grouped.CORE.push(getAllTest);
-    allTests.push(getAllTest);
-
-    // Core POST: Create minimal listing
-    const minimalListingData = {
-      propertyAddress: `${Date.now()} Test Street`,
-      listPrice: 500000,
-      propertyType: 'Single Family',
-      bedrooms: 3,
-      bathrooms: 2,
-      squareFootage: 1500,
-      listingStatus: 'Active'
-    };
-
-    const createMinimalTest = {
-      name: 'Create Listing (Minimal)',
-      description: 'Test with only required fields',
-      category: 'Critical',
-      method: 'POST',
-      endpoint: '/listings',
-      status: 'pending',
-      curl: `curl -X POST "${API_URL}/listings" -H "Authorization: Bearer ${token}" -H "Content-Type: application/json" -d '${JSON.stringify(minimalListingData)}'`,
-      requestBody: minimalListingData,
-      response: null,
-      error: null,
-      responseTime: null
-    };
-
-    if (token) {
-      const startTime2 = Date.now();
-      try {
-        const response = await fetch(`${API_URL}/listings`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(minimalListingData)
-        });
-        const data = await response.json();
-        createMinimalTest.responseTime = Date.now() - startTime2;
-        createMinimalTest.status = response.ok && data.success ? 'success' : 'failed';
-        createMinimalTest.response = data;
-        if (data.success && data.data) {
-          createdListingIds.push(data.data.id || data.data._id);
-          createdListingId = data.data.id || data.data._id;
-        } else {
-          createMinimalTest.error = data.error?.message || 'Failed to create listing';
-        }
-      } catch (error) {
-        createMinimalTest.status = 'failed';
-        createMinimalTest.error = error.message;
-        createMinimalTest.responseTime = Date.now() - startTime2;
-      }
-    }
-    grouped.CORE.push(createMinimalTest);
-    allTests.push(createMinimalTest);
-
-    // Core GET by ID
-    if (createdListingId) {
-      const getByIdTest = {
-        name: 'Get Listing by ID',
-        description: 'Retrieve a specific listing',
-        category: 'Critical',
-        method: 'GET',
-        endpoint: `/listings/${createdListingId}`,
-        status: 'pending'
-      };
-
-      const startTime3 = Date.now();
-      try {
-        const response = await fetch(`${API_URL}/listings/${createdListingId}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        getByIdTest.responseTime = Date.now() - startTime3;
-        getByIdTest.status = response.ok && data.success ? 'success' : 'failed';
-        getByIdTest.response = data;
-      } catch (error) {
-        getByIdTest.status = 'failed';
-        getByIdTest.error = error.message;
-      }
-      grouped.CORE.push(getByIdTest);
-      allTests.push(getByIdTest);
-    }
-
-    // Core PUT: Update listing
-    if (createdListingId) {
-      const updateData = {
-        listPrice: 550000,
-        listingStatus: 'Pending'
-      };
-
-      const updateTest = {
-        name: 'Update Listing',
-        description: 'Update basic listing information',
-        category: 'Critical',
-        method: 'PUT',
-        endpoint: `/listings/${createdListingId}`,
-        status: 'pending',
-        requestBody: updateData
-      };
-
-      const startTime4 = Date.now();
-      try {
-        const response = await fetch(`${API_URL}/listings/${createdListingId}`, {
-          method: 'PUT',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(updateData)
-        });
-        const data = await response.json();
-        updateTest.responseTime = Date.now() - startTime4;
-        updateTest.status = response.ok && data.success ? 'success' : 'failed';
-        updateTest.response = data;
-      } catch (error) {
-        updateTest.status = 'failed';
-        updateTest.error = error.message;
-      }
-      grouped.CORE.push(updateTest);
-      allTests.push(updateTest);
-    }
-
-    // ========================================
-    // FILTER & SEARCH TESTS
-    // ========================================
-
-    // Filter by status
-    const filterStatusTest = {
-      name: 'Filter by Status',
-      description: 'Get only active listings',
-      category: 'Search',
-      method: 'GET',
-      endpoint: '/listings?status=Active',
-      status: 'pending'
-    };
-
-    const startTime5 = Date.now();
-    try {
-      const response = await fetch(`${API_URL}/listings?status=Active`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
-      filterStatusTest.responseTime = Date.now() - startTime5;
-      filterStatusTest.status = response.ok && data.success ? 'success' : 'failed';
-      filterStatusTest.response = data;
-    } catch (error) {
-      filterStatusTest.status = 'failed';
-      filterStatusTest.error = error.message;
-    }
-    grouped.FILTERS.push(filterStatusTest);
-    allTests.push(filterStatusTest);
-
-    // Search by property address
-    const searchTest = {
-      name: 'Search by Property',
-      description: 'Search listings by property address',
-      category: 'Search',
-      method: 'GET',
-      endpoint: '/listings?search=Test',
-      status: 'pending'
-    };
-
-    const startTime6 = Date.now();
-    try {
-      const response = await fetch(`${API_URL}/listings?search=Test`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
-      searchTest.responseTime = Date.now() - startTime6;
-      searchTest.status = response.ok && data.success ? 'success' : 'failed';
-      searchTest.response = data;
-    } catch (error) {
-      searchTest.status = 'failed';
-      searchTest.error = error.message;
-    }
-    grouped.FILTERS.push(searchTest);
-    allTests.push(searchTest);
-
-    // Pagination test
-    const paginationTest = {
-      name: 'Pagination',
-      description: 'Test pagination parameters',
-      category: 'Search',
-      method: 'GET',
-      endpoint: '/listings?page=1&limit=5',
-      status: 'pending'
-    };
-
-    const startTime7 = Date.now();
-    try {
-      const response = await fetch(`${API_URL}/listings?page=1&limit=5`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
-      paginationTest.responseTime = Date.now() - startTime7;
-      paginationTest.status = response.ok && data.success ? 'success' : 'failed';
-      paginationTest.response = data;
-    } catch (error) {
-      paginationTest.status = 'failed';
-      paginationTest.error = error.message;
-    }
-    grouped.FILTERS.push(paginationTest);
-    allTests.push(paginationTest);
-
-    // Combined filters
-    const combinedFilterTest = {
-      name: 'Combined Filters',
-      description: 'Multiple filter parameters together',
-      category: 'Search',
-      method: 'GET',
-      endpoint: '/listings?status=Active&limit=10&page=1',
-      status: 'pending'
-    };
-
-    const startTime8 = Date.now();
-    try {
-      const response = await fetch(`${API_URL}/listings?status=Active&limit=10&page=1`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
-      combinedFilterTest.responseTime = Date.now() - startTime8;
-      combinedFilterTest.status = response.ok && data.success ? 'success' : 'failed';
-      combinedFilterTest.response = data;
-    } catch (error) {
-      combinedFilterTest.status = 'failed';
-      combinedFilterTest.error = error.message;
-    }
-    grouped.FILTERS.push(combinedFilterTest);
-    allTests.push(combinedFilterTest);
-
-    // ========================================
-    // ERROR HANDLING TESTS
-    // ========================================
-
-    // Test 404: Get non-existent listing
-    const notFoundTest = {
-      name: 'Get Non-Existent Listing',
-      description: 'Should return 404 error',
-      category: 'Error Handling',
-      method: 'GET',
-      endpoint: '/listings/00000000-0000-0000-0000-000000000000',
-      expectedStatus: 404,
-      status: 'pending'
-    };
-
-    const startTime9 = Date.now();
-    try {
-      const response = await fetch(`${API_URL}/listings/00000000-0000-0000-0000-000000000000`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
-      notFoundTest.responseTime = Date.now() - startTime9;
-      // This should fail (404), so success is when it returns error
-      notFoundTest.status = (response.status === 404 || !data.success) ? 'success' : 'failed';
-      notFoundTest.response = data;
-      if (response.status !== 404 && data.success) {
-        notFoundTest.error = `Expected 404 but got ${response.status}`;
-      }
-    } catch (error) {
-      notFoundTest.status = 'failed';
-      notFoundTest.error = error.message;
-    }
-    grouped.ERROR.push(notFoundTest);
-    allTests.push(notFoundTest);
-
-    // Test 400: Create listing with missing required fields
-    const missingFieldsTest = {
-      name: 'Create Listing - Missing Fields',
-      description: 'Should return validation error',
-      category: 'Error Handling',
-      method: 'POST',
-      endpoint: '/listings',
-      expectedStatus: 400,
-      status: 'pending',
-      requestBody: {} // Empty object - missing required fields
-    };
-
-    const startTime10 = Date.now();
-    try {
-      const response = await fetch(`${API_URL}/listings`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({})
-      });
-      const data = await response.json();
-      missingFieldsTest.responseTime = Date.now() - startTime10;
-      // Should fail with validation error
-      missingFieldsTest.status = !data.success ? 'success' : 'failed';
-      missingFieldsTest.response = data;
-      if (data.success) {
-        missingFieldsTest.error = 'Expected validation error but request succeeded';
-      }
-    } catch (error) {
-      missingFieldsTest.status = 'success'; // Network error is expected
-      missingFieldsTest.error = error.message;
-    }
-    grouped.ERROR.push(missingFieldsTest);
-    allTests.push(missingFieldsTest);
-
-    // Test: Update non-existent listing
-    const updateNonExistentTest = {
-      name: 'Update Non-Existent Listing',
-      description: 'Should return not found error',
-      category: 'Error Handling',
-      method: 'PUT',
-      endpoint: '/listings/invalid-id-123',
-      expectedStatus: 404,
-      status: 'pending'
-    };
-
-    const startTime11 = Date.now();
-    try {
-      const response = await fetch(`${API_URL}/listings/invalid-id-123`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ price: 100000 })
-      });
-      const data = await response.json();
-      updateNonExistentTest.responseTime = Date.now() - startTime11;
-      updateNonExistentTest.status = !data.success ? 'success' : 'failed';
-      updateNonExistentTest.response = data;
-    } catch (error) {
-      updateNonExistentTest.status = 'success';
-      updateNonExistentTest.error = error.message;
-    }
-    grouped.ERROR.push(updateNonExistentTest);
-    allTests.push(updateNonExistentTest);
-
-    // Test: Delete without archiving first
-    if (createdListingId) {
-      // Create a new listing to test delete without archive
-      const tempListingData = {
-        address: 'Temp Delete Test',
-        city: 'Test City',
-        state: 'CA',
-        zip_code: '90210',
-        price: 300000,
-        bedrooms: 2,
-        bathrooms: 1,
-        square_feet: 1000,
-        property_type: 'Condo',
-        listing_status: 'active'
-      };
-
-      let tempListingId = null;
-      try {
-        const createResponse = await fetch(`${API_URL}/listings`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(tempListingData)
-        });
-        const createData = await createResponse.json();
-        if (createData.success && createData.data) {
-          tempListingId = createData.data.id || createData.data._id;
-          createdListingIds.push(tempListingId);
-        }
-      } catch (error) {
-        // Ignore create error
-      }
-
-      if (tempListingId) {
-        const deleteWithoutArchiveTest = {
-          name: 'Delete Without Archive',
-          description: 'Should fail - must archive first',
-          category: 'Error Handling',
-          method: 'DELETE',
-          endpoint: `/listings/${tempListingId}`,
-          expectedStatus: 400,
-          status: 'pending'
-        };
-
-        const startTime12 = Date.now();
-        try {
-          const response = await fetch(`${API_URL}/listings/${tempListingId}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          const data = await response.json();
-          deleteWithoutArchiveTest.responseTime = Date.now() - startTime12;
-          // Should fail - expecting error
-          deleteWithoutArchiveTest.status = !data.success ? 'success' : 'warning';
-          deleteWithoutArchiveTest.response = data;
-          if (data.success) {
-            deleteWithoutArchiveTest.error = 'Delete succeeded without archiving (unexpected)';
-          }
-        } catch (error) {
-          deleteWithoutArchiveTest.status = 'success';
-          deleteWithoutArchiveTest.error = error.message;
-        }
-        grouped.ERROR.push(deleteWithoutArchiveTest);
-        allTests.push(deleteWithoutArchiveTest);
-      }
-    }
-
-    // ========================================
-    // EDGE CASE TESTS
-    // ========================================
-
-    // Test: Special characters in property address
-    const specialCharsTest = {
-      name: 'Create Listing - Special Characters',
-      description: 'Test with special chars in address',
-      category: 'Edge Case',
-      method: 'POST',
-      endpoint: '/listings',
-      status: 'pending',
-      requestBody: {
-        propertyAddress: `123 O'Brien & Co. Street #456`,
-        listPrice: 750000,
-        propertyType: 'Condo',
-        bedrooms: 2,
-        bathrooms: 2,
-        squareFootage: 1200,
-        listingStatus: 'Active',
-        description: `José García's property with Müller-Smith`
-      }
-    };
-
-    const startTime13 = Date.now();
-    try {
-      const response = await fetch(`${API_URL}/listings`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(specialCharsTest.requestBody)
-      });
-      const data = await response.json();
-      specialCharsTest.responseTime = Date.now() - startTime13;
-      specialCharsTest.status = response.ok && data.success ? 'success' : 'warning';
-      specialCharsTest.response = data;
-      if (data.success && data.data) {
-        createdListingIds.push(data.data.id || data.data._id);
-      }
-    } catch (error) {
-      specialCharsTest.status = 'failed';
-      specialCharsTest.error = error.message;
-    }
-    grouped.EDGE.push(specialCharsTest);
-    allTests.push(specialCharsTest);
-
-    // Test: Very large purchase price
-    const largePriceTest = {
-      name: 'Create Listing - Large Price',
-      description: 'Test with very high purchase price',
-      category: 'Edge Case',
-      method: 'POST',
-      endpoint: '/listings',
-      status: 'pending',
-      requestBody: {
-        propertyAddress: 'Expensive Property Test',
-        listPrice: 999999999,
-        propertyType: 'Single Family',
-        bedrooms: 10,
-        bathrooms: 15,
-        squareFootage: 25000,
-        listingStatus: 'Active'
-      }
-    };
-
-    const startTime14 = Date.now();
-    try {
-      const response = await fetch(`${API_URL}/listings`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(largePriceTest.requestBody)
-      });
-      const data = await response.json();
-      largePriceTest.responseTime = Date.now() - startTime14;
-      largePriceTest.status = response.ok && data.success ? 'success' : 'warning';
-      largePriceTest.response = data;
-      if (data.success && data.data) {
-        createdListingIds.push(data.data.id || data.data._id);
-      }
-    } catch (error) {
-      largePriceTest.status = 'failed';
-      largePriceTest.error = error.message;
-    }
-    grouped.EDGE.push(largePriceTest);
-    allTests.push(largePriceTest);
-
-    // Test: Empty optional fields
-    const emptyFieldsTest = {
-      name: 'Create Listing - Empty Fields',
-      description: 'Test with empty optional fields',
-      category: 'Edge Case',
-      method: 'POST',
-      endpoint: '/listings',
-      status: 'pending',
-      requestBody: {
-        propertyAddress: 'Empty Fields Test',
-        listPrice: 400000,
-        propertyType: 'Single Family',
-        bedrooms: 3,
-        bathrooms: 2,
-        squareFootage: 1500,
-        listingStatus: 'Active',
-        description: ''
-      }
-    };
-
-    const startTime15 = Date.now();
-    try {
-      const response = await fetch(`${API_URL}/listings`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(emptyFieldsTest.requestBody)
-      });
-      const data = await response.json();
-      emptyFieldsTest.responseTime = Date.now() - startTime15;
-      emptyFieldsTest.status = response.ok && data.success ? 'success' : 'warning';
-      emptyFieldsTest.response = data;
-      if (data.success && data.data) {
-        createdListingIds.push(data.data.id || data.data._id);
-      }
-    } catch (error) {
-      emptyFieldsTest.status = 'failed';
-      emptyFieldsTest.error = error.message;
-    }
-    grouped.EDGE.push(emptyFieldsTest);
-    allTests.push(emptyFieldsTest);
-
-    // ========================================
-    // PERFORMANCE TESTS
-    // ========================================
-
-    // Test: Large pagination request
-    const largePaginationTest = {
-      name: 'Large Pagination',
-      description: 'Request page 999 with limit 100',
-      category: 'Performance',
-      method: 'GET',
-      endpoint: '/listings?page=999&limit=100',
-      status: 'pending'
-    };
-
-    const startTime16 = Date.now();
-    try {
-      const response = await fetch(`${API_URL}/listings?page=999&limit=100`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      const data = await response.json();
-      largePaginationTest.responseTime = Date.now() - startTime16;
-      largePaginationTest.status = response.ok && data.success ? 'success' : 'failed';
-      largePaginationTest.response = data;
-      // Check if response time is reasonable
-      if (largePaginationTest.responseTime > 2000) {
-        largePaginationTest.status = 'warning';
-        largePaginationTest.error = `Slow response: ${largePaginationTest.responseTime}ms`;
-      }
-    } catch (error) {
-      largePaginationTest.status = 'failed';
-      largePaginationTest.error = error.message;
-    }
-    grouped.PERFORMANCE.push(largePaginationTest);
-    allTests.push(largePaginationTest);
-
-    // Test: Concurrent requests
-    const concurrentTest = {
-      name: 'Concurrent Requests',
-      description: 'Send 5 simultaneous GET requests',
-      category: 'Performance',
-      method: 'GET',
-      endpoint: '/listings (x5)',
-      status: 'pending'
-    };
-
-    const startTime17 = Date.now();
-    try {
-      const promises = Array(5).fill(null).map(() =>
-        fetch(`${API_URL}/listings?limit=5`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        })
-      );
-      const responses = await Promise.all(promises);
-      const allSuccessful = responses.every(r => r.ok);
-      concurrentTest.responseTime = Date.now() - startTime17;
-      concurrentTest.status = allSuccessful ? 'success' : 'failed';
-      concurrentTest.response = {
-        requestCount: 5,
-        successCount: responses.filter(r => r.ok).length,
-        avgResponseTime: Math.round(concurrentTest.responseTime / 5)
-      };
-      // Check average response time
-      if (concurrentTest.responseTime / 5 > 1000) {
-        concurrentTest.status = 'warning';
-        concurrentTest.error = 'High average response time under load';
-      }
-    } catch (error) {
-      concurrentTest.status = 'failed';
-      concurrentTest.error = error.message;
-    }
-    grouped.PERFORMANCE.push(concurrentTest);
-    allTests.push(concurrentTest);
-
-    // Test: Response time consistency
-    const responseTimeTest = {
-      name: 'Response Time Consistency',
-      description: 'Check if response times are consistent',
-      category: 'Performance',
-      method: 'GET',
-      endpoint: '/listings?limit=10',
-      status: 'pending'
-    };
-
-    const responseTimes = [];
-    for (let i = 0; i < 3; i++) {
-      const startTimeRT = Date.now();
-      try {
-        const response = await fetch(`${API_URL}/listings?limit=10`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        await response.json();
-        responseTimes.push(Date.now() - startTimeRT);
-      } catch (error) {
-        // Ignore individual errors
-      }
-    }
-
-    if (responseTimes.length === 3) {
-      const avgTime = responseTimes.reduce((a, b) => a + b, 0) / 3;
-      const maxTime = Math.max(...responseTimes);
-      const minTime = Math.min(...responseTimes);
-      const variance = maxTime - minTime;
-
-      responseTimeTest.responseTime = Math.round(avgTime);
-      responseTimeTest.response = {
-        times: responseTimes,
-        average: Math.round(avgTime),
-        min: minTime,
-        max: maxTime,
-        variance: variance
-      };
-
-      // Check if variance is too high (>500ms difference)
-      if (variance > 500) {
-        responseTimeTest.status = 'warning';
-        responseTimeTest.error = `High variance in response times: ${variance}ms`;
+      if (authTab === 0) {
+        curlCmd += ` -H "Authorization: ${authDisplay}"`;
       } else {
-        responseTimeTest.status = 'success';
+        curlCmd += ` -H "X-API-Key: ${authDisplay}"`;
       }
-    } else {
-      responseTimeTest.status = 'failed';
-      responseTimeTest.error = 'Could not complete all requests';
-    }
-    grouped.PERFORMANCE.push(responseTimeTest);
-    allTests.push(responseTimeTest);
 
-    // ========================================
-    // WORKFLOW TESTS - Complete Archive/Delete
-    // ========================================
+      if (body) {
+        curlCmd += ` -H "Content-Type: application/json" -d '${JSON.stringify(body)}'`;
+      }
 
-    // Clean up all created test listings
-    for (const listingId of createdListingIds) {
-      if (listingId) {
-        // Archive first
-        const archiveTest = {
-          name: `Archive Test Listing`,
-          description: 'Soft delete test data',
-          category: 'Workflow',
-          method: 'PUT',
-          endpoint: `/listings/${listingId}/archive`,
-          status: 'pending'
-        };
+      return curlCmd;
+    };
 
-        const startTimeArchive = Date.now();
+    // Import and use the comprehensive health check service
+    try {
+      const { HealthCheckService } = await import('../../services/healthCheck.service');
+
+      // Extract auth value and determine type
+      const authValue = authTab === 0
+        ? authHeaders.Authorization?.replace('Bearer ', '')
+        : authHeaders['X-API-Key'];
+      const authType = authTab === 0 ? 'jwt' : 'apikey';
+
+      const healthService = new HealthCheckService(API_URL, authValue, authType);
+
+      const tests = await healthService.runListingsHealthCheck();
+
+      // Update curl commands based on auth type
+      tests.forEach(test => {
+        test.curl = createCurlCommand(test.method, test.endpoint, test.requestBody);
+        test.authType = authTab === 0 ? 'JWT' : 'API Key';
+      });
+
+      // Group tests by category
+      tests.forEach(test => {
+        if (test.category === 'Critical') grouped.CORE.push(test);
+        else if (test.category === 'Search') grouped.FILTERS.push(test);
+        else if (test.category === 'Error Handling') grouped.ERROR.push(test);
+        else if (test.category === 'Edge Case') grouped.EDGE.push(test);
+        else if (test.category === 'Performance') grouped.PERFORMANCE.push(test);
+        else if (test.category === 'Workflow') grouped.WORKFLOW.push(test);
+        allTests.push(test);
+      });
+
+      setTests(allTests);
+      setGroupedTests(grouped);
+      setLastRefresh(new Date());
+
+      // Ensure sections remain expanded after tests load
+      setExpandedSections({
+        CORE: true,
+        FILTERS: true,
+        ERROR: true,
+        EDGE: true,
+        PERFORMANCE: true,
+        WORKFLOW: true
+      });
+
+      // If we created a temporary API key, delete it after tests complete
+      if (authTab === 1 && temporaryApiKeyId) {
         try {
-          const response = await fetch(`${API_URL}/listings/${listingId}/archive`, {
-            method: 'PUT',
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          const data = await response.json();
-          archiveTest.responseTime = Date.now() - startTimeArchive;
-          archiveTest.status = response.ok && data.success ? 'success' : 'failed';
-          archiveTest.response = data;
-        } catch (error) {
-          archiveTest.status = 'failed';
-          archiveTest.error = error.message;
-        }
-        grouped.WORKFLOW.push(archiveTest);
-        allTests.push(archiveTest);
+          await apiKeysAPI.delete(temporaryApiKeyId);
 
-        // Then delete
-        const deleteTest = {
-          name: `Delete Archived Listing`,
-          description: 'Permanently remove test data',
-          category: 'Workflow',
-          method: 'DELETE',
-          endpoint: `/listings/${listingId}`,
-          status: 'pending'
-        };
-
-        const startTimeDelete = Date.now();
-        try {
-          const response = await fetch(`${API_URL}/listings/${listingId}`, {
+          // Add a test result showing the deletion
+          const deletionTest = {
+            name: 'Delete Test API Key',
             method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-          });
-          const data = await response.json();
-          deleteTest.responseTime = Date.now() - startTimeDelete;
-          deleteTest.status = response.ok && data.success ? 'success' : 'failed';
-          deleteTest.response = data;
-        } catch (error) {
-          deleteTest.status = 'failed';
-          deleteTest.error = error.message;
+            endpoint: `/api-keys/${temporaryApiKeyId}`,
+            category: 'Cleanup',
+            status: 'success',
+            description: 'Temporary test API key has been deleted',
+            response: { success: true, message: 'Test API key deleted successfully' },
+            curl: `curl -X DELETE "${API_URL}/api-keys/${temporaryApiKeyId}" -H "Authorization: Bearer YOUR_JWT_TOKEN"`,
+            authType: 'JWT'
+          };
+
+          allTests.push(deletionTest);
+          setTests([...allTests]);
+        } catch (deleteError) {
+          console.error('Failed to delete test API key:', deleteError);
+
+          // Add a test result showing the deletion failure
+          const deletionTest = {
+            name: 'Delete Test API Key',
+            method: 'DELETE',
+            endpoint: `/api-keys/${temporaryApiKeyId}`,
+            category: 'Cleanup',
+            status: 'failed',
+            description: 'Failed to delete temporary test API key',
+            error: deleteError.message,
+            curl: `curl -X DELETE "${API_URL}/api-keys/${temporaryApiKeyId}" -H "Authorization: Bearer YOUR_JWT_TOKEN"`,
+            authType: 'JWT'
+          };
+
+          allTests.push(deletionTest);
+          setTests([...allTests]);
         }
-        grouped.WORKFLOW.push(deleteTest);
-        allTests.push(deleteTest);
       }
+    } catch (error) {
+      console.error('Test execution failed:', error);
+      setSnackbarMessage('Failed to run tests: ' + error.message);
+      setSnackbarOpen(true);
     }
 
-    // Verify deletion
-    if (createdListingIds.length > 0 && createdListingIds[0]) {
-      const verifyTest = {
-        name: 'Verify Deletion',
-        description: 'Confirm test data was removed',
-        category: 'Workflow',
-        method: 'GET',
-        endpoint: `/listings/${createdListingIds[0]}`,
-        expectedStatus: 404,
-        status: 'pending'
-      };
-
-      const startTimeVerify = Date.now();
-      try {
-        const response = await fetch(`${API_URL}/listings/${createdListingIds[0]}`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await response.json();
-        verifyTest.responseTime = Date.now() - startTimeVerify;
-        // Should return 404
-        verifyTest.status = !data.success ? 'success' : 'failed';
-        verifyTest.response = data;
-      } catch (error) {
-        verifyTest.status = 'success';
-        verifyTest.error = error.message;
-      }
-      grouped.WORKFLOW.push(verifyTest);
-      allTests.push(verifyTest);
-    }
-
-    setTests(allTests);
-    setGroupedTests(grouped);
-    setLastRefresh(new Date().toLocaleString());
     setLoading(false);
-    setTestListingIds(createdListingIds);
-  }, []);
+  }, [authTab]);
 
-  const copyAllData = () => {
-    const testData = {
-      timestamp: new Date().toISOString(),
-      endpoint: 'listings',
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  const copyFullReport = () => {
+    const report = {
+      timestamp: lastRefresh?.toISOString(),
+      authentication: {
+        type: authTab === 0 ? 'JWT' : 'API Key',
+        details: authTab === 0
+          ? {
+              method: 'Bearer Token (JWT)',
+              tokenPresent: !!localStorage.getItem('authToken'),
+              tokenPreview: localStorage.getItem('authToken')?.substring(0, 20) + '...'
+            }
+          : {
+              method: 'X-API-Key Header',
+              keyUsed: testApiKey ? `${testApiKey.substring(0, 12)}...${testApiKey.slice(-4)}` : 'None',
+              temporaryKey: true
+            }
+      },
+      endpoint: '/listings',
       summary: {
         total: tests.length,
         passed: tests.filter(t => t.status === 'success').length,
         failed: tests.filter(t => t.status === 'failed').length,
         warnings: tests.filter(t => t.status === 'warning').length
       },
-      categories: {
-        core: groupedTests.CORE.length,
-        filters: groupedTests.FILTERS.length,
-        errors: groupedTests.ERROR.length,
-        edge: groupedTests.EDGE.length,
-        performance: groupedTests.PERFORMANCE.length,
-        workflow: groupedTests.WORKFLOW.length
-      },
-      tests: tests.map(test => ({
-        name: test.name,
-        category: test.category,
-        method: test.method,
-        endpoint: test.endpoint,
-        status: test.status,
-        responseTime: test.responseTime,
-        response: test.response,
-        error: test.error
-      }))
+      tests: tests
     };
 
-    navigator.clipboard.writeText(JSON.stringify(testData, null, 2));
-    setSnackbarMessage('Enhanced test data copied to clipboard');
+    navigator.clipboard.writeText(JSON.stringify(report, null, 2));
+    setSnackbarMessage('Full report with authentication details copied to clipboard!');
     setSnackbarOpen(true);
   };
 
+
   useEffect(() => {
-    runAllTests();
-  }, [runAllTests]);
+    if (authTab === 0) {
+      // Auto-run tests for JWT if token exists
+      const token = localStorage.getItem('crm_auth_token') ||
+                   localStorage.getItem('authToken') ||
+                   localStorage.getItem('token');
+      if (token) {
+        runAllTests(true);
+      }
+    } else if (authTab === 1) {
+      // Auto-run tests for API Key tab with new temporary key
+      runAllTests(true);
+    }
+  }, [authTab]);
 
-  const successCount = tests.filter(t => t.status === 'success').length;
-  const failedCount = tests.filter(t => t.status === 'failed').length;
-  const warningCount = tests.filter(t => t.status === 'warning').length;
-
-  const tabCategories = [
-    { label: 'All Tests', key: 'ALL', icon: <PlayIcon /> },
-    { label: 'GET', key: 'GET', icon: <SearchIcon />, color: '#2196f3' },
-    { label: 'POST', key: 'POST', icon: <AddIcon />, color: '#4caf50' },
-    { label: 'PUT', key: 'PUT', icon: <EditIcon />, color: '#ff9800' },
-    { label: 'DELETE', key: 'DELETE', icon: <DeleteIcon />, color: '#f44336' }
-  ];
-
-  const getTestsForTab = (tabIndex) => {
-    if (tabIndex === 0) return tests; // All tests
-    const method = tabCategories[tabIndex].key;
-    return tests.filter(t => t.method === method);
-  };
-
-  const getCategoryStats = (category) => {
-    const categoryTests = category === 'ALL' ? tests : tests.filter(t => t.method === category);
-    return {
-      total: categoryTests.length,
-      passed: categoryTests.filter(t => t.status === 'success').length,
-      failed: categoryTests.filter(t => t.status === 'failed').length,
-      warnings: categoryTests.filter(t => t.status === 'warning').length
-    };
-  };
+  const totalTests = tests.length;
+  const passedTests = tests.filter(t => t.status === 'success').length;
+  const failedTests = tests.filter(t => t.status === 'failed').length;
+  const warningTests = tests.filter(t => t.status === 'warning').length;
+  const successRate = totalTests > 0 ? Math.round((passedTests / totalTests) * 100) : 0;
 
   return (
     <PageContainer>
-      <Container maxWidth="lg">
-        <Fade in timeout={800}>
-          <Paper elevation={3} sx={{ p: 4, borderRadius: 3, background: 'rgba(255,255,255,0.98)' }}>
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+      <Container maxWidth="xl">
+        <Paper elevation={3} sx={{ p: 3, mb: 3, backgroundColor: 'rgba(255, 255, 255, 0.98)' }}>
+          <Typography variant="h4" gutterBottom fontWeight="bold">
+            Listings API Health Dashboard
+          </Typography>
+          <Typography variant="body1" color="textSecondary" mb={3}>
+            Comprehensive health checks for the Listings API with dual authentication support
+          </Typography>
+
+          {/* Authentication Tabs */}
+          <StyledTabs value={authTab} onChange={handleAuthTabChange}>
+            <StyledTab
+              icon={<JwtIcon />}
+              label="JWT Authentication"
+              iconPosition="start"
+            />
+            <StyledTab
+              icon={<ApiKeyIcon />}
+              label="API Key Authentication"
+              iconPosition="start"
+            />
+          </StyledTabs>
+
+          {/* Authentication Input - Only show for API Key tab */}
+          {authTab === 1 ? (
+            <AuthInputBox>
               <Box>
-                <Typography variant="h3" fontWeight="bold" gutterBottom>
-                  Listings API Health Dashboard
+                <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
+                  API Key Testing
+                </Typography>
+                <Typography variant="body2" color="textSecondary" mb={1}>
+                  Automatically creating a temporary test API key, running tests, and deleting it when complete.
+                </Typography>
+                {testApiKey && (
+                  <Alert severity="info" sx={{ mb: 2 }}>
+                    <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                      Test API Key (Full):
+                    </Typography>
+                    <TextField
+                      fullWidth
+                      multiline
+                      rows={2}
+                      value={testApiKey}
+                      variant="outlined"
+                      size="small"
+                      sx={{
+                        mt: 1,
+                        '& .MuiInputBase-input': {
+                          fontFamily: 'monospace',
+                          fontSize: '0.85rem',
+                          wordBreak: 'break-all',
+                          whiteSpace: 'pre-wrap'
+                        }
+                      }}
+                      InputProps={{
+                        readOnly: true
+                      }}
+                    />
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                      This temporary key was created for testing and will be deleted after tests complete.
+                    </Typography>
+                  </Alert>
+                )}
+              </Box>
+            </AuthInputBox>
+          ) : null}
+
+          {/* Stats Overview */}
+          <Grid container spacing={3} mb={3}>
+            <Grid item xs={12} sm={3}>
+              <Paper elevation={2} sx={{ p: 2, textAlign: 'center' }}>
+                <Typography variant="h3" fontWeight="bold" color={successRate === 100 ? 'success.main' : successRate >= 80 ? 'warning.main' : 'error.main'}>
+                  {successRate}%
                 </Typography>
                 <Typography variant="body2" color="textSecondary">
-                  Comprehensive testing with error handling, edge cases, and performance tests • Last refresh: {lastRefresh || 'Loading...'}
+                  Success Rate
                 </Typography>
-                <Box display="flex" alignItems="center" gap={2} mt={1}>
-                  <Typography variant="h2" fontWeight="bold" color={failedCount === 0 && warningCount === 0 ? '#4caf50' : failedCount > 0 ? '#f44336' : '#ff9800'}>
-                    {successCount}/{tests.length}
-                  </Typography>
-                  <Typography variant="body1" color="textSecondary">
-                    Tests Passing
-                  </Typography>
-                  {warningCount > 0 && (
-                    <>
-                      <Typography variant="h4" fontWeight="bold" color="#ff9800" sx={{ ml: 2 }}>
-                        {warningCount}
-                      </Typography>
-                      <Typography variant="body1" color="textSecondary">
-                        Warnings
-                      </Typography>
-                    </>
-                  )}
-                </Box>
-              </Box>
-              <Box display="flex" gap={1}>
-                <Tooltip title="Copy All Data">
-                  <IconButton
-                    onClick={copyAllData}
-                    disabled={loading || tests.length === 0}
-                    sx={{
-                      backgroundColor: '#f5f5f5',
-                      '&:hover': { backgroundColor: '#e0e0e0' }
-                    }}
-                  >
-                    <CopyIcon />
-                  </IconButton>
-                </Tooltip>
-                <Tooltip title="Refresh Tests">
-                  <IconButton
-                    onClick={runAllTests}
-                    disabled={loading}
-                    sx={{
-                      backgroundColor: '#f5f5f5',
-                      '&:hover': { backgroundColor: '#e0e0e0' }
-                    }}
-                  >
-                    <RefreshIcon />
-                  </IconButton>
-                </Tooltip>
-              </Box>
-            </Box>
-
-            <Divider sx={{ my: 2 }} />
-
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={2}>
-                <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#f5f5f5' }}>
-                  <Typography variant="h4" fontWeight="bold">{tests.length}</Typography>
-                  <Typography variant="body2" color="textSecondary">Total</Typography>
-                </Paper>
-              </Grid>
-              <Grid item xs={12} sm={2}>
-                <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#e8f5e9' }}>
-                  <Typography variant="h4" fontWeight="bold" color="#4caf50">
-                    {successCount}
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary">Passed</Typography>
-                </Paper>
-              </Grid>
-              <Grid item xs={12} sm={2}>
-                <Paper sx={{ p: 2, textAlign: 'center', bgcolor: failedCount === 0 ? '#e8f5e9' : '#ffebee' }}>
-                  <Typography variant="h4" fontWeight="bold" color={failedCount === 0 ? '#4caf50' : '#f44336'}>
-                    {failedCount}
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary">Failed</Typography>
-                </Paper>
-              </Grid>
-              <Grid item xs={12} sm={2}>
-                <Paper sx={{ p: 2, textAlign: 'center', bgcolor: warningCount > 0 ? '#fff3e0' : '#f5f5f5' }}>
-                  <Typography variant="h4" fontWeight="bold" color={warningCount > 0 ? '#ff9800' : '#666'}>
-                    {warningCount}
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary">Warnings</Typography>
-                </Paper>
-              </Grid>
-              <Grid item xs={12} sm={2}>
-                <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#e3f2fd' }}>
-                  <Typography variant="h4" fontWeight="bold" color="#2196f3">
-                    {tests.reduce((acc, t) => acc + (t.responseTime || 0), 0)}ms
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary">Total Time</Typography>
-                </Paper>
-              </Grid>
-              <Grid item xs={12} sm={2}>
-                <Paper sx={{ p: 2, textAlign: 'center', bgcolor: '#f3e5f5' }}>
-                  <Typography variant="h4" fontWeight="bold" color="#9c27b0">
-                    {tests.length > 0 ? Math.round(tests.reduce((acc, t) => acc + (t.responseTime || 0), 0) / tests.length) : 0}ms
-                  </Typography>
-                  <Typography variant="body2" color="textSecondary">Avg Time</Typography>
-                </Paper>
-              </Grid>
+              </Paper>
             </Grid>
+            <Grid item xs={12} sm={3}>
+              <Paper elevation={2} sx={{ p: 2, textAlign: 'center' }}>
+                <Typography variant="h3" fontWeight="bold">
+                  {totalTests}
+                </Typography>
+                <Typography variant="body2" color="textSecondary">
+                  Total Tests
+                </Typography>
+              </Paper>
+            </Grid>
+            <Grid item xs={12} sm={3}>
+              <Paper elevation={2} sx={{ p: 2, textAlign: 'center' }}>
+                <Stack direction="row" spacing={1} justifyContent="center">
+                  <Chip icon={<CheckIcon />} label={passedTests} color="success" />
+                  <Chip icon={<ErrorIcon />} label={failedTests} color="error" />
+                  {warningTests > 0 && <Chip icon={<WarningIcon />} label={warningTests} color="warning" />}
+                </Stack>
+                <Typography variant="body2" color="textSecondary" mt={1}>
+                  Test Results
+                </Typography>
+              </Paper>
+            </Grid>
+            <Grid item xs={12} sm={3}>
+              <Paper elevation={2} sx={{ p: 2, textAlign: 'center' }}>
+                <Stack direction="row" spacing={1} justifyContent="center">
+                  <Tooltip title={authTab === 1 ? "Run All Tests (New API Key)" : "Run All Tests"}>
+                    <IconButton
+                      color="primary"
+                      onClick={() => runAllTests(true)} // Force new key for API tests
+                      disabled={loading}
+                    >
+                      <PlayIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title={authTab === 1 ? "Refresh (Reuse API Key)" : "Refresh Tests"}>
+                    <IconButton
+                      color="default"
+                      onClick={() => runAllTests(false)} // Reuse existing key if available
+                      disabled={loading}
+                    >
+                      <RefreshIcon />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Copy Report">
+                    <IconButton
+                      color="default"
+                      onClick={copyFullReport}
+                      disabled={tests.length === 0}
+                    >
+                      <CopyIcon />
+                    </IconButton>
+                  </Tooltip>
+                </Stack>
+                <Typography variant="body2" color="textSecondary">
+                  Actions
+                </Typography>
+              </Paper>
+            </Grid>
+          </Grid>
 
-            {loading && <LinearProgress sx={{ my: 2 }} />}
-
-            <Box sx={{ borderBottom: 1, borderColor: 'divider', mt: 3 }}>
-              <Tabs value={currentTab} onChange={(e, v) => setCurrentTab(v)} variant="scrollable" scrollButtons="auto">
-                {tabCategories.map((cat, idx) => {
-                  const stats = getCategoryStats(cat.key);
-                  return (
-                    <Tab
-                      key={cat.key}
-                      sx={{
-                        ...(cat.color && currentTab === idx ? {
-                          backgroundColor: `${cat.color}15`,
-                          borderBottom: `3px solid ${cat.color}`
-                        } : {})
-                      }}
-                      label={
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <Box sx={{ color: cat.color || 'inherit' }}>
-                            {cat.icon}
-                          </Box>
-                          <span style={{ color: cat.color || 'inherit', fontWeight: currentTab === idx ? 'bold' : 'normal' }}>
-                            {cat.label}
-                          </span>
-                          {stats && stats.total > 0 && (
-                            <Chip
-                              size="small"
-                              label={`${stats.passed}/${stats.total}`}
-                              sx={{
-                                ml: 1,
-                                height: 20,
-                                backgroundColor: stats.failed > 0 ? '#f44336' : stats.warnings > 0 ? '#ff9800' : '#4caf50',
-                                color: 'white',
-                                fontWeight: 'bold'
-                              }}
-                            />
-                          )}
-                        </Box>
-                      }
-                    />
-                  );
-                })}
-              </Tabs>
+          {loading && (
+            <Box mb={3}>
+              <LinearProgress />
+              <Typography variant="body2" color="textSecondary" align="center" mt={1}>
+                Running tests with {authTab === 0 ? 'JWT' : 'API Key'} authentication...
+              </Typography>
             </Box>
+          )}
 
-            <Fade in={!loading}>
-              <Box sx={{ mt: 3 }}>
-                {currentTab === 0 && (
-                  <>
-                    {/* Show all tests grouped by HTTP method */}
-                    {['GET', 'POST', 'PUT', 'DELETE'].map((method) => {
-                      const methodTests = tests.filter(t => t.method === method);
-                      const methodColor = method === 'GET' ? '#2196f3' :
-                                         method === 'POST' ? '#4caf50' :
-                                         method === 'PUT' ? '#ff9800' : '#f44336';
-                      return methodTests.length > 0 && (
-                        <Box key={method} mb={3}>
-                          <SectionHeader variant="h6" sx={{ backgroundColor: `${methodColor}15`, borderLeft: `4px solid ${methodColor}` }}>
-                            {method} Requests ({methodTests.filter(t => t.status === 'success').length}/{methodTests.length})
-                          </SectionHeader>
-                          {methodTests.map((test, index) => (
-                            <TestItem key={`${method}-${index}`} test={test} />
-                          ))}
-                        </Box>
-                      );
-                    })}
-                  </>
-                )}
-                {currentTab > 0 && (
-                  <>
-                    {getTestsForTab(currentTab).map((test, index) => (
-                      <TestItem key={`test-${currentTab}-${index}`} test={test} />
-                    ))}
-                    {getTestsForTab(currentTab).length === 0 && (
-                      <Typography variant="body1" color="textSecondary" sx={{ mt: 3, textAlign: 'center' }}>
-                        No tests in this category
-                      </Typography>
-                    )}
-                  </>
-                )}
-              </Box>
-            </Fade>
-          </Paper>
-        </Fade>
+          {/* Test Categories */}
+          <TestSection
+            title="Core Operations"
+            tests={groupedTests.CORE}
+            icon={AddIcon}
+            expanded={expandedSections.CORE}
+            onToggle={() => toggleSection('CORE')}
+          />
+          <TestSection
+            title="Search & Filters"
+            tests={groupedTests.FILTERS}
+            icon={SearchIcon}
+            expanded={expandedSections.FILTERS}
+            onToggle={() => toggleSection('FILTERS')}
+          />
+          <TestSection
+            title="Error Handling"
+            tests={groupedTests.ERROR}
+            icon={BugIcon}
+            expanded={expandedSections.ERROR}
+            onToggle={() => toggleSection('ERROR')}
+          />
+          <TestSection
+            title="Edge Cases"
+            tests={groupedTests.EDGE}
+            icon={WarningIcon}
+            expanded={expandedSections.EDGE}
+            onToggle={() => toggleSection('EDGE')}
+          />
+          <TestSection
+            title="Performance"
+            tests={groupedTests.PERFORMANCE}
+            icon={SpeedIcon}
+            expanded={expandedSections.PERFORMANCE}
+            onToggle={() => toggleSection('PERFORMANCE')}
+          />
+          <TestSection
+            title="Workflows"
+            tests={groupedTests.WORKFLOW}
+            icon={EditIcon}
+            expanded={expandedSections.WORKFLOW}
+            onToggle={() => toggleSection('WORKFLOW')}
+          />
+
+          {lastRefresh && (
+            <Typography variant="caption" color="textSecondary" display="block" mt={3} textAlign="center">
+              Last refreshed: {lastRefresh.toLocaleString()} ({authTab === 0 ? 'JWT' : 'API Key'} Mode)
+            </Typography>
+          )}
+        </Paper>
+
+        <Snackbar
+          open={snackbarOpen}
+          autoHideDuration={6000}
+          onClose={() => setSnackbarOpen(false)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert onClose={() => setSnackbarOpen(false)} severity="success" sx={{ width: '100%' }}>
+            {snackbarMessage}
+          </Alert>
+        </Snackbar>
       </Container>
-
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={3000}
-        onClose={() => setSnackbarOpen(false)}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-      >
-        <Alert onClose={() => setSnackbarOpen(false)} severity="success" sx={{ width: '100%' }}>
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
     </PageContainer>
   );
 };
