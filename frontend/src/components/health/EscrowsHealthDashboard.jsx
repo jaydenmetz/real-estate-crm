@@ -518,7 +518,20 @@ const EscrowsHealthDashboard = () => {
   const copyFullReport = () => {
     const report = {
       timestamp: lastRefresh?.toISOString(),
-      authType: authTab === 0 ? 'JWT' : 'API Key',
+      authentication: {
+        type: authTab === 0 ? 'JWT' : 'API Key',
+        details: authTab === 0
+          ? {
+              method: 'Bearer Token (JWT)',
+              tokenPresent: !!localStorage.getItem('authToken'),
+              tokenPreview: localStorage.getItem('authToken')?.substring(0, 20) + '...'
+            }
+          : {
+              method: 'X-API-Key Header',
+              keyUsed: apiKey ? `${apiKey.substring(0, 12)}...${apiKey.slice(-4)}` : 'None',
+              selectedFromDropdown: apiKeys.some(k => k.key === apiKey || k.key_prefix === apiKey)
+            }
+      },
       endpoint: '/escrows',
       summary: {
         total: tests.length,
@@ -530,7 +543,7 @@ const EscrowsHealthDashboard = () => {
     };
 
     navigator.clipboard.writeText(JSON.stringify(report, null, 2));
-    setSnackbarMessage('Full report copied to clipboard!');
+    setSnackbarMessage('Full report with authentication details copied to clipboard!');
     setSnackbarOpen(true);
   };
 
