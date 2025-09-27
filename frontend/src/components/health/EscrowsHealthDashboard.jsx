@@ -77,7 +77,6 @@ const TestCard = styled(Card)(({ status }) => ({
                    status === 'failed' ? '#ffebee' :
                    status === 'warning' ? '#fff3e0' : '#fafafa',
   transition: 'all 0.3s ease',
-  cursor: 'pointer',
   '&:hover': {
     transform: 'translateY(-2px)',
     boxShadow: '0 4px 20px rgba(0,0,0,0.12)'
@@ -248,8 +247,8 @@ const TestResult = ({ test }) => {
   };
 
   return (
-    <TestCard status={test.status} onClick={() => setExpanded(!expanded)}>
-      <CardContent>
+    <TestCard status={test.status}>
+      <CardContent onClick={() => setExpanded(!expanded)} sx={{ cursor: 'pointer' }}>
         <Box display="flex" alignItems="center" justifyContent="space-between">
           <Box display="flex" alignItems="center" gap={2}>
             {getIcon()}
@@ -289,7 +288,9 @@ const TestResult = ({ test }) => {
       </CardContent>
 
       <Collapse in={expanded}>
-        <Box sx={{ p: 2, backgroundColor: 'rgba(0,0,0,0.02)' }}>
+        <Box
+          sx={{ p: 2, backgroundColor: 'rgba(0,0,0,0.02)' }}
+          onClick={(e) => e.stopPropagation()}>
           <Typography variant="subtitle2" gutterBottom fontWeight="bold">
             Endpoint:
           </Typography>
@@ -303,7 +304,10 @@ const TestResult = ({ test }) => {
                 cURL Command:
               </Typography>
               <CodeBlock>
-                <CopyButton size="small" onClick={() => copyToClipboard(test.curl)}>
+                <CopyButton size="small" onClick={(e) => {
+                  e.stopPropagation();
+                  copyToClipboard(test.curl);
+                }}>
                   <CopyIcon fontSize="small" />
                 </CopyButton>
                 <pre style={{ margin: 0 }}>{test.curl}</pre>
@@ -317,7 +321,10 @@ const TestResult = ({ test }) => {
                 Request Body:
               </Typography>
               <CodeBlock>
-                <CopyButton size="small" onClick={() => copyToClipboard(JSON.stringify(test.requestBody, null, 2))}>
+                <CopyButton size="small" onClick={(e) => {
+                  e.stopPropagation();
+                  copyToClipboard(JSON.stringify(test.requestBody, null, 2));
+                }}>
                   <CopyIcon fontSize="small" />
                 </CopyButton>
                 <pre style={{ margin: 0 }}>{JSON.stringify(test.requestBody, null, 2)}</pre>
@@ -331,7 +338,10 @@ const TestResult = ({ test }) => {
                 Response:
               </Typography>
               <CodeBlock>
-                <CopyButton size="small" onClick={() => copyToClipboard(formatResponse())}>
+                <CopyButton size="small" onClick={(e) => {
+                  e.stopPropagation();
+                  copyToClipboard(formatResponse());
+                }}>
                   <CopyIcon fontSize="small" />
                 </CopyButton>
                 <pre style={{ margin: 0 }}>{formatResponse()}</pre>
@@ -377,11 +387,11 @@ const EscrowsHealthDashboard = () => {
   });
   const [expandedSections, setExpandedSections] = useState({
     CORE: true,
-    FILTERS: false,
-    ERROR: false,
-    EDGE: false,
-    PERFORMANCE: false,
-    WORKFLOW: false
+    FILTERS: true,
+    ERROR: true,
+    EDGE: true,
+    PERFORMANCE: true,
+    WORKFLOW: true
   });
 
   const handleAuthTabChange = (event, newValue) => {
