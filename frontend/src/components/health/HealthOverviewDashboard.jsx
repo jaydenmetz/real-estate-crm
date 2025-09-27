@@ -356,7 +356,7 @@ const HealthOverviewDashboard = () => {
       passed: totalPassed,
       failed: totalTests - totalPassed,
       success_rate: `${rate.toFixed(1)}%`,
-      status: rate === 100 ? 'healthy' : rate >= 80 ? 'warning' : 'critical'
+      status: rate === 100 ? 'healthy' : 'critical' // No warning state, only healthy or critical
     };
   };
 

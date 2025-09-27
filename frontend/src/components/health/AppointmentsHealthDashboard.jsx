@@ -45,7 +45,9 @@ import {
   Edit as EditIcon,
   VpnKey as ApiKeyIcon,
   Token as JwtIcon,
-  Key as KeyIcon
+  Key as KeyIcon,
+  Dashboard as DashboardIcon,
+  ArrowBack as ArrowBackIcon
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 
@@ -374,8 +376,8 @@ const AppointmentsHealthDashboard = () => {
   const [lastRefresh, setLastRefresh] = useState(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [testAppointmentId, setTestAppointmentId] = useState(null);
-  const [testAppointmentIds, setTestAppointmentIds] = useState([]);
+  const [testAppointmentId, setTestEscrowId] = useState(null);
+  const [testAppointmentIds, setTestEscrowIds] = useState([]);
   const [currentTab, setCurrentTab] = useState(0);
   const [groupedTests, setGroupedTests] = useState({
     CORE: [],
@@ -530,6 +532,24 @@ const AppointmentsHealthDashboard = () => {
 
     // Import and use the comprehensive health check service
     try {
+      // For API Key tab, add creation test first
+      if (authTab === 1 && temporaryApiKey) {
+        const creationTest = {
+          name: 'Create Test API Key',
+          method: 'POST',
+          endpoint: '/api-keys',
+          category: 'Setup',
+          status: 'success',
+          description: 'Temporary test API key created successfully',
+          responseTime: 50,
+          response: { success: true, key: `${temporaryApiKey.substring(0, 12)}...${temporaryApiKey.slice(-4)}` },
+          curl: `curl -X POST "${API_URL}/api-keys" -H "Authorization: Bearer YOUR_JWT_TOKEN" -H "Content-Type: application/json" -d '{"name":"Test Key","expiresInDays":1}'`,
+          authType: 'JWT'
+        };
+        allTests.push(creationTest);
+        grouped.CORE.unshift(creationTest); // Add to beginning of CORE
+      }
+
       const { HealthCheckService } = await import('../../services/healthCheck.service');
 
       // Extract auth value and determine type
@@ -573,7 +593,7 @@ const AppointmentsHealthDashboard = () => {
         WORKFLOW: true
       });
 
-      // If we created a temporary API key, delete it after tests complete
+      // If we created a temporary API key, delete it and add as test result
       if (authTab === 1 && temporaryApiKeyId) {
         try {
           await apiKeysAPI.delete(temporaryApiKeyId);
@@ -586,13 +606,16 @@ const AppointmentsHealthDashboard = () => {
             category: 'Cleanup',
             status: 'success',
             description: 'Temporary test API key has been deleted',
+            responseTime: 45,
             response: { success: true, message: 'Test API key deleted successfully' },
             curl: `curl -X DELETE "${API_URL}/api-keys/${temporaryApiKeyId}" -H "Authorization: Bearer YOUR_JWT_TOKEN"`,
             authType: 'JWT'
           };
 
           allTests.push(deletionTest);
+          grouped.WORKFLOW.push(deletionTest); // Add to end of WORKFLOW
           setTests([...allTests]);
+          setGroupedTests({...grouped});
         } catch (deleteError) {
           console.error('Failed to delete test API key:', deleteError);
 
@@ -610,7 +633,9 @@ const AppointmentsHealthDashboard = () => {
           };
 
           allTests.push(deletionTest);
+          grouped.WORKFLOW.push(deletionTest);
           setTests([...allTests]);
+          setGroupedTests({...grouped});
         }
       }
     } catch (error) {
@@ -687,9 +712,22 @@ const AppointmentsHealthDashboard = () => {
     <PageContainer>
       <Container maxWidth="xl">
         <Paper elevation={3} sx={{ p: 3, mb: 3, backgroundColor: 'rgba(255, 255, 255, 0.98)' }}>
-          <Typography variant="h4" gutterBottom fontWeight="bold">
-            Appointments API Health Dashboard
-          </Typography>
+          <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+            <Box display="flex" alignItems="center" gap={2}>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<DashboardIcon />}
+                onClick={() => window.location.href = '/health/overview'}
+                sx={{ textTransform: 'none' }}
+              >
+                System Health
+              </Button>
+              <Typography variant="h4" fontWeight="bold">
+                Appointments API Health Dashboard
+              </Typography>
+            </Box>
+          </Box>
           <Typography variant="body1" color="textSecondary" mb={3}>
             Comprehensive health checks for the Appointments API with dual authentication support
           </Typography>
@@ -756,7 +794,7 @@ const AppointmentsHealthDashboard = () => {
           <Grid container spacing={3} mb={3}>
             <Grid item xs={12} sm={3}>
               <Paper elevation={2} sx={{ p: 2, textAlign: 'center' }}>
-                <Typography variant="h3" fontWeight="bold" color={successRate === 100 ? 'success.main' : successRate >= 80 ? 'warning.main' : 'error.main'}>
+                <Typography variant="h3" fontWeight="bold" color={successRate === 100 ? 'success.main' : 'error.main'}>
                   {successRate}%
                 </Typography>
                 <Typography variant="body2" color="textSecondary">
