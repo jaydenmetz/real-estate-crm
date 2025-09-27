@@ -211,7 +211,7 @@ const TestSection = ({ title, tests, icon: Icon, expanded, onToggle }) => {
 };
 
 const TestResult = ({ test }) => {
-  const [expanded, setExpanded] = useState(false);
+  const [expanded, setExpanded] = useState(false); // Individual tests start collapsed
   const [copySuccess, setCopySuccess] = useState(false);
 
   const getIcon = () => {
@@ -408,6 +408,15 @@ const EscrowsHealthDashboard = () => {
       PERFORMANCE: [],
       WORKFLOW: []
     });
+    // Keep sections expanded when switching tabs
+    setExpandedSections({
+      CORE: true,
+      FILTERS: true,
+      ERROR: true,
+      EDGE: true,
+      PERFORMANCE: true,
+      WORKFLOW: true
+    });
   };
 
   const getAuthHeader = () => {
@@ -553,6 +562,16 @@ const EscrowsHealthDashboard = () => {
       setTests(allTests);
       setGroupedTests(grouped);
       setLastRefresh(new Date());
+
+      // Ensure sections remain expanded after tests load
+      setExpandedSections({
+        CORE: true,
+        FILTERS: true,
+        ERROR: true,
+        EDGE: true,
+        PERFORMANCE: true,
+        WORKFLOW: true
+      });
 
       // If we created a temporary API key, delete it after tests complete
       if (authTab === 1 && temporaryApiKeyId) {
