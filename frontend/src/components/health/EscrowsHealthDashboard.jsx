@@ -357,9 +357,8 @@ const TestResult = ({ test }) => {
 
 const EscrowsHealthDashboard = () => {
   const [authTab, setAuthTab] = useState(0); // 0 = JWT, 1 = API Key
-  const [apiKey, setApiKey] = useState('');
-  const [apiKeys, setApiKeys] = useState([]);
-  const [apiKeysLoading, setApiKeysLoading] = useState(false);
+  const [testApiKey, setTestApiKey] = useState(null); // Store the full test API key
+  const [testApiKeyId, setTestApiKeyId] = useState(null); // Store the ID for deletion
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(false);
   const [lastRefresh, setLastRefresh] = useState(null);
@@ -407,8 +406,8 @@ const EscrowsHealthDashboard = () => {
                    localStorage.getItem('token');
       return token ? { 'Authorization': `Bearer ${token}` } : {};
     } else {
-      // API Key Authentication
-      return apiKey ? { 'X-API-Key': apiKey } : {};
+      // API Key Authentication - will be set during test run
+      return testApiKey ? { 'X-API-Key': testApiKey } : {};
     }
   };
 
@@ -419,7 +418,7 @@ const EscrowsHealthDashboard = () => {
                    localStorage.getItem('token');
       return token ? `Bearer ${token.substring(0, 20)}...` : 'No JWT token found';
     } else {
-      return apiKey ? `${apiKey.substring(0, 20)}...` : 'No API key provided';
+      return testApiKey ? `${testApiKey.substring(0, 20)}...` : 'No API key yet';
     }
   };
 
@@ -428,16 +427,50 @@ const EscrowsHealthDashboard = () => {
     setTests([]);
     setGroupedTests({ CORE: [], FILTERS: [], ERROR: [], EDGE: [], PERFORMANCE: [], WORKFLOW: [] });
 
+    // Clear any existing test API key
+    setTestApiKey(null);
+    setTestApiKeyId(null);
+
     let API_URL = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
     if (!API_URL.endsWith('/v1')) {
       API_URL = API_URL.replace(/\/$/, '') + '/v1';
     }
 
-    const authHeaders = getAuthHeader();
-    const authDisplay = getAuthDisplay();
+    // For API Key tab, create a temporary test API key
+    let authHeaders = getAuthHeader();
+    let authDisplay = getAuthDisplay();
+    let temporaryApiKey = null;
+    let temporaryApiKeyId = null;
 
-    if ((authTab === 1 && !apiKey) || (authTab === 0 && !authHeaders.Authorization)) {
-      setSnackbarMessage(`Please ${authTab === 0 ? 'log in to get a JWT token' : 'enter an API key'}`);
+    if (authTab === 1) {
+      // Create a temporary test API key
+      try {
+        const response = await apiKeysAPI.create({
+          name: `Test Key - ${new Date().toISOString()}`,
+          expiresInDays: 1 // Expires in 1 day
+        });
+
+        if (response?.data?.key) {
+          temporaryApiKey = response.data.key;
+          temporaryApiKeyId = response.data.id;
+          setTestApiKey(temporaryApiKey);
+          setTestApiKeyId(temporaryApiKeyId);
+
+          // Use the temporary key for testing
+          authHeaders = { 'X-API-Key': temporaryApiKey };
+          authDisplay = `${temporaryApiKey.substring(0, 20)}...`;
+        } else {
+          throw new Error('Failed to create test API key');
+        }
+      } catch (error) {
+        console.error('Failed to create test API key:', error);
+        setSnackbarMessage('Failed to create test API key: ' + error.message);
+        setSnackbarOpen(true);
+        setLoading(false);
+        return;
+      }
+    } else if (authTab === 0 && !authHeaders.Authorization) {
+      setSnackbarMessage('Please log in to get a JWT token');
       setSnackbarOpen(true);
       setLoading(false);
       return;
@@ -499,6 +532,47 @@ const EscrowsHealthDashboard = () => {
       setTests(allTests);
       setGroupedTests(grouped);
       setLastRefresh(new Date());
+
+      // If we created a temporary API key, delete it after tests complete
+      if (authTab === 1 && temporaryApiKeyId) {
+        try {
+          await apiKeysAPI.delete(temporaryApiKeyId);
+
+          // Add a test result showing the deletion
+          const deletionTest = {
+            name: 'Delete Test API Key',
+            method: 'DELETE',
+            endpoint: `/api-keys/${temporaryApiKeyId}`,
+            category: 'Cleanup',
+            status: 'success',
+            description: 'Temporary test API key has been deleted',
+            response: { success: true, message: 'Test API key deleted successfully' },
+            curl: `curl -X DELETE "${API_URL}/api-keys/${temporaryApiKeyId}" -H "Authorization: Bearer YOUR_JWT_TOKEN"`,
+            authType: 'JWT'
+          };
+
+          allTests.push(deletionTest);
+          setTests([...allTests]);
+        } catch (deleteError) {
+          console.error('Failed to delete test API key:', deleteError);
+
+          // Add a test result showing the deletion failure
+          const deletionTest = {
+            name: 'Delete Test API Key',
+            method: 'DELETE',
+            endpoint: `/api-keys/${temporaryApiKeyId}`,
+            category: 'Cleanup',
+            status: 'failed',
+            description: 'Failed to delete temporary test API key',
+            error: deleteError.message,
+            curl: `curl -X DELETE "${API_URL}/api-keys/${temporaryApiKeyId}" -H "Authorization: Bearer YOUR_JWT_TOKEN"`,
+            authType: 'JWT'
+          };
+
+          allTests.push(deletionTest);
+          setTests([...allTests]);
+        }
+      }
     } catch (error) {
       console.error('Test execution failed:', error);
       setSnackbarMessage('Failed to run tests: ' + error.message);
@@ -506,7 +580,7 @@ const EscrowsHealthDashboard = () => {
     }
 
     setLoading(false);
-  }, [authTab, apiKey]);
+  }, [authTab]);
 
   const toggleSection = (section) => {
     setExpandedSections(prev => ({
@@ -528,8 +602,8 @@ const EscrowsHealthDashboard = () => {
             }
           : {
               method: 'X-API-Key Header',
-              keyUsed: apiKey ? `${apiKey.substring(0, 12)}...${apiKey.slice(-4)}` : 'None',
-              selectedFromDropdown: apiKeys.some(k => k.key === apiKey || k.key_prefix === apiKey)
+              keyUsed: testApiKey ? `${testApiKey.substring(0, 12)}...${testApiKey.slice(-4)}` : 'None',
+              temporaryKey: true
             }
       },
       endpoint: '/escrows',
@@ -547,20 +621,6 @@ const EscrowsHealthDashboard = () => {
     setSnackbarOpen(true);
   };
 
-  const fetchApiKeys = useCallback(async () => {
-    setApiKeysLoading(true);
-    try {
-      const response = await apiKeysAPI.getAll();
-      if (response?.data) {
-        setApiKeys(response.data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch API keys:', error);
-      setApiKeys([]);
-    } finally {
-      setApiKeysLoading(false);
-    }
-  }, []);
 
   useEffect(() => {
     if (authTab === 0) {
@@ -571,11 +631,9 @@ const EscrowsHealthDashboard = () => {
       if (token) {
         runAllTests();
       }
-    } else if (authTab === 1) {
-      // Fetch API keys when switching to API Key tab
-      fetchApiKeys();
     }
-  }, [authTab, fetchApiKeys]);
+    // For API Key tab, user must manually click "Run All Tests" to create temporary key and test
+  }, [authTab]);
 
   const totalTests = tests.length;
   const passedTests = tests.filter(t => t.status === 'success').length;
@@ -632,67 +690,31 @@ const EscrowsHealthDashboard = () => {
             ) : (
               <Box>
                 <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                  API Key
+                  API Key Testing
                 </Typography>
                 <Typography variant="body2" color="textSecondary" mb={1}>
-                  Select an API key or paste your own. API keys allow external access.
+                  Click "Run All Tests" to automatically create a temporary test API key, run tests, and delete it.
                 </Typography>
-                {apiKeysLoading ? (
-                  <Box display="flex" alignItems="center" justifyContent="center" p={2}>
-                    <CircularProgress size={24} />
-                  </Box>
-                ) : (
-                  <Box>
-                    <FormControl fullWidth size="small" sx={{ mb: 2 }}>
-                      <InputLabel>Select API Key to Use</InputLabel>
-                      <Select
-                        value=""
-                        label="Select API Key to Use"
-                        displayEmpty
-                        renderValue={() => apiKey ? `Using key: ${apiKey.substring(0, 12)}...${apiKey.slice(-4)}` : "Select a key reference"}
-                      >
-                        <MenuItem value="" disabled>
-                          <em>Your saved API keys (select to see prefix)</em>
-                        </MenuItem>
-                        {apiKeys.map((key) => (
-                          <MenuItem key={key.id} value="">
-                            <Box>
-                              <Typography variant="body2">{key.name}</Typography>
-                              <Typography variant="caption" color="text.secondary">
-                                Prefix: {key.key_prefix} • Created: {new Date(key.created_at).toLocaleDateString()}
-                              </Typography>
-                            </Box>
-                          </MenuItem>
-                        ))}
-                      </Select>
-                    </FormControl>
-
+                {testApiKey && (
+                  <Alert severity="info" sx={{ mb: 2 }}>
+                    <Typography variant="subtitle2" fontWeight="bold" gutterBottom>
+                      Test API Key (Full):
+                    </Typography>
                     <TextField
                       fullWidth
-                      value={apiKey}
-                      onChange={(e) => setApiKey(e.target.value)}
-                      placeholder="Paste your full 64-character API key here..."
+                      value={testApiKey}
                       variant="outlined"
                       size="small"
-                      sx={{ mb: 1 }}
+                      sx={{ mt: 1, fontFamily: 'monospace' }}
                       InputProps={{
-                        startAdornment: <KeyIcon sx={{ mr: 1, color: 'text.secondary' }} />
+                        readOnly: true,
+                        style: { fontFamily: 'monospace', fontSize: '0.9rem' }
                       }}
-                      helperText="Enter the complete API key (64 hex characters). We only store prefixes for security."
                     />
-
-                    {apiKey && apiKey.length !== 64 && (
-                      <Alert severity="warning" sx={{ mt: 1 }}>
-                        API key should be exactly 64 characters. Current: {apiKey.length}
-                      </Alert>
-                    )}
-
-                    {apiKey && apiKey.length === 64 && (
-                      <Alert severity="success" sx={{ mt: 1 }}>
-                        ✓ Valid API key length
-                      </Alert>
-                    )}
-                  </Box>
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                      This temporary key was created for testing and will be deleted after tests complete.
+                    </Typography>
+                  </Alert>
                 )}
               </Box>
             )}
@@ -739,7 +761,7 @@ const EscrowsHealthDashboard = () => {
                     <IconButton
                       color="primary"
                       onClick={runAllTests}
-                      disabled={loading || (authTab === 1 && !apiKey)}
+                      disabled={loading}
                     >
                       <PlayIcon />
                     </IconButton>
@@ -748,7 +770,7 @@ const EscrowsHealthDashboard = () => {
                     <IconButton
                       color="default"
                       onClick={runAllTests}
-                      disabled={loading || (authTab === 1 && !apiKey)}
+                      disabled={loading}
                     >
                       <RefreshIcon />
                     </IconButton>
