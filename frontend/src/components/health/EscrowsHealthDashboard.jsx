@@ -696,13 +696,22 @@ const EscrowsHealthDashboard = () => {
                     </Typography>
                     <TextField
                       fullWidth
+                      multiline
+                      rows={2}
                       value={testApiKey}
                       variant="outlined"
                       size="small"
-                      sx={{ mt: 1, fontFamily: 'monospace' }}
+                      sx={{
+                        mt: 1,
+                        '& .MuiInputBase-input': {
+                          fontFamily: 'monospace',
+                          fontSize: '0.85rem',
+                          wordBreak: 'break-all',
+                          whiteSpace: 'pre-wrap'
+                        }
+                      }}
                       InputProps={{
-                        readOnly: true,
-                        style: { fontFamily: 'monospace', fontSize: '0.9rem' }
+                        readOnly: true
                       }}
                     />
                     <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
