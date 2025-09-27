@@ -679,18 +679,9 @@ const EscrowsHealthDashboard = () => {
             />
           </StyledTabs>
 
-          {/* Authentication Input */}
-          <AuthInputBox>
-            {authTab === 0 ? (
-              <Box>
-                <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
-                  JWT Authentication
-                </Typography>
-                <Typography variant="body2" color="textSecondary" mb={1}>
-                  Using the JWT token from your current login session. Tests will run automatically using your session credentials.
-                </Typography>
-              </Box>
-            ) : (
+          {/* Authentication Input - Only show for API Key tab */}
+          {authTab === 1 ? (
+            <AuthInputBox>
               <Box>
                 <Typography variant="subtitle1" fontWeight="bold" gutterBottom>
                   API Key Testing
@@ -720,8 +711,8 @@ const EscrowsHealthDashboard = () => {
                   </Alert>
                 )}
               </Box>
-            )}
-          </AuthInputBox>
+            </AuthInputBox>
+          ) : null}
 
           {/* Stats Overview */}
           <Grid container spacing={3} mb={3}>
