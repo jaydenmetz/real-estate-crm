@@ -1074,42 +1074,167 @@ const ListingsDashboard = () => {
         </Box>
       )}
 
-      {/* Hero Section */}
-      {/* Page Title */}
-      <Box sx={{ mb: 4 }}>
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Typography variant="h4" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
-            Listing Management
-          </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-            Manage and showcase your properties with powerful marketing tools
-          </Typography>
-          <Stack direction="row" spacing={2} flexWrap="wrap">
-            <Button
-              variant="contained"
-              size="large"
-              startIcon={<Add />}
-              onClick={handleCreateListing}
-            >
-              Create New Listing
-            </Button>
-            <Button
-              variant="outlined"
-              size="large"
-              startIcon={<Assessment />}
-            >
-              Market Analysis
-            </Button>
-          </Stack>
-        </motion.div>
-      </Box>
+      {/* Hero Section with Green Background and Stats */}
+      <HeroSection>
+        <Box sx={{ position: 'relative', zIndex: 1 }}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <Typography variant="h3" fontWeight="bold" gutterBottom color="white">
+              Listings Management
+            </Typography>
+            <Typography variant="h6" sx={{ opacity: 0.9, mb: 4, color: 'white' }}>
+              Manage and showcase your properties with powerful marketing tools
+            </Typography>
 
-      {/* Stats Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
+            {/* Action Buttons */}
+            <Stack direction="row" spacing={2} flexWrap="wrap" sx={{ mb: 4 }}>
+              <Button
+                variant="contained"
+                size="large"
+                startIcon={<Add />}
+                onClick={handleCreateListing}
+                sx={{
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  color: '#2E7D32',
+                  fontWeight: 600,
+                  '&:hover': {
+                    background: 'rgba(255, 255, 255, 1)',
+                  }
+                }}
+              >
+                Create New Listing
+              </Button>
+              <Button
+                variant="outlined"
+                size="large"
+                startIcon={<Assessment />}
+                sx={{
+                  borderColor: 'rgba(255, 255, 255, 0.5)',
+                  color: 'white',
+                  '&:hover': {
+                    borderColor: 'white',
+                    background: 'rgba(255, 255, 255, 0.1)',
+                  }
+                }}
+              >
+                Market Analysis
+              </Button>
+            </Stack>
+
+            {/* Stats Cards inside Hero */}
+            <Grid container spacing={3}>
+              <Grid item xs={12} sm={6} md={2}>
+                <Card sx={{
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: 2,
+                  boxShadow: '0 4px 20px 0 rgba(0, 0, 0, 0.05)'
+                }}>
+                  <CardContent sx={{ p: 2 }}>
+                    <Typography color="textSecondary" variant="caption" sx={{ textTransform: 'uppercase', fontWeight: 600 }}>
+                      Total Listings
+                    </Typography>
+                    <Typography variant="h4" fontWeight="bold" sx={{ mt: 1 }}>
+                      <CountUp end={stats.totalListings} duration={2} />
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6} md={2}>
+                <Card sx={{
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: 2,
+                  boxShadow: '0 4px 20px 0 rgba(0, 0, 0, 0.05)'
+                }}>
+                  <CardContent sx={{ p: 2 }}>
+                    <Typography color="textSecondary" variant="caption" sx={{ textTransform: 'uppercase', fontWeight: 600 }}>
+                      Active
+                    </Typography>
+                    <Typography variant="h4" fontWeight="bold" sx={{ mt: 1 }}>
+                      <CountUp end={stats.activeListings} duration={2} />
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6} md={2}>
+                <Card sx={{
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: 2,
+                  boxShadow: '0 4px 20px 0 rgba(0, 0, 0, 0.05)'
+                }}>
+                  <CardContent sx={{ p: 2 }}>
+                    <Typography color="textSecondary" variant="caption" sx={{ textTransform: 'uppercase', fontWeight: 600 }}>
+                      Total Value
+                    </Typography>
+                    <Typography variant="h4" fontWeight="bold" sx={{ mt: 1 }}>
+                      ${stats.totalValue > 0 ? <CountUp end={stats.totalValue / 1000000} decimals={1} duration={2} /> : '0'}M
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6} md={2}>
+                <Card sx={{
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: 2,
+                  boxShadow: '0 4px 20px 0 rgba(0, 0, 0, 0.05)'
+                }}>
+                  <CardContent sx={{ p: 2 }}>
+                    <Typography color="textSecondary" variant="caption" sx={{ textTransform: 'uppercase', fontWeight: 600 }}>
+                      Avg DOM
+                    </Typography>
+                    <Typography variant="h4" fontWeight="bold" sx={{ mt: 1 }}>
+                      <CountUp end={stats.avgDaysOnMarket} duration={2} />
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6} md={2}>
+                <Card sx={{
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: 2,
+                  boxShadow: '0 4px 20px 0 rgba(0, 0, 0, 0.05)'
+                }}>
+                  <CardContent sx={{ p: 2 }}>
+                    <Typography color="textSecondary" variant="caption" sx={{ textTransform: 'uppercase', fontWeight: 600 }}>
+                      Hot Properties
+                    </Typography>
+                    <Typography variant="h4" fontWeight="bold" sx={{ mt: 1 }}>
+                      <CountUp end={stats.hotProperties} duration={2} />
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+              <Grid item xs={12} sm={6} md={2}>
+                <Card sx={{
+                  background: 'rgba(255, 255, 255, 0.95)',
+                  backdropFilter: 'blur(10px)',
+                  borderRadius: 2,
+                  boxShadow: '0 4px 20px 0 rgba(0, 0, 0, 0.05)'
+                }}>
+                  <CardContent sx={{ p: 2 }}>
+                    <Typography color="textSecondary" variant="caption" sx={{ textTransform: 'uppercase', fontWeight: 600 }}>
+                      New This Week
+                    </Typography>
+                    <Typography variant="h4" fontWeight="bold" sx={{ mt: 1 }}>
+                      <CountUp end={stats.newThisWeek} duration={2} />
+                    </Typography>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+          </motion.div>
+        </Box>
+      </HeroSection>
+
+      {/* Stats Cards - Removed as they're now in hero */}
+      <Grid container spacing={3} sx={{ mb: 4, display: 'none' }}>
         <Grid item xs={12} sm={6} md={3}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1213,7 +1338,7 @@ const ListingsDashboard = () => {
                     Total Showings
                   </Typography>
                   <Typography variant="h4" fontWeight="bold">
-                    <CountUp end={mockListings.reduce((sum, l) => sum + l.showings, 0)} duration={2} />
+                    <CountUp end={listings.reduce((sum, l) => sum + (l.showings || 0), 0)} duration={2} />
                   </Typography>
                   <Chip
                     size="small"
