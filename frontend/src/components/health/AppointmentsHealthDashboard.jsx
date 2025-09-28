@@ -725,7 +725,7 @@ const AppointmentsHealthDashboard = () => {
                 variant="outlined"
                 size="small"
                 startIcon={<DashboardIcon />}
-                onClick={() => window.location.href = '/health/overview'}
+                onClick={() => window.location.href = '/health'}
                 sx={{ textTransform: 'none' }}
               >
                 System Health

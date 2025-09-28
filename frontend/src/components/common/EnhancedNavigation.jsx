@@ -364,7 +364,7 @@ const EnhancedNavigation = () => {
         </MenuItem>
         <MenuItem
           onClick={() => {
-            navigate('/health/overview');
+            navigate('/health');
             setBrandMenuAnchor(null);
           }}
         >
