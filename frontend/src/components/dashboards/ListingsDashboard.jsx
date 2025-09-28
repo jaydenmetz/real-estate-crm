@@ -493,8 +493,8 @@ const ListingsDashboard = () => {
       <CardMedia
         component="img"
         height="240"
-        image={listing.primaryImage}
-        alt={listing.propertyAddress}
+        image={listing.primaryImage || 'https://via.placeholder.com/400x240?text=No+Image'}
+        alt={listing.propertyAddress || 'Property'}
         sx={{ transition: 'transform 0.3s ease' }}
       />
       
@@ -508,9 +508,11 @@ const ListingsDashboard = () => {
               listing.listingStatus === 'Sold' ? <Check /> : null}
       />
       
-      <Typography className="price-badge" variant="h6">
-        ${(listing.listPrice || 0).toLocaleString()}
-      </Typography>
+      {listing.listPrice && (
+        <Typography className="price-badge" variant="h6">
+          ${listing.listPrice.toLocaleString()}
+        </Typography>
+      )}
 
       <Box
         className="listing-overlay"
@@ -533,19 +535,19 @@ const ListingsDashboard = () => {
             <Grid item xs={3}>
               <Box sx={{ textAlign: 'center', color: 'white' }}>
                 <Bed />
-                <Typography variant="caption" display="block">{listing.bedrooms} beds</Typography>
+                <Typography variant="caption" display="block">{listing.bedrooms || 0} beds</Typography>
               </Box>
             </Grid>
             <Grid item xs={3}>
               <Box sx={{ textAlign: 'center', color: 'white' }}>
                 <Bathtub />
-                <Typography variant="caption" display="block">{listing.bathrooms} baths</Typography>
+                <Typography variant="caption" display="block">{listing.bathrooms || 0} baths</Typography>
               </Box>
             </Grid>
             <Grid item xs={3}>
               <Box sx={{ textAlign: 'center', color: 'white' }}>
                 <SquareFoot />
-                <Typography variant="caption" display="block">{(listing.squareFootage || 0).toLocaleString()} ft²</Typography>
+                <Typography variant="caption" display="block">{listing.squareFootage ? `${listing.squareFootage.toLocaleString()} ft²` : 'N/A'}</Typography>
               </Box>
             </Grid>
             <Grid item xs={3}>
@@ -560,10 +562,10 @@ const ListingsDashboard = () => {
 
       <CardContent>
         <Typography gutterBottom variant="h6" component="div" sx={{ fontWeight: 'bold' }}>
-          {listing.propertyAddress.split(',')[0]}
+          {listing.propertyAddress ? listing.propertyAddress.split(',')[0] : 'No Address'}
         </Typography>
         <Typography variant="body2" color="text.secondary" gutterBottom>
-          {listing.propertyAddress.split(',').slice(1).join(',')}
+          {listing.propertyAddress ? listing.propertyAddress.split(',').slice(1).join(',') : ''}
         </Typography>
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
           MLS# {listing.mlsNumber}
@@ -593,13 +595,13 @@ const ListingsDashboard = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <RemoveRedEye sx={{ fontSize: 18, color: 'text.secondary' }} />
               <Typography variant="body2" color="text.secondary">
-                {listing.views}
+                {listing.views || 0}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
               <FavoriteBorder sx={{ fontSize: 18, color: 'text.secondary' }} />
               <Typography variant="body2" color="text.secondary">
-                {listing.favorites}
+                {listing.favorites || 0}
               </Typography>
             </Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -611,7 +613,7 @@ const ListingsDashboard = () => {
           </Stack>
           
           <Typography variant="caption" color="text.secondary">
-            {listing.daysOnMarket} days on market
+            {listing.daysOnMarket || 0} days on market
           </Typography>
         </Box>
       </CardContent>
@@ -1008,10 +1010,10 @@ const ListingsDashboard = () => {
                             ID: {listing.id} | Status: {listing.listingStatus}
                           </Typography>
                           <Typography variant="body2">
-                            {listing.address}
+                            {listing.propertyAddress || listing.address || 'No address'}
                           </Typography>
                           <Typography variant="body2">
-                            Price: ${listing.listPrice.toLocaleString()} | DOM: {listing.daysOnMarket}
+                            Price: ${(listing.listPrice || 0).toLocaleString()} | DOM: {listing.daysOnMarket || 0}
                           </Typography>
                         </Box>
                       ))}
