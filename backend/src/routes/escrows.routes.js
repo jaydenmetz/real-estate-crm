@@ -144,6 +144,17 @@ router.delete(
   escrowsController.deleteEscrow
 );
 
+// Batch delete multiple escrows (only archived ones) - POST /v1/escrows/batch-delete
+router.post(
+  '/batch-delete',
+  [
+    body('ids').isArray({ min: 1 }).withMessage('IDs must be a non-empty array'),
+    body('ids.*').isString().withMessage('Each ID must be a string')
+  ],
+  validate,
+  escrowsController.batchDeleteEscrows
+);
+
 // PATCH /v1/escrows/:id/checklist
 router.patch(
   '/:id/checklist',

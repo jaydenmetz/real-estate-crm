@@ -1143,6 +1143,8 @@ const EscrowsDashboard = () => {
   const [selectedStatus, setSelectedStatus] = useState('active');
   const [viewMode, setViewMode] = useState('optimized'); // 'optimized', 'compact', 'detailed'
   const [archivedCount, setArchivedCount] = useState(0);
+  const [selectedArchivedIds, setSelectedArchivedIds] = useState([]);
+  const [batchDeleting, setBatchDeleting] = useState(false);
   const [stats, setStats] = useState({
     totalEscrows: 0,
     activeEscrows: 0,
@@ -1494,6 +1496,47 @@ const EscrowsDashboard = () => {
       }
     } catch (error) {
       console.error('Failed to permanently delete escrow:', error);
+    }
+  };
+
+  const handleBatchDelete = async () => {
+    if (selectedArchivedIds.length === 0) return;
+
+    const count = selectedArchivedIds.length;
+    if (!window.confirm(`Are you sure you want to permanently delete ${count} escrow${count > 1 ? 's' : ''}? This action cannot be undone.`)) {
+      return;
+    }
+
+    setBatchDeleting(true);
+    try {
+      const response = await escrowsAPI.batchDelete(selectedArchivedIds);
+      if (response.success) {
+        setArchivedEscrows(prev => prev.filter(e => !selectedArchivedIds.includes(e.id)));
+        setArchivedCount(prev => Math.max(0, prev - selectedArchivedIds.length));
+        setSelectedArchivedIds([]);
+        console.log(`Successfully deleted ${response.data.deleted} escrows`);
+      }
+    } catch (error) {
+      console.error('Failed to batch delete escrows:', error);
+      alert('Failed to delete escrows. Please try again.');
+    } finally {
+      setBatchDeleting(false);
+    }
+  };
+
+  const handleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedArchivedIds(archivedEscrows.map(e => e.id));
+    } else {
+      setSelectedArchivedIds([]);
+    }
+  };
+
+  const handleSelectEscrow = (escrowId, checked) => {
+    if (checked) {
+      setSelectedArchivedIds(prev => [...prev, escrowId]);
+    } else {
+      setSelectedArchivedIds(prev => prev.filter(id => id !== escrowId));
     }
   };
 
@@ -2004,53 +2047,98 @@ const EscrowsDashboard = () => {
                 );
               }
 
-              return archivedEscrows.map((escrow, index) => {
-                if (viewMode === 'optimized') {
-                  return (
-                    <EscrowCardOptimized
-                      key={escrow.id}
-                      escrow={escrow}
-                      index={index}
-                      showCommission={true}
-                      isArchived={true}
-                      onQuickAction={(action, escrowData) => {
-                        if (action === 'view') {
-                          handleEscrowClick(escrowData.id);
-                        } else if (action === 'restore') {
-                          handleRestore(escrowData.id);
-                        } else if (action === 'delete') {
-                          handlePermanentDelete(escrowData.id);
-                        }
+              return (
+                <>
+                  {/* Batch action toolbar for archived escrows */}
+                  <Box sx={{ gridColumn: '1 / -1', mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Checkbox
+                      checked={selectedArchivedIds.length === archivedEscrows.length && archivedEscrows.length > 0}
+                      indeterminate={selectedArchivedIds.length > 0 && selectedArchivedIds.length < archivedEscrows.length}
+                      onChange={(e) => handleSelectAll(e.target.checked)}
+                    />
+                    <Typography variant="body2">
+                      {selectedArchivedIds.length > 0
+                        ? `${selectedArchivedIds.length} selected`
+                        : 'Select all'}
+                    </Typography>
+                    {selectedArchivedIds.length > 0 && (
+                      <Button
+                        variant="contained"
+                        color="error"
+                        size="small"
+                        startIcon={batchDeleting ? <CircularProgress size={16} color="inherit" /> : <DeleteForeverIcon />}
+                        onClick={handleBatchDelete}
+                        disabled={batchDeleting}
+                      >
+                        Delete {selectedArchivedIds.length} Escrow{selectedArchivedIds.length > 1 ? 's' : ''}
+                      </Button>
+                    )}
+                  </Box>
+
+                  {archivedEscrows.map((escrow, index) => {
+                const isSelected = selectedArchivedIds.includes(escrow.id);
+
+                return (
+                  <Box key={escrow.id} sx={{ position: 'relative' }}>
+                    {/* Selection checkbox */}
+                    <Checkbox
+                      checked={isSelected}
+                      onChange={(e) => handleSelectEscrow(escrow.id, e.target.checked)}
+                      sx={{
+                        position: 'absolute',
+                        top: 8,
+                        left: 8,
+                        zIndex: 10,
+                        bgcolor: 'background.paper',
+                        '&:hover': { bgcolor: 'background.paper' }
                       }}
+                      onClick={(e) => e.stopPropagation()}
                     />
-                  );
-                } else if (viewMode === 'compact') {
-                  return (
-                    <EscrowCompactCard
-                      key={escrow.id}
-                      escrow={escrow}
-                      index={index}
-                      showCommission={true}
-                      isArchived={true}
-                      onRestore={() => handleRestore(escrow.id)}
-                      onDelete={() => handlePermanentDelete(escrow.id)}
-                    />
-                  );
-                } else {
-                  return (
-                    <EscrowCard
-                      key={escrow.id}
-                      escrow={escrow}
-                      onClick={handleEscrowClick}
-                      onChecklistUpdate={handleChecklistUpdate}
-                      onRestore={handleRestore}
-                      onDelete={handlePermanentDelete}
-                      isArchived={true}
-                      index={index}
-                    />
-                  );
-                }
-              });
+
+                    {viewMode === 'optimized' ? (
+                      <EscrowCardOptimized
+                        escrow={escrow}
+                        index={index}
+                        showCommission={true}
+                        isArchived={true}
+                        onQuickAction={(action, escrowData) => {
+                          if (action === 'view') {
+                            handleEscrowClick(escrowData.id);
+                          } else if (action === 'restore') {
+                            handleRestore(escrowData.id);
+                          } else if (action === 'delete') {
+                            handlePermanentDelete(escrowData.id);
+                          }
+                        }}
+                        sx={{ pl: 5 }}
+                      />
+                    ) : viewMode === 'compact' ? (
+                      <EscrowCompactCard
+                        escrow={escrow}
+                        index={index}
+                        showCommission={true}
+                        isArchived={true}
+                        onRestore={() => handleRestore(escrow.id)}
+                        onDelete={() => handlePermanentDelete(escrow.id)}
+                        sx={{ pl: 5 }}
+                      />
+                    ) : (
+                      <EscrowCard
+                        escrow={escrow}
+                        onClick={handleEscrowClick}
+                        onChecklistUpdate={handleChecklistUpdate}
+                        onRestore={handleRestore}
+                        onDelete={handlePermanentDelete}
+                        isArchived={true}
+                        index={index}
+                        sx={{ pl: 5 }}
+                      />
+                    )}
+                  </Box>
+                );
+              })}
+                </>
+              );
             }
 
             // Otherwise show regular escrows filtered by status

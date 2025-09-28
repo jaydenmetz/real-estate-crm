@@ -796,6 +796,91 @@ class EscrowController {
   }
 
   /**
+   * Batch delete multiple escrows (hard delete)
+   */
+  static async batchDeleteEscrows(req, res) {
+    const client = await pool.connect();
+
+    try {
+      const { ids } = req.body;
+
+      if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'INVALID_REQUEST',
+            message: 'IDs must be a non-empty array'
+          }
+        });
+      }
+
+      await client.query('BEGIN');
+
+      // Verify all escrows exist and are archived
+      const verifyQuery = `
+        SELECT id, display_id, property_address
+        FROM escrows
+        WHERE (id = ANY($1) OR display_id = ANY($1))
+        AND deleted_at IS NOT NULL
+      `;
+
+      const verifyResult = await client.query(verifyQuery, [ids]);
+
+      if (verifyResult.rows.length !== ids.length) {
+        await client.query('ROLLBACK');
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: `Some escrows not found or not archived. Only archived escrows can be deleted.`,
+            details: {
+              requested: ids.length,
+              found: verifyResult.rows.length
+            }
+          }
+        });
+      }
+
+      // Delete all escrows
+      const deleteQuery = `
+        DELETE FROM escrows
+        WHERE (id = ANY($1) OR display_id = ANY($1))
+        AND deleted_at IS NOT NULL
+        RETURNING id, display_id, property_address
+      `;
+
+      const deleteResult = await client.query(deleteQuery, [ids]);
+
+      await client.query('COMMIT');
+
+      console.log(`Successfully deleted ${deleteResult.rows.length} escrows`);
+
+      return res.json({
+        success: true,
+        data: {
+          deleted: deleteResult.rows.length,
+          escrows: deleteResult.rows
+        }
+      });
+
+    } catch (error) {
+      await client.query('ROLLBACK');
+      console.error('Error in batch delete escrows:', error);
+
+      return res.status(500).json({
+        success: false,
+        error: {
+          code: 'BATCH_DELETE_ERROR',
+          message: 'Failed to delete escrows',
+          details: error.message
+        }
+      });
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
    * Create a new escrow with auto-incrementing ID and helper tables
    */
   static async createEscrow(req, res) {
@@ -3005,6 +3090,7 @@ module.exports = {
   archiveEscrow: EscrowController.archiveEscrow,
   restoreEscrow: EscrowController.restoreEscrow,
   deleteEscrow: EscrowController.deleteEscrow,
+  batchDeleteEscrows: EscrowController.batchDeleteEscrows,
   updateChecklist: EscrowController.updateChecklist,
   
   // New detail methods
