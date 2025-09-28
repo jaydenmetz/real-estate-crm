@@ -23,22 +23,32 @@ class UserAwareErrorBoundary extends React.Component {
   componentDidCatch(error, errorInfo) {
     console.error(`[${this.props.pageName || 'App'} Error]:`, error);
     console.error('Error Info:', errorInfo);
-    
+
+    // Handle both Error objects and plain objects
+    let normalizedError = error;
+    if (error && typeof error === 'object' && !(error instanceof Error)) {
+      // Convert plain object to Error
+      const message = error.message || error.statusText || JSON.stringify(error);
+      normalizedError = new Error(message);
+      normalizedError.originalError = error;
+    }
+
     // Enhanced error logging for debugging
     const user = authService.getCurrentUser();
     if (user?.username === 'admin') {
       console.group('🔴 Admin Error Details');
-      console.error('Error Message:', error.message);
-      console.error('Error Stack:', error.stack);
+      console.error('Error Message:', normalizedError.message);
+      console.error('Error Stack:', normalizedError.stack);
+      console.error('Original Error:', normalizedError.originalError);
       console.error('Component Stack:', errorInfo.componentStack);
       console.error('Props:', this.props);
       console.error('Current User:', user);
       console.error('Page Name:', this.props.pageName);
       console.groupEnd();
     }
-    
-    this.setState(prevState => ({ 
-      error, 
+
+    this.setState(prevState => ({
+      error: normalizedError,
       errorInfo,
       errorCount: prevState.errorCount + 1
     }));
@@ -68,26 +78,53 @@ class UserAwareErrorBoundary extends React.Component {
     window.location.reload();
   };
 
+  getErrorMessage = () => {
+    const { error } = this.state;
+    if (!error) return 'An unexpected error occurred';
+
+    // If it's an Error object, use its message
+    if (error instanceof Error) {
+      return error.message || error.toString();
+    }
+
+    // If it's an object with message property
+    if (typeof error === 'object' && error.message) {
+      return error.message;
+    }
+
+    // If it's an object with statusText
+    if (typeof error === 'object' && error.statusText) {
+      return `${error.status || ''} ${error.statusText}`.trim();
+    }
+
+    // Try to safely stringify
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return 'An unexpected error occurred';
+    }
+  };
+
   formatFullError = () => {
     const user = authService.getCurrentUser();
     const { error, errorInfo, errorCount } = this.state;
     const pageName = this.props.pageName || 'Application';
-    
+
     let errorReport = `❌ ${pageName} Error (Admin View)\n`;
-    errorReport += `${error?.toString() || 'An unexpected error occurred'}\n`;
+    errorReport += `${this.getErrorMessage()}\n`;
     errorReport += `Page: ${pageName}\n`;
     errorReport += `User: ${user?.username || 'Unknown'} (Admin)\n`;
     errorReport += `Error Count: ${errorCount}\n`;
     errorReport += `Time: ${safeFormatDate(new Date(), 'MM/dd/yyyy HH:mm:ss')}\n\n`;
-    
+
     if (error?.stack) {
       errorReport += `Stack Trace:\n${error.stack}\n\n`;
     }
-    
+
     if (errorInfo?.componentStack) {
       errorReport += `Component Stack:\n${errorInfo.componentStack}`;
     }
-    
+
     return errorReport;
   };
 
@@ -208,7 +245,7 @@ class UserAwareErrorBoundary extends React.Component {
               <Box sx={{ display: 'flex', alignItems: 'flex-start' }}>
                 <Box sx={{ flex: 1 }}>
                   <Typography variant="h6" gutterBottom>
-                    {this.state.error?.toString()}
+                    {this.getErrorMessage()}
                   </Typography>
                   <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
                     Page: {this.props.pageName || 'Unknown'}<br />
