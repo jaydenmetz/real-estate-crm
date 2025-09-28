@@ -147,8 +147,18 @@ const PropertyHeroWidget = ({ data = {} }) => {
   const propertyType = data.property_type || data.propertyType || 'Single Family';
   const apn = data.apn || 'N/A';
   const mlsNumber = data.mls_number || data.mlsNumber || 'N/A';
-  const propertyImage = data.property_image_url || data.propertyImageUrl || 
-    `https://via.placeholder.com/800x600/764ba2/ffffff?text=${encodeURIComponent(propertyAddress)}`;
+  // Use data URI for placeholder to avoid external requests
+  const placeholderImage = 'data:image/svg+xml;base64,' + btoa(`
+    <svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+      <rect width="800" height="600" fill="#764ba2"/>
+      <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
+            font-family="Arial, sans-serif" font-size="24" fill="white">
+        ${propertyAddress || 'Property Image'}
+      </text>
+    </svg>
+  `);
+
+  const propertyImage = data.property_image_url || data.propertyImageUrl || placeholderImage;
   
   const escrowStatus = data.escrow_status || data.escrowStatus || 'active';
   const statusColors = {
@@ -183,7 +193,19 @@ const PropertyHeroWidget = ({ data = {} }) => {
           src={propertyImage}
           alt={propertyAddress}
           onError={(e) => {
-            e.target.src = `https://via.placeholder.com/800x600/764ba2/ffffff?text=${encodeURIComponent(propertyAddress)}`;
+            // Prevent infinite loop by checking if we're already showing placeholder
+            if (!e.target.src.includes('data:image')) {
+              // Use a data URI instead of external placeholder to avoid network issues
+              e.target.src = 'data:image/svg+xml;base64,' + btoa(`
+                <svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="800" height="600" fill="#764ba2"/>
+                  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle"
+                        font-family="Arial, sans-serif" font-size="24" fill="white">
+                    ${propertyAddress || 'Property Image'}
+                  </text>
+                </svg>
+              `);
+            }
           }}
         />
         
