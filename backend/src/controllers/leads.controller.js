@@ -2010,3 +2010,59 @@ exports.getHotLeads = async (req, res) => {
     });
   }
 };
+
+// Batch delete leads
+exports.batchDeleteLeads = async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { ids } = req.body;
+
+    // Start transaction
+    await client.query('BEGIN');
+
+    // First, verify all leads exist and are archived
+    const checkQuery = `
+      SELECT id FROM leads
+      WHERE id = ANY($1)
+      AND deleted_at IS NULL
+    `;
+    const checkResult = await client.query(checkQuery, [ids]);
+
+    if (checkResult.rows.length > 0) {
+      await client.query('ROLLBACK');
+      const activeIds = checkResult.rows.map(r => r.id);
+      return res.status(400).json({
+        success: false,
+        error: `Some leads are not archived and cannot be deleted: ${activeIds.join(', ')}`
+      });
+    }
+
+    // Delete all leads at once
+    const deleteQuery = 'DELETE FROM leads WHERE id = ANY($1) RETURNING id';
+    const result = await client.query(deleteQuery, [ids]);
+
+    await client.query('COMMIT');
+
+    logger.info('Batch deleted leads', {
+      count: result.rowCount,
+      ids: result.rows.map(r => r.id)
+    });
+
+    res.json({
+      success: true,
+      message: `Successfully deleted ${result.rowCount} leads`,
+      deletedCount: result.rowCount,
+      deletedIds: result.rows.map(r => r.id)
+    });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    logger.error('Error batch deleting leads:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  } finally {
+    client.release();
+  }
+};
