@@ -94,17 +94,45 @@ export class HealthCheckService {
     tests.push(await this.runResponseTimeTest('/escrows?limit=10', 'Response Time Consistency', 'Performance'));
 
     // WORKFLOW TESTS - Archive and Delete
-    for (const id of createdIds) {
-      const archiveResult = await this.runTest('PUT', `/escrows/${id}/archive`, 'Archive Test Escrow', 'Workflow');
+    // Test single delete first
+    if (createdIds.length > 0) {
+      const firstId = createdIds[0];
+      const archiveResult = await this.runTest('PUT', `/escrows/${firstId}/archive`, 'Archive Single Escrow', 'Workflow');
       tests.push(archiveResult);
       if (archiveResult.status === 'success') {
-        tests.push(await this.runTest('DELETE', `/escrows/${id}`, 'Delete Archived Escrow', 'Workflow'));
+        tests.push(await this.runTest('DELETE', `/escrows/${firstId}`, 'Delete Single Archived Escrow', 'Workflow'));
       }
     }
 
-    // Verify deletion - this should return NOT_FOUND
+    // Test batch delete with remaining escrows
+    if (createdIds.length > 1) {
+      const remainingIds = createdIds.slice(1);
+
+      // First archive the remaining escrows
+      for (const id of remainingIds) {
+        await this.runTest('PUT', `/escrows/${id}/archive`, 'Archive for Batch Delete', 'Workflow');
+      }
+
+      // Now test batch delete
+      const batchDeleteResult = await this.runTest('POST', '/escrows/batch-delete', 'Batch Delete Multiple Escrows', 'Workflow', {
+        ids: remainingIds
+      });
+      tests.push(batchDeleteResult);
+
+      // Verify batch deletion worked
+      if (batchDeleteResult.status === 'success') {
+        const verifyBatch = await this.runTest('GET', `/escrows/${remainingIds[0]}`, 'Verify Batch Deletion', 'Workflow');
+        if (verifyBatch.response?.error?.code === 'NOT_FOUND') {
+          verifyBatch.status = 'success';
+          delete verifyBatch.error;
+        }
+        tests.push(verifyBatch);
+      }
+    }
+
+    // Verify single deletion - this should return NOT_FOUND
     if (testId) {
-      const verifyTest = await this.runTest('GET', `/escrows/${testId}`, 'Verify Deletion', 'Workflow');
+      const verifyTest = await this.runTest('GET', `/escrows/${testId}`, 'Verify Single Deletion', 'Workflow');
       // Fix the status - NOT_FOUND is the expected result for a deleted item
       if (verifyTest.response?.error?.code === 'NOT_FOUND') {
         verifyTest.status = 'success';
