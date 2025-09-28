@@ -1178,21 +1178,26 @@ const EscrowsDashboard = () => {
     }
   }, [selectedStatus, escrows]);
 
+  // Sync archived count with archived escrows array
+  useEffect(() => {
+    setArchivedCount(archivedEscrows.length);
+  }, [archivedEscrows]);
+
   const fetchEscrows = async () => {
     try {
       setLoading(true);
       console.log('Fetching escrows...');
 
-      // Fetch active escrows
-      const response = await escrowsAPI.getAll({ archived: 'false' });
+      // Fetch all escrows including archived
+      const response = await escrowsAPI.getAll({ includeArchived: true });
       console.log('API Response:', response);
 
-      // Fetch archived escrows
-      const archivedResponse = await escrowsAPI.getAll({ archived: 'true' });
-
       if (response.success) {
-        const escrowData = response.data.escrows || [];
-        const archivedData = archivedResponse.success ? archivedResponse.data.escrows || [] : [];
+        const allData = response.data.escrows || response.data || [];
+
+        // Separate active and archived escrows
+        const escrowData = allData.filter(escrow => !escrow.deleted_at);
+        const archivedData = allData.filter(escrow => escrow.deleted_at);
 
         console.log('Active escrows found:', escrowData.length);
         console.log('Archived escrows found:', archivedData.length);
