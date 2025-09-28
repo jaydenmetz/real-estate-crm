@@ -2710,72 +2710,160 @@ const LeadsDashboard = () => {
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: '#f5f5f5' }}>
-      {/* Debug Interface - Admin Only */}
+      {/* Stunning Debug Interface - Admin Only */}
       {user?.username === 'admin' && (
-        <Paper 
-          sx={{ 
-            m: 2, 
-            p: 2, 
-            background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%)',
-            color: 'white',
-            borderRadius: 2,
-            boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
-          }}
-        >
-          <Box 
-            sx={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'space-between',
-              cursor: 'pointer',
-              '&:hover': {
-                opacity: 0.9
+        <Box sx={{ m: 2, mb: 4 }}>
+          {/* Summary Debug Card */}
+          <Card
+            sx={(theme) => ({
+              background: `linear-gradient(135deg,
+                ${alpha(theme.palette.primary.main, 0.08)} 0%,
+                ${alpha(theme.palette.secondary.main, 0.08)} 50%,
+                ${alpha(theme.palette.error.main, 0.08)} 100%
+              )`,
+              border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+              borderRadius: '16px',
+              boxShadow: `0 8px 32px ${alpha(theme.palette.common.black, 0.1)}`,
+              overflow: 'hidden',
+              position: 'relative',
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '4px',
+                background: `linear-gradient(90deg,
+                  ${theme.palette.primary.main} 0%,
+                  ${theme.palette.secondary.main} 33%,
+                  ${theme.palette.error.main} 66%,
+                  ${theme.palette.warning.main} 100%
+                )`,
               }
-            }}
-            onClick={() => setDebugExpanded(!debugExpanded)}
+            })}
           >
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <BugReport sx={{ color: '#10B981' }} />
-              <Typography variant="h6" fontWeight="bold">
-                Debug Interface - Leads Dashboard
-              </Typography>
-              <Chip 
-                label="ADMIN ONLY" 
-                size="small" 
-                sx={{ 
-                  bgcolor: 'error.main',
-                  color: 'white',
-                  fontWeight: 'bold'
-                }} 
-              />
+            <Box sx={{ p: 3 }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 2 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Box
+                    sx={(theme) => ({
+                      p: 1.5,
+                      borderRadius: '12px',
+                      background: `linear-gradient(135deg, ${theme.palette.error.main}, ${theme.palette.error.dark})`,
+                      color: 'white',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: `0 4px 12px ${alpha(theme.palette.error.main, 0.3)}`
+                    })}
+                  >
+                    <BugReport />
+                  </Box>
+                  <Typography variant="h5" sx={{ fontWeight: 700, letterSpacing: '-0.5px' }}>
+                    Debug Panel: Leads Dashboard
+                  </Typography>
+                  <Chip
+                    label={process.env.NODE_ENV === 'production' ? '🔴 PRODUCTION' : '🟢 LOCAL'}
+                    sx={{
+                      background: process.env.NODE_ENV === 'production'
+                        ? 'linear-gradient(45deg, #ff6b6b, #ee5a24)'
+                        : 'linear-gradient(45deg, #00b894, #00cec9)',
+                      color: 'white',
+                      fontWeight: 600,
+                      fontSize: '0.75rem'
+                    }}
+                  />
+                  <Chip
+                    label="Admin Only"
+                    sx={{
+                      background: 'linear-gradient(45deg, #fdcb6e, #e17055)',
+                      color: 'white',
+                      fontWeight: 600,
+                      fontSize: '0.75rem'
+                    }}
+                  />
+                </Box>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Button
+                    variant="outlined"
+                    size="small"
+                    onClick={() => setDebugExpanded(!debugExpanded)}
+                    startIcon={debugExpanded ? <ExpandLess /> : <ExpandMore />}
+                    sx={(theme) => ({
+                      borderColor: alpha(theme.palette.primary.main, 0.5),
+                      color: theme.palette.primary.main,
+                      '&:hover': {
+                        borderColor: theme.palette.primary.main,
+                        background: alpha(theme.palette.primary.main, 0.1)
+                      }
+                    })}
+                  >
+                    {debugExpanded ? 'Hide' : 'Show'} Debug Details
+                  </Button>
+                  <IconButton
+                    size="small"
+                    onClick={() => {
+                      setNetworkData({
+                        stats: networkMonitor.getStats(),
+                        requests: networkMonitor.getRequests(),
+                        errors: networkMonitor.getErrors()
+                      });
+                    }}
+                    sx={(theme) => ({
+                      color: theme.palette.primary.main,
+                      '&:hover': {
+                        background: alpha(theme.palette.primary.main, 0.1)
+                      }
+                    })}
+                  >
+                    <Tooltip title="Refresh Network Data">
+                      <Refresh />
+                    </Tooltip>
+                  </IconButton>
+                  <CopyButton
+                    text={JSON.stringify({
+                      pageInfo: {
+                        url: window.location.href,
+                        timestamp: new Date().toISOString(),
+                        user: user?.username,
+                        userAgent: navigator.userAgent,
+                        screenResolution: `${window.screen.width}x${window.screen.height}`
+                      },
+                      leadsData: {
+                        totalLeads: stats.total,
+                        hotLeads: stats.hot,
+                        warmLeads: stats.warm,
+                        newThisWeek: stats.newThisWeek,
+                        conversionRate: conversionRate,
+                        leadsSample: leadsArray.slice(0, 3).map(l => ({
+                          id: l.id,
+                          name: l.name,
+                          score: l.score,
+                          stage: l.stage,
+                          source: l.source
+                        }))
+                      },
+                      networkActivity: {
+                        stats: networkData.stats,
+                        recentRequests: networkData.requests.slice(-5),
+                        errorCount: networkData.stats.errors || 0,
+                        allRequests: networkData.requests,
+                        allErrors: networkData.errors
+                      }
+                    }, null, 2)}
+                    label="📋 Copy Debug Summary"
+                    variant="contained"
+                    sx={{
+                      background: 'linear-gradient(45deg, #667eea, #764ba2)',
+                      '&:hover': {
+                        background: 'linear-gradient(45deg, #764ba2, #667eea)',
+                      }
+                    }}
+                  />
+                </Box>
+              </Box>
             </Box>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <Button
-                size="small"
-                startIcon={<Refresh />}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setNetworkData({
-                    stats: networkMonitor.getStats(),
-                    requests: networkMonitor.getRequests(),
-                    errors: networkMonitor.getErrors()
-                  });
-                }}
-                sx={{ 
-                  color: 'white',
-                  borderColor: 'white',
-                  '&:hover': {
-                    borderColor: '#10B981',
-                    bgcolor: 'rgba(16, 185, 129, 0.1)'
-                  }
-                }}
-                variant="outlined"
-              >
-                Refresh
-              </Button>
-              {debugExpanded ? <ExpandLess /> : <ExpandMore />}
-            </Box>
-          </Box>
+          </Card>
           
           <Collapse in={debugExpanded}>
             <Box sx={{ mt: 3 }}>
@@ -2941,7 +3029,7 @@ const LeadsDashboard = () => {
               </Box>
             </Box>
           </Collapse>
-        </Paper>
+        </Box>
       )}
 
       {/* Page Title */}
