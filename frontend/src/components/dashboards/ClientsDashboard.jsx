@@ -1103,113 +1103,110 @@ const ClientsDashboard = () => {
         </Box>
       )}
 
-      {/* Hero Section */}
-      <HeroSection>
-        <Grid container spacing={4} alignItems="center">
-          <Grid item xs={12} md={8}>
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
+      {/* Page Title */}
+      <Box sx={{ mb: 4 }}>
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <Typography variant="h4" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
+            Client Management
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+            Build lasting relationships and grow your business
+          </Typography>
+          <Stack direction="row" spacing={2} flexWrap="wrap">
+            <Button
+              variant="contained"
+              size="large"
+              startIcon={<PersonAdd />}
+              onClick={() => setOpenForm(true)}
             >
-              <Typography variant="h3" sx={{ fontWeight: 700, mb: 2 }}>
-                Client Management
-              </Typography>
-              <Typography variant="h6" sx={{ opacity: 0.9, mb: 3 }}>
-                Build lasting relationships and grow your business
-              </Typography>
-              <Stack direction="row" spacing={2} flexWrap="wrap">
-                <Button
-                  variant="contained"
-                  size="large"
-                  startIcon={<PersonAdd />}
-                  onClick={() => setOpenForm(true)}
-                  sx={{
-                    backgroundColor: 'white',
-                    color: 'primary.main',
-                    '&:hover': {
-                      backgroundColor: 'grey.100',
-                    },
-                  }}
-                >
-                  Add New Client
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="large"
-                  startIcon={<CloudUpload />}
-                  sx={{
-                    borderColor: 'white',
-                    color: 'white',
-                    '&:hover': {
-                      borderColor: 'white',
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                    },
-                  }}
-                >
-                  Import Clients
-                </Button>
-              </Stack>
-            </motion.div>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
+              Add New Client
+            </Button>
+            <Button
+              variant="outlined"
+              size="large"
+              startIcon={<CloudUpload />}
             >
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
-                  <MetricBox>
-                    <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main' }}>
-                      <CountUp end={stats.totalClients} duration={2} />
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Total Clients
-                    </Typography>
-                  </MetricBox>
-                </Grid>
-                <Grid item xs={6}>
-                  <MetricBox>
-                    <Typography variant="h4" sx={{ fontWeight: 700, color: 'success.main' }}>
-                      <CountUp end={stats.activeClients} duration={2} />
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Active Clients
-                    </Typography>
-                  </MetricBox>
-                </Grid>
-                <Grid item xs={6}>
-                  <MetricBox>
-                    <Typography variant="h4" sx={{ fontWeight: 700, color: 'warning.main' }}>
-                      ${stats.totalValue > 1000000 ? 
-                        <CountUp end={stats.totalValue / 1000000} decimals={1} duration={2} suffix="M" /> :
-                        <CountUp end={stats.totalValue / 1000} duration={2} suffix="K" />
-                      }
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Total Value
-                    </Typography>
-                  </MetricBox>
-                </Grid>
-                <Grid item xs={6}>
-                  <MetricBox>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Rating value={stats.avgRating} readOnly size="small" />
-                      <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                        {stats.avgRating.toFixed(1)}
-                      </Typography>
-                    </Box>
-                    <Typography variant="body2" color="text.secondary">
-                      Avg Rating
-                    </Typography>
-                  </MetricBox>
-                </Grid>
-              </Grid>
-            </motion.div>
-          </Grid>
+              Import Clients
+            </Button>
+          </Stack>
+        </motion.div>
+      </Box>
+
+      {/* Animated Stats Cards */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
+            <Card sx={{ p: 3, textAlign: 'center' }}>
+              <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main', mb: 1 }}>
+                <CountUp end={clients.length} duration={2} />
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Total Clients
+              </Typography>
+            </Card>
+          </motion.div>
         </Grid>
-      </HeroSection>
+        <Grid item xs={12} sm={6} md={3}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <Card sx={{ p: 3, textAlign: 'center' }}>
+              <Typography variant="h4" sx={{ fontWeight: 700, color: 'success.main', mb: 1 }}>
+                <CountUp end={clients.filter(c => c.status === 'Active').length} duration={2} />
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Active Clients
+              </Typography>
+            </Card>
+          </motion.div>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <Card sx={{ p: 3, textAlign: 'center' }}>
+              <Typography variant="h4" sx={{ fontWeight: 700, color: 'warning.main', mb: 1 }}>
+                $<CountUp end={clients.reduce((sum, c) => sum + (c.lifetimeValue || 0), 0) / 1000000} decimals={1} duration={2} />M
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Total Value
+              </Typography>
+            </Card>
+          </motion.div>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            <Card sx={{ p: 3, textAlign: 'center' }}>
+              <Typography variant="h4" sx={{ fontWeight: 700, color: 'info.main', mb: 1 }}>
+                <CountUp end={clients.filter(c => {
+                  const created = new Date(c.dateAdded);
+                  const now = new Date();
+                  return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
+                }).length} duration={2} />
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                New This Month
+              </Typography>
+            </Card>
+          </motion.div>
+        </Grid>
+      </Grid>
 
       {/* Stats Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>

@@ -1941,211 +1941,102 @@ const EscrowsDashboard = () => {
           </Box>
         )}
 
-        {/* Enhanced Hero Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <HeroSection>
-          <Grid container spacing={4} alignItems="center">
-            <Grid item xs={12} md={8}>
-              <motion.div
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
+        {/* Page Title */}
+        <Box sx={{ mb: 4 }}>
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
+            <Typography variant="h4" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
+              Escrow Management
+            </Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+              Track and manage all your real estate transactions in one place
+            </Typography>
+            <Stack direction="row" spacing={2} flexWrap="wrap">
+              <Button
+                variant="contained"
+                size="large"
+                startIcon={<Add />}
+                onClick={handleCreateNew}
               >
-                <Typography variant="h3" fontWeight="bold" gutterBottom>
-                  Escrow Dashboard
-                </Typography>
-                <Typography variant="h6" sx={{ mb: 3, opacity: 0.9 }}>
-                  Track and manage all your real estate transactions in one place
-                </Typography>
-                <Stack direction="row" spacing={2} flexWrap="wrap">
-                  <Button
-                    variant="contained"
-                    size="large"
-                    startIcon={<Add />}
-                    onClick={handleCreateNew}
-                    sx={{ 
-                      bgcolor: 'white', 
-                      color: 'primary.main',
-                      '&:hover': { 
-                        bgcolor: 'rgba(255,255,255,0.9)' 
-                      }
-                    }}
-                  >
-                    Create New Escrow
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    size="large"
-                    sx={{ 
-                      color: 'white', 
-                      borderColor: 'white',
-                      '&:hover': { 
-                        borderColor: 'white',
-                        bgcolor: 'rgba(255,255,255,0.1)' 
-                      }
-                    }}
-                    startIcon={<Assessment />}
-                  >
-                    Transaction Analytics
-                  </Button>
-                </Stack>
-              </motion.div>
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
+                Create New Escrow
+              </Button>
+              <Button
+                variant="outlined"
+                size="large"
+                startIcon={<Assessment />}
               >
-                <Box sx={{ 
-                  bgcolor: 'rgba(255,255,255,0.1)', 
-                  borderRadius: 3, 
-                  p: 3,
-                  backdropFilter: 'blur(10px)',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                }}>
-                  <Stack spacing={2}>
-                    {/* YTD Closed */}
-                    <Box>
-                      <Typography variant="overline" sx={{ opacity: 0.7, display: 'block', fontSize: '0.7rem' }}>
-                        YTD Closed
-                      </Typography>
-                      <Stack direction="row" alignItems="center" justifyContent="space-between">
-                        <Stack direction="row" alignItems="baseline" spacing={1}>
-                          <Typography variant="h4" fontWeight="bold">
-                            <CountUp end={stats.ytdClosed} duration={1.5} />
-                          </Typography>
-                          <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                            deals
-                          </Typography>
-                        </Stack>
-                        <Chip
-                          icon={stats.ytdChange >= 0 ? <TrendingUp sx={{ fontSize: 14 }} /> : <TrendingUp sx={{ fontSize: 14, transform: 'rotate(180deg)' }} />}
-                          label={`${Math.abs(stats.ytdChange)}%`}
-                          size="small"
-                          sx={{
-                            bgcolor: stats.ytdChange >= 0 ? alpha('#4caf50', 0.2) : alpha('#f44336', 0.2),
-                            color: stats.ytdChange >= 0 ? '#4caf50' : '#f44336',
-                            fontWeight: 'bold',
-                            border: `1px solid ${stats.ytdChange >= 0 ? '#4caf50' : '#f44336'}`,
-                          }}
-                        />
-                      </Stack>
-                      <Typography variant="caption" sx={{ opacity: 0.7 }}>
-                        ${(stats.ytdVolume / 1000000).toFixed(1)}M total volume
-                      </Typography>
-                    </Box>
-                    
-                    <Divider sx={{ borderColor: 'rgba(255,255,255,0.2)' }} />
-                    
-                    {/* Monthly Closed */}
-                    <Box>
-                      <Typography variant="overline" sx={{ opacity: 0.7, display: 'block', fontSize: '0.7rem' }}>
-                        Monthly Closed
-                      </Typography>
-                      <Stack direction="row" alignItems="center" justifyContent="space-between">
-                        <Stack direction="row" alignItems="baseline" spacing={1}>
-                          <Typography variant="h4" fontWeight="bold">
-                            <CountUp end={stats.monthClosed} duration={1.5} />
-                          </Typography>
-                          <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                            deals
-                          </Typography>
-                        </Stack>
-                        <Chip
-                          icon={stats.monthChange >= 0 ? <TrendingUp sx={{ fontSize: 14 }} /> : <TrendingUp sx={{ fontSize: 14, transform: 'rotate(180deg)' }} />}
-                          label={`${Math.abs(stats.monthChange)}%`}
-                          size="small"
-                          sx={{
-                            bgcolor: stats.monthChange >= 0 ? alpha('#4caf50', 0.2) : alpha('#f44336', 0.2),
-                            color: stats.monthChange >= 0 ? '#4caf50' : '#f44336',
-                            fontWeight: 'bold',
-                            border: `1px solid ${stats.monthChange >= 0 ? '#4caf50' : '#f44336'}`,
-                          }}
-                        />
-                      </Stack>
-                      <Typography variant="caption" sx={{ opacity: 0.7 }}>
-                        ${(stats.monthVolume / 1000000).toFixed(1)}M volume
-                      </Typography>
-                    </Box>
-                    
-                    <Divider sx={{ borderColor: 'rgba(255,255,255,0.2)' }} />
-                    
-                    {/* This Week Projected */}
-                    <Box>
-                      <Typography variant="overline" sx={{ opacity: 0.7, display: 'block', fontSize: '0.7rem' }}>
-                        This Week Projected
-                      </Typography>
-                      <Stack direction="row" alignItems="center" justifyContent="space-between">
-                        <Stack direction="row" alignItems="baseline" spacing={1}>
-                          <Typography variant="h4" fontWeight="bold">
-                            <CountUp end={stats.weekProjected} duration={1.5} />
-                          </Typography>
-                          <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                            closings
-                          </Typography>
-                        </Stack>
-                        <Chip
-                          icon={stats.weekChange >= 0 ? <TrendingUp sx={{ fontSize: 14 }} /> : <TrendingUp sx={{ fontSize: 14, transform: 'rotate(180deg)' }} />}
-                          label={`${Math.abs(stats.weekChange)}%`}
-                          size="small"
-                          sx={{
-                            bgcolor: stats.weekChange >= 0 ? alpha('#4caf50', 0.2) : alpha('#f44336', 0.2),
-                            color: stats.weekChange >= 0 ? '#4caf50' : '#f44336',
-                            fontWeight: 'bold',
-                            border: `1px solid ${stats.weekChange >= 0 ? '#4caf50' : '#f44336'}`,
-                          }}
-                        />
-                      </Stack>
-                      <Typography variant="caption" sx={{ opacity: 0.7 }}>
-                        ${(stats.weekVolume / 1000000).toFixed(1)}M projected
-                      </Typography>
-                    </Box>
-                    
-                    <Divider sx={{ borderColor: 'rgba(255,255,255,0.2)' }} />
-                    
-                    {/* Quick Stats */}
-                    <Box>
-                      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
-                        <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                          Closing This Week
-                        </Typography>
-                        <Chip 
-                          label={stats.closingThisWeek || 0} 
-                          size="small" 
-                          sx={{ 
-                            bgcolor: 'rgba(255,255,255,0.2)', 
-                            color: 'white',
-                            fontWeight: 'bold'
-                          }} 
-                        />
-                      </Stack>
-                      <Stack direction="row" justifyContent="space-between" alignItems="center">
-                        <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                          Pending Actions
-                        </Typography>
-                        <Chip 
-                          label={stats.pendingActions || 0} 
-                          size="small" 
-                          sx={{ 
-                            bgcolor: 'warning.main', 
-                            color: 'white',
-                            fontWeight: 'bold'
-                          }} 
-                        />
-                      </Stack>
-                    </Box>
-                  </Stack>
-                </Box>
-              </motion.div>
-            </Grid>
+                Transaction Analytics
+              </Button>
+            </Stack>
+          </motion.div>
+        </Box>
+
+        {/* Animated Stats Cards */}
+        <Grid container spacing={3} sx={{ mb: 4 }}>
+          <Grid item xs={12} sm={6} md={3}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              <StatCard
+                icon={Home}
+                title="Total Escrows"
+                value={escrows.length}
+                color="#2196f3"
+                delay={0}
+              />
+            </motion.div>
           </Grid>
-        </HeroSection>
-      </motion.div>
+          <Grid item xs={12} sm={6} md={3}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <StatCard
+                icon={AttachMoney}
+                title="Total Volume"
+                value={`$${(stats.totalVolume / 1000000).toFixed(1)}M`}
+                color="#4caf50"
+                delay={0.2}
+              />
+            </motion.div>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            >
+              <StatCard
+                icon={CheckCircle}
+                title="Projected Commission"
+                value={`$${(stats.projectedCommission / 1000).toFixed(0)}K`}
+                color="#ff9800"
+                delay={0.4}
+              />
+            </motion.div>
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
+              <StatCard
+                icon={Schedule}
+                title="Active Escrows"
+                value={stats.activeEscrows}
+                color="#9c27b0"
+                delay={0.6}
+              />
+            </motion.div>
+          </Grid>
+        </Grid>
 
       {/* Status Tabs */}
       <Box sx={{ mb: 4 }}>
@@ -2180,49 +2071,6 @@ const EscrowsDashboard = () => {
         </Tabs>
       </Box>
 
-      {/* Stats Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard
-              icon={Home}
-              title={`Total ${selectedStatus.charAt(0).toUpperCase() + selectedStatus.slice(1)}`}
-              value={stats.totalEscrows}
-              color="#2196f3"
-              delay={0}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard
-              icon={TrendingUp}
-              title="Gross Commission"
-              value={stats.grossCommission}
-              prefix="$"
-              color="#ff9800"
-              delay={200}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard
-              icon={CheckCircle}
-              title="My Commission"
-              value={stats.myCommission}
-              prefix="$"
-              color="#9c27b0"
-              delay={400}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatCard
-              icon={AttachMoney}
-              title="Total Volume"
-              value={stats.totalVolume / 1000000}
-              prefix="$"
-              suffix="M"
-              color="#4caf50"
-              delay={600}
-            />
-          </Grid>
-        </Grid>
 
         {/* Enhanced Charts - REMOVED PER USER REQUEST */}
         {/* <Grid container spacing={3} sx={{ mt: 2 }}>

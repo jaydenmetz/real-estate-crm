@@ -2943,35 +2943,37 @@ const LeadsDashboard = () => {
         </Paper>
       )}
 
-      {/* Hero Section */}
-      <HeroSection>
-        <Container maxWidth="xl">
+      {/* Page Title */}
+      <Container maxWidth="xl">
+        <Box sx={{ mb: 4 }}>
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.5 }}
           >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
               <Box>
-                <Typography variant="h3" fontWeight="bold" gutterBottom>
+                <Typography variant="h4" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
                   Lead Management
                 </Typography>
-                <Typography variant="h6" sx={{ opacity: 0.9 }}>
+                <Typography variant="body1" color="text.secondary">
                   Track and nurture your sales pipeline
                 </Typography>
               </Box>
-              <AnimatedButton
+              <Button
+                variant="contained"
                 startIcon={<Add />}
                 onClick={handleAddLead}
                 size="large"
               >
                 New Lead
-              </AnimatedButton>
+              </Button>
             </Box>
           </motion.div>
+        </Box>
 
-          {/* Stats Cards */}
-          <Grid container spacing={3}>
+        {/* Animated Stats Cards */}
+        <Grid container spacing={3} sx={{ mb: 4 }}>
             <Grid item xs={12} sm={6} md={3}>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -3060,11 +3062,6 @@ const LeadsDashboard = () => {
             />
           </Grid>
         </Grid>
-        </Container>
-      </HeroSection>
-
-      {/* Main Content */}
-      <Container maxWidth="xl" sx={{ mt: -6, position: 'relative', zIndex: 1 }}>
         {/* Search and Filter Bar */}
         <Paper sx={{ p: 2, mb: 3 }}>
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>

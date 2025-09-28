@@ -1270,107 +1270,106 @@ const AppointmentsDashboard = () => {
         </Box>
       )}
 
-      {/* Hero Section */}
-      <HeroSection>
-        <Grid container spacing={4} alignItems="center">
-          <Grid item xs={12} md={8}>
-            <motion.div
-              initial={{ opacity: 0, x: -50 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6 }}
+      {/* Page Title */}
+      <Box sx={{ mb: 4 }}>
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <Typography variant="h4" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
+            Appointment Management
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+            Schedule, track, and manage all your appointments in one place
+          </Typography>
+          <Stack direction="row" spacing={2} flexWrap="wrap">
+            <Button
+              variant="contained"
+              size="large"
+              startIcon={<Add />}
+              onClick={() => setOpenForm(true)}
             >
-              <Typography variant="h3" sx={{ fontWeight: 700, mb: 2 }}>
-                Appointment Management
-              </Typography>
-              <Typography variant="h6" sx={{ opacity: 0.9, mb: 3 }}>
-                Schedule, track, and manage all your appointments in one place
-              </Typography>
-              <Stack direction="row" spacing={2} flexWrap="wrap">
-                <Button
-                  variant="contained"
-                  size="large"
-                  startIcon={<Add />}
-                  onClick={() => setOpenForm(true)}
-                  sx={{
-                    backgroundColor: 'white',
-                    color: 'primary.main',
-                    '&:hover': {
-                      backgroundColor: 'grey.100',
-                    },
-                  }}
-                >
-                  Schedule Appointment
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="large"
-                  startIcon={<Sync />}
-                  sx={{
-                    borderColor: 'white',
-                    color: 'white',
-                    '&:hover': {
-                      borderColor: 'white',
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                    },
-                  }}
-                >
-                  Sync Calendar
-                </Button>
-              </Stack>
-            </motion.div>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
+              Schedule Appointment
+            </Button>
+            <Button
+              variant="outlined"
+              size="large"
+              startIcon={<Sync />}
             >
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
-                  <MetricBox>
-                    <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main' }}>
-                      <CountUp end={stats.todayCount} duration={2} />
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Today
-                    </Typography>
-                  </MetricBox>
-                </Grid>
-                <Grid item xs={6}>
-                  <MetricBox>
-                    <Typography variant="h4" sx={{ fontWeight: 700, color: 'info.main' }}>
-                      <CountUp end={stats.upcomingCount} duration={2} />
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Upcoming
-                    </Typography>
-                  </MetricBox>
-                </Grid>
-                <Grid item xs={6}>
-                  <MetricBox>
-                    <Typography variant="h4" sx={{ fontWeight: 700, color: 'success.main' }}>
-                      <CountUp end={stats.completedCount} duration={2} />
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Completed
-                    </Typography>
-                  </MetricBox>
-                </Grid>
-                <Grid item xs={6}>
-                  <MetricBox>
-                    <Typography variant="h4" sx={{ fontWeight: 700, color: 'error.main' }}>
-                      <CountUp end={stats.canceledCount} duration={2} />
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      Cancelled
-                    </Typography>
-                  </MetricBox>
-                </Grid>
-              </Grid>
-            </motion.div>
-          </Grid>
+              Sync Calendar
+            </Button>
+          </Stack>
+        </motion.div>
+      </Box>
+
+      {/* Animated Stats Cards */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
+            <Card sx={{ p: 3, textAlign: 'center' }}>
+              <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main', mb: 1 }}>
+                <CountUp end={stats.todayCount} duration={2} />
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Today
+              </Typography>
+            </Card>
+          </motion.div>
         </Grid>
-      </HeroSection>
+        <Grid item xs={12} sm={6} md={3}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <Card sx={{ p: 3, textAlign: 'center' }}>
+              <Typography variant="h4" sx={{ fontWeight: 700, color: 'info.main', mb: 1 }}>
+                <CountUp end={stats.upcomingCount} duration={2} />
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Upcoming
+              </Typography>
+            </Card>
+          </motion.div>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            <Card sx={{ p: 3, textAlign: 'center' }}>
+              <Typography variant="h4" sx={{ fontWeight: 700, color: 'success.main', mb: 1 }}>
+                <CountUp end={stats.completedCount} duration={2} />
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Completed
+              </Typography>
+            </Card>
+          </motion.div>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            <Card sx={{ p: 3, textAlign: 'center' }}>
+              <Typography variant="h4" sx={{ fontWeight: 700, color: 'error.main', mb: 1 }}>
+                <CountUp end={stats.canceledCount} duration={2} />
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Cancelled
+              </Typography>
+            </Card>
+          </motion.div>
+        </Grid>
+      </Grid>
 
       {/* Stats Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>

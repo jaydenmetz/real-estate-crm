@@ -1047,82 +1047,38 @@ const ListingsDashboard = () => {
       )}
 
       {/* Hero Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <HeroSection>
-          <Grid container spacing={4} alignItems="center">
-            <Grid item xs={12} md={8}>
-              <motion.div
-                initial={{ opacity: 0, x: -50 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-              >
-                <Typography variant="h3" fontWeight="bold" gutterBottom>
-                  Your Listings Portfolio
-                </Typography>
-                <Typography variant="h6" sx={{ mb: 3, opacity: 0.9 }}>
-                  Manage and showcase your properties with powerful marketing tools
-                </Typography>
-                <Stack direction="row" spacing={2} flexWrap="wrap">
-                  <AnimatedButton
-                    variant="contained"
-                    size="large"
-                    startIcon={<Add />}
-                    onClick={handleCreateListing}
-                  >
-                    Create New Listing
-                  </AnimatedButton>
-                  <Button
-                    variant="outlined"
-                    size="large"
-                    sx={{ 
-                      color: 'white', 
-                      borderColor: 'white',
-                      '&:hover': { 
-                        borderColor: 'white',
-                        bgcolor: 'rgba(255,255,255,0.1)' 
-                      }
-                    }}
-                    startIcon={<Assessment />}
-                  >
-                    Market Analysis
-                  </Button>
-                </Stack>
-              </motion.div>
-            </Grid>
-            <Grid item xs={12} md={4}>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-              >
-                <Box sx={{ 
-                  bgcolor: 'rgba(255,255,255,0.1)', 
-                  borderRadius: 3, 
-                  p: 3,
-                  backdropFilter: 'blur(10px)',
-                }}>
-                  <Typography variant="h2" fontWeight="bold" sx={{ mb: 1 }}>
-                    <CountUp end={stats.activeListings} duration={2} />
-                  </Typography>
-                  <Typography variant="h6" sx={{ opacity: 0.9 }}>
-                    Active Listings
-                  </Typography>
-                  <Typography variant="h4" sx={{ mt: 2, mb: 1 }}>
-                    $<CountUp end={stats.totalValue} duration={2.5} separator="," />
-                  </Typography>
-                  <Typography variant="body1" sx={{ opacity: 0.9 }}>
-                    Total Portfolio Value
-                  </Typography>
-                </Box>
-              </motion.div>
-            </Grid>
-          </Grid>
-        </HeroSection>
-      </motion.div>
+      {/* Page Title */}
+      <Box sx={{ mb: 4 }}>
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <Typography variant="h4" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
+            Listing Management
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+            Manage and showcase your properties with powerful marketing tools
+          </Typography>
+          <Stack direction="row" spacing={2} flexWrap="wrap">
+            <Button
+              variant="contained"
+              size="large"
+              startIcon={<Add />}
+              onClick={handleCreateListing}
+            >
+              Create New Listing
+            </Button>
+            <Button
+              variant="outlined"
+              size="large"
+              startIcon={<Assessment />}
+            >
+              Market Analysis
+            </Button>
+          </Stack>
+        </motion.div>
+      </Box>
 
       {/* Stats Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
