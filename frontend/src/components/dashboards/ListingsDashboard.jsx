@@ -302,7 +302,7 @@ const StatusChip = styled(Chip)(({ theme, status }) => {
   };
 });
 
-// Empty data for fresh start
+// Empty data for fresh start - this will be replaced with real data from API
 const mockListings = [];
 
 // Empty analytics data
@@ -322,6 +322,8 @@ const ListingsDashboard = () => {
   const [propertyType, setPropertyType] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [debugExpanded, setDebugExpanded] = useState(false);
+  const [listings, setListings] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [networkData, setNetworkData] = useState({
     stats: networkMonitor.getStats(),
     requests: networkMonitor.getRequests(),
@@ -333,6 +335,31 @@ const ListingsDashboard = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const { user } = useAuth();
+
+  // Fetch listings function
+  const fetchListings = async () => {
+    try {
+      setLoading(true);
+      const response = await listingsAPI.getAll({ includeArchived: false });
+
+      if (response.success) {
+        const listingData = response.data.listings || response.data || [];
+        setListings(listingData);
+      } else {
+        enqueueSnackbar('Failed to fetch listings', { variant: 'error' });
+      }
+    } catch (error) {
+      console.error('Error fetching listings:', error);
+      enqueueSnackbar('Error fetching listings', { variant: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load listings on mount
+  useEffect(() => {
+    fetchListings();
+  }, []);
 
   // Auto-refresh network data when debug panel is expanded
   useEffect(() => {
@@ -351,7 +378,8 @@ const ListingsDashboard = () => {
 
   // Filter listings based on tab and other filters
   const getFilteredListings = () => {
-    let filtered = [...mockListings];
+    // Use actual listings from state instead of mockListings
+    let filtered = [...listings];
 
     // Tab filters
     switch (tabValue) {
@@ -424,12 +452,12 @@ const ListingsDashboard = () => {
 
   // Calculate stats
   const stats = {
-    totalListings: mockListings.length,
-    activeListings: mockListings.filter(l => l.listingStatus === 'Active').length,
-    totalValue: mockListings.reduce((sum, l) => sum + l.listPrice, 0),
-    avgDaysOnMarket: Math.round(mockListings.reduce((sum, l) => sum + l.daysOnMarket, 0) / mockListings.length),
-    hotProperties: mockListings.filter(l => l.views > 400 || l.favorites > 30).length,
-    newThisWeek: mockListings.filter(l => differenceInDays(new Date(), new Date(l.listingDate)) <= 7).length,
+    totalListings: listings.length,
+    activeListings: listings.filter(l => l.listingStatus === 'Active').length,
+    totalValue: listings.reduce((sum, l) => sum + (l.listPrice || 0), 0),
+    avgDaysOnMarket: listings.length > 0 ? Math.round(listings.reduce((sum, l) => sum + (l.daysOnMarket || 0), 0) / listings.length) : 0,
+    hotProperties: listings.filter(l => (l.views || 0) > 400 || (l.favorites || 0) > 30).length,
+    newThisWeek: listings.filter(l => l.listingDate && differenceInDays(new Date(), new Date(l.listingDate)) <= 7).length,
   };
 
   const handleListingClick = (listing) => {
@@ -951,7 +979,7 @@ const ListingsDashboard = () => {
                       <Storage /> Recent Listings Data
                     </Typography>
                     <Stack spacing={2}>
-                      {mockListings.slice(0, 3).map((listing) => (
+                      {listings.slice(0, 3).map((listing) => (
                         <Box 
                           key={listing.id}
                           sx={{ 
@@ -1307,8 +1335,9 @@ const ListingsDashboard = () => {
       <NewListingModal
         open={openNewListingModal}
         onClose={() => setOpenNewListingModal(false)}
-        onSuccess={(newListing) => {
-          fetchListings();
+        onSuccess={async (newListing) => {
+          await fetchListings();
+          setOpenNewListingModal(false);
           enqueueSnackbar('Listing created successfully', { variant: 'success' });
         }}
       />
