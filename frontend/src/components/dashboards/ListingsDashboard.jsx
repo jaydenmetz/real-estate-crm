@@ -1097,41 +1097,6 @@ const ListingsDashboard = () => {
               Manage and showcase your properties with powerful marketing tools
             </Typography>
 
-            {/* Action Buttons */}
-            <Stack direction="row" spacing={2} flexWrap="wrap" sx={{ mb: 4 }}>
-              <Button
-                variant="contained"
-                size="large"
-                startIcon={<Add />}
-                onClick={handleCreateListing}
-                sx={{
-                  background: 'rgba(255, 255, 255, 0.95)',
-                  color: '#2E7D32',
-                  fontWeight: 600,
-                  '&:hover': {
-                    background: 'rgba(255, 255, 255, 1)',
-                  }
-                }}
-              >
-                Create New Listing
-              </Button>
-              <Button
-                variant="outlined"
-                size="large"
-                startIcon={<Assessment />}
-                sx={{
-                  borderColor: 'rgba(255, 255, 255, 0.5)',
-                  color: 'white',
-                  '&:hover': {
-                    borderColor: 'white',
-                    background: 'rgba(255, 255, 255, 0.1)',
-                  }
-                }}
-              >
-                Market Analysis
-              </Button>
-            </Stack>
-
             {/* Stats Cards inside Hero */}
             <Grid container spacing={3}>
               <Grid item xs={12} sm={6} md={2}>
@@ -1339,6 +1304,49 @@ const ListingsDashboard = () => {
                 </motion.div>
               </Grid>
             </Grid>
+
+            {/* Action Buttons */}
+            <Box sx={{ mt: 4, display: 'flex', gap: 2 }}>
+              <Button
+                variant="contained"
+                size="large"
+                startIcon={<Add />}
+                onClick={handleCreateListing}
+                sx={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                  color: 'white',
+                  backdropFilter: 'blur(10px)',
+                  fontWeight: 600,
+                  px: 3,
+                  py: 1.5,
+                  borderRadius: 2,
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                  }
+                }}
+              >
+                Create New Listing
+              </Button>
+              <Button
+                variant="outlined"
+                size="large"
+                startIcon={<Assessment />}
+                sx={{
+                  borderColor: 'rgba(255, 255, 255, 0.5)',
+                  color: 'white',
+                  backdropFilter: 'blur(10px)',
+                  px: 3,
+                  py: 1.5,
+                  borderRadius: 2,
+                  '&:hover': {
+                    borderColor: 'white',
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  }
+                }}
+              >
+                Market Analysis
+              </Button>
+            </Box>
           </motion.div>
         </Box>
       </HeroSection>
