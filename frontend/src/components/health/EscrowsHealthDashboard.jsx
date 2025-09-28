@@ -74,10 +74,12 @@ const TestCard = styled(Card)(({ status }) => ({
   border: '2px solid',
   borderColor: status === 'success' ? '#4caf50' :
                status === 'failed' ? '#f44336' :
-               status === 'warning' ? '#ff9800' : '#e0e0e0',
+               status === 'warning' ? '#ff9800' :
+               status === 'running' ? '#9e9e9e' : '#e0e0e0',
   backgroundColor: status === 'success' ? '#f1f8e9' :
                    status === 'failed' ? '#ffebee' :
-                   status === 'warning' ? '#fff3e0' : '#fafafa',
+                   status === 'warning' ? '#fff3e0' :
+                   status === 'running' ? '#f5f5f5' : '#fafafa',
   transition: 'all 0.3s ease',
   '&:hover': {
     transform: 'translateY(-2px)',
