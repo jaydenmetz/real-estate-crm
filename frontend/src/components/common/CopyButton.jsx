@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { IconButton, Tooltip, Snackbar } from '@mui/material';
 import { ContentCopy, Check } from '@mui/icons-material';
 
-const CopyButton = ({ text, label = "Copy to clipboard" }) => {
+const CopyButton = ({ text, label = "Copy to clipboard", onClick }) => {
   const [copied, setCopied] = useState(false);
   const [showSnackbar, setShowSnackbar] = useState(false);
 
-  const handleCopy = async () => {
+  const handleCopy = async (e) => {
+    e.stopPropagation();
+    if (onClick) onClick(e);
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);

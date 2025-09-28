@@ -736,11 +736,12 @@ const ListingsDashboard = () => {
       {user?.username === 'admin' && (
         <Box sx={{ mb: 4 }}>
           {/* Summary Debug Card */}
-          <Card 
+          <Card
+            onClick={() => setDebugExpanded(!debugExpanded)}
             sx={(theme) => ({
-              background: `linear-gradient(135deg, 
-                ${alpha(theme.palette.primary.main, 0.08)} 0%, 
-                ${alpha(theme.palette.secondary.main, 0.08)} 50%, 
+              background: `linear-gradient(135deg,
+                ${alpha(theme.palette.primary.main, 0.08)} 0%,
+                ${alpha(theme.palette.secondary.main, 0.08)} 50%,
                 ${alpha(theme.palette.error.main, 0.08)} 100%
               )`,
               border: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
@@ -748,6 +749,12 @@ const ListingsDashboard = () => {
               boxShadow: `0 8px 32px ${alpha(theme.palette.common.black, 0.1)}`,
               overflow: 'hidden',
               position: 'relative',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              '&:hover': {
+                boxShadow: `0 12px 40px ${alpha(theme.palette.common.black, 0.15)}`,
+                transform: 'translateY(-2px)',
+              },
               '&::before': {
                 content: '""',
                 position: 'absolute',
@@ -806,25 +813,10 @@ const ListingsDashboard = () => {
                   />
                 </Box>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                  <Button
-                    variant="outlined"
+                  <IconButton
                     size="small"
-                    onClick={() => setDebugExpanded(!debugExpanded)}
-                    startIcon={debugExpanded ? <ExpandLess /> : <ExpandMore />}
-                    sx={(theme) => ({
-                      borderColor: alpha(theme.palette.primary.main, 0.5),
-                      color: theme.palette.primary.main,
-                      '&:hover': {
-                        borderColor: theme.palette.primary.main,
-                        background: alpha(theme.palette.primary.main, 0.1)
-                      }
-                    })}
-                  >
-                    {debugExpanded ? 'Hide' : 'Show'} Debug Details
-                  </Button>
-                  <IconButton 
-                    size="small"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       // Update network data from network monitor
                       setNetworkData({
                         stats: networkMonitor.getStats(),
