@@ -34,6 +34,13 @@ router.put('/:id', requirePermission('listings'), updateValidation, validate, li
 router.put('/:id/archive', requirePermission('listings'), listingsController.archiveListing);
 // Delete endpoint: Hard delete - only works if listing is already archived
 router.delete('/:id', requirePermission('listings'), listingsController.deleteListing);
+// Batch delete endpoint: Delete multiple archived listings
+router.post('/batch-delete', requirePermission('listings'),
+  body('ids').isArray({ min: 1 }).withMessage('IDs must be a non-empty array'),
+  body('ids.*').isString().withMessage('Each ID must be a string'),
+  validate,
+  listingsController.batchDeleteListings
+);
 
 router.post('/:id/price-reduction', requirePermission('listings'), listingsController.recordPriceChange);
 router.post('/:id/showings', requirePermission('listings'), listingsController.logShowing);

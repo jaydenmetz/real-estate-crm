@@ -1511,10 +1511,16 @@ const EscrowsDashboard = () => {
     try {
       const response = await escrowsAPI.batchDelete(selectedArchivedIds);
       if (response.success) {
-        setArchivedEscrows(prev => prev.filter(e => !selectedArchivedIds.includes(e.id)));
-        setArchivedCount(prev => Math.max(0, prev - selectedArchivedIds.length));
+        // Re-fetch archived escrows to get accurate count
+        const archivedResponse = await escrowsAPI.getAll({ includeArchived: true });
+        if (archivedResponse.success) {
+          const allData = archivedResponse.data.escrows || archivedResponse.data || [];
+          const archivedData = allData.filter(escrow => escrow.deleted_at);
+          setArchivedEscrows(archivedData);
+          setArchivedCount(archivedData.length);
+        }
         setSelectedArchivedIds([]);
-        console.log(`Successfully deleted ${response.data.deleted} escrows`);
+        console.log(`Successfully deleted ${response.data.deletedCount} escrows`);
       }
     } catch (error) {
       console.error('Failed to batch delete escrows:', error);
@@ -1550,17 +1556,6 @@ const EscrowsDashboard = () => {
 
   return (
     <>
-      <DebugCard 
-        pageType="escrows" 
-        pageData={{
-          total: escrows.length,
-          active: escrows.filter(e => e.escrow_status === 'active').length,
-          pending: escrows.filter(e => e.escrow_status === 'pending').length,
-          closed: escrows.filter(e => e.escrow_status === 'closed').length,
-          loading,
-          selectedStatus
-        }}
-      />
       <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
         {/* Enhanced Hero Section */}
         <motion.div

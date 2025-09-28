@@ -966,3 +966,108 @@ exports.deleteListing = async (req, res) => {
     });
   }
 };
+
+// Batch delete listings (hard delete - only after archiving)
+// This endpoint is used by the health dashboard to test batch delete functionality
+// Enforces archive-before-delete workflow for data safety
+// Will only delete if all listings have been archived (deleted_at IS NOT NULL)
+exports.batchDeleteListings = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { ids } = req.body;
+    const userId = req.user.id;
+    const teamId = req.user.teamId;
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'IDs must be a non-empty array'
+        }
+      });
+    }
+
+    await client.query('BEGIN');
+
+    // First verify all listings exist and are archived
+    const verifyQuery = `
+      SELECT id, property_address, deleted_at
+      FROM listings
+      WHERE id = ANY($1)
+      AND (listing_agent_id = $2 OR team_id = $3)
+    `;
+
+    const verifyResult = await client.query(verifyQuery, [ids, userId, teamId]);
+
+    if (verifyResult.rows.length !== ids.length) {
+      await client.query('ROLLBACK');
+      const foundIds = verifyResult.rows.map(row => row.id);
+      const notFoundIds = ids.filter(id => !foundIds.includes(id));
+
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: `Some listings not found: ${notFoundIds.join(', ')}`,
+          notFoundIds
+        }
+      });
+    }
+
+    // Check if all are archived
+    const notArchivedListings = verifyResult.rows.filter(row => !row.deleted_at);
+    if (notArchivedListings.length > 0) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'NOT_ARCHIVED',
+          message: 'All listings must be archived before deletion',
+          notArchivedIds: notArchivedListings.map(l => l.id)
+        }
+      });
+    }
+
+    // Delete all listings
+    const deleteQuery = `
+      DELETE FROM listings
+      WHERE id = ANY($1)
+      AND (listing_agent_id = $2 OR team_id = $3)
+      AND deleted_at IS NOT NULL
+      RETURNING id, property_address
+    `;
+
+    const deleteResult = await client.query(deleteQuery, [ids, userId, teamId]);
+
+    await client.query('COMMIT');
+
+    logger.info('Batch delete listings completed', {
+      deletedCount: deleteResult.rows.length,
+      deletedBy: req.user?.email || 'unknown',
+      listingIds: deleteResult.rows.map(row => row.id)
+    });
+
+    res.json({
+      success: true,
+      data: {
+        deletedCount: deleteResult.rows.length,
+        deletedListings: deleteResult.rows,
+        message: `Successfully deleted ${deleteResult.rows.length} listings`
+      },
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    logger.error('Error in batch delete listings:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'BATCH_DELETE_ERROR',
+        message: 'Failed to batch delete listings'
+      }
+    });
+  } finally {
+    client.release();
+  }
+};

@@ -113,6 +113,7 @@ import {
   Info,
   Warning,
 } from '@mui/icons-material';
+import NewListingModal from '../forms/NewListingModal';
 import { DataGrid } from '@mui/x-data-grid';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useSnackbar } from 'notistack';
@@ -312,6 +313,7 @@ const priceRangeData = [];
 const ListingsDashboard = () => {
   const [tabValue, setTabValue] = useState(0);
   const [openForm, setOpenForm] = useState(false);
+  const [openNewListingModal, setOpenNewListingModal] = useState(false);
   const [selectedListing, setSelectedListing] = useState(null);
   const [viewMode, setViewMode] = useState('grid');
   const [filterAnchor, setFilterAnchor] = useState(null);
@@ -435,8 +437,7 @@ const ListingsDashboard = () => {
   };
 
   const handleCreateListing = () => {
-    setSelectedListing(null);
-    setOpenForm(true);
+    setOpenNewListingModal(true);
   };
 
   const handleEditListing = (listing, e) => {
@@ -1246,81 +1247,6 @@ const ListingsDashboard = () => {
         </Grid>
       </Grid>
 
-      {/* Market Trends Chart */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.5 }}
-      >
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} md={8}>
-            <Card sx={{ p: 3, height: '100%' }}>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-                <Typography variant="h6" fontWeight="bold">
-                  Market Trends
-                </Typography>
-                <ToggleButtonGroup
-                  value="price"
-                  exclusive
-                  size="small"
-                >
-                  <ToggleButton value="price">Price</ToggleButton>
-                  <ToggleButton value="volume">Volume</ToggleButton>
-                  <ToggleButton value="dom">DOM</ToggleButton>
-                </ToggleButtonGroup>
-              </Box>
-              <ResponsiveContainer width="100%" height={300}>
-                <AreaChart data={marketTrendData}>
-                  <defs>
-                    <linearGradient id="colorPrice" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#2E7D32" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#2E7D32" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <RechartsTooltip />
-                  <Area 
-                    type="monotone" 
-                    dataKey="avgPrice" 
-                    stroke="#2E7D32" 
-                    fillOpacity={1} 
-                    fill="url(#colorPrice)" 
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </Card>
-          </Grid>
-          <Grid item xs={12} md={4}>
-            <Card sx={{ p: 3, height: '100%' }}>
-              <Typography variant="h6" fontWeight="bold" gutterBottom>
-                Price Distribution
-              </Typography>
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={priceRangeData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={false}
-                    label={(entry) => `${entry.count} listings`}
-                    outerRadius={80}
-                    fill="#8884d8"
-                    dataKey="count"
-                  >
-                    {priceRangeData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.fill} />
-                    ))}
-                  </Pie>
-                  <RechartsTooltip />
-                  <Legend />
-                </PieChart>
-              </ResponsiveContainer>
-            </Card>
-          </Grid>
-        </Grid>
-      </motion.div>
 
       {/* Filters and Search */}
       <Paper sx={{ p: 2, mb: 3 }}>
@@ -1503,6 +1429,16 @@ const ListingsDashboard = () => {
           )}
         </motion.div>
       </AnimatePresence>
+
+      {/* New Listing Modal */}
+      <NewListingModal
+        open={openNewListingModal}
+        onClose={() => setOpenNewListingModal(false)}
+        onSuccess={(newListing) => {
+          fetchListings();
+          enqueueSnackbar('Listing created successfully', { variant: 'success' });
+        }}
+      />
 
       {/* Listing Form Dialog */}
       <ListingForm
