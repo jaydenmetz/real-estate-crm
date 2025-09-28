@@ -233,23 +233,71 @@ const HealthOverviewDashboard = () => {
 
   const copyAllTestResults = () => {
     const overallHealth = calculateOverallHealth();
-    const fullReport = {
-      "🔍 DEBUG REPORT": {
-        generated_at: new Date().toISOString(),
+
+    // Collect only failures and key info
+    const failures = [];
+    const modulesSummary = {};
+
+    modules.forEach(module => {
+      const result = testResults[module.key];
+      if (result) {
+        const failedTests = result.tests?.filter(t => t.status === 'failed') || [];
+
+        modulesSummary[module.key] = {
+          status: `${result.summary.passed}/${result.summary.total}`,
+          failedCount: failedTests.length
+        };
+
+        if (failedTests.length > 0) {
+          failures.push({
+            module: module.key,
+            failed: failedTests.map(t => ({
+              name: t.name,
+              endpoint: `${t.method} ${t.endpoint}`,
+              error: t.error || t.response?.error?.message || 'Unknown error'
+            }))
+          });
+        }
+      }
+    });
+
+    // Create concise report
+    const report = {
+      "SUMMARY": {
+        status: overallHealth.passed === overallHealth.total_tests ? "✅ ALL PASSING" : "❌ FAILURES DETECTED",
+        score: `${overallHealth.passed}/${overallHealth.total_tests} tests passing`,
+        timestamp: new Date().toISOString().split('T')[0] + ' ' + new Date().toLocaleTimeString(),
         environment: window.location.hostname,
-        api_base: API_URL,
-        auth_token_present: !!localStorage.getItem('crm_auth_token')
+        auth: localStorage.getItem('crm_auth_token') ? 'Valid' : 'Missing'
       },
-      "📊 SUMMARY": {
-        overall_status: overallHealth.status.toUpperCase(),
-        success_rate: overallHealth.success_rate,
-        tests_run: `${overallHealth.passed}/${overallHealth.total_tests}`,
-        modules_tested: `${Object.keys(testResults).length}/${modules.length}`
-      },
-      "📝 FULL_DETAILS": testResults
+      "MODULES": modulesSummary
     };
 
-    navigator.clipboard.writeText(JSON.stringify(fullReport, null, 2));
+    // Only add failures section if there are any
+    if (failures.length > 0) {
+      report["FAILURES"] = failures;
+    }
+
+    // Add quick fix suggestions if common issues detected
+    if (overallHealth.passed === 0 && overallHealth.total_tests > 0) {
+      report["LIKELY_ISSUE"] = {
+        problem: "All tests failing",
+        fixes: [
+          "1. Check if logged in: Go to /login",
+          "2. Check API status: https://api.jaydenmetz.com/v1/health",
+          "3. Clear cache and refresh: Ctrl+Shift+R",
+          "4. Check browser console for errors: F12"
+        ]
+      };
+    } else if (!localStorage.getItem('crm_auth_token')) {
+      report["LIKELY_ISSUE"] = {
+        problem: "No authentication token",
+        fixes: ["Login at: https://crm.jaydenmetz.com/login"]
+      };
+    }
+
+    const reportText = JSON.stringify(report, null, 2);
+    navigator.clipboard.writeText(reportText);
     setCopySuccess(true);
   };
 
