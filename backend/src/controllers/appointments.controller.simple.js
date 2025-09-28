@@ -482,6 +482,114 @@ class AppointmentsController {
     const result = await pool.query(query);
     res.json({ success: true, data: result.rows });
   }
+
+  /**
+   * Batch delete appointments (hard delete - only after archiving)
+   * This endpoint is used by the health dashboard to test batch delete functionality
+   * Enforces archive-before-delete workflow for data safety
+   * Will only delete if all appointments have been archived or cancelled
+   */
+  static async batchDeleteAppointments(req, res) {
+    const client = await pool.connect();
+    try {
+      const { ids } = req.body;
+      const teamId = req.user.teamId || req.user.team_id;
+
+      if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'IDs must be a non-empty array'
+          }
+        });
+      }
+
+      await client.query('BEGIN');
+
+      // First verify all appointments exist and are archived/cancelled
+      const verifyQuery = `
+        SELECT id, title, status
+        FROM appointments
+        WHERE id = ANY($1)
+        AND team_id = $2
+      `;
+
+      const verifyResult = await client.query(verifyQuery, [ids, teamId]);
+
+      if (verifyResult.rows.length !== ids.length) {
+        await client.query('ROLLBACK');
+        const foundIds = verifyResult.rows.map(row => row.id);
+        const notFoundIds = ids.filter(id => !foundIds.includes(id));
+
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: `Some appointments not found: ${notFoundIds.join(', ')}`,
+            notFoundIds
+          }
+        });
+      }
+
+      // Check if all are archived or cancelled
+      const notArchivedAppointments = verifyResult.rows.filter(row =>
+        row.status !== 'archived' && row.status !== 'cancelled'
+      );
+      if (notArchivedAppointments.length > 0) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'NOT_ARCHIVED',
+            message: 'All appointments must be archived or cancelled before deletion',
+            notArchivedIds: notArchivedAppointments.map(a => a.id)
+          }
+        });
+      }
+
+      // Delete all appointments
+      const deleteQuery = `
+        DELETE FROM appointments
+        WHERE id = ANY($1)
+        AND team_id = $2
+        AND (status = 'archived' OR status = 'cancelled')
+        RETURNING id, title
+      `;
+
+      const deleteResult = await client.query(deleteQuery, [ids, teamId]);
+
+      await client.query('COMMIT');
+
+      console.log('Batch delete appointments completed', {
+        deletedCount: deleteResult.rows.length,
+        deletedBy: req.user?.email || 'unknown',
+        appointmentIds: deleteResult.rows.map(row => row.id)
+      });
+
+      res.json({
+        success: true,
+        data: {
+          deletedCount: deleteResult.rows.length,
+          deletedAppointments: deleteResult.rows,
+          message: `Successfully deleted ${deleteResult.rows.length} appointments`
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      await client.query('ROLLBACK');
+      console.error('Error in batch delete appointments:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'BATCH_DELETE_ERROR',
+          message: 'Failed to batch delete appointments'
+        }
+      });
+    } finally {
+      client.release();
+    }
+  }
 }
 
 module.exports = AppointmentsController;

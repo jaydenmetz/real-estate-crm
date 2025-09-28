@@ -647,6 +647,115 @@ class ClientsController {
       });
     }
   }
+
+  /**
+   * Batch delete clients (hard delete - only after archiving)
+   * This endpoint is used by the health dashboard to test batch delete functionality
+   * Enforces archive-before-delete workflow for data safety
+   * Will only delete if all clients have been archived (status = 'archived')
+   */
+  static async batchDeleteClients(req, res) {
+    const client = await pool.connect();
+    try {
+      const { ids } = req.body;
+      const teamId = req.user.teamId || req.user.team_id;
+
+      if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'IDs must be a non-empty array'
+          }
+        });
+      }
+
+      await client.query('BEGIN');
+
+      // First verify all clients exist and are archived
+      const verifyQuery = `
+        SELECT cl.id, cl.status, co.first_name, co.last_name
+        FROM clients cl
+        JOIN contacts co ON cl.contact_id = co.id
+        WHERE cl.id = ANY($1)
+        AND (co.team_id = $2 OR co.team_id IS NULL)
+      `;
+
+      const verifyResult = await client.query(verifyQuery, [ids, teamId]);
+
+      if (verifyResult.rows.length !== ids.length) {
+        await client.query('ROLLBACK');
+        const foundIds = verifyResult.rows.map(row => row.id);
+        const notFoundIds = ids.filter(id => !foundIds.includes(id));
+
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: `Some clients not found: ${notFoundIds.join(', ')}`,
+            notFoundIds
+          }
+        });
+      }
+
+      // Check if all are archived
+      const notArchivedClients = verifyResult.rows.filter(row => row.status !== 'archived');
+      if (notArchivedClients.length > 0) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'NOT_ARCHIVED',
+            message: 'All clients must be archived before deletion',
+            notArchivedIds: notArchivedClients.map(c => c.id)
+          }
+        });
+      }
+
+      // Delete all clients (cascade will delete contacts due to FK constraint)
+      const deleteQuery = `
+        DELETE FROM clients cl
+        USING contacts co
+        WHERE cl.contact_id = co.id
+        AND cl.id = ANY($1)
+        AND (co.team_id = $2 OR co.team_id IS NULL)
+        AND cl.status = 'archived'
+        RETURNING cl.id, co.first_name, co.last_name
+      `;
+
+      const deleteResult = await client.query(deleteQuery, [ids, teamId]);
+
+      await client.query('COMMIT');
+
+      console.log('Batch delete clients completed', {
+        deletedCount: deleteResult.rows.length,
+        deletedBy: req.user?.email || 'unknown',
+        clientIds: deleteResult.rows.map(row => row.id)
+      });
+
+      res.json({
+        success: true,
+        data: {
+          deletedCount: deleteResult.rows.length,
+          deletedClients: deleteResult.rows,
+          message: `Successfully deleted ${deleteResult.rows.length} clients`
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      await client.query('ROLLBACK');
+      console.error('Error in batch delete clients:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'BATCH_DELETE_ERROR',
+          message: 'Failed to batch delete clients'
+        }
+      });
+    } finally {
+      client.release();
+    }
+  }
 }
 
 module.exports = ClientsController;

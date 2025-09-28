@@ -473,6 +473,112 @@ class LeadsController {
     const { activity } = req.body;
     res.json({ success: true, message: 'Activity recorded', leadId: id, activity });
   }
+
+  /**
+   * Batch delete leads (hard delete - only after archiving)
+   * This endpoint is used by the health dashboard to test batch delete functionality
+   * Enforces archive-before-delete workflow for data safety
+   * Will only delete if all leads have been archived (lead_status = 'archived')
+   */
+  static async batchDeleteLeads(req, res) {
+    const client = await pool.connect();
+    try {
+      const { ids } = req.body;
+      const teamId = req.user.teamId || req.user.team_id;
+
+      if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'IDs must be a non-empty array'
+          }
+        });
+      }
+
+      await client.query('BEGIN');
+
+      // First verify all leads exist and are archived
+      const verifyQuery = `
+        SELECT id, first_name, last_name, lead_status
+        FROM leads
+        WHERE id = ANY($1)
+        AND team_id = $2
+      `;
+
+      const verifyResult = await client.query(verifyQuery, [ids, teamId]);
+
+      if (verifyResult.rows.length !== ids.length) {
+        await client.query('ROLLBACK');
+        const foundIds = verifyResult.rows.map(row => row.id);
+        const notFoundIds = ids.filter(id => !foundIds.includes(id));
+
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: `Some leads not found: ${notFoundIds.join(', ')}`,
+            notFoundIds
+          }
+        });
+      }
+
+      // Check if all are archived
+      const notArchivedLeads = verifyResult.rows.filter(row => row.lead_status !== 'archived');
+      if (notArchivedLeads.length > 0) {
+        await client.query('ROLLBACK');
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'NOT_ARCHIVED',
+            message: 'All leads must be archived before deletion',
+            notArchivedIds: notArchivedLeads.map(l => l.id)
+          }
+        });
+      }
+
+      // Delete all leads
+      const deleteQuery = `
+        DELETE FROM leads
+        WHERE id = ANY($1)
+        AND team_id = $2
+        AND lead_status = 'archived'
+        RETURNING id, first_name, last_name
+      `;
+
+      const deleteResult = await client.query(deleteQuery, [ids, teamId]);
+
+      await client.query('COMMIT');
+
+      console.log('Batch delete leads completed', {
+        deletedCount: deleteResult.rows.length,
+        deletedBy: req.user?.email || 'unknown',
+        leadIds: deleteResult.rows.map(row => row.id)
+      });
+
+      res.json({
+        success: true,
+        data: {
+          deletedCount: deleteResult.rows.length,
+          deletedLeads: deleteResult.rows,
+          message: `Successfully deleted ${deleteResult.rows.length} leads`
+        },
+        timestamp: new Date().toISOString()
+      });
+    } catch (error) {
+      await client.query('ROLLBACK');
+      console.error('Error in batch delete leads:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'BATCH_DELETE_ERROR',
+          message: 'Failed to batch delete leads'
+        }
+      });
+    } finally {
+      client.release();
+    }
+  }
 }
 
 module.exports = LeadsController;

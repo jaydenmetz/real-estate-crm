@@ -39,5 +39,12 @@ router.post('/:id/activities', requirePermission('leads'), leadsController.recor
 router.put('/:id/archive', requirePermission('leads'), leadsController.archiveLead);
 // Delete endpoint: Hard delete
 router.delete('/:id', requirePermission('leads'), leadsController.deleteLead);
+// Batch delete endpoint: Delete multiple archived leads
+router.post('/batch-delete', requirePermission('leads'),
+  body('ids').isArray({ min: 1 }).withMessage('IDs must be a non-empty array'),
+  body('ids.*').isString().withMessage('Each ID must be a string'),
+  validate,
+  leadsController.batchDeleteLeads
+);
 
 module.exports = router;

@@ -37,6 +37,13 @@ router.put('/:id', updateValidation, validate, clientsController.updateClient);
 router.put('/:id/archive', clientsController.archiveClient);
 // Delete endpoint: Hard delete - only works if client is already archived
 router.delete('/:id', clientsController.deleteClient);
+// Batch delete endpoint: Delete multiple archived clients
+router.post('/batch-delete',
+  body('ids').isArray({ min: 1 }).withMessage('IDs must be a non-empty array'),
+  body('ids.*').isString().withMessage('Each ID must be a string'),
+  validate,
+  clientsController.batchDeleteClients
+);
 
 router.post('/:id/notes', clientsController.addNote);
 router.patch('/:id/tags', clientsController.bulkUpdateTags);

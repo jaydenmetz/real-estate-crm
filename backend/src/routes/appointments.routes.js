@@ -39,5 +39,12 @@ router.post('/:id/complete', appointmentsController.markComplete);
 router.put('/:id/archive', appointmentsController.archiveAppointment);
 // Delete endpoint: Hard delete
 router.delete('/:id', appointmentsController.deleteAppointment);
+// Batch delete endpoint: Delete multiple archived appointments
+router.post('/batch-delete',
+  body('ids').isArray({ min: 1 }).withMessage('IDs must be a non-empty array'),
+  body('ids.*').isString().withMessage('Each ID must be a string'),
+  validate,
+  appointmentsController.batchDeleteAppointments
+);
 
 module.exports = router;
