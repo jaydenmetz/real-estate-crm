@@ -21,6 +21,7 @@ import {
 } from '@mui/icons-material';
 import { escrowsAPI } from '../../services/api.service';
 import { useAuth } from '../../contexts/AuthContext';
+import { loadGoogleMapsScript } from '../../utils/googleMapsLoader';
 
 const NewEscrowModal = ({ open, onClose, onSuccess }) => {
   const { user } = useAuth();
@@ -44,18 +45,34 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
 
   const [formData, setFormData] = useState({
     propertyAddress: '',
-    city: '',
-    state: userState,
-    zipCode: '',
+    city: 'Bakersfield',  // Default to Bakersfield
+    state: 'CA',           // Default to CA
+    zipCode: '',           // Start empty, will populate on selection
     county: '',
   });
 
   // Use Google Places Autocomplete if API key is available
   const GOOGLE_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
   const hasValidGoogleKey = GOOGLE_API_KEY && GOOGLE_API_KEY !== 'YOUR_GOOGLE_API_KEY_HERE';
+  const [googleMapsLoaded, setGoogleMapsLoaded] = useState(false);
+
+  // Load Google Maps script when modal opens
+  useEffect(() => {
+    if (open && hasValidGoogleKey && !googleMapsLoaded) {
+      loadGoogleMapsScript()
+        .then(() => {
+          console.log('Google Maps loaded successfully');
+          setGoogleMapsLoaded(true);
+        })
+        .catch((error) => {
+          console.warn('Failed to load Google Maps:', error.message);
+          // Fallback to Nominatim will be used
+        });
+    }
+  }, [open, hasValidGoogleKey, googleMapsLoaded]);
 
   useEffect(() => {
-    if (open && hasValidGoogleKey && window.google && addressInputRef.current) {
+    if (open && googleMapsLoaded && window.google?.maps?.places && addressInputRef.current) {
       const autocomplete = new window.google.maps.places.Autocomplete(addressInputRef.current, {
         types: ['address'],
         componentRestrictions: { country: 'us' }
@@ -66,8 +83,8 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         if (place.address_components) {
           let streetNumber = '';
           let streetName = '';
-          let city = '';
-          let state = '';
+          let city = 'Bakersfield';  // Keep Bakersfield as default
+          let state = 'CA';           // Keep CA as default
           let zipCode = '';
           let county = '';
 
@@ -80,13 +97,13 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
               streetName = component.long_name;
             }
             if (types.includes('locality')) {
-              city = component.long_name;
+              city = component.long_name;  // Update if provided
             }
             if (types.includes('administrative_area_level_1')) {
-              state = component.short_name;
+              state = component.short_name;  // Update if provided
             }
             if (types.includes('postal_code')) {
-              zipCode = component.long_name;
+              zipCode = component.long_name;  // Populate zip on selection
             }
             if (types.includes('administrative_area_level_2')) {
               county = component.long_name;
@@ -95,10 +112,10 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
 
           const fullAddress = `${streetNumber} ${streetName}`.trim();
           setFormData({
-            propertyAddress: fullAddress,
-            city,
-            state,
-            zipCode,
+            propertyAddress: fullAddress,  // Street address only
+            city: city || 'Bakersfield',   // Default to Bakersfield if empty
+            state: state || 'CA',           // Default to CA if empty
+            zipCode,                        // Populate from selection
             county: county.replace(' County', ''),
           });
           setSelectedAddress(place);
@@ -106,10 +123,12 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
       });
 
       return () => {
-        window.google.maps.event.clearInstanceListeners(autocomplete);
+        if (window.google?.maps?.event) {
+          window.google.maps.event.clearInstanceListeners(autocomplete);
+        }
       };
     }
-  }, [open, hasValidGoogleKey]);
+  }, [open, googleMapsLoaded]);
 
   // Cleanup on unmount or modal close
   useEffect(() => {
@@ -124,7 +143,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
 
   // Fallback to Nominatim if no Google API key - ZERO DELAY implementation
   const fetchAddressSuggestions = useCallback((input) => {
-    if (hasValidGoogleKey) return; // Skip if using Google Places
+    if (googleMapsLoaded) return; // Skip if using Google Places
 
     // Cancel ANY previous request immediately
     if (abortControllerRef.current) {
@@ -393,22 +412,25 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         }
       }
     })(); // Execute immediately
-  }, [hasValidGoogleKey]);
+  }, [googleMapsLoaded, userCity, userState, userLat, userLng, searchRadius]);
 
 
   const handleAddressSelect = (event, value) => {
     if (value && typeof value === 'object' && value.value) {
+      // Extract just the street address (no city, state, zip)
+      const streetAddress = value.value.address;
+
       setFormData({
-        propertyAddress: value.value.address,
-        city: value.value.city,
-        state: value.value.state,
-        zipCode: value.value.zipCode,
-        county: value.value.county,
+        propertyAddress: streetAddress,  // Street address only
+        city: value.value.city || 'Bakersfield',  // Use provided or default
+        state: value.value.state || 'CA',         // Use provided or default
+        zipCode: value.value.zipCode || '',       // Populate zip from selection
+        county: value.value.county || '',
       });
       setSelectedAddress(value);
-      setAddressSearchText(value.label);
+      setAddressSearchText(streetAddress);  // Show only street address in input
     } else if (typeof value === 'string') {
-      // User typed something custom
+      // User typed something custom - keep defaults
       setSelectedAddress(null);
     }
   };
@@ -476,9 +498,9 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
       // Reset form
       setFormData({
         propertyAddress: '',
-        city: '',
-        state: 'CA',
-        zipCode: '',
+        city: 'Bakersfield',  // Reset to default
+        state: 'CA',           // Reset to default
+        zipCode: '',           // Clear zip
         county: '',
       });
       setSelectedAddress(null);
@@ -506,12 +528,12 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
               setManualEntry(!manualEntry);
               setSelectedAddress(null);
               if (!manualEntry) {
-                // Clear form when switching to manual
+                // Clear form when switching to manual but keep defaults
                 setFormData({
                   propertyAddress: '',
-                  city: '',
-                  state: 'CA',
-                  zipCode: '',
+                  city: 'Bakersfield',  // Keep default
+                  state: 'CA',           // Keep default
+                  zipCode: '',           // Clear zip
                   county: '',
                 });
               }
@@ -534,8 +556,8 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
           <TextField
             inputRef={addressInputRef}
             fullWidth
-            label="Property Address"
-            placeholder="Start typing an address..."
+            label="Street Address"
+            placeholder="Enter street number and name only..."
             value={formData.propertyAddress}
             onChange={(e) => setFormData({ ...formData, propertyAddress: e.target.value })}
             variant="outlined"
@@ -543,7 +565,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             InputProps={{
               startAdornment: <LocationOn sx={{ mr: 1, color: 'action.active' }} />,
             }}
-            helperText="Start typing to search for addresses"
+            helperText={`Address will default to ${formData.city}, ${formData.state}. Type to search for addresses.`}
           />
         ) : (
           <Autocomplete
