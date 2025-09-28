@@ -1941,102 +1941,225 @@ const EscrowsDashboard = () => {
           </Box>
         )}
 
-        {/* Page Title */}
-        <Box sx={{ mb: 4 }}>
+        {/* Hero Section with Stats */}
+        <HeroSection>
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Typography variant="h4" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
+            <Typography variant="h3" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
               Escrow Management
             </Typography>
-            <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+            <Typography variant="h6" sx={{ mb: 4, opacity: 0.9 }}>
               Track and manage all your real estate transactions in one place
             </Typography>
-            <Stack direction="row" spacing={2} flexWrap="wrap">
-              <Button
-                variant="contained"
-                size="large"
-                startIcon={<Add />}
-                onClick={handleCreateNew}
-              >
-                Create New Escrow
-              </Button>
-              <Button
-                variant="outlined"
-                size="large"
-                startIcon={<Assessment />}
-              >
-                Transaction Analytics
-              </Button>
-            </Stack>
           </motion.div>
-        </Box>
 
-        {/* Animated Stats Cards */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
-          <Grid item xs={12} sm={6} md={3}>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-            >
-              <StatCard
-                icon={Home}
-                title="Total Escrows"
-                value={escrows.length}
-                color="#2196f3"
-                delay={0}
-              />
-            </motion.div>
+          {/* Stats Grid */}
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={6} md={3}>
+              <Box sx={{
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: 2,
+                p: 2.5,
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+              }}>
+                <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                  <Box>
+                    <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>
+                      Total Escrows
+                    </Typography>
+                    <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+                      <CountUp end={stats.totalEscrows || 0} duration={2} separator="," />
+                    </Typography>
+                  </Box>
+                  <Home sx={{ fontSize: 40, opacity: 0.6 }} />
+                </Box>
+                {/* Mini chart */}
+                <Box sx={{ height: 40, mt: 1 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={chartData.slice(-7)}>
+                      <defs>
+                        <linearGradient id="colorEscrows" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#ffffff" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#ffffff" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <Area
+                        type="monotone"
+                        dataKey="value"
+                        stroke="#ffffff"
+                        fill="url(#colorEscrows)"
+                        strokeWidth={2}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </Box>
+              </Box>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={3}>
+              <Box sx={{
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: 2,
+                p: 2.5,
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+              }}>
+                <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                  <Box>
+                    <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>
+                      Active Escrows
+                    </Typography>
+                    <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+                      <CountUp end={stats.activeEscrows || 0} duration={2} separator="," />
+                    </Typography>
+                  </Box>
+                  <CheckCircle sx={{ fontSize: 40, opacity: 0.6 }} />
+                </Box>
+                {/* Mini chart */}
+                <Box sx={{ height: 40, mt: 1 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={chartData.slice(-7)}>
+                      <Line
+                        type="monotone"
+                        dataKey="value"
+                        stroke="#ffffff"
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </Box>
+              </Box>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={3}>
+              <Box sx={{
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: 2,
+                p: 2.5,
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+              }}>
+                <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                  <Box>
+                    <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>
+                      Total Volume
+                    </Typography>
+                    <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+                      $<CountUp
+                        end={(stats.totalVolume || 0) / 1000000}
+                        duration={2}
+                        separator=","
+                        decimals={1}
+                        suffix="M"
+                      />
+                    </Typography>
+                  </Box>
+                  <AttachMoney sx={{ fontSize: 40, opacity: 0.6 }} />
+                </Box>
+                {/* Mini chart */}
+                <Box sx={{ height: 40, mt: 1 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={chartData.slice(-7)}>
+                      <Bar dataKey="value" fill="rgba(255,255,255,0.6)" />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </Box>
+              </Box>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={3}>
+              <Box sx={{
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: 2,
+                p: 2.5,
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+              }}>
+                <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                  <Box>
+                    <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>
+                      Commission
+                    </Typography>
+                    <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+                      $<CountUp
+                        end={(stats.projectedCommission || 0) / 1000}
+                        duration={2}
+                        separator=","
+                        decimals={0}
+                        suffix="K"
+                      />
+                    </Typography>
+                  </Box>
+                  <TrendingUp sx={{ fontSize: 40, opacity: 0.6 }} />
+                </Box>
+                {/* Mini chart */}
+                <Box sx={{ height: 40, mt: 1 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={chartData.slice(-7)}>
+                      <defs>
+                        <linearGradient id="colorCommission" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#ffffff" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#ffffff" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <Area
+                        type="monotone"
+                        dataKey="value"
+                        stroke="#ffffff"
+                        fill="url(#colorCommission)"
+                        strokeWidth={2}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </Box>
+              </Box>
+            </Grid>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
+
+          {/* Action Buttons */}
+          <Box sx={{ mt: 4, display: 'flex', gap: 2 }}>
+            <Button
+              variant="contained"
+              size="large"
+              startIcon={<Add />}
+              onClick={handleCreateNew}
+              sx={{
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                color: 'white',
+                backdropFilter: 'blur(10px)',
+                fontWeight: 600,
+                px: 3,
+                py: 1.5,
+                borderRadius: 2,
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                }
+              }}
             >
-              <StatCard
-                icon={AttachMoney}
-                title="Total Volume"
-                value={`$${(stats.totalVolume / 1000000).toFixed(1)}M`}
-                color="#4caf50"
-                delay={0.2}
-              />
-            </motion.div>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
+              Create New Escrow
+            </Button>
+            <Button
+              variant="outlined"
+              size="large"
+              startIcon={<Assessment />}
+              sx={{
+                color: 'white',
+                borderColor: 'rgba(255, 255, 255, 0.5)',
+                '&:hover': {
+                  borderColor: 'white',
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                }
+              }}
             >
-              <StatCard
-                icon={CheckCircle}
-                title="Projected Commission"
-                value={`$${(stats.projectedCommission / 1000).toFixed(0)}K`}
-                color="#ff9800"
-                delay={0.4}
-              />
-            </motion.div>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-            >
-              <StatCard
-                icon={Schedule}
-                title="Active Escrows"
-                value={stats.activeEscrows}
-                color="#9c27b0"
-                delay={0.6}
-              />
-            </motion.div>
-          </Grid>
-        </Grid>
+              Transaction Analytics
+            </Button>
+          </Box>
+        </HeroSection>
 
       {/* Status Tabs */}
       <Box sx={{ mb: 4 }}>

@@ -1270,106 +1270,213 @@ const AppointmentsDashboard = () => {
         </Box>
       )}
 
-      {/* Page Title */}
-      <Box sx={{ mb: 4 }}>
+      {/* Hero Section with Stats */}
+      <HeroSection>
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <Typography variant="h4" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
+          <Typography variant="h3" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
             Appointment Management
           </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+          <Typography variant="h6" sx={{ mb: 4, opacity: 0.9 }}>
             Schedule, track, and manage all your appointments in one place
           </Typography>
-          <Stack direction="row" spacing={2} flexWrap="wrap">
-            <Button
-              variant="contained"
-              size="large"
-              startIcon={<Add />}
-              onClick={() => setOpenForm(true)}
-            >
-              Schedule Appointment
-            </Button>
-            <Button
-              variant="outlined"
-              size="large"
-              startIcon={<Sync />}
-            >
-              Sync Calendar
-            </Button>
-          </Stack>
         </motion.div>
-      </Box>
 
-      {/* Animated Stats Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
-            <Card sx={{ p: 3, textAlign: 'center' }}>
-              <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main', mb: 1 }}>
-                <CountUp end={stats.todayCount} duration={2} />
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Today
-              </Typography>
-            </Card>
-          </motion.div>
+        {/* Stats Grid */}
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6} md={3}>
+            <Box sx={{
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: 2,
+              p: 2.5,
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+            }}>
+              <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                <Box>
+                  <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>
+                    Today
+                  </Typography>
+                  <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+                    <CountUp end={stats.todayCount || 0} duration={2} separator="," />
+                  </Typography>
+                </Box>
+                <Today sx={{ fontSize: 40, opacity: 0.6 }} />
+              </Box>
+              {/* Mini chart */}
+              <Box sx={{ height: 40, mt: 1 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={weeklyData}>
+                    <defs>
+                      <linearGradient id="colorToday" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#ffffff" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#ffffff" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <Area
+                      type="monotone"
+                      dataKey="appointments"
+                      stroke="#ffffff"
+                      fill="url(#colorToday)"
+                      strokeWidth={2}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </Box>
+            </Box>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <Box sx={{
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: 2,
+              p: 2.5,
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+            }}>
+              <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                <Box>
+                  <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>
+                    Upcoming
+                  </Typography>
+                  <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+                    <CountUp end={stats.upcomingCount || 0} duration={2} separator="," />
+                  </Typography>
+                </Box>
+                <EventAvailable sx={{ fontSize: 40, opacity: 0.6 }} />
+              </Box>
+              {/* Mini chart */}
+              <Box sx={{ height: 40, mt: 1 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={weeklyData}>
+                    <Line
+                      type="monotone"
+                      dataKey="appointments"
+                      stroke="#ffffff"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </Box>
+            </Box>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <Box sx={{
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: 2,
+              p: 2.5,
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+            }}>
+              <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                <Box>
+                  <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>
+                    Completed
+                  </Typography>
+                  <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+                    <CountUp end={stats.completedCount || 0} duration={2} separator="," />
+                  </Typography>
+                </Box>
+                <CheckCircle sx={{ fontSize: 40, opacity: 0.6 }} />
+              </Box>
+              {/* Mini chart */}
+              <Box sx={{ height: 40, mt: 1 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={weeklyData}>
+                    <Bar dataKey="appointments" fill="rgba(255,255,255,0.6)" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </Box>
+            </Box>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <Box sx={{
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: 2,
+              p: 2.5,
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+            }}>
+              <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                <Box>
+                  <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>
+                    Cancelled
+                  </Typography>
+                  <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+                    <CountUp end={stats.canceledCount || 0} duration={2} separator="," />
+                  </Typography>
+                </Box>
+                <Cancel sx={{ fontSize: 40, opacity: 0.6 }} />
+              </Box>
+              {/* Mini chart */}
+              <Box sx={{ height: 40, mt: 1 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={weeklyData}>
+                    <defs>
+                      <linearGradient id="colorCancelled" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#ffffff" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#ffffff" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <Area
+                      type="monotone"
+                      dataKey="appointments"
+                      stroke="#ffffff"
+                      fill="url(#colorCancelled)"
+                      strokeWidth={2}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </Box>
+            </Box>
+          </Grid>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+
+        {/* Action Buttons */}
+        <Box sx={{ mt: 4, display: 'flex', gap: 2 }}>
+          <Button
+            variant="contained"
+            size="large"
+            startIcon={<Add />}
+            onClick={() => setOpenForm(true)}
+            sx={{
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              color: 'white',
+              backdropFilter: 'blur(10px)',
+              fontWeight: 600,
+              px: 3,
+              py: 1.5,
+              borderRadius: 2,
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.3)',
+              }
+            }}
           >
-            <Card sx={{ p: 3, textAlign: 'center' }}>
-              <Typography variant="h4" sx={{ fontWeight: 700, color: 'info.main', mb: 1 }}>
-                <CountUp end={stats.upcomingCount} duration={2} />
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Upcoming
-              </Typography>
-            </Card>
-          </motion.div>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
+            Schedule Appointment
+          </Button>
+          <Button
+            variant="outlined"
+            size="large"
+            startIcon={<Sync />}
+            sx={{
+              color: 'white',
+              borderColor: 'rgba(255, 255, 255, 0.5)',
+              '&:hover': {
+                borderColor: 'white',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              }
+            }}
           >
-            <Card sx={{ p: 3, textAlign: 'center' }}>
-              <Typography variant="h4" sx={{ fontWeight: 700, color: 'success.main', mb: 1 }}>
-                <CountUp end={stats.completedCount} duration={2} />
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Completed
-              </Typography>
-            </Card>
-          </motion.div>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-          >
-            <Card sx={{ p: 3, textAlign: 'center' }}>
-              <Typography variant="h4" sx={{ fontWeight: 700, color: 'error.main', mb: 1 }}>
-                <CountUp end={stats.canceledCount} duration={2} />
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Cancelled
-              </Typography>
-            </Card>
-          </motion.div>
-        </Grid>
-      </Grid>
+            Sync Calendar
+          </Button>
+        </Box>
+      </HeroSection>
 
       {/* Stats Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>

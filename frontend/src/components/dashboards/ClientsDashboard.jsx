@@ -1103,110 +1103,227 @@ const ClientsDashboard = () => {
         </Box>
       )}
 
-      {/* Page Title */}
-      <Box sx={{ mb: 4 }}>
+      {/* Hero Section with Stats */}
+      <HeroSection>
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
         >
-          <Typography variant="h4" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
+          <Typography variant="h3" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
             Client Management
           </Typography>
-          <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+          <Typography variant="h6" sx={{ mb: 4, opacity: 0.9 }}>
             Build lasting relationships and grow your business
           </Typography>
-          <Stack direction="row" spacing={2} flexWrap="wrap">
-            <Button
-              variant="contained"
-              size="large"
-              startIcon={<PersonAdd />}
-              onClick={() => setOpenForm(true)}
-            >
-              Add New Client
-            </Button>
-            <Button
-              variant="outlined"
-              size="large"
-              startIcon={<CloudUpload />}
-            >
-              Import Clients
-            </Button>
-          </Stack>
         </motion.div>
-      </Box>
 
-      {/* Animated Stats Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-          >
-            <Card sx={{ p: 3, textAlign: 'center' }}>
-              <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main', mb: 1 }}>
-                <CountUp end={clients.length} duration={2} />
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Total Clients
-              </Typography>
-            </Card>
-          </motion.div>
+        {/* Stats Grid */}
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6} md={3}>
+            <Box sx={{
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: 2,
+              p: 2.5,
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+            }}>
+              <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                <Box>
+                  <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>
+                    Total Clients
+                  </Typography>
+                  <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+                    <CountUp end={clients.length || 0} duration={2} separator="," />
+                  </Typography>
+                </Box>
+                <Groups sx={{ fontSize: 40, opacity: 0.6 }} />
+              </Box>
+              {/* Mini chart */}
+              <Box sx={{ height: 40, mt: 1 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={monthlyData}>
+                    <defs>
+                      <linearGradient id="colorTotalClients" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#ffffff" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#ffffff" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <Area
+                      type="monotone"
+                      dataKey="clients"
+                      stroke="#ffffff"
+                      fill="url(#colorTotalClients)"
+                      strokeWidth={2}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </Box>
+            </Box>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <Box sx={{
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: 2,
+              p: 2.5,
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+            }}>
+              <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                <Box>
+                  <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>
+                    Active Clients
+                  </Typography>
+                  <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+                    <CountUp end={clients.filter(c => c.status === 'Active').length || 0} duration={2} separator="," />
+                  </Typography>
+                </Box>
+                <Person sx={{ fontSize: 40, opacity: 0.6 }} />
+              </Box>
+              {/* Mini chart */}
+              <Box sx={{ height: 40, mt: 1 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={monthlyData}>
+                    <Line
+                      type="monotone"
+                      dataKey="clients"
+                      stroke="#ffffff"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </Box>
+            </Box>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <Box sx={{
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: 2,
+              p: 2.5,
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+            }}>
+              <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                <Box>
+                  <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>
+                    Total Value
+                  </Typography>
+                  <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+                    $<CountUp
+                      end={(clients.reduce((sum, c) => sum + (c.lifetimeValue || 0), 0) || 0) / 1000000}
+                      duration={2}
+                      separator=","
+                      decimals={1}
+                      suffix="M"
+                    />
+                  </Typography>
+                </Box>
+                <AttachMoney sx={{ fontSize: 40, opacity: 0.6 }} />
+              </Box>
+              {/* Mini chart */}
+              <Box sx={{ height: 40, mt: 1 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={monthlyData}>
+                    <Bar dataKey="value" fill="rgba(255,255,255,0.6)" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </Box>
+            </Box>
+          </Grid>
+
+          <Grid item xs={12} sm={6} md={3}>
+            <Box sx={{
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: 2,
+              p: 2.5,
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+            }}>
+              <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                <Box>
+                  <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>
+                    New This Month
+                  </Typography>
+                  <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+                    <CountUp
+                      end={clients.filter(c => {
+                        const created = new Date(c.dateAdded);
+                        const now = new Date();
+                        return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
+                      }).length || 0}
+                      duration={2}
+                      separator=","
+                    />
+                  </Typography>
+                </Box>
+                <TrendingUp sx={{ fontSize: 40, opacity: 0.6 }} />
+              </Box>
+              {/* Mini chart */}
+              <Box sx={{ height: 40, mt: 1 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={monthlyData}>
+                    <defs>
+                      <linearGradient id="colorNewClients" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#ffffff" stopOpacity={0.8}/>
+                        <stop offset="95%" stopColor="#ffffff" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <Area
+                      type="monotone"
+                      dataKey="clients"
+                      stroke="#ffffff"
+                      fill="url(#colorNewClients)"
+                      strokeWidth={2}
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </Box>
+            </Box>
+          </Grid>
         </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
+
+        {/* Action Buttons */}
+        <Box sx={{ mt: 4, display: 'flex', gap: 2 }}>
+          <Button
+            variant="contained"
+            size="large"
+            startIcon={<PersonAdd />}
+            onClick={() => setOpenForm(true)}
+            sx={{
+              backgroundColor: 'rgba(255, 255, 255, 0.2)',
+              color: 'white',
+              backdropFilter: 'blur(10px)',
+              fontWeight: 600,
+              px: 3,
+              py: 1.5,
+              borderRadius: 2,
+              '&:hover': {
+                backgroundColor: 'rgba(255, 255, 255, 0.3)',
+              }
+            }}
           >
-            <Card sx={{ p: 3, textAlign: 'center' }}>
-              <Typography variant="h4" sx={{ fontWeight: 700, color: 'success.main', mb: 1 }}>
-                <CountUp end={clients.filter(c => c.status === 'Active').length} duration={2} />
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Active Clients
-              </Typography>
-            </Card>
-          </motion.div>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
+            Add New Client
+          </Button>
+          <Button
+            variant="outlined"
+            size="large"
+            startIcon={<CloudUpload />}
+            sx={{
+              color: 'white',
+              borderColor: 'rgba(255, 255, 255, 0.5)',
+              '&:hover': {
+                borderColor: 'white',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              }
+            }}
           >
-            <Card sx={{ p: 3, textAlign: 'center' }}>
-              <Typography variant="h4" sx={{ fontWeight: 700, color: 'warning.main', mb: 1 }}>
-                $<CountUp end={clients.reduce((sum, c) => sum + (c.lifetimeValue || 0), 0) / 1000000} decimals={1} duration={2} />M
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Total Value
-              </Typography>
-            </Card>
-          </motion.div>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-          >
-            <Card sx={{ p: 3, textAlign: 'center' }}>
-              <Typography variant="h4" sx={{ fontWeight: 700, color: 'info.main', mb: 1 }}>
-                <CountUp end={clients.filter(c => {
-                  const created = new Date(c.dateAdded);
-                  const now = new Date();
-                  return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
-                }).length} duration={2} />
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                New This Month
-              </Typography>
-            </Card>
-          </motion.div>
-        </Grid>
-      </Grid>
+            Import Clients
+          </Button>
+        </Box>
+      </HeroSection>
 
       {/* Stats Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>

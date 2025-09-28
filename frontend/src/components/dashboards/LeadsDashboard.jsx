@@ -2145,21 +2145,22 @@ const bounce = keyframes`
 
 // Styled Components
 const HeroSection = styled(Box)(({ theme }) => ({
-  minHeight: '300px',
-  padding: theme.spacing(6, 0, 4),
-  background: 'linear-gradient(135deg, #10B981 0%, #34D399 100%)',
+  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
   color: 'white',
+  padding: theme.spacing(6),
+  borderRadius: theme.spacing(3),
   position: 'relative',
   overflow: 'hidden',
+  marginBottom: theme.spacing(4),
+  boxShadow: '0 20px 60px rgba(102, 126, 234, 0.3)',
   '&::before': {
     content: '""',
     position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: 'radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.2) 0%, transparent 50%)',
-    pointerEvents: 'none',
+    top: -50,
+    right: -50,
+    width: 200,
+    height: 200,
+    background: 'radial-gradient(circle, rgba(255,255,255,0.2) 0%, transparent 70%)',
   },
   '&::after': {
     content: '""',
@@ -2945,123 +2946,229 @@ const LeadsDashboard = () => {
 
       {/* Page Title */}
       <Container maxWidth="xl">
-        <Box sx={{ mb: 4 }}>
+        {/* Hero Section with Stats */}
+        <HeroSection>
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-              <Box>
-                <Typography variant="h4" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
-                  Lead Management
-                </Typography>
-                <Typography variant="body1" color="text.secondary">
-                  Track and nurture your sales pipeline
-                </Typography>
-              </Box>
-              <Button
-                variant="contained"
-                startIcon={<Add />}
-                onClick={handleAddLead}
-                size="large"
-              >
-                New Lead
-              </Button>
-            </Box>
+            <Typography variant="h3" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
+              Lead Management
+            </Typography>
+            <Typography variant="h6" sx={{ mb: 4, opacity: 0.9 }}>
+              Track and nurture your sales pipeline
+            </Typography>
           </motion.div>
-        </Box>
 
-        {/* Animated Stats Cards */}
-        <Grid container spacing={3} sx={{ mb: 4 }}>
+          {/* Stats Grid */}
+          <Grid container spacing={3}>
             <Grid item xs={12} sm={6} md={3}>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
-              >
-                <StatsCard color="primary">
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <Box>
-                      <Typography variant="h3" fontWeight="bold">
-                        <CountUp end={stats.total} duration={2} />
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                        Total Leads
-                      </Typography>
-                    </Box>
-                    <Avatar 
-                      className="stats-icon"
-                      sx={{ 
-                        bgcolor: alpha('#10B981', 0.1), 
-                        color: 'success.main',
-                        width: 56,
-                        height: 56,
-                        transition: 'all 0.3s ease',
-                      }}
-                    >
-                      <Person />
-                    </Avatar>
+              <Box sx={{
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: 2,
+                p: 2.5,
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+              }}>
+                <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                  <Box>
+                    <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>
+                      Total Leads
+                    </Typography>
+                    <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+                      <CountUp end={stats.total || 0} duration={2} separator="," />
+                    </Typography>
                   </Box>
-                </StatsCard>
-              </motion.div>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.2 }}
-              >
-                <StatsCard color="error">
-                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <Box>
-                      <Typography variant="h3" fontWeight="bold">
-                        <CountUp end={stats.hot} duration={2} />
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                        Hot Leads
-                      </Typography>
-                      <Chip
-                        label={`${Math.round((stats.hot / stats.total) * 100)}% of total`}
-                        size="small"
-                        color="error"
-                        sx={{ mt: 1 }}
+                  <People sx={{ fontSize: 40, opacity: 0.6 }} />
+                </Box>
+                {/* Mini chart */}
+                <Box sx={{ height: 40, mt: 1 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={[
+                      { day: 'Mon', value: 8 },
+                      { day: 'Tue', value: 10 },
+                      { day: 'Wed', value: 12 },
+                      { day: 'Thu', value: 15 },
+                      { day: 'Fri', value: 18 },
+                      { day: 'Sat', value: 14 },
+                      { day: 'Sun', value: 16 },
+                    ]}>
+                      <defs>
+                        <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#ffffff" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#ffffff" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <Area
+                        type="monotone"
+                        dataKey="value"
+                        stroke="#ffffff"
+                        fill="url(#colorTotal)"
+                        strokeWidth={2}
                       />
-                    </Box>
-                    <Avatar 
-                      className="stats-icon"
-                      sx={{ 
-                        bgcolor: alpha('#EF4444', 0.1), 
-                        color: 'error.main',
-                        width: 56,
-                        height: 56,
-                        transition: 'all 0.3s ease',
-                      }}
-                    >
-                      <LocalFireDepartment />
-                    </Avatar>
-                  </Box>
-                </StatsCard>
-              </motion.div>
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </Box>
+              </Box>
             </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatsCardComponent
-              title="Warm Leads"
-              value={stats.warm}
-              icon={<AccessTime />}
-              color="#f57c00"
-              trend={`${Math.round((stats.warm / stats.total) * 100)}% of total`}
-            />
+
+            <Grid item xs={12} sm={6} md={3}>
+              <Box sx={{
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: 2,
+                p: 2.5,
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+              }}>
+                <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                  <Box>
+                    <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>
+                      Hot Leads
+                    </Typography>
+                    <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+                      <CountUp end={stats.hot || 0} duration={2} separator="," />
+                    </Typography>
+                  </Box>
+                  <LocalFireDepartment sx={{ fontSize: 40, opacity: 0.6 }} />
+                </Box>
+                {/* Mini chart */}
+                <Box sx={{ height: 40, mt: 1 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RechartsLineChart data={[
+                      { day: 'Mon', value: 3 },
+                      { day: 'Tue', value: 4 },
+                      { day: 'Wed', value: 6 },
+                      { day: 'Thu', value: 8 },
+                      { day: 'Fri', value: 7 },
+                      { day: 'Sat', value: 5 },
+                      { day: 'Sun', value: 6 },
+                    ]}>
+                      <Line
+                        type="monotone"
+                        dataKey="value"
+                        stroke="#ffffff"
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                    </RechartsLineChart>
+                  </ResponsiveContainer>
+                </Box>
+              </Box>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <Box sx={{
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: 2,
+                p: 2.5,
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+              }}>
+                <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                  <Box>
+                    <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>
+                      Warm Leads
+                    </Typography>
+                    <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+                      <CountUp end={stats.warm || 0} duration={2} separator="," />
+                    </Typography>
+                  </Box>
+                  <AccessTime sx={{ fontSize: 40, opacity: 0.6 }} />
+                </Box>
+                {/* Mini chart */}
+                <Box sx={{ height: 40, mt: 1 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <RechartsBarChart data={[
+                      { day: 'Mon', value: 5 },
+                      { day: 'Tue', value: 7 },
+                      { day: 'Wed', value: 9 },
+                      { day: 'Thu', value: 11 },
+                      { day: 'Fri', value: 8 },
+                      { day: 'Sat', value: 6 },
+                      { day: 'Sun', value: 7 },
+                    ]}>
+                      <Bar dataKey="value" fill="rgba(255,255,255,0.6)" />
+                    </RechartsBarChart>
+                  </ResponsiveContainer>
+                </Box>
+              </Box>
+            </Grid>
+
+            <Grid item xs={12} sm={6} md={3}>
+              <Box sx={{
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: 2,
+                p: 2.5,
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+              }}>
+                <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+                  <Box>
+                    <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>
+                      New This Week
+                    </Typography>
+                    <Typography variant="h4" sx={{ fontWeight: 'bold' }}>
+                      <CountUp end={stats.newThisWeek || 0} duration={2} separator="," />
+                    </Typography>
+                  </Box>
+                  <TrendingUp sx={{ fontSize: 40, opacity: 0.6 }} />
+                </Box>
+                {/* Mini chart */}
+                <Box sx={{ height: 40, mt: 1 }}>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={[
+                      { day: 'Mon', value: 2 },
+                      { day: 'Tue', value: 3 },
+                      { day: 'Wed', value: 5 },
+                      { day: 'Thu', value: 4 },
+                      { day: 'Fri', value: 6 },
+                      { day: 'Sat', value: 3 },
+                      { day: 'Sun', value: 4 },
+                    ]}>
+                      <defs>
+                        <linearGradient id="colorNew" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#ffffff" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#ffffff" stopOpacity={0}/>
+                        </linearGradient>
+                      </defs>
+                      <Area
+                        type="monotone"
+                        dataKey="value"
+                        stroke="#ffffff"
+                        fill="url(#colorNew)"
+                        strokeWidth={2}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </Box>
+              </Box>
+            </Grid>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <StatsCardComponent
-              title="New This Week"
-              value={stats.newThisWeek}
-              icon={<Star />}
-              color="#388e3c"
-            />
-          </Grid>
-        </Grid>
+
+          {/* Action Button */}
+          <Box sx={{ mt: 4 }}>
+            <Button
+              variant="contained"
+              size="large"
+              startIcon={<Add />}
+              onClick={handleAddLead}
+              sx={{
+                backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                color: 'white',
+                backdropFilter: 'blur(10px)',
+                fontWeight: 600,
+                px: 3,
+                py: 1.5,
+                borderRadius: 2,
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                }
+              }}
+            >
+              New Lead
+            </Button>
+          </Box>
+        </HeroSection>
         {/* Search and Filter Bar */}
         <Paper sx={{ p: 2, mb: 3 }}>
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
