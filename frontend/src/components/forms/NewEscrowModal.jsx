@@ -30,7 +30,6 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
   const [addressSuggestions, setAddressSuggestions] = useState([]);
   const [loadingAddress, setLoadingAddress] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState(null);
-  const [manualEntry, setManualEntry] = useState(false);
   const [addressSearchText, setAddressSearchText] = useState('');
   const addressInputRef = useRef(null);
   const abortControllerRef = useRef(null);
@@ -438,19 +437,9 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate that either an address was selected or manual entry is complete
-    if (!manualEntry && !selectedAddress) {
-      setError('Please select an address from the suggestions or choose "Enter address manually"');
-      return;
-    }
-
-    if (manualEntry && (!formData.propertyAddress || !formData.city || !formData.state || !formData.zipCode)) {
+    // Validate required fields
+    if (!formData.propertyAddress || !formData.city || !formData.state || !formData.zipCode) {
       setError('Please fill in all address fields');
-      return;
-    }
-
-    if (!formData.propertyAddress) {
-      setError('Please select or enter a property address');
       return;
     }
 
@@ -505,7 +494,6 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
       });
       setSelectedAddress(null);
       setAddressSuggestions([]);
-      setManualEntry(false);
       setAddressSearchText('');
       setError('');
       onClose();
@@ -516,43 +504,12 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
     return (
       <Box>
         <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-          Search for the property address or enter it manually.
+          Enter the property address for this escrow.
         </Typography>
 
-        {/* Toggle for manual entry */}
-        <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Button
-            size="small"
-            variant={manualEntry ? 'contained' : 'outlined'}
-            onClick={() => {
-              setManualEntry(!manualEntry);
-              setSelectedAddress(null);
-              if (!manualEntry) {
-                // Clear form when switching to manual but keep defaults
-                setFormData({
-                  propertyAddress: '',
-                  city: 'Bakersfield',  // Keep default
-                  state: 'CA',           // Keep default
-                  zipCode: '',           // Clear zip
-                  county: '',
-                });
-              }
-            }}
-            startIcon={<LocationOn />}
-          >
-            {manualEntry ? 'Search for Address' : 'Enter Address Manually'}
-          </Button>
-          {!manualEntry && addressSearchText && !selectedAddress && (
-            <Typography variant="caption" color="error">
-              Please select an address from the list
-            </Typography>
-          )}
-        </Box>
-
-        {/* Address input based on mode */}
-        {!manualEntry ? (
-          // Search mode
-          hasValidGoogleKey ? (
+        {/* Address input with autofill */}
+        {
+hasValidGoogleKey && googleMapsLoaded ? (
           <TextField
             inputRef={addressInputRef}
             fullWidth
@@ -565,7 +522,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             InputProps={{
               startAdornment: <LocationOn sx={{ mr: 1, color: 'action.active' }} />,
             }}
-            helperText={`Address will default to ${formData.city}, ${formData.state}. Type to search for addresses.`}
+            helperText="Start typing to search for addresses"
           />
         ) : (
           <Autocomplete
@@ -613,104 +570,53 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
                     </>
                   ),
                 }}
-                helperText="Enter street number and name (e.g., '325 Flower' or 'Flower Street')"
+                helperText="Start typing to search for addresses"
               />
             )}
           />
-        )
-        ) : (
-          // Manual entry mode
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <TextField
-              fullWidth
-              label="Street Address"
-              placeholder="e.g., 325 Flower Street"
-              value={formData.propertyAddress}
-              onChange={(e) => setFormData({ ...formData, propertyAddress: e.target.value })}
-              required
-              variant="outlined"
-            />
-            <Box sx={{ display: 'flex', gap: 2 }}>
-              <TextField
-                label="City"
-                placeholder="Bakersfield"
-                value={formData.city}
-                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                required
-                sx={{ flex: 2 }}
-              />
-              <TextField
-                label="State"
-                value={formData.state}
-                onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                required
-                sx={{ flex: 1 }}
-              />
-              <TextField
-                label="ZIP Code"
-                placeholder="93301"
-                value={formData.zipCode}
-                onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
-                required
-                sx={{ flex: 1 }}
-              />
-            </Box>
-            <TextField
-              fullWidth
-              label="County (optional)"
-              placeholder="Kern"
-              value={formData.county}
-              onChange={(e) => setFormData({ ...formData, county: e.target.value })}
-            />
-          </Box>
         )}
 
-        {/* Show parsed address details if available */}
-        {!manualEntry && selectedAddress && (formData.city || formData.state || formData.zipCode) && (
-          <Paper
-            elevation={0}
-            sx={{
-              mt: 2,
-              p: 2,
-              bgcolor: 'grey.50',
-              border: '1px solid',
-              borderColor: 'grey.300',
-            }}
-          >
-            <Typography variant="caption" color="text.secondary" gutterBottom>
-              Detected Address Details:
-            </Typography>
-            <Typography variant="body2">
-              {formData.city && `City: ${formData.city}`}
-              {formData.city && formData.state && ', '}
-              {formData.state && `State: ${formData.state}`}
-              {(formData.city || formData.state) && formData.zipCode && ', '}
-              {formData.zipCode && `ZIP: ${formData.zipCode}`}
-              {formData.county && `, County: ${formData.county}`}
-            </Typography>
-          </Paper>
-        )}
+        {/* Additional address fields */}
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <TextField
+              label="City"
+              placeholder="Bakersfield"
+              value={formData.city}
+              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+              required
+              sx={{ flex: 2 }}
+            />
+            <TextField
+              label="State"
+              value={formData.state}
+              onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+              required
+              sx={{ flex: 1 }}
+            />
+            <TextField
+              label="ZIP Code"
+              placeholder="93301"
+              value={formData.zipCode}
+              onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
+              required
+              sx={{ flex: 1 }}
+            />
+          </Box>
+          <TextField
+            fullWidth
+            label="County (optional)"
+            placeholder="Kern"
+            value={formData.county}
+            onChange={(e) => setFormData({ ...formData, county: e.target.value })}
+          />
+        </Box>
+
       </Box>
     );
   };
 
 
-  // Load Google Maps API if needed
-  useEffect(() => {
-    if (hasValidGoogleKey && !window.google) {
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_API_KEY}&libraries=places`;
-      script.async = true;
-      script.defer = true;
-      script.onload = () => {
-        console.log('Google Maps API loaded successfully');
-      };
-      script.onerror = () => {
-        console.error('Failed to load Google Maps API');
-      };
-      document.head.appendChild(script);
-    }
-  }, [hasValidGoogleKey]);
 
   return (
     <Dialog
@@ -728,7 +634,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <LocationOn color="primary" />
           <Typography variant="h6" fontWeight="600">
-            Quick Create Escrow
+            New Escrow
           </Typography>
         </Box>
         <IconButton
@@ -768,7 +674,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
             disabled={loading || !formData.propertyAddress}
             startIcon={loading ? <CircularProgress size={20} /> : <Search />}
           >
-            {loading ? 'Creating...' : 'Create Escrow'}
+            {loading ? 'Creating...' : 'Create'}
           </Button>
         </DialogActions>
       </form>
