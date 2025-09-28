@@ -354,17 +354,28 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
       // Format the full address for the backend
       const fullAddress = `${formData.propertyAddress}, ${formData.city}, ${formData.state} ${formData.zipCode}`.trim();
 
-      // Create listing with provided data
+      // Create listing with provided data - only include non-empty fields
       const listingData = {
         propertyAddress: fullAddress,
-        listPrice: formData.listPrice ? parseFloat(formData.listPrice) : null,
         propertyType: formData.propertyType,
-        bedrooms: formData.bedrooms ? parseInt(formData.bedrooms) : null,
-        bathrooms: formData.bathrooms ? parseFloat(formData.bathrooms) : null,
-        squareFootage: formData.squareFootage ? parseInt(formData.squareFootage) : null,
         listingStatus: formData.listingStatus,
       };
 
+      // Only add optional fields if they have values
+      if (formData.listPrice) {
+        listingData.listPrice = parseFloat(formData.listPrice);
+      }
+      if (formData.bedrooms) {
+        listingData.bedrooms = parseInt(formData.bedrooms);
+      }
+      if (formData.bathrooms) {
+        listingData.bathrooms = parseFloat(formData.bathrooms);
+      }
+      if (formData.squareFootage) {
+        listingData.squareFootage = parseInt(formData.squareFootage);
+      }
+
+      console.log('Creating listing with data:', listingData);
       const response = await listingsAPI.create(listingData);
 
       if (response.success) {
@@ -373,11 +384,21 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
         }
         handleClose();
       } else {
-        setError(response.error?.message || 'Failed to create listing');
+        console.error('API Error:', response.error);
+        // Show more detailed error message
+        const errorMessage = response.error?.details
+          ? response.error.details.map(d => d.msg || d.message).join(', ')
+          : response.error?.message || 'Failed to create listing';
+        setError(errorMessage);
       }
     } catch (err) {
       console.error('Error creating listing:', err);
-      setError('An error occurred while creating the listing');
+      console.error('Error details:', err.response?.data);
+      // Show more specific error if available
+      const errorMessage = err.response?.data?.error?.message ||
+                          err.message ||
+                          'An error occurred while creating the listing';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
