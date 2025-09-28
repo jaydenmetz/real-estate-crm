@@ -517,10 +517,15 @@ const LeadsHealthDashboard = () => {
     const createCurlCommand = (method, endpoint, body = null) => {
       let curlCmd = `curl -X ${method} "${API_URL}${endpoint}"`;
 
+      // Use full token values for curl commands (not truncated display values)
       if (authTab === 0) {
-        curlCmd += ` -H "Authorization: ${authDisplay}"`;
+        // For JWT, use the full token from authHeaders
+        const fullToken = authHeaders.Authorization || `Bearer ${localStorage.getItem('crm_auth_token') || localStorage.getItem('authToken') || localStorage.getItem('token')}`;
+        curlCmd += ` -H "Authorization: ${fullToken}"`;
       } else {
-        curlCmd += ` -H "X-API-Key: ${authDisplay}"`;
+        // For API Key, use the full key
+        const fullApiKey = authTab === 1 && temporaryApiKey ? temporaryApiKey : (authHeaders['X-API-Key'] || selectedApiKey);
+        curlCmd += ` -H "X-API-Key: ${fullApiKey}"`;
       }
 
       if (body) {
