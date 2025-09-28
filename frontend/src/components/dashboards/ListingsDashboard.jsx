@@ -450,14 +450,28 @@ const ListingsDashboard = () => {
 
   const filteredListings = getFilteredListings();
 
-  // Calculate stats
+  // Calculate stats based on filtered listings
   const stats = {
-    totalListings: listings.length,
-    activeListings: listings.filter(l => l.listingStatus === 'Active').length,
-    totalValue: listings.reduce((sum, l) => sum + (l.listPrice || 0), 0),
-    avgDaysOnMarket: listings.length > 0 ? Math.round(listings.reduce((sum, l) => sum + (l.daysOnMarket || 0), 0) / listings.length) : 0,
-    hotProperties: listings.filter(l => (l.views || 0) > 400 || (l.favorites || 0) > 30).length,
-    newThisWeek: listings.filter(l => l.listingDate && differenceInDays(new Date(), new Date(l.listingDate)) <= 7).length,
+    totalListings: filteredListings.length,
+    activeListings: filteredListings.filter(l => l.listingStatus === 'Active').length,
+    totalValue: filteredListings.reduce((sum, l) => sum + (l.listPrice || 0), 0),
+    avgDaysOnMarket: filteredListings.length > 0 ? Math.round(filteredListings.reduce((sum, l) => sum + (l.daysOnMarket || 0), 0) / filteredListings.length) : 0,
+    hotProperties: filteredListings.filter(l => (l.views || 0) > 400 || (l.favorites || 0) > 30).length,
+    newThisWeek: filteredListings.filter(l => l.listingDate && differenceInDays(new Date(), new Date(l.listingDate)) <= 7).length,
+    pendingListings: filteredListings.filter(l => ['Pending', 'Under Contract'].includes(l.listingStatus)).length,
+    soldListings: filteredListings.filter(l => l.listingStatus === 'Sold').length,
+  };
+
+  // Generate chart data for mini sparklines
+  const generateSparklineData = (count) => {
+    const data = [];
+    for (let i = 0; i < 7; i++) {
+      data.push({
+        day: i,
+        value: Math.floor(Math.random() * count) + Math.floor(count * 0.5)
+      });
+    }
+    return data;
   };
 
   const handleListingClick = (listing) => {
@@ -1127,106 +1141,208 @@ const ListingsDashboard = () => {
             {/* Stats Cards inside Hero */}
             <Grid container spacing={3}>
               <Grid item xs={12} sm={6} md={2}>
-                <Card sx={{
-                  background: 'rgba(255, 255, 255, 0.95)',
-                  backdropFilter: 'blur(10px)',
-                  borderRadius: 2,
-                  boxShadow: '0 4px 20px 0 rgba(0, 0, 0, 0.05)'
-                }}>
-                  <CardContent sx={{ p: 2 }}>
-                    <Typography color="textSecondary" variant="caption" sx={{ textTransform: 'uppercase', fontWeight: 600 }}>
-                      Total Listings
-                    </Typography>
-                    <Typography variant="h4" fontWeight="bold" sx={{ mt: 1 }}>
-                      <CountUp end={stats.totalListings} duration={2} />
-                    </Typography>
-                  </CardContent>
-                </Card>
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                >
+                  <Card sx={{
+                    background: 'rgba(255, 255, 255, 0.95)',
+                    backdropFilter: 'blur(10px)',
+                    borderRadius: 2,
+                    boxShadow: '0 4px 20px 0 rgba(0, 0, 0, 0.05)',
+                    position: 'relative',
+                    overflow: 'hidden'
+                  }}>
+                    <CardContent sx={{ p: 2, position: 'relative', zIndex: 1 }}>
+                      <Typography color="textSecondary" variant="caption" sx={{ textTransform: 'uppercase', fontWeight: 600 }}>
+                        {tabValue === 0 ? 'Total' : tabValue === 1 ? 'Active' : tabValue === 2 ? 'Pending/UC' : tabValue === 3 ? 'Sold' : 'Hot'} Listings
+                      </Typography>
+                      <Typography variant="h4" fontWeight="bold" sx={{ mt: 1 }}>
+                        <CountUp end={stats.totalListings} duration={2} preserveValue />
+                      </Typography>
+                      <Box sx={{ height: 40, mt: 1, opacity: 0.7 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={generateSparklineData(stats.totalListings)}>
+                            <defs>
+                              <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#2E7D32" stopOpacity={0.8}/>
+                                <stop offset="95%" stopColor="#2E7D32" stopOpacity={0.1}/>
+                              </linearGradient>
+                            </defs>
+                            <Area type="monotone" dataKey="value" stroke="#2E7D32" fillOpacity={1} fill="url(#colorTotal)" strokeWidth={2} />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               </Grid>
               <Grid item xs={12} sm={6} md={2}>
-                <Card sx={{
-                  background: 'rgba(255, 255, 255, 0.95)',
-                  backdropFilter: 'blur(10px)',
-                  borderRadius: 2,
-                  boxShadow: '0 4px 20px 0 rgba(0, 0, 0, 0.05)'
-                }}>
-                  <CardContent sx={{ p: 2 }}>
-                    <Typography color="textSecondary" variant="caption" sx={{ textTransform: 'uppercase', fontWeight: 600 }}>
-                      Active
-                    </Typography>
-                    <Typography variant="h4" fontWeight="bold" sx={{ mt: 1 }}>
-                      <CountUp end={stats.activeListings} duration={2} />
-                    </Typography>
-                  </CardContent>
-                </Card>
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
+                >
+                  <Card sx={{
+                    background: 'rgba(255, 255, 255, 0.95)',
+                    backdropFilter: 'blur(10px)',
+                    borderRadius: 2,
+                    boxShadow: '0 4px 20px 0 rgba(0, 0, 0, 0.05)',
+                    position: 'relative',
+                    overflow: 'hidden'
+                  }}>
+                    <CardContent sx={{ p: 2, position: 'relative', zIndex: 1 }}>
+                      <Typography color="textSecondary" variant="caption" sx={{ textTransform: 'uppercase', fontWeight: 600 }}>
+                        Active
+                      </Typography>
+                      <Typography variant="h4" fontWeight="bold" sx={{ mt: 1 }}>
+                        <CountUp end={stats.activeListings} duration={2} preserveValue />
+                      </Typography>
+                      <Box sx={{ height: 40, mt: 1, opacity: 0.7 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={generateSparklineData(stats.activeListings)}>
+                            <Line type="monotone" dataKey="value" stroke="#4CAF50" strokeWidth={2} dot={false} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               </Grid>
               <Grid item xs={12} sm={6} md={2}>
-                <Card sx={{
-                  background: 'rgba(255, 255, 255, 0.95)',
-                  backdropFilter: 'blur(10px)',
-                  borderRadius: 2,
-                  boxShadow: '0 4px 20px 0 rgba(0, 0, 0, 0.05)'
-                }}>
-                  <CardContent sx={{ p: 2 }}>
-                    <Typography color="textSecondary" variant="caption" sx={{ textTransform: 'uppercase', fontWeight: 600 }}>
-                      Total Value
-                    </Typography>
-                    <Typography variant="h4" fontWeight="bold" sx={{ mt: 1 }}>
-                      ${stats.totalValue > 0 ? <CountUp end={stats.totalValue / 1000000} decimals={1} duration={2} /> : '0'}M
-                    </Typography>
-                  </CardContent>
-                </Card>
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                >
+                  <Card sx={{
+                    background: 'rgba(255, 255, 255, 0.95)',
+                    backdropFilter: 'blur(10px)',
+                    borderRadius: 2,
+                    boxShadow: '0 4px 20px 0 rgba(0, 0, 0, 0.05)',
+                    position: 'relative',
+                    overflow: 'hidden'
+                  }}>
+                    <CardContent sx={{ p: 2, position: 'relative', zIndex: 1 }}>
+                      <Typography color="textSecondary" variant="caption" sx={{ textTransform: 'uppercase', fontWeight: 600 }}>
+                        Total Value
+                      </Typography>
+                      <Typography variant="h4" fontWeight="bold" sx={{ mt: 1 }}>
+                        ${stats.totalValue > 0 ? <CountUp end={stats.totalValue / 1000000} decimals={1} duration={2} preserveValue /> : '0'}M
+                      </Typography>
+                      <Box sx={{ height: 40, mt: 1, opacity: 0.7 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                          <RechartsBarChart data={generateSparklineData(Math.floor(stats.totalValue / 100000) || 1)}>
+                            <Bar dataKey="value" fill="#FF9800" />
+                          </RechartsBarChart>
+                        </ResponsiveContainer>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               </Grid>
               <Grid item xs={12} sm={6} md={2}>
-                <Card sx={{
-                  background: 'rgba(255, 255, 255, 0.95)',
-                  backdropFilter: 'blur(10px)',
-                  borderRadius: 2,
-                  boxShadow: '0 4px 20px 0 rgba(0, 0, 0, 0.05)'
-                }}>
-                  <CardContent sx={{ p: 2 }}>
-                    <Typography color="textSecondary" variant="caption" sx={{ textTransform: 'uppercase', fontWeight: 600 }}>
-                      Avg DOM
-                    </Typography>
-                    <Typography variant="h4" fontWeight="bold" sx={{ mt: 1 }}>
-                      <CountUp end={stats.avgDaysOnMarket} duration={2} />
-                    </Typography>
-                  </CardContent>
-                </Card>
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
+                >
+                  <Card sx={{
+                    background: 'rgba(255, 255, 255, 0.95)',
+                    backdropFilter: 'blur(10px)',
+                    borderRadius: 2,
+                    boxShadow: '0 4px 20px 0 rgba(0, 0, 0, 0.05)',
+                    position: 'relative',
+                    overflow: 'hidden'
+                  }}>
+                    <CardContent sx={{ p: 2, position: 'relative', zIndex: 1 }}>
+                      <Typography color="textSecondary" variant="caption" sx={{ textTransform: 'uppercase', fontWeight: 600 }}>
+                        Avg DOM
+                      </Typography>
+                      <Typography variant="h4" fontWeight="bold" sx={{ mt: 1 }}>
+                        <CountUp end={stats.avgDaysOnMarket} duration={2} preserveValue />
+                      </Typography>
+                      <Box sx={{ height: 40, mt: 1, opacity: 0.7 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                          <AreaChart data={generateSparklineData(stats.avgDaysOnMarket)}>
+                            <defs>
+                              <linearGradient id="colorDom" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#2196F3" stopOpacity={0.8}/>
+                                <stop offset="95%" stopColor="#2196F3" stopOpacity={0.1}/>
+                              </linearGradient>
+                            </defs>
+                            <Area type="monotone" dataKey="value" stroke="#2196F3" fillOpacity={1} fill="url(#colorDom)" strokeWidth={2} />
+                          </AreaChart>
+                        </ResponsiveContainer>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               </Grid>
               <Grid item xs={12} sm={6} md={2}>
-                <Card sx={{
-                  background: 'rgba(255, 255, 255, 0.95)',
-                  backdropFilter: 'blur(10px)',
-                  borderRadius: 2,
-                  boxShadow: '0 4px 20px 0 rgba(0, 0, 0, 0.05)'
-                }}>
-                  <CardContent sx={{ p: 2 }}>
-                    <Typography color="textSecondary" variant="caption" sx={{ textTransform: 'uppercase', fontWeight: 600 }}>
-                      Hot Properties
-                    </Typography>
-                    <Typography variant="h4" fontWeight="bold" sx={{ mt: 1 }}>
-                      <CountUp end={stats.hotProperties} duration={2} />
-                    </Typography>
-                  </CardContent>
-                </Card>
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.5 }}
+                >
+                  <Card sx={{
+                    background: 'rgba(255, 255, 255, 0.95)',
+                    backdropFilter: 'blur(10px)',
+                    borderRadius: 2,
+                    boxShadow: '0 4px 20px 0 rgba(0, 0, 0, 0.05)',
+                    position: 'relative',
+                    overflow: 'hidden'
+                  }}>
+                    <CardContent sx={{ p: 2, position: 'relative', zIndex: 1 }}>
+                      <Typography color="textSecondary" variant="caption" sx={{ textTransform: 'uppercase', fontWeight: 600 }}>
+                        Hot Properties
+                      </Typography>
+                      <Typography variant="h4" fontWeight="bold" sx={{ mt: 1 }}>
+                        <CountUp end={stats.hotProperties} duration={2} preserveValue />
+                      </Typography>
+                      <Box sx={{ height: 40, mt: 1, opacity: 0.7 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart data={generateSparklineData(stats.hotProperties || 1)}>
+                            <Line type="monotone" dataKey="value" stroke="#FF5722" strokeWidth={3} dot={false} />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               </Grid>
               <Grid item xs={12} sm={6} md={2}>
-                <Card sx={{
-                  background: 'rgba(255, 255, 255, 0.95)',
-                  backdropFilter: 'blur(10px)',
-                  borderRadius: 2,
-                  boxShadow: '0 4px 20px 0 rgba(0, 0, 0, 0.05)'
-                }}>
-                  <CardContent sx={{ p: 2 }}>
-                    <Typography color="textSecondary" variant="caption" sx={{ textTransform: 'uppercase', fontWeight: 600 }}>
-                      New This Week
-                    </Typography>
-                    <Typography variant="h4" fontWeight="bold" sx={{ mt: 1 }}>
-                      <CountUp end={stats.newThisWeek} duration={2} />
-                    </Typography>
-                  </CardContent>
-                </Card>
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.5, delay: 0.6 }}
+                >
+                  <Card sx={{
+                    background: 'rgba(255, 255, 255, 0.95)',
+                    backdropFilter: 'blur(10px)',
+                    borderRadius: 2,
+                    boxShadow: '0 4px 20px 0 rgba(0, 0, 0, 0.05)',
+                    position: 'relative',
+                    overflow: 'hidden'
+                  }}>
+                    <CardContent sx={{ p: 2, position: 'relative', zIndex: 1 }}>
+                      <Typography color="textSecondary" variant="caption" sx={{ textTransform: 'uppercase', fontWeight: 600 }}>
+                        New This Week
+                      </Typography>
+                      <Typography variant="h4" fontWeight="bold" sx={{ mt: 1 }}>
+                        <CountUp end={stats.newThisWeek} duration={2} preserveValue />
+                      </Typography>
+                      <Box sx={{ height: 40, mt: 1, opacity: 0.7 }}>
+                        <ResponsiveContainer width="100%" height="100%">
+                          <RechartsBarChart data={generateSparklineData(stats.newThisWeek || 1)}>
+                            <Bar dataKey="value" fill="#9C27B0" radius={[4, 4, 0, 0]} />
+                          </RechartsBarChart>
+                        </ResponsiveContainer>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               </Grid>
             </Grid>
           </motion.div>
