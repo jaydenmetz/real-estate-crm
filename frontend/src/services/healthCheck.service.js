@@ -221,18 +221,41 @@ export class HealthCheckService {
     tests.push(await this.runConcurrentTests('/listings', 5, 'Concurrent Requests', 'Performance'));
     tests.push(await this.runResponseTimeTest('/listings?limit=10', 'Response Time Consistency', 'Performance'));
 
-    // WORKFLOW TESTS - Archive and Delete
+    // WORKFLOW TESTS - Archive and Delete with Batch Delete
+    // First, archive all created test listings
+    const archivedIds = [];
     for (const id of createdIds) {
       const archiveResult = await this.runTest('PUT', `/listings/${id}/archive`, 'Archive Test Listing', 'Workflow');
       tests.push(archiveResult);
       if (archiveResult.status === 'success') {
-        tests.push(await this.runTest('DELETE', `/listings/${id}`, 'Delete Archived Listing', 'Workflow'));
+        archivedIds.push(id);
       }
     }
 
-    // Verify deletion
-    if (testId) {
-      tests.push(await this.runTest('GET', `/listings/${testId}`, 'Verify Deletion', 'Workflow'));
+    // Test batch delete if we have multiple archived listings
+    if (archivedIds.length > 1) {
+      const batchDeleteResult = await this.runTest('POST', '/listings/batch-delete', 'Batch Delete Multiple Listings', 'Workflow', {
+        ids: archivedIds
+      });
+      tests.push(batchDeleteResult);
+
+      // Verify batch deletion worked
+      if (batchDeleteResult.status === 'success') {
+        const verifyBatch = await this.runTest('GET', `/listings/${archivedIds[0]}`, 'Verify Batch Deletion', 'Workflow');
+        if (verifyBatch.response?.error?.code === 'NOT_FOUND') {
+          verifyBatch.status = 'success';
+          verifyBatch.response = { verified: true, message: 'Batch deletion confirmed' };
+        }
+        tests.push(verifyBatch);
+      }
+    } else if (archivedIds.length === 1) {
+      // Fall back to individual delete if only one listing
+      tests.push(await this.runTest('DELETE', `/listings/${archivedIds[0]}`, 'Delete Archived Listing', 'Workflow'));
+
+      // Verify deletion
+      if (testId) {
+        tests.push(await this.runTest('GET', `/listings/${testId}`, 'Verify Deletion', 'Workflow'));
+      }
     }
 
     return tests;
@@ -260,8 +283,54 @@ export class HealthCheckService {
       tests.push(await this.runTest('PUT', `/clients/${testId}`, 'Update Client', 'Critical', {
         phone: '555-1234'
       }));
-      tests.push(await this.runTest('PUT', `/clients/${testId}/archive`, 'Archive Client', 'Critical'));
-      tests.push(await this.runTest('DELETE', `/clients/${testId}`, 'Delete Archived Client', 'Critical'));
+    }
+
+    // Create additional test clients for batch delete testing
+    const additionalIds = [];
+    for (let i = 0; i < 2; i++) {
+      const result = await this.runTest('POST', '/clients', `Create Test Client ${i + 2}`, 'Workflow', {
+        firstName: 'BatchTest',
+        lastName: `Client${i}_${Date.now()}`,
+        email: `batchtest${i}_${Date.now()}@example.com`
+      });
+      tests.push(result);
+      if (result.response?.data?.id) {
+        additionalIds.push(result.response.data.id);
+      }
+    }
+
+    // Combine all IDs for batch testing
+    const allClientIds = testId ? [testId, ...additionalIds] : additionalIds;
+
+    // Archive all test clients
+    const archivedIds = [];
+    for (const id of allClientIds) {
+      const archiveResult = await this.runTest('PUT', `/clients/${id}/archive`, 'Archive Client', 'Workflow');
+      tests.push(archiveResult);
+      if (archiveResult.status === 'success') {
+        archivedIds.push(id);
+      }
+    }
+
+    // Test batch delete if we have multiple archived clients
+    if (archivedIds.length > 1) {
+      const batchDeleteResult = await this.runTest('POST', '/clients/batch-delete', 'Batch Delete Multiple Clients', 'Workflow', {
+        ids: archivedIds
+      });
+      tests.push(batchDeleteResult);
+
+      // Verify batch deletion worked
+      if (batchDeleteResult.status === 'success' && archivedIds[0]) {
+        const verifyBatch = await this.runTest('GET', `/clients/${archivedIds[0]}`, 'Verify Batch Deletion', 'Workflow');
+        if (verifyBatch.response?.error?.code === 'NOT_FOUND') {
+          verifyBatch.status = 'success';
+          verifyBatch.response = { verified: true, message: 'Batch deletion confirmed' };
+        }
+        tests.push(verifyBatch);
+      }
+    } else if (archivedIds.length === 1) {
+      // Fall back to individual delete if only one client
+      tests.push(await this.runTest('DELETE', `/clients/${archivedIds[0]}`, 'Delete Archived Client', 'Workflow'));
     }
 
     // SEARCH & FILTER TESTS
@@ -363,19 +432,40 @@ export class HealthCheckService {
       tests.push(await this.runTest('POST', `/appointments/${createdIds[2]}/complete`, 'Complete Appointment', 'Workflow'));
     }
 
-    // Archive and delete workflow
+    // Archive and delete workflow with batch delete
+    const archivedIds = [];
     for (let i = 0; i < createdIds.length; i++) {
       const id = createdIds[i];
       const archiveResult = await this.runTest('PUT', `/appointments/${id}/archive`, `Archive Test Appointment ${i + 1}`, 'Workflow');
       tests.push(archiveResult);
       if (archiveResult.status === 'success') {
-        tests.push(await this.runTest('DELETE', `/appointments/${id}`, `Delete Archived Appointment ${i + 1}`, 'Workflow'));
+        archivedIds.push(id);
       }
     }
 
-    // Verify deletion - this should return NOT_FOUND
-    if (createdIds[0]) {
-      const verifyTest = await this.runTest('GET', `/appointments/${createdIds[0]}`, 'Verify All Deletions', 'Workflow');
+    // Test batch delete if we have multiple archived appointments
+    if (archivedIds.length > 1) {
+      const batchDeleteResult = await this.runTest('POST', '/appointments/batch-delete', 'Batch Delete Multiple Appointments', 'Workflow', {
+        ids: archivedIds
+      });
+      tests.push(batchDeleteResult);
+
+      // Verify batch deletion worked
+      if (batchDeleteResult.status === 'success') {
+        const verifyBatch = await this.runTest('GET', `/appointments/${archivedIds[0]}`, 'Verify Batch Deletion', 'Workflow');
+        if (verifyBatch.response?.error?.code === 'NOT_FOUND') {
+          verifyBatch.status = 'success';
+          verifyBatch.response = { verified: true, message: 'Batch deletion confirmed' };
+          delete verifyBatch.error;
+        }
+        tests.push(verifyBatch);
+      }
+    } else if (archivedIds.length === 1) {
+      // Fall back to individual delete if only one appointment
+      tests.push(await this.runTest('DELETE', `/appointments/${archivedIds[0]}`, 'Delete Archived Appointment', 'Workflow'));
+
+      // Verify deletion - this should return NOT_FOUND
+      const verifyTest = await this.runTest('GET', `/appointments/${archivedIds[0]}`, 'Verify Deletion', 'Workflow');
       // Fix the status - NOT_FOUND is the expected result for a deleted item
       if (verifyTest.response?.error?.code === 'NOT_FOUND') {
         verifyTest.status = 'success';
@@ -458,19 +548,40 @@ export class HealthCheckService {
       tests.push(await this.runTest('POST', `/leads/${createdIds[2]}/convert`, 'Convert Lead to Client', 'Workflow'));
     }
 
-    // Archive and delete workflow
-    for (let i = 0; i < Math.min(2, createdIds.length); i++) {
+    // Archive and delete workflow with batch delete
+    const archivedIds = [];
+    for (let i = 0; i < Math.min(createdIds.length, createdIds.length); i++) {
       const id = createdIds[i];
       const archiveResult = await this.runTest('PUT', `/leads/${id}/archive`, `Archive Test Lead ${i + 1}`, 'Workflow');
       tests.push(archiveResult);
       if (archiveResult.status === 'success') {
-        tests.push(await this.runTest('DELETE', `/leads/${id}`, `Delete Archived Lead ${i + 1}`, 'Workflow'));
+        archivedIds.push(id);
       }
     }
 
-    // Verify deletion - this should return NOT_FOUND
-    if (createdIds[0]) {
-      const verifyTest = await this.runTest('GET', `/leads/${createdIds[0]}`, 'Verify All Deletions', 'Workflow');
+    // Test batch delete if we have multiple archived leads
+    if (archivedIds.length > 1) {
+      const batchDeleteResult = await this.runTest('POST', '/leads/batch-delete', 'Batch Delete Multiple Leads', 'Workflow', {
+        ids: archivedIds
+      });
+      tests.push(batchDeleteResult);
+
+      // Verify batch deletion worked
+      if (batchDeleteResult.status === 'success') {
+        const verifyBatch = await this.runTest('GET', `/leads/${archivedIds[0]}`, 'Verify Batch Deletion', 'Workflow');
+        if (verifyBatch.response?.error?.code === 'NOT_FOUND') {
+          verifyBatch.status = 'success';
+          verifyBatch.response = { verified: true, message: 'Batch deletion confirmed' };
+          delete verifyBatch.error;
+        }
+        tests.push(verifyBatch);
+      }
+    } else if (archivedIds.length === 1) {
+      // Fall back to individual delete if only one lead
+      tests.push(await this.runTest('DELETE', `/leads/${archivedIds[0]}`, 'Delete Archived Lead', 'Workflow'));
+
+      // Verify deletion - this should return NOT_FOUND
+      const verifyTest = await this.runTest('GET', `/leads/${archivedIds[0]}`, 'Verify Deletion', 'Workflow');
       // Fix the status - NOT_FOUND is the expected result for a deleted item
       if (verifyTest.response?.error?.code === 'NOT_FOUND') {
         verifyTest.status = 'success';
