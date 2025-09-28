@@ -454,18 +454,18 @@ const HealthOverviewDashboard = () => {
           <Grid item xs={12} md={3}>
             <Box textAlign="center">
               <Box display="flex" justifyContent="center" gap={1}>
-                <Typography variant="h3" fontWeight="bold" color="success.main">
+                <Typography variant="h3" fontWeight="bold" color={overallHealth.passed === overallHealth.total_tests ? 'success.main' : 'warning.main'}>
                   {overallHealth.passed}
                 </Typography>
                 <Typography variant="h3" fontWeight="bold" color="textSecondary">
                   /
                 </Typography>
-                <Typography variant="h3" fontWeight="bold" color="error.main">
-                  {overallHealth.failed}
+                <Typography variant="h3" fontWeight="bold">
+                  {overallHealth.total_tests}
                 </Typography>
               </Box>
               <Typography variant="body2" color="textSecondary">
-                Test Results
+                Tests Passed
               </Typography>
             </Box>
           </Grid>

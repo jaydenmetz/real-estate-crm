@@ -292,3 +292,43 @@ CREATE INDEX idx_clients_status ON clients(status);
 ```
 
 This system is configured for Associated Real Estate under Berkshire Hathaway HomeServices with proper California DRE licensing structure.
+- Project: Real Estate CRM
+
+  File Organization Rules:
+  - NEVER create duplicate versions of files (no file2.jsx, fileEnhanced.jsx,
+  fileSimplified.jsx, etc.)
+  - ALWAYS edit existing files in place
+  - NEVER create files in the root directory except README.md and CLAUDE.md
+  - Documentation goes in /docs folder
+  - Test scripts go in /scripts/testing folder
+  - Backend utilities go in /scripts/backend folder
+  - When creating temporary test files, use /tmp directory, not the project
+  - If archiving old code, use archive/ folder within the component's directory
+
+  When Creating New Files:
+  - Health dashboards: /frontend/src/components/health/
+  - Documentation: /docs/
+  - Test scripts: /scripts/testing/
+  - Backend scripts: /backend/scripts/ (operational) or /scripts/backend/ (utilities)
+  - NEVER create in root directory
+
+  Naming Conventions:
+  - Use descriptive names, not versions (HealthDashboard.jsx not HealthDashboard2.jsx)
+  - If replacing a component, archive the old one first, don't create a new name
+  - Test scripts should start with test- prefix
+  - Documentation should be in CAPS_WITH_UNDERSCORES.md format
+
+  Sample Memory Entry:
+
+  Real Estate CRM Project Rules:
+  - Edit files in place, never create duplicates (no file2.jsx or fileEnhanced.jsx)
+  - Root directory stays clean - only README.md, CLAUDE.md, docker-compose.yml, 
+  railway.json
+  - All docs go in /docs folder, all test scripts in /scripts/testing
+  - When improving components, archive old version to archive/ subfolder, keep same 
+  filename
+  - Reference CLAUDE.md at project root for full guidelines
+  - Auto-commit and push all changes with Co-Authored-By: Claude
+
+  This way, every time you start a new conversation about your CRM project, Claude will
+  remember these organizational rules and won't create messy files or duplicates.
