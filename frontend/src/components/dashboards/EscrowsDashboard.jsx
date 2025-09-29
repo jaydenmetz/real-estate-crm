@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NewEscrowModal from '../forms/NewEscrowModal';
-import DebugCard from '../common/DebugCard';
 import EscrowCardOptimized from '../common/EscrowCardOptimized';
 import EscrowCompactCard from '../common/EscrowCompactCard';
 import {
@@ -2577,50 +2576,6 @@ const EscrowsDashboard = () => {
           })()}
         </AnimatePresence>
       </Box>
-
-      {/* New Debug Panel - Admin Only */}
-      {(
-      <DebugCard
-        pageTitle="Debug Panel: Escrows Dashboard"
-        user={user}
-        apiRequests={[
-          {
-            url: '/api/v1/escrows',
-            method: 'GET',
-            status: 200,
-            duration: networkMonitor.getStats().avgDuration || 0,
-            timestamp: new Date().toISOString(),
-            response: { escrows: escrows.slice(0, 3), total: escrows.length, stats }
-          }
-        ]}
-        databases={[
-          {
-            name: 'PostgreSQL - Escrows',
-            recordCount: escrows.length,
-            lastSync: new Date().toISOString(),
-            status: 'connected',
-            sampleData: escrows[0]
-          },
-          {
-            name: 'Redis Cache',
-            recordCount: networkMonitor.getStats().total,
-            lastSync: new Date().toISOString(),
-            status: 'connected'
-          }
-        ]}
-        customData={{
-          dashboardStats: stats,
-          chartData: { points: chartData.length, type: 'area' },
-          filterStatus: 'all',
-          viewMode: 'grid',
-          user: {
-            username: user?.username,
-            role: user?.role,
-            permissions: user?.permissions
-          }
-        }}
-      />
-      )}
 
       {/* New Escrow Modal */}
       <NewEscrowModal
