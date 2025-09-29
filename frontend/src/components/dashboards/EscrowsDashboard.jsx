@@ -527,10 +527,17 @@ const EscrowCard = ({ escrow, onClick, index, onChecklistUpdate, onArchive, onRe
               {!isArchived ? (
                 <IconButton
                   size="small"
-                  onClick={(e) => {
+                  onClick={async (e) => {
                     e.stopPropagation();
                     setArchiving(true);
-                    onArchive && onArchive(escrow.id);
+                    try {
+                      if (onArchive) {
+                        await onArchive(escrow.id);
+                      }
+                    } finally {
+                      // Always reset archiving state
+                      setArchiving(false);
+                    }
                   }}
                   disabled={archiving}
                   sx={{
@@ -1469,7 +1476,7 @@ const EscrowsDashboard = () => {
   const handleArchive = async (escrowId) => {
     try {
       const response = await escrowsAPI.archive(escrowId);
-      if (response.success) {
+      if (response && response.success) {
         // Move escrow from active to archived
         const archivedEscrow = escrows.find(e => e.id === escrowId);
         if (archivedEscrow) {
@@ -1485,9 +1492,17 @@ const EscrowsDashboard = () => {
           calculateStats(remainingEscrows, selectedStatus);
           generateChartData(remainingEscrows);
         }
+      } else {
+        console.error('Archive failed - no success response');
       }
     } catch (error) {
-      console.error('Failed to archive escrow:', error);
+      // Safely log error - make sure we're not rendering an object
+      const errorMessage = error?.message || error?.toString() || 'Unknown error';
+      console.error('Failed to archive escrow:', errorMessage);
+
+      // Optional: Show user-friendly error message
+      // You could set an error state here if you have one
+      console.log('Archive operation failed. Please try again.');
     }
   };
 
