@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
-const leadsController = require('../controllers/leads.controller.simple');
+const leadsController = require('../controllers/leads.controller');
 const { authenticate } = require('../middleware/apiKey.middleware');
 const { requirePermission } = require('../middleware/auth.middleware');
 const { validate } = require('../middleware/validation.middleware');

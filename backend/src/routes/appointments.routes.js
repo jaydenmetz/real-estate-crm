@@ -3,7 +3,7 @@
 const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
-const appointmentsController = require('../controllers/appointments.controller.simple');
+const appointmentsController = require('../controllers/appointments.controller');
 const { authenticate } = require('../middleware/apiKey.middleware');
 const { validate } = require('../middleware/validation.middleware');
 
