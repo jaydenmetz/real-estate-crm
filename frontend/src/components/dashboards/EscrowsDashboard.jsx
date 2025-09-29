@@ -1178,10 +1178,16 @@ const EscrowsDashboard = () => {
   }, []);
 
   useEffect(() => {
-    if (escrows.length > 0) {
+    if (selectedStatus === 'archived') {
+      // Calculate stats for archived escrows (should show 0s when empty)
+      calculateStats(archivedEscrows, 'archived');
+    } else if (escrows.length > 0) {
       calculateStats(escrows, selectedStatus);
+    } else {
+      // Set all stats to 0 when no escrows
+      calculateStats([], selectedStatus);
     }
-  }, [selectedStatus, escrows]);
+  }, [selectedStatus, escrows, archivedEscrows]);
 
   // Sync archived count with archived escrows array
   useEffect(() => {
@@ -1242,8 +1248,8 @@ const EscrowsDashboard = () => {
   };
 
   const calculateStats = (escrowData, statusFilter = 'active') => {
-    // Safety check for escrowData
-    if (!escrowData || !Array.isArray(escrowData)) {
+    // Safety check for escrowData or if it's archived with no data
+    if (!escrowData || !Array.isArray(escrowData) || (statusFilter === 'archived' && escrowData.length === 0)) {
       setStats({
         totalEscrows: 0,
         activeEscrows: 0,
@@ -1291,14 +1297,18 @@ const EscrowsDashboard = () => {
         );
         break;
       case 'cancelled':
-        filteredEscrows = escrowData.filter(e => 
-          e.escrowStatus === 'Cancelled' || 
+        filteredEscrows = escrowData.filter(e =>
+          e.escrowStatus === 'Cancelled' ||
           e.escrowStatus === 'cancelled' ||
-          e.escrowStatus === 'Withdrawn' || 
+          e.escrowStatus === 'Withdrawn' ||
           e.escrowStatus === 'withdrawn' ||
-          e.escrowStatus === 'Expired' || 
+          e.escrowStatus === 'Expired' ||
           e.escrowStatus === 'expired'
         );
+        break;
+      case 'archived':
+        // For archived, just use all the data since it's already filtered
+        filteredEscrows = escrowData;
         break;
       default:
         filteredEscrows = escrowData;
