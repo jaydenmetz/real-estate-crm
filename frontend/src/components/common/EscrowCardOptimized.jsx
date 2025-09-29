@@ -265,22 +265,24 @@ const EscrowCardOptimized = ({ escrow, index = 0, showCommission = true, onQuick
               }}
             >
               {!isArchived ? (
-                <IconButton
-                  size="small"
-                  onClick={(e) => handleQuickAction('archive', e)}
-                  sx={{
-                    bgcolor: 'background.paper',
-                    boxShadow: 2,
-                    '&:hover': {
-                      bgcolor: alpha('#ff9800', 0.1),
-                      '& .MuiSvgIcon-root': {
-                        color: '#ff9800',
-                      }
-                    },
-                  }}
-                >
-                  <DeleteOutline sx={{ fontSize: 20 }} />
-                </IconButton>
+                <Tooltip title="Archive">
+                  <IconButton
+                    size="small"
+                    onClick={(e) => handleQuickAction('archive', e)}
+                    sx={{
+                      bgcolor: 'background.paper',
+                      boxShadow: 2,
+                      '&:hover': {
+                        bgcolor: alpha('#ff9800', 0.1),
+                        '& .MuiSvgIcon-root': {
+                          color: '#ff9800',
+                        }
+                      },
+                    }}
+                  >
+                    <ArchiveIcon sx={{ fontSize: 20 }} />
+                  </IconButton>
+                </Tooltip>
               ) : (
                 <>
                   {/* Restore Button - Green */}
@@ -303,13 +305,7 @@ const EscrowCardOptimized = ({ escrow, index = 0, showCommission = true, onQuick
                   <Tooltip title="⚠️ Permanently Delete - This cannot be undone!">
                     <IconButton
                       size="small"
-                      onClick={(e) => {
-                        if (window.confirm('⚠️ WARNING: This will permanently delete this escrow and cannot be undone. Are you sure?')) {
-                          handleQuickAction('delete', e);
-                        } else {
-                          e.stopPropagation();
-                        }
-                      }}
+                      onClick={(e) => handleQuickAction('delete', e)}
                       sx={{
                         bgcolor: '#f44336',
                         boxShadow: 2,
