@@ -51,16 +51,71 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
   const userLng = user?.home_lng || -119.0187;
   const searchRadius = user?.search_radius_miles || 50;
 
-  // Helper function to calculate COE date (30 days out, adjusting for weekends)
+  // Helper function to check if a date is a US federal holiday
+  const isUSHoliday = (date) => {
+    const year = date.getFullYear();
+    const month = date.getMonth(); // 0-indexed
+    const day = date.getDate();
+    const dayOfWeek = date.getDay();
+
+    // Fixed holidays
+    // New Year's Day (January 1)
+    if (month === 0 && day === 1) return true;
+
+    // Independence Day (July 4)
+    if (month === 6 && day === 4) return true;
+
+    // Veterans Day (November 11)
+    if (month === 10 && day === 11) return true;
+
+    // Christmas Day (December 25)
+    if (month === 11 && day === 25) return true;
+
+    // Floating holidays
+    // Martin Luther King Jr. Day (3rd Monday in January)
+    if (month === 0 && dayOfWeek === 1 && day >= 15 && day <= 21) return true;
+
+    // Presidents' Day (3rd Monday in February)
+    if (month === 1 && dayOfWeek === 1 && day >= 15 && day <= 21) return true;
+
+    // Memorial Day (last Monday in May)
+    if (month === 4 && dayOfWeek === 1 && day >= 25) return true;
+
+    // Labor Day (1st Monday in September)
+    if (month === 8 && dayOfWeek === 1 && day <= 7) return true;
+
+    // Columbus Day (2nd Monday in October)
+    if (month === 9 && dayOfWeek === 1 && day >= 8 && day <= 14) return true;
+
+    // Thanksgiving Day (4th Thursday in November)
+    if (month === 10 && dayOfWeek === 4 && day >= 22 && day <= 28) return true;
+
+    // Day after Thanksgiving (Black Friday) - often observed in real estate
+    if (month === 10 && dayOfWeek === 5 && day >= 23 && day <= 29) return true;
+
+    // Christmas Eve and New Year's Eve (when on weekday) - often observed in real estate
+    if ((month === 11 && day === 24 && dayOfWeek >= 1 && dayOfWeek <= 5) ||
+        (month === 11 && day === 31 && dayOfWeek >= 1 && dayOfWeek <= 5)) return true;
+
+    return false;
+  };
+
+  // Helper function to calculate COE date (30 days out, adjusting for weekends and holidays)
   const calculateDefaultCOE = (acceptanceDate = new Date()) => {
     const coeDate = new Date(acceptanceDate);
     coeDate.setDate(coeDate.getDate() + 30);
 
-    // Check if it's a weekend and adjust to Monday
-    const dayOfWeek = coeDate.getDay();
-    if (dayOfWeek === 6) { // Saturday
-      coeDate.setDate(coeDate.getDate() + 2);
-    } else if (dayOfWeek === 0) { // Sunday
+    // Keep adjusting until we find a business day (not weekend or holiday)
+    while (true) {
+      const dayOfWeek = coeDate.getDay();
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+      const isHoliday = isUSHoliday(coeDate);
+
+      if (!isWeekend && !isHoliday) {
+        break; // Found a valid business day
+      }
+
+      // Move to next day
       coeDate.setDate(coeDate.getDate() + 1);
     }
 
@@ -624,7 +679,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
                     value={formData.closeOfEscrowDate}
                     onChange={(e) => setFormData({ ...formData, closeOfEscrowDate: e.target.value })}
                     InputLabelProps={{ shrink: true }}
-                    helperText="Target closing date"
+                    helperText="Automatically adjusts to next business day if weekend/holiday"
                   />
                 </Grid>
               </Grid>
