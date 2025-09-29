@@ -498,7 +498,7 @@ class LeadsController {
 
       await client.query('BEGIN');
 
-      // First verify all leads exist and are archived
+      // First verify which leads exist
       const verifyQuery = `
         SELECT id, first_name, last_name, lead_status
         FROM leads
@@ -508,17 +508,15 @@ class LeadsController {
 
       const verifyResult = await client.query(verifyQuery, [ids, teamId]);
 
-      if (verifyResult.rows.length !== ids.length) {
-        await client.query('ROLLBACK');
-        const foundIds = verifyResult.rows.map(row => row.id);
-        const notFoundIds = ids.filter(id => !foundIds.includes(id));
-
-        return res.status(404).json({
-          success: false,
-          error: {
-            code: 'NOT_FOUND',
-            message: `Some leads not found: ${notFoundIds.join(', ')}`,
-            notFoundIds
+      // If no leads found, just return success with 0 deletions
+      if (verifyResult.rows.length === 0) {
+        await client.query('COMMIT');
+        return res.json({
+          success: true,
+          message: 'No leads found to delete',
+          data: {
+            deletedCount: 0,
+            deletedIds: []
           }
         });
       }
@@ -537,6 +535,9 @@ class LeadsController {
         });
       }
 
+      // Only delete the leads that were found
+      const foundIds = verifyResult.rows.map(row => row.id);
+
       // Delete all leads
       const deleteQuery = `
         DELETE FROM leads
@@ -546,7 +547,7 @@ class LeadsController {
         RETURNING id, first_name, last_name
       `;
 
-      const deleteResult = await client.query(deleteQuery, [ids, teamId]);
+      const deleteResult = await client.query(deleteQuery, [foundIds, teamId]);
 
       await client.query('COMMIT');
 

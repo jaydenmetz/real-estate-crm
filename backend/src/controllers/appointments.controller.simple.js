@@ -507,7 +507,7 @@ class AppointmentsController {
 
       await client.query('BEGIN');
 
-      // First verify all appointments exist and are archived/cancelled
+      // First verify which appointments exist
       const verifyQuery = `
         SELECT id, title, status
         FROM appointments
@@ -517,17 +517,15 @@ class AppointmentsController {
 
       const verifyResult = await client.query(verifyQuery, [ids, teamId]);
 
-      if (verifyResult.rows.length !== ids.length) {
-        await client.query('ROLLBACK');
-        const foundIds = verifyResult.rows.map(row => row.id);
-        const notFoundIds = ids.filter(id => !foundIds.includes(id));
-
-        return res.status(404).json({
-          success: false,
-          error: {
-            code: 'NOT_FOUND',
-            message: `Some appointments not found: ${notFoundIds.join(', ')}`,
-            notFoundIds
+      // If no appointments found, just return success with 0 deletions
+      if (verifyResult.rows.length === 0) {
+        await client.query('COMMIT');
+        return res.json({
+          success: true,
+          message: 'No appointments found to delete',
+          data: {
+            deletedCount: 0,
+            deletedIds: []
           }
         });
       }
@@ -548,6 +546,9 @@ class AppointmentsController {
         });
       }
 
+      // Only delete the appointments that were found
+      const foundIds = verifyResult.rows.map(row => row.id);
+
       // Delete all appointments
       const deleteQuery = `
         DELETE FROM appointments
@@ -557,7 +558,7 @@ class AppointmentsController {
         RETURNING id, title
       `;
 
-      const deleteResult = await client.query(deleteQuery, [ids, teamId]);
+      const deleteResult = await client.query(deleteQuery, [foundIds, teamId]);
 
       await client.query('COMMIT');
 
