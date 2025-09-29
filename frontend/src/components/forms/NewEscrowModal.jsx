@@ -684,24 +684,53 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
               </Grid>
 
               {/* Commission Fields */}
-              <TextField
-                fullWidth
-                label="Commission Percentage"
-                placeholder="2.5"
-                value={formData.commissionPercentage}
-                onChange={(e) => {
-                  const value = e.target.value.replace(/[^0-9.]/g, '');
-                  setFormData({ ...formData, commissionPercentage: value, commissionFlat: '' });
-                }}
-                InputProps={{
-                  endAdornment: <InputAdornment position="end">%</InputAdornment>,
-                }}
-                helperText={
-                  formData.purchasePrice && formData.commissionPercentage
-                    ? `Commission: $${(parseFloat(formData.purchasePrice.replace(/,/g, '')) * parseFloat(formData.commissionPercentage) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                    : 'Enter percentage (e.g., 2.5 for 2.5%)'
-                }
-              />
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Commission Percentage"
+                    placeholder="2.5"
+                    value={formData.commissionPercentage}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9.]/g, '');
+                      setFormData({ ...formData, commissionPercentage: value, commissionFlat: '' });
+                    }}
+                    InputProps={{
+                      endAdornment: <InputAdornment position="end">%</InputAdornment>,
+                    }}
+                    helperText="Enter percentage (e.g., 2.5 for 2.5%)"
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  {formData.purchasePrice && formData.commissionPercentage ? (
+                    <Box
+                      sx={{
+                        backgroundColor: 'success.light',
+                        borderRadius: 1,
+                        p: 2,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        height: '56px',
+                        mt: '8px'
+                      }}
+                    >
+                      <Typography variant="caption" color="text.secondary">
+                        Commission Amount
+                      </Typography>
+                      <Typography variant="h6" color="success.dark" fontWeight="bold">
+                        ${(parseFloat(formData.purchasePrice.replace(/,/g, '')) * parseFloat(formData.commissionPercentage) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                      </Typography>
+                    </Box>
+                  ) : (
+                    <Box sx={{ height: '72px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Typography variant="body2" color="text.secondary">
+                        Commission will display here
+                      </Typography>
+                    </Box>
+                  )}
+                </Grid>
+              </Grid>
 
               <TextField
                 fullWidth
