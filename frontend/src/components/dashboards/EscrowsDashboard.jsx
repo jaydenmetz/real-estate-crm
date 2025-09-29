@@ -2590,7 +2590,7 @@ const EscrowsDashboard = () => {
                 // Choose component based on view mode
                 if (viewMode === 'grid') {
                   return (
-                    <EscrowCardOptimized
+                    <EscrowCardGrid
                       key={escrow.id}
                       escrow={escrow}
                       index={index}

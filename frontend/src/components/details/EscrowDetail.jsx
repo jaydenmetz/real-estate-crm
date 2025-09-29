@@ -29,7 +29,7 @@ import { apiCall, API_BASE_URL } from '../../services/api.service';
 import { testApiConnection, testEscrowEndpoint } from '../../utils/testApi';
 
 // Import components
-import EscrowCardOptimized from '../common/EscrowCardOptimized';
+import EscrowCardGrid from '../common/EscrowCardGrid';
 import PropertyHeroWidget from '../escrow-detail/PropertyHeroWidget';
 import PeopleWidget from '../escrow-detail/PeopleWidget';
 import TimelineWidget from '../escrow-detail/TimelineWidget';
@@ -357,7 +357,7 @@ function EscrowDetail() {
 
         {/* Escrow Card Header */}
         <Box sx={{ mb: 3 }}>
-          <EscrowCardOptimized 
+          <EscrowCardGrid 
             escrow={escrowData} 
             showCommission={false}
             onQuickAction={(action) => {
