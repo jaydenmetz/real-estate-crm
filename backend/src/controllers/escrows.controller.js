@@ -131,12 +131,18 @@ class EscrowController {
       let paramIndex = 1;
 
       // Handle archived filter
-      if (req.query.archived === 'true') {
+      // Support both 'archived' and 'includeArchived' parameters
+      const includeArchived = req.query.includeArchived === 'true' || req.query.includeArchived === true;
+      const showArchived = req.query.archived === 'true';
+
+      if (showArchived) {
+        // Show only archived (soft deleted) escrows
         whereConditions.push(`e.deleted_at IS NOT NULL`);
-      } else if (req.query.archived !== 'all') {
-        // By default, don't show archived escrows
+      } else if (!includeArchived && req.query.archived !== 'all') {
+        // By default, show only active escrows (not archived)
         whereConditions.push(`e.deleted_at IS NULL`);
       }
+      // If includeArchived is true or archived is 'all', show both active and archived
 
       if (status && status !== 'all') {
         // Normalize status to match database values (capitalize first letter)

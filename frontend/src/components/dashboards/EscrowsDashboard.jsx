@@ -1215,16 +1215,19 @@ const EscrowsDashboard = () => {
       if (response.success) {
         const allData = response.data.escrows || response.data || [];
 
-        // Separate active and archived escrows
-        const escrowData = allData.filter(escrow => !escrow.deleted_at);
-        const archivedData = allData.filter(escrow => escrow.deleted_at);
+        // Separate active and archived escrows based on deleted_at field
+        const escrowData = allData.filter(escrow => !escrow.deleted_at && !escrow.deletedAt);
+        const archivedData = allData.filter(escrow => escrow.deleted_at || escrow.deletedAt);
 
+        console.log('All escrows received:', allData.length);
         console.log('Active escrows found:', escrowData.length);
         console.log('Archived escrows found:', archivedData.length);
 
         setEscrows(escrowData);
         setArchivedEscrows(archivedData);
         setArchivedCount(archivedData.length);
+
+        // Calculate stats only for active escrows
         calculateStats(escrowData, selectedStatus);
         generateChartData(escrowData);
       } else {
@@ -1460,9 +1463,17 @@ const EscrowsDashboard = () => {
         // Move escrow from active to archived
         const archivedEscrow = escrows.find(e => e.id === escrowId);
         if (archivedEscrow) {
+          // Mark as archived
+          archivedEscrow.deleted_at = new Date().toISOString();
+
           setEscrows(prev => prev.filter(e => e.id !== escrowId));
           setArchivedEscrows(prev => [...prev, archivedEscrow]);
           setArchivedCount(prev => prev + 1);
+
+          // Recalculate stats with remaining active escrows
+          const remainingEscrows = escrows.filter(e => e.id !== escrowId);
+          calculateStats(remainingEscrows, selectedStatus);
+          generateChartData(remainingEscrows);
         }
       }
     } catch (error) {
@@ -1477,9 +1488,18 @@ const EscrowsDashboard = () => {
         // Move escrow from archived to active
         const restoredEscrow = archivedEscrows.find(e => e.id === escrowId);
         if (restoredEscrow) {
+          // Remove archived marker
+          delete restoredEscrow.deleted_at;
+          delete restoredEscrow.deletedAt;
+
           setArchivedEscrows(prev => prev.filter(e => e.id !== escrowId));
           setEscrows(prev => [...prev, restoredEscrow]);
           setArchivedCount(prev => Math.max(0, prev - 1));
+
+          // Recalculate stats with updated active escrows
+          const updatedEscrows = [...escrows, restoredEscrow];
+          calculateStats(updatedEscrows, selectedStatus);
+          generateChartData(updatedEscrows);
         }
       }
     } catch (error) {
@@ -1504,7 +1524,7 @@ const EscrowsDashboard = () => {
                              escrows.find(e => e.id === escrowId);
 
       // If not archived, archive first
-      if (escrowToDelete && !escrowToDelete.deleted_at) {
+      if (escrowToDelete && !escrowToDelete.deleted_at && !escrowToDelete.deletedAt) {
         const archiveResponse = await escrowsAPI.archive(escrowId);
         if (!archiveResponse.success) {
           console.error('Failed to archive escrow before deletion');
@@ -1515,9 +1535,17 @@ const EscrowsDashboard = () => {
       // Now permanently delete the archived escrow
       const response = await escrowsAPI.delete(escrowId);
       if (response.success) {
+        // Remove from both lists
         setArchivedEscrows(prev => prev.filter(e => e.id !== escrowId));
         setEscrows(prev => prev.filter(e => e.id !== escrowId));
         setArchivedCount(prev => Math.max(0, prev - 1));
+
+        // Recalculate stats with remaining active escrows only
+        const remainingEscrows = escrows.filter(e => e.id !== escrowId);
+        calculateStats(remainingEscrows, selectedStatus);
+        generateChartData(remainingEscrows);
+
+        console.log('Successfully permanently deleted escrow:', escrowId);
       }
     } catch (error) {
       console.error('Failed to permanently delete escrow:', error);
@@ -1536,16 +1564,19 @@ const EscrowsDashboard = () => {
     try {
       const response = await escrowsAPI.batchDelete(selectedArchivedIds);
       if (response.success) {
-        // Re-fetch archived escrows to get accurate count
-        const archivedResponse = await escrowsAPI.getAll({ includeArchived: true });
-        if (archivedResponse.success) {
-          const allData = archivedResponse.data.escrows || archivedResponse.data || [];
-          const archivedData = allData.filter(escrow => escrow.deleted_at);
-          setArchivedEscrows(archivedData);
-          setArchivedCount(archivedData.length);
-        }
+        // Remove deleted escrows from both lists locally
+        const deletedIds = new Set(selectedArchivedIds);
+        setArchivedEscrows(prev => prev.filter(e => !deletedIds.has(e.id)));
+        setEscrows(prev => prev.filter(e => !deletedIds.has(e.id)));
+        setArchivedCount(prev => Math.max(0, prev - selectedArchivedIds.length));
         setSelectedArchivedIds([]);
-        console.log(`Successfully deleted ${response.data.deletedCount} escrows`);
+
+        // Recalculate stats with remaining active escrows only
+        const remainingEscrows = escrows.filter(e => !deletedIds.has(e.id));
+        calculateStats(remainingEscrows, selectedStatus);
+        generateChartData(remainingEscrows);
+
+        console.log(`Successfully permanently deleted ${response.data.deletedCount || selectedArchivedIds.length} escrows`);
       }
     } catch (error) {
       console.error('Failed to batch delete escrows:', error);
