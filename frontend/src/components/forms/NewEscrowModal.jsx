@@ -13,6 +13,13 @@ import {
   Typography,
   Autocomplete,
   Paper,
+  InputAdornment,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Grid,
+  FormHelperText,
 } from '@mui/material';
 import debounce from 'lodash/debounce';
 import {
@@ -44,12 +51,33 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
   const userLng = user?.home_lng || -119.0187;
   const searchRadius = user?.search_radius_miles || 50;
 
+  // Helper function to calculate COE date (30 days out, adjusting for weekends)
+  const calculateDefaultCOE = (acceptanceDate = new Date()) => {
+    const coeDate = new Date(acceptanceDate);
+    coeDate.setDate(coeDate.getDate() + 30);
+
+    // Check if it's a weekend and adjust to Monday
+    const dayOfWeek = coeDate.getDay();
+    if (dayOfWeek === 6) { // Saturday
+      coeDate.setDate(coeDate.getDate() + 2);
+    } else if (dayOfWeek === 0) { // Sunday
+      coeDate.setDate(coeDate.getDate() + 1);
+    }
+
+    return coeDate.toISOString().split('T')[0];
+  };
+
   const [formData, setFormData] = useState({
     propertyAddress: '',
     city: 'Bakersfield',  // Default to Bakersfield
     state: 'CA',           // Default to CA
     zipCode: '',           // Start empty, will populate on selection
     county: '',
+    purchasePrice: '',
+    acceptanceDate: new Date().toISOString().split('T')[0], // Today's date
+    closeOfEscrowDate: calculateDefaultCOE(), // 30 days from today
+    commissionType: 'percentage', // 'percentage' or 'flat'
+    commissionAmount: '',
   });
 
   // Check for Google API key
@@ -332,21 +360,40 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
       return;
     }
 
+    if (!formData.purchasePrice) {
+      setError('Please enter the purchase price');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
     try {
-      // Create escrow with minimal data - just address info
+      // Calculate commission if percentage
+      let calculatedCommission = 0;
+      if (formData.commissionAmount) {
+        if (formData.commissionType === 'percentage') {
+          calculatedCommission = parseFloat(formData.purchasePrice) * parseFloat(formData.commissionAmount) / 100;
+        } else {
+          calculatedCommission = parseFloat(formData.commissionAmount);
+        }
+      }
+
+      // Create escrow with all the new fields
       const escrowData = {
         propertyAddress: formData.propertyAddress,
         city: formData.city || '',
         state: formData.state || 'CA',
         zipCode: formData.zipCode || '',
         county: formData.county || '',
-        // Set default values for required fields
-        purchasePrice: 0,
+        purchasePrice: parseFloat(formData.purchasePrice) || 0,
+        myCommission: calculatedCommission,
+        commissionType: formData.commissionType,
+        commissionRate: formData.commissionType === 'percentage' ? parseFloat(formData.commissionAmount) : null,
+        acceptanceDate: formData.acceptanceDate,
+        closeOfEscrowDate: formData.closeOfEscrowDate,
         escrowNumber: `ESC-${Date.now()}`,
-        openDate: new Date().toISOString().split('T')[0],
+        openDate: formData.acceptanceDate, // Use acceptance date as open date
         status: 'active'
       };
 
@@ -377,6 +424,11 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         state: 'CA',
         zipCode: '',
         county: '',
+        purchasePrice: '',
+        acceptanceDate: new Date().toISOString().split('T')[0],
+        closeOfEscrowDate: calculateDefaultCOE(),
+        commissionType: 'percentage',
+        commissionAmount: '',
       });
       setSelectedAddress(null);
       setAddressSuggestions([]);
@@ -404,7 +456,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <LocationOn color="primary" />
           <Typography variant="h6" fontWeight="600">
-            New Escrow
+            Create New Escrow
           </Typography>
         </Box>
         <IconButton
@@ -429,7 +481,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
 
           <Box>
             <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
-              Enter the property address for this escrow.
+              Enter the property details and transaction information for this escrow.
             </Typography>
 
             {/* Unified Autocomplete for both Google and Nominatim */}
@@ -526,6 +578,94 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
                 value={formData.county}
                 onChange={(e) => setFormData({ ...formData, county: e.target.value })}
               />
+
+              {/* Purchase Price */}
+              <TextField
+                fullWidth
+                label="Purchase Price"
+                placeholder="450000"
+                value={formData.purchasePrice}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9]/g, '');
+                  setFormData({ ...formData, purchasePrice: value });
+                }}
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                }}
+                helperText="Enter the purchase price of the property"
+              />
+
+              {/* Date Fields */}
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Acceptance Date"
+                    type="date"
+                    value={formData.acceptanceDate}
+                    onChange={(e) => {
+                      const newAcceptanceDate = e.target.value;
+                      setFormData({
+                        ...formData,
+                        acceptanceDate: newAcceptanceDate,
+                        // Recalculate COE date when acceptance date changes
+                        closeOfEscrowDate: calculateDefaultCOE(new Date(newAcceptanceDate))
+                      });
+                    }}
+                    InputLabelProps={{ shrink: true }}
+                    helperText="Date offer was accepted"
+                  />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                  <TextField
+                    fullWidth
+                    label="Close of Escrow Date"
+                    type="date"
+                    value={formData.closeOfEscrowDate}
+                    onChange={(e) => setFormData({ ...formData, closeOfEscrowDate: e.target.value })}
+                    InputLabelProps={{ shrink: true }}
+                    helperText="Target closing date"
+                  />
+                </Grid>
+              </Grid>
+
+              {/* Commission Fields */}
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
+                <FormControl sx={{ minWidth: 140 }}>
+                  <InputLabel>Commission Type</InputLabel>
+                  <Select
+                    value={formData.commissionType}
+                    onChange={(e) => setFormData({ ...formData, commissionType: e.target.value, commissionAmount: '' })}
+                    label="Commission Type"
+                  >
+                    <MenuItem value="percentage">Percentage</MenuItem>
+                    <MenuItem value="flat">Flat Rate</MenuItem>
+                  </Select>
+                </FormControl>
+                <TextField
+                  fullWidth
+                  label={formData.commissionType === 'percentage' ? 'Commission %' : 'Commission Amount'}
+                  placeholder={formData.commissionType === 'percentage' ? '2.5' : '10000'}
+                  value={formData.commissionAmount}
+                  onChange={(e) => {
+                    const value = formData.commissionType === 'percentage'
+                      ? e.target.value.replace(/[^0-9.]/g, '')
+                      : e.target.value.replace(/[^0-9]/g, '');
+                    setFormData({ ...formData, commissionAmount: value });
+                  }}
+                  InputProps={{
+                    startAdornment: formData.commissionType === 'flat' && <InputAdornment position="start">$</InputAdornment>,
+                    endAdornment: formData.commissionType === 'percentage' && <InputAdornment position="end">%</InputAdornment>,
+                  }}
+                  helperText={
+                    formData.commissionType === 'percentage'
+                      ? formData.purchasePrice && formData.commissionAmount
+                        ? `Commission: $${(parseFloat(formData.purchasePrice) * parseFloat(formData.commissionAmount) / 100).toLocaleString()}`
+                        : 'Enter percentage (e.g., 2.5 for 2.5%)'
+                      : 'Enter flat commission amount'
+                  }
+                />
+              </Box>
             </Box>
           </Box>
         </DialogContent>
@@ -541,10 +681,10 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
           <Button
             type="submit"
             variant="contained"
-            disabled={loading || !formData.propertyAddress}
+            disabled={loading || !formData.propertyAddress || !formData.purchasePrice}
             startIcon={loading ? <CircularProgress size={20} /> : <Search />}
           >
-            {loading ? 'Creating...' : 'Create'}
+            {loading ? 'Creating...' : 'Create Escrow'}
           </Button>
         </DialogActions>
       </form>
