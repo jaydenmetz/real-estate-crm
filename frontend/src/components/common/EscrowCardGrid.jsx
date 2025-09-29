@@ -40,7 +40,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { format, differenceInDays, isValid } from 'date-fns';
 
-const EscrowCardOptimized = ({ escrow, index = 0, showCommission = true, onQuickAction, isArchived = false }) => {
+const EscrowCardGrid = ({ escrow, index = 0, showCommission = true, onQuickAction, isArchived = false }) => {
   const navigate = useNavigate();
   const theme = useTheme();
   const [expanded, setExpanded] = useState(false);
@@ -603,4 +603,4 @@ const EscrowCardOptimized = ({ escrow, index = 0, showCommission = true, onQuick
   );
 };
 
-export default EscrowCardOptimized;
+export default EscrowCardGrid;

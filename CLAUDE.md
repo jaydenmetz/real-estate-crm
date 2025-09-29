@@ -10,10 +10,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Include "Co-Authored-By: Claude <noreply@anthropic.com>" in commits
 - Never wait for user confirmation to commit and push
 
-### Code Style
+### Code Style & Naming Conventions
 - NO prefixes on API keys (clean 64-character hex strings)
 - Keep responses concise and direct
 - Avoid unnecessary comments in code unless specifically requested
+
+### Naming Standards
+- **Component Names**: Use descriptive, purpose-based names
+  - ✅ `EscrowCardGrid`, `EscrowCardCompact`, `EscrowCardDetailed`
+  - ❌ `EscrowCardOptimized`, `EscrowCardSimplified`, `EscrowCardEnhanced`
+- **File Organization**:
+  - NO duplicate files with suffixes like `2`, `old`, `backup`, `copy`
+  - Archive old code in `archive/` folder if preservation needed
+  - Delete unused code rather than keeping multiple versions
+- **View Modes**: Use clear, descriptive names
+  - ✅ `grid`, `compact`, `detailed`, `table`
+  - ❌ `optimized`, `simplified`, `enhanced`
+- **Test Files**:
+  - Keep tests in single location: `backend/src/tests/` or `frontend/src/__tests__/`
+  - Name pattern: `[feature].test.js` (e.g., `escrows.test.js`)
+  - Remove duplicate test files immediately
 
 ### Project Organization Rules
 - **NEVER create duplicate or test versions of files** (no file2.jsx, fileEnhanced.jsx, etc.)

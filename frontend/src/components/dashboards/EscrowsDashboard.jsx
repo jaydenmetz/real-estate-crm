@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NewEscrowModal from '../forms/NewEscrowModal';
-import EscrowCardOptimized from '../common/EscrowCardOptimized';
+import EscrowCardGrid from '../common/EscrowCardGrid';
 import EscrowCompactCard from '../common/EscrowCompactCard';
 import {
   Container,
@@ -1147,7 +1147,7 @@ const EscrowsDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [showNewEscrowModal, setShowNewEscrowModal] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState('active');
-  const [viewMode, setViewMode] = useState('optimized'); // 'optimized', 'compact', 'detailed'
+  const [viewMode, setViewMode] = useState('grid'); // 'grid', 'compact', 'detailed'
   const [archivedCount, setArchivedCount] = useState(0);
   const [selectedArchivedIds, setSelectedArchivedIds] = useState([]);
   const [batchDeleting, setBatchDeleting] = useState(false);
@@ -2388,9 +2388,9 @@ const EscrowsDashboard = () => {
               },
             }}
           >
-            <ToggleButton value="optimized" aria-label="optimized view">
+            <ToggleButton value="grid" aria-label="grid view">
               <ViewModule sx={{ mr: 1, fontSize: 18 }} />
-              Optimized
+              Grid
             </ToggleButton>
             <ToggleButton value="compact" aria-label="compact view">
               <ViewList sx={{ mr: 1, fontSize: 18 }} />
@@ -2415,9 +2415,9 @@ const EscrowsDashboard = () => {
 
       {/* Escrow Cards */}
       <Box sx={{
-        display: viewMode === 'optimized' ? 'grid' : 'flex',
+        display: viewMode === 'grid' ? 'grid' : 'flex',
         flexDirection: 'column',
-        gridTemplateColumns: viewMode === 'optimized' ? 'repeat(auto-fill, minmax(400px, 1fr))' : undefined,
+        gridTemplateColumns: viewMode === 'grid' ? 'repeat(auto-fill, minmax(400px, 1fr))' : undefined,
         gap: 2
       }}>
         <AnimatePresence>
@@ -2493,8 +2493,8 @@ const EscrowsDashboard = () => {
                       onClick={(e) => e.stopPropagation()}
                     />
 
-                    {viewMode === 'optimized' ? (
-                      <EscrowCardOptimized
+                    {viewMode === 'grid' ? (
+                      <EscrowCardGrid
                         escrow={escrow}
                         index={index}
                         showCommission={true}
@@ -2588,7 +2588,7 @@ const EscrowsDashboard = () => {
             } else {
               return filteredEscrows.map((escrow, index) => {
                 // Choose component based on view mode
-                if (viewMode === 'optimized') {
+                if (viewMode === 'grid') {
                   return (
                     <EscrowCardOptimized
                       key={escrow.id}
