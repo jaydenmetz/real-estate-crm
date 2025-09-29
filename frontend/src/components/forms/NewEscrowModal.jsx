@@ -131,8 +131,8 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
     purchasePrice: '',
     acceptanceDate: new Date().toISOString().split('T')[0], // Today's date
     closeOfEscrowDate: calculateDefaultCOE(), // 30 days from today
-    commissionType: 'percentage', // 'percentage' or 'flat'
-    commissionAmount: '',
+    commissionPercentage: '',
+    commissionFlat: '',
   });
 
   // Check for Google API key
@@ -424,14 +424,12 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
     setError('');
 
     try {
-      // Calculate commission if percentage
+      // Calculate commission
       let calculatedCommission = 0;
-      if (formData.commissionAmount) {
-        if (formData.commissionType === 'percentage') {
-          calculatedCommission = parseFloat(formData.purchasePrice) * parseFloat(formData.commissionAmount) / 100;
-        } else {
-          calculatedCommission = parseFloat(formData.commissionAmount);
-        }
+      if (formData.commissionPercentage) {
+        calculatedCommission = parseFloat(formData.purchasePrice.replace(/,/g, '')) * parseFloat(formData.commissionPercentage) / 100;
+      } else if (formData.commissionFlat) {
+        calculatedCommission = parseFloat(formData.commissionFlat.replace(/,/g, ''));
       }
 
       // Create escrow with all the new fields
@@ -441,10 +439,10 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         state: formData.state || 'CA',
         zipCode: formData.zipCode || '',
         county: formData.county || '',
-        purchasePrice: parseFloat(formData.purchasePrice) || 0,
+        purchasePrice: parseFloat(formData.purchasePrice.replace(/,/g, '')) || 0,
         myCommission: calculatedCommission,
-        commissionType: formData.commissionType,
-        commissionRate: formData.commissionType === 'percentage' ? parseFloat(formData.commissionAmount) : null,
+        commissionType: formData.commissionPercentage ? 'percentage' : 'flat',
+        commissionRate: formData.commissionPercentage ? parseFloat(formData.commissionPercentage) : null,
         acceptanceDate: formData.acceptanceDate,
         closeOfEscrowDate: formData.closeOfEscrowDate,
         escrowNumber: `ESC-${Date.now()}`,
@@ -482,8 +480,8 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         purchasePrice: '',
         acceptanceDate: new Date().toISOString().split('T')[0],
         closeOfEscrowDate: calculateDefaultCOE(),
-        commissionType: 'percentage',
-        commissionAmount: '',
+        commissionPercentage: '',
+        commissionFlat: '',
       });
       setSelectedAddress(null);
       setAddressSuggestions([]);
@@ -638,11 +636,12 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
               <TextField
                 fullWidth
                 label="Purchase Price"
-                placeholder="450000"
+                placeholder="450,000"
                 value={formData.purchasePrice}
                 onChange={(e) => {
                   const value = e.target.value.replace(/[^0-9]/g, '');
-                  setFormData({ ...formData, purchasePrice: value });
+                  const formatted = value ? parseInt(value).toLocaleString() : '';
+                  setFormData({ ...formData, purchasePrice: formatted });
                 }}
                 InputProps={{
                   startAdornment: <InputAdornment position="start">$</InputAdornment>,
@@ -685,42 +684,40 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
               </Grid>
 
               {/* Commission Fields */}
-              <Box sx={{ display: 'flex', gap: 2, alignItems: 'flex-start' }}>
-                <FormControl sx={{ minWidth: 140 }}>
-                  <InputLabel>Commission Type</InputLabel>
-                  <Select
-                    value={formData.commissionType}
-                    onChange={(e) => setFormData({ ...formData, commissionType: e.target.value, commissionAmount: '' })}
-                    label="Commission Type"
-                  >
-                    <MenuItem value="percentage">Percentage</MenuItem>
-                    <MenuItem value="flat">Flat Rate</MenuItem>
-                  </Select>
-                </FormControl>
-                <TextField
-                  fullWidth
-                  label={formData.commissionType === 'percentage' ? 'Commission %' : 'Commission Amount'}
-                  placeholder={formData.commissionType === 'percentage' ? '2.5' : '10000'}
-                  value={formData.commissionAmount}
-                  onChange={(e) => {
-                    const value = formData.commissionType === 'percentage'
-                      ? e.target.value.replace(/[^0-9.]/g, '')
-                      : e.target.value.replace(/[^0-9]/g, '');
-                    setFormData({ ...formData, commissionAmount: value });
-                  }}
-                  InputProps={{
-                    startAdornment: formData.commissionType === 'flat' && <InputAdornment position="start">$</InputAdornment>,
-                    endAdornment: formData.commissionType === 'percentage' && <InputAdornment position="end">%</InputAdornment>,
-                  }}
-                  helperText={
-                    formData.commissionType === 'percentage'
-                      ? formData.purchasePrice && formData.commissionAmount
-                        ? `Commission: $${(parseFloat(formData.purchasePrice) * parseFloat(formData.commissionAmount) / 100).toLocaleString()}`
-                        : 'Enter percentage (e.g., 2.5 for 2.5%)'
-                      : 'Enter flat commission amount'
-                  }
-                />
-              </Box>
+              <TextField
+                fullWidth
+                label="Commission Percentage"
+                placeholder="2.5"
+                value={formData.commissionPercentage}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9.]/g, '');
+                  setFormData({ ...formData, commissionPercentage: value, commissionFlat: '' });
+                }}
+                InputProps={{
+                  endAdornment: <InputAdornment position="end">%</InputAdornment>,
+                }}
+                helperText={
+                  formData.purchasePrice && formData.commissionPercentage
+                    ? `Commission: $${(parseFloat(formData.purchasePrice.replace(/,/g, '')) * parseFloat(formData.commissionPercentage) / 100).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                    : 'Enter percentage (e.g., 2.5 for 2.5%)'
+                }
+              />
+
+              <TextField
+                fullWidth
+                label="Flat Commission Amount"
+                placeholder="10,000"
+                value={formData.commissionFlat}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/[^0-9]/g, '');
+                  const formatted = value ? parseInt(value).toLocaleString() : '';
+                  setFormData({ ...formData, commissionFlat: formatted, commissionPercentage: '' });
+                }}
+                InputProps={{
+                  startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                }}
+                helperText="Or enter a flat commission amount"
+              />
             </Box>
           </Box>
         </DialogContent>
