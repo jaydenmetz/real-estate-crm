@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useQuery } from 'react-query';
 import { api, apiKeysAPI } from '../../services/api.service';
+import { formatCurlCommand } from '../../utils/formatCurl';
 import {
   Box,
   Container,
@@ -310,11 +311,11 @@ const TestResult = ({ test }) => {
               <CodeBlock>
                 <CopyButton size="small" onClick={(e) => {
                   e.stopPropagation();
-                  copyToClipboard(test.curl);
+                  copyToClipboard(formatCurlCommand(test.curl));
                 }}>
                   <CopyIcon fontSize="small" />
                 </CopyButton>
-                <pre style={{ margin: 0 }}>{test.curl}</pre>
+                <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{formatCurlCommand(test.curl)}</pre>
               </CodeBlock>
             </>
           )}
