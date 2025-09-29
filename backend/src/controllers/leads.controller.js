@@ -2021,32 +2021,47 @@ exports.batchDeleteLeads = async (req, res) => {
     // Start transaction
     await client.query('BEGIN');
 
-    // First, verify all leads exist and are archived
-    const checkQuery = `
-      SELECT id FROM leads
+    // First, check which leads exist
+    const existCheckQuery = `
+      SELECT id, deleted_at FROM leads
       WHERE id = ANY($1)
-      AND deleted_at IS NULL
     `;
-    const checkResult = await client.query(checkQuery, [ids]);
+    const existResult = await client.query(existCheckQuery, [ids]);
 
-    if (checkResult.rows.length > 0) {
+    // If no leads found, just return success with 0 deletions
+    if (existResult.rows.length === 0) {
+      await client.query('COMMIT');
+      return res.json({
+        success: true,
+        message: 'No leads found to delete',
+        deletedCount: 0,
+        deletedIds: []
+      });
+    }
+
+    // Check if any are not archived (deleted_at IS NULL means active)
+    const activeLeads = existResult.rows.filter(r => !r.deleted_at);
+    if (activeLeads.length > 0) {
       await client.query('ROLLBACK');
-      const activeIds = checkResult.rows.map(r => r.id);
+      const activeIds = activeLeads.map(r => r.id);
       return res.status(400).json({
         success: false,
         error: `Some leads are not archived and cannot be deleted: ${activeIds.join(', ')}`
       });
     }
 
-    // Delete all leads at once
+    // Delete only the leads that exist and are archived
+    const existingIds = existResult.rows.map(r => r.id);
     const deleteQuery = 'DELETE FROM leads WHERE id = ANY($1) RETURNING id';
-    const result = await client.query(deleteQuery, [ids]);
+    const result = await client.query(deleteQuery, [existingIds]);
 
     await client.query('COMMIT');
 
     logger.info('Batch deleted leads', {
       count: result.rowCount,
-      ids: result.rows.map(r => r.id)
+      ids: result.rows.map(r => r.id),
+      requestedIds: ids,
+      notFound: ids.filter(id => !existingIds.includes(id))
     });
 
     res.json({
