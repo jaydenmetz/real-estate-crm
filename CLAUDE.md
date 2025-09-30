@@ -16,7 +16,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Avoid unnecessary comments in code unless specifically requested
 
 ### Naming Standards
-- **Component Names**: Use descriptive, purpose-based names
+- **Component Names**: Use the final naming structure of the component. If I ask for a more simple EscrowCard, keep the name EscrowCard. Not EscrowCardSimplified
   - ✅ `EscrowCardGrid`, `EscrowCardCompact`, `EscrowCardDetailed`
   - ❌ `EscrowCardOptimized`, `EscrowCardSimplified`, `EscrowCardEnhanced`
 - **File Organization**:
