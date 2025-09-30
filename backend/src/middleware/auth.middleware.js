@@ -1,6 +1,18 @@
 const jwt = require('jsonwebtoken');
 const { pool } = require('../config/database');
 
+// JWT Secret Configuration
+// Priority: Environment variable > Fallback (for backward compatibility during migration)
+const jwtSecret = process.env.JWT_SECRET ||
+  '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472';
+
+// Log which secret source is being used (helps with debugging)
+if (process.env.JWT_SECRET) {
+  console.log('✅ Using JWT_SECRET from environment variable');
+} else {
+  console.warn('⚠️  WARNING: Using fallback JWT_SECRET. Set JWT_SECRET environment variable for production!');
+}
+
 /**
  * Authenticate user via JWT token
  */
@@ -8,7 +20,7 @@ const authenticate = async (req, res, next) => {
   try {
     // Get token from header
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({
         success: false,
@@ -18,13 +30,11 @@ const authenticate = async (req, res, next) => {
         }
       });
     }
-    
+
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-    
+
     try {
-      // Verify token - use hardcoded secret for consistency
-      // Ignoring environment variable to ensure all endpoints use same secret
-      const jwtSecret = '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472';
+      // Verify token with configured secret
       const decoded = jwt.verify(token, jwtSecret);
       
       // Get user from database
