@@ -142,15 +142,16 @@ class AuthController {
         });
       }
       
-      // Get user by email OR username
+      // Get user by email OR username (include lockout fields)
       const userQuery = `
-        SELECT id, email, username, password_hash, first_name, last_name, role, is_active
+        SELECT id, email, username, password_hash, first_name, last_name, role, is_active,
+               failed_login_attempts, locked_until
         FROM users
         WHERE LOWER(email) = LOWER($1) OR LOWER(username) = LOWER($1)
       `;
-      
+
       const userResult = await pool.query(userQuery, [loginEmail]);
-      
+
       if (userResult.rows.length === 0) {
         return res.status(401).json({
           success: false,
@@ -160,9 +161,9 @@ class AuthController {
           }
         });
       }
-      
+
       const user = userResult.rows[0];
-      
+
       // Check if user is active
       if (!user.is_active) {
         return res.status(401).json({
@@ -173,11 +174,36 @@ class AuthController {
           }
         });
       }
-      
+
+      // Check if account is locked
+      if (user.locked_until && new Date(user.locked_until) > new Date()) {
+        const minutesLeft = Math.ceil((new Date(user.locked_until) - new Date()) / 60000);
+        return res.status(423).json({
+          success: false,
+          error: {
+            code: 'ACCOUNT_LOCKED',
+            message: `Account temporarily locked due to too many failed login attempts. Try again in ${minutesLeft} minute${minutesLeft !== 1 ? 's' : ''}.`,
+            locked_until: user.locked_until
+          }
+        });
+      }
+
       // Verify password
       const isPasswordValid = await bcrypt.compare(password, user.password_hash);
-      
+
       if (!isPasswordValid) {
+        // Increment failed attempts and lock if threshold reached
+        await pool.query(`
+          UPDATE users
+          SET
+            failed_login_attempts = failed_login_attempts + 1,
+            locked_until = CASE
+              WHEN failed_login_attempts >= 4 THEN NOW() + INTERVAL '30 minutes'
+              ELSE NULL
+            END
+          WHERE id = $1
+        `, [user.id]);
+
         return res.status(401).json({
           success: false,
           error: {
@@ -186,12 +212,16 @@ class AuthController {
           }
         });
       }
-      
-      // Update last login
-      await pool.query(
-        'UPDATE users SET last_login = NOW() WHERE id = $1',
-        [user.id]
-      );
+
+      // Successful login - reset failed attempts and update last login
+      await pool.query(`
+        UPDATE users
+        SET
+          last_login = NOW(),
+          failed_login_attempts = 0,
+          locked_until = NULL
+        WHERE id = $1
+      `, [user.id]);
 
       // Generate JWT access token
       const accessToken = jwt.sign(

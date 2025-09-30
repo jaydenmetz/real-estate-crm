@@ -38,7 +38,8 @@ const authenticateApiKey = async (req, res, next) => {
       teamId: userData.teamId,
       teamName: userData.teamName,
       apiKeyId: userData.apiKeyId,
-      permissions: userData.permissions,
+      scopes: userData.scopes || { all: ['read', 'write', 'delete'] },
+      permissions: userData.permissions, // Keep for backward compatibility
       authMethod: 'api_key'
     };
 
@@ -120,6 +121,7 @@ const authenticate = async (req, res, next) => {
 
 /**
  * Check if user has permission for specific resource and action
+ * @deprecated Use requireScope instead
  */
 const requirePermission = (resource, action) => {
   return (req, res, next) => {
@@ -153,8 +155,53 @@ const requirePermission = (resource, action) => {
   };
 };
 
+/**
+ * Check if user has required scope for resource and action
+ * Modern scope-based authorization (replaces requirePermission)
+ */
+const requireScope = (resource, action) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: 'UNAUTHORIZED',
+          message: 'Authentication required'
+        }
+      });
+    }
+
+    // JWT users bypass scope checks (have full access)
+    if (req.user.authMethod !== 'api_key') {
+      return next();
+    }
+
+    const scopes = req.user.scopes || {};
+
+    // Check if user has 'all:action' scope (e.g., all:read)
+    const hasAllScope = scopes.all && scopes.all.includes(action);
+
+    // Check if user has 'resource:action' scope (e.g., clients:read)
+    const hasResourceScope = scopes[resource] && scopes[resource].includes(action);
+
+    if (!hasAllScope && !hasResourceScope) {
+      return res.status(403).json({
+        success: false,
+        error: {
+          code: 'INSUFFICIENT_SCOPE',
+          message: `API key missing required scope: ${resource}:${action}`,
+          required_scope: `${resource}:${action}`
+        }
+      });
+    }
+
+    next();
+  };
+};
+
 module.exports = {
   authenticateApiKey,
   authenticate,
-  requirePermission
+  requirePermission, // Deprecated - kept for backward compatibility
+  requireScope
 };

@@ -51,13 +51,18 @@ class ApiKeyService {
         expiresAt.setDate(expiresAt.getDate() + expiresInDays);
       }
 
+      // Default scopes: full access to all resources
+      const defaultScopes = {
+        all: ['read', 'write', 'delete']
+      };
+
       // Insert API key record
       const insertResult = await client.query(`
         INSERT INTO api_keys (
-          user_id, team_id, name, key_hash, key_prefix, expires_at
-        ) VALUES ($1, $2, $3, $4, $5, $6)
-        RETURNING id, name, key_prefix, permissions, expires_at, created_at
-      `, [userId, teamId, name, keyHash, keyPrefix, expiresAt]);
+          user_id, team_id, name, key_hash, key_prefix, scopes, expires_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7)
+        RETURNING id, name, key_prefix, scopes, expires_at, created_at
+      `, [userId, teamId, name, keyHash, keyPrefix, JSON.stringify(defaultScopes), expiresAt]);
 
       await client.query('COMMIT');
 
@@ -80,10 +85,11 @@ class ApiKeyService {
     const keyHash = this.hashApiKey(apiKey);
 
     const result = await pool.query(`
-      SELECT 
+      SELECT
         ak.id as api_key_id,
         ak.user_id,
         ak.team_id,
+        ak.scopes,
         ak.permissions,
         ak.expires_at,
         ak.is_active,
@@ -136,7 +142,8 @@ class ApiKeyService {
       lastName: keyData.last_name,
       role: keyData.role,
       teamName: keyData.team_name,
-      permissions: keyData.permissions
+      scopes: keyData.scopes || { all: ['read', 'write', 'delete'] }, // Fallback for old keys
+      permissions: keyData.permissions // Keep for backward compatibility
     };
   }
 
