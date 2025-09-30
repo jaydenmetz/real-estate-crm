@@ -2,6 +2,14 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { pool } = require('../config/database');
 
+// JWT Secret Configuration (matches auth.middleware.js)
+const jwtSecret = process.env.JWT_SECRET ||
+  '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472';
+
+// JWT expiry from environment or defaults
+const jwtAccessExpiry = process.env.JWT_ACCESS_TOKEN_EXPIRY || '15m';
+const jwtRefreshExpiry = process.env.JWT_REFRESH_TOKEN_EXPIRY || '7d';
+
 class AuthController {
   /**
    * Test endpoint
@@ -13,9 +21,7 @@ class AuthController {
         'SELECT id, email, is_active FROM users WHERE email = $1',
         ['admin@jaydenmetz.com']
       );
-      
-      const jwtSecret = '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472';
-      
+
       res.json({
         success: true,
         data: {
@@ -78,11 +84,10 @@ class AuthController {
         return;
       }
       
-      // Use a hardcoded secret for now
       const token = jwt.sign(
         { id: user.id, email: user.email },
-        '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472',
-        { expiresIn: '30d' }
+        jwtSecret,
+        { expiresIn: jwtAccessExpiry }
       );
       
       res.end(JSON.stringify({
@@ -129,15 +134,12 @@ class AuthController {
         return res.json({ success: false, error: 'Invalid password' });
       }
       
-      // Generate token - use hardcoded secret for consistency
-      // Ignoring environment variable to ensure all endpoints use same secret
-      const jwtSecret = '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472';
       console.log('Using JWT secret:', jwtSecret.substring(0, 10) + '...');
-      
+
       const token = jwt.sign(
         { id: user.id, email: user.email, role: user.role },
         jwtSecret,
-        { expiresIn: '30d' }
+        { expiresIn: jwtAccessExpiry }
       );
       
       res.json({
@@ -342,17 +344,16 @@ class AuthController {
         'UPDATE users SET last_login = NOW() WHERE id = $1',
         [user.id]
       );
-      
-      // Generate JWT token - ensure we use the same secret everywhere
-      const jwtSecret = '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472';
+
+      // Generate JWT token
       const token = jwt.sign(
-        { 
-          id: user.id, 
-          email: user.email, 
-          role: user.role 
+        {
+          id: user.id,
+          email: user.email,
+          role: user.role
         },
         jwtSecret,
-        { expiresIn: '30d' }
+        { expiresIn: jwtAccessExpiry }
       );
       
       res.json({
