@@ -332,6 +332,126 @@ await SecurityEventService.logLoginSuccess(req, user);
 - After Phase 4: 9.5/10
 - After Phase 5: **10/10** (with noted limitations)
 
+### Phase 5.1-5.4: Security Event Logging Completion Plan
+
+Based on the elite engineering audit of Phase 5, the following sub-phases address the 20 immediate action items:
+
+#### Phase 5.1: Fix & Stabilize (CRITICAL - Today)
+**Status:** 🔄 IN PROGRESS
+**Goal:** Make Phase 5 production-ready and fully functional
+
+**Tasks:**
+1. ✅ Verify Railway deployment of fire-and-forget fix
+2. 🔄 Test successful login works without INTERNAL_ERROR
+3. ✅ Verify events are being logged to database
+4. ❌ Write integration tests for login → event logging pipeline
+5. ❌ Add `/v1/security-events/health` endpoint
+
+**Time Estimate:** 2-3 hours
+**Success Criteria:**
+- Login works without errors
+- All 5 authentication event types log correctly
+- Health check returns green
+- Integration tests pass
+
+#### Phase 5.2: Essential Coverage (HIGH - This Week)
+**Status:** ⏳ PENDING Phase 5.1
+**Goal:** Log critical security events and add basic monitoring
+
+**Tasks:**
+1. Add logout event logging
+2. Log password changes
+3. Log failed API key attempts
+4. Build basic security dashboard (Settings page section)
+5. Add email alert for account lockouts
+6. Write API endpoint tests (4 endpoints)
+7. Add data retention cron job (90-day deletion)
+
+**Time Estimate:** 1-2 days
+**Success Criteria:**
+- 8 event types logging (up from 5)
+- Users can view login history in Settings
+- Account lockout emails being sent
+- API tests achieve 80%+ coverage
+- Retention job runs successfully
+
+**Implementation Order:**
+1. Logout logging (30 min)
+2. Password change logging (30 min)
+3. Failed API key logging (30 min)
+4. API endpoint tests (2 hours)
+5. Basic dashboard (3 hours)
+6. Email alerts (2 hours)
+7. Retention cron (1 hour)
+
+#### Phase 5.3: Comprehensive Logging (MEDIUM - This Month)
+**Status:** ⏳ PENDING Phase 5.2
+**Goal:** Log all data access and prepare for compliance
+
+**Tasks:**
+1. Log data access events (read/write to clients, escrows, listings, leads)
+2. Add authorization failure logging (permission denials)
+3. Add GDPR deletion endpoint (`DELETE /v1/security-events/user/:userId`)
+4. Add GDPR export endpoint (`GET /v1/security-events/export` - CSV)
+5. Build admin security dashboard (system-wide event monitoring)
+6. Add geographic anomaly detection (flag logins from unusual locations)
+7. Implement table partitioning (partition by month for performance)
+
+**Time Estimate:** 3-5 days
+**Success Criteria:**
+- 15+ event types logging (comprehensive coverage)
+- GDPR compliance endpoints working
+- Admin dashboard shows critical events
+- Geo anomaly detection identifies 95%+ of suspicious activity
+- Table partitioning ready for 10M+ rows
+
+**Implementation Order:**
+1. Data access logging (1 day) - Most critical for compliance
+2. Authorization failure logging (2 hours)
+3. GDPR endpoints (3 hours)
+4. Admin dashboard (4 hours)
+5. Geo anomaly detection (4 hours)
+6. Table partitioning (2 hours)
+
+#### Phase 5.4: Enterprise Readiness (LOW - Before Sales)
+**Status:** ⏳ PENDING Phase 5.3
+**Goal:** Production-grade monitoring and compliance reporting
+
+**Tasks:**
+1. Real-time alerting (Slack/SMS for critical events)
+2. Device fingerprinting (track devices for suspicious activity)
+3. SIEM integration (export to Splunk/DataDog/Elastic)
+4. Compliance reports (SOX, HIPAA, GDPR audit reports)
+5. Performance optimization (handle 1M+ events/month)
+6. Rate limit monitoring (track and alert on suspicious patterns)
+
+**Time Estimate:** 1 week
+**Success Criteria:**
+- <5 min response time to critical events
+- Device fingerprinting blocks 90%+ of compromised sessions
+- SIEM integration provides real-time feed
+- Compliance reports pass external audit
+- System handles 10k events/hour
+
+**Implementation Order:**
+1. Real-time alerting (1 day) - Most valuable for security ops
+2. Device fingerprinting (1 day)
+3. Rate limit monitoring (4 hours)
+4. SIEM integration (1 day)
+5. Compliance reports (1 day)
+6. Performance optimization (1 day)
+
+### Phase Summary Table
+
+| Phase | Priority | Time | Key Deliverable | Blocks Next Phase? |
+|-------|----------|------|----------------|-------------------|
+| 5.1 | CRITICAL | 3 hours | Working login + tests | ✅ YES |
+| 5.2 | HIGH | 2 days | Dashboard + alerts | ✅ YES |
+| 5.3 | MEDIUM | 5 days | Full logging + GDPR | ⚠️ PARTIALLY |
+| 5.4 | LOW | 1 week | Enterprise monitoring | ❌ NO |
+
+**Current Focus:** Phase 5.1 - Fixing production login and stabilizing core logging functionality.
+
 ## Development Commands
 
 ### Backend
