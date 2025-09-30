@@ -180,8 +180,8 @@ class AuthController {
       if (user.locked_until && new Date(user.locked_until) > new Date()) {
         const minutesLeft = Math.ceil((new Date(user.locked_until) - new Date()) / 60000);
 
-        // Log attempt to access locked account
-        await SecurityEventService.logLockedAccountAttempt(req, user, minutesLeft);
+        // Log attempt to access locked account (fire-and-forget)
+        SecurityEventService.logLockedAccountAttempt(req, user, minutesLeft).catch(console.error);
 
         return res.status(423).json({
           success: false,
@@ -212,17 +212,17 @@ class AuthController {
 
         const updatedUser = updateResult.rows[0];
 
-        // Log failed login attempt
-        await SecurityEventService.logLoginFailed(req, loginEmail, 'Invalid credentials');
+        // Log failed login attempt (fire-and-forget, don't await)
+        SecurityEventService.logLoginFailed(req, loginEmail, 'Invalid credentials').catch(console.error);
 
-        // If account was just locked, log that event
+        // If account was just locked, log that event (fire-and-forget)
         if (updatedUser.locked_until) {
-          await SecurityEventService.logAccountLocked(
+          SecurityEventService.logAccountLocked(
             req,
             user,
             updatedUser.locked_until,
             updatedUser.failed_login_attempts
-          );
+          ).catch(console.error);
         }
 
         return res.status(401).json({
@@ -270,8 +270,8 @@ class AuthController {
         deviceInfo
       );
 
-      // Log successful login
-      await SecurityEventService.logLoginSuccess(req, user);
+      // Log successful login (fire-and-forget)
+      SecurityEventService.logLoginSuccess(req, user).catch(console.error);
 
       // Set refresh token as httpOnly cookie
       res.cookie('refreshToken', refreshToken.token, {
@@ -620,8 +620,8 @@ class AuthController {
         maxAge: 7 * 24 * 60 * 60 * 1000
       });
 
-      // Log token refresh
-      await SecurityEventService.logTokenRefresh(req, tokenData);
+      // Log token refresh (fire-and-forget)
+      SecurityEventService.logTokenRefresh(req, tokenData).catch(console.error);
 
       res.json({
         success: true,

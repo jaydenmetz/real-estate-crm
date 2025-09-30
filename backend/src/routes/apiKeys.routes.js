@@ -50,8 +50,8 @@ router.post('/', async (req, res) => {
       expiresInDays
     );
 
-    // Log API key creation
-    await SecurityEventService.logApiKeyCreated(req, req.user, apiKey.id, name);
+    // Log API key creation (fire-and-forget)
+    SecurityEventService.logApiKeyCreated(req, req.user, apiKey.id, name).catch(console.error);
 
     res.status(201).json({
       success: true,
@@ -80,13 +80,13 @@ router.put('/:id/revoke', async (req, res) => {
 
     const result = await ApiKeyService.revokeApiKey(req.user.id, req.params.id);
 
-    // Log API key revocation
-    await SecurityEventService.logApiKeyRevoked(
+    // Log API key revocation (fire-and-forget)
+    SecurityEventService.logApiKeyRevoked(
       req,
       req.user,
       req.params.id,
       keyToRevoke?.name || 'Unknown'
-    );
+    ).catch(console.error);
 
     res.json({
       success: true,
