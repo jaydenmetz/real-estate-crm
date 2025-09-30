@@ -255,7 +255,8 @@ class AuthController {
         { expiresIn: jwtAccessExpiry }
       );
 
-      // Create refresh token with device info
+      // TEMPORARILY DISABLED: Skip refresh token for debugging
+      /*
       const ipAddress = req.ip || req.connection.remoteAddress;
       const userAgent = req.headers['user-agent'] || 'Unknown';
       const deviceInfo = {
@@ -270,17 +271,17 @@ class AuthController {
         deviceInfo
       );
 
-      // Log successful login (fire-and-forget)
-      // TEMPORARILY DISABLED for debugging
-      // SecurityEventService.logLoginSuccess(req, user).catch(console.error);
-
-      // Set refresh token as httpOnly cookie
       res.cookie('refreshToken', refreshToken.token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax', // Changed from 'strict' - allows top-level navigation (email links, OAuth) while preventing CSRF
-        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        sameSite: 'lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000
       });
+      */
+
+      // Log successful login (fire-and-forget)
+      // TEMPORARILY DISABLED for debugging
+      // SecurityEventService.logLoginSuccess(req, user).catch(console.error);
 
       res.json({
         success: true,
@@ -296,7 +297,7 @@ class AuthController {
           },
           token: accessToken, // Keep 'token' for backward compatibility
           accessToken,
-          refreshToken: refreshToken.token, // For mobile apps that can't use cookies
+          // refreshToken: refreshToken.token, // DISABLED for debugging
           expiresIn: jwtAccessExpiry,
           tokenType: 'Bearer'
         },
