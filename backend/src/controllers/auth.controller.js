@@ -19,162 +19,6 @@ class AuthController {
   /**
    * Test endpoint
    */
-  static async test(req, res) {
-    try {
-      const result = await pool.query('SELECT NOW() as time, COUNT(*) as count FROM users');
-      const adminResult = await pool.query(
-        'SELECT id, email, is_active FROM users WHERE email = $1',
-        ['admin@jaydenmetz.com']
-      );
-
-      res.json({
-        success: true,
-        data: {
-          database: 'connected',
-          time: result.rows[0].time,
-          userCount: result.rows[0].count,
-          jwtSecret: process.env.JWT_SECRET ? 'configured' : 'missing',
-          jwtSecretFirst10: jwtSecret.substring(0, 10),
-          nodeEnv: process.env.NODE_ENV || 'not set',
-          adminUser: adminResult.rows.length > 0 ? {
-            found: true,
-            ...adminResult.rows[0]
-          } : { found: false }
-        }
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        error: {
-          code: 'TEST_ERROR',
-          message: error.message
-        }
-      });
-    }
-  }
-
-  /**
-   * Debug login - completely raw response
-   */
-  static async debugLogin(req, res) {
-    // Raw response, no error handling
-    const { username, password } = req.body;
-    
-    res.setHeader('Content-Type', 'application/json');
-    
-    if (!username || !password) {
-      res.end(JSON.stringify({
-        error: 'Missing username or password',
-        received: { username: !!username, password: !!password }
-      }));
-      return;
-    }
-    
-    try {
-      const result = await pool.query(
-        'SELECT id, email, password_hash FROM users WHERE LOWER(email) = LOWER($1) OR LOWER(username) = LOWER($1)',
-        [username]
-      );
-      
-      if (result.rows.length === 0) {
-        res.end(JSON.stringify({ error: 'User not found' }));
-        return;
-      }
-      
-      const user = result.rows[0];
-      const validPassword = await bcrypt.compare(password, user.password_hash);
-      
-      if (!validPassword) {
-        res.end(JSON.stringify({ error: 'Invalid password' }));
-        return;
-      }
-      
-      const token = jwt.sign(
-        { id: user.id, email: user.email },
-        jwtSecret,
-        { expiresIn: jwtAccessExpiry }
-      );
-      
-      res.end(JSON.stringify({
-        success: true,
-        token: token,
-        user: { id: user.id, email: user.email }
-      }));
-      
-    } catch (err) {
-      res.end(JSON.stringify({
-        error: 'Database error',
-        details: err.message
-      }));
-    }
-  }
-
-  /**
-   * Simple login for debugging
-   */
-  static async simpleLogin(req, res) {
-    try {
-      const { username, password } = req.body;
-      
-      // Debug logging
-      console.log('Simple login attempt:', { username, hasPassword: !!password });
-      
-      // Direct query - check both email and username
-      const result = await pool.query(
-        'SELECT id, email, username, password_hash, first_name, last_name, role FROM users WHERE LOWER(email) = LOWER($1) OR LOWER(username) = LOWER($1)',
-        [username]
-      );
-      
-      if (result.rows.length === 0) {
-        return res.json({ success: false, error: 'User not found', debugInfo: { username } });
-      }
-      
-      const user = result.rows[0];
-      console.log('User found:', user.email);
-      
-      const validPassword = await bcrypt.compare(password, user.password_hash);
-      console.log('Password validation result:', validPassword);
-      
-      if (!validPassword) {
-        return res.json({ success: false, error: 'Invalid password' });
-      }
-      
-      console.log('Using JWT secret:', jwtSecret.substring(0, 10) + '...');
-
-      const token = jwt.sign(
-        { id: user.id, email: user.email, role: user.role },
-        jwtSecret,
-        { expiresIn: jwtAccessExpiry }
-      );
-      
-      res.json({
-        success: true,
-        data: {
-          user: {
-            id: user.id,
-            email: user.email,
-            username: user.username,
-            firstName: user.first_name,
-            lastName: user.last_name,
-            role: user.role
-          },
-          token
-        }
-      });
-      
-    } catch (error) {
-      console.error('Simple login error:', error);
-      res.json({
-        success: false,
-        error: error.message,
-        stack: error.stack
-      });
-    }
-  }
-
-  /**
-   * Register a new user
-   */
   static async register(req, res) {
     const client = await pool.connect();
     
@@ -233,17 +77,16 @@ class AuthController {
       ]);
       
       const user = result.rows[0];
-      
-      // Generate JWT token - ensure we use the same secret everywhere
-      const jwtSecret = '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472';
+
+      // Generate JWT token
       const token = jwt.sign(
-        { 
-          id: user.id, 
-          email: user.email, 
-          role: user.role 
+        {
+          id: user.id,
+          email: user.email,
+          role: user.role
         },
         jwtSecret,
-        { expiresIn: '30d' }
+        { expiresIn: jwtAccessExpiry }
       );
       
       await client.query('COMMIT');
@@ -413,91 +256,6 @@ class AuthController {
           code: 'LOGIN_ERROR',
           message: 'Failed to login',
           details: error.message
-        }
-      });
-    }
-  }
-
-  /**
-   * Emergency login endpoint - bypasses bcrypt for testing
-   */
-  static emergencyLogin(req, res) {
-    // No async to avoid middleware issues
-    const { email, password } = req.body;
-    
-    // Log request received
-    console.log('Emergency login attempt:', { email, hasPassword: !!password });
-    
-    // For emergency admin access only
-    if (email === 'admin@jaydenmetz.com' && (password === 'AdminPassword123!' || password === 'AdminPassword123')) {
-      // Direct query for admin user
-      pool.query(
-        'SELECT id, email, username, first_name, last_name, role FROM users WHERE email = $1',
-        ['admin@jaydenmetz.com']
-      ).then(result => {
-        console.log('Query result:', { rowCount: result.rows.length });
-        
-        if (result.rows.length > 0) {
-          const user = result.rows[0];
-          console.log('User found:', user.email);
-          
-          // Generate token - check for Railway-specific JWT_SECRET first
-          const jwtSecret = process.env.JWT_SECRET || process.env.RAILWAY_JWT_SECRET || '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472';
-          console.log('Using JWT secret (first 10 chars):', jwtSecret.substring(0, 10));
-          console.log('JWT_SECRET env var:', process.env.JWT_SECRET ? 'Set' : 'Not set');
-          console.log('RAILWAY_JWT_SECRET env var:', process.env.RAILWAY_JWT_SECRET ? 'Set' : 'Not set');
-          
-          const token = jwt.sign(
-            { id: user.id, email: user.email, role: user.role },
-            jwtSecret,
-            { expiresIn: '30d' }
-          );
-          
-          console.log('Token generated successfully');
-          
-          res.json({
-            success: true,
-            data: {
-              user: {
-                id: user.id,
-                email: user.email,
-                username: user.username,
-                firstName: user.first_name,
-                lastName: user.last_name,
-                role: user.role
-              },
-              token
-            }
-          });
-        } else {
-          console.log('No user found in database');
-          res.status(404).json({
-            success: false,
-            error: {
-              code: 'USER_NOT_FOUND',
-              message: 'Admin user not found in database'
-            }
-          });
-        }
-      }).catch(dbError => {
-        console.error('Database error in emergency login:', dbError);
-        res.status(500).json({
-          success: false,
-          error: {
-            code: 'DB_ERROR',
-            message: dbError.message,
-            stack: dbError.stack
-          }
-        });
-      });
-    } else {
-      console.log('Invalid credentials provided');
-      res.status(401).json({
-        success: false,
-        error: {
-          code: 'INVALID_CREDENTIALS',
-          message: 'Invalid credentials',
-          received: { email, hasPassword: !!password }
         }
       });
     }
