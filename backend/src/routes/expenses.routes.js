@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const expensesController = require('../controllers/expenses.controller');
-const { authenticate, requirePermission } = require('../middleware/auth.middleware');
+const { authenticate } = require('../middleware/auth.middleware');
 const { validate } = require('../middleware/validation.middleware');
 
 // All routes require authentication
@@ -50,15 +50,15 @@ const reportValidation = [
 ];
 
 // Routes
-router.get('/stats', requirePermission('expenses'), expensesController.getStats);
-router.get('/categories', requirePermission('expenses'), expensesController.getCategories);
-router.get('/', requirePermission('expenses'), expensesController.getExpenses);
-router.get('/:id', requirePermission('expenses'), expensesController.getExpense);
-router.post('/', requirePermission('expenses'), createValidation, validate, expensesController.createExpense);
-router.post('/report', requirePermission('expenses'), reportValidation, validate, expensesController.generateReport);
-router.put('/:id', requirePermission('expenses'), updateValidation, validate, expensesController.updateExpense);
-router.post('/:id/receipt', requirePermission('expenses'), receiptValidation, validate, expensesController.uploadReceipt);
-router.patch('/:id/approve', requirePermission('expenses'), expensesController.approveExpense);
-router.delete('/:id', requirePermission('expenses'), expensesController.deleteExpense);
+router.get('/stats', expensesController.getStats);
+router.get('/categories', expensesController.getCategories);
+router.get('/', expensesController.getExpenses);
+router.get('/:id', expensesController.getExpense);
+router.post('/', createValidation, validate, expensesController.createExpense);
+router.post('/report', reportValidation, validate, expensesController.generateReport);
+router.put('/:id', updateValidation, validate, expensesController.updateExpense);
+router.post('/:id/receipt', receiptValidation, validate, expensesController.uploadReceipt);
+router.patch('/:id/approve', expensesController.approveExpense);
+router.delete('/:id', expensesController.deleteExpense);
 
 module.exports = router;

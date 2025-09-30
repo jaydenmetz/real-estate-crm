@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const uploadService = require('../services/upload.service');
 const Document = require('../models/Document');
-const { authenticate, requirePermission } = require('../middleware/auth.middleware');
+const { authenticate } = require('../middleware/auth.middleware');
 const logger = require('../utils/logger');
 
 // All routes require authentication
@@ -13,7 +13,7 @@ const documentUpload = uploadService.createUploadMiddleware('document').single('
 const imageUpload = uploadService.createUploadMiddleware('image').single('file');
 
 // Upload document endpoint
-router.post('/document', requirePermission('uploads'), (req, res) => {
+router.post('/document', (req, res) => {
   documentUpload(req, res, async (err) => {
     try {
       if (err) {
@@ -96,7 +96,7 @@ router.post('/document', requirePermission('uploads'), (req, res) => {
 });
 
 // Upload image endpoint
-router.post('/image', requirePermission('uploads'), (req, res) => {
+router.post('/image', (req, res) => {
   imageUpload(req, res, async (err) => {
     try {
       if (err) {
@@ -188,7 +188,7 @@ router.post('/image', requirePermission('uploads'), (req, res) => {
 });
 
 // Get uploaded file (for local storage)
-router.get('/:filename', requirePermission('uploads'), async (req, res) => {
+router.get('/:filename', async (req, res) => {
   try {
     const { filename } = req.params;
     
@@ -238,7 +238,7 @@ router.get('/:filename', requirePermission('uploads'), async (req, res) => {
 });
 
 // Get file metadata
-router.get('/metadata/:id', requirePermission('uploads'), async (req, res) => {
+router.get('/metadata/:id', async (req, res) => {
   try {
     const document = await Document.findById(req.params.id);
     
@@ -269,7 +269,7 @@ router.get('/metadata/:id', requirePermission('uploads'), async (req, res) => {
 });
 
 // Delete uploaded file
-router.delete('/:id', requirePermission('uploads'), async (req, res) => {
+router.delete('/:id', async (req, res) => {
   try {
     const document = await Document.findById(req.params.id);
     
@@ -314,7 +314,7 @@ router.delete('/:id', requirePermission('uploads'), async (req, res) => {
 });
 
 // Get upload statistics
-router.get('/stats/summary', requirePermission('uploads'), async (req, res) => {
+router.get('/stats/summary', async (req, res) => {
   try {
     const [stats, documentCount] = await Promise.all([
       uploadService.getUploadStats(),
@@ -341,7 +341,7 @@ router.get('/stats/summary', requirePermission('uploads'), async (req, res) => {
 });
 
 // List uploaded files with pagination
-router.get('/', requirePermission('uploads'), async (req, res) => {
+router.get('/', async (req, res) => {
   try {
     const {
       page = 1,

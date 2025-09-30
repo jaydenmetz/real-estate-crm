@@ -5,12 +5,10 @@ const { body, param, query } = require('express-validator');
 const router = express.Router();
 const escrowsController = require('../controllers/escrows.controller');
 const { authenticate } = require('../middleware/apiKey.middleware');
-const { requirePermission } = require('../middleware/auth.middleware');
 const { validate, escrowValidationRules, paginationValidationRules, idValidationRules } = require('../middleware/validation.middleware');
 
-// All routes require authentication and escrows permission
+// All routes require authentication
 router.use(authenticate);
-router.use(requirePermission('escrows'));
 
 // GET /v1/escrows?status&page&limit&minPrice&maxPrice&closingDateStart&closingDateEnd
 router.get(

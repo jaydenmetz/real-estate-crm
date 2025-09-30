@@ -39,7 +39,6 @@ const authenticateApiKey = async (req, res, next) => {
       teamName: userData.teamName,
       apiKeyId: userData.apiKeyId,
       scopes: userData.scopes || { all: ['read', 'write', 'delete'] },
-      permissions: userData.permissions, // Keep for backward compatibility
       authMethod: 'api_key'
     };
 
@@ -119,41 +118,6 @@ const authenticate = async (req, res, next) => {
   });
 };
 
-/**
- * Check if user has permission for specific resource and action
- * @deprecated Use requireScope instead
- */
-const requirePermission = (resource, action) => {
-  return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        error: {
-          code: 'UNAUTHORIZED',
-          message: 'Authentication required'
-        }
-      });
-    }
-
-    // If using JWT auth, allow all permissions (for now)
-    if (req.user.authMethod !== 'api_key') {
-      return next();
-    }
-
-    // Check API key permissions
-    if (!ApiKeyService.hasPermission(req.user.permissions, resource, action)) {
-      return res.status(403).json({
-        success: false,
-        error: {
-          code: 'FORBIDDEN',
-          message: `You do not have ${action} permission for ${resource}`
-        }
-      });
-    }
-
-    next();
-  };
-};
 
 /**
  * Check if user has required scope for resource and action
@@ -202,6 +166,5 @@ const requireScope = (resource, action) => {
 module.exports = {
   authenticateApiKey,
   authenticate,
-  requirePermission, // Deprecated - kept for backward compatibility
   requireScope
 };

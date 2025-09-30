@@ -90,7 +90,6 @@ class ApiKeyService {
         ak.user_id,
         ak.team_id,
         ak.scopes,
-        ak.permissions,
         ak.expires_at,
         ak.is_active,
         u.email,
@@ -142,8 +141,7 @@ class ApiKeyService {
       lastName: keyData.last_name,
       role: keyData.role,
       teamName: keyData.team_name,
-      scopes: keyData.scopes || { all: ['read', 'write', 'delete'] }, // Fallback for old keys
-      permissions: keyData.permissions // Keep for backward compatibility
+      scopes: keyData.scopes || { all: ['read', 'write', 'delete'] } // Fallback for old keys
     };
   }
 
@@ -219,15 +217,6 @@ class ApiKeyService {
     }
   }
 
-  /**
-   * Check if user has permission for specific action
-   */
-  static hasPermission(permissions, resource, action) {
-    if (!permissions || !permissions[resource]) {
-      return false;
-    }
-    return permissions[resource].includes(action);
-  }
 }
 
 module.exports = ApiKeyService;

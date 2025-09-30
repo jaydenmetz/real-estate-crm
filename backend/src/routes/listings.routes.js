@@ -3,7 +3,6 @@ const router = express.Router();
 const { body } = require('express-validator');
 const listingsController = require('../controllers/listings.controller');
 const { authenticate } = require('../middleware/apiKey.middleware');
-const { requirePermission } = require('../middleware/auth.middleware');
 const { validate } = require('../middleware/validation.middleware');
 
 // All routes require authentication
@@ -24,25 +23,25 @@ const updateValidation = [
 ];
 
 // Routes
-router.get('/', requirePermission('listings'), listingsController.getListings);
-router.get('/:id', requirePermission('listings'), listingsController.getListing);
-router.post('/', requirePermission('listings'), createValidation, validate, listingsController.createListing);
-router.put('/:id', requirePermission('listings'), updateValidation, validate, listingsController.updateListing);
+router.get('/', listingsController.getListings);
+router.get('/:id', listingsController.getListing);
+router.post('/', createValidation, validate, listingsController.createListing);
+router.put('/:id', updateValidation, validate, listingsController.updateListing);
 
 // Archive and Delete endpoints - Added for health dashboard testing
 // Archive endpoint: Soft deletes by setting deleted_at timestamp
-router.put('/:id/archive', requirePermission('listings'), listingsController.archiveListing);
+router.put('/:id/archive', listingsController.archiveListing);
 // Delete endpoint: Hard delete - only works if listing is already archived
-router.delete('/:id', requirePermission('listings'), listingsController.deleteListing);
+router.delete('/:id', listingsController.deleteListing);
 // Batch delete endpoint: Delete multiple archived listings
-router.post('/batch-delete', requirePermission('listings'),
+router.post('/batch-delete',
   body('ids').isArray({ min: 1 }).withMessage('IDs must be a non-empty array'),
   body('ids.*').isString().withMessage('Each ID must be a string'),
   validate,
   listingsController.batchDeleteListings
 );
 
-router.post('/:id/price-reduction', requirePermission('listings'), listingsController.recordPriceChange);
-router.post('/:id/showings', requirePermission('listings'), listingsController.logShowing);
+router.post('/:id/price-reduction', listingsController.recordPriceChange);
+router.post('/:id/showings', listingsController.logShowing);
 
 module.exports = router;

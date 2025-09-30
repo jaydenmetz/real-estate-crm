@@ -3,7 +3,6 @@ const router = express.Router();
 const { body } = require('express-validator');
 const leadsController = require('../controllers/leads.controller');
 const { authenticate } = require('../middleware/apiKey.middleware');
-const { requirePermission } = require('../middleware/auth.middleware');
 const { validate } = require('../middleware/validation.middleware');
 
 // All routes require authentication
@@ -27,20 +26,20 @@ const updateValidation = [
 ];
 
 // Routes
-router.get('/', requirePermission('leads'), leadsController.getLeads);
-router.get('/:id', requirePermission('leads'), leadsController.getLead);
-router.post('/', requirePermission('leads'), createValidation, validate, leadsController.createLead);
-router.put('/:id', requirePermission('leads'), updateValidation, validate, leadsController.updateLead);
-router.post('/:id/convert', requirePermission('leads'), leadsController.convertToClient);
-router.post('/:id/activities', requirePermission('leads'), leadsController.recordActivity);
+router.get('/', leadsController.getLeads);
+router.get('/:id', leadsController.getLead);
+router.post('/', createValidation, validate, leadsController.createLead);
+router.put('/:id', updateValidation, validate, leadsController.updateLead);
+router.post('/:id/convert', leadsController.convertToClient);
+router.post('/:id/activities', leadsController.recordActivity);
 
 // Archive and Delete endpoints - Added for health dashboard testing
 // Archive endpoint: Soft deletes by setting status to 'archived'
-router.put('/:id/archive', requirePermission('leads'), leadsController.archiveLead);
+router.put('/:id/archive', leadsController.archiveLead);
 // Delete endpoint: Hard delete
-router.delete('/:id', requirePermission('leads'), leadsController.deleteLead);
+router.delete('/:id', leadsController.deleteLead);
 // Batch delete endpoint: Delete multiple archived leads
-router.post('/batch-delete', requirePermission('leads'),
+router.post('/batch-delete',
   body('ids').isArray({ min: 1 }).withMessage('IDs must be a non-empty array'),
   body('ids.*').isString().withMessage('Each ID must be a string'),
   validate,
