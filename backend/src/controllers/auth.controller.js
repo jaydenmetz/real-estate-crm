@@ -194,7 +194,9 @@ class AuthController {
       }
 
       // Verify password
+      console.log('[LOGIN] Verifying password for user:', user.email);
       const isPasswordValid = await bcrypt.compare(password, user.password_hash);
+      console.log('[LOGIN] Password valid:', isPasswordValid);
 
       if (!isPasswordValid) {
         // Increment failed attempts and lock if threshold reached
@@ -235,6 +237,7 @@ class AuthController {
       }
 
       // Successful login - reset failed attempts and update last login
+      console.log('[LOGIN] Password valid, updating last_login for user:', user.id);
       await pool.query(`
         UPDATE users
         SET
@@ -245,6 +248,7 @@ class AuthController {
       `, [user.id]);
 
       // Generate JWT access token
+      console.log('[LOGIN] Generating JWT token for user:', user.email);
       const accessToken = jwt.sign(
         {
           id: user.id,
@@ -256,6 +260,7 @@ class AuthController {
       );
 
       // Create refresh token with device info
+      console.log('[LOGIN] Creating refresh token for user:', user.id);
       const ipAddress = req.ip || req.connection.remoteAddress;
       const userAgent = req.headers['user-agent'] || 'Unknown';
       const deviceInfo = {
@@ -263,14 +268,17 @@ class AuthController {
         ip: ipAddress
       };
 
+      console.log('[LOGIN] Calling RefreshTokenService.createRefreshToken...');
       const refreshToken = await RefreshTokenService.createRefreshToken(
         user.id,
         ipAddress,
         userAgent,
         deviceInfo
       );
+      console.log('[LOGIN] Refresh token created:', refreshToken.id);
 
       // Log successful login (fire-and-forget)
+      console.log('[LOGIN] Logging security event (fire-and-forget)...');
       SecurityEventService.logLoginSuccess(req, user).catch(console.error);
 
       // Set refresh token as httpOnly cookie
@@ -303,13 +311,20 @@ class AuthController {
       });
       
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('Login error:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+
+      // Return detailed error for debugging
       res.status(500).json({
         success: false,
         error: {
           code: 'LOGIN_ERROR',
           message: 'Failed to login',
-          details: error.message
+          details: error.message,
+          stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         }
       });
     }
