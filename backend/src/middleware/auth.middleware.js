@@ -2,19 +2,13 @@ const jwt = require('jsonwebtoken');
 const { pool } = require('../config/database');
 
 // JWT Secret Configuration
-// Priority: Environment variable > Fallback (for backward compatibility during migration)
-const jwtSecret = process.env.JWT_SECRET ||
-  '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472';
-
-// OLD exposed secret for temporary backward compatibility during migration
-const legacyJwtSecret = '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472';
-
-// Log which secret source is being used (helps with debugging)
-if (process.env.JWT_SECRET) {
-  console.log('✅ Using JWT_SECRET from environment variable');
-} else {
-  console.warn('⚠️  WARNING: Using fallback JWT_SECRET. Set JWT_SECRET environment variable for production!');
+// MUST be set in environment - no fallback for security
+if (!process.env.JWT_SECRET) {
+  throw new Error('FATAL: JWT_SECRET environment variable is required');
 }
+
+const jwtSecret = process.env.JWT_SECRET;
+console.log('✅ Using JWT_SECRET from environment variable');
 
 /**
  * Authenticate user via JWT token
@@ -37,24 +31,8 @@ const authenticate = async (req, res, next) => {
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
     try {
-      // Try verifying with primary secret first
-      let decoded;
-      try {
-        decoded = jwt.verify(token, jwtSecret);
-      } catch (primaryError) {
-        // If primary verification fails and we have a different legacy secret, try that
-        if (process.env.JWT_SECRET && primaryError.name === 'JsonWebTokenError') {
-          try {
-            decoded = jwt.verify(token, legacyJwtSecret);
-            console.log('⚠️  Token verified with legacy secret - user should re-login soon');
-          } catch (legacyError) {
-            // Both failed, throw the original error
-            throw primaryError;
-          }
-        } else {
-          throw primaryError;
-        }
-      }
+      // Verify token with configured secret
+      const decoded = jwt.verify(token, jwtSecret);
 
       // Get user from database
       const userQuery = `

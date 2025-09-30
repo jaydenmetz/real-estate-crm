@@ -3,8 +3,12 @@ const jwt = require('jsonwebtoken');
 const { pool } = require('../config/database');
 
 // JWT Secret Configuration (matches auth.middleware.js)
-const jwtSecret = process.env.JWT_SECRET ||
-  '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472';
+// MUST be set in environment - no fallback for security
+if (!process.env.JWT_SECRET) {
+  throw new Error('FATAL: JWT_SECRET environment variable is required');
+}
+
+const jwtSecret = process.env.JWT_SECRET;
 
 // JWT expiry from environment or defaults
 const jwtAccessExpiry = process.env.JWT_ACCESS_TOKEN_EXPIRY || '15m';
