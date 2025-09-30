@@ -337,12 +337,27 @@ await SecurityEventService.logLoginSuccess(req, user);
 Based on the elite engineering audit of Phase 5, the following sub-phases address the 20 immediate action items:
 
 #### Phase 5.1: Fix & Stabilize (CRITICAL - Today)
-**Status:** 🔄 IN PROGRESS
+**Status:** 🚨 **BLOCKED - Railway Not Deploying**
 **Goal:** Make Phase 5 production-ready and fully functional
 
+**CRITICAL BLOCKER IDENTIFIED:**
+Railway auto-deploy from GitHub has stopped working. Production is running outdated code (commit `8430616`) with blocking `await` bug. All fixes committed in last 90 minutes (6 commits) have NOT deployed.
+
+**Evidence:**
+- Test endpoint `/test-simple` missing `deployVersion` field (added in commit `7294b10`)
+- Production login still returns INTERNAL_ERROR despite fire-and-forget fix (commit `2d4d0cd`)
+- Error handler improvements not reflected in responses
+
+**Required User Action:**
+1. Log into Railway dashboard at https://railway.app
+2. Check deployment logs for build/deploy errors
+3. Manually trigger deployment of latest commit (`7294b10` or later)
+4. Verify `/test-simple` shows deployVersion field
+5. Test login works
+
 **Tasks:**
-1. ✅ Verify Railway deployment of fire-and-forget fix
-2. 🔄 Test successful login works without INTERNAL_ERROR
+1. 🚨 **BLOCKER:** Fix Railway deployment pipeline
+2. ⏳ Test successful login works without INTERNAL_ERROR
 3. ✅ Verify events are being logged to database
 4. ❌ Write integration tests for login → event logging pipeline
 5. ❌ Add `/v1/security-events/health` endpoint
