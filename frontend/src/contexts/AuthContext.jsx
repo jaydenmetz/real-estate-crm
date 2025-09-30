@@ -124,6 +124,30 @@ export const AuthProvider = ({ children }) => {
     };
   }, []);
 
+  // Auto-refresh token before it expires
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    // Check if token needs refresh every 10 minutes
+    const refreshInterval = setInterval(async () => {
+      if (authService.isTokenExpiringSoon()) {
+        try {
+          const result = await authService.refreshAccessToken();
+          if (!result.success) {
+            console.warn('Token refresh failed:', result.error);
+            // If refresh fails, user will be logged out on next API call
+          } else {
+            console.log('✅ Token refreshed successfully');
+          }
+        } catch (error) {
+          console.error('Auto-refresh error:', error);
+        }
+      }
+    }, 10 * 60 * 1000); // Check every 10 minutes
+
+    return () => clearInterval(refreshInterval);
+  }, [isAuthenticated]);
+
   // Login function
   const login = useCallback((userData) => {
     setUser(userData);

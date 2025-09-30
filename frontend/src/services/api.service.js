@@ -112,12 +112,31 @@ class ApiService {
             hasApiKey: !!this.apiKey,
             status: response.status
           });
-          
+
           // Don't redirect if we're already on the login page, calling auth endpoints, or api-keys
           const isAuthEndpoint = url.includes('/auth/');
+          const isRefreshEndpoint = url.includes('/auth/refresh');
           const isApiKeysEndpoint = url.includes('/api-keys');
           const isLoginPage = window.location.pathname === '/login';
           const isSettingsPage = window.location.pathname === '/settings';
+
+          // Try to refresh token if we have JWT (not API key) and not already refreshing
+          if (!isAuthEndpoint && !isApiKeysEndpoint && this.token && !this.apiKey && !options._isRetry) {
+            try {
+              // Import authService dynamically to avoid circular dependency
+              const authService = (await import('./auth.service')).default;
+              const refreshResult = await authService.refreshAccessToken();
+
+              if (refreshResult.success) {
+                console.log('✅ Token refreshed, retrying request');
+                // Retry the original request with new token
+                options._isRetry = true;
+                return this.request(endpoint, options);
+              }
+            } catch (refreshError) {
+              console.error('Token refresh failed:', refreshError);
+            }
+          }
 
           // Only redirect to login for true authentication failures, not missing endpoints
           if (!isAuthEndpoint && !isApiKeysEndpoint && !isLoginPage && !isSettingsPage) {
@@ -125,12 +144,13 @@ class ApiService {
             localStorage.removeItem('authToken');
             localStorage.removeItem('apiKey');
             localStorage.removeItem('user');
+            localStorage.removeItem('tokenExpiry');
             // Redirect to login page after a brief delay
             setTimeout(() => {
               window.location.href = '/login';
             }, 100);
           }
-          
+
           // Throw auth error
           const authError = new Error('Authentication required');
           authError.status = 401;

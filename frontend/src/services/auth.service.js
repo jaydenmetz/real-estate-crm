@@ -91,32 +91,41 @@ class AuthService {
       });
 
       if (response.success && response.data) {
-        const { token, user } = response.data;
-        
+        // Support both old 'token' and new 'accessToken' fields for backward compatibility
+        const { token, accessToken, user, expiresIn } = response.data;
+        const authToken = accessToken || token;
+
         // Store token and user data
-        this.token = token;
+        this.token = authToken;
         this.user = user;
-        
-        // Save to localStorage for persistence
-        localStorage.setItem(TOKEN_KEY, token);
+
+        // Save access token to localStorage for persistence
+        // Note: Refresh token is automatically stored in httpOnly cookie by backend
+        localStorage.setItem(TOKEN_KEY, authToken);
         localStorage.setItem(USER_KEY, JSON.stringify(user));
-        
+
+        // Store token expiry time for auto-refresh logic
+        if (expiresIn) {
+          const expiryTime = Date.now() + this.parseExpiry(expiresIn);
+          localStorage.setItem('tokenExpiry', expiryTime.toString());
+        }
+
         // Set auth header
-        apiInstance.setToken(token);
-        
+        apiInstance.setToken(authToken);
+
         // If user has an API key, store it
         if (user?.apiKey) {
           this.apiKey = user.apiKey;
           localStorage.setItem(API_KEY_KEY, user.apiKey);
           apiInstance.setApiKey(user.apiKey);
         }
-        
+
         return {
           success: true,
           user: user
         };
       }
-      
+
       return {
         success: false,
         error: response.error || 'Login failed'
@@ -128,6 +137,72 @@ class AuthService {
         error: error.message || 'Network error during login'
       };
     }
+  }
+
+  // Parse expiry string (e.g., "15m", "7d") to milliseconds
+  parseExpiry(expiresIn) {
+    const match = expiresIn.match(/^(\d+)([smhd])$/);
+    if (!match) return 15 * 60 * 1000; // Default 15 minutes
+
+    const value = parseInt(match[1]);
+    const unit = match[2];
+
+    switch (unit) {
+      case 's': return value * 1000;
+      case 'm': return value * 60 * 1000;
+      case 'h': return value * 60 * 60 * 1000;
+      case 'd': return value * 24 * 60 * 60 * 1000;
+      default: return 15 * 60 * 1000;
+    }
+  }
+
+  // Refresh access token using refresh token (stored in httpOnly cookie)
+  async refreshAccessToken() {
+    try {
+      const response = await apiInstance.post('/auth/refresh', {});
+
+      if (response.success && response.data) {
+        const { accessToken, expiresIn } = response.data;
+
+        // Update token
+        this.token = accessToken;
+        localStorage.setItem(TOKEN_KEY, accessToken);
+
+        // Update expiry time
+        if (expiresIn) {
+          const expiryTime = Date.now() + this.parseExpiry(expiresIn);
+          localStorage.setItem('tokenExpiry', expiryTime.toString());
+        }
+
+        // Set auth header
+        apiInstance.setToken(accessToken);
+
+        return {
+          success: true,
+          token: accessToken
+        };
+      }
+
+      return {
+        success: false,
+        error: response.error || 'Token refresh failed'
+      };
+    } catch (error) {
+      console.error('Token refresh error:', error);
+      return {
+        success: false,
+        error: error.message || 'Network error during token refresh'
+      };
+    }
+  }
+
+  // Check if token is about to expire (within 2 minutes)
+  isTokenExpiringSoon() {
+    const expiryTime = localStorage.getItem('tokenExpiry');
+    if (!expiryTime) return false;
+
+    const timeUntilExpiry = parseInt(expiryTime) - Date.now();
+    return timeUntilExpiry < 2 * 60 * 1000; // Less than 2 minutes
   }
 
   // Logout user
@@ -146,6 +221,7 @@ class AuthService {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     localStorage.removeItem(API_KEY_KEY);
+    localStorage.removeItem('tokenExpiry');  // Clear token expiry
     localStorage.removeItem('crm_auth_token');  // Clear old key
     localStorage.removeItem('crm_user_data');  // Clear old key
     localStorage.removeItem('crm_api_key');  // Clear old key
