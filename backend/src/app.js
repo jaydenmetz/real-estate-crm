@@ -127,8 +127,7 @@ app.use((req, res, next) => {
 app.get('/test-simple', (req, res) => {
   res.json({
     status: 'ok',
-    time: new Date().toISOString(),
-    deployVersion: 'v5.1-debug-logging-2025-09-30T21:28'
+    time: new Date().toISOString()
   });
 });
 

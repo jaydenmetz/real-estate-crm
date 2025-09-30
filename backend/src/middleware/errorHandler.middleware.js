@@ -11,9 +11,9 @@ module.exports = (err, req, res, next) => {
   });
 
   const status = err.status || err.statusCode || 500;
-
-  // TEMPORARY: Always show error message to debug production issue
-  const message = err.message || 'An internal error occurred';
+  const message = process.env.NODE_ENV === 'production'
+    ? 'An internal error occurred'
+    : err.message;
 
   const errorResponse = {
     success: false,

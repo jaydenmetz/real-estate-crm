@@ -1,8 +1,0 @@
-{
-  "dependencies": {
-    "babylonjs": "^5.57.1",
-    "babylonjs-gui": "^5.57.1",
-    "glob": "^11.0.3",
-    "socket.io-client": "^4.8.1"
-  }
-}
