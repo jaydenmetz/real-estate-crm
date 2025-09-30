@@ -4,6 +4,7 @@ const express = require('express');
 const helmet = require('helmet');
 const compression = require('compression');
 const cors = require('cors');
+const cookieParser = require('cookie-parser');
 const Sentry = require('@sentry/node');
 const { apiLimiter, authLimiter, strictLimiter, healthCheckLimiter, helmet: helmetConfig } = require('./middleware/security.middleware');
 const { escrowValidationRules, validate, sanitizeRequestBody } = require('./middleware/validation.middleware');
@@ -89,12 +90,13 @@ app.use(cors(corsOptions));
 // IMPORTANT: Handle preflight OPTIONS requests
 app.options('*', cors(corsOptions));
 
-app.use(express.json({ 
+app.use(cookieParser()); // Parse cookies for refresh tokens
+app.use(express.json({
   limit: '10mb',
   type: ['application/json', 'text/plain']
 }));
-app.use(express.urlencoded({ 
-  extended: true, 
+app.use(express.urlencoded({
+  extended: true,
   limit: '10mb' 
 }));
 

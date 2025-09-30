@@ -1,6 +1,7 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { pool } = require('../config/database');
+const RefreshTokenService = require('../services/refreshToken.service');
 
 // JWT Secret Configuration (matches auth.middleware.js)
 // MUST be set in environment - no fallback for security
@@ -349,8 +350,8 @@ class AuthController {
         [user.id]
       );
 
-      // Generate JWT token
-      const token = jwt.sign(
+      // Generate JWT access token
+      const accessToken = jwt.sign(
         {
           id: user.id,
           email: user.email,
@@ -359,7 +360,30 @@ class AuthController {
         jwtSecret,
         { expiresIn: jwtAccessExpiry }
       );
-      
+
+      // Create refresh token with device info
+      const ipAddress = req.ip || req.connection.remoteAddress;
+      const userAgent = req.headers['user-agent'] || 'Unknown';
+      const deviceInfo = {
+        browser: userAgent,
+        ip: ipAddress
+      };
+
+      const refreshToken = await RefreshTokenService.createRefreshToken(
+        user.id,
+        ipAddress,
+        userAgent,
+        deviceInfo
+      );
+
+      // Set refresh token as httpOnly cookie
+      res.cookie('refreshToken', refreshToken.token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+      });
+
       res.json({
         success: true,
         data: {
@@ -372,7 +396,9 @@ class AuthController {
             role: user.role,
             isActive: user.is_active
           },
-          token
+          token: accessToken, // Keep 'token' for backward compatibility
+          accessToken,
+          expiresIn: jwtAccessExpiry
         },
         message: 'Login successful'
       });
@@ -719,15 +745,185 @@ class AuthController {
   }
 
   /**
-   * Logout (optional - mainly for token blacklisting if implemented)
+   * Refresh access token using refresh token
+   * POST /auth/refresh
+   */
+  static async refresh(req, res) {
+    try {
+      const refreshToken = req.cookies.refreshToken;
+
+      if (!refreshToken) {
+        return res.status(401).json({
+          success: false,
+          error: {
+            code: 'NO_REFRESH_TOKEN',
+            message: 'No refresh token provided'
+          }
+        });
+      }
+
+      // Validate refresh token
+      const tokenData = await RefreshTokenService.validateRefreshToken(refreshToken);
+
+      if (!tokenData) {
+        return res.status(401).json({
+          success: false,
+          error: {
+            code: 'INVALID_REFRESH_TOKEN',
+            message: 'Invalid or expired refresh token'
+          }
+        });
+      }
+
+      // Generate new access token
+      const accessToken = jwt.sign(
+        {
+          id: tokenData.id,
+          email: tokenData.email,
+          role: tokenData.role
+        },
+        jwtSecret,
+        { expiresIn: jwtAccessExpiry }
+      );
+
+      // Optional: Rotate refresh token for enhanced security
+      const ipAddress = req.ip || req.connection.remoteAddress;
+      const userAgent = req.headers['user-agent'] || 'Unknown';
+
+      const newRefreshToken = await RefreshTokenService.rotateRefreshToken(
+        refreshToken,
+        tokenData.id,
+        ipAddress,
+        userAgent
+      );
+
+      // Update cookie with new refresh token
+      res.cookie('refreshToken', newRefreshToken.token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000
+      });
+
+      res.json({
+        success: true,
+        data: {
+          accessToken,
+          expiresIn: jwtAccessExpiry
+        }
+      });
+
+    } catch (error) {
+      console.error('Refresh token error:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'REFRESH_ERROR',
+          message: 'Failed to refresh token'
+        }
+      });
+    }
+  }
+
+  /**
+   * Logout - revoke current refresh token
+   * POST /auth/logout
    */
   static async logout(req, res) {
-    // In a stateless JWT system, logout is handled client-side
-    // This endpoint can be used for token blacklisting if needed
-    res.json({
-      success: true,
-      message: 'Logged out successfully'
-    });
+    try {
+      const refreshToken = req.cookies.refreshToken;
+
+      if (refreshToken) {
+        await RefreshTokenService.revokeRefreshToken(refreshToken);
+      }
+
+      // Clear refresh token cookie
+      res.clearCookie('refreshToken');
+
+      res.json({
+        success: true,
+        message: 'Logged out successfully'
+      });
+
+    } catch (error) {
+      console.error('Logout error:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'LOGOUT_ERROR',
+          message: 'Failed to logout'
+        }
+      });
+    }
+  }
+
+  /**
+   * Logout from all devices - revoke all user refresh tokens
+   * POST /auth/logout-all
+   * Requires authentication
+   */
+  static async logoutAll(req, res) {
+    try {
+      const userId = req.user.id;
+
+      await RefreshTokenService.revokeAllUserTokens(userId);
+
+      // Clear refresh token cookie
+      res.clearCookie('refreshToken');
+
+      res.json({
+        success: true,
+        message: 'Logged out from all devices successfully'
+      });
+
+    } catch (error) {
+      console.error('Logout all error:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'LOGOUT_ALL_ERROR',
+          message: 'Failed to logout from all devices'
+        }
+      });
+    }
+  }
+
+  /**
+   * Get active sessions for current user
+   * GET /auth/sessions
+   * Requires authentication
+   */
+  static async getSessions(req, res) {
+    try {
+      const userId = req.user.id;
+
+      const sessions = await RefreshTokenService.getUserTokens(userId);
+
+      res.json({
+        success: true,
+        data: {
+          sessions: sessions.map(session => ({
+            id: session.id,
+            createdAt: session.created_at,
+            expiresAt: session.expires_at,
+            ipAddress: session.ip_address,
+            userAgent: session.user_agent,
+            deviceInfo: session.device_info,
+            isCurrent: req.cookies.refreshToken === session.token
+          }))
+        }
+      });
+
+    } catch (error) {
+      console.error('Get sessions error:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'GET_SESSIONS_ERROR',
+          message: 'Failed to retrieve sessions'
+        }
+      });
+    }
   }
 }
 
