@@ -131,6 +131,25 @@ app.get('/test-simple', (req, res) => {
   });
 });
 
+// Test SecurityEventService availability
+app.get('/test-security-service', (req, res) => {
+  try {
+    const SecurityEventService = require('./services/securityEvent.service');
+    res.json({
+      status: 'ok',
+      securityServiceAvailable: typeof SecurityEventService !== 'undefined',
+      hasLogLoginSuccess: typeof SecurityEventService.logLoginSuccess === 'function',
+      hasMethods: Object.getOwnPropertyNames(SecurityEventService).filter(name => typeof SecurityEventService[name] === 'function')
+    });
+  } catch (error) {
+    res.status(500).json({
+      status: 'error',
+      error: error.message,
+      stack: error.stack
+    });
+  }
+});
+
 app.get('/health', (req, res) => {
   const healthData = {
     status: 'healthy',
