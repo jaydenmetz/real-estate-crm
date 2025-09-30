@@ -150,11 +150,11 @@ class ApiKeyService {
    */
   static async listUserApiKeys(userId) {
     const result = await pool.query(`
-      SELECT 
+      SELECT
         id,
         name,
         key_prefix,
-        permissions,
+        scopes,
         last_used_at,
         expires_at,
         is_active,
