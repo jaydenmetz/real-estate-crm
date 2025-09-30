@@ -182,15 +182,16 @@ exports.createClient = async (req, res) => {
     // Create contact first
     const contactQuery = `
       INSERT INTO contacts (
-        first_name, last_name, email, phone,
+        contact_type, first_name, last_name, email, phone,
         address_street, address_city, address_state, address_zip,
         notes, tags, team_id, created_at, updated_at
       ) VALUES (
-        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW(), NOW()
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW()
       ) RETURNING id
     `;
 
     const contactValues = [
+      clientType.toLowerCase(), // contact_type: 'buyer', 'seller', 'client'
       firstName,
       lastName,
       email,
