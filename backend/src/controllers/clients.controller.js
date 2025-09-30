@@ -3,9 +3,10 @@ const logger = require('../utils/logger');
 const { validationResult } = require('express-validator');
 const emailService = require('../services/email.service');
 const { validateEmail, validatePhone } = require('../utils/validators');
+const { pool } = require('../config/database');
 
 // GET /api/v1/clients
-exports.getClients = async (req, res) => {
+exports.getAllClients = async (req, res) => {
   try {
     const {
       type,
@@ -143,7 +144,7 @@ exports.getClients = async (req, res) => {
 };
 
 // GET /api/v1/clients/:id
-exports.getClient = async (req, res) => {
+exports.getClientById = async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -830,6 +831,77 @@ exports.linkToProperty = async (req, res) => {
         details: error.message
       }
     });
+  }
+};
+
+// POST /api/v1/clients/batch-delete
+exports.batchDeleteClients = async (req, res) => {
+  const client = await pool.connect();
+  try {
+    const { ids } = req.body;
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_REQUEST',
+          message: 'IDs must be a non-empty array'
+        }
+      });
+    }
+
+    await client.query('BEGIN');
+
+    // Check which clients exist and are archived
+    const checkQuery = `
+      SELECT cl.id
+      FROM clients cl
+      JOIN contacts co ON cl.contact_id = co.id
+      WHERE cl.id = ANY($1) AND cl.status = 'archived'
+    `;
+    const existResult = await client.query(checkQuery, [ids]);
+
+    if (existResult.rows.length === 0) {
+      await client.query('COMMIT');
+      return res.json({
+        success: true,
+        message: 'No clients found to delete',
+        deletedCount: 0,
+        deletedIds: []
+      });
+    }
+
+    const existingIds = existResult.rows.map(row => row.id);
+
+    // Delete clients
+    const deleteQuery = `
+      DELETE FROM clients
+      WHERE id = ANY($1)
+      RETURNING id
+    `;
+    const deleteResult = await client.query(deleteQuery, [existingIds]);
+
+    await client.query('COMMIT');
+
+    res.json({
+      success: true,
+      message: `Successfully deleted ${deleteResult.rowCount} clients`,
+      deletedCount: deleteResult.rowCount,
+      deletedIds: deleteResult.rows.map(row => row.id)
+    });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('Batch delete clients error:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'DELETE_ERROR',
+        message: 'Failed to delete clients',
+        details: error.message
+      }
+    });
+  } finally {
+    client.release();
   }
 };
 

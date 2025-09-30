@@ -513,6 +513,56 @@ exports.updateAppointment = async (req, res) => {
   }
 };
 
+// Archive appointment - soft delete by setting status to 'cancelled'
+exports.archiveAppointment = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const archivedAppointment = await Appointment.findByIdAndUpdate(
+      id,
+      {
+        status: 'cancelled',
+        archivedAt: new Date(),
+        updatedAt: new Date()
+      },
+      { new: true }
+    );
+
+    if (!archivedAppointment) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Appointment not found'
+        }
+      });
+    }
+
+    // Emit real-time update if socket.io is configured
+    const io = req.app.get('io');
+    if (io) {
+      io.to('appointments').emit('appointment:archived', { id });
+    }
+
+    res.json({
+      success: true,
+      data: archivedAppointment,
+      message: 'Appointment archived successfully',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('Error archiving appointment:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'ARCHIVE_ERROR',
+        message: 'Failed to archive appointment',
+        details: error.message
+      }
+    });
+  }
+};
+
 // DELETE /api/v1/appointments/:id
 exports.deleteAppointment = async (req, res) => {
   try {

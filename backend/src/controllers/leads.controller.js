@@ -569,6 +569,56 @@ exports.updateLead = async (req, res) => {
   }
 };
 
+// Archive lead - soft delete by setting status to 'Archived'
+exports.archiveLead = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const archivedLead = await Lead.findByIdAndUpdate(
+      id,
+      {
+        status: 'Archived',
+        archivedAt: new Date(),
+        updatedAt: new Date()
+      },
+      { new: true }
+    );
+
+    if (!archivedLead) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Lead not found'
+        }
+      });
+    }
+
+    // Emit real-time update if socket.io is configured
+    const io = req.app.get('io');
+    if (io) {
+      io.to('leads').emit('lead:archived', { id });
+    }
+
+    res.json({
+      success: true,
+      data: archivedLead,
+      message: 'Lead archived successfully',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('Error archiving lead:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'ARCHIVE_ERROR',
+        message: 'Failed to archive lead',
+        details: error.message
+      }
+    });
+  }
+};
+
 // DELETE /api/v1/leads/:id
 exports.deleteLead = async (req, res) => {
   try {
