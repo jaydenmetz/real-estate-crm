@@ -4,10 +4,6 @@ const AuthController = require('../controllers/auth.controller');
 const { authenticate } = require('../middleware/auth.middleware');
 
 // Public routes
-router.get('/test', AuthController.test);
-router.post('/simple-login', AuthController.simpleLogin);
-router.post('/debug-login', AuthController.debugLogin);
-router.post('/emergency-login', AuthController.emergencyLogin);
 router.post('/register', AuthController.register);
 router.post('/login', AuthController.login);
 router.post('/refresh', AuthController.refresh); // Refresh access token (uses httpOnly cookie)
