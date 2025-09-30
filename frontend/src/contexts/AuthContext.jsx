@@ -20,7 +20,6 @@ export const AuthProvider = ({ children }) => {
   // Track last verification time to prevent excessive API calls
   const lastVerifyRef = useRef(0);
   const VERIFY_COOLDOWN = 5 * 60 * 1000; // 5 minutes between verifications
-  const FOCUS_DEBOUNCE = 30 * 1000; // 30 seconds minimum between focus verifications
 
   // Verify token on mount and when returning to app
   useEffect(() => {
@@ -82,22 +81,7 @@ export const AuthProvider = ({ children }) => {
     // Initial verification
     verifyAuth(true);
 
-    // Re-verify when window regains focus (but not too often)
-    let focusTimeout;
-    const handleFocus = () => {
-      // Clear any pending timeout
-      if (focusTimeout) clearTimeout(focusTimeout);
-
-      // Debounce focus events to prevent rapid-fire verifications
-      focusTimeout = setTimeout(() => {
-        const now = Date.now();
-        if (authService.isAuthenticated() && now - lastVerifyRef.current >= FOCUS_DEBOUNCE) {
-          verifyAuth();
-        }
-      }, 1000); // Wait 1 second after focus before verifying
-    };
-
-    // Only verify on visibility change (tab switch), not regular focus
+    // Verify on visibility change (when user returns to tab)
     const handleVisibilityChange = () => {
       if (!document.hidden && authService.isAuthenticated()) {
         const now = Date.now();
@@ -107,20 +91,10 @@ export const AuthProvider = ({ children }) => {
       }
     };
 
-    // Use visibility API instead of focus for better control
     document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    // Periodic verification every 15 minutes while active
-    const intervalId = setInterval(() => {
-      if (!document.hidden && authService.isAuthenticated()) {
-        verifyAuth();
-      }
-    }, 15 * 60 * 1000); // 15 minutes
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
-      if (focusTimeout) clearTimeout(focusTimeout);
-      clearInterval(intervalId);
     };
   }, []);
 

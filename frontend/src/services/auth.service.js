@@ -41,26 +41,34 @@ class AuthService {
       const response = await apiInstance.post('/auth/register', userData);
 
       if (response.success && response.data) {
-        const { token, user } = response.data;
-        
+        // Support both old 'token' and new 'accessToken' fields for backward compatibility
+        const { token, accessToken, user, expiresIn } = response.data;
+        const authToken = accessToken || token;
+
         // Store token and user data
-        this.token = token;
+        this.token = authToken;
         this.user = user;
-        
-        // Save to localStorage for persistence
-        localStorage.setItem(TOKEN_KEY, token);
+
+        // Save access token to localStorage for persistence
+        localStorage.setItem(TOKEN_KEY, authToken);
         localStorage.setItem(USER_KEY, JSON.stringify(user));
-        
+
+        // Store token expiry time for auto-refresh logic
+        if (expiresIn) {
+          const expiryTime = Date.now() + this.parseExpiry(expiresIn);
+          localStorage.setItem('tokenExpiry', expiryTime.toString());
+        }
+
         // Set auth header
-        apiInstance.setToken(token);
-        
+        apiInstance.setToken(authToken);
+
         // If user has an API key, store it
         if (user?.apiKey) {
           this.apiKey = user.apiKey;
           localStorage.setItem(API_KEY_KEY, user.apiKey);
           apiInstance.setApiKey(user.apiKey);
         }
-        
+
         return {
           success: true,
           user: user,
