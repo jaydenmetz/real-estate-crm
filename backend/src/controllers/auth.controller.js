@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { pool } = require('../config/database');
 const RefreshTokenService = require('../services/refreshToken.service');
+const SecurityEventService = require('../services/securityEvent.service');
 
 // JWT Secret Configuration (matches auth.middleware.js)
 // MUST be set in environment - no fallback for security
@@ -178,6 +179,10 @@ class AuthController {
       // Check if account is locked
       if (user.locked_until && new Date(user.locked_until) > new Date()) {
         const minutesLeft = Math.ceil((new Date(user.locked_until) - new Date()) / 60000);
+
+        // Log attempt to access locked account
+        await SecurityEventService.logLockedAccountAttempt(req, user, minutesLeft);
+
         return res.status(423).json({
           success: false,
           error: {
@@ -193,7 +198,7 @@ class AuthController {
 
       if (!isPasswordValid) {
         // Increment failed attempts and lock if threshold reached
-        await pool.query(`
+        const updateResult = await pool.query(`
           UPDATE users
           SET
             failed_login_attempts = failed_login_attempts + 1,
@@ -202,7 +207,23 @@ class AuthController {
               ELSE NULL
             END
           WHERE id = $1
+          RETURNING failed_login_attempts, locked_until
         `, [user.id]);
+
+        const updatedUser = updateResult.rows[0];
+
+        // Log failed login attempt
+        await SecurityEventService.logLoginFailed(req, loginEmail, 'Invalid credentials');
+
+        // If account was just locked, log that event
+        if (updatedUser.locked_until) {
+          await SecurityEventService.logAccountLocked(
+            req,
+            user,
+            updatedUser.locked_until,
+            updatedUser.failed_login_attempts
+          );
+        }
 
         return res.status(401).json({
           success: false,
@@ -248,6 +269,9 @@ class AuthController {
         userAgent,
         deviceInfo
       );
+
+      // Log successful login
+      await SecurityEventService.logLoginSuccess(req, user);
 
       // Set refresh token as httpOnly cookie
       res.cookie('refreshToken', refreshToken.token, {
@@ -595,6 +619,9 @@ class AuthController {
         sameSite: 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000
       });
+
+      // Log token refresh
+      await SecurityEventService.logTokenRefresh(req, tokenData);
 
       res.json({
         success: true,

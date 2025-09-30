@@ -178,6 +178,9 @@ apiRouter.get('/test-endpoint', (req, res) => {
 // API key management routes (requires JWT authentication)
 apiRouter.use('/api-keys', require('./routes/apiKeys.routes'));
 
+// Security events routes (requires authentication)
+apiRouter.use('/security-events', require('./routes/securityEvents.routes'));
+
 // API Routes - Using professional .routes.js files with built-in auth
 // Each route file handles its own authentication and validation
 // Escrows routes - including health checks

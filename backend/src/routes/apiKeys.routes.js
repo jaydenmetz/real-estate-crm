@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const ApiKeyService = require('../services/apiKey.service');
+const SecurityEventService = require('../services/securityEvent.service');
 const { authenticate } = require('../middleware/auth.middleware');
 
 // All API key routes require authentication
@@ -48,7 +49,10 @@ router.post('/', async (req, res) => {
       name,
       expiresInDays
     );
-    
+
+    // Log API key creation
+    await SecurityEventService.logApiKeyCreated(req, req.user, apiKey.id, name);
+
     res.status(201).json({
       success: true,
       data: apiKey,
@@ -70,8 +74,20 @@ router.post('/', async (req, res) => {
 // PUT /v1/api-keys/:id/revoke - Revoke an API key
 router.put('/:id/revoke', async (req, res) => {
   try {
+    // Get key name before revoking
+    const keys = await ApiKeyService.listUserApiKeys(req.user.id);
+    const keyToRevoke = keys.find(k => k.id === req.params.id);
+
     const result = await ApiKeyService.revokeApiKey(req.user.id, req.params.id);
-    
+
+    // Log API key revocation
+    await SecurityEventService.logApiKeyRevoked(
+      req,
+      req.user,
+      req.params.id,
+      keyToRevoke?.name || 'Unknown'
+    );
+
     res.json({
       success: true,
       data: result,
