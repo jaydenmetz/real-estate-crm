@@ -398,7 +398,9 @@ class AuthController {
           },
           token: accessToken, // Keep 'token' for backward compatibility
           accessToken,
-          expiresIn: jwtAccessExpiry
+          refreshToken: refreshToken.token, // For mobile apps that can't use cookies
+          expiresIn: jwtAccessExpiry,
+          tokenType: 'Bearer'
         },
         message: 'Login successful'
       });
@@ -750,7 +752,8 @@ class AuthController {
    */
   static async refresh(req, res) {
     try {
-      const refreshToken = req.cookies.refreshToken;
+      // Support both cookie and body for mobile apps
+      const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
 
       if (!refreshToken) {
         return res.status(401).json({
@@ -831,7 +834,8 @@ class AuthController {
    */
   static async logout(req, res) {
     try {
-      const refreshToken = req.cookies.refreshToken;
+      // Support both cookie and body for mobile apps
+      const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
 
       if (refreshToken) {
         await RefreshTokenService.revokeRefreshToken(refreshToken);
