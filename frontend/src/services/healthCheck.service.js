@@ -655,8 +655,37 @@ export class HealthCheckService {
         options.body = JSON.stringify(body);
       }
 
-      const response = await fetch(`${this.API_URL}${endpoint}`, options);
-      const data = await response.json();
+      let response = await fetch(`${this.API_URL}${endpoint}`, options);
+      let data = await response.json();
+
+      // If we get a 401 (token expired) and using JWT auth, try to refresh the token
+      if (response.status === 401 && this.authType === 'jwt' && data.error?.code === 'TOKEN_EXPIRED') {
+        console.log(`Token expired for test "${name}", attempting to refresh...`);
+
+        // Try to get a fresh token from localStorage (it might have been refreshed by another component)
+        const freshToken = localStorage.getItem('crm_auth_token') ||
+                          localStorage.getItem('authToken') ||
+                          localStorage.getItem('token');
+
+        if (freshToken && freshToken !== this.authValue) {
+          // Update auth headers with fresh token
+          this.authValue = freshToken;
+          this.authHeaders = { 'Authorization': `Bearer ${freshToken}` };
+
+          // Retry the request with fresh token
+          options.headers = { ...this.authHeaders };
+          if (body && method !== 'GET') {
+            options.headers['Content-Type'] = 'application/json';
+          }
+
+          response = await fetch(`${this.API_URL}${endpoint}`, options);
+          data = await response.json();
+          console.log(`Retried test "${name}" with fresh token`);
+        } else {
+          // No fresh token available
+          test.error = 'Authentication token has expired. Please refresh the page and log in again.';
+        }
+      }
 
       test.responseTime = Date.now() - startTime;
       test.response = data;
@@ -672,7 +701,7 @@ export class HealthCheckService {
         // Normal tests should succeed
         test.status = response.ok && data.success ? 'success' : 'failed';
         if (!response.ok || !data.success) {
-          test.error = data.error?.message || 'Request failed';
+          test.error = data.error?.message || data.error?.code || 'Request failed';
         }
       }
     } catch (error) {
