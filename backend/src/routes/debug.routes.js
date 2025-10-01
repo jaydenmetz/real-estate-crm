@@ -3,6 +3,22 @@ const router = express.Router();
 const { pool } = require('../config/database');
 const { authenticate } = require('../middleware/auth.middleware');
 
+// Security check - disable debug routes in production
+if (process.env.NODE_ENV === 'production') {
+  router.use((req, res) => {
+    res.status(404).json({
+      success: false,
+      error: {
+        code: 'NOT_FOUND',
+        message: 'Debug routes are disabled in production'
+      }
+    });
+  });
+
+  module.exports = router;
+  return;
+}
+
 // Debug endpoint to test database connection
 router.get('/test-db', async (req, res) => {
   try {

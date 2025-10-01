@@ -4,6 +4,370 @@
  * discover and include these definitions.
  *
  * @openapi
+ * /auth/register:
+ *   post:
+ *     operationId: registerUser
+ *     summary: Register new user
+ *     description: Creates a new user account. Returns JWT token for immediate authentication.
+ *     tags: [Authentication]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, password, firstName, lastName]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 minLength: 8
+ *               firstName:
+ *                 type: string
+ *               lastName:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *
+ * /auth/login:
+ *   post:
+ *     operationId: loginUser
+ *     summary: Login user
+ *     description: Authenticate with email/password. Returns JWT access token (7 days) and refresh token in httpOnly cookie.
+ *     tags: [Authentication]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [email, password]
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 example: "admin@jaydenmetz.com"
+ *               password:
+ *                 type: string
+ *                 example: "AdminPassword123!"
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     token:
+ *                       type: string
+ *                       description: JWT access token
+ *                     user:
+ *                       type: object
+ *       401:
+ *         description: Invalid credentials
+ *
+ * /auth/refresh:
+ *   post:
+ *     operationId: refreshAccessToken
+ *     summary: Refresh access token
+ *     description: Get new access token using refresh token from cookie. Extends session without re-login.
+ *     tags: [Authentication]
+ *     security: []
+ *     responses:
+ *       200:
+ *         description: Token refreshed
+ *       401:
+ *         description: Invalid refresh token
+ *
+ * /auth/logout:
+ *   post:
+ *     operationId: logoutUser
+ *     summary: Logout user
+ *     description: Invalidates refresh token and clears cookie
+ *     tags: [Authentication]
+ *     security: []
+ *     responses:
+ *       200:
+ *         description: Logged out successfully
+ *
+ * /auth/verify:
+ *   get:
+ *     operationId: verifyToken
+ *     summary: Verify token validity
+ *     description: Checks if JWT token is valid and returns user profile
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Token is valid
+ *       401:
+ *         description: Token invalid
+ *
+ * /auth/profile:
+ *   get:
+ *     operationId: getUserProfile
+ *     summary: Get user profile
+ *     description: Returns authenticated user's profile information
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Profile retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *                     email:
+ *                       type: string
+ *                     firstName:
+ *                       type: string
+ *                     lastName:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *       401:
+ *         description: Unauthorized
+ *   put:
+ *     operationId: updateUserProfile
+ *     summary: Update user profile
+ *     description: Updates authenticated user's profile information
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               firstName:
+ *                 type: string
+ *               lastName:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *
+ * /auth/logout-all:
+ *   post:
+ *     operationId: logoutAllDevices
+ *     summary: Logout from all devices
+ *     description: Invalidates all refresh tokens for the authenticated user, logging them out from all sessions
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Logged out from all devices successfully
+ *       401:
+ *         description: Unauthorized
+ *
+ * /auth/sessions:
+ *   get:
+ *     operationId: listActiveSessions
+ *     summary: List active sessions
+ *     description: Returns list of active refresh tokens/sessions for authenticated user
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Sessions retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       device_info:
+ *                         type: object
+ *                       created_at:
+ *                         type: string
+ *                         format: date-time
+ *                       expires_at:
+ *                         type: string
+ *                         format: date-time
+ *       401:
+ *         description: Unauthorized
+ *
+ * /api-keys:
+ *   get:
+ *     operationId: listApiKeys
+ *     summary: List API keys
+ *     description: Returns list of API keys for authenticated user (keys are masked)
+ *     tags: [API Keys]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: API keys retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                         format: uuid
+ *                       name:
+ *                         type: string
+ *                       key_preview:
+ *                         type: string
+ *                         description: Last 8 characters of key
+ *                       is_active:
+ *                         type: boolean
+ *                       created_at:
+ *                         type: string
+ *                         format: date-time
+ *                       last_used_at:
+ *                         type: string
+ *                         format: date-time
+ *                       expires_at:
+ *                         type: string
+ *                         format: date-time
+ *       401:
+ *         description: Unauthorized
+ *   post:
+ *     operationId: createApiKey
+ *     summary: Create new API key
+ *     description: Generates a new API key for authenticated user. Key is only shown once.
+ *     tags: [API Keys]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [name]
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Descriptive name for the API key
+ *               expiresInDays:
+ *                 type: integer
+ *                 description: Number of days until expiration (default 365)
+ *     responses:
+ *       201:
+ *         description: API key created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                       format: uuid
+ *                     key:
+ *                       type: string
+ *                       description: Full API key (only shown once)
+ *                     name:
+ *                       type: string
+ *                     expires_at:
+ *                       type: string
+ *                       format: date-time
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *
+ * /api-keys/{id}/revoke:
+ *   put:
+ *     operationId: revokeApiKey
+ *     summary: Revoke API key
+ *     description: Deactivates an API key without deleting it
+ *     tags: [API Keys]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: API key revoked successfully
+ *       404:
+ *         description: API key not found
+ *       401:
+ *         description: Unauthorized
+ *
+ * /api-keys/{id}:
+ *   delete:
+ *     operationId: deleteApiKey
+ *     summary: Delete API key
+ *     description: Permanently deletes an API key
+ *     tags: [API Keys]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         schema:
+ *           type: string
+ *           format: uuid
+ *     responses:
+ *       200:
+ *         description: API key deleted successfully
+ *       404:
+ *         description: API key not found
+ *       401:
+ *         description: Unauthorized
+ *
  * /listings:
  *   get:
  *     operationId: listListings
