@@ -2,26 +2,31 @@ const express = require('express');
 const router = express.Router();
 const pool = require('../config/database');
 const { getRedisClient } = require('../config/redis');
+const { authenticate } = require('../middleware/apiKey.middleware');
+const { adminOnly } = require('../middleware/adminOnly.middleware');
 const os = require('os');
 const fs = require('fs').promises;
 const path = require('path');
 
 /**
- * COMPREHENSIVE SYSTEM HEALTH CHECK
- * 
+ * COMPREHENSIVE SYSTEM HEALTH CHECK - ADMIN ONLY
+ *
+ * ⚠️ SECURITY: These endpoints expose internal system details
+ * ⚠️ ACCESS: Restricted to system_admin role only
+ *
  * What is Redis?
  * --------------
  * Redis is an in-memory data store (cache) that's super fast.
  * Think of it like RAM for your database - temporary but very quick.
- * 
+ *
  * What we use it for (or could use it for):
  * 1. Session storage - Store user login sessions (faster than database)
  * 2. API rate limiting - Track how many requests each user makes
  * 3. Caching - Store frequently accessed data (like popular escrows)
  * 4. Real-time features - WebSocket connections, live updates
- * 
+ *
  * Current Status: OPTIONAL - Your app works without it
- * 
+ *
  * Authentication Storage:
  * -----------------------
  * Currently your auth is stored in:
@@ -30,9 +35,15 @@ const path = require('path');
  * 3. Redis (if available) - Could store sessions for faster validation
  */
 
+// Apply admin-only middleware to ALL routes in this file
+router.use(authenticate);
+router.use(adminOnly);
+
 /**
- * Main system health check - PUBLIC endpoint
+ * Main system health check - ADMIN ONLY
  * GET /v1/health
+ *
+ * ⚠️ Requires: Authentication + system_admin role
  */
 router.get('/', async (req, res) => {
   const healthStatus = {

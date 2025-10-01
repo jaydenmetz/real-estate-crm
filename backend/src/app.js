@@ -191,7 +191,12 @@ apiRouter.use(apiLimiter); // API rate limiting
 
 // Public routes with auth-specific rate limiting
 apiRouter.use('/auth', authLimiter, require('./routes/auth.routes').router);
-apiRouter.use('/health', healthCheckLimiter, require('./routes/system-health.routes')); // Comprehensive system health checks
+
+// Public status endpoints (no auth required)
+apiRouter.use('/status', require('./routes/public-status.routes')); // Public: /status/public, /status/ping, /status/health
+
+// Admin-only health endpoints (requires system_admin role)
+apiRouter.use('/health', healthCheckLimiter, require('./routes/system-health.routes')); // Admin-only: Comprehensive system diagnostics
 
 // Super simple test endpoint for debugging (bypass all middleware)
 apiRouter.get('/test-endpoint', (req, res) => {
