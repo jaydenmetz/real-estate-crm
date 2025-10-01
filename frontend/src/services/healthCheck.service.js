@@ -428,7 +428,7 @@ export class HealthCheckService {
       startTime: '14:00',
       endTime: '15:00',
       location: "123 O'Connor St #456",
-      appointmentType: 'Consultation'
+      appointmentType: 'Property Showing'
     });
     tests.push(specialCharsResult);
     if (specialCharsResult.response?.data?.id) {
