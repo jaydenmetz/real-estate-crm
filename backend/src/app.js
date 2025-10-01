@@ -181,8 +181,11 @@ apiRouter.get('/test-endpoint', (req, res) => {
 // API key management routes (requires JWT authentication)
 apiRouter.use('/api-keys', require('./routes/apiKeys.routes'));
 
-// Security events routes (requires authentication)
-apiRouter.use('/security-events', require('./routes/securityEvents.routes'));
+// Security events routes (requires authentication, except health)
+const securityEventsRouter = express.Router();
+securityEventsRouter.use('/', require('./routes/securityEvents-health.routes')); // Health endpoint (public)
+securityEventsRouter.use('/', require('./routes/securityEvents.routes')); // All other endpoints (authenticated)
+apiRouter.use('/security-events', securityEventsRouter);
 
 // API Routes - Using professional .routes.js files with built-in auth
 // Each route file handles its own authentication and validation
