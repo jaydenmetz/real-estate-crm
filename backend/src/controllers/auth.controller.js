@@ -284,7 +284,9 @@ class AuthController {
         // Continue with login even if refresh token fails
       }
 
-      // Log successful login (fire-and-forget)
+      // Log successful login (fire-and-forget pattern)
+      // Note: .catch() handles async errors, try/catch handles sync errors
+      // If logging fails, login still succeeds (graceful degradation)
       try {
         SecurityEventService.logLoginSuccess(req, user).catch(console.error);
       } catch (logError) {
