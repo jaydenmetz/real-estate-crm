@@ -273,10 +273,18 @@
  *   post:
  *     operationId: createApiKey
  *     summary: Create new API key
- *     description: Generates a new API key for authenticated user. Key is only shown once.
+ *     description: |
+ *       Generates a new API key for authenticated user. Key is only shown once.
+ *
+ *       ⚠️ **CONSEQUENTIAL ACTION**: Creates new authentication credentials.
+ *       Store the key securely - it cannot be retrieved again.
  *     tags: [API Keys]
  *     security:
  *       - bearerAuth: []
+ *     x-openai-isConsequential: true
+ *     x-ai-examples:
+ *       - query: "Create a new API key for GPT-4 integration"
+ *         parameters: { name: "GPT-4 Integration", expiresInDays: 365 }
  *     requestBody:
  *       required: true
  *       content:

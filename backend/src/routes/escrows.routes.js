@@ -23,6 +23,14 @@ router.use(authenticate);
  *     security:
  *       - bearerAuth: []
  *       - apiKey: []
+ *     x-openai-isConsequential: false
+ *     x-ai-examples:
+ *       - query: "Show me all active escrows"
+ *         parameters: { status: "active" }
+ *       - query: "Find escrows closing this month"
+ *         parameters: { closingDateStart: "2025-10-01", closingDateEnd: "2025-10-31" }
+ *       - query: "List escrows over $500k"
+ *         parameters: { minPrice: 500000 }
  *     parameters:
  *       - name: status
  *         in: query
@@ -115,6 +123,12 @@ router.get(
  *     security:
  *       - bearerAuth: []
  *       - apiKey: []
+ *     x-openai-isConsequential: false
+ *     x-ai-examples:
+ *       - query: "Get escrow details for ID 550e8400-e29b-41d4-a716-446655440000"
+ *         parameters: { id: "550e8400-e29b-41d4-a716-446655440000" }
+ *       - query: "Show me the full details of this escrow"
+ *         parameters: { id: "{{escrow_id}}" }
  *     parameters:
  *       - $ref: '#/components/parameters/idParam'
  *     responses:
@@ -149,12 +163,28 @@ router.get(
  *   post:
  *     operationId: createEscrow
  *     summary: Create new escrow
- *     description: Creates a new escrow transaction. Property address is required. Supports both snake_case and camelCase field names for flexibility.
+ *     description: |
+ *       Creates a new escrow transaction. Property address is required.
+ *
+ *       ⚠️ **CONSEQUENTIAL ACTION**: This creates a new transaction record in the CRM.
+ *       AI agents should confirm with users before executing.
+ *
+ *       Business Rules:
+ *       - Property address is mandatory
+ *       - Purchase price should be positive if provided
+ *       - Closing date must be in the future
+ *       - Status defaults to "pending" if not specified
  *     tags:
  *       - Escrows
  *     security:
  *       - bearerAuth: []
  *       - apiKey: []
+ *     x-openai-isConsequential: true
+ *     x-ai-examples:
+ *       - query: "Create an escrow for 123 Main St at $500k closing March 1st"
+ *         parameters: { property_address: "123 Main St, Tehachapi, CA 93561", purchase_price: 500000, closing_date: "2025-03-01" }
+ *       - query: "Start a new escrow transaction for the property on Oak Street"
+ *         parameters: { property_address: "456 Oak St, Tehachapi, CA 93561", escrow_status: "active" }
  *     requestBody:
  *       required: true
  *       content:
@@ -272,12 +302,31 @@ router.post(
  *   put:
  *     operationId: updateEscrow
  *     summary: Update escrow
- *     description: Updates an existing escrow transaction. Supports partial updates (only send fields you want to change). Includes optimistic locking via version field.
+ *     description: |
+ *       Updates an existing escrow transaction. Supports partial updates (only send fields you want to change).
+ *
+ *       ⚠️ **CONSEQUENTIAL ACTION**: This modifies transaction data.
+ *       AI agents should confirm changes with users before executing.
+ *
+ *       Business Rules:
+ *       - Cannot change property address after creation
+ *       - Closing date changes may require broker approval
+ *       - Price changes should be documented
+ *       - Optimistic locking prevents concurrent update conflicts
+ *       - Version field increments automatically
  *     tags:
  *       - Escrows
  *     security:
  *       - bearerAuth: []
  *       - apiKey: []
+ *     x-openai-isConsequential: true
+ *     x-ai-examples:
+ *       - query: "Update escrow price to $525,000"
+ *         parameters: { id: "{{escrow_id}}", purchase_price: 525000 }
+ *       - query: "Change the closing date to March 15th"
+ *         parameters: { id: "{{escrow_id}}", closing_date: "2025-03-15" }
+ *       - query: "Mark this escrow as closed"
+ *         parameters: { id: "{{escrow_id}}", escrow_status: "closed" }
  *     parameters:
  *       - $ref: '#/components/parameters/idParam'
  *     requestBody:
@@ -387,7 +436,23 @@ router.put(
  *   delete:
  *     operationId: deleteEscrow
  *     summary: Delete escrow (permanent)
- *     description: Permanently deletes an escrow transaction. Only archived escrows can be deleted. This action cannot be undone.
+ *     description: |
+ *       Permanently deletes an escrow transaction. This action cannot be undone.
+ *
+ *       🚨 **HIGHLY CONSEQUENTIAL ACTION**: This permanently destroys data.
+ *       AI agents MUST get explicit user confirmation before executing.
+ *
+ *       Business Rules:
+ *       - Only archived escrows can be permanently deleted
+ *       - Active or closed escrows should be archived first
+ *       - Deletion removes all transaction history
+ *       - This action is irreversible - no recovery possible
+ *       - Use archive instead of delete for most cases
+ *     x-openai-isConsequential: true
+ *     x-ai-examples:
+ *       - query: "Permanently delete archived escrow {{escrow_id}}"
+ *         parameters: { id: "{{escrow_id}}" }
+ *         warning: "This will permanently delete the escrow. Are you sure?"
  *     tags:
  *       - Escrows
  *     security:
