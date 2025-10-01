@@ -8,7 +8,6 @@ let schemaInfo = null;
 // Clear schema cache on startup to ensure fresh detection
 if (process.env.NODE_ENV === 'production') {
   schemaInfo = null;
-  console.log('Production environment detected - clearing schema cache');
 }
 
 // Helper function to detect database schema
@@ -37,8 +36,6 @@ async function detectSchema() {
       hasUuid: columns.includes('uuid')
     };
     
-    console.log('Detected schema columns:', columns);
-    console.log('Schema info:', schemaInfo);
     return schemaInfo;
   } catch (error) {
     console.error('Schema detection error:', error);
@@ -63,10 +60,6 @@ class EscrowController {
    */
   static async getAllEscrows(req, res) {
     try {
-      console.log('\n=== getAllEscrows called ===');
-      console.log('Environment:', process.env.NODE_ENV);
-      console.log('Database URL exists:', !!process.env.DATABASE_URL);
-      console.log('User:', req.user?.email, 'Team:', req.user?.teamId);
       
       const {
         page = 1,
@@ -96,7 +89,6 @@ class EscrowController {
             MAX(id::text) as last_id
           FROM escrows
         `);
-        console.log('Escrows table check:', tableCheck.rows[0]);
       } catch (checkError) {
         console.error('Error checking escrows table:', checkError.message);
       }
@@ -115,12 +107,8 @@ class EscrowController {
           LIMIT 10
         `;
         const idCheckResult = await pool.query(idCheckQuery);
-        console.log('\n=== Database ID Check ===');
-        console.log('First 10 escrows in database:');
         idCheckResult.rows.forEach(row => {
-          console.log(`  Primary ID: ${row.primary_id}, Numeric ID: ${row.numeric_id}, Team Seq ID: ${row.team_sequence_id}, Display ID: ${row.display_id}, Address: ${row.property_address}`);
         });
-        console.log('========================\n');
       } catch (err) {
         console.error('ID check query failed:', err.message);
       }
@@ -166,11 +154,8 @@ class EscrowController {
         FROM escrows e
         WHERE ${whereClause}
       `;
-      console.log('Count Query:', countQuery);
-      console.log('Count Query Params:', queryParams);
       const countResult = await pool.query(countQuery, queryParams);
       const totalCount = parseInt(countResult.rows[0].total);
-      console.log('Total escrows in database:', totalCount);
 
       // Build dynamic query based on schema
       queryParams.push(limit, offset);
@@ -181,8 +166,6 @@ class EscrowController {
       let idField = 'id::text';
       let displayIdField = 'display_id';  // Format: ESCROW-2025-0001
       
-      console.log('Using ID field:', idField);
-      console.log('Schema info:', schema);
       
       let commissionField;
       if (schema.hasMyCommission && schema.hasBuyerSideCommission) {
@@ -242,28 +225,15 @@ class EscrowController {
         LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
       `;
 
-      console.log('List Query:', listQuery);
-      console.log('List Query Params:', queryParams);
       const listResult = await pool.query(listQuery, queryParams);
-      console.log('Query executed, rows returned:', listResult.rows.length);
       
       // Debug: Log the actual IDs being returned
-      console.log('Escrows returned from database:');
       listResult.rows.forEach((escrow, index) => {
-        console.log(`  ${index + 1}. ID: ${escrow.id}, numeric_id: ${escrow.numeric_id}, team_seq_id: ${escrow.team_sequence_id}, Display ID: ${escrow.displayId}, Address: ${escrow.propertyAddress}`);
       });
-      console.log(`Total escrows: ${listResult.rows.length}`);
       
       // Special check for ESC-2025-001 or ESC-2025-0001
       const escrow2025001 = listResult.rows.find(e => e.displayId === 'ESC-2025-001' || e.displayId === 'ESC-2025-0001');
       if (escrow2025001) {
-        console.log('\n=== First Escrow Debug Info ===');
-        console.log('Display ID:', escrow2025001.displayId);
-        console.log('ID (used for navigation):', escrow2025001.id);
-        console.log('Numeric ID:', escrow2025001.numeric_id);
-        console.log('Team Sequence ID:', escrow2025001.team_sequence_id);
-        console.log('Full record:', JSON.stringify(escrow2025001, null, 2));
-        console.log('==============================\n');
       }
 
       res.json({
@@ -614,8 +584,6 @@ class EscrowController {
         RETURNING *
       `;
       
-      console.log('Update query:', updateQuery);
-      console.log('Update values:', values);
       
       const result = await client.query(updateQuery, values);
       
@@ -859,7 +827,6 @@ class EscrowController {
 
       await client.query('COMMIT');
 
-      console.log(`Successfully deleted ${deleteResult.rows.length} escrows`);
 
       return res.json({
         success: true,
