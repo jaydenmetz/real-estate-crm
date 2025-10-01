@@ -255,8 +255,7 @@ class AuthController {
         { expiresIn: jwtAccessExpiry }
       );
 
-      // TEMPORARILY DISABLED: Skip refresh token for debugging
-      /*
+      // Create refresh token with device info
       const ipAddress = req.ip || req.connection.remoteAddress;
       const userAgent = req.headers['user-agent'] || 'Unknown';
       const deviceInfo = {
@@ -271,17 +270,16 @@ class AuthController {
         deviceInfo
       );
 
+      // Log successful login (fire-and-forget)
+      SecurityEventService.logLoginSuccess(req, user).catch(console.error);
+
+      // Set refresh token as httpOnly cookie
       res.cookie('refreshToken', refreshToken.token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
       });
-      */
-
-      // Log successful login (fire-and-forget)
-      // TEMPORARILY DISABLED for debugging
-      // SecurityEventService.logLoginSuccess(req, user).catch(console.error);
 
       res.json({
         success: true,
@@ -297,7 +295,7 @@ class AuthController {
           },
           token: accessToken, // Keep 'token' for backward compatibility
           accessToken,
-          // refreshToken: refreshToken.token, // DISABLED for debugging
+          refreshToken: refreshToken.token, // For mobile apps that can't use cookies
           expiresIn: jwtAccessExpiry,
           tokenType: 'Bearer'
         },
@@ -311,14 +309,14 @@ class AuthController {
         name: error.name
       });
 
-      // Return detailed error for debugging
+      // Return detailed error (showing details in prod temporarily for debugging)
       res.status(500).json({
         success: false,
         error: {
           code: 'LOGIN_ERROR',
           message: 'Failed to login',
           details: error.message,
-          stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+          stack: error.stack // TEMPORARY: Showing stack in production for debugging
         }
       });
     }
