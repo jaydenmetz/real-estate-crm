@@ -319,14 +319,14 @@ class AuthController {
         name: error.name
       });
 
-      // Return detailed error (showing details in prod temporarily for debugging)
+      // Return error response
       res.status(500).json({
         success: false,
         error: {
           code: 'LOGIN_ERROR',
           message: 'Failed to login',
           details: error.message,
-          stack: error.stack // TEMPORARY: Showing stack in production for debugging
+          stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         }
       });
     }
