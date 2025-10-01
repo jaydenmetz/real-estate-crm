@@ -207,6 +207,9 @@ apiRouter.get('/test-endpoint', (req, res) => {
 // API key management routes (requires JWT authentication)
 apiRouter.use('/api-keys', require('./routes/apiKeys.routes'));
 
+// AI Natural Language Query routes (requires authentication + strict rate limiting)
+apiRouter.use('/ai', require('./routes/ai.routes'));
+
 // Security events routes (requires authentication, except health)
 const securityEventsRouter = express.Router();
 securityEventsRouter.use('/', require('./routes/securityEvents-health.routes')); // Health endpoint (public)
