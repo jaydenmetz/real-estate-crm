@@ -255,31 +255,41 @@ class AuthController {
         { expiresIn: jwtAccessExpiry }
       );
 
-      // Create refresh token with device info
-      const ipAddress = req.ip || req.connection.remoteAddress;
-      const userAgent = req.headers['user-agent'] || 'Unknown';
-      const deviceInfo = {
-        browser: userAgent,
-        ip: ipAddress
-      };
+      // Create refresh token with device info (wrapped in try/catch to prevent blocking)
+      let refreshTokenData = null;
+      try {
+        const ipAddress = req.ip || req.connection.remoteAddress;
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        const deviceInfo = {
+          browser: userAgent,
+          ip: ipAddress
+        };
 
-      const refreshToken = await RefreshTokenService.createRefreshToken(
-        user.id,
-        ipAddress,
-        userAgent,
-        deviceInfo
-      );
+        refreshTokenData = await RefreshTokenService.createRefreshToken(
+          user.id,
+          ipAddress,
+          userAgent,
+          deviceInfo
+        );
 
-      // Log successful login (fire-and-forget) - TEMPORARILY DISABLED
-      // SecurityEventService.logLoginSuccess(req, user).catch(console.error);
+        // Set refresh token as httpOnly cookie
+        res.cookie('refreshToken', refreshTokenData.token, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+      } catch (refreshTokenError) {
+        console.error('Failed to create refresh token (non-fatal):', refreshTokenError);
+        // Continue with login even if refresh token fails
+      }
 
-      // Set refresh token as httpOnly cookie
-      res.cookie('refreshToken', refreshToken.token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
-      });
+      // Log successful login (fire-and-forget)
+      try {
+        SecurityEventService.logLoginSuccess(req, user).catch(console.error);
+      } catch (logError) {
+        console.error('Failed to log security event (non-fatal):', logError);
+      }
 
       res.json({
         success: true,
@@ -295,7 +305,7 @@ class AuthController {
           },
           token: accessToken, // Keep 'token' for backward compatibility
           accessToken,
-          refreshToken: refreshToken.token, // For mobile apps that can't use cookies
+          refreshToken: refreshTokenData?.token, // For mobile apps that can't use cookies
           expiresIn: jwtAccessExpiry,
           tokenType: 'Bearer'
         },
