@@ -213,10 +213,41 @@ All endpoints require authentication via:
         description: 'API key management for external integrations'
       },
       {
+        name: 'AI',
+        description: 'AI-powered natural language query interface'
+      },
+      {
         name: 'Health',
         description: 'System health and monitoring endpoints'
       }
-    ]
+    ],
+    'x-ai-integration': {
+      openai: {
+        enabled: true,
+        models: ['gpt-4o', 'gpt-4o-mini', 'gpt-3.5-turbo'],
+        function_calling: true,
+        description: 'All read endpoints support OpenAI function calling. Use API keys for authentication.'
+      },
+      anthropic: {
+        enabled: true,
+        models: ['claude-3-5-sonnet', 'claude-3-opus', 'claude-3-sonnet'],
+        mcp_server: {
+          available: true,
+          location: 'backend/src/mcp-server.js',
+          description: 'Standalone MCP server for Claude Desktop integration'
+        }
+      },
+      considerations: {
+        rate_limits: 'AI endpoints have stricter rate limits (10/min production, 50/min development)',
+        authentication: 'Use X-API-Key header for AI agent authentication',
+        best_practices: [
+          'Use operationId for function naming consistency',
+          'Check x-openai-isConsequential before write operations',
+          'Implement retry logic for rate limit errors',
+          'Cache OpenAPI spec locally to reduce fetches'
+        ]
+      }
+    }
   },
   apis: [
     './src/routes/*.js',
