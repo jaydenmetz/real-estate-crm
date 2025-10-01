@@ -270,8 +270,8 @@ class AuthController {
         deviceInfo
       );
 
-      // Log successful login (fire-and-forget)
-      SecurityEventService.logLoginSuccess(req, user).catch(console.error);
+      // Log successful login (fire-and-forget) - TEMPORARILY DISABLED
+      // SecurityEventService.logLoginSuccess(req, user).catch(console.error);
 
       // Set refresh token as httpOnly cookie
       res.cookie('refreshToken', refreshToken.token, {
