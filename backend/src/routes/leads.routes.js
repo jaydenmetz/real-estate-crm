@@ -4,6 +4,7 @@ const { body } = require('express-validator');
 const leadsController = require('../controllers/leads.controller');
 const { authenticate } = require('../middleware/apiKey.middleware');
 const { validate } = require('../middleware/validation.middleware');
+const { validateLeadRules } = require('../middleware/businessRules.middleware');
 
 // All routes require authentication
 router.use(authenticate);
@@ -28,8 +29,8 @@ const updateValidation = [
 // Routes
 router.get('/', leadsController.getLeads);
 router.get('/:id', leadsController.getLead);
-router.post('/', createValidation, validate, leadsController.createLead);
-router.put('/:id', updateValidation, validate, leadsController.updateLead);
+router.post('/', createValidation, validate, validateLeadRules, leadsController.createLead);
+router.put('/:id', updateValidation, validate, validateLeadRules, leadsController.updateLead);
 router.post('/:id/convert', leadsController.convertToClient);
 router.post('/:id/activities', leadsController.recordActivity);
 

@@ -372,22 +372,61 @@ exports.updateListing = async (req, res) => {
       updateFields.push(`listing_date = CURRENT_DATE`);
     }
 
-    // Add updated_at
+    // Add updated_at, version, and last_modified_by
     updateFields.push(`updated_at = CURRENT_TIMESTAMP`);
+    updateFields.push(`version = version + 1`);
+    updateFields.push(`last_modified_by = $${paramCount}`);
+    values.push(req.user?.id || null);
+    paramCount++;
+
+    // Optimistic locking: check version if provided
+    const { version: clientVersion } = updates;
+    let versionClause = '';
+    if (clientVersion !== undefined) {
+      versionClause = ` AND version = $${paramCount}`;
+      values.push(clientVersion);
+      paramCount++;
+    }
 
     // Add id as last parameter
     values.push(id);
 
     const updateQuery = `
-      UPDATE listings 
+      UPDATE listings
       SET ${updateFields.join(', ')}
-      WHERE id = $${paramCount} AND deleted_at IS NULL
+      WHERE id = $${paramCount} AND deleted_at IS NULL${versionClause}
       RETURNING *
     `;
 
     const result = await query(updateQuery, values);
 
     if (result.rows.length === 0) {
+      // Check if record exists but version mismatch
+      if (clientVersion !== undefined) {
+        const checkQuery = 'SELECT version FROM listings WHERE id = $1 AND deleted_at IS NULL';
+        const checkResult = await query(checkQuery, [id]);
+
+        if (checkResult.rows.length === 0) {
+          return res.status(404).json({
+            success: false,
+            error: {
+              code: 'NOT_FOUND',
+              message: 'Listing not found'
+            }
+          });
+        } else {
+          return res.status(409).json({
+            success: false,
+            error: {
+              code: 'VERSION_CONFLICT',
+              message: 'This listing was modified by another user. Please refresh and try again.',
+              currentVersion: checkResult.rows[0].version,
+              attemptedVersion: clientVersion
+            }
+          });
+        }
+      }
+
       return res.status(404).json({
         success: false,
         error: {

@@ -6,6 +6,7 @@ const { body } = require('express-validator');
 const appointmentsController = require('../controllers/appointments.controller');
 const { authenticate } = require('../middleware/apiKey.middleware');
 const { validate } = require('../middleware/validation.middleware');
+const { validateAppointmentRules } = require('../middleware/businessRules.middleware');
 
 // All routes require authentication
 router.use(authenticate);
@@ -29,8 +30,8 @@ const updateValidation = [
 // Routes
 router.get('/', appointmentsController.getAppointments);
 router.get('/:id', appointmentsController.getAppointment);
-router.post('/', createValidation, validate, appointmentsController.createAppointment);
-router.put('/:id', updateValidation, validate, appointmentsController.updateAppointment);
+router.post('/', createValidation, validate, validateAppointmentRules, appointmentsController.createAppointment);
+router.put('/:id', updateValidation, validate, validateAppointmentRules, appointmentsController.updateAppointment);
 router.post('/:id/cancel', appointmentsController.cancelAppointment);
 router.post('/:id/complete', appointmentsController.markComplete);
 

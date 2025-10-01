@@ -233,18 +233,58 @@ exports.updateLead = async (req, res) => {
 
     setClause.push(`updated_at = CURRENT_TIMESTAMP`);
     setClause.push(`last_contact_date = CURRENT_DATE`);
+    setClause.push(`version = version + 1`);
+    setClause.push(`last_modified_by = $${paramIndex}`);
+    values.push(req.user?.id || null);
+    paramIndex++;
+
+    // Optimistic locking: check version if provided
+    const { version: clientVersion } = updates;
+    let versionClause = '';
+    if (clientVersion !== undefined) {
+      versionClause = ` AND version = $${paramIndex}`;
+      values.push(clientVersion);
+      paramIndex++;
+    }
+
     values.push(id);
 
     const query = `
       UPDATE leads
       SET ${setClause.join(', ')}
-      WHERE id = $${paramIndex} AND deleted_at IS NULL
+      WHERE id = $${paramIndex} AND deleted_at IS NULL${versionClause}
       RETURNING *
     `;
 
     const result = await pool.query(query, values);
 
     if (result.rows.length === 0) {
+      // Check if record exists but version mismatch
+      if (clientVersion !== undefined) {
+        const checkQuery = 'SELECT version FROM leads WHERE id = $1 AND deleted_at IS NULL';
+        const checkResult = await pool.query(checkQuery, [id]);
+
+        if (checkResult.rows.length === 0) {
+          return res.status(404).json({
+            success: false,
+            error: {
+              code: 'NOT_FOUND',
+              message: 'Lead not found'
+            }
+          });
+        } else {
+          return res.status(409).json({
+            success: false,
+            error: {
+              code: 'VERSION_CONFLICT',
+              message: 'This lead was modified by another user. Please refresh and try again.',
+              currentVersion: checkResult.rows[0].version,
+              attemptedVersion: clientVersion
+            }
+          });
+        }
+      }
+
       return res.status(404).json({
         success: false,
         error: {

@@ -572,29 +572,61 @@ class EscrowController {
       if (id.startsWith('escrow-')) {
         cleanId = id.substring(7);
       }
-      
+
       // Determine if ID is UUID format or display format
       const isUUIDFormat = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanId);
       values.push(cleanId);
-      
+
+      // Optimistic locking: check version if provided
+      const { version: clientVersion } = req.body;
+      let versionClause = '';
+      if (clientVersion !== undefined) {
+        paramIndex++;
+        values.push(clientVersion);
+        versionClause = ` AND version = $${paramIndex}`;
+      }
+
       const updateQuery = `
-        UPDATE escrows 
-        SET ${updateFields.join(', ')}, updated_at = NOW()
-        WHERE ${isUUIDFormat ? 'id = $' + paramIndex : 'display_id = $' + paramIndex}
+        UPDATE escrows
+        SET ${updateFields.join(', ')},
+            updated_at = NOW(),
+            version = version + 1,
+            last_modified_by = $${paramIndex + 1}
+        WHERE ${isUUIDFormat ? 'id = $' + (paramIndex - (clientVersion !== undefined ? 1 : 0)) : 'display_id = $' + (paramIndex - (clientVersion !== undefined ? 1 : 0))}${versionClause}
         RETURNING *
       `;
-      
-      
+
+      values.push(req.user?.id || null);
+
       const result = await client.query(updateQuery, values);
-      
+
       if (result.rows.length === 0) {
-        return res.status(404).json({
-          success: false,
-          error: {
-            code: 'NOT_FOUND',
-            message: 'Escrow not found'
-          }
-        });
+        // Check if record exists but version mismatch
+        const checkQuery = `
+          SELECT version FROM escrows
+          WHERE ${isUUIDFormat ? 'id' : 'display_id'} = $1
+        `;
+        const checkResult = await client.query(checkQuery, [cleanId]);
+
+        if (checkResult.rows.length === 0) {
+          return res.status(404).json({
+            success: false,
+            error: {
+              code: 'NOT_FOUND',
+              message: 'Escrow not found'
+            }
+          });
+        } else {
+          return res.status(409).json({
+            success: false,
+            error: {
+              code: 'VERSION_CONFLICT',
+              message: 'This escrow was modified by another user. Please refresh and try again.',
+              currentVersion: checkResult.rows[0].version,
+              attemptedVersion: clientVersion
+            }
+          });
+        }
       }
       
       // Log the update for debugging

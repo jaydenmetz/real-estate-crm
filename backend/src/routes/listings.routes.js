@@ -4,6 +4,7 @@ const { body } = require('express-validator');
 const listingsController = require('../controllers/listings.controller');
 const { authenticate } = require('../middleware/apiKey.middleware');
 const { validate } = require('../middleware/validation.middleware');
+const { validateListingRules } = require('../middleware/businessRules.middleware');
 
 // All routes require authentication
 router.use(authenticate);
@@ -25,8 +26,8 @@ const updateValidation = [
 // Routes
 router.get('/', listingsController.getListings);
 router.get('/:id', listingsController.getListing);
-router.post('/', createValidation, validate, listingsController.createListing);
-router.put('/:id', updateValidation, validate, listingsController.updateListing);
+router.post('/', createValidation, validate, validateListingRules, listingsController.createListing);
+router.put('/:id', updateValidation, validate, validateListingRules, listingsController.updateListing);
 
 // Archive and Delete endpoints - Added for health dashboard testing
 // Archive endpoint: Soft deletes by setting deleted_at timestamp

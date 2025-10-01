@@ -6,6 +6,7 @@ const router = express.Router();
 const escrowsController = require('../controllers/escrows.controller');
 const { authenticate } = require('../middleware/apiKey.middleware');
 const { validate, escrowValidationRules, paginationValidationRules, idValidationRules } = require('../middleware/validation.middleware');
+const { validateEscrowRules } = require('../middleware/businessRules.middleware');
 
 // All routes require authentication
 router.use(authenticate);
@@ -76,6 +77,7 @@ router.post(
     body('zipCode').optional().isString().withMessage('Zip code must be a string')
   ],
   validate,
+  validateEscrowRules,
   escrowsController.createEscrow
 );
 
@@ -109,6 +111,7 @@ router.put(
     body('escrowStatus').optional().isString().withMessage('Escrow status must be a string')
   ],
   validate,
+  validateEscrowRules,
   escrowsController.updateEscrow
 );
 

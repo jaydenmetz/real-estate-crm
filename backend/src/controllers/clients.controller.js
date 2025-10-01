@@ -179,6 +179,24 @@ exports.createClient = async (req, res) => {
 
     await client.query('BEGIN');
 
+    // Check for duplicate email
+    if (email) {
+      const duplicateCheck = await client.query(
+        'SELECT id FROM contacts WHERE email = $1 AND deleted_at IS NULL',
+        [email]
+      );
+      if (duplicateCheck.rows.length > 0) {
+        await client.query('ROLLBACK');
+        return res.status(409).json({
+          success: false,
+          error: {
+            code: 'DUPLICATE_EMAIL',
+            message: 'A contact with this email already exists'
+          }
+        });
+      }
+    }
+
     // Create contact first
     const contactQuery = `
       INSERT INTO contacts (
@@ -322,7 +340,7 @@ exports.updateClient = async (req, res) => {
 
       if (updates.clientType) {
         clientUpdates.push(`client_type = $${paramIndex++}`);
-        clientValues.push(updates.clientType);
+        clientValues.push(updates.clientType.toLowerCase());
       }
       if (updates.status) {
         clientUpdates.push(`status = $${paramIndex++}`);
@@ -331,15 +349,44 @@ exports.updateClient = async (req, res) => {
 
       if (clientUpdates.length > 0) {
         clientUpdates.push(`updated_at = NOW()`);
+        clientUpdates.push(`version = version + 1`);
+        clientUpdates.push(`last_modified_by = $${paramIndex++}`);
+        clientValues.push(req.user?.id || null);
+
+        // Optimistic locking: check version if provided
+        const { version: clientVersion } = updates;
+        let versionClause = '';
+        if (clientVersion !== undefined) {
+          versionClause = ` AND version = $${paramIndex++}`;
+          clientValues.push(clientVersion);
+        }
+
         clientValues.push(id);
 
         const clientQuery = `
           UPDATE clients
           SET ${clientUpdates.join(', ')}
-          WHERE id = $${paramIndex}
+          WHERE id = $${paramIndex}${versionClause}
         `;
 
-        await client.query(clientQuery, clientValues);
+        const result = await client.query(clientQuery, clientValues);
+
+        // Check for version conflict
+        if (result.rowCount === 0 && clientVersion !== undefined) {
+          await client.query('ROLLBACK');
+          const versionCheck = await pool.query('SELECT version FROM clients WHERE id = $1', [id]);
+          if (versionCheck.rows.length > 0) {
+            return res.status(409).json({
+              success: false,
+              error: {
+                code: 'VERSION_CONFLICT',
+                message: 'This client was modified by another user. Please refresh and try again.',
+                currentVersion: versionCheck.rows[0].version,
+                attemptedVersion: clientVersion
+              }
+            });
+          }
+        }
       }
     }
 
