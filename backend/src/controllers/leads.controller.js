@@ -31,12 +31,13 @@ exports.getLeads = async (req, res) => {
       paramIndex++;
     }
 
-    // Type filter (if your table has this field)
-    if (leadType) {
-      whereConditions.push(`lead_type = $${paramIndex}`);
-      queryParams.push(leadType);
-      paramIndex++;
-    }
+    // Type filter - column doesn't exist yet, skipping
+    // TODO: Add lead_type column to leads table
+    // if (leadType) {
+    //   whereConditions.push(`lead_type = $${paramIndex}`);
+    //   queryParams.push(leadType);
+    //   paramIndex++;
+    // }
 
     // Search filter
     if (search) {
@@ -390,17 +391,18 @@ exports.convertToClient = async (req, res) => {
 
     const lead = leadResult.rows[0];
 
-    // Create client from lead
-    const clientQuery = `
-      INSERT INTO clients (
-        first_name, last_name, email, phone, notes,
-        team_id, created_at, updated_at
+    // Create contact first
+    const contactQuery = `
+      INSERT INTO contacts (
+        contact_type, first_name, last_name, email, phone,
+        notes, team_id, created_at, updated_at
       )
-      VALUES ($1, $2, $3, $4, $5, $6, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-      RETURNING *
+      VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+      RETURNING id
     `;
 
-    const clientValues = [
+    const contactValues = [
+      'buyer', // Default to buyer for converted leads
       lead.first_name,
       lead.last_name,
       lead.email,
@@ -409,7 +411,17 @@ exports.convertToClient = async (req, res) => {
       lead.team_id
     ];
 
-    const clientResult = await client.query(clientQuery, clientValues);
+    const contactResult = await client.query(contactQuery, contactValues);
+    const contactId = contactResult.rows[0].id;
+
+    // Create client from lead
+    const clientQuery = `
+      INSERT INTO clients (contact_id, client_type, status, created_at, updated_at)
+      VALUES ($1, $2, 'active', NOW(), NOW())
+      RETURNING *
+    `;
+
+    const clientResult = await client.query(clientQuery, [contactId, 'buyer']);
     const newClient = clientResult.rows[0];
 
     // Update lead with conversion info

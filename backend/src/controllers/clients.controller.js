@@ -215,7 +215,7 @@ exports.createClient = async (req, res) => {
       RETURNING id
     `;
 
-    const clientResult = await client.query(clientQuery, [contactId, clientType]);
+    const clientResult = await client.query(clientQuery, [contactId, clientType.toLowerCase()]);
 
     await client.query('COMMIT');
 
