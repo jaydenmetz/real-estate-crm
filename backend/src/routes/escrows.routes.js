@@ -11,7 +11,83 @@ const { validateEscrowRules } = require('../middleware/businessRules.middleware'
 // All routes require authentication
 router.use(authenticate);
 
-// GET /v1/escrows?status&page&limit&minPrice&maxPrice&closingDateStart&closingDateEnd
+/**
+ * @openapi
+ * /escrows:
+ *   get:
+ *     operationId: listEscrows
+ *     summary: List all escrows
+ *     description: Returns a paginated list of escrow transactions with optional filtering by status, price range, and closing dates
+ *     tags:
+ *       - Escrows
+ *     security:
+ *       - bearerAuth: []
+ *       - apiKey: []
+ *     parameters:
+ *       - name: status
+ *         in: query
+ *         description: Filter by escrow status
+ *         schema:
+ *           type: string
+ *           enum: [active, pending, closed, cancelled]
+ *       - name: minPrice
+ *         in: query
+ *         description: Minimum purchase price filter
+ *         schema:
+ *           type: number
+ *           minimum: 0
+ *       - name: maxPrice
+ *         in: query
+ *         description: Maximum purchase price filter
+ *         schema:
+ *           type: number
+ *           minimum: 0
+ *       - name: closingDateStart
+ *         in: query
+ *         description: Filter escrows closing after this date
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - name: closingDateEnd
+ *         in: query
+ *         description: Filter escrows closing before this date
+ *         schema:
+ *           type: string
+ *           format: date
+ *       - $ref: '#/components/parameters/pageParam'
+ *       - $ref: '#/components/parameters/limitParam'
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved escrows
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/PaginatedResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Escrow'
+ *             example:
+ *               success: true
+ *               data:
+ *                 - id: "550e8400-e29b-41d4-a716-446655440000"
+ *                   property_address: "123 Main St, Tehachapi, CA 93561"
+ *                   purchase_price: 500000
+ *                   escrow_status: "active"
+ *                   closing_date: "2025-03-01"
+ *               pagination:
+ *                 page: 1
+ *                 limit: 20
+ *                 total: 45
+ *                 pages: 3
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
 router.get(
   '/',
   [
@@ -27,7 +103,37 @@ router.get(
   escrowsController.getEscrows
 );
 
-// GET /v1/escrows/:id
+/**
+ * @openapi
+ * /escrows/{id}:
+ *   get:
+ *     operationId: getEscrowById
+ *     summary: Get escrow by ID
+ *     description: Returns detailed information about a specific escrow transaction
+ *     tags:
+ *       - Escrows
+ *     security:
+ *       - bearerAuth: []
+ *       - apiKey: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/idParam'
+ *     responses:
+ *       200:
+ *         description: Escrow found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/Escrow'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ */
 router.get(
   '/:id',
   [
@@ -37,7 +143,86 @@ router.get(
   escrowsController.getEscrow
 );
 
-// POST /v1/escrows
+/**
+ * @openapi
+ * /escrows:
+ *   post:
+ *     operationId: createEscrow
+ *     summary: Create new escrow
+ *     description: Creates a new escrow transaction. Property address is required. Supports both snake_case and camelCase field names for flexibility.
+ *     tags:
+ *       - Escrows
+ *     security:
+ *       - bearerAuth: []
+ *       - apiKey: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - property_address
+ *             properties:
+ *               property_address:
+ *                 type: string
+ *                 description: Full property address
+ *                 example: "123 Main St, Tehachapi, CA 93561"
+ *               purchase_price:
+ *                 type: number
+ *                 example: 500000
+ *               buyers:
+ *                 type: array
+ *                 items:
+ *                   $ref: '#/components/schemas/Person'
+ *               sellers:
+ *                 type: array
+ *                 items:
+ *                   $ref: '#/components/schemas/Person'
+ *               acceptance_date:
+ *                 type: string
+ *                 format: date
+ *                 example: "2025-01-15"
+ *               closing_date:
+ *                 type: string
+ *                 format: date
+ *                 example: "2025-03-01"
+ *               escrow_status:
+ *                 type: string
+ *                 enum: [active, pending, closed, cancelled]
+ *                 example: "active"
+ *               city:
+ *                 type: string
+ *                 example: "Tehachapi"
+ *               state:
+ *                 type: string
+ *                 example: "CA"
+ *               zip_code:
+ *                 type: string
+ *                 example: "93561"
+ *           example:
+ *             property_address: "123 Main St, Tehachapi, CA 93561"
+ *             purchase_price: 500000
+ *             buyers: [{"name": "John Doe", "email": "john@example.com"}]
+ *             closing_date: "2025-03-01"
+ *             escrow_status: "active"
+ *     responses:
+ *       201:
+ *         description: Escrow created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/Escrow'
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ */
 router.post(
   '/',
   // Custom middleware to normalize field names before validation
@@ -81,7 +266,68 @@ router.post(
   escrowsController.createEscrow
 );
 
-// PUT /v1/escrows/:id
+/**
+ * @openapi
+ * /escrows/{id}:
+ *   put:
+ *     operationId: updateEscrow
+ *     summary: Update escrow
+ *     description: Updates an existing escrow transaction. Supports partial updates (only send fields you want to change). Includes optimistic locking via version field.
+ *     tags:
+ *       - Escrows
+ *     security:
+ *       - bearerAuth: []
+ *       - apiKey: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/idParam'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               purchase_price:
+ *                 type: number
+ *                 example: 525000
+ *               closing_date:
+ *                 type: string
+ *                 format: date
+ *                 example: "2025-03-15"
+ *               escrow_status:
+ *                 type: string
+ *                 enum: [active, pending, closed, cancelled]
+ *               version:
+ *                 type: integer
+ *                 description: Current version for optimistic locking
+ *                 example: 1
+ *           example:
+ *             purchase_price: 525000
+ *             closing_date: "2025-03-15"
+ *             version: 1
+ *     responses:
+ *       200:
+ *         description: Escrow updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/Escrow'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
+ *       409:
+ *         description: Version conflict (optimistic locking)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ */
 router.put(
   '/:id',
   // Normalize field names before validation (remove snake_case versions after copying)
@@ -135,7 +381,38 @@ router.put(
   escrowsController.restoreEscrow
 );
 
-// Permanently delete escrow (only archived ones) - DELETE /v1/escrows/:id
+/**
+ * @openapi
+ * /escrows/{id}:
+ *   delete:
+ *     operationId: deleteEscrow
+ *     summary: Delete escrow (permanent)
+ *     description: Permanently deletes an escrow transaction. Only archived escrows can be deleted. This action cannot be undone.
+ *     tags:
+ *       - Escrows
+ *     security:
+ *       - bearerAuth: []
+ *       - apiKey: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/idParam'
+ *     responses:
+ *       200:
+ *         description: Escrow deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessResponse'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
+ *       400:
+ *         description: Cannot delete non-archived escrow
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ */
 router.delete(
   '/:id',
   [

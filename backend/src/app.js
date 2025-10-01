@@ -157,6 +157,32 @@ app.get('/ws/status', (req, res) => {
   });
 });
 
+// ============================================
+// OpenAPI / Swagger Documentation
+// ============================================
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./config/openapi.config');
+
+// Serve OpenAPI JSON spec (for AI consumption)
+app.get('/v1/openapi.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.setHeader('Access-Control-Allow-Origin', '*'); // Allow AI tools to fetch
+  res.send(swaggerSpec);
+});
+
+// Serve interactive Swagger UI documentation
+app.use('/v1/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customSiteTitle: 'Real Estate CRM API Documentation',
+  customCss: '.swagger-ui .topbar { display: none }',
+  swaggerOptions: {
+    persistAuthorization: true,
+    displayRequestDuration: true,
+    filter: true,
+    showExtensions: true,
+    showCommonExtensions: true
+  }
+}));
+
 // Import authentication middleware
 const { authenticate } = require('./middleware/apiKey.middleware');
 
