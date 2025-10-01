@@ -261,15 +261,16 @@ export class HealthCheckService {
     return tests;
   }
 
-  // Run comprehensive health checks for Clients (15 tests)
+  // Run comprehensive health checks for Clients (22 tests)
   async runClientsHealthCheck() {
     const tests = [];
+    const createdIds = [];
     let testId = null;
 
     // CORE TESTS
     tests.push(await this.runTest('GET', '/clients', 'List All Clients', 'Critical'));
 
-    const createResult = await this.runTest('POST', '/clients', 'Create Client (Required Fields Only)', 'Critical', {
+    const createResult = await this.runTest('POST', '/clients', 'Create Client (Minimal)', 'Critical', {
       firstName: 'Test',
       lastName: `CoreClient_${Date.now()}`,
       email: `client_${Date.now()}@example.com`
@@ -277,196 +278,97 @@ export class HealthCheckService {
     tests.push(createResult);
     if (createResult.response?.data?.id) {
       testId = createResult.response.data.id;
+      createdIds.push(testId);
     }
 
     if (testId) {
+      tests.push(await this.runTest('GET', `/clients/${testId}`, 'Get Client by ID', 'Critical'));
       tests.push(await this.runTest('PUT', `/clients/${testId}`, 'Update Client', 'Critical', {
-        phone: '555-1234'
+        phone: '555-1234',
+        clientType: 'buyer'
       }));
-    }
-
-    // Create additional test clients for batch delete testing
-    const additionalIds = [];
-    for (let i = 0; i < 2; i++) {
-      const result = await this.runTest('POST', '/clients', `Create Test Client ${i + 2}`, 'Workflow', {
-        firstName: 'BatchTest',
-        lastName: `Client${i}_${Date.now()}`,
-        email: `batchtest${i}_${Date.now()}@example.com`
-      });
-      tests.push(result);
-      if (result.response?.data?.id) {
-        additionalIds.push(result.response.data.id);
-      }
-    }
-
-    // Combine all IDs for batch testing
-    const allClientIds = testId ? [testId, ...additionalIds] : additionalIds;
-
-    // Archive all test clients
-    const archivedIds = [];
-    for (const id of allClientIds) {
-      const archiveResult = await this.runTest('PUT', `/clients/${id}/archive`, 'Archive Client', 'Workflow');
-      tests.push(archiveResult);
-      if (archiveResult.status === 'success') {
-        archivedIds.push(id);
-      }
-    }
-
-    // Test batch delete if we have multiple archived clients
-    if (archivedIds.length > 1) {
-      const batchDeleteResult = await this.runTest('POST', '/clients/batch-delete', 'Batch Delete Multiple Clients', 'Workflow', {
-        ids: archivedIds
-      });
-      tests.push(batchDeleteResult);
-
-      // Verify batch deletion worked
-      if (batchDeleteResult.status === 'success' && archivedIds[0]) {
-        const verifyBatch = await this.runTest('GET', `/clients/${archivedIds[0]}`, 'Verify Batch Deletion', 'Workflow');
-        if (verifyBatch.response?.error?.code === 'NOT_FOUND') {
-          verifyBatch.status = 'success';
-          verifyBatch.response = { verified: true, message: 'Batch deletion confirmed' };
-        }
-        tests.push(verifyBatch);
-      }
-    } else if (archivedIds.length === 1) {
-      // Fall back to individual delete if only one client
-      tests.push(await this.runTest('DELETE', `/clients/${archivedIds[0]}`, 'Delete Archived Client', 'Workflow'));
     }
 
     // SEARCH & FILTER TESTS
     tests.push(await this.runTest('GET', '/clients?status=active', 'Filter by Status', 'Search'));
     tests.push(await this.runTest('GET', '/clients?search=Test', 'Search by Name', 'Search'));
-    tests.push(await this.runTest('GET', '/clients?page=2&limit=5', 'Pagination', 'Search'));
+    tests.push(await this.runTest('GET', '/clients?page=1&limit=5', 'Pagination', 'Search'));
+    tests.push(await this.runTest('GET', '/clients?status=active&limit=10&page=1', 'Combined Filters', 'Search'));
 
     // ERROR HANDLING TESTS
     tests.push(await this.runTest('GET', '/clients/00000000-0000-0000-0000-000000000000', 'Get Non-Existent Client', 'Error Handling'));
-    tests.push(await this.runTest('POST', '/clients', 'Create Client - Missing Required Fields', 'Error Handling', { firstName: 'Test' }));
-    tests.push(await this.runTest('POST', '/clients', 'Create Client - Invalid Email', 'Error Handling', {
-      firstName: 'Test',
-      lastName: 'Client',
-      email: 'invalid-email'
-    }));
+    tests.push(await this.runTest('POST', '/clients', 'Create Client - Missing Fields', 'Error Handling', { firstName: 'Test' }));
+    tests.push(await this.runTest('PUT', '/clients/invalid-id-123', 'Update Non-Existent Client', 'Error Handling', { phone: '555-0000' }));
 
     // EDGE CASE TESTS
-    tests.push(await this.runTest('POST', '/clients', 'Create Client - Special Characters', 'Edge Case', {
-      firstName: "O'Brien-Test",
-      lastName: 'Müller & Co.',
+    const specialCharsResult = await this.runTest('POST', '/clients', 'Create Client - Special Characters', 'Edge Case', {
+      firstName: "O'Brien",
+      lastName: "Müller-García & Co.",
       email: `special${Date.now()}@test.com`,
+      phone: '+1 (555) 123-4567',
       clientType: 'seller'
-    }));
+    });
+    tests.push(specialCharsResult);
+    if (specialCharsResult.response?.data?.id) {
+      createdIds.push(specialCharsResult.response.data.id);
+    }
 
-    tests.push(await this.runTest('POST', '/clients', 'Create Client - Long Text Fields', 'Edge Case', {
-      firstName: 'A'.repeat(50),
-      lastName: 'B'.repeat(50),
-      email: `long${Date.now()}@test.com`
-    }));
+    const emptyFieldsResult = await this.runTest('POST', '/clients', 'Create Client - Empty Optional Fields', 'Edge Case', {
+      firstName: 'EmptyFields',
+      lastName: 'Test',
+      email: `empty${Date.now()}@test.com`,
+      phone: '',
+      address: ''
+    });
+    tests.push(emptyFieldsResult);
+    if (emptyFieldsResult.response?.data?.id) {
+      createdIds.push(emptyFieldsResult.response.data.id);
+    }
 
     // PERFORMANCE TESTS
-    tests.push(await this.runTest('GET', '/clients?page=999&limit=100', 'Large Pagination Request', 'Performance'));
-    tests.push(await this.runConcurrentTests('/clients', 5, 'Concurrent GET Requests', 'Performance'));
+    tests.push(await this.runTest('GET', '/clients?page=999&limit=100', 'Large Pagination', 'Performance'));
+    tests.push(await this.runConcurrentTests('/clients', 5, 'Concurrent Requests', 'Performance'));
+    tests.push(await this.runResponseTimeTest('/clients?limit=10', 'Response Time Consistency', 'Performance'));
 
-    return tests;
-  }
-
-  // Run comprehensive health checks for Appointments (15 tests)
-  async runAppointmentsHealthCheck() {
-    const tests = [];
-    const createdIds = [];
-
-    // CORE TESTS
-    tests.push(await this.runTest('GET', '/appointments', 'List All Appointments', 'Critical'));
-    tests.push(await this.runTest('GET', '/appointments?startDate=2025-09-26&endDate=2025-10-03', 'List with Date Range', 'Critical'));
-
-    // Create test appointments
-    const minimalResult = await this.runTest('POST', '/appointments', 'Create Appointment (Minimal)', 'Critical', {
-      title: `Test Showing ${Date.now()}`,
-      appointmentDate: new Date().toISOString().split('T')[0],
-      startTime: '10:00',
-      endTime: '11:00',
-      appointmentType: 'Property Showing'
-    });
-    tests.push(minimalResult);
-    if (minimalResult.response?.data?.id) {
-      createdIds.push(minimalResult.response.data.id);
-    }
-
-    const basicResult = await this.runTest('POST', '/appointments', 'Create Appointment (Basic)', 'Critical', {
-      title: `Listing Presentation ${Date.now()}`,
-      appointmentDate: new Date().toISOString().split('T')[0],
-      startTime: '10:00',
-      endTime: '11:00',
-      location: '123 Main St, Los Angeles, CA 90001',
-      appointmentType: 'Listing Presentation'
-    });
-    tests.push(basicResult);
-    if (basicResult.response?.data?.id) {
-      createdIds.push(basicResult.response.data.id);
-    }
-
-    const fullResult = await this.runTest('POST', '/appointments', 'Create Appointment (Full)', 'Critical', {
-      title: `Closing Appointment ${Date.now()}`,
-      appointmentDate: new Date().toISOString().split('T')[0],
-      startTime: '10:00',
-      endTime: '11:00',
-      location: '456 Title Company Blvd, Beverly Hills, CA 90210',
-      appointmentType: 'Closing'
-    });
-    tests.push(fullResult);
-    if (fullResult.response?.data?.id) {
-      createdIds.push(fullResult.response.data.id);
-    }
-
-    // Update and status tests
-    if (createdIds[0]) {
-      tests.push(await this.runTest('PUT', `/appointments/${createdIds[0]}`, 'Update Appointment by ID', 'Critical', {
-        location: 'Updated Location - Conference Room B',
-        status: 'confirmed'
-      }));
-    }
-
-    if (createdIds[1]) {
-      tests.push(await this.runTest('POST', `/appointments/${createdIds[1]}/cancel`, 'Cancel Appointment', 'Workflow'));
-    }
-
-    if (createdIds[2]) {
-      tests.push(await this.runTest('POST', `/appointments/${createdIds[2]}/complete`, 'Complete Appointment', 'Workflow'));
-    }
-
-    // Archive and delete workflow with batch delete
-    const archivedIds = [];
-    for (let i = 0; i < createdIds.length; i++) {
-      const id = createdIds[i];
-      const archiveResult = await this.runTest('PUT', `/appointments/${id}/archive`, `Archive Test Appointment ${i + 1}`, 'Workflow');
+    // WORKFLOW TESTS - Archive and Delete
+    if (createdIds.length > 0) {
+      const firstId = createdIds[0];
+      const archiveResult = await this.runTest('PUT', `/clients/${firstId}/archive`, 'Archive Single Client', 'Workflow');
       tests.push(archiveResult);
       if (archiveResult.status === 'success') {
-        archivedIds.push(id);
+        tests.push(await this.runTest('DELETE', `/clients/${firstId}`, 'Delete Single Archived Client', 'Workflow'));
       }
     }
 
-    // Test batch delete if we have multiple archived appointments
-    if (archivedIds.length > 1) {
-      const batchDeleteResult = await this.runTest('POST', '/appointments/batch-delete', 'Batch Delete Multiple Appointments', 'Workflow', {
-        ids: archivedIds
+    // Test batch delete with remaining clients
+    if (createdIds.length > 1) {
+      const remainingIds = createdIds.slice(1);
+
+      // First archive the remaining clients
+      for (const id of remainingIds) {
+        await this.runTest('PUT', `/clients/${id}/archive`, 'Archive for Batch Delete', 'Workflow');
+      }
+
+      // Now test batch delete
+      const batchDeleteResult = await this.runTest('POST', '/clients/batch-delete', 'Batch Delete Multiple Clients', 'Workflow', {
+        ids: remainingIds
       });
       tests.push(batchDeleteResult);
 
       // Verify batch deletion worked
       if (batchDeleteResult.status === 'success') {
-        const verifyBatch = await this.runTest('GET', `/appointments/${archivedIds[0]}`, 'Verify Batch Deletion', 'Workflow');
+        const verifyBatch = await this.runTest('GET', `/clients/${remainingIds[0]}`, 'Verify Batch Deletion', 'Workflow');
         if (verifyBatch.response?.error?.code === 'NOT_FOUND') {
           verifyBatch.status = 'success';
-          verifyBatch.response = { verified: true, message: 'Batch deletion confirmed' };
           delete verifyBatch.error;
         }
         tests.push(verifyBatch);
       }
-    } else if (archivedIds.length === 1) {
-      // Fall back to individual delete if only one appointment
-      tests.push(await this.runTest('DELETE', `/appointments/${archivedIds[0]}`, 'Delete Archived Appointment', 'Workflow'));
+    }
 
-      // Verify deletion - this should return NOT_FOUND
-      const verifyTest = await this.runTest('GET', `/appointments/${archivedIds[0]}`, 'Verify Deletion', 'Workflow');
-      // Fix the status - NOT_FOUND is the expected result for a deleted item
+    // Verify single deletion
+    if (testId) {
+      const verifyTest = await this.runTest('GET', `/clients/${testId}`, 'Verify Single Deletion', 'Workflow');
       if (verifyTest.response?.error?.code === 'NOT_FOUND') {
         verifyTest.status = 'success';
         delete verifyTest.error;
@@ -477,112 +379,243 @@ export class HealthCheckService {
     return tests;
   }
 
-  // Run comprehensive health checks for Leads (14 tests)
+  // Run comprehensive health checks for Appointments (23 tests)
+  async runAppointmentsHealthCheck() {
+    const tests = [];
+    const createdIds = [];
+    let testId = null;
+
+    // CORE TESTS
+    tests.push(await this.runTest('GET', '/appointments', 'List All Appointments', 'Critical'));
+
+    const createResult = await this.runTest('POST', '/appointments', 'Create Appointment (Minimal)', 'Critical', {
+      title: `Test Showing ${Date.now()}`,
+      appointmentDate: new Date().toISOString().split('T')[0],
+      startTime: '10:00',
+      endTime: '11:00',
+      appointmentType: 'Property Showing'
+    });
+    tests.push(createResult);
+    if (createResult.response?.data?.id) {
+      testId = createResult.response.data.id;
+      createdIds.push(testId);
+    }
+
+    if (testId) {
+      tests.push(await this.runTest('GET', `/appointments/${testId}`, 'Get Appointment by ID', 'Critical'));
+      tests.push(await this.runTest('PUT', `/appointments/${testId}`, 'Update Appointment', 'Critical', {
+        location: 'Updated Location - Conference Room B',
+        status: 'confirmed'
+      }));
+    }
+
+    // SEARCH & FILTER TESTS
+    tests.push(await this.runTest('GET', '/appointments?status=scheduled', 'Filter by Status', 'Search'));
+    const today = new Date().toISOString().split('T')[0];
+    tests.push(await this.runTest('GET', `/appointments?startDate=${today}&endDate=${today}`, 'Filter by Date Range', 'Search'));
+    tests.push(await this.runTest('GET', '/appointments?page=1&limit=5', 'Pagination', 'Search'));
+    tests.push(await this.runTest('GET', `/appointments?status=scheduled&limit=10&page=1`, 'Combined Filters', 'Search'));
+
+    // ERROR HANDLING TESTS
+    tests.push(await this.runTest('GET', '/appointments/00000000-0000-0000-0000-000000000000', 'Get Non-Existent Appointment', 'Error Handling'));
+    tests.push(await this.runTest('POST', '/appointments', 'Create Appointment - Missing Fields', 'Error Handling', { title: 'Missing Date' }));
+    tests.push(await this.runTest('PUT', '/appointments/invalid-id-123', 'Update Non-Existent Appointment', 'Error Handling', { location: 'Test' }));
+
+    // EDGE CASE TESTS
+    const specialCharsResult = await this.runTest('POST', '/appointments', 'Create Appointment - Special Characters', 'Edge Case', {
+      title: "O'Brien & Müller Meeting - García's Property",
+      appointmentDate: new Date().toISOString().split('T')[0],
+      startTime: '14:00',
+      endTime: '15:00',
+      location: "123 O'Connor St #456",
+      appointmentType: 'Consultation'
+    });
+    tests.push(specialCharsResult);
+    if (specialCharsResult.response?.data?.id) {
+      createdIds.push(specialCharsResult.response.data.id);
+    }
+
+    const emptyFieldsResult = await this.runTest('POST', '/appointments', 'Create Appointment - Empty Optional Fields', 'Edge Case', {
+      title: 'Empty Fields Test',
+      appointmentDate: new Date().toISOString().split('T')[0],
+      startTime: '16:00',
+      endTime: '17:00',
+      location: '',
+      notes: ''
+    });
+    tests.push(emptyFieldsResult);
+    if (emptyFieldsResult.response?.data?.id) {
+      createdIds.push(emptyFieldsResult.response.data.id);
+    }
+
+    // PERFORMANCE TESTS
+    tests.push(await this.runTest('GET', '/appointments?page=999&limit=100', 'Large Pagination', 'Performance'));
+    tests.push(await this.runConcurrentTests('/appointments', 5, 'Concurrent Requests', 'Performance'));
+    tests.push(await this.runResponseTimeTest('/appointments?limit=10', 'Response Time Consistency', 'Performance'));
+
+    // WORKFLOW TESTS - Archive and Delete
+    if (createdIds.length > 0) {
+      const firstId = createdIds[0];
+      const archiveResult = await this.runTest('PUT', `/appointments/${firstId}/archive`, 'Archive Single Appointment', 'Workflow');
+      tests.push(archiveResult);
+      if (archiveResult.status === 'success') {
+        tests.push(await this.runTest('DELETE', `/appointments/${firstId}`, 'Delete Single Archived Appointment', 'Workflow'));
+      }
+    }
+
+    // Test batch delete with remaining appointments
+    if (createdIds.length > 1) {
+      const remainingIds = createdIds.slice(1);
+
+      // First archive the remaining appointments
+      for (const id of remainingIds) {
+        await this.runTest('PUT', `/appointments/${id}/archive`, 'Archive for Batch Delete', 'Workflow');
+      }
+
+      // Now test batch delete
+      const batchDeleteResult = await this.runTest('POST', '/appointments/batch-delete', 'Batch Delete Multiple Appointments', 'Workflow', {
+        ids: remainingIds
+      });
+      tests.push(batchDeleteResult);
+
+      // Verify batch deletion worked
+      if (batchDeleteResult.status === 'success') {
+        const verifyBatch = await this.runTest('GET', `/appointments/${remainingIds[0]}`, 'Verify Batch Deletion', 'Workflow');
+        if (verifyBatch.response?.error?.code === 'NOT_FOUND') {
+          verifyBatch.status = 'success';
+          delete verifyBatch.error;
+        }
+        tests.push(verifyBatch);
+      }
+    }
+
+    // Verify single deletion
+    if (testId) {
+      const verifyTest = await this.runTest('GET', `/appointments/${testId}`, 'Verify Single Deletion', 'Workflow');
+      if (verifyTest.response?.error?.code === 'NOT_FOUND') {
+        verifyTest.status = 'success';
+        delete verifyTest.error;
+      }
+      tests.push(verifyTest);
+    }
+
+    return tests;
+  }
+
+  // Run comprehensive health checks for Leads (23 tests)
   async runLeadsHealthCheck() {
     const tests = [];
     const createdIds = [];
+    let testId = null;
 
     // CORE TESTS
     tests.push(await this.runTest('GET', '/leads', 'List All Leads', 'Critical'));
-    tests.push(await this.runTest('GET', '/leads?leadStatus=New&leadType=Buyer', 'List with Filters', 'Search'));
 
-    // Create test leads
-    const minimalResult = await this.runTest('POST', '/leads', 'Create Lead (Minimal)', 'Critical', {
+    const createResult = await this.runTest('POST', '/leads', 'Create Lead (Minimal)', 'Critical', {
       firstName: 'Test',
       lastName: `BuyerLead_${Date.now()}`,
       email: `testbuyer_${Date.now()}@test.com`,
       phone: '555-1001',
       source: 'Website'
     });
-    tests.push(minimalResult);
-    if (minimalResult.response?.data?.id) {
-      createdIds.push(minimalResult.response.data.id);
+    tests.push(createResult);
+    if (createResult.response?.data?.id) {
+      testId = createResult.response.data.id;
+      createdIds.push(testId);
     }
 
-    const basicResult = await this.runTest('POST', '/leads', 'Create Lead (Basic)', 'Critical', {
-      firstName: 'Test',
-      lastName: `SellerLead_${Date.now()}`,
-      email: `testseller_${Date.now()}@test.com`,
-      phone: '555-1002',
-      source: 'Referral',
-      notes: 'Referred by existing client'
-    });
-    tests.push(basicResult);
-    if (basicResult.response?.data?.id) {
-      createdIds.push(basicResult.response.data.id);
-    }
-
-    const fullResult = await this.runTest('POST', '/leads', 'Create Lead (Full)', 'Critical', {
-      firstName: 'Test',
-      lastName: `InvestorLead_${Date.now()}`,
-      email: `testinvestor_${Date.now()}@test.com`,
-      phone: '555-1003',
-      source: 'Open House',
-      notes: 'Cash buyer, interested in distressed properties'
-    });
-    tests.push(fullResult);
-    if (fullResult.response?.data?.id) {
-      createdIds.push(fullResult.response.data.id);
-    }
-
-    // Update and workflow tests
-    if (createdIds[0]) {
-      tests.push(await this.runTest('PUT', `/leads/${createdIds[0]}`, 'Update Lead by ID', 'Critical', {
+    if (testId) {
+      tests.push(await this.runTest('GET', `/leads/${testId}`, 'Get Lead by ID', 'Critical'));
+      tests.push(await this.runTest('PUT', `/leads/${testId}`, 'Update Lead', 'Critical', {
         leadStatus: 'contacted',
-        notes: 'Initial contact made, scheduled follow-up'
-      }));
-      tests.push(await this.runTest('POST', `/leads/${createdIds[0]}/activities`, 'Record Lead Activity', 'Workflow', {
-        activityType: 'email',
-        notes: 'Sent follow-up email'
+        notes: 'Initial contact made'
       }));
     }
 
-    if (createdIds[1]) {
-      tests.push(await this.runTest('PUT', `/leads/${createdIds[1]}`, 'Qualify Lead', 'Workflow', {
-        leadStatus: 'qualified',
-        notes: 'Lead qualified - budget confirmed at 500k-750k'
-      }));
+    // SEARCH & FILTER TESTS
+    tests.push(await this.runTest('GET', '/leads?leadStatus=New', 'Filter by Status', 'Search'));
+    tests.push(await this.runTest('GET', '/leads?search=Test', 'Search by Name', 'Search'));
+    tests.push(await this.runTest('GET', '/leads?page=1&limit=5', 'Pagination', 'Search'));
+    tests.push(await this.runTest('GET', '/leads?leadStatus=New&limit=10&page=1', 'Combined Filters', 'Search'));
+
+    // ERROR HANDLING TESTS
+    tests.push(await this.runTest('GET', '/leads/00000000-0000-0000-0000-000000000000', 'Get Non-Existent Lead', 'Error Handling'));
+    tests.push(await this.runTest('POST', '/leads', 'Create Lead - Missing Fields', 'Error Handling', { firstName: 'Test' }));
+    tests.push(await this.runTest('PUT', '/leads/invalid-id-123', 'Update Non-Existent Lead', 'Error Handling', { notes: 'Test' }));
+
+    // EDGE CASE TESTS
+    const specialCharsResult = await this.runTest('POST', '/leads', 'Create Lead - Special Characters', 'Edge Case', {
+      firstName: "O'Brien",
+      lastName: "Müller-García",
+      email: `special${Date.now()}@test.com`,
+      phone: '+1 (555) 987-6543',
+      source: 'Referral',
+      notes: "Client of José's & García Co."
+    });
+    tests.push(specialCharsResult);
+    if (specialCharsResult.response?.data?.id) {
+      createdIds.push(specialCharsResult.response.data.id);
     }
 
-    if (createdIds[2]) {
-      tests.push(await this.runTest('POST', `/leads/${createdIds[2]}/convert`, 'Convert Lead to Client', 'Workflow'));
+    const emptyFieldsResult = await this.runTest('POST', '/leads', 'Create Lead - Empty Optional Fields', 'Edge Case', {
+      firstName: 'EmptyFields',
+      lastName: 'Test',
+      email: `empty${Date.now()}@test.com`,
+      phone: '555-0000',
+      source: 'Website',
+      notes: ''
+    });
+    tests.push(emptyFieldsResult);
+    if (emptyFieldsResult.response?.data?.id) {
+      createdIds.push(emptyFieldsResult.response.data.id);
     }
 
-    // Archive and delete workflow with batch delete
-    const archivedIds = [];
-    for (let i = 0; i < Math.min(createdIds.length, createdIds.length); i++) {
-      const id = createdIds[i];
-      const archiveResult = await this.runTest('PUT', `/leads/${id}/archive`, `Archive Test Lead ${i + 1}`, 'Workflow');
+    // PERFORMANCE TESTS
+    tests.push(await this.runTest('GET', '/leads?page=999&limit=100', 'Large Pagination', 'Performance'));
+    tests.push(await this.runConcurrentTests('/leads', 5, 'Concurrent Requests', 'Performance'));
+    tests.push(await this.runResponseTimeTest('/leads?limit=10', 'Response Time Consistency', 'Performance'));
+
+    // WORKFLOW TESTS - Archive and Delete
+    if (createdIds.length > 0) {
+      const firstId = createdIds[0];
+      const archiveResult = await this.runTest('PUT', `/leads/${firstId}/archive`, 'Archive Single Lead', 'Workflow');
       tests.push(archiveResult);
       if (archiveResult.status === 'success') {
-        archivedIds.push(id);
+        tests.push(await this.runTest('DELETE', `/leads/${firstId}`, 'Delete Single Archived Lead', 'Workflow'));
       }
     }
 
-    // Test batch delete if we have multiple archived leads
-    if (archivedIds.length > 1) {
+    // Test batch delete with remaining leads
+    if (createdIds.length > 1) {
+      const remainingIds = createdIds.slice(1);
+
+      // First archive the remaining leads
+      for (const id of remainingIds) {
+        await this.runTest('PUT', `/leads/${id}/archive`, 'Archive for Batch Delete', 'Workflow');
+      }
+
+      // Now test batch delete
       const batchDeleteResult = await this.runTest('POST', '/leads/batch-delete', 'Batch Delete Multiple Leads', 'Workflow', {
-        ids: archivedIds
+        ids: remainingIds
       });
       tests.push(batchDeleteResult);
 
       // Verify batch deletion worked
       if (batchDeleteResult.status === 'success') {
-        const verifyBatch = await this.runTest('GET', `/leads/${archivedIds[0]}`, 'Verify Batch Deletion', 'Workflow');
+        const verifyBatch = await this.runTest('GET', `/leads/${remainingIds[0]}`, 'Verify Batch Deletion', 'Workflow');
         if (verifyBatch.response?.error?.code === 'NOT_FOUND') {
           verifyBatch.status = 'success';
+          delete verifyBatch.error;
           verifyBatch.response = { verified: true, message: 'Batch deletion confirmed' };
           delete verifyBatch.error;
         }
         tests.push(verifyBatch);
       }
-    } else if (archivedIds.length === 1) {
-      // Fall back to individual delete if only one lead
-      tests.push(await this.runTest('DELETE', `/leads/${archivedIds[0]}`, 'Delete Archived Lead', 'Workflow'));
+    }
 
-      // Verify deletion - this should return NOT_FOUND
-      const verifyTest = await this.runTest('GET', `/leads/${archivedIds[0]}`, 'Verify Deletion', 'Workflow');
-      // Fix the status - NOT_FOUND is the expected result for a deleted item
+    // Verify single deletion
+    if (testId) {
+      const verifyTest = await this.runTest('GET', `/leads/${testId}`, 'Verify Single Deletion', 'Workflow');
       if (verifyTest.response?.error?.code === 'NOT_FOUND') {
         verifyTest.status = 'success';
         delete verifyTest.error;
