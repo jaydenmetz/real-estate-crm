@@ -949,11 +949,29 @@ const Settings = () => {
                     </ListItemSecondaryAction>
                   </ListItem>
                 </List>
+
+                <Divider sx={{ my: 3 }} />
+
+                <Typography variant="h6" gutterBottom>
+                  Security & Audit Logs
+                </Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  View authentication and security-related events for your account
+                </Typography>
+                <Button
+                  variant="outlined"
+                  startIcon={<Security />}
+                  onClick={() => navigate('/security-events')}
+                  sx={{ mb: 2 }}
+                >
+                  View Security Events
+                </Button>
+
                 <Button
                   variant="contained"
                   startIcon={<Save />}
                   onClick={handleSaveProfile}
-                  sx={{ mt: 2 }}
+                  sx={{ mt: 2, display: 'block' }}
                 >
                   Save Privacy Settings
                 </Button>

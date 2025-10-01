@@ -43,6 +43,7 @@ import ExpenseDashboard from './components/dashboards/ExpenseDashboard';
 // System Components
 import ActivityLog from './components/system/ActivityLog';
 import AllNotes from './components/system/AllNotes';
+import SecurityEventsPage from './components/system/SecurityEventsPage';
 import HealthOverviewDashboard from './components/health/HealthOverviewDashboard';
 import EscrowsHealthDashboard from './components/health/EscrowsHealthDashboard';
 import ListingsHealthDashboard from './components/health/ListingsHealthDashboard';
@@ -278,6 +279,7 @@ function App() {
                                 {/* System Features */}
                                 <Route path="/activity-log" element={<ActivityLog />} />
                                 <Route path="/all-notes" element={<AllNotes />} />
+                                <Route path="/security-events" element={<SecurityEventsPage />} />
                                 <Route path="/settings" element={
                                   <React.Suspense fallback={<Box sx={{ p: 4, textAlign: 'center' }}>Loading settings...</Box>}>
                                     <Settings />
