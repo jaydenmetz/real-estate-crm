@@ -296,6 +296,9 @@ apiRouter.use('/uploads', require('./routes/upload.routes'));
 apiRouter.use('/profiles', require('./routes/profiles.routes'));
 apiRouter.use('/settings', require('./routes/settings.routes'));
 
+// Onboarding routes
+apiRouter.use('/onboarding', require('./routes/onboarding.routes'));
+
 // Mount API router
 app.use(`/${process.env.API_VERSION || 'v1'}`, apiRouter);
 

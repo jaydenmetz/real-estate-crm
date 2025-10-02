@@ -5,6 +5,7 @@ const RefreshTokenService = require('../services/refreshToken.service');
 const SecurityEventService = require('../services/securityEvent.service');
 const EmailService = require('../services/email.service');
 const GeoAnomalyService = require('../services/geoAnomaly.service');
+const OnboardingService = require('../services/onboarding.service');
 
 // JWT Secret Configuration (matches auth.middleware.js)
 // MUST be set in environment - no fallback for security
@@ -96,6 +97,11 @@ class AuthController {
 
       await client.query('COMMIT');
 
+      // Generate sample data and initialize onboarding (async, don't block response)
+      OnboardingService.generateSampleData(user.id)
+        .then(() => console.log(`✅ Sample data generated for user ${user.id}`))
+        .catch((err) => console.error(`❌ Failed to generate sample data for user ${user.id}:`, err));
+
       res.status(201).json({
         success: true,
         data: {
@@ -108,6 +114,11 @@ class AuthController {
             isActive: user.is_active,
           },
           token,
+          onboarding: {
+            sampleDataGenerated: true,
+            tutorialAvailable: true,
+            nextStep: '/onboarding/welcome',
+          },
         },
         message: 'User registered successfully',
       });
