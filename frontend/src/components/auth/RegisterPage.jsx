@@ -32,6 +32,7 @@ import {
 import { Google } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
 import { useAuth } from '../../contexts/AuthContext';
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
@@ -195,16 +196,53 @@ const RegisterPage = () => {
     }
   };
 
-  const handleGoogleSignIn = async () => {
+  const handleGoogleSuccess = async (credentialResponse) => {
     setError('');
+    setLoading(true);
+
     try {
-      // TODO: Implement Google OAuth
-      // For now, show a message
-      setError('Google Sign-In coming soon! Please use email registration.');
+      const apiUrl = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
+      const endpoint = apiUrl.includes('/v1') ? `${apiUrl}/auth/google` : `${apiUrl}/v1/auth/google`;
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          idToken: credentialResponse.credential,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Store token and user info
+        localStorage.setItem('token', result.data.token);
+        localStorage.setItem('user', JSON.stringify(result.data.user));
+
+        // Use the login function from AuthContext if available
+        if (login) {
+          await login(result.data.token, result.data.user);
+        }
+
+        // Redirect to onboarding tutorial for new users
+        setTimeout(() => {
+          navigate('/onboarding/welcome');
+        }, 500);
+      } else {
+        setError(result.error?.message || 'Google sign-in failed');
+      }
     } catch (err) {
       console.error('Google sign-in error:', err);
-      setError('Google sign-in failed. Please try again.');
+      setError('An error occurred during Google sign-in. Please try again.');
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleGoogleError = () => {
+    setError('Google sign-in was cancelled or failed. Please try again.');
   };
 
   const handleBack = () => {
@@ -510,26 +548,16 @@ const RegisterPage = () => {
           {/* Google Sign-In Button */}
           {activeStep === 0 && (
             <Box sx={{ mb: 3 }}>
-              <Button
-                fullWidth
-                variant="outlined"
-                size="large"
-                startIcon={<Google />}
-                onClick={handleGoogleSignIn}
-                sx={{
-                  borderColor: 'divider',
-                  color: 'text.primary',
-                  textTransform: 'none',
-                  fontSize: '1rem',
-                  py: 1.5,
-                  '&:hover': {
-                    borderColor: 'primary.main',
-                    backgroundColor: 'action.hover',
-                  }
-                }}
-              >
-                Continue with Google
-              </Button>
+              <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={handleGoogleError}
+                  theme="outline"
+                  size="large"
+                  width="100%"
+                  text="continue_with"
+                />
+              </Box>
 
               <Box sx={{ display: 'flex', alignItems: 'center', my: 3 }}>
                 <Divider sx={{ flex: 1 }} />
@@ -613,4 +641,20 @@ const RegisterPage = () => {
   );
 };
 
-export default RegisterPage;
+// Wrap with GoogleOAuthProvider
+const RegisterPageWithGoogle = () => {
+  const googleClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+
+  if (!googleClientId) {
+    console.warn('Google Client ID not configured. Google Sign-In will not work.');
+    return <RegisterPage />;
+  }
+
+  return (
+    <GoogleOAuthProvider clientId={googleClientId}>
+      <RegisterPage />
+    </GoogleOAuthProvider>
+  );
+};
+
+export default RegisterPageWithGoogle;

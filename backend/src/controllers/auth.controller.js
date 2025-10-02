@@ -6,6 +6,7 @@ const SecurityEventService = require('../services/securityEvent.service');
 const EmailService = require('../services/email.service');
 const GeoAnomalyService = require('../services/geoAnomaly.service');
 const OnboardingService = require('../services/onboarding.service');
+const GoogleOAuthService = require('../services/googleOAuth.service');
 
 // JWT Secret Configuration (matches auth.middleware.js)
 // MUST be set in environment - no fallback for security
@@ -816,6 +817,98 @@ class AuthController {
         error: {
           code: 'GET_SESSIONS_ERROR',
           message: 'Failed to retrieve sessions',
+        },
+      });
+    }
+  }
+
+  /**
+   * Google OAuth Sign-In
+   */
+  static async googleSignIn(req, res) {
+    try {
+      const { idToken } = req.body;
+
+      if (!idToken) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'MISSING_ID_TOKEN',
+            message: 'Google ID token is required',
+          },
+        });
+      }
+
+      // Verify Google token and sign in/register user
+      const result = await GoogleOAuthService.signInWithGoogle(idToken);
+
+      // Create refresh token
+      const refreshToken = await RefreshTokenService.createToken(
+        result.user.id,
+        req.ip,
+        req.get('user-agent'),
+      );
+
+      // Set httpOnly cookie for refresh token
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      });
+
+      // Log successful login via Google
+      SecurityEventService.logEvent({
+        eventType: 'login_success',
+        eventCategory: 'authentication',
+        severity: 'info',
+        userId: result.user.id,
+        email: result.user.email,
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        requestPath: req.path,
+        requestMethod: req.method,
+        success: true,
+        message: 'User logged in successfully via Google OAuth',
+        metadata: {
+          authMethod: 'google_oauth',
+        },
+      }).catch(console.error);
+
+      res.json({
+        success: true,
+        data: {
+          token: result.token,
+          user: result.user,
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Google sign-in error:', error);
+
+      // Log failed Google login
+      SecurityEventService.logEvent({
+        eventType: 'login_failed',
+        eventCategory: 'authentication',
+        severity: 'warning',
+        email: req.body.email || 'unknown',
+        ipAddress: req.ip,
+        userAgent: req.get('user-agent'),
+        requestPath: req.path,
+        requestMethod: req.method,
+        success: false,
+        message: `Google OAuth login failed: ${error.message}`,
+        metadata: {
+          authMethod: 'google_oauth',
+          errorMessage: error.message,
+        },
+      }).catch(console.error);
+
+      res.status(401).json({
+        success: false,
+        error: {
+          code: 'GOOGLE_AUTH_ERROR',
+          message: error.message || 'Google authentication failed',
         },
       });
     }

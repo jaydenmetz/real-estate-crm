@@ -7,6 +7,7 @@ const { authenticate } = require('../middleware/auth.middleware');
 // Public routes
 router.post('/register', AuthController.register);
 router.post('/login', AuthController.login);
+router.post('/google', AuthController.googleSignIn); // Google OAuth sign-in
 router.post('/refresh', AuthController.refresh); // Refresh access token (uses httpOnly cookie)
 
 // Protected routes (require JWT authentication)
