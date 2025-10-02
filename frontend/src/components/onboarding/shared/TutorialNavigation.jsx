@@ -21,6 +21,7 @@ const TutorialNavigation = ({ currentStep, nextStep, onNext, showBack = true }) 
       alignItems: 'center',
       mt: 4,
       gap: 2,
+      px: { xs: 2, sm: 0 },
     }}>
       {showBack && currentStep > 0 ? (
         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -31,11 +32,17 @@ const TutorialNavigation = ({ currentStep, nextStep, onNext, showBack = true }) 
             sx={{
               color: 'white',
               borderColor: 'rgba(255,255,255,0.3)',
+              minHeight: '44px',
+              minWidth: '44px',
+              px: { xs: 2, sm: 3 },
+              py: { xs: 1.5, sm: 1 },
+              fontSize: { xs: '0.9rem', sm: '1rem' },
               '&:hover': {
                 borderColor: 'rgba(255,255,255,0.6)',
                 backgroundColor: 'rgba(255,255,255,0.1)',
               }
             }}
+            aria-label="Go back to previous step (or swipe right, press left arrow)"
           >
             Back
           </Button>
@@ -61,9 +68,11 @@ const TutorialNavigation = ({ currentStep, nextStep, onNext, showBack = true }) 
           sx={{
             background: 'linear-gradient(90deg, #10b981 0%, #059669 100%)',
             color: 'white',
-            px: 4,
-            py: 1.5,
-            fontSize: '1.1rem',
+            minHeight: '44px',
+            minWidth: '44px',
+            px: { xs: 3, sm: 4 },
+            py: { xs: 1.5, sm: 1.5 },
+            fontSize: { xs: '1rem', sm: '1.1rem' },
             fontWeight: 600,
             boxShadow: '0 4px 20px rgba(16, 185, 129, 0.4)',
             '&:hover': {
@@ -71,6 +80,7 @@ const TutorialNavigation = ({ currentStep, nextStep, onNext, showBack = true }) 
               boxShadow: '0 6px 25px rgba(16, 185, 129, 0.5)',
             }
           }}
+          aria-label={`Continue to ${nextStep || 'next step'} (or swipe left, press right arrow)`}
         >
           {nextStep || 'Continue'}
         </Button>

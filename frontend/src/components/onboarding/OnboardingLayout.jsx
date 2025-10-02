@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Box, LinearProgress, IconButton, Typography } from '@mui/material';
 import { Close, Replay } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSwipeable } from 'react-swipeable';
 import OnboardingService from '../../services/onboarding.service';
 
 const OnboardingLayout = () => {
@@ -49,6 +50,43 @@ const OnboardingLayout = () => {
     }
   };
 
+  const goToNextStep = () => {
+    if (currentStepIndex < steps.length - 1) {
+      navigate(steps[currentStepIndex + 1].path);
+    }
+  };
+
+  const goToPreviousStep = () => {
+    if (currentStepIndex > 0) {
+      navigate(steps[currentStepIndex - 1].path);
+    }
+  };
+
+  // Swipe gesture handlers for mobile
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () => goToNextStep(),
+    onSwipedRight: () => goToPreviousStep(),
+    preventScrollOnSwipe: false,
+    trackMouse: false, // Only track touch, not mouse
+    delta: 50, // Minimum swipe distance (50px)
+  });
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowRight') {
+        goToNextStep();
+      } else if (e.key === 'ArrowLeft') {
+        goToPreviousStep();
+      } else if (e.key === 'Escape') {
+        handleSkip();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentStepIndex]);
+
   if (loading) {
     return (
       <Box sx={{ width: '100%', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -58,12 +96,18 @@ const OnboardingLayout = () => {
   }
 
   return (
-    <Box sx={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      position: 'relative',
-      overflow: 'hidden',
-    }}>
+    <Box
+      {...swipeHandlers}
+      sx={{
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        position: 'relative',
+        overflow: 'hidden',
+        touchAction: 'pan-y', // Allow vertical scrolling, enable horizontal swipes
+      }}
+      role="main"
+      aria-label="Onboarding Tutorial"
+    >
       {/* Progress Bar */}
       <Box sx={{
         position: 'fixed',
@@ -77,12 +121,20 @@ const OnboardingLayout = () => {
         <Box sx={{
           maxWidth: '1200px',
           margin: '0 auto',
-          padding: '16px 24px',
+          padding: { xs: '12px 16px', sm: '16px 24px' },
           display: 'flex',
           alignItems: 'center',
-          gap: 2,
+          gap: { xs: 1, sm: 2 },
         }}>
-          <Typography variant="body2" sx={{ color: '#667eea', fontWeight: 600, minWidth: '100px' }}>
+          <Typography
+            variant="body2"
+            sx={{
+              color: '#667eea',
+              fontWeight: 600,
+              minWidth: { xs: '60px', sm: '100px' },
+              fontSize: { xs: '0.75rem', sm: '0.875rem' },
+            }}
+          >
             {currentStepIndex >= 0 ? `Step ${currentStepIndex + 1} of ${steps.length}` : 'Loading...'}
           </Typography>
           <LinearProgress
@@ -90,7 +142,7 @@ const OnboardingLayout = () => {
             value={progressPercentage}
             sx={{
               flex: 1,
-              height: 8,
+              height: { xs: 6, sm: 8 },
               borderRadius: 4,
               backgroundColor: '#e0e0e0',
               '& .MuiLinearProgress-bar': {
@@ -98,6 +150,7 @@ const OnboardingLayout = () => {
                 background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
               }
             }}
+            aria-label={`Tutorial progress: ${Math.round(progressPercentage)}%`}
           />
           <Box sx={{ display: 'flex', gap: 1 }}>
             <IconButton
@@ -105,11 +158,14 @@ const OnboardingLayout = () => {
               onClick={handleSkip}
               sx={{
                 color: '#666',
+                minWidth: '44px',
+                minHeight: '44px',
                 '&:hover': {
                   color: '#667eea',
                   backgroundColor: 'rgba(102, 126, 234, 0.1)',
                 }
               }}
+              aria-label="Skip tutorial (or press Escape)"
             >
               <Close />
             </IconButton>
@@ -118,7 +174,7 @@ const OnboardingLayout = () => {
       </Box>
 
       {/* Content Area */}
-      <Box sx={{ pt: 10 }}>
+      <Box sx={{ pt: { xs: 8, sm: 10 } }}>
         <AnimatePresence mode="wait">
           <motion.div
             key={location.pathname}
@@ -127,7 +183,7 @@ const OnboardingLayout = () => {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
           >
-            <Outlet context={{ progress, loadProgress, steps, currentStepIndex }} />
+            <Outlet context={{ progress, loadProgress, steps, currentStepIndex, goToNextStep, goToPreviousStep }} />
           </motion.div>
         </AnimatePresence>
       </Box>
@@ -143,6 +199,39 @@ const OnboardingLayout = () => {
         pointerEvents: 'none',
         background: 'radial-gradient(circle at 20% 50%, rgba(255,255,255,0.3) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(255,255,255,0.2) 0%, transparent 50%)',
       }} />
+
+      {/* Mobile Swipe Hint (only show on first step, mobile only) */}
+      {currentStepIndex === 0 && (
+        <Box
+          sx={{
+            position: 'fixed',
+            bottom: 24,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            display: { xs: 'block', md: 'none' },
+            zIndex: 1000,
+          }}
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 2, duration: 0.5 }}
+          >
+            <Typography
+              variant="caption"
+              sx={{
+                color: 'rgba(255,255,255,0.9)',
+                background: 'rgba(0,0,0,0.3)',
+                padding: '8px 16px',
+                borderRadius: '20px',
+                backdropFilter: 'blur(10px)',
+              }}
+            >
+              Swipe left/right or use arrow keys
+            </Typography>
+          </motion.div>
+        </Box>
+      )}
     </Box>
   );
 };

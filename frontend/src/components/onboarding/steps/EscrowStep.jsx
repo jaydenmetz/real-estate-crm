@@ -4,12 +4,15 @@ import { Box, Container, Typography, Paper, Chip } from '@mui/material';
 import { motion } from 'framer-motion';
 import { CheckCircle, Clock } from 'lucide-react';
 import CountUp from 'react-countup';
+import Confetti from 'react-confetti';
+import { useWindowSize } from 'react-use';
 import TutorialNavigation from '../shared/TutorialNavigation';
 import OnboardingService from '../../../services/onboarding.service';
 
 const EscrowStep = () => {
   const navigate = useNavigate();
   const { loadProgress } = useOutletContext();
+  const { width, height } = useWindowSize();
   const [sampleData, setSampleData] = useState(null);
   const [showConfetti, setShowConfetti] = useState(false);
 
@@ -48,6 +51,7 @@ const EscrowStep = () => {
 
   return (
     <Container maxWidth="md">
+      {showConfetti && <Confetti width={width} height={height} recycle={false} numberOfPieces={200} colors={['#10b981', '#059669', '#34d399']} />}
       <Box sx={{
         minHeight: 'calc(100vh - 120px)',
         display: 'flex',
