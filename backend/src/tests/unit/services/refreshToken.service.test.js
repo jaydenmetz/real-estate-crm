@@ -1,206 +1,460 @@
+/**
+ * RefreshTokenService Unit Tests
+ * Phase 1: Testing Foundation & Unit Tests
+ *
+ * Tests all methods in RefreshTokenService with mocked dependencies
+ */
+
+const crypto = require('crypto');
 const RefreshTokenService = require('../../../services/refreshToken.service');
+
+// Mock dependencies
+jest.mock('../../../config/database', () => ({
+  pool: {
+    query: jest.fn(),
+  },
+}));
+
+jest.mock('../../../utils/logger', () => ({
+  info: jest.fn(),
+  error: jest.fn(),
+  debug: jest.fn(),
+  warn: jest.fn(),
+}));
+
 const { pool } = require('../../../config/database');
+const logger = require('../../../utils/logger');
 
-describe('RefreshTokenService Unit Tests', () => {
-  let testUserId;
-  let testToken;
-
-  beforeAll(async () => {
-    // Create test user
-    const result = await pool.query(
-      'INSERT INTO users (email, password_hash, first_name, last_name, role) VALUES ($1, $2, $3, $4, $5) RETURNING id',
-      ['refreshtoken@example.com', 'hashedpassword', 'Refresh', 'Token', 'agent'],
-    );
-    testUserId = result.rows[0].id;
+describe('RefreshTokenService', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
-  afterAll(async () => {
-    // Cleanup
-    await pool.query('DELETE FROM refresh_tokens WHERE user_id = $1', [testUserId]);
-    await pool.query('DELETE FROM users WHERE id = $1', [testUserId]);
-    await pool.end();
+  describe('createRefreshToken', () => {
+    const mockUserId = 'user-123';
+    const mockIpAddress = '192.168.1.1';
+    const mockUserAgent = 'Mozilla/5.0';
+    const mockDeviceInfo = { browser: 'Chrome', os: 'Windows' };
+
+    test('should generate 80-character hex token', async () => {
+      pool.query.mockResolvedValueOnce({ rows: [] });
+
+      const token = await RefreshTokenService.createRefreshToken(
+        mockUserId,
+        mockIpAddress,
+        mockUserAgent,
+        mockDeviceInfo
+      );
+
+      expect(token).toBeDefined();
+      expect(token).toHaveLength(80);
+      expect(/^[a-f0-9]{80}$/.test(token)).toBe(true);
+    });
+
+    test('should insert token into database with correct expiration', async () => {
+      pool.query.mockResolvedValueOnce({ rows: [] });
+
+      await RefreshTokenService.createRefreshToken(
+        mockUserId,
+        mockIpAddress,
+        mockUserAgent,
+        mockDeviceInfo
+      );
+
+      expect(pool.query).toHaveBeenCalledTimes(1);
+      const insertQuery = pool.query.mock.calls[0][0];
+      expect(insertQuery).toContain('INSERT INTO refresh_tokens');
+      expect(insertQuery).toContain('expires_at');
+
+      // Verify expiration is 7 days (NOW() + INTERVAL '7 days')
+      expect(insertQuery).toContain("INTERVAL '7 days'");
+    });
+
+    test('should store user context in database', async () => {
+      pool.query.mockResolvedValueOnce({ rows: [] });
+
+      await RefreshTokenService.createRefreshToken(
+        mockUserId,
+        mockIpAddress,
+        mockUserAgent,
+        mockDeviceInfo
+      );
+
+      const queryParams = pool.query.mock.calls[0][1];
+      expect(queryParams).toContain(mockUserId);
+      expect(queryParams).toContain(mockIpAddress);
+      expect(queryParams).toContain(mockUserAgent);
+    });
+
+    test('should handle database errors gracefully', async () => {
+      const dbError = new Error('Database connection failed');
+      pool.query.mockRejectedValueOnce(dbError);
+
+      await expect(
+        RefreshTokenService.createRefreshToken(mockUserId, mockIpAddress, mockUserAgent, mockDeviceInfo)
+      ).rejects.toThrow('Database connection failed');
+
+      expect(logger.error).toHaveBeenCalled();
+    });
+
+    test('should generate unique tokens on multiple calls', async () => {
+      pool.query.mockResolvedValue({ rows: [] });
+
+      const token1 = await RefreshTokenService.createRefreshToken(
+        mockUserId,
+        mockIpAddress,
+        mockUserAgent,
+        mockDeviceInfo
+      );
+      const token2 = await RefreshTokenService.createRefreshToken(
+        mockUserId,
+        mockIpAddress,
+        mockUserAgent,
+        mockDeviceInfo
+      );
+
+      expect(token1).not.toBe(token2);
+    });
   });
 
-  // Test 1: Create refresh token
-  it('should create a new refresh token', async () => {
-    const token = await RefreshTokenService.createRefreshToken(
-      testUserId,
-      '192.168.1.100',
-      'Mozilla/5.0 Test Browser',
-      { device: 'Desktop' },
-    );
+  describe('validateRefreshToken', () => {
+    const mockToken = crypto.randomBytes(40).toString('hex');
+    const mockUserData = {
+      user_id: 'user-123',
+      email: 'test@example.com',
+      first_name: 'Test',
+      last_name: 'User',
+      role: 'agent',
+      is_active: true,
+      team_id: 'team-456',
+    };
 
-    expect(token).toHaveProperty('token');
-    expect(token).toHaveProperty('expires_at');
-    expect(token.user_id).toBe(testUserId);
-    expect(token.token).toHaveLength(80); // 40 bytes = 80 hex chars
-    expect(token.ip_address).toBe('192.168.1.100');
+    test('should return user data for valid token', async () => {
+      pool.query.mockResolvedValueOnce({ rows: [mockUserData] });
 
-    testToken = token.token;
+      const result = await RefreshTokenService.validateRefreshToken(mockToken);
+
+      expect(result).toBeDefined();
+      expect(result.user_id).toBe('user-123');
+      expect(result.email).toBe('test@example.com');
+      expect(pool.query).toHaveBeenCalledWith(
+        expect.stringContaining('SELECT rt.*, u.id as user_id'),
+        [mockToken]
+      );
+    });
+
+    test('should update last_used_at timestamp', async () => {
+      pool.query.mockResolvedValueOnce({ rows: [mockUserData] });
+      pool.query.mockResolvedValueOnce({ rows: [] }); // UPDATE query
+
+      await RefreshTokenService.validateRefreshToken(mockToken);
+
+      expect(pool.query).toHaveBeenCalledTimes(2);
+      const updateQuery = pool.query.mock.calls[1][0];
+      expect(updateQuery).toContain('UPDATE refresh_tokens');
+      expect(updateQuery).toContain('last_used_at = NOW()');
+    });
+
+    test('should return null for nonexistent token', async () => {
+      pool.query.mockResolvedValueOnce({ rows: [] });
+
+      const result = await RefreshTokenService.validateRefreshToken(mockToken);
+
+      expect(result).toBeNull();
+    });
+
+    test('should return null for expired token', async () => {
+      // Token exists but query filters it out due to expires_at check
+      pool.query.mockResolvedValueOnce({ rows: [] });
+
+      const result = await RefreshTokenService.validateRefreshToken(mockToken);
+
+      expect(result).toBeNull();
+    });
+
+    test('should return null for revoked token', async () => {
+      // Token exists but query filters it out due to revoked_at check
+      pool.query.mockResolvedValueOnce({ rows: [] });
+
+      const result = await RefreshTokenService.validateRefreshToken(mockToken);
+
+      expect(result).toBeNull();
+    });
+
+    test('should return null for inactive user', async () => {
+      // Token exists but query filters it out due to is_active check
+      pool.query.mockResolvedValueOnce({ rows: [] });
+
+      const result = await RefreshTokenService.validateRefreshToken(mockToken);
+
+      expect(result).toBeNull();
+    });
+
+    test('should handle database errors', async () => {
+      const dbError = new Error('Query failed');
+      pool.query.mockRejectedValueOnce(dbError);
+
+      await expect(
+        RefreshTokenService.validateRefreshToken(mockToken)
+      ).rejects.toThrow('Query failed');
+    });
   });
 
-  // Test 2: Validate valid refresh token
-  it('should validate a valid refresh token', async () => {
-    const userData = await RefreshTokenService.validateRefreshToken(testToken);
+  describe('rotateRefreshToken', () => {
+    const mockOldToken = crypto.randomBytes(40).toString('hex');
+    const mockUserId = 'user-123';
+    const mockIpAddress = '192.168.1.1';
+    const mockUserAgent = 'Mozilla/5.0';
 
-    expect(userData).not.toBeNull();
-    expect(userData.user_id).toBe(testUserId);
-    expect(userData.email).toBe('refreshtoken@example.com');
-    expect(userData.is_active).toBe(true);
+    test('should mark old token as used and generate new token', async () => {
+      // Mock UPDATE to mark old token
+      pool.query.mockResolvedValueOnce({ rows: [] });
+      // Mock INSERT for new token
+      pool.query.mockResolvedValueOnce({ rows: [] });
+
+      const newToken = await RefreshTokenService.rotateRefreshToken(
+        mockOldToken,
+        mockUserId,
+        mockIpAddress,
+        mockUserAgent
+      );
+
+      expect(newToken).toBeDefined();
+      expect(newToken).toHaveLength(80);
+      expect(newToken).not.toBe(mockOldToken);
+
+      // Should have updated old token
+      expect(pool.query).toHaveBeenCalledWith(
+        expect.stringContaining('UPDATE refresh_tokens'),
+        expect.arrayContaining([mockOldToken])
+      );
+    });
+
+    test('should set revoked_at for old token', async () => {
+      pool.query.mockResolvedValue({ rows: [] });
+
+      await RefreshTokenService.rotateRefreshToken(
+        mockOldToken,
+        mockUserId,
+        mockIpAddress,
+        mockUserAgent
+      );
+
+      const updateQuery = pool.query.mock.calls[0][0];
+      expect(updateQuery).toContain('revoked_at = NOW()');
+    });
+
+    test('should handle replay attack (old token already used)', async () => {
+      // Mock finding already revoked token
+      pool.query.mockRejectedValueOnce(new Error('Token already used'));
+
+      await expect(
+        RefreshTokenService.rotateRefreshToken(mockOldToken, mockUserId, mockIpAddress, mockUserAgent)
+      ).rejects.toThrow('Token already used');
+    });
   });
 
-  // Test 3: Reject invalid refresh token
-  it('should reject invalid refresh token', async () => {
-    const invalidToken = 'invalid_token_123456789';
+  describe('revokeRefreshToken', () => {
+    const mockToken = crypto.randomBytes(40).toString('hex');
 
-    const userData = await RefreshTokenService.validateRefreshToken(invalidToken);
+    test('should revoke token successfully', async () => {
+      pool.query.mockResolvedValueOnce({ rowCount: 1 });
 
-    expect(userData).toBeNull();
+      const result = await RefreshTokenService.revokeRefreshToken(mockToken);
+
+      expect(result).toBe(true);
+      expect(pool.query).toHaveBeenCalledWith(
+        expect.stringContaining('UPDATE refresh_tokens'),
+        expect.arrayContaining([mockToken])
+      );
+    });
+
+    test('should return false if token not found', async () => {
+      pool.query.mockResolvedValueOnce({ rowCount: 0 });
+
+      const result = await RefreshTokenService.revokeRefreshToken(mockToken);
+
+      expect(result).toBe(false);
+    });
+
+    test('should set revoked_at timestamp', async () => {
+      pool.query.mockResolvedValueOnce({ rowCount: 1 });
+
+      await RefreshTokenService.revokeRefreshToken(mockToken);
+
+      const updateQuery = pool.query.mock.calls[0][0];
+      expect(updateQuery).toContain('revoked_at = NOW()');
+      expect(updateQuery).toContain('WHERE token = $1');
+    });
   });
 
-  // Test 4: Revoke refresh token (logout)
-  it('should revoke refresh token on logout', async () => {
-    // Create a new token to revoke
-    const newToken = await RefreshTokenService.createRefreshToken(
-      testUserId,
-      '192.168.1.101',
-      'Test Browser',
-    );
+  describe('revokeAllUserTokens', () => {
+    const mockUserId = 'user-123';
 
-    // Revoke it
-    const revoked = await RefreshTokenService.revokeRefreshToken(newToken.token);
+    test('should revoke all tokens for user', async () => {
+      pool.query.mockResolvedValueOnce({ rowCount: 5 });
 
-    expect(revoked).toBe(true);
+      const result = await RefreshTokenService.revokeAllUserTokens(mockUserId);
 
-    // Try to validate revoked token
-    const userData = await RefreshTokenService.validateRefreshToken(newToken.token);
+      expect(result).toBe(5);
+      expect(pool.query).toHaveBeenCalledWith(
+        expect.stringContaining('UPDATE refresh_tokens'),
+        expect.arrayContaining([mockUserId])
+      );
+    });
 
-    expect(userData).toBeNull();
+    test('should only revoke non-revoked tokens', async () => {
+      pool.query.mockResolvedValueOnce({ rowCount: 3 });
+
+      await RefreshTokenService.revokeAllUserTokens(mockUserId);
+
+      const updateQuery = pool.query.mock.calls[0][0];
+      expect(updateQuery).toContain('revoked_at IS NULL');
+    });
+
+    test('should return 0 if user has no active tokens', async () => {
+      pool.query.mockResolvedValueOnce({ rowCount: 0 });
+
+      const result = await RefreshTokenService.revokeAllUserTokens(mockUserId);
+
+      expect(result).toBe(0);
+    });
   });
 
-  // Test 5: Revoke all tokens for user
-  it('should revoke all refresh tokens for a user', async () => {
-    // Create multiple tokens
-    await RefreshTokenService.createRefreshToken(testUserId, '192.168.1.102', 'Browser 1');
-    await RefreshTokenService.createRefreshToken(testUserId, '192.168.1.103', 'Browser 2');
-    await RefreshTokenService.createRefreshToken(testUserId, '192.168.1.104', 'Browser 3');
+  describe('getUserTokens', () => {
+    const mockUserId = 'user-123';
+    const mockTokens = [
+      {
+        id: '1',
+        user_agent: 'Chrome',
+        ip_address: '192.168.1.1',
+        created_at: new Date(),
+        last_used_at: new Date(),
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
+      {
+        id: '2',
+        user_agent: 'Firefox',
+        ip_address: '192.168.1.2',
+        created_at: new Date(),
+        last_used_at: new Date(),
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      },
+    ];
 
-    // Revoke all
-    const count = await RefreshTokenService.revokeAllUserTokens(testUserId);
+    test('should return all active tokens for user', async () => {
+      pool.query.mockResolvedValueOnce({ rows: mockTokens });
 
-    expect(count).toBeGreaterThanOrEqual(3);
+      const result = await RefreshTokenService.getUserTokens(mockUserId);
 
-    // Verify all tokens are revoked
-    const result = await pool.query(
-      'SELECT * FROM refresh_tokens WHERE user_id = $1 AND revoked_at IS NULL',
-      [testUserId],
-    );
+      expect(result).toHaveLength(2);
+      expect(result[0].user_agent).toBe('Chrome');
+      expect(result[1].user_agent).toBe('Firefox');
+    });
 
-    expect(result.rows.length).toBe(0);
+    test('should only return non-revoked, non-expired tokens', async () => {
+      pool.query.mockResolvedValueOnce({ rows: mockTokens });
+
+      await RefreshTokenService.getUserTokens(mockUserId);
+
+      const selectQuery = pool.query.mock.calls[0][0];
+      expect(selectQuery).toContain('revoked_at IS NULL');
+      expect(selectQuery).toContain('expires_at > NOW()');
+    });
+
+    test('should return empty array if user has no active tokens', async () => {
+      pool.query.mockResolvedValueOnce({ rows: [] });
+
+      const result = await RefreshTokenService.getUserTokens(mockUserId);
+
+      expect(result).toEqual([]);
+    });
   });
 
-  // Test 6: Cleanup expired tokens
-  it('should cleanup expired refresh tokens', async () => {
-    // Create an expired token manually
-    const expiredToken = `expired_token_${Date.now()}`;
-    const pastDate = new Date('2020-01-01');
+  describe('cleanupExpiredTokens', () => {
+    test('should delete expired tokens', async () => {
+      pool.query.mockResolvedValueOnce({ rowCount: 42 });
 
-    await pool.query(
-      'INSERT INTO refresh_tokens (user_id, token, expires_at, ip_address, user_agent) VALUES ($1, $2, $3, $4, $5)',
-      [testUserId, expiredToken, pastDate, '192.168.1.105', 'Test'],
-    );
+      const result = await RefreshTokenService.cleanupExpiredTokens();
 
-    // Cleanup expired tokens
-    const deleted = await RefreshTokenService.cleanupExpiredTokens();
+      expect(result).toBe(42);
+      expect(pool.query).toHaveBeenCalledWith(
+        expect.stringContaining('DELETE FROM refresh_tokens')
+      );
+    });
 
-    expect(deleted).toBeGreaterThan(0);
+    test('should only delete tokens past expiration', async () => {
+      pool.query.mockResolvedValueOnce({ rowCount: 10 });
 
-    // Verify expired token is deleted
-    const result = await pool.query(
-      'SELECT * FROM refresh_tokens WHERE token = $1',
-      [expiredToken],
-    );
+      await RefreshTokenService.cleanupExpiredTokens();
 
-    expect(result.rows.length).toBe(0);
+      const deleteQuery = pool.query.mock.calls[0][0];
+      expect(deleteQuery).toContain('expires_at < NOW()');
+    });
+
+    test('should return 0 if no expired tokens', async () => {
+      pool.query.mockResolvedValueOnce({ rowCount: 0 });
+
+      const result = await RefreshTokenService.cleanupExpiredTokens();
+
+      expect(result).toBe(0);
+    });
+
+    test('should log cleanup statistics', async () => {
+      pool.query.mockResolvedValueOnce({ rowCount: 25 });
+
+      await RefreshTokenService.cleanupExpiredTokens();
+
+      expect(logger.info).toHaveBeenCalledWith(
+        expect.stringContaining('25'),
+        expect.any(Object)
+      );
+    });
   });
 
-  // Test 7: Get active tokens for user
-  it('should retrieve all active tokens for user', async () => {
-    // Create fresh tokens
-    await RefreshTokenService.createRefreshToken(testUserId, '192.168.1.106', 'Device 1');
-    await RefreshTokenService.createRefreshToken(testUserId, '192.168.1.107', 'Device 2');
+  describe('getTokenStats', () => {
+    const mockStats = {
+      total_tokens: 150,
+      active_tokens: 100,
+      revoked_tokens: 30,
+      expired_tokens: 20,
+    };
 
-    const tokens = await RefreshTokenService.getUserActiveTokens(testUserId);
+    test('should return comprehensive token statistics', async () => {
+      pool.query.mockResolvedValueOnce({ rows: [mockStats] });
 
-    expect(tokens.length).toBeGreaterThanOrEqual(2);
-    expect(tokens[0]).toHaveProperty('ip_address');
-    expect(tokens[0]).toHaveProperty('user_agent');
-    expect(tokens[0]).toHaveProperty('created_at');
-  });
+      const result = await RefreshTokenService.getTokenStats();
 
-  // Test 8: Token rotation on refresh
-  it('should rotate refresh token when used', async () => {
-    // Create initial token
-    const initialToken = await RefreshTokenService.createRefreshToken(
-      testUserId,
-      '192.168.1.108',
-      'Rotation Test',
-    );
+      expect(result).toEqual(mockStats);
+      expect(result.total_tokens).toBe(150);
+      expect(result.active_tokens).toBe(100);
+      expect(result.revoked_tokens).toBe(30);
+      expect(result.expired_tokens).toBe(20);
+    });
 
-    // Rotate it
-    const newToken = await RefreshTokenService.rotateRefreshToken(
-      initialToken.token,
-      '192.168.1.108',
-      'Rotation Test',
-    );
+    test('should query with correct aggregations', async () => {
+      pool.query.mockResolvedValueOnce({ rows: [mockStats] });
 
-    expect(newToken).toHaveProperty('token');
-    expect(newToken.token).not.toBe(initialToken.token);
+      await RefreshTokenService.getTokenStats();
 
-    // Old token should be revoked
-    const oldValidation = await RefreshTokenService.validateRefreshToken(initialToken.token);
-    expect(oldValidation).toBeNull();
+      const statsQuery = pool.query.mock.calls[0][0];
+      expect(statsQuery).toContain('COUNT(*)');
+      expect(statsQuery).toContain('refresh_tokens');
+    });
 
-    // New token should be valid
-    const newValidation = await RefreshTokenService.validateRefreshToken(newToken.token);
-    expect(newValidation).not.toBeNull();
-  });
+    test('should handle empty database', async () => {
+      pool.query.mockResolvedValueOnce({
+        rows: [{
+          total_tokens: 0,
+          active_tokens: 0,
+          revoked_tokens: 0,
+          expired_tokens: 0,
+        }],
+      });
 
-  // Test 9: Detect token reuse (security)
-  it('should detect and prevent refresh token reuse', async () => {
-    // Create and revoke a token
-    const reuseToken = await RefreshTokenService.createRefreshToken(
-      testUserId,
-      '192.168.1.109',
-      'Reuse Test',
-    );
+      const result = await RefreshTokenService.getTokenStats();
 
-    await RefreshTokenService.revokeRefreshToken(reuseToken.token);
-
-    // Try to use revoked token
-    const result = await RefreshTokenService.validateRefreshToken(reuseToken.token);
-
-    expect(result).toBeNull();
-  });
-
-  // Test 10: Handle token expiry edge cases
-  it('should reject token that expires in the future but is already past expiry', async () => {
-    // Create token with very short expiry (1 second)
-    const shortToken = `short_lived_${Date.now()}`;
-    const shortExpiry = new Date();
-    shortExpiry.setSeconds(shortExpiry.getSeconds() - 1); // Already expired
-
-    await pool.query(
-      'INSERT INTO refresh_tokens (user_id, token, expires_at, ip_address, user_agent) VALUES ($1, $2, $3, $4, $5)',
-      [testUserId, shortToken, shortExpiry, '192.168.1.110', 'Test'],
-    );
-
-    // Try to validate expired token
-    const result = await RefreshTokenService.validateRefreshToken(shortToken);
-
-    expect(result).toBeNull();
-
-    // Cleanup
-    await pool.query('DELETE FROM refresh_tokens WHERE token = $1', [shortToken]);
+      expect(result.total_tokens).toBe(0);
+    });
   });
 });

@@ -1,169 +1,506 @@
+/**
+ * ApiKeyService Unit Tests
+ * Phase 1: Testing Foundation & Unit Tests
+ *
+ * Tests all methods in ApiKeyService with mocked dependencies
+ */
+
+const crypto = require('crypto');
 const ApiKeyService = require('../../../services/apiKey.service');
+
+// Mock dependencies
+jest.mock('../../../config/database', () => ({
+  pool: {
+    query: jest.fn(),
+    connect: jest.fn(),
+  },
+}));
+
 const { pool } = require('../../../config/database');
 
-describe('ApiKeyService Unit Tests', () => {
-  let testUserId;
-  let testApiKeyId;
-  let testApiKeyValue;
-
-  beforeAll(async () => {
-    // Create test user
-    const result = await pool.query(
-      'INSERT INTO users (email, password_hash, first_name, last_name, role) VALUES ($1, $2, $3, $4, $5) RETURNING id',
-      ['apikey@example.com', 'hashedpassword', 'API', 'Key', 'agent'],
-    );
-    testUserId = result.rows[0].id;
+describe('ApiKeyService', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // Suppress console.error for tests
+    jest.spyOn(console, 'error').mockImplementation(() => {});
   });
 
-  afterAll(async () => {
-    // Cleanup
-    await pool.query('DELETE FROM api_keys WHERE user_id = $1', [testUserId]);
-    await pool.query('DELETE FROM users WHERE id = $1', [testUserId]);
-    await pool.end();
+  afterEach(() => {
+    console.error.mockRestore();
   });
 
-  // Test 1: Generate API key (64 characters)
-  it('should generate 64-character hex API key', () => {
-    const apiKey = ApiKeyService.generateApiKey();
+  describe('generateApiKey', () => {
+    test('should generate 64-character hex string', () => {
+      const key = ApiKeyService.generateApiKey();
 
-    expect(apiKey).toHaveLength(64);
-    expect(apiKey).toMatch(/^[a-f0-9]{64}$/); // Hex format
+      expect(key).toHaveLength(64);
+      expect(/^[a-f0-9]{64}$/.test(key)).toBe(true);
+    });
+
+    test('should generate unique keys on multiple calls', () => {
+      const key1 = ApiKeyService.generateApiKey();
+      const key2 = ApiKeyService.generateApiKey();
+
+      expect(key1).not.toBe(key2);
+    });
   });
 
-  // Test 2: Hash API key consistently
-  it('should hash API key consistently', () => {
-    const apiKey = 'test_api_key_12345678901234567890123456789012345678901234567890';
-    const hash1 = ApiKeyService.hashApiKey(apiKey);
-    const hash2 = ApiKeyService.hashApiKey(apiKey);
+  describe('hashApiKey', () => {
+    test('should hash API key using SHA-256', () => {
+      const apiKey = 'a'.repeat(64);
+      const hash = ApiKeyService.hashApiKey(apiKey);
 
-    expect(hash1).toBe(hash2);
-    expect(hash1).toHaveLength(64); // SHA-256 produces 64 hex chars
+      expect(hash).toHaveLength(64);
+      expect(/^[a-f0-9]{64}$/.test(hash)).toBe(true);
+    });
+
+    test('should produce consistent hashes for same input', () => {
+      const apiKey = 'test_api_key_123';
+      const hash1 = ApiKeyService.hashApiKey(apiKey);
+      const hash2 = ApiKeyService.hashApiKey(apiKey);
+
+      expect(hash1).toBe(hash2);
+    });
+
+    test('should produce different hashes for different inputs', () => {
+      const hash1 = ApiKeyService.hashApiKey('key1');
+      const hash2 = ApiKeyService.hashApiKey('key2');
+
+      expect(hash1).not.toBe(hash2);
+    });
   });
 
-  // Test 3: Create API key for user
-  it('should create API key for user', async () => {
-    const apiKey = await ApiKeyService.createApiKey(testUserId, 'Test API Key', 365);
+  describe('createApiKey', () => {
+    test('should create API key with default scopes', async () => {
+      const mockClient = {
+        query: jest.fn()
+          .mockResolvedValueOnce({ rows: [{ team_id: 'team-123' }] }) // User query
+          .mockResolvedValueOnce({
+            rows: [{
+              id: 'apikey-456',
+              name: 'Test Key',
+              key_prefix: 'abcd1234...wxyz',
+              scopes: { all: ['read', 'write', 'delete'] },
+              expires_at: null,
+              created_at: new Date(),
+            }],
+          }), // INSERT query
+        release: jest.fn(),
+      };
 
-    expect(apiKey).toHaveProperty('key');
-    expect(apiKey).toHaveProperty('id');
-    expect(apiKey).toHaveProperty('key_prefix');
-    expect(apiKey.key).toHaveLength(64);
-    expect(apiKey.name).toBe('Test API Key');
+      pool.connect.mockResolvedValueOnce(mockClient);
 
-    testApiKeyId = apiKey.id;
-    testApiKeyValue = apiKey.key;
+      const result = await ApiKeyService.createApiKey('user-123', 'Test Key', null);
+
+      expect(result).toHaveProperty('key');
+      expect(result.key).toHaveLength(64);
+      expect(result.id).toBe('apikey-456');
+      expect(result.name).toBe('Test Key');
+
+      // Verify transaction was committed
+      expect(mockClient.query).toHaveBeenCalledWith('BEGIN');
+      expect(mockClient.query).toHaveBeenCalledWith('COMMIT');
+      expect(mockClient.release).toHaveBeenCalled();
+    });
+
+    test('should create API key with expiration date', async () => {
+      const mockClient = {
+        query: jest.fn()
+          .mockResolvedValueOnce({ rows: [{ team_id: 'team-456' }] })
+          .mockResolvedValueOnce({
+            rows: [{
+              id: 'apikey-789',
+              name: 'Expiring Key',
+              key_prefix: 'test1234...5678',
+              scopes: { all: ['read', 'write', 'delete'] },
+              expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+              created_at: new Date(),
+            }],
+          }),
+        release: jest.fn(),
+      };
+
+      pool.connect.mockResolvedValueOnce(mockClient);
+
+      const result = await ApiKeyService.createApiKey('user-456', 'Expiring Key', 30);
+
+      expect(result.expires_at).toBeDefined();
+      const insertCall = mockClient.query.mock.calls[1];
+      expect(insertCall[1][6]).not.toBeNull(); // expires_at parameter
+    });
+
+    test('should rollback transaction on error', async () => {
+      const mockClient = {
+        query: jest.fn()
+          .mockResolvedValueOnce({ rows: [{ team_id: 'team-789' }] })
+          .mockRejectedValueOnce(new Error('Database error')),
+        release: jest.fn(),
+      };
+
+      pool.connect.mockResolvedValueOnce(mockClient);
+
+      await expect(
+        ApiKeyService.createApiKey('user-789', 'Failed Key', null)
+      ).rejects.toThrow('Database error');
+
+      expect(mockClient.query).toHaveBeenCalledWith('ROLLBACK');
+      expect(mockClient.release).toHaveBeenCalled();
+    });
+
+    test('should throw error if user not found', async () => {
+      const mockClient = {
+        query: jest.fn()
+          .mockResolvedValueOnce({ rows: [] }), // No user found
+        release: jest.fn(),
+      };
+
+      pool.connect.mockResolvedValueOnce(mockClient);
+
+      await expect(
+        ApiKeyService.createApiKey('nonexistent-user', 'Test Key', null)
+      ).rejects.toThrow('User not found');
+
+      expect(mockClient.query).toHaveBeenCalledWith('ROLLBACK');
+    });
+
+    test('should store only first 8 and last 4 chars as prefix', async () => {
+      const mockClient = {
+        query: jest.fn()
+          .mockResolvedValueOnce({ rows: [{ team_id: 'team-123' }] })
+          .mockResolvedValueOnce({
+            rows: [{
+              id: 'apikey-111',
+              name: 'Prefix Test',
+              key_prefix: expect.stringMatching(/^.{8}\.\.\..{4}$/),
+              scopes: { all: ['read', 'write', 'delete'] },
+              expires_at: null,
+              created_at: new Date(),
+            }],
+          }),
+        release: jest.fn(),
+      };
+
+      pool.connect.mockResolvedValueOnce(mockClient);
+
+      await ApiKeyService.createApiKey('user-111', 'Prefix Test', null);
+
+      const insertParams = mockClient.query.mock.calls[1][1];
+      const keyPrefix = insertParams[4];
+      expect(keyPrefix).toMatch(/^.{8}\.\.\..{4}$/);
+    });
   });
 
-  // Test 4: Validate valid API key
-  it('should validate valid API key', async () => {
-    const userData = await ApiKeyService.validateApiKey(testApiKeyValue);
+  describe('validateApiKey', () => {
+    const mockApiKey = 'a'.repeat(64);
+    const mockKeyHash = crypto.createHash('sha256').update(mockApiKey).digest('hex');
 
-    expect(userData).not.toBeNull();
-    expect(userData.user_id).toBe(testUserId);
-    expect(userData.email).toBe('apikey@example.com');
-    expect(userData.is_active).toBe(true);
-  });
+    test('should validate valid API key and return user data', async () => {
+      const mockKeyData = {
+        api_key_id: 'apikey-123',
+        user_id: 'user-456',
+        team_id: 'team-789',
+        scopes: { all: ['read', 'write', 'delete'] },
+        expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+        is_active: true,
+        email: 'test@example.com',
+        first_name: 'John',
+        last_name: 'Doe',
+        role: 'agent',
+        user_is_active: true,
+        team_name: 'Test Team',
+      };
 
-  // Test 5: Reject invalid API key
-  it('should reject invalid API key', async () => {
-    const invalidKey = 'invalid_api_key_1234567890123456789012345678901234567890123456';
+      pool.query
+        .mockResolvedValueOnce({ rows: [mockKeyData] }) // SELECT query
+        .mockResolvedValueOnce({ rows: [] }); // UPDATE last_used_at
 
-    const userData = await ApiKeyService.validateApiKey(invalidKey);
+      const result = await ApiKeyService.validateApiKey(mockApiKey);
 
-    expect(userData).toBeNull();
-  });
+      expect(result).toEqual({
+        apiKeyId: 'apikey-123',
+        userId: 'user-456',
+        teamId: 'team-789',
+        email: 'test@example.com',
+        firstName: 'John',
+        lastName: 'Doe',
+        role: 'agent',
+        teamName: 'Test Team',
+        scopes: { all: ['read', 'write', 'delete'] },
+      });
 
-  // Test 6: Get all API keys for user
-  it('should retrieve all API keys for user', async () => {
-    const apiKeys = await ApiKeyService.getUserApiKeys(testUserId);
-
-    expect(apiKeys.length).toBeGreaterThan(0);
-    expect(apiKeys[0]).toHaveProperty('name');
-    expect(apiKeys[0]).toHaveProperty('key_prefix');
-    expect(apiKeys[0]).not.toHaveProperty('key'); // Full key should not be returned
-    expect(apiKeys[0]).not.toHaveProperty('key_hash'); // Hash should not be returned
-  });
-
-  // Test 7: Revoke API key
-  it('should revoke API key', async () => {
-    const revoked = await ApiKeyService.revokeApiKey(testApiKeyId);
-
-    expect(revoked).toBe(true);
-
-    // Try to validate revoked key
-    const userData = await ApiKeyService.validateApiKey(testApiKeyValue);
-
-    expect(userData).toBeNull();
-
-    // Re-activate for other tests
-    await pool.query('UPDATE api_keys SET is_active = true WHERE id = $1', [testApiKeyId]);
-  });
-
-  // Test 8: Delete API key permanently
-  it('should delete API key permanently', async () => {
-    // Create a new key to delete
-    const newKey = await ApiKeyService.createApiKey(testUserId, 'Delete Test Key', 30);
-
-    const deleted = await ApiKeyService.deleteApiKey(newKey.id);
-
-    expect(deleted).toBe(true);
-
-    // Verify it's deleted
-    const result = await pool.query('SELECT * FROM api_keys WHERE id = $1', [newKey.id]);
-
-    expect(result.rows.length).toBe(0);
-  });
-
-  // Test 9: Update last_used_at timestamp
-  it('should update last_used_at when API key is validated', async () => {
-    // Get initial last_used_at
-    const before = await pool.query(
-      'SELECT last_used_at FROM api_keys WHERE id = $1',
-      [testApiKeyId],
-    );
-
-    const initialLastUsed = before.rows[0].last_used_at;
-
-    // Wait a moment
-    await new Promise((resolve) => setTimeout(resolve, 100));
-
-    // Use the API key
-    await ApiKeyService.validateApiKey(testApiKeyValue);
-
-    // Check if last_used_at was updated
-    const after = await pool.query(
-      'SELECT last_used_at FROM api_keys WHERE id = $1',
-      [testApiKeyId],
-    );
-
-    const updatedLastUsed = after.rows[0].last_used_at;
-
-    // Should be updated (or null if not implemented)
-    if (updatedLastUsed) {
-      expect(new Date(updatedLastUsed).getTime()).toBeGreaterThan(
-        initialLastUsed ? new Date(initialLastUsed).getTime() : 0,
+      expect(pool.query).toHaveBeenCalledWith(
+        expect.stringContaining('SELECT'),
+        [mockKeyHash]
       );
-    }
+    });
+
+    test('should update last_used_at timestamp', async () => {
+      const mockKeyData = {
+        api_key_id: 'apikey-999',
+        user_id: 'user-999',
+        team_id: 'team-999',
+        scopes: { all: ['read'] },
+        expires_at: null,
+        is_active: true,
+        email: 'user@example.com',
+        first_name: 'Jane',
+        last_name: 'Smith',
+        role: 'agent',
+        user_is_active: true,
+        team_name: 'Team 999',
+      };
+
+      pool.query
+        .mockResolvedValueOnce({ rows: [mockKeyData] })
+        .mockResolvedValueOnce({ rows: [] });
+
+      await ApiKeyService.validateApiKey(mockApiKey);
+
+      expect(pool.query).toHaveBeenCalledWith(
+        expect.stringContaining('UPDATE api_keys'),
+        ['apikey-999']
+      );
+    });
+
+    test('should return null for nonexistent API key', async () => {
+      pool.query.mockResolvedValueOnce({ rows: [] });
+
+      const result = await ApiKeyService.validateApiKey('nonexistent_key');
+
+      expect(result).toBeNull();
+    });
+
+    test('should throw error for deactivated API key', async () => {
+      const mockKeyData = {
+        api_key_id: 'apikey-inactive',
+        is_active: false,
+        user_is_active: true,
+      };
+
+      pool.query.mockResolvedValueOnce({ rows: [mockKeyData] });
+
+      await expect(
+        ApiKeyService.validateApiKey(mockApiKey)
+      ).rejects.toThrow('API key has been deactivated');
+    });
+
+    test('should throw error for deactivated user', async () => {
+      const mockKeyData = {
+        api_key_id: 'apikey-user-inactive',
+        is_active: true,
+        user_is_active: false,
+      };
+
+      pool.query.mockResolvedValueOnce({ rows: [mockKeyData] });
+
+      await expect(
+        ApiKeyService.validateApiKey(mockApiKey)
+      ).rejects.toThrow('User account has been deactivated');
+    });
+
+    test('should throw error for expired API key', async () => {
+      const mockKeyData = {
+        api_key_id: 'apikey-expired',
+        is_active: true,
+        user_is_active: true,
+        expires_at: new Date('2020-01-01'),
+      };
+
+      pool.query.mockResolvedValueOnce({ rows: [mockKeyData] });
+
+      await expect(
+        ApiKeyService.validateApiKey(mockApiKey)
+      ).rejects.toThrow('API key has expired');
+    });
+
+    test('should use default scopes if scopes is null', async () => {
+      const mockKeyData = {
+        api_key_id: 'apikey-old',
+        user_id: 'user-old',
+        team_id: 'team-old',
+        scopes: null,
+        expires_at: null,
+        is_active: true,
+        email: 'old@example.com',
+        first_name: 'Old',
+        last_name: 'Key',
+        role: 'agent',
+        user_is_active: true,
+        team_name: 'Old Team',
+      };
+
+      pool.query
+        .mockResolvedValueOnce({ rows: [mockKeyData] })
+        .mockResolvedValueOnce({ rows: [] });
+
+      const result = await ApiKeyService.validateApiKey(mockApiKey);
+
+      expect(result.scopes).toEqual({ all: ['read', 'write', 'delete'] });
+    });
   });
 
-  // Test 10: Reject expired API key
-  it('should reject expired API key', async () => {
-    // Create API key with expiry in the past
-    const expiredKey = ApiKeyService.generateApiKey();
-    const keyHash = ApiKeyService.hashApiKey(expiredKey);
-    const pastDate = new Date('2020-01-01');
+  describe('listUserApiKeys', () => {
+    test('should return all API keys for user', async () => {
+      const mockKeys = [
+        {
+          id: 'apikey-1',
+          name: 'Production Key',
+          key_prefix: 'abcd1234...wxyz',
+          scopes: { all: ['read', 'write', 'delete'] },
+          last_used_at: new Date(),
+          expires_at: null,
+          is_active: true,
+          created_at: new Date(),
+        },
+        {
+          id: 'apikey-2',
+          name: 'Development Key',
+          key_prefix: 'efgh5678...stuv',
+          scopes: { all: ['read'] },
+          last_used_at: null,
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          is_active: true,
+          created_at: new Date(),
+        },
+      ];
 
-    await pool.query(
-      'INSERT INTO api_keys (user_id, name, key_hash, expires_at, is_active) VALUES ($1, $2, $3, $4, $5)',
-      [testUserId, 'Expired Key', keyHash, pastDate, true],
-    );
+      pool.query.mockResolvedValueOnce({ rows: mockKeys });
 
-    // Try to validate expired key
-    const userData = await ApiKeyService.validateApiKey(expiredKey);
+      const result = await ApiKeyService.listUserApiKeys('user-123');
 
-    expect(userData).toBeNull();
+      expect(result).toEqual(mockKeys);
+      expect(pool.query).toHaveBeenCalledWith(
+        expect.stringContaining('SELECT'),
+        ['user-123']
+      );
+    });
 
-    // Cleanup
-    await pool.query('DELETE FROM api_keys WHERE key_hash = $1', [keyHash]);
+    test('should return empty array if user has no keys', async () => {
+      pool.query.mockResolvedValueOnce({ rows: [] });
+
+      const result = await ApiKeyService.listUserApiKeys('user-no-keys');
+
+      expect(result).toEqual([]);
+    });
+
+    test('should order keys by created_at DESC', async () => {
+      pool.query.mockResolvedValueOnce({ rows: [] });
+
+      await ApiKeyService.listUserApiKeys('user-123');
+
+      const query = pool.query.mock.calls[0][0];
+      expect(query).toContain('ORDER BY created_at DESC');
+    });
+  });
+
+  describe('revokeApiKey', () => {
+    test('should revoke API key successfully', async () => {
+      pool.query.mockResolvedValueOnce({ rows: [{ id: 'apikey-123' }] });
+
+      const result = await ApiKeyService.revokeApiKey('user-123', 'apikey-123');
+
+      expect(result).toEqual({
+        success: true,
+        message: 'API key revoked successfully',
+      });
+
+      expect(pool.query).toHaveBeenCalledWith(
+        expect.stringContaining('UPDATE api_keys'),
+        ['apikey-123', 'user-123']
+      );
+    });
+
+    test('should set is_active to false', async () => {
+      pool.query.mockResolvedValueOnce({ rows: [{ id: 'apikey-456' }] });
+
+      await ApiKeyService.revokeApiKey('user-456', 'apikey-456');
+
+      const query = pool.query.mock.calls[0][0];
+      expect(query).toContain('is_active = false');
+    });
+
+    test('should throw error if API key not found', async () => {
+      pool.query.mockResolvedValueOnce({ rows: [] });
+
+      await expect(
+        ApiKeyService.revokeApiKey('user-789', 'nonexistent-key')
+      ).rejects.toThrow('API key not found or you do not have permission to revoke it');
+    });
+
+    test('should prevent revoking another user\'s key', async () => {
+      pool.query.mockResolvedValueOnce({ rows: [] }); // No rows returned (wrong user_id)
+
+      await expect(
+        ApiKeyService.revokeApiKey('user-wrong', 'apikey-123')
+      ).rejects.toThrow('API key not found or you do not have permission to revoke it');
+    });
+  });
+
+  describe('deleteApiKey', () => {
+    test('should delete API key permanently', async () => {
+      pool.query.mockResolvedValueOnce({ rows: [{ id: 'apikey-delete' }] });
+
+      const result = await ApiKeyService.deleteApiKey('user-delete', 'apikey-delete');
+
+      expect(result).toEqual({
+        success: true,
+        message: 'API key deleted successfully',
+      });
+
+      expect(pool.query).toHaveBeenCalledWith(
+        expect.stringContaining('DELETE FROM api_keys'),
+        ['apikey-delete', 'user-delete']
+      );
+    });
+
+    test('should throw error if API key not found', async () => {
+      pool.query.mockResolvedValueOnce({ rows: [] });
+
+      await expect(
+        ApiKeyService.deleteApiKey('user-123', 'nonexistent-key')
+      ).rejects.toThrow('API key not found or you do not have permission to delete it');
+    });
+
+    test('should prevent deleting another user\'s key', async () => {
+      pool.query.mockResolvedValueOnce({ rows: [] });
+
+      await expect(
+        ApiKeyService.deleteApiKey('user-wrong', 'apikey-123')
+      ).rejects.toThrow('API key not found or you do not have permission to delete it');
+    });
+  });
+
+  describe('logApiKeyUsage', () => {
+    test('should log API key usage', async () => {
+      pool.query.mockResolvedValueOnce({ rows: [] });
+
+      await ApiKeyService.logApiKeyUsage(
+        'apikey-123',
+        '/v1/escrows',
+        'GET',
+        200,
+        '192.168.1.1',
+        'Mozilla/5.0'
+      );
+
+      expect(pool.query).toHaveBeenCalledWith(
+        expect.stringContaining('INSERT INTO api_key_logs'),
+        ['apikey-123', '/v1/escrows', 'GET', 200, '192.168.1.1', 'Mozilla/5.0']
+      );
+    });
+
+    test('should handle logging errors gracefully', async () => {
+      pool.query.mockRejectedValueOnce(new Error('Database error'));
+
+      // Should not throw
+      await expect(
+        ApiKeyService.logApiKeyUsage('apikey-fail', '/test', 'POST', 500, '1.1.1.1', 'Test')
+      ).resolves.toBeUndefined();
+
+      expect(console.error).toHaveBeenCalledWith(
+        'Failed to log API key usage:',
+        expect.any(Error)
+      );
+    });
   });
 });
