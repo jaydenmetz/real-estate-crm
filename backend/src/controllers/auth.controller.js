@@ -4,6 +4,7 @@ const { pool } = require('../config/database');
 const RefreshTokenService = require('../services/refreshToken.service');
 const SecurityEventService = require('../services/securityEvent.service');
 const EmailService = require('../services/email.service');
+const GeoAnomalyService = require('../services/geoAnomaly.service');
 
 // JWT Secret Configuration (matches auth.middleware.js)
 // MUST be set in environment - no fallback for security
@@ -302,6 +303,9 @@ class AuthController {
       // If logging fails, login still succeeds (graceful degradation)
       try {
         SecurityEventService.logLoginSuccess(req, user).catch(console.error);
+
+        // Check for geographic anomalies (fire-and-forget)
+        GeoAnomalyService.logLoginWithGeo(req, user).catch(console.error);
       } catch (logError) {
         console.error('Failed to log security event (non-fatal):', logError);
       }
