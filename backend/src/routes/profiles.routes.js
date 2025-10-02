@@ -5,6 +5,8 @@ const { pool } = require('../config/database');
 const { authenticate, optionalAuth } = require('../middleware/auth.middleware');
 const { authenticateApiKey } = require('../middleware/apiKey.middleware');
 const { authenticateAny } = require('../middleware/combinedAuth.middleware');
+const UserProfileService = require('../services/userProfile.service');
+const BrokerProfileService = require('../services/brokerProfile.service');
 
 // Get public profile by username
 router.get('/public/:username', optionalAuth, async (req, res) => {
@@ -384,6 +386,238 @@ router.get('/statistics/:username', async (req, res) => {
       error: {
         code: 'STATS_ERROR',
         message: 'Failed to fetch statistics',
+      },
+    });
+  }
+});
+
+// ============================================================================
+// DOCUMENT AUTOMATION PROFILE ROUTES (NEW)
+// ============================================================================
+
+/**
+ * @route   GET /v1/profiles/document-profile
+ * @desc    Get current user's document automation profile with broker info
+ * @access  Private
+ */
+router.get('/document-profile', authenticateAny, async (req, res) => {
+  try {
+    const profile = await UserProfileService.getProfileByUserId(req.user.id);
+
+    if (!profile) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'PROFILE_NOT_FOUND',
+          message: 'Document profile not found. Create one at POST /v1/profiles/document-profile',
+        },
+      });
+    }
+
+    res.json({
+      success: true,
+      data: profile,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Error fetching document profile:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'FETCH_PROFILE_ERROR',
+        message: 'Failed to fetch document profile',
+      },
+    });
+  }
+});
+
+/**
+ * @route   POST /v1/profiles/document-profile
+ * @desc    Create or update current user's document automation profile
+ * @access  Private
+ */
+router.post('/document-profile', authenticateAny, async (req, res) => {
+  try {
+    const profile = await UserProfileService.upsertProfile(req.user.id, req.body);
+
+    res.json({
+      success: true,
+      data: profile,
+      message: 'Document profile saved successfully',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Error saving document profile:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'SAVE_PROFILE_ERROR',
+        message: 'Failed to save document profile',
+      },
+    });
+  }
+});
+
+/**
+ * @route   POST /v1/profiles/verify-dre
+ * @desc    Verify DRE license for current user
+ * @access  Private
+ */
+router.post('/verify-dre', authenticateAny, async (req, res) => {
+  try {
+    const { licenseNumber } = req.body;
+
+    if (!licenseNumber) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'MISSING_LICENSE_NUMBER',
+          message: 'License number is required',
+        },
+      });
+    }
+
+    const profile = await UserProfileService.verifyDRELicense(req.user.id, licenseNumber);
+
+    res.json({
+      success: true,
+      data: profile,
+      message: 'DRE license verification complete',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Error verifying DRE license:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'DRE_VERIFICATION_ERROR',
+        message: 'Failed to verify DRE license',
+      },
+    });
+  }
+});
+
+/**
+ * @route   GET /v1/profiles/document-data
+ * @desc    Get document merge data for current user (for template filling)
+ * @access  Private
+ */
+router.get('/document-data', authenticateAny, async (req, res) => {
+  try {
+    const mergeData = await UserProfileService.getDocumentMergeData(req.user.id);
+
+    res.json({
+      success: true,
+      data: mergeData,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Error fetching document merge data:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'FETCH_DOCUMENT_DATA_ERROR',
+        message: error.message || 'Failed to fetch document merge data',
+      },
+    });
+  }
+});
+
+/**
+ * @route   GET /v1/profiles/my-broker-profile
+ * @desc    Get broker profile for current user's supervising broker
+ * @access  Private
+ */
+router.get('/my-broker-profile', authenticateAny, async (req, res) => {
+  try {
+    const profile = await BrokerProfileService.getProfileForUser(req.user.id);
+
+    if (!profile) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'BROKER_PROFILE_NOT_FOUND',
+          message: 'No broker profile found. You may not have a supervising broker set.',
+        },
+      });
+    }
+
+    res.json({
+      success: true,
+      data: profile,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Error fetching broker profile:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'FETCH_BROKER_PROFILE_ERROR',
+        message: 'Failed to fetch broker profile',
+      },
+    });
+  }
+});
+
+/**
+ * @route   GET /v1/profiles/broker/:brokerId
+ * @desc    Get broker profile by ID
+ * @access  Private
+ */
+router.get('/broker/:brokerId', authenticateAny, async (req, res) => {
+  try {
+    const profile = await BrokerProfileService.getProfileByBrokerId(req.params.brokerId);
+
+    if (!profile) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'BROKER_PROFILE_NOT_FOUND',
+          message: 'Broker profile not found',
+        },
+      });
+    }
+
+    res.json({
+      success: true,
+      data: profile,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Error fetching broker profile:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'FETCH_BROKER_PROFILE_ERROR',
+        message: 'Failed to fetch broker profile',
+      },
+    });
+  }
+});
+
+/**
+ * @route   POST /v1/profiles/broker/:brokerId
+ * @desc    Create or update broker profile
+ * @access  Private (broker admin only - TODO: add authorization)
+ */
+router.post('/broker/:brokerId', authenticateAny, async (req, res) => {
+  try {
+    // TODO: Check if user has broker admin permissions
+    const profile = await BrokerProfileService.upsertProfile(req.params.brokerId, req.body);
+
+    res.json({
+      success: true,
+      data: profile,
+      message: 'Broker profile saved successfully',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Error saving broker profile:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'SAVE_BROKER_PROFILE_ERROR',
+        message: 'Failed to save broker profile',
       },
     });
   }
