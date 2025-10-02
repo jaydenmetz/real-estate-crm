@@ -23,63 +23,126 @@ import {
   Lock,
   Visibility,
   VisibilityOff,
-  Business,
-  Phone,
+  Phone as PhoneIcon,
   Home,
-  AppRegistration,
   ArrowBack,
+  ArrowForward,
   CheckCircleOutline,
 } from '@mui/icons-material';
+import { Google } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
-import authService from '../../services/auth.service';
 import { useAuth } from '../../contexts/AuthContext';
 
 const RegisterPage = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [activeStep, setActiveStep] = useState(0);
+  const [leadId, setLeadId] = useState(null);
 
-  const steps = ['Account Details', 'Personal Information', 'Complete Setup'];
+  const steps = ['Your Information', 'Create Account'];
 
-  const { control, handleSubmit, watch, formState: { errors }, trigger } = useForm({
+  const { control, handleSubmit, watch, formState: { errors }, trigger, setValue } = useForm({
     defaultValues: {
-      username: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
       firstName: '',
       lastName: '',
-      company: '',
       phone: '',
+      email: '',
+      username: '',
+      password: '',
+      confirmPassword: '',
     }
   });
 
   const password = watch('password');
+  const phone = watch('phone');
+
+  // Phone number formatting function
+  const formatPhoneNumber = (value) => {
+    if (!value) return value;
+
+    // Remove all non-digits
+    const phoneNumber = value.replace(/[^\d]/g, '');
+
+    // Format as (XXX) XXX-XXXX
+    if (phoneNumber.length < 4) {
+      return phoneNumber;
+    } else if (phoneNumber.length < 7) {
+      return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3)}`;
+    } else {
+      return `(${phoneNumber.slice(0, 3)}) ${phoneNumber.slice(3, 6)}-${phoneNumber.slice(6, 10)}`;
+    }
+  };
+
+  const handlePhoneChange = (onChange) => (e) => {
+    const formatted = formatPhoneNumber(e.target.value);
+    onChange(formatted);
+  };
 
   const handleNext = async () => {
     let fieldsToValidate = [];
-    
-    if (activeStep === 0) {
-      fieldsToValidate = ['username', 'email', 'password', 'confirmPassword'];
-    } else if (activeStep === 1) {
-      fieldsToValidate = ['firstName', 'lastName'];
-    }
 
-    const isValid = await trigger(fieldsToValidate);
-    if (isValid) {
-      if (activeStep === steps.length - 1) {
+    if (activeStep === 0) {
+      fieldsToValidate = ['firstName', 'lastName', 'phone', 'email'];
+
+      const isValid = await trigger(fieldsToValidate);
+      if (isValid) {
+        // Create lead first
+        await createLead();
+      }
+    } else if (activeStep === 1) {
+      fieldsToValidate = ['username', 'password', 'confirmPassword'];
+
+      const isValid = await trigger(fieldsToValidate);
+      if (isValid) {
         handleSubmit(onSubmit)();
-      } else {
-        setActiveStep((prev) => prev + 1);
       }
     }
   };
 
-  const handleBack = () => {
-    setActiveStep((prev) => prev - 1);
+  const createLead = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
+      const endpoint = apiUrl.includes('/v1') ? `${apiUrl}/leads` : `${apiUrl}/v1/leads`;
+
+      // Get unformatted phone number
+      const rawPhone = phone.replace(/[^\d]/g, '');
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: `${watch('firstName')} ${watch('lastName')}`,
+          email: watch('email'),
+          phone: rawPhone,
+          source: 'website',
+          status: 'new',
+          notes: 'Self-registered lead from website',
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setLeadId(result.data.id);
+        setActiveStep(1);
+      } else {
+        setError(result.error?.message || 'Failed to create lead');
+      }
+    } catch (err) {
+      console.error('Lead creation error:', err);
+      setError('An error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const onSubmit = async (data) => {
@@ -89,6 +152,10 @@ const RegisterPage = () => {
     try {
       const apiUrl = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
       const endpoint = apiUrl.includes('/v1') ? `${apiUrl}/auth/register` : `${apiUrl}/v1/auth/register`;
+
+      // Get unformatted phone number
+      const rawPhone = data.phone.replace(/[^\d]/g, '');
+
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
@@ -100,15 +167,14 @@ const RegisterPage = () => {
           password: data.password,
           firstName: data.firstName,
           lastName: data.lastName,
-          company: data.company,
-          phone: data.phone,
+          phone: rawPhone,
+          leadId: leadId, // Link to the lead we created
         }),
       });
 
       const result = await response.json();
 
       if (result.success) {
-        // Store token and redirect to onboarding
         if (result.data?.token) {
           localStorage.setItem('token', result.data.token);
           localStorage.setItem('user', JSON.stringify(result.data.user));
@@ -117,8 +183,6 @@ const RegisterPage = () => {
           setTimeout(() => {
             navigate('/onboarding/welcome');
           }, 500);
-        } else {
-          setActiveStep(steps.length);
         }
       } else {
         setError(result.error?.message || 'Registration failed');
@@ -131,158 +195,31 @@ const RegisterPage = () => {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setError('');
+    try {
+      // TODO: Implement Google OAuth
+      // For now, show a message
+      setError('Google Sign-In coming soon! Please use email registration.');
+    } catch (err) {
+      console.error('Google sign-in error:', err);
+      setError('Google sign-in failed. Please try again.');
+    }
+  };
+
+  const handleBack = () => {
+    setActiveStep((prev) => prev - 1);
+  };
+
   const renderStepContent = () => {
     switch (activeStep) {
       case 0:
         return (
           <>
-            <Controller
-              name="username"
-              control={control}
-              rules={{ 
-                required: 'Username is required',
-                pattern: {
-                  value: /^[a-zA-Z0-9_]{3,20}$/,
-                  message: 'Username must be 3-20 characters, alphanumeric and underscore only'
-                }
-              }}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  fullWidth
-                  label="Username"
-                  variant="outlined"
-                  margin="normal"
-                  error={!!errors.username}
-                  helperText={errors.username?.message}
-                  disabled={loading}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Person />
-                      </InputAdornment>
-                    ),
-                  }}
-                  autoComplete="username"
-                  autoFocus
-                />
-              )}
-            />
+            <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
+              Tell us about yourself
+            </Typography>
 
-            <Controller
-              name="email"
-              control={control}
-              rules={{ 
-                required: 'Email is required',
-                pattern: {
-                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                  message: 'Invalid email format'
-                }
-              }}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  fullWidth
-                  label="Email"
-                  type="email"
-                  variant="outlined"
-                  margin="normal"
-                  error={!!errors.email}
-                  helperText={errors.email?.message}
-                  disabled={loading}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Email />
-                      </InputAdornment>
-                    ),
-                  }}
-                  autoComplete="email"
-                />
-              )}
-            />
-
-            <Controller
-              name="password"
-              control={control}
-              rules={{ 
-                required: 'Password is required',
-                minLength: {
-                  value: 8,
-                  message: 'Password must be at least 8 characters'
-                }
-              }}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  fullWidth
-                  label="Password"
-                  type={showPassword ? 'text' : 'password'}
-                  variant="outlined"
-                  margin="normal"
-                  error={!!errors.password}
-                  helperText={errors.password?.message}
-                  disabled={loading}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Lock />
-                      </InputAdornment>
-                    ),
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          onClick={() => setShowPassword(!showPassword)}
-                          edge="end"
-                          disabled={loading}
-                        >
-                          {showPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
-                  autoComplete="new-password"
-                  inputProps={{ 'data-form': 'register' }}
-                />
-              )}
-            />
-
-            <Controller
-              name="confirmPassword"
-              control={control}
-              rules={{ 
-                required: 'Please confirm your password',
-                validate: value => value === password || 'Passwords do not match'
-              }}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  fullWidth
-                  label="Confirm Password"
-                  type={showPassword ? 'text' : 'password'}
-                  variant="outlined"
-                  margin="normal"
-                  error={!!errors.confirmPassword}
-                  helperText={errors.confirmPassword?.message}
-                  disabled={loading}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Lock />
-                      </InputAdornment>
-                    ),
-                  }}
-                  autoComplete="new-password"
-                  inputProps={{ 'data-form': 'register' }}
-                />
-              )}
-            />
-          </>
-        );
-
-      case 1:
-        return (
-          <>
             <Box sx={{ display: 'flex', gap: 2 }}>
               <Controller
                 name="firstName"
@@ -325,116 +262,215 @@ const RegisterPage = () => {
             </Box>
 
             <Controller
-              name="company"
+              name="phone"
               control={control}
-              render={({ field }) => (
+              rules={{
+                required: 'Phone number is required',
+                pattern: {
+                  value: /^\(\d{3}\) \d{3}-\d{4}$/,
+                  message: 'Phone must be in format (XXX) XXX-XXXX'
+                }
+              }}
+              render={({ field: { onChange, value, ...field } }) => (
                 <TextField
                   {...field}
+                  value={value}
+                  onChange={handlePhoneChange(onChange)}
                   fullWidth
-                  label="Company Name (Optional)"
+                  label="Phone Number"
                   variant="outlined"
                   margin="normal"
+                  error={!!errors.phone}
+                  helperText={errors.phone?.message || 'Format: (XXX) XXX-XXXX'}
                   disabled={loading}
+                  placeholder="(555) 123-4567"
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <Business />
+                        <PhoneIcon />
                       </InputAdornment>
                     ),
                   }}
-                  autoComplete="organization"
+                  autoComplete="tel"
+                  inputProps={{
+                    maxLength: 14, // (XXX) XXX-XXXX = 14 characters
+                  }}
                 />
               )}
             />
 
             <Controller
-              name="phone"
+              name="email"
               control={control}
+              rules={{
+                required: 'Email is required',
+                pattern: {
+                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                  message: 'Invalid email format'
+                }
+              }}
               render={({ field }) => (
                 <TextField
                   {...field}
                   fullWidth
-                  label="Phone Number (Optional)"
+                  label="Email Address"
+                  type="email"
                   variant="outlined"
                   margin="normal"
+                  error={!!errors.email}
+                  helperText={errors.email?.message}
                   disabled={loading}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
-                        <Phone />
+                        <Email />
                       </InputAdornment>
                     ),
                   }}
-                  autoComplete="tel"
+                  autoComplete="email"
                 />
               )}
             />
           </>
         );
 
-      case 2:
+      case 1:
         return (
-          <Box sx={{ textAlign: 'center', py: 3 }}>
-            <Typography variant="h5" gutterBottom>
-              Ready to Get Started!
+          <>
+            <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
+              Create your account credentials
             </Typography>
-            <Typography variant="body1" color="text.secondary" paragraph>
-              Your account is ready to be created with the following details:
-            </Typography>
-            
-            <Box sx={{ my: 3, textAlign: 'left', maxWidth: 400, mx: 'auto' }}>
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                <strong>Username:</strong> {watch('username')}
-              </Typography>
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                <strong>Email:</strong> {watch('email')}
-              </Typography>
-              <Typography variant="body2" sx={{ mb: 1 }}>
-                <strong>Name:</strong> {watch('firstName')} {watch('lastName')}
-              </Typography>
-              {watch('company') && (
-                <Typography variant="body2" sx={{ mb: 1 }}>
-                  <strong>Company:</strong> {watch('company')}
-                </Typography>
-              )}
-            </Box>
 
-            <Alert severity="info" sx={{ mt: 2 }}>
-              You'll receive admin privileges with full access to all features.
+            <Alert severity="success" sx={{ mb: 2 }}>
+              Great! We've saved your information. Now let's set up your login credentials.
             </Alert>
-          </Box>
+
+            <Controller
+              name="username"
+              control={control}
+              rules={{
+                required: 'Username is required',
+                pattern: {
+                  value: /^[a-zA-Z0-9_]{3,20}$/,
+                  message: 'Username must be 3-20 characters (letters, numbers, underscore only)'
+                }
+              }}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  label="Username"
+                  variant="outlined"
+                  margin="normal"
+                  error={!!errors.username}
+                  helperText={errors.username?.message || 'This will be your login username'}
+                  disabled={loading}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Person />
+                      </InputAdornment>
+                    ),
+                  }}
+                  autoComplete="username"
+                  autoFocus
+                />
+              )}
+            />
+
+            <Controller
+              name="password"
+              control={control}
+              rules={{
+                required: 'Password is required',
+                minLength: {
+                  value: 8,
+                  message: 'Password must be at least 8 characters'
+                },
+                pattern: {
+                  value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
+                  message: 'Password must contain uppercase, lowercase, and number'
+                }
+              }}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  label="Password"
+                  type={showPassword ? 'text' : 'password'}
+                  variant="outlined"
+                  margin="normal"
+                  error={!!errors.password}
+                  helperText={errors.password?.message || 'Min 8 characters, uppercase, lowercase, number'}
+                  disabled={loading}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Lock />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => setShowPassword(!showPassword)}
+                          edge="end"
+                          disabled={loading}
+                        >
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                  autoComplete="new-password"
+                />
+              )}
+            />
+
+            <Controller
+              name="confirmPassword"
+              control={control}
+              rules={{
+                required: 'Please confirm your password',
+                validate: value => value === password || 'Passwords do not match'
+              }}
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  fullWidth
+                  label="Confirm Password"
+                  type={showConfirmPassword ? 'text' : 'password'}
+                  variant="outlined"
+                  margin="normal"
+                  error={!!errors.confirmPassword}
+                  helperText={errors.confirmPassword?.message}
+                  disabled={loading}
+                  InputProps={{
+                    startAdornment: (
+                      <InputAdornment position="start">
+                        <Lock />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          edge="end"
+                          disabled={loading}
+                        >
+                          {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                  autoComplete="new-password"
+                />
+              )}
+            />
+          </>
         );
 
       default:
-        // Coming soon message after successful registration
-        return (
-          <Box sx={{ textAlign: 'center', py: 3 }}>
-            <Box sx={{ mb: 3 }}>
-              <CheckCircleOutline sx={{ fontSize: 64, color: 'success.main' }} />
-            </Box>
-            <Typography variant="h5" gutterBottom color="success.main">
-              Registration Successful!
-            </Typography>
-            <Typography variant="body1" color="text.secondary" paragraph>
-              Thank you for registering. Your account request has been received.
-            </Typography>
-            
-            <Alert severity="info" sx={{ my: 3 }}>
-              <Typography variant="body2">
-                <strong>Account Activation Coming Soon</strong>
-              </Typography>
-              <Typography variant="body2" sx={{ mt: 1 }}>
-                We're currently setting up new accounts manually. You'll receive an email 
-                at <strong>{watch('email')}</strong> once your account is activated.
-              </Typography>
-            </Alert>
-
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 2 }}>
-              This typically takes 1-2 business days. If you have any questions, 
-              please contact support.
-            </Typography>
-          </Box>
-        );
+        return null;
     }
   };
 
@@ -464,12 +500,46 @@ const RegisterPage = () => {
               <Home sx={{ fontSize: 48, color: 'primary.main' }} />
             </Box>
             <Typography variant="h4" gutterBottom fontWeight="bold">
-              Create Your Account
+              Get Started
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Set up your Real Estate CRM admin account
+              Join thousands of real estate professionals
             </Typography>
           </Box>
+
+          {/* Google Sign-In Button */}
+          {activeStep === 0 && (
+            <Box sx={{ mb: 3 }}>
+              <Button
+                fullWidth
+                variant="outlined"
+                size="large"
+                startIcon={<Google />}
+                onClick={handleGoogleSignIn}
+                sx={{
+                  borderColor: 'divider',
+                  color: 'text.primary',
+                  textTransform: 'none',
+                  fontSize: '1rem',
+                  py: 1.5,
+                  '&:hover': {
+                    borderColor: 'primary.main',
+                    backgroundColor: 'action.hover',
+                  }
+                }}
+              >
+                Continue with Google
+              </Button>
+
+              <Box sx={{ display: 'flex', alignItems: 'center', my: 3 }}>
+                <Divider sx={{ flex: 1 }} />
+                <Typography variant="body2" sx={{ px: 2, color: 'text.secondary' }}>
+                  or
+                </Typography>
+                <Divider sx={{ flex: 1 }} />
+              </Box>
+            </Box>
+          )}
 
           {/* Stepper */}
           <Stepper activeStep={activeStep} sx={{ mb: 4 }}>
@@ -491,41 +561,31 @@ const RegisterPage = () => {
             {renderStepContent()}
 
             {/* Actions */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4 }}>
-              {activeStep < steps.length ? (
-                <>
-                  <Button
-                    disabled={activeStep === 0 || loading}
-                    onClick={handleBack}
-                    startIcon={<ArrowBack />}
-                  >
-                    Back
-                  </Button>
-                  
-                  <Button
-                    variant="contained"
-                    onClick={handleNext}
-                    disabled={loading}
-                    endIcon={activeStep === steps.length - 1 ? 
-                      (loading ? <CircularProgress size={20} /> : <AppRegistration />) : 
-                      null
-                    }
-                  >
-                    {activeStep === steps.length - 1 ? 
-                      (loading ? 'Creating Account...' : 'Create Account') : 
-                      'Next'
-                    }
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  variant="contained"
-                  onClick={() => navigate('/login')}
-                  sx={{ mx: 'auto' }}
-                >
-                  Return to Login
-                </Button>
-              )}
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4, gap: 2 }}>
+              <Button
+                disabled={activeStep === 0 || loading}
+                onClick={handleBack}
+                startIcon={<ArrowBack />}
+                sx={{ visibility: activeStep === 0 ? 'hidden' : 'visible' }}
+              >
+                Back
+              </Button>
+
+              <Button
+                variant="contained"
+                onClick={handleNext}
+                disabled={loading}
+                endIcon={activeStep === 0 ? <ArrowForward /> : (loading ? <CircularProgress size={20} /> : <CheckCircleOutline />)}
+                sx={{
+                  background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
+                  px: 4,
+                  '&:hover': {
+                    background: 'linear-gradient(90deg, #5568d3 0%, #66438e 100%)',
+                  }
+                }}
+              >
+                {activeStep === 0 ? 'Continue' : (loading ? 'Creating Account...' : 'Create Account')}
+              </Button>
             </Box>
           </form>
 
@@ -535,7 +595,7 @@ const RegisterPage = () => {
           <Box sx={{ textAlign: 'center' }}>
             <Typography variant="body2" color="text.secondary">
               Already have an account?{' '}
-              <Link component={RouterLink} to="/login">
+              <Link component={RouterLink} to="/login" sx={{ fontWeight: 600 }}>
                 Sign in
               </Link>
             </Typography>
@@ -545,7 +605,7 @@ const RegisterPage = () => {
         {/* Footer */}
         <Box sx={{ textAlign: 'center', mt: 3 }}>
           <Typography variant="body2" sx={{ color: 'white', opacity: 0.8 }}>
-            © 2025 Metz Real Estate CRM. All rights reserved.
+            © 2025 Real Estate CRM. All rights reserved.
           </Typography>
         </Box>
       </Container>
