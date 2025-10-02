@@ -69,53 +69,53 @@ async function logAccessEvent(req, res, resourceType, responseData) {
   switch (method) {
     case 'GET':
       if (resourceId) {
-        // Read single resource
-        await SecurityEventService.logDataRead(
+        // Read single resource (fire-and-forget)
+        SecurityEventService.logDataRead(
           req,
           RESOURCE_TYPES[resourceType] || resourceType,
           resourceId,
           resourceName
-        );
+        ).catch(console.error);
       }
       // Don't log list operations to avoid spam (could add flag to enable)
       break;
 
     case 'POST':
-      // Create operation
+      // Create operation (fire-and-forget)
       if (resourceId) {
-        await SecurityEventService.logDataCreated(
+        SecurityEventService.logDataCreated(
           req,
           RESOURCE_TYPES[resourceType] || resourceType,
           resourceId,
           resourceName
-        );
+        ).catch(console.error);
       }
       break;
 
     case 'PUT':
     case 'PATCH':
-      // Update operation
+      // Update operation (fire-and-forget)
       if (resourceId) {
         const changes = extractChanges(req.body);
-        await SecurityEventService.logDataUpdated(
+        SecurityEventService.logDataUpdated(
           req,
           RESOURCE_TYPES[resourceType] || resourceType,
           resourceId,
           resourceName,
           changes
-        );
+        ).catch(console.error);
       }
       break;
 
     case 'DELETE':
-      // Delete operation
+      // Delete operation (fire-and-forget)
       if (resourceId) {
-        await SecurityEventService.logDataDeleted(
+        SecurityEventService.logDataDeleted(
           req,
           RESOURCE_TYPES[resourceType] || resourceType,
           resourceId,
           resourceName
-        );
+        ).catch(console.error);
       }
       break;
 

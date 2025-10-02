@@ -53,9 +53,8 @@ const authenticateAny = async (req, res, next) => {
       const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
       try {
-        // Verify token - use hardcoded secret for consistency
-        // Ignoring environment variable to ensure all endpoints use same secret
-        const jwtSecret = '279fffb2e462a0f2d8b41137be7452c4746f99f2ff3dd0aeafb22f2e799c1472';
+        // Verify token using environment variable
+        const jwtSecret = process.env.JWT_SECRET;
         const decoded = jwt.verify(token, jwtSecret);
 
         // Get user from database

@@ -9,13 +9,13 @@ const getDatabaseConfig = () => {
     };
   }
 
-  // Fallback to Railway's default connection info if DATABASE_URL not set
+  // Fallback to individual env vars (all required in production)
   return {
-    host: process.env.DB_HOST || 'ballast.proxy.rlwy.net',
-    port: process.env.DB_PORT || 20017,
-    user: process.env.DB_USER || 'postgres',
-    password: process.env.DB_PASSWORD || 'ueLIWnvALZWVbRdnOmpLGsrrukeGLGQQ',
-    database: process.env.DB_NAME || 'railway',
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
     ssl: { rejectUnauthorized: false },
   };
 };
