@@ -64,11 +64,18 @@ const EventTypes = {
   EMAIL_CHANGED: 'email_changed',
   PROFILE_UPDATED: 'profile_updated',
 
+  // Data access events
+  DATA_READ: 'data_read',
+  DATA_CREATED: 'data_created',
+  DATA_UPDATED: 'data_updated',
+  DATA_DELETED: 'data_deleted',
+
   // Suspicious activity
   SUSPICIOUS_IP: 'suspicious_ip',
   RATE_LIMIT_EXCEEDED: 'rate_limit_exceeded',
   INVALID_TOKEN: 'invalid_token',
   MULTIPLE_FAILED_LOGINS: 'multiple_failed_logins',
+  GEO_ANOMALY: 'geo_anomaly',
 };
 
 /**
@@ -79,6 +86,7 @@ const EventCategories = {
   AUTHORIZATION: 'authorization',
   API_KEY: 'api_key',
   ACCOUNT: 'account',
+  DATA_ACCESS: 'data_access',
   SUSPICIOUS: 'suspicious',
 };
 
@@ -340,6 +348,127 @@ class SecurityEventService {
       success: false,
       message: `Rate limit exceeded: ${limit} requests per ${windowMs}ms`,
       metadata: { limit, window_ms: windowMs },
+    });
+  }
+
+  /**
+   * Log data access (read)
+   */
+  static async logDataRead(req, resourceType, resourceId, resourceName = null) {
+    return this.logEvent({
+      eventType: EventTypes.DATA_READ,
+      eventCategory: EventCategories.DATA_ACCESS,
+      severity: Severity.INFO,
+      ...this.extractUserContext(req.user),
+      ...this.extractRequestContext(req),
+      success: true,
+      message: `Read ${resourceType}: ${resourceName || resourceId}`,
+      metadata: {
+        resource_type: resourceType,
+        resource_id: resourceId,
+        resource_name: resourceName,
+      },
+    });
+  }
+
+  /**
+   * Log data creation
+   */
+  static async logDataCreated(req, resourceType, resourceId, resourceName = null) {
+    return this.logEvent({
+      eventType: EventTypes.DATA_CREATED,
+      eventCategory: EventCategories.DATA_ACCESS,
+      severity: Severity.INFO,
+      ...this.extractUserContext(req.user),
+      ...this.extractRequestContext(req),
+      success: true,
+      message: `Created ${resourceType}: ${resourceName || resourceId}`,
+      metadata: {
+        resource_type: resourceType,
+        resource_id: resourceId,
+        resource_name: resourceName,
+      },
+    });
+  }
+
+  /**
+   * Log data update
+   */
+  static async logDataUpdated(req, resourceType, resourceId, resourceName = null, changes = {}) {
+    return this.logEvent({
+      eventType: EventTypes.DATA_UPDATED,
+      eventCategory: EventCategories.DATA_ACCESS,
+      severity: Severity.INFO,
+      ...this.extractUserContext(req.user),
+      ...this.extractRequestContext(req),
+      success: true,
+      message: `Updated ${resourceType}: ${resourceName || resourceId}`,
+      metadata: {
+        resource_type: resourceType,
+        resource_id: resourceId,
+        resource_name: resourceName,
+        changes,
+      },
+    });
+  }
+
+  /**
+   * Log data deletion
+   */
+  static async logDataDeleted(req, resourceType, resourceId, resourceName = null) {
+    return this.logEvent({
+      eventType: EventTypes.DATA_DELETED,
+      eventCategory: EventCategories.DATA_ACCESS,
+      severity: Severity.WARNING,
+      ...this.extractUserContext(req.user),
+      ...this.extractRequestContext(req),
+      success: true,
+      message: `Deleted ${resourceType}: ${resourceName || resourceId}`,
+      metadata: {
+        resource_type: resourceType,
+        resource_id: resourceId,
+        resource_name: resourceName,
+      },
+    });
+  }
+
+  /**
+   * Log permission denied
+   */
+  static async logPermissionDenied(req, resource, action, reason = null) {
+    return this.logEvent({
+      eventType: EventTypes.PERMISSION_DENIED,
+      eventCategory: EventCategories.AUTHORIZATION,
+      severity: Severity.WARNING,
+      ...this.extractUserContext(req.user),
+      ...this.extractRequestContext(req),
+      success: false,
+      message: `Permission denied: ${action} on ${resource}`,
+      metadata: {
+        resource,
+        action,
+        reason,
+        user_role: req.user?.role,
+      },
+    });
+  }
+
+  /**
+   * Log geographic anomaly
+   */
+  static async logGeoAnomaly(req, user, detectedCountry, expectedCountry) {
+    return this.logEvent({
+      eventType: EventTypes.GEO_ANOMALY,
+      eventCategory: EventCategories.SUSPICIOUS,
+      severity: Severity.ERROR,
+      ...this.extractUserContext(user),
+      ...this.extractRequestContext(req),
+      success: false,
+      message: `Unusual login location detected: ${detectedCountry} (expected: ${expectedCountry})`,
+      metadata: {
+        detected_country: detectedCountry,
+        expected_country: expectedCountry,
+      },
     });
   }
 
