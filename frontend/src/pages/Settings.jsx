@@ -73,6 +73,7 @@ import { useNavigate } from 'react-router-dom';
 import { api, apiKeysAPI } from '../services/api.service';
 import { useAuth } from '../contexts/AuthContext';
 import SecurityDashboard from '../components/settings/SecurityDashboard';
+import OnboardingSettings from '../components/settings/OnboardingSettings';
 
 // Tab panel component
 function TabPanel({ children, value, index, ...other }) {
@@ -462,6 +463,7 @@ const Settings = () => {
                 <Tab icon={<Security />} label="Privacy" />
                 <Tab icon={<Shield />} label="Security" />
                 <Tab icon={<Key />} label="API Keys" />
+                <Tab icon={<School />} label="Onboarding" />
                 <Tab icon={<WorkspacePremium />} label="Developer" />
               </Tabs>
             </Paper>
@@ -1226,8 +1228,13 @@ const Settings = () => {
                 </Dialog>
               </TabPanel>
 
-              {/* Developer Tab */}
+              {/* Onboarding Tab */}
               <TabPanel value={activeTab} index={8}>
+                <OnboardingSettings />
+              </TabPanel>
+
+              {/* Developer Tab */}
+              <TabPanel value={activeTab} index={9}>
                 <Typography variant="h5" gutterBottom>
                   Developer Tools
                 </Typography>

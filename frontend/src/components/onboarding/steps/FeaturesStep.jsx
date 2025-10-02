@@ -6,20 +6,31 @@ import { Home, TrendingUp, Users, Bell, FileText, Smartphone, CheckCircle } from
 import Confetti from 'react-confetti';
 import { useWindowSize } from 'react-use';
 import OnboardingService from '../../../services/onboarding.service';
+import FeedbackDialog from '../FeedbackDialog';
 
 const FeaturesStep = () => {
   const navigate = useNavigate();
   const { width, height } = useWindowSize();
   const { loadProgress } = useOutletContext();
   const [showConfetti, setShowConfetti] = React.useState(false);
+  const [showFeedback, setShowFeedback] = React.useState(false);
 
   useEffect(() => {
     OnboardingService.completeStep('features').then(() => loadProgress()).catch(console.error);
     setTimeout(() => setShowConfetti(true), 500);
+
+    // Show feedback dialog after 3 seconds (after confetti)
+    setTimeout(() => setShowFeedback(true), 3000);
   }, []);
 
   const handleComplete = async () => {
+    setShowFeedback(false);
     navigate('/?welcome=true');
+  };
+
+  const handleFeedbackSubmit = (feedback) => {
+    console.log('Feedback submitted:', feedback);
+    navigate('/?welcome=true&feedback=submitted');
   };
 
   const features = [
@@ -80,6 +91,13 @@ const FeaturesStep = () => {
           </motion.div>
         </Box>
       </Box>
+
+      {/* Feedback Dialog */}
+      <FeedbackDialog
+        open={showFeedback}
+        onClose={() => setShowFeedback(false)}
+        onSubmit={handleFeedbackSubmit}
+      />
     </Container>
   );
 };

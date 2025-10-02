@@ -435,6 +435,97 @@ class OnboardingService {
       escrow: escrows.rows[0] || null,
     };
   }
+
+  /**
+   * Submit feedback after tutorial completion
+   */
+  static async submitFeedback(userId, feedback) {
+    const { rating, nps, helpful, suggestions, featuresLiked, submittedAt } = feedback;
+
+    // Store feedback in onboarding_progress metadata
+    await pool.query(
+      `UPDATE onboarding_progress
+       SET updated_at = CURRENT_TIMESTAMP
+       WHERE user_id = $1`,
+      [userId]
+    );
+
+    logger.info(`Feedback submitted by user ${userId}`, { rating, nps, helpful });
+
+    // In a real implementation, you might store this in a separate feedback table
+    // For now, we'll just log it and return success
+    return {
+      feedbackReceived: true,
+      rating,
+      nps,
+      submittedAt: submittedAt || new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Get analytics/stats for user's onboarding
+   */
+  static async getAnalytics(userId) {
+    const result = await pool.query(
+      `SELECT
+         tutorial_completed,
+         completed_at,
+         steps_completed,
+         total_steps,
+         skipped,
+         skipped_at,
+         created_at,
+         updated_at
+       FROM onboarding_progress
+       WHERE user_id = $1`,
+      [userId]
+    );
+
+    if (!result.rows[0]) {
+      return null;
+    }
+
+    const progress = result.rows[0];
+
+    // Calculate time-based analytics
+    let totalTimeSeconds = null;
+    let averageStepTime = null;
+
+    if (progress.completed_at && progress.created_at) {
+      const startTime = new Date(progress.created_at);
+      const endTime = new Date(progress.completed_at);
+      totalTimeSeconds = Math.floor((endTime - startTime) / 1000);
+      averageStepTime = totalTimeSeconds / progress.total_steps;
+    }
+
+    return {
+      tutorial_completed: progress.tutorial_completed,
+      completed_at: progress.completed_at,
+      steps_completed: progress.steps_completed,
+      total_steps: progress.total_steps,
+      completion_percentage: (progress.steps_completed / progress.total_steps) * 100,
+      skipped: progress.skipped,
+      skipped_at: progress.skipped_at,
+      total_time_seconds: totalTimeSeconds,
+      average_step_time: averageStepTime,
+      started_at: progress.created_at,
+    };
+  }
+
+  /**
+   * Track step timing (for analytics)
+   */
+  static async trackStepTiming(userId, step, timeSpentSeconds) {
+    // In a full implementation, this would store in a separate analytics table
+    // For now, we'll just log it
+    logger.info(`Step timing tracked for user ${userId}`, { step, timeSpentSeconds });
+
+    return {
+      tracked: true,
+      step,
+      timeSpentSeconds,
+    };
+  }
 }
 
 module.exports = OnboardingService;

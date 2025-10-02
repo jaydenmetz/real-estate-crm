@@ -216,4 +216,109 @@ router.delete('/sample-data', authenticateRequest, async (req, res) => {
   }
 });
 
+/**
+ * @route   POST /v1/onboarding/feedback
+ * @desc    Submit feedback after tutorial completion
+ * @access  Private
+ * @body    { rating, nps, helpful, suggestions, featuresLiked, submittedAt }
+ */
+router.post('/feedback', authenticateRequest, async (req, res) => {
+  try {
+    const feedback = req.body;
+
+    if (!feedback.rating || feedback.rating < 1 || feedback.rating > 5) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_RATING',
+          message: 'Rating must be between 1 and 5',
+        },
+      });
+    }
+
+    const result = await OnboardingService.submitFeedback(req.user.id, feedback);
+
+    res.json({
+      success: true,
+      data: result,
+      message: 'Feedback submitted successfully',
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Error submitting feedback:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'SUBMIT_FEEDBACK_ERROR',
+        message: 'Failed to submit feedback',
+      },
+    });
+  }
+});
+
+/**
+ * @route   GET /v1/onboarding/analytics
+ * @desc    Get analytics/stats for current user's onboarding
+ * @access  Private
+ */
+router.get('/analytics', authenticateRequest, async (req, res) => {
+  try {
+    const analytics = await OnboardingService.getAnalytics(req.user.id);
+
+    res.json({
+      success: true,
+      data: analytics,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Error fetching analytics:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'FETCH_ANALYTICS_ERROR',
+        message: 'Failed to fetch analytics',
+      },
+    });
+  }
+});
+
+/**
+ * @route   POST /v1/onboarding/track-timing
+ * @desc    Track time spent on a tutorial step (for analytics)
+ * @access  Private
+ * @body    { step, timeSpentSeconds }
+ */
+router.post('/track-timing', authenticateRequest, async (req, res) => {
+  try {
+    const { step, timeSpentSeconds } = req.body;
+
+    if (!step || typeof timeSpentSeconds !== 'number') {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_TIMING_DATA',
+          message: 'Step and timeSpentSeconds are required',
+        },
+      });
+    }
+
+    const result = await OnboardingService.trackStepTiming(req.user.id, step, timeSpentSeconds);
+
+    res.json({
+      success: true,
+      data: result,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Error tracking timing:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'TRACK_TIMING_ERROR',
+        message: 'Failed to track timing',
+      },
+    });
+  }
+});
+
 module.exports = router;

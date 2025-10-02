@@ -167,6 +167,57 @@ class OnboardingService {
       return data.data;
     }, 2);
   }
+
+  /**
+   * Submit feedback after tutorial completion
+   */
+  static async submitFeedback(feedback) {
+    return this.retryWithBackoff(async () => {
+      const token = localStorage.getItem('token');
+      const data = await this.fetchWithErrorHandling(`${BASE_URL}/onboarding/feedback`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(feedback),
+      });
+      return data.data;
+    }, 2);
+  }
+
+  /**
+   * Get analytics/stats for current user's onboarding
+   */
+  static async getAnalytics() {
+    return this.retryWithBackoff(async () => {
+      const token = localStorage.getItem('token');
+      const data = await this.fetchWithErrorHandling(`${BASE_URL}/onboarding/analytics`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      return data.data;
+    });
+  }
+
+  /**
+   * Track step timing (for analytics)
+   */
+  static async trackStepTiming(step, timeSpentSeconds) {
+    return this.retryWithBackoff(async () => {
+      const token = localStorage.getItem('token');
+      const data = await this.fetchWithErrorHandling(`${BASE_URL}/onboarding/track-timing`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ step, timeSpentSeconds }),
+      });
+      return data.data;
+    }, 1); // Only retry once for analytics (not critical)
+  }
 }
 
 export default OnboardingService;
