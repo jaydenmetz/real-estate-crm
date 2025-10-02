@@ -4,7 +4,93 @@ const router = express.Router();
 const SecurityEventService = require('../services/securityEvent.service');
 const { authenticate, requireRole } = require('../middleware/auth.middleware');
 
-// All security event routes require authentication
+/**
+ * GET /v1/security-events/health
+ * Health check endpoint for security event logging system
+ * Public endpoint (no auth required) for monitoring
+ */
+router.get('/health', async (req, res) => {
+  try {
+    const healthData = {
+      status: 'healthy',
+      checks: {},
+    };
+
+    // Check database connectivity
+    try {
+      const { pool } = require('../config/database');
+      const dbCheck = await pool.query('SELECT COUNT(*) FROM security_events');
+      healthData.checks.database = {
+        status: 'healthy',
+        totalEvents: parseInt(dbCheck.rows[0].count),
+      };
+    } catch (dbError) {
+      healthData.status = 'degraded';
+      healthData.checks.database = {
+        status: 'unhealthy',
+        error: dbError.message,
+      };
+    }
+
+    // Check recent event logging (last 24 hours)
+    try {
+      const recentEvents = await SecurityEventService.queryEvents({
+        startDate: new Date(Date.now() - 24 * 60 * 60 * 1000),
+        limit: 1,
+      });
+      healthData.checks.recentActivity = {
+        status: recentEvents.length > 0 ? 'healthy' : 'warning',
+        eventsLast24h: recentEvents.length > 0,
+      };
+    } catch (activityError) {
+      healthData.checks.recentActivity = {
+        status: 'unhealthy',
+        error: activityError.message,
+      };
+    }
+
+    // Check event type distribution
+    try {
+      const { pool } = require('../config/database');
+      const statsQuery = await pool.query(`
+        SELECT event_type, COUNT(*) as count
+        FROM security_events
+        WHERE created_at > NOW() - INTERVAL '7 days'
+        GROUP BY event_type
+        ORDER BY count DESC
+        LIMIT 10
+      `);
+      healthData.checks.eventTypes = {
+        status: 'healthy',
+        topEventsLast7Days: statsQuery.rows,
+      };
+    } catch (statsError) {
+      healthData.checks.eventTypes = {
+        status: 'warning',
+        error: statsError.message,
+      };
+    }
+
+    const statusCode = healthData.status === 'healthy' ? 200 : 503;
+    res.status(statusCode).json({
+      success: healthData.status === 'healthy',
+      data: healthData,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Error in security events health check:', error);
+    res.status(503).json({
+      success: false,
+      data: {
+        status: 'unhealthy',
+        error: error.message,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
+// All other security event routes require authentication
 router.use(authenticate);
 
 /**
