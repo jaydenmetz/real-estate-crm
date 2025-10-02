@@ -54,20 +54,20 @@ import LeadsHealthDashboard from './components/health/LeadsHealthDashboard';
 // import Calendar from './components/system/Calendar';
 // import Settings from './components/system/Settings';
 
-// Lazy load public profile
+// Lazy load public profile and settings
 const PublicProfile = React.lazy(() => import('./pages/PublicProfileStunning'));
 const Settings = React.lazy(() => import('./pages/Settings'));
 
-// Onboarding components
+// Onboarding components (lazy loaded for performance)
 import OnboardingLayout from './components/onboarding/OnboardingLayout';
-import WelcomeStep from './components/onboarding/steps/WelcomeStep';
-import EscrowStep from './components/onboarding/steps/EscrowStep';
-import ListingsStep from './components/onboarding/steps/ListingsStep';
-import ClientsStep from './components/onboarding/steps/ClientsStep';
-import AppointmentsStep from './components/onboarding/steps/AppointmentsStep';
-import LeadsStep from './components/onboarding/steps/LeadsStep';
-import MarketplaceStep from './components/onboarding/steps/MarketplaceStep';
-import FeaturesStep from './components/onboarding/steps/FeaturesStep';
+const WelcomeStep = React.lazy(() => import('./components/onboarding/steps/WelcomeStep'));
+const EscrowStep = React.lazy(() => import('./components/onboarding/steps/EscrowStep'));
+const ListingsStep = React.lazy(() => import('./components/onboarding/steps/ListingsStep'));
+const ClientsStep = React.lazy(() => import('./components/onboarding/steps/ClientsStep'));
+const AppointmentsStep = React.lazy(() => import('./components/onboarding/steps/AppointmentsStep'));
+const LeadsStep = React.lazy(() => import('./components/onboarding/steps/LeadsStep'));
+const MarketplaceStep = React.lazy(() => import('./components/onboarding/steps/MarketplaceStep'));
+const FeaturesStep = React.lazy(() => import('./components/onboarding/steps/FeaturesStep'));
 
 // Services
 import websocketService from './services/websocket.service';
@@ -240,14 +240,46 @@ function App() {
                   {/* Onboarding Routes (Protected) */}
                   <Route path="/onboarding" element={<ProtectedRoute><OnboardingLayout /></ProtectedRoute>}>
                     <Route index element={<Navigate to="/onboarding/welcome" />} />
-                    <Route path="welcome" element={<WelcomeStep />} />
-                    <Route path="escrow" element={<EscrowStep />} />
-                    <Route path="listings" element={<ListingsStep />} />
-                    <Route path="clients" element={<ClientsStep />} />
-                    <Route path="appointments" element={<AppointmentsStep />} />
-                    <Route path="leads" element={<LeadsStep />} />
-                    <Route path="marketplace" element={<MarketplaceStep />} />
-                    <Route path="features" element={<FeaturesStep />} />
+                    <Route path="welcome" element={
+                      <React.Suspense fallback={<Box sx={{ p: 4, textAlign: 'center', color: 'white' }}>Loading...</Box>}>
+                        <WelcomeStep />
+                      </React.Suspense>
+                    } />
+                    <Route path="escrow" element={
+                      <React.Suspense fallback={<Box sx={{ p: 4, textAlign: 'center', color: 'white' }}>Loading...</Box>}>
+                        <EscrowStep />
+                      </React.Suspense>
+                    } />
+                    <Route path="listings" element={
+                      <React.Suspense fallback={<Box sx={{ p: 4, textAlign: 'center', color: 'white' }}>Loading...</Box>}>
+                        <ListingsStep />
+                      </React.Suspense>
+                    } />
+                    <Route path="clients" element={
+                      <React.Suspense fallback={<Box sx={{ p: 4, textAlign: 'center', color: 'white' }}>Loading...</Box>}>
+                        <ClientsStep />
+                      </React.Suspense>
+                    } />
+                    <Route path="appointments" element={
+                      <React.Suspense fallback={<Box sx={{ p: 4, textAlign: 'center', color: 'white' }}>Loading...</Box>}>
+                        <AppointmentsStep />
+                      </React.Suspense>
+                    } />
+                    <Route path="leads" element={
+                      <React.Suspense fallback={<Box sx={{ p: 4, textAlign: 'center', color: 'white' }}>Loading...</Box>}>
+                        <LeadsStep />
+                      </React.Suspense>
+                    } />
+                    <Route path="marketplace" element={
+                      <React.Suspense fallback={<Box sx={{ p: 4, textAlign: 'center', color: 'white' }}>Loading...</Box>}>
+                        <MarketplaceStep />
+                      </React.Suspense>
+                    } />
+                    <Route path="features" element={
+                      <React.Suspense fallback={<Box sx={{ p: 4, textAlign: 'center', color: 'white' }}>Loading...</Box>}>
+                        <FeaturesStep />
+                      </React.Suspense>
+                    } />
                   </Route>
 
                   {/* Protected Routes */}

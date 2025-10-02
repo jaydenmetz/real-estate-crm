@@ -1,16 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Box, LinearProgress, IconButton, Typography } from '@mui/material';
-import { Close, Replay } from '@mui/icons-material';
+import { Box, LinearProgress, IconButton, Typography, Alert, Snackbar } from '@mui/material';
+import { Close, Replay, WifiOff, Wifi } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSwipeable } from 'react-swipeable';
 import OnboardingService from '../../services/onboarding.service';
+import OnboardingErrorBoundary from './OnboardingErrorBoundary';
 
 const OnboardingLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [progress, setProgress] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const [showOfflineAlert, setShowOfflineAlert] = useState(false);
 
   const steps = [
     { id: 'welcome', path: '/onboarding/welcome', label: 'Welcome' },
@@ -28,14 +32,42 @@ const OnboardingLayout = () => {
 
   useEffect(() => {
     loadProgress();
+
+    // Monitor online/offline status
+    const handleOnline = () => {
+      setIsOnline(true);
+      setShowOfflineAlert(false);
+      // Reload progress when coming back online
+      loadProgress();
+    };
+
+    const handleOffline = () => {
+      setIsOnline(false);
+      setShowOfflineAlert(true);
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
   }, []);
 
   const loadProgress = async () => {
     try {
+      setError(null);
       const data = await OnboardingService.getProgress();
       setProgress(data);
     } catch (error) {
       console.error('Failed to load progress:', error);
+      setError(error.message || 'Failed to load progress');
+
+      // If network error and offline, don't show error (already showing offline alert)
+      if (!error.isNetworkError || isOnline) {
+        setError(error.message || 'Failed to load progress');
+      }
     } finally {
       setLoading(false);
     }
@@ -89,8 +121,49 @@ const OnboardingLayout = () => {
 
   if (loading) {
     return (
-      <Box sx={{ width: '100%', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <LinearProgress sx={{ width: '50%' }} />
+      <Box sx={{
+        width: '100%',
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+      }}>
+        <LinearProgress sx={{ width: '50%', mb: 2 }} />
+        <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.8)' }}>
+          Loading your tutorial...
+        </Typography>
+      </Box>
+    );
+  }
+
+  if (error && !showOfflineAlert) {
+    return (
+      <Box sx={{
+        width: '100%',
+        height: '100vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        p: 3
+      }}>
+        <Alert
+          severity="error"
+          sx={{ maxWidth: '500px', mb: 3 }}
+          action={
+            <IconButton size="small" onClick={loadProgress} color="inherit">
+              <Replay />
+            </IconButton>
+          }
+        >
+          {error}
+        </Alert>
+        <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.8)' }}>
+          Click the retry button to try again
+        </Typography>
       </Box>
     );
   }
@@ -175,18 +248,58 @@ const OnboardingLayout = () => {
 
       {/* Content Area */}
       <Box sx={{ pt: { xs: 8, sm: 10 } }}>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={location.pathname}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Outlet context={{ progress, loadProgress, steps, currentStepIndex, goToNextStep, goToPreviousStep }} />
-          </motion.div>
-        </AnimatePresence>
+        <OnboardingErrorBoundary step={steps[currentStepIndex]?.id}>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <Outlet context={{ progress, loadProgress, steps, currentStepIndex, goToNextStep, goToPreviousStep }} />
+            </motion.div>
+          </AnimatePresence>
+        </OnboardingErrorBoundary>
       </Box>
+
+      {/* Offline Alert */}
+      <Snackbar
+        open={showOfflineAlert}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          severity="warning"
+          icon={<WifiOff />}
+          sx={{ width: '100%' }}
+        >
+          You're offline. Progress won't be saved until you reconnect.
+        </Alert>
+      </Snackbar>
+
+      {/* Network Status Indicator (top-right) */}
+      {!isOnline && (
+        <Box sx={{
+          position: 'fixed',
+          top: 80,
+          right: 16,
+          background: 'rgba(245, 158, 11, 0.9)',
+          color: 'white',
+          borderRadius: 2,
+          px: 2,
+          py: 1,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          fontSize: '0.875rem',
+          fontWeight: 600,
+          zIndex: 9998,
+          backdropFilter: 'blur(10px)',
+        }}>
+          <WifiOff size={16} />
+          Offline
+        </Box>
+      )}
 
       {/* Background Decoration */}
       <Box sx={{
