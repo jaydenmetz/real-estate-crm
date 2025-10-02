@@ -794,4 +794,9 @@ app.use(function onError(err, req, res, next) {
   });
 });
 
+// Initialize job scheduler (cron jobs)
+if (process.env.NODE_ENV !== 'test') {
+  require('./jobs/scheduler');
+}
+
 module.exports = app;

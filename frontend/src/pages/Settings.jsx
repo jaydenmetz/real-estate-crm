@@ -65,12 +65,14 @@ import {
   Key,
   ContentCopy,
   Visibility,
-  VisibilityOff
+  VisibilityOff,
+  Shield
 } from '@mui/icons-material';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useNavigate } from 'react-router-dom';
 import { api, apiKeysAPI } from '../services/api.service';
 import { useAuth } from '../contexts/AuthContext';
+import SecurityDashboard from '../components/settings/SecurityDashboard';
 
 // Tab panel component
 function TabPanel({ children, value, index, ...other }) {
@@ -201,16 +203,16 @@ const Settings = () => {
       // Handle specific error cases
       if (error.status === 404) {
         console.error('API Keys endpoint not found');
-        if (activeTab === 6) {
+        if (activeTab === 7) {
           setSnackbar({ open: true, message: 'API Keys feature not available', severity: 'warning' });
         }
       } else if (error.status === 401) {
         console.error('Authentication required for API keys');
         // Don't show error if user is not on API keys tab
-        if (activeTab === 6) {
+        if (activeTab === 7) {
           setSnackbar({ open: true, message: 'Please log in to manage API keys', severity: 'info' });
         }
-      } else if (activeTab === 6) {
+      } else if (activeTab === 7) {
         // Only show generic error if user is on API keys tab
         setSnackbar({ open: true, message: 'Failed to load API keys', severity: 'error' });
       }
@@ -234,7 +236,7 @@ const Settings = () => {
         setApiKeys([]);
       },
       retry: false,
-      enabled: activeTab === 6,
+      enabled: activeTab === 7,
       staleTime: 60000,
       cacheTime: 300000
     }
@@ -458,6 +460,7 @@ const Settings = () => {
                 <Tab icon={<Notifications />} label="Notifications" />
                 <Tab icon={<Palette />} label="Appearance" />
                 <Tab icon={<Security />} label="Privacy" />
+                <Tab icon={<Shield />} label="Security" />
                 <Tab icon={<Key />} label="API Keys" />
                 <Tab icon={<WorkspacePremium />} label="Developer" />
               </Tabs>
@@ -977,8 +980,13 @@ const Settings = () => {
                 </Button>
               </TabPanel>
 
-              {/* API Keys Tab */}
+              {/* Security Tab */}
               <TabPanel value={activeTab} index={6}>
+                <SecurityDashboard />
+              </TabPanel>
+
+              {/* API Keys Tab */}
+              <TabPanel value={activeTab} index={7}>
                 <Typography variant="h5" gutterBottom>
                   API Key Management
                 </Typography>
@@ -1219,7 +1227,7 @@ const Settings = () => {
               </TabPanel>
 
               {/* Developer Tab */}
-              <TabPanel value={activeTab} index={7}>
+              <TabPanel value={activeTab} index={8}>
                 <Typography variant="h5" gutterBottom>
                   Developer Tools
                 </Typography>

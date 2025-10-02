@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const { pool } = require('../config/database');
 const RefreshTokenService = require('../services/refreshToken.service');
 const SecurityEventService = require('../services/securityEvent.service');
+const EmailService = require('../services/email.service');
 
 // JWT Secret Configuration (matches auth.middleware.js)
 // MUST be set in environment - no fallback for security
@@ -216,7 +217,7 @@ class AuthController {
         // Log failed login attempt (fire-and-forget, don't await)
         SecurityEventService.logLoginFailed(req, loginEmail, 'Invalid credentials').catch(console.error);
 
-        // If account was just locked, log that event (fire-and-forget)
+        // If account was just locked, log that event and send email alert (fire-and-forget)
         if (updatedUser.locked_until) {
           SecurityEventService.logAccountLocked(
             req,
@@ -224,6 +225,17 @@ class AuthController {
             updatedUser.locked_until,
             updatedUser.failed_login_attempts,
           ).catch(console.error);
+
+          // Send email alert (fire-and-forget)
+          const minutesLocked = Math.ceil((new Date(updatedUser.locked_until) - new Date()) / 60000);
+          EmailService.sendAccountLockoutAlert({
+            to: user.email,
+            name: user.first_name,
+            failedAttempts: updatedUser.failed_login_attempts,
+            ipAddress: req.ip || req.connection?.remoteAddress || 'Unknown',
+            lockedUntil: new Date(updatedUser.locked_until).toLocaleString(),
+            minutesLocked,
+          }).catch(console.error);
         }
 
         return res.status(401).json({

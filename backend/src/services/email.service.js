@@ -52,6 +52,62 @@ class EmailService {
           <p>Best regards,<br>Your Real Estate Team</p>
         `,
       },
+      accountLockout: {
+        subject: '🔒 Security Alert: Your account has been temporarily locked',
+        getBody: (data) => `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <div style="background: #d32f2f; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0;">
+              <h1>🔒 Account Temporarily Locked</h1>
+            </div>
+            <div style="background: #f9f9f9; padding: 20px; border: 1px solid #ddd; border-top: none;">
+              <p>Hi ${data.name},</p>
+
+              <div style="background: #fff3cd; border: 1px solid #ffc107; padding: 15px; margin: 15px 0; border-radius: 4px;">
+                <strong>⚠️ Security Alert:</strong> Your account has been temporarily locked due to multiple failed login attempts.
+              </div>
+
+              <h3>Lockout Details:</h3>
+              <div style="background: white; padding: 10px; margin: 10px 0; border-radius: 4px;">
+                <strong>Failed Attempts:</strong> ${data.failedAttempts}
+              </div>
+              <div style="background: white; padding: 10px; margin: 10px 0; border-radius: 4px;">
+                <strong>IP Address:</strong> ${data.ipAddress || 'Unknown'}
+              </div>
+              <div style="background: white; padding: 10px; margin: 10px 0; border-radius: 4px;">
+                <strong>Locked Until:</strong> ${data.lockedUntil} (${data.minutesLocked} minutes)
+              </div>
+
+              <h3>What This Means:</h3>
+              <ul>
+                <li>Your account will automatically unlock in <strong>${data.minutesLocked} minutes</strong></li>
+                <li>If this was you, please wait and try again after the lockout period</li>
+                <li>If this wasn't you, someone may be trying to access your account</li>
+              </ul>
+
+              <h3>Recommended Actions:</h3>
+              <ol>
+                <li>Review your recent security events in the Settings page</li>
+                <li>Change your password if you suspect unauthorized access</li>
+                <li>Enable two-factor authentication (when available)</li>
+                <li>Contact support if you need immediate assistance</li>
+              </ol>
+
+              <div style="text-align: center; margin: 20px 0;">
+                <a href="https://crm.jaydenmetz.com/settings#security"
+                   style="display: inline-block; padding: 12px 24px; background: #1976d2; color: white;
+                          text-decoration: none; border-radius: 4px;">
+                  View Security Dashboard
+                </a>
+              </div>
+
+              <div style="text-align: center; margin-top: 20px; color: #666; font-size: 12px;">
+                <p>This is an automated security notification from Real Estate CRM</p>
+                <p>If you did not attempt to log in, please contact support immediately</p>
+              </div>
+            </div>
+          </div>
+        `,
+      },
     };
   }
 
@@ -150,6 +206,16 @@ class EmailService {
       subject,
       html: body,
       template: 'custom',
+    });
+  }
+
+  async sendAccountLockoutAlert(data) {
+    const template = this.templates.accountLockout;
+    return this.sendEmail({
+      to: data.to,
+      subject: template.subject,
+      html: template.getBody(data),
+      template: 'accountLockout',
     });
   }
 }
