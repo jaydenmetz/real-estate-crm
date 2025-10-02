@@ -31,6 +31,8 @@ class AlertingService {
         <p><strong>Severity:</strong> ${alertData.severity}</p>
         <p><strong>Time:</strong> ${new Date(alertData.timestamp).toLocaleString()}</p>
         <p><strong>Message:</strong> ${alertData.message}</p>
+        ${alertData.ipAddress ? `<p><strong>IP Address:</strong> ${alertData.ipAddress}</p>` : ''}
+        ${alertData.email ? `<p><strong>User Email:</strong> ${alertData.email}</p>` : ''}
       </div>
     `;
 

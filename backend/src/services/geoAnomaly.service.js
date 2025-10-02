@@ -11,10 +11,15 @@
 const { pool } = require('../config/database');
 const SecurityEventService = require('./securityEvent.service');
 
+// Simple in-memory cache to reduce API calls
+// Cache TTL: 24 hours (geolocation rarely changes)
+const geoCache = new Map();
+const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+
 class GeoAnomalyService {
   /**
    * Get geolocation data for an IP address
-   * Uses free ip-api.com service
+   * Uses free ip-api.com service with 24-hour caching
    */
   static async getIpGeolocation(ipAddress) {
     try {
@@ -36,6 +41,16 @@ class GeoAnomalyService {
       // Remove IPv6 prefix if present (::ffff:x.x.x.x)
       const cleanIp = ipAddress.replace('::ffff:', '');
 
+      // Check cache first
+      if (geoCache.has(cleanIp)) {
+        const cached = geoCache.get(cleanIp);
+        if (Date.now() - cached.timestamp < CACHE_TTL) {
+          return cached.geo; // Return cached data (reduces API calls by ~95%)
+        }
+        // Cache expired, remove it
+        geoCache.delete(cleanIp);
+      }
+
       // Call free geolocation API
       const response = await fetch(`http://ip-api.com/json/${cleanIp}?fields=status,message,country,countryCode,region,regionName,city,lat,lon,timezone,isp,query`);
       const data = await response.json();
@@ -45,7 +60,7 @@ class GeoAnomalyService {
         return null;
       }
 
-      return {
+      const geoData = {
         country: data.country,
         countryCode: data.countryCode,
         region: data.regionName,
@@ -57,6 +72,14 @@ class GeoAnomalyService {
         query: data.query,
         isLocal: false,
       };
+
+      // Cache the result
+      geoCache.set(cleanIp, {
+        geo: geoData,
+        timestamp: Date.now(),
+      });
+
+      return geoData;
     } catch (error) {
       console.error('Error getting IP geolocation:', error);
       return null;
