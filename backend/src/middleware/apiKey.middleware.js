@@ -1,4 +1,5 @@
 const ApiKeyService = require('../services/apiKey.service');
+const SecurityEventService = require('../services/securityEvent.service');
 
 /**
  * Authenticate requests using API Key
@@ -17,6 +18,20 @@ const authenticateApiKey = async (req, res, next) => {
     const userData = await ApiKeyService.validateApiKey(apiKey);
 
     if (!userData) {
+      // Log failed API key authentication (fire-and-forget)
+      SecurityEventService.logEvent({
+        eventType: 'api_key_used',
+        eventCategory: 'api_key',
+        severity: 'warning',
+        ipAddress: req.ip || req.connection?.remoteAddress,
+        userAgent: req.headers['user-agent'],
+        requestPath: req.originalUrl,
+        requestMethod: req.method,
+        success: false,
+        message: 'Invalid API key provided',
+        metadata: { key_prefix: apiKey.substring(0, 8) },
+      }).catch(console.error);
+
       return res.status(401).json({
         success: false,
         error: {
@@ -58,6 +73,19 @@ const authenticateApiKey = async (req, res, next) => {
     console.error('API Key authentication error:', error.message, error.stack);
 
     if (error.message && error.message.includes('expired')) {
+      // Log expired API key attempt (fire-and-forget)
+      SecurityEventService.logEvent({
+        eventType: 'api_key_expired',
+        eventCategory: 'api_key',
+        severity: 'warning',
+        ipAddress: req.ip || req.connection?.remoteAddress,
+        userAgent: req.headers['user-agent'],
+        requestPath: req.originalUrl,
+        requestMethod: req.method,
+        success: false,
+        message: error.message,
+      }).catch(console.error);
+
       return res.status(401).json({
         success: false,
         error: {
@@ -68,6 +96,19 @@ const authenticateApiKey = async (req, res, next) => {
     }
 
     if (error.message.includes('deactivated')) {
+      // Log deactivated API key attempt (fire-and-forget)
+      SecurityEventService.logEvent({
+        eventType: 'api_key_used',
+        eventCategory: 'api_key',
+        severity: 'warning',
+        ipAddress: req.ip || req.connection?.remoteAddress,
+        userAgent: req.headers['user-agent'],
+        requestPath: req.originalUrl,
+        requestMethod: req.method,
+        success: false,
+        message: error.message,
+      }).catch(console.error);
+
       return res.status(401).json({
         success: false,
         error: {

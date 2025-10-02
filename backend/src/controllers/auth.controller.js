@@ -514,6 +514,22 @@ class AuthController {
         updates.push(`password_hash = $${paramIndex}`);
         values.push(passwordHash);
         paramIndex++;
+
+        // Log password change (fire-and-forget)
+        SecurityEventService.logEvent({
+          eventType: 'password_changed',
+          eventCategory: 'account',
+          severity: 'warning',
+          userId: req.user.id,
+          email: req.user.email,
+          username: req.user.username,
+          ipAddress: req.ip || req.connection?.remoteAddress,
+          userAgent: req.headers['user-agent'],
+          requestPath: req.originalUrl,
+          requestMethod: req.method,
+          success: true,
+          message: 'User password changed',
+        }).catch(console.error);
       }
 
       if (updates.length === 0) {
@@ -670,6 +686,24 @@ class AuthController {
 
       if (refreshToken) {
         await RefreshTokenService.revokeRefreshToken(refreshToken);
+      }
+
+      // Log logout event (fire-and-forget)
+      if (req.user) {
+        SecurityEventService.logEvent({
+          eventType: 'logout',
+          eventCategory: 'authentication',
+          severity: 'info',
+          userId: req.user.id,
+          email: req.user.email,
+          username: req.user.username,
+          ipAddress: req.ip || req.connection?.remoteAddress,
+          userAgent: req.headers['user-agent'],
+          requestPath: req.originalUrl,
+          requestMethod: req.method,
+          success: true,
+          message: 'User logged out successfully',
+        }).catch(console.error);
       }
 
       // Clear refresh token cookie
