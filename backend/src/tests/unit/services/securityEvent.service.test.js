@@ -317,7 +317,7 @@ describe('SecurityEventService', () => {
 
       const metadata = JSON.parse(pool.query.mock.calls[0][1][12]);
       expect(metadata.failed_attempts).toBe(5);
-      expect(metadata.locked_until).toEqual(lockedUntil);
+      expect(metadata.locked_until).toBe(lockedUntil.toISOString());
     });
   });
 

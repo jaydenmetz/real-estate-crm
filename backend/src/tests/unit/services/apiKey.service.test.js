@@ -74,6 +74,7 @@ describe('ApiKeyService', () => {
     test('should create API key with default scopes', async () => {
       const mockClient = {
         query: jest.fn()
+          .mockResolvedValueOnce(undefined) // BEGIN
           .mockResolvedValueOnce({ rows: [{ team_id: 'team-123' }] }) // User query
           .mockResolvedValueOnce({
             rows: [{
@@ -84,7 +85,8 @@ describe('ApiKeyService', () => {
               expires_at: null,
               created_at: new Date(),
             }],
-          }), // INSERT query
+          }) // INSERT query
+          .mockResolvedValueOnce(undefined), // COMMIT
         release: jest.fn(),
       };
 
@@ -106,6 +108,7 @@ describe('ApiKeyService', () => {
     test('should create API key with expiration date', async () => {
       const mockClient = {
         query: jest.fn()
+          .mockResolvedValueOnce(undefined) // BEGIN
           .mockResolvedValueOnce({ rows: [{ team_id: 'team-456' }] })
           .mockResolvedValueOnce({
             rows: [{
@@ -116,7 +119,8 @@ describe('ApiKeyService', () => {
               expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
               created_at: new Date(),
             }],
-          }),
+          })
+          .mockResolvedValueOnce(undefined), // COMMIT
         release: jest.fn(),
       };
 
@@ -125,13 +129,14 @@ describe('ApiKeyService', () => {
       const result = await ApiKeyService.createApiKey('user-456', 'Expiring Key', 30);
 
       expect(result.expires_at).toBeDefined();
-      const insertCall = mockClient.query.mock.calls[1];
+      const insertCall = mockClient.query.mock.calls[2];
       expect(insertCall[1][6]).not.toBeNull(); // expires_at parameter
     });
 
     test('should rollback transaction on error', async () => {
       const mockClient = {
         query: jest.fn()
+          .mockResolvedValueOnce(undefined) // BEGIN
           .mockResolvedValueOnce({ rows: [{ team_id: 'team-789' }] })
           .mockRejectedValueOnce(new Error('Database error')),
         release: jest.fn(),
@@ -150,6 +155,7 @@ describe('ApiKeyService', () => {
     test('should throw error if user not found', async () => {
       const mockClient = {
         query: jest.fn()
+          .mockResolvedValueOnce(undefined) // BEGIN
           .mockResolvedValueOnce({ rows: [] }), // No user found
         release: jest.fn(),
       };
@@ -166,17 +172,19 @@ describe('ApiKeyService', () => {
     test('should store only first 8 and last 4 chars as prefix', async () => {
       const mockClient = {
         query: jest.fn()
+          .mockResolvedValueOnce(undefined) // BEGIN
           .mockResolvedValueOnce({ rows: [{ team_id: 'team-123' }] })
           .mockResolvedValueOnce({
             rows: [{
               id: 'apikey-111',
               name: 'Prefix Test',
-              key_prefix: expect.stringMatching(/^.{8}\.\.\..{4}$/),
+              key_prefix: 'abcd1234...wxyz',
               scopes: { all: ['read', 'write', 'delete'] },
               expires_at: null,
               created_at: new Date(),
             }],
-          }),
+          })
+          .mockResolvedValueOnce(undefined), // COMMIT
         release: jest.fn(),
       };
 
@@ -184,7 +192,7 @@ describe('ApiKeyService', () => {
 
       await ApiKeyService.createApiKey('user-111', 'Prefix Test', null);
 
-      const insertParams = mockClient.query.mock.calls[1][1];
+      const insertParams = mockClient.query.mock.calls[2][1];
       const keyPrefix = insertParams[4];
       expect(keyPrefix).toMatch(/^.{8}\.\.\..{4}$/);
     });
