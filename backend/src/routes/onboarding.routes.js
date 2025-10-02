@@ -1,6 +1,6 @@
 const express = require('express');
 const OnboardingService = require('../services/onboarding.service');
-const { authenticateRequest } = require('../middleware/combinedAuth.middleware');
+const { authenticateAny } = require('../middleware/combinedAuth.middleware');
 
 const router = express.Router();
 
@@ -9,7 +9,7 @@ const router = express.Router();
  * @desc    Get current user's onboarding progress
  * @access  Private
  */
-router.get('/progress', authenticateRequest, async (req, res) => {
+router.get('/progress', authenticateAny, async (req, res) => {
   try {
     const progress = await OnboardingService.getProgress(req.user.id);
 
@@ -36,7 +36,7 @@ router.get('/progress', authenticateRequest, async (req, res) => {
  * @access  Private
  * @body    { step: 'welcome' | 'escrow' | 'listings' | 'clients' | 'appointments' | 'leads' | 'marketplace' | 'features' }
  */
-router.post('/complete-step', authenticateRequest, async (req, res) => {
+router.post('/complete-step', authenticateAny, async (req, res) => {
   try {
     const { step } = req.body;
 
@@ -86,7 +86,7 @@ router.post('/complete-step', authenticateRequest, async (req, res) => {
  * @desc    Skip the tutorial (mark as skipped)
  * @access  Private
  */
-router.post('/skip', authenticateRequest, async (req, res) => {
+router.post('/skip', authenticateAny, async (req, res) => {
   try {
     const progress = await OnboardingService.skipTutorial(req.user.id);
 
@@ -113,7 +113,7 @@ router.post('/skip', authenticateRequest, async (req, res) => {
  * @desc    Reset tutorial progress (for replay)
  * @access  Private
  */
-router.post('/reset', authenticateRequest, async (req, res) => {
+router.post('/reset', authenticateAny, async (req, res) => {
   try {
     const progress = await OnboardingService.resetProgress(req.user.id);
 
@@ -140,7 +140,7 @@ router.post('/reset', authenticateRequest, async (req, res) => {
  * @desc    Get sample data for current user (for tutorial display)
  * @access  Private
  */
-router.get('/sample-data', authenticateRequest, async (req, res) => {
+router.get('/sample-data', authenticateAny, async (req, res) => {
   try {
     const sampleData = await OnboardingService.getSampleData(req.user.id);
 
@@ -166,7 +166,7 @@ router.get('/sample-data', authenticateRequest, async (req, res) => {
  * @desc    Generate sample data for current user (manual trigger)
  * @access  Private
  */
-router.post('/generate-sample-data', authenticateRequest, async (req, res) => {
+router.post('/generate-sample-data', authenticateAny, async (req, res) => {
   try {
     const result = await OnboardingService.generateSampleData(req.user.id);
 
@@ -194,7 +194,7 @@ router.post('/generate-sample-data', authenticateRequest, async (req, res) => {
  * @desc    Delete all sample data for current user
  * @access  Private
  */
-router.delete('/sample-data', authenticateRequest, async (req, res) => {
+router.delete('/sample-data', authenticateAny, async (req, res) => {
   try {
     const result = await OnboardingService.deleteSampleData(req.user.id);
 
@@ -222,7 +222,7 @@ router.delete('/sample-data', authenticateRequest, async (req, res) => {
  * @access  Private
  * @body    { rating, nps, helpful, suggestions, featuresLiked, submittedAt }
  */
-router.post('/feedback', authenticateRequest, async (req, res) => {
+router.post('/feedback', authenticateAny, async (req, res) => {
   try {
     const feedback = req.body;
 
@@ -261,7 +261,7 @@ router.post('/feedback', authenticateRequest, async (req, res) => {
  * @desc    Get analytics/stats for current user's onboarding
  * @access  Private
  */
-router.get('/analytics', authenticateRequest, async (req, res) => {
+router.get('/analytics', authenticateAny, async (req, res) => {
   try {
     const analytics = await OnboardingService.getAnalytics(req.user.id);
 
@@ -288,7 +288,7 @@ router.get('/analytics', authenticateRequest, async (req, res) => {
  * @access  Private
  * @body    { step, timeSpentSeconds }
  */
-router.post('/track-timing', authenticateRequest, async (req, res) => {
+router.post('/track-timing', authenticateAny, async (req, res) => {
   try {
     const { step, timeSpentSeconds } = req.body;
 
