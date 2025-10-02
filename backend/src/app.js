@@ -223,6 +223,9 @@ securityEventsRouter.use('/', require('./routes/securityEvents.routes'));
 // All other endpoints (authenticated)
 apiRouter.use('/security-events', securityEventsRouter);
 
+// GDPR compliance routes
+apiRouter.use('/gdpr', require('./routes/gdpr.routes'));
+
 // API Routes - Using professional .routes.js files with built-in auth
 // Each route file handles its own authentication and validation
 // Escrows routes - including health checks
