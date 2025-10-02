@@ -1,4 +1,5 @@
 const express = require('express');
+
 const router = express.Router();
 const SecurityEventService = require('../services/securityEvent.service');
 const { authenticate, requireRole } = require('../middleware/auth.middleware');
@@ -29,7 +30,7 @@ router.get('/', async (req, res) => {
       endDate,
       success,
       limit = 100,
-      offset = 0
+      offset = 0,
     } = req.query;
 
     // Users can only view their own events (unless admin)
@@ -51,7 +52,7 @@ router.get('/', async (req, res) => {
       endDate: endDate ? new Date(endDate) : null,
       success: successFilter,
       limit: limitValue,
-      offset: offsetValue
+      offset: offsetValue,
     });
 
     res.json({
@@ -60,9 +61,9 @@ router.get('/', async (req, res) => {
       pagination: {
         limit: limitValue,
         offset: offsetValue,
-        count: events.length
+        count: events.length,
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Error querying security events:', error);
@@ -70,8 +71,8 @@ router.get('/', async (req, res) => {
       success: false,
       error: {
         code: 'QUERY_FAILED',
-        message: 'Failed to query security events'
-      }
+        message: 'Failed to query security events',
+      },
     });
   }
 });
@@ -101,10 +102,10 @@ router.get('/stats', async (req, res) => {
         period: {
           days: daysValue,
           startDate: new Date(Date.now() - daysValue * 24 * 60 * 60 * 1000).toISOString(),
-          endDate: new Date().toISOString()
-        }
+          endDate: new Date().toISOString(),
+        },
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Error getting security event stats:', error);
@@ -112,8 +113,8 @@ router.get('/stats', async (req, res) => {
       success: false,
       error: {
         code: 'STATS_FAILED',
-        message: 'Failed to get security event statistics'
-      }
+        message: 'Failed to get security event statistics',
+      },
     });
   }
 });
@@ -130,13 +131,13 @@ router.get('/recent', async (req, res) => {
     const events = await SecurityEventService.queryEvents({
       userId,
       limit: 50,
-      offset: 0
+      offset: 0,
     });
 
     res.json({
       success: true,
       data: events,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Error getting recent security events:', error);
@@ -144,8 +145,8 @@ router.get('/recent', async (req, res) => {
       success: false,
       error: {
         code: 'QUERY_FAILED',
-        message: 'Failed to get recent security events'
-      }
+        message: 'Failed to get recent security events',
+      },
     });
   }
 });
@@ -167,7 +168,7 @@ router.get('/critical', requireRole('system_admin'), async (req, res) => {
       severity: 'critical',
       startDate,
       limit: 100,
-      offset: 0
+      offset: 0,
     });
 
     res.json({
@@ -176,9 +177,9 @@ router.get('/critical', requireRole('system_admin'), async (req, res) => {
       period: {
         days: daysValue,
         startDate: startDate.toISOString(),
-        endDate: new Date().toISOString()
+        endDate: new Date().toISOString(),
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Error getting critical security events:', error);
@@ -186,8 +187,8 @@ router.get('/critical', requireRole('system_admin'), async (req, res) => {
       success: false,
       error: {
         code: 'QUERY_FAILED',
-        message: 'Failed to get critical security events'
-      }
+        message: 'Failed to get critical security events',
+      },
     });
   }
 });

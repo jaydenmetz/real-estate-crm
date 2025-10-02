@@ -9,12 +9,12 @@ exports.getAppointments = async (req, res) => {
       endDate,
       status,
       page = 1,
-      limit = 20
+      limit = 20,
     } = req.query;
 
     const offset = (page - 1) * limit;
-    let whereConditions = ['deleted_at IS NULL'];
-    let queryParams = [];
+    const whereConditions = ['deleted_at IS NULL'];
+    const queryParams = [];
     let paramIndex = 1;
 
     // Team filter
@@ -69,10 +69,10 @@ exports.getAppointments = async (req, res) => {
           currentPage: parseInt(page),
           totalPages: Math.ceil(totalCount / limit),
           totalCount,
-          limit: parseInt(limit)
-        }
+          limit: parseInt(limit),
+        },
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error fetching appointments:', error);
@@ -81,8 +81,8 @@ exports.getAppointments = async (req, res) => {
       error: {
         code: 'FETCH_ERROR',
         message: 'Failed to fetch appointments',
-        details: error.message
-      }
+        details: error.message,
+      },
     });
   }
 };
@@ -100,15 +100,15 @@ exports.getAppointment = async (req, res) => {
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Appointment not found'
-        }
+          message: 'Appointment not found',
+        },
       });
     }
 
     res.json({
       success: true,
       data: result.rows[0],
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error fetching appointment:', error);
@@ -117,8 +117,8 @@ exports.getAppointment = async (req, res) => {
       error: {
         code: 'FETCH_ERROR',
         message: 'Failed to fetch appointment',
-        details: error.message
-      }
+        details: error.message,
+      },
     });
   }
 };
@@ -136,7 +136,7 @@ exports.createAppointment = async (req, res) => {
       description,
       status = 'Scheduled',
       clientId,
-      listingId
+      listingId,
     } = req.body;
 
     // Validation
@@ -145,8 +145,8 @@ exports.createAppointment = async (req, res) => {
         success: false,
         error: {
           code: 'MISSING_FIELDS',
-          message: 'Title, date, and start time are required'
-        }
+          message: 'Title, date, and start time are required',
+        },
       });
     }
 
@@ -172,7 +172,7 @@ exports.createAppointment = async (req, res) => {
       clientId || null,
       listingId || null,
       req.user?.id || null,
-      req.user?.teamId || req.user?.team_id || null
+      req.user?.teamId || req.user?.team_id || null,
     ];
 
     const result = await pool.query(query, values);
@@ -181,7 +181,7 @@ exports.createAppointment = async (req, res) => {
       success: true,
       data: result.rows[0],
       message: 'Appointment created successfully',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error creating appointment:', error);
@@ -190,8 +190,8 @@ exports.createAppointment = async (req, res) => {
       error: {
         code: 'CREATE_ERROR',
         message: 'Failed to create appointment',
-        details: error.message
-      }
+        details: error.message,
+      },
     });
   }
 };
@@ -209,7 +209,7 @@ exports.updateAppointment = async (req, res) => {
 
     const allowedFields = [
       'title', 'appointment_date', 'start_time', 'end_time', 'location',
-      'appointment_type', 'description', 'status', 'client_id', 'listing_id'
+      'appointment_type', 'description', 'status', 'client_id', 'listing_id',
     ];
 
     for (const field of allowedFields) {
@@ -225,13 +225,13 @@ exports.updateAppointment = async (req, res) => {
         success: false,
         error: {
           code: 'NO_UPDATES',
-          message: 'No valid fields to update'
-        }
+          message: 'No valid fields to update',
+        },
       });
     }
 
-    setClause.push(`updated_at = CURRENT_TIMESTAMP`);
-    setClause.push(`version = version + 1`);
+    setClause.push('updated_at = CURRENT_TIMESTAMP');
+    setClause.push('version = version + 1');
     setClause.push(`last_modified_by = $${paramIndex}`);
     values.push(req.user?.id || null);
     paramIndex++;
@@ -267,35 +267,34 @@ exports.updateAppointment = async (req, res) => {
             success: false,
             error: {
               code: 'NOT_FOUND',
-              message: 'Appointment not found'
-            }
-          });
-        } else {
-          return res.status(409).json({
-            success: false,
-            error: {
-              code: 'VERSION_CONFLICT',
-              message: 'This appointment was modified by another user. Please refresh and try again.',
-              currentVersion: checkResult.rows[0].version,
-              attemptedVersion: clientVersion
-            }
+              message: 'Appointment not found',
+            },
           });
         }
+        return res.status(409).json({
+          success: false,
+          error: {
+            code: 'VERSION_CONFLICT',
+            message: 'This appointment was modified by another user. Please refresh and try again.',
+            currentVersion: checkResult.rows[0].version,
+            attemptedVersion: clientVersion,
+          },
+        });
       }
 
       return res.status(404).json({
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Appointment not found'
-        }
+          message: 'Appointment not found',
+        },
       });
     }
 
     res.json({
       success: true,
       data: result.rows[0],
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error updating appointment:', error);
@@ -304,8 +303,8 @@ exports.updateAppointment = async (req, res) => {
       error: {
         code: 'UPDATE_ERROR',
         message: 'Failed to update appointment',
-        details: error.message
-      }
+        details: error.message,
+      },
     });
   }
 };
@@ -329,8 +328,8 @@ exports.archiveAppointment = async (req, res) => {
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Appointment not found'
-        }
+          message: 'Appointment not found',
+        },
       });
     }
 
@@ -338,7 +337,7 @@ exports.archiveAppointment = async (req, res) => {
       success: true,
       data: result.rows[0],
       message: 'Appointment archived successfully',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error archiving appointment:', error);
@@ -347,8 +346,8 @@ exports.archiveAppointment = async (req, res) => {
       error: {
         code: 'ARCHIVE_ERROR',
         message: 'Failed to archive appointment',
-        details: error.message
-      }
+        details: error.message,
+      },
     });
   }
 };
@@ -367,8 +366,8 @@ exports.deleteAppointment = async (req, res) => {
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Appointment not found'
-        }
+          message: 'Appointment not found',
+        },
       });
     }
 
@@ -377,8 +376,8 @@ exports.deleteAppointment = async (req, res) => {
         success: false,
         error: {
           code: 'NOT_ARCHIVED',
-          message: 'Appointment must be archived before deletion'
-        }
+          message: 'Appointment must be archived before deletion',
+        },
       });
     }
 
@@ -388,7 +387,7 @@ exports.deleteAppointment = async (req, res) => {
     res.json({
       success: true,
       message: 'Appointment deleted successfully',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error deleting appointment:', error);
@@ -397,8 +396,8 @@ exports.deleteAppointment = async (req, res) => {
       error: {
         code: 'DELETE_ERROR',
         message: 'Failed to delete appointment',
-        details: error.message
-      }
+        details: error.message,
+      },
     });
   }
 };
@@ -422,8 +421,8 @@ exports.cancelAppointment = async (req, res) => {
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Appointment not found'
-        }
+          message: 'Appointment not found',
+        },
       });
     }
 
@@ -431,7 +430,7 @@ exports.cancelAppointment = async (req, res) => {
       success: true,
       data: result.rows[0],
       message: 'Appointment cancelled successfully',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error cancelling appointment:', error);
@@ -440,8 +439,8 @@ exports.cancelAppointment = async (req, res) => {
       error: {
         code: 'CANCEL_ERROR',
         message: 'Failed to cancel appointment',
-        details: error.message
-      }
+        details: error.message,
+      },
     });
   }
 };
@@ -465,8 +464,8 @@ exports.markComplete = async (req, res) => {
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Appointment not found'
-        }
+          message: 'Appointment not found',
+        },
       });
     }
 
@@ -474,7 +473,7 @@ exports.markComplete = async (req, res) => {
       success: true,
       data: result.rows[0],
       message: 'Appointment marked as completed',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error marking appointment complete:', error);
@@ -483,8 +482,8 @@ exports.markComplete = async (req, res) => {
       error: {
         code: 'COMPLETE_ERROR',
         message: 'Failed to mark appointment as complete',
-        details: error.message
-      }
+        details: error.message,
+      },
     });
   }
 };
@@ -511,26 +510,26 @@ exports.batchDeleteAppointments = async (req, res) => {
         success: true,
         message: 'No appointments found to delete',
         deletedCount: 0,
-        deletedIds: []
+        deletedIds: [],
       });
     }
 
     // Check if any are not archived
-    const activeAppointments = existResult.rows.filter(r => !r.deleted_at);
+    const activeAppointments = existResult.rows.filter((r) => !r.deleted_at);
     if (activeAppointments.length > 0) {
       await client.query('ROLLBACK');
-      const activeIds = activeAppointments.map(r => r.id);
+      const activeIds = activeAppointments.map((r) => r.id);
       return res.status(400).json({
         success: false,
         error: {
           code: 'NOT_ARCHIVED',
-          message: `Some appointments are not archived: ${activeIds.join(', ')}`
-        }
+          message: `Some appointments are not archived: ${activeIds.join(', ')}`,
+        },
       });
     }
 
     // Delete archived appointments
-    const existingIds = existResult.rows.map(r => r.id);
+    const existingIds = existResult.rows.map((r) => r.id);
     const deleteQuery = 'DELETE FROM appointments WHERE id = ANY($1) RETURNING id';
     const result = await client.query(deleteQuery, [existingIds]);
 
@@ -538,14 +537,14 @@ exports.batchDeleteAppointments = async (req, res) => {
 
     logger.info('Batch deleted appointments', {
       count: result.rowCount,
-      ids: result.rows.map(r => r.id)
+      ids: result.rows.map((r) => r.id),
     });
 
     res.json({
       success: true,
       message: `Successfully deleted ${result.rowCount} appointments`,
       deletedCount: result.rowCount,
-      deletedIds: result.rows.map(r => r.id)
+      deletedIds: result.rows.map((r) => r.id),
     });
   } catch (error) {
     await client.query('ROLLBACK');
@@ -555,8 +554,8 @@ exports.batchDeleteAppointments = async (req, res) => {
       error: {
         code: 'DELETE_ERROR',
         message: 'Failed to batch delete appointments',
-        details: error.message
-      }
+        details: error.message,
+      },
     });
   } finally {
     client.release();

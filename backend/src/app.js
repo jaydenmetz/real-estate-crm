@@ -6,7 +6,10 @@ const compression = require('compression');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const Sentry = require('@sentry/node');
-const { apiLimiter, authLimiter, strictLimiter, healthCheckLimiter, helmet: helmetConfig } = require('./middleware/security.middleware');
+const swaggerUi = require('swagger-ui-express');
+const {
+  apiLimiter, authLimiter, strictLimiter, healthCheckLimiter, helmet: helmetConfig,
+} = require('./middleware/security.middleware');
 const { escrowValidationRules, validate, sanitizeRequestBody } = require('./middleware/validation.middleware');
 const logger = require('./utils/logger');
 const websocketService = require('./services/websocket.service');
@@ -14,12 +17,11 @@ const { initializeDatabase } = require('./config/database');
 const { initializeRedis } = require('./config/redis');
 const { errorLogging, requestLogging } = require('./middleware/errorLogging.middleware');
 
-
 (async () => {
   try {
     await initializeDatabase();
     console.log('✅ Database ready');
-    
+
     // Try to initialize Redis but don't fail if it's not available
     try {
       await initializeRedis();
@@ -48,41 +50,41 @@ app.use(compression({
     }
     return compression.filter(req, res);
   },
-  level: 6 // Balanced compression level
+  level: 6, // Balanced compression level
 }));
 
 // Enhanced security headers from security middleware
 app.use(helmetConfig);
 
 const corsOptions = {
-  origin: function (origin, callback) {
+  origin(origin, callback) {
     const allowedOrigins = [
       'https://crm.jaydenmetz.com',
       'https://api.jaydenmetz.com',
       'http://localhost:3000',
-      'http://localhost:3001'
+      'http://localhost:3001',
     ];
-    
+
     // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
-    
+
     // Check if origin is in allowed list
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
-    
+
     // Allow subdomains of jaydenmetz.com
     if (/^https:\/\/[a-z0-9-]+\.jaydenmetz\.com$/.test(origin)) {
       return callback(null, true);
     }
-    
+
     callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Team-ID', 'X-API-Key', 'API-Key', 'sentry-trace', 'baggage'],
   exposedHeaders: ['X-Total-Count', 'X-Page-Count'],
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
 };
 
 app.use(cors(corsOptions));
@@ -93,11 +95,11 @@ app.options('*', cors(corsOptions));
 app.use(cookieParser()); // Parse cookies for refresh tokens
 app.use(express.json({
   limit: '10mb',
-  type: ['application/json', 'text/plain']
+  type: ['application/json', 'text/plain'],
 }));
 app.use(express.urlencoded({
   extended: true,
-  limit: '10mb' 
+  limit: '10mb',
 }));
 
 // Security middleware stack
@@ -111,13 +113,13 @@ app.use('/uploads', express.static('uploads'));
 
 app.use((req, res, next) => {
   const importantRoutes = ['/ai/', '/auth/', '/webhooks/'];
-  const shouldLog = importantRoutes.some(route => req.path.includes(route)) || 
-                   req.method !== 'GET';
-  
+  const shouldLog = importantRoutes.some((route) => req.path.includes(route))
+                   || req.method !== 'GET';
+
   if (shouldLog) {
     logger.info(`${req.method} ${req.path}`, {
       ip: req.ip,
-      userAgent: req.get('user-agent')?.substring(0, 100)
+      userAgent: req.get('user-agent')?.substring(0, 100),
     });
   }
   next();
@@ -127,7 +129,7 @@ app.use((req, res, next) => {
 app.get('/test-simple', (req, res) => {
   res.json({
     status: 'ok',
-    time: new Date().toISOString()
+    time: new Date().toISOString(),
   });
 });
 
@@ -138,12 +140,12 @@ app.get('/health', (req, res) => {
     version: process.env.API_VERSION || '1.0.0',
     websocket: {
       status: websocketService.io ? 'running' : 'not_initialized',
-      connections: websocketService.getConnectionCount()
+      connections: websocketService.getConnectionCount(),
     },
     memory: process.memoryUsage(),
-    uptime: process.uptime()
+    uptime: process.uptime(),
   };
-  
+
   res.json(healthData);
 });
 
@@ -153,14 +155,13 @@ app.get('/ws/status', (req, res) => {
   res.json({
     status: websocketService.io ? 'active' : 'inactive',
     connectedClients: websocketService.getConnectionCount(),
-    clientIds: websocketService.getConnectedClients()
+    clientIds: websocketService.getConnectedClients(),
   });
 });
 
 // ============================================
 // OpenAPI / Swagger Documentation
 // ============================================
-const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./config/openapi.config');
 
 // Serve OpenAPI JSON spec (for AI consumption)
@@ -179,8 +180,8 @@ app.use('/v1/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
     displayRequestDuration: true,
     filter: true,
     showExtensions: true,
-    showCommonExtensions: true
-  }
+    showCommonExtensions: true,
+  },
 }));
 
 // Import authentication middleware
@@ -218,7 +219,8 @@ apiRouter.use('/ai', require('./routes/ai.routes'));
 // Security events routes (requires authentication, except health)
 const securityEventsRouter = express.Router();
 securityEventsRouter.use('/', require('./routes/securityEvents-health.routes')); // Health endpoint (public)
-securityEventsRouter.use('/', require('./routes/securityEvents.routes')); // All other endpoints (authenticated)
+securityEventsRouter.use('/', require('./routes/securityEvents.routes'));
+// All other endpoints (authenticated)
 apiRouter.use('/security-events', securityEventsRouter);
 
 // API Routes - Using professional .routes.js files with built-in auth
@@ -227,13 +229,15 @@ apiRouter.use('/security-events', securityEventsRouter);
 const escrowsRouter = express.Router();
 escrowsRouter.use('/', require('./routes/escrows.routes'));
 escrowsRouter.use('/', require('./routes/escrows-health.routes')); // Health endpoints at /escrows/health/*
-escrowsRouter.use('/', require('./routes/escrows-health-enhanced.routes')); // Enhanced health at /escrows/health/enhanced
+escrowsRouter.use('/', require('./routes/escrows-health-enhanced.routes'));
+// Enhanced health at /escrows/health/enhanced
 apiRouter.use('/escrows', escrowsRouter);
 
 // Listings routes - including health checks
 const listingsRouter = express.Router();
 listingsRouter.use('/', require('./routes/listings.routes'));
-listingsRouter.use('/', require('./routes/listings-health.routes')); // Health endpoints at /listings/health/*
+listingsRouter.use('/', require('./routes/listings-health.routes'));
+// Health endpoints at /listings/health/*
 apiRouter.use('/listings', listingsRouter);
 apiRouter.use('/clients', require('./routes/clients.routes'));
 apiRouter.use('/appointments', require('./routes/appointments.routes'));
@@ -260,7 +264,7 @@ apiRouter.get('/debug-sentry', (req, res) => {
       Sentry.captureException(error, {
         tags: { type: 'test-error' },
         level: 'error',
-        user: req.user || { id: 'anonymous' }
+        user: req.user || { id: 'anonymous' },
       });
     }
 
@@ -268,9 +272,9 @@ apiRouter.get('/debug-sentry', (req, res) => {
       success: false,
       error: {
         code: 'SENTRY_TEST',
-        message: 'Sentry test error triggered successfully! Check your Sentry dashboard.'
+        message: 'Sentry test error triggered successfully! Check your Sentry dashboard.',
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 });
@@ -295,7 +299,7 @@ apiRouter.get('/analytics/dashboard', async (req, res) => {
     const mockDashboardData = {
       // Key Performance Indicators
       totalEscrows: 12,
-      activeEscrows: 8, 
+      activeEscrows: 8,
       closingThisWeek: 3,
       totalListings: 15,
       activeListings: 11,
@@ -306,22 +310,22 @@ apiRouter.get('/analytics/dashboard', async (req, res) => {
       totalLeads: 47,
       newLeads: 8,
       qualifiedLeads: 23,
-      
+
       // Financial Metrics
       monthlyVolume: 2850000,
       avgSalePrice: 485000,
       totalCommission: 85500,
       avgDaysToClose: 28,
-      
+
       // Performance Metrics
       leadConversionRate: 18.5,
       listingConversionRate: 78.2,
       avgShowingsPerListing: 12,
-      
+
       // Today's Schedule
       todayAppointments: 3,
       thisWeekAppointments: 14,
-      
+
       // Recent Activity
       recentActivity: [
         {
@@ -329,39 +333,51 @@ apiRouter.get('/analytics/dashboard', async (req, res) => {
           type: 'listing',
           action: 'New listing created',
           details: '123 Main St - $485,000',
-          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
+          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
         },
         {
-          id: 2, 
+          id: 2,
           type: 'lead',
           action: 'New lead received',
           details: 'Sarah Chen - Website inquiry',
-          timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString()
+          timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
         },
         {
           id: 3,
           type: 'appointment',
-          action: 'Appointment scheduled', 
+          action: 'Appointment scheduled',
           details: 'Johnson Family - Buyer consultation',
-          timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString()
+          timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
         },
         {
           id: 4,
           type: 'closing',
           action: 'Closing completed',
           details: '789 Oak Ave - Wilson LLC',
-          timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
-        }
+          timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+        },
       ],
 
       // Monthly Trend Data (for charts)
       monthlyTrend: [
-        { month: 'Jan', volume: 2100000, transactions: 8, avgPrice: 425000 },
-        { month: 'Feb', volume: 1950000, transactions: 7, avgPrice: 445000 },
-        { month: 'Mar', volume: 2650000, transactions: 9, avgPrice: 465000 },
-        { month: 'Apr', volume: 2850000, transactions: 11, avgPrice: 475000 },
-        { month: 'May', volume: 2750000, transactions: 10, avgPrice: 485000 },
-        { month: 'Jun', volume: 2950000, transactions: 12, avgPrice: 495000 }
+        {
+          month: 'Jan', volume: 2100000, transactions: 8, avgPrice: 425000,
+        },
+        {
+          month: 'Feb', volume: 1950000, transactions: 7, avgPrice: 445000,
+        },
+        {
+          month: 'Mar', volume: 2650000, transactions: 9, avgPrice: 465000,
+        },
+        {
+          month: 'Apr', volume: 2850000, transactions: 11, avgPrice: 475000,
+        },
+        {
+          month: 'May', volume: 2750000, transactions: 10, avgPrice: 485000,
+        },
+        {
+          month: 'Jun', volume: 2950000, transactions: 12, avgPrice: 495000,
+        },
       ],
 
       // Pipeline Data
@@ -371,20 +387,20 @@ apiRouter.get('/analytics/dashboard', async (req, res) => {
           contacted: 15,
           qualified: 23,
           appointment: 12,
-          contract: 6
+          contract: 6,
         },
         listings: {
           preparation: 3,
           active: 11,
           pending: 4,
-          sold: 8
+          sold: 8,
         },
         escrows: {
           opening: 2,
           active: 8,
           contingencies: 3,
-          closing: 3
-        }
+          closing: 3,
+        },
       },
 
       // Market Statistics
@@ -392,7 +408,7 @@ apiRouter.get('/analytics/dashboard', async (req, res) => {
         avgDaysOnMarket: 18,
         inventoryLevel: 2.3, // months
         priceAppreciation: 8.5, // percentage
-        absorbtonRate: 0.42 // monthly
+        absorbtonRate: 0.42, // monthly
       },
 
       // AI Team Status
@@ -402,7 +418,7 @@ apiRouter.get('/analytics/dashboard', async (req, res) => {
         tasksCompleted: 247,
         tokenUsage: 125000,
         costToday: 23.50,
-        efficiency: 94.2
+        efficiency: 94.2,
       },
 
       // Urgent Items
@@ -411,20 +427,20 @@ apiRouter.get('/analytics/dashboard', async (req, res) => {
           type: 'deadline',
           description: 'Henderson inspection contingency expires',
           dueIn: '2 hours',
-          priority: 'high'
+          priority: 'high',
         },
         {
           type: 'followup',
           description: 'Wilson contract negotiation response needed',
-          dueIn: '4 hours', 
-          priority: 'high'
+          dueIn: '4 hours',
+          priority: 'high',
         },
         {
           type: 'showing',
           description: 'Schedule additional showings for Johnson family',
           dueIn: '1 day',
-          priority: 'medium'
-        }
+          priority: 'medium',
+        },
       ],
 
       // Goals & Targets
@@ -432,55 +448,55 @@ apiRouter.get('/analytics/dashboard', async (req, res) => {
         volume: {
           target: 3500000,
           current: 2850000,
-          percentage: 81.4
+          percentage: 81.4,
         },
         transactions: {
           target: 15,
           current: 12,
-          percentage: 80.0
+          percentage: 80.0,
         },
         newLeads: {
           target: 50,
           current: 47,
-          percentage: 94.0
+          percentage: 94.0,
         },
         listings: {
           target: 20,
           current: 15,
-          percentage: 75.0
-        }
+          percentage: 75.0,
+        },
       },
 
       // Birthdays & Anniversaries (Client Relationship)
       upcomingEvents: [
         {
           type: 'birthday',
-          client: 'Martinez Family', 
+          client: 'Martinez Family',
           date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
-          note: 'Send birthday card'
+          note: 'Send birthday card',
         },
         {
-          type: 'anniversary', 
+          type: 'anniversary',
           client: 'Thompson Family',
           date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-          note: '2-year home anniversary'
-        }
-      ]
+          note: '2-year home anniversary',
+        },
+      ],
     };
-    
+
     res.json({
       success: true,
       data: mockDashboardData,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Dashboard analytics error:', error);
     res.status(500).json({
       success: false,
-      error: { 
-        code: 'ANALYTICS_ERROR', 
-        message: 'Failed to fetch analytics' 
-      }
+      error: {
+        code: 'ANALYTICS_ERROR',
+        message: 'Failed to fetch analytics',
+      },
     });
   }
 });
@@ -494,7 +510,7 @@ apiRouter.get('/clients', async (req, res) => {
       {
         id: '1',
         firstName: 'John',
-        lastName: 'Henderson', 
+        lastName: 'Henderson',
         email: 'john.henderson@email.com',
         phone: '(555) 123-4567',
         clientType: 'Buyer',
@@ -503,27 +519,27 @@ apiRouter.get('/clients', async (req, res) => {
         notes: 'First-time homebuyer, budget $450k',
         tags: ['buyer', 'first-time'],
         createdAt: '2025-06-15T10:00:00Z',
-        lastContact: '2025-07-05T14:30:00Z'
+        lastContact: '2025-07-05T14:30:00Z',
       },
       {
-        id: '2', 
+        id: '2',
         firstName: 'Sarah',
         lastName: 'Martinez',
         email: 'sarah.martinez@email.com',
         phone: '(555) 234-5678',
         clientType: 'Seller',
-        clientStatus: 'Active', 
+        clientStatus: 'Active',
         preferredContact: 'Phone',
         notes: 'Relocating for job, needs quick sale',
         tags: ['seller', 'relocation'],
         createdAt: '2025-06-20T09:15:00Z',
-        lastContact: '2025-07-06T11:00:00Z'
+        lastContact: '2025-07-06T11:00:00Z',
       },
       {
         id: '3',
         firstName: 'Mike',
         lastName: 'Johnson',
-        email: 'mike.johnson@email.com', 
+        email: 'mike.johnson@email.com',
         phone: '(555) 345-6789',
         clientType: 'Both',
         clientStatus: 'Active',
@@ -531,8 +547,8 @@ apiRouter.get('/clients', async (req, res) => {
         notes: 'Upgrading to larger home, sell first',
         tags: ['buyer', 'seller', 'move-up'],
         createdAt: '2025-05-10T16:45:00Z',
-        lastContact: '2025-07-04T13:20:00Z'
-      }
+        lastContact: '2025-07-04T13:20:00Z',
+      },
     ];
 
     res.json({
@@ -541,9 +557,9 @@ apiRouter.get('/clients', async (req, res) => {
         clients: mockClients,
         total: mockClients.length,
         page: 1,
-        pages: 1
+        pages: 1,
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error fetching clients:', error);
@@ -551,8 +567,8 @@ apiRouter.get('/clients', async (req, res) => {
       success: false,
       error: {
         code: 'FETCH_ERROR',
-        message: 'Failed to fetch clients'
-      }
+        message: 'Failed to fetch clients',
+      },
     });
   }
 });
@@ -576,14 +592,14 @@ apiRouter.get('/leads', async (req, res) => {
         notes: 'Interested in downtown condos',
         tags: ['buyer', 'condo', 'downtown'],
         createdAt: '2025-07-06T08:30:00Z',
-        lastContact: null
+        lastContact: null,
       },
       {
         id: '2',
         firstName: 'David',
         lastName: 'Rodriguez',
         email: 'david.rodriguez@email.com',
-        phone: '(555) 567-8901', 
+        phone: '(555) 567-8901',
         leadSource: 'Referral',
         leadType: 'Seller',
         leadStatus: 'Contacted',
@@ -593,8 +609,8 @@ apiRouter.get('/leads', async (req, res) => {
         notes: 'Referred by Martinez family',
         tags: ['seller', 'referral', 'high-value'],
         createdAt: '2025-07-05T14:20:00Z',
-        lastContact: '2025-07-06T09:15:00Z'
-      }
+        lastContact: '2025-07-06T09:15:00Z',
+      },
     ];
 
     res.json({
@@ -603,9 +619,9 @@ apiRouter.get('/leads', async (req, res) => {
         leads: mockLeads,
         total: mockLeads.length,
         page: 1,
-        pages: 1
+        pages: 1,
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error fetching leads:', error);
@@ -613,8 +629,8 @@ apiRouter.get('/leads', async (req, res) => {
       success: false,
       error: {
         code: 'FETCH_ERROR',
-        message: 'Failed to fetch leads'
-      }
+        message: 'Failed to fetch leads',
+      },
     });
   }
 });
@@ -628,7 +644,7 @@ apiRouter.get('/leads', async (req, res) => {
 //         propertyAddress: '123 Main St, Anytown, CA 12345',
 //         purchasePrice: 485000,
 //         buyers: ['Henderson Family'],
-//         sellers: ['Smith Family'], 
+//         sellers: ['Smith Family'],
 //         acceptanceDate: '2025-06-15',
 //         closingDate: '2025-07-15',
 //         status: 'Active',
@@ -640,21 +656,21 @@ apiRouter.get('/leads', async (req, res) => {
 //       },
 //       {
 //         id: '2',
-//         propertyAddress: '456 Oak Ave, Anytown, CA 12345', 
+//         propertyAddress: '456 Oak Ave, Anytown, CA 12345',
 //         purchasePrice: 525000,
 //         buyers: ['Wilson LLC'],
 //         sellers: ['Rodriguez Family'],
 //         acceptanceDate: '2025-06-20',
 //         closingDate: '2025-07-20',
 //         status: 'Pending',
-//         escrowNumber: 'ESC-2025-002', 
+//         escrowNumber: 'ESC-2025-002',
 //         titleCompany: 'Chicago Title',
 //         lender: 'Bank of America',
 //         agent: 'You',
 //         commission: 15750
 //       }
 //     ];
-// 
+//
 //     res.json({
 //       success: true,
 //       data: {
@@ -670,7 +686,7 @@ apiRouter.get('/leads', async (req, res) => {
 //     res.status(500).json({
 //       success: false,
 //       error: {
-//         code: 'FETCH_ERROR', 
+//         code: 'FETCH_ERROR',
 //         message: 'Failed to fetch escrows'
 //       }
 //     });
@@ -696,13 +712,13 @@ apiRouter.get('/listings', async (req, res) => {
         propertyType: 'Single Family',
         sellers: ['Thompson Family'],
         showings: 8,
-        offers: 1
+        offers: 1,
       },
       {
         id: '2',
         address: '321 Elm Dr, Anytown, CA 12345',
         listPrice: 425000,
-        listDate: '2025-07-01', 
+        listDate: '2025-07-01',
         status: 'Active',
         daysOnMarket: 5,
         mlsNumber: 'MLS234567',
@@ -713,8 +729,8 @@ apiRouter.get('/listings', async (req, res) => {
         propertyType: 'Condo',
         sellers: ['Garcia Family'],
         showings: 12,
-        offers: 2
-      }
+        offers: 2,
+      },
     ];
 
     res.json({
@@ -723,9 +739,9 @@ apiRouter.get('/listings', async (req, res) => {
         listings: mockListings,
         total: mockListings.length,
         page: 1,
-        pages: 1
+        pages: 1,
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error fetching listings:', error);
@@ -733,8 +749,8 @@ apiRouter.get('/listings', async (req, res) => {
       success: false,
       error: {
         code: 'FETCH_ERROR',
-        message: 'Failed to fetch listings'
-      }
+        message: 'Failed to fetch listings',
+      },
     });
   }
 });
@@ -756,9 +772,9 @@ app.use((req, res) => {
     error: {
       code: 'NOT_FOUND',
       message: 'Endpoint not found',
-      suggestion: 'Check the API documentation for valid endpoints'
+      suggestion: 'Check the API documentation for valid endpoints',
     },
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -773,8 +789,8 @@ app.use(function onError(err, req, res, next) {
     error: {
       code: 'INTERNAL_ERROR',
       message: process.env.NODE_ENV === 'production' ? 'An error occurred' : err.message,
-      sentryId: res.sentry
-    }
+      sentryId: res.sentry,
+    },
   });
 });
 

@@ -13,7 +13,7 @@ describe('Leads API Integration Tests', () => {
       .post('/v1/auth/login')
       .send({
         email: 'admin@jaydenmetz.com',
-        password: 'AdminPassword123!'
+        password: 'AdminPassword123!',
       });
 
     expect(loginResponse.status).toBe(200);
@@ -42,7 +42,7 @@ describe('Leads API Integration Tests', () => {
         leadSource: 'Website',
         status: 'New',
         interestedIn: 'Buying',
-        notes: 'Interested in properties under $600k'
+        notes: 'Interested in properties under $600k',
       });
 
     expect(response.status).toBe(201);
@@ -66,7 +66,7 @@ describe('Leads API Integration Tests', () => {
     expect(Array.isArray(response.body.data.leads)).toBe(true);
 
     // All returned leads should be 'New'
-    response.body.data.leads.forEach(lead => {
+    response.body.data.leads.forEach((lead) => {
       expect(lead.status).toBe('New');
     });
   });
@@ -90,7 +90,7 @@ describe('Leads API Integration Tests', () => {
       .set('Authorization', `Bearer ${authToken}`)
       .send({
         status: 'Contacted',
-        notes: 'Called lead on ' + new Date().toLocaleDateString()
+        notes: `Called lead on ${new Date().toLocaleDateString()}`,
       });
 
     expect(response.status).toBe(200);
@@ -108,7 +108,7 @@ describe('Leads API Integration Tests', () => {
     expect(response.body.success).toBe(true);
 
     // All returned leads should be from Website
-    response.body.data.leads.forEach(lead => {
+    response.body.data.leads.forEach((lead) => {
       expect(lead.leadSource).toBe('Website');
     });
   });
@@ -126,7 +126,7 @@ describe('Leads API Integration Tests', () => {
       .post(`/v1/leads/${testLeadId}/convert`)
       .set('Authorization', `Bearer ${authToken}`)
       .send({
-        clientType: 'Buyer'
+        clientType: 'Buyer',
       });
 
     expect(response.status).toBe(200);
@@ -152,7 +152,7 @@ describe('Leads API Integration Tests', () => {
       .get('/v1/leads')
       .set('Authorization', `Bearer ${authToken}`);
 
-    const archivedLead = listResponse.body.data.leads.find(l => l.id === testLeadId);
+    const archivedLead = listResponse.body.data.leads.find((l) => l.id === testLeadId);
     expect(archivedLead).toBeUndefined();
   });
 });

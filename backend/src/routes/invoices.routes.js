@@ -1,4 +1,5 @@
 const express = require('express');
+
 const router = express.Router();
 const { body } = require('express-validator');
 const invoicesController = require('../controllers/invoices.controller');
@@ -21,7 +22,7 @@ const createValidation = [
   body('items').isArray({ min: 1 }).withMessage('At least one invoice item is required'),
   body('items.*.description').notEmpty().withMessage('Item description is required'),
   body('items.*.amount').isNumeric().withMessage('Item amount must be a number'),
-  body('dueDate').optional().isISO8601().withMessage('Invalid due date format')
+  body('dueDate').optional().isISO8601().withMessage('Invalid due date format'),
 ];
 
 const updateValidation = [
@@ -30,14 +31,14 @@ const updateValidation = [
   body('items').optional().isArray({ min: 1 }),
   body('items.*.amount').optional().isNumeric(),
   body('dueDate').optional().isISO8601(),
-  body('status').optional().isIn(['Pending', 'Paid', 'Overdue', 'Cancelled'])
+  body('status').optional().isIn(['Pending', 'Paid', 'Overdue', 'Cancelled']),
 ];
 
 const paymentValidation = [
   body('amount').isNumeric().isFloat({ gt: 0 }).withMessage('Payment amount must be positive'),
   body('method').notEmpty().withMessage('Payment method is required'),
   body('reference').optional().notEmpty(),
-  body('date').optional().isISO8601()
+  body('date').optional().isISO8601(),
 ];
 
 // Routes

@@ -5,7 +5,9 @@ const logger = require('../utils/logger');
  * Validates business rules for escrow operations
  */
 const validateEscrowRules = (req, res, next) => {
-  const { opening_date, closing_date, purchase_price, earnest_money } = req.body;
+  const {
+    opening_date, closing_date, purchase_price, earnest_money,
+  } = req.body;
   const errors = [];
 
   // Rule 1: Closing date must be after opening date
@@ -17,7 +19,7 @@ const validateEscrowRules = (req, res, next) => {
       errors.push({
         field: 'closing_date',
         message: 'Closing date must be after opening date',
-        rule: 'CLOSING_AFTER_OPENING'
+        rule: 'CLOSING_AFTER_OPENING',
       });
     }
   }
@@ -27,7 +29,7 @@ const validateEscrowRules = (req, res, next) => {
     errors.push({
       field: 'purchase_price',
       message: 'Purchase price must be greater than zero',
-      rule: 'POSITIVE_PURCHASE_PRICE'
+      rule: 'POSITIVE_PURCHASE_PRICE',
     });
   }
 
@@ -37,7 +39,7 @@ const validateEscrowRules = (req, res, next) => {
       errors.push({
         field: 'earnest_money',
         message: 'Earnest money cannot be negative',
-        rule: 'NON_NEGATIVE_EARNEST_MONEY'
+        rule: 'NON_NEGATIVE_EARNEST_MONEY',
       });
     }
 
@@ -45,7 +47,7 @@ const validateEscrowRules = (req, res, next) => {
       errors.push({
         field: 'earnest_money',
         message: 'Earnest money cannot exceed purchase price',
-        rule: 'EARNEST_MONEY_EXCEEDS_PRICE'
+        rule: 'EARNEST_MONEY_EXCEEDS_PRICE',
       });
     }
   }
@@ -57,8 +59,8 @@ const validateEscrowRules = (req, res, next) => {
       error: {
         code: 'BUSINESS_RULE_VIOLATION',
         message: 'Business rule validation failed',
-        violations: errors
-      }
+        violations: errors,
+      },
     });
   }
 
@@ -69,7 +71,9 @@ const validateEscrowRules = (req, res, next) => {
  * Validates business rules for listing operations
  */
 const validateListingRules = (req, res, next) => {
-  const { list_price, listPrice, square_feet, squareFootage, year_built, yearBuilt } = req.body;
+  const {
+    list_price, listPrice, square_feet, squareFootage, year_built, yearBuilt,
+  } = req.body;
   const errors = [];
 
   const price = list_price || listPrice;
@@ -81,7 +85,7 @@ const validateListingRules = (req, res, next) => {
     errors.push({
       field: 'list_price',
       message: 'List price must be greater than zero',
-      rule: 'POSITIVE_LIST_PRICE'
+      rule: 'POSITIVE_LIST_PRICE',
     });
   }
 
@@ -90,7 +94,7 @@ const validateListingRules = (req, res, next) => {
     errors.push({
       field: 'square_feet',
       message: 'Square footage must be greater than zero',
-      rule: 'POSITIVE_SQUARE_FEET'
+      rule: 'POSITIVE_SQUARE_FEET',
     });
   }
 
@@ -101,7 +105,7 @@ const validateListingRules = (req, res, next) => {
       errors.push({
         field: 'year_built',
         message: `Year built must be between 1800 and ${currentYear + 2}`,
-        rule: 'REASONABLE_YEAR_BUILT'
+        rule: 'REASONABLE_YEAR_BUILT',
       });
     }
   }
@@ -114,14 +118,14 @@ const validateListingRules = (req, res, next) => {
         price,
         sqft,
         pricePerSqft,
-        listing: req.body
+        listing: req.body,
       });
     }
     if (pricePerSqft > 10000) {
       errors.push({
         field: 'list_price',
         message: 'Price per square foot exceeds $10,000 - please verify',
-        rule: 'EXTREME_PRICE_PER_SQFT'
+        rule: 'EXTREME_PRICE_PER_SQFT',
       });
     }
   }
@@ -133,8 +137,8 @@ const validateListingRules = (req, res, next) => {
       error: {
         code: 'BUSINESS_RULE_VIOLATION',
         message: 'Business rule validation failed',
-        violations: errors
-      }
+        violations: errors,
+      },
     });
   }
 
@@ -157,7 +161,7 @@ const validateAppointmentRules = (req, res, next) => {
       errors.push({
         field: 'end_time',
         message: 'End time must be after start time',
-        rule: 'END_AFTER_START'
+        rule: 'END_AFTER_START',
       });
     }
   }
@@ -172,7 +176,7 @@ const validateAppointmentRules = (req, res, next) => {
       errors.push({
         field: 'appointment_date',
         message: 'Cannot create appointments in the past',
-        rule: 'NO_PAST_APPOINTMENTS'
+        rule: 'NO_PAST_APPOINTMENTS',
       });
     }
   }
@@ -184,8 +188,8 @@ const validateAppointmentRules = (req, res, next) => {
       error: {
         code: 'BUSINESS_RULE_VIOLATION',
         message: 'Business rule validation failed',
-        violations: errors
-      }
+        violations: errors,
+      },
     });
   }
 
@@ -204,7 +208,7 @@ const validateLeadRules = (req, res, next) => {
     errors.push({
       field: 'lead_score',
       message: 'Lead score must be between 0 and 100',
-      rule: 'LEAD_SCORE_RANGE'
+      rule: 'LEAD_SCORE_RANGE',
     });
   }
 
@@ -215,7 +219,7 @@ const validateLeadRules = (req, res, next) => {
       errors.push({
         field: 'budget_range',
         message: 'Budget range cannot be empty',
-        rule: 'NON_EMPTY_BUDGET'
+        rule: 'NON_EMPTY_BUDGET',
       });
     }
   }
@@ -227,8 +231,8 @@ const validateLeadRules = (req, res, next) => {
       error: {
         code: 'BUSINESS_RULE_VIOLATION',
         message: 'Business rule validation failed',
-        violations: errors
-      }
+        violations: errors,
+      },
     });
   }
 
@@ -239,5 +243,5 @@ module.exports = {
   validateEscrowRules,
   validateListingRules,
   validateAppointmentRules,
-  validateLeadRules
+  validateLeadRules,
 };

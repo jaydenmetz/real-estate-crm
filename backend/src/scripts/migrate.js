@@ -7,8 +7,8 @@ require('dotenv').config();
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.NODE_ENV === 'production' ? {
-    rejectUnauthorized: false
-  } : false
+    rejectUnauthorized: false,
+  } : false,
 });
 
 // Migration directory
@@ -23,7 +23,7 @@ async function createMigrationsTable() {
       executed_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
     );
   `;
-  
+
   try {
     await pool.query(createTableQuery);
     console.log('✓ Migrations table ready');
@@ -37,7 +37,7 @@ async function createMigrationsTable() {
 async function getExecutedMigrations() {
   const query = 'SELECT filename FROM migrations ORDER BY executed_at';
   const result = await pool.query(query);
-  return result.rows.map(row => row.filename);
+  return result.rows.map((row) => row.filename);
 }
 
 // Get list of migration files
@@ -47,11 +47,11 @@ function getMigrationFiles() {
     fs.mkdirSync(MIGRATIONS_DIR, { recursive: true });
     return [];
   }
-  
+
   const files = fs.readdirSync(MIGRATIONS_DIR)
-    .filter(file => file.endsWith('.sql'))
+    .filter((file) => file.endsWith('.sql'))
     .sort();
-  
+
   return files;
 }
 
@@ -59,21 +59,21 @@ function getMigrationFiles() {
 async function executeMigration(filename) {
   const filepath = path.join(MIGRATIONS_DIR, filename);
   const sql = fs.readFileSync(filepath, 'utf8');
-  
+
   const client = await pool.connect();
-  
+
   try {
     await client.query('BEGIN');
-    
+
     // Execute the migration SQL
     await client.query(sql);
-    
+
     // Record the migration
     await client.query(
       'INSERT INTO migrations (filename) VALUES ($1)',
-      [filename]
+      [filename],
     );
-    
+
     await client.query('COMMIT');
     console.log(`✓ Executed migration: ${filename}`);
   } catch (error) {
@@ -88,38 +88,37 @@ async function executeMigration(filename) {
 // Main migration runner
 async function runMigrations() {
   console.log('Starting database migrations...\n');
-  
+
   try {
     // Ensure migrations table exists
     await createMigrationsTable();
-    
+
     // Get executed migrations
     const executedMigrations = await getExecutedMigrations();
     console.log(`Found ${executedMigrations.length} executed migrations`);
-    
+
     // Get migration files
     const migrationFiles = getMigrationFiles();
     console.log(`Found ${migrationFiles.length} migration files\n`);
-    
+
     // Find pending migrations
     const pendingMigrations = migrationFiles.filter(
-      file => !executedMigrations.includes(file)
+      (file) => !executedMigrations.includes(file),
     );
-    
+
     if (pendingMigrations.length === 0) {
       console.log('✓ All migrations completed - database is up to date!');
       return;
     }
-    
+
     console.log(`Executing ${pendingMigrations.length} pending migrations...\n`);
-    
+
     // Execute pending migrations
     for (const migration of pendingMigrations) {
       await executeMigration(migration);
     }
-    
+
     console.log('\n✓ All migrations completed successfully!');
-    
   } catch (error) {
     console.error('\n✗ Migration failed:', error.message);
     process.exit(1);
@@ -130,7 +129,7 @@ async function runMigrations() {
 
 // Run migrations if called directly
 if (require.main === module) {
-  runMigrations().catch(error => {
+  runMigrations().catch((error) => {
     console.error('Unexpected error:', error);
     process.exit(1);
   });

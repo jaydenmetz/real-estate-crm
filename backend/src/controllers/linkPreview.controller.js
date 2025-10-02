@@ -15,8 +15,8 @@ const getLinkPreview = async (req, res) => {
         success: false,
         error: {
           code: 'MISSING_URL',
-          message: 'URL is required'
-        }
+          message: 'URL is required',
+        },
       });
     }
 
@@ -29,19 +29,19 @@ const getLinkPreview = async (req, res) => {
         success: false,
         error: {
           code: 'INVALID_URL',
-          message: 'Invalid URL format'
-        }
+          message: 'Invalid URL format',
+        },
       });
     }
 
     // For Zillow, we'll need to handle their blocking differently
     let response;
-    
+
     try {
       response = await axios.get(url, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
           'Accept-Language': 'en-US,en;q=0.9',
           'Accept-Encoding': 'gzip, deflate, br',
           'Cache-Control': 'no-cache',
@@ -53,16 +53,16 @@ const getLinkPreview = async (req, res) => {
       // If Zillow blocks us (403), provide a structured fallback
       if (axiosError.response?.status === 403 && validUrl.hostname.includes('zillow.com')) {
         console.log('Zillow blocked request, using fallback data');
-        
+
         // Extract property ID from URL
         const zpidMatch = url.match(/(\d+)_zpid/);
         const zpid = zpidMatch ? zpidMatch[1] : null;
-        
+
         // Return structured Zillow data without scraping
         return res.json({
           success: true,
           data: {
-            url: url,
+            url,
             title: 'View Property on Zillow',
             description: 'Click to view full property details, photos, and more on Zillow.com',
             image: null, // We'll use the escrow image in the frontend
@@ -73,12 +73,12 @@ const getLinkPreview = async (req, res) => {
             twitterTags: {},
             propertyData: null,
             isBlocked: true, // Flag to indicate we couldn't fetch real data
-            zpid: zpid,
+            zpid,
           },
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
       }
-      
+
       throw axiosError;
     }
 
@@ -108,21 +108,21 @@ const getLinkPreview = async (req, res) => {
     });
 
     // Extract standard meta tags as additional fallback
-    const title = ogTags.title || 
-                 $('title').text() || 
-                 $('meta[name="title"]').attr('content') || 
-                 '';
+    const title = ogTags.title
+                 || $('title').text()
+                 || $('meta[name="title"]').attr('content')
+                 || '';
 
-    const description = ogTags.description || 
-                       $('meta[name="description"]').attr('content') || 
-                       $('meta[property="description"]').attr('content') || 
-                       '';
+    const description = ogTags.description
+                       || $('meta[name="description"]').attr('content')
+                       || $('meta[property="description"]').attr('content')
+                       || '';
 
-    const image = ogTags.image || 
-                 twitterTags.image || 
-                 $('meta[name="image"]').attr('content') || 
-                 $('link[rel="image_src"]').attr('href') || 
-                 '';
+    const image = ogTags.image
+                 || twitterTags.image
+                 || $('meta[name="image"]').attr('content')
+                 || $('link[rel="image_src"]').attr('href')
+                 || '';
 
     // Make image URL absolute if it's relative
     let absoluteImageUrl = image;
@@ -131,9 +131,9 @@ const getLinkPreview = async (req, res) => {
     }
 
     // Extract additional metadata
-    const siteName = ogTags.site_name || 
-                    $('meta[name="application-name"]').attr('content') || 
-                    validUrl.hostname;
+    const siteName = ogTags.site_name
+                    || $('meta[name="application-name"]').attr('content')
+                    || validUrl.hostname;
 
     const type = ogTags.type || 'website';
 
@@ -145,26 +145,25 @@ const getLinkPreview = async (req, res) => {
 
     // Build preview response
     const preview = {
-      url: url,
+      url,
       title: title.trim(),
       description: description.trim(),
       image: absoluteImageUrl,
-      siteName: siteName,
-      type: type,
+      siteName,
+      type,
       favicon: `${validUrl.origin}/favicon.ico`,
       // Include all OG tags for completeness
-      ogTags: ogTags,
-      twitterTags: twitterTags,
+      ogTags,
+      twitterTags,
       // Include property-specific data if available
-      propertyData: propertyData,
+      propertyData,
     };
 
     res.json({
       success: true,
       data: preview,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
-
   } catch (error) {
     console.error('Error fetching link preview:', error);
 
@@ -174,8 +173,8 @@ const getLinkPreview = async (req, res) => {
         success: false,
         error: {
           code: 'URL_NOT_FOUND',
-          message: 'The URL could not be found'
-        }
+          message: 'The URL could not be found',
+        },
       });
     }
 
@@ -184,8 +183,8 @@ const getLinkPreview = async (req, res) => {
         success: false,
         error: {
           code: 'PAGE_NOT_FOUND',
-          message: 'The page does not exist'
-        }
+          message: 'The page does not exist',
+        },
       });
     }
 
@@ -194,8 +193,8 @@ const getLinkPreview = async (req, res) => {
         success: false,
         error: {
           code: 'TIMEOUT',
-          message: 'Request timed out while fetching the page'
-        }
+          message: 'Request timed out while fetching the page',
+        },
       });
     }
 
@@ -203,8 +202,8 @@ const getLinkPreview = async (req, res) => {
       success: false,
       error: {
         code: 'PREVIEW_FETCH_ERROR',
-        message: 'Failed to fetch link preview'
-      }
+        message: 'Failed to fetch link preview',
+      },
     });
   }
 };
@@ -272,5 +271,5 @@ function extractZillowData($) {
 }
 
 module.exports = {
-  getLinkPreview
+  getLinkPreview,
 };

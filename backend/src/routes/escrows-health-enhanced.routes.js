@@ -1,9 +1,10 @@
 const express = require('express');
+
 const router = express.Router();
+const crypto = require('crypto');
 const { pool } = require('../config/database');
 const { authenticate } = require('../middleware/apiKey.middleware');
 const ApiKeyService = require('../services/apiKey.service');
-const crypto = require('crypto');
 
 /**
  * ENHANCED HEALTH CHECK FOR ESCROWS MODULE
@@ -24,15 +25,15 @@ router.get('/health/enhanced', authenticate, async (req, res) => {
       id: req.user?.id,
       email: req.user?.email,
       role: req.user?.role,
-      authMethod: req.user?.authMethod // 'jwt' or 'api_key'
+      authMethod: req.user?.authMethod, // 'jwt' or 'api_key'
     },
     testSummary: {
       total: 0,
       passed: 0,
       failed: 0,
-      duration: 0
+      duration: 0,
     },
-    tests: []
+    tests: [],
   };
 
   const startTime = Date.now();
@@ -48,7 +49,7 @@ router.get('/health/enhanced', authenticate, async (req, res) => {
       status, // 'passed', 'failed', 'skipped'
       timestamp: new Date().toISOString(),
       data,
-      error
+      error,
     });
     results.testSummary.total++;
     if (status === 'passed') results.testSummary.passed++;
@@ -65,11 +66,11 @@ router.get('/health/enhanced', authenticate, async (req, res) => {
       addTest('JWT_TOKEN_VALID', 'passed', {
         message: 'Request authenticated with valid JWT token',
         userId: req.user.id,
-        tokenExpiry: req.user.exp ? new Date(req.user.exp * 1000).toISOString() : 'N/A'
+        tokenExpiry: req.user.exp ? new Date(req.user.exp * 1000).toISOString() : 'N/A',
       });
     } else {
       addTest('JWT_TOKEN_VALID', 'skipped', {
-        message: 'Request used API key authentication instead of JWT'
+        message: 'Request used API key authentication instead of JWT',
       });
     }
 
@@ -78,11 +79,11 @@ router.get('/health/enhanced', authenticate, async (req, res) => {
       addTest('API_KEY_VALID', 'passed', {
         message: 'Request authenticated with valid API key',
         keyId: req.user.apiKeyId,
-        keyPreview: req.user.apiKeyPreview
+        keyPreview: req.user.apiKeyPreview,
       });
     } else {
       addTest('API_KEY_VALID', 'skipped', {
-        message: 'Request used JWT authentication instead of API key'
+        message: 'Request used JWT authentication instead of API key',
       });
     }
 
@@ -96,7 +97,7 @@ router.get('/health/enhanced', authenticate, async (req, res) => {
       const newApiKey = await ApiKeyService.createApiKey(
         req.user.id,
         testKeyName,
-        1 // Expires in 1 day
+        1, // Expires in 1 day
       );
 
       testApiKeyId = newApiKey.id;
@@ -108,7 +109,7 @@ router.get('/health/enhanced', authenticate, async (req, res) => {
         keyPreview: `...${testApiKeyValue.slice(-8)}`,
         fullKey: testApiKeyValue, // ⚠️ SHOWN ONLY IN TEST - Never store in logs
         expiresAt: newApiKey.expires_at,
-        message: '✅ Test API key created successfully'
+        message: '✅ Test API key created successfully',
       });
     } catch (error) {
       addTest('API_KEY_CREATE', 'failed', {}, error.message);
@@ -131,13 +132,13 @@ router.get('/health/enhanced', authenticate, async (req, res) => {
             message: '✅ Test API key is active and can be found in database',
             keyId: keyCheck.rows[0].id,
             isActive: keyCheck.rows[0].is_active,
-            isValid: keyCheck.rows[0].is_valid
+            isValid: keyCheck.rows[0].is_valid,
           });
         } else {
           addTest('API_KEY_VERIFY_WORKS', 'failed', {
             message: '❌ Test API key exists but is not valid',
             found: keyCheck.rows.length > 0,
-            details: keyCheck.rows[0] || null
+            details: keyCheck.rows[0] || null,
           });
         }
       } catch (error) {
@@ -171,14 +172,14 @@ router.get('/health/enhanced', authenticate, async (req, res) => {
         `${testPrefix}-001`,
         req.user.id,
         req.user.teamId,
-        3000
+        3000,
       ]);
 
       testEscrowId = createResult.rows[0].id;
       addTest('ESCROW_CREATE', 'passed', {
         escrowId: testEscrowId,
         displayId: createResult.rows[0].display_id,
-        propertyAddress: createResult.rows[0].property_address
+        propertyAddress: createResult.rows[0].property_address,
       });
     } catch (error) {
       addTest('ESCROW_CREATE', 'failed', {}, error.message);
@@ -197,11 +198,11 @@ router.get('/health/enhanced', authenticate, async (req, res) => {
         if (readResult.rows.length > 0) {
           addTest('ESCROW_READ', 'passed', {
             escrowId: readResult.rows[0].id,
-            data: readResult.rows[0]
+            data: readResult.rows[0],
           });
         } else {
           addTest('ESCROW_READ', 'failed', {
-            message: 'Escrow not found or permission denied'
+            message: 'Escrow not found or permission denied',
           });
         }
       } catch (error) {
@@ -221,11 +222,11 @@ router.get('/health/enhanced', authenticate, async (req, res) => {
           addTest('ESCROW_UPDATE', 'passed', {
             escrowId: updateResult.rows[0].id,
             oldPrice: 100000,
-            newPrice: updateResult.rows[0].purchase_price
+            newPrice: updateResult.rows[0].purchase_price,
           });
         } else {
           addTest('ESCROW_UPDATE', 'failed', {
-            message: 'Could not update escrow - permission denied'
+            message: 'Could not update escrow - permission denied',
           });
         }
       } catch (error) {
@@ -244,11 +245,11 @@ router.get('/health/enhanced', authenticate, async (req, res) => {
         if (parseInt(listResult.rows[0].count) > 0) {
           addTest('ESCROW_LIST', 'passed', {
             testEscrowsFound: parseInt(listResult.rows[0].count),
-            message: 'Test escrow appears in list query'
+            message: 'Test escrow appears in list query',
           });
         } else {
           addTest('ESCROW_LIST', 'failed', {
-            message: 'Test escrow not found in list query'
+            message: 'Test escrow not found in list query',
           });
         }
       } catch (error) {
@@ -266,11 +267,11 @@ router.get('/health/enhanced', authenticate, async (req, res) => {
         if (deleteResult.rows.length > 0) {
           addTest('ESCROW_DELETE', 'passed', {
             deletedEscrowId: deleteResult.rows[0].id,
-            message: 'Test escrow deleted successfully'
+            message: 'Test escrow deleted successfully',
           });
         } else {
           addTest('ESCROW_DELETE', 'failed', {
-            message: 'Could not delete escrow - permission denied'
+            message: 'Could not delete escrow - permission denied',
           });
         }
       } catch (error) {
@@ -285,12 +286,12 @@ router.get('/health/enhanced', authenticate, async (req, res) => {
 
         if (verifyResult.rows.length === 0) {
           addTest('ESCROW_VERIFY_DELETED', 'passed', {
-            message: '✅ Escrow confirmed deleted from database'
+            message: '✅ Escrow confirmed deleted from database',
           });
         } else {
           addTest('ESCROW_VERIFY_DELETED', 'failed', {
             message: '❌ Escrow still exists after deletion',
-            escrowId: verifyResult.rows[0].id
+            escrowId: verifyResult.rows[0].id,
           });
         }
       } catch (error) {
@@ -309,11 +310,11 @@ router.get('/health/enhanced', authenticate, async (req, res) => {
 
         addTest('API_KEY_DELETE', 'passed', {
           deletedKeyId: testApiKeyId,
-          message: '✅ Test API key deleted successfully'
+          message: '✅ Test API key deleted successfully',
         });
       } catch (error) {
         addTest('API_KEY_DELETE', 'failed', {
-          keyId: testApiKeyId
+          keyId: testApiKeyId,
         }, error.message);
       }
     }
@@ -333,14 +334,14 @@ router.get('/health/enhanced', authenticate, async (req, res) => {
           addTest('API_KEY_VERIFY_DELETED', 'passed', {
             message: '✅ Test API key confirmed deleted from database',
             attemptedKey: `...${testApiKeyValue.slice(-8)}`,
-            result: 'Key not found in database (expected)'
+            result: 'Key not found in database (expected)',
           });
         } else {
           addTest('API_KEY_VERIFY_DELETED', 'failed', {
             message: '❌ Test API key still exists in database after deletion',
             keyId: keyCheck.rows[0].id,
             isActive: keyCheck.rows[0].is_active,
-            warning: 'SECURITY ISSUE: Deleted keys should not remain in database'
+            warning: 'SECURITY ISSUE: Deleted keys should not remain in database',
           });
         }
       } catch (error) {
@@ -372,15 +373,14 @@ router.get('/health/enhanced', authenticate, async (req, res) => {
       addTest('PERMISSION_ISOLATION', 'passed', {
         message: '✅ User can only access their own data',
         accessibleEscrows: parseInt(isolationTest.rows[0].accessible_count),
-        note: 'Permission filtering working correctly'
+        note: 'Permission filtering working correctly',
       });
     } catch (error) {
       addTest('PERMISSION_ISOLATION', 'failed', {}, error.message);
     }
-
   } catch (error) {
     addTest('HEALTH_CHECK_ERROR', 'failed', {
-      message: 'Unexpected error during health check'
+      message: 'Unexpected error during health check',
     }, error.message);
   }
 
@@ -396,23 +396,15 @@ router.get('/health/enhanced', authenticate, async (req, res) => {
 
   // Add summary for frontend
   results.summary = {
-    authenticationWorks: results.tests.some(t =>
-      (t.name === 'JWT_TOKEN_VALID' || t.name === 'API_KEY_VALID') && t.status === 'passed'
-    ),
-    crudOperationsWork: results.tests.filter(t =>
-      t.name.startsWith('ESCROW_') && t.status === 'passed'
-    ).length >= 4,
-    apiKeyLifecycleWorks: results.tests.some(t =>
-      t.name === 'API_KEY_VERIFY_DELETED' && t.status === 'passed'
-    ),
-    permissionsWork: results.tests.some(t =>
-      t.name === 'PERMISSION_ISOLATION' && t.status === 'passed'
-    )
+    authenticationWorks: results.tests.some((t) => (t.name === 'JWT_TOKEN_VALID' || t.name === 'API_KEY_VALID') && t.status === 'passed'),
+    crudOperationsWork: results.tests.filter((t) => t.name.startsWith('ESCROW_') && t.status === 'passed').length >= 4,
+    apiKeyLifecycleWorks: results.tests.some((t) => t.name === 'API_KEY_VERIFY_DELETED' && t.status === 'passed'),
+    permissionsWork: results.tests.some((t) => t.name === 'PERMISSION_ISOLATION' && t.status === 'passed'),
   };
 
   res.json({
     success: true,
-    data: results
+    data: results,
   });
 });
 

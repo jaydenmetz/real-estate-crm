@@ -1,4 +1,5 @@
 const express = require('express');
+
 const router = express.Router();
 const rateLimit = require('express-rate-limit');
 const { authenticate } = require('../middleware/auth.middleware');
@@ -12,11 +13,11 @@ const aiRateLimiter = rateLimit({
     success: false,
     error: {
       code: 'AI_RATE_LIMIT_EXCEEDED',
-      message: 'Too many AI queries. Please wait before trying again.'
-    }
+      message: 'Too many AI queries. Please wait before trying again.',
+    },
   },
   standardHeaders: true,
-  legacyHeaders: false
+  legacyHeaders: false,
 });
 
 /**
@@ -100,8 +101,8 @@ router.post('/query', authenticate, aiRateLimiter, async (req, res) => {
         success: false,
         error: {
           code: 'INVALID_QUERY',
-          message: 'Query must be a non-empty string'
-        }
+          message: 'Query must be a non-empty string',
+        },
       });
     }
 
@@ -111,8 +112,8 @@ router.post('/query', authenticate, aiRateLimiter, async (req, res) => {
         success: false,
         error: {
           code: 'AI_SERVICE_UNAVAILABLE',
-          message: 'AI service is not configured. Please contact administrator.'
-        }
+          message: 'AI service is not configured. Please contact administrator.',
+        },
       });
     }
 
@@ -130,8 +131,8 @@ router.post('/query', authenticate, aiRateLimiter, async (req, res) => {
       success: false,
       error: {
         code: 'AI_QUERY_ERROR',
-        message: 'Failed to process AI query'
-      }
+        message: 'Failed to process AI query',
+      },
     });
   }
 });
@@ -173,7 +174,7 @@ router.get('/suggestions', authenticate, (req, res) => {
     res.json({
       success: true,
       data: suggestions,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('AI suggestions error:', error);
@@ -181,8 +182,8 @@ router.get('/suggestions', authenticate, (req, res) => {
       success: false,
       error: {
         code: 'SUGGESTIONS_ERROR',
-        message: 'Failed to get query suggestions'
-      }
+        message: 'Failed to get query suggestions',
+      },
     });
   }
 });

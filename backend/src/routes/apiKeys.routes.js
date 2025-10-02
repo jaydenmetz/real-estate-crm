@@ -1,4 +1,5 @@
 const express = require('express');
+
 const router = express.Router();
 const ApiKeyService = require('../services/apiKey.service');
 const SecurityEventService = require('../services/securityEvent.service');
@@ -11,11 +12,11 @@ router.use(authenticate);
 router.get('/', async (req, res) => {
   try {
     const apiKeys = await ApiKeyService.listUserApiKeys(req.user.id);
-    
+
     res.json({
       success: true,
       data: apiKeys,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Error listing API keys:', error);
@@ -23,8 +24,8 @@ router.get('/', async (req, res) => {
       success: false,
       error: {
         code: 'LIST_FAILED',
-        message: 'Failed to list API keys'
-      }
+        message: 'Failed to list API keys',
+      },
     });
   }
 });
@@ -33,21 +34,21 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const { name, expiresInDays } = req.body;
-    
+
     if (!name) {
       return res.status(400).json({
         success: false,
         error: {
           code: 'VALIDATION_ERROR',
-          message: 'API key name is required'
-        }
+          message: 'API key name is required',
+        },
       });
     }
-    
+
     const apiKey = await ApiKeyService.createApiKey(
       req.user.id,
       name,
-      expiresInDays
+      expiresInDays,
     );
 
     // Log API key creation (fire-and-forget)
@@ -57,7 +58,7 @@ router.post('/', async (req, res) => {
       success: true,
       data: apiKey,
       message: 'API key created successfully. Save this key securely - it will not be shown again.',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Error creating API key:', error);
@@ -65,8 +66,8 @@ router.post('/', async (req, res) => {
       success: false,
       error: {
         code: 'CREATE_FAILED',
-        message: 'Failed to create API key'
-      }
+        message: 'Failed to create API key',
+      },
     });
   }
 });
@@ -76,7 +77,7 @@ router.put('/:id/revoke', async (req, res) => {
   try {
     // Get key name before revoking
     const keys = await ApiKeyService.listUserApiKeys(req.user.id);
-    const keyToRevoke = keys.find(k => k.id === req.params.id);
+    const keyToRevoke = keys.find((k) => k.id === req.params.id);
 
     const result = await ApiKeyService.revokeApiKey(req.user.id, req.params.id);
 
@@ -85,33 +86,33 @@ router.put('/:id/revoke', async (req, res) => {
       req,
       req.user,
       req.params.id,
-      keyToRevoke?.name || 'Unknown'
+      keyToRevoke?.name || 'Unknown',
     ).catch(console.error);
 
     res.json({
       success: true,
       data: result,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Error revoking API key:', error);
-    
+
     if (error.message.includes('not found')) {
       return res.status(404).json({
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: error.message
-        }
+          message: error.message,
+        },
       });
     }
-    
+
     res.status(500).json({
       success: false,
       error: {
         code: 'REVOKE_FAILED',
-        message: 'Failed to revoke API key'
-      }
+        message: 'Failed to revoke API key',
+      },
     });
   }
 });
@@ -120,31 +121,31 @@ router.put('/:id/revoke', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const result = await ApiKeyService.deleteApiKey(req.user.id, req.params.id);
-    
+
     res.json({
       success: true,
       data: result,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('Error deleting API key:', error);
-    
+
     if (error.message.includes('not found')) {
       return res.status(404).json({
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: error.message
-        }
+          message: error.message,
+        },
       });
     }
-    
+
     res.status(500).json({
       success: false,
       error: {
         code: 'DELETE_FAILED',
-        message: 'Failed to delete API key'
-      }
+        message: 'Failed to delete API key',
+      },
     });
   }
 });

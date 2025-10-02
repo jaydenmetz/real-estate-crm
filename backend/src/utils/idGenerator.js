@@ -13,7 +13,7 @@ const entityPrefixes = {
   user: { internal: 'user_', external: 'USER-' },
   document: { internal: 'doc_', external: 'DOC-' },
   task: { internal: 'task_', external: 'TASK-' },
-  activity: { internal: 'activity_', external: 'ACT-' }
+  activity: { internal: 'activity_', external: 'ACT-' },
 };
 
 /**
@@ -25,15 +25,15 @@ async function generateEscrowIds(teamId) {
   try {
     const result = await query(
       'SELECT * FROM generate_escrow_ids($1)',
-      [teamId]
+      [teamId],
     );
-    
+
     return result.rows[0];
   } catch (error) {
     // Fallback to manual generation if function doesn't exist
     const year = new Date().getFullYear().toString();
     const teamSuffix = teamId.split('_')[1] || 'default';
-    
+
     // Get next sequence
     const sequenceResult = await query(
       `
@@ -41,14 +41,14 @@ async function generateEscrowIds(teamId) {
       FROM escrows
       WHERE internal_id LIKE $1
       `,
-      [`esc_${year}_%_${teamSuffix}`]
+      [`esc_${year}_%_${teamSuffix}`],
     );
-    
+
     const sequence = sequenceResult.rows[0].next_seq.toString().padStart(3, '0');
-    
+
     return {
       internal_id: `esc_${year}_${sequence}_${teamSuffix}`,
-      external_id: `ESC-${year}-${sequence}`
+      external_id: `ESC-${year}-${sequence}`,
     };
   }
 }
@@ -64,13 +64,13 @@ async function generateEntityIds(entityType, teamId) {
   if (!prefixes) {
     throw new Error(`Unknown entity type: ${entityType}`);
   }
-  
+
   const year = new Date().getFullYear().toString();
   const teamSuffix = teamId.split('_')[1] || 'default';
-  
+
   // Get table name from entity type
-  const tableName = entityType + 's'; // Simple pluralization
-  
+  const tableName = `${entityType}s`; // Simple pluralization
+
   // Get next sequence
   const sequenceResult = await query(
     `
@@ -78,14 +78,14 @@ async function generateEntityIds(entityType, teamId) {
     FROM ${tableName}
     WHERE internal_id LIKE $1
     `,
-    [`${prefixes.internal}${year}_%_${teamSuffix}`]
+    [`${prefixes.internal}${year}_%_${teamSuffix}`],
   );
-  
+
   const sequence = sequenceResult.rows[0].next_seq.toString().padStart(3, '0');
-  
+
   return {
     internal_id: `${prefixes.internal}${year}_${sequence}_${teamSuffix}`,
-    external_id: `${prefixes.external}${year}-${sequence}`
+    external_id: `${prefixes.external}${year}-${sequence}`,
   };
 }
 
@@ -96,16 +96,16 @@ async function generateEntityIds(entityType, teamId) {
  */
 function parseInternalId(internalId) {
   const parts = internalId.split('_');
-  
+
   if (parts.length < 4) {
     throw new Error('Invalid internal ID format');
   }
-  
+
   return {
     entity: parts[0],
     year: parts[1],
     sequence: parts[2],
-    team: parts.slice(3).join('_') // Handle team names with underscores
+    team: parts.slice(3).join('_'), // Handle team names with underscores
   };
 }
 
@@ -117,23 +117,23 @@ function parseInternalId(internalId) {
 function isValidInternalId(internalId) {
   try {
     const parsed = parseInternalId(internalId);
-    
+
     // Check entity prefix
-    const validPrefixes = Object.keys(entityPrefixes).map(k => entityPrefixes[k].internal.replace('_', ''));
+    const validPrefixes = Object.keys(entityPrefixes).map((k) => entityPrefixes[k].internal.replace('_', ''));
     if (!validPrefixes.includes(parsed.entity)) {
       return false;
     }
-    
+
     // Check year format
     if (!/^\d{4}$/.test(parsed.year)) {
       return false;
     }
-    
+
     // Check sequence format
     if (!/^\d{3}$/.test(parsed.sequence)) {
       return false;
     }
-    
+
     return true;
   } catch {
     return false;
@@ -145,5 +145,5 @@ module.exports = {
   generateEntityIds,
   parseInternalId,
   isValidInternalId,
-  entityPrefixes
+  entityPrefixes,
 };

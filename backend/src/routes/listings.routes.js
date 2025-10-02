@@ -1,4 +1,5 @@
 const express = require('express');
+
 const router = express.Router();
 const { body } = require('express-validator');
 const listingsController = require('../controllers/listings.controller');
@@ -15,12 +16,12 @@ const createValidation = [
   body('listPrice').optional().isNumeric().withMessage('List price must be a number'),
   body('sellers').optional().isArray().withMessage('Sellers must be an array'),
   body('listingDate').optional().isISO8601().withMessage('Invalid listing date'),
-  body('propertyType').optional().isIn(['Single Family', 'Condo', 'Townhouse', 'Multi-Family', 'Land', 'Commercial'])
+  body('propertyType').optional().isIn(['Single Family', 'Condo', 'Townhouse', 'Multi-Family', 'Land', 'Commercial']),
 ];
 
 const updateValidation = [
   body('listPrice').optional().isNumeric(),
-  body('listingStatus').optional().isIn(['Coming Soon', 'Active', 'Pending', 'Sold', 'Expired', 'Withdrawn', 'Cancelled'])
+  body('listingStatus').optional().isIn(['Coming Soon', 'Active', 'Pending', 'Sold', 'Expired', 'Withdrawn', 'Cancelled']),
 ];
 
 // Routes
@@ -35,11 +36,12 @@ router.put('/:id/archive', listingsController.archiveListing);
 // Delete endpoint: Hard delete - only works if listing is already archived
 router.delete('/:id', listingsController.deleteListing);
 // Batch delete endpoint: Delete multiple archived listings
-router.post('/batch-delete',
+router.post(
+  '/batch-delete',
   body('ids').isArray({ min: 1 }).withMessage('IDs must be a non-empty array'),
   body('ids.*').isString().withMessage('Each ID must be a string'),
   validate,
-  listingsController.batchDeleteListings
+  listingsController.batchDeleteListings,
 );
 
 router.post('/:id/price-reduction', listingsController.recordPriceChange);

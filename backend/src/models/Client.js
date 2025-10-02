@@ -1,11 +1,10 @@
-
-const { query } = require('../config/database');
 const { v4: uuidv4 } = require('uuid');
+const { query } = require('../config/database');
 
 class Client {
   static async create(data) {
     const id = `client_${uuidv4().replace(/-/g, '').substring(0, 12)}`;
-    
+
     const text = `
       INSERT INTO clients (
         id, first_name, last_name, preferred_name, client_status,
@@ -15,7 +14,7 @@ class Client {
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
       RETURNING *
     `;
-    
+
     const values = [
       id,
       data.firstName,
@@ -34,13 +33,13 @@ class Client {
       JSON.stringify(data.financial || {}),
       JSON.stringify(data.leadInfo || {}),
       JSON.stringify(data.communication || {}),
-      data.tags || []
+      data.tags || [],
     ];
-    
+
     const result = await query(text, values);
     return result.rows[0];
   }
-  
+
   static async findAll(filters = {}) {
     let text = `
       SELECT c.*,
@@ -69,56 +68,56 @@ class Client {
       ) t ON c.id = t.client_id
       WHERE 1=1
     `;
-    
+
     const values = [];
     let paramCount = 0;
-    
+
     if (filters.type) {
       paramCount++;
       text += ` AND c.client_type = $${paramCount}`;
       values.push(filters.type);
     }
-    
+
     if (filters.status) {
       paramCount++;
       text += ` AND c.client_status = $${paramCount}`;
       values.push(filters.status);
     }
-    
+
     if (filters.tag) {
       paramCount++;
       text += ` AND $${paramCount} = ANY(c.tags)`;
       values.push(filters.tag);
     }
-    
+
     if (filters.search) {
       paramCount++;
       text += ` AND (c.first_name ILIKE $${paramCount} OR c.last_name ILIKE $${paramCount} OR c.email ILIKE $${paramCount} OR c.phone ILIKE $${paramCount})`;
       values.push(`%${filters.search}%`);
     }
-    
-    text += ` GROUP BY c.id`;
-    
+
+    text += ' GROUP BY c.id';
+
     // Add sorting
     const sortField = filters.sort || 'created_at';
     const sortOrder = filters.order === 'asc' ? 'ASC' : 'DESC';
     text += ` ORDER BY c.${sortField} ${sortOrder}`;
-    
+
     // Add pagination
     const limit = Math.min(filters.limit || 20, 100);
     const offset = ((filters.page || 1) - 1) * limit;
     text += ` LIMIT ${limit} OFFSET ${offset}`;
-    
+
     const result = await query(text, values);
-    
+
     return {
       clients: result.rows,
       total: result.rows.length > 0 ? parseInt(result.rows[0].total_count) : 0,
       page: filters.page || 1,
-      pages: result.rows.length > 0 ? Math.ceil(result.rows[0].total_count / limit) : 0
+      pages: result.rows.length > 0 ? Math.ceil(result.rows[0].total_count / limit) : 0,
     };
   }
-  
+
   static async findById(id) {
     const text = `
       SELECT c.*,
@@ -137,17 +136,17 @@ class Client {
       WHERE c.id = $1
       GROUP BY c.id
     `;
-    
+
     const result = await query(text, [id]);
     return result.rows.length > 0 ? result.rows[0] : null;
   }
-  
+
   static async update(id, data) {
     const fields = [];
     const values = [id];
     let paramCount = 1;
-    
-    Object.keys(data).forEach(key => {
+
+    Object.keys(data).forEach((key) => {
       if (key !== 'id' && key !== 'created_at') {
         paramCount++;
         if (typeof data[key] === 'object' && data[key] !== null && !Array.isArray(data[key])) {
@@ -159,35 +158,35 @@ class Client {
         }
       }
     });
-    
+
     fields.push('updated_at = NOW()');
-    
+
     const text = `
       UPDATE clients 
       SET ${fields.join(', ')}
       WHERE id = $1
       RETURNING *
     `;
-    
+
     const result = await query(text, values);
     return result.rows.length > 0 ? result.rows[0] : null;
   }
-  
+
   static async delete(id, requestedBy, reason) {
     const DeletionRequest = require('./DeletionRequest');
     return DeletionRequest.create('client', id, requestedBy, reason);
   }
-  
+
   static async addNote(id, noteData) {
     const noteId = `note_${uuidv4().replace(/-/g, '').substring(0, 12)}`;
-    
+
     const text = `
       INSERT INTO notes (
         id, entity_type, entity_id, content, note_type, is_private, created_by
       ) VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *
     `;
-    
+
     const values = [
       noteId,
       'client',
@@ -195,16 +194,16 @@ class Client {
       noteData.note,
       noteData.type,
       noteData.isPrivate,
-      noteData.createdBy
+      noteData.createdBy,
     ];
-    
+
     const result = await query(text, values);
     return result.rows[0];
   }
-  
+
   static async updateTags(id, operation, tags) {
     let text;
-    
+
     if (operation === 'add') {
       text = `
         UPDATE clients 
@@ -227,7 +226,7 @@ class Client {
         RETURNING *
       `;
     }
-    
+
     const result = await query(text, [id, tags]);
     return result.rows.length > 0 ? result.rows[0] : null;
   }

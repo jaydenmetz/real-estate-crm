@@ -1,5 +1,5 @@
-
 const express = require('express');
+
 const router = express.Router();
 const { body } = require('express-validator');
 const clientsController = require('../controllers/clients.controller');
@@ -15,7 +15,7 @@ const createValidation = [
   body('lastName').notEmpty().withMessage('Last name is required'),
   body('email').optional().isEmail().withMessage('Valid email is required'),
   body('clientType').optional().isIn(['Buyer', 'Seller', 'Both', 'Investor', 'Referral', 'buyer', 'seller', 'both', 'investor', 'referral']),
-  body('phone').optional().isString().withMessage('Invalid phone number')
+  body('phone').optional().isString().withMessage('Invalid phone number'),
 ];
 
 const updateValidation = [
@@ -23,7 +23,7 @@ const updateValidation = [
   body('lastName').optional().notEmpty(),
   body('email').optional().isEmail(),
   body('clientType').optional().isIn(['Buyer', 'Seller', 'Both', 'Investor', 'Referral', 'buyer', 'seller', 'both', 'investor', 'referral']),
-  body('status').optional().isIn(['active', 'inactive', 'archived'])
+  body('status').optional().isIn(['active', 'inactive', 'archived']),
 ];
 
 // Routes (removed requirePermission middleware that doesn't exist)
@@ -38,11 +38,12 @@ router.put('/:id/archive', clientsController.archiveClient);
 // Delete endpoint: Hard delete - only works if client is already archived
 router.delete('/:id', clientsController.deleteClient);
 // Batch delete endpoint: Delete multiple archived clients
-router.post('/batch-delete',
+router.post(
+  '/batch-delete',
   body('ids').isArray({ min: 1 }).withMessage('IDs must be a non-empty array'),
   body('ids.*').isString().withMessage('Each ID must be a string'),
   validate,
-  clientsController.batchDeleteClients
+  clientsController.batchDeleteClients,
 );
 
 router.post('/:id/notes', clientsController.addNote);

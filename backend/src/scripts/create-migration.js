@@ -13,7 +13,7 @@ function generateTimestamp() {
   const hours = String(now.getHours()).padStart(2, '0');
   const minutes = String(now.getMinutes()).padStart(2, '0');
   const seconds = String(now.getSeconds()).padStart(2, '0');
-  
+
   return `${year}${month}${day}${hours}${minutes}${seconds}`;
 }
 
@@ -25,12 +25,12 @@ function createMigration(name) {
     console.log('Usage: npm run migrate:create <migration-name>');
     process.exit(1);
   }
-  
+
   // Ensure migrations directory exists
   if (!fs.existsSync(MIGRATIONS_DIR)) {
     fs.mkdirSync(MIGRATIONS_DIR, { recursive: true });
   }
-  
+
   // Generate filename
   const timestamp = generateTimestamp();
   const sanitizedName = name
@@ -38,16 +38,16 @@ function createMigration(name) {
     .replace(/[^a-z0-9]/g, '_')
     .replace(/_+/g, '_')
     .replace(/^_|_$/g, '');
-  
+
   const filename = `${timestamp}_${sanitizedName}.sql`;
   const filepath = path.join(MIGRATIONS_DIR, filename);
-  
+
   // Check if file already exists
   if (fs.existsSync(filepath)) {
     console.error(`✗ Migration file already exists: ${filename}`);
     process.exit(1);
   }
-  
+
   // Migration template
   const template = `-- Migration: ${name}
 -- Created: ${new Date().toISOString()}
@@ -67,7 +67,7 @@ function createMigration(name) {
 -- Add rollback SQL here (commented out by default)
 -- DROP TABLE IF EXISTS example_table;
 `;
-  
+
   // Write migration file
   try {
     fs.writeFileSync(filepath, template);

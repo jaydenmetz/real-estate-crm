@@ -1,4 +1,5 @@
 const express = require('express');
+
 const router = express.Router();
 const { body } = require('express-validator');
 const commissionsController = require('../controllers/commissions.controller');
@@ -19,7 +20,7 @@ const createValidation = [
   body('agentName').notEmpty().withMessage('Agent name is required'),
   body('salePrice').isNumeric().withMessage('Sale price must be a number'),
   body('commissionRate').isNumeric().withMessage('Commission rate must be a number'),
-  body('brokerageSplit').isInt({ min: 0, max: 100 }).withMessage('Brokerage split must be between 0 and 100')
+  body('brokerageSplit').isInt({ min: 0, max: 100 }).withMessage('Brokerage split must be between 0 and 100'),
 ];
 
 const updateValidation = [
@@ -28,14 +29,14 @@ const updateValidation = [
   body('brokerageSplit').optional().isInt({ min: 0, max: 100 }),
   body('status').optional().isIn(['Pending', 'Processing', 'Paid', 'Cancelled']),
   body('referralFee').optional().isNumeric(),
-  body('transactionFee').optional().isNumeric()
+  body('transactionFee').optional().isNumeric(),
 ];
 
 const statusUpdateValidation = [
   body('status').isIn(['Pending', 'Processing', 'Paid', 'Cancelled']).withMessage('Invalid status'),
   body('paymentDetails.payoutDate').optional().isISO8601(),
   body('paymentDetails.checkNumber').optional().notEmpty(),
-  body('paymentDetails.depositAccount').optional().notEmpty()
+  body('paymentDetails.depositAccount').optional().notEmpty(),
 ];
 
 // Routes

@@ -13,7 +13,7 @@ describe('Appointments API Integration Tests', () => {
       .post('/v1/auth/login')
       .send({
         email: 'admin@jaydenmetz.com',
-        password: 'AdminPassword123!'
+        password: 'AdminPassword123!',
       });
 
     expect(loginResponse.status).toBe(200);
@@ -44,7 +44,7 @@ describe('Appointments API Integration Tests', () => {
         endTime: '15:00:00',
         location: '123 Test Property Ave',
         appointmentType: 'Property Showing',
-        status: 'Scheduled'
+        status: 'Scheduled',
       });
 
     expect(response.status).toBe(201);
@@ -90,7 +90,7 @@ describe('Appointments API Integration Tests', () => {
       .set('Authorization', `Bearer ${authToken}`)
       .send({
         startTime: '15:00:00',
-        endTime: '16:00:00'
+        endTime: '16:00:00',
       });
 
     expect(response.status).toBe(200);
@@ -142,7 +142,7 @@ describe('Appointments API Integration Tests', () => {
       .get('/v1/appointments')
       .set('Authorization', `Bearer ${authToken}`);
 
-    const archivedAppointment = listResponse.body.data.appointments.find(a => a.id === testAppointmentId);
+    const archivedAppointment = listResponse.body.data.appointments.find((a) => a.id === testAppointmentId);
     expect(archivedAppointment).toBeUndefined();
   });
 });

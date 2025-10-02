@@ -16,12 +16,12 @@ if (!DATABASE_URL) {
 async function runMigration() {
   // Parse the connection string to determine if SSL is needed
   const isProduction = DATABASE_URL.includes('railway.app') || DATABASE_URL.includes('amazonaws.com');
-  
+
   const client = new Client({
     connectionString: DATABASE_URL,
     ssl: isProduction ? {
-      rejectUnauthorized: false
-    } : false
+      rejectUnauthorized: false,
+    } : false,
   });
 
   try {
@@ -31,9 +31,9 @@ async function runMigration() {
 
     // First, let's check current state
     console.log('\n📊 Checking current ID formats...');
-    
+
     const tables = ['escrows', 'listings', 'clients', 'leads', 'appointments'];
-    
+
     for (const table of tables) {
       try {
         const result = await client.query(`
@@ -42,22 +42,22 @@ async function runMigration() {
                  COUNT(CASE WHEN id NOT LIKE '${table.slice(0, -1)}-%' THEN 1 END) as without_prefix
           FROM ${table}
         `);
-        
+
         console.log(`\n${table}:`);
         console.log(`  Total records: ${result.rows[0].total}`);
         console.log(`  With prefix: ${result.rows[0].with_prefix}`);
         console.log(`  Without prefix: ${result.rows[0].without_prefix}`);
-        
+
         // Show sample IDs
         const sampleResult = await client.query(`
           SELECT id FROM ${table} 
           WHERE id NOT LIKE '${table.slice(0, -1)}-%' 
           LIMIT 3
         `);
-        
+
         if (sampleResult.rows.length > 0) {
-          console.log(`  Sample IDs without prefix:`);
-          sampleResult.rows.forEach(row => {
+          console.log('  Sample IDs without prefix:');
+          sampleResult.rows.forEach((row) => {
             console.log(`    - ${row.id}`);
           });
         }
@@ -69,19 +69,19 @@ async function runMigration() {
     // Ask for confirmation
     console.log('\n⚠️  This migration will add prefixes to all IDs that don\'t have them.');
     console.log('Press Ctrl+C to cancel, or wait 5 seconds to continue...');
-    
-    await new Promise(resolve => setTimeout(resolve, 5000));
+
+    await new Promise((resolve) => setTimeout(resolve, 5000));
 
     // Read and run the migration
     console.log('\n🚀 Running migration...');
     const migrationPath = path.join(__dirname, '../../migrations/015_add_entity_prefixes_to_ids.sql');
     const migrationSQL = fs.readFileSync(migrationPath, 'utf8');
-    
+
     // Split by statement and run each one
     const statements = migrationSQL
       .split(';')
-      .map(s => s.trim())
-      .filter(s => s.length > 0 && !s.startsWith('--'));
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0 && !s.startsWith('--'));
 
     for (let i = 0; i < statements.length; i++) {
       const statement = statements[i];
@@ -97,7 +97,7 @@ async function runMigration() {
         // Comments might fail on some databases
         try {
           await client.query(statement);
-          console.log(`✅ Added comment`);
+          console.log('✅ Added comment');
         } catch (err) {
           console.log(`⚠️  Could not add comment: ${err.message}`);
         }
@@ -106,7 +106,7 @@ async function runMigration() {
 
     // Verify the changes
     console.log('\n✅ Migration complete! Verifying changes...');
-    
+
     for (const table of tables) {
       try {
         const result = await client.query(`
@@ -114,18 +114,18 @@ async function runMigration() {
                  COUNT(CASE WHEN id LIKE '${table.slice(0, -1)}-%' THEN 1 END) as with_prefix
           FROM ${table}
         `);
-        
+
         console.log(`${table}: ${result.rows[0].with_prefix}/${result.rows[0].total} records have prefix`);
-        
+
         // Show sample of new IDs
         const sampleResult = await client.query(`
           SELECT id FROM ${table} 
           WHERE id LIKE '${table.slice(0, -1)}-%' 
           LIMIT 2
         `);
-        
+
         if (sampleResult.rows.length > 0) {
-          sampleResult.rows.forEach(row => {
+          sampleResult.rows.forEach((row) => {
             console.log(`  ✓ ${row.id}`);
           });
         }
@@ -135,7 +135,6 @@ async function runMigration() {
     }
 
     console.log('\n🎉 Entity prefix migration completed successfully!');
-
   } catch (error) {
     console.error('❌ Migration failed:', error.message);
     process.exit(1);

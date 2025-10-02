@@ -30,22 +30,22 @@ All endpoints require authentication via:
       contact: {
         name: 'Jayden Metz Realty Group',
         email: 'admin@jaydenmetz.com',
-        url: 'https://crm.jaydenmetz.com'
+        url: 'https://crm.jaydenmetz.com',
       },
       license: {
         name: 'Proprietary',
-        url: 'https://crm.jaydenmetz.com/terms'
-      }
+        url: 'https://crm.jaydenmetz.com/terms',
+      },
     },
     servers: [
       {
         url: 'https://api.jaydenmetz.com/v1',
-        description: 'Production server'
+        description: 'Production server',
       },
       {
         url: 'http://localhost:5050/v1',
-        description: 'Development server'
-      }
+        description: 'Development server',
+      },
     ],
     components: {
       securitySchemes: {
@@ -53,14 +53,14 @@ All endpoints require authentication via:
           type: 'http',
           scheme: 'bearer',
           bearerFormat: 'JWT',
-          description: 'JWT token obtained from /auth/login endpoint'
+          description: 'JWT token obtained from /auth/login endpoint',
         },
         apiKey: {
           type: 'apiKey',
           in: 'header',
           name: 'X-API-Key',
-          description: 'API key for external integrations and AI agents'
-        }
+          description: 'API key for external integrations and AI agents',
+        },
       },
       responses: {
         UnauthorizedError: {
@@ -75,13 +75,13 @@ All endpoints require authentication via:
                     type: 'object',
                     properties: {
                       code: { type: 'string', example: 'NO_AUTH_TOKEN' },
-                      message: { type: 'string', example: 'No authentication token provided' }
-                    }
-                  }
-                }
-              }
-            }
-          }
+                      message: { type: 'string', example: 'No authentication token provided' },
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
         NotFoundError: {
           description: 'Resource not found',
@@ -95,13 +95,13 @@ All endpoints require authentication via:
                     type: 'object',
                     properties: {
                       code: { type: 'string', example: 'NOT_FOUND' },
-                      message: { type: 'string', example: 'Resource not found' }
-                    }
-                  }
-                }
-              }
-            }
-          }
+                      message: { type: 'string', example: 'Resource not found' },
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
         ValidationError: {
           description: 'Invalid request data',
@@ -116,13 +116,13 @@ All endpoints require authentication via:
                     properties: {
                       code: { type: 'string', example: 'VALIDATION_ERROR' },
                       message: { type: 'string', example: 'Invalid request data' },
-                      details: { type: 'array', items: { type: 'string' } }
-                    }
-                  }
-                }
-              }
-            }
-          }
+                      details: { type: 'array', items: { type: 'string' } },
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
         ServerError: {
           description: 'Internal server error',
@@ -136,14 +136,14 @@ All endpoints require authentication via:
                     type: 'object',
                     properties: {
                       code: { type: 'string', example: 'SERVER_ERROR' },
-                      message: { type: 'string', example: 'Internal server error' }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
+                      message: { type: 'string', example: 'Internal server error' },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       },
       parameters: {
         pageParam: {
@@ -152,9 +152,9 @@ All endpoints require authentication via:
           schema: {
             type: 'integer',
             minimum: 1,
-            default: 1
+            default: 1,
           },
-          description: 'Page number for pagination'
+          description: 'Page number for pagination',
         },
         limitParam: {
           in: 'query',
@@ -163,9 +163,9 @@ All endpoints require authentication via:
             type: 'integer',
             minimum: 1,
             maximum: 100,
-            default: 20
+            default: 20,
           },
-          description: 'Number of items per page'
+          description: 'Number of items per page',
         },
         idParam: {
           in: 'path',
@@ -173,60 +173,60 @@ All endpoints require authentication via:
           required: true,
           schema: {
             type: 'string',
-            format: 'uuid'
+            format: 'uuid',
           },
-          description: 'Unique identifier (UUID)'
-        }
-      }
+          description: 'Unique identifier (UUID)',
+        },
+      },
     },
     security: [
       { bearerAuth: [] },
-      { apiKey: [] }
+      { apiKey: [] },
     ],
     tags: [
       {
         name: 'Authentication',
-        description: 'User authentication and session management'
+        description: 'User authentication and session management',
       },
       {
         name: 'Escrows',
-        description: 'Real estate transaction management'
+        description: 'Real estate transaction management',
       },
       {
         name: 'Listings',
-        description: 'Property inventory and marketing'
+        description: 'Property inventory and marketing',
       },
       {
         name: 'Clients',
-        description: 'Contact and relationship management'
+        description: 'Contact and relationship management',
       },
       {
         name: 'Appointments',
-        description: 'Calendar and scheduling'
+        description: 'Calendar and scheduling',
       },
       {
         name: 'Leads',
-        description: 'Lead qualification and conversion'
+        description: 'Lead qualification and conversion',
       },
       {
         name: 'API Keys',
-        description: 'API key management for external integrations'
+        description: 'API key management for external integrations',
       },
       {
         name: 'AI',
-        description: 'AI-powered natural language query interface'
+        description: 'AI-powered natural language query interface',
       },
       {
         name: 'Health',
-        description: 'System health and monitoring endpoints'
-      }
+        description: 'System health and monitoring endpoints',
+      },
     ],
     'x-ai-integration': {
       openai: {
         enabled: true,
         models: ['gpt-4o', 'gpt-4o-mini', 'gpt-3.5-turbo'],
         function_calling: true,
-        description: 'All read endpoints support OpenAI function calling. Use API keys for authentication.'
+        description: 'All read endpoints support OpenAI function calling. Use API keys for authentication.',
       },
       anthropic: {
         enabled: true,
@@ -234,8 +234,8 @@ All endpoints require authentication via:
         mcp_server: {
           available: true,
           location: 'backend/src/mcp-server.js',
-          description: 'Standalone MCP server for Claude Desktop integration'
-        }
+          description: 'Standalone MCP server for Claude Desktop integration',
+        },
       },
       considerations: {
         rate_limits: 'AI endpoints have stricter rate limits (10/min production, 50/min development)',
@@ -244,15 +244,15 @@ All endpoints require authentication via:
           'Use operationId for function naming consistency',
           'Check x-openai-isConsequential before write operations',
           'Implement retry logic for rate limit errors',
-          'Cache OpenAPI spec locally to reduce fetches'
-        ]
-      }
-    }
+          'Cache OpenAPI spec locally to reduce fetches',
+        ],
+      },
+    },
   },
   apis: [
     './src/routes/*.js',
-    './src/schemas/*.js'
-  ]
+    './src/schemas/*.js',
+  ],
 };
 
 const swaggerSpec = swaggerJsdoc(options);

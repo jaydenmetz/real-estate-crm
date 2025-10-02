@@ -1,4 +1,5 @@
 const express = require('express');
+
 const router = express.Router();
 const { pool } = require('../config/database');
 const SecurityEventService = require('../services/securityEvent.service');
@@ -11,7 +12,7 @@ router.get('/health', async (req, res) => {
   const results = {
     timestamp: new Date().toISOString(),
     overall: 'healthy',
-    checks: []
+    checks: [],
   };
 
   try {
@@ -21,13 +22,13 @@ router.get('/health', async (req, res) => {
       results.checks.push({
         name: 'Database Connection',
         status: 'pass',
-        message: 'Database connection active'
+        message: 'Database connection active',
       });
     } catch (error) {
       results.checks.push({
         name: 'Database Connection',
         status: 'fail',
-        message: error.message
+        message: error.message,
       });
       results.overall = 'unhealthy';
     }
@@ -45,7 +46,7 @@ router.get('/health', async (req, res) => {
         results.checks.push({
           name: 'Security Events Table',
           status: 'pass',
-          message: 'Table exists'
+          message: 'Table exists',
         });
       } else {
         throw new Error('security_events table does not exist');
@@ -54,7 +55,7 @@ router.get('/health', async (req, res) => {
       results.checks.push({
         name: 'Security Events Table',
         status: 'fail',
-        message: error.message
+        message: error.message,
       });
       results.overall = 'unhealthy';
     }
@@ -65,7 +66,7 @@ router.get('/health', async (req, res) => {
         results.checks.push({
           name: 'SecurityEventService',
           status: 'pass',
-          message: 'Service available with all methods'
+          message: 'Service available with all methods',
         });
       } else {
         throw new Error('SecurityEventService.logEvent not available');
@@ -74,7 +75,7 @@ router.get('/health', async (req, res) => {
       results.checks.push({
         name: 'SecurityEventService',
         status: 'fail',
-        message: error.message
+        message: error.message,
       });
       results.overall = 'unhealthy';
     }
@@ -91,7 +92,7 @@ router.get('/health', async (req, res) => {
         ipAddress: req.ip || 'health-check',
         userAgent: 'Health Check',
         requestPath: '/v1/security-events/health',
-        requestMethod: 'GET'
+        requestMethod: 'GET',
       }).catch(() => {
         // Fire-and-forget - errors are expected to be caught
       });
@@ -99,13 +100,13 @@ router.get('/health', async (req, res) => {
       results.checks.push({
         name: 'Event Logging (Fire-and-Forget)',
         status: 'pass',
-        message: 'Logging initiated without blocking'
+        message: 'Logging initiated without blocking',
       });
     } catch (error) {
       results.checks.push({
         name: 'Event Logging (Fire-and-Forget)',
         status: 'fail',
-        message: error.message
+        message: error.message,
       });
       results.overall = 'unhealthy';
     }
@@ -114,19 +115,19 @@ router.get('/health', async (req, res) => {
     try {
       const events = await SecurityEventService.queryEvents({
         userId: null, // System check, no user filter
-        limit: 1
+        limit: 1,
       });
 
       results.checks.push({
         name: 'Event Retrieval',
         status: 'pass',
-        message: `Can query events (found ${events.length} recent)`
+        message: `Can query events (found ${events.length} recent)`,
       });
     } catch (error) {
       results.checks.push({
         name: 'Event Retrieval',
         status: 'fail',
-        message: error.message
+        message: error.message,
       });
       results.overall = 'unhealthy';
     }
@@ -145,20 +146,20 @@ router.get('/health', async (req, res) => {
         results.checks.push({
           name: 'Performance Indexes',
           status: 'pass',
-          message: `${indexCount} indexes present for optimal performance`
+          message: `${indexCount} indexes present for optimal performance`,
         });
       } else {
         results.checks.push({
           name: 'Performance Indexes',
           status: 'warn',
-          message: `Only ${indexCount} indexes found (expected 13+)`
+          message: `Only ${indexCount} indexes found (expected 13+)`,
         });
       }
     } catch (error) {
       results.checks.push({
         name: 'Performance Indexes',
         status: 'fail',
-        message: error.message
+        message: error.message,
       });
     }
 
@@ -175,13 +176,13 @@ router.get('/health', async (req, res) => {
       results.checks.push({
         name: 'Recent Activity',
         status: 'pass',
-        message: `${recentCount} events logged in last 24 hours`
+        message: `${recentCount} events logged in last 24 hours`,
       });
     } catch (error) {
       results.checks.push({
         name: 'Recent Activity',
         status: 'fail',
-        message: error.message
+        message: error.message,
       });
     }
 
@@ -194,46 +195,45 @@ router.get('/health', async (req, res) => {
         'lockout_attempt_while_locked',
         'token_refresh',
         'api_key_created',
-        'api_key_revoked'
+        'api_key_revoked',
       ];
 
       results.checks.push({
         name: 'Supported Event Types',
         status: 'pass',
-        message: `${supportedTypes.length} event types supported`
+        message: `${supportedTypes.length} event types supported`,
       });
     } catch (error) {
       results.checks.push({
         name: 'Supported Event Types',
         status: 'fail',
-        message: error.message
+        message: error.message,
       });
     }
 
     // Summary
-    const passCount = results.checks.filter(c => c.status === 'pass').length;
-    const failCount = results.checks.filter(c => c.status === 'fail').length;
-    const warnCount = results.checks.filter(c => c.status === 'warn').length;
+    const passCount = results.checks.filter((c) => c.status === 'pass').length;
+    const failCount = results.checks.filter((c) => c.status === 'fail').length;
+    const warnCount = results.checks.filter((c) => c.status === 'warn').length;
 
     results.summary = {
       total: results.checks.length,
       passed: passCount,
       failed: failCount,
       warnings: warnCount,
-      score: `${passCount}/${results.checks.length}`
+      score: `${passCount}/${results.checks.length}`,
     };
 
     // Return appropriate status code
     const statusCode = results.overall === 'healthy' ? 200 : 503;
     res.status(statusCode).json(results);
-
   } catch (error) {
     res.status(500).json({
       timestamp: new Date().toISOString(),
       overall: 'error',
       message: 'Health check failed',
       error: error.message,
-      checks: results.checks
+      checks: results.checks,
     });
   }
 });

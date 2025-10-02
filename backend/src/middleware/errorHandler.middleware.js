@@ -7,7 +7,7 @@ module.exports = (err, req, res, next) => {
     stack: err.stack,
     url: req.url,
     method: req.method,
-    ip: req.ip
+    ip: req.ip,
   });
 
   const status = err.status || err.statusCode || 500;
@@ -20,9 +20,9 @@ module.exports = (err, req, res, next) => {
     error: {
       code: err.code || 'INTERNAL_ERROR',
       message,
-      errorId: `ERR_${Date.now()}_${Math.random().toString(36).substring(7)}`
+      errorId: `ERR_${Date.now()}_${Math.random().toString(36).substring(7)}`,
     },
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   };
 
   if (process.env.NODE_ENV === 'development') {

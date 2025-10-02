@@ -16,26 +16,26 @@ class UploadService {
       'application/vnd.ms-excel',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'text/plain',
-      'text/csv'
+      'text/csv',
     ];
-    
+
     // Size limits
     this.maxFileSize = process.env.MAX_FILE_SIZE || 10 * 1024 * 1024; // 10MB default
     this.maxImageSize = 5 * 1024 * 1024; // 5MB for images
-    
+
     // Upload directories
     this.uploadDir = process.env.UPLOAD_DIR || './uploads';
     this.documentDir = path.join(this.uploadDir, 'documents');
     this.imageDir = path.join(this.uploadDir, 'images');
-    
+
     // Image resize configurations
     this.imageVariants = {
       thumbnail: { width: 150, height: 150, fit: 'cover' },
       small: { width: 400, height: 300, fit: 'inside' },
       medium: { width: 800, height: 600, fit: 'inside' },
-      large: { width: 1200, height: 900, fit: 'inside' }
+      large: { width: 1200, height: 900, fit: 'inside' },
     };
-    
+
     // Initialize directories
     this.initializeDirectories();
   }
@@ -44,12 +44,12 @@ class UploadService {
     try {
       await fs.mkdir(this.documentDir, { recursive: true });
       await fs.mkdir(this.imageDir, { recursive: true });
-      
+
       // Create subdirectories for image variants
       for (const variant of Object.keys(this.imageVariants)) {
         await fs.mkdir(path.join(this.imageDir, variant), { recursive: true });
       }
-      
+
       logger.info('Upload directories initialized');
     } catch (error) {
       logger.error('Failed to initialize upload directories:', error);
@@ -70,7 +70,7 @@ class UploadService {
           .replace(/[^a-zA-Z0-9]/g, '-')
           .toLowerCase();
         cb(null, `${basename}-${uniqueSuffix}${ext}`);
-      }
+      },
     });
   }
 
@@ -78,7 +78,7 @@ class UploadService {
   getFileFilter(type) {
     return (req, file, cb) => {
       const allowedTypes = type === 'image' ? this.allowedImageTypes : this.allowedDocumentTypes;
-      
+
       if (allowedTypes.includes(file.mimetype)) {
         cb(null, true);
       } else {
@@ -92,13 +92,13 @@ class UploadService {
     const storage = this.getLocalStorage(type);
     const fileFilter = this.getFileFilter(type);
     const limits = {
-      fileSize: type === 'image' ? this.maxImageSize : this.maxFileSize
+      fileSize: type === 'image' ? this.maxImageSize : this.maxFileSize,
     };
 
     return multer({
       storage,
       fileFilter,
-      limits
+      limits,
     });
   }
 
@@ -106,7 +106,7 @@ class UploadService {
   async processImage(filePath, filename) {
     try {
       const results = {};
-      
+
       // Get image metadata
       // const metadata = await sharp(filePath).metadata();
       const metadata = { width: 800, height: 600 }; // Temporary placeholder
@@ -114,31 +114,31 @@ class UploadService {
         width: metadata.width,
         height: metadata.height,
         format: metadata.format,
-        size: metadata.size
+        size: metadata.size,
       };
-      
+
       // Create variants
       for (const [variant, config] of Object.entries(this.imageVariants)) {
         const variantDir = path.join(this.imageDir, variant);
         const variantPath = path.join(variantDir, filename);
-        
+
         /* await sharp(filePath)
           .resize(config.width, config.height, { fit: config.fit })
           .toFile(variantPath); */
-        
+
         results[variant] = {
           path: variantPath,
-          url: `/uploads/images/${variant}/${filename}`
+          url: `/uploads/images/${variant}/${filename}`,
         };
       }
-      
+
       results.original = {
         path: filePath,
-        url: `/uploads/images/${filename}`
+        url: `/uploads/images/${filename}`,
       };
-      
+
       logger.info('Image processed successfully:', { filename, variants: Object.keys(results) });
-      
+
       return results;
     } catch (error) {
       logger.error('Failed to process image:', error);
@@ -150,12 +150,12 @@ class UploadService {
   async uploadToS3(file, type) {
     // In production, this would use aws-sdk to upload to S3
     logger.info('S3 upload not implemented in development mode');
-    
+
     return {
       location: 'local',
       bucket: null,
       key: file.filename,
-      url: `/${type}s/${file.filename}`
+      url: `/${type}s/${file.filename}`,
     };
   }
 
@@ -172,10 +172,10 @@ class UploadService {
         uploadedAt: new Date(),
         metadata: {
           ...metadata,
-          encoding: file.encoding
-        }
+          encoding: file.encoding,
+        },
       };
-      
+
       // In production, upload to S3
       if (process.env.NODE_ENV === 'production' && process.env.AWS_S3_BUCKET) {
         const s3Result = await this.uploadToS3(file, 'document');
@@ -183,16 +183,16 @@ class UploadService {
       } else {
         fileInfo.storage = {
           location: 'local',
-          path: file.path
+          path: file.path,
         };
       }
-      
+
       logger.info('Document uploaded successfully:', {
         filename: file.filename,
         size: file.size,
-        type: file.mimetype
+        type: file.mimetype,
       });
-      
+
       return fileInfo;
     } catch (error) {
       logger.error('Failed to handle document upload:', error);
@@ -205,7 +205,7 @@ class UploadService {
     try {
       // Process image and create variants
       const processed = await this.processImage(file.path, file.filename);
-      
+
       const fileInfo = {
         originalName: file.originalname,
         filename: file.filename,
@@ -218,18 +218,18 @@ class UploadService {
         metadata: {
           ...metadata,
           ...processed.metadata,
-          encoding: file.encoding
-        }
+          encoding: file.encoding,
+        },
       };
-      
+
       // In production, upload all variants to S3
       if (process.env.NODE_ENV === 'production' && process.env.AWS_S3_BUCKET) {
         const s3Results = {};
         for (const [variant, data] of Object.entries(processed)) {
           if (variant !== 'metadata') {
-            s3Results[variant] = await this.uploadToS3({ 
+            s3Results[variant] = await this.uploadToS3({
               filename: `${variant}/${file.filename}`,
-              path: data.path 
+              path: data.path,
             }, 'image');
           }
         }
@@ -237,23 +237,23 @@ class UploadService {
       } else {
         fileInfo.storage = {
           location: 'local',
-          variants: processed
+          variants: processed,
         };
       }
-      
+
       logger.info('Image uploaded and processed successfully:', {
         filename: file.filename,
         size: file.size,
-        variants: Object.keys(processed).filter(k => k !== 'metadata')
+        variants: Object.keys(processed).filter((k) => k !== 'metadata'),
       });
-      
+
       return fileInfo;
     } catch (error) {
       logger.error('Failed to handle image upload:', error);
-      
+
       // Clean up files on error
       await this.deleteLocalFile(file.path);
-      
+
       throw error;
     }
   }
@@ -274,13 +274,13 @@ class UploadService {
   async deleteFile(fileInfo) {
     try {
       const deletionResults = [];
-      
+
       // Delete from S3 if applicable
       if (fileInfo.storage && fileInfo.storage.location === 's3') {
         // In production, delete from S3
         logger.info('S3 deletion not implemented');
       }
-      
+
       // Delete local files
       if (fileInfo.storage && fileInfo.storage.location === 'local') {
         // Delete original
@@ -288,7 +288,7 @@ class UploadService {
           const deleted = await this.deleteLocalFile(fileInfo.path);
           deletionResults.push({ file: 'original', deleted });
         }
-        
+
         // Delete variants for images
         if (fileInfo.variants) {
           for (const [variant, data] of Object.entries(fileInfo.variants)) {
@@ -299,15 +299,15 @@ class UploadService {
           }
         }
       }
-      
+
       logger.info('File deletion completed:', {
         filename: fileInfo.filename,
-        results: deletionResults
+        results: deletionResults,
       });
-      
+
       return {
         success: true,
-        deletionResults
+        deletionResults,
       };
     } catch (error) {
       logger.error('Failed to delete file:', error);
@@ -320,18 +320,18 @@ class UploadService {
     try {
       const filePath = path.join(
         type === 'image' ? this.imageDir : this.documentDir,
-        filename
+        filename,
       );
-      
+
       const stats = await fs.stat(filePath);
-      
+
       return {
         filename,
         size: stats.size,
         createdAt: stats.birthtime,
         modifiedAt: stats.mtime,
         exists: true,
-        path: filePath
+        path: filePath,
       };
     } catch (error) {
       if (error.code === 'ENOENT') {
@@ -344,27 +344,27 @@ class UploadService {
   // Validate file before upload
   validateFile(file, type) {
     const errors = [];
-    
+
     // Check file size
     const maxSize = type === 'image' ? this.maxImageSize : this.maxFileSize;
     if (file.size > maxSize) {
       errors.push(`File size exceeds maximum allowed size of ${maxSize / 1024 / 1024}MB`);
     }
-    
+
     // Check file type
     const allowedTypes = type === 'image' ? this.allowedImageTypes : this.allowedDocumentTypes;
     if (!allowedTypes.includes(file.mimetype)) {
       errors.push(`File type ${file.mimetype} is not allowed`);
     }
-    
+
     // Check filename
     if (!file.originalname || file.originalname.length > 255) {
       errors.push('Invalid filename');
     }
-    
+
     return {
       valid: errors.length === 0,
-      errors
+      errors,
     };
   }
 
@@ -373,13 +373,13 @@ class UploadService {
     try {
       const [documentFiles, imageFiles] = await Promise.all([
         fs.readdir(this.documentDir),
-        fs.readdir(this.imageDir)
+        fs.readdir(this.imageDir),
       ]);
-      
+
       let totalSize = 0;
       let documentCount = 0;
       let imageCount = 0;
-      
+
       // Count documents
       for (const file of documentFiles) {
         const filePath = path.join(this.documentDir, file);
@@ -389,7 +389,7 @@ class UploadService {
           totalSize += stats.size;
         }
       }
-      
+
       // Count images (only originals, not variants)
       for (const file of imageFiles) {
         const filePath = path.join(this.imageDir, file);
@@ -399,14 +399,14 @@ class UploadService {
           totalSize += stats.size;
         }
       }
-      
+
       return {
         totalFiles: documentCount + imageCount,
         documentCount,
         imageCount,
         totalSize,
         totalSizeMB: (totalSize / 1024 / 1024).toFixed(2),
-        storageLocation: process.env.NODE_ENV === 'production' ? 's3' : 'local'
+        storageLocation: process.env.NODE_ENV === 'production' ? 's3' : 'local',
       };
     } catch (error) {
       logger.error('Failed to get upload statistics:', error);

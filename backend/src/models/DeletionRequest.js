@@ -1,23 +1,23 @@
-const { query } = require('../config/database');
 const { v4: uuidv4 } = require('uuid');
+const { query } = require('../config/database');
 
 class DeletionRequest {
   static async create(entityType, entityId, requestedBy, reason) {
     const id = `del_${uuidv4().replace(/-/g, '').substring(0, 12)}`;
-    
+
     const text = `
       INSERT INTO deletion_requests (
         id, entity_type, entity_id, requested_by, reason, status
       ) VALUES ($1, $2, $3, $4, $5, $6)
       RETURNING *
     `;
-    
+
     const values = [id, entityType, entityId, requestedBy, reason, 'pending_approval'];
     const result = await query(text, values);
-    
+
     return result.rows[0];
   }
-  
+
   static async findAll(filters = {}) {
     let text = `
       SELECT dr.*, 
@@ -33,28 +33,28 @@ class DeletionRequest {
       LEFT JOIN clients c ON dr.entity_id = c.id AND dr.entity_type = 'client'
       WHERE 1=1
     `;
-    
+
     const values = [];
     let paramCount = 0;
-    
+
     if (filters.status) {
       paramCount++;
       text += ` AND dr.status = $${paramCount}`;
       values.push(filters.status);
     }
-    
+
     if (filters.entityType) {
       paramCount++;
       text += ` AND dr.entity_type = $${paramCount}`;
       values.push(filters.entityType);
     }
-    
-    text += ` ORDER BY dr.created_at DESC`;
-    
+
+    text += ' ORDER BY dr.created_at DESC';
+
     const result = await query(text, values);
     return result.rows;
   }
-  
+
   static async approve(id, approvedBy) {
     const text = `
       UPDATE deletion_requests 
@@ -62,19 +62,19 @@ class DeletionRequest {
       WHERE id = $1
       RETURNING *
     `;
-    
+
     const result = await query(text, [id, approvedBy]);
-    
+
     if (result.rows.length > 0) {
       const request = result.rows[0];
-      
+
       // Perform actual deletion based on entity type
       await this.executeActualDeletion(request);
     }
-    
+
     return result.rows[0];
   }
-  
+
   static async reject(id, rejectedBy, reason) {
     const text = `
       UPDATE deletion_requests 
@@ -82,14 +82,14 @@ class DeletionRequest {
       WHERE id = $1
       RETURNING *
     `;
-    
+
     const result = await query(text, [id, rejectedBy, reason]);
     return result.rows[0];
   }
-  
+
   static async executeActualDeletion(request) {
     const { entity_type, entity_id } = request;
-    
+
     switch (entity_type) {
       case 'escrow':
         await query('DELETE FROM escrows WHERE id = $1', [entity_id]);

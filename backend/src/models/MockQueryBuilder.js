@@ -47,9 +47,9 @@ class MockQueryBuilder {
     let result = [...this.data];
 
     // Apply filters
-    Object.keys(this.filters).forEach(key => {
+    Object.keys(this.filters).forEach((key) => {
       const value = this.filters[key];
-      result = result.filter(item => {
+      result = result.filter((item) => {
         if (value && typeof value === 'object' && value.$in) {
           return value.$in.includes(item[key]);
         }
@@ -63,7 +63,7 @@ class MockQueryBuilder {
         for (const [key, order] of Object.entries(this.sortOptions)) {
           const aVal = a[key];
           const bVal = b[key];
-          
+
           if (aVal < bVal) return order === 1 ? -1 : 1;
           if (aVal > bVal) return order === 1 ? 1 : -1;
         }
@@ -83,11 +83,11 @@ class MockQueryBuilder {
 
     // Apply field selection (simplified)
     if (this.selectFields) {
-      const fields = this.selectFields.split(' ').filter(f => !f.startsWith('-'));
+      const fields = this.selectFields.split(' ').filter((f) => !f.startsWith('-'));
       if (fields.length > 0) {
-        result = result.map(item => {
+        result = result.map((item) => {
           const selected = {};
-          fields.forEach(field => {
+          fields.forEach((field) => {
             if (item[field] !== undefined) {
               selected[field] = item[field];
             }

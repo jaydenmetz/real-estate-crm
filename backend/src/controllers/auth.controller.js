@@ -22,44 +22,46 @@ class AuthController {
    */
   static async register(req, res) {
     const client = await pool.connect();
-    
+
     try {
       await client.query('BEGIN');
-      
-      const { email, password, firstName, lastName, role = 'agent' } = req.body;
-      
+
+      const {
+        email, password, firstName, lastName, role = 'agent',
+      } = req.body;
+
       // Validate input
       if (!email || !password || !firstName || !lastName) {
         return res.status(400).json({
           success: false,
           error: {
             code: 'MISSING_FIELDS',
-            message: 'Email, password, first name, and last name are required'
-          }
+            message: 'Email, password, first name, and last name are required',
+          },
         });
       }
-      
+
       // Check if user already exists
       const existingUser = await client.query(
         'SELECT id FROM users WHERE email = $1',
-        [email.toLowerCase()]
+        [email.toLowerCase()],
       );
-      
+
       if (existingUser.rows.length > 0) {
         await client.query('ROLLBACK');
         return res.status(400).json({
           success: false,
           error: {
             code: 'USER_EXISTS',
-            message: 'User with this email already exists'
-          }
+            message: 'User with this email already exists',
+          },
         });
       }
-      
+
       // Hash password
       const salt = await bcrypt.genSalt(10);
       const passwordHash = await bcrypt.hash(password, salt);
-      
+
       // Create user
       const createUserQuery = `
         INSERT INTO users (
@@ -68,15 +70,15 @@ class AuthController {
         ) VALUES ($1, $2, $3, $4, $5, true, NOW(), NOW())
         RETURNING id, email, first_name, last_name, role, is_active
       `;
-      
+
       const result = await client.query(createUserQuery, [
         email.toLowerCase(),
         passwordHash,
         firstName,
         lastName,
-        role
+        role,
       ]);
-      
+
       const user = result.rows[0];
 
       // Generate JWT token
@@ -84,14 +86,14 @@ class AuthController {
         {
           id: user.id,
           email: user.email,
-          role: user.role
+          role: user.role,
         },
         jwtSecret,
-        { expiresIn: jwtAccessExpiry }
+        { expiresIn: jwtAccessExpiry },
       );
-      
+
       await client.query('COMMIT');
-      
+
       res.status(201).json({
         success: true,
         data: {
@@ -101,13 +103,12 @@ class AuthController {
             firstName: user.first_name,
             lastName: user.last_name,
             role: user.role,
-            isActive: user.is_active
+            isActive: user.is_active,
           },
-          token
+          token,
         },
-        message: 'User registered successfully'
+        message: 'User registered successfully',
       });
-      
     } catch (error) {
       await client.query('ROLLBACK');
       console.error('Registration error:', error);
@@ -115,8 +116,8 @@ class AuthController {
         success: false,
         error: {
           code: 'REGISTRATION_ERROR',
-          message: 'Failed to register user'
-        }
+          message: 'Failed to register user',
+        },
       });
     } finally {
       client.release();
@@ -131,18 +132,18 @@ class AuthController {
       // Accept both username and email fields for compatibility
       const { email, username, password } = req.body;
       const loginEmail = email || username;
-      
+
       // Validate input
       if (!loginEmail || !password) {
         return res.status(400).json({
           success: false,
           error: {
             code: 'MISSING_CREDENTIALS',
-            message: 'Username/email and password are required'
-          }
+            message: 'Username/email and password are required',
+          },
         });
       }
-      
+
       // Get user by email OR username (include lockout fields)
       const userQuery = `
         SELECT id, email, username, password_hash, first_name, last_name, role, is_active,
@@ -158,8 +159,8 @@ class AuthController {
           success: false,
           error: {
             code: 'INVALID_CREDENTIALS',
-            message: 'Invalid email or password'
-          }
+            message: 'Invalid email or password',
+          },
         });
       }
 
@@ -171,8 +172,8 @@ class AuthController {
           success: false,
           error: {
             code: 'ACCOUNT_DISABLED',
-            message: 'Your account has been disabled'
-          }
+            message: 'Your account has been disabled',
+          },
         });
       }
 
@@ -188,8 +189,8 @@ class AuthController {
           error: {
             code: 'ACCOUNT_LOCKED',
             message: `Account temporarily locked due to too many failed login attempts. Try again in ${minutesLeft} minute${minutesLeft !== 1 ? 's' : ''}.`,
-            locked_until: user.locked_until
-          }
+            locked_until: user.locked_until,
+          },
         });
       }
 
@@ -221,7 +222,7 @@ class AuthController {
             req,
             user,
             updatedUser.locked_until,
-            updatedUser.failed_login_attempts
+            updatedUser.failed_login_attempts,
           ).catch(console.error);
         }
 
@@ -229,8 +230,8 @@ class AuthController {
           success: false,
           error: {
             code: 'INVALID_CREDENTIALS',
-            message: 'Invalid email or password'
-          }
+            message: 'Invalid email or password',
+          },
         });
       }
 
@@ -249,10 +250,10 @@ class AuthController {
         {
           id: user.id,
           email: user.email,
-          role: user.role
+          role: user.role,
         },
         jwtSecret,
-        { expiresIn: jwtAccessExpiry }
+        { expiresIn: jwtAccessExpiry },
       );
 
       // Create refresh token with device info (wrapped in try/catch to prevent blocking)
@@ -262,14 +263,14 @@ class AuthController {
         const userAgent = req.headers['user-agent'] || 'Unknown';
         const deviceInfo = {
           browser: userAgent,
-          ip: ipAddress
+          ip: ipAddress,
         };
 
         refreshTokenData = await RefreshTokenService.createRefreshToken(
           user.id,
           ipAddress,
           userAgent,
-          deviceInfo
+          deviceInfo,
         );
 
         // Set refresh token as httpOnly cookie
@@ -277,7 +278,7 @@ class AuthController {
           httpOnly: true,
           secure: process.env.NODE_ENV === 'production',
           sameSite: 'lax',
-          maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         });
       } catch (refreshTokenError) {
         console.error('Failed to create refresh token (non-fatal):', refreshTokenError);
@@ -303,22 +304,21 @@ class AuthController {
             firstName: user.first_name,
             lastName: user.last_name,
             role: user.role,
-            isActive: user.is_active
+            isActive: user.is_active,
           },
           token: accessToken, // Keep 'token' for backward compatibility
           accessToken,
           refreshToken: refreshTokenData?.token, // For mobile apps that can't use cookies
           expiresIn: jwtAccessExpiry,
-          tokenType: 'Bearer'
+          tokenType: 'Bearer',
         },
-        message: 'Login successful'
+        message: 'Login successful',
       });
-      
     } catch (error) {
       console.error('Login error:', {
         message: error.message,
         stack: error.stack,
-        name: error.name
+        name: error.name,
       });
 
       // Return error response
@@ -328,8 +328,8 @@ class AuthController {
           code: 'LOGIN_ERROR',
           message: 'Failed to login',
           details: error.message,
-          stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-        }
+          stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+        },
       });
     }
   }
@@ -341,28 +341,28 @@ class AuthController {
     try {
       // User is already authenticated via middleware
       const userId = req.user.id;
-      
+
       const userQuery = `
         SELECT id, email, username, first_name, last_name, role, is_active, 
                last_login, created_at, updated_at
         FROM users
         WHERE id = $1
       `;
-      
+
       const userResult = await pool.query(userQuery, [userId]);
-      
+
       if (userResult.rows.length === 0) {
         return res.status(404).json({
           success: false,
           error: {
             code: 'USER_NOT_FOUND',
-            message: 'User not found'
-          }
+            message: 'User not found',
+          },
         });
       }
-      
+
       const user = userResult.rows[0];
-      
+
       res.json({
         success: true,
         data: {
@@ -376,19 +376,18 @@ class AuthController {
             isActive: user.is_active,
             lastLogin: user.last_login,
             createdAt: user.created_at,
-            updatedAt: user.updated_at
-          }
-        }
+            updatedAt: user.updated_at,
+          },
+        },
       });
-      
     } catch (error) {
       console.error('Get profile error:', error);
       res.status(500).json({
         success: false,
         error: {
           code: 'PROFILE_ERROR',
-          message: 'Failed to get profile'
-        }
+          message: 'Failed to get profile',
+        },
       });
     }
   }
@@ -398,7 +397,7 @@ class AuthController {
    */
   static async updateProfile(req, res) {
     const client = await pool.connect();
-    
+
     try {
       const userId = req.user.id;
       const {
@@ -412,20 +411,20 @@ class AuthController {
         homeLat,
         homeLng,
         licensedStates,
-        searchRadiusMiles
+        searchRadiusMiles,
       } = req.body;
-      
+
       const updates = [];
       const values = [];
       let paramIndex = 1;
-      
+
       // Build update fields
       if (firstName) {
         updates.push(`first_name = $${paramIndex}`);
         values.push(firstName);
         paramIndex++;
       }
-      
+
       if (lastName) {
         updates.push(`last_name = $${paramIndex}`);
         values.push(lastName);
@@ -482,55 +481,55 @@ class AuthController {
             success: false,
             error: {
               code: 'MISSING_CURRENT_PASSWORD',
-              message: 'Current password is required to change password'
-            }
+              message: 'Current password is required to change password',
+            },
           });
         }
-        
+
         // Verify current password
         const userResult = await client.query(
           'SELECT password_hash FROM users WHERE id = $1',
-          [userId]
+          [userId],
         );
-        
+
         const isPasswordValid = await bcrypt.compare(
-          currentPassword, 
-          userResult.rows[0].password_hash
+          currentPassword,
+          userResult.rows[0].password_hash,
         );
-        
+
         if (!isPasswordValid) {
           return res.status(400).json({
             success: false,
             error: {
               code: 'INVALID_CURRENT_PASSWORD',
-              message: 'Current password is incorrect'
-            }
+              message: 'Current password is incorrect',
+            },
           });
         }
-        
+
         // Hash new password
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(newPassword, salt);
-        
+
         updates.push(`password_hash = $${paramIndex}`);
         values.push(passwordHash);
         paramIndex++;
       }
-      
+
       if (updates.length === 0) {
         return res.status(400).json({
           success: false,
           error: {
             code: 'NO_UPDATES',
-            message: 'No fields to update'
-          }
+            message: 'No fields to update',
+          },
         });
       }
-      
+
       // Add updated_at
-      updates.push(`updated_at = NOW()`);
+      updates.push('updated_at = NOW()');
       values.push(userId);
-      
+
       const updateQuery = `
         UPDATE users
         SET ${updates.join(', ')}
@@ -539,10 +538,10 @@ class AuthController {
                   home_city, home_state, home_zip, home_lat, home_lng,
                   licensed_states, search_radius_miles
       `;
-      
+
       const result = await client.query(updateQuery, values);
       const user = result.rows[0];
-      
+
       res.json({
         success: true,
         data: {
@@ -558,19 +557,18 @@ class AuthController {
           home_lat: user.home_lat,
           home_lng: user.home_lng,
           licensed_states: user.licensed_states,
-          search_radius_miles: user.search_radius_miles
+          search_radius_miles: user.search_radius_miles,
         },
-        message: 'Profile updated successfully'
+        message: 'Profile updated successfully',
       });
-      
     } catch (error) {
       console.error('Update profile error:', error);
       res.status(500).json({
         success: false,
         error: {
           code: 'UPDATE_ERROR',
-          message: 'Failed to update profile'
-        }
+          message: 'Failed to update profile',
+        },
       });
     } finally {
       client.release();
@@ -591,8 +589,8 @@ class AuthController {
           success: false,
           error: {
             code: 'NO_REFRESH_TOKEN',
-            message: 'No refresh token provided'
-          }
+            message: 'No refresh token provided',
+          },
         });
       }
 
@@ -604,8 +602,8 @@ class AuthController {
           success: false,
           error: {
             code: 'INVALID_REFRESH_TOKEN',
-            message: 'Invalid or expired refresh token'
-          }
+            message: 'Invalid or expired refresh token',
+          },
         });
       }
 
@@ -614,10 +612,10 @@ class AuthController {
         {
           id: tokenData.id,
           email: tokenData.email,
-          role: tokenData.role
+          role: tokenData.role,
         },
         jwtSecret,
-        { expiresIn: jwtAccessExpiry }
+        { expiresIn: jwtAccessExpiry },
       );
 
       // Optional: Rotate refresh token for enhanced security
@@ -628,7 +626,7 @@ class AuthController {
         refreshToken,
         tokenData.id,
         ipAddress,
-        userAgent
+        userAgent,
       );
 
       // Update cookie with new refresh token
@@ -636,7 +634,7 @@ class AuthController {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 7 * 24 * 60 * 60 * 1000
+        maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
       // Log token refresh (fire-and-forget)
@@ -646,18 +644,17 @@ class AuthController {
         success: true,
         data: {
           accessToken,
-          expiresIn: jwtAccessExpiry
-        }
+          expiresIn: jwtAccessExpiry,
+        },
       });
-
     } catch (error) {
       console.error('Refresh token error:', error);
       res.status(500).json({
         success: false,
         error: {
           code: 'REFRESH_ERROR',
-          message: 'Failed to refresh token'
-        }
+          message: 'Failed to refresh token',
+        },
       });
     }
   }
@@ -680,17 +677,16 @@ class AuthController {
 
       res.json({
         success: true,
-        message: 'Logged out successfully'
+        message: 'Logged out successfully',
       });
-
     } catch (error) {
       console.error('Logout error:', error);
       res.status(500).json({
         success: false,
         error: {
           code: 'LOGOUT_ERROR',
-          message: 'Failed to logout'
-        }
+          message: 'Failed to logout',
+        },
       });
     }
   }
@@ -711,17 +707,16 @@ class AuthController {
 
       res.json({
         success: true,
-        message: 'Logged out from all devices successfully'
+        message: 'Logged out from all devices successfully',
       });
-
     } catch (error) {
       console.error('Logout all error:', error);
       res.status(500).json({
         success: false,
         error: {
           code: 'LOGOUT_ALL_ERROR',
-          message: 'Failed to logout from all devices'
-        }
+          message: 'Failed to logout from all devices',
+        },
       });
     }
   }
@@ -740,26 +735,25 @@ class AuthController {
       res.json({
         success: true,
         data: {
-          sessions: sessions.map(session => ({
+          sessions: sessions.map((session) => ({
             id: session.id,
             createdAt: session.created_at,
             expiresAt: session.expires_at,
             ipAddress: session.ip_address,
             userAgent: session.user_agent,
             deviceInfo: session.device_info,
-            isCurrent: req.cookies.refreshToken === session.token
-          }))
-        }
+            isCurrent: req.cookies.refreshToken === session.token,
+          })),
+        },
       });
-
     } catch (error) {
       console.error('Get sessions error:', error);
       res.status(500).json({
         success: false,
         error: {
           code: 'GET_SESSIONS_ERROR',
-          message: 'Failed to retrieve sessions'
-        }
+          message: 'Failed to retrieve sessions',
+        },
       });
     }
   }

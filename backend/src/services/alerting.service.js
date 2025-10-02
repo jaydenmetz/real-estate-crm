@@ -50,7 +50,6 @@ class AlertingService {
 
       // Log alert
       await this.logAlert(alert);
-
     } catch (error) {
       logger.error('Error sending alert', { error, alert });
       // Don't throw - alerting failures shouldn't crash the app
@@ -125,50 +124,50 @@ class AlertingService {
       icon_emoji: ':rotating_light:',
       text: mentionChannel ? '<!channel> CRITICAL SECURITY ALERT' : 'Security Alert',
       attachments: [{
-        color: color,
+        color,
         title: `${emoji} ${alert.type}`,
         text: alert.message,
         fields: [
           {
             title: 'Severity',
             value: alert.severity,
-            short: true
+            short: true,
           },
           {
             title: 'Time',
             value: new Date().toISOString(),
-            short: true
+            short: true,
           },
           {
             title: 'User',
             value: alert.user || 'N/A',
-            short: true
+            short: true,
           },
           {
             title: 'IP Address',
             value: alert.ip || 'N/A',
-            short: true
-          }
+            short: true,
+          },
         ],
         actions: [
           {
             type: 'button',
             text: 'Acknowledge',
-            url: `${process.env.FRONTEND_URL}/alerts/${alert.id}`
+            url: `${process.env.FRONTEND_URL}/alerts/${alert.id}`,
           },
           {
             type: 'button',
             text: 'View Details',
-            url: `${process.env.FRONTEND_URL}/security-events?type=${alert.type}`
-          }
-        ]
-      }]
+            url: `${process.env.FRONTEND_URL}/security-events?type=${alert.type}`,
+          },
+        ],
+      }],
     };
 
     const response = await fetch(this.SLACK_WEBHOOK, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
@@ -198,24 +197,24 @@ class AlertingService {
           ip_address: alert.ip,
           event_type: alert.type,
           timestamp: new Date().toISOString(),
-          metadata: alert.metadata
-        }
+          metadata: alert.metadata,
+        },
       },
       links: [
         {
           href: `${process.env.FRONTEND_URL}/alerts/${alert.id}`,
-          text: 'View Alert Details'
-        }
-      ]
+          text: 'View Alert Details',
+        },
+      ],
     };
 
     const response = await fetch('https://events.pagerduty.com/v2/enqueue', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/vnd.pagerduty+json;version=2'
+        Accept: 'application/vnd.pagerduty+json;version=2',
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
@@ -233,7 +232,7 @@ class AlertingService {
     logger.info('Email alert would be sent', {
       to: this.SECURITY_EMAIL,
       subject: `[${alert.severity}] Security Alert: ${alert.type}`,
-      alert
+      alert,
     });
 
     // Example SendGrid implementation:
@@ -262,7 +261,7 @@ class AlertingService {
     logger.info('SMS alert would be sent', {
       to: this.SECURITY_PHONE,
       message: `CRITICAL: ${alert.message}`,
-      alert
+      alert,
     });
 
     // Example Twilio implementation:
@@ -312,7 +311,7 @@ class AlertingService {
     this.alertCache.set(cacheKey, {
       count: 1,
       timestamp: new Date(),
-      last_seen: new Date()
+      last_seen: new Date(),
     });
 
     return false; // Not a duplicate
@@ -339,10 +338,10 @@ class AlertingService {
    */
   getSeverityColor(severity) {
     const colors = {
-      'P1': 'danger',    // Red
-      'P2': 'warning',   // Orange
-      'P3': 'good',      // Green
-      'P4': '#808080'    // Gray
+      P1: 'danger', // Red
+      P2: 'warning', // Orange
+      P3: 'good', // Green
+      P4: '#808080', // Gray
     };
     return colors[severity] || 'good';
   }
@@ -352,10 +351,10 @@ class AlertingService {
    */
   getSeverityEmoji(severity) {
     const emojis = {
-      'P1': '🚨',
-      'P2': '⚠️',
-      'P3': 'ℹ️',
-      'P4': '📝'
+      P1: '🚨',
+      P2: '⚠️',
+      P3: 'ℹ️',
+      P4: '📝',
     };
     return emojis[severity] || 'ℹ️';
   }

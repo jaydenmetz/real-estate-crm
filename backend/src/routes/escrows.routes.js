@@ -2,10 +2,13 @@
 
 const express = require('express');
 const { body, param, query } = require('express-validator');
+
 const router = express.Router();
 const escrowsController = require('../controllers/escrows.controller');
 const { authenticate } = require('../middleware/apiKey.middleware');
-const { validate, escrowValidationRules, paginationValidationRules, idValidationRules } = require('../middleware/validation.middleware');
+const {
+  validate, escrowValidationRules, paginationValidationRules, idValidationRules,
+} = require('../middleware/validation.middleware');
 const { validateEscrowRules } = require('../middleware/businessRules.middleware');
 
 // All routes require authentication
@@ -100,15 +103,19 @@ router.get(
   '/',
   [
     query('status').optional().isString().withMessage('Status must be a string'),
-    query('minPrice').optional().isFloat({ min: 0 }).withMessage('minPrice must be a positive number').toFloat(),
-    query('maxPrice').optional().isFloat({ min: 0 }).withMessage('maxPrice must be a positive number').toFloat(),
+    query('minPrice').optional().isFloat({ min: 0 }).withMessage('minPrice must be a positive number')
+      .toFloat(),
+    query('maxPrice').optional().isFloat({ min: 0 }).withMessage('maxPrice must be a positive number')
+      .toFloat(),
     query('closingDateStart').optional().isISO8601().withMessage('Invalid closingDateStart format'),
     query('closingDateEnd').optional().isISO8601().withMessage('Invalid closingDateEnd format'),
-    query('page').optional().isInt({ min: 1 }).withMessage('Page must be an integer').toInt(),
-    query('limit').optional().isInt({ min: 1 }).withMessage('Limit must be an integer').toInt()
+    query('page').optional().isInt({ min: 1 }).withMessage('Page must be an integer')
+      .toInt(),
+    query('limit').optional().isInt({ min: 1 }).withMessage('Limit must be an integer')
+      .toInt(),
   ],
   validate,
-  escrowsController.getEscrows
+  escrowsController.getEscrows,
 );
 
 /**
@@ -151,10 +158,10 @@ router.get(
 router.get(
   '/:id',
   [
-    param('id').notEmpty().withMessage('Escrow ID is required')
+    param('id').notEmpty().withMessage('Escrow ID is required'),
   ],
   validate,
-  escrowsController.getEscrow
+  escrowsController.getEscrow,
 );
 
 /**
@@ -289,11 +296,11 @@ router.post(
     body('escrowStatus').optional().isString().withMessage('Escrow status must be a string'),
     body('city').optional().isString().withMessage('City must be a string'),
     body('state').optional().isString().withMessage('State must be a string'),
-    body('zipCode').optional().isString().withMessage('Zip code must be a string')
+    body('zipCode').optional().isString().withMessage('Zip code must be a string'),
   ],
   validate,
   validateEscrowRules,
-  escrowsController.createEscrow
+  escrowsController.createEscrow,
 );
 
 /**
@@ -403,31 +410,31 @@ router.put(
     param('id').notEmpty().withMessage('Escrow ID is required'),
     body('purchasePrice').optional().isNumeric().withMessage('Purchase price must be a number'),
     body('closingDate').optional().isISO8601().withMessage('Invalid closing date'),
-    body('escrowStatus').optional().isString().withMessage('Escrow status must be a string')
+    body('escrowStatus').optional().isString().withMessage('Escrow status must be a string'),
   ],
   validate,
   validateEscrowRules,
-  escrowsController.updateEscrow
+  escrowsController.updateEscrow,
 );
 
 // Archive (soft delete) escrow - PUT /v1/escrows/:id/archive
 router.put(
   '/:id/archive',
   [
-    param('id').notEmpty().withMessage('Escrow ID is required')
+    param('id').notEmpty().withMessage('Escrow ID is required'),
   ],
   validate,
-  escrowsController.archiveEscrow
+  escrowsController.archiveEscrow,
 );
 
 // Restore archived escrow - PUT /v1/escrows/:id/restore
 router.put(
   '/:id/restore',
   [
-    param('id').notEmpty().withMessage('Escrow ID is required')
+    param('id').notEmpty().withMessage('Escrow ID is required'),
   ],
   validate,
-  escrowsController.restoreEscrow
+  escrowsController.restoreEscrow,
 );
 
 /**
@@ -481,10 +488,10 @@ router.put(
 router.delete(
   '/:id',
   [
-    param('id').notEmpty().withMessage('Escrow ID is required')
+    param('id').notEmpty().withMessage('Escrow ID is required'),
   ],
   validate,
-  escrowsController.deleteEscrow
+  escrowsController.deleteEscrow,
 );
 
 // Batch delete multiple escrows (only archived ones) - POST /v1/escrows/batch-delete
@@ -492,10 +499,10 @@ router.post(
   '/batch-delete',
   [
     body('ids').isArray({ min: 1 }).withMessage('IDs must be a non-empty array'),
-    body('ids.*').isString().withMessage('Each ID must be a string')
+    body('ids.*').isString().withMessage('Each ID must be a string'),
   ],
   validate,
-  escrowsController.batchDeleteEscrows
+  escrowsController.batchDeleteEscrows,
 );
 
 // PATCH /v1/escrows/:id/checklist
@@ -505,120 +512,120 @@ router.patch(
     param('id').notEmpty().withMessage('Escrow ID is required'),
     body('item').notEmpty().withMessage('Checklist item is required'),
     body('value').isBoolean().withMessage('Value must be boolean'),
-    body('note').optional().isString().withMessage('Note must be a string')
+    body('note').optional().isString().withMessage('Note must be a string'),
   ],
   validate,
-  escrowsController.updateChecklist
+  escrowsController.updateChecklist,
 );
 
 // GET /v1/escrows/:id/timeline
 router.get(
   '/:id/timeline',
   [
-    param('id').notEmpty().withMessage('Escrow ID is required')
+    param('id').notEmpty().withMessage('Escrow ID is required'),
   ],
   validate,
-  escrowsController.getEscrowTimeline
+  escrowsController.getEscrowTimeline,
 );
 
 // GET /v1/escrows/:id/people
 router.get(
   '/:id/people',
   [
-    param('id').notEmpty().withMessage('Escrow ID is required')
+    param('id').notEmpty().withMessage('Escrow ID is required'),
   ],
   validate,
-  escrowsController.getEscrowPeople
+  escrowsController.getEscrowPeople,
 );
 
 // GET /v1/escrows/:id/financials
 router.get(
   '/:id/financials',
   [
-    param('id').notEmpty().withMessage('Escrow ID is required')
+    param('id').notEmpty().withMessage('Escrow ID is required'),
   ],
   validate,
-  escrowsController.getEscrowFinancials
+  escrowsController.getEscrowFinancials,
 );
 
 // GET /v1/escrows/:id/checklists
 router.get(
   '/:id/checklists',
   [
-    param('id').notEmpty().withMessage('Escrow ID is required')
+    param('id').notEmpty().withMessage('Escrow ID is required'),
   ],
   validate,
-  escrowsController.getEscrowChecklists
+  escrowsController.getEscrowChecklists,
 );
 
 // GET /v1/escrows/:id/details
 router.get(
   '/:id/details',
   [
-    param('id').notEmpty().withMessage('Escrow ID is required')
+    param('id').notEmpty().withMessage('Escrow ID is required'),
   ],
   validate,
-  escrowsController.getEscrowDetails
+  escrowsController.getEscrowDetails,
 );
 
 // GET /v1/escrows/:id/property-details
 router.get(
   '/:id/property-details',
   [
-    param('id').notEmpty().withMessage('Escrow ID is required')
+    param('id').notEmpty().withMessage('Escrow ID is required'),
   ],
   validate,
-  escrowsController.getEscrowPropertyDetails
+  escrowsController.getEscrowPropertyDetails,
 );
 
 // GET /v1/escrows/:id/checklist-loan
 router.get(
   '/:id/checklist-loan',
   [
-    param('id').notEmpty().withMessage('Escrow ID is required')
+    param('id').notEmpty().withMessage('Escrow ID is required'),
   ],
   validate,
-  escrowsController.getEscrowChecklistLoan
+  escrowsController.getEscrowChecklistLoan,
 );
 
 // GET /v1/escrows/:id/checklist-house
 router.get(
   '/:id/checklist-house',
   [
-    param('id').notEmpty().withMessage('Escrow ID is required')
+    param('id').notEmpty().withMessage('Escrow ID is required'),
   ],
   validate,
-  escrowsController.getEscrowChecklistHouse
+  escrowsController.getEscrowChecklistHouse,
 );
 
 // GET /v1/escrows/:id/checklist-admin
 router.get(
   '/:id/checklist-admin',
   [
-    param('id').notEmpty().withMessage('Escrow ID is required')
+    param('id').notEmpty().withMessage('Escrow ID is required'),
   ],
   validate,
-  escrowsController.getEscrowChecklistAdmin
+  escrowsController.getEscrowChecklistAdmin,
 );
 
 // GET /v1/escrows/:id/documents
 router.get(
   '/:id/documents',
   [
-    param('id').notEmpty().withMessage('Escrow ID is required')
+    param('id').notEmpty().withMessage('Escrow ID is required'),
   ],
   validate,
-  escrowsController.getEscrowDocuments
+  escrowsController.getEscrowDocuments,
 );
 
 // GET /v1/escrows/:id/notes
 router.get(
   '/:id/notes',
   [
-    param('id').notEmpty().withMessage('Escrow ID is required')
+    param('id').notEmpty().withMessage('Escrow ID is required'),
   ],
   validate,
-  escrowsController.getEscrowNotes
+  escrowsController.getEscrowNotes,
 );
 
 // POST /v1/escrows/:id/notes
@@ -627,10 +634,10 @@ router.post(
   [
     param('id').notEmpty().withMessage('Escrow ID is required'),
     body('note').notEmpty().withMessage('Note content is required'),
-    body('type').optional().isString().withMessage('Note type must be a string')
+    body('type').optional().isString().withMessage('Note type must be a string'),
   ],
   validate,
-  escrowsController.addEscrowNote
+  escrowsController.addEscrowNote,
 );
 
 // Additional PUT endpoints for updating specific escrow sections
@@ -639,80 +646,80 @@ router.post(
 router.put(
   '/:id/details',
   [
-    param('id').notEmpty().withMessage('Escrow ID is required')
+    param('id').notEmpty().withMessage('Escrow ID is required'),
   ],
   validate,
-  escrowsController.updateEscrowDetails
+  escrowsController.updateEscrowDetails,
 );
 
 // PUT /v1/escrows/:id/people
 router.put(
   '/:id/people',
   [
-    param('id').notEmpty().withMessage('Escrow ID is required')
+    param('id').notEmpty().withMessage('Escrow ID is required'),
   ],
   validate,
-  escrowsController.updateEscrowPeople
+  escrowsController.updateEscrowPeople,
 );
 
 // PUT /v1/escrows/:id/timeline
 router.put(
   '/:id/timeline',
   [
-    param('id').notEmpty().withMessage('Escrow ID is required')
+    param('id').notEmpty().withMessage('Escrow ID is required'),
   ],
   validate,
-  escrowsController.updateEscrowTimeline || escrowsController.updateEscrow
+  escrowsController.updateEscrowTimeline || escrowsController.updateEscrow,
 );
 
 // PUT /v1/escrows/:id/financials
 router.put(
   '/:id/financials',
   [
-    param('id').notEmpty().withMessage('Escrow ID is required')
+    param('id').notEmpty().withMessage('Escrow ID is required'),
   ],
   validate,
-  escrowsController.updateEscrowFinancials
+  escrowsController.updateEscrowFinancials,
 );
 
 // PUT /v1/escrows/:id/property-details
 router.put(
   '/:id/property-details',
   [
-    param('id').notEmpty().withMessage('Escrow ID is required')
+    param('id').notEmpty().withMessage('Escrow ID is required'),
   ],
   validate,
-  escrowsController.updateEscrowPropertyDetails
+  escrowsController.updateEscrowPropertyDetails,
 );
 
 // PUT /v1/escrows/:id/checklist-loan
 router.put(
   '/:id/checklist-loan',
   [
-    param('id').notEmpty().withMessage('Escrow ID is required')
+    param('id').notEmpty().withMessage('Escrow ID is required'),
   ],
   validate,
-  escrowsController.updateEscrowChecklistLoan
+  escrowsController.updateEscrowChecklistLoan,
 );
 
 // PUT /v1/escrows/:id/checklist-house
 router.put(
   '/:id/checklist-house',
   [
-    param('id').notEmpty().withMessage('Escrow ID is required')
+    param('id').notEmpty().withMessage('Escrow ID is required'),
   ],
   validate,
-  escrowsController.updateEscrowChecklistHouse
+  escrowsController.updateEscrowChecklistHouse,
 );
 
 // PUT /v1/escrows/:id/checklist-admin
 router.put(
   '/:id/checklist-admin',
   [
-    param('id').notEmpty().withMessage('Escrow ID is required')
+    param('id').notEmpty().withMessage('Escrow ID is required'),
   ],
   validate,
-  escrowsController.updateEscrowChecklistAdmin
+  escrowsController.updateEscrowChecklistAdmin,
 );
 
 // PUT /v1/escrows/:id/documents
@@ -720,10 +727,10 @@ router.put(
   '/:id/documents',
   [
     param('id').notEmpty().withMessage('Escrow ID is required'),
-    body().isArray().withMessage('Documents must be an array')
+    body().isArray().withMessage('Documents must be an array'),
   ],
   validate,
-  escrowsController.updateEscrowDocuments
+  escrowsController.updateEscrowDocuments,
 );
 
 module.exports = router;

@@ -57,5 +57,5 @@ module.exports = {
   pool,
   query,
   transaction,
-  initializeDatabase
+  initializeDatabase,
 };

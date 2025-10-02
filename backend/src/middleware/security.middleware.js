@@ -38,14 +38,14 @@ const helmetConfig = helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-      scriptSrc: ["'self'", "https://browser.sentry-cdn.com"],
-      fontSrc: ["'self'", "https://fonts.gstatic.com"],
-      imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "https://*.sentry.io", "https://api.jaydenmetz.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
+      scriptSrc: ["'self'", 'https://browser.sentry-cdn.com'],
+      fontSrc: ["'self'", 'https://fonts.gstatic.com'],
+      imgSrc: ["'self'", 'data:', 'https:'],
+      connectSrc: ["'self'", 'https://*.sentry.io', 'https://api.jaydenmetz.com'],
       objectSrc: ["'none'"],
       upgradeInsecureRequests: [],
-    }
+    },
   },
   crossOriginEmbedderPolicy: false,
 });
@@ -55,5 +55,5 @@ module.exports = {
   authLimiter,
   strictLimiter,
   healthCheckLimiter,
-  helmet: helmetConfig
+  helmet: helmetConfig,
 };

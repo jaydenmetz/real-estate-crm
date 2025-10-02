@@ -1,4 +1,5 @@
 const express = require('express');
+
 const router = express.Router();
 const { pool } = require('../config/database');
 
@@ -23,14 +24,14 @@ router.get('/public', async (req, res) => {
     service: 'Real Estate CRM API',
     status: 'operational', // operational, degraded, outage
     timestamp: new Date().toISOString(),
-    components: []
+    components: [],
   };
 
   // Check 1: API is responding (if we get here, it's working)
   status.components.push({
     name: 'API Server',
     status: 'operational',
-    description: 'REST API endpoints'
+    description: 'REST API endpoints',
   });
 
   // Check 2: Database connectivity (simple ping, no details)
@@ -39,13 +40,13 @@ router.get('/public', async (req, res) => {
     status.components.push({
       name: 'Database',
       status: 'operational',
-      description: 'Data storage and retrieval'
+      description: 'Data storage and retrieval',
     });
   } catch (error) {
     status.components.push({
       name: 'Database',
       status: 'outage',
-      description: 'Data storage and retrieval'
+      description: 'Data storage and retrieval',
     });
     status.status = 'outage';
   }
@@ -54,19 +55,19 @@ router.get('/public', async (req, res) => {
   status.components.push({
     name: 'Escrows',
     status: 'operational',
-    description: 'Transaction management'
+    description: 'Transaction management',
   });
 
   status.components.push({
     name: 'Listings',
     status: 'operational',
-    description: 'Property listings'
+    description: 'Property listings',
   });
 
   status.components.push({
     name: 'Authentication',
     status: 'operational',
-    description: 'Login and security'
+    description: 'Login and security',
   });
 
   // Overall message for customers
@@ -80,7 +81,7 @@ router.get('/public', async (req, res) => {
 
   res.json({
     success: true,
-    data: status
+    data: status,
   });
 });
 
@@ -94,7 +95,7 @@ router.get('/ping', (req, res) => {
   res.status(200).json({
     success: true,
     status: 'ok',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -111,13 +112,13 @@ router.get('/health', async (req, res) => {
 
     res.status(200).json({
       success: true,
-      status: 'healthy'
+      status: 'healthy',
     });
   } catch (error) {
     res.status(503).json({
       success: false,
       status: 'unhealthy',
-      message: 'Database unavailable'
+      message: 'Database unavailable',
     });
   }
 });

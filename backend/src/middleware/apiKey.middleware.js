@@ -7,23 +7,22 @@ const authenticateApiKey = async (req, res, next) => {
   try {
     // Check for API key in header
     const apiKey = req.headers['x-api-key'] || req.headers['api-key'];
-    
+
     if (!apiKey) {
       // No API key provided, skip to next middleware (might use JWT auth)
       return next();
     }
 
-
     // Validate API key
     const userData = await ApiKeyService.validateApiKey(apiKey);
-    
+
     if (!userData) {
       return res.status(401).json({
         success: false,
         error: {
           code: 'INVALID_API_KEY',
-          message: 'Invalid API key provided'
-        }
+          message: 'Invalid API key provided',
+        },
       });
     }
 
@@ -39,7 +38,7 @@ const authenticateApiKey = async (req, res, next) => {
       teamName: userData.teamName,
       apiKeyId: userData.apiKeyId,
       scopes: userData.scopes || { all: ['read', 'write', 'delete'] },
-      authMethod: 'api_key'
+      authMethod: 'api_key',
     };
 
     // Log API key usage (async, don't wait)
@@ -51,39 +50,39 @@ const authenticateApiKey = async (req, res, next) => {
       req.method,
       null, // Status code will be logged in response
       ipAddress,
-      userAgent
+      userAgent,
     ).catch(console.error);
 
     next();
   } catch (error) {
     console.error('API Key authentication error:', error.message, error.stack);
-    
+
     if (error.message && error.message.includes('expired')) {
       return res.status(401).json({
         success: false,
         error: {
           code: 'API_KEY_EXPIRED',
-          message: error.message
-        }
+          message: error.message,
+        },
       });
     }
-    
+
     if (error.message.includes('deactivated')) {
       return res.status(401).json({
         success: false,
         error: {
           code: 'API_KEY_DEACTIVATED',
-          message: error.message
-        }
+          message: error.message,
+        },
       });
     }
-    
+
     res.status(500).json({
       success: false,
       error: {
         code: 'AUTH_ERROR',
-        message: 'Authentication failed'
-      }
+        message: 'Authentication failed',
+      },
     });
   }
 };
@@ -94,77 +93,74 @@ const authenticateApiKey = async (req, res, next) => {
 const authenticate = async (req, res, next) => {
   // First try API key authentication
   const apiKey = req.headers['x-api-key'] || req.headers['api-key'];
-  
+
   if (apiKey) {
     return authenticateApiKey(req, res, next);
   }
-  
+
   // Then try JWT authentication
   const authHeader = req.headers.authorization;
-  
+
   if (authHeader && authHeader.startsWith('Bearer ')) {
     // Use existing JWT authentication
     const authMiddleware = require('./auth.middleware');
     return authMiddleware.authenticate(req, res, next);
   }
-  
+
   // No authentication provided
   return res.status(401).json({
     success: false,
     error: {
       code: 'NO_AUTH_TOKEN',
-      message: 'No authentication token provided'
-    }
+      message: 'No authentication token provided',
+    },
   });
 };
-
 
 /**
  * Check if user has required scope for resource and action
  * Modern scope-based authorization (replaces requirePermission)
  */
-const requireScope = (resource, action) => {
-  return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        error: {
-          code: 'UNAUTHORIZED',
-          message: 'Authentication required'
-        }
-      });
-    }
+const requireScope = (resource, action) => (req, res, next) => {
+  if (!req.user) {
+    return res.status(401).json({
+      success: false,
+      error: {
+        code: 'UNAUTHORIZED',
+        message: 'Authentication required',
+      },
+    });
+  }
 
-    // JWT users bypass scope checks (have full access)
-    if (req.user.authMethod !== 'api_key') {
-      return next();
-    }
+  // JWT users bypass scope checks (have full access)
+  if (req.user.authMethod !== 'api_key') {
+    return next();
+  }
 
-    const scopes = req.user.scopes || {};
+  const scopes = req.user.scopes || {};
 
-    // Check if user has 'all:action' scope (e.g., all:read)
-    const hasAllScope = scopes.all && scopes.all.includes(action);
+  // Check if user has 'all:action' scope (e.g., all:read)
+  const hasAllScope = scopes.all && scopes.all.includes(action);
 
-    // Check if user has 'resource:action' scope (e.g., clients:read)
-    const hasResourceScope = scopes[resource] && scopes[resource].includes(action);
+  // Check if user has 'resource:action' scope (e.g., clients:read)
+  const hasResourceScope = scopes[resource] && scopes[resource].includes(action);
 
-    if (!hasAllScope && !hasResourceScope) {
-      return res.status(403).json({
-        success: false,
-        error: {
-          code: 'INSUFFICIENT_SCOPE',
-          message: `API key missing required scope: ${resource}:${action}`,
-          required_scope: `${resource}:${action}`
-        }
-      });
-    }
+  if (!hasAllScope && !hasResourceScope) {
+    return res.status(403).json({
+      success: false,
+      error: {
+        code: 'INSUFFICIENT_SCOPE',
+        message: `API key missing required scope: ${resource}:${action}`,
+        required_scope: `${resource}:${action}`,
+      },
+    });
+  }
 
-    next();
-  };
+  next();
 };
 
 module.exports = {
   authenticateApiKey,
   authenticate,
-  requireScope
+  requireScope,
 };

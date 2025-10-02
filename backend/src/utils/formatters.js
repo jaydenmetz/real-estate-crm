@@ -6,7 +6,7 @@ const formatters = {
     if (amount === null || amount === undefined) return '$0.00';
     return new Intl.NumberFormat(locale, {
       style: 'currency',
-      currency: currency
+      currency,
     }).format(amount);
   },
 
@@ -46,7 +46,9 @@ const formatters = {
   // Address formatting
   address: (addressObj) => {
     if (!addressObj || typeof addressObj !== 'object') return '';
-    const { street, city, state, zipCode } = addressObj;
+    const {
+      street, city, state, zipCode,
+    } = addressObj;
     const parts = [street, city, state, zipCode].filter(Boolean);
     return parts.join(', ');
   },
@@ -60,9 +62,9 @@ const formatters = {
   // Number formatting with units
   number: (value, decimals = 0, suffix = '') => {
     if (value === null || value === undefined) return '0';
-    return value.toLocaleString('en-US', { 
+    return value.toLocaleString('en-US', {
       minimumFractionDigits: decimals,
-      maximumFractionDigits: decimals 
+      maximumFractionDigits: decimals,
     }) + suffix;
   },
 
@@ -72,7 +74,7 @@ const formatters = {
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return `${parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
   },
 
   // Truncate text
@@ -84,9 +86,7 @@ const formatters = {
   // Title case
   titleCase: (str) => {
     if (!str) return '';
-    return str.replace(/\w\S*/g, (txt) => 
-      txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase()
-    );
+    return str.replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase());
   },
 
   // Initials
@@ -100,9 +100,9 @@ const formatters = {
   daysDifference: (date1, date2 = new Date()) => {
     const d1 = typeof date1 === 'string' ? parseISO(date1) : date1;
     const d2 = typeof date2 === 'string' ? parseISO(date2) : date2;
-    
+
     if (!isValid(d1) || !isValid(d2)) return 0;
-    
+
     const diffTime = Math.abs(d2 - d1);
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   },
@@ -122,7 +122,7 @@ const formatters = {
     if (diffHours < 24) return `${diffHours}h ago`;
     if (diffDays < 7) return `${diffDays}d ago`;
     return formatters.date(date, 'MMM d');
-  }
+  },
 };
 
 module.exports = formatters;

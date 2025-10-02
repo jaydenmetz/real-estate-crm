@@ -12,7 +12,7 @@ class WeatherService {
       'Thunderstorms',
       'Snow',
       'Fog',
-      'Clear'
+      'Clear',
     ];
   }
 
@@ -27,7 +27,7 @@ class WeatherService {
       const baseTemp = 20; // Base temperature in Celsius
       const seasonalVariation = this.getSeasonalVariation(targetDate);
       const dailyVariation = Math.random() * 10 - 5; // ±5°C variation
-      
+
       const temperature = Math.round(baseTemp + seasonalVariation + dailyVariation);
       const condition = this.mockWeatherConditions[Math.floor(Math.random() * this.mockWeatherConditions.length)];
       const precipitation = condition.includes('Rain') || condition.includes('Snow') ? Math.round(Math.random() * 100) : 0;
@@ -42,29 +42,29 @@ class WeatherService {
           high: temperature + 3,
           low: temperature - 3,
           current: temperature,
-          unit: 'C'
+          unit: 'C',
         },
         precipitation: {
           probability: precipitation,
-          amount: precipitation > 50 ? `${Math.random() * 10 + 1}mm` : '0mm'
+          amount: precipitation > 50 ? `${Math.random() * 10 + 1}mm` : '0mm',
         },
         wind: {
           speed: windSpeed,
           direction: this.getWindDirection(),
-          unit: 'km/h'
+          unit: 'km/h',
         },
-        humidity: humidity,
+        humidity,
         visibility: condition === 'Fog' ? 'Low' : 'Good',
         uvIndex: condition === 'Sunny' || condition === 'Clear' ? Math.round(Math.random() * 5 + 5) : Math.round(Math.random() * 3 + 1),
         recommendations: this.getRecommendations(condition, temperature),
-        accuracy: daysFromNow <= 3 ? 'High' : daysFromNow <= 7 ? 'Medium' : 'Low'
+        accuracy: daysFromNow <= 3 ? 'High' : daysFromNow <= 7 ? 'Medium' : 'Low',
       };
 
       logger.info('Weather forecast generated:', {
         location,
         date: targetDate.toISOString().split('T')[0],
         condition,
-        temperature: temperature
+        temperature,
       });
 
       return forecast;
@@ -78,18 +78,18 @@ class WeatherService {
     const month = date.getMonth();
     // Simple seasonal temperature variation (Northern Hemisphere)
     const seasonalTemp = {
-      0: -10,  // January
-      1: -8,   // February
-      2: -3,   // March
-      3: 2,    // April
-      4: 8,    // May
-      5: 12,   // June
-      6: 15,   // July
-      7: 14,   // August
-      8: 10,   // September
-      9: 5,    // October
-      10: -2,  // November
-      11: -8   // December
+      0: -10, // January
+      1: -8, // February
+      2: -3, // March
+      3: 2, // April
+      4: 8, // May
+      5: 12, // June
+      6: 15, // July
+      7: 14, // August
+      8: 10, // September
+      9: 5, // October
+      10: -2, // November
+      11: -8, // December
     };
     return seasonalTemp[month] || 0;
   }
@@ -155,10 +155,10 @@ class WeatherService {
 
       return {
         location,
-        startDate: startDate,
+        startDate,
         endDate: new Date(start.setDate(start.getDate() + days - 1)),
-        days: days,
-        forecasts
+        days,
+        forecasts,
       };
     } catch (error) {
       logger.error('Failed to get multi-day forecast:', error);
@@ -179,7 +179,7 @@ class WeatherService {
         severity: 'moderate',
         startTime: new Date(),
         endTime: new Date(Date.now() + 6 * 60 * 60 * 1000), // 6 hours from now
-        areas: [location]
+        areas: [location],
       });
     }
 
@@ -187,7 +187,7 @@ class WeatherService {
       location,
       alerts,
       hasActiveAlerts: alerts.length > 0,
-      lastChecked: new Date()
+      lastChecked: new Date(),
     };
   }
 }

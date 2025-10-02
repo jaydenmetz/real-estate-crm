@@ -4,18 +4,18 @@ require('dotenv').config({ path: path.join(__dirname, '../../.env.production') }
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+  ssl: { rejectUnauthorized: false },
 });
 
 async function addEscrowCompanyFields() {
   const client = await pool.connect();
-  
+
   try {
     console.log('Connected to production database');
-    
+
     // Begin transaction
     await client.query('BEGIN');
-    
+
     // Add columns if they don't exist
     console.log('Adding escrow company fields...');
     await client.query(`
@@ -31,9 +31,9 @@ async function addEscrowCompanyFields() {
       ADD COLUMN IF NOT EXISTS loan_officer_phone VARCHAR(50),
       ADD COLUMN IF NOT EXISTS property_image_url TEXT
     `);
-    
+
     console.log('Columns added successfully');
-    
+
     // Update ESCROW-2025-0002 specifically
     const updateResult = await client.query(`
       UPDATE escrows 
@@ -51,11 +51,11 @@ async function addEscrowCompanyFields() {
       WHERE display_id = 'ESCROW-2025-0002'
       RETURNING display_id, escrow_company, lender_name
     `);
-    
+
     if (updateResult.rows.length > 0) {
       console.log('Updated ESCROW-2025-0002:', updateResult.rows[0]);
     }
-    
+
     // Update other escrows with default values
     const updateOthersResult = await client.query(`
       UPDATE escrows 
@@ -76,13 +76,13 @@ async function addEscrowCompanyFields() {
         )
       WHERE escrow_company IS NULL OR property_image_url IS NULL
     `);
-    
+
     console.log(`Updated ${updateOthersResult.rowCount} other escrows with company data`);
-    
+
     // Commit transaction
     await client.query('COMMIT');
     console.log('Transaction committed successfully');
-    
+
     // Show final results
     const finalResult = await client.query(`
       SELECT 
@@ -98,12 +98,11 @@ async function addEscrowCompanyFields() {
       ORDER BY display_id
       LIMIT 5
     `);
-    
+
     console.log('\nFinal escrow company data:');
-    finalResult.rows.forEach(row => {
+    finalResult.rows.forEach((row) => {
       console.log(`${row.display_id}: ${row.escrow_company} / ${row.title_company} / ${row.lender_name}`);
     });
-    
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('Error adding escrow company fields:', error);
@@ -120,7 +119,7 @@ addEscrowCompanyFields()
     console.log('\nEscrow company fields added successfully');
     process.exit(0);
   })
-  .catch(error => {
+  .catch((error) => {
     console.error('\nUpdate failed:', error.message);
     process.exit(1);
   });

@@ -1,10 +1,10 @@
-const { query } = require('../config/database');
 const { v4: uuidv4 } = require('uuid');
+const { query } = require('../config/database');
 
 class Document {
   static async create(data) {
     const id = `doc_${uuidv4().replace(/-/g, '').substring(0, 12)}`;
-    
+
     const text = `
       INSERT INTO documents (
         id, filename, original_name, mime_type, size,
@@ -16,7 +16,7 @@ class Document {
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
       RETURNING *
     `;
-    
+
     const values = [
       id,
       data.filename,
@@ -41,9 +41,9 @@ class Document {
       0, // views
       null, // last_accessed_at
       data.uploadedAt || new Date(),
-      data.expiresAt
+      data.expiresAt,
     ];
-    
+
     const result = await query(text, values);
     return result.rows[0];
   }
@@ -113,7 +113,7 @@ class Document {
     }
 
     // Add sorting
-    text += ` ORDER BY created_at DESC`;
+    text += ' ORDER BY created_at DESC';
 
     // Add pagination
     if (filters.limit) {
@@ -234,21 +234,21 @@ class Document {
       AND (expires_at IS NULL OR expires_at > NOW())
       GROUP BY category
     `;
-    
+
     const result = await query(text, [userId]);
-    
+
     const categories = result.rows;
     const totalCount = categories.reduce((sum, cat) => sum + parseInt(cat.count), 0);
     const totalSize = categories.reduce((sum, cat) => sum + parseInt(cat.total_size || 0), 0);
-    
+
     return {
-      categories: categories.map(cat => ({
+      categories: categories.map((cat) => ({
         category: cat.category,
         count: parseInt(cat.count),
-        totalSize: parseInt(cat.total_size || 0)
+        totalSize: parseInt(cat.total_size || 0),
       })),
       totalCount,
-      totalSize
+      totalSize,
     };
   }
 
@@ -256,11 +256,10 @@ class Document {
   async save() {
     if (this.id) {
       return Document.update(this.id, this);
-    } else {
-      const saved = await Document.create(this);
-      Object.assign(this, saved);
-      return this;
     }
+    const saved = await Document.create(this);
+    Object.assign(this, saved);
+    return this;
   }
 
   async recordView() {
@@ -296,15 +295,15 @@ class Document {
     if (this.uploadedBy === userId || this.uploaded_by === userId) {
       return true;
     }
-    
+
     // Check visibility
     if (this.visibility === 'public') {
       return true;
     }
-    
+
     // Check shared permissions
     const sharedWith = this.sharedWith || this.shared_with || [];
-    return sharedWith.some(share => share.userId === userId);
+    return sharedWith.some((share) => share.userId === userId);
   }
 
   getUrl(variant = 'original') {

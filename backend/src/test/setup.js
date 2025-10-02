@@ -21,7 +21,7 @@ global.console = {
 // Global test utilities
 global.testUtils = {
   // Sleep utility for async tests
-  sleep: (ms) => new Promise(resolve => setTimeout(resolve, ms)),
+  sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
 
   // Generate random email
   randomEmail: () => `test-${Date.now()}-${Math.random().toString(36).substring(7)}@example.com`,

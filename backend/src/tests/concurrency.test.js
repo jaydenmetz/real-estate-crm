@@ -17,7 +17,7 @@ describe('Concurrency Tests - Optimistic Locking', () => {
       .post('/v1/auth/login')
       .send({
         email: 'admin@jaydenmetz.com',
-        password: 'AdminPassword123!'
+        password: 'AdminPassword123!',
       });
 
     authToken = loginRes.body.data.token;
@@ -61,7 +61,7 @@ describe('Concurrency Tests - Optimistic Locking', () => {
           state: 'CA',
           zipCode: '93561',
           purchasePrice: 500000,
-          escrowStatus: 'Active'
+          escrowStatus: 'Active',
         });
 
       testEscrowId = res.body.data.id;
@@ -82,7 +82,7 @@ describe('Concurrency Tests - Optimistic Locking', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           purchasePrice: 525000,
-          version: currentVersion
+          version: currentVersion,
         });
 
       expect(updateA.status).toBe(200);
@@ -94,7 +94,7 @@ describe('Concurrency Tests - Optimistic Locking', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           purchasePrice: 510000,
-          version: currentVersion // Stale version (1)
+          version: currentVersion, // Stale version (1)
         });
 
       expect(updateB.status).toBe(409);
@@ -109,7 +109,7 @@ describe('Concurrency Tests - Optimistic Locking', () => {
         .put(`/v1/escrows/${testEscrowId}`)
         .set('Authorization', `Bearer ${authToken}`)
         .send({
-          purchasePrice: 505000
+          purchasePrice: 505000,
         });
 
       expect(res.status).toBe(200);
@@ -128,7 +128,7 @@ describe('Concurrency Tests - Optimistic Locking', () => {
           lastName: 'Test',
           email: `concurrency-${Date.now()}@test.com`,
           phone: '555-0001',
-          clientType: 'buyer'
+          clientType: 'buyer',
         });
 
       testClientId = res.body.data.id;
@@ -148,7 +148,7 @@ describe('Concurrency Tests - Optimistic Locking', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           clientType: 'seller',
-          version: currentVersion
+          version: currentVersion,
         });
 
       expect(updateA.status).toBe(200);
@@ -159,7 +159,7 @@ describe('Concurrency Tests - Optimistic Locking', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           status: 'inactive',
-          version: currentVersion
+          version: currentVersion,
         });
 
       expect(updateB.status).toBe(409);
@@ -175,7 +175,7 @@ describe('Concurrency Tests - Optimistic Locking', () => {
           lastName: 'Email',
           email: 'admin@jaydenmetz.com', // Known existing email
           phone: '555-0002',
-          clientType: 'buyer'
+          clientType: 'buyer',
         });
 
       expect(duplicateRes.status).toBe(409);
@@ -194,7 +194,7 @@ describe('Concurrency Tests - Optimistic Locking', () => {
           city: 'Tehachapi',
           state: 'CA',
           listPrice: 450000,
-          propertyType: 'Single Family'
+          propertyType: 'Single Family',
         });
 
       testListingId = res.body.data.id;
@@ -213,7 +213,7 @@ describe('Concurrency Tests - Optimistic Locking', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           listPrice: 440000,
-          version: currentVersion
+          version: currentVersion,
         });
 
       expect(updateA.status).toBe(200);
@@ -224,7 +224,7 @@ describe('Concurrency Tests - Optimistic Locking', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           listPrice: 445000,
-          version: currentVersion
+          version: currentVersion,
         });
 
       expect(updateB.status).toBe(409);
@@ -240,7 +240,7 @@ describe('Concurrency Tests - Optimistic Locking', () => {
           firstName: 'Lead',
           lastName: 'Concurrency',
           email: `lead-${Date.now()}@test.com`,
-          leadSource: 'Website'
+          leadSource: 'Website',
         });
 
       testLeadId = res.body.data.id;
@@ -258,7 +258,7 @@ describe('Concurrency Tests - Optimistic Locking', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           lead_score: 75,
-          version: currentVersion
+          version: currentVersion,
         });
 
       expect(updateA.status).toBe(200);
@@ -268,7 +268,7 @@ describe('Concurrency Tests - Optimistic Locking', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           lead_score: 80,
-          version: currentVersion
+          version: currentVersion,
         });
 
       expect(updateB.status).toBe(409);
@@ -289,7 +289,7 @@ describe('Concurrency Tests - Optimistic Locking', () => {
           appointment_date: dateStr,
           start_time: '10:00:00',
           end_time: '11:00:00',
-          appointment_type: 'meeting'
+          appointment_type: 'meeting',
         });
 
       testAppointmentId = res.body.data.id;
@@ -307,7 +307,7 @@ describe('Concurrency Tests - Optimistic Locking', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           start_time: '10:30:00',
-          version: currentVersion
+          version: currentVersion,
         });
 
       expect(updateA.status).toBe(200);
@@ -317,7 +317,7 @@ describe('Concurrency Tests - Optimistic Locking', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           start_time: '11:00:00',
-          version: currentVersion
+          version: currentVersion,
         });
 
       expect(updateB.status).toBe(409);
@@ -333,7 +333,7 @@ describe('Concurrency Tests - Optimistic Locking', () => {
           propertyAddress: '789 Invalid St',
           city: 'Tehachapi',
           state: 'CA',
-          purchase_price: -100000 // Negative price
+          purchase_price: -100000, // Negative price
         });
 
       expect(res.status).toBe(400);
@@ -349,14 +349,14 @@ describe('Concurrency Tests - Optimistic Locking', () => {
           city: 'Tehachapi',
           state: 'CA',
           opening_date: '2025-12-01',
-          closing_date: '2025-11-01' // Before opening
+          closing_date: '2025-11-01', // Before opening
         });
 
       expect(res.status).toBe(400);
       expect(res.body.error.violations).toContainEqual(
         expect.objectContaining({
-          rule: 'CLOSING_AFTER_OPENING'
-        })
+          rule: 'CLOSING_AFTER_OPENING',
+        }),
       );
     });
 
@@ -366,7 +366,7 @@ describe('Concurrency Tests - Optimistic Locking', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           propertyAddress: '999 Negative Price Ln',
-          listPrice: -200000
+          listPrice: -200000,
         });
 
       expect(res.status).toBe(400);
@@ -380,14 +380,14 @@ describe('Concurrency Tests - Optimistic Locking', () => {
         .send({
           propertyAddress: '888 Time Travel Dr',
           listPrice: 300000,
-          yearBuilt: 1650 // Too old
+          yearBuilt: 1650, // Too old
         });
 
       expect(res.status).toBe(400);
       expect(res.body.error.violations).toContainEqual(
         expect.objectContaining({
-          rule: 'REASONABLE_YEAR_BUILT'
-        })
+          rule: 'REASONABLE_YEAR_BUILT',
+        }),
       );
     });
 
@@ -398,14 +398,14 @@ describe('Concurrency Tests - Optimistic Locking', () => {
         .send({
           firstName: 'Invalid',
           lastName: 'Score',
-          lead_score: 150 // Over 100
+          lead_score: 150, // Over 100
         });
 
       expect(res.status).toBe(400);
       expect(res.body.error.violations).toContainEqual(
         expect.objectContaining({
-          rule: 'LEAD_SCORE_RANGE'
-        })
+          rule: 'LEAD_SCORE_RANGE',
+        }),
       );
     });
 
@@ -421,14 +421,14 @@ describe('Concurrency Tests - Optimistic Locking', () => {
           title: 'Invalid Time Appointment',
           appointment_date: dateStr,
           start_time: '15:00:00',
-          end_time: '14:00:00' // Before start
+          end_time: '14:00:00', // Before start
         });
 
       expect(res.status).toBe(400);
       expect(res.body.error.violations).toContainEqual(
         expect.objectContaining({
-          rule: 'END_AFTER_START'
-        })
+          rule: 'END_AFTER_START',
+        }),
       );
     });
   });

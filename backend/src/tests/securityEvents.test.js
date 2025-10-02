@@ -14,7 +14,7 @@ describe('Security Events Integration Tests', () => {
   // Setup: Create a test user and authenticate
   beforeAll(async () => {
     // Clean up any existing test data
-    await pool.query(`DELETE FROM users WHERE email = 'securitytest@example.com'`);
+    await pool.query('DELETE FROM users WHERE email = \'securitytest@example.com\'');
 
     // Create test user
     const bcrypt = require('bcryptjs');
@@ -33,7 +33,7 @@ describe('Security Events Integration Tests', () => {
       .post('/v1/auth/login')
       .send({
         email: 'securitytest@example.com',
-        password: 'TestPassword123!'
+        password: 'TestPassword123!',
       });
 
     authToken = loginResponse.body.data.accessToken;
@@ -41,8 +41,8 @@ describe('Security Events Integration Tests', () => {
 
   // Cleanup: Remove test user and events
   afterAll(async () => {
-    await pool.query(`DELETE FROM security_events WHERE email = 'securitytest@example.com'`);
-    await pool.query(`DELETE FROM users WHERE email = 'securitytest@example.com'`);
+    await pool.query('DELETE FROM security_events WHERE email = \'securitytest@example.com\'');
+    await pool.query('DELETE FROM users WHERE email = \'securitytest@example.com\'');
   });
 
   describe('1. Login Success Event Logging', () => {
@@ -51,14 +51,14 @@ describe('Security Events Integration Tests', () => {
         .post('/v1/auth/login')
         .send({
           email: 'securitytest@example.com',
-          password: 'TestPassword123!'
+          password: 'TestPassword123!',
         });
 
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
 
       // Wait a moment for fire-and-forget logging
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Verify event was logged
       const eventResult = await pool.query(`
@@ -82,14 +82,14 @@ describe('Security Events Integration Tests', () => {
         .post('/v1/auth/login')
         .send({
           email: 'securitytest@example.com',
-          password: 'WrongPassword123!'
+          password: 'WrongPassword123!',
         });
 
       expect(response.status).toBe(401);
       expect(response.body.success).toBe(false);
 
       // Wait for fire-and-forget logging
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Verify event was logged
       const eventResult = await pool.query(`
@@ -121,13 +121,13 @@ describe('Security Events Integration Tests', () => {
         .post('/v1/auth/login')
         .send({
           email: 'securitytest@example.com',
-          password: 'WrongPassword123!'
+          password: 'WrongPassword123!',
         });
 
       expect(response.status).toBe(401);
 
       // Wait for fire-and-forget logging
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Verify account_locked event was logged
       const eventResult = await pool.query(`
@@ -158,10 +158,10 @@ describe('Security Events Integration Tests', () => {
         .post('/v1/auth/login')
         .send({
           email: 'securitytest@example.com',
-          password: 'TestPassword123!'
+          password: 'TestPassword123!',
         });
 
-      const refreshToken = loginResponse.body.data.refreshToken;
+      const { refreshToken } = loginResponse.body.data;
 
       // Use refresh token
       const refreshResponse = await request(app)
@@ -172,7 +172,7 @@ describe('Security Events Integration Tests', () => {
       expect(refreshResponse.body.success).toBe(true);
 
       // Wait for fire-and-forget logging
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Verify event was logged
       const eventResult = await pool.query(`
@@ -196,14 +196,14 @@ describe('Security Events Integration Tests', () => {
         .set('Authorization', `Bearer ${authToken}`)
         .send({
           name: 'Test API Key',
-          expiresInDays: 30
+          expiresInDays: 30,
         });
 
       expect(response.status).toBe(201);
       expect(response.body.success).toBe(true);
 
       // Wait for fire-and-forget logging
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Verify event was logged
       const eventResult = await pool.query(`
@@ -230,7 +230,7 @@ describe('Security Events Integration Tests', () => {
         .post('/v1/auth/login')
         .send({
           email: 'securitytest@example.com',
-          password: 'TestPassword123!'
+          password: 'TestPassword123!',
         });
 
       // Login should succeed regardless of logging
@@ -255,7 +255,7 @@ describe('Security Events Integration Tests', () => {
       expect(response.body.data.length).toBeGreaterThan(0);
 
       // Verify all events belong to the user
-      response.body.data.forEach(event => {
+      response.body.data.forEach((event) => {
         expect(event.email).toBe('securitytest@example.com');
       });
     });
@@ -289,13 +289,13 @@ describe('Security Events Integration Tests', () => {
         .set('User-Agent', 'TestAgent/1.0')
         .send({
           email: 'securitytest@example.com',
-          password: 'TestPassword123!'
+          password: 'TestPassword123!',
         });
 
       expect(response.status).toBe(200);
 
       // Wait for logging
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
       // Verify captured data
       const eventResult = await pool.query(`

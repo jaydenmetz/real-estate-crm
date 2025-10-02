@@ -5,7 +5,7 @@ const listingsController = require('./listings.controller');
 jest.mock('../config/database');
 jest.mock('../utils/logger');
 jest.mock('express-validator', () => ({
-  validationResult: jest.fn(() => ({ isEmpty: () => true, array: () => [] }))
+  validationResult: jest.fn(() => ({ isEmpty: () => true, array: () => [] })),
 }));
 
 describe('ListingsController', () => {
@@ -19,19 +19,19 @@ describe('ListingsController', () => {
       user: {
         id: 'user-123',
         teamId: 'team-456',
-        email: 'agent@example.com'
+        email: 'agent@example.com',
       },
       app: {
-        get: jest.fn().mockReturnValue(null) // No socket.io in tests
+        get: jest.fn().mockReturnValue(null), // No socket.io in tests
       },
       body: {},
       query: {},
-      params: {}
+      params: {},
     };
 
     mockRes = {
       json: jest.fn().mockReturnThis(),
-      status: jest.fn().mockReturnThis()
+      status: jest.fn().mockReturnThis(),
     };
 
     // Mock query function
@@ -42,8 +42,12 @@ describe('ListingsController', () => {
     // TEST 1: Get all listings with pagination
     it('should return paginated listings', async () => {
       const mockListings = [
-        { id: 'listing-1', property_address: '123 Main St', list_price: 500000, listing_status: 'Active' },
-        { id: 'listing-2', property_address: '456 Oak Ave', list_price: 650000, listing_status: 'Pending' }
+        {
+          id: 'listing-1', property_address: '123 Main St', list_price: 500000, listing_status: 'Active',
+        },
+        {
+          id: 'listing-2', property_address: '456 Oak Ave', list_price: 650000, listing_status: 'Pending',
+        },
       ];
 
       query
@@ -62,10 +66,10 @@ describe('ListingsController', () => {
             total: 25,
             page: 1,
             limit: 20,
-            pages: 2
-          }
+            pages: 2,
+          },
         },
-        timestamp: expect.any(String)
+        timestamp: expect.any(String),
       });
     });
 
@@ -81,7 +85,7 @@ describe('ListingsController', () => {
 
       expect(query).toHaveBeenCalledWith(
         expect.stringContaining('listing_status = $'),
-        expect.arrayContaining(['Active'])
+        expect.arrayContaining(['Active']),
       );
     });
 
@@ -97,7 +101,7 @@ describe('ListingsController', () => {
 
       expect(query).toHaveBeenCalledWith(
         expect.stringContaining('list_price >= $'),
-        expect.arrayContaining([300000, 700000])
+        expect.arrayContaining([300000, 700000]),
       );
     });
 
@@ -113,7 +117,7 @@ describe('ListingsController', () => {
 
       expect(query).toHaveBeenCalledWith(
         expect.stringContaining('property_type = $'),
-        expect.arrayContaining(['Condo'])
+        expect.arrayContaining(['Condo']),
       );
     });
 
@@ -129,7 +133,7 @@ describe('ListingsController', () => {
 
       expect(query).toHaveBeenCalledWith(
         expect.stringContaining('ORDER BY l.list_price ASC'),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 
@@ -143,7 +147,7 @@ describe('ListingsController', () => {
 
       expect(query).toHaveBeenCalledWith(
         expect.stringContaining('deleted_at IS NULL'),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 
@@ -158,8 +162,8 @@ describe('ListingsController', () => {
         success: false,
         error: {
           code: 'FETCH_ERROR',
-          message: 'Failed to fetch listings'
-        }
+          message: 'Failed to fetch listings',
+        },
       });
     });
   });
@@ -174,7 +178,7 @@ describe('ListingsController', () => {
         listing_status: 'Active',
         listing_commission: 3.0,
         buyer_commission: 2.5,
-        total_commission: 5.5
+        total_commission: 5.5,
       };
 
       query.mockResolvedValue({ rows: [mockListing] });
@@ -187,9 +191,9 @@ describe('ListingsController', () => {
         success: true,
         data: expect.objectContaining({
           id: 'listing-1',
-          analytics: expect.any(Object)
+          analytics: expect.any(Object),
         }),
-        timestamp: expect.any(String)
+        timestamp: expect.any(String),
       });
     });
 
@@ -206,8 +210,8 @@ describe('ListingsController', () => {
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Listing not found'
-        }
+          message: 'Listing not found',
+        },
       });
     });
   });
@@ -218,12 +222,10 @@ describe('ListingsController', () => {
     beforeEach(() => {
       mockClient = {
         query: jest.fn(),
-        release: jest.fn()
+        release: jest.fn(),
       };
 
-      transaction.mockImplementation(async (callback) => {
-        return await callback(mockClient);
-      });
+      transaction.mockImplementation(async (callback) => await callback(mockClient));
     });
 
     // TEST 10: Create new listing successfully
@@ -235,7 +237,7 @@ describe('ListingsController', () => {
         bedrooms: 3,
         bathrooms: 2,
         squareFootage: 2000,
-        listingStatus: 'Coming Soon'
+        listingStatus: 'Coming Soon',
       };
 
       const mockCreatedListing = {
@@ -243,7 +245,7 @@ describe('ListingsController', () => {
         property_address: '123 Main St',
         list_price: 500000,
         mls_number: 'MLS202512345',
-        listing_status: 'Coming Soon'
+        listing_status: 'Coming Soon',
       };
 
       mockClient.query.mockResolvedValue({ rows: [mockCreatedListing] });
@@ -256,7 +258,7 @@ describe('ListingsController', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
         data: mockCreatedListing,
-        timestamp: expect.any(String)
+        timestamp: expect.any(String),
       });
     });
 
@@ -264,14 +266,14 @@ describe('ListingsController', () => {
     it('should default property type to Single Family if not specified', async () => {
       const mockCreatedListing = {
         id: 'listing-1',
-        property_type: 'Single Family'
+        property_type: 'Single Family',
       };
 
       mockClient.query.mockResolvedValue({ rows: [mockCreatedListing] });
 
       mockReq.body = {
         propertyAddress: '123 Main St',
-        listPrice: 500000
+        listPrice: 500000,
         // propertyType omitted
       };
 
@@ -284,14 +286,14 @@ describe('ListingsController', () => {
     it('should generate MLS number automatically', async () => {
       const mockCreatedListing = {
         id: 'listing-1',
-        mls_number: expect.stringMatching(/^MLS\d{4}\d{4}$/)
+        mls_number: expect.stringMatching(/^MLS\d{4}\d{4}$/),
       };
 
       mockClient.query.mockResolvedValue({ rows: [mockCreatedListing] });
 
       mockReq.body = {
         propertyAddress: '123 Main St',
-        listPrice: 500000
+        listPrice: 500000,
       };
 
       await listingsController.createListing(mockReq, mockRes);
@@ -307,7 +309,7 @@ describe('ListingsController', () => {
         id: 'listing-1',
         property_address: '123 Main St',
         list_price: 475000,
-        listing_status: 'Active'
+        listing_status: 'Active',
       };
 
       query
@@ -317,7 +319,7 @@ describe('ListingsController', () => {
       mockReq.params = { id: 'listing-1' };
       mockReq.body = {
         listPrice: 475000,
-        listingStatus: 'Active'
+        listingStatus: 'Active',
       };
 
       await listingsController.updateListing(mockReq, mockRes);
@@ -325,7 +327,7 @@ describe('ListingsController', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
         data: updatedListing,
-        timestamp: expect.any(String)
+        timestamp: expect.any(String),
       });
     });
 
@@ -353,7 +355,7 @@ describe('ListingsController', () => {
       mockReq.params = { id: 'listing-1' };
       mockReq.body = {
         listPrice: 475000,
-        version: 3 // Outdated version
+        version: 3, // Outdated version
       };
 
       await listingsController.updateListing(mockReq, mockRes);
@@ -364,8 +366,8 @@ describe('ListingsController', () => {
         error: expect.objectContaining({
           code: 'VERSION_CONFLICT',
           currentVersion: 5,
-          attemptedVersion: 3
-        })
+          attemptedVersion: 3,
+        }),
       });
     });
   });
@@ -385,7 +387,7 @@ describe('ListingsController', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
         data: expect.objectContaining({ listing_status: 'Active' }),
-        timestamp: expect.any(String)
+        timestamp: expect.any(String),
       });
     });
 
@@ -403,8 +405,8 @@ describe('ListingsController', () => {
         success: false,
         error: expect.objectContaining({
           code: 'INVALID_TRANSITION',
-          allowedTransitions: []
-        })
+          allowedTransitions: [],
+        }),
       });
     });
   });
@@ -416,7 +418,7 @@ describe('ListingsController', () => {
         id: 'listing-1',
         property_address: '123 Main St',
         deleted_at: new Date(),
-        listing_status: 'Cancelled'
+        listing_status: 'Cancelled',
       };
 
       query.mockResolvedValue({ rows: [archivedListing] });
@@ -427,13 +429,13 @@ describe('ListingsController', () => {
 
       expect(query).toHaveBeenCalledWith(
         expect.stringContaining('deleted_at = CURRENT_TIMESTAMP'),
-        expect.arrayContaining(['listing-1'])
+        expect.arrayContaining(['listing-1']),
       );
 
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
         data: archivedListing,
-        timestamp: expect.any(String)
+        timestamp: expect.any(String),
       });
     });
 
@@ -450,8 +452,8 @@ describe('ListingsController', () => {
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Listing not found or already archived'
-        }
+          message: 'Listing not found or already archived',
+        },
       });
     });
   });
@@ -461,7 +463,7 @@ describe('ListingsController', () => {
     it('should delete archived listing successfully', async () => {
       const deletedListing = {
         id: 'listing-1',
-        property_address: '123 Main St'
+        property_address: '123 Main St',
       };
 
       query
@@ -476,9 +478,9 @@ describe('ListingsController', () => {
         success: true,
         data: {
           id: 'listing-1',
-          message: expect.stringContaining('permanently deleted')
+          message: expect.stringContaining('permanently deleted'),
         },
-        timestamp: expect.any(String)
+        timestamp: expect.any(String),
       });
     });
 
@@ -495,8 +497,8 @@ describe('ListingsController', () => {
         success: false,
         error: {
           code: 'NOT_ARCHIVED',
-          message: 'Listing must be archived before deletion'
-        }
+          message: 'Listing must be archived before deletion',
+        },
       });
     });
   });

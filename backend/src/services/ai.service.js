@@ -99,15 +99,15 @@ async function naturalLanguageToSQL(userQuery, userId) {
       messages: [
         {
           role: 'system',
-          content: SCHEMA_CONTEXT
+          content: SCHEMA_CONTEXT,
         },
         {
           role: 'user',
-          content: `Generate a PostgreSQL query for: ${userQuery}`
-        }
+          content: `Generate a PostgreSQL query for: ${userQuery}`,
+        },
       ],
       temperature: 0.1, // Low temperature for consistent SQL generation
-      max_tokens: 500
+      max_tokens: 500,
     });
 
     const sqlQuery = response.choices[0].message.content.trim();
@@ -132,7 +132,7 @@ function validateSQL(sql) {
   const dangerousKeywords = [
     'insert', 'update', 'delete', 'drop', 'create', 'alter',
     'truncate', 'grant', 'revoke', 'execute', 'exec',
-    'xp_', 'sp_', 'pg_sleep', 'dblink'
+    'xp_', 'sp_', 'pg_sleep', 'dblink',
   ];
 
   for (const keyword of dangerousKeywords) {
@@ -173,7 +173,7 @@ async function executeNaturalLanguageQuery(userQuery, userId) {
       sql: sqlQuery,
       rowCount: result.rows.length,
       data: result.rows,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   } catch (error) {
     console.error('Natural language query error:', error);
@@ -183,9 +183,9 @@ async function executeNaturalLanguageQuery(userQuery, userId) {
       query: userQuery,
       error: {
         code: 'QUERY_EXECUTION_FAILED',
-        message: error.message
+        message: error.message,
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 }
@@ -195,21 +195,21 @@ async function executeNaturalLanguageQuery(userQuery, userId) {
  */
 function getSuggestedQueries() {
   return [
-    "Show me all active escrows",
-    "List clients with budget over $500k",
-    "Find upcoming appointments this week",
-    "Show properties listed in the last 30 days",
+    'Show me all active escrows',
+    'List clients with budget over $500k',
+    'Find upcoming appointments this week',
+    'Show properties listed in the last 30 days',
     "Find hot leads that haven't been contacted",
-    "Show escrows closing this month",
-    "List all buyer clients in active status",
-    "Find appointments scheduled for today",
-    "Show listings over $1 million",
-    "Find converted leads from this quarter"
+    'Show escrows closing this month',
+    'List all buyer clients in active status',
+    'Find appointments scheduled for today',
+    'Show listings over $1 million',
+    'Find converted leads from this quarter',
   ];
 }
 
 module.exports = {
   executeNaturalLanguageQuery,
   getSuggestedQueries,
-  validateSQL
+  validateSQL,
 };

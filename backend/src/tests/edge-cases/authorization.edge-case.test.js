@@ -15,7 +15,7 @@ describe('Authorization Failure Edge Cases', () => {
       .post('/v1/auth/login')
       .send({
         email: 'admin@jaydenmetz.com',
-        password: 'AdminPassword123!'
+        password: 'AdminPassword123!',
       });
 
     user1Token = login1.body.data.token;
@@ -32,7 +32,7 @@ describe('Authorization Failure Edge Cases', () => {
         zipCode: '93561',
         purchasePrice: 500000,
         status: 'active',
-        escrowNumber: `AUTH-TEST-${Date.now()}`
+        escrowNumber: `AUTH-TEST-${Date.now()}`,
       });
 
     user1EscrowId = escrowResponse.body.data.id;
@@ -126,7 +126,7 @@ describe('Authorization Failure Edge Cases', () => {
       .set('Authorization', `Bearer ${user1Token}`)
       .send({
         name: 'Test Revocation Key',
-        expiresInDays: 365
+        expiresInDays: 365,
       });
 
     const apiKey = createResponse.body.data.key;
@@ -165,7 +165,7 @@ describe('Authorization Failure Edge Cases', () => {
       .put(`/v1/escrows/${fakeEscrowId}`)
       .set('Authorization', `Bearer ${user1Token}`)
       .send({
-        status: 'closed'
+        status: 'closed',
       });
 
     expect([403, 404]).toContain(response.status);
@@ -190,7 +190,7 @@ describe('Authorization Failure Edge Cases', () => {
     const parts = user1Token.split('.');
     if (parts.length === 3) {
       // Modify the payload slightly
-      const tamperedToken = parts[0] + '.eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.' + parts[2];
+      const tamperedToken = `${parts[0]}.eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.${parts[2]}`;
 
       const response = await request(app)
         .get('/v1/escrows')

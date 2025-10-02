@@ -5,7 +5,7 @@ const constants = {
     LISTING: 'listing',
     CLIENT: 'client',
     LEAD: 'lead',
-    APPOINTMENT: 'appointment'
+    APPOINTMENT: 'appointment',
   },
 
   // Escrow statuses
@@ -14,7 +14,7 @@ const constants = {
     PENDING: 'Pending',
     CLOSED: 'Closed',
     CANCELLED: 'Cancelled',
-    ON_HOLD: 'On Hold'
+    ON_HOLD: 'On Hold',
   },
 
   // Listing statuses
@@ -25,7 +25,7 @@ const constants = {
     SOLD: 'Sold',
     EXPIRED: 'Expired',
     WITHDRAWN: 'Withdrawn',
-    CANCELLED: 'Cancelled'
+    CANCELLED: 'Cancelled',
   },
 
   // Client types
@@ -34,7 +34,7 @@ const constants = {
     SELLER: 'Seller',
     BOTH: 'Both',
     INVESTOR: 'Investor',
-    REFERRAL: 'Referral'
+    REFERRAL: 'Referral',
   },
 
   // Client statuses
@@ -42,7 +42,7 @@ const constants = {
     ACTIVE: 'Active',
     PAST_CLIENT: 'Past Client',
     PROSPECT: 'Prospect',
-    ARCHIVED: 'Archived'
+    ARCHIVED: 'Archived',
   },
 
   // Lead statuses
@@ -54,7 +54,7 @@ const constants = {
     APPOINTMENT_SET: 'Appointment Set',
     MET: 'Met',
     CONVERTED: 'Converted',
-    LOST: 'Lost'
+    LOST: 'Lost',
   },
 
   // Lead temperatures
@@ -62,7 +62,7 @@ const constants = {
     HOT: 'Hot',
     WARM: 'Warm',
     COOL: 'Cool',
-    COLD: 'Cold'
+    COLD: 'Cold',
   },
 
   // Appointment types
@@ -73,7 +73,7 @@ const constants = {
     OPEN_HOUSE: 'Open House',
     CLOSING: 'Closing',
     INSPECTION: 'Inspection',
-    OTHER: 'Other'
+    OTHER: 'Other',
   },
 
   // Appointment statuses
@@ -82,7 +82,7 @@ const constants = {
     CONFIRMED: 'Confirmed',
     COMPLETED: 'Completed',
     CANCELLED: 'Cancelled',
-    NO_SHOW: 'No Show'
+    NO_SHOW: 'No Show',
   },
 
   // Property types
@@ -92,14 +92,14 @@ const constants = {
     TOWNHOUSE: 'Townhouse',
     MULTI_FAMILY: 'Multi-Family',
     LAND: 'Land',
-    COMMERCIAL: 'Commercial'
+    COMMERCIAL: 'Commercial',
   },
 
   // Contact methods
   CONTACT_METHODS: {
     CALL: 'Call',
     TEXT: 'Text',
-    EMAIL: 'Email'
+    EMAIL: 'Email',
   },
 
   // Communication types
@@ -108,7 +108,7 @@ const constants = {
     TEXT: 'text',
     EMAIL: 'email',
     MEETING: 'meeting',
-    SHOWING: 'showing'
+    SHOWING: 'showing',
   },
 
   // Note types
@@ -117,7 +117,7 @@ const constants = {
     CONVERSATION: 'conversation',
     MEETING: 'meeting',
     FOLLOW_UP: 'follow_up',
-    INTERNAL: 'internal'
+    INTERNAL: 'internal',
   },
 
   // Document types
@@ -128,14 +128,14 @@ const constants = {
     INSPECTION_REPORT: 'inspection_report',
     APPRAISAL: 'appraisal',
     PHOTOS: 'photos',
-    OTHER: 'other'
+    OTHER: 'other',
   },
 
   // AI Agent roles
   AI_ROLES: {
     EXECUTIVE: 'executive',
     MANAGER: 'manager',
-    AGENT: 'agent'
+    AGENT: 'agent',
   },
 
   // AI Agent departments
@@ -143,7 +143,7 @@ const constants = {
     MANAGEMENT: 'management',
     BUYER: 'buyer',
     LISTING: 'listing',
-    OPERATIONS: 'operations'
+    OPERATIONS: 'operations',
   },
 
   // Webhook events
@@ -159,7 +159,7 @@ const constants = {
     LEAD_CREATED: 'lead.created',
     LEAD_CONVERTED: 'lead.converted',
     APPOINTMENT_CREATED: 'appointment.created',
-    APPOINTMENT_CANCELLED: 'appointment.cancelled'
+    APPOINTMENT_CANCELLED: 'appointment.cancelled',
   },
 
   // Tom Ferry best practices
@@ -170,7 +170,7 @@ const constants = {
     EIGHT_BY_EIGHT_TOUCHES: 8, // 8 touches in 8 weeks
     MAX_DAYS_ON_MARKET: 30,
     TARGET_CONVERSION_RATE: 0.25, // 25%
-    TARGET_LIST_TO_SALE_RATIO: 0.97 // 97%
+    TARGET_LIST_TO_SALE_RATIO: 0.97, // 97%
   },
 
   // Database limits
@@ -180,14 +180,14 @@ const constants = {
     MAX_UPLOAD_SIZE: 10 * 1024 * 1024, // 10MB
     MAX_NOTE_LENGTH: 2000,
     MAX_TAG_LENGTH: 50,
-    MAX_TAGS_PER_ENTITY: 20
+    MAX_TAGS_PER_ENTITY: 20,
   },
 
   // Regular expressions
   REGEX: {
     ID_FORMAT: /^[a-z]+_[a-zA-Z0-9]{12}$/,
     PHONE: /^\+?[\d\s\-\(\)\.]+$/,
-    EMAIL: /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    EMAIL: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
   },
 
   // Error codes
@@ -199,7 +199,7 @@ const constants = {
     CONFLICT: 'CONFLICT',
     RATE_LIMITED: 'RATE_LIMITED',
     INTERNAL_ERROR: 'INTERNAL_ERROR',
-    SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE'
+    SERVICE_UNAVAILABLE: 'SERVICE_UNAVAILABLE',
   },
 
   // Success messages
@@ -207,8 +207,8 @@ const constants = {
     CREATED: 'Resource created successfully',
     UPDATED: 'Resource updated successfully',
     DELETED: 'Resource deleted successfully',
-    FOUND: 'Resource retrieved successfully'
-  }
+    FOUND: 'Resource retrieved successfully',
+  },
 };
 
 module.exports = constants;

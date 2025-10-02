@@ -14,7 +14,7 @@ describe('Escrows API Integration Tests', () => {
       .post('/v1/auth/login')
       .send({
         email: 'admin@jaydenmetz.com',
-        password: 'AdminPassword123!'
+        password: 'AdminPassword123!',
       });
 
     expect(loginResponse.status).toBe(200);
@@ -44,7 +44,7 @@ describe('Escrows API Integration Tests', () => {
         escrowNumber: `TEST-${Date.now()}`,
         status: 'active',
         openDate: new Date().toISOString(),
-        estimatedCloseDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+        estimatedCloseDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       });
 
     expect(response.status).toBe(201);
@@ -100,7 +100,7 @@ describe('Escrows API Integration Tests', () => {
       .set('Authorization', `Bearer ${authToken}`)
       .send({
         status: 'pending',
-        version: currentVersion
+        version: currentVersion,
       });
 
     expect(updateResponse.status).toBe(200);
@@ -116,7 +116,7 @@ describe('Escrows API Integration Tests', () => {
       .set('Authorization', `Bearer ${authToken}`)
       .send({
         status: 'closed',
-        version: 0 // Stale version
+        version: 0, // Stale version
       });
 
     expect(response.status).toBe(409);
@@ -150,7 +150,7 @@ describe('Escrows API Integration Tests', () => {
       .get('/v1/escrows')
       .set('Authorization', `Bearer ${authToken}`);
 
-    const archivedEscrow = listResponse.body.data.escrows.find(e => e.id === testEscrowId);
+    const archivedEscrow = listResponse.body.data.escrows.find((e) => e.id === testEscrowId);
     expect(archivedEscrow).toBeUndefined();
   });
 });

@@ -1,8 +1,8 @@
 // backend/src/tests/refreshToken.test.js
 const request = require('supertest');
+const jwt = require('jsonwebtoken');
 const app = require('../app');
 const pool = require('../config/database');
-const jwt = require('jsonwebtoken');
 
 describe('Refresh Token Tests', () => {
   let testUserId;
@@ -15,7 +15,7 @@ describe('Refresh Token Tests', () => {
       .post('/v1/auth/login')
       .send({
         email: 'admin@jaydenmetz.com',
-        password: 'AdminPassword123!'
+        password: 'AdminPassword123!',
       });
 
     accessToken = loginRes.body.data.accessToken || loginRes.body.data.token;
@@ -55,7 +55,7 @@ describe('Refresh Token Tests', () => {
         .post('/v1/auth/login')
         .send({
           email: 'admin@jaydenmetz.com',
-          password: 'AdminPassword123!'
+          password: 'AdminPassword123!',
         });
 
       const cookies = loginRes.headers['set-cookie'];
@@ -76,7 +76,7 @@ describe('Refresh Token Tests', () => {
       const expiredToken = jwt.sign(
         { userId: testUserId, type: 'refresh' },
         process.env.JWT_SECRET,
-        { expiresIn: '-1d' } // Expired yesterday
+        { expiresIn: '-1d' }, // Expired yesterday
       );
 
       const res = await request(app)
@@ -112,7 +112,7 @@ describe('Refresh Token Tests', () => {
         .post('/v1/auth/login')
         .send({
           email: 'admin@jaydenmetz.com',
-          password: 'AdminPassword123!'
+          password: 'AdminPassword123!',
         });
 
       const tokenToRevoke = loginRes.body.data.refreshToken;
@@ -120,7 +120,7 @@ describe('Refresh Token Tests', () => {
       // Revoke it in database
       await pool.query(
         'UPDATE refresh_tokens SET revoked = true WHERE token = $1',
-        [tokenToRevoke]
+        [tokenToRevoke],
       );
 
       // Try to use revoked token
@@ -153,12 +153,12 @@ describe('Refresh Token Tests', () => {
       // Get initial timestamp
       const beforeQuery = await pool.query(
         'SELECT last_used_at FROM refresh_tokens WHERE token = $1',
-        [refreshToken]
+        [refreshToken],
       );
       const beforeTime = beforeQuery.rows[0]?.last_used_at;
 
       // Wait a moment
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Use refresh token
       await request(app)
@@ -168,7 +168,7 @@ describe('Refresh Token Tests', () => {
       // Check updated timestamp
       const afterQuery = await pool.query(
         'SELECT last_used_at FROM refresh_tokens WHERE token = $1',
-        [refreshToken]
+        [refreshToken],
       );
       const afterTime = afterQuery.rows[0]?.last_used_at;
 
@@ -179,16 +179,14 @@ describe('Refresh Token Tests', () => {
 
     test('should handle concurrent refresh requests', async () => {
       // Make 5 simultaneous refresh requests
-      const promises = Array(5).fill(null).map(() =>
-        request(app)
-          .post('/v1/auth/refresh')
-          .send({ refreshToken })
-      );
+      const promises = Array(5).fill(null).map(() => request(app)
+        .post('/v1/auth/refresh')
+        .send({ refreshToken }));
 
       const results = await Promise.all(promises);
 
       // All should succeed
-      results.forEach(res => {
+      results.forEach((res) => {
         expect(res.status).toBe(200);
         expect(res.body.success).toBe(true);
         expect(res.body.data.accessToken).toBeDefined();
@@ -196,14 +194,12 @@ describe('Refresh Token Tests', () => {
 
       // All new tokens should be valid
       const tokenValidations = await Promise.all(
-        results.map(res =>
-          request(app)
-            .get('/v1/escrows')
-            .set('Authorization', `Bearer ${res.body.data.accessToken}`)
-        )
+        results.map((res) => request(app)
+          .get('/v1/escrows')
+          .set('Authorization', `Bearer ${res.body.data.accessToken}`)),
       );
 
-      tokenValidations.forEach(validation => {
+      tokenValidations.forEach((validation) => {
         expect(validation.status).toBe(200);
       });
     });
@@ -213,11 +209,11 @@ describe('Refresh Token Tests', () => {
       const shortToken = jwt.sign(
         { userId: testUserId, email: 'admin@jaydenmetz.com' },
         process.env.JWT_SECRET,
-        { expiresIn: '1s' }
+        { expiresIn: '1s' },
       );
 
       // Wait for it to expire
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
       // Try to use expired access token
       const expiredRes = await request(app)
@@ -257,7 +253,7 @@ describe('Refresh Token Tests', () => {
     test('should store refresh token hash, not plaintext', async () => {
       const result = await pool.query(
         'SELECT token FROM refresh_tokens WHERE user_id = $1 LIMIT 1',
-        [testUserId]
+        [testUserId],
       );
 
       const storedToken = result.rows[0]?.token;
@@ -274,14 +270,14 @@ describe('Refresh Token Tests', () => {
         .set('User-Agent', 'TestBot/1.0')
         .send({
           email: 'admin@jaydenmetz.com',
-          password: 'AdminPassword123!'
+          password: 'AdminPassword123!',
         });
 
       const newRefreshToken = loginRes.body.data.refreshToken;
 
       const result = await pool.query(
         'SELECT user_agent, device_info FROM refresh_tokens WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1',
-        [testUserId]
+        [testUserId],
       );
 
       expect(result.rows[0].user_agent).toBe('TestBot/1.0');
@@ -293,7 +289,7 @@ describe('Refresh Token Tests', () => {
     test('should have 7-day expiration', async () => {
       const result = await pool.query(
         'SELECT expires_at, created_at FROM refresh_tokens WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1',
-        [testUserId]
+        [testUserId],
       );
 
       const expiresAt = new Date(result.rows[0].expires_at);
@@ -310,13 +306,13 @@ describe('Refresh Token Tests', () => {
           .post('/v1/auth/login')
           .send({
             email: 'admin@jaydenmetz.com',
-            password: 'AdminPassword123!'
+            password: 'AdminPassword123!',
           });
       }
 
       const result = await pool.query(
         'SELECT COUNT(*) FROM refresh_tokens WHERE user_id = $1 AND revoked = false',
-        [testUserId]
+        [testUserId],
       );
 
       // Should have a reasonable number (not unlimited)

@@ -9,12 +9,12 @@ exports.getLeads = async (req, res) => {
       leadType,
       search,
       page = 1,
-      limit = 20
+      limit = 20,
     } = req.query;
 
     const offset = (page - 1) * limit;
-    let whereConditions = ['deleted_at IS NULL'];
-    let queryParams = [];
+    const whereConditions = ['deleted_at IS NULL'];
+    const queryParams = [];
     let paramIndex = 1;
 
     // Team filter
@@ -71,10 +71,10 @@ exports.getLeads = async (req, res) => {
           currentPage: parseInt(page),
           totalPages: Math.ceil(totalCount / limit),
           totalCount,
-          limit: parseInt(limit)
-        }
+          limit: parseInt(limit),
+        },
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error fetching leads:', error);
@@ -83,8 +83,8 @@ exports.getLeads = async (req, res) => {
       error: {
         code: 'FETCH_ERROR',
         message: 'Failed to fetch leads',
-        details: error.message
-      }
+        details: error.message,
+      },
     });
   }
 };
@@ -102,15 +102,15 @@ exports.getLead = async (req, res) => {
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Lead not found'
-        }
+          message: 'Lead not found',
+        },
       });
     }
 
     res.json({
       success: true,
       data: result.rows[0],
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error fetching lead:', error);
@@ -119,8 +119,8 @@ exports.getLead = async (req, res) => {
       error: {
         code: 'FETCH_ERROR',
         message: 'Failed to fetch lead',
-        details: error.message
-      }
+        details: error.message,
+      },
     });
   }
 };
@@ -137,7 +137,7 @@ exports.createLead = async (req, res) => {
       notes,
       leadStatus = 'New',
       leadScore = 0,
-      leadTemperature = 'Cold'
+      leadTemperature = 'Cold',
     } = req.body;
 
     // Validation
@@ -146,8 +146,8 @@ exports.createLead = async (req, res) => {
         success: false,
         error: {
           code: 'MISSING_FIELDS',
-          message: 'First name and last name are required'
-        }
+          message: 'First name and last name are required',
+        },
       });
     }
 
@@ -172,7 +172,7 @@ exports.createLead = async (req, res) => {
       leadScore,
       leadTemperature,
       req.user?.id || null,
-      req.user?.teamId || req.user?.team_id || null
+      req.user?.teamId || req.user?.team_id || null,
     ];
 
     const result = await pool.query(query, values);
@@ -181,7 +181,7 @@ exports.createLead = async (req, res) => {
       success: true,
       data: result.rows[0],
       message: 'Lead created successfully',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error creating lead:', error);
@@ -190,8 +190,8 @@ exports.createLead = async (req, res) => {
       error: {
         code: 'CREATE_ERROR',
         message: 'Failed to create lead',
-        details: error.message
-      }
+        details: error.message,
+      },
     });
   }
 };
@@ -210,7 +210,7 @@ exports.updateLead = async (req, res) => {
     const allowedFields = [
       'first_name', 'last_name', 'email', 'phone', 'lead_source',
       'lead_status', 'lead_score', 'lead_temperature', 'notes',
-      'property_interest', 'budget_range', 'timeline', 'next_follow_up'
+      'property_interest', 'budget_range', 'timeline', 'next_follow_up',
     ];
 
     for (const field of allowedFields) {
@@ -226,14 +226,14 @@ exports.updateLead = async (req, res) => {
         success: false,
         error: {
           code: 'NO_UPDATES',
-          message: 'No valid fields to update'
-        }
+          message: 'No valid fields to update',
+        },
       });
     }
 
-    setClause.push(`updated_at = CURRENT_TIMESTAMP`);
-    setClause.push(`last_contact_date = CURRENT_DATE`);
-    setClause.push(`version = version + 1`);
+    setClause.push('updated_at = CURRENT_TIMESTAMP');
+    setClause.push('last_contact_date = CURRENT_DATE');
+    setClause.push('version = version + 1');
     setClause.push(`last_modified_by = $${paramIndex}`);
     values.push(req.user?.id || null);
     paramIndex++;
@@ -269,35 +269,34 @@ exports.updateLead = async (req, res) => {
             success: false,
             error: {
               code: 'NOT_FOUND',
-              message: 'Lead not found'
-            }
-          });
-        } else {
-          return res.status(409).json({
-            success: false,
-            error: {
-              code: 'VERSION_CONFLICT',
-              message: 'This lead was modified by another user. Please refresh and try again.',
-              currentVersion: checkResult.rows[0].version,
-              attemptedVersion: clientVersion
-            }
+              message: 'Lead not found',
+            },
           });
         }
+        return res.status(409).json({
+          success: false,
+          error: {
+            code: 'VERSION_CONFLICT',
+            message: 'This lead was modified by another user. Please refresh and try again.',
+            currentVersion: checkResult.rows[0].version,
+            attemptedVersion: clientVersion,
+          },
+        });
       }
 
       return res.status(404).json({
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Lead not found'
-        }
+          message: 'Lead not found',
+        },
       });
     }
 
     res.json({
       success: true,
       data: result.rows[0],
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error updating lead:', error);
@@ -306,8 +305,8 @@ exports.updateLead = async (req, res) => {
       error: {
         code: 'UPDATE_ERROR',
         message: 'Failed to update lead',
-        details: error.message
-      }
+        details: error.message,
+      },
     });
   }
 };
@@ -331,8 +330,8 @@ exports.archiveLead = async (req, res) => {
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Lead not found'
-        }
+          message: 'Lead not found',
+        },
       });
     }
 
@@ -340,7 +339,7 @@ exports.archiveLead = async (req, res) => {
       success: true,
       data: result.rows[0],
       message: 'Lead archived successfully',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error archiving lead:', error);
@@ -349,8 +348,8 @@ exports.archiveLead = async (req, res) => {
       error: {
         code: 'ARCHIVE_ERROR',
         message: 'Failed to archive lead',
-        details: error.message
-      }
+        details: error.message,
+      },
     });
   }
 };
@@ -369,8 +368,8 @@ exports.deleteLead = async (req, res) => {
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Lead not found'
-        }
+          message: 'Lead not found',
+        },
       });
     }
 
@@ -379,8 +378,8 @@ exports.deleteLead = async (req, res) => {
         success: false,
         error: {
           code: 'NOT_ARCHIVED',
-          message: 'Lead must be archived before deletion'
-        }
+          message: 'Lead must be archived before deletion',
+        },
       });
     }
 
@@ -390,7 +389,7 @@ exports.deleteLead = async (req, res) => {
     res.json({
       success: true,
       message: 'Lead deleted successfully',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error deleting lead:', error);
@@ -399,8 +398,8 @@ exports.deleteLead = async (req, res) => {
       error: {
         code: 'DELETE_ERROR',
         message: 'Failed to delete lead',
-        details: error.message
-      }
+        details: error.message,
+      },
     });
   }
 };
@@ -424,8 +423,8 @@ exports.convertToClient = async (req, res) => {
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Lead not found'
-        }
+          message: 'Lead not found',
+        },
       });
     }
 
@@ -448,7 +447,7 @@ exports.convertToClient = async (req, res) => {
       lead.email,
       lead.phone,
       `Converted from lead. Original notes: ${lead.notes || 'None'}`,
-      lead.team_id
+      lead.team_id,
     ];
 
     const contactResult = await client.query(contactQuery, contactValues);
@@ -480,10 +479,10 @@ exports.convertToClient = async (req, res) => {
       success: true,
       data: {
         client: newClient,
-        lead: updatedLeadResult.rows[0]
+        lead: updatedLeadResult.rows[0],
       },
       message: 'Lead successfully converted to client',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     await client.query('ROLLBACK');
@@ -493,8 +492,8 @@ exports.convertToClient = async (req, res) => {
       error: {
         code: 'CONVERT_ERROR',
         message: 'Failed to convert lead to client',
-        details: error.message
-      }
+        details: error.message,
+      },
     });
   } finally {
     client.release();
@@ -529,8 +528,8 @@ exports.recordActivity = async (req, res) => {
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Lead not found'
-        }
+          message: 'Lead not found',
+        },
       });
     }
 
@@ -538,7 +537,7 @@ exports.recordActivity = async (req, res) => {
       success: true,
       data: result.rows[0],
       message: 'Activity recorded successfully',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error recording lead activity:', error);
@@ -547,8 +546,8 @@ exports.recordActivity = async (req, res) => {
       error: {
         code: 'ACTIVITY_ERROR',
         message: 'Failed to record activity',
-        details: error.message
-      }
+        details: error.message,
+      },
     });
   }
 };
@@ -575,26 +574,26 @@ exports.batchDeleteLeads = async (req, res) => {
         success: true,
         message: 'No leads found to delete',
         deletedCount: 0,
-        deletedIds: []
+        deletedIds: [],
       });
     }
 
     // Check if any are not archived
-    const activeLeads = existResult.rows.filter(r => !r.deleted_at);
+    const activeLeads = existResult.rows.filter((r) => !r.deleted_at);
     if (activeLeads.length > 0) {
       await client.query('ROLLBACK');
-      const activeIds = activeLeads.map(r => r.id);
+      const activeIds = activeLeads.map((r) => r.id);
       return res.status(400).json({
         success: false,
         error: {
           code: 'NOT_ARCHIVED',
-          message: `Some leads are not archived: ${activeIds.join(', ')}`
-        }
+          message: `Some leads are not archived: ${activeIds.join(', ')}`,
+        },
       });
     }
 
     // Delete archived leads
-    const existingIds = existResult.rows.map(r => r.id);
+    const existingIds = existResult.rows.map((r) => r.id);
     const deleteQuery = 'DELETE FROM leads WHERE id = ANY($1) RETURNING id';
     const result = await client.query(deleteQuery, [existingIds]);
 
@@ -602,14 +601,14 @@ exports.batchDeleteLeads = async (req, res) => {
 
     logger.info('Batch deleted leads', {
       count: result.rowCount,
-      ids: result.rows.map(r => r.id)
+      ids: result.rows.map((r) => r.id),
     });
 
     res.json({
       success: true,
       message: `Successfully deleted ${result.rowCount} leads`,
       deletedCount: result.rowCount,
-      deletedIds: result.rows.map(r => r.id)
+      deletedIds: result.rows.map((r) => r.id),
     });
   } catch (error) {
     await client.query('ROLLBACK');
@@ -619,8 +618,8 @@ exports.batchDeleteLeads = async (req, res) => {
       error: {
         code: 'DELETE_ERROR',
         message: 'Failed to batch delete leads',
-        details: error.message
-      }
+        details: error.message,
+      },
     });
   } finally {
     client.release();

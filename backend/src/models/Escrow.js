@@ -1,4 +1,3 @@
-
 // backend/src/models/Escrow.js
 
 const { query } = require('../config/database');
@@ -29,7 +28,7 @@ class Escrow {
       closingDate,
       propertyType = 'Single Family',
       leadSource,
-      createdBy
+      createdBy,
     } = data;
 
     // Wrap in a transaction
@@ -51,7 +50,7 @@ class Escrow {
         earnestMoneyDeposit, downPayment, loanAmount,
         commissionPercentage, grossCommission, netCommission,
         acceptanceDate, closingDate, propertyType,
-        leadSource, createdBy
+        leadSource, createdBy,
       ];
       await client.query(insertEscrowSql, params);
 
@@ -82,10 +81,10 @@ class Escrow {
    * @param {Object} filters
    */
   static async findAll(filters = {}) {
-    const page    = parseInt(filters.page, 10) || 1;
-    const limit   = Math.min(parseInt(filters.limit, 10) || 20, 100);
-    const offset  = (page - 1) * limit;
-    const status  = filters.status;
+    const page = parseInt(filters.page, 10) || 1;
+    const limit = Math.min(parseInt(filters.limit, 10) || 20, 100);
+    const offset = (page - 1) * limit;
+    const { status } = filters;
     let sql = `
       SELECT
         e.*,
@@ -118,7 +117,9 @@ class Escrow {
 
     return {
       escrows: rows,
-      pagination: { total, page, pages: Math.ceil(total / limit), limit }
+      pagination: {
+        total, page, pages: Math.ceil(total / limit), limit,
+      },
     };
   }
 
@@ -159,18 +160,18 @@ class Escrow {
     let idx = 2;
     const mapping = {
       propertyAddress: 'property_address',
-      escrowStatus:    'escrow_status',
-      purchasePrice:   'purchase_price',
+      escrowStatus: 'escrow_status',
+      purchasePrice: 'purchase_price',
       earnestMoneyDeposit: 'earnest_money_deposit',
-      downPayment:     'down_payment',
-      loanAmount:      'loan_amount',
+      downPayment: 'down_payment',
+      loanAmount: 'loan_amount',
       commissionPercentage: 'commission_percentage',
       grossCommission: 'gross_commission',
-      netCommission:   'net_commission',
-      acceptanceDate:  'acceptance_date',
-      closingDate:     'closing_date',
-      propertyType:    'property_type',
-      leadSource:      'lead_source'
+      netCommission: 'net_commission',
+      acceptanceDate: 'acceptance_date',
+      closingDate: 'closing_date',
+      propertyType: 'property_type',
+      leadSource: 'lead_source',
     };
     for (const [key, col] of Object.entries(mapping)) {
       if (data[key] !== undefined) {

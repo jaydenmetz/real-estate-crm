@@ -11,7 +11,7 @@ describe('Input Validation Edge Cases', () => {
       .post('/v1/auth/login')
       .send({
         email: 'admin@jaydenmetz.com',
-        password: 'AdminPassword123!'
+        password: 'AdminPassword123!',
       });
 
     authToken = loginResponse.body.data.token;
@@ -28,7 +28,7 @@ describe('Input Validation Edge Cases', () => {
       .post('/v1/escrows')
       .set('Authorization', `Bearer ${authToken}`)
       .send({
-        propertyAddress: '123 Test St'
+        propertyAddress: '123 Test St',
         // Missing purchasePrice, status, etc.
       });
 
@@ -44,7 +44,7 @@ describe('Input Validation Edge Cases', () => {
       .send({
         propertyAddress: '123 Test St',
         purchasePrice: 'not-a-number', // Invalid type
-        status: 'active'
+        status: 'active',
       });
 
     expect(response.status).toBe(400);
@@ -59,7 +59,7 @@ describe('Input Validation Edge Cases', () => {
       .send({
         propertyAddress: '123 Test St',
         purchasePrice: -500000, // Invalid negative
-        status: 'active'
+        status: 'active',
       });
 
     expect(response.status).toBe(400);
@@ -74,7 +74,7 @@ describe('Input Validation Edge Cases', () => {
       .send({
         address: '123 Test St',
         price: 500000,
-        status: 'InvalidStatus' // Not in allowed values
+        status: 'InvalidStatus', // Not in allowed values
       });
 
     expect(response.status).toBe(400);
@@ -90,7 +90,7 @@ describe('Input Validation Edge Cases', () => {
         firstName: 'John',
         lastName: 'Doe',
         email: '', // Empty string
-        clientType: 'Buyer'
+        clientType: 'Buyer',
       });
 
     expect(response.status).toBe(400);
@@ -106,7 +106,7 @@ describe('Input Validation Edge Cases', () => {
         firstName: 'John',
         lastName: 'Doe',
         email: 'not-an-email', // Invalid format
-        clientType: 'Buyer'
+        clientType: 'Buyer',
       });
 
     expect(response.status).toBe(400);
@@ -123,7 +123,7 @@ describe('Input Validation Edge Cases', () => {
       .send({
         propertyAddress: longAddress,
         purchasePrice: 500000,
-        status: 'active'
+        status: 'active',
       });
 
     expect(response.status).toBe(400);
@@ -139,7 +139,7 @@ describe('Input Validation Edge Cases', () => {
         firstName: 'John<script>alert("XSS")</script>',
         lastName: 'Doe',
         email: `test.${Date.now()}@example.com`,
-        clientType: 'Buyer'
+        clientType: 'Buyer',
       });
 
     // Should either reject or sanitize
@@ -161,7 +161,7 @@ describe('Input Validation Edge Cases', () => {
         appointmentDate: 'not-a-date', // Invalid format
         startTime: '14:00:00',
         endTime: '15:00:00',
-        appointmentType: 'Property Showing'
+        appointmentType: 'Property Showing',
       });
 
     expect(response.status).toBe(400);
@@ -180,7 +180,7 @@ describe('Input Validation Edge Cases', () => {
         appointmentDate: pastDate, // In the past
         startTime: '14:00:00',
         endTime: '15:00:00',
-        appointmentType: 'Property Showing'
+        appointmentType: 'Property Showing',
       });
 
     // Should either reject or warn (depends on business logic)

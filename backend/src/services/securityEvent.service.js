@@ -68,7 +68,7 @@ const EventTypes = {
   SUSPICIOUS_IP: 'suspicious_ip',
   RATE_LIMIT_EXCEEDED: 'rate_limit_exceeded',
   INVALID_TOKEN: 'invalid_token',
-  MULTIPLE_FAILED_LOGINS: 'multiple_failed_logins'
+  MULTIPLE_FAILED_LOGINS: 'multiple_failed_logins',
 };
 
 /**
@@ -79,7 +79,7 @@ const EventCategories = {
   AUTHORIZATION: 'authorization',
   API_KEY: 'api_key',
   ACCOUNT: 'account',
-  SUSPICIOUS: 'suspicious'
+  SUSPICIOUS: 'suspicious',
 };
 
 /**
@@ -89,7 +89,7 @@ const Severity = {
   INFO: 'info',
   WARNING: 'warning',
   ERROR: 'error',
-  CRITICAL: 'critical'
+  CRITICAL: 'critical',
 };
 
 /**
@@ -115,7 +115,7 @@ class SecurityEventService {
     success = false,
     message = null,
     metadata = {},
-    apiKeyId = null
+    apiKeyId = null,
   }) {
     try {
       const result = await pool.query(`
@@ -130,7 +130,7 @@ class SecurityEventService {
         eventType, eventCategory, severity,
         userId, email, username,
         ipAddress, userAgent, requestPath, requestMethod,
-        success, message, JSON.stringify(metadata), apiKeyId
+        success, message, JSON.stringify(metadata), apiKeyId,
       ]);
 
       return result.rows[0];
@@ -149,7 +149,7 @@ class SecurityEventService {
       ipAddress: req.ip || req.connection?.remoteAddress || null,
       userAgent: req.headers['user-agent'] || null,
       requestPath: req.originalUrl || req.path || null,
-      requestMethod: req.method || null
+      requestMethod: req.method || null,
     };
   }
 
@@ -162,7 +162,7 @@ class SecurityEventService {
     return {
       userId: user.id || null,
       email: user.email || null,
-      username: user.username || null
+      username: user.username || null,
     };
   }
 
@@ -181,7 +181,7 @@ class SecurityEventService {
       ...this.extractUserContext(user),
       ...this.extractRequestContext(req),
       success: true,
-      message: 'User logged in successfully'
+      message: 'User logged in successfully',
     });
   }
 
@@ -198,7 +198,7 @@ class SecurityEventService {
       ...this.extractRequestContext(req),
       success: false,
       message: reason,
-      metadata: { attempted_identifier: emailOrUsername }
+      metadata: { attempted_identifier: emailOrUsername },
     });
   }
 
@@ -216,8 +216,8 @@ class SecurityEventService {
       message: `Account locked after ${failedAttempts} failed login attempts`,
       metadata: {
         locked_until: lockedUntil,
-        failed_attempts: failedAttempts
-      }
+        failed_attempts: failedAttempts,
+      },
     });
   }
 
@@ -233,7 +233,7 @@ class SecurityEventService {
       ...this.extractRequestContext(req),
       success: false,
       message: `Login attempt on locked account (${minutesRemaining} minutes remaining)`,
-      metadata: { minutes_remaining: minutesRemaining }
+      metadata: { minutes_remaining: minutesRemaining },
     });
   }
 
@@ -248,7 +248,7 @@ class SecurityEventService {
       ...this.extractUserContext(user),
       ...this.extractRequestContext(req),
       success: true,
-      message: 'Access token refreshed'
+      message: 'Access token refreshed',
     });
   }
 
@@ -262,10 +262,10 @@ class SecurityEventService {
       severity: Severity.INFO,
       ...this.extractUserContext(user),
       ...this.extractRequestContext(req),
-      apiKeyId: apiKeyId,
+      apiKeyId,
       success: true,
       message: `API key created: ${keyName}`,
-      metadata: { key_name: keyName }
+      metadata: { key_name: keyName },
     });
   }
 
@@ -281,9 +281,9 @@ class SecurityEventService {
       severity: Severity.INFO,
       ...this.extractUserContext(user),
       ...this.extractRequestContext(req),
-      apiKeyId: apiKeyId,
+      apiKeyId,
       success: true,
-      message: 'API key used for authentication'
+      message: 'API key used for authentication',
     });
   }
 
@@ -297,10 +297,10 @@ class SecurityEventService {
       severity: Severity.WARNING,
       ...this.extractUserContext(user),
       ...this.extractRequestContext(req),
-      apiKeyId: apiKeyId,
+      apiKeyId,
       success: true,
       message: `API key revoked: ${keyName}`,
-      metadata: { key_name: keyName }
+      metadata: { key_name: keyName },
     });
   }
 
@@ -321,8 +321,8 @@ class SecurityEventService {
         resource,
         action,
         required_scope: requiredScope,
-        user_scopes: user?.scopes || null
-      }
+        user_scopes: user?.scopes || null,
+      },
     });
   }
 
@@ -339,7 +339,7 @@ class SecurityEventService {
       ...this.extractRequestContext(req),
       success: false,
       message: `Rate limit exceeded: ${limit} requests per ${windowMs}ms`,
-      metadata: { limit, window_ms: windowMs }
+      metadata: { limit, window_ms: windowMs },
     });
   }
 
@@ -356,7 +356,7 @@ class SecurityEventService {
     success = null,
     ipAddress = null,
     limit = 100,
-    offset = 0
+    offset = 0,
   }) {
     const conditions = [];
     const params = [];
@@ -428,7 +428,7 @@ class SecurityEventService {
    */
   static async getEventStats(userId = null, daysBack = 30) {
     const params = [daysBack];
-    const userFilter = userId ? `AND user_id = $2` : '';
+    const userFilter = userId ? 'AND user_id = $2' : '';
     if (userId) params.push(userId);
 
     const result = await pool.query(`

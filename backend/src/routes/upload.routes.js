@@ -1,4 +1,5 @@
 const express = require('express');
+
 const router = express.Router();
 const uploadService = require('../services/upload.service');
 const Document = require('../models/Document');
@@ -22,8 +23,8 @@ router.post('/document', (req, res) => {
           success: false,
           error: {
             code: 'UPLOAD_ERROR',
-            message: err.message || 'Failed to upload document'
-          }
+            message: err.message || 'Failed to upload document',
+          },
         });
       }
 
@@ -32,8 +33,8 @@ router.post('/document', (req, res) => {
           success: false,
           error: {
             code: 'NO_FILE',
-            message: 'No file provided'
-          }
+            message: 'No file provided',
+          },
         });
       }
 
@@ -42,7 +43,7 @@ router.post('/document', (req, res) => {
         uploadedBy: req.user.id,
         category: req.body.category || 'general',
         description: req.body.description,
-        tags: req.body.tags ? req.body.tags.split(',').map(t => t.trim()) : []
+        tags: req.body.tags ? req.body.tags.split(',').map((t) => t.trim()) : [],
       });
 
       // Save document metadata to database
@@ -57,11 +58,11 @@ router.post('/document', (req, res) => {
         uploadedBy: req.user?.id || 'anonymous',
         category: req.body.category || 'general',
         description: req.body.description,
-        tags: req.body.tags ? req.body.tags.split(',').map(t => t.trim()) : [],
+        tags: req.body.tags ? req.body.tags.split(',').map((t) => t.trim()) : [],
         relatedTo: {
           entityType: req.body.entityType,
-          entityId: req.body.entityId
-        }
+          entityId: req.body.entityId,
+        },
       });
 
       res.status(201).json({
@@ -73,23 +74,23 @@ router.post('/document', (req, res) => {
           url: document.url,
           size: document.size,
           mimeType: document.mimeType,
-          uploadedAt: document.createdAt
-        }
+          uploadedAt: document.createdAt,
+        },
       });
     } catch (error) {
       logger.error('Failed to process document upload:', error);
-      
+
       // Clean up uploaded file on error
       if (req.file) {
         await uploadService.deleteLocalFile(req.file.path);
       }
-      
+
       res.status(500).json({
         success: false,
         error: {
           code: 'PROCESSING_ERROR',
-          message: 'Failed to process uploaded document'
-        }
+          message: 'Failed to process uploaded document',
+        },
       });
     }
   });
@@ -105,8 +106,8 @@ router.post('/image', (req, res) => {
           success: false,
           error: {
             code: 'UPLOAD_ERROR',
-            message: err.message || 'Failed to upload image'
-          }
+            message: err.message || 'Failed to upload image',
+          },
         });
       }
 
@@ -115,8 +116,8 @@ router.post('/image', (req, res) => {
           success: false,
           error: {
             code: 'NO_FILE',
-            message: 'No file provided'
-          }
+            message: 'No file provided',
+          },
         });
       }
 
@@ -126,7 +127,7 @@ router.post('/image', (req, res) => {
         category: req.body.category || 'property',
         description: req.body.description,
         altText: req.body.altText,
-        tags: req.body.tags ? req.body.tags.split(',').map(t => t.trim()) : []
+        tags: req.body.tags ? req.body.tags.split(',').map((t) => t.trim()) : [],
       });
 
       // Save image metadata to database
@@ -143,12 +144,12 @@ router.post('/image', (req, res) => {
         category: req.body.category || 'property',
         description: req.body.description,
         altText: req.body.altText,
-        tags: req.body.tags ? req.body.tags.split(',').map(t => t.trim()) : [],
+        tags: req.body.tags ? req.body.tags.split(',').map((t) => t.trim()) : [],
         metadata: fileInfo.metadata,
         relatedTo: {
           entityType: req.body.entityType,
-          entityId: req.body.entityId
-        }
+          entityId: req.body.entityId,
+        },
       });
 
       res.status(201).json({
@@ -163,25 +164,25 @@ router.post('/image', (req, res) => {
           mimeType: document.mimeType,
           dimensions: {
             width: fileInfo.metadata.width,
-            height: fileInfo.metadata.height
+            height: fileInfo.metadata.height,
           },
-          uploadedAt: document.createdAt
-        }
+          uploadedAt: document.createdAt,
+        },
       });
     } catch (error) {
       logger.error('Failed to process image upload:', error);
-      
+
       // Clean up uploaded file on error
       if (req.file) {
         await uploadService.deleteLocalFile(req.file.path);
       }
-      
+
       res.status(500).json({
         success: false,
         error: {
           code: 'PROCESSING_ERROR',
-          message: 'Failed to process uploaded image'
-        }
+          message: 'Failed to process uploaded image',
+        },
       });
     }
   });
@@ -191,38 +192,38 @@ router.post('/image', (req, res) => {
 router.get('/:filename', async (req, res) => {
   try {
     const { filename } = req.params;
-    
+
     // Find document in database
     const document = await Document.findOne({ filename });
-    
+
     if (!document) {
       return res.status(404).json({
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'File not found'
-        }
+          message: 'File not found',
+        },
       });
     }
-    
+
     // Check if file exists locally
     const fileType = document.mimeType.startsWith('image/') ? 'image' : 'document';
     const fileInfo = await uploadService.getFileInfo(filename, fileType);
-    
+
     if (!fileInfo.exists) {
       return res.status(404).json({
         success: false,
         error: {
           code: 'FILE_MISSING',
-          message: 'File not found on storage'
-        }
+          message: 'File not found on storage',
+        },
       });
     }
-    
+
     // Set appropriate headers
     res.setHeader('Content-Type', document.mimeType);
     res.setHeader('Content-Disposition', `inline; filename="${document.originalName}"`);
-    
+
     // Send file
     res.sendFile(fileInfo.path);
   } catch (error) {
@@ -231,8 +232,8 @@ router.get('/:filename', async (req, res) => {
       success: false,
       error: {
         code: 'RETRIEVAL_ERROR',
-        message: 'Failed to retrieve file'
-      }
+        message: 'Failed to retrieve file',
+      },
     });
   }
 });
@@ -241,20 +242,20 @@ router.get('/:filename', async (req, res) => {
 router.get('/metadata/:id', async (req, res) => {
   try {
     const document = await Document.findById(req.params.id);
-    
+
     if (!document) {
       return res.status(404).json({
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Document not found'
-        }
+          message: 'Document not found',
+        },
       });
     }
-    
+
     res.json({
       success: true,
-      data: document
+      data: document,
     });
   } catch (error) {
     logger.error('Failed to get file metadata:', error);
@@ -262,8 +263,8 @@ router.get('/metadata/:id', async (req, res) => {
       success: false,
       error: {
         code: 'METADATA_ERROR',
-        message: 'Failed to retrieve file metadata'
-      }
+        message: 'Failed to retrieve file metadata',
+      },
     });
   }
 });
@@ -272,34 +273,34 @@ router.get('/metadata/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const document = await Document.findById(req.params.id);
-    
+
     if (!document) {
       return res.status(404).json({
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Document not found'
-        }
+          message: 'Document not found',
+        },
       });
     }
-    
+
     // Delete physical files
     const deletionResult = await uploadService.deleteFile(document);
-    
+
     // Delete from database
     await Document.remove(document.id);
-    
+
     logger.info('File deleted successfully:', {
       id: req.params.id,
-      filename: document.filename
+      filename: document.filename,
     });
-    
+
     res.json({
       success: true,
       data: {
         id: req.params.id,
-        deletionResult
-      }
+        deletionResult,
+      },
     });
   } catch (error) {
     logger.error('Failed to delete file:', error);
@@ -307,8 +308,8 @@ router.delete('/:id', async (req, res) => {
       success: false,
       error: {
         code: 'DELETION_ERROR',
-        message: 'Failed to delete file'
-      }
+        message: 'Failed to delete file',
+      },
     });
   }
 });
@@ -318,15 +319,15 @@ router.get('/stats/summary', async (req, res) => {
   try {
     const [stats, documentCount] = await Promise.all([
       uploadService.getUploadStats(),
-      Document.countDocuments()
+      Document.countDocuments(),
     ]);
-    
+
     res.json({
       success: true,
       data: {
         ...stats,
-        databaseCount: documentCount
-      }
+        databaseCount: documentCount,
+      },
     });
   } catch (error) {
     logger.error('Failed to get upload statistics:', error);
@@ -334,8 +335,8 @@ router.get('/stats/summary', async (req, res) => {
       success: false,
       error: {
         code: 'STATS_ERROR',
-        message: 'Failed to retrieve upload statistics'
-      }
+        message: 'Failed to retrieve upload statistics',
+      },
     });
   }
 });
@@ -350,25 +351,25 @@ router.get('/', async (req, res) => {
       entityType,
       entityId,
       uploadedBy,
-      mimeType
+      mimeType,
     } = req.query;
-    
+
     const query = {};
-    
+
     if (category) query.category = category;
     if (entityType) query['relatedTo.entityType'] = entityType;
     if (entityId) query['relatedTo.entityId'] = entityId;
     if (uploadedBy) query.uploadedBy = uploadedBy;
     if (mimeType) query.mimeType = new RegExp(mimeType, 'i');
-    
+
     const documents = await Document.find(query)
       .sort({ createdAt: -1 })
       .limit(limit * 1)
       .skip((page - 1) * limit)
       .select('-path -storage');
-    
+
     const total = await Document.countDocuments(query);
-    
+
     res.json({
       success: true,
       data: documents,
@@ -376,8 +377,8 @@ router.get('/', async (req, res) => {
         current: page,
         pages: Math.ceil(total / limit),
         total,
-        limit
-      }
+        limit,
+      },
     });
   } catch (error) {
     logger.error('Failed to list files:', error);
@@ -385,8 +386,8 @@ router.get('/', async (req, res) => {
       success: false,
       error: {
         code: 'LIST_ERROR',
-        message: 'Failed to list files'
-      }
+        message: 'Failed to list files',
+      },
     });
   }
 });

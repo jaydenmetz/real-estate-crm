@@ -10,7 +10,7 @@ describe('Rate Limiting Edge Cases', () => {
       .post('/v1/auth/login')
       .send({
         email: 'admin@jaydenmetz.com',
-        password: 'AdminPassword123!'
+        password: 'AdminPassword123!',
       });
 
     authToken = loginResponse.body.data.token;
@@ -31,15 +31,15 @@ describe('Rate Limiting Edge Cases', () => {
           .post('/v1/auth/login')
           .send({
             email: 'admin@jaydenmetz.com',
-            password: 'WrongPassword123!'
-          })
+            password: 'WrongPassword123!',
+          }),
       );
     }
 
     const responses = await Promise.all(promises);
 
     // At least some should be rate limited (429)
-    const rateLimited = responses.filter(r => r.status === 429);
+    const rateLimited = responses.filter((r) => r.status === 429);
     expect(rateLimited.length).toBeGreaterThan(0);
 
     if (rateLimited.length > 0) {
@@ -56,14 +56,14 @@ describe('Rate Limiting Edge Cases', () => {
       promises.push(
         request(app)
           .get('/v1/escrows')
-          .set('Authorization', `Bearer ${authToken}`)
+          .set('Authorization', `Bearer ${authToken}`),
       );
     }
 
     const responses = await Promise.all(promises);
 
     // Check if any were rate limited
-    const rateLimited = responses.filter(r => r.status === 429);
+    const rateLimited = responses.filter((r) => r.status === 429);
 
     // If rate limiting is enabled, should see 429s
     if (rateLimited.length > 0) {
@@ -84,7 +84,7 @@ describe('Rate Limiting Edge Cases', () => {
         password: 'TestPassword123!',
         firstName: 'Rate',
         lastName: 'Test',
-        role: 'agent'
+        role: 'agent',
       });
 
     // Make 5 failed login attempts
@@ -93,7 +93,7 @@ describe('Rate Limiting Edge Cases', () => {
         .post('/v1/auth/login')
         .send({
           email: testEmail,
-          password: 'WrongPassword!'
+          password: 'WrongPassword!',
         });
     }
 
@@ -102,7 +102,7 @@ describe('Rate Limiting Edge Cases', () => {
       .post('/v1/auth/login')
       .send({
         email: testEmail,
-        password: 'TestPassword123!' // Even correct password
+        password: 'TestPassword123!', // Even correct password
       });
 
     expect(lockoutResponse.status).toBe(403);
@@ -121,10 +121,8 @@ describe('Rate Limiting Edge Cases', () => {
     // Many rate limiters include these headers
     // Check if any rate limit headers exist
     const headers = Object.keys(response.headers);
-    const hasRateLimitHeaders = headers.some(h =>
-      h.toLowerCase().includes('ratelimit') ||
-      h.toLowerCase().includes('x-rate')
-    );
+    const hasRateLimitHeaders = headers.some((h) => h.toLowerCase().includes('ratelimit')
+      || h.toLowerCase().includes('x-rate'));
 
     // This is optional - not all rate limiters include headers
     // Just documenting what we find

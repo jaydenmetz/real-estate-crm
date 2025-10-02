@@ -13,7 +13,7 @@ describe('Listings API Integration Tests', () => {
       .post('/v1/auth/login')
       .send({
         email: 'admin@jaydenmetz.com',
-        password: 'AdminPassword123!'
+        password: 'AdminPassword123!',
       });
 
     expect(loginResponse.status).toBe(200);
@@ -49,7 +49,7 @@ describe('Listings API Integration Tests', () => {
         listingType: 'Sale',
         status: 'Active',
         mlsNumber: `MLS-${Date.now()}`,
-        description: 'Beautiful test property'
+        description: 'Beautiful test property',
       });
 
     expect(response.status).toBe(201);
@@ -73,7 +73,7 @@ describe('Listings API Integration Tests', () => {
     expect(Array.isArray(response.body.data.listings)).toBe(true);
 
     // All returned listings should have status 'Active'
-    response.body.data.listings.forEach(listing => {
+    response.body.data.listings.forEach((listing) => {
       expect(listing.status).toBe('Active');
     });
   });
@@ -97,7 +97,7 @@ describe('Listings API Integration Tests', () => {
       .put(`/v1/listings/${testListingId}`)
       .set('Authorization', `Bearer ${authToken}`)
       .send({
-        price: 725000 // Price reduction
+        price: 725000, // Price reduction
       });
 
     expect(response.status).toBe(200);
@@ -115,7 +115,7 @@ describe('Listings API Integration Tests', () => {
     expect(response.body.success).toBe(true);
 
     // All listings should be within price range
-    response.body.data.listings.forEach(listing => {
+    response.body.data.listings.forEach((listing) => {
       const price = parseFloat(listing.price);
       expect(price).toBeGreaterThanOrEqual(700000);
       expect(price).toBeLessThanOrEqual(800000);
@@ -133,7 +133,7 @@ describe('Listings API Integration Tests', () => {
         state: 'CA',
         zipCode: '93561',
         price: 500000,
-        propertyType: 'InvalidType' // Invalid
+        propertyType: 'InvalidType', // Invalid
       });
 
     expect(response.status).toBe(400);
@@ -155,7 +155,7 @@ describe('Listings API Integration Tests', () => {
       .get('/v1/listings?status=Active')
       .set('Authorization', `Bearer ${authToken}`);
 
-    const archivedListing = listResponse.body.data.listings.find(l => l.id === testListingId);
+    const archivedListing = listResponse.body.data.listings.find((l) => l.id === testListingId);
     expect(archivedListing).toBeUndefined();
   });
 });

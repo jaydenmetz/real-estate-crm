@@ -8,8 +8,8 @@ const limiter = rateLimit({
     success: false,
     error: {
       code: 'RATE_LIMIT_EXCEEDED',
-      message: 'Too many requests, please try again later.'
-    }
+      message: 'Too many requests, please try again later.',
+    },
   },
   standardHeaders: true,
   legacyHeaders: false,
@@ -17,14 +17,14 @@ const limiter = rateLimit({
   skip: (req) => {
     // Skip rate limiting for health checks, auth, and WebSocket
     const skipPaths = ['/health', '/ws/', '/auth/', '/api-keys'];
-    return skipPaths.some(path => req.path.includes(path));
+    return skipPaths.some((path) => req.path.includes(path));
   },
   keyGenerator: (req) => {
     // Use a combination of IP and user ID if authenticated
     const userId = req.user?.id || 'anonymous';
     const ip = req.ip || req.connection.remoteAddress;
     return `${ip}-${userId}`;
-  }
+  },
 });
 
 module.exports = limiter;

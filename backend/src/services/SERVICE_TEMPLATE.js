@@ -1,10 +1,10 @@
 /**
  * Service Layer Template
- * 
+ *
  * Services contain business logic and orchestration.
  * They should NOT handle HTTP concerns (that's for controllers).
  * They should NOT directly query the database (use models/repositories).
- * 
+ *
  * Responsibilities:
  * - Business rule validation
  * - Orchestrating multiple operations

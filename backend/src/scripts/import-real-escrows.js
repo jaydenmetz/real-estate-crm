@@ -36,7 +36,7 @@ const escrows = [
         cd: true,
         loanDocsSigned: true,
         cashToClosePaid: true,
-        loanFunded: true
+        loanFunded: true,
       },
       house: {
         homeInspectionOrdered: true,
@@ -46,16 +46,16 @@ const escrows = [
         homeInspectionReceived: true,
         sellerDisclosures: true,
         rr: true,
-        recorded: true
+        recorded: true,
       },
       admin: {
         mlsStatusUpdate: true,
         tcEmail: true,
         tcGlideInvite: true,
         addContactsToPhone: false,
-        addContactsToNotion: false
-      }
-    }
+        addContactsToNotion: false,
+      },
+    },
   },
   {
     propertyAddress: '13720 Colorado Ln',
@@ -88,7 +88,7 @@ const escrows = [
         cd: true,
         loanDocsSigned: true,
         cashToClosePaid: true,
-        loanFunded: true
+        loanFunded: true,
       },
       house: {
         homeInspectionOrdered: true,
@@ -98,16 +98,16 @@ const escrows = [
         homeInspectionReceived: true,
         sellerDisclosures: true,
         rr: true,
-        recorded: true
+        recorded: true,
       },
       admin: {
         mlsStatusUpdate: true,
         tcEmail: true,
         tcGlideInvite: true,
         addContactsToPhone: false,
-        addContactsToNotion: false
-      }
-    }
+        addContactsToNotion: false,
+      },
+    },
   },
   {
     propertyAddress: '5609 Monitor St',
@@ -142,7 +142,7 @@ const escrows = [
         cd: true,
         loanDocsSigned: true,
         cashToClosePaid: true,
-        loanFunded: true
+        loanFunded: true,
       },
       house: {
         homeInspectionOrdered: true,
@@ -152,16 +152,16 @@ const escrows = [
         homeInspectionReceived: true,
         sellerDisclosures: true,
         rr: true,
-        recorded: true
+        recorded: true,
       },
       admin: {
         mlsStatusUpdate: true,
         tcEmail: true,
         tcGlideInvite: true,
         addContactsToPhone: true,
-        addContactsToNotion: true
-      }
-    }
+        addContactsToNotion: true,
+      },
+    },
   },
   {
     propertyAddress: '313 Darling Point Dr',
@@ -196,7 +196,7 @@ const escrows = [
         cd: true,
         loanDocsSigned: true,
         cashToClosePaid: true,
-        loanFunded: false
+        loanFunded: false,
       },
       house: {
         homeInspectionOrdered: true,
@@ -206,16 +206,16 @@ const escrows = [
         homeInspectionReceived: true,
         sellerDisclosures: true,
         rr: true,
-        recorded: false
+        recorded: false,
       },
       admin: {
         mlsStatusUpdate: true,
         tcEmail: true,
         tcGlideInvite: true,
         addContactsToPhone: false,
-        addContactsToNotion: false
-      }
-    }
+        addContactsToNotion: false,
+      },
+    },
   },
   {
     propertyAddress: '9753 Sunglow St',
@@ -253,7 +253,7 @@ const escrows = [
         cd: false,
         loanDocsSigned: false,
         cashToClosePaid: false,
-        loanFunded: false
+        loanFunded: false,
       },
       house: {
         homeInspectionOrdered: false,
@@ -263,16 +263,16 @@ const escrows = [
         homeInspectionReceived: false,
         sellerDisclosures: false,
         rr: false,
-        recorded: false
+        recorded: false,
       },
       admin: {
         mlsStatusUpdate: false,
         tcEmail: false,
         tcGlideInvite: false,
         addContactsToPhone: false,
-        addContactsToNotion: false
-      }
-    }
+        addContactsToNotion: false,
+      },
+    },
   },
   {
     propertyAddress: '5609 Monitor St',
@@ -309,7 +309,7 @@ const escrows = [
         cd: false,
         loanDocsSigned: true,
         cashToClosePaid: true,
-        loanFunded: false
+        loanFunded: false,
       },
       house: {
         homeInspectionOrdered: true,
@@ -319,42 +319,42 @@ const escrows = [
         homeInspectionReceived: true,
         sellerDisclosures: true,
         rr: true,
-        recorded: false
+        recorded: false,
       },
       admin: {
         mlsStatusUpdate: true,
         tcEmail: true,
         tcGlideInvite: true,
         addContactsToPhone: false,
-        addContactsToNotion: false
-      }
-    }
-  }
+        addContactsToNotion: false,
+      },
+    },
+  },
 ];
 
 async function importEscrows() {
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
   });
 
   try {
     console.log('Connected to database');
-    
+
     // Begin transaction
     await pool.query('BEGIN');
-    
+
     // Delete existing test escrows
     console.log('Deleting existing test escrows...');
     await pool.query('DELETE FROM escrows WHERE created_at < NOW()');
-    
+
     // Insert new escrows
     console.log('Inserting real escrow data...');
-    
+
     for (const escrow of escrows) {
       // Generate escrow number
       const escrowNumber = `ESC-${new Date().getFullYear()}-${Math.floor(Math.random() * 9000) + 1000}`;
-      
+
       // Insert escrow
       const result = await pool.query(`
         INSERT INTO escrows (
@@ -380,12 +380,12 @@ async function importEscrows() {
         escrow.clients,
         escrow.acceptanceDate,
         escrow.scheduledCoeDate,
-        escrow.escrowStatus === 'closed' ? escrow.coeDate : null
+        escrow.escrowStatus === 'closed' ? escrow.coeDate : null,
       ]);
-      
+
       const escrowId = result.rows[0].id;
       console.log(`Created escrow ${escrowNumber} for ${escrow.propertyAddress}`);
-      
+
       // Insert property details
       await pool.query(`
         INSERT INTO escrow_property_details (
@@ -408,9 +408,9 @@ async function importEscrows() {
         1800,
         '0.15 acres',
         2000,
-        escrow.purchasePrice
+        escrow.purchasePrice,
       ]);
-      
+
       // Insert people
       await pool.query(`
         INSERT INTO escrow_people (
@@ -431,17 +431,17 @@ async function importEscrows() {
       `, [
         escrowId,
         escrow.clients.join(', '),
-        escrow.buyersAgent + (escrow.additionalBuyersAgent ? ', ' + escrow.additionalBuyersAgent : ''),
-        escrow.listingAgent + (escrow.additionalListingAgent ? ', ' + escrow.additionalListingAgent : ''),
+        escrow.buyersAgent + (escrow.additionalBuyersAgent ? `, ${escrow.additionalBuyersAgent}` : ''),
+        escrow.listingAgent + (escrow.additionalListingAgent ? `, ${escrow.additionalListingAgent}` : ''),
         escrow.loanOfficer,
         escrow.escrowOfficer,
         escrow.transactionCoordinator,
         escrow.homeInspectionCompany || null,
         escrow.termiteInspectionCompany || null,
         escrow.homeWarrantyCompany || null,
-        escrow.nhdCompany || null
+        escrow.nhdCompany || null,
       ]);
-      
+
       // Insert timeline
       await pool.query(`
         INSERT INTO escrow_timeline (
@@ -464,11 +464,11 @@ async function importEscrows() {
         escrow.scheduledCoeDate,
         3,
         17,
-        escrow.escrowStatus === 'closed' ? 
-          Math.floor((new Date(escrow.coeDate) - new Date(escrow.acceptanceDate)) / (1000 * 60 * 60 * 24)) :
-          null
+        escrow.escrowStatus === 'closed'
+          ? Math.floor((new Date(escrow.coeDate) - new Date(escrow.acceptanceDate)) / (1000 * 60 * 60 * 24))
+          : null,
       ]);
-      
+
       // Insert financials
       await pool.query(`
         INSERT INTO escrow_financials (
@@ -491,9 +491,9 @@ async function importEscrows() {
         escrow.myCommission,
         escrow.commissionAdjustments || 0,
         escrow.expenseAdjustments || 0,
-        escrow.leadSource || null
+        escrow.leadSource || null,
       ]);
-      
+
       // Insert checklists
       await pool.query(`
         INSERT INTO escrow_checklists (
@@ -508,14 +508,13 @@ async function importEscrows() {
         escrowId,
         JSON.stringify(escrow.checklists.loan),
         JSON.stringify(escrow.checklists.house),
-        JSON.stringify(escrow.checklists.admin)
+        JSON.stringify(escrow.checklists.admin),
       ]);
     }
-    
+
     // Commit transaction
     await pool.query('COMMIT');
     console.log('Successfully imported all escrows!');
-    
   } catch (error) {
     await pool.query('ROLLBACK');
     console.error('Error importing escrows:', error);
@@ -533,13 +532,13 @@ async function runImport() {
     process.env.NODE_ENV = 'development';
     process.env.DATABASE_URL = 'postgresql://postgres:postgres@localhost:5432/real_estate_crm';
     await importEscrows();
-    
+
     // Import to production
     console.log('\n=== Importing to PRODUCTION database ===');
     process.env.NODE_ENV = 'production';
     process.env.DATABASE_URL = 'postgresql://postgres:ueLIWnvALZWVbRdnOmpLGsrrukeGLGQQ@ballast.proxy.rlwy.net:20017/railway';
     await importEscrows();
-    
+
     console.log('\n✅ Import completed successfully for both environments!');
   } catch (error) {
     console.error('❌ Import failed:', error);

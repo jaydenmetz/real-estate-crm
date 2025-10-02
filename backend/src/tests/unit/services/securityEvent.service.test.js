@@ -9,7 +9,7 @@ describe('SecurityEventService Unit Tests', () => {
     // Create a test user for security events
     const result = await pool.query(
       'INSERT INTO users (email, password_hash, first_name, last_name, role) VALUES ($1, $2, $3, $4, $5) RETURNING id',
-      ['securitytest@example.com', 'hashedpassword', 'Security', 'Test', 'agent']
+      ['securitytest@example.com', 'hashedpassword', 'Security', 'Test', 'agent'],
     );
     testUserId = result.rows[0].id;
   });
@@ -29,25 +29,25 @@ describe('SecurityEventService Unit Tests', () => {
       ip: '192.168.1.1',
       headers: { 'user-agent': 'Test Browser' },
       path: '/v1/auth/login',
-      method: 'POST'
+      method: 'POST',
     };
 
     const user = {
       id: testUserId,
       email: 'securitytest@example.com',
-      username: 'securitytest'
+      username: 'securitytest',
     };
 
     // Fire-and-forget call
     await SecurityEventService.logLoginSuccess(req, user);
 
     // Give it a moment to write to database
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Verify event was logged
     const result = await pool.query(
       'SELECT * FROM security_events WHERE user_id = $1 AND event_type = $2 ORDER BY created_at DESC LIMIT 1',
-      [testUserId, 'login_success']
+      [testUserId, 'login_success'],
     );
 
     expect(result.rows.length).toBe(1);
@@ -65,16 +65,16 @@ describe('SecurityEventService Unit Tests', () => {
       ip: '192.168.1.2',
       headers: { 'user-agent': 'Test Browser' },
       path: '/v1/auth/login',
-      method: 'POST'
+      method: 'POST',
     };
 
     await SecurityEventService.logLoginFailed(req, 'securitytest@example.com', 'Invalid password');
 
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     const result = await pool.query(
       'SELECT * FROM security_events WHERE email = $1 AND event_type = $2 ORDER BY created_at DESC LIMIT 1',
-      ['securitytest@example.com', 'login_failed']
+      ['securitytest@example.com', 'login_failed'],
     );
 
     expect(result.rows.length).toBe(1);
@@ -91,21 +91,21 @@ describe('SecurityEventService Unit Tests', () => {
       ip: '192.168.1.3',
       headers: { 'user-agent': 'Test Browser' },
       path: '/v1/auth/login',
-      method: 'POST'
+      method: 'POST',
     };
 
     const user = {
       id: testUserId,
-      email: 'securitytest@example.com'
+      email: 'securitytest@example.com',
     };
 
     await SecurityEventService.logAccountLocked(req, user, 5);
 
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     const result = await pool.query(
       'SELECT * FROM security_events WHERE user_id = $1 AND event_type = $2 ORDER BY created_at DESC LIMIT 1',
-      [testUserId, 'account_locked']
+      [testUserId, 'account_locked'],
     );
 
     expect(result.rows.length).toBe(1);
@@ -122,21 +122,21 @@ describe('SecurityEventService Unit Tests', () => {
       ip: '192.168.1.4',
       headers: { 'user-agent': 'Test Browser' },
       path: '/v1/auth/refresh',
-      method: 'POST'
+      method: 'POST',
     };
 
     const user = {
       id: testUserId,
-      email: 'securitytest@example.com'
+      email: 'securitytest@example.com',
     };
 
     await SecurityEventService.logTokenRefresh(req, user);
 
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     const result = await pool.query(
       'SELECT * FROM security_events WHERE user_id = $1 AND event_type = $2 ORDER BY created_at DESC LIMIT 1',
-      [testUserId, 'token_refresh']
+      [testUserId, 'token_refresh'],
     );
 
     expect(result.rows.length).toBe(1);
@@ -152,23 +152,23 @@ describe('SecurityEventService Unit Tests', () => {
       ip: '192.168.1.5',
       headers: { 'user-agent': 'Test Browser' },
       path: '/v1/api-keys',
-      method: 'POST'
+      method: 'POST',
     };
 
     const user = {
       id: testUserId,
-      email: 'securitytest@example.com'
+      email: 'securitytest@example.com',
     };
 
     const apiKeyId = 'test-api-key-id-123';
 
     await SecurityEventService.logApiKeyCreated(req, user, apiKeyId, 'Test API Key');
 
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     const result = await pool.query(
       'SELECT * FROM security_events WHERE user_id = $1 AND event_type = $2 ORDER BY created_at DESC LIMIT 1',
-      [testUserId, 'api_key_created']
+      [testUserId, 'api_key_created'],
     );
 
     expect(result.rows.length).toBe(1);
@@ -185,23 +185,23 @@ describe('SecurityEventService Unit Tests', () => {
       ip: '192.168.1.6',
       headers: { 'user-agent': 'Test Browser' },
       path: '/v1/api-keys/test-key',
-      method: 'DELETE'
+      method: 'DELETE',
     };
 
     const user = {
       id: testUserId,
-      email: 'securitytest@example.com'
+      email: 'securitytest@example.com',
     };
 
     const apiKeyId = 'test-api-key-id-456';
 
     await SecurityEventService.logApiKeyRevoked(req, user, apiKeyId);
 
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     const result = await pool.query(
       'SELECT * FROM security_events WHERE user_id = $1 AND event_type = $2 AND api_key_id = $3 ORDER BY created_at DESC LIMIT 1',
-      [testUserId, 'api_key_revoked', apiKeyId]
+      [testUserId, 'api_key_revoked', apiKeyId],
     );
 
     expect(result.rows.length).toBe(1);
@@ -217,16 +217,16 @@ describe('SecurityEventService Unit Tests', () => {
       ip: '192.168.1.7',
       headers: { 'user-agent': 'Test Browser' },
       path: '/v1/escrows',
-      method: 'GET'
+      method: 'GET',
     };
 
     await SecurityEventService.logRateLimitExceeded(req, 'securitytest@example.com');
 
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     const result = await pool.query(
       'SELECT * FROM security_events WHERE event_type = $1 AND ip_address = $2 ORDER BY created_at DESC LIMIT 1',
-      ['rate_limit_exceeded', '192.168.1.7']
+      ['rate_limit_exceeded', '192.168.1.7'],
     );
 
     expect(result.rows.length).toBe(1);
@@ -244,7 +244,7 @@ describe('SecurityEventService Unit Tests', () => {
       ip: '192.168.1.8',
       headers: { 'user-agent': 'Test Browser' },
       path: '/v1/test',
-      method: 'GET'
+      method: 'GET',
     };
 
     const user = { id: testUserId, email: 'securitytest@example.com' };
@@ -252,7 +252,7 @@ describe('SecurityEventService Unit Tests', () => {
     await SecurityEventService.logLoginSuccess(req, user);
     await SecurityEventService.logTokenRefresh(req, user);
 
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise((resolve) => setTimeout(resolve, 200));
 
     // Query events
     const events = await SecurityEventService.getEventsByUser(testUserId, { limit: 10 });

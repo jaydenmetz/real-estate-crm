@@ -41,7 +41,7 @@ describe('AI Integration Tests', () => {
         .get('/v1/openapi.json')
         .expect(200);
 
-      const paths = response.body.paths;
+      const { paths } = response.body;
       expect(paths).toHaveProperty('/escrows');
       expect(paths).toHaveProperty('/listings');
       expect(paths).toHaveProperty('/clients');
@@ -135,12 +135,12 @@ describe('AI Integration Tests', () => {
           request(BASE_URL)
             .post('/v1/ai/query')
             .set('Authorization', `Bearer ${TEST_JWT}`)
-            .send({ query: `Test query ${i}` })
+            .send({ query: `Test query ${i}` }),
         );
       }
 
       const responses = await Promise.all(promises);
-      const rateLimited = responses.filter(r => r.status === 429);
+      const rateLimited = responses.filter((r) => r.status === 429);
 
       // In development (50/min) this might not trigger, but in production it should
       if (process.env.NODE_ENV === 'production') {
@@ -231,7 +231,7 @@ describe('AI Integration Tests', () => {
     test('SQL injection attempts should be blocked', () => {
       const AiService = require('../services/ai.service');
 
-      const maliciousSQL = "SELECT * FROM escrows WHERE user_id = $1; DROP TABLE escrows; --";
+      const maliciousSQL = 'SELECT * FROM escrows WHERE user_id = $1; DROP TABLE escrows; --';
 
       expect(() => {
         AiService.validateSQL(maliciousSQL);
@@ -241,7 +241,7 @@ describe('AI Integration Tests', () => {
     test('Write operations in SQL should be blocked', () => {
       const AiService = require('../services/ai.service');
 
-      const writeSQL = "UPDATE escrows SET purchase_price = 999999 WHERE user_id = $1";
+      const writeSQL = 'UPDATE escrows SET purchase_price = 999999 WHERE user_id = $1';
 
       expect(() => {
         AiService.validateSQL(writeSQL);
@@ -251,7 +251,7 @@ describe('AI Integration Tests', () => {
     test('Queries without user_id filter should be rejected', () => {
       const AiService = require('../services/ai.service');
 
-      const unsafeSQL = "SELECT * FROM escrows LIMIT 100";
+      const unsafeSQL = 'SELECT * FROM escrows LIMIT 100';
 
       expect(() => {
         AiService.validateSQL(unsafeSQL);
@@ -288,5 +288,5 @@ describe('AI Integration Tests', () => {
 module.exports = {
   BASE_URL,
   TEST_JWT,
-  TEST_API_KEY
+  TEST_API_KEY,
 };

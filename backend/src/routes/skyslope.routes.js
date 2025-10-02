@@ -1,4 +1,5 @@
 const express = require('express');
+
 const router = express.Router();
 const skyslopeService = require('../services/skyslope');
 const commissionService = require('../services/commission');
@@ -11,36 +12,36 @@ const { pool } = require('../config/database');
 router.get('/escrows/:id/documents', async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     // Get escrow with SkySlope ID
     const escrowQuery = 'SELECT * FROM escrows WHERE id = $1';
     const escrowResult = await pool.query(escrowQuery, [id]);
-    
+
     if (escrowResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Escrow not found'
-        }
+          message: 'Escrow not found',
+        },
       });
     }
-    
+
     const escrow = escrowResult.rows[0];
-    
+
     if (!escrow.skyslope_id) {
       return res.status(400).json({
         success: false,
         error: {
           code: 'NO_SKYSLOPE_ID',
-          message: 'Escrow not linked to SkySlope'
-        }
+          message: 'Escrow not linked to SkySlope',
+        },
       });
     }
-    
+
     // Get documents from SkySlope
     const documents = await skyslopeService.getEscrowDocuments(escrow);
-    
+
     // Get locally tracked documents
     const localDocsQuery = `
       SELECT * FROM escrow_skyslope_documents 
@@ -48,24 +49,23 @@ router.get('/escrows/:id/documents', async (req, res) => {
       ORDER BY created_at DESC
     `;
     const localDocsResult = await pool.query(localDocsQuery, [id]);
-    
+
     res.json({
       success: true,
       data: {
         skyslopeId: escrow.skyslope_id,
-        documents: documents,
-        localDocuments: localDocsResult.rows
-      }
+        documents,
+        localDocuments: localDocsResult.rows,
+      },
     });
-    
   } catch (error) {
     console.error('Error fetching SkySlope documents:', error);
     res.status(500).json({
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Failed to fetch documents from SkySlope'
-      }
+        message: 'Failed to fetch documents from SkySlope',
+      },
     });
   }
 });
@@ -78,21 +78,20 @@ router.get('/templates/:transactionType', async (req, res) => {
   try {
     const { transactionType } = req.params;
     const { state = 'CA' } = req.query;
-    
+
     const templates = await skyslopeService.getDocumentTemplates(transactionType, state);
-    
+
     res.json({
       success: true,
-      data: templates
+      data: templates,
     });
-    
   } catch (error) {
     res.status(500).json({
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Failed to fetch document templates'
-      }
+        message: 'Failed to fetch document templates',
+      },
     });
   }
 });
@@ -104,26 +103,26 @@ router.get('/templates/:transactionType', async (req, res) => {
 router.post('/escrows/:id/sync', async (req, res) => {
   try {
     const { id } = req.params;
-    
+
     // Get escrow data
     const escrowQuery = 'SELECT * FROM escrows WHERE id = $1';
     const escrowResult = await pool.query(escrowQuery, [id]);
-    
+
     if (escrowResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Escrow not found'
-        }
+          message: 'Escrow not found',
+        },
       });
     }
-    
+
     const escrow = escrowResult.rows[0];
-    
+
     // Sync with SkySlope
     const syncResult = await skyslopeService.syncEscrowWithSkySlope(escrow);
-    
+
     if (syncResult.success) {
       // Update escrow with SkySlope ID
       const updateQuery = `
@@ -136,39 +135,38 @@ router.post('/escrows/:id/sync', async (req, res) => {
         WHERE id = $1
         RETURNING *
       `;
-      
+
       const transactionType = skyslopeService.determineTransactionType(escrow);
       const updateResult = await pool.query(updateQuery, [
         id,
         syncResult.skyslopeId,
-        transactionType
+        transactionType,
       ]);
-      
+
       res.json({
         success: true,
         data: {
           escrow: updateResult.rows[0],
-          skyslope: syncResult.data
-        }
+          skyslope: syncResult.data,
+        },
       });
     } else {
       res.status(400).json({
         success: false,
         error: {
           code: 'SYNC_FAILED',
-          message: syncResult.error
-        }
+          message: syncResult.error,
+        },
       });
     }
-    
   } catch (error) {
     console.error('Error syncing with SkySlope:', error);
     res.status(500).json({
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Failed to sync with SkySlope'
-      }
+        message: 'Failed to sync with SkySlope',
+      },
     });
   }
 });
@@ -180,41 +178,45 @@ router.post('/escrows/:id/sync', async (req, res) => {
 router.post('/escrows/:id/documents', async (req, res) => {
   try {
     const { id } = req.params;
-    const { documentName, documentCode, documentType, file } = req.body;
-    
+    const {
+      documentName, documentCode, documentType, file,
+    } = req.body;
+
     // Get escrow with SkySlope ID
     const escrowQuery = 'SELECT * FROM escrows WHERE id = $1';
     const escrowResult = await pool.query(escrowQuery, [id]);
-    
+
     if (escrowResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Escrow not found'
-        }
+          message: 'Escrow not found',
+        },
       });
     }
-    
+
     const escrow = escrowResult.rows[0];
-    
+
     if (!escrow.skyslope_id) {
       return res.status(400).json({
         success: false,
         error: {
           code: 'NO_SKYSLOPE_ID',
-          message: 'Escrow not linked to SkySlope'
-        }
+          message: 'Escrow not linked to SkySlope',
+        },
       });
     }
-    
+
     // Upload to SkySlope
     const uploadResult = await skyslopeService.uploadDocument(
       escrow.skyslope_id,
       escrow.skyslope_type || 'sale',
-      { documentName, documentCode, documentType, file }
+      {
+        documentName, documentCode, documentType, file,
+      },
     );
-    
+
     // Track in local database
     const insertQuery = `
       INSERT INTO escrow_skyslope_documents
@@ -222,28 +224,27 @@ router.post('/escrows/:id/documents', async (req, res) => {
       VALUES ($1, $2, $3, $4, $5, 'uploaded', NOW())
       RETURNING *
     `;
-    
+
     const insertResult = await pool.query(insertQuery, [
       id,
       uploadResult.data.id,
       documentName,
       documentCode,
-      documentType
+      documentType,
     ]);
-    
+
     res.json({
       success: true,
-      data: insertResult.rows[0]
+      data: insertResult.rows[0],
     });
-    
   } catch (error) {
     console.error('Error uploading document:', error);
     res.status(500).json({
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Failed to upload document'
-      }
+        message: 'Failed to upload document',
+      },
     });
   }
 });
@@ -255,44 +256,43 @@ router.post('/escrows/:id/documents', async (req, res) => {
 router.get('/commission/:escrowId', async (req, res) => {
   try {
     const { escrowId } = req.params;
-    
+
     // Get escrow data
     const escrowQuery = 'SELECT * FROM escrows WHERE id = $1';
     const escrowResult = await pool.query(escrowQuery, [escrowId]);
-    
+
     if (escrowResult.rows.length === 0) {
       return res.status(404).json({
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Escrow not found'
-        }
+          message: 'Escrow not found',
+        },
       });
     }
-    
+
     const escrow = escrowResult.rows[0];
-    
+
     // Get YTD GCI at the time of transaction
     const ytdGci = escrow.ytd_gci || await commissionService.getYtdGciAtDate(
-      escrow.closing_date || escrow.acceptance_date
+      escrow.closing_date || escrow.acceptance_date,
     );
-    
+
     // Calculate commission breakdown
     const breakdown = await commissionService.calculateCommissionBreakdown(escrow, ytdGci);
-    
+
     res.json({
       success: true,
-      data: breakdown
+      data: breakdown,
     });
-    
   } catch (error) {
     console.error('Error calculating commission:', error);
     res.status(500).json({
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Failed to calculate commission'
-      }
+        message: 'Failed to calculate commission',
+      },
     });
   }
 });
@@ -304,22 +304,21 @@ router.get('/commission/:escrowId', async (req, res) => {
 router.post('/commission/:escrowId/update', async (req, res) => {
   try {
     const { escrowId } = req.params;
-    
+
     const updatedEscrow = await commissionService.updateEscrowCommission(escrowId);
-    
+
     res.json({
       success: true,
-      data: updatedEscrow
+      data: updatedEscrow,
     });
-    
   } catch (error) {
     console.error('Error updating commission:', error);
     res.status(500).json({
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Failed to update commission data'
-      }
+        message: 'Failed to update commission data',
+      },
     });
   }
 });
@@ -331,9 +330,9 @@ router.post('/commission/:escrowId/update', async (req, res) => {
 router.get('/commission/ytd', async (req, res) => {
   try {
     const { year = new Date().getFullYear() } = req.query;
-    
+
     const ytdGci = await commissionService.getCurrentYtdGci(parseInt(year));
-    
+
     // Get breakdown by quarter
     const quarterlyQuery = `
       SELECT 
@@ -347,9 +346,9 @@ router.get('/commission/ytd', async (req, res) => {
       GROUP BY EXTRACT(QUARTER FROM closing_date)
       ORDER BY quarter
     `;
-    
+
     const quarterlyResult = await pool.query(quarterlyQuery, [year]);
-    
+
     res.json({
       success: true,
       data: {
@@ -358,18 +357,17 @@ router.get('/commission/ytd', async (req, res) => {
         quarterlyBreakdown: quarterlyResult.rows,
         currentSplitTier: ytdGci >= 100000 ? '100%' : ytdGci >= 50000 ? '80%' : '70%',
         nextTierThreshold: ytdGci >= 100000 ? null : ytdGci >= 50000 ? 100000 : 50000,
-        amountToNextTier: ytdGci >= 100000 ? 0 : ytdGci >= 50000 ? 100000 - ytdGci : 50000 - ytdGci
-      }
+        amountToNextTier: ytdGci >= 100000 ? 0 : ytdGci >= 50000 ? 100000 - ytdGci : 50000 - ytdGci,
+      },
     });
-    
   } catch (error) {
     console.error('Error getting YTD GCI:', error);
     res.status(500).json({
       success: false,
       error: {
         code: 'SERVER_ERROR',
-        message: 'Failed to get YTD GCI'
-      }
+        message: 'Failed to get YTD GCI',
+      },
     });
   }
 });

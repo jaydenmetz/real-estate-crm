@@ -1,10 +1,10 @@
-const { query } = require('../config/database');
 const { v4: uuidv4 } = require('uuid');
+const { query } = require('../config/database');
 
 class Listing {
   static async create(data) {
     const id = `list_${uuidv4().replace(/-/g, '').substring(0, 12)}`;
-    
+
     const text = `
       INSERT INTO listings (
         id, property_address, mls_number, listing_status, list_price,
@@ -16,7 +16,7 @@ class Listing {
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
       RETURNING *
     `;
-    
+
     const values = [
       id,
       data.propertyAddress,
@@ -42,22 +42,22 @@ class Listing {
       data.videoWalkthrough || false,
       data.listingCommission,
       data.buyerAgentCommission,
-      data.tags || []
+      data.tags || [],
     ];
-    
+
     const result = await query(text, values);
-    
+
     // Add sellers
     if (data.sellers && data.sellers.length > 0) {
       await this.addSellers(id, data.sellers);
     }
-    
+
     // Record initial price
     await this.recordPriceHistory(id, data.listPrice, data.listingDate, 'Initial listing');
-    
+
     return this.findById(id);
   }
-  
+
   static async findAll(filters = {}) {
     let text = `
       SELECT l.*, 
@@ -68,56 +68,56 @@ class Listing {
       LEFT JOIN clients c ON ls.client_id = c.id
       WHERE 1=1
     `;
-    
+
     const values = [];
     let paramCount = 0;
-    
+
     if (filters.status) {
       paramCount++;
       text += ` AND l.listing_status = $${paramCount}`;
       values.push(filters.status);
     }
-    
+
     if (filters.minPrice) {
       paramCount++;
       text += ` AND l.list_price >= $${paramCount}`;
       values.push(filters.minPrice);
     }
-    
+
     if (filters.maxPrice) {
       paramCount++;
       text += ` AND l.list_price <= $${paramCount}`;
       values.push(filters.maxPrice);
     }
-    
+
     if (filters.propertyType) {
       paramCount++;
       text += ` AND l.property_type = $${paramCount}`;
       values.push(filters.propertyType);
     }
-    
-    text += ` GROUP BY l.id`;
-    
+
+    text += ' GROUP BY l.id';
+
     // Add sorting
     const sortField = filters.sort || 'created_at';
     const sortOrder = filters.order === 'asc' ? 'ASC' : 'DESC';
     text += ` ORDER BY l.${sortField} ${sortOrder}`;
-    
+
     // Add pagination
     const limit = Math.min(filters.limit || 20, 100);
     const offset = ((filters.page || 1) - 1) * limit;
     text += ` LIMIT ${limit} OFFSET ${offset}`;
-    
+
     const result = await query(text, values);
-    
+
     return {
       listings: result.rows,
       total: result.rows.length > 0 ? parseInt(result.rows[0].total_count) : 0,
       page: filters.page || 1,
-      pages: result.rows.length > 0 ? Math.ceil(result.rows[0].total_count / limit) : 0
+      pages: result.rows.length > 0 ? Math.ceil(result.rows[0].total_count / limit) : 0,
     };
   }
-  
+
   static async findById(id) {
     const text = `
       SELECT l.*, 
@@ -134,66 +134,66 @@ class Listing {
       WHERE l.id = $1
       GROUP BY l.id
     `;
-    
+
     const result = await query(text, [id]);
     return result.rows.length > 0 ? result.rows[0] : null;
   }
-  
+
   static async update(id, data) {
     const fields = [];
     const values = [id];
     let paramCount = 1;
-    
-    Object.keys(data).forEach(key => {
+
+    Object.keys(data).forEach((key) => {
       if (key !== 'id' && key !== 'created_at' && key !== 'sellers') {
         paramCount++;
         fields.push(`${key} = $${paramCount}`);
         values.push(data[key]);
       }
     });
-    
+
     fields.push('updated_at = NOW()');
-    
+
     const text = `
       UPDATE listings 
       SET ${fields.join(', ')}
       WHERE id = $1
       RETURNING *
     `;
-    
+
     await query(text, values);
     return this.findById(id);
   }
-  
+
   static async recordPriceReduction(id, data) {
     // Update listing price
     await query(
       'UPDATE listings SET list_price = $2, updated_at = NOW() WHERE id = $1',
-      [id, data.newPrice]
+      [id, data.newPrice],
     );
-    
+
     // Record price history
     return this.recordPriceHistory(id, data.newPrice, data.effectiveDate, data.reason);
   }
-  
+
   static async recordPriceHistory(listingId, price, date, reason) {
     const text = `
       INSERT INTO listing_price_history (listing_id, price, date, reason)
       VALUES ($1, $2, $3, $4)
       RETURNING *
     `;
-    
+
     const result = await query(text, [listingId, price, date, reason]);
     return result.rows[0];
   }
-  
+
   static async logShowing(id, showingData) {
     // Update showing counts
     await query(
       'UPDATE listings SET total_showings = total_showings + 1 WHERE id = $1',
-      [id]
+      [id],
     );
-    
+
     // Log communication
     const text = `
       INSERT INTO communications (
@@ -201,21 +201,21 @@ class Listing {
       ) VALUES ($1, $2, $3, $4, $5, NOW())
       RETURNING *
     `;
-    
+
     const values = [
       'listing',
       id,
       'showing',
       'inbound',
-      JSON.stringify(showingData)
+      JSON.stringify(showingData),
     ];
-    
+
     const result = await query(text, values);
     return result.rows[0];
   }
-  
+
   static async addSellers(listingId, sellerIds) {
-    const values = sellerIds.map(sellerId => `('${listingId}', '${sellerId}')`).join(',');
+    const values = sellerIds.map((sellerId) => `('${listingId}', '${sellerId}')`).join(',');
     const text = `INSERT INTO listing_sellers (listing_id, client_id) VALUES ${values} ON CONFLICT DO NOTHING`;
     await query(text);
   }

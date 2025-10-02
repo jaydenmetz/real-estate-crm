@@ -36,7 +36,7 @@ const escrows = [
         cd: true,
         loanDocsSigned: true,
         cashToClosePaid: true,
-        loanFunded: true
+        loanFunded: true,
       },
       house: {
         homeInspectionOrdered: true,
@@ -46,16 +46,16 @@ const escrows = [
         homeInspectionReceived: true,
         sellerDisclosures: true,
         rr: true,
-        recorded: true
+        recorded: true,
       },
       admin: {
         mlsStatusUpdate: true,
         tcEmail: true,
         tcGlideInvite: true,
         addContactsToPhone: false,
-        addContactsToNotion: false
-      }
-    }
+        addContactsToNotion: false,
+      },
+    },
   },
   {
     propertyAddress: '13720 Colorado Ln, San Francisco, CA 94110',
@@ -88,7 +88,7 @@ const escrows = [
         cd: true,
         loanDocsSigned: true,
         cashToClosePaid: true,
-        loanFunded: true
+        loanFunded: true,
       },
       house: {
         homeInspectionOrdered: true,
@@ -98,16 +98,16 @@ const escrows = [
         homeInspectionReceived: true,
         sellerDisclosures: true,
         rr: true,
-        recorded: true
+        recorded: true,
       },
       admin: {
         mlsStatusUpdate: true,
         tcEmail: true,
         tcGlideInvite: true,
         addContactsToPhone: false,
-        addContactsToNotion: false
-      }
-    }
+        addContactsToNotion: false,
+      },
+    },
   },
   {
     propertyAddress: '5609 Monitor St, San Francisco, CA 94110',
@@ -142,7 +142,7 @@ const escrows = [
         cd: true,
         loanDocsSigned: true,
         cashToClosePaid: true,
-        loanFunded: true
+        loanFunded: true,
       },
       house: {
         homeInspectionOrdered: true,
@@ -152,16 +152,16 @@ const escrows = [
         homeInspectionReceived: true,
         sellerDisclosures: true,
         rr: true,
-        recorded: true
+        recorded: true,
       },
       admin: {
         mlsStatusUpdate: true,
         tcEmail: true,
         tcGlideInvite: true,
         addContactsToPhone: true,
-        addContactsToNotion: true
-      }
-    }
+        addContactsToNotion: true,
+      },
+    },
   },
   {
     propertyAddress: '313 Darling Point Dr, San Francisco, CA 94110',
@@ -196,7 +196,7 @@ const escrows = [
         cd: true,
         loanDocsSigned: true,
         cashToClosePaid: true,
-        loanFunded: false
+        loanFunded: false,
       },
       house: {
         homeInspectionOrdered: true,
@@ -206,16 +206,16 @@ const escrows = [
         homeInspectionReceived: true,
         sellerDisclosures: true,
         rr: true,
-        recorded: false
+        recorded: false,
       },
       admin: {
         mlsStatusUpdate: true,
         tcEmail: true,
         tcGlideInvite: true,
         addContactsToPhone: false,
-        addContactsToNotion: false
-      }
-    }
+        addContactsToNotion: false,
+      },
+    },
   },
   {
     propertyAddress: '9753 Sunglow St, San Francisco, CA 94110',
@@ -253,7 +253,7 @@ const escrows = [
         cd: false,
         loanDocsSigned: false,
         cashToClosePaid: false,
-        loanFunded: false
+        loanFunded: false,
       },
       house: {
         homeInspectionOrdered: false,
@@ -263,16 +263,16 @@ const escrows = [
         homeInspectionReceived: false,
         sellerDisclosures: false,
         rr: false,
-        recorded: false
+        recorded: false,
       },
       admin: {
         mlsStatusUpdate: false,
         tcEmail: false,
         tcGlideInvite: false,
         addContactsToPhone: false,
-        addContactsToNotion: false
-      }
-    }
+        addContactsToNotion: false,
+      },
+    },
   },
   {
     propertyAddress: '5609 Monitor St #2, San Francisco, CA 94110',
@@ -309,7 +309,7 @@ const escrows = [
         cd: false,
         loanDocsSigned: true,
         cashToClosePaid: true,
-        loanFunded: false
+        loanFunded: false,
       },
       house: {
         homeInspectionOrdered: true,
@@ -319,65 +319,65 @@ const escrows = [
         homeInspectionReceived: true,
         sellerDisclosures: true,
         rr: true,
-        recorded: false
+        recorded: false,
       },
       admin: {
         mlsStatusUpdate: true,
         tcEmail: true,
         tcGlideInvite: true,
         addContactsToPhone: false,
-        addContactsToNotion: false
-      }
-    }
-  }
+        addContactsToNotion: false,
+      },
+    },
+  },
 ];
 
 async function importEscrows() {
   const pool = new Pool({
     connectionString: process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
   });
 
   try {
     console.log('Connected to database');
-    
+
     // Begin transaction
     await pool.query('BEGIN');
-    
+
     // Delete existing test escrows (be careful with this in production!)
     console.log('Deleting existing test escrows...');
     const deleteResult = await pool.query('DELETE FROM escrows WHERE created_at < NOW()');
     console.log(`Deleted ${deleteResult.rowCount} existing escrows`);
-    
+
     // Insert new escrows
     console.log('Inserting real escrow data...');
-    
+
     for (let i = 0; i < escrows.length; i++) {
       const escrow = escrows[i];
-      
+
       // Build people object
       const people = {
         buyers: escrow.clients,
-        buyersAgent: escrow.buyersAgent + (escrow.additionalBuyersAgent ? ', ' + escrow.additionalBuyersAgent : ''),
-        listingAgent: escrow.listingAgent + (escrow.additionalListingAgent ? ', ' + escrow.additionalListingAgent : ''),
+        buyersAgent: escrow.buyersAgent + (escrow.additionalBuyersAgent ? `, ${escrow.additionalBuyersAgent}` : ''),
+        listingAgent: escrow.listingAgent + (escrow.additionalListingAgent ? `, ${escrow.additionalListingAgent}` : ''),
         loanOfficer: escrow.loanOfficer,
         escrowOfficer: escrow.escrowOfficer,
         transactionCoordinator: escrow.transactionCoordinator,
         homeInspectionCompany: escrow.homeInspectionCompany,
         termiteInspectionCompany: escrow.termiteInspectionCompany,
         homeWarrantyCompany: escrow.homeWarrantyCompany,
-        nhdCompany: escrow.nhdCompany
+        nhdCompany: escrow.nhdCompany,
       };
-      
+
       // Build timeline object
       const timeline = {
         acceptanceDate: escrow.acceptanceDate,
         emdDate: escrow.emdDate,
         contingenciesDate: escrow.contingenciesDate,
         scheduledCoeDate: escrow.scheduledCoeDate,
-        actualCoeDate: escrow.escrowStatus === 'closed' ? escrow.coeDate : null
+        actualCoeDate: escrow.escrowStatus === 'closed' ? escrow.coeDate : null,
       };
-      
+
       // Build financials object
       const financials = {
         purchasePrice: escrow.purchasePrice,
@@ -386,16 +386,16 @@ async function importEscrows() {
         myCommission: escrow.myCommission,
         commissionAdjustments: escrow.commissionAdjustments || 0,
         expenseAdjustments: escrow.expenseAdjustments || 0,
-        leadSource: escrow.leadSource
+        leadSource: escrow.leadSource,
       };
-      
+
       // Build expenses array
-      const expensesArray = escrow.expenses ? escrow.expenses.map(exp => ({
+      const expensesArray = escrow.expenses ? escrow.expenses.map((exp) => ({
         description: exp,
         amount: 0,
-        paid: false
+        paid: false,
       })) : [];
-      
+
       // Insert escrow with minimal required fields
       const result = await pool.query(`
         INSERT INTO escrows (
@@ -469,16 +469,15 @@ async function importEscrows() {
         escrow.contingenciesDate,
         escrow.emdDate,
         escrow.escrowStatus === 'closed' ? escrow.coeDate : null,
-        escrow.checklists.house.avid || false
+        escrow.checklists.house.avid || false,
       ]);
-      
+
       console.log(`Created escrow ${result.rows[0].display_id} for ${escrow.propertyAddress}`);
     }
-    
+
     // Commit transaction
     await pool.query('COMMIT');
     console.log('Successfully imported all escrows!');
-    
   } catch (error) {
     await pool.query('ROLLBACK');
     console.error('Error importing escrows:', error);
@@ -496,7 +495,7 @@ async function runImport() {
     process.env.NODE_ENV = 'production';
     process.env.DATABASE_URL = 'postgresql://postgres:ueLIWnvALZWVbRdnOmpLGsrrukeGLGQQ@ballast.proxy.rlwy.net:20017/railway';
     await importEscrows();
-    
+
     console.log('\n✅ Import completed successfully!');
   } catch (error) {
     console.error('❌ Import failed:', error);

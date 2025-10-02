@@ -43,22 +43,22 @@ function buildRestructuredEscrowResponse(escrow) {
   }
 
   // Calculate days to close
-  const daysToClose = escrow.closing_date ? 
-    Math.floor((new Date(escrow.closing_date) - new Date()) / (1000 * 60 * 60 * 24)) : 0;
+  const daysToClose = escrow.closing_date
+    ? Math.floor((new Date(escrow.closing_date) - new Date()) / (1000 * 60 * 60 * 24)) : 0;
 
   // Calculate checklist progress
   let totalItems = 0;
   let completedItems = 0;
-  
-  Object.values(checklists).forEach(section => {
+
+  Object.values(checklists).forEach((section) => {
     if (typeof section === 'object' && section !== null) {
-      Object.values(section).forEach(value => {
+      Object.values(section).forEach((value) => {
         totalItems++;
         if (value === true) completedItems++;
       });
     }
   });
-  
+
   const checklistProgress = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
 
   // Build the restructured response
@@ -77,8 +77,8 @@ function buildRestructuredEscrowResponse(escrow) {
       loanAmount: parseFloat(escrow.loan_amount) || financials.loanAmount || 0,
       myCommission: parseFloat(escrow.my_commission) || 0,
       scheduledCoeDate: escrow.closing_date || null,
-      daysToClose: daysToClose,
-      checklistProgress: checklistProgress,
+      daysToClose,
+      checklistProgress,
       lastActivity: escrow.updated_at || escrow.created_at || null,
       upcomingDeadlines: 2,
       escrowCompany: escrow.escrow_company || null,
@@ -89,7 +89,7 @@ function buildRestructuredEscrowResponse(escrow) {
       transactionType: escrow.transaction_type || 'Purchase',
       leadSource: escrow.lead_source || financials.leadSource || null,
       createdAt: escrow.created_at,
-      updatedAt: escrow.updated_at
+      updatedAt: escrow.updated_at,
     },
 
     // Property details (renamed from propertyDetails)
@@ -129,66 +129,66 @@ function buildRestructuredEscrowResponse(escrow) {
       daysOnMarket: escrow.days_on_market || null,
       previousListPrice: escrow.previous_list_price || null,
       originalListPrice: escrow.original_list_price || null,
-      pricePerSqft: escrow.square_feet && escrow.purchase_price ? 
-        Math.round(parseFloat(escrow.purchase_price) / escrow.square_feet) : null
+      pricePerSqft: escrow.square_feet && escrow.purchase_price
+        ? Math.round(parseFloat(escrow.purchase_price) / escrow.square_feet) : null,
     },
 
     // People - simplified to contact references with roles
     people: {
-      buyer: people.buyer && (people.buyer.id || people.buyer.name) ? { 
-        contactId: people.buyer.id || null, 
-        role: 'buyer', 
-        name: people.buyer.name || null 
+      buyer: people.buyer && (people.buyer.id || people.buyer.name) ? {
+        contactId: people.buyer.id || null,
+        role: 'buyer',
+        name: people.buyer.name || null,
       } : null,
-      buyerAgent: people.buyerAgent && (people.buyerAgent.id || people.buyerAgent.name) ? { 
-        contactId: people.buyerAgent.id || null, 
-        role: 'buyerAgent', 
-        name: people.buyerAgent.name || null 
+      buyerAgent: people.buyerAgent && (people.buyerAgent.id || people.buyerAgent.name) ? {
+        contactId: people.buyerAgent.id || null,
+        role: 'buyerAgent',
+        name: people.buyerAgent.name || null,
       } : null,
-      seller: people.seller && (people.seller.id || people.seller.name) ? { 
-        contactId: people.seller.id || null, 
-        role: 'seller', 
-        name: people.seller.name || null 
+      seller: people.seller && (people.seller.id || people.seller.name) ? {
+        contactId: people.seller.id || null,
+        role: 'seller',
+        name: people.seller.name || null,
       } : null,
-      sellerAgent: people.sellerAgent && (people.sellerAgent.id || people.sellerAgent.name) ? { 
-        contactId: people.sellerAgent.id || null, 
-        role: 'sellerAgent', 
-        name: people.sellerAgent.name || null 
+      sellerAgent: people.sellerAgent && (people.sellerAgent.id || people.sellerAgent.name) ? {
+        contactId: people.sellerAgent.id || null,
+        role: 'sellerAgent',
+        name: people.sellerAgent.name || null,
       } : null,
-      escrowOfficer: (people.escrowOfficer && (people.escrowOfficer.id || people.escrowOfficer.name)) || escrow.escrow_officer_name ? { 
-        contactId: people.escrowOfficer?.id || null, 
-        role: 'escrowOfficer', 
-        name: people.escrowOfficer?.name || escrow.escrow_officer_name || null 
+      escrowOfficer: (people.escrowOfficer && (people.escrowOfficer.id || people.escrowOfficer.name)) || escrow.escrow_officer_name ? {
+        contactId: people.escrowOfficer?.id || null,
+        role: 'escrowOfficer',
+        name: people.escrowOfficer?.name || escrow.escrow_officer_name || null,
       } : null,
-      titleOfficer: people.titleOfficer && (people.titleOfficer.id || people.titleOfficer.name) ? { 
-        contactId: people.titleOfficer.id || null, 
-        role: 'titleOfficer', 
-        name: people.titleOfficer.name || null 
+      titleOfficer: people.titleOfficer && (people.titleOfficer.id || people.titleOfficer.name) ? {
+        contactId: people.titleOfficer.id || null,
+        role: 'titleOfficer',
+        name: people.titleOfficer.name || null,
       } : null,
-      loanOfficer: (people.loanOfficer && (people.loanOfficer.id || people.loanOfficer.name)) || escrow.loan_officer_name ? { 
-        contactId: people.loanOfficer?.id || null, 
-        role: 'loanOfficer', 
-        name: people.loanOfficer?.name || escrow.loan_officer_name || null 
+      loanOfficer: (people.loanOfficer && (people.loanOfficer.id || people.loanOfficer.name)) || escrow.loan_officer_name ? {
+        contactId: people.loanOfficer?.id || null,
+        role: 'loanOfficer',
+        name: people.loanOfficer?.name || escrow.loan_officer_name || null,
       } : null,
-      homeInspector: people.homeInspector && (people.homeInspector.id || people.homeInspector.name) ? { 
-        contactId: people.homeInspector.id || null, 
-        role: 'homeInspector', 
-        name: people.homeInspector.name || null 
+      homeInspector: people.homeInspector && (people.homeInspector.id || people.homeInspector.name) ? {
+        contactId: people.homeInspector.id || null,
+        role: 'homeInspector',
+        name: people.homeInspector.name || null,
       } : null,
-      appraiser: people.appraiser && (people.appraiser.id || people.appraiser.name) ? { 
-        contactId: people.appraiser.id || null, 
-        role: 'appraiser', 
-        name: people.appraiser.name || null 
+      appraiser: people.appraiser && (people.appraiser.id || people.appraiser.name) ? {
+        contactId: people.appraiser.id || null,
+        role: 'appraiser',
+        name: people.appraiser.name || null,
       } : null,
-      transactionCoordinator: (people.transactionCoordinator && (people.transactionCoordinator.id || people.transactionCoordinator.name)) || escrow.transaction_coordinator ? { 
-        contactId: people.transactionCoordinator?.id || null, 
-        role: 'transactionCoordinator', 
-        name: people.transactionCoordinator?.name || escrow.transaction_coordinator || null 
+      transactionCoordinator: (people.transactionCoordinator && (people.transactionCoordinator.id || people.transactionCoordinator.name)) || escrow.transaction_coordinator ? {
+        contactId: people.transactionCoordinator?.id || null,
+        role: 'transactionCoordinator',
+        name: people.transactionCoordinator?.name || escrow.transaction_coordinator || null,
       } : null,
       referralAgent: (people.referralAgent && (people.referralAgent.id || people.referralAgent.name)) || escrow.referral_agent || financials.referralAgent ? {
         contactId: people.referralAgent?.id || null,
         role: 'referralAgent',
-        name: people.referralAgent?.name || escrow.referral_agent || financials.referralAgent || null
+        name: people.referralAgent?.name || escrow.referral_agent || financials.referralAgent || null,
       } : null,
     },
 
@@ -246,7 +246,7 @@ function buildRestructuredEscrowResponse(escrow) {
       cd: checklists.loan?.cd || false,
       loanDocsSigned: checklists.loan?.loanDocsSigned || false,
       cashToClosePaid: checklists.loan?.cashToClosePaid || false,
-      loanFunded: checklists.loan?.loanFunded || false
+      loanFunded: checklists.loan?.loanFunded || false,
     },
 
     'checklist-house': {
@@ -257,8 +257,8 @@ function buildRestructuredEscrowResponse(escrow) {
       homeInspectionReceived: checklists.house?.homeInspectionReceived || false,
       sellerDisclosures: checklists.house?.sellerDisclosures || false,
       rr: checklists.house?.rr || false,
-      cr: checklists.house?.cr || false,  // Added CR field
-      recorded: checklists.house?.recorded || false
+      cr: checklists.house?.cr || false, // Added CR field
+      recorded: checklists.house?.recorded || false,
     },
 
     'checklist-admin': {
@@ -266,11 +266,11 @@ function buildRestructuredEscrowResponse(escrow) {
       tcEmail: checklists.admin?.tcEmail || false,
       tcGlideInvite: checklists.admin?.tcGlideInvite || false,
       addContactsToPhone: checklists.admin?.addContactsToPhone || false,
-      addContactsToNotion: checklists.admin?.addContactsToNotion || false
+      addContactsToNotion: checklists.admin?.addContactsToNotion || false,
     },
 
     // Documents array
-    documents: escrow.documents || []
+    documents: escrow.documents || [],
   };
 }
 

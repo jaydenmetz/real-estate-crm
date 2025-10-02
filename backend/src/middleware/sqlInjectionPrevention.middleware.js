@@ -1,4 +1,6 @@
-const { body, query, param, validationResult } = require('express-validator');
+const {
+  body, query, param, validationResult,
+} = require('express-validator');
 
 /**
  * SQL Injection Prevention Middleware
@@ -25,7 +27,7 @@ const SQL_BLACKLIST_PATTERNS = [
 const containsSQLInjection = (input) => {
   if (typeof input !== 'string') return false;
 
-  return SQL_BLACKLIST_PATTERNS.some(pattern => pattern.test(input));
+  return SQL_BLACKLIST_PATTERNS.some((pattern) => pattern.test(input));
 };
 
 /**
@@ -47,9 +49,7 @@ const sanitizeObject = (obj) => {
     } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       sanitized[key] = sanitizeObject(value);
     } else if (Array.isArray(value)) {
-      sanitized[key] = value.map(item =>
-        typeof item === 'string' ? item.replace(/'/g, "''").trim() : item
-      );
+      sanitized[key] = value.map((item) => (typeof item === 'string' ? item.replace(/'/g, "''").trim() : item));
     } else {
       sanitized[key] = value;
     }
@@ -72,8 +72,8 @@ const preventSQLInjection = (req, res, next) => {
             error: {
               code: 'INVALID_INPUT',
               message: 'Invalid characters detected in query parameters',
-              field: key
-            }
+              field: key,
+            },
           });
         }
       }
@@ -88,8 +88,8 @@ const preventSQLInjection = (req, res, next) => {
             error: {
               code: 'INVALID_INPUT',
               message: 'Invalid characters detected in URL parameters',
-              field: key
-            }
+              field: key,
+            },
           });
         }
       }
@@ -104,8 +104,8 @@ const preventSQLInjection = (req, res, next) => {
           success: false,
           error: {
             code: 'INVALID_INPUT',
-            message: error.message
-          }
+            message: error.message,
+          },
         });
       }
     }
@@ -116,8 +116,8 @@ const preventSQLInjection = (req, res, next) => {
       success: false,
       error: {
         code: 'VALIDATION_ERROR',
-        message: 'Input validation failed'
-      }
+        message: 'Input validation failed',
+      },
     });
   }
 };
@@ -189,55 +189,52 @@ const validationRules = {
     .optional()
     .isLength({ max: 100 })
     .escape()
-    .withMessage('Search query too long')
+    .withMessage('Search query too long'),
 };
 
 /**
  * Middleware to validate request based on validation rules
  */
-const validate = (rules) => {
-  return async (req, res, next) => {
-    // Apply validation rules
-    await Promise.all(rules.map(rule => rule.run(req)));
+const validate = (rules) => async (req, res, next) => {
+  // Apply validation rules
+  await Promise.all(rules.map((rule) => rule.run(req)));
 
-    // Check for validation errors
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        error: {
-          code: 'VALIDATION_ERROR',
-          message: 'Validation failed',
-          details: errors.array()
-        }
-      });
-    }
+  // Check for validation errors
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({
+      success: false,
+      error: {
+        code: 'VALIDATION_ERROR',
+        message: 'Validation failed',
+        details: errors.array(),
+      },
+    });
+  }
 
-    next();
-  };
+  next();
 };
 
 /**
  * Create parameterized query helper
  */
-const createParameterizedQuery = (query, params) => {
+const createParameterizedQuery = (query, params) =>
   // This is a helper to ensure parameterized queries are used
   // The actual implementation should use your database library's parameterized query feature
-  return {
+  ({
     text: query,
-    values: params
-  };
-};
+    values: params,
+  })
+;
 
 /**
  * Sanitize filename for uploads
  */
-const sanitizeFilename = (filename) => {
-  return filename
-    .replace(/[^a-zA-Z0-9._-]/g, '') // Remove special characters
-    .replace(/\.\./g, '') // Prevent directory traversal
-    .substring(0, 255); // Limit length
-};
+const sanitizeFilename = (filename) => filename
+  .replace(/[^a-zA-Z0-9._-]/g, '') // Remove special characters
+  .replace(/\.\./g, '') // Prevent directory traversal
+  .substring(0, 255) // Limit length
+;
 
 module.exports = {
   preventSQLInjection,
@@ -245,5 +242,5 @@ module.exports = {
   validate,
   createParameterizedQuery,
   sanitizeFilename,
-  containsSQLInjection
+  containsSQLInjection,
 };

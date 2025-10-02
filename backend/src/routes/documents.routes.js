@@ -1,5 +1,6 @@
 // backend/src/routes/documents.routes.js
 const express = require('express');
+
 const router = express.Router();
 const { query } = require('../config/database');
 
@@ -19,7 +20,7 @@ router.get('/:id', async (req, res) => {
   try {
     const { rows } = await query(
       'SELECT * FROM documents WHERE id = $1',
-      [req.params.id]
+      [req.params.id],
     );
     if (!rows.length) return res.status(404).json({ success: false, error: 'Not found' });
     res.json({ success: true, data: rows[0] });
@@ -32,7 +33,9 @@ router.get('/:id', async (req, res) => {
 // POST new document
 router.post('/', async (req, res) => {
   try {
-    const { entity_type, entity_id, document_type, name, file_path, file_size, uploaded_by } = req.body;
+    const {
+      entity_type, entity_id, document_type, name, file_path, file_size, uploaded_by,
+    } = req.body;
     const sql = `
       INSERT INTO documents
         (id, entity_type, entity_id, document_type, name, file_path, file_size, uploaded_by)
@@ -52,7 +55,9 @@ router.post('/', async (req, res) => {
 // PUT update
 router.put('/:id', async (req, res) => {
   try {
-    const { document_type, name, file_path, file_size } = req.body;
+    const {
+      document_type, name, file_path, file_size,
+    } = req.body;
     const sql = `
       UPDATE documents
       SET document_type=$1, name=$2, file_path=$3, file_size=$4, uploaded_at=CURRENT_TIMESTAMP

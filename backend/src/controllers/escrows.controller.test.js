@@ -16,17 +16,17 @@ describe('EscrowsController', () => {
       user: {
         id: 'user-123',
         email: 'agent@example.com',
-        role: 'agent'
+        role: 'agent',
       },
       body: {},
       query: {},
-      params: {}
+      params: {},
     };
 
     // Setup mock response
     mockRes = {
       json: jest.fn().mockReturnThis(),
-      status: jest.fn().mockReturnThis()
+      status: jest.fn().mockReturnThis(),
     };
   });
 
@@ -40,15 +40,15 @@ describe('EscrowsController', () => {
           property_address: '123 Main St',
           purchase_price: 500000,
           status: 'active',
-          user_id: 'user-123'
+          user_id: 'user-123',
         },
         {
           id: 'escrow-2',
           property_address: '456 Oak Ave',
           purchase_price: 750000,
           status: 'pending',
-          user_id: 'user-123'
-        }
+          user_id: 'user-123',
+        },
       ];
 
       pool.query.mockResolvedValue({ rows: mockEscrows });
@@ -59,12 +59,12 @@ describe('EscrowsController', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('SELECT'),
-        expect.arrayContaining(['user-123'])
+        expect.arrayContaining(['user-123']),
       );
 
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
-        data: mockEscrows
+        data: mockEscrows,
       });
     });
 
@@ -77,8 +77,8 @@ describe('EscrowsController', () => {
         {
           id: 'escrow-1',
           property_address: '123 Main St',
-          status: 'active'
-        }
+          status: 'active',
+        },
       ];
 
       pool.query.mockResolvedValue({ rows: mockEscrows });
@@ -89,12 +89,12 @@ describe('EscrowsController', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('WHERE'),
-        expect.arrayContaining(['user-123', 'active'])
+        expect.arrayContaining(['user-123', 'active']),
       );
 
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
-        data: mockEscrows
+        data: mockEscrows,
       });
     });
 
@@ -109,7 +109,7 @@ describe('EscrowsController', () => {
       // Assert
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
-        data: []
+        data: [],
       });
     });
   });
@@ -123,7 +123,7 @@ describe('EscrowsController', () => {
         property_address: '123 Main St',
         purchase_price: 500000,
         status: 'active',
-        user_id: 'user-123'
+        user_id: 'user-123',
       };
 
       mockReq.params = { id: 'escrow-1' };
@@ -135,12 +135,12 @@ describe('EscrowsController', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('WHERE'),
-        expect.arrayContaining(['escrow-1', 'user-123'])
+        expect.arrayContaining(['escrow-1', 'user-123']),
       );
 
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
-        data: mockEscrow
+        data: mockEscrow,
       });
     });
 
@@ -158,8 +158,8 @@ describe('EscrowsController', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
         error: expect.objectContaining({
-          code: 'NOT_FOUND'
-        })
+          code: 'NOT_FOUND',
+        }),
       });
     });
   });
@@ -174,7 +174,7 @@ describe('EscrowsController', () => {
         purchase_price: 600000,
         status: 'active',
         user_id: 'user-123',
-        created_at: new Date().toISOString()
+        created_at: new Date().toISOString(),
       };
 
       mockReq.body = {
@@ -183,7 +183,7 @@ describe('EscrowsController', () => {
         seller_name: 'John Seller',
         buyer_name: 'Jane Buyer',
         escrow_company: 'Secure Escrow Inc',
-        close_date: '2026-03-01'
+        close_date: '2026-03-01',
       };
 
       pool.query.mockResolvedValue({ rows: [mockNewEscrow] });
@@ -197,14 +197,14 @@ describe('EscrowsController', () => {
         expect.arrayContaining([
           'user-123',
           '789 Elm St',
-          600000
-        ])
+          600000,
+        ]),
       );
 
       expect(mockRes.status).toHaveBeenCalledWith(201);
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
-        data: mockNewEscrow
+        data: mockNewEscrow,
       });
     });
 
@@ -213,7 +213,7 @@ describe('EscrowsController', () => {
       // Arrange
       mockReq.body = {
         // Missing property_address
-        purchase_price: 500000
+        purchase_price: 500000,
       };
 
       // Act
@@ -224,8 +224,8 @@ describe('EscrowsController', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
         error: expect.objectContaining({
-          code: 'MISSING_FIELDS'
-        })
+          code: 'MISSING_FIELDS',
+        }),
       });
     });
 
@@ -234,7 +234,7 @@ describe('EscrowsController', () => {
       // Arrange
       mockReq.body = {
         property_address: '123 Main St',
-        purchase_price: 'invalid-price' // Should be number
+        purchase_price: 'invalid-price', // Should be number
       };
 
       // Act
@@ -245,8 +245,8 @@ describe('EscrowsController', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
         error: expect.objectContaining({
-          code: expect.stringMatching(/INVALID|VALIDATION/)
-        })
+          code: expect.stringMatching(/INVALID|VALIDATION/),
+        }),
       });
     });
   });
@@ -260,13 +260,13 @@ describe('EscrowsController', () => {
         property_address: '123 Main St',
         purchase_price: 550000, // Updated price
         status: 'pending', // Updated status
-        user_id: 'user-123'
+        user_id: 'user-123',
       };
 
       mockReq.params = { id: 'escrow-1' };
       mockReq.body = {
         purchase_price: 550000,
-        status: 'pending'
+        status: 'pending',
       };
 
       // First query checks ownership, second updates
@@ -280,12 +280,12 @@ describe('EscrowsController', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('UPDATE escrows'),
-        expect.any(Array)
+        expect.any(Array),
       );
 
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
-        data: mockUpdatedEscrow
+        data: mockUpdatedEscrow,
       });
     });
 
@@ -305,8 +305,8 @@ describe('EscrowsController', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
         error: expect.objectContaining({
-          code: 'NOT_FOUND'
-        })
+          code: 'NOT_FOUND',
+        }),
       });
     });
   });
@@ -327,12 +327,12 @@ describe('EscrowsController', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('DELETE FROM escrows'),
-        expect.arrayContaining(['escrow-1', 'user-123'])
+        expect.arrayContaining(['escrow-1', 'user-123']),
       );
 
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
-        message: expect.any(String)
+        message: expect.any(String),
       });
     });
   });

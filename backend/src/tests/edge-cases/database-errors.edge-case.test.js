@@ -10,7 +10,7 @@ describe('Database Error Handling Edge Cases', () => {
       .post('/v1/auth/login')
       .send({
         email: 'admin@jaydenmetz.com',
-        password: 'AdminPassword123!'
+        password: 'AdminPassword123!',
       });
 
     authToken = loginResponse.body.data.token;
@@ -32,7 +32,7 @@ describe('Database Error Handling Edge Cases', () => {
         firstName: 'John',
         lastName: 'Duplicate',
         email: uniqueEmail,
-        clientType: 'Buyer'
+        clientType: 'Buyer',
       });
 
     expect(response1.status).toBe(201);
@@ -46,7 +46,7 @@ describe('Database Error Handling Edge Cases', () => {
         firstName: 'Jane',
         lastName: 'Duplicate',
         email: uniqueEmail, // Same email
-        clientType: 'Seller'
+        clientType: 'Seller',
       });
 
     expect(response2.status).toBe(400);
@@ -68,7 +68,7 @@ describe('Database Error Handling Edge Cases', () => {
         propertyAddress: '123 Test St',
         purchasePrice: 500000,
         status: 'active',
-        clientId: nonExistentClientId // Non-existent foreign key
+        clientId: nonExistentClientId, // Non-existent foreign key
       });
 
     // Should gracefully handle (either 400 or 404)
@@ -116,11 +116,11 @@ describe('Database Error Handling Edge Cases', () => {
         zipCode: '93561',
         purchasePrice: 500000,
         status: 'active',
-        escrowNumber: `CONCUR-${Date.now()}`
+        escrowNumber: `CONCUR-${Date.now()}`,
       });
 
     const escrowId = createResponse.body.data.id;
-    const version = createResponse.body.data.version;
+    const { version } = createResponse.body.data;
 
     // First update (should succeed)
     const update1 = await request(app)
@@ -128,7 +128,7 @@ describe('Database Error Handling Edge Cases', () => {
       .set('Authorization', `Bearer ${authToken}`)
       .send({
         status: 'pending',
-        version: version
+        version,
       });
 
     expect(update1.status).toBe(200);
@@ -139,7 +139,7 @@ describe('Database Error Handling Edge Cases', () => {
       .set('Authorization', `Bearer ${authToken}`)
       .send({
         status: 'closed',
-        version: version // Stale version
+        version, // Stale version
       });
 
     expect(update2.status).toBe(409);

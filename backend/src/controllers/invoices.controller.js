@@ -1,6 +1,6 @@
+const { validationResult } = require('express-validator');
 const Invoice = require('../models/Invoice.mock');
 const logger = require('../utils/logger');
-const { validationResult } = require('express-validator');
 
 // GET /invoices
 exports.getInvoices = async (req, res) => {
@@ -16,15 +16,15 @@ exports.getInvoices = async (req, res) => {
       page: req.query.page || 1,
       limit: req.query.limit || 20,
       sort: req.query.sort,
-      order: req.query.order
+      order: req.query.order,
     };
-    
+
     const result = await Invoice.findAll(filters);
-    
+
     res.json({
       success: true,
       data: result,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error fetching invoices:', error);
@@ -32,8 +32,8 @@ exports.getInvoices = async (req, res) => {
       success: false,
       error: {
         code: 'FETCH_ERROR',
-        message: 'Failed to fetch invoices'
-      }
+        message: 'Failed to fetch invoices',
+      },
     });
   }
 };
@@ -42,21 +42,21 @@ exports.getInvoices = async (req, res) => {
 exports.getInvoice = async (req, res) => {
   try {
     const invoice = await Invoice.findById(req.params.id);
-    
+
     if (!invoice) {
       return res.status(404).json({
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Invoice not found'
-        }
+          message: 'Invoice not found',
+        },
       });
     }
-    
+
     res.json({
       success: true,
       data: invoice,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error fetching invoice:', error);
@@ -64,8 +64,8 @@ exports.getInvoice = async (req, res) => {
       success: false,
       error: {
         code: 'FETCH_ERROR',
-        message: 'Failed to fetch invoice'
-      }
+        message: 'Failed to fetch invoice',
+      },
     });
   }
 };
@@ -74,11 +74,11 @@ exports.getInvoice = async (req, res) => {
 exports.getStats = async (req, res) => {
   try {
     const stats = await Invoice.getStats();
-    
+
     res.json({
       success: true,
       data: stats,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error fetching invoice stats:', error);
@@ -86,8 +86,8 @@ exports.getStats = async (req, res) => {
       success: false,
       error: {
         code: 'STATS_ERROR',
-        message: 'Failed to fetch invoice statistics'
-      }
+        message: 'Failed to fetch invoice statistics',
+      },
     });
   }
 };
@@ -102,21 +102,21 @@ exports.createInvoice = async (req, res) => {
         error: {
           code: 'VALIDATION_ERROR',
           message: 'Invalid input data',
-          details: errors.array()
-        }
+          details: errors.array(),
+        },
       });
     }
-    
+
     const invoice = await Invoice.create(req.body);
-    
+
     // Emit real-time update
     const io = req.app.get('io');
     io.to('invoices').emit('invoice:created', invoice);
-    
+
     res.status(201).json({
       success: true,
       data: invoice,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error creating invoice:', error);
@@ -124,8 +124,8 @@ exports.createInvoice = async (req, res) => {
       success: false,
       error: {
         code: 'CREATE_ERROR',
-        message: 'Failed to create invoice'
-      }
+        message: 'Failed to create invoice',
+      },
     });
   }
 };
@@ -134,25 +134,25 @@ exports.createInvoice = async (req, res) => {
 exports.updateInvoice = async (req, res) => {
   try {
     const invoice = await Invoice.update(req.params.id, req.body);
-    
+
     if (!invoice) {
       return res.status(404).json({
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Invoice not found'
-        }
+          message: 'Invoice not found',
+        },
       });
     }
-    
+
     // Emit real-time update
     const io = req.app.get('io');
     io.to('invoices').emit('invoice:updated', invoice);
-    
+
     res.json({
       success: true,
       data: invoice,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error updating invoice:', error);
@@ -160,8 +160,8 @@ exports.updateInvoice = async (req, res) => {
       success: false,
       error: {
         code: 'UPDATE_ERROR',
-        message: 'Failed to update invoice'
-      }
+        message: 'Failed to update invoice',
+      },
     });
   }
 };
@@ -176,35 +176,35 @@ exports.recordPayment = async (req, res) => {
         error: {
           code: 'VALIDATION_ERROR',
           message: 'Invalid payment data',
-          details: errors.array()
-        }
+          details: errors.array(),
+        },
       });
     }
-    
+
     const invoice = await Invoice.recordPayment(req.params.id, req.body);
-    
+
     if (!invoice) {
       return res.status(404).json({
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Invoice not found'
-        }
+          message: 'Invoice not found',
+        },
       });
     }
-    
+
     // Emit real-time update
     const io = req.app.get('io');
-    io.to('invoices').emit('invoice:paymentReceived', { 
-      id: req.params.id, 
+    io.to('invoices').emit('invoice:paymentReceived', {
+      id: req.params.id,
       payment: req.body,
-      invoice 
+      invoice,
     });
-    
+
     res.json({
       success: true,
       data: invoice,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error recording payment:', error);
@@ -212,8 +212,8 @@ exports.recordPayment = async (req, res) => {
       success: false,
       error: {
         code: 'PAYMENT_ERROR',
-        message: 'Failed to record payment'
-      }
+        message: 'Failed to record payment',
+      },
     });
   }
 };
@@ -222,21 +222,21 @@ exports.recordPayment = async (req, res) => {
 exports.sendReminder = async (req, res) => {
   try {
     const result = await Invoice.sendReminder(req.params.id);
-    
+
     if (!result) {
       return res.status(404).json({
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Invoice not found'
-        }
+          message: 'Invoice not found',
+        },
       });
     }
-    
+
     res.json({
       success: true,
       data: result,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error sending reminder:', error);
@@ -244,8 +244,8 @@ exports.sendReminder = async (req, res) => {
       success: false,
       error: {
         code: 'REMINDER_ERROR',
-        message: 'Failed to send reminder'
-      }
+        message: 'Failed to send reminder',
+      },
     });
   }
 };
@@ -254,15 +254,15 @@ exports.sendReminder = async (req, res) => {
 exports.deleteInvoice = async (req, res) => {
   try {
     const result = await Invoice.delete(req.params.id);
-    
+
     // Emit real-time update
     const io = req.app.get('io');
     io.to('invoices').emit('invoice:deleted', { id: req.params.id });
-    
+
     res.json({
       success: true,
       data: result,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error deleting invoice:', error);
@@ -270,8 +270,8 @@ exports.deleteInvoice = async (req, res) => {
       success: false,
       error: {
         code: 'DELETE_ERROR',
-        message: 'Failed to delete invoice'
-      }
+        message: 'Failed to delete invoice',
+      },
     });
   }
 };
@@ -280,26 +280,26 @@ exports.deleteInvoice = async (req, res) => {
 exports.downloadInvoice = async (req, res) => {
   try {
     const invoice = await Invoice.findById(req.params.id);
-    
+
     if (!invoice) {
       return res.status(404).json({
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Invoice not found'
-        }
+          message: 'Invoice not found',
+        },
       });
     }
-    
+
     // In a real implementation, this would generate a PDF
     res.json({
       success: true,
       data: {
         message: 'Invoice download endpoint',
         invoiceNumber: invoice.invoiceNumber,
-        downloadUrl: `/api/v1/documents/invoice-${invoice.id}.pdf`
+        downloadUrl: `/api/v1/documents/invoice-${invoice.id}.pdf`,
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error downloading invoice:', error);
@@ -307,8 +307,8 @@ exports.downloadInvoice = async (req, res) => {
       success: false,
       error: {
         code: 'DOWNLOAD_ERROR',
-        message: 'Failed to download invoice'
-      }
+        message: 'Failed to download invoice',
+      },
     });
   }
 };

@@ -3,12 +3,12 @@ require('dotenv').config({ path: '../.env' });
 
 const pool = new Pool({
   connectionString: 'postgresql://postgres:ueLIWnvALZWVbRdnOmpLGsrrukeGLGQQ@ballast.proxy.rlwy.net:20017/railway',
-  ssl: { rejectUnauthorized: false }
+  ssl: { rejectUnauthorized: false },
 });
 
 /**
  * Manual process to get Zillow Open Graph images
- * 
+ *
  * Since Zillow blocks automated requests, here are manual methods:
  */
 
@@ -44,9 +44,9 @@ async function updatePropertyImage(address, imageUrl) {
            updated_at = NOW()
        WHERE property_address = $2
        RETURNING id, display_id`,
-      [imageUrl, address]
+      [imageUrl, address],
     );
-    
+
     if (result.rows.length > 0) {
       console.log(`✓ Updated ${result.rows[0].display_id}: ${address}`);
       console.log(`  New image: ${imageUrl}\n`);
@@ -63,20 +63,20 @@ const zillowImagePatterns = {
   '9602 Cecilia St, Downey, CA 90241': {
     zpid: '21067548',
     typical_pattern: 'https://photos.zillowstatic.com/fp/{hash}-cc_ft_960.webp',
-    working_url: 'https://photos.zillowstatic.com/fp/a57d78b482fea26c0ff9bfc6422b87a9-cc_ft_1536.webp'
+    working_url: 'https://photos.zillowstatic.com/fp/a57d78b482fea26c0ff9bfc6422b87a9-cc_ft_1536.webp',
   },
   '5609 Monitor St, Bakersfield, CA 93307': {
     zpid: '19015640',
-    typical_pattern: 'https://photos.zillowstatic.com/fp/{hash}-cc_ft_960.webp'
+    typical_pattern: 'https://photos.zillowstatic.com/fp/{hash}-cc_ft_960.webp',
   },
   '9753 Sunglow St, Pico Rivera, CA 90660': {
     zpid: '21102569',
-    typical_pattern: 'https://photos.zillowstatic.com/fp/{hash}-cc_ft_960.webp'
+    typical_pattern: 'https://photos.zillowstatic.com/fp/{hash}-cc_ft_960.webp',
   },
   '313 Darling Point Dr, Bakersfield, CA 93307': {
     zpid: '300316000',
-    typical_pattern: 'https://photos.zillowstatic.com/fp/{hash}-cc_ft_960.webp'
-  }
+    typical_pattern: 'https://photos.zillowstatic.com/fp/{hash}-cc_ft_960.webp',
+  },
 };
 
 console.log('\n=== Your Zillow Properties ===\n');
@@ -86,14 +86,14 @@ async function showProperties() {
     `SELECT property_address, zillow_url, property_image_url 
      FROM escrows 
      WHERE zillow_url IS NOT NULL 
-     ORDER BY property_address`
+     ORDER BY property_address`,
   );
-  
+
   for (const row of result.rows) {
     console.log(`Property: ${row.property_address}`);
     console.log(`Zillow URL: ${row.zillow_url}`);
     console.log(`Current Image: ${row.property_image_url}\n`);
-    
+
     const pattern = zillowImagePatterns[row.property_address];
     if (pattern) {
       console.log(`ZPID: ${pattern.zpid}`);
@@ -104,7 +104,7 @@ async function showProperties() {
     }
     console.log('---\n');
   }
-  
+
   console.log('\nTo update an image manually:');
   console.log('node src/scripts/get-zillow-images-manual.js "ADDRESS" "IMAGE_URL"\n');
 }

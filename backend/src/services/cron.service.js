@@ -8,5 +8,5 @@ module.exports = {
   start: () => {
     // Placeholder for future cron jobs
     logger.info('✅ Cron service initialized (no active jobs)');
-  }
+  },
 };

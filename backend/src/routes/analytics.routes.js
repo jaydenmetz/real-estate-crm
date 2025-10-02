@@ -1,5 +1,6 @@
 const express = require('express');
 const { query } = require('../config/database');
+
 const router = express.Router();
 
 // Dashboard analytics
@@ -28,11 +29,19 @@ router.get('/dashboard', async (req, res) => {
       todayAppointments: 3,
       thisWeekAppointments: 14,
       recentActivity: [
-        { id: 1, type: 'listing', action: 'New listing created', details: '123 Main St - $485,000', timestamp: new Date(Date.now() - 2*3600*1000) },
-        { id: 2, type: 'lead',    action: 'New lead received',      details: 'Sarah Chen - Website inquiry', timestamp: new Date(Date.now() - 3*3600*1000) },
-        { id: 3, type: 'appointment', action: 'Appointment scheduled','details': 'Johnson Family - Buyer consultation', timestamp: new Date(Date.now() - 5*3600*1000) },
-        { id: 4, type: 'closing', action: 'Closing completed',      details: '789 Oak Ave - Wilson LLC',      timestamp: new Date(Date.now() - 24*3600*1000) }
-      ]
+        {
+          id: 1, type: 'listing', action: 'New listing created', details: '123 Main St - $485,000', timestamp: new Date(Date.now() - 2 * 3600 * 1000),
+        },
+        {
+          id: 2, type: 'lead', action: 'New lead received', details: 'Sarah Chen - Website inquiry', timestamp: new Date(Date.now() - 3 * 3600 * 1000),
+        },
+        {
+          id: 3, type: 'appointment', action: 'Appointment scheduled', details: 'Johnson Family - Buyer consultation', timestamp: new Date(Date.now() - 5 * 3600 * 1000),
+        },
+        {
+          id: 4, type: 'closing', action: 'Closing completed', details: '789 Oak Ave - Wilson LLC', timestamp: new Date(Date.now() - 24 * 3600 * 1000),
+        },
+      ],
     };
     res.json(mockDashboardData);
   } catch (err) {
@@ -50,9 +59,9 @@ router.get('/lead/:id', async (req, res) => {
       recommended_actions: [
         'Follow up within 24 hours',
         'Send property matches',
-        'Schedule viewing'
+        'Schedule viewing',
       ],
-      similar_leads_converted: 8
+      similar_leads_converted: 8,
     });
   } catch (err) {
     console.error('Error fetching lead analytics:', err);
@@ -69,15 +78,15 @@ router.get('/escrow/:id', async (req, res) => {
       commission_breakdown: {
         listing_side: 15000,
         buying_side: 15000,
-        adjustments: -500
+        adjustments: -500,
       },
       risk_factors: [],
       milestone_progress: {
         inspection: 100,
         appraisal: 100,
         loan_approval: 80,
-        closing_prep: 50
-      }
+        closing_prep: 50,
+      },
     });
   } catch (err) {
     console.error('Error fetching escrow analytics:', err);
@@ -92,12 +101,12 @@ router.get('/listing/:id', async (req, res) => {
       estimated_value: 520000,
       days_on_market: 12,
       price_reductions: [
-        { date: '2025-06-01', from: 500000, to: 485000 }
+        { date: '2025-06-01', from: 500000, to: 485000 },
       ],
       showing_stats: {
         total: 24,
-        week: 3
-      }
+        week: 3,
+      },
     });
   } catch (err) {
     console.error('Error fetching listing analytics:', err);
@@ -111,7 +120,7 @@ router.get('/appointments/:id', async (req, res) => {
     res.json({
       attendance: { invited: 5, confirmed: 4, no_shows: 1 },
       duration_metrics: { scheduled: 60, actual: 55 },
-      follow_up_tasks: ['Send thank-you note', 'Schedule next call']
+      follow_up_tasks: ['Send thank-you note', 'Schedule next call'],
     });
   } catch (err) {
     console.error('Error fetching appointment analytics:', err);
@@ -119,4 +128,4 @@ router.get('/appointments/:id', async (req, res) => {
   }
 });
 
-module.exports = router
+module.exports = router;

@@ -28,7 +28,7 @@ const authenticateAny = async (req, res, next) => {
           teamName: userData.teamName,
           apiKeyId: userData.apiKeyId,
           permissions: userData.permissions,
-          authMethod: 'api_key'
+          authMethod: 'api_key',
         };
 
         // Log API key usage (async, don't wait)
@@ -39,8 +39,8 @@ const authenticateAny = async (req, res, next) => {
           req.originalUrl,
           req.method,
           ipAddress,
-          userAgent
-        ).catch(err => console.error('Failed to log API key usage:', err));
+          userAgent,
+        ).catch((err) => console.error('Failed to log API key usage:', err));
 
         return next();
       }
@@ -81,8 +81,8 @@ const authenticateAny = async (req, res, next) => {
             success: false,
             error: {
               code: 'USER_NOT_FOUND',
-              message: 'User not found or inactive'
-            }
+              message: 'User not found or inactive',
+            },
           });
         }
 
@@ -99,7 +99,7 @@ const authenticateAny = async (req, res, next) => {
           role: user.role,
           teamId: user.team_id,
           teamName: user.team_name,
-          authMethod: 'jwt'
+          authMethod: 'jwt',
         };
 
         return next();
@@ -109,8 +109,8 @@ const authenticateAny = async (req, res, next) => {
             success: false,
             error: {
               code: 'INVALID_TOKEN',
-              message: 'Invalid authentication token'
-            }
+              message: 'Invalid authentication token',
+            },
           });
         }
         if (error.name === 'TokenExpiredError') {
@@ -118,8 +118,8 @@ const authenticateAny = async (req, res, next) => {
             success: false,
             error: {
               code: 'TOKEN_EXPIRED',
-              message: 'Authentication token has expired'
-            }
+              message: 'Authentication token has expired',
+            },
           });
         }
         throw error;
@@ -131,27 +131,26 @@ const authenticateAny = async (req, res, next) => {
       success: false,
       error: {
         code: 'NO_AUTH',
-        message: 'Authentication required. Please provide either an API key or JWT token.'
-      }
+        message: 'Authentication required. Please provide either an API key or JWT token.',
+      },
     });
-
   } catch (error) {
     console.error('Authentication error details:', {
       error: error.message,
       stack: error.stack,
       name: error.name,
-      code: error.code
+      code: error.code,
     });
     return res.status(500).json({
       success: false,
       error: {
         code: 'AUTH_ERROR',
-        message: `Authentication failed: ${error.message}`
-      }
+        message: `Authentication failed: ${error.message}`,
+      },
     });
   }
 };
 
 module.exports = {
-  authenticateAny
+  authenticateAny,
 };

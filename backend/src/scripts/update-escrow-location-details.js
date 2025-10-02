@@ -8,15 +8,15 @@ const locationUpdates = [
     city: 'Downey',
     state: 'CA',
     zip_code: '90241',
-    county: 'Los Angeles'
+    county: 'Los Angeles',
   },
   {
-    display_id: 'ESC-2025-4069', 
+    display_id: 'ESC-2025-4069',
     property_address: '13720 Colorado Ln, Victorville, CA 92395',
     city: 'Victorville',
     state: 'CA',
     zip_code: '92395',
-    county: 'San Bernardino'
+    county: 'San Bernardino',
   },
   {
     display_id: 'ESC-2025-2467',
@@ -24,7 +24,7 @@ const locationUpdates = [
     city: 'Bakersfield',
     state: 'CA',
     zip_code: '93307',
-    county: 'Kern'
+    county: 'Kern',
   },
   {
     display_id: 'ESC-2025-8173',
@@ -32,7 +32,7 @@ const locationUpdates = [
     city: 'Bakersfield',
     state: 'CA',
     zip_code: '93307',
-    county: 'Kern'
+    county: 'Kern',
   },
   {
     display_id: 'ESC-2025-8841',
@@ -40,7 +40,7 @@ const locationUpdates = [
     city: 'Pico Rivera',
     state: 'CA',
     zip_code: '90660',
-    county: 'Los Angeles'
+    county: 'Los Angeles',
   },
   {
     display_id: 'ESC-2025-2305',
@@ -48,15 +48,15 @@ const locationUpdates = [
     city: 'Bakersfield',
     state: 'CA',
     zip_code: '93307',
-    county: 'Kern'
-  }
+    county: 'Kern',
+  },
 ];
 
 async function updateLocationDetails() {
   // First check which columns exist in production
   const pool = new Pool({
     connectionString: 'postgresql://postgres:ueLIWnvALZWVbRdnOmpLGsrrukeGLGQQ@ballast.proxy.rlwy.net:20017/railway',
-    ssl: { rejectUnauthorized: false }
+    ssl: { rejectUnauthorized: false },
   });
 
   try {
@@ -67,8 +67,8 @@ async function updateLocationDetails() {
       WHERE table_name = 'escrows' 
       AND column_name IN ('city', 'state', 'zip_code', 'county')
     `);
-    
-    const existingColumns = schemaCheck.rows.map(row => row.column_name);
+
+    const existingColumns = schemaCheck.rows.map((row) => row.column_name);
     console.log('Existing location columns:', existingColumns);
 
     // Add missing columns if needed
@@ -76,7 +76,7 @@ async function updateLocationDetails() {
       { name: 'city', type: 'VARCHAR(100)' },
       { name: 'state', type: 'VARCHAR(2)' },
       { name: 'zip_code', type: 'VARCHAR(10)' },
-      { name: 'county', type: 'VARCHAR(100)' }
+      { name: 'county', type: 'VARCHAR(100)' },
     ];
 
     for (const column of columnsToAdd) {
@@ -88,25 +88,24 @@ async function updateLocationDetails() {
 
     console.log('\n=== Updating Production Database ===');
     await pool.query('BEGIN');
-    
+
     for (const update of locationUpdates) {
       const result = await pool.query(
         `UPDATE escrows 
          SET city = $1, state = $2, zip_code = $3, county = $4
          WHERE display_id = $5
          RETURNING display_id, city, state, zip_code, county`,
-        [update.city, update.state, update.zip_code, update.county, update.display_id]
+        [update.city, update.state, update.zip_code, update.county, update.display_id],
       );
-      
+
       if (result.rowCount > 0) {
         const row = result.rows[0];
         console.log(`✅ Updated ${row.display_id}: ${row.city}, ${row.state} ${row.zip_code} (${row.county} County)`);
       }
     }
-    
+
     await pool.query('COMMIT');
     console.log('\n✅ Production database updated successfully!');
-    
   } catch (error) {
     await pool.query('ROLLBACK');
     console.error('❌ Error updating production:', error.message);
@@ -117,12 +116,12 @@ async function updateLocationDetails() {
   // Update local database
   const localPool = new Pool({
     connectionString: 'postgresql://postgres:postgres@localhost:5432/real_estate_crm',
-    ssl: false
+    ssl: false,
   });
 
   try {
     console.log('\n=== Updating Local Database ===');
-    
+
     // Check local schema
     const localSchemaCheck = await localPool.query(`
       SELECT column_name 
@@ -130,12 +129,12 @@ async function updateLocationDetails() {
       WHERE table_name = 'escrows' 
       AND column_name IN ('city', 'state', 'zip_code', 'county')
     `);
-    
-    const localColumns = localSchemaCheck.rows.map(row => row.column_name);
+
+    const localColumns = localSchemaCheck.rows.map((row) => row.column_name);
     console.log('Existing local columns:', localColumns);
 
     await localPool.query('BEGIN');
-    
+
     // Local database uses different display_ids
     const localUpdates = [
       { display_id: 'ESCROW-2025-0009', ...locationUpdates[0] },
@@ -143,15 +142,15 @@ async function updateLocationDetails() {
       { display_id: 'ESCROW-2025-0013', ...locationUpdates[2] },
       { display_id: 'ESCROW-2025-0015', ...locationUpdates[3] },
       { display_id: 'ESCROW-2025-0017', ...locationUpdates[4] },
-      { display_id: 'ESCROW-2025-0019', ...locationUpdates[5] }
+      { display_id: 'ESCROW-2025-0019', ...locationUpdates[5] },
     ];
-    
+
     for (const update of localUpdates) {
       // Build dynamic query based on available columns
       const updateFields = [];
       const values = [];
       let paramIndex = 1;
-      
+
       if (localColumns.includes('city')) {
         updateFields.push(`city = $${paramIndex++}`);
         values.push(update.city);
@@ -168,21 +167,20 @@ async function updateLocationDetails() {
         updateFields.push(`county = $${paramIndex++}`);
         values.push(update.county);
       }
-      
+
       if (updateFields.length > 0) {
         values.push(update.display_id);
         const query = `UPDATE escrows SET ${updateFields.join(', ')} WHERE display_id = $${paramIndex} RETURNING display_id`;
         const result = await localPool.query(query, values);
-        
+
         if (result.rowCount > 0) {
           console.log(`✅ Updated ${result.rows[0].display_id}`);
         }
       }
     }
-    
+
     await localPool.query('COMMIT');
     console.log('✅ Local database updated successfully!');
-    
   } catch (error) {
     await localPool.query('ROLLBACK');
     console.error('❌ Error updating local:', error.message);

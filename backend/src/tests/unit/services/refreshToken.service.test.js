@@ -9,7 +9,7 @@ describe('RefreshTokenService Unit Tests', () => {
     // Create test user
     const result = await pool.query(
       'INSERT INTO users (email, password_hash, first_name, last_name, role) VALUES ($1, $2, $3, $4, $5) RETURNING id',
-      ['refreshtoken@example.com', 'hashedpassword', 'Refresh', 'Token', 'agent']
+      ['refreshtoken@example.com', 'hashedpassword', 'Refresh', 'Token', 'agent'],
     );
     testUserId = result.rows[0].id;
   });
@@ -27,7 +27,7 @@ describe('RefreshTokenService Unit Tests', () => {
       testUserId,
       '192.168.1.100',
       'Mozilla/5.0 Test Browser',
-      { device: 'Desktop' }
+      { device: 'Desktop' },
     );
 
     expect(token).toHaveProperty('token');
@@ -64,7 +64,7 @@ describe('RefreshTokenService Unit Tests', () => {
     const newToken = await RefreshTokenService.createRefreshToken(
       testUserId,
       '192.168.1.101',
-      'Test Browser'
+      'Test Browser',
     );
 
     // Revoke it
@@ -93,7 +93,7 @@ describe('RefreshTokenService Unit Tests', () => {
     // Verify all tokens are revoked
     const result = await pool.query(
       'SELECT * FROM refresh_tokens WHERE user_id = $1 AND revoked_at IS NULL',
-      [testUserId]
+      [testUserId],
     );
 
     expect(result.rows.length).toBe(0);
@@ -102,12 +102,12 @@ describe('RefreshTokenService Unit Tests', () => {
   // Test 6: Cleanup expired tokens
   it('should cleanup expired refresh tokens', async () => {
     // Create an expired token manually
-    const expiredToken = 'expired_token_' + Date.now();
+    const expiredToken = `expired_token_${Date.now()}`;
     const pastDate = new Date('2020-01-01');
 
     await pool.query(
       'INSERT INTO refresh_tokens (user_id, token, expires_at, ip_address, user_agent) VALUES ($1, $2, $3, $4, $5)',
-      [testUserId, expiredToken, pastDate, '192.168.1.105', 'Test']
+      [testUserId, expiredToken, pastDate, '192.168.1.105', 'Test'],
     );
 
     // Cleanup expired tokens
@@ -118,7 +118,7 @@ describe('RefreshTokenService Unit Tests', () => {
     // Verify expired token is deleted
     const result = await pool.query(
       'SELECT * FROM refresh_tokens WHERE token = $1',
-      [expiredToken]
+      [expiredToken],
     );
 
     expect(result.rows.length).toBe(0);
@@ -144,14 +144,14 @@ describe('RefreshTokenService Unit Tests', () => {
     const initialToken = await RefreshTokenService.createRefreshToken(
       testUserId,
       '192.168.1.108',
-      'Rotation Test'
+      'Rotation Test',
     );
 
     // Rotate it
     const newToken = await RefreshTokenService.rotateRefreshToken(
       initialToken.token,
       '192.168.1.108',
-      'Rotation Test'
+      'Rotation Test',
     );
 
     expect(newToken).toHaveProperty('token');
@@ -172,7 +172,7 @@ describe('RefreshTokenService Unit Tests', () => {
     const reuseToken = await RefreshTokenService.createRefreshToken(
       testUserId,
       '192.168.1.109',
-      'Reuse Test'
+      'Reuse Test',
     );
 
     await RefreshTokenService.revokeRefreshToken(reuseToken.token);
@@ -186,13 +186,13 @@ describe('RefreshTokenService Unit Tests', () => {
   // Test 10: Handle token expiry edge cases
   it('should reject token that expires in the future but is already past expiry', async () => {
     // Create token with very short expiry (1 second)
-    const shortToken = 'short_lived_' + Date.now();
+    const shortToken = `short_lived_${Date.now()}`;
     const shortExpiry = new Date();
     shortExpiry.setSeconds(shortExpiry.getSeconds() - 1); // Already expired
 
     await pool.query(
       'INSERT INTO refresh_tokens (user_id, token, expires_at, ip_address, user_agent) VALUES ($1, $2, $3, $4, $5)',
-      [testUserId, shortToken, shortExpiry, '192.168.1.110', 'Test']
+      [testUserId, shortToken, shortExpiry, '192.168.1.110', 'Test'],
     );
 
     // Try to validate expired token

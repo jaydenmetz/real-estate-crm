@@ -10,7 +10,7 @@ describe('Concurrent Request Handling', () => {
       .post('/v1/auth/login')
       .send({
         email: 'admin@jaydenmetz.com',
-        password: 'AdminPassword123!'
+        password: 'AdminPassword123!',
       });
 
     authToken = loginResponse.body.data.token;
@@ -22,16 +22,14 @@ describe('Concurrent Request Handling', () => {
 
   // Test 1: Parallel read requests
   it('should handle 50 parallel read requests without errors', async () => {
-    const promises = Array(50).fill(null).map(() =>
-      request(app)
-        .get('/v1/escrows')
-        .set('Authorization', `Bearer ${authToken}`)
-    );
+    const promises = Array(50).fill(null).map(() => request(app)
+      .get('/v1/escrows')
+      .set('Authorization', `Bearer ${authToken}`));
 
     const responses = await Promise.all(promises);
 
     // All should succeed
-    responses.forEach(response => {
+    responses.forEach((response) => {
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
     });
@@ -39,26 +37,24 @@ describe('Concurrent Request Handling', () => {
 
   // Test 2: Concurrent writes to different resources
   it('should handle concurrent write operations to different resources', async () => {
-    const promises = Array(10).fill(null).map((_, i) =>
-      request(app)
-        .post('/v1/clients')
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({
-          firstName: 'Concurrent',
-          lastName: `Client${i}`,
-          email: `concurrent.${Date.now()}.${i}@example.com`,
-          clientType: 'Buyer'
-        })
-    );
+    const promises = Array(10).fill(null).map((_, i) => request(app)
+      .post('/v1/clients')
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({
+        firstName: 'Concurrent',
+        lastName: `Client${i}`,
+        email: `concurrent.${Date.now()}.${i}@example.com`,
+        clientType: 'Buyer',
+      }));
 
     const responses = await Promise.all(promises);
 
     // All should succeed
-    const successful = responses.filter(r => r.status === 201);
+    const successful = responses.filter((r) => r.status === 201);
     expect(successful.length).toBe(10);
 
     // Cleanup
-    const clientIds = successful.map(r => r.body.data.id);
+    const clientIds = successful.map((r) => r.body.data.id);
     for (const id of clientIds) {
       await pool.query('DELETE FROM clients WHERE id = $1', [id]);
     }
@@ -77,28 +73,26 @@ describe('Concurrent Request Handling', () => {
         zipCode: '93561',
         purchasePrice: 500000,
         status: 'active',
-        escrowNumber: `RACE-${Date.now()}`
+        escrowNumber: `RACE-${Date.now()}`,
       });
 
     const escrowId = createResponse.body.data.id;
-    const version = createResponse.body.data.version;
+    const { version } = createResponse.body.data;
 
     // Try to update same escrow concurrently with same version
-    const updatePromises = Array(5).fill(null).map((_, i) =>
-      request(app)
-        .put(`/v1/escrows/${escrowId}`)
-        .set('Authorization', `Bearer ${authToken}`)
-        .send({
-          status: i % 2 === 0 ? 'pending' : 'active',
-          version: version
-        })
-    );
+    const updatePromises = Array(5).fill(null).map((_, i) => request(app)
+      .put(`/v1/escrows/${escrowId}`)
+      .set('Authorization', `Bearer ${authToken}`)
+      .send({
+        status: i % 2 === 0 ? 'pending' : 'active',
+        version,
+      }));
 
     const responses = await Promise.all(updatePromises);
 
     // Only one should succeed (200), others should fail with version conflict (409)
-    const successful = responses.filter(r => r.status === 200);
-    const conflicts = responses.filter(r => r.status === 409);
+    const successful = responses.filter((r) => r.status === 200);
+    const conflicts = responses.filter((r) => r.status === 409);
 
     expect(successful.length).toBe(1);
     expect(conflicts.length).toBe(4);
@@ -111,23 +105,21 @@ describe('Concurrent Request Handling', () => {
   it('should prevent duplicate registrations with same email', async () => {
     const testEmail = `race.condition.${Date.now()}@example.com`;
 
-    const promises = Array(5).fill(null).map(() =>
-      request(app)
-        .post('/v1/auth/register')
-        .send({
-          email: testEmail,
-          password: 'TestPassword123!',
-          firstName: 'Race',
-          lastName: 'Test',
-          role: 'agent'
-        })
-    );
+    const promises = Array(5).fill(null).map(() => request(app)
+      .post('/v1/auth/register')
+      .send({
+        email: testEmail,
+        password: 'TestPassword123!',
+        firstName: 'Race',
+        lastName: 'Test',
+        role: 'agent',
+      }));
 
     const responses = await Promise.all(promises);
 
     // Only one should succeed (201), others should fail (400)
-    const successful = responses.filter(r => r.status === 201);
-    const failed = responses.filter(r => r.status === 400);
+    const successful = responses.filter((r) => r.status === 201);
+    const failed = responses.filter((r) => r.status === 400);
 
     expect(successful.length).toBe(1);
     expect(failed.length).toBe(4);
@@ -145,7 +137,7 @@ describe('Concurrent Request Handling', () => {
       promises.push(
         request(app)
           .get('/v1/escrows')
-          .set('Authorization', `Bearer ${authToken}`)
+          .set('Authorization', `Bearer ${authToken}`),
       );
     }
 
@@ -160,24 +152,24 @@ describe('Concurrent Request Handling', () => {
             lastName: `Operation${i}`,
             email: `mixed.${Date.now()}.${i}@example.com`,
             leadSource: 'Website',
-            status: 'New'
-          })
+            status: 'New',
+          }),
       );
     }
 
     const responses = await Promise.all(promises);
 
     // Count successes
-    const readSuccesses = responses.filter(r => r.status === 200).length;
-    const writeSuccesses = responses.filter(r => r.status === 201).length;
+    const readSuccesses = responses.filter((r) => r.status === 200).length;
+    const writeSuccesses = responses.filter((r) => r.status === 201).length;
 
     expect(readSuccesses).toBeGreaterThanOrEqual(15); // Most reads should succeed
     expect(writeSuccesses).toBeGreaterThanOrEqual(3); // Most writes should succeed
 
     // Cleanup leads
     const leadIds = responses
-      .filter(r => r.status === 201 && r.body.data)
-      .map(r => r.body.data.id);
+      .filter((r) => r.status === 201 && r.body.data)
+      .map((r) => r.body.data.id);
 
     for (const id of leadIds) {
       await pool.query('DELETE FROM leads WHERE id = $1', [id]);

@@ -10,7 +10,7 @@ describe('ApiKeyService Unit Tests', () => {
     // Create test user
     const result = await pool.query(
       'INSERT INTO users (email, password_hash, first_name, last_name, role) VALUES ($1, $2, $3, $4, $5) RETURNING id',
-      ['apikey@example.com', 'hashedpassword', 'API', 'Key', 'agent']
+      ['apikey@example.com', 'hashedpassword', 'API', 'Key', 'agent'],
     );
     testUserId = result.rows[0].id;
   });
@@ -119,13 +119,13 @@ describe('ApiKeyService Unit Tests', () => {
     // Get initial last_used_at
     const before = await pool.query(
       'SELECT last_used_at FROM api_keys WHERE id = $1',
-      [testApiKeyId]
+      [testApiKeyId],
     );
 
     const initialLastUsed = before.rows[0].last_used_at;
 
     // Wait a moment
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     // Use the API key
     await ApiKeyService.validateApiKey(testApiKeyValue);
@@ -133,7 +133,7 @@ describe('ApiKeyService Unit Tests', () => {
     // Check if last_used_at was updated
     const after = await pool.query(
       'SELECT last_used_at FROM api_keys WHERE id = $1',
-      [testApiKeyId]
+      [testApiKeyId],
     );
 
     const updatedLastUsed = after.rows[0].last_used_at;
@@ -141,7 +141,7 @@ describe('ApiKeyService Unit Tests', () => {
     // Should be updated (or null if not implemented)
     if (updatedLastUsed) {
       expect(new Date(updatedLastUsed).getTime()).toBeGreaterThan(
-        initialLastUsed ? new Date(initialLastUsed).getTime() : 0
+        initialLastUsed ? new Date(initialLastUsed).getTime() : 0,
       );
     }
   });
@@ -155,7 +155,7 @@ describe('ApiKeyService Unit Tests', () => {
 
     await pool.query(
       'INSERT INTO api_keys (user_id, name, key_hash, expires_at, is_active) VALUES ($1, $2, $3, $4, $5)',
-      [testUserId, 'Expired Key', keyHash, pastDate, true]
+      [testUserId, 'Expired Key', keyHash, pastDate, true],
     );
 
     // Try to validate expired key

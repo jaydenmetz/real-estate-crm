@@ -1,8 +1,9 @@
 const express = require('express');
+
 const router = express.Router();
+const { body, validationResult } = require('express-validator');
 const { getLinkPreview } = require('../controllers/linkPreview.controller');
 const { authenticate } = require('../middleware/auth.middleware');
-const { body, validationResult } = require('express-validator');
 
 // Validation middleware
 const validateLinkPreview = [
@@ -15,12 +16,12 @@ const validateLinkPreview = [
         error: {
           code: 'VALIDATION_ERROR',
           message: 'Invalid request data',
-          details: errors.array()
-        }
+          details: errors.array(),
+        },
       });
     }
     next();
-  }
+  },
 ];
 
 // POST /api/v1/link-preview

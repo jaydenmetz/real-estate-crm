@@ -11,7 +11,7 @@ describe('Security Attack Prevention Tests', () => {
       .post('/v1/auth/login')
       .send({
         email: 'admin@jaydenmetz.com',
-        password: 'AdminPassword123!'
+        password: 'AdminPassword123!',
       });
 
     authToken = loginResponse.body.data.token;
@@ -63,7 +63,7 @@ describe('Security Attack Prevention Tests', () => {
         firstName: xssAttempt,
         lastName: 'Test',
         email: `xss.test.${Date.now()}@example.com`,
-        clientType: 'Buyer'
+        clientType: 'Buyer',
       });
 
     if (response.status === 201) {
@@ -89,7 +89,7 @@ describe('Security Attack Prevention Tests', () => {
         email: `xss.lead.${Date.now()}@example.com`,
         leadSource: 'Website',
         status: 'New',
-        notes: xssAttempt
+        notes: xssAttempt,
       });
 
     if (response.status === 201) {
@@ -134,7 +134,7 @@ describe('Security Attack Prevention Tests', () => {
         firstName: commandInjection,
         lastName: 'Test',
         email: `cmd.test.${Date.now()}@example.com`,
-        clientType: 'Buyer'
+        clientType: 'Buyer',
       });
 
     // Should be treated as regular string, not executed
@@ -152,7 +152,7 @@ describe('Security Attack Prevention Tests', () => {
       .post('/v1/auth/login')
       .send({
         email: ldapInjection,
-        password: 'test'
+        password: 'test',
       });
 
     expect(response.status).toBe(401);
@@ -171,7 +171,7 @@ describe('Security Attack Prevention Tests', () => {
         firstName: 'Test',
         lastName: 'Header',
         email: `header.${Date.now()}@example.com`,
-        clientType: 'Buyer'
+        clientType: 'Buyer',
       });
 
     // Should process normally, ignoring injection attempt
@@ -187,7 +187,7 @@ describe('Security Attack Prevention Tests', () => {
       .post('/v1/escrows')
       .send({
         propertyAddress: '123 Test St',
-        purchasePrice: 500000
+        purchasePrice: 500000,
       });
     // Should require authentication
     expect(response.status).toBe(401);

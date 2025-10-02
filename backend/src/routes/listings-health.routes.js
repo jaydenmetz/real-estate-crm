@@ -1,17 +1,16 @@
 const express = require('express');
+
 const router = express.Router();
 const { pool, query } = require('../config/database');
 const { authenticate } = require('../middleware/apiKey.middleware');
 
 // Helper function to format response
-const formatHealthResponse = (success, data, error = null) => {
-  return {
-    success,
-    timestamp: new Date().toISOString(),
-    data: success ? data : null,
-    error: error ? { code: error.code || 'HEALTH_CHECK_FAILED', message: error.message } : null
-  };
-};
+const formatHealthResponse = (success, data, error = null) => ({
+  success,
+  timestamp: new Date().toISOString(),
+  data: success ? data : null,
+  error: error ? { code: error.code || 'HEALTH_CHECK_FAILED', message: error.message } : null,
+});
 
 // GET /v1/listings/health - Comprehensive health check with automatic tests
 router.get('/health', authenticate, async (req, res) => {
@@ -19,7 +18,7 @@ router.get('/health', authenticate, async (req, res) => {
     timestamp: new Date().toISOString(),
     user: req.user?.email,
     authMethod: req.user?.authMethod,
-    tests: []
+    tests: [],
   };
 
   let testListingId = null;
@@ -56,7 +55,7 @@ router.get('/health', authenticate, async (req, res) => {
         req.user.id,
         req.user.teamId,
         2.5,
-        'Health check test listing - will be deleted'
+        'Health check test listing - will be deleted',
       ]);
 
       testListingId = createResult.rows[0].id;
@@ -254,15 +253,14 @@ router.get('/health', authenticate, async (req, res) => {
     // Calculate summary
     const summary = {
       total: results.tests.length,
-      passed: results.tests.filter(t => t.status === 'passed').length,
-      failed: results.tests.filter(t => t.status === 'failed').length,
-      skipped: results.tests.filter(t => t.status === 'skipped').length,
-      executionTime: Date.now() - Date.parse(results.timestamp)
+      passed: results.tests.filter((t) => t.status === 'passed').length,
+      failed: results.tests.filter((t) => t.status === 'failed').length,
+      skipped: results.tests.filter((t) => t.status === 'skipped').length,
+      executionTime: Date.now() - Date.parse(results.timestamp),
     };
 
     results.summary = summary;
     res.json(formatHealthResponse(true, results));
-
   } catch (error) {
     // Cleanup on error
     if (testListingId) {
@@ -296,7 +294,7 @@ router.get('/health/db', authenticate, async (req, res) => {
       status: 'connected',
       database_time: result.rows[0].time,
       version: result.rows[0].version,
-      connections: stats.rows[0]
+      connections: stats.rows[0],
     }));
   } catch (error) {
     res.status(503).json(formatHealthResponse(false, null, error));
@@ -311,7 +309,7 @@ router.get('/health/crud', authenticate, async (req, res) => {
     read: false,
     update: false,
     archive: false,
-    delete: false
+    delete: false,
   };
   const timings = {};
   let testListingId = null;
@@ -337,7 +335,7 @@ router.get('/health/crud', authenticate, async (req, res) => {
       agent_id: req.user.id,
       team_id: req.user.teamId,
       commission_percentage: 2.5,
-      description: 'Health check test listing - will be deleted'
+      description: 'Health check test listing - will be deleted',
     };
 
     const createResult = await pool.query(`
@@ -353,7 +351,7 @@ router.get('/health/crud', authenticate, async (req, res) => {
       testListing.bathrooms, testListing.square_feet, testListing.lot_size,
       testListing.year_built, testListing.property_type, testListing.status,
       testListing.listing_date, testListing.mls_number, testListing.agent_id,
-      testListing.team_id, testListing.commission_percentage, testListing.description
+      testListing.team_id, testListing.commission_percentage, testListing.description,
     ]);
 
     testListingId = createResult.rows[0].id;
@@ -364,7 +362,7 @@ router.get('/health/crud', authenticate, async (req, res) => {
     const readStart = Date.now();
     const readResult = await pool.query(
       'SELECT * FROM listings WHERE id = $1 AND team_id = $2',
-      [testListingId, req.user.teamId]
+      [testListingId, req.user.teamId],
     );
     operations.read = readResult.rows.length === 1;
     timings.read = Date.now() - readStart;
@@ -399,7 +397,7 @@ router.get('/health/crud', authenticate, async (req, res) => {
       const deleteStart = Date.now();
       const deleteResult = await pool.query(
         'DELETE FROM listings WHERE id = $1 AND team_id = $2',
-        [testListingId, req.user.teamId]
+        [testListingId, req.user.teamId],
       );
       operations.delete = deleteResult.rowCount === 1;
       timings.delete = Date.now() - deleteStart;
@@ -408,7 +406,7 @@ router.get('/health/crud', authenticate, async (req, res) => {
       timings.delete = 0;
     }
 
-    const allPassed = Object.values(operations).every(op => op === true);
+    const allPassed = Object.values(operations).every((op) => op === true);
     const totalTime = Object.values(timings).reduce((a, b) => a + b, 0);
 
     res.json(formatHealthResponse(true, {
@@ -416,9 +414,8 @@ router.get('/health/crud', authenticate, async (req, res) => {
       operations,
       timings,
       total_time_ms: totalTime,
-      test_listing_id: testMode ? testListingId : null
+      test_listing_id: testMode ? testListingId : null,
     }));
-
   } catch (error) {
     // Cleanup on error
     if (testListingId && !testMode) {
@@ -431,7 +428,7 @@ router.get('/health/crud', authenticate, async (req, res) => {
 
     res.status(500).json(formatHealthResponse(false, {
       operations,
-      error: error.message
+      error: error.message,
     }, error));
   }
 });
@@ -453,7 +450,7 @@ router.get('/health/analytics', authenticate, async (req, res) => {
         COUNT(*) FILTER (WHERE listing_date > CURRENT_DATE - INTERVAL '7 days' AND deleted_at IS NULL) as new_this_week,
         COUNT(*) FILTER (WHERE listing_date > CURRENT_DATE - INTERVAL '30 days' AND deleted_at IS NULL) as new_this_month
       FROM listings
-      ${teamFilter ? 'WHERE ' + teamFilter.substring(4) : ''}
+      ${teamFilter ? `WHERE ${teamFilter.substring(4)}` : ''}
     `, params);
 
     // Pricing metrics
@@ -465,7 +462,7 @@ router.get('/health/analytics', authenticate, async (req, res) => {
         MAX(price) FILTER (WHERE status = 'Active' AND deleted_at IS NULL) as max_active_price,
         AVG(price / NULLIF(square_feet, 0)) FILTER (WHERE status = 'Active' AND deleted_at IS NULL) as avg_price_per_sqft
       FROM listings
-      ${teamFilter ? 'WHERE ' + teamFilter.substring(4) : ''}
+      ${teamFilter ? `WHERE ${teamFilter.substring(4)}` : ''}
     `, params);
 
     // Days on market metrics
@@ -480,7 +477,7 @@ router.get('/health/analytics', authenticate, async (req, res) => {
         MAX(EXTRACT(epoch FROM (CURRENT_DATE - listing_date))/86400)::INT
           FILTER (WHERE status = 'Active' AND deleted_at IS NULL) as longest_active_days
       FROM listings
-      ${teamFilter ? 'WHERE ' + teamFilter.substring(4) : ''}
+      ${teamFilter ? `WHERE ${teamFilter.substring(4)}` : ''}
     `, params);
 
     // Property type distribution
@@ -500,9 +497,8 @@ router.get('/health/analytics', authenticate, async (req, res) => {
       pricing: pricingResult.rows[0],
       days_on_market: domResult.rows[0],
       property_types: propertyTypeResult.rows,
-      generated_at: new Date().toISOString()
+      generated_at: new Date().toISOString(),
     }));
-
   } catch (error) {
     res.status(500).json(formatHealthResponse(false, null, error));
   }
@@ -590,34 +586,32 @@ router.get('/health/compliance', authenticate, async (req, res) => {
       WHERE l.status = 'Active'
         AND l.deleted_at IS NULL
         AND ABS(l.price - ps.avg_price) > 3 * ps.stddev_price
-        ${teamFilter ? 'AND l.' + teamFilter.substring(4) : ''}
+        ${teamFilter ? `AND l.${teamFilter.substring(4)}` : ''}
       LIMIT 5
     `, params);
 
-    const issues =
-      missingFieldsResult.rowCount +
-      (expiredResult.rows[0].expired_count || 0) +
-      (staleResult.rows[0].stale_count || 0) +
-      priceAnomaliesResult.rowCount;
+    const issues = missingFieldsResult.rowCount
+      + (expiredResult.rows[0].expired_count || 0)
+      + (staleResult.rows[0].stale_count || 0)
+      + priceAnomaliesResult.rowCount;
 
     res.json(formatHealthResponse(true, {
       status: issues === 0 ? 'compliant' : issues < 5 ? 'warning' : 'critical',
-      issues: issues,
+      issues,
       details: {
         missing_required_fields: missingFieldsResult.rows,
         expired_listings: {
           count: expiredResult.rows[0].expired_count || 0,
-          ids: expiredResult.rows[0].expired_ids?.slice(0, 5) || []
+          ids: expiredResult.rows[0].expired_ids?.slice(0, 5) || [],
         },
         stale_listings: {
           count: staleResult.rows[0].stale_count || 0,
-          ids: staleResult.rows[0].stale_ids?.slice(0, 5) || []
+          ids: staleResult.rows[0].stale_ids?.slice(0, 5) || [],
         },
-        price_anomalies: priceAnomaliesResult.rows
+        price_anomalies: priceAnomaliesResult.rows,
       },
-      checked_at: new Date().toISOString()
+      checked_at: new Date().toISOString(),
     }));
-
   } catch (error) {
     res.status(500).json(formatHealthResponse(false, null, error));
   }
@@ -642,12 +636,12 @@ async function checkDatabaseHealth() {
       status: latency < 100 ? 'healthy' : latency < 500 ? 'degraded' : 'critical',
       latency_ms: latency,
       connections: stats.rows[0].total_connections,
-      active_queries: stats.rows[0].active_queries
+      active_queries: stats.rows[0].active_queries,
     };
   } catch (error) {
     return {
       status: 'critical',
-      error: error.message
+      error: error.message,
     };
   }
 }
@@ -695,8 +689,8 @@ async function checkCompliance(user) {
 
     return {
       status: issues === 0 ? 'compliant' : 'non-compliant',
-      issues: issues,
-      details: result.rows[0]
+      issues,
+      details: result.rows[0],
     };
   } catch (error) {
     console.error('Error checking compliance:', error);
@@ -719,14 +713,14 @@ async function getPerformanceMetrics() {
     return {
       avg_response_time: result.rows[0]?.avg_response_time || 0,
       max_response_time: result.rows[0]?.max_response_time || 0,
-      total_calls: result.rows[0]?.total_calls || 0
+      total_calls: result.rows[0]?.total_calls || 0,
     };
   } catch (error) {
     // pg_stat_statements might not be enabled
     return {
       avg_response_time: 0,
       max_response_time: 0,
-      total_calls: 0
+      total_calls: 0,
     };
   }
 }

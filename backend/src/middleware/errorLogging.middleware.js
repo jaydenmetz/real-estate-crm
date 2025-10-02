@@ -4,7 +4,7 @@ const logger = require('../utils/logger');
 const errorLogging = (err, req, res, next) => {
   // Generate unique error ID
   const errorId = `ERR_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  
+
   // Collect detailed error information
   const errorDetails = {
     errorId,
@@ -18,8 +18,8 @@ const errorLogging = (err, req, res, next) => {
     headers: {
       'user-agent': req.headers['user-agent'],
       'content-type': req.headers['content-type'],
-      'origin': req.headers.origin,
-      'referer': req.headers.referer
+      origin: req.headers.origin,
+      referer: req.headers.referer,
     },
     user: req.user?.id || 'anonymous',
     ip: req.ip,
@@ -28,8 +28,8 @@ const errorLogging = (err, req, res, next) => {
       stack: err.stack,
       code: err.code,
       statusCode: err.statusCode || 500,
-      type: err.constructor.name
-    }
+      type: err.constructor.name,
+    },
   };
 
   // Log to console and file
@@ -37,7 +37,7 @@ const errorLogging = (err, req, res, next) => {
 
   // Check if user is admin
   const isAdmin = req.user && (req.user.role === 'admin' || req.user.role === 'system_admin');
-  
+
   // Send detailed error in development or for admin users
   if (process.env.NODE_ENV === 'development' || isAdmin) {
     res.status(err.statusCode || 500).json({
@@ -47,8 +47,8 @@ const errorLogging = (err, req, res, next) => {
         message: err.message,
         errorId,
         details: errorDetails,
-        stack: isAdmin ? err.stack : undefined
-      }
+        stack: isAdmin ? err.stack : undefined,
+      },
     });
   } else {
     res.status(err.statusCode || 500).json({
@@ -57,8 +57,8 @@ const errorLogging = (err, req, res, next) => {
         code: err.code || 'INTERNAL_ERROR',
         message: 'An error occurred processing your request',
         errorId,
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     });
   }
 };
@@ -66,13 +66,13 @@ const errorLogging = (err, req, res, next) => {
 // Request logging middleware
 const requestLogging = (req, res, next) => {
   const start = Date.now();
-  
+
   // Log request
   logger.info('Incoming request', {
     method: req.method,
     url: req.url,
     ip: req.ip,
-    userAgent: req.headers['user-agent']
+    userAgent: req.headers['user-agent'],
   });
 
   // Log response
@@ -82,7 +82,7 @@ const requestLogging = (req, res, next) => {
       method: req.method,
       url: req.url,
       statusCode: res.statusCode,
-      duration: `${duration}ms`
+      duration: `${duration}ms`,
     });
   });
 
@@ -97,5 +97,5 @@ const asyncHandler = (fn) => (req, res, next) => {
 module.exports = {
   errorLogging,
   requestLogging,
-  asyncHandler
+  asyncHandler,
 };

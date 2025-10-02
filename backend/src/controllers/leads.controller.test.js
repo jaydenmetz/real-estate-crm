@@ -15,16 +15,16 @@ describe('LeadsController', () => {
     mockReq = {
       user: {
         id: 'user-123',
-        teamId: 'team-456'
+        teamId: 'team-456',
       },
       body: {},
       query: {},
-      params: {}
+      params: {},
     };
 
     mockRes = {
       json: jest.fn().mockReturnThis(),
-      status: jest.fn().mockReturnThis()
+      status: jest.fn().mockReturnThis(),
     };
   });
 
@@ -32,8 +32,12 @@ describe('LeadsController', () => {
     // TEST 1: Get all leads with pagination
     it('should return paginated leads', async () => {
       const mockLeads = [
-        { id: 'lead-1', first_name: 'John', last_name: 'Doe', lead_status: 'new' },
-        { id: 'lead-2', first_name: 'Jane', last_name: 'Smith', lead_status: 'contacted' }
+        {
+          id: 'lead-1', first_name: 'John', last_name: 'Doe', lead_status: 'new',
+        },
+        {
+          id: 'lead-2', first_name: 'Jane', last_name: 'Smith', lead_status: 'contacted',
+        },
       ];
 
       pool.query
@@ -52,10 +56,10 @@ describe('LeadsController', () => {
             currentPage: 1,
             totalPages: 2,
             totalCount: 25,
-            limit: 20
-          }
+            limit: 20,
+          },
         },
-        timestamp: expect.any(String)
+        timestamp: expect.any(String),
       });
     });
 
@@ -71,7 +75,7 @@ describe('LeadsController', () => {
 
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('lead_status = $'),
-        expect.arrayContaining(['team-456', 'qualified', 20, 0])
+        expect.arrayContaining(['team-456', 'qualified', 20, 0]),
       );
     });
 
@@ -87,7 +91,7 @@ describe('LeadsController', () => {
 
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('ILIKE'),
-        expect.arrayContaining(['team-456', '%john%', 20, 0])
+        expect.arrayContaining(['team-456', '%john%', 20, 0]),
       );
     });
 
@@ -107,10 +111,10 @@ describe('LeadsController', () => {
             currentPage: 1,
             totalPages: 0,
             totalCount: 0,
-            limit: 20
-          }
+            limit: 20,
+          },
         },
-        timestamp: expect.any(String)
+        timestamp: expect.any(String),
       });
     });
 
@@ -124,9 +128,9 @@ describe('LeadsController', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
         error: expect.objectContaining({
-          code: 'FETCH_ERROR'
+          code: 'FETCH_ERROR',
         }),
-        timestamp: expect.any(String)
+        timestamp: expect.any(String),
       });
     });
 
@@ -142,7 +146,7 @@ describe('LeadsController', () => {
 
       expect(pool.query).toHaveBeenCalledWith(
         expect.any(String),
-        expect.arrayContaining([10, 20]) // limit=10, offset=(3-1)*10=20
+        expect.arrayContaining([10, 20]), // limit=10, offset=(3-1)*10=20
       );
 
       expect(mockRes.json).toHaveBeenCalledWith({
@@ -153,10 +157,10 @@ describe('LeadsController', () => {
             currentPage: 3,
             totalPages: 10,
             totalCount: 100,
-            limit: 10
-          }
+            limit: 10,
+          },
         },
-        timestamp: expect.any(String)
+        timestamp: expect.any(String),
       });
     });
 
@@ -170,7 +174,7 @@ describe('LeadsController', () => {
 
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('deleted_at IS NULL'),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
   });
@@ -184,11 +188,11 @@ describe('LeadsController', () => {
         email: 'new@example.com',
         phone: '555-0199',
         lead_source: 'Website',
-        lead_status: 'new'
+        lead_status: 'new',
       };
 
       pool.query.mockResolvedValue({
-        rows: [{ id: 'lead-new', ...newLead }]
+        rows: [{ id: 'lead-new', ...newLead }],
       });
 
       mockReq.body = newLead;
@@ -200,9 +204,9 @@ describe('LeadsController', () => {
         success: true,
         data: expect.objectContaining({
           id: 'lead-new',
-          first_name: 'New'
+          first_name: 'New',
         }),
-        timestamp: expect.any(String)
+        timestamp: expect.any(String),
       });
     });
 
@@ -210,7 +214,7 @@ describe('LeadsController', () => {
     it('should reject lead without required fields', async () => {
       mockReq.body = {
         // Missing first_name and last_name
-        email: 'test@example.com'
+        email: 'test@example.com',
       };
 
       await leadsController.createLead(mockReq, mockRes);
@@ -219,22 +223,22 @@ describe('LeadsController', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
         error: expect.objectContaining({
-          code: 'VALIDATION_ERROR'
+          code: 'VALIDATION_ERROR',
         }),
-        timestamp: expect.any(String)
+        timestamp: expect.any(String),
       });
     });
 
     // TEST 10: Default lead status to 'new'
     it('should default lead status to new if not provided', async () => {
       pool.query.mockResolvedValue({
-        rows: [{ id: 'lead-1', lead_status: 'new' }]
+        rows: [{ id: 'lead-1', lead_status: 'new' }],
       });
 
       mockReq.body = {
         first_name: 'John',
         last_name: 'Doe',
-        email: 'john@example.com'
+        email: 'john@example.com',
         // lead_status omitted
       };
 
@@ -251,7 +255,7 @@ describe('LeadsController', () => {
         id: 'lead-1',
         first_name: 'John',
         last_name: 'Updated',
-        lead_status: 'qualified'
+        lead_status: 'qualified',
       };
 
       pool.query.mockResolvedValue({ rows: [updatedLead] });
@@ -259,7 +263,7 @@ describe('LeadsController', () => {
       mockReq.params = { id: 'lead-1' };
       mockReq.body = {
         last_name: 'Updated',
-        lead_status: 'qualified'
+        lead_status: 'qualified',
       };
 
       await leadsController.updateLead(mockReq, mockRes);
@@ -267,7 +271,7 @@ describe('LeadsController', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
         data: updatedLead,
-        timestamp: expect.any(String)
+        timestamp: expect.any(String),
       });
     });
 
@@ -284,9 +288,9 @@ describe('LeadsController', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
         error: expect.objectContaining({
-          code: 'NOT_FOUND'
+          code: 'NOT_FOUND',
         }),
-        timestamp: expect.any(String)
+        timestamp: expect.any(String),
       });
     });
   });
@@ -295,7 +299,7 @@ describe('LeadsController', () => {
     // TEST 13: Soft delete lead
     it('should soft delete lead', async () => {
       pool.query.mockResolvedValue({
-        rows: [{ id: 'lead-1', deleted_at: new Date() }]
+        rows: [{ id: 'lead-1', deleted_at: new Date() }],
       });
 
       mockReq.params = { id: 'lead-1' };
@@ -304,13 +308,13 @@ describe('LeadsController', () => {
 
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('deleted_at = NOW()'),
-        expect.arrayContaining(['lead-1'])
+        expect.arrayContaining(['lead-1']),
       );
 
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
         message: expect.stringContaining('deleted'),
-        timestamp: expect.any(String)
+        timestamp: expect.any(String),
       });
     });
 
@@ -334,7 +338,7 @@ describe('LeadsController', () => {
         first_name: 'John',
         last_name: 'Doe',
         email: 'john@example.com',
-        lead_status: 'new'
+        lead_status: 'new',
       };
 
       pool.query.mockResolvedValue({ rows: [mockLead] });
@@ -346,7 +350,7 @@ describe('LeadsController', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
         data: mockLead,
-        timestamp: expect.any(String)
+        timestamp: expect.any(String),
       });
     });
   });

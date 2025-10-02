@@ -4,14 +4,14 @@ require('dotenv').config();
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: process.env.DATABASE_URL.includes('railway.app') ? {
-    rejectUnauthorized: false
-  } : false
+    rejectUnauthorized: false,
+  } : false,
 });
 
 async function applyPrefixes() {
   try {
     console.log('🚀 Applying entity prefixes to production database...\n');
-    
+
     // Update escrows
     console.log('Updating escrows...');
     const escrowResult = await pool.query(`
@@ -20,21 +20,20 @@ async function applyPrefixes() {
       WHERE id::text NOT LIKE 'escrow-%' AND id::text NOT LIKE 'esc%'
     `);
     console.log(`✅ Updated ${escrowResult.rowCount} escrow records`);
-    
+
     // Show the results
     const checkResult = await pool.query(`
       SELECT id, display_id, property_address
       FROM escrows
       ORDER BY numeric_id
     `);
-    
+
     console.log('\nUpdated escrows:');
-    checkResult.rows.forEach(row => {
+    checkResult.rows.forEach((row) => {
       console.log(`  ${row.display_id}: ${row.id}`);
     });
-    
+
     console.log('\n✅ Entity prefix migration completed successfully!');
-    
   } catch (error) {
     console.error('❌ Error:', error.message);
     if (error.message.includes('invalid input syntax for type uuid')) {

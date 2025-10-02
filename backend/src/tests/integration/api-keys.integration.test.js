@@ -14,7 +14,7 @@ describe('API Keys Integration Tests', () => {
       .post('/v1/auth/login')
       .send({
         email: 'admin@jaydenmetz.com',
-        password: 'AdminPassword123!'
+        password: 'AdminPassword123!',
       });
 
     expect(loginResponse.status).toBe(200);
@@ -37,7 +37,7 @@ describe('API Keys Integration Tests', () => {
       .set('Authorization', `Bearer ${authToken}`)
       .send({
         name: 'Integration Test Key',
-        expiresInDays: 365
+        expiresInDays: 365,
       });
 
     expect(response.status).toBe(201);
@@ -84,7 +84,7 @@ describe('API Keys Integration Tests', () => {
     expect(Array.isArray(response.body.data)).toBe(true);
 
     // Should include our test key
-    const testKey = response.body.data.find(k => k.id === testApiKeyId);
+    const testKey = response.body.data.find((k) => k.id === testApiKeyId);
     expect(testKey).toBeDefined();
     expect(testKey.name).toBe('Integration Test Key');
     expect(testKey.key).toBeUndefined(); // Key value should not be returned in list

@@ -1,4 +1,5 @@
 const express = require('express');
+
 const router = express.Router();
 const { body } = require('express-validator');
 const leadsController = require('../controllers/leads.controller');
@@ -16,14 +17,14 @@ const createValidation = [
   body('leadSource').optional().isString().withMessage('Lead source is required'),
   body('leadType').optional().isIn(['Buyer', 'Seller', 'Both', 'Investor', 'buyer', 'seller', 'both', 'investor']),
   body('email').optional().isEmail().withMessage('Invalid email'),
-  body('phone').optional().isString().withMessage('Invalid phone number')
+  body('phone').optional().isString().withMessage('Invalid phone number'),
 ];
 
 const updateValidation = [
   body('firstName').optional().notEmpty(),
   body('lastName').optional().notEmpty(),
   body('leadType').optional().isIn(['Buyer', 'Seller', 'Both', 'Investor', 'buyer', 'seller', 'both', 'investor']),
-  body('status').optional().isString()
+  body('status').optional().isString(),
 ];
 
 // Routes
@@ -40,11 +41,12 @@ router.put('/:id/archive', leadsController.archiveLead);
 // Delete endpoint: Hard delete
 router.delete('/:id', leadsController.deleteLead);
 // Batch delete endpoint: Delete multiple archived leads
-router.post('/batch-delete',
+router.post(
+  '/batch-delete',
   body('ids').isArray({ min: 1 }).withMessage('IDs must be a non-empty array'),
   body('ids.*').isString().withMessage('Each ID must be a string'),
   validate,
-  leadsController.batchDeleteLeads
+  leadsController.batchDeleteLeads,
 );
 
 module.exports = router;

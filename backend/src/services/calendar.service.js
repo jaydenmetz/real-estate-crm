@@ -1,12 +1,12 @@
-const logger = require('../utils/logger');
 const crypto = require('crypto');
+const logger = require('../utils/logger');
 
 class CalendarService {
   constructor() {
     this.meetingProviders = {
       zoom: { baseUrl: 'https://zoom.us/j/', enabled: false },
       meet: { baseUrl: 'https://meet.google.com/', enabled: true },
-      teams: { baseUrl: 'https://teams.microsoft.com/meet/', enabled: false }
+      teams: { baseUrl: 'https://teams.microsoft.com/meet/', enabled: false },
     };
   }
 
@@ -15,19 +15,19 @@ class CalendarService {
       // In production, this would integrate with video conferencing APIs
       const meetingId = crypto.randomBytes(6).toString('hex');
       const provider = 'meet'; // Default to Google Meet
-      
+
       const meetingLink = {
         provider,
         url: `${this.meetingProviders[provider].baseUrl}${meetingId}`,
         meetingId,
         password: crypto.randomBytes(4).toString('hex'),
-        instructions: `Join the video meeting at the scheduled time using the link provided.`
+        instructions: 'Join the video meeting at the scheduled time using the link provided.',
       };
 
       logger.info('Generated video meeting link:', {
         provider,
         meetingId,
-        appointmentTitle: details.title
+        appointmentTitle: details.title,
       });
 
       return meetingLink;
@@ -39,28 +39,28 @@ class CalendarService {
 
   async sendInvites(options) {
     const { appointment, attendees, includeVideoLink } = options;
-    
+
     try {
       // In production, this would integrate with calendar APIs (Google Calendar, Outlook, etc.)
-      const invites = attendees.map(attendee => ({
+      const invites = attendees.map((attendee) => ({
         to: attendee.email,
         status: 'pending',
-        sentAt: new Date()
+        sentAt: new Date(),
       }));
 
       logger.info('Sending calendar invites:', {
         appointmentId: appointment._id,
         attendeeCount: attendees.length,
-        includeVideoLink
+        includeVideoLink,
       });
 
       // Simulate sending invites
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       return {
         success: true,
         invitesSent: invites.length,
-        invites
+        invites,
       };
     } catch (error) {
       logger.error('Failed to send calendar invites:', error);
@@ -70,27 +70,27 @@ class CalendarService {
 
   async sendUpdateNotifications(options) {
     const { appointment, attendees, changeType } = options;
-    
+
     try {
-      const notifications = attendees.map(attendee => ({
+      const notifications = attendees.map((attendee) => ({
         to: attendee.email,
         type: changeType,
-        sentAt: new Date()
+        sentAt: new Date(),
       }));
 
       logger.info('Sending update notifications:', {
         appointmentId: appointment._id,
         changeType,
-        attendeeCount: attendees.length
+        attendeeCount: attendees.length,
       });
 
       // Simulate sending notifications
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       return {
         success: true,
         notificationsSent: notifications.length,
-        notifications
+        notifications,
       };
     } catch (error) {
       logger.error('Failed to send update notifications:', error);
@@ -100,27 +100,27 @@ class CalendarService {
 
   async sendCancellationNotices(options) {
     const { appointment, attendees, reason } = options;
-    
+
     try {
-      const notices = attendees.map(attendee => ({
+      const notices = attendees.map((attendee) => ({
         to: attendee.email,
         reason,
-        sentAt: new Date()
+        sentAt: new Date(),
       }));
 
       logger.info('Sending cancellation notices:', {
         appointmentId: appointment._id,
         reason,
-        attendeeCount: attendees.length
+        attendeeCount: attendees.length,
       });
 
       // Simulate sending notices
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       return {
         success: true,
         noticesSent: notices.length,
-        notices
+        notices,
       };
     } catch (error) {
       logger.error('Failed to send cancellation notices:', error);
@@ -130,27 +130,27 @@ class CalendarService {
 
   async sendReminder(options) {
     const { appointment, attendees, reminderType } = options;
-    
+
     try {
-      const reminders = attendees.map(attendee => ({
+      const reminders = attendees.map((attendee) => ({
         to: attendee.email,
         reminderType,
-        sentAt: new Date()
+        sentAt: new Date(),
       }));
 
       logger.info('Sending appointment reminder:', {
         appointmentId: appointment._id,
         reminderType,
-        attendeeCount: attendees.length
+        attendeeCount: attendees.length,
       });
 
       // Simulate sending reminders
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       return {
         success: true,
         remindersSent: reminders.length,
-        reminders
+        reminders,
       };
     } catch (error) {
       logger.error('Failed to send reminder:', error);
@@ -159,26 +159,24 @@ class CalendarService {
   }
 
   generateICS(appointment) {
-    const { 
-      title, 
-      description, 
-      startTime, 
-      endTime, 
-      location, 
+    const {
+      title,
+      description,
+      startTime,
+      endTime,
+      location,
       attendees = [],
-      videoMeetingLink 
+      videoMeetingLink,
     } = appointment;
 
-    const formatDate = (date) => {
-      return new Date(date).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
-    };
+    const formatDate = (date) => new Date(date).toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
 
     const uid = `${appointment._id}@realestatecrm.com`;
     const timestamp = formatDate(new Date());
     const start = formatDate(startTime);
     const end = formatDate(endTime);
 
-    let icsContent = [
+    const icsContent = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
       'PRODID:-//Real Estate CRM//Appointment//EN',
@@ -193,11 +191,11 @@ class CalendarService {
       `DESCRIPTION:${description || ''}${videoMeetingLink ? `\\n\\nVideo Link: ${videoMeetingLink.url}` : ''}`,
       `LOCATION:${location || 'TBD'}`,
       'STATUS:CONFIRMED',
-      'SEQUENCE:0'
+      'SEQUENCE:0',
     ];
 
     // Add attendees
-    attendees.forEach(attendee => {
+    attendees.forEach((attendee) => {
       icsContent.push(`ATTENDEE;CN="${attendee.firstName} ${attendee.lastName}";ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:mailto:${attendee.email}`);
     });
 
@@ -210,7 +208,7 @@ class CalendarService {
       'TRIGGER:-PT1H',
       'ACTION:DISPLAY',
       'DESCRIPTION:Appointment Reminder',
-      'END:VALARM'
+      'END:VALARM',
     );
 
     icsContent.push('END:VEVENT', 'END:VCALENDAR');
@@ -221,20 +219,20 @@ class CalendarService {
   async syncWithGoogleCalendar(options) {
     // In production, this would use Google Calendar API
     logger.info('Syncing with Google Calendar:', options);
-    
+
     return {
       success: true,
-      message: 'Google Calendar sync is not implemented in this mock version'
+      message: 'Google Calendar sync is not implemented in this mock version',
     };
   }
 
   async syncWithOutlook(options) {
     // In production, this would use Microsoft Graph API
     logger.info('Syncing with Outlook:', options);
-    
+
     return {
       success: true,
-      message: 'Outlook sync is not implemented in this mock version'
+      message: 'Outlook sync is not implemented in this mock version',
     };
   }
 
@@ -244,12 +242,12 @@ class CalendarService {
     const mockDistanceKm = Math.random() * 30 + 5; // 5-35km
     const avgSpeedKmh = 40; // Average city driving speed
     const travelTimeMinutes = Math.ceil((mockDistanceKm / avgSpeedKmh) * 60);
-    
+
     return {
       distance: `${mockDistanceKm.toFixed(1)} km`,
       duration: travelTimeMinutes,
       durationText: `${travelTimeMinutes} minutes`,
-      trafficConditions: 'normal'
+      trafficConditions: 'normal',
     };
   }
 }

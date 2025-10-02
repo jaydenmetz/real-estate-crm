@@ -1,4 +1,5 @@
 const express = require('express');
+
 const router = express.Router();
 const { body } = require('express-validator');
 const webhooksController = require('../controllers/webhooks.controller');
@@ -12,7 +13,7 @@ router.use(authenticate);
 const registerValidation = [
   body('url').isURL().withMessage('Valid URL required'),
   body('events').isArray().withMessage('Events must be an array'),
-  body('secret').isLength({ min: 10 }).withMessage('Secret must be at least 10 characters')
+  body('secret').isLength({ min: 10 }).withMessage('Secret must be at least 10 characters'),
 ];
 
 // Routes

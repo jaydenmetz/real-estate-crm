@@ -15,7 +15,7 @@ class WebSocketService {
       'https://crm.jaydenmetz.com',
       'https://api.jaydenmetz.com',
       'http://localhost:3000',
-      'http://localhost:3001'
+      'http://localhost:3001',
     ];
 
     this.io = socketIo(server, {
@@ -37,18 +37,18 @@ class WebSocketService {
           callback(new Error('Not allowed by CORS'));
         },
         methods: ['GET', 'POST'],
-        credentials: true
+        credentials: true,
       },
       pingInterval: 10000,
       pingTimeout: 5000,
-      transports: ['websocket', 'polling']
+      transports: ['websocket', 'polling'],
     });
 
     this.io.use(this.authenticateSocket.bind(this));
 
     this.io.on('connection', (socket) => {
-      const userId = socket.userId;
-      const teamId = socket.teamId;
+      const { userId } = socket;
+      const { teamId } = socket;
 
       logger.info(`WebSocket client connected: ${userId} (Team: ${teamId})`);
       this.connectedClients.set(socket.id, { userId, teamId, socket });
@@ -61,7 +61,7 @@ class WebSocketService {
       // Broadcast connection to team
       socket.to(`team-${teamId}`).emit('team:userConnected', {
         userId,
-        timestamp: new Date()
+        timestamp: new Date(),
       });
 
       // Handle generic messaging
@@ -92,7 +92,7 @@ class WebSocketService {
         // Notify team of disconnection
         socket.to(`team-${teamId}`).emit('team:userDisconnected', {
           userId,
-          timestamp: new Date()
+          timestamp: new Date(),
         });
       });
     });
@@ -137,9 +137,9 @@ class WebSocketService {
   }
 
   getConnectedClients() {
-    return Array.from(this.connectedClients.values()).map(client => ({
+    return Array.from(this.connectedClients.values()).map((client) => ({
       userId: client.userId,
-      teamId: client.teamId
+      teamId: client.teamId,
     }));
   }
 

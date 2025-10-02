@@ -18,23 +18,23 @@ describe('ClientsController', () => {
         id: 'user-123',
         email: 'agent@example.com',
         role: 'agent',
-        teamId: 'team-456'
+        teamId: 'team-456',
       },
       body: {},
       query: {},
-      params: {}
+      params: {},
     };
 
     // Setup mock response
     mockRes = {
       json: jest.fn().mockReturnThis(),
-      status: jest.fn().mockReturnThis()
+      status: jest.fn().mockReturnThis(),
     };
 
     // Setup mock database client for transactions
     mockClient = {
       query: jest.fn(),
-      release: jest.fn()
+      release: jest.fn(),
     };
   });
 
@@ -50,7 +50,7 @@ describe('ClientsController', () => {
           email: 'john@example.com',
           phone: '555-0101',
           client_type: 'Buyer',
-          status: 'active'
+          status: 'active',
         },
         {
           id: 'client-2',
@@ -59,8 +59,8 @@ describe('ClientsController', () => {
           email: 'jane@example.com',
           phone: '555-0102',
           client_type: 'Seller',
-          status: 'active'
-        }
+          status: 'active',
+        },
       ];
 
       pool.query
@@ -81,9 +81,9 @@ describe('ClientsController', () => {
             currentPage: 1,
             totalPages: 2,
             totalCount: 25,
-            limit: 20
-          }
-        }
+            limit: 20,
+          },
+        },
       });
     });
 
@@ -102,7 +102,7 @@ describe('ClientsController', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('cl.status = $'),
-        expect.arrayContaining(['team-456', 'inactive', 20, 0])
+        expect.arrayContaining(['team-456', 'inactive', 20, 0]),
       );
     });
 
@@ -114,8 +114,8 @@ describe('ClientsController', () => {
           id: 'client-1',
           first_name: 'John',
           last_name: 'Smith',
-          email: 'john.smith@example.com'
-        }
+          email: 'john.smith@example.com',
+        },
       ];
 
       pool.query
@@ -130,15 +130,15 @@ describe('ClientsController', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('ILIKE'),
-        expect.arrayContaining(['team-456', 'active', '%john%', 20, 0])
+        expect.arrayContaining(['team-456', 'active', '%john%', 20, 0]),
       );
 
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
         data: {
           clients: searchResults,
-          pagination: expect.any(Object)
-        }
+          pagination: expect.any(Object),
+        },
       });
     });
 
@@ -157,7 +157,7 @@ describe('ClientsController', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.any(String),
-        expect.arrayContaining([20, 20]) // limit, offset
+        expect.arrayContaining([20, 20]), // limit, offset
       );
 
       expect(mockRes.json).toHaveBeenCalledWith({
@@ -168,9 +168,9 @@ describe('ClientsController', () => {
             currentPage: 2,
             totalPages: 3,
             totalCount: 50,
-            limit: 20
-          }
-        }
+            limit: 20,
+          },
+        },
       });
     });
 
@@ -193,9 +193,9 @@ describe('ClientsController', () => {
             currentPage: 1,
             totalPages: 0,
             totalCount: 0,
-            limit: 20
-          }
-        }
+            limit: 20,
+          },
+        },
       });
     });
 
@@ -214,8 +214,8 @@ describe('ClientsController', () => {
         error: {
           code: 'FETCH_ERROR',
           message: 'Failed to fetch clients',
-          details: 'Database connection failed'
-        }
+          details: 'Database connection failed',
+        },
       });
     });
   });
@@ -230,7 +230,7 @@ describe('ClientsController', () => {
         last_name: 'Buyer',
         email: 'john@example.com',
         client_type: 'Buyer',
-        status: 'active'
+        status: 'active',
       };
 
       mockReq.params = { id: 'client-1' };
@@ -242,12 +242,12 @@ describe('ClientsController', () => {
       // Assert
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('WHERE cl.id = $1'),
-        ['client-1']
+        ['client-1'],
       );
 
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
-        data: mockClient
+        data: mockClient,
       });
     });
 
@@ -266,8 +266,8 @@ describe('ClientsController', () => {
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Client not found'
-        }
+          message: 'Client not found',
+        },
       });
     });
 
@@ -287,8 +287,8 @@ describe('ClientsController', () => {
         error: {
           code: 'FETCH_ERROR',
           message: 'Failed to fetch client',
-          details: 'Connection timeout'
-        }
+          details: 'Connection timeout',
+        },
       });
     });
   });
@@ -312,19 +312,19 @@ describe('ClientsController', () => {
         addressState: 'CA',
         addressZip: '90001',
         notes: 'First-time buyer',
-        tags: ['hot-lead', 'pre-approved']
+        tags: ['hot-lead', 'pre-approved'],
       };
 
       const mockContact = {
         id: 'contact-1',
-        ...newClientData
+        ...newClientData,
       };
 
       const mockClient_created = {
         id: 'client-1',
         contact_id: 'contact-1',
         client_type: 'Buyer',
-        status: 'active'
+        status: 'active',
       };
 
       mockClient.query
@@ -348,8 +348,8 @@ describe('ClientsController', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
         data: expect.objectContaining({
-          id: 'client-1'
-        })
+          id: 'client-1',
+        }),
       });
     });
 
@@ -364,7 +364,7 @@ describe('ClientsController', () => {
       mockReq.body = {
         firstName: 'John',
         lastName: 'Doe',
-        email: 'existing@example.com'
+        email: 'existing@example.com',
       };
 
       // Act
@@ -379,8 +379,8 @@ describe('ClientsController', () => {
         success: false,
         error: {
           code: 'DUPLICATE_EMAIL',
-          message: 'A contact with this email already exists'
-        }
+          message: 'A contact with this email already exists',
+        },
       });
     });
 
@@ -420,7 +420,7 @@ describe('ClientsController', () => {
       mockReq.body = {
         firstName: 'John',
         lastName: 'Doe',
-        email: 'test@example.com'
+        email: 'test@example.com',
       };
 
       // Act
@@ -447,7 +447,7 @@ describe('ClientsController', () => {
         firstName: 'Jane',
         lastName: 'Seller',
         email: 'jane@example.com',
-        clientType: 'Seller'
+        clientType: 'Seller',
       };
 
       // Act
@@ -458,8 +458,8 @@ describe('ClientsController', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
         data: expect.objectContaining({
-          client_type: 'Seller'
-        })
+          client_type: 'Seller',
+        }),
       });
     });
 
@@ -476,7 +476,7 @@ describe('ClientsController', () => {
       mockReq.body = {
         firstName: 'John',
         lastName: 'Default',
-        email: 'default@example.com'
+        email: 'default@example.com',
         // clientType omitted - should default to 'Buyer'
       };
 
@@ -487,8 +487,8 @@ describe('ClientsController', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
         data: expect.objectContaining({
-          client_type: 'Buyer'
-        })
+          client_type: 'Buyer',
+        }),
       });
     });
   });

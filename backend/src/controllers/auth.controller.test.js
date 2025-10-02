@@ -22,14 +22,14 @@ describe('AuthController', () => {
       body: {},
       ip: '127.0.0.1',
       headers: { 'user-agent': 'Jest Test Suite' },
-      connection: { remoteAddress: '127.0.0.1' }
+      connection: { remoteAddress: '127.0.0.1' },
     };
 
     // Setup mock response
     mockRes = {
       json: jest.fn().mockReturnThis(),
       status: jest.fn().mockReturnThis(),
-      cookie: jest.fn().mockReturnThis()
+      cookie: jest.fn().mockReturnThis(),
     };
   });
 
@@ -47,21 +47,21 @@ describe('AuthController', () => {
         role: 'agent',
         is_active: true,
         failed_login_attempts: 0,
-        locked_until: null
-    };
+        locked_until: null,
+      };
 
       pool.query.mockResolvedValueOnce({ rows: [mockUser] }); // User lookup
       pool.query.mockResolvedValueOnce({ rows: [mockUser] }); // Reset failed attempts
 
       RefreshTokenService.createRefreshToken.mockResolvedValue({
-        token: 'refresh-token-abc123'
+        token: 'refresh-token-abc123',
       });
 
       SecurityEventService.logLoginSuccess.mockResolvedValue();
 
       mockReq.body = {
         email: 'test@example.com',
-        password: 'ValidPassword123!'
+        password: 'ValidPassword123!',
       };
 
       // Act
@@ -75,13 +75,13 @@ describe('AuthController', () => {
             user: expect.objectContaining({
               email: 'test@example.com',
               firstName: 'Test',
-              lastName: 'User'
+              lastName: 'User',
             }),
             token: expect.any(String),
             accessToken: expect.any(String),
-            expiresIn: '15m'
-          })
-        })
+            expiresIn: '15m',
+          }),
+        }),
       );
 
       expect(mockRes.cookie).toHaveBeenCalledWith(
@@ -89,8 +89,8 @@ describe('AuthController', () => {
         'refresh-token-abc123',
         expect.objectContaining({
           httpOnly: true,
-          sameSite: 'lax'
-        })
+          sameSite: 'lax',
+        }),
       );
 
       expect(SecurityEventService.logLoginSuccess).toHaveBeenCalled();
@@ -105,19 +105,19 @@ describe('AuthController', () => {
         password_hash: await bcrypt.hash('CorrectPassword123!', 10),
         failed_login_attempts: 2,
         locked_until: null,
-        is_active: true
+        is_active: true,
       };
 
       pool.query.mockResolvedValueOnce({ rows: [mockUser] }); // User lookup
       pool.query.mockResolvedValueOnce({
-        rows: [{ failed_login_attempts: 3, locked_until: null }]
+        rows: [{ failed_login_attempts: 3, locked_until: null }],
       }); // Increment failed attempts
 
       SecurityEventService.logLoginFailed.mockResolvedValue();
 
       mockReq.body = {
         email: 'test@example.com',
-        password: 'WrongPassword!'
+        password: 'WrongPassword!',
       };
 
       // Act
@@ -130,15 +130,15 @@ describe('AuthController', () => {
           success: false,
           error: expect.objectContaining({
             code: 'INVALID_CREDENTIALS',
-            message: 'Invalid email or password'
-          })
-        })
+            message: 'Invalid email or password',
+          }),
+        }),
       );
 
       expect(SecurityEventService.logLoginFailed).toHaveBeenCalledWith(
         mockReq,
         'test@example.com',
-        'Invalid credentials'
+        'Invalid credentials',
       );
     });
 
@@ -151,14 +151,14 @@ describe('AuthController', () => {
         password_hash: await bcrypt.hash('CorrectPassword123!', 10),
         failed_login_attempts: 4, // One more attempt will lock
         locked_until: null,
-        is_active: true
+        is_active: true,
       };
 
       const lockedUntil = new Date(Date.now() + 30 * 60 * 1000);
 
       pool.query.mockResolvedValueOnce({ rows: [mockUser] }); // User lookup
       pool.query.mockResolvedValueOnce({
-        rows: [{ failed_login_attempts: 5, locked_until: lockedUntil }]
+        rows: [{ failed_login_attempts: 5, locked_until: lockedUntil }],
       }); // Lock account
 
       SecurityEventService.logLoginFailed.mockResolvedValue();
@@ -166,7 +166,7 @@ describe('AuthController', () => {
 
       mockReq.body = {
         email: 'test@example.com',
-        password: 'WrongPassword!'
+        password: 'WrongPassword!',
       };
 
       // Act
@@ -189,7 +189,7 @@ describe('AuthController', () => {
         locked_until: lockedUntil,
         is_active: true,
         first_name: 'Test',
-        last_name: 'User'
+        last_name: 'User',
       };
 
       pool.query.mockResolvedValueOnce({ rows: [mockUser] });
@@ -198,7 +198,7 @@ describe('AuthController', () => {
 
       mockReq.body = {
         email: 'test@example.com',
-        password: 'ValidPassword123!' // Even correct password rejected
+        password: 'ValidPassword123!', // Even correct password rejected
       };
 
       // Act
@@ -210,9 +210,9 @@ describe('AuthController', () => {
         expect.objectContaining({
           success: false,
           error: expect.objectContaining({
-            code: 'ACCOUNT_LOCKED'
-          })
-        })
+            code: 'ACCOUNT_LOCKED',
+          }),
+        }),
       );
 
       expect(SecurityEventService.logLockedAccountAttempt).toHaveBeenCalled();
@@ -227,14 +227,14 @@ describe('AuthController', () => {
         password_hash: await bcrypt.hash('ValidPassword123!', 10),
         is_active: false, // Account disabled
         failed_login_attempts: 0,
-        locked_until: null
+        locked_until: null,
       };
 
       pool.query.mockResolvedValueOnce({ rows: [mockUser] });
 
       mockReq.body = {
         email: 'test@example.com',
-        password: 'ValidPassword123!'
+        password: 'ValidPassword123!',
       };
 
       // Act
@@ -246,9 +246,9 @@ describe('AuthController', () => {
         expect.objectContaining({
           success: false,
           error: expect.objectContaining({
-            code: 'ACCOUNT_DISABLED'
-          })
-        })
+            code: 'ACCOUNT_DISABLED',
+          }),
+        }),
       );
     });
 
@@ -256,7 +256,7 @@ describe('AuthController', () => {
     it('should return error when email or password is missing', async () => {
       // Arrange
       mockReq.body = {
-        email: 'test@example.com'
+        email: 'test@example.com',
         // password missing
       };
 
@@ -269,9 +269,9 @@ describe('AuthController', () => {
         expect.objectContaining({
           success: false,
           error: expect.objectContaining({
-            code: 'MISSING_CREDENTIALS'
-          })
-        })
+            code: 'MISSING_CREDENTIALS',
+          }),
+        }),
       );
     });
 
@@ -282,7 +282,7 @@ describe('AuthController', () => {
 
       mockReq.body = {
         email: 'nonexistent@example.com',
-        password: 'SomePassword123!'
+        password: 'SomePassword123!',
       };
 
       // Act
@@ -295,9 +295,9 @@ describe('AuthController', () => {
           success: false,
           error: expect.objectContaining({
             code: 'INVALID_CREDENTIALS',
-            message: 'Invalid email or password' // Generic message (don't reveal user existence)
-          })
-        })
+            message: 'Invalid email or password', // Generic message (don't reveal user existence)
+          }),
+        }),
       );
     });
   });
@@ -316,17 +316,17 @@ describe('AuthController', () => {
               first_name: 'New',
               last_name: 'User',
               role: 'agent',
-              is_active: true
-            }]
+              is_active: true,
+            }],
           }), // Create user
-        release: jest.fn()
+        release: jest.fn(),
       });
 
       mockReq.body = {
         email: 'newuser@example.com',
         password: 'SecurePass123!',
         firstName: 'New',
-        lastName: 'User'
+        lastName: 'User',
       };
 
       // Act
@@ -339,11 +339,11 @@ describe('AuthController', () => {
           success: true,
           data: expect.objectContaining({
             user: expect.objectContaining({
-              email: 'newuser@example.com'
+              email: 'newuser@example.com',
             }),
-            token: expect.any(String)
-          })
-        })
+            token: expect.any(String),
+          }),
+        }),
       );
     });
 
@@ -353,16 +353,16 @@ describe('AuthController', () => {
       pool.connect = jest.fn().mockResolvedValue({
         query: jest.fn()
           .mockResolvedValueOnce({
-            rows: [{ id: 'existing-user-id' }]
+            rows: [{ id: 'existing-user-id' }],
           }), // User already exists
-        release: jest.fn()
+        release: jest.fn(),
       });
 
       mockReq.body = {
         email: 'existing@example.com',
         password: 'SecurePass123!',
         firstName: 'Test',
-        lastName: 'User'
+        lastName: 'User',
       };
 
       // Act
@@ -375,9 +375,9 @@ describe('AuthController', () => {
           success: false,
           error: expect.objectContaining({
             code: 'USER_EXISTS',
-            message: 'User with this email already exists'
-          })
-        })
+            message: 'User with this email already exists',
+          }),
+        }),
       );
     });
 
@@ -386,7 +386,7 @@ describe('AuthController', () => {
       // Arrange
       pool.connect = jest.fn().mockResolvedValue({
         query: jest.fn(),
-        release: jest.fn()
+        release: jest.fn(),
       });
 
       mockReq.body = {
@@ -403,9 +403,9 @@ describe('AuthController', () => {
         expect.objectContaining({
           success: false,
           error: expect.objectContaining({
-            code: 'MISSING_FIELDS'
-          })
-        })
+            code: 'MISSING_FIELDS',
+          }),
+        }),
       );
     });
   });

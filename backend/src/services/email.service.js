@@ -12,7 +12,7 @@ class EmailService {
           <p>Our team will be in touch shortly to discuss your needs and preferences.</p>
           <br>
           <p>Best regards,<br>Your Real Estate Team</p>
-        `
+        `,
       },
       propertyUpdate: {
         subject: 'New Properties Matching Your Criteria',
@@ -22,7 +22,7 @@ class EmailService {
           <p>Log in to your account to view these exciting opportunities.</p>
           <br>
           <p>Best regards,<br>Your Real Estate Team</p>
-        `
+        `,
       },
       appointmentReminder: {
         subject: 'Appointment Reminder',
@@ -39,7 +39,7 @@ class EmailService {
           <p>Please let us know if you need to reschedule.</p>
           <br>
           <p>Best regards,<br>Your Real Estate Team</p>
-        `
+        `,
       },
       statusUpdate: {
         subject: 'Status Update on Your Real Estate Transaction',
@@ -50,8 +50,8 @@ class EmailService {
           <p>${data.message}</p>
           <br>
           <p>Best regards,<br>Your Real Estate Team</p>
-        `
-      }
+        `,
+      },
     };
   }
 
@@ -62,16 +62,16 @@ class EmailService {
         to: options.to,
         subject: options.subject,
         template: options.template,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       // Simulate email sending delay
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       return {
         success: true,
         messageId: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
     } catch (error) {
       logger.error('Email send failed:', error);
@@ -85,7 +85,7 @@ class EmailService {
       to: data.to,
       subject: template.subject,
       html: template.getBody(data),
-      template: 'welcome'
+      template: 'welcome',
     });
   }
 
@@ -95,7 +95,7 @@ class EmailService {
       to: data.to,
       subject: template.subject,
       html: template.getBody(data),
-      template: 'propertyUpdate'
+      template: 'propertyUpdate',
     });
   }
 
@@ -105,7 +105,7 @@ class EmailService {
       to: data.to,
       subject: template.subject,
       html: template.getBody(data),
-      template: 'appointmentReminder'
+      template: 'appointmentReminder',
     });
   }
 
@@ -115,34 +115,32 @@ class EmailService {
       to: data.to,
       subject: template.subject,
       html: template.getBody(data),
-      template: 'statusUpdate'
+      template: 'statusUpdate',
     });
   }
 
   async sendBulkEmail(recipients, template, data) {
     const results = [];
-    
+
     // Process emails in batches to avoid overwhelming the service
     const batchSize = 10;
     for (let i = 0; i < recipients.length; i += batchSize) {
       const batch = recipients.slice(i, i + batchSize);
       const batchResults = await Promise.all(
-        batch.map(recipient => 
-          this.sendEmail({
-            to: recipient.email,
-            subject: template.subject,
-            html: template.getBody({ ...data, name: recipient.name }),
-            template: template.name
-          }).catch(error => ({ success: false, error: error.message, recipient: recipient.email }))
-        )
+        batch.map((recipient) => this.sendEmail({
+          to: recipient.email,
+          subject: template.subject,
+          html: template.getBody({ ...data, name: recipient.name }),
+          template: template.name,
+        }).catch((error) => ({ success: false, error: error.message, recipient: recipient.email }))),
       );
       results.push(...batchResults);
     }
-    
+
     return {
-      sent: results.filter(r => r.success).length,
-      failed: results.filter(r => !r.success).length,
-      results
+      sent: results.filter((r) => r.success).length,
+      failed: results.filter((r) => !r.success).length,
+      results,
     };
   }
 
@@ -151,7 +149,7 @@ class EmailService {
       to,
       subject,
       html: body,
-      template: 'custom'
+      template: 'custom',
     });
   }
 }

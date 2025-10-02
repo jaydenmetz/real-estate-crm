@@ -6,7 +6,7 @@ class BrokerService {
    */
   static async createBroker(brokerData) {
     const client = await pool.connect();
-    
+
     try {
       await client.query('BEGIN');
 
@@ -25,7 +25,7 @@ class BrokerService {
         logoUrl,
         commissionSplitDefault,
         monthlyFee,
-        transactionFee
+        transactionFee,
       } = brokerData;
 
       const result = await client.query(`
@@ -38,7 +38,7 @@ class BrokerService {
       `, [
         name, companyName, licenseNumber, licenseState, email,
         phone, address, city, state, zipCode, website, logoUrl,
-        commissionSplitDefault, monthlyFee, transactionFee
+        commissionSplitDefault, monthlyFee, transactionFee,
       ]);
 
       await client.query('COMMIT');
@@ -58,7 +58,7 @@ class BrokerService {
     const {
       commissionSplit,
       monthlyFee,
-      transactionFee
+      transactionFee,
     } = options;
 
     const result = await pool.query(`
@@ -213,7 +213,7 @@ class BrokerService {
       JOIN broker_teams bt ON t.team_id = bt.team_id
       WHERE bt.broker_id = $1 AND bt.status = 'active'
     `, [brokerId]);
-    
+
     stats.totalEscrows = parseInt(escrowResult.rows[0].escrow_count || 0);
     stats.totalVolume = parseFloat(escrowResult.rows[0].total_volume || 0);
     stats.totalCommission = parseFloat(escrowResult.rows[0].total_commission || 0);
@@ -226,7 +226,7 @@ class BrokerService {
       FROM broker_teams bt
       WHERE bt.broker_id = $1 AND bt.status = 'active'
     `, [brokerId]);
-    
+
     stats.monthlyRevenue = parseFloat(revenueResult.rows[0].monthly_fees || 0);
     stats.estimatedTransactionFees = parseFloat(revenueResult.rows[0].estimated_transaction_fees || 0);
 
@@ -241,9 +241,9 @@ class BrokerService {
     const values = [];
     let paramCount = 1;
 
-    Object.keys(updates).forEach(key => {
+    Object.keys(updates).forEach((key) => {
       if (updates[key] !== undefined) {
-        const snakeCase = key.replace(/[A-Z]/g, letter => `_${letter.toLowerCase()}`);
+        const snakeCase = key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
         fields.push(`${snakeCase} = $${paramCount}`);
         values.push(updates[key]);
         paramCount++;
@@ -255,7 +255,7 @@ class BrokerService {
     }
 
     values.push(brokerId);
-    
+
     const result = await pool.query(`
       UPDATE brokers
       SET ${fields.join(', ')}, updated_at = CURRENT_TIMESTAMP
@@ -289,10 +289,10 @@ class BrokerService {
     }
 
     const roleHierarchy = {
-      'owner': 4,
-      'admin': 3,
-      'manager': 2,
-      'viewer': 1
+      owner: 4,
+      admin: 3,
+      manager: 2,
+      viewer: 1,
     };
 
     const userRole = result.rows[0].role;

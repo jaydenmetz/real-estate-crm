@@ -18,7 +18,7 @@ class WebhookService {
     try {
       // Get active webhooks for this team and event
       const webhooks = await this.getActiveWebhooks(teamId, event);
-      
+
       if (webhooks.length === 0) {
         return;
       }
@@ -28,13 +28,11 @@ class WebhookService {
         event,
         team_id: teamId,
         timestamp: new Date().toISOString(),
-        data: payload
+        data: payload,
       };
 
       // Send to each webhook endpoint
-      const promises = webhooks.map(webhook => 
-        this.sendWebhook(webhook, event, fullPayload)
-      );
+      const promises = webhooks.map((webhook) => this.sendWebhook(webhook, event, fullPayload));
 
       // Execute all webhook calls in parallel
       await Promise.allSettled(promises);
@@ -54,7 +52,7 @@ class WebhookService {
         AND is_active = true
         AND ($2 = ANY(events) OR 'all' = ANY(events))
       `,
-      [teamId, event]
+      [teamId, event],
     );
 
     return result.rows;
@@ -73,7 +71,7 @@ class WebhookService {
       const headers = {
         'Content-Type': 'application/json',
         'X-Webhook-Event': event,
-        'X-Webhook-Timestamp': payload.timestamp
+        'X-Webhook-Timestamp': payload.timestamp,
       };
 
       if (webhook.secret) {
@@ -85,7 +83,7 @@ class WebhookService {
       response = await axios.post(webhook.url, payload, {
         headers,
         timeout: 30000, // 30 second timeout
-        validateStatus: () => true // Don't throw on any status
+        validateStatus: () => true, // Don't throw on any status
       });
 
       // Log successful delivery
@@ -93,18 +91,17 @@ class WebhookService {
         status: response.status,
         body: response.data,
         duration: Date.now() - startTime,
-        success: response.status >= 200 && response.status < 300
+        success: response.status >= 200 && response.status < 300,
       });
-
     } catch (err) {
       error = err;
-      
+
       // Log failed delivery
       await this.logWebhookDelivery(webhook.id, event, payload, {
         status: 0,
         error: err.message,
         duration: Date.now() - startTime,
-        success: false
+        success: false,
       });
 
       // Retry logic
@@ -130,7 +127,7 @@ class WebhookService {
     const expected = this.generateSignature(secret, payload);
     return crypto.timingSafeEqual(
       Buffer.from(expected),
-      Buffer.from(signature)
+      Buffer.from(signature),
     );
   }
 
@@ -152,8 +149,8 @@ class WebhookService {
           payload,
           result.status,
           JSON.stringify(result.body || result.error),
-          result.success ? new Date() : null
-        ]
+          result.success ? new Date() : null,
+        ],
       );
     } catch (error) {
       logger.error('Error logging webhook delivery:', error);
@@ -167,7 +164,7 @@ class WebhookService {
     if (attemptCount >= 3) {
       logger.warn('Max webhook retry attempts reached', {
         webhookId: webhook.id,
-        event
+        event,
       });
       return;
     }
@@ -182,14 +179,16 @@ class WebhookService {
       webhook,
       event,
       payload,
-      attemptCount: attemptCount + 1
+      attemptCount: attemptCount + 1,
     }));
 
     // Schedule retry
     setTimeout(async () => {
       const retryData = await redis.get(retryKey);
       if (retryData) {
-        const { webhook, event, payload, attemptCount } = JSON.parse(retryData);
+        const {
+          webhook, event, payload, attemptCount,
+        } = JSON.parse(retryData);
         await this.sendWebhook(webhook, event, payload);
         await redis.del(retryKey);
       }
@@ -200,7 +199,9 @@ class WebhookService {
    * Register a new webhook
    */
   static async register(teamId, webhookData) {
-    const { url, events, secret, metadata } = webhookData;
+    const {
+      url, events, secret, metadata,
+    } = webhookData;
 
     const result = await query(
       `
@@ -208,7 +209,7 @@ class WebhookService {
       VALUES ($1, $2, $3, $4, $5)
       RETURNING *
       `,
-      [teamId, url, events, secret, metadata || {}]
+      [teamId, url, events, secret, metadata || {}],
     );
 
     return result.rows[0];
@@ -243,7 +244,7 @@ class WebhookService {
       WHERE team_id = $${valueIndex} AND id = $${valueIndex + 1}
       RETURNING *
       `,
-      values
+      values,
     );
 
     if (result.rows.length === 0) {
@@ -259,7 +260,7 @@ class WebhookService {
   static async delete(teamId, webhookId) {
     const result = await query(
       'DELETE FROM webhooks WHERE team_id = $1 AND id = $2 RETURNING id',
-      [teamId, webhookId]
+      [teamId, webhookId],
     );
 
     if (result.rows.length === 0) {
@@ -284,7 +285,7 @@ class WebhookService {
       ORDER BY l.created_at DESC
       LIMIT $3 OFFSET $4
       `,
-      [teamId, webhookId, limit, offset]
+      [teamId, webhookId, limit, offset],
     );
 
     return result.rows;
@@ -296,7 +297,7 @@ class WebhookService {
   static async test(teamId, webhookId) {
     const result = await query(
       'SELECT * FROM webhooks WHERE team_id = $1 AND id = $2',
-      [teamId, webhookId]
+      [teamId, webhookId],
     );
 
     if (result.rows.length === 0) {
@@ -306,7 +307,7 @@ class WebhookService {
     const webhook = result.rows[0];
     const testPayload = {
       test: true,
-      message: 'This is a test webhook from Real Estate CRM'
+      message: 'This is a test webhook from Real Estate CRM',
     };
 
     return await this.sendWebhook(webhook, 'webhook.test', testPayload);
@@ -314,10 +315,9 @@ class WebhookService {
 }
 
 // Helper function for easy access
-const emitWebhook = (teamId, event, payload) => 
-  WebhookService.emit(teamId, event, payload);
+const emitWebhook = (teamId, event, payload) => WebhookService.emit(teamId, event, payload);
 
 module.exports = {
   WebhookService,
-  emitWebhook
+  emitWebhook,
 };

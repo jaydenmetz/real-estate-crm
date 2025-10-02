@@ -1,6 +1,6 @@
+const { validationResult } = require('express-validator');
 const { pool, query, transaction } = require('../config/database');
 const logger = require('../utils/logger');
-const { validationResult } = require('express-validator');
 
 // Helper to generate MLS number
 function generateMLSNumber() {
@@ -13,12 +13,12 @@ function generateMLSNumber() {
 // Valid status transitions
 const validStatusTransitions = {
   'Coming Soon': ['Active', 'Cancelled'],
-  'Active': ['Pending', 'Sold', 'Expired', 'Cancelled', 'Withdrawn'],
-  'Pending': ['Active', 'Sold', 'Cancelled'],
-  'Sold': [], // Terminal state
-  'Expired': ['Active', 'Withdrawn'],
-  'Cancelled': ['Active'],
-  'Withdrawn': ['Active']
+  Active: ['Pending', 'Sold', 'Expired', 'Cancelled', 'Withdrawn'],
+  Pending: ['Active', 'Sold', 'Cancelled'],
+  Sold: [], // Terminal state
+  Expired: ['Active', 'Withdrawn'],
+  Cancelled: ['Active'],
+  Withdrawn: ['Active'],
 };
 
 // Get all listings with filtering and pagination
@@ -34,12 +34,12 @@ exports.getListings = async (req, res) => {
       sortBy = 'created_at',
       sortOrder = 'DESC',
       page = 1,
-      limit = 20
+      limit = 20,
     } = req.query;
 
     const offset = (parseInt(page) - 1) * parseInt(limit);
     const params = [];
-    let whereConditions = ['l.deleted_at IS NULL'];
+    const whereConditions = ['l.deleted_at IS NULL'];
 
     // Add filters
     if (status) {
@@ -108,10 +108,10 @@ exports.getListings = async (req, res) => {
           total,
           page: parseInt(page),
           limit: parseInt(limit),
-          pages: Math.ceil(total / parseInt(limit))
-        }
+          pages: Math.ceil(total / parseInt(limit)),
+        },
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error fetching listings:', error);
@@ -119,8 +119,8 @@ exports.getListings = async (req, res) => {
       success: false,
       error: {
         code: 'FETCH_ERROR',
-        message: 'Failed to fetch listings'
-      }
+        message: 'Failed to fetch listings',
+      },
     });
   }
 };
@@ -150,8 +150,8 @@ exports.getListing = async (req, res) => {
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Listing not found'
-        }
+          message: 'Listing not found',
+        },
       });
     }
 
@@ -162,13 +162,13 @@ exports.getListing = async (req, res) => {
       views: 0,
       favorites: 0,
       shares: 0,
-      inquiries: 0
+      inquiries: 0,
     };
 
     res.json({
       success: true,
       data: listing,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error fetching listing:', error);
@@ -176,8 +176,8 @@ exports.getListing = async (req, res) => {
       success: false,
       error: {
         code: 'FETCH_ERROR',
-        message: 'Failed to fetch listing'
-      }
+        message: 'Failed to fetch listing',
+      },
     });
   }
 };
@@ -192,8 +192,8 @@ exports.createListing = async (req, res) => {
         error: {
           code: 'VALIDATION_ERROR',
           message: 'Invalid input data',
-          details: errors.array()
-        }
+          details: errors.array(),
+        },
       });
     }
 
@@ -215,7 +215,7 @@ exports.createListing = async (req, res) => {
       virtualTourLink,
       professionalPhotos = false,
       dronePhotos = false,
-      videoWalkthrough = false
+      videoWalkthrough = false,
     } = req.body;
 
     const result = await transaction(async (client) => {
@@ -262,7 +262,7 @@ exports.createListing = async (req, res) => {
         dronePhotos,
         videoWalkthrough,
         req.user?.id || null,
-        req.user?.team_id || null
+        req.user?.team_id || null,
       ];
 
       const listingResult = await client.query(listingQuery, listingValues);
@@ -283,13 +283,13 @@ exports.createListing = async (req, res) => {
       listingId: result.id,
       mlsNumber: result.mls_number,
       propertyAddress: result.property_address,
-      listPrice: result.list_price
+      listPrice: result.list_price,
     });
 
     res.status(201).json({
       success: true,
       data: result,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error creating listing:', error);
@@ -297,8 +297,8 @@ exports.createListing = async (req, res) => {
       success: false,
       error: {
         code: 'CREATE_ERROR',
-        message: 'Failed to create listing'
-      }
+        message: 'Failed to create listing',
+      },
     });
   }
 };
@@ -316,7 +316,8 @@ exports.updateListing = async (req, res) => {
 
     // Track if price is being changed
     let priceChanged = false;
-    let oldPrice, newPrice;
+    let oldPrice; let
+      newPrice;
 
     // Get current listing first if price is being updated
     if (updates.listPrice) {
@@ -345,7 +346,7 @@ exports.updateListing = async (req, res) => {
         dronePhotos: 'drone_photos',
         videoWalkthrough: 'video_walkthrough',
         showingInstructions: 'showing_instructions',
-        priceReductionDate: 'price_reduction_date'
+        priceReductionDate: 'price_reduction_date',
       };
 
       const column = columnMap[key] || key;
@@ -361,20 +362,20 @@ exports.updateListing = async (req, res) => {
         success: false,
         error: {
           code: 'NO_UPDATES',
-          message: 'No valid fields to update'
-        }
+          message: 'No valid fields to update',
+        },
       });
     }
 
     // Update days on market if status is changing to Active
     if (updates.listingStatus === 'Active') {
-      updateFields.push(`days_on_market = 0`);
-      updateFields.push(`listing_date = CURRENT_DATE`);
+      updateFields.push('days_on_market = 0');
+      updateFields.push('listing_date = CURRENT_DATE');
     }
 
     // Add updated_at, version, and last_modified_by
-    updateFields.push(`updated_at = CURRENT_TIMESTAMP`);
-    updateFields.push(`version = version + 1`);
+    updateFields.push('updated_at = CURRENT_TIMESTAMP');
+    updateFields.push('version = version + 1');
     updateFields.push(`last_modified_by = $${paramCount}`);
     values.push(req.user?.id || null);
     paramCount++;
@@ -411,28 +412,27 @@ exports.updateListing = async (req, res) => {
             success: false,
             error: {
               code: 'NOT_FOUND',
-              message: 'Listing not found'
-            }
-          });
-        } else {
-          return res.status(409).json({
-            success: false,
-            error: {
-              code: 'VERSION_CONFLICT',
-              message: 'This listing was modified by another user. Please refresh and try again.',
-              currentVersion: checkResult.rows[0].version,
-              attemptedVersion: clientVersion
-            }
+              message: 'Listing not found',
+            },
           });
         }
+        return res.status(409).json({
+          success: false,
+          error: {
+            code: 'VERSION_CONFLICT',
+            message: 'This listing was modified by another user. Please refresh and try again.',
+            currentVersion: checkResult.rows[0].version,
+            attemptedVersion: clientVersion,
+          },
+        });
       }
 
       return res.status(404).json({
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Listing not found'
-        }
+          message: 'Listing not found',
+        },
       });
     }
 
@@ -443,7 +443,7 @@ exports.updateListing = async (req, res) => {
         oldPrice,
         newPrice,
         reason: updates.priceChangeReason || 'Price updated',
-        updatedBy: req.user?.email || 'unknown'
+        updatedBy: req.user?.email || 'unknown',
       });
     }
 
@@ -456,7 +456,7 @@ exports.updateListing = async (req, res) => {
     res.json({
       success: true,
       data: result.rows[0],
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error updating listing:', error);
@@ -464,8 +464,8 @@ exports.updateListing = async (req, res) => {
       success: false,
       error: {
         code: 'UPDATE_ERROR',
-        message: 'Failed to update listing'
-      }
+        message: 'Failed to update listing',
+      },
     });
   }
 };
@@ -479,7 +479,7 @@ exports.updateStatus = async (req, res) => {
     // Get current status
     const currentResult = await query(
       'SELECT listing_status FROM listings WHERE id = $1 AND deleted_at IS NULL',
-      [id]
+      [id],
     );
 
     if (currentResult.rows.length === 0) {
@@ -487,8 +487,8 @@ exports.updateStatus = async (req, res) => {
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Listing not found'
-        }
+          message: 'Listing not found',
+        },
       });
     }
 
@@ -502,8 +502,8 @@ exports.updateStatus = async (req, res) => {
         error: {
           code: 'INVALID_TRANSITION',
           message: `Cannot change status from ${currentStatus} to ${status}`,
-          allowedTransitions
-        }
+          allowedTransitions,
+        },
       });
     }
 
@@ -522,7 +522,7 @@ exports.updateStatus = async (req, res) => {
       listingId: id,
       oldStatus: currentStatus,
       newStatus: status,
-      updatedBy: req.user?.email || 'unknown'
+      updatedBy: req.user?.email || 'unknown',
     });
 
     // Emit real-time update
@@ -534,7 +534,7 @@ exports.updateStatus = async (req, res) => {
     res.json({
       success: true,
       data: result.rows[0],
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error updating listing status:', error);
@@ -542,8 +542,8 @@ exports.updateStatus = async (req, res) => {
       success: false,
       error: {
         code: 'STATUS_ERROR',
-        message: 'Failed to update listing status'
-      }
+        message: 'Failed to update listing status',
+      },
     });
   }
 };
@@ -559,8 +559,8 @@ exports.recordPriceChange = async (req, res) => {
         success: false,
         error: {
           code: 'VALIDATION_ERROR',
-          message: 'Valid new price is required'
-        }
+          message: 'Valid new price is required',
+        },
       });
     }
 
@@ -568,7 +568,7 @@ exports.recordPriceChange = async (req, res) => {
       // Get current price
       const currentResult = await client.query(
         'SELECT list_price FROM listings WHERE id = $1 AND deleted_at IS NULL',
-        [id]
+        [id],
       );
 
       if (currentResult.rows.length === 0) {
@@ -583,7 +583,7 @@ exports.recordPriceChange = async (req, res) => {
          SET list_price = $1, updated_at = CURRENT_TIMESTAMP 
          WHERE id = $2 
          RETURNING *`,
-        [newPrice, id]
+        [newPrice, id],
       );
 
       // Price history can be implemented later if needed
@@ -600,7 +600,7 @@ exports.recordPriceChange = async (req, res) => {
     res.json({
       success: true,
       data: result,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error recording price change:', error);
@@ -608,8 +608,8 @@ exports.recordPriceChange = async (req, res) => {
       success: false,
       error: {
         code: 'PRICE_ERROR',
-        message: 'Failed to record price change'
-      }
+        message: 'Failed to record price change',
+      },
     });
   }
 };
@@ -618,15 +618,17 @@ exports.recordPriceChange = async (req, res) => {
 exports.logShowing = async (req, res) => {
   try {
     const { id } = req.params;
-    const { date, time, agentName, agentEmail, agentPhone, feedback, interested } = req.body;
+    const {
+      date, time, agentName, agentEmail, agentPhone, feedback, interested,
+    } = req.body;
 
     if (!date || !time) {
       return res.status(400).json({
         success: false,
         error: {
           code: 'VALIDATION_ERROR',
-          message: 'Date and time are required'
-        }
+          message: 'Date and time are required',
+        },
       });
     }
 
@@ -636,7 +638,7 @@ exports.logShowing = async (req, res) => {
     // Update listing timestamp to track activity
     await query(
       'UPDATE listings SET updated_at = CURRENT_TIMESTAMP WHERE id = $1',
-      [id]
+      [id],
     );
 
     res.json({
@@ -647,9 +649,9 @@ exports.logShowing = async (req, res) => {
         showing_time: time,
         agent_name: agentName,
         feedback,
-        interested: interested || false
+        interested: interested || false,
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error logging showing:', error);
@@ -657,8 +659,8 @@ exports.logShowing = async (req, res) => {
       success: false,
       error: {
         code: 'SHOWING_ERROR',
-        message: 'Failed to log showing'
-      }
+        message: 'Failed to log showing',
+      },
     });
   }
 };
@@ -674,8 +676,8 @@ exports.updateMarketingChecklist = async (req, res) => {
         success: false,
         error: {
           code: 'VALIDATION_ERROR',
-          message: 'Checklist data must be an array'
-        }
+          message: 'Checklist data must be an array',
+        },
       });
     }
 
@@ -684,7 +686,7 @@ exports.updateMarketingChecklist = async (req, res) => {
     res.json({
       success: true,
       data: checklistData,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error updating marketing checklist:', error);
@@ -692,8 +694,8 @@ exports.updateMarketingChecklist = async (req, res) => {
       success: false,
       error: {
         code: 'CHECKLIST_ERROR',
-        message: 'Failed to update marketing checklist'
-      }
+        message: 'Failed to update marketing checklist',
+      },
     });
   }
 };
@@ -706,7 +708,7 @@ exports.getListingAnalytics = async (req, res) => {
     // Get listing basic info
     const listingResult = await query(
       'SELECT id, property_address, list_price, property_type, square_feet, listing_date FROM listings WHERE id = $1',
-      [id]
+      [id],
     );
 
     if (listingResult.rows.length === 0) {
@@ -714,8 +716,8 @@ exports.getListingAnalytics = async (req, res) => {
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Listing not found'
-        }
+          message: 'Listing not found',
+        },
       });
     }
 
@@ -773,7 +775,7 @@ exports.getListingAnalytics = async (req, res) => {
     const comparableResult = await query(comparableQuery, [
       listing.property_type,
       listing.square_feet || 0,
-      listing.list_price
+      listing.list_price,
     ]);
 
     // Format response
@@ -782,33 +784,33 @@ exports.getListingAnalytics = async (req, res) => {
         id: listing.id,
         address: listing.property_address,
         listPrice: listing.list_price,
-        pricePerSqft: listing.square_feet ? (listing.list_price / listing.square_feet).toFixed(2) : null
+        pricePerSqft: listing.square_feet ? (listing.list_price / listing.square_feet).toFixed(2) : null,
       },
       metrics: {
         views: 0,
         favorites: 0,
         shares: 0,
-        inquiries: 0
+        inquiries: 0,
       },
       dailyBreakdown: {},
       showings: showingResult.rows[0],
       marketComparison: {
         avgDaysOnMarket: Math.round(comparableResult.rows[0].avg_days_on_market || 0),
         avgPricePerSqft: parseFloat(comparableResult.rows[0].avg_price_per_sqft || 0).toFixed(2),
-        comparableProperties: parseInt(comparableResult.rows[0].comparable_count || 0)
-      }
+        comparableProperties: parseInt(comparableResult.rows[0].comparable_count || 0),
+      },
     };
 
     // Process analytics data
-    analyticsResult.rows.forEach(row => {
-      analytics.metrics[row.event_type + 's'] = parseInt(row.total);
+    analyticsResult.rows.forEach((row) => {
+      analytics.metrics[`${row.event_type}s`] = parseInt(row.total);
       analytics.dailyBreakdown[row.event_type] = row.daily_data;
     });
 
     res.json({
       success: true,
       data: analytics,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error fetching listing analytics:', error);
@@ -816,8 +818,8 @@ exports.getListingAnalytics = async (req, res) => {
       success: false,
       error: {
         code: 'ANALYTICS_ERROR',
-        message: 'Failed to fetch listing analytics'
-      }
+        message: 'Failed to fetch listing analytics',
+      },
     });
   }
 };
@@ -834,8 +836,8 @@ exports.trackAnalytics = async (req, res) => {
         success: false,
         error: {
           code: 'INVALID_EVENT',
-          message: 'Invalid event type'
-        }
+          message: 'Invalid event type',
+        },
       });
     }
 
@@ -846,9 +848,9 @@ exports.trackAnalytics = async (req, res) => {
       data: {
         listing_id: id,
         event_type: eventType,
-        event_date: new Date().toISOString()
+        event_date: new Date().toISOString(),
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error tracking analytics:', error);
@@ -856,8 +858,8 @@ exports.trackAnalytics = async (req, res) => {
       success: false,
       error: {
         code: 'ANALYTICS_ERROR',
-        message: 'Failed to track analytics event'
-      }
+        message: 'Failed to track analytics event',
+      },
     });
   }
 };
@@ -870,7 +872,7 @@ exports.archiveListing = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
-    const teamId = req.user.teamId;
+    const { teamId } = req.user;
 
     // Archive the listing with permission check
     // Note: Uses listing_agent_id column for ownership check
@@ -892,20 +894,20 @@ exports.archiveListing = async (req, res) => {
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Listing not found or already archived'
-        }
+          message: 'Listing not found or already archived',
+        },
       });
     }
 
     logger.info('Listing archived', {
       listingId: id,
-      archivedBy: req.user?.email || 'unknown'
+      archivedBy: req.user?.email || 'unknown',
     });
 
     res.json({
       success: true,
       data: result.rows[0],
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error archiving listing:', error);
@@ -913,8 +915,8 @@ exports.archiveListing = async (req, res) => {
       success: false,
       error: {
         code: 'ARCHIVE_ERROR',
-        message: 'Failed to archive listing'
-      }
+        message: 'Failed to archive listing',
+      },
     });
   }
 };
@@ -927,7 +929,7 @@ exports.deleteListing = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.id;
-    const teamId = req.user.teamId;
+    const { teamId } = req.user;
 
     // First check if the listing exists and is archived
     // Note: Uses listing_agent_id column for ownership check
@@ -945,8 +947,8 @@ exports.deleteListing = async (req, res) => {
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Listing not found'
-        }
+          message: 'Listing not found',
+        },
       });
     }
 
@@ -955,8 +957,8 @@ exports.deleteListing = async (req, res) => {
         success: false,
         error: {
           code: 'NOT_ARCHIVED',
-          message: 'Listing must be archived before deletion'
-        }
+          message: 'Listing must be archived before deletion',
+        },
       });
     }
 
@@ -976,23 +978,23 @@ exports.deleteListing = async (req, res) => {
         success: false,
         error: {
           code: 'DELETE_FAILED',
-          message: 'Failed to delete listing'
-        }
+          message: 'Failed to delete listing',
+        },
       });
     }
 
     logger.info('Listing permanently deleted', {
       listingId: id,
-      deletedBy: req.user?.email || 'unknown'
+      deletedBy: req.user?.email || 'unknown',
     });
 
     res.json({
       success: true,
       data: {
         id: result.rows[0].id,
-        message: `Listing ${result.rows[0].property_address} permanently deleted`
+        message: `Listing ${result.rows[0].property_address} permanently deleted`,
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error deleting listing:', error);
@@ -1000,8 +1002,8 @@ exports.deleteListing = async (req, res) => {
       success: false,
       error: {
         code: 'DELETE_ERROR',
-        message: 'Failed to delete listing'
-      }
+        message: 'Failed to delete listing',
+      },
     });
   }
 };
@@ -1015,15 +1017,15 @@ exports.batchDeleteListings = async (req, res) => {
   try {
     const { ids } = req.body;
     const userId = req.user.id;
-    const teamId = req.user.teamId;
+    const { teamId } = req.user;
 
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
       return res.status(400).json({
         success: false,
         error: {
           code: 'VALIDATION_ERROR',
-          message: 'IDs must be a non-empty array'
-        }
+          message: 'IDs must be a non-empty array',
+        },
       });
     }
 
@@ -1041,21 +1043,21 @@ exports.batchDeleteListings = async (req, res) => {
 
     if (verifyResult.rows.length !== ids.length) {
       await client.query('ROLLBACK');
-      const foundIds = verifyResult.rows.map(row => row.id);
-      const notFoundIds = ids.filter(id => !foundIds.includes(id));
+      const foundIds = verifyResult.rows.map((row) => row.id);
+      const notFoundIds = ids.filter((id) => !foundIds.includes(id));
 
       return res.status(404).json({
         success: false,
         error: {
           code: 'NOT_FOUND',
           message: `Some listings not found: ${notFoundIds.join(', ')}`,
-          notFoundIds
-        }
+          notFoundIds,
+        },
       });
     }
 
     // Check if all are archived
-    const notArchivedListings = verifyResult.rows.filter(row => !row.deleted_at);
+    const notArchivedListings = verifyResult.rows.filter((row) => !row.deleted_at);
     if (notArchivedListings.length > 0) {
       await client.query('ROLLBACK');
       return res.status(400).json({
@@ -1063,8 +1065,8 @@ exports.batchDeleteListings = async (req, res) => {
         error: {
           code: 'NOT_ARCHIVED',
           message: 'All listings must be archived before deletion',
-          notArchivedIds: notArchivedListings.map(l => l.id)
-        }
+          notArchivedIds: notArchivedListings.map((l) => l.id),
+        },
       });
     }
 
@@ -1084,7 +1086,7 @@ exports.batchDeleteListings = async (req, res) => {
     logger.info('Batch delete listings completed', {
       deletedCount: deleteResult.rows.length,
       deletedBy: req.user?.email || 'unknown',
-      listingIds: deleteResult.rows.map(row => row.id)
+      listingIds: deleteResult.rows.map((row) => row.id),
     });
 
     res.json({
@@ -1092,9 +1094,9 @@ exports.batchDeleteListings = async (req, res) => {
       data: {
         deletedCount: deleteResult.rows.length,
         deletedListings: deleteResult.rows,
-        message: `Successfully deleted ${deleteResult.rows.length} listings`
+        message: `Successfully deleted ${deleteResult.rows.length} listings`,
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     await client.query('ROLLBACK');
@@ -1103,8 +1105,8 @@ exports.batchDeleteListings = async (req, res) => {
       success: false,
       error: {
         code: 'BATCH_DELETE_ERROR',
-        message: 'Failed to batch delete listings'
-      }
+        message: 'Failed to batch delete listings',
+      },
     });
   } finally {
     client.release();

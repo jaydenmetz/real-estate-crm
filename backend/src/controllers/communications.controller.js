@@ -14,19 +14,19 @@ exports.create = async (req, res) => {
 };
 
 exports.get = async (req, res) => {
-  const c = communications.find(c => c.id === req.params.id);
+  const c = communications.find((c) => c.id === req.params.id);
   if (!c) return res.status(404).json({ success: false, error: 'Not found' });
   res.json({ success: true, data: c });
 };
 
 exports.update = async (req, res) => {
-  let idx = communications.findIndex(c => c.id === req.params.id);
+  const idx = communications.findIndex((c) => c.id === req.params.id);
   if (idx === -1) return res.status(404).json({ success: false, error: 'Not found' });
   communications[idx] = { ...communications[idx], ...req.body, updatedAt: new Date().toISOString() };
   res.json({ success: true, data: communications[idx] });
 };
 
 exports.remove = async (req, res) => {
-  communications = communications.filter(c => c.id !== req.params.id);
+  communications = communications.filter((c) => c.id !== req.params.id);
   res.status(204).end();
 };

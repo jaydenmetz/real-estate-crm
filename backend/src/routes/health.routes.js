@@ -1,4 +1,5 @@
 const express = require('express');
+
 const router = express.Router();
 const { pool } = require('../config/database');
 
@@ -7,7 +8,7 @@ router.get('/', async (req, res) => {
   try {
     // Test database connection
     const dbResult = await pool.query('SELECT NOW() as time, COUNT(*) as user_count FROM users');
-    
+
     res.json({
       success: true,
       data: {
@@ -16,11 +17,11 @@ router.get('/', async (req, res) => {
         database: {
           connected: true,
           time: dbResult.rows[0].time,
-          userCount: dbResult.rows[0].user_count
+          userCount: dbResult.rows[0].user_count,
         },
         environment: process.env.NODE_ENV,
-        version: process.env.API_VERSION
-      }
+        version: process.env.API_VERSION,
+      },
     });
   } catch (error) {
     res.status(503).json({
@@ -28,8 +29,8 @@ router.get('/', async (req, res) => {
       error: {
         code: 'UNHEALTHY',
         message: 'Service unhealthy',
-        details: error.message
-      }
+        details: error.message,
+      },
     });
   }
 });

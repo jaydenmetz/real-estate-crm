@@ -10,7 +10,7 @@ describe('Large Payload Handling', () => {
       .post('/v1/auth/login')
       .send({
         email: 'admin@jaydenmetz.com',
-        password: 'AdminPassword123!'
+        password: 'AdminPassword123!',
       });
 
     authToken = loginResponse.body.data.token;
@@ -33,7 +33,7 @@ describe('Large Payload Handling', () => {
         email: `large.${Date.now()}@example.com`,
         leadSource: 'Website',
         status: 'New',
-        notes: veryLongNotes
+        notes: veryLongNotes,
       });
 
     // Should either accept (with truncation) or reject
@@ -79,7 +79,7 @@ describe('Large Payload Handling', () => {
         lastName: 'Test',
         email: `nested.${Date.now()}@example.com`,
         clientType: 'Buyer',
-        metadata: nested // Deeply nested
+        metadata: nested, // Deeply nested
       });
 
     // Should either flatten/reject or accept
@@ -103,7 +103,7 @@ describe('Large Payload Handling', () => {
         notes: largeText,
         purchasePrice: 500000,
         status: 'active',
-        escrowNumber: `LARGE-${Date.now()}`
+        escrowNumber: `LARGE-${Date.now()}`,
       });
 
     if (response.status === 201) {
@@ -120,7 +120,7 @@ describe('Large Payload Handling', () => {
       firstName: 'Bulk',
       lastName: `Client${i}`,
       email: `bulk.${Date.now()}.${i}@example.com`,
-      clientType: 'Buyer'
+      clientType: 'Buyer',
     }));
 
     const response = await request(app)

@@ -1,4 +1,5 @@
 const express = require('express');
+
 const router = express.Router();
 const { body } = require('express-validator');
 const expensesController = require('../controllers/expenses.controller');
@@ -21,7 +22,7 @@ const createValidation = [
   body('tags').optional().isArray(),
   body('mileage.start').optional().isNumeric(),
   body('mileage.end').optional().isNumeric(),
-  body('mileage.rate').optional().isNumeric()
+  body('mileage.rate').optional().isNumeric(),
 ];
 
 const updateValidation = [
@@ -33,12 +34,12 @@ const updateValidation = [
   body('date').optional().isISO8601(),
   body('paymentMethod').optional().notEmpty(),
   body('taxDeductible').optional().isBoolean(),
-  body('status').optional().isIn(['Pending', 'Paid', 'Approved', 'Rejected'])
+  body('status').optional().isIn(['Pending', 'Paid', 'Approved', 'Rejected']),
 ];
 
 const receiptValidation = [
   body('filename').notEmpty().withMessage('Filename is required'),
-  body('url').notEmpty().withMessage('URL is required')
+  body('url').notEmpty().withMessage('URL is required'),
 ];
 
 const reportValidation = [
@@ -46,7 +47,7 @@ const reportValidation = [
   body('startDate').optional().isISO8601(),
   body('endDate').optional().isISO8601(),
   body('category').optional().notEmpty(),
-  body('taxDeductible').optional().isBoolean()
+  body('taxDeductible').optional().isBoolean(),
 ];
 
 // Routes

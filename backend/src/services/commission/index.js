@@ -22,20 +22,20 @@ class CommissionService {
           gci_threshold_min DESC
         LIMIT 1
       `;
-      
+
       const result = await pool.query(query, [leadSource, year, currentYtdGci]);
-      
+
       if (result.rows.length === 0) {
         // Default to 70% if no rules found
         return {
           splitPercentage: 70,
           capStatus: 'pre_cap',
-          rule: 'default'
+          rule: 'default',
         };
       }
-      
+
       const rule = result.rows[0];
-      
+
       // Determine cap status
       let capStatus = 'pre_cap';
       if (currentYtdGci >= 100000) {
@@ -43,15 +43,15 @@ class CommissionService {
       } else if (currentYtdGci >= 50000) {
         capStatus = 'mid_tier';
       }
-      
+
       return {
         splitPercentage: parseFloat(rule.split_percentage),
         capStatus,
         rule: rule.notes || `${rule.split_percentage}% split`,
         threshold: {
           min: parseFloat(rule.gci_threshold_min),
-          max: rule.gci_threshold_max ? parseFloat(rule.gci_threshold_max) : null
-        }
+          max: rule.gci_threshold_max ? parseFloat(rule.gci_threshold_max) : null,
+        },
       };
     } catch (error) {
       console.error('Error calculating commission split:', error);
@@ -70,44 +70,44 @@ class CommissionService {
       if (ytdGci === null) {
         ytdGci = await this.getCurrentYtdGci();
       }
-      
+
       const purchasePrice = parseFloat(escrow.purchase_price) || 0;
       const commissionPercentage = parseFloat(escrow.commission_percentage) || 3;
       const grossCommission = parseFloat(escrow.gross_commission) || (purchasePrice * (commissionPercentage / 100));
       const myCommission = parseFloat(escrow.my_commission) || grossCommission;
-      
+
       // Get split percentage based on YTD GCI
       const splitInfo = await this.calculateCommissionSplit(ytdGci, escrow.lead_source);
-      
+
       // Calculate agent's portion
-      const splitPercentage = splitInfo.splitPercentage;
+      const { splitPercentage } = splitInfo;
       const grossAgentCommission = myCommission * (splitPercentage / 100);
-      
+
       // Standard deductions
       const transactionFee = 285;
       const tcFee = 250;
       const franchiseFees = myCommission * 0.0257; // 2.57% franchise fee
-      
+
       // Calculate net income
       const totalDeductions = transactionFee + tcFee + franchiseFees;
       const agent1099Income = grossAgentCommission - totalDeductions;
-      
+
       // Company's portion
       const companyCommission = myCommission - grossAgentCommission;
-      
+
       return {
         // Transaction details
         purchasePrice,
         commissionPercentage,
         grossCommission,
         myCommission,
-        
+
         // Split calculation
         ytdGciBeforeTransaction: ytdGci,
         ytdGciAfterTransaction: ytdGci + myCommission,
         splitPercentage,
         capStatus: splitInfo.capStatus,
-        
+
         // Agent breakdown
         grossAgentCommission,
         transactionFee,
@@ -115,13 +115,13 @@ class CommissionService {
         franchiseFees,
         totalDeductions,
         agent1099Income,
-        
+
         // Company breakdown
         companyCommission,
-        
+
         // Summary
         splitRule: splitInfo.rule,
-        effectiveDate: new Date()
+        effectiveDate: new Date(),
       };
     } catch (error) {
       console.error('Error calculating commission breakdown:', error);
@@ -142,7 +142,7 @@ class CommissionService {
           EXTRACT(YEAR FROM closing_date) = $1
           AND escrow_status = 'Closed'
       `;
-      
+
       const result = await pool.query(query, [year]);
       return parseFloat(result.rows[0].ytd_gci) || 0;
     } catch (error) {
@@ -159,19 +159,19 @@ class CommissionService {
       // Get escrow data
       const escrowQuery = 'SELECT * FROM escrows WHERE id = $1';
       const escrowResult = await pool.query(escrowQuery, [escrowId]);
-      
+
       if (escrowResult.rows.length === 0) {
         throw new Error('Escrow not found');
       }
-      
+
       const escrow = escrowResult.rows[0];
-      
+
       // Get YTD GCI at the time of this transaction
       const ytdGci = await this.getYtdGciAtDate(escrow.closing_date || escrow.acceptance_date);
-      
+
       // Calculate commission breakdown
       const breakdown = await this.calculateCommissionBreakdown(escrow, ytdGci);
-      
+
       // Update escrow with commission data
       const updateQuery = `
         UPDATE escrows
@@ -187,7 +187,7 @@ class CommissionService {
         WHERE id = $1
         RETURNING *
       `;
-      
+
       const agentSplitData = {
         splitPercentage: breakdown.splitPercentage,
         grossAgentCommission: breakdown.grossAgentCommission,
@@ -196,17 +196,17 @@ class CommissionService {
         franchiseFees: breakdown.franchiseFees,
         agent1099Income: breakdown.agent1099Income,
         companyCommission: breakdown.companyCommission,
-        splitRule: breakdown.splitRule
+        splitRule: breakdown.splitRule,
       };
-      
+
       const updateResult = await pool.query(updateQuery, [
         escrowId,
         breakdown.ytdGciBeforeTransaction,
         breakdown.splitPercentage,
         breakdown.capStatus,
-        JSON.stringify(agentSplitData)
+        JSON.stringify(agentSplitData),
       ]);
-      
+
       return updateResult.rows[0];
     } catch (error) {
       console.error('Error updating escrow commission:', error);
@@ -229,7 +229,7 @@ class CommissionService {
           AND closing_date < $2
           AND escrow_status = 'Closed'
       `;
-      
+
       const result = await pool.query(query, [year, date]);
       return parseFloat(result.rows[0].ytd_gci) || 0;
     } catch (error) {
@@ -249,15 +249,15 @@ class CommissionService {
         VALUES ($1, $2, $3, $4, $5)
         RETURNING *
       `;
-      
+
       const result = await pool.query(query, [
         leadSource,
         gciMin,
         gciMax,
         splitPercentage,
-        notes
+        notes,
       ]);
-      
+
       return result.rows[0];
     } catch (error) {
       console.error('Error adding custom split rule:', error);

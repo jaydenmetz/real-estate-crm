@@ -1,10 +1,11 @@
 const express = require('express');
+
 const router = express.Router();
+const os = require('os');
 const pool = require('../config/database');
 const { getRedisClient } = require('../config/redis');
 const { authenticate } = require('../middleware/apiKey.middleware');
 const { adminOnly } = require('../middleware/adminOnly.middleware');
-const os = require('os');
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -52,7 +53,7 @@ router.get('/', async (req, res) => {
     uptime: process.uptime(),
     environment: process.env.NODE_ENV || 'development',
     version: process.env.APP_VERSION || '1.0.0',
-    checks: {}
+    checks: {},
   };
 
   // 1. PostgreSQL Health Check
@@ -69,9 +70,9 @@ router.get('/', async (req, res) => {
       FROM pg_stat_activity
       WHERE datname = current_database()
     `);
-    
+
     const queryTime = Date.now() - startTime;
-    
+
     // Get table counts
     const tableStats = await pool.query(`
       SELECT 
@@ -91,14 +92,14 @@ router.get('/', async (req, res) => {
         sizeInMB: Math.round(dbResult.rows[0].size_bytes / 1024 / 1024),
         serverTime: dbResult.rows[0].server_time,
         activeConnections: parseInt(dbResult.rows[0].connection_count),
-        tableCounts: tableStats.rows[0]
-      }
+        tableCounts: tableStats.rows[0],
+      },
     };
   } catch (error) {
     healthStatus.checks.postgresql = {
       status: 'unhealthy',
       error: error.message,
-      recommendation: 'Check DATABASE_URL and PostgreSQL server status'
+      recommendation: 'Check DATABASE_URL and PostgreSQL server status',
     };
   }
 
@@ -107,20 +108,20 @@ router.get('/', async (req, res) => {
   if (redisClient) {
     try {
       const startTime = Date.now();
-      
+
       // Test Redis connection
       await redisClient.ping();
-      
+
       // Get Redis info
       const info = await redisClient.info('server');
       const memInfo = await redisClient.info('memory');
-      
+
       // Parse Redis version from info
       const versionMatch = info.match(/redis_version:([^\r\n]+)/);
       const usedMemoryMatch = memInfo.match(/used_memory_human:([^\r\n]+)/);
-      
+
       const queryTime = Date.now() - startTime;
-      
+
       healthStatus.checks.redis = {
         status: 'healthy',
         responseTime: `${queryTime}ms`,
@@ -128,22 +129,22 @@ router.get('/', async (req, res) => {
           connected: true,
           version: versionMatch ? versionMatch[1] : 'unknown',
           usedMemory: usedMemoryMatch ? usedMemoryMatch[1] : 'unknown',
-          purpose: 'Optional caching layer for performance'
-        }
+          purpose: 'Optional caching layer for performance',
+        },
       };
     } catch (error) {
       healthStatus.checks.redis = {
         status: 'degraded',
         error: error.message,
         note: 'Redis is optional - app functions without it',
-        impact: 'Slightly slower performance, no caching'
+        impact: 'Slightly slower performance, no caching',
       };
     }
   } else {
     healthStatus.checks.redis = {
       status: 'not_configured',
       note: 'Redis not enabled - this is OK',
-      impact: 'No performance impact for current features'
+      impact: 'No performance impact for current features',
     };
   }
 
@@ -151,7 +152,7 @@ router.get('/', async (req, res) => {
   try {
     // Check JWT secret is configured
     const hasJWTSecret = !!process.env.JWT_SECRET;
-    
+
     // Check recent authentications
     const authStats = await pool.query(`
       SELECT 
@@ -171,13 +172,13 @@ router.get('/', async (req, res) => {
         activeUsers: parseInt(authStats.rows[0].active_users),
         totalApiKeys: parseInt(authStats.rows[0].total_api_keys),
         activeApiKeys: parseInt(authStats.rows[0].active_keys),
-        validApiKeys: parseInt(authStats.rows[0].valid_keys)
-      }
+        validApiKeys: parseInt(authStats.rows[0].valid_keys),
+      },
     };
   } catch (error) {
     healthStatus.checks.authentication = {
       status: 'warning',
-      error: error.message
+      error: error.message,
     };
   }
 
@@ -190,15 +191,15 @@ router.get('/', async (req, res) => {
       memoryUsage: {
         totalMB: Math.round(os.totalmem() / 1024 / 1024),
         freeMB: Math.round(os.freemem() / 1024 / 1024),
-        usedByAppMB: Math.round(process.memoryUsage().heapUsed / 1024 / 1024)
+        usedByAppMB: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
       },
       cpuCores: os.cpus().length,
       loadAverage: os.loadavg(),
       uptime: {
         system: os.uptime(),
-        process: process.uptime()
-      }
-    }
+        process: process.uptime(),
+      },
+    },
   };
 
   // 5. API Endpoints Check
@@ -206,23 +207,23 @@ router.get('/', async (req, res) => {
     const endpointChecks = [
       { name: 'Auth', path: '/auth/test', method: 'GET' },
       { name: 'Escrows', path: '/escrows', method: 'GET' },
-      { name: 'API Keys', path: '/api-keys', method: 'GET' }
+      { name: 'API Keys', path: '/api-keys', method: 'GET' },
     ];
 
     healthStatus.checks.endpoints = {
       status: 'healthy',
-      available: endpointChecks.map(e => e.name),
-      note: 'All endpoints require authentication except /health'
+      available: endpointChecks.map((e) => e.name),
+      note: 'All endpoints require authentication except /health',
     };
   } catch (error) {
     healthStatus.checks.endpoints = {
       status: 'warning',
-      error: error.message
+      error: error.message,
     };
   }
 
   // Determine overall health status
-  const statuses = Object.values(healthStatus.checks).map(c => c.status);
+  const statuses = Object.values(healthStatus.checks).map((c) => c.status);
   if (statuses.includes('unhealthy')) {
     healthStatus.status = 'unhealthy';
   } else if (statuses.includes('degraded') || statuses.includes('warning')) {
@@ -233,13 +234,13 @@ router.get('/', async (req, res) => {
 
   // Add recommendations
   healthStatus.recommendations = [];
-  
+
   if (!redisClient) {
     healthStatus.recommendations.push({
       type: 'performance',
       message: 'Consider adding Redis for caching and session storage',
       priority: 'low',
-      impact: 'Would improve response times for frequently accessed data'
+      impact: 'Would improve response times for frequently accessed data',
     });
   }
 
@@ -248,13 +249,13 @@ router.get('/', async (req, res) => {
       type: 'scaling',
       message: 'High number of database connections',
       priority: 'medium',
-      action: 'Consider connection pooling or scaling database'
+      action: 'Consider connection pooling or scaling database',
     });
   }
 
   res.json({
     success: true,
-    data: healthStatus
+    data: healthStatus,
   });
 });
 
@@ -350,14 +351,14 @@ router.get('/postgres', async (req, res) => {
     res.json({
       success: true,
       data: diagnostics,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     console.error('PostgreSQL health check error:', error);
     res.status(500).json({
       success: false,
       error: error.message,
-      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined,
     });
   }
 });
@@ -368,7 +369,7 @@ router.get('/postgres', async (req, res) => {
  */
 router.get('/redis', async (req, res) => {
   const redisClient = getRedisClient();
-  
+
   if (!redisClient) {
     return res.json({
       success: true,
@@ -380,21 +381,21 @@ router.get('/redis', async (req, res) => {
           'Faster API responses through caching',
           'Session storage across server restarts',
           'Rate limiting capabilities',
-          'Real-time features support'
-        ]
-      }
+          'Real-time features support',
+        ],
+      },
     });
   }
 
   try {
     const info = await redisClient.info();
     const dbSize = await redisClient.dbSize();
-    
+
     // Parse info string
     const infoLines = info.split('\r\n');
     const infoObj = {};
-    
-    infoLines.forEach(line => {
+
+    infoLines.forEach((line) => {
       if (line && !line.startsWith('#')) {
         const [key, value] = line.split(':');
         if (key && value) {
@@ -413,23 +414,23 @@ router.get('/redis', async (req, res) => {
         memory: {
           used: infoObj.used_memory_human,
           peak: infoObj.used_memory_peak_human,
-          rss: infoObj.used_memory_rss_human
+          rss: infoObj.used_memory_rss_human,
         },
         clients: {
           connected: infoObj.connected_clients,
-          blocked: infoObj.blocked_clients
+          blocked: infoObj.blocked_clients,
         },
         persistence: {
           lastSave: infoObj.rdb_last_save_time,
-          changes: infoObj.rdb_changes_since_last_save
-        }
+          changes: infoObj.rdb_changes_since_last_save,
+        },
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -482,7 +483,7 @@ router.get('/auth', async (req, res) => {
       apiKeysEnabled: true,
       usersWithApiKeys: authMethods.rows[0].users_with_api_keys,
       sessionStorage: 'Browser localStorage (JWT) + PostgreSQL (API Keys)',
-      redisSessionsEnabled: !!getRedisClient()
+      redisSessionsEnabled: !!getRedisClient(),
     };
 
     // Failed login attempts (if tracking)
@@ -490,18 +491,18 @@ router.get('/auth', async (req, res) => {
       passwordHashAlgorithm: 'bcrypt',
       jwtExpirationTime: process.env.JWT_EXPIRATION || '30d',
       apiKeyLength: 64,
-      rateLimitingEnabled: false // Could check if Redis is being used for this
+      rateLimitingEnabled: false, // Could check if Redis is being used for this
     };
 
     res.json({
       success: true,
       data: diagnostics,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     res.status(500).json({
       success: false,
-      error: error.message
+      error: error.message,
     });
   }
 });
@@ -512,20 +513,20 @@ router.get('/auth', async (req, res) => {
  */
 router.get('/test-all', async (req, res) => {
   const tests = [];
-  
+
   // Test main health
   try {
     const mainHealth = await fetch(`${req.protocol}://${req.get('host')}/v1/health`);
     tests.push({
       endpoint: '/v1/health',
       status: mainHealth.status,
-      success: mainHealth.ok
+      success: mainHealth.ok,
     });
   } catch (error) {
     tests.push({
       endpoint: '/v1/health',
       status: 'error',
-      error: error.message
+      error: error.message,
     });
   }
 
@@ -537,10 +538,10 @@ router.get('/test-all', async (req, res) => {
         '/v1/health': 'Main system health check (PUBLIC)',
         '/v1/health/postgres': 'PostgreSQL detailed diagnostics',
         '/v1/health/redis': 'Redis cache diagnostics',
-        '/v1/health/auth': 'Authentication system diagnostics'
+        '/v1/health/auth': 'Authentication system diagnostics',
       },
-      tests
-    }
+      tests,
+    },
   });
 });
 

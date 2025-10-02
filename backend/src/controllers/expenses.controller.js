@@ -1,6 +1,6 @@
+const { validationResult } = require('express-validator');
 const Expense = require('../models/Expense.mock');
 const logger = require('../utils/logger');
-const { validationResult } = require('express-validator');
 
 // GET /expenses
 exports.getExpenses = async (req, res) => {
@@ -15,15 +15,15 @@ exports.getExpenses = async (req, res) => {
       page: req.query.page || 1,
       limit: req.query.limit || 20,
       sort: req.query.sort,
-      order: req.query.order
+      order: req.query.order,
     };
-    
+
     const result = await Expense.findAll(filters);
-    
+
     res.json({
       success: true,
       data: result,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error fetching expenses:', error);
@@ -31,8 +31,8 @@ exports.getExpenses = async (req, res) => {
       success: false,
       error: {
         code: 'FETCH_ERROR',
-        message: 'Failed to fetch expenses'
-      }
+        message: 'Failed to fetch expenses',
+      },
     });
   }
 };
@@ -41,21 +41,21 @@ exports.getExpenses = async (req, res) => {
 exports.getExpense = async (req, res) => {
   try {
     const expense = await Expense.findById(req.params.id);
-    
+
     if (!expense) {
       return res.status(404).json({
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Expense not found'
-        }
+          message: 'Expense not found',
+        },
       });
     }
-    
+
     res.json({
       success: true,
       data: expense,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error fetching expense:', error);
@@ -63,8 +63,8 @@ exports.getExpense = async (req, res) => {
       success: false,
       error: {
         code: 'FETCH_ERROR',
-        message: 'Failed to fetch expense'
-      }
+        message: 'Failed to fetch expense',
+      },
     });
   }
 };
@@ -73,15 +73,15 @@ exports.getExpense = async (req, res) => {
 exports.getStats = async (req, res) => {
   try {
     const filters = {
-      year: req.query.year || new Date().getFullYear()
+      year: req.query.year || new Date().getFullYear(),
     };
-    
+
     const stats = await Expense.getStats(filters);
-    
+
     res.json({
       success: true,
       data: stats,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error fetching expense stats:', error);
@@ -89,8 +89,8 @@ exports.getStats = async (req, res) => {
       success: false,
       error: {
         code: 'STATS_ERROR',
-        message: 'Failed to fetch expense statistics'
-      }
+        message: 'Failed to fetch expense statistics',
+      },
     });
   }
 };
@@ -99,11 +99,11 @@ exports.getStats = async (req, res) => {
 exports.getCategories = async (req, res) => {
   try {
     const categories = await Expense.getCategories();
-    
+
     res.json({
       success: true,
       data: categories,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error fetching expense categories:', error);
@@ -111,8 +111,8 @@ exports.getCategories = async (req, res) => {
       success: false,
       error: {
         code: 'FETCH_ERROR',
-        message: 'Failed to fetch expense categories'
-      }
+        message: 'Failed to fetch expense categories',
+      },
     });
   }
 };
@@ -127,21 +127,21 @@ exports.createExpense = async (req, res) => {
         error: {
           code: 'VALIDATION_ERROR',
           message: 'Invalid input data',
-          details: errors.array()
-        }
+          details: errors.array(),
+        },
       });
     }
-    
+
     const expense = await Expense.create(req.body);
-    
+
     // Emit real-time update
     const io = req.app.get('io');
     io.to('expenses').emit('expense:created', expense);
-    
+
     res.status(201).json({
       success: true,
       data: expense,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error creating expense:', error);
@@ -149,8 +149,8 @@ exports.createExpense = async (req, res) => {
       success: false,
       error: {
         code: 'CREATE_ERROR',
-        message: 'Failed to create expense'
-      }
+        message: 'Failed to create expense',
+      },
     });
   }
 };
@@ -159,25 +159,25 @@ exports.createExpense = async (req, res) => {
 exports.updateExpense = async (req, res) => {
   try {
     const expense = await Expense.update(req.params.id, req.body);
-    
+
     if (!expense) {
       return res.status(404).json({
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Expense not found'
-        }
+          message: 'Expense not found',
+        },
       });
     }
-    
+
     // Emit real-time update
     const io = req.app.get('io');
     io.to('expenses').emit('expense:updated', expense);
-    
+
     res.json({
       success: true,
       data: expense,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error updating expense:', error);
@@ -185,8 +185,8 @@ exports.updateExpense = async (req, res) => {
       success: false,
       error: {
         code: 'UPDATE_ERROR',
-        message: 'Failed to update expense'
-      }
+        message: 'Failed to update expense',
+      },
     });
   }
 };
@@ -196,25 +196,25 @@ exports.uploadReceipt = async (req, res) => {
   try {
     const receiptData = {
       filename: req.body.filename || 'receipt.pdf',
-      url: req.body.url || `/api/v1/documents/receipt-${req.params.id}`
+      url: req.body.url || `/api/v1/documents/receipt-${req.params.id}`,
     };
-    
+
     const expense = await Expense.uploadReceipt(req.params.id, receiptData);
-    
+
     if (!expense) {
       return res.status(404).json({
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Expense not found'
-        }
+          message: 'Expense not found',
+        },
       });
     }
-    
+
     res.json({
       success: true,
       data: expense,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error uploading receipt:', error);
@@ -222,8 +222,8 @@ exports.uploadReceipt = async (req, res) => {
       success: false,
       error: {
         code: 'UPLOAD_ERROR',
-        message: 'Failed to upload receipt'
-      }
+        message: 'Failed to upload receipt',
+      },
     });
   }
 };
@@ -233,25 +233,25 @@ exports.approveExpense = async (req, res) => {
   try {
     const approvedBy = req.user?.name || 'Admin';
     const expense = await Expense.approve(req.params.id, approvedBy);
-    
+
     if (!expense) {
       return res.status(404).json({
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Expense not found'
-        }
+          message: 'Expense not found',
+        },
       });
     }
-    
+
     // Emit real-time update
     const io = req.app.get('io');
     io.to('expenses').emit('expense:approved', expense);
-    
+
     res.json({
       success: true,
       data: expense,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error approving expense:', error);
@@ -259,8 +259,8 @@ exports.approveExpense = async (req, res) => {
       success: false,
       error: {
         code: 'APPROVE_ERROR',
-        message: 'Failed to approve expense'
-      }
+        message: 'Failed to approve expense',
+      },
     });
   }
 };
@@ -269,15 +269,15 @@ exports.approveExpense = async (req, res) => {
 exports.deleteExpense = async (req, res) => {
   try {
     const result = await Expense.delete(req.params.id);
-    
+
     // Emit real-time update
     const io = req.app.get('io');
     io.to('expenses').emit('expense:deleted', { id: req.params.id });
-    
+
     res.json({
       success: true,
       data: result,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error deleting expense:', error);
@@ -285,8 +285,8 @@ exports.deleteExpense = async (req, res) => {
       success: false,
       error: {
         code: 'DELETE_ERROR',
-        message: 'Failed to delete expense'
-      }
+        message: 'Failed to delete expense',
+      },
     });
   }
 };
@@ -300,15 +300,15 @@ exports.generateReport = async (req, res) => {
       endDate: req.body.endDate,
       category: req.body.category,
       taxDeductible: req.body.taxDeductible,
-      userId: req.user?.id || 'System'
+      userId: req.user?.id || 'System',
     };
-    
+
     const report = await Expense.generateReport(filters);
-    
+
     res.json({
       success: true,
       data: report,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     logger.error('Error generating expense report:', error);
@@ -316,8 +316,8 @@ exports.generateReport = async (req, res) => {
       success: false,
       error: {
         code: 'REPORT_ERROR',
-        message: 'Failed to generate expense report'
-      }
+        message: 'Failed to generate expense report',
+      },
     });
   }
 };

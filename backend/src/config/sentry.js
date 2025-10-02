@@ -6,7 +6,7 @@ const { CaptureConsole } = require('@sentry/integrations');
  * Only enabled in production or when SENTRY_DSN is set
  */
 const initializeSentry = (app) => {
-  const SENTRY_DSN = process.env.SENTRY_DSN;
+  const { SENTRY_DSN } = process.env;
 
   if (!SENTRY_DSN) {
     console.log('📊 Sentry not configured (no DSN provided)');
@@ -19,7 +19,7 @@ const initializeSentry = (app) => {
     integrations: [
       // Automatically capture console errors
       new CaptureConsole({
-        levels: ['error', 'warn']
+        levels: ['error', 'warn'],
       }),
       // Express integration
       new Sentry.Integrations.Http({ tracing: true }),
@@ -82,7 +82,7 @@ const initializeSentry = (app) => {
         return null;
       }
       return breadcrumb;
-    }
+    },
   });
 
   // Add user context middleware
@@ -92,7 +92,7 @@ const initializeSentry = (app) => {
         id: req.user.id,
         email: req.user.email,
         username: req.user.username,
-        ip_address: req.ip
+        ip_address: req.ip,
       });
     }
     next();
@@ -109,7 +109,7 @@ const captureError = (error, context = {}) => {
 
   Sentry.withScope((scope) => {
     // Add custom context
-    Object.keys(context).forEach(key => {
+    Object.keys(context).forEach((key) => {
       scope.setContext(key, context[key]);
     });
 
@@ -126,7 +126,7 @@ const captureMessage = (message, level = 'info', context = {}) => {
 
   Sentry.withScope((scope) => {
     // Add custom context
-    Object.keys(context).forEach(key => {
+    Object.keys(context).forEach((key) => {
       scope.setContext(key, context[key]);
     });
 
@@ -145,10 +145,10 @@ const trackTransaction = async (name, operation, callback) => {
 
   const transaction = Sentry.startTransaction({
     op: operation,
-    name: name,
+    name,
   });
 
-  Sentry.getCurrentHub().configureScope(scope => scope.setSpan(transaction));
+  Sentry.getCurrentHub().configureScope((scope) => scope.setSpan(transaction));
 
   try {
     const result = await callback();
@@ -176,7 +176,7 @@ const errorHandler = () => Sentry.Handlers.errorHandler({
       return true;
     }
     return false;
-  }
+  },
 });
 
 /**
@@ -197,5 +197,5 @@ module.exports = {
   errorHandler,
   requestHandler,
   tracingHandler,
-  Sentry
+  Sentry,
 };

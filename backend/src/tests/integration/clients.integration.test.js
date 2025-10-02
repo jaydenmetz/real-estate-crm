@@ -13,7 +13,7 @@ describe('Clients API Integration Tests', () => {
       .post('/v1/auth/login')
       .send({
         email: 'admin@jaydenmetz.com',
-        password: 'AdminPassword123!'
+        password: 'AdminPassword123!',
       });
 
     expect(loginResponse.status).toBe(200);
@@ -44,7 +44,7 @@ describe('Clients API Integration Tests', () => {
         state: 'CA',
         zipCode: '93561',
         clientType: 'Buyer',
-        status: 'Active'
+        status: 'Active',
       });
 
     expect(response.status).toBe(201);
@@ -87,7 +87,7 @@ describe('Clients API Integration Tests', () => {
       .put(`/v1/clients/${testClientId}`)
       .set('Authorization', `Bearer ${authToken}`)
       .send({
-        phone: '661-555-9999'
+        phone: '661-555-9999',
       });
 
     expect(response.status).toBe(200);
@@ -105,7 +105,7 @@ describe('Clients API Integration Tests', () => {
     expect(response.body.success).toBe(true);
 
     // All returned clients should be Buyers
-    response.body.data.clients.forEach(client => {
+    response.body.data.clients.forEach((client) => {
       expect(client.clientType).toBe('Buyer');
     });
   });
@@ -127,7 +127,7 @@ describe('Clients API Integration Tests', () => {
         firstName: 'Duplicate',
         lastName: 'Test',
         email: existingEmail, // Duplicate
-        clientType: 'Buyer'
+        clientType: 'Buyer',
       });
 
     expect(response.status).toBe(400);
@@ -149,7 +149,7 @@ describe('Clients API Integration Tests', () => {
       .get('/v1/clients')
       .set('Authorization', `Bearer ${authToken}`);
 
-    const archivedClient = listResponse.body.data.clients.find(c => c.id === testClientId);
+    const archivedClient = listResponse.body.data.clients.find((c) => c.id === testClientId);
     expect(archivedClient).toBeUndefined();
   });
 });

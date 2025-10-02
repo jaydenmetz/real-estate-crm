@@ -17,16 +17,16 @@ describe('AppointmentsController', () => {
         id: 'user-123',
         teamId: 'team-456',
         team_id: 'team-456',
-        email: 'agent@example.com'
+        email: 'agent@example.com',
       },
       body: {},
       query: {},
-      params: {}
+      params: {},
     };
 
     mockRes = {
       json: jest.fn().mockReturnThis(),
-      status: jest.fn().mockReturnThis()
+      status: jest.fn().mockReturnThis(),
     };
   });
 
@@ -39,15 +39,15 @@ describe('AppointmentsController', () => {
           title: 'Property Showing',
           appointment_date: '2025-10-15',
           start_time: '10:00:00',
-          status: 'Scheduled'
+          status: 'Scheduled',
         },
         {
           id: 'appt-2',
           title: 'Client Meeting',
           appointment_date: '2025-10-16',
           start_time: '14:00:00',
-          status: 'Scheduled'
-        }
+          status: 'Scheduled',
+        },
       ];
 
       pool.query
@@ -66,10 +66,10 @@ describe('AppointmentsController', () => {
             currentPage: 1,
             totalPages: 2,
             totalCount: 25,
-            limit: 20
-          }
+            limit: 20,
+          },
         },
-        timestamp: expect.any(String)
+        timestamp: expect.any(String),
       });
     });
 
@@ -81,14 +81,14 @@ describe('AppointmentsController', () => {
 
       mockReq.query = {
         startDate: '2025-10-01',
-        endDate: '2025-10-31'
+        endDate: '2025-10-31',
       };
 
       await appointmentsController.getAppointments(mockReq, mockRes);
 
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('appointment_date >= $'),
-        expect.arrayContaining(['team-456', '2025-10-01', '2025-10-31'])
+        expect.arrayContaining(['team-456', '2025-10-01', '2025-10-31']),
       );
     });
 
@@ -104,7 +104,7 @@ describe('AppointmentsController', () => {
 
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('status = $'),
-        expect.arrayContaining(['team-456', 'Completed'])
+        expect.arrayContaining(['team-456', 'Completed']),
       );
     });
 
@@ -118,7 +118,7 @@ describe('AppointmentsController', () => {
 
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('deleted_at IS NULL'),
-        expect.any(Array)
+        expect.any(Array),
       );
     });
 
@@ -134,8 +134,8 @@ describe('AppointmentsController', () => {
         error: {
           code: 'FETCH_ERROR',
           message: 'Failed to fetch appointments',
-          details: 'Database error'
-        }
+          details: 'Database error',
+        },
       });
     });
   });
@@ -148,7 +148,7 @@ describe('AppointmentsController', () => {
         title: 'Property Showing',
         appointment_date: '2025-10-15',
         start_time: '10:00:00',
-        status: 'Scheduled'
+        status: 'Scheduled',
       };
 
       pool.query.mockResolvedValue({ rows: [mockAppointment] });
@@ -160,7 +160,7 @@ describe('AppointmentsController', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
         data: mockAppointment,
-        timestamp: expect.any(String)
+        timestamp: expect.any(String),
       });
     });
 
@@ -177,8 +177,8 @@ describe('AppointmentsController', () => {
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Appointment not found'
-        }
+          message: 'Appointment not found',
+        },
       });
     });
   });
@@ -194,7 +194,7 @@ describe('AppointmentsController', () => {
         location: '123 Main St',
         appointmentType: 'Property Showing',
         description: 'Show property to client',
-        clientId: 'client-1'
+        clientId: 'client-1',
       };
 
       const mockCreatedAppointment = {
@@ -202,7 +202,7 @@ describe('AppointmentsController', () => {
         title: 'Property Showing',
         appointment_date: '2025-10-15',
         start_time: '10:00:00',
-        status: 'Scheduled'
+        status: 'Scheduled',
       };
 
       pool.query.mockResolvedValue({ rows: [mockCreatedAppointment] });
@@ -216,7 +216,7 @@ describe('AppointmentsController', () => {
         success: true,
         data: mockCreatedAppointment,
         message: 'Appointment created successfully',
-        timestamp: expect.any(String)
+        timestamp: expect.any(String),
       });
     });
 
@@ -224,7 +224,7 @@ describe('AppointmentsController', () => {
     it('should reject appointment without required fields', async () => {
       mockReq.body = {
         // Missing title, appointmentDate, startTime
-        location: '123 Main St'
+        location: '123 Main St',
       };
 
       await appointmentsController.createAppointment(mockReq, mockRes);
@@ -234,8 +234,8 @@ describe('AppointmentsController', () => {
         success: false,
         error: {
           code: 'MISSING_FIELDS',
-          message: 'Title, date, and start time are required'
-        }
+          message: 'Title, date, and start time are required',
+        },
       });
     });
 
@@ -243,7 +243,7 @@ describe('AppointmentsController', () => {
     it('should default status to Scheduled if not provided', async () => {
       const mockCreatedAppointment = {
         id: 'appt-1',
-        status: 'Scheduled'
+        status: 'Scheduled',
       };
 
       pool.query.mockResolvedValue({ rows: [mockCreatedAppointment] });
@@ -251,7 +251,7 @@ describe('AppointmentsController', () => {
       mockReq.body = {
         title: 'Property Showing',
         appointmentDate: '2025-10-15',
-        startTime: '10:00:00'
+        startTime: '10:00:00',
         // status omitted - should default to 'Scheduled'
       };
 
@@ -264,7 +264,7 @@ describe('AppointmentsController', () => {
     it('should default appointment type to Property Showing if not provided', async () => {
       const mockCreatedAppointment = {
         id: 'appt-1',
-        appointment_type: 'Property Showing'
+        appointment_type: 'Property Showing',
       };
 
       pool.query.mockResolvedValue({ rows: [mockCreatedAppointment] });
@@ -272,7 +272,7 @@ describe('AppointmentsController', () => {
       mockReq.body = {
         title: 'Show property',
         appointmentDate: '2025-10-15',
-        startTime: '10:00:00'
+        startTime: '10:00:00',
         // appointmentType omitted
       };
 
@@ -288,7 +288,7 @@ describe('AppointmentsController', () => {
       const updatedAppointment = {
         id: 'appt-1',
         title: 'Updated Showing',
-        status: 'Confirmed'
+        status: 'Confirmed',
       };
 
       pool.query.mockResolvedValue({ rows: [updatedAppointment] });
@@ -296,7 +296,7 @@ describe('AppointmentsController', () => {
       mockReq.params = { id: 'appt-1' };
       mockReq.body = {
         title: 'Updated Showing',
-        status: 'Confirmed'
+        status: 'Confirmed',
       };
 
       await appointmentsController.updateAppointment(mockReq, mockRes);
@@ -304,7 +304,7 @@ describe('AppointmentsController', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
         data: updatedAppointment,
-        timestamp: expect.any(String)
+        timestamp: expect.any(String),
       });
     });
 
@@ -329,7 +329,7 @@ describe('AppointmentsController', () => {
       mockReq.params = { id: 'appt-1' };
       mockReq.body = {
         title: 'Updated',
-        version: 3 // Outdated version
+        version: 3, // Outdated version
       };
 
       await appointmentsController.updateAppointment(mockReq, mockRes);
@@ -340,8 +340,8 @@ describe('AppointmentsController', () => {
         error: expect.objectContaining({
           code: 'VERSION_CONFLICT',
           currentVersion: 5,
-          attemptedVersion: 3
-        })
+          attemptedVersion: 3,
+        }),
       });
     });
   });
@@ -353,7 +353,7 @@ describe('AppointmentsController', () => {
         id: 'appt-1',
         title: 'Property Showing',
         deleted_at: new Date(),
-        status: 'cancelled'
+        status: 'cancelled',
       };
 
       pool.query.mockResolvedValue({ rows: [archivedAppointment] });
@@ -364,14 +364,14 @@ describe('AppointmentsController', () => {
 
       expect(pool.query).toHaveBeenCalledWith(
         expect.stringContaining('deleted_at = CURRENT_TIMESTAMP'),
-        ['appt-1']
+        ['appt-1'],
       );
 
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
         data: archivedAppointment,
         message: 'Appointment archived successfully',
-        timestamp: expect.any(String)
+        timestamp: expect.any(String),
       });
     });
 
@@ -401,7 +401,7 @@ describe('AppointmentsController', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: true,
         message: 'Appointment deleted successfully',
-        timestamp: expect.any(String)
+        timestamp: expect.any(String),
       });
     });
 
@@ -418,8 +418,8 @@ describe('AppointmentsController', () => {
         success: false,
         error: {
           code: 'NOT_ARCHIVED',
-          message: 'Appointment must be archived before deletion'
-        }
+          message: 'Appointment must be archived before deletion',
+        },
       });
     });
   });
@@ -430,7 +430,7 @@ describe('AppointmentsController', () => {
       const cancelledAppointment = {
         id: 'appt-1',
         title: 'Property Showing',
-        status: 'cancelled'
+        status: 'cancelled',
       };
 
       pool.query.mockResolvedValue({ rows: [cancelledAppointment] });
@@ -443,7 +443,7 @@ describe('AppointmentsController', () => {
         success: true,
         data: cancelledAppointment,
         message: 'Appointment cancelled successfully',
-        timestamp: expect.any(String)
+        timestamp: expect.any(String),
       });
     });
   });
@@ -454,7 +454,7 @@ describe('AppointmentsController', () => {
       const completedAppointment = {
         id: 'appt-1',
         title: 'Property Showing',
-        status: 'Completed'
+        status: 'Completed',
       };
 
       pool.query.mockResolvedValue({ rows: [completedAppointment] });
@@ -467,7 +467,7 @@ describe('AppointmentsController', () => {
         success: true,
         data: completedAppointment,
         message: 'Appointment marked as completed',
-        timestamp: expect.any(String)
+        timestamp: expect.any(String),
       });
     });
   });
@@ -478,7 +478,7 @@ describe('AppointmentsController', () => {
     beforeEach(() => {
       mockClient = {
         query: jest.fn(),
-        release: jest.fn()
+        release: jest.fn(),
       };
 
       pool.connect = jest.fn().mockResolvedValue(mockClient);
@@ -494,16 +494,16 @@ describe('AppointmentsController', () => {
           rows: [
             { id: 'appt-1', deleted_at: new Date() },
             { id: 'appt-2', deleted_at: new Date() },
-            { id: 'appt-3', deleted_at: new Date() }
-          ]
+            { id: 'appt-3', deleted_at: new Date() },
+          ],
         })
         .mockResolvedValueOnce({ // Delete
           rowCount: 3,
           rows: [
             { id: 'appt-1' },
             { id: 'appt-2' },
-            { id: 'appt-3' }
-          ]
+            { id: 'appt-3' },
+          ],
         })
         .mockResolvedValueOnce({ }); // COMMIT
 
@@ -519,7 +519,7 @@ describe('AppointmentsController', () => {
         success: true,
         message: 'Successfully deleted 3 appointments',
         deletedCount: 3,
-        deletedIds: mockIds
+        deletedIds: mockIds,
       });
     });
 
@@ -531,8 +531,8 @@ describe('AppointmentsController', () => {
           rows: [
             { id: 'appt-1', deleted_at: new Date() },
             { id: 'appt-2', deleted_at: null }, // Not archived!
-            { id: 'appt-3', deleted_at: new Date() }
-          ]
+            { id: 'appt-3', deleted_at: new Date() },
+          ],
         })
         .mockResolvedValueOnce({ }); // ROLLBACK
 
@@ -547,8 +547,8 @@ describe('AppointmentsController', () => {
       expect(mockRes.json).toHaveBeenCalledWith({
         success: false,
         error: expect.objectContaining({
-          code: 'NOT_ARCHIVED'
-        })
+          code: 'NOT_ARCHIVED',
+        }),
       });
     });
   });

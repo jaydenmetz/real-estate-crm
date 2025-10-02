@@ -24,7 +24,7 @@ describe('Authentication API Integration Tests', () => {
         password: 'TestPassword123!',
         firstName: 'Test',
         lastName: 'User',
-        role: 'agent'
+        role: 'agent',
       });
 
     expect(response.status).toBe(201);
@@ -45,7 +45,7 @@ describe('Authentication API Integration Tests', () => {
         email: 'admin@jaydenmetz.com', // Existing email
         password: 'TestPassword123!',
         firstName: 'Duplicate',
-        lastName: 'User'
+        lastName: 'User',
       });
 
     expect(response.status).toBe(400);
@@ -59,7 +59,7 @@ describe('Authentication API Integration Tests', () => {
       .post('/v1/auth/login')
       .send({
         email: 'admin@jaydenmetz.com',
-        password: 'AdminPassword123!'
+        password: 'AdminPassword123!',
       });
 
     expect(response.status).toBe(200);
@@ -77,7 +77,7 @@ describe('Authentication API Integration Tests', () => {
       .post('/v1/auth/login')
       .send({
         email: 'admin@jaydenmetz.com',
-        password: 'WrongPassword123!'
+        password: 'WrongPassword123!',
       });
 
     expect(response.status).toBe(401);
@@ -90,7 +90,7 @@ describe('Authentication API Integration Tests', () => {
     const response = await request(app)
       .post('/v1/auth/refresh')
       .send({
-        refreshToken: refreshToken
+        refreshToken,
       });
 
     expect(response.status).toBe(200);

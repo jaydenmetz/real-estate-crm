@@ -3,7 +3,7 @@ const logger = require('../utils/logger');
 const MockQueryBuilder = require('./MockQueryBuilder');
 
 // Comprehensive mock clients data
-let mockClients = [
+const mockClients = [
   {
     id: '1',
     firstName: 'Michael',
@@ -42,7 +42,7 @@ let mockClients = [
     anniversaryDate: new Date('2015-09-20'),
     spouseName: 'Jennifer Thompson',
     children: ['Emma (5)'],
-    pets: ['Max (Golden Retriever)']
+    pets: ['Max (Golden Retriever)'],
   },
   {
     id: '2',
@@ -72,7 +72,7 @@ let mockClients = [
     // Location preferences
     address: '456 Ocean View Drive',
     city: 'La Jolla',
-    state: 'CA', 
+    state: 'CA',
     zipCode: '92037',
     // Additional details
     occupation: 'Retired Teacher',
@@ -82,7 +82,7 @@ let mockClients = [
     anniversaryDate: null,
     spouseName: null,
     children: ['David (28)', 'Maria (25)'],
-    pets: []
+    pets: [],
   },
   {
     id: '3',
@@ -122,7 +122,7 @@ let mockClients = [
     anniversaryDate: new Date('2018-06-15'),
     spouseName: 'Linda Chen',
     children: [],
-    pets: ['Whiskers (Cat)', 'Shadow (Cat)']
+    pets: ['Whiskers (Cat)', 'Shadow (Cat)'],
   },
   {
     id: '4',
@@ -162,8 +162,8 @@ let mockClients = [
     anniversaryDate: new Date('2010-05-20'),
     spouseName: 'Robert Williams',
     children: ['Sophie (12)', 'James (10)'],
-    pets: ['Bailey (Labrador)']
-  }
+    pets: ['Bailey (Labrador)'],
+  },
 ];
 
 class ClientMock {
@@ -175,60 +175,58 @@ class ClientMock {
     }
     return query;
   }
-  
+
   static async findAll(filters = {}) {
     try {
       let filtered = [...mockClients];
-      
+
       // Apply client type filter
       if (filters.clientType && filters.clientType !== 'all') {
-        filtered = filtered.filter(c => c.clientType === filters.clientType);
+        filtered = filtered.filter((c) => c.clientType === filters.clientType);
       }
-      
+
       // Apply status filter
       if (filters.status) {
-        filtered = filtered.filter(c => c.status === filters.status);
+        filtered = filtered.filter((c) => c.status === filters.status);
       }
-      
+
       // Apply source filter
       if (filters.source) {
-        filtered = filtered.filter(c => c.source === filters.source);
+        filtered = filtered.filter((c) => c.source === filters.source);
       }
-      
+
       // Apply tag filter
       if (filters.tag) {
-        filtered = filtered.filter(c => c.tags.includes(filters.tag));
+        filtered = filtered.filter((c) => c.tags.includes(filters.tag));
       }
-      
+
       // Apply search
       if (filters.search) {
         const searchTerm = filters.search.toLowerCase();
-        filtered = filtered.filter(c => 
-          c.fullName.toLowerCase().includes(searchTerm) ||
-          c.email.toLowerCase().includes(searchTerm) ||
-          c.phone.includes(searchTerm) ||
-          c.notes.toLowerCase().includes(searchTerm)
-        );
+        filtered = filtered.filter((c) => c.fullName.toLowerCase().includes(searchTerm)
+          || c.email.toLowerCase().includes(searchTerm)
+          || c.phone.includes(searchTerm)
+          || c.notes.toLowerCase().includes(searchTerm));
       }
-      
+
       // Apply sorting
       const sortField = filters.sort || 'createdAt';
       const sortOrder = filters.order === 'desc' ? -1 : 1;
-      
+
       filtered.sort((a, b) => {
         if (a[sortField] < b[sortField]) return -sortOrder;
         if (a[sortField] > b[sortField]) return sortOrder;
         return 0;
       });
-      
+
       // Apply pagination
       const page = parseInt(filters.page) || 1;
       const limit = parseInt(filters.limit) || 20;
       const offset = (page - 1) * limit;
       const paginated = filtered.slice(offset, offset + limit);
-      
+
       // Return minimal data for list view
-      const minimalClients = paginated.map(client => ({
+      const minimalClients = paginated.map((client) => ({
         id: client.id,
         fullName: client.fullName,
         firstName: client.firstName,
@@ -244,17 +242,17 @@ class ClientMock {
         lastContactDate: client.lastContactDate,
         nextFollowUpDate: client.nextFollowUpDate,
         createdAt: client.createdAt,
-        updatedAt: client.updatedAt
+        updatedAt: client.updatedAt,
       }));
-      
+
       return {
         clients: minimalClients,
         pagination: {
           total: filtered.length,
           page,
           pages: Math.ceil(filtered.length / limit),
-          limit
-        }
+          limit,
+        },
       };
     } catch (error) {
       logger.error('Mock Client.findAll error:', error);
@@ -263,13 +261,13 @@ class ClientMock {
   }
 
   static async findById(id) {
-    const client = mockClients.find(c => c.id === id);
+    const client = mockClients.find((c) => c.id === id);
     if (!client) return null;
-    
+
     // Return comprehensive client data for detail view
     return {
       ...client,
-      
+
       // Communication history
       communicationHistory: [
         {
@@ -279,7 +277,7 @@ class ClientMock {
           subject: 'New Listings Matching Your Criteria',
           notes: 'Sent 3 properties, client interested in 123 Main St',
           duration: null,
-          outcome: 'Scheduled showing'
+          outcome: 'Scheduled showing',
         },
         {
           id: 2,
@@ -288,7 +286,7 @@ class ClientMock {
           subject: 'Follow-up on weekend showings',
           notes: 'Discussed pros/cons of viewed properties. Client wants to see more options in La Jolla area.',
           duration: 15,
-          outcome: 'Continue searching'
+          outcome: 'Continue searching',
         },
         {
           id: 3,
@@ -297,7 +295,7 @@ class ClientMock {
           subject: 'Property showings',
           notes: 'Showed 4 properties. Client loved 456 Oak Ave but concerned about HOA fees.',
           duration: 120,
-          outcome: 'Researching HOA details'
+          outcome: 'Researching HOA details',
         },
         {
           id: 4,
@@ -306,10 +304,10 @@ class ClientMock {
           subject: 'Quick question about pre-approval',
           notes: 'Client asked about updating pre-approval amount. Referred to lender.',
           duration: null,
-          outcome: 'Information provided'
-        }
+          outcome: 'Information provided',
+        },
       ],
-      
+
       // Properties data
       properties: {
         // Owned properties (for sellers)
@@ -321,10 +319,10 @@ class ClientMock {
             mortgageBalance: 450000,
             monthlyPayment: 3200,
             purchaseDate: new Date('2015-06-15'),
-            purchasePrice: 750000
-          }
+            purchasePrice: 750000,
+          },
         ] : [],
-        
+
         // Interested properties (for buyers)
         interested: client.clientType === 'Buyer' ? [
           {
@@ -334,7 +332,7 @@ class ClientMock {
             status: 'Active',
             addedDate: new Date('2025-07-12'),
             notes: 'Loves the kitchen, concerned about street noise',
-            rating: 4
+            rating: 4,
           },
           {
             id: '2',
@@ -343,7 +341,7 @@ class ClientMock {
             status: 'Active',
             addedDate: new Date('2025-07-08'),
             notes: 'Perfect location, high HOA fees',
-            rating: 3
+            rating: 3,
           },
           {
             id: '3',
@@ -352,10 +350,10 @@ class ClientMock {
             status: 'Pending',
             addedDate: new Date('2025-07-01'),
             notes: 'Dream home but over budget',
-            rating: 5
-          }
+            rating: 5,
+          },
         ] : [],
-        
+
         // Viewed properties
         viewed: [
           {
@@ -363,18 +361,18 @@ class ClientMock {
             address: '111 Vista Drive, Encinitas, CA',
             listPrice: 925000,
             viewedDate: new Date('2025-07-05'),
-            feedback: 'Too small, no home office space'
+            feedback: 'Too small, no home office space',
           },
           {
-            id: '2', 
+            id: '2',
             address: '222 Garden Way, Solana Beach, CA',
             listPrice: 1100000,
             viewedDate: new Date('2025-07-05'),
-            feedback: 'Loved it but someone else got offer accepted first'
-          }
-        ]
+            feedback: 'Loved it but someone else got offer accepted first',
+          },
+        ],
       },
-      
+
       // Documents
       documents: [
         {
@@ -383,7 +381,7 @@ class ClientMock {
           type: 'financial',
           size: '156 KB',
           uploadedDate: new Date('2025-06-01').toISOString(),
-          expirationDate: client.preApprovalExpiration?.toISOString() || null
+          expirationDate: client.preApprovalExpiration?.toISOString() || null,
         },
         {
           id: 2,
@@ -391,7 +389,7 @@ class ClientMock {
           type: 'financial',
           size: '89 KB',
           uploadedDate: new Date('2025-06-15').toISOString(),
-          expirationDate: null
+          expirationDate: null,
         },
         {
           id: 3,
@@ -399,10 +397,10 @@ class ClientMock {
           type: 'contract',
           size: '234 KB',
           uploadedDate: new Date('2025-06-01').toISOString(),
-          expirationDate: new Date('2025-12-01').toISOString()
-        }
+          expirationDate: new Date('2025-12-01').toISOString(),
+        },
       ],
-      
+
       // Tasks & reminders
       tasks: [
         {
@@ -411,7 +409,7 @@ class ClientMock {
           dueDate: new Date('2025-07-20'),
           priority: 'high',
           status: 'pending',
-          notes: 'Focus on 3-4 bedrooms, prefer ocean views'
+          notes: 'Focus on 3-4 bedrooms, prefer ocean views',
         },
         {
           id: 2,
@@ -419,7 +417,7 @@ class ClientMock {
           dueDate: new Date('2025-07-22'),
           priority: 'medium',
           status: 'pending',
-          notes: 'Client checking with lender about rate lock'
+          notes: 'Client checking with lender about rate lock',
         },
         {
           id: 3,
@@ -427,10 +425,10 @@ class ClientMock {
           dueDate: new Date('2025-07-18'),
           priority: 'high',
           status: 'completed',
-          notes: 'Confirmed for Saturday 10am-2pm'
-        }
+          notes: 'Confirmed for Saturday 10am-2pm',
+        },
       ],
-      
+
       // Financial summary (for buyers)
       financialSummary: client.clientType === 'Buyer' ? {
         preApprovalAmount: client.preApprovalAmount,
@@ -438,24 +436,24 @@ class ClientMock {
         monthlyBudget: Math.round((client.annualIncome / 12) * 0.28), // 28% DTI
         currentRent: client.currentRent,
         creditScore: 750,
-        debtToIncome: 22
+        debtToIncome: 22,
       } : null,
-      
+
       // Preferences (for buyers)
       preferences: client.clientType === 'Buyer' ? {
         propertyTypes: ['Single Family', 'Townhouse'],
         bedrooms: { min: 3, max: 5 },
         bathrooms: { min: 2, max: 4 },
-        priceRange: { 
-          min: client.preApprovalAmount ? client.preApprovalAmount * 0.8 : 0, 
-          max: client.preApprovalAmount || 0 
+        priceRange: {
+          min: client.preApprovalAmount ? client.preApprovalAmount * 0.8 : 0,
+          max: client.preApprovalAmount || 0,
         },
         locations: ['La Jolla', 'Del Mar', 'Carmel Valley', 'Encinitas'],
         mustHaves: ['Home Office', 'Good Schools', 'Garage', 'Updated Kitchen'],
         niceToHaves: ['Pool', 'Ocean View', 'Large Yard'],
-        dealBreakers: ['Busy Street', 'Major Repairs Needed', 'No Parking']
+        dealBreakers: ['Busy Street', 'Major Repairs Needed', 'No Parking'],
       } : null,
-      
+
       // Listing performance (for sellers)
       listingPerformance: client.clientType === 'Seller' && client.properties?.owned?.[0] ? {
         currentListing: {
@@ -466,7 +464,7 @@ class ClientMock {
           offers: 1,
           views: 234,
           favorites: 18,
-          priceReductions: 0
+          priceReductions: 0,
         },
         marketAnalysis: {
           estimatedValue: 1250000,
@@ -477,18 +475,18 @@ class ClientMock {
               address: '123 Nearby St',
               soldPrice: 1225000,
               soldDate: new Date('2025-06-15'),
-              daysOnMarket: 12
+              daysOnMarket: 12,
             },
             {
               address: '456 Similar Ave',
               soldPrice: 1275000,
               soldDate: new Date('2025-05-20'),
-              daysOnMarket: 8
-            }
-          ]
-        }
+              daysOnMarket: 8,
+            },
+          ],
+        },
       } : null,
-      
+
       // Activity timeline
       activityTimeline: [
         {
@@ -497,7 +495,7 @@ class ClientMock {
           type: 'communication',
           title: 'Sent property matches',
           description: 'Emailed 3 new listings matching criteria',
-          icon: 'email'
+          icon: 'email',
         },
         {
           id: 2,
@@ -505,7 +503,7 @@ class ClientMock {
           type: 'meeting',
           title: 'Phone consultation',
           description: 'Discussed weekend showing feedback',
-          icon: 'phone'
+          icon: 'phone',
         },
         {
           id: 3,
@@ -513,7 +511,7 @@ class ClientMock {
           type: 'showing',
           title: 'Property tour',
           description: 'Showed 4 properties in La Jolla/Del Mar',
-          icon: 'home'
+          icon: 'home',
         },
         {
           id: 4,
@@ -521,7 +519,7 @@ class ClientMock {
           type: 'document',
           title: 'Document uploaded',
           description: 'Updated pre-approval letter received',
-          icon: 'document'
+          icon: 'document',
         },
         {
           id: 5,
@@ -529,10 +527,10 @@ class ClientMock {
           type: 'milestone',
           title: 'Pre-approval obtained',
           description: `Pre-approved for $${client.preApprovalAmount?.toLocaleString() || 0}`,
-          icon: 'check'
-        }
+          icon: 'check',
+        },
       ],
-      
+
       // AI insights
       aiInsights: {
         engagementScore: 85,
@@ -542,16 +540,16 @@ class ClientMock {
           'Schedule follow-up for new listings',
           'Check on mortgage rate lock status',
           'Send market update report',
-          'Invite to weekend open houses'
+          'Invite to weekend open houses',
         ],
         personalityProfile: {
           communicationStyle: 'Direct and efficient',
           decisionMaking: 'Analytical',
           priorities: ['Location', 'Schools', 'Investment Value'],
-          concerns: ['Timing', 'Market Conditions', 'Interest Rates']
-        }
+          concerns: ['Timing', 'Market Conditions', 'Interest Rates'],
+        },
       },
-      
+
       // Related contacts
       relatedContacts: [
         ...(client.spouseName ? [{
@@ -560,7 +558,7 @@ class ClientMock {
           relationship: 'Spouse',
           phone: client.secondaryPhone,
           email: null,
-          notes: 'Decision maker'
+          notes: 'Decision maker',
         }] : []),
         ...(client.referredBy ? [{
           id: 'referrer-1',
@@ -568,16 +566,16 @@ class ClientMock {
           relationship: 'Referrer',
           phone: null,
           email: null,
-          notes: 'Sent referral bonus'
-        }] : [])
-      ]
+          notes: 'Sent referral bonus',
+        }] : []),
+      ],
     };
   }
 
   static async create(data) {
     try {
-      const id = String(Math.max(...mockClients.map(c => parseInt(c.id) || 0)) + 1);
-      
+      const id = String(Math.max(...mockClients.map((c) => parseInt(c.id) || 0)) + 1);
+
       const newClient = {
         id,
         firstName: data.firstName,
@@ -616,17 +614,17 @@ class ClientMock {
         anniversaryDate: data.anniversaryDate ? new Date(data.anniversaryDate) : null,
         spouseName: data.spouseName || null,
         children: data.children || [],
-        pets: data.pets || []
+        pets: data.pets || [],
       };
-      
+
       mockClients.push(newClient);
-      
+
       logger.info('Mock client created:', {
         id: newClient.id,
         fullName: newClient.fullName,
-        clientType: newClient.clientType
+        clientType: newClient.clientType,
       });
-      
+
       return newClient;
     } catch (error) {
       logger.error('Mock Client.create error:', error);
@@ -636,33 +634,33 @@ class ClientMock {
 
   static async update(id, data) {
     try {
-      const index = mockClients.findIndex(c => c.id === id);
+      const index = mockClients.findIndex((c) => c.id === id);
       if (index === -1) {
         return null;
       }
-      
+
       const currentClient = mockClients[index];
-      
+
       // Update the client
       mockClients[index] = {
         ...currentClient,
         ...data,
-        fullName: data.firstName && data.lastName ? 
-          `${data.firstName} ${data.lastName}` : 
-          currentClient.fullName,
-        updatedAt: new Date()
+        fullName: data.firstName && data.lastName
+          ? `${data.firstName} ${data.lastName}`
+          : currentClient.fullName,
+        updatedAt: new Date(),
       };
-      
+
       // Update lastContactDate if specified
       if (data.updateLastContact) {
         mockClients[index].lastContactDate = new Date();
       }
-      
+
       logger.info('Mock client updated:', {
         id,
-        changes: Object.keys(data)
+        changes: Object.keys(data),
       });
-      
+
       return mockClients[index];
     } catch (error) {
       logger.error('Mock Client.update error:', error);
@@ -685,26 +683,26 @@ class ClientMock {
 
   static async logCommunication(id, communicationData) {
     try {
-      const client = mockClients.find(c => c.id === id);
+      const client = mockClients.find((c) => c.id === id);
       if (!client) return null;
-      
+
       // Update last contact date
-      await this.update(id, { 
+      await this.update(id, {
         lastContactDate: new Date(),
-        nextFollowUpDate: communicationData.nextFollowUpDate || null
+        nextFollowUpDate: communicationData.nextFollowUpDate || null,
       });
-      
+
       logger.info('Communication logged:', {
         clientId: id,
         type: communicationData.type,
-        subject: communicationData.subject
+        subject: communicationData.subject,
       });
-      
+
       return {
         id: Date.now(),
         clientId: id,
         ...communicationData,
-        createdAt: new Date()
+        createdAt: new Date(),
       };
     } catch (error) {
       logger.error('Mock Client.logCommunication error:', error);
@@ -714,14 +712,14 @@ class ClientMock {
 
   static async addTag(id, tag) {
     try {
-      const client = mockClients.find(c => c.id === id);
+      const client = mockClients.find((c) => c.id === id);
       if (!client) return null;
-      
+
       if (!client.tags.includes(tag)) {
         client.tags.push(tag);
         client.updatedAt = new Date();
       }
-      
+
       logger.info('Tag added to client:', { id, tag });
       return client;
     } catch (error) {
@@ -732,12 +730,12 @@ class ClientMock {
 
   static async removeTag(id, tag) {
     try {
-      const client = mockClients.find(c => c.id === id);
+      const client = mockClients.find((c) => c.id === id);
       if (!client) return null;
-      
-      client.tags = client.tags.filter(t => t !== tag);
+
+      client.tags = client.tags.filter((t) => t !== tag);
       client.updatedAt = new Date();
-      
+
       logger.info('Tag removed from client:', { id, tag });
       return client;
     } catch (error) {
@@ -748,19 +746,19 @@ class ClientMock {
 
   static async delete(id) {
     try {
-      const index = mockClients.findIndex(c => c.id === id);
+      const index = mockClients.findIndex((c) => c.id === id);
       if (index === -1) {
         throw new Error('Client not found');
       }
-      
+
       const deletedClient = mockClients[index];
       mockClients.splice(index, 1);
-      
+
       logger.info('Mock client deleted:', {
         id,
-        fullName: deletedClient.fullName
+        fullName: deletedClient.fullName,
       });
-      
+
       return deletedClient;
     } catch (error) {
       logger.error('Mock Client.delete error:', error);
@@ -770,31 +768,31 @@ class ClientMock {
 
   static async getStats() {
     const total = mockClients.length;
-    const buyers = mockClients.filter(c => c.clientType === 'Buyer').length;
-    const sellers = mockClients.filter(c => c.clientType === 'Seller').length;
-    const active = mockClients.filter(c => c.status === 'Active').length;
-    const hotLeads = mockClients.filter(c => c.status === 'Hot Lead').length;
-    
+    const buyers = mockClients.filter((c) => c.clientType === 'Buyer').length;
+    const sellers = mockClients.filter((c) => c.clientType === 'Seller').length;
+    const active = mockClients.filter((c) => c.status === 'Active').length;
+    const hotLeads = mockClients.filter((c) => c.status === 'Hot Lead').length;
+
     return {
       total,
       byType: {
         buyers,
         sellers,
-        pastClients: mockClients.filter(c => c.clientType === 'Past Client').length,
-        leads: mockClients.filter(c => c.clientType === 'Lead').length
+        pastClients: mockClients.filter((c) => c.clientType === 'Past Client').length,
+        leads: mockClients.filter((c) => c.clientType === 'Lead').length,
       },
       byStatus: {
         active,
         hotLeads,
-        inactive: mockClients.filter(c => c.status === 'Inactive').length,
-        new: mockClients.filter(c => c.status === 'New').length
+        inactive: mockClients.filter((c) => c.status === 'Inactive').length,
+        new: mockClients.filter((c) => c.status === 'New').length,
       },
       bySource: {
-        referral: mockClients.filter(c => c.source === 'Referral').length,
-        website: mockClients.filter(c => c.source === 'Website').length,
-        openHouse: mockClients.filter(c => c.source === 'Open House').length,
-        other: mockClients.filter(c => !['Referral', 'Website', 'Open House'].includes(c.source)).length
-      }
+        referral: mockClients.filter((c) => c.source === 'Referral').length,
+        website: mockClients.filter((c) => c.source === 'Website').length,
+        openHouse: mockClients.filter((c) => c.source === 'Open House').length,
+        other: mockClients.filter((c) => !['Referral', 'Website', 'Open House'].includes(c.source)).length,
+      },
     };
   }
 }

@@ -1,4 +1,5 @@
 const express = require('express');
+
 const router = express.Router();
 const { pool } = require('../config/database');
 const { authenticate } = require('../middleware/apiKey.middleware');
@@ -6,7 +7,7 @@ const { authenticate } = require('../middleware/apiKey.middleware');
 /**
  * Health check endpoint that tests all escrow API operations
  * Creates a test escrow, performs operations, then deletes it
- * 
+ *
  * GET /v1/escrows/health
  */
 router.get('/health', authenticate, async (req, res) => {
@@ -14,7 +15,7 @@ router.get('/health', authenticate, async (req, res) => {
     timestamp: new Date().toISOString(),
     user: req.user?.email,
     authMethod: req.user?.authMethod,
-    tests: []
+    tests: [],
   };
 
   let testEscrowId = null;
@@ -44,7 +45,7 @@ router.get('/health', authenticate, async (req, res) => {
         `${testPrefix}-001`,
         req.user.id,
         req.user.teamId,
-        3000
+        3000,
       ]);
 
       testEscrowId = createResult.rows[0].id;
@@ -115,11 +116,11 @@ router.get('/health', authenticate, async (req, res) => {
         `, [
           JSON.stringify({
             buyers: [{ name: 'Test Buyer', email: 'buyer@test.com' }],
-            sellers: [{ name: 'Test Seller', email: 'seller@test.com' }]
+            sellers: [{ name: 'Test Seller', email: 'seller@test.com' }],
           }),
           testEscrowId,
           req.user.id,
-          req.user.teamId
+          req.user.teamId,
         ]);
 
         if (peopleResult.rows.length > 0) {
@@ -145,11 +146,11 @@ router.get('/health', authenticate, async (req, res) => {
         `, [
           JSON.stringify({
             loan: { preApproval: { checked: true } },
-            house: { inspection: { checked: false } }
+            house: { inspection: { checked: false } },
           }),
           testEscrowId,
           req.user.id,
-          req.user.teamId
+          req.user.teamId,
         ]);
 
         if (checklistResult.rows.length > 0) {
@@ -261,9 +262,9 @@ router.get('/health', authenticate, async (req, res) => {
     // Calculate summary
     const summary = {
       total: results.tests.length,
-      passed: results.tests.filter(t => t.status === 'passed').length,
-      failed: results.tests.filter(t => t.status === 'failed').length,
-      skipped: results.tests.filter(t => t.status === 'skipped').length
+      passed: results.tests.filter((t) => t.status === 'passed').length,
+      failed: results.tests.filter((t) => t.status === 'failed').length,
+      skipped: results.tests.filter((t) => t.status === 'skipped').length,
     };
     summary.success = summary.failed === 0;
 
@@ -275,9 +276,8 @@ router.get('/health', authenticate, async (req, res) => {
     res.status(statusCode).json({
       success: summary.success,
       data: results,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
-
   } catch (error) {
     // Clean up test escrow if it exists (force delete regardless of state)
     if (testEscrowId) {
@@ -302,10 +302,10 @@ router.get('/health', authenticate, async (req, res) => {
       error: {
         code: 'HEALTH_CHECK_FAILED',
         message: 'Health check failed',
-        details: error.message
+        details: error.message,
       },
       data: results,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 });
@@ -324,9 +324,9 @@ router.get('/health/auth', authenticate, async (req, res) => {
       teamId: req.user?.teamId,
       role: req.user?.role,
       authMethod: req.user?.authMethod,
-      permissions: req.user?.permissions
+      permissions: req.user?.permissions,
     },
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
@@ -337,15 +337,15 @@ router.get('/health/auth', authenticate, async (req, res) => {
 router.get('/health/db', authenticate, async (req, res) => {
   try {
     const result = await pool.query('SELECT NOW() as time, current_database() as database');
-    
+
     res.json({
       success: true,
       data: {
         connected: true,
         database: result.rows[0].database,
-        serverTime: result.rows[0].time
+        serverTime: result.rows[0].time,
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     res.status(500).json({
@@ -353,9 +353,9 @@ router.get('/health/db', authenticate, async (req, res) => {
       error: {
         code: 'DB_CONNECTION_FAILED',
         message: 'Database connection failed',
-        details: error.message
+        details: error.message,
       },
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 });

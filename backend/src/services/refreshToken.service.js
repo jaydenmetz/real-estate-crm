@@ -40,13 +40,13 @@ class RefreshTokenService {
         expiresAt,
         ipAddress,
         userAgent,
-        deviceInfo
+        deviceInfo,
       ]);
 
       logger.info('Refresh token created', {
         userId,
         tokenId: result.rows[0].id,
-        expiresAt
+        expiresAt,
       });
 
       return result.rows[0];
@@ -84,7 +84,7 @@ class RefreshTokenService {
       const result = await pool.query(query, [token]);
 
       if (result.rows.length === 0) {
-        logger.warn('Invalid or expired refresh token used', { token: token.substring(0, 10) + '...' });
+        logger.warn('Invalid or expired refresh token used', { token: `${token.substring(0, 10)}...` });
         return null;
       }
 
@@ -141,7 +141,7 @@ class RefreshTokenService {
 
       logger.info('All user tokens revoked', {
         userId,
-        count: result.rowCount
+        count: result.rowCount,
       });
 
       return result.rowCount;
@@ -230,7 +230,7 @@ class RefreshTokenService {
         active_tokens: 0,
         expired_tokens: 0,
         revoked_tokens: 0,
-        active_users: 0
+        active_users: 0,
       };
     }
   }
@@ -253,7 +253,7 @@ class RefreshTokenService {
       // Revoke old token
       await client.query(
         'UPDATE refresh_tokens SET revoked_at = NOW() WHERE token = $1',
-        [oldToken]
+        [oldToken],
       );
 
       // Create new token
@@ -272,7 +272,7 @@ class RefreshTokenService {
         token,
         expiresAt,
         ipAddress,
-        userAgent
+        userAgent,
       ]);
 
       await client.query('COMMIT');

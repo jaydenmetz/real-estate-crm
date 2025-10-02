@@ -23,14 +23,14 @@ class ApiKeyService {
    */
   static async createApiKey(userId, name, expiresInDays = null) {
     const client = await pool.connect();
-    
+
     try {
       await client.query('BEGIN');
 
       // Get user's team_id
       const userResult = await client.query(
         'SELECT team_id FROM users WHERE id = $1',
-        [userId]
+        [userId],
       );
 
       if (userResult.rows.length === 0) {
@@ -42,7 +42,7 @@ class ApiKeyService {
       // Generate new API key
       const apiKey = this.generateApiKey();
       const keyHash = this.hashApiKey(apiKey);
-      const keyPrefix = apiKey.substring(0, 8) + '...' + apiKey.substring(apiKey.length - 4); // Store first 8 and last 4 chars for identification
+      const keyPrefix = `${apiKey.substring(0, 8)}...${apiKey.substring(apiKey.length - 4)}`; // Store first 8 and last 4 chars for identification
 
       // Calculate expiration date if specified
       let expiresAt = null;
@@ -53,7 +53,7 @@ class ApiKeyService {
 
       // Default scopes: full access to all resources
       const defaultScopes = {
-        all: ['read', 'write', 'delete']
+        all: ['read', 'write', 'delete'],
       };
 
       // Insert API key record
@@ -68,7 +68,7 @@ class ApiKeyService {
 
       return {
         ...insertResult.rows[0],
-        key: apiKey // Return the full key only on creation
+        key: apiKey, // Return the full key only on creation
       };
     } catch (error) {
       await client.query('ROLLBACK');
@@ -141,7 +141,7 @@ class ApiKeyService {
       lastName: keyData.last_name,
       role: keyData.role,
       teamName: keyData.team_name,
-      scopes: keyData.scopes || { all: ['read', 'write', 'delete'] } // Fallback for old keys
+      scopes: keyData.scopes || { all: ['read', 'write', 'delete'] }, // Fallback for old keys
     };
   }
 
@@ -216,7 +216,6 @@ class ApiKeyService {
       console.error('Failed to log API key usage:', error);
     }
   }
-
 }
 
 module.exports = ApiKeyService;

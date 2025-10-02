@@ -39,21 +39,21 @@ class SkySlopeService {
         `${this.baseURL}/auth/login`,
         {
           clientId: this.clientId,
-          clientSecret: this.clientSecret
+          clientSecret: this.clientSecret,
         },
         {
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `SS ${this.accessKey}:${hmac}`,
-            'Timestamp': timestamp
-          }
-        }
+            Authorization: `SS ${this.accessKey}:${hmac}`,
+            Timestamp: timestamp,
+          },
+        },
       );
 
       this.sessionToken = response.data.sessionToken;
       // Token expires in 2 hours, but we'll refresh after 1.5 hours to be safe
       this.tokenExpiry = new Date(Date.now() + 90 * 60 * 1000);
-      
+
       return this.sessionToken;
     } catch (error) {
       console.error('SkySlope authentication failed:', error.response?.data || error.message);
@@ -66,15 +66,15 @@ class SkySlopeService {
    */
   async makeRequest(method, endpoint, data = null) {
     const token = await this.authenticate();
-    
+
     try {
       const config = {
         method,
         url: `${this.baseURL}${endpoint}`,
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       };
 
       if (data) {
@@ -100,10 +100,10 @@ class SkySlopeService {
    * Create a new listing or sale in SkySlope
    */
   async createTransaction(transactionData) {
-    const endpoint = transactionData.transactionType === 'listing' 
-      ? '/api/listings' 
+    const endpoint = transactionData.transactionType === 'listing'
+      ? '/api/listings'
       : '/api/sales';
-    
+
     return this.makeRequest('POST', endpoint, transactionData);
   }
 
@@ -114,7 +114,7 @@ class SkySlopeService {
     const endpoint = transactionType === 'listing'
       ? `/api/listings/${skyslopeId}/documents`
       : `/api/sales/${skyslopeId}/documents`;
-    
+
     return this.makeRequest('GET', endpoint);
   }
 
@@ -137,20 +137,20 @@ class SkySlopeService {
     const endpoint = transactionType === 'listing'
       ? `/api/listings/${transactionId}/documents`
       : `/api/sales/${transactionId}/documents`;
-    
+
     // For file uploads, we need to use FormData
     const formData = new FormData();
-    Object.keys(documentData).forEach(key => {
+    Object.keys(documentData).forEach((key) => {
       formData.append(key, documentData[key]);
     });
 
     const token = await this.authenticate();
-    
+
     return axios.post(`${this.baseURL}${endpoint}`, formData, {
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'multipart/form-data'
-      }
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'multipart/form-data',
+      },
     });
   }
 
@@ -171,7 +171,7 @@ class SkySlopeService {
         { name: 'HOA Documents', code: 'HOA', required: false },
         { name: 'Counter Offers', code: 'COUNTER', required: false },
         { name: 'Addendums', code: 'ADDENDUM', required: false },
-        { name: 'Closing Statement', code: 'CLOSING', required: true }
+        { name: 'Closing Statement', code: 'CLOSING', required: true },
       ],
       listing: [
         { name: 'Listing Agreement', code: 'LISTING', required: true },
@@ -181,8 +181,8 @@ class SkySlopeService {
         { name: 'MLS Documents', code: 'MLS', required: true },
         { name: 'Seller Net Sheet', code: 'NET_SHEET', required: false },
         { name: 'CMA - Comparative Market Analysis', code: 'CMA', required: false },
-        { name: 'Pre-Listing Inspection', code: 'PRE_INSPECTION', required: false }
-      ]
+        { name: 'Pre-Listing Inspection', code: 'PRE_INSPECTION', required: false },
+      ],
     };
 
     return templates[transactionType] || [];
@@ -206,12 +206,12 @@ class SkySlopeService {
       return {
         success: true,
         skyslopeId: result.id,
-        data: result
+        data: result,
       };
     } catch (error) {
       return {
         success: false,
-        error: error.message
+        error: error.message,
       };
     }
   }
@@ -224,10 +224,10 @@ class SkySlopeService {
 
   mapEscrowStatusToSkySlope(status) {
     const statusMap = {
-      'Active': 'active',
-      'Pending': 'pending',
-      'Closed': 'closed',
-      'Cancelled': 'cancelled'
+      Active: 'active',
+      Pending: 'pending',
+      Closed: 'closed',
+      Cancelled: 'cancelled',
     };
     return statusMap[status] || 'active';
   }

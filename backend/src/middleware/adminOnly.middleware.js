@@ -10,8 +10,8 @@ const adminOnly = (req, res, next) => {
       success: false,
       error: {
         code: 'UNAUTHORIZED',
-        message: 'Authentication required'
-      }
+        message: 'Authentication required',
+      },
     });
   }
 
@@ -23,8 +23,8 @@ const adminOnly = (req, res, next) => {
         code: 'FORBIDDEN',
         message: 'Admin access required. This endpoint is restricted to system administrators.',
         userRole: req.user.role,
-        requiredRole: 'system_admin'
-      }
+        requiredRole: 'system_admin',
+      },
     });
   }
 

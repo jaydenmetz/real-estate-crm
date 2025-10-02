@@ -4,18 +4,18 @@ require('dotenv').config({ path: path.join(__dirname, '../../.env.production') }
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
+  ssl: { rejectUnauthorized: false },
 });
 
 async function updateEscrowFinancialData() {
   const client = await pool.connect();
-  
+
   try {
     console.log('Connected to production database');
-    
+
     // Begin transaction
     await client.query('BEGIN');
-    
+
     // Check current state of ESCROW-2025-0002
     const checkResult = await client.query(`
       SELECT 
@@ -29,11 +29,11 @@ async function updateEscrowFinancialData() {
       FROM escrows 
       WHERE display_id = 'ESCROW-2025-0002'
     `);
-    
+
     if (checkResult.rows.length > 0) {
       console.log('\nCurrent state of ESCROW-2025-0002:');
       console.log(checkResult.rows[0]);
-      
+
       // Update with financial data
       const updateResult = await client.query(`
         UPDATE escrows
@@ -53,15 +53,15 @@ async function updateEscrowFinancialData() {
         WHERE display_id = 'ESCROW-2025-0002'
         RETURNING *
       `);
-      
+
       console.log('\nUpdated ESCROW-2025-0002 with financial data');
       console.log('New values:', {
         purchase_price: updateResult.rows[0].purchase_price,
         down_payment: updateResult.rows[0].down_payment,
         loan_amount: updateResult.rows[0].loan_amount,
-        net_commission: updateResult.rows[0].net_commission
+        net_commission: updateResult.rows[0].net_commission,
       });
-      
+
       // Update other escrows with 0 or NULL purchase_price
       const updateOthersResult = await client.query(`
         UPDATE escrows
@@ -85,13 +85,13 @@ async function updateEscrowFinancialData() {
         WHERE (purchase_price IS NULL OR purchase_price = 0)
           AND display_id != 'ESCROW-2025-0002'
       `);
-      
+
       console.log(`\nUpdated ${updateOthersResult.rowCount} other escrows with financial data`);
-      
+
       // Commit transaction
       await client.query('COMMIT');
       console.log('\nTransaction committed successfully');
-      
+
       // Show final results
       const finalResult = await client.query(`
         SELECT 
@@ -105,17 +105,15 @@ async function updateEscrowFinancialData() {
         ORDER BY display_id
         LIMIT 10
       `);
-      
+
       console.log('\nFinal escrow financial data:');
-      finalResult.rows.forEach(row => {
+      finalResult.rows.forEach((row) => {
         console.log(`${row.display_id}: $${row.purchase_price?.toLocaleString() || 0} (Commission: $${row.net_commission?.toLocaleString() || 0})`);
       });
-      
     } else {
       console.log('ESCROW-2025-0002 not found');
       await client.query('ROLLBACK');
     }
-    
   } catch (error) {
     await client.query('ROLLBACK');
     console.error('Error updating escrow financial data:', error);
@@ -132,7 +130,7 @@ updateEscrowFinancialData()
     console.log('\nFinancial data update completed');
     process.exit(0);
   })
-  .catch(error => {
+  .catch((error) => {
     console.error('\nUpdate failed:', error.message);
     process.exit(1);
   });

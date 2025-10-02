@@ -1,6 +1,7 @@
 // backend/src/routes/appointments.routes.js
 
 const express = require('express');
+
 const router = express.Router();
 const { body } = require('express-validator');
 const appointmentsController = require('../controllers/appointments.controller');
@@ -17,14 +18,14 @@ const createValidation = [
   body('appointmentType').optional().isIn(['Listing Presentation', 'Buyer Consultation', 'Property Showing', 'Open House', 'Closing', 'Inspection', 'Other', 'meeting']),
   body('startDate').optional().isISO8601().withMessage('Invalid start date'),
   body('endDate').optional().isISO8601().withMessage('Invalid end date'),
-  body('duration').optional().isInt({ min: 15, max: 480 })
+  body('duration').optional().isInt({ min: 15, max: 480 }),
 ];
 
 const updateValidation = [
   body('title').optional().notEmpty(),
   body('startDate').optional().isISO8601(),
   body('endDate').optional().isISO8601(),
-  body('status').optional().isString()
+  body('status').optional().isString(),
 ];
 
 // Routes
@@ -41,11 +42,12 @@ router.put('/:id/archive', appointmentsController.archiveAppointment);
 // Delete endpoint: Hard delete
 router.delete('/:id', appointmentsController.deleteAppointment);
 // Batch delete endpoint: Delete multiple archived appointments
-router.post('/batch-delete',
+router.post(
+  '/batch-delete',
   body('ids').isArray({ min: 1 }).withMessage('IDs must be a non-empty array'),
   body('ids.*').isString().withMessage('Each ID must be a string'),
   validate,
-  appointmentsController.batchDeleteAppointments
+  appointmentsController.batchDeleteAppointments,
 );
 
 module.exports = router;

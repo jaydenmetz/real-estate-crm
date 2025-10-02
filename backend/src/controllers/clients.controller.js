@@ -8,14 +8,14 @@ exports.getAllClients = async (req, res) => {
       page = 1,
       limit = 20,
       status = 'active',
-      search
+      search,
     } = req.query;
 
     const offset = (page - 1) * limit;
 
     // Build WHERE conditions
-    let whereConditions = [];
-    let queryParams = [];
+    const whereConditions = [];
+    const queryParams = [];
     let paramIndex = 1;
 
     // Only filter by team if user has one
@@ -86,9 +86,9 @@ exports.getAllClients = async (req, res) => {
           currentPage: parseInt(page),
           totalPages: Math.ceil(total / limit),
           totalCount: total,
-          limit: parseInt(limit)
-        }
-      }
+          limit: parseInt(limit),
+        },
+      },
     });
   } catch (error) {
     console.error('Get clients error:', error);
@@ -97,8 +97,8 @@ exports.getAllClients = async (req, res) => {
       error: {
         code: 'FETCH_ERROR',
         message: 'Failed to fetch clients',
-        details: error.message
-      }
+        details: error.message,
+      },
     });
   }
 };
@@ -137,14 +137,14 @@ exports.getClientById = async (req, res) => {
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Client not found'
-        }
+          message: 'Client not found',
+        },
       });
     }
 
     res.json({
       success: true,
-      data: result.rows[0]
+      data: result.rows[0],
     });
   } catch (error) {
     console.error('Get client error:', error);
@@ -153,8 +153,8 @@ exports.getClientById = async (req, res) => {
       error: {
         code: 'FETCH_ERROR',
         message: 'Failed to fetch client',
-        details: error.message
-      }
+        details: error.message,
+      },
     });
   }
 };
@@ -174,7 +174,7 @@ exports.createClient = async (req, res) => {
       addressState,
       addressZip,
       notes,
-      tags = []
+      tags = [],
     } = req.body;
 
     await client.query('BEGIN');
@@ -183,7 +183,7 @@ exports.createClient = async (req, res) => {
     if (email) {
       const duplicateCheck = await client.query(
         'SELECT id FROM contacts WHERE email = $1 AND deleted_at IS NULL',
-        [email]
+        [email],
       );
       if (duplicateCheck.rows.length > 0) {
         await client.query('ROLLBACK');
@@ -191,8 +191,8 @@ exports.createClient = async (req, res) => {
           success: false,
           error: {
             code: 'DUPLICATE_EMAIL',
-            message: 'A contact with this email already exists'
-          }
+            message: 'A contact with this email already exists',
+          },
         });
       }
     }
@@ -220,7 +220,7 @@ exports.createClient = async (req, res) => {
       addressZip,
       notes,
       tags,
-      req.user?.teamId || req.user?.team_id || null
+      req.user?.teamId || req.user?.team_id || null,
     ];
 
     const contactResult = await client.query(contactQuery, contactValues);
@@ -248,8 +248,8 @@ exports.createClient = async (req, res) => {
         email,
         phone,
         client_type: clientType,
-        status: 'active'
-      }
+        status: 'active',
+      },
     });
   } catch (error) {
     await client.query('ROLLBACK');
@@ -259,8 +259,8 @@ exports.createClient = async (req, res) => {
       error: {
         code: 'CREATE_ERROR',
         message: 'Failed to create client',
-        details: error.message
-      }
+        details: error.message,
+      },
     });
   } finally {
     client.release();
@@ -288,8 +288,8 @@ exports.updateClient = async (req, res) => {
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Client not found'
-        }
+          message: 'Client not found',
+        },
       });
     }
 
@@ -319,7 +319,7 @@ exports.updateClient = async (req, res) => {
       }
 
       if (contactUpdates.length > 0) {
-        contactUpdates.push(`updated_at = NOW()`);
+        contactUpdates.push('updated_at = NOW()');
         contactValues.push(existing.rows[0].contact_id);
 
         const contactQuery = `
@@ -348,8 +348,8 @@ exports.updateClient = async (req, res) => {
       }
 
       if (clientUpdates.length > 0) {
-        clientUpdates.push(`updated_at = NOW()`);
-        clientUpdates.push(`version = version + 1`);
+        clientUpdates.push('updated_at = NOW()');
+        clientUpdates.push('version = version + 1');
         clientUpdates.push(`last_modified_by = $${paramIndex++}`);
         clientValues.push(req.user?.id || null);
 
@@ -382,8 +382,8 @@ exports.updateClient = async (req, res) => {
                 code: 'VERSION_CONFLICT',
                 message: 'This client was modified by another user. Please refresh and try again.',
                 currentVersion: versionCheck.rows[0].version,
-                attemptedVersion: clientVersion
-              }
+                attemptedVersion: clientVersion,
+              },
             });
           }
         }
@@ -397,7 +397,7 @@ exports.updateClient = async (req, res) => {
 
     res.json({
       success: true,
-      data: updatedResult.rows[0]
+      data: updatedResult.rows[0],
     });
   } catch (error) {
     await client.query('ROLLBACK');
@@ -407,8 +407,8 @@ exports.updateClient = async (req, res) => {
       error: {
         code: 'UPDATE_ERROR',
         message: 'Failed to update client',
-        details: error.message
-      }
+        details: error.message,
+      },
     });
   } finally {
     client.release();
@@ -434,15 +434,15 @@ exports.archiveClient = async (req, res) => {
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Client not found'
-        }
+          message: 'Client not found',
+        },
       });
     }
 
     res.json({
       success: true,
       data: { id: result.rows[0].id },
-      message: 'Client archived successfully'
+      message: 'Client archived successfully',
     });
   } catch (error) {
     console.error('Archive client error:', error);
@@ -450,8 +450,8 @@ exports.archiveClient = async (req, res) => {
       success: false,
       error: {
         code: 'ARCHIVE_ERROR',
-        message: 'Failed to archive client'
-      }
+        message: 'Failed to archive client',
+      },
     });
   }
 };
@@ -476,8 +476,8 @@ exports.deleteClient = async (req, res) => {
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Client not found'
-        }
+          message: 'Client not found',
+        },
       });
     }
 
@@ -495,7 +495,7 @@ exports.deleteClient = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Client deleted successfully'
+      message: 'Client deleted successfully',
     });
   } catch (error) {
     await client.query('ROLLBACK');
@@ -504,8 +504,8 @@ exports.deleteClient = async (req, res) => {
       success: false,
       error: {
         code: 'DELETE_ERROR',
-        message: 'Failed to delete client'
-      }
+        message: 'Failed to delete client',
+      },
     });
   } finally {
     client.release();
@@ -523,8 +523,8 @@ exports.batchDeleteClients = async (req, res) => {
         success: false,
         error: {
           code: 'INVALID_REQUEST',
-          message: 'IDs must be a non-empty array'
-        }
+          message: 'IDs must be a non-empty array',
+        },
       });
     }
 
@@ -545,11 +545,11 @@ exports.batchDeleteClients = async (req, res) => {
         success: true,
         message: 'No clients found to delete',
         deletedCount: 0,
-        deletedIds: []
+        deletedIds: [],
       });
     }
 
-    const existingIds = existResult.rows.map(row => row.id);
+    const existingIds = existResult.rows.map((row) => row.id);
 
     // Delete clients
     const deleteQuery = `
@@ -565,7 +565,7 @@ exports.batchDeleteClients = async (req, res) => {
       success: true,
       message: `Successfully deleted ${deleteResult.rowCount} clients`,
       deletedCount: deleteResult.rowCount,
-      deletedIds: deleteResult.rows.map(row => row.id)
+      deletedIds: deleteResult.rows.map((row) => row.id),
     });
   } catch (error) {
     await client.query('ROLLBACK');
@@ -575,8 +575,8 @@ exports.batchDeleteClients = async (req, res) => {
       error: {
         code: 'DELETE_ERROR',
         message: 'Failed to delete clients',
-        details: error.message
-      }
+        details: error.message,
+      },
     });
   } finally {
     client.release();
@@ -594,8 +594,8 @@ exports.addNote = async (req, res) => {
         success: false,
         error: {
           code: 'MISSING_CONTENT',
-          message: 'Note content is required'
-        }
+          message: 'Note content is required',
+        },
       });
     }
 
@@ -615,14 +615,14 @@ exports.addNote = async (req, res) => {
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Client not found'
-        }
+          message: 'Client not found',
+        },
       });
     }
 
     res.status(201).json({
       success: true,
-      data: { notes: result.rows[0].notes }
+      data: { notes: result.rows[0].notes },
     });
   } catch (error) {
     console.error('Add note error:', error);
@@ -631,8 +631,8 @@ exports.addNote = async (req, res) => {
       error: {
         code: 'NOTE_ERROR',
         message: 'Failed to add note',
-        details: error.message
-      }
+        details: error.message,
+      },
     });
   }
 };
@@ -648,8 +648,8 @@ exports.bulkUpdateTags = async (req, res) => {
         success: false,
         error: {
           code: 'INVALID_TAGS',
-          message: 'Tags must be an array'
-        }
+          message: 'Tags must be an array',
+        },
       });
     }
 
@@ -667,14 +667,14 @@ exports.bulkUpdateTags = async (req, res) => {
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Client not found'
-        }
+          message: 'Client not found',
+        },
       });
     }
 
     res.json({
       success: true,
-      data: { tags: result.rows[0].tags }
+      data: { tags: result.rows[0].tags },
     });
   } catch (error) {
     console.error('Update tags error:', error);
@@ -683,8 +683,8 @@ exports.bulkUpdateTags = async (req, res) => {
       error: {
         code: 'TAG_ERROR',
         message: 'Failed to update tags',
-        details: error.message
-      }
+        details: error.message,
+      },
     });
   }
 };
