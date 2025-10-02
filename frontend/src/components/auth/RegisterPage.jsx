@@ -108,8 +108,18 @@ const RegisterPage = () => {
       const result = await response.json();
 
       if (result.success) {
-        // Show coming soon message instead of logging in
-        setActiveStep(steps.length); // Move to a new step
+        // Store token and redirect to onboarding
+        if (result.data?.token) {
+          localStorage.setItem('token', result.data.token);
+          localStorage.setItem('user', JSON.stringify(result.data.user));
+
+          // Redirect to onboarding tutorial
+          setTimeout(() => {
+            navigate('/onboarding/welcome');
+          }, 500);
+        } else {
+          setActiveStep(steps.length);
+        }
       } else {
         setError(result.error?.message || 'Registration failed');
       }

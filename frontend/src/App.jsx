@@ -58,6 +58,17 @@ import LeadsHealthDashboard from './components/health/LeadsHealthDashboard';
 const PublicProfile = React.lazy(() => import('./pages/PublicProfileStunning'));
 const Settings = React.lazy(() => import('./pages/Settings'));
 
+// Onboarding components
+import OnboardingLayout from './components/onboarding/OnboardingLayout';
+import WelcomeStep from './components/onboarding/steps/WelcomeStep';
+import EscrowStep from './components/onboarding/steps/EscrowStep';
+import ListingsStep from './components/onboarding/steps/ListingsStep';
+import ClientsStep from './components/onboarding/steps/ClientsStep';
+import AppointmentsStep from './components/onboarding/steps/AppointmentsStep';
+import LeadsStep from './components/onboarding/steps/LeadsStep';
+import MarketplaceStep from './components/onboarding/steps/MarketplaceStep';
+import FeaturesStep from './components/onboarding/steps/FeaturesStep';
+
 // Services
 import websocketService from './services/websocket.service';
 
@@ -225,7 +236,20 @@ function App() {
                       <PublicProfile />
                     </React.Suspense>
                   } />
-                  
+
+                  {/* Onboarding Routes (Protected) */}
+                  <Route path="/onboarding" element={<ProtectedRoute><OnboardingLayout /></ProtectedRoute>}>
+                    <Route index element={<Navigate to="/onboarding/welcome" />} />
+                    <Route path="welcome" element={<WelcomeStep />} />
+                    <Route path="escrow" element={<EscrowStep />} />
+                    <Route path="listings" element={<ListingsStep />} />
+                    <Route path="clients" element={<ClientsStep />} />
+                    <Route path="appointments" element={<AppointmentsStep />} />
+                    <Route path="leads" element={<LeadsStep />} />
+                    <Route path="marketplace" element={<MarketplaceStep />} />
+                    <Route path="features" element={<FeaturesStep />} />
+                  </Route>
+
                   {/* Protected Routes */}
                   <Route
                     path="/*"
