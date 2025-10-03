@@ -282,6 +282,9 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
         setUsernameAvailable(result.data.available);
         if (!result.data.available) {
           setFieldError('username', { type: 'manual', message: 'Username is already taken' });
+        } else {
+          // Clear error if username is available
+          setFieldError('username', null);
         }
       }
     } catch (err) {
@@ -441,22 +444,49 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
               <input type="password" name="fake-password" tabIndex="-1" autoComplete="new-password" />
             </div>
 
-            <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
-              Create your account credentials
-            </Typography>
+            {/* Summary of information from Step 1 */}
+            <Paper
+              elevation={0}
+              sx={{
+                p: 2,
+                mb: 3,
+                backgroundColor: 'grey.50',
+                border: '1px solid',
+                borderColor: 'grey.200'
+              }}
+            >
+              <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                Your Information
+              </Typography>
+              <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mt: 1 }}>
+                <Typography variant="body2">
+                  <strong>Name:</strong> {firstName} {lastName}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Email:</strong> {watch('email')}
+                </Typography>
+                <Typography variant="body2" sx={{ gridColumn: '1 / -1' }}>
+                  <strong>Phone:</strong> {phone}
+                </Typography>
+              </Box>
+            </Paper>
 
-            <Alert severity="success" sx={{ mb: 2 }}>
-              Great! We've saved your information. Now let's set up your login credentials.
-            </Alert>
+            <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
+              Create Account Details
+            </Typography>
 
             <Controller
               name="username"
               control={control}
               rules={{
                 required: 'Username is required',
+                minLength: {
+                  value: 4,
+                  message: 'Username must be at least 4 characters'
+                },
                 pattern: {
-                  value: /^[a-zA-Z0-9_]{3,20}$/,
-                  message: 'Username must be 3-20 characters (letters, numbers, underscore only)'
+                  value: /^[a-z0-9_]{4,20}$/,
+                  message: 'Username must be lowercase letters, numbers, or underscore only'
                 }
               }}
               render={({ field }) => (
