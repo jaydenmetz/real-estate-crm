@@ -497,73 +497,76 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
                   message: 'Username must be letters, numbers, or underscore only'
                 }
               }}
-              render={({ field }) => (
-                <TextField
-                  {...field}
-                  key={`username-${fieldId}`}
-                  fullWidth
-                  label="Username"
-                  variant="outlined"
-                  margin="normal"
-                  error={!!errors.username || (usernameAvailable === false && !checkingUsername)}
-                  helperText={
-                    errors.username?.message ||
-                    (checkingUsername ? 'Checking availability...' :
-                      usernameAvailable === true ? '✓ Username is available' :
-                      usernameAvailable === false ? 'Username is already taken' :
-                      'Letters, numbers, underscore only (min 4 characters)')
-                  }
-                  disabled={loading}
-                  sx={{
-                    '& .MuiOutlinedInput-root': {
-                      '& fieldset': {
-                        borderColor: !checkingUsername && usernameAvailable === true ? 'success.main' : undefined,
-                        borderWidth: !checkingUsername && usernameAvailable === true ? 2 : undefined,
+              render={({ field }) => {
+                // Determine the current state
+                const isChecking = checkingUsername;
+                const isAvailable = !checkingUsername && usernameAvailable === true;
+                const isTaken = !checkingUsername && usernameAvailable === false;
+                const isDefault = !isChecking && usernameAvailable === null;
+
+                return (
+                  <TextField
+                    {...field}
+                    key={`username-${fieldId}`}
+                    fullWidth
+                    label="Username"
+                    variant="outlined"
+                    margin="normal"
+                    error={isTaken}
+                    helperText={
+                      isChecking ? 'Checking availability...' :
+                      isAvailable ? '✓ Username is available' :
+                      isTaken ? 'Username is already taken' :
+                      'Letters, numbers, underscore only (min 4 characters)'
+                    }
+                    disabled={loading}
+                    sx={{
+                      '& .MuiOutlinedInput-root': {
+                        '& fieldset': {
+                          borderColor: isAvailable ? 'success.main' : isTaken ? 'error.main' : undefined,
+                          borderWidth: (isAvailable || isTaken) ? 2 : 1,
+                        },
+                        '&:hover fieldset': {
+                          borderColor: isAvailable ? 'success.main' : isTaken ? 'error.main' : undefined,
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: isAvailable ? 'success.main' : isTaken ? 'error.main' : undefined,
+                        },
                       },
-                      '&:hover fieldset': {
-                        borderColor: !checkingUsername && usernameAvailable === true ? 'success.main' : undefined,
+                      '& .MuiInputLabel-root': {
+                        color: isAvailable ? 'success.main' : isTaken ? 'error.main' : undefined,
+                        '&.Mui-focused': {
+                          color: isAvailable ? 'success.main' : isTaken ? 'error.main' : undefined,
+                        },
                       },
-                      '&.Mui-focused fieldset': {
-                        borderColor: !checkingUsername && usernameAvailable === true ? 'success.main' : undefined,
+                      '& .MuiFormHelperText-root': {
+                        color: isAvailable ? 'success.main' : isTaken ? 'error.main' : isChecking ? 'text.secondary' : undefined,
                       },
-                    },
-                    '& .MuiInputLabel-root': {
-                      color: !checkingUsername && usernameAvailable === true ? 'success.main' : undefined,
-                      '&.Mui-focused': {
-                        color: !checkingUsername && usernameAvailable === true ? 'success.main' : undefined,
-                      },
-                    },
-                    '& .MuiFormHelperText-root': {
-                      color: !checkingUsername && usernameAvailable === true ? 'success.main' : undefined,
-                    },
-                  }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <Person />
-                      </InputAdornment>
-                    ),
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        {checkingUsername && <CircularProgress size={20} />}
-                        {!checkingUsername && usernameAvailable === true && (
-                          <CheckCircle sx={{ color: 'success.main' }} />
-                        )}
-                        {!checkingUsername && usernameAvailable === false && (
-                          <Cancel sx={{ color: 'error.main' }} />
-                        )}
-                      </InputAdornment>
-                    ),
-                  }}
-                  inputProps={{
-                    autoComplete: "chrome-off",
-                    name: fieldId,
-                    id: fieldId,
-                    "data-form-type": "other"
-                  }}
-                  autoFocus
-                />
-              )}
+                    }}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <Person sx={{ color: isAvailable ? 'success.main' : isTaken ? 'error.main' : undefined }} />
+                        </InputAdornment>
+                      ),
+                      endAdornment: (
+                        <InputAdornment position="end">
+                          {isChecking && <CircularProgress size={20} />}
+                          {isAvailable && <CheckCircle sx={{ color: 'success.main' }} />}
+                          {isTaken && <Cancel sx={{ color: 'error.main' }} />}
+                        </InputAdornment>
+                      ),
+                    }}
+                    inputProps={{
+                      autoComplete: "chrome-off",
+                      name: fieldId,
+                      id: fieldId,
+                      "data-form-type": "other"
+                    }}
+                    autoFocus
+                  />
+                );
+              }}
             />
 
             <Controller
