@@ -1269,8 +1269,7 @@ const Settings = () => {
                         color="error"
                         onClick={async () => {
                           try {
-                            const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com'}/v1/debug-sentry`);
-                            const data = await response.text();
+                            await api.request('/debug-sentry');
                             setSnackbar({
                               open: true,
                               message: 'Backend error triggered! Check Sentry dashboard.',
