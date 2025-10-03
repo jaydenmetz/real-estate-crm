@@ -31,24 +31,27 @@ class AuthController {
       await client.query('BEGIN');
 
       const {
-        email, password, firstName, lastName, role = 'agent',
+        email, password, firstName, lastName, username, role = 'agent',
       } = req.body;
 
       // Validate input
-      if (!email || !password || !firstName || !lastName) {
+      if (!email || !password || !firstName || !lastName || !username) {
         return res.status(400).json({
           success: false,
           error: {
             code: 'MISSING_FIELDS',
-            message: 'Email, password, first name, and last name are required',
+            message: 'Email, password, first name, last name, and username are required',
           },
         });
       }
 
-      // Check if user already exists
+      // Convert username to lowercase
+      const usernameLower = username.toLowerCase();
+
+      // Check if user already exists (by email or username)
       const existingUser = await client.query(
-        'SELECT id FROM users WHERE email = $1',
-        [email.toLowerCase()],
+        'SELECT id FROM users WHERE LOWER(email) = LOWER($1) OR LOWER(username) = LOWER($2)',
+        [email, usernameLower],
       );
 
       if (existingUser.rows.length > 0) {
@@ -57,7 +60,7 @@ class AuthController {
           success: false,
           error: {
             code: 'USER_EXISTS',
-            message: 'User with this email already exists',
+            message: 'User with this email or username already exists',
           },
         });
       }
@@ -69,14 +72,15 @@ class AuthController {
       // Create user
       const createUserQuery = `
         INSERT INTO users (
-          email, password_hash, first_name, last_name, role, 
+          email, username, password_hash, first_name, last_name, role,
           is_active, created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, true, NOW(), NOW())
-        RETURNING id, email, first_name, last_name, role, is_active
+        ) VALUES ($1, $2, $3, $4, $5, $6, true, NOW(), NOW())
+        RETURNING id, email, username, first_name, last_name, role, is_active
       `;
 
       const result = await client.query(createUserQuery, [
         email.toLowerCase(),
+        usernameLower,
         passwordHash,
         firstName,
         lastName,
@@ -932,13 +936,13 @@ class AuthController {
         });
       }
 
-      // Check if username matches required pattern
-      if (!/^[a-z0-9_]+$/.test(username)) {
+      // Check if username matches required pattern (accept uppercase, will convert to lowercase)
+      if (!/^[a-zA-Z0-9_]+$/.test(username)) {
         return res.json({
           success: true,
           data: {
             available: false,
-            message: 'Username can only contain lowercase letters, numbers, and underscores',
+            message: 'Username can only contain letters, numbers, and underscores',
           },
         });
       }
