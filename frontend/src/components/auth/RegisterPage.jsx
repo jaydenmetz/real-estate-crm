@@ -366,7 +366,10 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
                       </InputAdornment>
                     ),
                   }}
-                  autoComplete="username"
+                  inputProps={{
+                    autoComplete: "off",
+                    name: "new-username"
+                  }}
                   autoFocus
                 />
               )}
@@ -415,7 +418,10 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
                       </InputAdornment>
                     ),
                   }}
-                  autoComplete="new-password"
+                  inputProps={{
+                    autoComplete: "new-password",
+                    name: "new-password"
+                  }}
                 />
               )}
             />
@@ -456,7 +462,10 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
                       </InputAdornment>
                     ),
                   }}
-                  autoComplete="new-password"
+                  inputProps={{
+                    autoComplete: "new-password",
+                    name: "confirm-password"
+                  }}
                 />
               )}
             />
