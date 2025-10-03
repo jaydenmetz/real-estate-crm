@@ -295,6 +295,13 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
     }
   }, [setFieldError]);
 
+  // Reset availability state immediately when user types (before debounced check)
+  useEffect(() => {
+    if (username && activeStep === 1) {
+      setUsernameAvailable(null); // Clear green/red styling while typing
+    }
+  }, [username, activeStep]);
+
   // Debounce username checking
   useEffect(() => {
     const timer = setTimeout(() => {
