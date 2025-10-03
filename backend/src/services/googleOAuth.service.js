@@ -53,7 +53,7 @@ class GoogleOAuthService {
 
       // Check if user exists
       let user = await dbClient.query(
-        'SELECT id, email, first_name, last_name, role, is_active, google_id FROM users WHERE email = $1',
+        'SELECT id, email, username, first_name, last_name, role, is_active, google_id FROM users WHERE email = $1',
         [googleUser.email.toLowerCase()],
       );
 
@@ -61,16 +61,20 @@ class GoogleOAuthService {
         // Create new user (Google OAuth registration)
         const randomPassword = await bcrypt.hash(Math.random().toString(36), 10);
 
+        // Use email as username for Google OAuth users (lowercase)
+        const username = googleUser.email.toLowerCase();
+
         const createUserQuery = `
           INSERT INTO users (
-            email, password_hash, first_name, last_name, role,
+            email, username, password_hash, first_name, last_name, role,
             google_id, profile_picture_url, is_active, created_at, updated_at
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, true, NOW(), NOW())
-          RETURNING id, email, first_name, last_name, role, is_active, google_id, profile_picture_url
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, true, NOW(), NOW())
+          RETURNING id, email, username, first_name, last_name, role, is_active, google_id, profile_picture_url
         `;
 
         user = await dbClient.query(createUserQuery, [
           googleUser.email.toLowerCase(),
+          username, // Username = email for Google OAuth users
           randomPassword, // Random password (user won't use it)
           googleUser.firstName,
           googleUser.lastName,
@@ -122,6 +126,7 @@ class GoogleOAuthService {
         user: {
           id: userData.id,
           email: userData.email,
+          username: userData.username,
           firstName: userData.first_name,
           lastName: userData.last_name,
           role: userData.role,

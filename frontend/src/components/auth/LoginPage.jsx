@@ -32,11 +32,12 @@ import {
   Speed,
 } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
+import { GoogleLogin } from '@react-oauth/google';
 import authService from '../../services/auth.service';
 import { useAuth } from '../../contexts/AuthContext';
 import { createApiKey } from '../../utils/auth';
 
-const LoginPage = () => {
+const LoginPage = ({ hasGoogleAuth = false }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
@@ -60,11 +61,11 @@ const LoginPage = () => {
 
     try {
       const result = await authService.login(data.username, data.password, data.rememberMe);
-      
+
       if (result.success) {
         // Update auth context
         login(result.user);
-        
+
         // Try to create an API key for more reliable authentication
         try {
           const apiKeyResult = await createApiKey('Web Session', 365);
@@ -73,7 +74,7 @@ const LoginPage = () => {
           // API key creation failed, but JWT login succeeded
           console.warn('Could not create API key, using JWT only:', apiKeyError);
         }
-        
+
         // Navigate to previous page or default dashboard
         navigate(from, { replace: true });
       } else {
@@ -85,6 +86,54 @@ const LoginPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setError('');
+    setLoading(true);
+
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
+      const endpoint = apiUrl.includes('/v1')
+        ? `${apiUrl}/auth/google`
+        : `${apiUrl}/v1/auth/google`;
+
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          idToken: credentialResponse.credential,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Update auth context
+        login(result.data.user);
+
+        // Store tokens
+        localStorage.setItem('token', result.data.token);
+        localStorage.setItem('user', JSON.stringify(result.data.user));
+
+        // Navigate to previous page or default dashboard
+        navigate(from, { replace: true });
+      } else {
+        setError(result.error?.message || 'Google Sign-In failed');
+      }
+    } catch (err) {
+      console.error('Google Sign-In error:', err);
+      setError('An error occurred during Google Sign-In. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleError = () => {
+    console.error('Google Sign-In failed');
+    setError('Google Sign-In was unsuccessful. Please try again.');
   };
 
   return (
@@ -119,6 +168,31 @@ const LoginPage = () => {
               Sign in to manage your real estate business
             </Typography>
           </Box>
+
+          {/* Google Sign-In */}
+          {hasGoogleAuth && (
+            <>
+              <Box sx={{ mb: 3 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'center' }}>
+                  <GoogleLogin
+                    onSuccess={handleGoogleSuccess}
+                    onError={handleGoogleError}
+                    theme="outline"
+                    size="large"
+                    width="100%"
+                    text="signin_with"
+                  />
+                </Box>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', my: 3 }}>
+                <Divider sx={{ flex: 1 }} />
+                <Typography variant="body2" sx={{ px: 2, color: 'text.secondary' }}>
+                  or
+                </Typography>
+                <Divider sx={{ flex: 1 }} />
+              </Box>
+            </>
+          )}
 
           {/* Login Form */}
           <form onSubmit={handleSubmit(onSubmit)}>
@@ -299,4 +373,22 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+// Wrapper to conditionally provide Google OAuth
+const LoginPageWithGoogle = () => {
+  const googleClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+
+  if (!googleClientId) {
+    return <LoginPage hasGoogleAuth={false} />;
+  }
+
+  // Dynamically import GoogleOAuthProvider only when needed
+  const { GoogleOAuthProvider } = require('@react-oauth/google');
+
+  return (
+    <GoogleOAuthProvider clientId={googleClientId}>
+      <LoginPage hasGoogleAuth={true} />
+    </GoogleOAuthProvider>
+  );
+};
+
+export default LoginPageWithGoogle;

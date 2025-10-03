@@ -268,6 +268,7 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
     }
 
     setCheckingUsername(true);
+    setUsernameAvailable(null); // Reset state while checking
 
     try {
       const apiUrl = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
@@ -497,7 +498,7 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
                   label="Username"
                   variant="outlined"
                   margin="normal"
-                  error={!!errors.username || (usernameAvailable === false)}
+                  error={!!errors.username || (usernameAvailable === false && !checkingUsername)}
                   helperText={
                     errors.username?.message ||
                     (checkingUsername ? 'Checking availability...' :
