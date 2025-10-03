@@ -184,14 +184,14 @@ import 'swiper/css/effect-fade';
 
 // Styled Components
 const HeroSection = styled(Box)(({ theme }) => ({
-  background: 'linear-gradient(135deg, #1565C0 0%, #42A5F5 100%)',
+  background: 'linear-gradient(135deg, #7C4DFF 0%, #B388FF 100%)',
   color: 'white',
   padding: theme.spacing(6),
   borderRadius: theme.spacing(3),
   position: 'relative',
   overflow: 'hidden',
   marginBottom: theme.spacing(4),
-  boxShadow: '0 20px 60px rgba(21, 101, 192, 0.3)',
+  boxShadow: '0 20px 60px rgba(124, 77, 255, 0.3)',
   '&::before': {
     content: '""',
     position: 'absolute',
@@ -231,13 +231,13 @@ const StatsCard = styled(Card)(({ theme }) => ({
 
 const pulseAnimation = keyframes`
   0% {
-    box-shadow: 0 0 0 0 rgba(21, 101, 192, 0.4);
+    box-shadow: 0 0 0 0 rgba(124, 77, 255, 0.4);
   }
   70% {
-    box-shadow: 0 0 0 10px rgba(21, 101, 192, 0);
+    box-shadow: 0 0 0 10px rgba(124, 77, 255, 0);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(21, 101, 192, 0);
+    box-shadow: 0 0 0 0 rgba(124, 77, 255, 0);
   }
 `;
 
@@ -476,9 +476,9 @@ const ClientsDashboard = () => {
 
   // Chart data
   const clientTypeData = [
-    { name: 'Buyers', value: clients.filter(c => c.type === 'Buyer').length, color: '#1565C0' },
-    { name: 'Sellers', value: clients.filter(c => c.type === 'Seller').length, color: '#42A5F5' },
-    { name: 'Both', value: clients.filter(c => c.type === 'Both').length, color: '#90CAF9' },
+    { name: 'Buyers', value: clients.filter(c => c.type === 'Buyer').length, color: '#7C4DFF' },
+    { name: 'Sellers', value: clients.filter(c => c.type === 'Seller').length, color: '#B388FF' },
+    { name: 'Both', value: clients.filter(c => c.type === 'Both').length, color: '#D1C4E9' },
   ];
 
   const monthlyData = [
@@ -1329,8 +1329,8 @@ const ClientsDashboard = () => {
                 <AreaChart data={monthlyData}>
                   <defs>
                     <linearGradient id="colorClients" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#1565C0" stopOpacity={0.8}/>
-                      <stop offset="95%" stopColor="#1565C0" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#7C4DFF" stopOpacity={0.8}/>
+                      <stop offset="95%" stopColor="#7C4DFF" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -1340,7 +1340,7 @@ const ClientsDashboard = () => {
                   <Area
                     type="monotone"
                     dataKey="clients"
-                    stroke="#1565C0"
+                    stroke="#7C4DFF"
                     fillOpacity={1}
                     fill="url(#colorClients)"
                     strokeWidth={2}

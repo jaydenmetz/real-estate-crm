@@ -938,59 +938,12 @@ const HomeDashboard = () => {
             </motion.div>
           </Grid>
 
-          {/* Listings Module */}
-          <Grid item xs={12}>
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.9 }}
-            >
-              <ModuleHeroCard
-                gradient="linear-gradient(135deg, #2E7D32 0%, #66BB6A 100%)"
-                onClick={() => navigate('/listings')}
-              >
-                <Typography variant="h5" fontWeight="bold" gutterBottom>
-                  Listings Management
-                </Typography>
-                <Typography variant="body2" sx={{ opacity: 0.9, mb: 3 }}>
-                  Manage and showcase your properties
-                </Typography>
-                <Grid container spacing={3}>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
-                      <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Total Listings</Typography>
-                      <Typography variant="h4" fontWeight="bold"><CountUp end={stats.totalListings} duration={2} /></Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
-                      <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Active</Typography>
-                      <Typography variant="h4" fontWeight="bold"><CountUp end={stats.activeListings} duration={2} /></Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
-                      <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Total Value</Typography>
-                      <Typography variant="h4" fontWeight="bold">${stats.listingsValue > 0 ? <CountUp end={stats.listingsValue / 1000000} decimals={1} duration={2} /> : '0'}M</Typography>
-                    </Box>
-                  </Grid>
-                  <Grid item xs={12} sm={6} md={3}>
-                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
-                      <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Hot Properties</Typography>
-                      <Typography variant="h4" fontWeight="bold"><CountUp end={stats.hotListings} duration={2} /></Typography>
-                    </Box>
-                  </Grid>
-                </Grid>
-              </ModuleHeroCard>
-            </motion.div>
-          </Grid>
-
           {/* Escrows Module */}
           <Grid item xs={12}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 1.0 }}
+              transition={{ duration: 0.6, delay: 0.9 }}
             >
               <ModuleHeroCard
                 gradient="linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)"
@@ -1032,6 +985,53 @@ const HomeDashboard = () => {
             </motion.div>
           </Grid>
 
+          {/* Listings Module */}
+          <Grid item xs={12}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 1.0 }}
+            >
+              <ModuleHeroCard
+                gradient="linear-gradient(135deg, #2E7D32 0%, #66BB6A 100%)"
+                onClick={() => navigate('/listings')}
+              >
+                <Typography variant="h5" fontWeight="bold" gutterBottom>
+                  Listings Management
+                </Typography>
+                <Typography variant="body2" sx={{ opacity: 0.9, mb: 3 }}>
+                  Manage and showcase your properties
+                </Typography>
+                <Grid container spacing={3}>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                      <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Total Listings</Typography>
+                      <Typography variant="h4" fontWeight="bold"><CountUp end={stats.totalListings} duration={2} /></Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                      <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Active</Typography>
+                      <Typography variant="h4" fontWeight="bold"><CountUp end={stats.activeListings} duration={2} /></Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                      <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Total Value</Typography>
+                      <Typography variant="h4" fontWeight="bold">${stats.listingsValue > 0 ? <CountUp end={stats.listingsValue / 1000000} decimals={1} duration={2} /> : '0'}M</Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                      <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Hot Properties</Typography>
+                      <Typography variant="h4" fontWeight="bold"><CountUp end={stats.hotListings} duration={2} /></Typography>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </ModuleHeroCard>
+            </motion.div>
+          </Grid>
+
           {/* Clients Module */}
           <Grid item xs={12}>
             <motion.div
@@ -1040,7 +1040,7 @@ const HomeDashboard = () => {
               transition={{ duration: 0.6, delay: 1.1 }}
             >
               <ModuleHeroCard
-                gradient="linear-gradient(135deg, #1565C0 0%, #42A5F5 100%)"
+                gradient="linear-gradient(135deg, #7C4DFF 0%, #B388FF 100%)"
                 onClick={() => navigate('/clients')}
               >
                 <Typography variant="h5" fontWeight="bold" gutterBottom>
