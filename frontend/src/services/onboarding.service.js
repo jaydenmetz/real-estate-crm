@@ -77,7 +77,7 @@ class OnboardingService {
    */
   static async getProgress() {
     return this.retryWithBackoff(async () => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       const data = await this.fetchWithErrorHandling(`${BASE_URL}/onboarding/progress`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -92,7 +92,7 @@ class OnboardingService {
    */
   static async completeStep(step) {
     return this.retryWithBackoff(async () => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       const data = await this.fetchWithErrorHandling(`${BASE_URL}/onboarding/complete-step`, {
         method: 'POST',
         headers: {
@@ -110,7 +110,7 @@ class OnboardingService {
    */
   static async skipTutorial() {
     return this.retryWithBackoff(async () => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       const data = await this.fetchWithErrorHandling(`${BASE_URL}/onboarding/skip`, {
         method: 'POST',
         headers: {
@@ -126,7 +126,7 @@ class OnboardingService {
    */
   static async resetProgress() {
     return this.retryWithBackoff(async () => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       const data = await this.fetchWithErrorHandling(`${BASE_URL}/onboarding/reset`, {
         method: 'POST',
         headers: {
@@ -142,7 +142,7 @@ class OnboardingService {
    */
   static async getSampleData() {
     return this.retryWithBackoff(async () => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       const data = await this.fetchWithErrorHandling(`${BASE_URL}/onboarding/sample-data`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -157,7 +157,7 @@ class OnboardingService {
    */
   static async deleteSampleData() {
     return this.retryWithBackoff(async () => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       const data = await this.fetchWithErrorHandling(`${BASE_URL}/onboarding/sample-data`, {
         method: 'DELETE',
         headers: {
@@ -173,7 +173,7 @@ class OnboardingService {
    */
   static async submitFeedback(feedback) {
     return this.retryWithBackoff(async () => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       const data = await this.fetchWithErrorHandling(`${BASE_URL}/onboarding/feedback`, {
         method: 'POST',
         headers: {
@@ -191,7 +191,7 @@ class OnboardingService {
    */
   static async getAnalytics() {
     return this.retryWithBackoff(async () => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       const data = await this.fetchWithErrorHandling(`${BASE_URL}/onboarding/analytics`, {
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -206,7 +206,7 @@ class OnboardingService {
    */
   static async trackStepTiming(step, timeSpentSeconds) {
     return this.retryWithBackoff(async () => {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('authToken');
       const data = await this.fetchWithErrorHandling(`${BASE_URL}/onboarding/track-timing`, {
         method: 'POST',
         headers: {

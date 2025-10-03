@@ -33,11 +33,7 @@ export const apiUrl = (path) => {
 // Helper function for API calls with better error handling
 export const apiCall = async (url, options = {}) => {
   // Get authentication token from multiple possible locations
-  const token = localStorage.getItem('crm_auth_token') || 
-                localStorage.getItem('authToken') ||
-                localStorage.getItem('token') ||
-                sessionStorage.getItem('crm_auth_token') ||
-                sessionStorage.getItem('token');
+  const token = localStorage.getItem('authToken');
   
   const headers = {
     'Content-Type': 'application/json',

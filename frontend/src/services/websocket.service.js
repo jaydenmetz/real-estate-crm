@@ -15,7 +15,7 @@ class WebSocketService {
   connect() {
     return new Promise((resolve, reject) => {
       try {
-        const token = localStorage.getItem('api_token');
+        const token = localStorage.getItem('authToken');
         
         // Use React environment variable and ensure HTTPS in production
         const wsUrl = process.env.REACT_APP_WS_URL || 'wss://api.jaydenmetz.com';
