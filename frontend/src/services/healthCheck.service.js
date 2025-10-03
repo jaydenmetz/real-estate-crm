@@ -654,47 +654,35 @@ export class HealthCheckService {
       let data;
       let responseOk = true;
 
-      // Use apiInstance for JWT auth (automatic token refresh)
-      // Use raw fetch for API key auth (no expiry)
-      if (this.authType === 'jwt') {
-        // Remove /v1 prefix if present (apiInstance adds it automatically)
-        const cleanEndpoint = endpoint.replace(/^\/v1/, '');
+      // Remove /v1 prefix if present (apiInstance adds it automatically)
+      const cleanEndpoint = endpoint.replace(/^\/v1/, '');
 
-        try {
-          // apiInstance.request expects body to be already stringified
-          const requestOptions = { method };
-          if (body && method !== 'GET') {
-            requestOptions.body = JSON.stringify(body);
-          }
+      // Prepare request options
+      const requestOptions = { method };
+      if (body && method !== 'GET') {
+        requestOptions.body = JSON.stringify(body);
+      }
 
+      try {
+        // Use apiInstance for BOTH auth types (automatic token refresh + consistent error handling)
+        if (this.authType === 'jwt') {
+          // JWT auth - standard request
           data = await apiInstance.request(cleanEndpoint, requestOptions);
-          responseOk = true;
-        } catch (error) {
-          // apiInstance throws on HTTP errors, capture the response
-          data = error.response?.data || {
-            success: false,
-            error: {
-              message: error.message,
-              code: error.response?.status || 'UNKNOWN'
-            }
-          };
-          responseOk = false;
+        } else {
+          // API Key auth - use requestWithApiKey method
+          data = await apiInstance.requestWithApiKey(cleanEndpoint, this.authValue, requestOptions);
         }
-      } else {
-        // API Key auth - use raw fetch (no token refresh needed)
-        const options = {
-          method,
-          headers: { ...this.authHeaders }
+        responseOk = true;
+      } catch (error) {
+        // apiInstance throws on HTTP errors, capture the response
+        data = error.response?.data || {
+          success: false,
+          error: {
+            message: error.message,
+            code: error.response?.status || 'UNKNOWN'
+          }
         };
-
-        if (body && method !== 'GET') {
-          options.headers['Content-Type'] = 'application/json';
-          options.body = JSON.stringify(body);
-        }
-
-        const response = await fetch(`${this.API_URL}${endpoint}`, options);
-        data = await response.json();
-        responseOk = response.ok;
+        responseOk = false;
       }
 
       test.responseTime = Date.now() - startTime;

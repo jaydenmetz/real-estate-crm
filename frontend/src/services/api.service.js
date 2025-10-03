@@ -280,6 +280,89 @@ class ApiService {
     }
   }
 
+  /**
+   * Make a request with a specific API key (for testing)
+   * Does NOT change the stored apiKey, only uses it for this request
+   * @param {string} endpoint - API endpoint
+   * @param {string} apiKey - Temporary API key to use
+   * @param {object} options - Request options
+   * @returns {Promise<any>} Response data
+   */
+  async requestWithApiKey(endpoint, apiKey, options = {}) {
+    if (!apiKey) {
+      throw new Error('API key is required for requestWithApiKey()');
+    }
+
+    // Store original values
+    const originalApiKey = this.apiKey;
+    const originalToken = this.token;
+
+    try {
+      // Temporarily set API key and clear token
+      this.apiKey = apiKey;
+      this.token = null;
+
+      // Make request (will use this.apiKey in headers)
+      const result = await this.request(endpoint, options);
+
+      return result;
+    } finally {
+      // Always restore original values
+      this.apiKey = originalApiKey;
+      this.token = originalToken;
+    }
+  }
+
+  /**
+   * API Key Management Methods
+   */
+
+  /**
+   * List all API keys for current user
+   * @returns {Promise<Array>} Array of API key objects (keys are hashed)
+   */
+  async listApiKeys() {
+    return this.get('/api-keys');
+  }
+
+  /**
+   * Create new API key
+   * @param {string} name - Key name/description
+   * @param {number} expiresInDays - Days until expiration (optional)
+   * @returns {Promise<{key: string, id: string}>} Created key (key shown only once)
+   */
+  async createApiKey(name, expiresInDays = null) {
+    return this.post('/api-keys', { name, expiresInDays });
+  }
+
+  /**
+   * Create a temporary API key for testing
+   * @param {string} name - API key name
+   * @returns {Promise<{key: string, id: string}>} Created API key details
+   */
+  async createTestApiKey(name = 'Health Test Key') {
+    return this.createApiKey(name, 1); // 1-day expiry for test keys
+  }
+
+  /**
+   * Update API key metadata
+   * @param {string} keyId - API key ID
+   * @param {object} updates - Fields to update (name, expiresInDays)
+   * @returns {Promise<void>}
+   */
+  async updateApiKey(keyId, updates) {
+    return this.put(`/api-keys/${keyId}`, updates);
+  }
+
+  /**
+   * Delete/revoke API key
+   * @param {string} keyId - API key ID to delete
+   * @returns {Promise<void>}
+   */
+  async deleteApiKey(keyId) {
+    return this.delete(`/api-keys/${keyId}`);
+  }
+
   // File upload
   async uploadFile(endpoint, file, additionalData = {}) {
     const formData = new FormData();
