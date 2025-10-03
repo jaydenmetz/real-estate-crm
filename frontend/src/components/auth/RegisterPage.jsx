@@ -42,7 +42,9 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [activeStep, setActiveStep] = useState(0);
-  const [usernameReadonly, setUsernameReadonly] = useState(true);
+
+  // Generate unique field ID on mount to prevent browser autofill recognition
+  const [fieldId] = useState(() => `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
 
   const steps = ['Your Information', 'Create Account'];
 
@@ -322,7 +324,10 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
                       </InputAdornment>
                     ),
                   }}
-                  autoComplete="email"
+                  inputProps={{
+                    autoComplete: "off",
+                    "data-form-type": "other"
+                  }}
                 />
               )}
             />
@@ -359,6 +364,7 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
               render={({ field }) => (
                 <TextField
                   {...field}
+                  key={`username-${fieldId}`}
                   fullWidth
                   label="Username"
                   variant="outlined"
@@ -372,13 +378,12 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
                         <Person />
                       </InputAdornment>
                     ),
-                    readOnly: usernameReadonly,
                   }}
-                  onFocus={() => setUsernameReadonly(false)}
                   inputProps={{
-                    autoComplete: "off",
-                    name: "registration-username-field",
-                    id: "registration-username-unique"
+                    autoComplete: "chrome-off",
+                    name: fieldId,
+                    id: fieldId,
+                    "data-form-type": "other"
                   }}
                   autoFocus
                 />
