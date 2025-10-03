@@ -507,6 +507,23 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
                       'Letters, numbers, underscore only (min 4 characters)')
                   }
                   disabled={loading}
+                  sx={{
+                    '& .MuiOutlinedInput-root': {
+                      '& fieldset': {
+                        borderColor: !checkingUsername && usernameAvailable === true ? 'success.main' : undefined,
+                        borderWidth: !checkingUsername && usernameAvailable === true ? 2 : undefined,
+                      },
+                      '&:hover fieldset': {
+                        borderColor: !checkingUsername && usernameAvailable === true ? 'success.main' : undefined,
+                      },
+                      '&.Mui-focused fieldset': {
+                        borderColor: !checkingUsername && usernameAvailable === true ? 'success.main' : undefined,
+                      },
+                    },
+                    '& .MuiFormHelperText-root': {
+                      color: !checkingUsername && usernameAvailable === true ? 'success.main' : undefined,
+                    },
+                  }}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
