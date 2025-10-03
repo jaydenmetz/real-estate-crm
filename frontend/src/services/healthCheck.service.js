@@ -1,20 +1,26 @@
 // Comprehensive health check service for all modules
 // This ensures the system health overview runs the same tests as individual health pages
 
+import apiInstance from './api.service';
+
 export class HealthCheckService {
   constructor(apiUrl, authValue, authType = 'jwt') {
     this.API_URL = apiUrl;
     if (!this.API_URL.endsWith('/v1')) {
       this.API_URL = this.API_URL.replace(/\/$/, '') + '/v1';
     }
-    this.authValue = authValue;
     this.authType = authType; // 'jwt' or 'apikey'
 
-    // Set appropriate headers based on auth type
+    // Store auth value but DON'T create static headers
+    // apiInstance will handle token refresh automatically
     if (authType === 'apikey') {
+      this.authValue = authValue;
+      // API keys don't expire, can be stored
       this.authHeaders = { 'X-API-Key': authValue };
     } else {
-      this.authHeaders = { 'Authorization': `Bearer ${authValue}` };
+      // For JWT, don't store the token - get it fresh each time
+      this.authValue = null; // Will get fresh token from localStorage
+      this.authHeaders = null; // Will use apiInstance auth
     }
   }
 
@@ -645,18 +651,49 @@ export class HealthCheckService {
 
     const startTime = Date.now();
     try {
-      const options = {
-        method,
-        headers: { ...this.authHeaders }
-      };
+      let data;
+      let responseOk = true;
 
-      if (body && method !== 'GET') {
-        options.headers['Content-Type'] = 'application/json';
-        options.body = JSON.stringify(body);
+      // Use apiInstance for JWT auth (automatic token refresh)
+      // Use raw fetch for API key auth (no expiry)
+      if (this.authType === 'jwt') {
+        // Remove /v1 prefix if present (apiInstance adds it automatically)
+        const cleanEndpoint = endpoint.replace(/^\/v1/, '');
+
+        try {
+          // apiInstance.request will throw on error, handle gracefully
+          data = await apiInstance.request(cleanEndpoint, {
+            method,
+            ...(body && method !== 'GET' ? { data: body } : {})
+          });
+          responseOk = true;
+        } catch (error) {
+          // apiInstance throws on HTTP errors, capture the response
+          data = error.response?.data || {
+            success: false,
+            error: {
+              message: error.message,
+              code: error.response?.status || 'UNKNOWN'
+            }
+          };
+          responseOk = false;
+        }
+      } else {
+        // API Key auth - use raw fetch (no token refresh needed)
+        const options = {
+          method,
+          headers: { ...this.authHeaders }
+        };
+
+        if (body && method !== 'GET') {
+          options.headers['Content-Type'] = 'application/json';
+          options.body = JSON.stringify(body);
+        }
+
+        const response = await fetch(`${this.API_URL}${endpoint}`, options);
+        data = await response.json();
+        responseOk = response.ok;
       }
-
-      const response = await fetch(`${this.API_URL}${endpoint}`, options);
-      const data = await response.json();
 
       test.responseTime = Date.now() - startTime;
       test.response = data;
@@ -664,14 +701,14 @@ export class HealthCheckService {
       // Determine success based on the test type
       if (category === 'Error Handling') {
         // Error handling tests should return errors
-        test.status = !response.ok && data.error ? 'success' : 'failed';
+        test.status = !responseOk && data.error ? 'success' : 'failed';
       } else if (name.includes('Verify Deletion')) {
         // Verify deletion should return not found
-        test.status = !response.ok && data.error?.code === 'NOT_FOUND' ? 'success' : 'failed';
+        test.status = !responseOk && data.error?.code === 'NOT_FOUND' ? 'success' : 'failed';
       } else {
         // Normal tests should succeed
-        test.status = response.ok && data.success ? 'success' : 'failed';
-        if (!response.ok || !data.success) {
+        test.status = responseOk && data.success ? 'success' : 'failed';
+        if (!responseOk || !data.success) {
           test.error = data.error?.message || data.error?.code || 'Request failed';
         }
       }
@@ -689,12 +726,25 @@ export class HealthCheckService {
     const startTime = Date.now();
     const promises = [];
 
-    for (let i = 0; i < count; i++) {
-      promises.push(
-        fetch(`${this.API_URL}${endpoint}`, {
-          headers: { ...this.authHeaders }
-        })
-      );
+    if (this.authType === 'jwt') {
+      // Use apiInstance for automatic token refresh
+      const cleanEndpoint = endpoint.replace(/^\/v1/, '');
+      for (let i = 0; i < count; i++) {
+        promises.push(
+          apiInstance.request(cleanEndpoint, { method: 'GET' })
+            .then(() => ({ ok: true }))
+            .catch(() => ({ ok: false }))
+        );
+      }
+    } else {
+      // Use raw fetch for API key auth
+      for (let i = 0; i < count; i++) {
+        promises.push(
+          fetch(`${this.API_URL}${endpoint}`, {
+            headers: { ...this.authHeaders }
+          })
+        );
+      }
     }
 
     try {
@@ -736,12 +786,19 @@ export class HealthCheckService {
     for (let i = 0; i < 3; i++) {
       const startTime = Date.now();
       try {
-        await fetch(`${this.API_URL}${endpoint}`, {
-          headers: this.token ? { 'Authorization': `Bearer ${this.token}` } : {}
-        });
+        if (this.authType === 'jwt') {
+          // Use apiInstance for automatic token refresh
+          const cleanEndpoint = endpoint.replace(/^\/v1/, '');
+          await apiInstance.request(cleanEndpoint, { method: 'GET' });
+        } else {
+          // Use raw fetch for API key auth
+          await fetch(`${this.API_URL}${endpoint}`, {
+            headers: { ...this.authHeaders }
+          });
+        }
         times.push(Date.now() - startTime);
       } catch (error) {
-        // Continue with other requests
+        times.push(-1); // Track failures
       }
     }
 

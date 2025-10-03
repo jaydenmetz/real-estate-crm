@@ -426,10 +426,8 @@ const EscrowsHealthDashboard = () => {
 
   const getAuthHeader = () => {
     if (authTab === 0) {
-      // JWT Authentication
-      const token = localStorage.getItem('crm_auth_token') ||
-                   localStorage.getItem('authToken') ||
-                   localStorage.getItem('token');
+      // JWT Authentication - use standardized authToken key
+      const token = localStorage.getItem('authToken');
       return token ? { 'Authorization': `Bearer ${token}` } : {};
     } else {
       // API Key Authentication - will be set during test run
@@ -439,9 +437,8 @@ const EscrowsHealthDashboard = () => {
 
   const getAuthDisplay = () => {
     if (authTab === 0) {
-      const token = localStorage.getItem('crm_auth_token') ||
-                   localStorage.getItem('authToken') ||
-                   localStorage.getItem('token');
+      // Use standardized authToken key
+      const token = localStorage.getItem('authToken');
       return token ? `Bearer ${token.substring(0, 20)}...` : 'No JWT token found';
     } else {
       return testApiKey ? `${testApiKey.substring(0, 20)}...` : 'No API key yet';
@@ -523,7 +520,7 @@ const EscrowsHealthDashboard = () => {
       // Use full token values for curl commands (not truncated display values)
       if (authTab === 0) {
         // For JWT, use the full token from authHeaders
-        const fullToken = authHeaders.Authorization || `Bearer ${localStorage.getItem('crm_auth_token') || localStorage.getItem('authToken') || localStorage.getItem('token')}`;
+        const fullToken = authHeaders.Authorization || `Bearer ${localStorage.getItem('authToken')}`;
         curlCmd += ` -H "Authorization: ${fullToken}"`;
       } else {
         // For API Key, use the full key
@@ -697,10 +694,8 @@ const EscrowsHealthDashboard = () => {
 
   useEffect(() => {
     if (authTab === 0) {
-      // Auto-run tests for JWT if token exists
-      const token = localStorage.getItem('crm_auth_token') ||
-                   localStorage.getItem('authToken') ||
-                   localStorage.getItem('token');
+      // Auto-run tests for JWT if token exists - use standardized authToken key
+      const token = localStorage.getItem('authToken');
       if (token) {
         runAllTests(true);
       }

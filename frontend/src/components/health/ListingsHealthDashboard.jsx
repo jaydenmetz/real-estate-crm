@@ -523,7 +523,7 @@ const ListingsHealthDashboard = () => {
       // Use full token values for curl commands (not truncated display values)
       if (authTab === 0) {
         // For JWT, use the full token from authHeaders
-        const fullToken = authHeaders.Authorization || `Bearer ${localStorage.getItem('crm_auth_token') || localStorage.getItem('authToken') || localStorage.getItem('token')}`;
+        const fullToken = authHeaders.Authorization || `Bearer ${localStorage.getItem('authToken')}`;
         curlCmd += ` -H "Authorization: ${fullToken}"`;
       } else {
         // For API Key, use the full key
