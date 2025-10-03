@@ -520,6 +520,12 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
                         borderColor: !checkingUsername && usernameAvailable === true ? 'success.main' : undefined,
                       },
                     },
+                    '& .MuiInputLabel-root': {
+                      color: !checkingUsername && usernameAvailable === true ? 'success.main' : undefined,
+                      '&.Mui-focused': {
+                        color: !checkingUsername && usernameAvailable === true ? 'success.main' : undefined,
+                      },
+                    },
                     '& .MuiFormHelperText-root': {
                       color: !checkingUsername && usernameAvailable === true ? 'success.main' : undefined,
                     },
