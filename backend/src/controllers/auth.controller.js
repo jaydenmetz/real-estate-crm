@@ -305,8 +305,8 @@ class AuthController {
         // Set refresh token as httpOnly cookie
         res.cookie('refreshToken', refreshTokenData.token, {
           httpOnly: true,
-          secure: process.env.NODE_ENV === 'production',
-          sameSite: 'lax',
+          secure: true, // Always use HTTPS (production is always HTTPS)
+          sameSite: 'none', // Allow cross-origin requests (crm.jaydenmetz.com → api.jaydenmetz.com)
           domain: '.jaydenmetz.com',
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         });
@@ -681,8 +681,8 @@ class AuthController {
       // Update cookie with new refresh token
       res.cookie('refreshToken', newRefreshToken.token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        secure: true, // Always use HTTPS (production is always HTTPS)
+        sameSite: 'none', // Allow cross-origin requests (crm.jaydenmetz.com → api.jaydenmetz.com)
         domain: '.jaydenmetz.com',
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
@@ -856,8 +856,9 @@ class AuthController {
       // Set httpOnly cookie for refresh token
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        secure: true, // Always use HTTPS (production is always HTTPS)
+        sameSite: 'none', // Allow cross-origin requests (crm.jaydenmetz.com → api.jaydenmetz.com)
+        domain: '.jaydenmetz.com',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
 
