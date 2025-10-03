@@ -489,9 +489,15 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
                   message: 'Username must be lowercase letters, numbers, or underscore only'
                 }
               }}
-              render={({ field }) => (
+              render={({ field: { onChange, value, ...field } }) => (
                 <TextField
                   {...field}
+                  value={value}
+                  onChange={(e) => {
+                    // Convert to lowercase as user types
+                    const lowercased = e.target.value.toLowerCase();
+                    onChange(lowercased);
+                  }}
                   key={`username-${fieldId}`}
                   fullWidth
                   label="Username"
@@ -503,7 +509,7 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
                     (checkingUsername ? 'Checking availability...' :
                       usernameAvailable === true ? '✓ Username is available' :
                       usernameAvailable === false ? 'Username is already taken' :
-                      'Lowercase letters, numbers, underscore only (min 4 characters)')
+                      'Auto-converts to lowercase (letters, numbers, underscore - min 4 chars)')
                   }
                   disabled={loading}
                   InputProps={{
