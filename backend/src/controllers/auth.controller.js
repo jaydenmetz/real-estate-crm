@@ -913,6 +913,63 @@ class AuthController {
       });
     }
   }
+
+  /**
+   * Check username availability
+   */
+  static async checkUsername(req, res) {
+    try {
+      const { username } = req.params;
+
+      // Validate username format
+      if (!username || username.length < 4 || username.length > 20) {
+        return res.json({
+          success: true,
+          data: {
+            available: false,
+            message: 'Username must be 4-20 characters',
+          },
+        });
+      }
+
+      // Check if username matches required pattern
+      if (!/^[a-z0-9_]+$/.test(username)) {
+        return res.json({
+          success: true,
+          data: {
+            available: false,
+            message: 'Username can only contain lowercase letters, numbers, and underscores',
+          },
+        });
+      }
+
+      // Check if username exists
+      const result = await pool.query(
+        'SELECT id FROM users WHERE LOWER(username) = LOWER($1)',
+        [username],
+      );
+
+      const available = result.rows.length === 0;
+
+      res.json({
+        success: true,
+        data: {
+          available,
+          username,
+          message: available ? 'Username is available' : 'Username is already taken',
+        },
+      });
+    } catch (error) {
+      console.error('Check username error:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'CHECK_USERNAME_ERROR',
+          message: 'Failed to check username availability',
+        },
+      });
+    }
+  }
 }
 
 module.exports = AuthController;

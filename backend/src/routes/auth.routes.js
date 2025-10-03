@@ -9,6 +9,7 @@ router.post('/register', AuthController.register);
 router.post('/login', AuthController.login);
 router.post('/google', AuthController.googleSignIn); // Google OAuth sign-in
 router.post('/refresh', AuthController.refresh); // Refresh access token (uses httpOnly cookie)
+router.get('/check-username/:username', AuthController.checkUsername); // Check username availability
 
 // Protected routes (require JWT authentication)
 router.get('/verify', authenticate, AuthController.getProfile); // Verify token endpoint

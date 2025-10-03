@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
   Container,
@@ -28,6 +28,8 @@ import {
   ArrowBack,
   ArrowForward,
   CheckCircleOutline,
+  CheckCircle,
+  Cancel,
 } from '@mui/icons-material';
 import { Google } from '@mui/icons-material';
 import { useForm, Controller } from 'react-hook-form';
@@ -42,13 +44,15 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [activeStep, setActiveStep] = useState(0);
+  const [usernameAvailable, setUsernameAvailable] = useState(null);
+  const [checkingUsername, setCheckingUsername] = useState(false);
 
   // Generate unique field ID on mount to prevent browser autofill recognition
   const [fieldId] = useState(() => `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
 
   const steps = ['Your Information', 'Create Account'];
 
-  const { control, handleSubmit, watch, formState: { errors }, trigger, setValue } = useForm({
+  const { control, handleSubmit, watch, formState: { errors }, trigger, setValue, setError: setFieldError } = useForm({
     defaultValues: {
       firstName: '',
       lastName: '',
@@ -62,6 +66,9 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
 
   const password = watch('password');
   const phone = watch('phone');
+  const username = watch('username');
+  const firstName = watch('firstName');
+  const lastName = watch('lastName');
 
   // Phone number formatting function
   const formatPhoneNumber = (value) => {
@@ -85,6 +92,50 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
     onChange(formatted);
   };
 
+  // Generate username from first and last name
+  const generateUsername = async (first, last) => {
+    if (!first || !last) return '';
+
+    // Convert to lowercase and remove spaces/special chars
+    const baseUsername = `${first}${last}`.toLowerCase().replace(/[^a-z0-9_]/g, '');
+
+    // Check if minimum length
+    if (baseUsername.length < 4) return baseUsername;
+
+    // Check availability
+    const apiUrl = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
+
+    // Try base username first
+    let testUsername = baseUsername;
+    let suffix = 0;
+    let available = false;
+
+    while (!available && suffix < 100) {
+      try {
+        const endpoint = apiUrl.includes('/v1')
+          ? `${apiUrl}/auth/check-username/${testUsername}`
+          : `${apiUrl}/v1/auth/check-username/${testUsername}`;
+
+        const response = await fetch(endpoint);
+        const result = await response.json();
+
+        if (result.success && result.data.available) {
+          available = true;
+          return testUsername;
+        } else {
+          suffix++;
+          testUsername = `${baseUsername}${suffix}`;
+        }
+      } catch (err) {
+        console.error('Error checking username:', err);
+        return baseUsername; // Return base if check fails
+      }
+    }
+
+    return testUsername;
+  };
+
+  // Auto-generate username when moving to step 2
   const handleNext = async () => {
     let fieldsToValidate = [];
 
@@ -93,7 +144,12 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
 
       const isValid = await trigger(fieldsToValidate);
       if (isValid) {
-        // Move to next step (no need to create lead since registration captures all data)
+        // Generate username before moving to step 2
+        setLoading(true);
+        const generatedUsername = await generateUsername(firstName, lastName);
+        setValue('username', generatedUsername);
+        setUsernameAvailable(true);
+        setLoading(false);
         setActiveStep(1);
       }
     } else if (activeStep === 1) {
@@ -203,6 +259,48 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
   const handleGoogleError = () => {
     setError('Google sign-in was cancelled or failed. Please try again.');
   };
+
+  // Check username availability with debounce
+  const checkUsernameAvailability = useCallback(async (usernameToCheck) => {
+    if (!usernameToCheck || usernameToCheck.length < 4) {
+      setUsernameAvailable(null);
+      return;
+    }
+
+    setCheckingUsername(true);
+
+    try {
+      const apiUrl = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
+      const endpoint = apiUrl.includes('/v1')
+        ? `${apiUrl}/auth/check-username/${usernameToCheck}`
+        : `${apiUrl}/v1/auth/check-username/${usernameToCheck}`;
+
+      const response = await fetch(endpoint);
+      const result = await response.json();
+
+      if (result.success) {
+        setUsernameAvailable(result.data.available);
+        if (!result.data.available) {
+          setFieldError('username', { type: 'manual', message: 'Username is already taken' });
+        }
+      }
+    } catch (err) {
+      console.error('Error checking username:', err);
+    } finally {
+      setCheckingUsername(false);
+    }
+  }, [setFieldError]);
+
+  // Debounce username checking
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (username && activeStep === 1) {
+        checkUsernameAvailability(username);
+      }
+    }, 500); // Wait 500ms after user stops typing
+
+    return () => clearTimeout(timer);
+  }, [username, activeStep, checkUsernameAvailability]);
 
   const handleBack = () => {
     setActiveStep((prev) => prev - 1);
@@ -369,13 +467,30 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
                   label="Username"
                   variant="outlined"
                   margin="normal"
-                  error={!!errors.username}
-                  helperText={errors.username?.message || 'This will be your login username'}
+                  error={!!errors.username || (usernameAvailable === false)}
+                  helperText={
+                    errors.username?.message ||
+                    (checkingUsername ? 'Checking availability...' :
+                      usernameAvailable === true ? '✓ Username is available' :
+                      usernameAvailable === false ? 'Username is already taken' :
+                      'Lowercase letters, numbers, underscore only (min 4 characters)')
+                  }
                   disabled={loading}
                   InputProps={{
                     startAdornment: (
                       <InputAdornment position="start">
                         <Person />
+                      </InputAdornment>
+                    ),
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        {checkingUsername && <CircularProgress size={20} />}
+                        {!checkingUsername && usernameAvailable === true && (
+                          <CheckCircle sx={{ color: 'success.main' }} />
+                        )}
+                        {!checkingUsername && usernameAvailable === false && (
+                          <Cancel sx={{ color: 'error.main' }} />
+                        )}
                       </InputAdornment>
                     ),
                   }}
