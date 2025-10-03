@@ -661,11 +661,13 @@ export class HealthCheckService {
         const cleanEndpoint = endpoint.replace(/^\/v1/, '');
 
         try {
-          // apiInstance.request will throw on error, handle gracefully
-          data = await apiInstance.request(cleanEndpoint, {
-            method,
-            ...(body && method !== 'GET' ? { data: body } : {})
-          });
+          // apiInstance.request expects body to be already stringified
+          const requestOptions = { method };
+          if (body && method !== 'GET') {
+            requestOptions.body = JSON.stringify(body);
+          }
+
+          data = await apiInstance.request(cleanEndpoint, requestOptions);
           responseOk = true;
         } catch (error) {
           // apiInstance throws on HTTP errors, capture the response
