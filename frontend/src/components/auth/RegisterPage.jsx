@@ -331,6 +331,12 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
       case 1:
         return (
           <>
+            {/* Hidden dummy fields to prevent browser autofill - must be first */}
+            <div style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px' }}>
+              <input type="text" name="fake-username" tabIndex="-1" autoComplete="off" />
+              <input type="password" name="fake-password" tabIndex="-1" autoComplete="new-password" />
+            </div>
+
             <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
               Create your account credentials
             </Typography>
@@ -368,7 +374,8 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
                   }}
                   inputProps={{
                     autoComplete: "off",
-                    name: "new-username"
+                    name: "registration-username-field",
+                    id: "registration-username-unique"
                   }}
                   autoFocus
                 />
@@ -420,7 +427,8 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
                   }}
                   inputProps={{
                     autoComplete: "new-password",
-                    name: "new-password"
+                    name: "registration-password-field",
+                    id: "registration-password-unique"
                   }}
                 />
               )}
@@ -464,7 +472,8 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
                   }}
                   inputProps={{
                     autoComplete: "new-password",
-                    name: "confirm-password"
+                    name: "registration-confirm-password-field",
+                    id: "registration-confirm-password-unique"
                   }}
                 />
               )}
@@ -544,7 +553,7 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
           </Stepper>
 
           {/* Form */}
-          <form onSubmit={(e) => e.preventDefault()}>
+          <form onSubmit={(e) => e.preventDefault()} autoComplete="off">
             {error && (
               <Alert severity="error" sx={{ mb: 3 }}>
                 {error}
