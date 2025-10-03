@@ -1,154 +1,98 @@
-// Authentication utilities for the CRM application
-// Supports both JWT tokens and API keys
-
-import apiInstance from '../services/api.service';
-
 /**
- * Store JWT token after successful login
- * @param {string} token - JWT token from login response
- * @param {object} user - User data from login response
+ * Centralized authentication utilities
+ * Single source of truth for localStorage keys and auth operations
+ *
+ * @module utils/auth
  */
-export const setAuthToken = (token, user = null) => {
-  if (token) {
-    localStorage.setItem('authToken', token);
-    apiInstance.setToken(token);
-  }
-  
-  if (user) {
-    localStorage.setItem('user', JSON.stringify(user));
-  }
+
+// Storage keys (matches api.service.js)
+export const STORAGE_KEYS = {
+  AUTH_TOKEN: 'authToken',
+  USER: 'user',
+  API_KEY: 'apiKey',
+  TOKEN_EXPIRY: 'tokenExpiry'
 };
 
 /**
- * Store API key for authentication
- * @param {string} apiKey - API key (64-character hex string)
+ * Get current auth token (JWT)
+ * @returns {string|null} JWT token or null
  */
-export const setApiKey = (apiKey) => {
-  if (apiKey && apiKey.length === 64) {
-    localStorage.setItem('apiKey', apiKey);
-    apiInstance.setApiKey(apiKey);
-  } else {
-    console.error('Invalid API key format. Must be 64-character hex string');
-  }
+export const getAuthToken = () => {
+  return localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN);
 };
 
 /**
- * Get current authentication status
- * @returns {object} Authentication status
- */
-export const getAuthStatus = () => {
-  const token = localStorage.getItem('authToken');
-  const apiKey = localStorage.getItem('apiKey');
-  const user = localStorage.getItem('user');
-  
-  return {
-    isAuthenticated: !!(token || apiKey),
-    hasJWT: !!token,
-    hasApiKey: !!apiKey,
-    user: user ? JSON.parse(user) : null,
-    authMethod: apiKey ? 'api-key' : (token ? 'jwt' : 'none')
-  };
-};
-
-/**
- * Clear all authentication data
- */
-export const clearAuth = () => {
-  localStorage.removeItem('authToken');
-  localStorage.removeItem('apiKey');
-  localStorage.removeItem('user');
-  apiInstance.setToken(null);
-  apiInstance.setApiKey(null);
-};
-
-/**
- * Check if user is authenticated
- * @returns {boolean} True if authenticated
- */
-export const isAuthenticated = () => {
-  const { isAuthenticated } = getAuthStatus();
-  return isAuthenticated;
-};
-
-/**
- * Get current user from localStorage
+ * Get current user data
  * @returns {object|null} User object or null
  */
-export const getCurrentUser = () => {
-  const { user } = getAuthStatus();
-  return user;
-};
-
-/**
- * Create API key for current user
- * @param {string} name - Name for the API key
- * @param {number} expiresInDays - Days until expiration (default: 365)
- * @returns {Promise<object>} API key response
- */
-export const createApiKey = async (name, expiresInDays = 365) => {
+export const getUser = () => {
   try {
-    const response = await apiInstance.post('/api-keys', {
-      name,
-      expiresInDays
-    });
-    
-    if (response.success && response.data.key) {
-      // Store the newly created API key
-      setApiKey(response.data.key);
-      return response.data;
-    }
-    
-    throw new Error(response.error?.message || 'Failed to create API key');
+    const userData = localStorage.getItem(STORAGE_KEYS.USER);
+    return userData ? JSON.parse(userData) : null;
   } catch (error) {
-    console.error('Error creating API key:', error);
-    throw error;
+    console.error('Failed to parse user data:', error);
+    return null;
   }
 };
 
 /**
- * Login with email and password
- * @param {string} email - User email
- * @param {string} password - User password
- * @returns {Promise<object>} Login response
+ * Get current API key
+ * @returns {string|null} API key or null
  */
-export const login = async (email, password) => {
-  try {
-    const response = await apiInstance.post('/auth/login', {
-      email,
-      password
-    });
-    
-    if (response.success && response.data.token) {
-      setAuthToken(response.data.token, response.data.user);
-      return response.data;
-    }
-    
-    throw new Error(response.error?.message || 'Login failed');
-  } catch (error) {
-    console.error('Login error:', error);
-    throw error;
-  }
+export const getApiKey = () => {
+  return localStorage.getItem(STORAGE_KEYS.API_KEY);
 };
 
 /**
- * Logout user
+ * Check if user is authenticated (has either JWT or API key)
+ * @returns {boolean}
  */
-export const logout = () => {
-  clearAuth();
-  window.location.href = '/login';
+export const isAuthenticated = () => {
+  return !!(getAuthToken() || getApiKey());
 };
 
-// Export for window debugging in development
-if (process.env.NODE_ENV === 'development') {
-  window.authUtils = {
-    setAuthToken,
-    setApiKey,
-    getAuthStatus,
-    clearAuth,
-    isAuthenticated,
-    getCurrentUser,
-    createApiKey,
-    login,
-    logout
-  };
-}
+/**
+ * Get token expiry timestamp
+ * @returns {number|null} Expiry timestamp or null
+ */
+export const getTokenExpiry = () => {
+  const expiry = localStorage.getItem(STORAGE_KEYS.TOKEN_EXPIRY);
+  return expiry ? parseInt(expiry, 10) : null;
+};
+
+/**
+ * Check if token is expiring soon (within 2 minutes)
+ * @returns {boolean}
+ */
+export const isTokenExpiringSoon = () => {
+  const expiry = getTokenExpiry();
+  if (!expiry) return false;
+
+  const now = Math.floor(Date.now() / 1000);
+  const timeRemaining = expiry - now;
+  return timeRemaining < 120; // Less than 2 minutes
+};
+
+/**
+ * Get time remaining until token expires
+ * @returns {number|null} Seconds until expiry, or null if no token
+ */
+export const getTimeUntilExpiry = () => {
+  const expiry = getTokenExpiry();
+  if (!expiry) return null;
+
+  const now = Math.floor(Date.now() / 1000);
+  return Math.max(0, expiry - now);
+};
+
+// Default export with all utilities
+export default {
+  STORAGE_KEYS,
+  getAuthToken,
+  getUser,
+  getApiKey,
+  isAuthenticated,
+  getTokenExpiry,
+  isTokenExpiringSoon,
+  getTimeUntilExpiry
+};
