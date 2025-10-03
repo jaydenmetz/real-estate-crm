@@ -195,10 +195,13 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
           localStorage.setItem('token', result.data.token);
           localStorage.setItem('user', JSON.stringify(result.data.user));
 
+          // Update auth context to log user in
+          if (login) {
+            await login(result.data.token, result.data.user);
+          }
+
           // Redirect to onboarding tutorial
-          setTimeout(() => {
-            navigate('/onboarding/welcome');
-          }, 500);
+          navigate('/onboarding/welcome');
         }
       } else {
         setError(result.error?.message || 'Registration failed');
@@ -236,15 +239,13 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
         localStorage.setItem('token', result.data.token);
         localStorage.setItem('user', JSON.stringify(result.data.user));
 
-        // Use the login function from AuthContext if available
+        // Update auth context to log user in
         if (login) {
           await login(result.data.token, result.data.user);
         }
 
-        // Redirect to onboarding tutorial for new users
-        setTimeout(() => {
-          navigate('/onboarding/welcome');
-        }, 500);
+        // Redirect to onboarding tutorial
+        navigate('/onboarding/welcome');
       } else {
         setError(result.error?.message || 'Google sign-in failed');
       }
