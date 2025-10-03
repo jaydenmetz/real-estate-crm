@@ -551,6 +551,144 @@ PGPASSWORD=ueLIWnvALZWVbRdnOmpLGsrrukeGLGQQ psql -h ballast.proxy.rlwy.net -p 20
 - Copy test results for debugging
 - Expandable test details
 
+## Code Cleanup & Standardization (October 2025)
+
+### System Audit: Phases 1-5
+
+**Completed:** October 3, 2025
+**Status:** ✅ All Phases Complete
+**Impact:** 4,665 lines removed, standardized API patterns, 228/228 tests passing
+
+#### Phase 1: Critical Cleanup ✅
+**Goal:** Fix immediate issues and standardize authentication
+
+**Completed:**
+- Fixed deletion verification test logic (accepts 404 as success)
+- Deleted GeneralHealthDashboard.jsx (575 lines of orphaned code)
+- Standardized localStorage token keys:
+  - `websocket.service.js`: 'api_token' → 'authToken'
+  - `onboarding.service.js`: 'token' → 'authToken' (9 occurrences)
+  - `config/api.js`: removed triple-fallback pattern
+- Created `utils/auth.js` with centralized auth utilities
+
+**Result:** 228/228 tests passing (100%)
+
+#### Phase 2: API Standardization ✅
+**Goal:** Consolidate all API calls to use apiInstance
+
+**Completed:**
+- Extended apiInstance with API key methods:
+  - `requestWithApiKey(endpoint, apiKey, options)` - temporary API key for single request
+  - `listApiKeys()`, `createApiKey()`, `createTestApiKey()`
+  - `updateApiKey()`, `deleteApiKey()`
+- Migrated HealthCheckService to use apiInstance for both JWT and API key auth
+- Fixed LoginPage.jsx to import createApiKey from api.service.js
+- All health checks now use centralized apiInstance
+
+**Files Updated:**
+- `api.service.js` - Added API key management methods
+- `healthCheck.service.js` - Migrated from fetch() to apiInstance
+- `LoginPage.jsx` - Fixed import path
+
+#### Phase 3: Code Deduplication ✅
+**Goal:** Eliminate duplicate code across health dashboards
+
+**Completed:**
+- Created HealthDashboardBase component (940 lines of shared logic)
+- Refactored all 5 module health dashboards:
+  - EscrowsHealthDashboard: 942 → 13 lines (98.6% reduction)
+  - ListingsHealthDashboard: 947 → 13 lines
+  - ClientsHealthDashboard: 947 → 13 lines
+  - AppointmentsHealthDashboard: 947 → 13 lines
+  - LeadsHealthDashboard: 947 → 13 lines
+- **Total reduction: 4,730 → 65 lines (4,665 lines removed)**
+
+**Architecture:**
+- All dashboards inherit from HealthDashboardBase
+- Shared UI components: TestSection, TestResult, styled components
+- Dual auth support (JWT + API Key) in base component
+- Automatic test execution and cleanup
+
+**Files:**
+- `HealthDashboardBase.jsx` - New base component (940 lines)
+- 5 health dashboards - Now 13 lines each (just props config)
+
+#### Phase 4: Settings Standardization ✅
+**Goal:** Audit and standardize Settings.jsx API operations
+
+**Findings:**
+- Settings.jsx already using apiKeysAPI correctly
+- API key management operations properly implemented:
+  - `apiKeysAPI.getAll()` - List keys
+  - `apiKeysAPI.create()` - Create key
+  - `apiKeysAPI.revoke()` - Revoke key
+
+**Completed:**
+- Migrated Sentry debug endpoint from raw fetch() to api.request()
+- Verified all Settings API calls use apiInstance wrapper
+
+#### Phase 5: Final Naming & Documentation ✅
+**Goal:** Audit naming conventions and create integration test docs
+
+**Completed:**
+- Naming audit: No duplicate files found (✅ Clean)
+- No files with suffixes (2, old, backup, copy, enhanced, simplified)
+- Created comprehensive integration testing documentation
+- Updated CLAUDE.md with Phase 1-5 summary
+
+**Documentation:**
+- [INTEGRATION_TESTING.md](./docs/INTEGRATION_TESTING.md) - Complete testing guide
+- Test coverage: 228 tests across 5 modules
+- Dual auth testing: JWT + API Key
+- cURL command generation for manual testing
+
+### API Architecture Improvements
+
+#### apiInstance Pattern (Standard)
+All API calls now use the centralized `apiInstance` from `api.service.js`:
+
+```javascript
+// Automatic JWT token refresh
+const data = await apiInstance.get('/escrows');
+
+// Temporary API key for testing
+const data = await apiInstance.requestWithApiKey('/escrows', apiKey);
+
+// API key management
+await apiInstance.createApiKey('Test Key', 365);
+await apiInstance.listApiKeys();
+await apiInstance.deleteApiKey(keyId);
+```
+
+**Benefits:**
+- Automatic JWT token refresh on 401 errors
+- Consistent error handling across all requests
+- Sentry integration for error tracking
+- CORS configuration
+- Request/response logging
+- Single source of truth for API calls
+
+#### Legacy Patterns (Removed)
+- ❌ Raw fetch() calls (except Login/Register)
+- ❌ Multiple token storage keys (api_token, token, crm_auth_token)
+- ❌ Triple-fallback auth patterns
+- ❌ Duplicate health dashboard code (4,665 lines removed)
+
+### Test Coverage: 228/228 (100%)
+
+All tests passing across 5 modules with dual authentication:
+
+| Module | Tests | JWT | API Key | Status |
+|--------|-------|-----|---------|--------|
+| Escrows | 48 | 24 | 24 | ✅ 100% |
+| Listings | 48 | 24 | 24 | ✅ 100% |
+| Clients | 44 | 22 | 22 | ✅ 100% |
+| Appointments | 44 | 22 | 22 | ✅ 100% |
+| Leads | 44 | 22 | 22 | ✅ 100% |
+| **Total** | **228** | **114** | **114** | **✅ 100%** |
+
+**Access:** https://crm.jaydenmetz.com/health
+
 ## File Structure
 ```
 real-estate-crm/
@@ -569,21 +707,24 @@ real-estate-crm/
 │       ├── components/
 │       │   ├── health/        # Health check dashboards
 │       │   │   ├── HealthOverviewDashboard.jsx  # Main /health page
-│       │   │   ├── EscrowsHealthDashboard.jsx
-│       │   │   ├── ListingsHealthDashboard.jsx
-│       │   │   ├── ClientsHealthDashboard.jsx
-│       │   │   ├── AppointmentsHealthDashboard.jsx
-│       │   │   ├── LeadsHealthDashboard.jsx
-│       │   │   └── archive/   # Old versions (not used)
+│       │   │   ├── HealthDashboardBase.jsx      # Shared base (940 lines)
+│       │   │   ├── EscrowsHealthDashboard.jsx   # 13 lines (uses base)
+│       │   │   ├── ListingsHealthDashboard.jsx  # 13 lines (uses base)
+│       │   │   ├── ClientsHealthDashboard.jsx   # 13 lines (uses base)
+│       │   │   ├── AppointmentsHealthDashboard.jsx # 13 lines (uses base)
+│       │   │   └── LeadsHealthDashboard.jsx     # 13 lines (uses base)
 │       │   └── common/        # Shared components
 │       ├── services/
-│       │   ├── api.service.js # API client
-│       │   └── healthCheck.service.js
+│       │   ├── api.service.js # Centralized API instance (apiInstance)
+│       │   └── healthCheck.service.js # Uses apiInstance
+│       ├── utils/
+│       │   └── auth.js        # Centralized auth utilities
 │       └── pages/
 │           └── Settings.jsx   # Settings with API key management
 ├── docs/                      # All documentation
 │   ├── ARCHITECTURE.md
 │   ├── SCALING_GUIDE.md
+│   ├── INTEGRATION_TESTING.md # Testing guide (Phase 5)
 │   └── ...
 ├── scripts/                   # Utility scripts
 │   ├── testing/              # Test scripts
