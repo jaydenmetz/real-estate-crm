@@ -1134,7 +1134,7 @@ const HomeDashboard = () => {
               transition={{ duration: 0.6, delay: 1.3 }}
             >
               <ModuleHeroCard
-                gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+                gradient="linear-gradient(135deg, #00ACC1 0%, #26C6DA 100%)"
                 onClick={() => navigate('/leads')}
               >
                 <Typography variant="h5" fontWeight="bold" gutterBottom>

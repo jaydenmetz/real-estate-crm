@@ -2145,14 +2145,14 @@ const bounce = keyframes`
 
 // Styled Components
 const HeroSection = styled(Box)(({ theme }) => ({
-  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  background: 'linear-gradient(135deg, #00ACC1 0%, #26C6DA 100%)',
   color: 'white',
   padding: theme.spacing(6),
   borderRadius: theme.spacing(3),
   position: 'relative',
   overflow: 'hidden',
   marginBottom: theme.spacing(4),
-  boxShadow: '0 20px 60px rgba(102, 126, 234, 0.3)',
+  boxShadow: '0 20px 60px rgba(0, 172, 193, 0.3)',
   '&::before': {
     content: '""',
     position: 'absolute',
@@ -2339,7 +2339,7 @@ const ActivityItem = styled(Box)(({ theme }) => ({
 const FunnelStage = styled(Box)(({ theme, width }) => ({
   height: 60,
   width: `${width}%`,
-  background: 'linear-gradient(135deg, #9C27B0 0%, #E91E63 100%)',
+  background: 'linear-gradient(135deg, #00ACC1 0%, #26C6DA 100%)',
   color: 'white',
   display: 'flex',
   alignItems: 'center',
@@ -2377,10 +2377,10 @@ const FloatingActionButton = styled(Fab)(({ theme }) => ({
   position: 'fixed',
   bottom: theme.spacing(4),
   right: theme.spacing(4),
-  background: 'linear-gradient(135deg, #9C27B0 0%, #E91E63 100%)',
+  background: 'linear-gradient(135deg, #00ACC1 0%, #26C6DA 100%)',
   color: 'white',
   '&:hover': {
-    background: 'linear-gradient(135deg, #7B1FA2 0%, #C2185B 100%)',
+    background: 'linear-gradient(135deg, #0097A7 0%, #00BCD4 100%)',
   },
 }));
 
@@ -2467,8 +2467,8 @@ const mockLeads = [
 
 // Chart data
 const leadSourceData = [
-  { name: 'Website', value: 35, color: '#9C27B0' },
-  { name: 'Referral', value: 28, color: '#E91E63' },
+  { name: 'Website', value: 35, color: '#00ACC1' },
+  { name: 'Referral', value: 28, color: '#26C6DA' },
   { name: 'Social Media', value: 20, color: '#3F51B5' },
   { name: 'Open House', value: 12, color: '#00BCD4' },
   { name: 'Other', value: 5, color: '#FF9800' },
@@ -2639,7 +2639,7 @@ const LeadsDashboard = () => {
 
   const getStageColor = (stage) => {
     const colors = {
-      'New': '#9C27B0',
+      'New': '#00ACC1',
       'Contacted': '#3F51B5',
       'Qualified': '#00BCD4',
       'Viewing': '#4CAF50',
@@ -2846,9 +2846,9 @@ const LeadsDashboard = () => {
                     label="📋 Copy Debug Summary"
                     variant="contained"
                     sx={{
-                      background: 'linear-gradient(45deg, #667eea, #764ba2)',
+                      background: 'linear-gradient(45deg, #00ACC1, #26C6DA)',
                       '&:hover': {
-                        background: 'linear-gradient(45deg, #764ba2, #667eea)',
+                        background: 'linear-gradient(45deg, #26C6DA, #00ACC1)',
                       }
                     }}
                   />
