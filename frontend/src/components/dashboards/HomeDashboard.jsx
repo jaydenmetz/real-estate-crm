@@ -260,15 +260,83 @@ const HomeDashboard = () => {
   const theme = useTheme();
   const { user } = useAuth();
 
-  // Empty data for fresh start
+  // Fetch real data from APIs
+  const { data: listingsData } = useQuery('listings', () => api.get('/listings'), {
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const { data: escrowsData } = useQuery('escrows', () => api.get('/escrows'), {
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: clientsData } = useQuery('clients', () => api.get('/clients'), {
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: appointmentsData } = useQuery('appointments', () => api.get('/appointments'), {
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const { data: leadsData } = useQuery('leads', () => api.get('/leads'), {
+    staleTime: 5 * 60 * 1000,
+  });
+
+  // Calculate stats from fetched data
+  const listings = listingsData?.data?.data || [];
+  const escrows = escrowsData?.data?.data || [];
+  const clients = clientsData?.data?.data || [];
+  const appointments = appointmentsData?.data?.data || [];
+  const leads = leadsData?.data?.data || [];
+
   const stats = {
-    activeEscrows: 0,
-    activeListings: 0,
-    totalClients: 0,
-    upcomingAppointments: 0,
-    monthlyVolume: 0,
-    closingThisWeek: 0,
-    newLeads: 0,
+    // Listings stats
+    totalListings: listings.length,
+    activeListings: listings.filter(l => l.status === 'active').length,
+    listingsValue: listings.reduce((sum, l) => sum + (parseFloat(l.price) || 0), 0),
+    hotListings: listings.filter(l => l.views > 50 || l.showings > 5).length,
+
+    // Escrows stats
+    totalEscrows: escrows.length,
+    activeEscrows: escrows.filter(e => e.escrowStatus === 'active' || e.escrowStatus === 'pending').length,
+    escrowVolume: escrows.reduce((sum, e) => sum + (parseFloat(e.purchasePrice) || 0), 0),
+    projectedCommission: escrows.reduce((sum, e) => sum + (parseFloat(e.buyerCommission || 0) + parseFloat(e.sellerCommission || 0)), 0),
+
+    // Clients stats
+    totalClients: clients.length,
+    activeClients: clients.filter(c => c.status === 'active').length,
+    buyers: clients.filter(c => c.clientType === 'buyer').length,
+    sellers: clients.filter(c => c.clientType === 'seller').length,
+
+    // Appointments stats
+    totalAppointments: appointments.length,
+    todayAppointments: appointments.filter(a => {
+      const apptDate = new Date(a.appointmentDate);
+      const today = new Date();
+      return apptDate.toDateString() === today.toDateString();
+    }).length,
+    weekAppointments: appointments.filter(a => {
+      const apptDate = new Date(a.appointmentDate);
+      const weekFromNow = new Date();
+      weekFromNow.setDate(weekFromNow.getDate() + 7);
+      return apptDate <= weekFromNow && apptDate >= new Date();
+    }).length,
+    completedAppointments: appointments.filter(a => a.status === 'completed').length,
+
+    // Leads stats
+    totalLeads: leads.length,
+    newLeads: leads.filter(l => l.status === 'new').length,
+    hotLeads: leads.filter(l => l.leadScore >= 80).length,
+    convertedLeads: leads.filter(l => l.status === 'converted' || l.status === 'client').length,
+
+    // Dashboard overview stats
+    upcomingAppointments: appointments.filter(a => new Date(a.appointmentDate) >= new Date()).length,
+    monthlyVolume: escrows.reduce((sum, e) => sum + (parseFloat(e.purchasePrice) || 0), 0),
+    closingThisWeek: escrows.filter(e => {
+      const closeDate = new Date(e.closingDate);
+      const weekFromNow = new Date();
+      weekFromNow.setDate(weekFromNow.getDate() + 7);
+      return closeDate <= weekFromNow && closeDate >= new Date();
+    }).length,
     pendingTasks: 0,
   };
 
@@ -891,25 +959,25 @@ const HomeDashboard = () => {
                   <Grid item xs={12} sm={6} md={3}>
                     <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
                       <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Total Listings</Typography>
-                      <Typography variant="h4" fontWeight="bold">0</Typography>
+                      <Typography variant="h4" fontWeight="bold"><CountUp end={stats.totalListings} duration={2} /></Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
                       <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Active</Typography>
-                      <Typography variant="h4" fontWeight="bold">0</Typography>
+                      <Typography variant="h4" fontWeight="bold"><CountUp end={stats.activeListings} duration={2} /></Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
                       <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Total Value</Typography>
-                      <Typography variant="h4" fontWeight="bold">$0M</Typography>
+                      <Typography variant="h4" fontWeight="bold">${stats.listingsValue > 0 ? <CountUp end={stats.listingsValue / 1000000} decimals={1} duration={2} /> : '0'}M</Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
                       <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Hot Properties</Typography>
-                      <Typography variant="h4" fontWeight="bold">0</Typography>
+                      <Typography variant="h4" fontWeight="bold"><CountUp end={stats.hotListings} duration={2} /></Typography>
                     </Box>
                   </Grid>
                 </Grid>
@@ -938,25 +1006,25 @@ const HomeDashboard = () => {
                   <Grid item xs={12} sm={6} md={3}>
                     <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
                       <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Total Escrows</Typography>
-                      <Typography variant="h4" fontWeight="bold">0</Typography>
+                      <Typography variant="h4" fontWeight="bold"><CountUp end={stats.totalEscrows} duration={2} /></Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
                       <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Active Escrows</Typography>
-                      <Typography variant="h4" fontWeight="bold">0</Typography>
+                      <Typography variant="h4" fontWeight="bold"><CountUp end={stats.activeEscrows} duration={2} /></Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
                       <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Total Volume</Typography>
-                      <Typography variant="h4" fontWeight="bold">$0M</Typography>
+                      <Typography variant="h4" fontWeight="bold">${stats.escrowVolume > 0 ? <CountUp end={stats.escrowVolume / 1000000} decimals={1} duration={2} /> : '0'}M</Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
                       <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Commission</Typography>
-                      <Typography variant="h4" fontWeight="bold">$0K</Typography>
+                      <Typography variant="h4" fontWeight="bold">${stats.projectedCommission > 0 ? <CountUp end={stats.projectedCommission / 1000} decimals={0} duration={2} /> : '0'}K</Typography>
                     </Box>
                   </Grid>
                 </Grid>
@@ -985,25 +1053,25 @@ const HomeDashboard = () => {
                   <Grid item xs={12} sm={6} md={3}>
                     <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
                       <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Total Clients</Typography>
-                      <Typography variant="h4" fontWeight="bold">0</Typography>
+                      <Typography variant="h4" fontWeight="bold"><CountUp end={stats.totalClients} duration={2} /></Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
                       <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Active Clients</Typography>
-                      <Typography variant="h4" fontWeight="bold">0</Typography>
+                      <Typography variant="h4" fontWeight="bold"><CountUp end={stats.activeClients} duration={2} /></Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
                       <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Buyers</Typography>
-                      <Typography variant="h4" fontWeight="bold">0</Typography>
+                      <Typography variant="h4" fontWeight="bold"><CountUp end={stats.buyers} duration={2} /></Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
                       <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Sellers</Typography>
-                      <Typography variant="h4" fontWeight="bold">0</Typography>
+                      <Typography variant="h4" fontWeight="bold"><CountUp end={stats.sellers} duration={2} /></Typography>
                     </Box>
                   </Grid>
                 </Grid>
@@ -1032,25 +1100,25 @@ const HomeDashboard = () => {
                   <Grid item xs={12} sm={6} md={3}>
                     <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
                       <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Total Appointments</Typography>
-                      <Typography variant="h4" fontWeight="bold">0</Typography>
+                      <Typography variant="h4" fontWeight="bold"><CountUp end={stats.totalAppointments} duration={2} /></Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
                       <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Today</Typography>
-                      <Typography variant="h4" fontWeight="bold">0</Typography>
+                      <Typography variant="h4" fontWeight="bold"><CountUp end={stats.todayAppointments} duration={2} /></Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
                       <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>This Week</Typography>
-                      <Typography variant="h4" fontWeight="bold">0</Typography>
+                      <Typography variant="h4" fontWeight="bold"><CountUp end={stats.weekAppointments} duration={2} /></Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
                       <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Completed</Typography>
-                      <Typography variant="h4" fontWeight="bold">0</Typography>
+                      <Typography variant="h4" fontWeight="bold"><CountUp end={stats.completedAppointments} duration={2} /></Typography>
                     </Box>
                   </Grid>
                 </Grid>
@@ -1079,25 +1147,33 @@ const HomeDashboard = () => {
                   <Grid item xs={12} sm={6} md={3}>
                     <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
                       <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Total Leads</Typography>
-                      <Typography variant="h4" fontWeight="bold">0</Typography>
+                      <Typography variant="h4" fontWeight="bold">
+                        <CountUp end={stats.totalLeads} duration={2} />
+                      </Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
                       <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>New Leads</Typography>
-                      <Typography variant="h4" fontWeight="bold">0</Typography>
+                      <Typography variant="h4" fontWeight="bold">
+                        <CountUp end={stats.newLeads} duration={2} />
+                      </Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
                       <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Hot Leads</Typography>
-                      <Typography variant="h4" fontWeight="bold">0</Typography>
+                      <Typography variant="h4" fontWeight="bold">
+                        <CountUp end={stats.hotLeads} duration={2} />
+                      </Typography>
                     </Box>
                   </Grid>
                   <Grid item xs={12} sm={6} md={3}>
                     <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
                       <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Converted</Typography>
-                      <Typography variant="h4" fontWeight="bold">0</Typography>
+                      <Typography variant="h4" fontWeight="bold">
+                        <CountUp end={stats.convertedLeads} duration={2} />
+                      </Typography>
                     </Box>
                   </Grid>
 </Grid>
