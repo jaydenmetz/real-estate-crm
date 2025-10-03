@@ -34,7 +34,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { useAuth } from '../../contexts/AuthContext';
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 
-const RegisterPage = () => {
+const RegisterPage = ({ hasGoogleAuth = false }) => {
   const navigate = useNavigate();
   const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
@@ -546,7 +546,7 @@ const RegisterPage = () => {
           </Box>
 
           {/* Google Sign-In Button */}
-          {activeStep === 0 && (
+          {activeStep === 0 && hasGoogleAuth && (
             <Box sx={{ mb: 3 }}>
               <Box sx={{ display: 'flex', justifyContent: 'center' }}>
                 <GoogleLogin
@@ -647,12 +647,12 @@ const RegisterPageWithGoogle = () => {
 
   if (!googleClientId) {
     console.warn('Google Client ID not configured. Google Sign-In will not work.');
-    return <RegisterPage />;
+    return <RegisterPage hasGoogleAuth={false} />;
   }
 
   return (
     <GoogleOAuthProvider clientId={googleClientId}>
-      <RegisterPage />
+      <RegisterPage hasGoogleAuth={true} />
     </GoogleOAuthProvider>
   );
 };
