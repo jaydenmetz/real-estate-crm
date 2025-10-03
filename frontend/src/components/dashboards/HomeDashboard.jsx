@@ -1040,7 +1040,7 @@ const HomeDashboard = () => {
               transition={{ duration: 0.6, delay: 1.1 }}
             >
               <ModuleHeroCard
-                gradient="linear-gradient(135deg, #7C4DFF 0%, #B388FF 100%)"
+                gradient="linear-gradient(135deg, #0891B2 0%, #06B6D4 100%)"
                 onClick={() => navigate('/clients')}
               >
                 <Typography variant="h5" fontWeight="bold" gutterBottom>
@@ -1134,7 +1134,7 @@ const HomeDashboard = () => {
               transition={{ duration: 0.6, delay: 1.3 }}
             >
               <ModuleHeroCard
-                gradient="linear-gradient(135deg, #EC4899 0%, #F472B6 100%)"
+                gradient="linear-gradient(135deg, #9333EA 0%, #A855F7 100%)"
                 onClick={() => navigate('/leads')}
               >
                 <Typography variant="h5" fontWeight="bold" gutterBottom>

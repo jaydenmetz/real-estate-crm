@@ -2145,14 +2145,14 @@ const bounce = keyframes`
 
 // Styled Components
 const HeroSection = styled(Box)(({ theme }) => ({
-  background: 'linear-gradient(135deg, #EC4899 0%, #F472B6 100%)',
+  background: 'linear-gradient(135deg, #9333EA 0%, #A855F7 100%)',
   color: 'white',
   padding: theme.spacing(6),
   borderRadius: theme.spacing(3),
   position: 'relative',
   overflow: 'hidden',
   marginBottom: theme.spacing(4),
-  boxShadow: '0 20px 60px rgba(236, 72, 153, 0.3)',
+  boxShadow: '0 20px 60px rgba(147, 51, 234, 0.3)',
   '&::before': {
     content: '""',
     position: 'absolute',
@@ -2339,7 +2339,7 @@ const ActivityItem = styled(Box)(({ theme }) => ({
 const FunnelStage = styled(Box)(({ theme, width }) => ({
   height: 60,
   width: `${width}%`,
-  background: 'linear-gradient(135deg, #EC4899 0%, #F472B6 100%)',
+  background: 'linear-gradient(135deg, #9333EA 0%, #A855F7 100%)',
   color: 'white',
   display: 'flex',
   alignItems: 'center',
@@ -2377,10 +2377,10 @@ const FloatingActionButton = styled(Fab)(({ theme }) => ({
   position: 'fixed',
   bottom: theme.spacing(4),
   right: theme.spacing(4),
-  background: 'linear-gradient(135deg, #EC4899 0%, #F472B6 100%)',
+  background: 'linear-gradient(135deg, #9333EA 0%, #A855F7 100%)',
   color: 'white',
   '&:hover': {
-    background: 'linear-gradient(135deg, #DB2777 0%, #EC4899 100%)',
+    background: 'linear-gradient(135deg, #7E22CE 0%, #9333EA 100%)',
   },
 }));
 
@@ -2467,11 +2467,11 @@ const mockLeads = [
 
 // Chart data
 const leadSourceData = [
-  { name: 'Website', value: 35, color: '#EC4899' },
-  { name: 'Referral', value: 28, color: '#F472B6' },
-  { name: 'Social Media', value: 20, color: '#FB7185' },
-  { name: 'Open House', value: 12, color: '#FDA4AF' },
-  { name: 'Other', value: 5, color: '#FECDD3' },
+  { name: 'Website', value: 35, color: '#9333EA' },
+  { name: 'Referral', value: 28, color: '#A855F7' },
+  { name: 'Social Media', value: 20, color: '#C084FC' },
+  { name: 'Open House', value: 12, color: '#D8B4FE' },
+  { name: 'Other', value: 5, color: '#E9D5FF' },
 ];
 
 const leadStageData = [
@@ -2639,9 +2639,9 @@ const LeadsDashboard = () => {
 
   const getStageColor = (stage) => {
     const colors = {
-      'New': '#EC4899',
-      'Contacted': '#F472B6',
-      'Qualified': '#FB7185',
+      'New': '#9333EA',
+      'Contacted': '#A855F7',
+      'Qualified': '#C084FC',
       'Viewing': '#4CAF50',
       'Negotiating': '#FF9800',
       'Closed': '#4CAF50',
@@ -2846,9 +2846,9 @@ const LeadsDashboard = () => {
                     label="📋 Copy Debug Summary"
                     variant="contained"
                     sx={{
-                      background: 'linear-gradient(45deg, #EC4899, #F472B6)',
+                      background: 'linear-gradient(45deg, #9333EA, #A855F7)',
                       '&:hover': {
-                        background: 'linear-gradient(45deg, #F472B6, #EC4899)',
+                        background: 'linear-gradient(45deg, #A855F7, #9333EA)',
                       }
                     }}
                   />
