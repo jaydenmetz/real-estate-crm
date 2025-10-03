@@ -42,6 +42,7 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [activeStep, setActiveStep] = useState(0);
+  const [usernameReadonly, setUsernameReadonly] = useState(true);
 
   const steps = ['Your Information', 'Create Account'];
 
@@ -371,7 +372,9 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
                         <Person />
                       </InputAdornment>
                     ),
+                    readOnly: usernameReadonly,
                   }}
+                  onFocus={() => setUsernameReadonly(false)}
                   inputProps={{
                     autoComplete: "off",
                     name: "registration-username-field",
