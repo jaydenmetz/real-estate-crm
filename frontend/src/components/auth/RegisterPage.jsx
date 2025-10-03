@@ -42,7 +42,6 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [activeStep, setActiveStep] = useState(0);
-  const [leadId, setLeadId] = useState(null);
 
   const steps = ['Your Information', 'Create Account'];
 
@@ -91,8 +90,8 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
 
       const isValid = await trigger(fieldsToValidate);
       if (isValid) {
-        // Create lead first
-        await createLead();
+        // Move to next step (no need to create lead since registration captures all data)
+        setActiveStep(1);
       }
     } else if (activeStep === 1) {
       fieldsToValidate = ['username', 'password', 'confirmPassword'];
@@ -101,48 +100,6 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
       if (isValid) {
         handleSubmit(onSubmit)();
       }
-    }
-  };
-
-  const createLead = async () => {
-    setLoading(true);
-    setError('');
-
-    try {
-      const apiUrl = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
-      const endpoint = apiUrl.includes('/v1') ? `${apiUrl}/leads` : `${apiUrl}/v1/leads`;
-
-      // Get unformatted phone number
-      const rawPhone = phone.replace(/[^\d]/g, '');
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: `${watch('firstName')} ${watch('lastName')}`,
-          email: watch('email'),
-          phone: rawPhone,
-          source: 'website',
-          status: 'new',
-          notes: 'Self-registered lead from website',
-        }),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        setLeadId(result.data.id);
-        setActiveStep(1);
-      } else {
-        setError(result.error?.message || 'Failed to create lead');
-      }
-    } catch (err) {
-      console.error('Lead creation error:', err);
-      setError('An error occurred. Please try again.');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -169,7 +126,6 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
           firstName: data.firstName,
           lastName: data.lastName,
           phone: rawPhone,
-          leadId: leadId, // Link to the lead we created
         }),
       });
 
