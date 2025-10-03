@@ -227,15 +227,20 @@ const AnimatedButton = styled(Button)(({ theme }) => ({
 const ModuleHeroCard = styled(Box)(({ theme, gradient }) => ({
   background: gradient || 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
   borderRadius: theme.spacing(3),
-  padding: theme.spacing(4),
+  padding: theme.spacing(6),
   color: 'white',
   cursor: 'pointer',
   transition: 'all 0.3s ease-in-out',
   position: 'relative',
   overflow: 'hidden',
+  marginBottom: theme.spacing(4),
+  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
+  [theme.breakpoints.down('md')]: {
+    padding: theme.spacing(4),
+  },
   '&:hover': {
     transform: 'translateY(-4px)',
-    boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+    boxShadow: '0 24px 70px rgba(0,0,0,0.35)',
   },
   '&::after': {
     content: '""',
@@ -866,7 +871,7 @@ const HomeDashboard = () => {
           </Grid>
 
           {/* Listings Module */}
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -882,29 +887,29 @@ const HomeDashboard = () => {
                 <Typography variant="body2" sx={{ opacity: 0.9, mb: 3 }}>
                   Manage and showcase your properties
                 </Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Total</Typography>
-                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                <Grid container spacing={3}>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                      <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Total Listings</Typography>
+                      <Typography variant="h4" fontWeight="bold">0</Typography>
                     </Box>
                   </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Active</Typography>
-                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                      <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Active</Typography>
+                      <Typography variant="h4" fontWeight="bold">0</Typography>
                     </Box>
                   </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Value</Typography>
-                      <Typography variant="h5" fontWeight="bold">$0M</Typography>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                      <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Total Value</Typography>
+                      <Typography variant="h4" fontWeight="bold">$0M</Typography>
                     </Box>
                   </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Hot</Typography>
-                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                      <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Hot Properties</Typography>
+                      <Typography variant="h4" fontWeight="bold">0</Typography>
                     </Box>
                   </Grid>
                 </Grid>
@@ -913,7 +918,7 @@ const HomeDashboard = () => {
           </Grid>
 
           {/* Escrows Module */}
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -929,29 +934,29 @@ const HomeDashboard = () => {
                 <Typography variant="body2" sx={{ opacity: 0.9, mb: 3 }}>
                   Track your real estate transactions
                 </Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Total</Typography>
-                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                <Grid container spacing={3}>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                      <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Total Escrows</Typography>
+                      <Typography variant="h4" fontWeight="bold">0</Typography>
                     </Box>
                   </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Active</Typography>
-                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                      <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Active Escrows</Typography>
+                      <Typography variant="h4" fontWeight="bold">0</Typography>
                     </Box>
                   </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Volume</Typography>
-                      <Typography variant="h5" fontWeight="bold">$0M</Typography>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                      <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Total Volume</Typography>
+                      <Typography variant="h4" fontWeight="bold">$0M</Typography>
                     </Box>
                   </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Commission</Typography>
-                      <Typography variant="h5" fontWeight="bold">$0K</Typography>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                      <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Commission</Typography>
+                      <Typography variant="h4" fontWeight="bold">$0K</Typography>
                     </Box>
                   </Grid>
                 </Grid>
@@ -960,7 +965,7 @@ const HomeDashboard = () => {
           </Grid>
 
           {/* Clients Module */}
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -976,29 +981,29 @@ const HomeDashboard = () => {
                 <Typography variant="body2" sx={{ opacity: 0.9, mb: 3 }}>
                   Manage your client relationships
                 </Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Total</Typography>
-                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                <Grid container spacing={3}>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                      <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Total Clients</Typography>
+                      <Typography variant="h4" fontWeight="bold">0</Typography>
                     </Box>
                   </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Active</Typography>
-                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                      <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Active Clients</Typography>
+                      <Typography variant="h4" fontWeight="bold">0</Typography>
                     </Box>
                   </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Buyers</Typography>
-                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                      <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Buyers</Typography>
+                      <Typography variant="h4" fontWeight="bold">0</Typography>
                     </Box>
                   </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Sellers</Typography>
-                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                      <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Sellers</Typography>
+                      <Typography variant="h4" fontWeight="bold">0</Typography>
                     </Box>
                   </Grid>
                 </Grid>
@@ -1007,7 +1012,7 @@ const HomeDashboard = () => {
           </Grid>
 
           {/* Appointments Module */}
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1023,29 +1028,29 @@ const HomeDashboard = () => {
                 <Typography variant="body2" sx={{ opacity: 0.9, mb: 3 }}>
                   Schedule and manage appointments
                 </Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Total</Typography>
-                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                <Grid container spacing={3}>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                      <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Total Appointments</Typography>
+                      <Typography variant="h4" fontWeight="bold">0</Typography>
                     </Box>
                   </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Today</Typography>
-                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                      <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Today</Typography>
+                      <Typography variant="h4" fontWeight="bold">0</Typography>
                     </Box>
                   </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Week</Typography>
-                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                      <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>This Week</Typography>
+                      <Typography variant="h4" fontWeight="bold">0</Typography>
                     </Box>
                   </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Completed</Typography>
-                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                      <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Completed</Typography>
+                      <Typography variant="h4" fontWeight="bold">0</Typography>
                     </Box>
                   </Grid>
                 </Grid>
@@ -1054,7 +1059,7 @@ const HomeDashboard = () => {
           </Grid>
 
           {/* Leads Module */}
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -1070,32 +1075,32 @@ const HomeDashboard = () => {
                 <Typography variant="body2" sx={{ opacity: 0.9, mb: 3 }}>
                   Track and convert your leads
                 </Typography>
-                <Grid container spacing={2}>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Total</Typography>
-                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                <Grid container spacing={3}>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                      <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Total Leads</Typography>
+                      <Typography variant="h4" fontWeight="bold">0</Typography>
                     </Box>
                   </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>New</Typography>
-                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                      <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>New Leads</Typography>
+                      <Typography variant="h4" fontWeight="bold">0</Typography>
                     </Box>
                   </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Hot</Typography>
-                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                      <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Hot Leads</Typography>
+                      <Typography variant="h4" fontWeight="bold">0</Typography>
                     </Box>
                   </Grid>
-                  <Grid item xs={6} sm={3}>
-                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
-                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Converted</Typography>
-                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+                      <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>Converted</Typography>
+                      <Typography variant="h4" fontWeight="bold">0</Typography>
                     </Box>
                   </Grid>
-                </Grid>
+</Grid>
               </ModuleHeroCard>
             </motion.div>
           </Grid>
