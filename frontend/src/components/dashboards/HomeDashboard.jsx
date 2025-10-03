@@ -30,7 +30,7 @@ import { styled, keyframes } from '@mui/material/styles';
 import {
   TrendingUp,
   Schedule,
-  Home,
+  Home as HomeIcon,
   People,
   Assessment,
   Warning,
@@ -51,6 +51,9 @@ import {
   PendingActions,
   Groups,
   EventNote,
+  PersonOutline,
+  EventAvailableOutlined,
+  LeaderboardOutlined,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
@@ -218,6 +221,31 @@ const AnimatedButton = styled(Button)(({ theme }) => ({
     background: 'linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%)',
     transform: 'translateY(-2px)',
     boxShadow: theme.shadows[8],
+  },
+}));
+
+const ModuleHeroCard = styled(Box)(({ theme, gradient }) => ({
+  background: gradient || 'linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%)',
+  borderRadius: theme.spacing(3),
+  padding: theme.spacing(4),
+  color: 'white',
+  cursor: 'pointer',
+  transition: 'all 0.3s ease-in-out',
+  position: 'relative',
+  overflow: 'hidden',
+  '&:hover': {
+    transform: 'translateY(-4px)',
+    boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
+  },
+  '&::after': {
+    content: '""',
+    position: 'absolute',
+    top: -100,
+    right: -100,
+    width: 300,
+    height: 300,
+    background: 'radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%)',
+    borderRadius: '50%',
   },
 }));
 
@@ -821,6 +849,254 @@ const HomeDashboard = () => {
                   </Grid>
                 </Grid>
               </ProgressCard>
+            </motion.div>
+          </Grid>
+
+          {/* Module Hero Cards */}
+          <Grid item xs={12}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.8 }}
+            >
+              <Typography variant="h5" fontWeight="bold" gutterBottom sx={{ mb: 3 }}>
+                Quick Access
+              </Typography>
+            </motion.div>
+          </Grid>
+
+          {/* Listings Module */}
+          <Grid item xs={12} md={6}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.9 }}
+            >
+              <ModuleHeroCard
+                gradient="linear-gradient(135deg, #2E7D32 0%, #66BB6A 100%)"
+                onClick={() => navigate('/listings')}
+              >
+                <Typography variant="h5" fontWeight="bold" gutterBottom>
+                  Listings Management
+                </Typography>
+                <Typography variant="body2" sx={{ opacity: 0.9, mb: 3 }}>
+                  Manage and showcase your properties
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={6} sm={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
+                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Total</Typography>
+                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
+                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Active</Typography>
+                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
+                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Value</Typography>
+                      <Typography variant="h5" fontWeight="bold">$0M</Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
+                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Hot</Typography>
+                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </ModuleHeroCard>
+            </motion.div>
+          </Grid>
+
+          {/* Escrows Module */}
+          <Grid item xs={12} md={6}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 1.0 }}
+            >
+              <ModuleHeroCard
+                gradient="linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)"
+                onClick={() => navigate('/escrows')}
+              >
+                <Typography variant="h5" fontWeight="bold" gutterBottom>
+                  Escrow Management
+                </Typography>
+                <Typography variant="body2" sx={{ opacity: 0.9, mb: 3 }}>
+                  Track your real estate transactions
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={6} sm={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
+                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Total</Typography>
+                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
+                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Active</Typography>
+                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
+                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Volume</Typography>
+                      <Typography variant="h5" fontWeight="bold">$0M</Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
+                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Commission</Typography>
+                      <Typography variant="h5" fontWeight="bold">$0K</Typography>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </ModuleHeroCard>
+            </motion.div>
+          </Grid>
+
+          {/* Clients Module */}
+          <Grid item xs={12} md={6}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 1.1 }}
+            >
+              <ModuleHeroCard
+                gradient="linear-gradient(135deg, #1565C0 0%, #42A5F5 100%)"
+                onClick={() => navigate('/clients')}
+              >
+                <Typography variant="h5" fontWeight="bold" gutterBottom>
+                  Client Management
+                </Typography>
+                <Typography variant="body2" sx={{ opacity: 0.9, mb: 3 }}>
+                  Manage your client relationships
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={6} sm={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
+                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Total</Typography>
+                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
+                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Active</Typography>
+                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
+                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Buyers</Typography>
+                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
+                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Sellers</Typography>
+                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </ModuleHeroCard>
+            </motion.div>
+          </Grid>
+
+          {/* Appointments Module */}
+          <Grid item xs={12} md={6}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 1.2 }}
+            >
+              <ModuleHeroCard
+                gradient="linear-gradient(135deg, #F57C00 0%, #FFB74D 100%)"
+                onClick={() => navigate('/appointments')}
+              >
+                <Typography variant="h5" fontWeight="bold" gutterBottom>
+                  Appointments
+                </Typography>
+                <Typography variant="body2" sx={{ opacity: 0.9, mb: 3 }}>
+                  Schedule and manage appointments
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={6} sm={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
+                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Total</Typography>
+                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
+                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Today</Typography>
+                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
+                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Week</Typography>
+                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
+                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Completed</Typography>
+                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </ModuleHeroCard>
+            </motion.div>
+          </Grid>
+
+          {/* Leads Module */}
+          <Grid item xs={12} md={6}>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 1.3 }}
+            >
+              <ModuleHeroCard
+                gradient="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"
+                onClick={() => navigate('/leads')}
+              >
+                <Typography variant="h5" fontWeight="bold" gutterBottom>
+                  Lead Management
+                </Typography>
+                <Typography variant="body2" sx={{ opacity: 0.9, mb: 3 }}>
+                  Track and convert your leads
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={6} sm={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
+                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Total</Typography>
+                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
+                      <Typography variant="caption" sx={{ opacity: 0.9 }}>New</Typography>
+                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
+                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Hot</Typography>
+                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                    </Box>
+                  </Grid>
+                  <Grid item xs={6} sm={3}>
+                    <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2, backdropFilter: 'blur(10px)' }}>
+                      <Typography variant="caption" sx={{ opacity: 0.9 }}>Converted</Typography>
+                      <Typography variant="h5" fontWeight="bold">0</Typography>
+                    </Box>
+                  </Grid>
+                </Grid>
+              </ModuleHeroCard>
             </motion.div>
           </Grid>
         </Grid>
