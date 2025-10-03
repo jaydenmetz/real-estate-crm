@@ -476,7 +476,7 @@ const HomeDashboard = () => {
                       transition: 'all 0.3s ease',
                     }}
                   >
-                    <Home />
+                    <HomeIcon />
                   </Avatar>
                 </Box>
                 <Typography 
