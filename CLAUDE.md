@@ -2,6 +2,79 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 📋 SYSTEM DOCUMENTATION
+
+### Primary Documentation: SYSTEM_WHITEPAPER.md
+
+**Location:** `/docs/SYSTEM_WHITEPAPER.md`
+**Purpose:** Single source of truth for entire system
+**Audience:** New developers, stakeholders, Claude agents, external reviewers
+**Status:** Living document, updated monthly or after major changes
+
+**This whitepaper contains:**
+- Complete system architecture and design philosophy
+- All 6 modules (Escrows, Listings, Clients, Leads, Appointments, Brokers)
+- Database schema (all 26 tables)
+- Authentication & security architecture
+- API and frontend architecture
+- Deployment and infrastructure
+- Current status and future roadmap
+- Everything someone needs to understand the system
+
+**When to update SYSTEM_WHITEPAPER.md:**
+- ✅ New module or major feature added
+- ✅ Security changes implemented (MFA, session management, etc.)
+- ✅ Architecture refactoring (database changes, API restructuring)
+- ✅ Technology upgrades (Node.js version, new libraries)
+- ✅ Major bug fixes that change behavior
+- ✅ Compliance changes (SOC 2, GDPR updates)
+- ✅ Production metrics change significantly (users, performance, scale)
+
+**How to update:**
+1. Read current SYSTEM_WHITEPAPER.md
+2. Identify which section(s) changed
+3. Update relevant sections with new information
+4. Update "Last Updated" date at top
+5. Update "Current Status" section if applicable
+6. Update "Future Roadmap" if priorities changed
+7. Commit with message: "Update SYSTEM_WHITEPAPER.md: [brief description of changes]"
+
+**Example update commit message:**
+```
+Update SYSTEM_WHITEPAPER.md: Add MFA implementation details
+
+- Added MFA/2FA section under Authentication & Security
+- Updated security score from 7.5/10 to 9.0/10
+- Moved MFA from Future Roadmap to Current Status
+- Updated technology stack (added speakeasy library)
+```
+
+### Secondary Documentation: CLAUDE.md (This File)
+
+**Purpose:** Working instructions for Claude Code agents
+**Scope:** Developer preferences, naming conventions, project organization, quick reference
+**Audience:** Claude Code only
+
+**Do NOT duplicate information from SYSTEM_WHITEPAPER.md in this file.**
+Keep CLAUDE.md focused on "how to work on this project" not "what the project is."
+
+### Other Documentation
+
+**Keep These (Still Useful):**
+- `SECURITY_REFERENCE.md` - Detailed security implementation (technical deep dive)
+- `SECURITY_OPERATIONS.md` - Day-to-day security procedures
+- `ARCHITECTURE.md` - Technical architecture patterns (backend/frontend structure)
+- `DATABASE_STRUCTURE.md` - Detailed schema with relationships
+
+**Archive These (Outdated/Redundant):**
+- Most phase-specific docs (PHASE1_CODE_REVIEW.md, WEEK_2_STATUS.md, etc.)
+- Duplicate API docs (API_ESCROWS.md, API_ESCROWS_COMPLETE.md, API_ESCROWS_ORGANIZED.md)
+- Old planning docs (IMPROVEMENT_PLAN_TO_A_MINUS.md, ROADMAP_TO_100_PERCENT.md)
+
+The whitepaper consolidates all this information into one comprehensive document.
+
+---
+
 ## IMPORTANT DEVELOPER PREFERENCES
 
 ### Auto-commit and Push
@@ -9,6 +82,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Use descriptive commit messages
 - Include "Co-Authored-By: Claude <noreply@anthropic.com>" in commits
 - Never wait for user confirmation to commit and push
+- **After significant changes, update SYSTEM_WHITEPAPER.md** (see above)
 
 ### Code Style & Naming Conventions
 - NO prefixes on API keys (clean 64-character hex strings)
