@@ -2280,15 +2280,28 @@ const EscrowsDashboard = () => {
               }}
             >
               <ToggleButton value="small" aria-label="small widget view">
-                <ViewModule sx={{ mr: 1, fontSize: 18 }} />
-                Grid
+                {/* 4 boxes in 2x2 grid */}
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 0.3, mr: 1 }}>
+                  <Box sx={{ width: 6, height: 6, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 6, height: 6, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 6, height: 6, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 6, height: 6, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                </Box>
+                Small
               </ToggleButton>
               <ToggleButton value="medium" aria-label="medium widget view">
-                <ViewList sx={{ mr: 1, fontSize: 18 }} />
+                {/* 2 horizontal boxes side by side */}
+                <Box sx={{ display: 'flex', gap: 0.3, mr: 1 }}>
+                  <Box sx={{ width: 7, height: 14, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 7, height: 14, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                </Box>
                 Medium
               </ToggleButton>
               <ToggleButton value="large" aria-label="large widget view">
-                <ViewAgenda sx={{ mr: 1, fontSize: 18 }} />
+                {/* 1 long horizontal box */}
+                <Box sx={{ mr: 1 }}>
+                  <Box sx={{ width: 20, height: 14, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                </Box>
                 Large
               </ToggleButton>
             </ToggleButtonGroup>

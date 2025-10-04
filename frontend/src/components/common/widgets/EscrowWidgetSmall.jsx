@@ -221,6 +221,49 @@ const EscrowWidgetSmall = ({ escrow, index = 0 }) => {
             />
           </Box>
 
+          {/* Company Logos - 4 boxes in grid (2x2) */}
+          <Box
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: 0.75,
+              mb: 2,
+            }}
+          >
+            {[
+              { name: escrow.escrowCompany, icon: '🏦', label: 'Escrow' },
+              { name: escrow.lenderName, icon: '💰', label: 'Lender' },
+              { name: escrow.titleCompany, icon: '📋', label: 'Title' },
+              { name: escrow.nhdCompany, icon: '🏘️', label: 'NHD' },
+            ].map((company, idx) => (
+              <Tooltip key={idx} title={company.name || 'N/A'} arrow>
+                <Box
+                  sx={{
+                    height: 32,
+                    borderRadius: 1,
+                    border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    backgroundColor: alpha(theme.palette.background.paper, 0.5),
+                    fontSize: '0.7rem',
+                    fontWeight: 500,
+                    color: 'text.secondary',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    px: 0.5,
+                  }}
+                >
+                  <span style={{ marginRight: 4 }}>{company.icon}</span>
+                  <Typography variant="caption" sx={{ fontSize: 9, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {company.name ? company.name.split(' ')[0] : company.label}
+                  </Typography>
+                </Box>
+              </Tooltip>
+            ))}
+          </Box>
+
           {/* Actions */}
           <Box sx={{ mt: 'auto', display: 'flex', gap: 1 }}>
             <Box
