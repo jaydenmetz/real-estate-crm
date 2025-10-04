@@ -2209,37 +2209,76 @@ const EscrowsDashboard = () => {
           </Box>
         </HeroSection>
 
-      {/* Status Tabs */}
+      {/* Status Tabs with View Mode Toggle */}
       <Box sx={{ mb: 4 }}>
-        <Tabs
-          value={selectedStatus}
-          onChange={(e, newValue) => setSelectedStatus(newValue)}
+        <Paper
+          elevation={0}
           sx={{
             backgroundColor: 'background.paper',
             borderRadius: 2,
             boxShadow: 1,
-            '& .MuiTab-root': {
-              textTransform: 'none',
-              fontSize: '1rem',
-              fontWeight: 500,
-              minHeight: 56,
-            },
-            '& .Mui-selected': {
-              fontWeight: 700,
-            },
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            pr: 2,
           }}
         >
-          <Tab label="Active Escrows" value="active" />
-          <Tab label="Closed Escrows" value="closed" />
-          <Tab label="Cancelled Escrows" value="cancelled" />
-          <Tab
-            label={`Archived Escrows${archivedCount > 0 ? ` (${archivedCount})` : ''}`}
-            value="archived"
+          <Tabs
+            value={selectedStatus}
+            onChange={(e, newValue) => setSelectedStatus(newValue)}
             sx={{
-              color: selectedStatus === 'archived' ? 'warning.main' : 'text.secondary'
+              flex: 1,
+              '& .MuiTab-root': {
+                textTransform: 'none',
+                fontSize: '1rem',
+                fontWeight: 500,
+                minHeight: 56,
+              },
+              '& .Mui-selected': {
+                fontWeight: 700,
+              },
             }}
-          />
-        </Tabs>
+          >
+            <Tab label="Active Escrows" value="active" />
+            <Tab label="Closed Escrows" value="closed" />
+            <Tab label="Cancelled Escrows" value="cancelled" />
+            <Tab
+              label={`Archived Escrows${archivedCount > 0 ? ` (${archivedCount})` : ''}`}
+              value="archived"
+              sx={{
+                color: selectedStatus === 'archived' ? 'warning.main' : 'text.secondary'
+              }}
+            />
+          </Tabs>
+
+          <ToggleButtonGroup
+            value={viewMode}
+            exclusive
+            onChange={(e, newView) => newView && setViewMode(newView)}
+            size="small"
+            sx={{
+              '& .MuiToggleButton-root': {
+                px: 2,
+                py: 0.5,
+                textTransform: 'none',
+                fontWeight: 500,
+              },
+            }}
+          >
+            <ToggleButton value="grid" aria-label="grid view">
+              <ViewModule sx={{ mr: 1, fontSize: 18 }} />
+              Grid
+            </ToggleButton>
+            <ToggleButton value="compact" aria-label="compact view">
+              <ViewList sx={{ mr: 1, fontSize: 18 }} />
+              Compact
+            </ToggleButton>
+            <ToggleButton value="detailed" aria-label="detailed view">
+              <ViewAgenda sx={{ mr: 1, fontSize: 18 }} />
+              Detailed
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </Paper>
       </Box>
 
 
@@ -2368,41 +2407,6 @@ const EscrowsDashboard = () => {
           </Grid>
         </Grid> */}
 
-      {/* Action Bar with View Toggle */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
-          {selectedStatus.charAt(0).toUpperCase() + selectedStatus.slice(1)} Escrows
-        </Typography>
-        <Stack direction="row" spacing={2} alignItems="center">
-          <ToggleButtonGroup
-            value={viewMode}
-            exclusive
-            onChange={(e, newView) => newView && setViewMode(newView)}
-            size="small"
-            sx={{
-              '& .MuiToggleButton-root': {
-                px: 2,
-                py: 0.5,
-                textTransform: 'none',
-                fontWeight: 500,
-              },
-            }}
-          >
-            <ToggleButton value="grid" aria-label="grid view">
-              <ViewModule sx={{ mr: 1, fontSize: 18 }} />
-              Grid
-            </ToggleButton>
-            <ToggleButton value="compact" aria-label="compact view">
-              <ViewList sx={{ mr: 1, fontSize: 18 }} />
-              Compact
-            </ToggleButton>
-            <ToggleButton value="detailed" aria-label="detailed view">
-              <ViewAgenda sx={{ mr: 1, fontSize: 18 }} />
-              Detailed
-            </ToggleButton>
-          </ToggleButtonGroup>
-        </Stack>
-      </Box>
 
       {/* Escrow Cards */}
       <Box sx={{
