@@ -376,8 +376,8 @@ class AuthController {
       const userId = req.user.id;
 
       const userQuery = `
-        SELECT id, email, username, first_name, last_name, role, is_active, 
-               last_login, created_at, updated_at
+        SELECT id, email, username, first_name, last_name, role, is_active,
+               last_login, created_at, updated_at, timezone
         FROM users
         WHERE id = $1
       `;
@@ -410,6 +410,7 @@ class AuthController {
             lastLogin: user.last_login,
             createdAt: user.created_at,
             updatedAt: user.updated_at,
+            timezone: user.timezone || 'America/Los_Angeles',
           },
         },
       });
@@ -445,6 +446,7 @@ class AuthController {
         homeLng,
         licensedStates,
         searchRadiusMiles,
+        timezone,
       } = req.body;
 
       const updates = [];
@@ -504,6 +506,12 @@ class AuthController {
       if (searchRadiusMiles !== undefined) {
         updates.push(`search_radius_miles = $${paramIndex}`);
         values.push(searchRadiusMiles);
+        paramIndex++;
+      }
+
+      if (timezone) {
+        updates.push(`timezone = $${paramIndex}`);
+        values.push(timezone);
         paramIndex++;
       }
 

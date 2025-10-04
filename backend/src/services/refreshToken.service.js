@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const { pool } = require('../config/database');
 const logger = require('../utils/logger');
+const IpGeolocationService = require('./ipGeolocation.service');
 
 /**
  * Refresh Token Service
@@ -26,11 +27,20 @@ class RefreshTokenService {
       const expiryDays = parseInt(process.env.JWT_REFRESH_TOKEN_EXPIRY_DAYS || '7');
       expiresAt.setDate(expiresAt.getDate() + expiryDays);
 
+      // Get location from IP address (fire-and-forget to avoid blocking login)
+      let location = null;
+      try {
+        location = await IpGeolocationService.getLocationCached(ipAddress);
+      } catch (geoError) {
+        logger.warn('Failed to get IP geolocation (non-fatal):', geoError);
+      }
+
       const query = `
         INSERT INTO refresh_tokens (
-          user_id, token, expires_at, ip_address, user_agent, device_info
+          user_id, token, expires_at, ip_address, user_agent, device_info,
+          location_city, location_region, location_country, location_lat, location_lng, location_timezone
         )
-        VALUES ($1, $2, $3, $4, $5, $6)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
         RETURNING *
       `;
 
@@ -41,12 +51,19 @@ class RefreshTokenService {
         ipAddress,
         userAgent,
         deviceInfo,
+        location?.city,
+        location?.region,
+        location?.country,
+        location?.lat,
+        location?.lng,
+        location?.timezone,
       ]);
 
       logger.info('Refresh token created', {
         userId,
         tokenId: result.rows[0].id,
         expiresAt,
+        location: location ? `${location.city}, ${location.region}` : 'Unknown',
       });
 
       return result.rows[0];
@@ -261,9 +278,20 @@ class RefreshTokenService {
       const expiresAt = new Date();
       expiresAt.setDate(expiresAt.getDate() + 7);
 
+      // Get location from IP address
+      let location = null;
+      try {
+        location = await IpGeolocationService.getLocationCached(ipAddress);
+      } catch (geoError) {
+        logger.warn('Failed to get IP geolocation during rotation (non-fatal):', geoError);
+      }
+
       const insertQuery = `
-        INSERT INTO refresh_tokens (user_id, token, expires_at, ip_address, user_agent)
-        VALUES ($1, $2, $3, $4, $5)
+        INSERT INTO refresh_tokens (
+          user_id, token, expires_at, ip_address, user_agent,
+          location_city, location_region, location_country, location_lat, location_lng, location_timezone
+        )
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         RETURNING *
       `;
 
@@ -273,6 +301,12 @@ class RefreshTokenService {
         expiresAt,
         ipAddress,
         userAgent,
+        location?.city,
+        location?.region,
+        location?.country,
+        location?.lat,
+        location?.lng,
+        location?.timezone,
       ]);
 
       await client.query('COMMIT');
