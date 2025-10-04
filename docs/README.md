@@ -10,24 +10,19 @@
 
 New to the codebase? Start here:
 
-1. **[SYSTEM_WHITEPAPER.md](SYSTEM_WHITEPAPER.md)** - Complete system overview
-2. **[DATA_FLOW_ARCHITECTURE.md](DATA_FLOW_ARCHITECTURE.md)** - How data flows from DB to UI
-3. **[WIDGET_TEMPLATE_SYSTEM.md](WIDGET_TEMPLATE_SYSTEM.md)** - Widget/card standards
-4. **[DASHBOARD_PAGE_TEMPLATE.md](DASHBOARD_PAGE_TEMPLATE.md)** - Page structure template
+1. **[DATABASE_DASHBOARD_TEMPLATE.md](DATABASE_DASHBOARD_TEMPLATE.md)** - ⭐ Complete guide: Database → Beautiful UI
+2. **[SYSTEM_WHITEPAPER.md](SYSTEM_WHITEPAPER.md)** - Complete system overview
+3. **[ARCHITECTURE.md](ARCHITECTURE.md)** - Technical architecture details
 
 ---
 
 ## Core Architecture Documentation
 
 ### 📐 Architecture & Design
+- **[DATABASE_DASHBOARD_TEMPLATE.md](DATABASE_DASHBOARD_TEMPLATE.md)** - ⭐ PRIMARY: Database → UI complete guide
 - **[SYSTEM_WHITEPAPER.md](SYSTEM_WHITEPAPER.md)** - Complete system architecture
-- **[DATA_FLOW_ARCHITECTURE.md](DATA_FLOW_ARCHITECTURE.md)** - ⭐ Data flow from database to widgets
 - **[ARCHITECTURE.md](ARCHITECTURE.md)** - Technical architecture details
 - **[MULTI_TENANT_ARCHITECTURE.md](MULTI_TENANT_ARCHITECTURE.md)** - Team/tenant structure
-
-### 🎨 Frontend Standards
-- **[WIDGET_TEMPLATE_SYSTEM.md](WIDGET_TEMPLATE_SYSTEM.md)** - ⭐ Small/Medium/Large widget standards
-- **[DASHBOARD_PAGE_TEMPLATE.md](DASHBOARD_PAGE_TEMPLATE.md)** - ⭐ Dashboard page structure
 
 ### 🗄️ Database
 - **[DATABASE_STRUCTURE.md](DATABASE_STRUCTURE.md)** - Schema and tables
@@ -99,34 +94,21 @@ New to the codebase? Start here:
 
 ## Reference Implementation: Escrows Module
 
-The **Escrows module** is the reference implementation for all other modules. When building Listings, Clients, Leads, or Appointments:
+The **Escrows module** is the reference implementation for all other modules.
 
-1. **Data Flow:** Follow [DATA_FLOW_ARCHITECTURE.md](DATA_FLOW_ARCHITECTURE.md)
-   - Single API endpoint (`GET /v1/[module]`)
-   - Dashboard fetches data once
-   - Same data passed to all widget sizes
+**See [DATABASE_DASHBOARD_TEMPLATE.md](DATABASE_DASHBOARD_TEMPLATE.md) for the complete guide** on how to:
+- Transform any database table into a beautiful dashboard
+- Implement 3-tier widget system (Small/Medium/Large)
+- Follow data flow from PostgreSQL → API → React → Widgets
+- Use consistent 320px height, progressive disclosure, and professional design
 
-2. **Widget Structure:** Follow [WIDGET_TEMPLATE_SYSTEM.md](WIDGET_TEMPLATE_SYSTEM.md)
-   - Small: 320x320px grid cards
-   - Medium: 320px height horizontal cards
-   - Large: 320px height full-width cards
-
-3. **File Locations:**
-   ```
-   /frontend/src/components/dashboards/EscrowsDashboard.jsx
-   /frontend/src/components/common/widgets/EscrowWidgetSmall.jsx
-   /frontend/src/components/common/widgets/EscrowWidgetMedium.jsx
-   /frontend/src/components/common/widgets/EscrowWidgetLarge.jsx
-   ```
-
-4. **API Service:**
-   ```javascript
-   // /frontend/src/services/api.service.js
-   export const escrowsAPI = {
-     getAll: (params) => apiInstance.get('/escrows', params),
-     // ... other methods
-   };
-   ```
+**Key Files:**
+```
+/frontend/src/components/dashboards/EscrowsDashboard.jsx
+/frontend/src/components/common/widgets/EscrowWidgetSmall.jsx
+/frontend/src/components/common/widgets/EscrowWidgetMedium.jsx
+/frontend/src/components/common/widgets/EscrowWidgetLarge.jsx
+```
 
 ---
 
@@ -135,6 +117,8 @@ The **Escrows module** is the reference implementation for all other modules. Wh
 Older documentation has been moved to `/docs/archive/` for historical reference:
 
 **Archived Files (October 4, 2025):**
+
+*First Archive (9 files):*
 - `deploy-zillow-feature.md` - One-time Zillow deployment (completed)
 - `fix-railway-env.md` - Railway authentication fix (resolved)
 - `ZILLOW_FEATURE_STATUS.md` - Zillow feature status (deployed)
@@ -144,6 +128,11 @@ Older documentation has been moved to `/docs/archive/` for historical reference:
 - `railway-db-commands.md` - Railway database commands (replaced by CLAUDE.md)
 - `DUPLICATE_COMPONENTS_AUDIT.md` - Component naming audit (one-time cleanup)
 - `ONBOARDING_TESTING_GUIDE.md` - Onboarding testing guide (feature complete)
+
+*Second Archive (3 files - consolidated into DATABASE_DASHBOARD_TEMPLATE.md):*
+- `DATA_FLOW_ARCHITECTURE.md` - Data flow from database to widgets
+- `WIDGET_TEMPLATE_SYSTEM.md` - Small/Medium/Large widget standards
+- `DASHBOARD_PAGE_TEMPLATE.md` - Dashboard page structure template
 
 **Do not use archived documentation for new development.**
 
