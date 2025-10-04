@@ -58,6 +58,7 @@ import LeadsHealthDashboard from './components/health/LeadsHealthDashboard';
 const PublicProfile = React.lazy(() => import('./pages/PublicProfileStunning'));
 const Settings = React.lazy(() => import('./pages/Settings'));
 const AdminPanel = React.lazy(() => import('./pages/AdminPanel'));
+const Unauthorized = React.lazy(() => import('./pages/Unauthorized'));
 
 // Onboarding components (lazy loaded for performance)
 import OnboardingLayout from './components/onboarding/OnboardingLayout';
@@ -232,6 +233,11 @@ function App() {
                   {/* Public Routes */}
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/unauthorized" element={
+                    <React.Suspense fallback={<Box sx={{ p: 4, textAlign: 'center' }}>Loading...</Box>}>
+                      <Unauthorized />
+                    </React.Suspense>
+                  } />
                   <Route path="/profile/:username" element={
                     <React.Suspense fallback={<Box sx={{ p: 4, textAlign: 'center' }}>Loading profile...</Box>}>
                       <PublicProfile />
