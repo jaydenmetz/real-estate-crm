@@ -233,7 +233,7 @@ const EnhancedNavigation = () => {
                 onClick={handleOtherDataClick}
                 sx={{ mx: 0.5 }}
               >
-                More
+                Data
               </Button>
             </Box>
           )}
