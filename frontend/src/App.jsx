@@ -18,7 +18,7 @@ import RegisterPage from './components/auth/RegisterPage';
 import UserAwareErrorBoundary from './components/common/UserAwareErrorBoundary';
 
 // Components
-import EnhancedNavigation from './components/common/EnhancedNavigation';
+import Navigation from './components/common/Navigation';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import GlobalErrorBoundary from './components/common/GlobalErrorBoundary';
 
@@ -297,7 +297,7 @@ function App() {
                         <UserAwareErrorBoundary pageName="Application">
                           <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
                             {/* Navigation */}
-                            <EnhancedNavigation />
+                            <Navigation />
                             
                             {/* Main Content */}
                             <Box sx={{ flexGrow: 1, backgroundColor: '#f8f9fa' }}>

@@ -90,24 +90,57 @@ The whitepaper consolidates all this information into one comprehensive document
 - Avoid unnecessary comments in code unless specifically requested
 
 ### Naming Standards
-- **Component Names**: Use the final naming structure of the component. If I ask for a more simple EscrowCard, keep the name EscrowCard. Not EscrowCardSimplified
-  - ✅ `EscrowCardGrid`, `EscrowCardCompact`, `EscrowCardDetailed`
-  - ❌ `EscrowCardOptimized`, `EscrowCardSimplified`, `EscrowCardEnhanced`
-- **File Organization**:
-  - NO duplicate files with suffixes like `2`, `old`, `backup`, `copy`
-  - Archive old code in `archive/` folder if preservation needed
-  - Delete unused code rather than keeping multiple versions
-- **View Modes**: Use clear, descriptive names
-  - ✅ `grid`, `compact`, `detailed`, `table`
-  - ❌ `optimized`, `simplified`, `enhanced`
-- **Test Files**:
-  - Keep tests in single location: `backend/src/tests/` or `frontend/src/__tests__/`
-  - Name pattern: `[feature].test.js` (e.g., `escrows.test.js`)
-  - Remove duplicate test files immediately
+
+#### 🚨 CRITICAL RULE: NO "Enhanced", "Optimized", "Improved", "New", "V2" Prefixes
+**NEVER EVER create files with these patterns:**
+- ❌ `NavigationEnhanced.jsx` or `EnhancedNavigation.jsx`
+- ❌ `EscrowCardOptimized.jsx` or `OptimizedEscrowCard.jsx`
+- ❌ `DashboardImproved.jsx` or `ImprovedDashboard.jsx`
+- ❌ `ComponentV2.jsx` or `Component2.jsx`
+- ❌ `ComponentNew.jsx` (unless it's a "New Item" modal like `NewEscrowModal.jsx`)
+
+**If you need to update a component:**
+1. ✅ **Edit the existing file in place** (e.g., `Navigation.jsx`)
+2. ❌ **DO NOT create `EnhancedNavigation.jsx`** alongside it
+3. If the old version needs to be preserved, move it to `archive/Navigation_old_2025-10-04.jsx`
+4. The main component always keeps its original name
+
+**Example - Correct Approach:**
+```
+# User asks: "Make the Navigation better"
+# ✅ CORRECT: Edit Navigation.jsx directly
+# ❌ WRONG: Create EnhancedNavigation.jsx
+```
+
+#### Component Names
+- **Component Names**: Use the final naming structure. If updating EscrowCard, keep the name EscrowCard.
+  - ✅ `EscrowCard.jsx` → edit this file, don't create `EscrowCardSimplified.jsx`
+  - ✅ Size variants: `EscrowWidgetSmall.jsx`, `EscrowWidgetMedium.jsx`, `EscrowWidgetLarge.jsx`
+  - ✅ Purpose variants: `EscrowCard.jsx`, `EscrowModal.jsx`, `EscrowForm.jsx`
+  - ❌ Version variants: `EscrowCardEnhanced.jsx`, `EscrowCardOptimized.jsx`, `EscrowCardV2.jsx`
+
+#### File Organization
+- **NO duplicate files** with suffixes like `2`, `old`, `backup`, `copy`, `Enhanced`, `Optimized`, `Improved`
+- **ALWAYS use existing files** - edit in place, don't create new versions
+- If preservation needed: Move old version to `archive/ComponentName_YYYY-MM-DD.jsx`
+- Delete unused code rather than keeping multiple versions
+
+#### View Modes
+Use clear, descriptive names based on functionality:
+- ✅ `small`, `medium`, `large` (size)
+- ✅ `grid`, `list`, `table`, `calendar` (layout)
+- ✅ `compact`, `detailed` (density)
+- ❌ `optimized`, `simplified`, `enhanced` (vague improvements)
+
+#### Test Files
+- Keep tests in single location: `backend/src/tests/` or `frontend/src/__tests__/`
+- Name pattern: `[feature].test.js` (e.g., `escrows.test.js`)
+- Remove duplicate test files immediately
 
 ### Project Organization Rules
 - **NEVER create duplicate or test versions of files** (no file2.jsx, fileEnhanced.jsx, etc.)
 - **ALWAYS use existing files** - edit in place, don't create new versions
+- **If you find yourself creating a new file with a similar name, STOP and edit the original**
 - **Keep root directory clean** - no test scripts or documentation in root
 - **Use proper folder structure**:
   - `/docs` - All documentation and guides
@@ -116,6 +149,27 @@ The whitepaper consolidates all this information into one comprehensive document
     - `/scripts/backend` - Backend-specific scripts
   - `/backend/scripts` - Backend operational scripts (backups, etc.)
   - Component archives go in `archive/` folder within their directory
+
+### Real Example That Caused Problems
+
+**❌ WHAT HAPPENED (WRONG):**
+```
+# User had Navigation.jsx
+# Claude created EnhancedNavigation.jsx instead of editing Navigation.jsx
+# App.jsx imported EnhancedNavigation
+# Edits to Navigation.jsx didn't appear because wrong file was being used
+# This caused confusion and wasted time
+```
+
+**✅ WHAT SHOULD HAVE HAPPENED (CORRECT):**
+```
+# User had Navigation.jsx
+# User asked to improve it
+# Claude edited Navigation.jsx directly (same filename)
+# No confusion, changes appear immediately
+```
+
+**Remember:** The user wants ONE file per component. If they ask you to improve it, edit that file - don't create a new one with a different name.
 
 ## Project Overview
 
