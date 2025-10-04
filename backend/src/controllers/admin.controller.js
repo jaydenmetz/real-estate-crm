@@ -346,11 +346,18 @@ class AdminController {
         }
       }
 
+      // Get the primary key column name for this table
+      const primaryKeyMap = {
+        teams: 'team_id',
+        // Most tables use 'id' by default
+      };
+      const pkColumn = primaryKeyMap[tableName] || 'id';
+
       // Create placeholders for parameterized query
       const placeholders = ids.map((_, i) => `$${i + 1}`).join(',');
 
       const result = await pool.query(
-        `DELETE FROM ${tableName} WHERE id IN (${placeholders}) RETURNING id`,
+        `DELETE FROM ${tableName} WHERE ${pkColumn} IN (${placeholders}) RETURNING ${pkColumn} as id`,
         ids
       );
 
@@ -472,8 +479,15 @@ class AdminController {
         }
       }
 
+      // Get the primary key column name for this table
+      const primaryKeyMap = {
+        teams: 'team_id',
+        // Most tables use 'id' by default
+      };
+      const pkColumn = primaryKeyMap[tableName] || 'id';
+
       // Safe to delete all rows for this table
-      const result = await pool.query(`DELETE FROM ${tableName} RETURNING id`);
+      const result = await pool.query(`DELETE FROM ${tableName} RETURNING ${pkColumn} as id`);
 
       res.json({
         success: true,
