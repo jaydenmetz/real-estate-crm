@@ -2280,27 +2280,27 @@ const EscrowsDashboard = () => {
               }}
             >
               <ToggleButton value="small" aria-label="small widget view">
-                {/* 4 boxes in single row (1x4 grid) */}
+                {/* 4 half-width boxes in single row (1x4 grid) */}
                 <Box sx={{ display: 'flex', gap: 0.3, mr: 1 }}>
-                  <Box sx={{ width: 4, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 4, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 4, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 4, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 2, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 2, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 2, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 2, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                 </Box>
                 Small
               </ToggleButton>
               <ToggleButton value="medium" aria-label="medium widget view">
-                {/* 2 horizontal boxes side by side */}
+                {/* 2 half-width boxes side by side */}
                 <Box sx={{ display: 'flex', gap: 0.3, mr: 1 }}>
-                  <Box sx={{ width: 7, height: 14, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 7, height: 14, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 3.5, height: 14, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 3.5, height: 14, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                 </Box>
                 Medium
               </ToggleButton>
               <ToggleButton value="large" aria-label="large widget view">
-                {/* 1 long horizontal box */}
+                {/* 1 half-width horizontal box */}
                 <Box sx={{ mr: 1 }}>
-                  <Box sx={{ width: 20, height: 14, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 10, height: 14, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                 </Box>
                 Large
               </ToggleButton>

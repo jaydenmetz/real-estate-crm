@@ -5,35 +5,36 @@ import {
   Typography,
   Box,
   Chip,
-  LinearProgress,
-  IconButton,
-  Tooltip,
+  Skeleton,
   useTheme,
   alpha,
 } from '@mui/material';
 import {
   Home,
-  CalendarToday,
   AttachMoney,
-  Timer,
-  Visibility,
-  Edit,
+  CalendarToday,
+  TrendingUp,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { differenceInDays, isValid } from 'date-fns';
 
-const EscrowWidgetSmall = ({ escrow, index = 0 }) => {
+const EscrowWidgetSmall = ({ escrow, index = 0, loading = false }) => {
   const navigate = useNavigate();
   const theme = useTheme();
 
+  if (loading) {
+    return <EscrowWidgetSmallSkeleton />;
+  }
+
   // Parse data
   const purchasePrice = parseFloat(escrow.purchasePrice) || 0;
+  const commission = parseFloat(escrow.myCommission) || 0;
   const checklistProgress = parseInt(escrow.checklistProgress) || 0;
 
   // Calculate days to close
   const closingDate = escrow.scheduledCoeDate || escrow.closingDate;
-  let daysToClose = 'N/A';
+  let daysToClose = null;
   let isUrgent = false;
   let isPastDue = false;
 
@@ -46,45 +47,55 @@ const EscrowWidgetSmall = ({ escrow, index = 0 }) => {
         isUrgent = days <= 7 && days > 0;
         isPastDue = days < 0;
       }
-    } catch (e) {
-      daysToClose = escrow.daysToClose || 'N/A';
-    }
+    } catch (e) {}
   }
 
   // Format currency
   const formatCurrency = (value) => {
-    if (value >= 1000000) {
-      return `$${(value / 1000000).toFixed(2)}M`;
-    } else if (value >= 1000) {
-      return `$${(value / 1000).toFixed(0)}K`;
-    }
+    if (value >= 1000000) return `$${(value / 1000000).toFixed(2)}M`;
+    if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
     return `$${value.toLocaleString()}`;
   };
 
   // Format date
   const formatDate = (date) => {
-    if (!date) return 'N/A';
+    if (!date) return null;
     try {
       const d = new Date(date);
       if (isValid(d)) {
         return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       }
     } catch (e) {}
-    return 'N/A';
+    return null;
   };
 
   // Status config
   const getStatusConfig = (status) => {
     const configs = {
-      'Active': { color: 'success', bg: '#4caf50' },
-      'Pending': { color: 'warning', bg: '#ff9800' },
-      'Closed': { color: 'default', bg: '#9e9e9e' },
-      'Cancelled': { color: 'error', bg: '#f44336' },
+      'Active': { color: 'success', bg: '#4caf50', label: 'Active' },
+      'Pending': { color: 'warning', bg: '#ff9800', label: 'Pending' },
+      'Closed': { color: 'default', bg: '#9e9e9e', label: 'Closed' },
+      'Cancelled': { color: 'error', bg: '#f44336', label: 'Cancelled' },
     };
     return configs[status] || configs['Pending'];
   };
 
   const statusConfig = getStatusConfig(escrow.escrowStatus);
+
+  // Get property image or default
+  const propertyImage = escrow.propertyImageUrl || escrow.zillowImageUrl;
+
+  // Parse address for compact display
+  const parseAddress = (address) => {
+    if (!address) return { street: 'No Address', city: '' };
+    const parts = address.split(',');
+    return {
+      street: parts[0]?.trim() || 'No Address',
+      city: parts[1]?.trim() || '',
+    };
+  };
+
+  const { street, city } = parseAddress(escrow.propertyAddress);
 
   return (
     <motion.div
@@ -95,10 +106,11 @@ const EscrowWidgetSmall = ({ escrow, index = 0 }) => {
       <Card
         onClick={() => navigate(`/escrows/${escrow.id}`)}
         sx={{
-          height: 280,
+          height: 320,
           cursor: 'pointer',
           transition: 'all 0.2s ease-in-out',
           border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+          overflow: 'hidden',
           '&:hover': {
             transform: 'translateY(-4px)',
             boxShadow: `0 12px 24px ${alpha(statusConfig.bg, 0.2)}`,
@@ -106,83 +118,134 @@ const EscrowWidgetSmall = ({ escrow, index = 0 }) => {
           },
         }}
       >
-        <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column', p: 2.5 }}>
-          {/* Header: Icon + Status */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-            <Box
-              sx={{
-                width: 48,
-                height: 48,
-                borderRadius: 2,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                background: `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha(theme.palette.primary.main, 0.05)} 100%)`,
-              }}
-            >
-              <Home sx={{ fontSize: 28, color: 'primary.main' }} />
-            </Box>
-            <Chip
-              label={escrow.escrowStatus}
-              size="small"
-              color={statusConfig.color}
-              sx={{ fontWeight: 600, fontSize: 11 }}
-            />
-          </Box>
+        {/* Property Image */}
+        <Box
+          sx={{
+            height: 140,
+            position: 'relative',
+            background: propertyImage
+              ? `url(${propertyImage})`
+              : `linear-gradient(135deg, ${alpha(theme.palette.grey[400], 0.2)} 0%, ${alpha(theme.palette.grey[500], 0.3)} 100%)`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          {!propertyImage && (
+            <Home sx={{ fontSize: 64, color: alpha(theme.palette.grey[500], 0.5) }} />
+          )}
 
-          {/* Title + Subtitle */}
+          {/* Status Chip */}
+          <Chip
+            label={statusConfig.label}
+            size="small"
+            sx={{
+              position: 'absolute',
+              top: 10,
+              right: 10,
+              fontWeight: 600,
+              fontSize: 11,
+              backgroundColor: statusConfig.bg,
+              color: 'white',
+              '& .MuiChip-label': { px: 1.5 },
+            }}
+          />
+
+          {/* Progress Badge */}
+          <Box
+            sx={{
+              position: 'absolute',
+              bottom: 10,
+              left: 10,
+              backgroundColor: alpha(theme.palette.common.black, 0.7),
+              color: 'white',
+              px: 1.5,
+              py: 0.5,
+              borderRadius: 1,
+              fontSize: 11,
+              fontWeight: 600,
+            }}
+          >
+            {checklistProgress}% Complete
+          </Box>
+        </Box>
+
+        <CardContent sx={{ p: 2, height: 'calc(100% - 140px)', display: 'flex', flexDirection: 'column' }}>
+          {/* Address */}
           <Typography
             variant="h6"
             sx={{
               fontWeight: 700,
-              mb: 0.5,
-              fontSize: '1rem',
+              fontSize: '0.95rem',
+              mb: 0.25,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
-              color: 'text.primary',
             }}
           >
-            {escrow.propertyAddress || 'No Address'}
+            {street}
           </Typography>
           <Typography
             variant="body2"
             color="text.secondary"
             sx={{
-              mb: 2.5,
+              fontSize: '0.75rem',
+              mb: 2,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
-              fontSize: '0.875rem',
             }}
           >
-            {escrow.clientName || 'No Client'}
+            {city || escrow.clientName || 'No Client'}
           </Typography>
 
-          {/* Stats Row */}
-          <Box sx={{ display: 'flex', gap: 1.5, mb: 2.5 }}>
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontSize: 10 }}>
-                Price
-              </Typography>
-              <Tooltip title={`$${purchasePrice.toLocaleString()}`}>
-                <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem' }}>
-                  {formatCurrency(purchasePrice)}
+          {/* Key Metrics - 2 rows x 2 columns */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mb: 2 }}>
+            <Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.25 }}>
+                <AttachMoney sx={{ fontSize: 12, color: 'success.main' }} />
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: 10 }}>
+                  Price
                 </Typography>
-              </Tooltip>
-            </Box>
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontSize: 10 }}>
-                Close
-              </Typography>
+              </Box>
               <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem' }}>
-                {formatDate(closingDate)}
+                {formatCurrency(purchasePrice)}
               </Typography>
             </Box>
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5, fontSize: 10 }}>
-                Days
+
+            <Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.25 }}>
+                <CalendarToday sx={{ fontSize: 12, color: 'primary.main' }} />
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: 10 }}>
+                  Close
+                </Typography>
+              </Box>
+              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem' }}>
+                {formatDate(closingDate) || 'TBD'}
               </Typography>
+            </Box>
+
+            <Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.25 }}>
+                <TrendingUp sx={{ fontSize: 12, color: 'secondary.main' }} />
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: 10 }}>
+                  Commission
+                </Typography>
+              </Box>
+              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem' }}>
+                {formatCurrency(commission)}
+              </Typography>
+            </Box>
+
+            <Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.25 }}>
+                <CalendarToday sx={{ fontSize: 12, color: isPastDue ? 'error.main' : isUrgent ? 'warning.main' : 'info.main' }} />
+                <Typography variant="caption" color="text.secondary" sx={{ fontSize: 10 }}>
+                  Days
+                </Typography>
+              </Box>
               <Typography
                 variant="body2"
                 sx={{
@@ -191,143 +254,104 @@ const EscrowWidgetSmall = ({ escrow, index = 0 }) => {
                   color: isPastDue ? 'error.main' : isUrgent ? 'warning.main' : 'text.primary',
                 }}
               >
-                {daysToClose !== 'N/A' ? daysToClose : 'N/A'}
+                {daysToClose !== null ? (isPastDue ? `${Math.abs(daysToClose)} late` : daysToClose) : 'TBD'}
               </Typography>
             </Box>
           </Box>
 
-          {/* Progress Bar */}
-          <Box sx={{ mb: 2 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-              <Typography variant="caption" color="text.secondary" sx={{ fontSize: 10 }}>
-                Progress
-              </Typography>
-              <Typography variant="caption" sx={{ fontWeight: 600, fontSize: 10 }}>
-                {checklistProgress}%
-              </Typography>
-            </Box>
-            <LinearProgress
-              variant="determinate"
-              value={checklistProgress}
-              sx={{
-                height: 6,
-                borderRadius: 3,
-                backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                '& .MuiLinearProgress-bar': {
-                  borderRadius: 3,
-                  background: `linear-gradient(90deg, ${theme.palette.primary.main} 0%, ${alpha(theme.palette.primary.main, 0.7)} 100%)`,
-                },
-              }}
-            />
-          </Box>
-
-          {/* Company Logos - 4 boxes in single row (1x4) */}
+          {/* Company Logos - 4 boxes */}
           <Box
             sx={{
               display: 'grid',
               gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: 0.75,
-              mb: 2,
+              gap: 0.5,
+              mt: 'auto',
             }}
           >
             {[
-              { name: escrow.escrowCompany, icon: '🏦', label: 'Escrow' },
-              { name: escrow.lenderName, icon: '💰', label: 'Lender' },
-              { name: escrow.titleCompany, icon: '📋', label: 'Title' },
-              { name: escrow.nhdCompany, icon: '🏘️', label: 'NHD' },
+              { name: escrow.escrowCompany, label: 'ESC' },
+              { name: escrow.lenderName, label: 'LDR' },
+              { name: escrow.titleCompany, label: 'TTL' },
+              { name: escrow.nhdCompany, label: 'NHD' },
             ].map((company, idx) => (
-              <Tooltip key={idx} title={company.name || 'N/A'} arrow>
-                <Box
+              <Box
+                key={idx}
+                title={company.name || 'N/A'}
+                sx={{
+                  height: 28,
+                  borderRadius: 0.75,
+                  border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  backgroundColor: company.name ? alpha(theme.palette.primary.main, 0.04) : alpha(theme.palette.grey[300], 0.3),
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    backgroundColor: company.name ? alpha(theme.palette.primary.main, 0.08) : alpha(theme.palette.grey[300], 0.5),
+                  },
+                }}
+              >
+                <Typography
+                  variant="caption"
                   sx={{
-                    height: 32,
-                    borderRadius: 1,
-                    border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: alpha(theme.palette.background.paper, 0.5),
-                    fontSize: '0.7rem',
-                    fontWeight: 500,
-                    color: 'text.secondary',
+                    fontSize: 9,
+                    fontWeight: 600,
+                    color: company.name ? 'text.primary' : 'text.disabled',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
                     px: 0.5,
                   }}
                 >
-                  <span style={{ marginRight: 4 }}>{company.icon}</span>
-                  <Typography variant="caption" sx={{ fontSize: 9, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                    {company.name ? company.name.split(' ')[0] : company.label}
-                  </Typography>
-                </Box>
-              </Tooltip>
+                  {company.label}
+                </Typography>
+              </Box>
             ))}
-          </Box>
-
-          {/* Actions */}
-          <Box sx={{ mt: 'auto', display: 'flex', gap: 1 }}>
-            <Box
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`/escrows/${escrow.id}`);
-              }}
-              sx={{
-                flex: 1,
-                py: 0.75,
-                px: 1.5,
-                borderRadius: 1.5,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 0.5,
-                border: `1px solid ${theme.palette.primary.main}`,
-                color: 'primary.main',
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                '&:hover': {
-                  backgroundColor: alpha(theme.palette.primary.main, 0.1),
-                },
-              }}
-            >
-              <Visibility sx={{ fontSize: 14 }} />
-              View
-            </Box>
-            <Box
-              onClick={(e) => {
-                e.stopPropagation();
-                navigate(`/escrows/${escrow.id}/edit`);
-              }}
-              sx={{
-                flex: 1,
-                py: 0.75,
-                px: 1.5,
-                borderRadius: 1.5,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 0.5,
-                border: `1px solid ${alpha(theme.palette.text.secondary, 0.3)}`,
-                color: 'text.secondary',
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.2s',
-                '&:hover': {
-                  borderColor: theme.palette.text.primary,
-                  color: 'text.primary',
-                  backgroundColor: alpha(theme.palette.text.primary, 0.05),
-                },
-              }}
-            >
-              <Edit sx={{ fontSize: 14 }} />
-              Edit
-            </Box>
           </Box>
         </CardContent>
       </Card>
     </motion.div>
+  );
+};
+
+// Skeleton loading component
+const EscrowWidgetSmallSkeleton = () => {
+  const theme = useTheme();
+
+  return (
+    <Card
+      sx={{
+        height: 320,
+        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+        overflow: 'hidden',
+      }}
+    >
+      {/* Image skeleton */}
+      <Skeleton variant="rectangular" height={140} animation="wave" />
+
+      <CardContent sx={{ p: 2 }}>
+        {/* Address skeleton */}
+        <Skeleton variant="text" width="80%" height={24} sx={{ mb: 0.5 }} />
+        <Skeleton variant="text" width="60%" height={18} sx={{ mb: 2 }} />
+
+        {/* Metrics skeleton - 2x2 grid */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mb: 2 }}>
+          {[...Array(4)].map((_, idx) => (
+            <Box key={idx}>
+              <Skeleton variant="text" width="50%" height={14} sx={{ mb: 0.5 }} />
+              <Skeleton variant="text" width="70%" height={20} />
+            </Box>
+          ))}
+        </Box>
+
+        {/* Company logos skeleton */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0.5 }}>
+          {[...Array(4)].map((_, idx) => (
+            <Skeleton key={idx} variant="rectangular" height={28} sx={{ borderRadius: 0.75 }} />
+          ))}
+        </Box>
+      </CardContent>
+    </Card>
   );
 };
 
