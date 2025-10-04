@@ -168,7 +168,7 @@ const Navigation = () => {
             }}
           >
             <ListItemIcon><MoreVert /></ListItemIcon>
-            <ListItemText primary="More Features" />
+            <ListItemText primary="Data" />
           </ListItemButton>
         </ListItem>
       </List>
@@ -304,7 +304,7 @@ const Navigation = () => {
         <Divider />
         <MenuItem onClick={() => handleOtherDataClose('/other-data')}>
           <ListItemIcon><MoreVert /></ListItemIcon>
-          <ListItemText>View All Features</ListItemText>
+          <ListItemText>View All Data</ListItemText>
         </MenuItem>
       </Menu>
 
