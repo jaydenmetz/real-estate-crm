@@ -2510,6 +2510,7 @@ const LeadsDashboard = () => {
   // State
   const [viewMode, setViewMode] = useState('grid');
   const [selectedStage, setSelectedStage] = useState('all');
+  const [tabValue, setTabValue] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
@@ -2679,9 +2680,16 @@ const LeadsDashboard = () => {
 
   // Ensure leads is always an array
   const leadsArray = Array.isArray(leads) ? leads : [];
-  
+
+  // Map tab index to stage filter
+  const tabStages = ['all', 'New', 'Contacted', 'Qualified', 'Viewing', 'Closed'];
+  const tabStage = tabStages[tabValue] || 'all';
+
   // Filter leads
   const filteredLeads = leadsArray.filter(lead => {
+    // Filter by tab selection
+    if (tabStage !== 'all' && lead.stage !== tabStage) return false;
+    // Keep other filters if needed
     if (selectedStage !== 'all' && lead.stage !== selectedStage) return false;
     if (searchQuery && !lead.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
     if (sourceFilter !== 'all' && lead.source !== sourceFilter) return false;
