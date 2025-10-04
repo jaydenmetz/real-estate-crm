@@ -1156,7 +1156,7 @@ const EscrowsDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [showNewEscrowModal, setShowNewEscrowModal] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState('active');
-  const [viewMode, setViewMode] = useState('grid'); // 'grid', 'compact', 'detailed'
+  const [viewMode, setViewMode] = useState('small'); // 'small', 'medium', 'large'
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [calendarDialogOpen, setCalendarDialogOpen] = useState(false);
@@ -2278,17 +2278,17 @@ const EscrowsDashboard = () => {
                 },
               }}
             >
-              <ToggleButton value="grid" aria-label="grid view">
+              <ToggleButton value="small" aria-label="small widget view">
                 <ViewModule sx={{ mr: 1, fontSize: 18 }} />
                 Grid
               </ToggleButton>
-              <ToggleButton value="compact" aria-label="compact view">
+              <ToggleButton value="medium" aria-label="medium widget view">
                 <ViewList sx={{ mr: 1, fontSize: 18 }} />
-                Compact
+                Medium
               </ToggleButton>
-              <ToggleButton value="detailed" aria-label="detailed view">
+              <ToggleButton value="large" aria-label="large widget view">
                 <ViewAgenda sx={{ mr: 1, fontSize: 18 }} />
-                Detailed
+                Large
               </ToggleButton>
             </ToggleButtonGroup>
 
@@ -2564,10 +2564,14 @@ const EscrowsDashboard = () => {
         <>
           {/* Escrow Cards */}
           <Box sx={{
-            display: viewMode === 'grid' ? 'grid' : 'flex',
-            flexDirection: 'column',
-            gridTemplateColumns: viewMode === 'grid' ? 'repeat(auto-fill, minmax(400px, 1fr))' : undefined,
-            gap: 2
+            display: 'grid',
+            gridTemplateColumns:
+              viewMode === 'small'
+                ? { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' }
+                : viewMode === 'medium'
+                ? { xs: '1fr', md: 'repeat(2, 1fr)' }
+                : '1fr',
+            gap: 3
           }}>
         <AnimatePresence>
           {(() => {
@@ -2747,7 +2751,7 @@ const EscrowsDashboard = () => {
             } else {
               return filteredEscrows.map((escrow, index) => {
                 // Choose component based on view mode
-                if (viewMode === 'grid') {
+                if (viewMode === 'small') {
                   return (
                     <EscrowCardGrid
                       key={escrow.id}
@@ -2763,7 +2767,7 @@ const EscrowsDashboard = () => {
                       }}
                     />
                   );
-                } else if (viewMode === 'compact') {
+                } else if (viewMode === 'medium') {
                   return (
                     <EscrowCompactCard
                       key={escrow.id}
@@ -2773,7 +2777,7 @@ const EscrowsDashboard = () => {
                     />
                   );
                 } else {
-                  // Detailed view - use original card
+                  // Large view - use original card with full details
                   return (
                     <EscrowCard
                       key={escrow.id}
