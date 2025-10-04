@@ -38,6 +38,7 @@ import {
   AttachMoney,
   Receipt,
   Campaign,
+  Shield,
   Email,
   LocationOn,
   Description,
@@ -46,12 +47,18 @@ import {
   Logout,
 } from '@mui/icons-material';
 
+import { useAuth } from '../../contexts/AuthContext';
+
 const Navigation = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  
+  const { user } = useAuth();
+
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // Check if user is admin
+  const isAdmin = user && (user.role === 'system_admin' || user.role === 'admin');
   const [otherDataAnchor, setOtherDataAnchor] = useState(null);
   const [profileAnchor, setProfileAnchor] = useState(null);
   const [notificationAnchor, setNotificationAnchor] = useState(null);
@@ -89,6 +96,12 @@ const Navigation = () => {
         { path: '/documents', label: 'Documents', icon: <Description /> },
         { path: '/analytics', label: 'Analytics', icon: <Analytics /> },
         { path: '/settings', label: 'Settings', icon: <Settings /> },
+      ]
+    },
+    {
+      category: 'Admin',
+      items: [
+        { path: '/admin', label: 'Admin Panel', icon: <Shield />, adminOnly: true },
       ]
     },
   ];
@@ -266,22 +279,28 @@ const Navigation = () => {
         onClose={() => handleOtherDataClose()}
         PaperProps={{ sx: { width: 320, maxHeight: 400 } }}
       >
-        {otherDataItems.map((category, index) => (
-          <Box key={index}>
-            {index > 0 && <Divider />}
-            <MenuItem disabled>
-              <Typography variant="caption" color="text.secondary">
-                {category.category}
-              </Typography>
-            </MenuItem>
-            {category.items.map((item) => (
-              <MenuItem key={item.path} onClick={() => handleOtherDataClose(item.path)}>
-                <ListItemIcon>{item.icon}</ListItemIcon>
-                <ListItemText>{item.label}</ListItemText>
+        {otherDataItems.map((category, index) => {
+          // Filter out admin-only items if user is not admin
+          const visibleItems = category.items.filter(item => !item.adminOnly || isAdmin);
+          if (visibleItems.length === 0) return null;
+
+          return (
+            <Box key={index}>
+              {index > 0 && <Divider />}
+              <MenuItem disabled>
+                <Typography variant="caption" color="text.secondary">
+                  {category.category}
+                </Typography>
               </MenuItem>
-            ))}
-          </Box>
-        ))}
+              {visibleItems.map((item) => (
+                <MenuItem key={item.path} onClick={() => handleOtherDataClose(item.path)}>
+                  <ListItemIcon>{item.icon}</ListItemIcon>
+                  <ListItemText>{item.label}</ListItemText>
+                </MenuItem>
+              ))}
+            </Box>
+          );
+        })}
         <Divider />
         <MenuItem onClick={() => handleOtherDataClose('/other-data')}>
           <ListItemIcon><MoreVert /></ListItemIcon>

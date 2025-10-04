@@ -250,6 +250,9 @@ apiRouter.use('/communications', require('./routes/communications.routes'));
 apiRouter.use('/documents', require('./routes/documents.routes'));
 apiRouter.use('/webhooks', require('./routes/webhooks.routes')); // Webhooks bypass auth for external services
 
+// Admin routes (requires system_admin role)
+apiRouter.use('/admin', require('./routes/admin.routes'));
+
 // Debug and test routes (development only)
 if (process.env.NODE_ENV === 'development') {
   apiRouter.use('/debug', authenticate, require('./routes/debug.routes'));
