@@ -3249,41 +3249,22 @@ const LeadsDashboard = () => {
             </Button>
           </Box>
         </HeroSection>
-        {/* Search and Filter Bar */}
-        <Paper sx={{ p: 2, mb: 3 }}>
-          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-            <TextField
-              fullWidth
-              variant="outlined"
-              placeholder="Search leads by name, email, or phone..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search />
-                  </InputAdornment>
-                ),
-              }}
-            />
-            <Button
-              variant="outlined"
-              startIcon={<FilterList />}
-              onClick={handleFilterClick}
-            >
-              Filter: {selectedFilter === 'all' ? 'All' : selectedFilter}
-            </Button>
-            <Menu
-              anchorEl={filterAnchorEl}
-              open={Boolean(filterAnchorEl)}
-              onClose={() => handleFilterClose(null)}
-            >
-              <MenuItem onClick={() => handleFilterClose('all')}>All Leads</MenuItem>
-              <MenuItem onClick={() => handleFilterClose('hot')}>Hot Leads</MenuItem>
-              <MenuItem onClick={() => handleFilterClose('warm')}>Warm Leads</MenuItem>
-              <MenuItem onClick={() => handleFilterClose('cold')}>Cold Leads</MenuItem>
-            </Menu>
-          </Box>
+
+        {/* Tabs */}
+        <Paper sx={{ mb: 3 }}>
+          <Tabs
+            value={tabValue}
+            onChange={(e, newValue) => setTabValue(newValue)}
+            variant="scrollable"
+            scrollButtons="auto"
+          >
+            <Tab label={`All (${leads.length})`} />
+            <Tab label={`New (${leads.filter(l => l.stage === 'New').length})`} />
+            <Tab label={`Contacted (${leads.filter(l => l.stage === 'Contacted').length})`} />
+            <Tab label={`Qualified (${leads.filter(l => l.stage === 'Qualified').length})`} />
+            <Tab label={`Viewing (${leads.filter(l => l.stage === 'Viewing').length})`} />
+            <Tab label={`Closed (${leads.filter(l => l.stage === 'Closed').length})`} />
+          </Tabs>
         </Paper>
 
         {/* Leads Table */}
