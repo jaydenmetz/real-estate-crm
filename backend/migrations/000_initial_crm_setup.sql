@@ -1,7 +1,9 @@
 -- ============================================================================
--- FRESH START MIGRATION - October 4, 2025
--- Complete database schema from scratch
--- This replaces all previous migrations
+-- INITIAL CRM SETUP - October 4, 2025
+-- Complete Real Estate CRM database schema
+--
+-- This is migration #000 - the foundation of the entire system
+-- All tables, indexes, relationships, and seed data in one file
 -- ============================================================================
 
 -- ============================================================================
@@ -397,7 +399,7 @@ CREATE TABLE migrations (
 );
 
 -- Record this migration
-INSERT INTO migrations (name) VALUES ('000_FRESH_START_2025.sql');
+INSERT INTO migrations (name) VALUES ('000_initial_crm_setup.sql');
 
 -- ============================================================================
 -- 11. SEED DATA: Default Broker & Admin User

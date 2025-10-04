@@ -53,8 +53,8 @@ GRANT ALL ON SCHEMA public TO public;
 echo -e "${GREEN}✅ Database wiped clean${NC}"
 
 echo ""
-echo -e "${YELLOW}Step 3: Running fresh start migration...${NC}"
-psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -f backend/migrations/000_FRESH_START_2025.sql
+echo -e "${YELLOW}Step 3: Running initial CRM setup migration...${NC}"
+psql -h $DB_HOST -p $DB_PORT -U $DB_USER -d $DB_NAME -f backend/migrations/000_initial_crm_setup.sql
 echo -e "${GREEN}✅ Schema created${NC}"
 
 echo ""
