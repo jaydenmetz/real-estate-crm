@@ -221,11 +221,11 @@ const EscrowWidgetSmall = ({ escrow, index = 0 }) => {
             />
           </Box>
 
-          {/* Company Logos - 4 boxes in grid (2x2) */}
+          {/* Company Logos - 4 boxes in single row (1x4) */}
           <Box
             sx={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
+              gridTemplateColumns: 'repeat(4, 1fr)',
               gap: 0.75,
               mb: 2,
             }}

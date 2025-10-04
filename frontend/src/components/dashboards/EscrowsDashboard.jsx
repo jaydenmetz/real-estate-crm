@@ -2280,12 +2280,12 @@ const EscrowsDashboard = () => {
               }}
             >
               <ToggleButton value="small" aria-label="small widget view">
-                {/* 4 boxes in 2x2 grid */}
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 0.3, mr: 1 }}>
-                  <Box sx={{ width: 6, height: 6, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 6, height: 6, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 6, height: 6, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 6, height: 6, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                {/* 4 boxes in single row (1x4 grid) */}
+                <Box sx={{ display: 'flex', gap: 0.3, mr: 1 }}>
+                  <Box sx={{ width: 4, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 4, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 4, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 4, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                 </Box>
                 Small
               </ToggleButton>
