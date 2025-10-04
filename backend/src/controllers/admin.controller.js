@@ -298,6 +298,54 @@ class AdminController {
         });
       }
 
+      // CRITICAL: Prevent self-deletion for auth-critical tables
+      const currentUserId = req.user.id;
+
+      // 1. Prevent deleting your own user account
+      if (tableName === 'users' && ids.includes(currentUserId)) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'CANNOT_DELETE_SELF',
+            message: 'You cannot delete your own user account. Please ask another admin to delete your account.'
+          }
+        });
+      }
+
+      // 2. Prevent deleting your current refresh tokens (would cause instant logout)
+      if (tableName === 'refresh_tokens') {
+        // Get current user's active refresh tokens
+        const currentTokens = await pool.query(
+          'SELECT id FROM refresh_tokens WHERE user_id = $1 AND revoked_at IS NULL AND expires_at > NOW()',
+          [currentUserId]
+        );
+        const currentTokenIds = currentTokens.rows.map(t => t.id);
+        const attemptingToDeleteCurrent = ids.some(id => currentTokenIds.includes(id));
+
+        if (attemptingToDeleteCurrent) {
+          return res.status(400).json({
+            success: false,
+            error: {
+              code: 'CANNOT_DELETE_CURRENT_SESSION',
+              message: 'You cannot delete your active session tokens. This would log you out. Use the "Logout" button instead, or delete other users\' tokens only.'
+            }
+          });
+        }
+      }
+
+      // 3. Warn if deleting API key currently in use (if using API key auth)
+      if (tableName === 'api_keys' && req.apiKeyId) {
+        if (ids.includes(req.apiKeyId)) {
+          return res.status(400).json({
+            success: false,
+            error: {
+              code: 'CANNOT_DELETE_CURRENT_API_KEY',
+              message: 'You cannot delete the API key you are currently using. This would cause authentication errors. Please use a different authentication method first.'
+            }
+          });
+        }
+      }
+
       // Create placeholders for parameterized query
       const placeholders = ids.map((_, i) => `$${i + 1}`).join(',');
 
@@ -354,6 +402,77 @@ class AdminController {
         });
       }
 
+      // CRITICAL: Prevent deletion that would break current session
+      const currentUserId = req.user.id;
+
+      // 1. NEVER allow deleting all users (would delete yourself)
+      if (tableName === 'users') {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'CANNOT_DELETE_ALL_USERS',
+            message: 'Deleting all users is not allowed. This would delete your own account and lock everyone out of the system. Delete users individually instead.'
+          }
+        });
+      }
+
+      // 2. For refresh_tokens, exclude current user's active tokens
+      if (tableName === 'refresh_tokens') {
+        // Delete all EXCEPT current user's active tokens
+        const result = await pool.query(
+          `DELETE FROM refresh_tokens
+           WHERE NOT (user_id = $1 AND revoked_at IS NULL AND expires_at > NOW())
+           RETURNING id`,
+          [currentUserId]
+        );
+
+        return res.json({
+          success: true,
+          data: {
+            deletedCount: result.rowCount,
+            message: 'All refresh tokens deleted except your active sessions (to prevent auto-logout)'
+          }
+        });
+      }
+
+      // 3. For api_keys, exclude current API key if using API key auth
+      if (tableName === 'api_keys' && req.apiKeyId) {
+        const result = await pool.query(
+          'DELETE FROM api_keys WHERE id != $1 RETURNING id',
+          [req.apiKeyId]
+        );
+
+        return res.json({
+          success: true,
+          data: {
+            deletedCount: result.rowCount,
+            message: 'All API keys deleted except the one you are currently using (to prevent authentication errors)'
+          }
+        });
+      }
+
+      // 4. Compliance tables: Extra warning but allow deletion
+      const complianceTables = ['security_events', 'audit_log', 'audit_logs'];
+      if (complianceTables.includes(tableName)) {
+        console.warn(`⚠️  COMPLIANCE WARNING: User ${currentUserId} deleted all rows from ${tableName}`);
+        // Log this action to security events (if not deleting security_events itself)
+        if (tableName !== 'security_events') {
+          // Fire-and-forget security log
+          pool.query(`
+            INSERT INTO security_events (event_type, event_category, severity, user_id, ip_address, user_agent, request_path, request_method, success, message)
+            VALUES ('compliance_data_deleted', 'account', 'critical', $1, $2, $3, $4, $5, true, $6)
+          `, [
+            currentUserId,
+            req.ip || req.connection?.remoteAddress,
+            req.headers['user-agent'],
+            req.originalUrl,
+            req.method,
+            `User deleted all rows from ${tableName} table`
+          ]).catch(console.error);
+        }
+      }
+
+      // Safe to delete all rows for this table
       const result = await pool.query(`DELETE FROM ${tableName} RETURNING id`);
 
       res.json({
