@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const AdminController = require('../controllers/admin.controller');
-const { authenticateToken } = require('../middleware/auth.middleware');
+const { authenticate } = require('../middleware/auth.middleware');
 
 // Middleware to check if user is admin
 const requireAdmin = (req, res, next) => {
@@ -18,7 +18,7 @@ const requireAdmin = (req, res, next) => {
 };
 
 // All admin routes require authentication and admin role
-router.use(authenticateToken);
+router.use(authenticate);
 router.use(requireAdmin);
 
 // Admin endpoints
