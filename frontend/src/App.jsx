@@ -303,28 +303,28 @@ function App() {
                                 } />
                                 
                     
-                                {/* Health Check - Main system health page */}
-                                <Route path="/health" element={<HealthOverviewDashboard />} />
-                                
+                                {/* Health Check - Main system health page (Admin Only) */}
+                                <Route path="/health" element={<ProtectedRoute requiredRole="system_admin"><HealthOverviewDashboard /></ProtectedRoute>} />
+
                                 {/* Main Features */}
                                 <Route path="/escrows" element={<EscrowsDashboard />} />
-                                <Route path="/escrows/health" element={<EscrowsHealthDashboard />} />
+                                <Route path="/escrows/health" element={<ProtectedRoute requiredRole="system_admin"><EscrowsHealthDashboard /></ProtectedRoute>} />
                                 <Route path="/escrows/:id" element={<EscrowDetail />} />
-                    
+
                                 <Route path="/listings" element={<ListingsDashboard />} />
-                                <Route path="/listings/health" element={<ListingsHealthDashboard />} />
+                                <Route path="/listings/health" element={<ProtectedRoute requiredRole="system_admin"><ListingsHealthDashboard /></ProtectedRoute>} />
                                 <Route path="/listings/:id" element={<ListingDetail />} />
-                    
+
                                 <Route path="/clients" element={<ClientsDashboard />} />
-                                <Route path="/clients/health" element={<ClientsHealthDashboard />} />
+                                <Route path="/clients/health" element={<ProtectedRoute requiredRole="system_admin"><ClientsHealthDashboard /></ProtectedRoute>} />
                                 <Route path="/clients/:id" element={<ClientDetail />} />
-                    
+
                                 <Route path="/appointments" element={<AppointmentsDashboard />} />
-                                <Route path="/appointments/health" element={<AppointmentsHealthDashboard />} />
+                                <Route path="/appointments/health" element={<ProtectedRoute requiredRole="system_admin"><AppointmentsHealthDashboard /></ProtectedRoute>} />
                                 <Route path="/appointments/:id" element={<AppointmentDetail />} />
-                    
+
                                 <Route path="/leads" element={<LeadsDashboard />} />
-                                <Route path="/leads/health" element={<LeadsHealthDashboard />} />
+                                <Route path="/leads/health" element={<ProtectedRoute requiredRole="system_admin"><LeadsHealthDashboard /></ProtectedRoute>} />
                                 <Route path="/leads/:id" element={<LeadDetail />} />
                     
                                 {/* Financial Management */}
