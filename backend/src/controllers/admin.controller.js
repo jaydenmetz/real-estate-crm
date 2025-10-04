@@ -265,6 +265,172 @@ class AdminController {
       });
     }
   }
+
+  /**
+   * Delete rows from table
+   */
+  static async deleteRows(req, res) {
+    try {
+      const { tableName } = req.params;
+      const { ids } = req.body; // Array of IDs to delete
+
+      // Whitelist validation
+      const allowedTables = [
+        'api_key_logs', 'api_keys', 'appointments', 'audit_log', 'audit_logs',
+        'broker_profiles', 'broker_teams', 'broker_users', 'brokers', 'clients',
+        'contacts', 'document_templates', 'documents', 'escrows', 'generated_documents',
+        'leads', 'listing_price_history', 'listing_showings', 'listings', 'migrations',
+        'onboarding_progress', 'refresh_tokens', 'security_events', 'teams',
+        'user_profiles', 'users'
+      ];
+
+      if (!allowedTables.includes(tableName)) {
+        return res.status(400).json({
+          success: false,
+          error: { code: 'INVALID_TABLE', message: 'Invalid table name' }
+        });
+      }
+
+      if (!ids || !Array.isArray(ids) || ids.length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: { code: 'INVALID_IDS', message: 'IDs array is required' }
+        });
+      }
+
+      // Create placeholders for parameterized query
+      const placeholders = ids.map((_, i) => `$${i + 1}`).join(',');
+
+      const result = await pool.query(
+        `DELETE FROM ${tableName} WHERE id IN (${placeholders}) RETURNING id`,
+        ids
+      );
+
+      res.json({
+        success: true,
+        data: {
+          deletedCount: result.rowCount,
+          deletedIds: result.rows.map(r => r.id)
+        }
+      });
+    } catch (error) {
+      console.error('Delete rows error:', error);
+      res.status(500).json({
+        success: false,
+        error: { code: 'DELETE_ROWS_ERROR', message: 'Failed to delete rows' }
+      });
+    }
+  }
+
+  /**
+   * Delete all rows from table (DANGEROUS)
+   */
+  static async deleteAllRows(req, res) {
+    try {
+      const { tableName } = req.params;
+      const { confirmation } = req.body; // Must pass "DELETE_ALL" as confirmation
+
+      if (confirmation !== 'DELETE_ALL') {
+        return res.status(400).json({
+          success: false,
+          error: { code: 'CONFIRMATION_REQUIRED', message: 'Confirmation string required' }
+        });
+      }
+
+      // Whitelist validation
+      const allowedTables = [
+        'api_key_logs', 'api_keys', 'appointments', 'audit_log', 'audit_logs',
+        'broker_profiles', 'broker_teams', 'broker_users', 'brokers', 'clients',
+        'contacts', 'document_templates', 'documents', 'escrows', 'generated_documents',
+        'leads', 'listing_price_history', 'listing_showings', 'listings', 'migrations',
+        'onboarding_progress', 'refresh_tokens', 'security_events', 'teams',
+        'user_profiles', 'users'
+      ];
+
+      if (!allowedTables.includes(tableName)) {
+        return res.status(400).json({
+          success: false,
+          error: { code: 'INVALID_TABLE', message: 'Invalid table name' }
+        });
+      }
+
+      const result = await pool.query(`DELETE FROM ${tableName} RETURNING id`);
+
+      res.json({
+        success: true,
+        data: {
+          deletedCount: result.rowCount
+        }
+      });
+    } catch (error) {
+      console.error('Delete all rows error:', error);
+      res.status(500).json({
+        success: false,
+        error: { code: 'DELETE_ALL_ERROR', message: 'Failed to delete all rows' }
+      });
+    }
+  }
+
+  /**
+   * Create new row in table
+   */
+  static async createRow(req, res) {
+    try {
+      const { tableName } = req.params;
+      const rowData = req.body;
+
+      // Whitelist validation
+      const allowedTables = [
+        'api_key_logs', 'api_keys', 'appointments', 'audit_log', 'audit_logs',
+        'broker_profiles', 'broker_teams', 'broker_users', 'brokers', 'clients',
+        'contacts', 'document_templates', 'documents', 'escrows', 'generated_documents',
+        'leads', 'listing_price_history', 'listing_showings', 'listings', 'migrations',
+        'onboarding_progress', 'refresh_tokens', 'security_events', 'teams',
+        'user_profiles', 'users'
+      ];
+
+      if (!allowedTables.includes(tableName)) {
+        return res.status(400).json({
+          success: false,
+          error: { code: 'INVALID_TABLE', message: 'Invalid table name' }
+        });
+      }
+
+      if (!rowData || Object.keys(rowData).length === 0) {
+        return res.status(400).json({
+          success: false,
+          error: { code: 'NO_DATA', message: 'Row data is required' }
+        });
+      }
+
+      // Build INSERT query dynamically
+      const columns = Object.keys(rowData);
+      const values = Object.values(rowData);
+      const placeholders = values.map((_, i) => `$${i + 1}`).join(',');
+
+      const query = `
+        INSERT INTO ${tableName} (${columns.join(',')})
+        VALUES (${placeholders})
+        RETURNING *
+      `;
+
+      const result = await pool.query(query, values);
+
+      res.json({
+        success: true,
+        data: result.rows[0]
+      });
+    } catch (error) {
+      console.error('Create row error:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'CREATE_ROW_ERROR',
+          message: error.message || 'Failed to create row'
+        }
+      });
+    }
+  }
 }
 
 module.exports = AdminController;

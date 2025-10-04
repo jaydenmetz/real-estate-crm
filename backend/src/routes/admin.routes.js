@@ -28,6 +28,11 @@ router.get('/api-keys', AdminController.getAllApiKeys);
 router.get('/security-events', AdminController.getSecurityEvents);
 router.get('/refresh-tokens', AdminController.getRefreshTokens);
 router.get('/audit-logs', AdminController.getAuditLogs);
+
+// Table CRUD operations
 router.get('/table/:tableName', AdminController.getTableData);
+router.post('/table/:tableName', AdminController.createRow);
+router.delete('/table/:tableName/rows', AdminController.deleteRows);
+router.delete('/table/:tableName/all', AdminController.deleteAllRows);
 
 module.exports = router;
