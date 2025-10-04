@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Box,
   Container,
@@ -21,10 +21,14 @@ import authService from '../services/auth.service';
 
 const Unauthorized = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { logout, login } = useAuth();
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Get the page the user was trying to access (if any)
+  const from = location.state?.from?.pathname || '/admin';
 
   const handleAdminLogin = async (e) => {
     e.preventDefault();
@@ -48,11 +52,13 @@ const Unauthorized = () => {
 
       if (result.success) {
         console.log('Login successful, user:', result.user);
-        // Update auth context
-        await login(result.user.token || result.token, result.user);
 
-        // Redirect to admin panel
-        navigate('/admin');
+        // Update auth context with just the user data (not the token)
+        login(result.user);
+
+        console.log('Navigating to:', from);
+        // Redirect to the page the user was trying to access, or /admin by default
+        navigate(from, { replace: true });
       } else {
         console.error('Login failed:', result.error);
         setError(result.error || 'Invalid admin password');
