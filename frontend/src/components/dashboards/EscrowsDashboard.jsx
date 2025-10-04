@@ -2251,33 +2251,47 @@ const EscrowsDashboard = () => {
             />
           </Tabs>
 
-          <ToggleButtonGroup
-            value={viewMode}
-            exclusive
-            onChange={(e, newView) => newView && setViewMode(newView)}
-            size="small"
-            sx={{
-              '& .MuiToggleButton-root': {
-                px: 2,
-                py: 0.5,
-                textTransform: 'none',
-                fontWeight: 500,
-              },
-            }}
-          >
-            <ToggleButton value="grid" aria-label="grid view">
-              <ViewModule sx={{ mr: 1, fontSize: 18 }} />
-              Grid
-            </ToggleButton>
-            <ToggleButton value="compact" aria-label="compact view">
-              <ViewList sx={{ mr: 1, fontSize: 18 }} />
-              Compact
-            </ToggleButton>
-            <ToggleButton value="detailed" aria-label="detailed view">
-              <ViewAgenda sx={{ mr: 1, fontSize: 18 }} />
-              Detailed
-            </ToggleButton>
-          </ToggleButtonGroup>
+          <Stack direction="row" spacing={2} alignItems="center">
+            <ToggleButtonGroup
+              value={viewMode}
+              exclusive
+              onChange={(e, newView) => newView && setViewMode(newView)}
+              size="small"
+              sx={{
+                '& .MuiToggleButton-root': {
+                  px: 2,
+                  py: 0.5,
+                  textTransform: 'none',
+                  fontWeight: 500,
+                },
+              }}
+            >
+              <ToggleButton value="grid" aria-label="grid view">
+                <ViewModule sx={{ mr: 1, fontSize: 18 }} />
+                Grid
+              </ToggleButton>
+              <ToggleButton value="compact" aria-label="compact view">
+                <ViewList sx={{ mr: 1, fontSize: 18 }} />
+                Compact
+              </ToggleButton>
+              <ToggleButton value="detailed" aria-label="detailed view">
+                <ViewAgenda sx={{ mr: 1, fontSize: 18 }} />
+                Detailed
+              </ToggleButton>
+            </ToggleButtonGroup>
+
+            <IconButton
+              size="small"
+              sx={{
+                color: 'primary.main',
+                '&:hover': {
+                  backgroundColor: alpha => alpha(theme.palette.primary.main, 0.1),
+                },
+              }}
+            >
+              <CalendarToday />
+            </IconButton>
+          </Stack>
         </Paper>
       </Box>
 
