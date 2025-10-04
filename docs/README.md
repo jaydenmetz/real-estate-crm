@@ -28,7 +28,6 @@ New to the codebase? Start here:
 ### 🎨 Frontend Standards
 - **[WIDGET_TEMPLATE_SYSTEM.md](WIDGET_TEMPLATE_SYSTEM.md)** - ⭐ Small/Medium/Large widget standards
 - **[DASHBOARD_PAGE_TEMPLATE.md](DASHBOARD_PAGE_TEMPLATE.md)** - ⭐ Dashboard page structure
-- **[DUPLICATE_COMPONENTS_AUDIT.md](DUPLICATE_COMPONENTS_AUDIT.md)** - Component naming standards
 
 ### 🗄️ Database
 - **[DATABASE_STRUCTURE.md](DATABASE_STRUCTURE.md)** - Schema and tables
@@ -61,7 +60,6 @@ New to the codebase? Start here:
 ### 🚀 Deployment
 - **[RAILWAY_ENVIRONMENT_SETUP.md](RAILWAY_ENVIRONMENT_SETUP.md)** - Railway configuration
 - **[ENVIRONMENTS.md](ENVIRONMENTS.md)** - Environment variables
-- **[railway-db-commands.md](railway-db-commands.md)** - Database operations
 
 ### 🏥 Health & Monitoring
 - **[HEALTH_CHECK_STRATEGY.md](HEALTH_CHECK_STRATEGY.md)** - Health check system
@@ -77,11 +75,9 @@ New to the codebase? Start here:
 
 ### 🧪 Testing
 - **[INTEGRATION_TESTING.md](INTEGRATION_TESTING.md)** - Integration test strategy
-- **[ONBOARDING_TESTING_GUIDE.md](ONBOARDING_TESTING_GUIDE.md)** - Onboarding flow tests
 
 ### 🔧 Feature Guides
 - **[GOOGLE_OAUTH_SETUP.md](GOOGLE_OAUTH_SETUP.md)** - Google OAuth integration
-- **[ZILLOW_FEATURE_STATUS.md](ZILLOW_FEATURE_STATUS.md)** - Zillow integration
 
 ### 🤖 AI Integration
 - **[MCP_SERVER_SETUP.md](MCP_SERVER_SETUP.md)** - MCP server configuration
@@ -97,8 +93,7 @@ New to the codebase? Start here:
 - **[ENTERPRISE_READINESS_AUDIT.md](ENTERPRISE_READINESS_AUDIT.md)** - Enterprise readiness
 
 ### 🗺️ Roadmap
-- **[IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md)** - Feature implementation plan
-- **[TEAM_STRUCTURE_PROPOSAL.md](TEAM_STRUCTURE_PROPOSAL.md)** - Team architecture
+- See BILLION_DOLLAR_PLAYBOOK.md and ZERO_BUDGET_ROADMAP.md for future plans
 
 ---
 
@@ -138,10 +133,17 @@ The **Escrows module** is the reference implementation for all other modules. Wh
 ## Archive
 
 Older documentation has been moved to `/docs/archive/` for historical reference:
-- Previous API structures
-- Migration reports
-- Weekly status reports
-- Deprecated features
+
+**Archived Files (October 4, 2025):**
+- `deploy-zillow-feature.md` - One-time Zillow deployment (completed)
+- `fix-railway-env.md` - Railway authentication fix (resolved)
+- `ZILLOW_FEATURE_STATUS.md` - Zillow feature status (deployed)
+- `IMPLEMENTATION_PLAN.md` - Old multi-tenant plan (implemented)
+- `TEAM_STRUCTURE_PROPOSAL.md` - Team architecture proposal (implemented)
+- `get-zillow-image-manually.md` - Manual Zillow image process (rarely used)
+- `railway-db-commands.md` - Railway database commands (replaced by CLAUDE.md)
+- `DUPLICATE_COMPONENTS_AUDIT.md` - Component naming audit (one-time cleanup)
+- `ONBOARDING_TESTING_GUIDE.md` - Onboarding testing guide (feature complete)
 
 **Do not use archived documentation for new development.**
 
