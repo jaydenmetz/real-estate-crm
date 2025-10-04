@@ -236,10 +236,25 @@ class AdminController {
         type: col.data_type
       }));
 
+      // Determine which column to order by
+      const columnNames = columns.map(c => c.name);
+      let orderByColumn = 'created_at'; // default
+
+      if (!columnNames.includes('created_at')) {
+        // Fallback: use executed_at, updated_at, or first column
+        if (columnNames.includes('executed_at')) {
+          orderByColumn = 'executed_at';
+        } else if (columnNames.includes('updated_at')) {
+          orderByColumn = 'updated_at';
+        } else {
+          orderByColumn = columnNames[0]; // Use first column as last resort
+        }
+      }
+
       // Get data with pagination
       const dataResult = await pool.query(`
         SELECT * FROM ${tableName}
-        ORDER BY created_at DESC
+        ORDER BY ${orderByColumn} DESC
         LIMIT $1 OFFSET $2
       `, [limit, offset]);
 
