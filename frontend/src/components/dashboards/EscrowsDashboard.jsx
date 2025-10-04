@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NewEscrowModal from '../forms/NewEscrowModal';
-import EscrowCardGrid from '../common/EscrowCardGrid';
-import EscrowCompactCard from '../common/EscrowCompactCard';
+import EscrowWidgetSmall from '../common/widgets/EscrowWidgetSmall';
+import EscrowWidgetMedium from '../common/widgets/EscrowWidgetMedium';
+import EscrowWidgetLarge from '../common/widgets/EscrowWidgetLarge';
 import {
   Container,
   Box,
@@ -2750,42 +2751,29 @@ const EscrowsDashboard = () => {
               );
             } else {
               return filteredEscrows.map((escrow, index) => {
-                // Choose component based on view mode
+                // Choose widget component based on view mode
                 if (viewMode === 'small') {
                   return (
-                    <EscrowCardGrid
+                    <EscrowWidgetSmall
                       key={escrow.id}
                       escrow={escrow}
                       index={index}
-                      showCommission={true}
-                      onQuickAction={(action, escrowData) => {
-                        if (action === 'view') {
-                          handleEscrowClick(escrowData.id);
-                        } else if (action === 'archive') {
-                          handleArchive(escrowData.id);
-                        }
-                      }}
                     />
                   );
                 } else if (viewMode === 'medium') {
                   return (
-                    <EscrowCompactCard
+                    <EscrowWidgetMedium
                       key={escrow.id}
                       escrow={escrow}
                       index={index}
-                      showCommission={true}
                     />
                   );
                 } else {
-                  // Large view - use original card with full details
+                  // Large view - comprehensive details
                   return (
-                    <EscrowCard
+                    <EscrowWidgetLarge
                       key={escrow.id}
                       escrow={escrow}
-                      onClick={handleEscrowClick}
-                      onChecklistUpdate={handleChecklistUpdate}
-                      onArchive={handleArchive}
-                      isArchived={false}
                       index={index}
                     />
                   );
