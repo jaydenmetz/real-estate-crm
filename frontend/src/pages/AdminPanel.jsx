@@ -36,9 +36,22 @@ import SecurityEventsTable from '../components/admin/SecurityEventsTable';
 import RefreshTokensTable from '../components/admin/RefreshTokensTable';
 import AuditLogsTable from '../components/admin/AuditLogsTable';
 import DatabaseOverview from '../components/admin/DatabaseOverview';
+import TableDataViewer from '../components/admin/TableDataViewer';
 
 const AdminPanel = () => {
   const [activeTab, setActiveTab] = useState(0);
+  const [selectedTable, setSelectedTable] = useState(null);
+  const [selectedTableName, setSelectedTableName] = useState(null);
+
+  const handleTableClick = (tableKey, tableName) => {
+    setSelectedTable(tableKey);
+    setSelectedTableName(tableName);
+  };
+
+  const handleBackToOverview = () => {
+    setSelectedTable(null);
+    setSelectedTableName(null);
+  };
 
   const tables = [
     { name: 'Overview', icon: <DatabaseIcon />, component: DatabaseOverview },
@@ -98,7 +111,17 @@ const AdminPanel = () => {
 
           {tables.map((table, index) => (
             <TabPanel key={table.name} value={activeTab} index={index}>
-              <table.component />
+              {table.name === 'Overview' && selectedTable ? (
+                <TableDataViewer
+                  tableName={selectedTable}
+                  displayName={selectedTableName}
+                  onBack={handleBackToOverview}
+                />
+              ) : table.name === 'Overview' ? (
+                <DatabaseOverview onTableClick={handleTableClick} />
+              ) : (
+                <table.component />
+              )}
             </TabPanel>
           ))}
         </Paper>

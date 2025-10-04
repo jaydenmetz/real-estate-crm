@@ -8,11 +8,14 @@ class AdminController {
     try {
       const stats = {};
 
-      // Query count for each table
+      // Query count for each table (all 26 tables)
       const tables = [
-        'users', 'api_keys', 'security_events', 'refresh_tokens', 'audit_logs',
-        'escrows', 'listings', 'clients', 'appointments', 'leads',
-        'brokers', 'onboarding_progress'
+        'api_key_logs', 'api_keys', 'appointments', 'audit_log', 'audit_logs',
+        'broker_profiles', 'broker_teams', 'broker_users', 'brokers', 'clients',
+        'contacts', 'document_templates', 'documents', 'escrows', 'generated_documents',
+        'leads', 'listing_price_history', 'listing_showings', 'listings', 'migrations',
+        'onboarding_progress', 'refresh_tokens', 'security_events', 'teams',
+        'user_profiles', 'users'
       ];
 
       for (const table of tables) {
@@ -182,6 +185,82 @@ class AdminController {
         error: {
           code: 'GET_AUDIT_LOGS_ERROR',
           message: 'Failed to fetch audit logs'
+        }
+      });
+    }
+  }
+
+  /**
+   * Get table data with pagination
+   */
+  static async getTableData(req, res) {
+    try {
+      const { tableName } = req.params;
+      const limit = parseInt(req.query.limit) || 100;
+      const offset = parseInt(req.query.offset) || 0;
+
+      // Whitelist of allowed tables to prevent SQL injection
+      const allowedTables = [
+        'api_key_logs', 'api_keys', 'appointments', 'audit_log', 'audit_logs',
+        'broker_profiles', 'broker_teams', 'broker_users', 'brokers', 'clients',
+        'contacts', 'document_templates', 'documents', 'escrows', 'generated_documents',
+        'leads', 'listing_price_history', 'listing_showings', 'listings', 'migrations',
+        'onboarding_progress', 'refresh_tokens', 'security_events', 'teams',
+        'user_profiles', 'users'
+      ];
+
+      if (!allowedTables.includes(tableName)) {
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'INVALID_TABLE',
+            message: 'Invalid table name'
+          }
+        });
+      }
+
+      // Get total count
+      const countResult = await pool.query(`SELECT COUNT(*) FROM ${tableName}`);
+      const totalCount = parseInt(countResult.rows[0].count);
+
+      // Get column information
+      const columnsResult = await pool.query(`
+        SELECT column_name, data_type
+        FROM information_schema.columns
+        WHERE table_name = $1 AND table_schema = 'public'
+        ORDER BY ordinal_position
+      `, [tableName]);
+
+      const columns = columnsResult.rows.map(col => ({
+        name: col.column_name,
+        type: col.data_type
+      }));
+
+      // Get data with pagination
+      const dataResult = await pool.query(`
+        SELECT * FROM ${tableName}
+        ORDER BY created_at DESC
+        LIMIT $1 OFFSET $2
+      `, [limit, offset]);
+
+      res.json({
+        success: true,
+        data: {
+          tableName,
+          columns,
+          rows: dataResult.rows,
+          totalCount,
+          limit,
+          offset
+        }
+      });
+    } catch (error) {
+      console.error('Get table data error:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'GET_TABLE_DATA_ERROR',
+          message: 'Failed to fetch table data'
         }
       });
     }
