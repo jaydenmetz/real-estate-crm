@@ -32,24 +32,34 @@ const Unauthorized = () => {
     setError('');
 
     try {
-      // Logout current user first
-      await logout();
+      // Logout current user first (if any)
+      try {
+        await logout();
+      } catch (logoutErr) {
+        console.log('Logout error (may already be logged out):', logoutErr);
+      }
 
-      // Login as admin
+      console.log('Attempting admin login with username: admin');
+
+      // Login as admin with explicit username
       const result = await authService.login('admin', password);
 
+      console.log('Login result:', result);
+
       if (result.success) {
+        console.log('Login successful, user:', result.user);
         // Update auth context
         await login(result.user.token || result.token, result.user);
 
         // Redirect to admin panel
         navigate('/admin');
       } else {
+        console.error('Login failed:', result.error);
         setError(result.error || 'Invalid admin password');
       }
     } catch (err) {
       console.error('Admin login error:', err);
-      setError('Failed to login as admin. Please check your password.');
+      setError(`Failed to login as admin: ${err.message || 'Please check your password.'}`);
     } finally {
       setLoading(false);
     }
