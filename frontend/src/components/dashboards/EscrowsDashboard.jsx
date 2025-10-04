@@ -35,6 +35,15 @@ import {
   Checkbox,
   ToggleButton,
   ToggleButtonGroup,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  Badge,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
@@ -1148,6 +1157,9 @@ const EscrowsDashboard = () => {
   const [showNewEscrowModal, setShowNewEscrowModal] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState('active');
   const [viewMode, setViewMode] = useState('grid'); // 'grid', 'compact', 'detailed'
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [calendarDialogOpen, setCalendarDialogOpen] = useState(false);
   const [archivedCount, setArchivedCount] = useState(0);
   const [selectedArchivedIds, setSelectedArchivedIds] = useState([]);
   const [batchDeleting, setBatchDeleting] = useState(false);
@@ -2282,10 +2294,12 @@ const EscrowsDashboard = () => {
 
             <IconButton
               size="small"
+              onClick={() => setShowCalendar(!showCalendar)}
               sx={{
-                color: 'primary.main',
+                color: showCalendar ? 'primary.main' : 'text.secondary',
+                backgroundColor: showCalendar ? (theme) => alpha(theme.palette.primary.main, 0.1) : 'transparent',
                 '&:hover': {
-                  backgroundColor: alpha => alpha(theme.palette.primary.main, 0.1),
+                  backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.15),
                 },
               }}
             >
@@ -2422,13 +2436,139 @@ const EscrowsDashboard = () => {
         </Grid> */}
 
 
-      {/* Escrow Cards */}
-      <Box sx={{
-        display: viewMode === 'grid' ? 'grid' : 'flex',
-        flexDirection: 'column',
-        gridTemplateColumns: viewMode === 'grid' ? 'repeat(auto-fill, minmax(400px, 1fr))' : undefined,
-        gap: 2
-      }}>
+      {/* Calendar View */}
+      {showCalendar ? (
+        <Paper sx={{ p: 3, mb: 3 }}>
+          <Typography variant="h6" gutterBottom sx={{ mb: 3, fontWeight: 600 }}>
+            Escrow Calendar - Key Dates
+          </Typography>
+          <Grid container spacing={2}>
+            {(() => {
+              // Generate calendar grid for current month
+              const today = new Date();
+              const year = today.getFullYear();
+              const month = today.getMonth();
+              const firstDay = new Date(year, month, 1);
+              const lastDay = new Date(year, month + 1, 0);
+              const daysInMonth = lastDay.getDate();
+              const startingDayOfWeek = firstDay.getDay();
+
+              // Get all escrows with important dates
+              const allEscrows = [...escrows, ...archivedEscrows];
+
+              // Organize escrows by date
+              const escrowsByDate = {};
+              allEscrows.forEach(escrow => {
+                const dates = [
+                  { date: escrow.openDate, type: 'Open', color: '#4caf50' },
+                  { date: escrow.closeDate, type: 'Close', color: '#2196f3' },
+                  { date: escrow.inspectionDate, type: 'Inspection', color: '#ff9800' },
+                  { date: escrow.appraisalDate, type: 'Appraisal', color: '#9c27b0' },
+                ].filter(d => d.date);
+
+                dates.forEach(({ date, type, color }) => {
+                  const dateStr = safeFormatDate(date, 'yyyy-MM-dd');
+                  if (!escrowsByDate[dateStr]) escrowsByDate[dateStr] = [];
+                  escrowsByDate[dateStr].push({ ...escrow, eventType: type, eventColor: color });
+                });
+              });
+
+              const days = [];
+
+              // Day headers
+              ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].forEach(day => {
+                days.push(
+                  <Grid item xs={12 / 7} key={`header-${day}`}>
+                    <Typography variant="caption" sx={{ fontWeight: 700, textAlign: 'center', display: 'block' }}>
+                      {day}
+                    </Typography>
+                  </Grid>
+                );
+              });
+
+              // Empty cells before first day
+              for (let i = 0; i < startingDayOfWeek; i++) {
+                days.push(<Grid item xs={12 / 7} key={`empty-${i}`}><Box sx={{ height: 80 }} /></Grid>);
+              }
+
+              // Calendar days
+              for (let day = 1; day <= daysInMonth; day++) {
+                const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dayEscrows = escrowsByDate[dateStr] || [];
+                const isToday = day === today.getDate() && month === today.getMonth();
+
+                days.push(
+                  <Grid item xs={12 / 7} key={`day-${day}`}>
+                    <Paper
+                      elevation={isToday ? 3 : 0}
+                      onClick={() => {
+                        if (dayEscrows.length > 0) {
+                          setSelectedDate({ date: dateStr, escrows: dayEscrows });
+                          setCalendarDialogOpen(true);
+                        }
+                      }}
+                      sx={{
+                        height: 80,
+                        p: 1,
+                        cursor: dayEscrows.length > 0 ? 'pointer' : 'default',
+                        border: theme => `1px solid ${isToday ? theme.palette.primary.main : theme.palette.divider}`,
+                        backgroundColor: isToday ? theme => alpha(theme.palette.primary.main, 0.05) : 'background.paper',
+                        '&:hover': dayEscrows.length > 0 ? {
+                          backgroundColor: theme => alpha(theme.palette.primary.main, 0.1),
+                        } : {},
+                        position: 'relative',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontWeight: isToday ? 700 : 400,
+                          color: isToday ? 'primary.main' : 'text.primary',
+                        }}
+                      >
+                        {day}
+                      </Typography>
+                      <Box sx={{ mt: 0.5 }}>
+                        {dayEscrows.slice(0, 2).map((escrow, idx) => (
+                          <Chip
+                            key={idx}
+                            label={escrow.eventType}
+                            size="small"
+                            sx={{
+                              height: 16,
+                              fontSize: 9,
+                              mb: 0.5,
+                              backgroundColor: escrow.eventColor,
+                              color: 'white',
+                              '& .MuiChip-label': { px: 0.5 },
+                            }}
+                          />
+                        ))}
+                        {dayEscrows.length > 2 && (
+                          <Typography variant="caption" sx={{ fontSize: 9, color: 'text.secondary' }}>
+                            +{dayEscrows.length - 2} more
+                          </Typography>
+                        )}
+                      </Box>
+                    </Paper>
+                  </Grid>
+                );
+              }
+
+              return days;
+            })()}
+          </Grid>
+        </Paper>
+      ) : (
+        <>
+          {/* Escrow Cards */}
+          <Box sx={{
+            display: viewMode === 'grid' ? 'grid' : 'flex',
+            flexDirection: 'column',
+            gridTemplateColumns: viewMode === 'grid' ? 'repeat(auto-fill, minmax(400px, 1fr))' : undefined,
+            gap: 2
+          }}>
         <AnimatePresence>
           {(() => {
             // If archived tab is selected, show archived escrows
@@ -2651,6 +2791,105 @@ const EscrowsDashboard = () => {
           })()}
         </AnimatePresence>
       </Box>
+        </>
+      )}
+
+      {/* Calendar Date Detail Dialog */}
+      <Dialog
+        open={calendarDialogOpen}
+        onClose={() => setCalendarDialogOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>
+          {selectedDate && (
+            <Box>
+              <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                Escrow Events - {safeFormatDate(selectedDate.date, 'MMMM d, yyyy')}
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {selectedDate.escrows.length} event{selectedDate.escrows.length !== 1 ? 's' : ''} scheduled
+              </Typography>
+            </Box>
+          )}
+        </DialogTitle>
+        <DialogContent>
+          {selectedDate && (
+            <List>
+              {selectedDate.escrows.map((escrow, idx) => (
+                <ListItem
+                  key={idx}
+                  sx={{
+                    border: theme => `1px solid ${theme.palette.divider}`,
+                    borderRadius: 2,
+                    mb: 1,
+                    cursor: 'pointer',
+                    '&:hover': {
+                      backgroundColor: theme => alpha(theme.palette.primary.main, 0.05),
+                    },
+                  }}
+                  onClick={() => {
+                    setCalendarDialogOpen(false);
+                    handleEscrowClick(escrow.id);
+                  }}
+                >
+                  <ListItemIcon>
+                    <Box
+                      sx={{
+                        width: 40,
+                        height: 40,
+                        borderRadius: 1,
+                        backgroundColor: escrow.eventColor,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: 'white',
+                        fontWeight: 700,
+                      }}
+                    >
+                      {escrow.eventType.charAt(0)}
+                    </Box>
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                          {escrow.address}
+                        </Typography>
+                        <Chip
+                          label={escrow.eventType}
+                          size="small"
+                          sx={{
+                            backgroundColor: escrow.eventColor,
+                            color: 'white',
+                            fontWeight: 600,
+                          }}
+                        />
+                      </Box>
+                    }
+                    secondary={
+                      <Stack spacing={0.5} sx={{ mt: 1 }}>
+                        <Typography variant="body2" color="text.secondary">
+                          Client: {escrow.clientName || 'N/A'}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Price: ${escrow.salePrice?.toLocaleString() || 'N/A'}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Status: {escrow.status}
+                        </Typography>
+                      </Stack>
+                    }
+                  />
+                </ListItem>
+              ))}
+            </List>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setCalendarDialogOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
 
       {/* New Escrow Modal */}
       <NewEscrowModal
