@@ -2420,6 +2420,11 @@ const EscrowsDashboard = () => {
                   <Paper
                     sx={{
                       p: 6,
+                      height: 240,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
                       textAlign: 'center',
                       background: theme => alpha(theme.palette.warning.main, 0.03),
                       border: theme => `1px solid ${alpha(theme.palette.warning.main, 0.1)}`,
@@ -2559,9 +2564,14 @@ const EscrowsDashboard = () => {
             
             if (!filteredEscrows || filteredEscrows.length === 0) {
               return (
-            <Paper 
-              sx={{ 
-                p: 6, 
+            <Paper
+              sx={{
+                p: 6,
+                height: 240,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
                 textAlign: 'center',
                 background: theme => alpha(theme.palette.primary.main, 0.03),
                 border: theme => `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
