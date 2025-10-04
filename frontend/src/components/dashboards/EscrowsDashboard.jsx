@@ -2401,15 +2401,6 @@ const EscrowsDashboard = () => {
               Detailed
             </ToggleButton>
           </ToggleButtonGroup>
-          <Button
-            variant="contained"
-            color="primary"
-            startIcon={<Add />}
-            onClick={handleCreateNew}
-            size="large"
-          >
-            Create New Escrow
-          </Button>
         </Stack>
       </Box>
 
