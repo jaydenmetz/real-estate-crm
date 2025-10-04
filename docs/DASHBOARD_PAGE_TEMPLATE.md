@@ -2,7 +2,12 @@
 
 **Last Updated:** October 4, 2025
 **Purpose:** Standardized template for all CRM module dashboards (Escrows, Listings, Clients, Appointments, Leads)
+**Status:** ✅ Aligned with DATA_FLOW_ARCHITECTURE.md
 **Reference:** Use this document when creating new pages or updating existing ones
+
+⚠️ **IMPORTANT:** For widget specifications (small/medium/large cards), see:
+- [DATA_FLOW_ARCHITECTURE.md](DATA_FLOW_ARCHITECTURE.md) - Complete data flow
+- [WIDGET_TEMPLATE_SYSTEM.md](WIDGET_TEMPLATE_SYSTEM.md) - Widget standards
 
 ---
 
@@ -48,10 +53,11 @@ Every dashboard page follows this exact structure from top to bottom:
 │    - All / Status filters with counts                       │
 │    - Badge indicators                                        │
 ├─────────────────────────────────────────────────────────────┤
-│ 6. CONTENT AREA (3 View Modes)                              │
-│    - Card Grid View (default)                              │
-│    - Table View (DataGrid)                                  │
-│    - Special View (Calendar for Appointments, etc)          │
+│ 6. CONTENT AREA (3 Widget View Modes)                       │
+│    - Small: 320x320px grid cards (4 per row)               │
+│    - Medium: 320px height horizontal cards (2 per row)     │
+│    - Large: 320px height full-width cards (1 per row)      │
+│    See WIDGET_TEMPLATE_SYSTEM.md for specifications        │
 ├─────────────────────────────────────────────────────────────┤
 │ 7. SPEED DIAL (Bottom Right)                                 │
 │    - Floating action button                                 │
