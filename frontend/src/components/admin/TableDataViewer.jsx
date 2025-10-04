@@ -23,7 +23,9 @@ import {
   Delete,
   DeleteForever,
   Add,
-  DeleteOutline
+  DeleteOutline,
+  ContentCopy,
+  FileCopy
 } from '@mui/icons-material';
 import apiInstance from '../../services/api.service';
 
@@ -151,6 +153,45 @@ const TableDataViewer = ({ tableName, displayName, onBack }) => {
       }
     } catch (error) {
       setError(`Failed to delete row: ${error.message}`);
+    }
+  };
+
+  const handleCopySelected = async () => {
+    setError('');
+    setSuccess('');
+    try {
+      // Get the actual row data for selected IDs
+      const selectedRowsData = tableData.rows.filter(row =>
+        selectedRows.includes(row.id || row._rowId)
+      );
+
+      // Copy to clipboard as JSON
+      const jsonData = JSON.stringify(selectedRowsData, null, 2);
+      await navigator.clipboard.writeText(jsonData);
+
+      setSuccess(`Copied ${selectedRowsData.length} row(s) to clipboard as JSON`);
+    } catch (error) {
+      setError(`Failed to copy: ${error.message}`);
+    }
+  };
+
+  const handleCopyAll = async () => {
+    setError('');
+    setSuccess('');
+    try {
+      // Fetch all rows (not just current page)
+      const response = await apiInstance.get(
+        `/admin/table/${tableName}?limit=${tableData.totalCount}&offset=0`
+      );
+
+      if (response.success) {
+        const jsonData = JSON.stringify(response.data.rows, null, 2);
+        await navigator.clipboard.writeText(jsonData);
+
+        setSuccess(`Copied all ${response.data.rows.length} row(s) to clipboard as JSON`);
+      }
+    } catch (error) {
+      setError(`Failed to copy all: ${error.message}`);
     }
   };
 
@@ -287,6 +328,25 @@ const TableDataViewer = ({ tableName, displayName, onBack }) => {
           color="success"
         >
           Add Row
+        </Button>
+
+        <Button
+          variant="contained"
+          startIcon={<ContentCopy />}
+          onClick={handleCopySelected}
+          disabled={selectedRows.length === 0}
+          color="info"
+        >
+          Copy Selected ({selectedRows.length})
+        </Button>
+
+        <Button
+          variant="contained"
+          startIcon={<FileCopy />}
+          onClick={handleCopyAll}
+          color="primary"
+        >
+          Copy All JSON
         </Button>
 
         <Button
