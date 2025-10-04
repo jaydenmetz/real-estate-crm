@@ -246,10 +246,17 @@ class ApiService {
   }
 
   // DELETE request
-  async delete(endpoint) {
-    return this.request(endpoint, {
+  async delete(endpoint, data = {}) {
+    const config = {
       method: 'DELETE',
-    });
+    };
+
+    // Add body if data is provided
+    if (Object.keys(data).length > 0) {
+      config.body = JSON.stringify(data);
+    }
+
+    return this.request(endpoint, config);
   }
 
   // PATCH request

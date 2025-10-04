@@ -80,7 +80,7 @@ const TableDataViewer = ({ tableName, displayName, onBack }) => {
     setSuccess('');
     try {
       const response = await apiInstance.delete(`/admin/table/${tableName}/rows`, {
-        data: { ids: selectedRows }
+        ids: selectedRows
       });
 
       if (response.success) {
@@ -105,7 +105,7 @@ const TableDataViewer = ({ tableName, displayName, onBack }) => {
     setSuccess('');
     try {
       const response = await apiInstance.delete(`/admin/table/${tableName}/all`, {
-        data: { confirmation: 'DELETE_ALL' }
+        confirmation: 'DELETE_ALL'
       });
 
       if (response.success) {
@@ -142,7 +142,7 @@ const TableDataViewer = ({ tableName, displayName, onBack }) => {
     setSuccess('');
     try {
       const response = await apiInstance.delete(`/admin/table/${tableName}/rows`, {
-        data: { ids: [id] }
+        ids: [id]
       });
 
       if (response.success) {
