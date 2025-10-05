@@ -133,9 +133,6 @@ const EscrowWidgetLarge = ({ escrow, index = 0, loading = false }) => {
           '&:hover': {
             transform: 'translateY(-8px) scale(1.02)',
             boxShadow: statusConfig.glow,
-            '& .overlay-gradient': {
-              opacity: 0.15,
-            },
           },
         }}
       >
@@ -149,23 +146,6 @@ const EscrowWidgetLarge = ({ escrow, index = 0, loading = false }) => {
             width: 4,
             background: statusConfig.bg,
             zIndex: 2,
-          }}
-        />
-
-        {/* ANIMATED OVERLAY GRADIENT on hover */}
-        <Box
-          className="overlay-gradient"
-          sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: statusConfig.bg,
-            opacity: 0,
-            transition: 'opacity 0.3s',
-            pointerEvents: 'none',
-            zIndex: 1,
           }}
         />
 
