@@ -376,10 +376,10 @@ const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
               display: 'flex',
               flexDirection: 'column'
             }}>
-              {/* Property Image - maintains aspect ratio */}
+              {/* Property Image - 3:2 aspect ratio (standard MLS photos) */}
               <Box
                 sx={{
-                  aspectRatio: '1 / 1', // Square aspect ratio
+                  aspectRatio: '3 / 2', // Standard MLS photo aspect ratio (1500x1000)
                   width: '100%',
                   position: 'relative',
                   background: propertyImage
@@ -470,7 +470,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
               {/* Card Content */}
               <CardContent sx={{
                 p: 2.5,
-                aspectRatio: '1 / 1', // Same square aspect ratio as image
+                aspectRatio: '3 / 2', // Same 3:2 aspect ratio as image
                 width: '100%',
                 display: 'flex',
                 flexDirection: 'column',
