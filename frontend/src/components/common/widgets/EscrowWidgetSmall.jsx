@@ -253,10 +253,10 @@ const EscrowWidgetSmall = ({ escrow, index = 0, loading = false }) => {
                 },
               }}
             >
-              <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: '#059669', mb: 0.5, display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: '#059669', mb: 0.25, display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Price
               </Typography>
-              <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1.1rem', color: '#10b981', letterSpacing: '-0.5px' }}>
+              <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1rem', color: '#10b981', letterSpacing: '-0.5px' }}>
                 {formatCurrency(purchasePrice)}
               </Typography>
             </Box>
@@ -275,10 +275,10 @@ const EscrowWidgetSmall = ({ escrow, index = 0, loading = false }) => {
                 },
               }}
             >
-              <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: '#4f46e5', mb: 0.5, display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: '#4f46e5', mb: 0.25, display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Commission
               </Typography>
-              <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1.1rem', color: '#6366f1', letterSpacing: '-0.5px' }}>
+              <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1rem', color: '#6366f1', letterSpacing: '-0.5px' }}>
                 {formatCurrency(commission)}
               </Typography>
             </Box>
