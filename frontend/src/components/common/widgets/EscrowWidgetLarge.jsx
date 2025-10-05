@@ -136,11 +136,11 @@ const EscrowWidgetLarge = ({ escrow, index = 0, loading = false }) => {
           },
         }}
       >
-        {/* LEFT: Property Image - 360px wide (vs 280px in Medium) */}
+        {/* LEFT: Property Image - 320px wide (proportional to 4× Small) */}
         <Box
           sx={{
-            width: 360,
-            minWidth: 360,
+            width: 320,
+            minWidth: 320,
             height: 320,
             position: 'relative',
             background: propertyImage
@@ -475,7 +475,7 @@ const EscrowWidgetLargeSkeleton = () => {
       }}
     >
       {/* Image skeleton */}
-      <Skeleton variant="rectangular" width={360} height={320} animation="wave" />
+      <Skeleton variant="rectangular" width={320} height={320} animation="wave" />
 
       <CardContent sx={{ flex: 1, p: 3 }}>
         {/* Address skeleton */}

@@ -134,11 +134,11 @@ const EscrowWidgetMedium = ({ escrow, index = 0, loading = false }) => {
           },
         }}
       >
-        {/* LEFT: Property Image - 280px wide */}
+        {/* LEFT: Property Image - 200px wide (proportional to card width) */}
         <Box
           sx={{
-            width: 280,
-            minWidth: 280,
+            width: 200,
+            minWidth: 200,
             height: 320,
             position: 'relative',
             background: propertyImage
@@ -415,7 +415,7 @@ const EscrowWidgetMediumSkeleton = () => {
       }}
     >
       {/* Image skeleton */}
-      <Skeleton variant="rectangular" width={280} height={320} animation="wave" />
+      <Skeleton variant="rectangular" width={200} height={320} animation="wave" />
 
       <CardContent sx={{ flex: 1, p: 3 }}>
         {/* Address skeleton */}
