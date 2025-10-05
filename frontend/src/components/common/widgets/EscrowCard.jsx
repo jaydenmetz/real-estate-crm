@@ -711,19 +711,17 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                     width: viewMode === 'medium' ? '100%' : 'calc(33.33% - 1px)', // Full width for medium, 1/3 for large (minus border)
                     height: '100%', // Match Card 1 height
                     flexShrink: 0,
-                    background: viewMode === 'medium'
-                      ? 'linear-gradient(135deg, rgba(139,92,246,0.02) 0%, rgba(168,85,247,0.03) 100%)'
-                      : 'linear-gradient(135deg, rgba(99,102,241,0.02) 0%, rgba(139,92,246,0.03) 100%)',
+                    background: 'linear-gradient(135deg, rgba(248,250,252,0.8) 0%, rgba(241,245,249,0.9) 100%)',
                     borderRight: viewMode === 'large' ? `1px solid ${alpha(theme.palette.divider, 0.08)}` : 'none',
-                    p: 2,
+                    p: 1.5,
                     display: 'flex',
                     flexDirection: 'column',
-                    justifyContent: 'center', // Center content vertically
+                    overflow: 'hidden',
                   }}
                 >
               {viewMode === 'medium' ? (
                 <>
-                  <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 3, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                  <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.75rem', mb: 1.5, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     Timeline
                   </Typography>
 
@@ -733,15 +731,15 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                       sx={{
                         display: 'flex',
                         alignItems: 'flex-start',
-                        gap: 1.5,
-                        mb: 3,
+                        gap: 1,
+                        mb: idx < timeline.length - 1 ? 2 : 0,
                         position: 'relative',
                         '&::after': idx < timeline.length - 1 ? {
                           content: '""',
                           position: 'absolute',
-                          left: 11,
-                          top: 28,
-                          bottom: -24,
+                          left: 9,
+                          top: 22,
+                          bottom: -16,
                           width: 2,
                           background: milestone.completed
                             ? 'linear-gradient(to bottom, #10b981, #059669)'
@@ -750,15 +748,15 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                       }}
                     >
                       {milestone.completed ? (
-                        <CheckCircleOutline sx={{ fontSize: 24, color: '#10b981', flexShrink: 0 }} />
+                        <CheckCircleOutline sx={{ fontSize: 20, color: '#10b981', flexShrink: 0 }} />
                       ) : (
-                        <RadioButtonUnchecked sx={{ fontSize: 24, color: alpha(theme.palette.text.disabled, 0.3), flexShrink: 0 }} />
+                        <RadioButtonUnchecked sx={{ fontSize: 20, color: alpha(theme.palette.text.disabled, 0.3), flexShrink: 0 }} />
                       )}
                       <Box sx={{ flex: 1 }}>
-                        <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: milestone.completed ? theme.palette.text.primary : theme.palette.text.secondary }}>
+                        <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.8rem', color: milestone.completed ? theme.palette.text.primary : theme.palette.text.secondary, lineHeight: 1.3 }}>
                           {milestone.label}
                         </Typography>
-                        <Typography variant="caption" sx={{ fontSize: 11, color: theme.palette.text.secondary }}>
+                        <Typography variant="caption" sx={{ fontSize: 10, color: theme.palette.text.secondary }}>
                           {milestone.date ? formatDate(milestone.date) : 'Pending'}
                         </Typography>
                       </Box>
