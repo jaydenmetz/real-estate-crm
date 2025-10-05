@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Card,
   CardContent,
@@ -9,6 +9,8 @@ import {
   useTheme,
   alpha,
   LinearProgress,
+  IconButton,
+  useMediaQuery,
 } from '@mui/material';
 import {
   Home,
@@ -20,8 +22,10 @@ import {
   AccountBalance,
   CheckCircleOutline,
   RadioButtonUnchecked,
+  ChevronLeft,
+  ChevronRight,
 } from '@mui/icons-material';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { differenceInDays, isValid, format } from 'date-fns';
 
@@ -29,6 +33,50 @@ const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
   const navigate = useNavigate();
   const theme = useTheme();
   const [showCommission, setShowCommission] = React.useState(false);
+  const [currentPanel, setCurrentPanel] = useState(0); // 0=small, 1=people, 2=timeline, 3=checklists
+
+  // Responsive breakpoints
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // < 600px
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md')); // 600-900px
+  const isDesktop = useMediaQuery(theme.breakpoints.up('lg')); // 1200px+
+
+  // Panel widths
+  const PANEL_WIDTHS = {
+    small: 320,
+    people: 380,
+    timeline: 240,
+    checklists: 240,
+  };
+
+  // Calculate visible panels based on viewport
+  const getVisiblePanels = () => {
+    if (isDesktop) return 4; // Show all panels
+    if (isTablet) return 2; // Show 2 panels
+    return 1; // Mobile: Show 1 panel
+  };
+
+  const visiblePanels = getVisiblePanels();
+  const totalPanels = 4;
+  const maxPanelIndex = totalPanels - visiblePanels;
+
+  // Navigation handlers
+  const goToNextPanel = () => {
+    setCurrentPanel((prev) => Math.min(prev + 1, maxPanelIndex));
+  };
+
+  const goToPrevPanel = () => {
+    setCurrentPanel((prev) => Math.max(prev - 1, 0));
+  };
+
+  // Swipe gesture handling
+  const handleDragEnd = (event: any, info: PanInfo) => {
+    const swipeThreshold = 50;
+    if (info.offset.x < -swipeThreshold) {
+      goToNextPanel();
+    } else if (info.offset.x > swipeThreshold) {
+      goToPrevPanel();
+    }
+  };
 
   // Parse data
   const purchasePrice = parseFloat(escrow.purchasePrice) || 0;
@@ -147,581 +195,639 @@ const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
     { group: 'Disclosures', completed: 4, total: 4 },
   ];
 
-  // Calculate total width based on view mode
-  const cardWidth = viewMode === 'small' ? 320 : viewMode === 'medium' ? 700 : 1180;
+  // Calculate container width based on visible panels
+  const getContainerWidth = () => {
+    if (isDesktop) return 1180; // All panels
+    if (isTablet) return 700; // 2 panels (small + people)
+    return 320; // 1 panel
+  };
+
+  const containerWidth = getContainerWidth();
+
+  // Calculate translate offset based on current panel
+  const getTranslateX = () => {
+    if (isDesktop) return 0; // No translation needed, all visible
+
+    let offset = 0;
+    const panelWidths = [
+      PANEL_WIDTHS.small,
+      PANEL_WIDTHS.people,
+      PANEL_WIDTHS.timeline,
+      PANEL_WIDTHS.checklists,
+    ];
+
+    for (let i = 0; i < currentPanel; i++) {
+      offset += panelWidths[i];
+    }
+
+    return -offset;
+  };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.05 }}
-      style={{ width: cardWidth }}
+      style={{ width: '100%', maxWidth: containerWidth, position: 'relative' }}
     >
-      <Card
-        onClick={() => navigate(`/escrows/${escrow.id}`)}
-        sx={{
-          height: 400,
-          width: '100%',
-          cursor: 'pointer',
-          borderRadius: 4,
-          overflow: 'hidden',
-          position: 'relative',
-          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          boxShadow: `0 4px 20px ${alpha(statusConfig.color, 0.15)}`,
-          '&:hover': {
-            transform: 'translateY(-8px) scale(1.02)',
-            boxShadow: statusConfig.glow,
-          },
-          display: 'flex',
-          flexDirection: 'row',
-        }}
-      >
-        {/* SMALL CARD - Base (320px) - Always visible */}
-        <Box sx={{ width: 320, flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
-          {/* Property Image */}
-          <Box
-            sx={{
-              height: 213,
-              position: 'relative',
-              background: propertyImage
-                ? `url(${propertyImage})`
-                : 'linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%)',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              '&::after': {
-                content: '""',
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: '50%',
-                background: 'linear-gradient(to top, rgba(0,0,0,0.4), transparent)',
-              },
-            }}
-          >
-            {!propertyImage && (
-              <Home sx={{ fontSize: 80, color: alpha('#757575', 0.5), zIndex: 1 }} />
-            )}
-
-            {/* Status Chip */}
-            <Chip
-              label={statusConfig.label}
-              size="small"
+      {/* Navigation Arrows - Only show on mobile/tablet */}
+      {!isDesktop && (
+        <>
+          {currentPanel > 0 && (
+            <IconButton
+              onClick={goToPrevPanel}
               sx={{
                 position: 'absolute',
-                top: 12,
-                right: 12,
-                fontWeight: 700,
-                fontSize: 11,
-                letterSpacing: '0.5px',
-                textTransform: 'uppercase',
-                background: statusConfig.bg,
-                color: 'white',
-                border: '2px solid rgba(255,255,255,0.3)',
-                backdropFilter: 'blur(10px)',
-                zIndex: 3,
-                '& .MuiChip-label': { px: 1.5, py: 0.5 },
+                left: -20,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                zIndex: 10,
+                background: alpha(theme.palette.background.paper, 0.9),
+                boxShadow: 3,
+                '&:hover': {
+                  background: theme.palette.background.paper,
+                },
+              }}
+            >
+              <ChevronLeft />
+            </IconButton>
+          )}
+
+          {currentPanel < maxPanelIndex && (
+            <IconButton
+              onClick={goToNextPanel}
+              sx={{
+                position: 'absolute',
+                right: -20,
+                top: '50%',
+                transform: 'translateY(-50%)',
+                zIndex: 10,
+                background: alpha(theme.palette.background.paper, 0.9),
+                boxShadow: 3,
+                '&:hover': {
+                  background: theme.palette.background.paper,
+                },
+              }}
+            >
+              <ChevronRight />
+            </IconButton>
+          )}
+        </>
+      )}
+
+      {/* Panel Indicators - Only show on mobile */}
+      {isMobile && (
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: -30,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            display: 'flex',
+            gap: 1,
+            zIndex: 10,
+          }}
+        >
+          {[0, 1, 2, 3].map((i) => (
+            <Box
+              key={i}
+              onClick={() => setCurrentPanel(Math.min(i, maxPanelIndex))}
+              sx={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                background: i === currentPanel ? statusConfig.color : alpha(theme.palette.text.disabled, 0.3),
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+                '&:hover': {
+                  transform: 'scale(1.3)',
+                },
               }}
             />
+          ))}
+        </Box>
+      )}
 
-            {/* Progress Bar */}
-            <Box
-              sx={{
-                position: 'absolute',
-                bottom: 0,
-                left: 0,
-                right: 0,
-                height: 6,
-                backgroundColor: 'rgba(0,0,0,0.3)',
-                zIndex: 3,
-              }}
-            >
+      {/* Card Container with Overflow Hidden */}
+      <Box sx={{ overflow: 'hidden', width: '100%', borderRadius: 4 }}>
+        <motion.div
+          drag={!isDesktop ? 'x' : false}
+          dragConstraints={{ left: 0, right: 0 }}
+          dragElastic={0.1}
+          onDragEnd={handleDragEnd}
+          animate={{ x: getTranslateX() }}
+          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        >
+          <Card
+            onClick={() => navigate(`/escrows/${escrow.id}`)}
+            sx={{
+              height: 400,
+              width: 1180, // Total width of all panels
+              cursor: 'pointer',
+              borderRadius: 4,
+              overflow: 'visible',
+              position: 'relative',
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              boxShadow: `0 4px 20px ${alpha(statusConfig.color, 0.15)}`,
+              '&:hover': {
+                boxShadow: statusConfig.glow,
+              },
+              display: 'flex',
+              flexDirection: 'row',
+            }}
+          >
+            {/* PANEL 1: Small Card - Base (320px) */}
+            <Box sx={{ width: 320, flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
+              {/* Property Image */}
               <Box
                 sx={{
-                  height: '100%',
-                  width: `${checklistProgress}%`,
-                  background: statusConfig.bg,
-                  transition: 'width 0.5s ease-in-out',
-                  boxShadow: `0 0 10px ${alpha(statusConfig.color, 0.6)}`,
-                }}
-              />
-            </Box>
-
-            {/* Progress Percentage */}
-            <Typography
-              variant="caption"
-              sx={{
-                position: 'absolute',
-                bottom: 12,
-                left: 12,
-                fontWeight: 800,
-                fontSize: 18,
-                color: 'white',
-                textShadow: '0 2px 8px rgba(0,0,0,0.5)',
-                zIndex: 4,
-              }}
-            >
-              {checklistProgress}%
-            </Typography>
-          </Box>
-
-          {/* Card Content */}
-          <CardContent sx={{ p: 2.5, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
-            {/* Address */}
-            <Typography
-              variant="h6"
-              sx={{
-                fontWeight: 800,
-                fontSize: '1rem',
-                mb: 2,
-                color: theme.palette.text.primary,
-                lineHeight: 1.3,
-              }}
-            >
-              {address}
-            </Typography>
-
-            {/* Metrics Grid */}
-            <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1.5, mb: 2 }}>
-              {/* Price */}
-              <Box
-                sx={{
-                  p: 1,
-                  borderRadius: 2,
-                  background: 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(5,150,105,0.12) 100%)',
-                  border: `1px solid ${alpha('#10b981', 0.15)}`,
-                  transition: 'all 0.2s',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(5,150,105,0.16) 100%)',
-                    transform: 'scale(1.05)',
+                  height: 213,
+                  position: 'relative',
+                  background: propertyImage
+                    ? `url(${propertyImage})`
+                    : 'linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%)',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  '&::after': {
+                    content: '""',
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: '50%',
+                    background: 'linear-gradient(to top, rgba(0,0,0,0.4), transparent)',
                   },
                 }}
               >
-                <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: '#059669', mb: 0.25, display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                  Price
-                </Typography>
-                <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1rem', color: '#10b981', letterSpacing: '-0.5px' }}>
-                  {formatCurrency(purchasePrice)}
+                {!propertyImage && (
+                  <Home sx={{ fontSize: 80, color: alpha('#757575', 0.5), zIndex: 1 }} />
+                )}
+
+                {/* Status Chip */}
+                <Chip
+                  label={statusConfig.label}
+                  size="small"
+                  sx={{
+                    position: 'absolute',
+                    top: 12,
+                    right: 12,
+                    fontWeight: 700,
+                    fontSize: 11,
+                    letterSpacing: '0.5px',
+                    textTransform: 'uppercase',
+                    background: statusConfig.bg,
+                    color: 'white',
+                    border: '2px solid rgba(255,255,255,0.3)',
+                    backdropFilter: 'blur(10px)',
+                    zIndex: 3,
+                    '& .MuiChip-label': { px: 1.5, py: 0.5 },
+                  }}
+                />
+
+                {/* Progress Bar */}
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    height: 6,
+                    backgroundColor: 'rgba(0,0,0,0.3)',
+                    zIndex: 3,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      height: '100%',
+                      width: `${checklistProgress}%`,
+                      background: statusConfig.bg,
+                      transition: 'width 0.5s ease-in-out',
+                      boxShadow: `0 0 10px ${alpha(statusConfig.color, 0.6)}`,
+                    }}
+                  />
+                </Box>
+
+                {/* Progress Percentage */}
+                <Typography
+                  variant="caption"
+                  sx={{
+                    position: 'absolute',
+                    bottom: 12,
+                    left: 12,
+                    fontWeight: 800,
+                    fontSize: 18,
+                    color: 'white',
+                    textShadow: '0 2px 8px rgba(0,0,0,0.5)',
+                    zIndex: 4,
+                  }}
+                >
+                  {checklistProgress}%
                 </Typography>
               </Box>
 
-              {/* Commission */}
-              <Box
-                sx={{
-                  position: 'relative',
-                  p: 1,
-                  borderRadius: 2,
-                  background: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(79,70,229,0.12) 100%)',
-                  border: `1px solid ${alpha('#6366f1', 0.15)}`,
-                  transition: 'all 0.2s',
-                  '&:hover': {
-                    background: 'linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(79,70,229,0.16) 100%)',
-                    transform: 'scale(1.05)',
-                  },
-                }}
-              >
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: '#4f46e5', mb: 0.25, display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                    Commission
-                  </Typography>
+              {/* Card Content */}
+              <CardContent sx={{ p: 2.5, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+                {/* Address */}
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 800,
+                    fontSize: '1rem',
+                    mb: 2,
+                    color: theme.palette.text.primary,
+                    lineHeight: 1.3,
+                  }}
+                >
+                  {address}
+                </Typography>
+
+                {/* Metrics Grid */}
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1.5, mb: 2 }}>
+                  {/* Price */}
                   <Box
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowCommission(!showCommission);
-                    }}
                     sx={{
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: 20,
-                      height: 20,
-                      borderRadius: 1,
+                      p: 1,
+                      borderRadius: 2,
+                      background: 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(5,150,105,0.12) 100%)',
+                      border: `1px solid ${alpha('#10b981', 0.15)}`,
                       transition: 'all 0.2s',
                       '&:hover': {
-                        background: alpha('#6366f1', 0.1),
+                        background: 'linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(5,150,105,0.16) 100%)',
+                        transform: 'scale(1.05)',
                       },
                     }}
                   >
-                    {showCommission ? (
-                      <VisibilityOff sx={{ fontSize: 14, color: '#6366f1' }} />
-                    ) : (
-                      <Visibility sx={{ fontSize: 14, color: '#6366f1' }} />
-                    )}
+                    <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: '#059669', mb: 0.25, display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      Price
+                    </Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1rem', color: '#10b981', letterSpacing: '-0.5px' }}>
+                      {formatCurrency(purchasePrice)}
+                    </Typography>
                   </Box>
-                </Box>
-                <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1rem', color: '#6366f1', letterSpacing: '-0.5px' }}>
-                  {showCommission ? formatCurrency(commission) : maskCommission(commission)}
-                </Typography>
-              </Box>
-            </Box>
 
-            {/* Footer - Close date and days */}
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                mt: 'auto',
-                pt: 1.5,
-                borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
-              }}
-            >
-              <Box>
-                <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
-                  Closes
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary }}>
-                  {formatDate(closingDate) || 'TBD'}
-                </Typography>
-              </Box>
-
-              {/* Days Badge */}
-              {escrow.escrowStatus === 'Closed' ? (
-                <Box sx={{
-                  display: 'flex', alignItems: 'center', gap: 0.75,
-                  px: 2, py: 1, borderRadius: 2,
-                  background: 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(5,150,105,0.15) 100%)',
-                  border: `1px solid ${alpha('#10b981', 0.2)}`,
-                }}>
-                  <CheckCircle sx={{ fontSize: 18, color: '#10b981' }} />
-                  <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: '#10b981' }}>
-                    Closed
-                  </Typography>
-                </Box>
-              ) : escrow.escrowStatus === 'Cancelled' ? (
-                <Box sx={{
-                  display: 'flex', alignItems: 'center', gap: 0.75,
-                  px: 2, py: 1, borderRadius: 2,
-                  background: 'linear-gradient(135deg, rgba(239,68,68,0.1) 0%, rgba(220,38,38,0.15) 100%)',
-                  border: `1px solid ${alpha('#ef4444', 0.2)}`,
-                }}>
-                  <Cancel sx={{ fontSize: 18, color: '#ef4444' }} />
-                  <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: '#ef4444' }}>
-                    Cancelled
-                  </Typography>
-                </Box>
-              ) : daysToClose !== null ? (
-                <Box
-                  sx={{
-                    px: 2,
-                    py: 1,
-                    borderRadius: 2,
-                    background: isPastDue
-                      ? 'linear-gradient(135deg, rgba(239,68,68,0.1) 0%, rgba(220,38,38,0.15) 100%)'
-                      : isUrgent
-                      ? 'linear-gradient(135deg, rgba(245,158,11,0.1) 0%, rgba(217,119,6,0.15) 100%)'
-                      : 'linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(37,99,235,0.15) 100%)',
-                    border: `1px solid ${alpha(
-                      isPastDue ? '#ef4444' : isUrgent ? '#f59e0b' : '#3b82f6',
-                      0.2
-                    )}`,
-                  }}
-                >
-                  <Typography
-                    variant="body2"
+                  {/* Commission */}
+                  <Box
                     sx={{
-                      fontWeight: 700,
-                      fontSize: '0.875rem',
-                      color: isPastDue ? '#ef4444' : isUrgent ? '#f59e0b' : '#3b82f6',
+                      position: 'relative',
+                      p: 1,
+                      borderRadius: 2,
+                      background: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(79,70,229,0.12) 100%)',
+                      border: `1px solid ${alpha('#6366f1', 0.15)}`,
+                      transition: 'all 0.2s',
+                      '&:hover': {
+                        background: 'linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(79,70,229,0.16) 100%)',
+                        transform: 'scale(1.05)',
+                      },
                     }}
                   >
-                    {isPastDue ? `${Math.abs(daysToClose)}d late` : `${daysToClose}d`}
-                  </Typography>
-                </Box>
-              ) : null}
-            </Box>
-          </CardContent>
-        </Box>
-
-        {/* MEDIUM PANEL - People (380px) - Slides in from right */}
-        <AnimatePresence>
-          {(viewMode === 'medium' || viewMode === 'large') && (
-            <motion.div
-              initial={{ x: 380, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: 380, opacity: 0 }}
-              transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-              style={{ width: 380, flexShrink: 0 }}
-            >
-              <Box
-                sx={{
-                  width: '100%',
-                  height: '100%',
-                  background: 'linear-gradient(135deg, rgba(99,102,241,0.02) 0%, rgba(139,92,246,0.03) 100%)',
-                  borderLeft: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-                  p: 3,
-                  display: 'flex',
-                  flexDirection: 'column',
-                }}
-              >
-                <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 3, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
-                  People
-                </Typography>
-
-                {/* Buyer */}
-                <motion.div
-                  initial={{ x: 20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.1 }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                    <Avatar
-                      sx={{
-                        width: 56,
-                        height: 56,
-                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                        fontWeight: 700,
-                        fontSize: '1.25rem',
-                      }}
-                    >
-                      {getInitials(people.buyer.name)}
-                    </Avatar>
-                    <Box sx={{ flex: 1 }}>
-                      <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
-                        Buyer
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: '#4f46e5', mb: 0.25, display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        Commission
                       </Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', color: theme.palette.text.primary }}>
-                        {people.buyer.name}
-                      </Typography>
-                      {people.buyer.email && (
-                        <Typography variant="caption" sx={{ fontSize: 11, color: theme.palette.text.secondary }}>
-                          {people.buyer.email}
-                        </Typography>
-                      )}
-                    </Box>
-                  </Box>
-                </motion.div>
-
-                {/* Seller */}
-                <motion.div
-                  initial={{ x: 20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.15 }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                    <Avatar
-                      sx={{
-                        width: 56,
-                        height: 56,
-                        background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                        fontWeight: 700,
-                        fontSize: '1.25rem',
-                      }}
-                    >
-                      {getInitials(people.seller.name)}
-                    </Avatar>
-                    <Box sx={{ flex: 1 }}>
-                      <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
-                        Seller
-                      </Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', color: theme.palette.text.primary }}>
-                        {people.seller.name}
-                      </Typography>
-                      {people.seller.email && (
-                        <Typography variant="caption" sx={{ fontSize: 11, color: theme.palette.text.secondary }}>
-                          {people.seller.email}
-                        </Typography>
-                      )}
-                    </Box>
-                  </Box>
-                </motion.div>
-
-                {/* Listing Agent */}
-                <motion.div
-                  initial={{ x: 20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                    <Avatar
-                      sx={{
-                        width: 56,
-                        height: 56,
-                        background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
-                        fontWeight: 700,
-                        fontSize: '1.25rem',
-                      }}
-                    >
-                      {getInitials(people.listingAgent.name)}
-                    </Avatar>
-                    <Box sx={{ flex: 1 }}>
-                      <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
-                        Listing Agent
-                      </Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', color: theme.palette.text.primary }}>
-                        {people.listingAgent.name}
-                      </Typography>
-                      <Typography variant="caption" sx={{ fontSize: 11, color: theme.palette.text.secondary }}>
-                        {people.listingAgent.brokerage}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </motion.div>
-
-                {/* Buyer Agent */}
-                <motion.div
-                  initial={{ x: 20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.25 }}
-                >
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Avatar
-                      sx={{
-                        width: 56,
-                        height: 56,
-                        background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-                        fontWeight: 700,
-                        fontSize: '1.25rem',
-                      }}
-                    >
-                      {getInitials(people.buyerAgent.name)}
-                    </Avatar>
-                    <Box sx={{ flex: 1 }}>
-                      <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
-                        Buyer Agent
-                      </Typography>
-                      <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', color: theme.palette.text.primary }}>
-                        {people.buyerAgent.name}
-                      </Typography>
-                      <Typography variant="caption" sx={{ fontSize: 11, color: theme.palette.text.secondary }}>
-                        {people.buyerAgent.brokerage}
-                      </Typography>
-                    </Box>
-                  </Box>
-                </motion.div>
-              </Box>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* LARGE PANEL - Timeline & Checklist (480px) - Slides in from right */}
-        <AnimatePresence>
-          {viewMode === 'large' && (
-            <motion.div
-              initial={{ x: 480, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: 480, opacity: 0 }}
-              transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1], delay: 0.1 }}
-              style={{ width: 480, flexShrink: 0 }}
-            >
-              <Box
-                sx={{
-                  width: '100%',
-                  height: '100%',
-                  background: 'linear-gradient(135deg, rgba(139,92,246,0.02) 0%, rgba(168,85,247,0.03) 100%)',
-                  borderLeft: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-                  p: 3,
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: 3,
-                }}
-              >
-                {/* Timeline Column */}
-                <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 3, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
-                    Timeline
-                  </Typography>
-
-                  {timeline.map((milestone, idx) => (
-                    <motion.div
-                      key={milestone.label}
-                      initial={{ x: 20, opacity: 0 }}
-                      animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: 0.15 + idx * 0.05 }}
-                    >
                       <Box
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setShowCommission(!showCommission);
+                        }}
                         sx={{
+                          cursor: 'pointer',
                           display: 'flex',
-                          alignItems: 'flex-start',
-                          gap: 1.5,
-                          mb: 3,
-                          position: 'relative',
-                          '&::after': idx < timeline.length - 1 ? {
-                            content: '""',
-                            position: 'absolute',
-                            left: 11,
-                            top: 28,
-                            bottom: -24,
-                            width: 2,
-                            background: milestone.completed
-                              ? 'linear-gradient(to bottom, #10b981, #059669)'
-                              : alpha(theme.palette.divider, 0.2),
-                          } : {},
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: 20,
+                          height: 20,
+                          borderRadius: 1,
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            background: alpha('#6366f1', 0.1),
+                          },
                         }}
                       >
-                        {milestone.completed ? (
-                          <CheckCircleOutline sx={{ fontSize: 24, color: '#10b981', flexShrink: 0 }} />
+                        {showCommission ? (
+                          <VisibilityOff sx={{ fontSize: 14, color: '#6366f1' }} />
                         ) : (
-                          <RadioButtonUnchecked sx={{ fontSize: 24, color: alpha(theme.palette.text.disabled, 0.3), flexShrink: 0 }} />
+                          <Visibility sx={{ fontSize: 14, color: '#6366f1' }} />
                         )}
-                        <Box sx={{ flex: 1 }}>
-                          <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: milestone.completed ? theme.palette.text.primary : theme.palette.text.secondary }}>
-                            {milestone.label}
-                          </Typography>
-                          <Typography variant="caption" sx={{ fontSize: 11, color: theme.palette.text.secondary }}>
-                            {milestone.date ? formatDate(milestone.date) : 'Pending'}
-                          </Typography>
-                        </Box>
                       </Box>
-                    </motion.div>
-                  ))}
+                    </Box>
+                    <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1rem', color: '#6366f1', letterSpacing: '-0.5px' }}>
+                      {showCommission ? formatCurrency(commission) : maskCommission(commission)}
+                    </Typography>
+                  </Box>
                 </Box>
 
-                {/* Checklist Column */}
-                <Box>
-                  <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 3, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
-                    Checklists
-                  </Typography>
+                {/* Footer - Close date and days */}
+                <Box
+                  sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    mt: 'auto',
+                    pt: 1.5,
+                    borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                  }}
+                >
+                  <Box>
+                    <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
+                      Closes
+                    </Typography>
+                    <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary }}>
+                      {formatDate(closingDate) || 'TBD'}
+                    </Typography>
+                  </Box>
 
-                  {checklists.map((checklist, idx) => {
-                    const progress = (checklist.completed / checklist.total) * 100;
-                    const isComplete = checklist.completed === checklist.total;
-
-                    return (
-                      <motion.div
-                        key={checklist.group}
-                        initial={{ x: 20, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        transition={{ delay: 0.2 + idx * 0.05 }}
+                  {/* Days Badge */}
+                  {escrow.escrowStatus === 'Closed' ? (
+                    <Box sx={{
+                      display: 'flex', alignItems: 'center', gap: 0.75,
+                      px: 2, py: 1, borderRadius: 2,
+                      background: 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(5,150,105,0.15) 100%)',
+                      border: `1px solid ${alpha('#10b981', 0.2)}`,
+                    }}>
+                      <CheckCircle sx={{ fontSize: 18, color: '#10b981' }} />
+                      <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: '#10b981' }}>
+                        Closed
+                      </Typography>
+                    </Box>
+                  ) : escrow.escrowStatus === 'Cancelled' ? (
+                    <Box sx={{
+                      display: 'flex', alignItems: 'center', gap: 0.75,
+                      px: 2, py: 1, borderRadius: 2,
+                      background: 'linear-gradient(135deg, rgba(239,68,68,0.1) 0%, rgba(220,38,38,0.15) 100%)',
+                      border: `1px solid ${alpha('#ef4444', 0.2)}`,
+                    }}>
+                      <Cancel sx={{ fontSize: 18, color: '#ef4444' }} />
+                      <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: '#ef4444' }}>
+                        Cancelled
+                      </Typography>
+                    </Box>
+                  ) : daysToClose !== null ? (
+                    <Box
+                      sx={{
+                        px: 2,
+                        py: 1,
+                        borderRadius: 2,
+                        background: isPastDue
+                          ? 'linear-gradient(135deg, rgba(239,68,68,0.1) 0%, rgba(220,38,38,0.15) 100%)'
+                          : isUrgent
+                          ? 'linear-gradient(135deg, rgba(245,158,11,0.1) 0%, rgba(217,119,6,0.15) 100%)'
+                          : 'linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(37,99,235,0.15) 100%)',
+                        border: `1px solid ${alpha(
+                          isPastDue ? '#ef4444' : isUrgent ? '#f59e0b' : '#3b82f6',
+                          0.2
+                        )}`,
+                      }}
+                    >
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontWeight: 700,
+                          fontSize: '0.875rem',
+                          color: isPastDue ? '#ef4444' : isUrgent ? '#f59e0b' : '#3b82f6',
+                        }}
                       >
-                        <Box sx={{ mb: 3 }}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                            <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary }}>
-                              {checklist.group}
-                            </Typography>
-                            <Typography variant="caption" sx={{ fontSize: 11, fontWeight: 600, color: isComplete ? '#10b981' : theme.palette.text.secondary }}>
-                              {checklist.completed}/{checklist.total}
-                            </Typography>
-                          </Box>
-                          <LinearProgress
-                            variant="determinate"
-                            value={progress}
-                            sx={{
-                              height: 6,
-                              borderRadius: 3,
-                              backgroundColor: alpha(theme.palette.divider, 0.1),
-                              '& .MuiLinearProgress-bar': {
-                                background: isComplete
-                                  ? 'linear-gradient(90deg, #10b981 0%, #059669 100%)'
-                                  : 'linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%)',
-                                borderRadius: 3,
-                              },
-                            }}
-                          />
-                        </Box>
-                      </motion.div>
-                    );
-                  })}
+                        {isPastDue ? `${Math.abs(daysToClose)}d late` : `${daysToClose}d`}
+                      </Typography>
+                    </Box>
+                  ) : null}
+                </Box>
+              </CardContent>
+            </Box>
+
+            {/* PANEL 2: People (380px) */}
+            <Box
+              sx={{
+                width: 380,
+                flexShrink: 0,
+                height: '100%',
+                background: 'linear-gradient(135deg, rgba(99,102,241,0.02) 0%, rgba(139,92,246,0.03) 100%)',
+                borderLeft: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
+                p: 3,
+                display: 'flex',
+                flexDirection: 'column',
+              }}
+            >
+              <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 3, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                People
+              </Typography>
+
+              {/* Buyer */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                <Avatar
+                  sx={{
+                    width: 56,
+                    height: 56,
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    fontWeight: 700,
+                    fontSize: '1.25rem',
+                  }}
+                >
+                  {getInitials(people.buyer.name)}
+                </Avatar>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
+                    Buyer
+                  </Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', color: theme.palette.text.primary }}>
+                    {people.buyer.name}
+                  </Typography>
+                  {people.buyer.email && (
+                    <Typography variant="caption" sx={{ fontSize: 11, color: theme.palette.text.secondary }}>
+                      {people.buyer.email}
+                    </Typography>
+                  )}
                 </Box>
               </Box>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </Card>
+
+              {/* Seller */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                <Avatar
+                  sx={{
+                    width: 56,
+                    height: 56,
+                    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                    fontWeight: 700,
+                    fontSize: '1.25rem',
+                  }}
+                >
+                  {getInitials(people.seller.name)}
+                </Avatar>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
+                    Seller
+                  </Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', color: theme.palette.text.primary }}>
+                    {people.seller.name}
+                  </Typography>
+                  {people.seller.email && (
+                    <Typography variant="caption" sx={{ fontSize: 11, color: theme.palette.text.secondary }}>
+                      {people.seller.email}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+
+              {/* Listing Agent */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
+                <Avatar
+                  sx={{
+                    width: 56,
+                    height: 56,
+                    background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+                    fontWeight: 700,
+                    fontSize: '1.25rem',
+                  }}
+                >
+                  {getInitials(people.listingAgent.name)}
+                </Avatar>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
+                    Listing Agent
+                  </Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', color: theme.palette.text.primary }}>
+                    {people.listingAgent.name}
+                  </Typography>
+                  <Typography variant="caption" sx={{ fontSize: 11, color: theme.palette.text.secondary }}>
+                    {people.listingAgent.brokerage}
+                  </Typography>
+                </Box>
+              </Box>
+
+              {/* Buyer Agent */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Avatar
+                  sx={{
+                    width: 56,
+                    height: 56,
+                    background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
+                    fontWeight: 700,
+                    fontSize: '1.25rem',
+                  }}
+                >
+                  {getInitials(people.buyerAgent.name)}
+                </Avatar>
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
+                    Buyer Agent
+                  </Typography>
+                  <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', color: theme.palette.text.primary }}>
+                    {people.buyerAgent.name}
+                  </Typography>
+                  <Typography variant="caption" sx={{ fontSize: 11, color: theme.palette.text.secondary }}>
+                    {people.buyerAgent.brokerage}
+                  </Typography>
+                </Box>
+              </Box>
+            </Box>
+
+            {/* PANEL 3: Timeline (240px) */}
+            <Box
+              sx={{
+                width: 240,
+                flexShrink: 0,
+                height: '100%',
+                background: 'linear-gradient(135deg, rgba(139,92,246,0.02) 0%, rgba(168,85,247,0.03) 100%)',
+                borderLeft: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
+                p: 3,
+              }}
+            >
+              <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 3, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                Timeline
+              </Typography>
+
+              {timeline.map((milestone, idx) => (
+                <Box
+                  key={milestone.label}
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: 1.5,
+                    mb: 3,
+                    position: 'relative',
+                    '&::after': idx < timeline.length - 1 ? {
+                      content: '""',
+                      position: 'absolute',
+                      left: 11,
+                      top: 28,
+                      bottom: -24,
+                      width: 2,
+                      background: milestone.completed
+                        ? 'linear-gradient(to bottom, #10b981, #059669)'
+                        : alpha(theme.palette.divider, 0.2),
+                    } : {},
+                  }}
+                >
+                  {milestone.completed ? (
+                    <CheckCircleOutline sx={{ fontSize: 24, color: '#10b981', flexShrink: 0 }} />
+                  ) : (
+                    <RadioButtonUnchecked sx={{ fontSize: 24, color: alpha(theme.palette.text.disabled, 0.3), flexShrink: 0 }} />
+                  )}
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: milestone.completed ? theme.palette.text.primary : theme.palette.text.secondary }}>
+                      {milestone.label}
+                    </Typography>
+                    <Typography variant="caption" sx={{ fontSize: 11, color: theme.palette.text.secondary }}>
+                      {milestone.date ? formatDate(milestone.date) : 'Pending'}
+                    </Typography>
+                  </Box>
+                </Box>
+              ))}
+            </Box>
+
+            {/* PANEL 4: Checklists (240px) */}
+            <Box
+              sx={{
+                width: 240,
+                flexShrink: 0,
+                height: '100%',
+                background: 'linear-gradient(135deg, rgba(168,85,247,0.02) 0%, rgba(217,70,239,0.03) 100%)',
+                borderLeft: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
+                p: 3,
+              }}
+            >
+              <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 3, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                Checklists
+              </Typography>
+
+              {checklists.map((checklist, idx) => {
+                const progress = (checklist.completed / checklist.total) * 100;
+                const isComplete = checklist.completed === checklist.total;
+
+                return (
+                  <Box key={checklist.group} sx={{ mb: 3 }}>
+                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                      <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary }}>
+                        {checklist.group}
+                      </Typography>
+                      <Typography variant="caption" sx={{ fontSize: 11, fontWeight: 600, color: isComplete ? '#10b981' : theme.palette.text.secondary }}>
+                        {checklist.completed}/{checklist.total}
+                      </Typography>
+                    </Box>
+                    <LinearProgress
+                      variant="determinate"
+                      value={progress}
+                      sx={{
+                        height: 6,
+                        borderRadius: 3,
+                        backgroundColor: alpha(theme.palette.divider, 0.1),
+                        '& .MuiLinearProgress-bar': {
+                          background: isComplete
+                            ? 'linear-gradient(90deg, #10b981 0%, #059669 100%)'
+                            : 'linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%)',
+                          borderRadius: 3,
+                        },
+                      }}
+                    />
+                  </Box>
+                );
+              })}
+            </Box>
+          </Card>
+        </motion.div>
+      </Box>
     </motion.div>
   );
 };
