@@ -876,9 +876,9 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                   </Typography>
                 </Box>
               </Box>
-                </>
-              )}
-                </Box>
+                    </Box>
+                  </>
+                )}
 
                 {/* PANEL 3: Timeline (Only in large view) */}
                 {viewMode === 'large' && (
