@@ -340,26 +340,20 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
         </Box>
       )}
 
-      {/* Card Container - 2-card approach with scroll-like slide */}
+      {/* Card Container - Card 1 stays fixed, Card 2 slides in */}
       <Box sx={{
         width: '100%',
         position: 'relative',
         display: 'flex',
         flexDirection: 'row',
         gap: 1.5, // 12px gap between cards
-        alignItems: 'stretch', // Make both cards same height
+        alignItems: 'flex-start', // Align to top, let cards determine own height
       }}>
-        {/* Card 1: Small Card (Always visible) */}
-        <motion.div
-          layoutId={`escrow-small-${escrow.id}`}
-          style={{
-            width: viewMode === 'small' ? '100%' : viewMode === 'medium' ? 'calc(45.71% - 12px)' : 'calc(27.12% - 12px)',
+        {/* Card 1: Small Card (Fixed width - never moves) */}
+        <Box
+          sx={{
+            width: viewMode === 'small' ? '100%' : 'calc(25% - 18px)', // Small card width from grid calculation
             flexShrink: 0,
-            display: 'flex',
-            flexDirection: 'column',
-          }}
-          transition={{
-            layout: { type: 'spring', stiffness: 300, damping: 30 }
           }}
         >
           <Card
@@ -681,32 +675,28 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
               </CardContent>
             </Box>
           </Card>
-        </motion.div>
+        </Box>
 
-        {/* Card 2: Extension Panels (Slides from behind Card 1) */}
+        {/* Card 2: Extension Panels (Slides in from right) */}
         <AnimatePresence mode="wait">
           {viewMode !== 'small' && (
             <motion.div
               key={`extension-${viewMode}`}
-              layoutId={`escrow-extension-${escrow.id}`}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
               style={{
-                width: viewMode === 'medium' ? 'calc(54.29% - 12px)' : 'calc(72.88% - 12px)',
-                flexShrink: 0,
-                flexGrow: 1,
-                display: 'flex',
+                flex: 1, // Take remaining space
+                minWidth: 0, // Allow flex shrink
               }}
               transition={{
-                layout: { type: 'spring', stiffness: 400, damping: 35 },
-                opacity: { duration: 0.15 }
+                opacity: { duration: 0.2 },
+                x: { type: 'spring', stiffness: 400, damping: 35 }
               }}
             >
               <Card
                 sx={{
                   width: '100%',
-                  height: '100%', // Match Card 1's height (from flex stretch)
                   borderRadius: 4,
                   overflow: 'hidden',
                   position: 'relative',
