@@ -222,12 +222,12 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
   // Small card width = (100% - 72px) / 4 = 25% - 18px
   //
   // For aspect ratio calculation:
-  // Small card has 3:4 aspect ratio (width:height)
-  // If small card width = calc(25% - 18px), height = calc((25% - 18px) * 4/3)
+  // Using 3:3.5 aspect ratio (width:height) for shorter cards
+  // If small card width = calc(25% - 18px), height = calc((25% - 18px) * 3.5/3)
   //
   // We need ALL cards (small/medium/large) to have the SAME height
   // So we calculate height from the small card's width, then use that fixed height for all
-  const cardHeight = 'calc((25vw - 18px) * 4 / 3)'; // Height based on small card width
+  const cardHeight = 'calc((25vw - 18px) * 3.5 / 3)'; // Height based on small card width with 3:3.5 ratio
 
   // Helper to check if a panel should be shown
   const showPanel = (panelIndex) => {
