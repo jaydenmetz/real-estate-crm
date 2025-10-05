@@ -709,6 +709,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                 <Box
                   sx={{
                     width: viewMode === 'medium' ? '100%' : 'calc(33.33% - 1px)', // Full width for medium, 1/3 for large (minus border)
+                    height: '100%', // Match Card 1 height
                     flexShrink: 0,
                     background: viewMode === 'medium'
                       ? 'linear-gradient(135deg, rgba(139,92,246,0.02) 0%, rgba(168,85,247,0.03) 100%)'
