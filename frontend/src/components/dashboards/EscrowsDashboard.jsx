@@ -1711,57 +1711,17 @@ const EscrowsDashboard = () => {
         </Paper>
       ) : (
         <>
-          {/* TEST: Grid Layout Visualization */}
-          <Box sx={{ mb: 4 }}>
-            <Typography variant="caption" sx={{ mb: 2, display: 'block', color: 'error.main', fontWeight: 700 }}>
-              TEST: Grid Layout Visualization ({viewMode} mode)
-            </Typography>
-
-            {/* Row 1 for Small mode (4 boxes) */}
-            {viewMode === 'small' && (
-              <Box sx={{
-                width: '100%',
-                border: '2px solid red',
-                display: 'flex',
-                height: 640, // Dynamic height based on aspect ratio (will match cards)
-                mb: 3,
-              }}>
-                <Box sx={{ flex: 1, border: '1px solid red', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'red' }}>Box 1</Box>
-                <Box sx={{ width: 2, bgcolor: 'red' }} /> {/* Divider */}
-                <Box sx={{ flex: 1, border: '1px solid red', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'red' }}>Box 2</Box>
-                <Box sx={{ width: 2, bgcolor: 'red' }} /> {/* Divider */}
-                <Box sx={{ flex: 1, border: '1px solid red', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'red' }}>Box 3</Box>
-                <Box sx={{ width: 2, bgcolor: 'red' }} /> {/* Divider */}
-                <Box sx={{ flex: 1, border: '1px solid red', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'red' }}>Box 4</Box>
-              </Box>
-            )}
-
-            {/* Row 1 for Medium mode (2 boxes) */}
-            {viewMode === 'medium' && (
-              <Box sx={{
-                width: '100%',
-                border: '2px solid red',
-                display: 'flex',
-                height: 640, // Dynamic height based on aspect ratio
-                mb: 3,
-              }}>
-                <Box sx={{ flex: 1, border: '1px solid red', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'red' }}>Box 1</Box>
-                <Box sx={{ width: 2, bgcolor: 'red' }} /> {/* Divider */}
-                <Box sx={{ flex: 1, border: '1px solid red', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'red' }}>Box 2</Box>
-              </Box>
-            )}
-          </Box>
-
-          {/* Escrow Cards */}
+          {/* Escrow Cards with proper dividers and edge alignment */}
           <Box sx={{
             display: 'grid',
             gridTemplateColumns: {
               xs: '1fr', // Mobile: Always 1 column
               sm: '1fr', // Tablet: Always 1 column
-              md: viewMode === 'small' ? 'repeat(2, 1fr)' : viewMode === 'medium' ? 'repeat(2, 1fr)' : '1fr', // Medium screens: 2 cols for small, 2 for medium, 1 for large
-              lg: viewMode === 'small' ? 'repeat(4, 1fr)' : viewMode === 'medium' ? 'repeat(2, 1fr)' : '1fr', // Large screens: Respect viewMode
+              md: viewMode === 'small' ? 'repeat(2, 1fr)' : viewMode === 'medium' ? 'repeat(2, 1fr)' : '1fr',
+              lg: viewMode === 'small' ? 'repeat(4, 1fr)' : viewMode === 'medium' ? 'repeat(2, 1fr)' : '1fr',
             },
-            gap: 3,
+            columnGap: 3, // 24px gap = divider width
+            rowGap: 3,
             width: '100%',
           }}>
         <AnimatePresence>

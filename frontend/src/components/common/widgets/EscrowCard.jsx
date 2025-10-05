@@ -335,14 +335,11 @@ const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
         </Box>
       )}
 
-      {/* Card Container with Overflow Hidden */}
+      {/* Card Container - fills grid cell completely */}
       <Box sx={{
         overflow: 'hidden',
         width: '100%',
         borderRadius: 4,
-        display: 'flex',
-        justifyContent: viewMode === 'large' ? 'flex-start' : 'center', // Left-align large, center small/medium
-        alignItems: 'center',
       }}>
         <motion.div
           drag={!isDesktop ? 'x' : false}
@@ -352,15 +349,13 @@ const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
           animate={{ x: getTranslateX() }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
           style={{
-            width: viewMode === 'large' ? '100%' : 'auto',
-            maxWidth: viewMode === 'small' ? 320 : viewMode === 'medium' ? 700 : 'none',
+            width: '100%',
           }}
         >
           <Card
             onClick={() => navigate(`/escrows/${escrow.id}`)}
             sx={{
               width: '100%',
-              maxWidth: viewMode === 'small' ? 320 : viewMode === 'medium' ? 700 : 'none',
               cursor: 'pointer',
               borderRadius: 4,
               overflow: 'hidden',
