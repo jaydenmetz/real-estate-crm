@@ -218,7 +218,7 @@ const EscrowWidgetSmall = ({ escrow, index = 0, loading = false }) => {
           </Typography>
         </Box>
 
-        <CardContent sx={{ p: 2, display: 'flex', flexDirection: 'column', flex: 1 }}>
+        <CardContent sx={{ p: 2, display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
           {/* Address - FULL ADDRESS, larger text */}
           <Typography
             variant="h6"
@@ -238,7 +238,7 @@ const EscrowWidgetSmall = ({ escrow, index = 0, loading = false }) => {
           </Typography>
 
           {/* KEY METRICS - 2 LARGE boxes */}
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mb: 2 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mb: 1.5 }}>
             {/* Price */}
             <Box
               sx={{
@@ -288,7 +288,7 @@ const EscrowWidgetSmall = ({ escrow, index = 0, loading = false }) => {
           <Box
             sx={{
               mt: 'auto',
-              pt: 1.5,
+              pt: 1,
               borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
               display: 'flex',
               justifyContent: 'space-between',
@@ -354,22 +354,22 @@ const EscrowWidgetSmallSkeleton = () => {
       {/* Image skeleton */}
       <Skeleton variant="rectangular" height={160} animation="wave" />
 
-      <CardContent sx={{ p: 2.5 }}>
+      <CardContent sx={{ p: 2, display: 'flex', flexDirection: 'column', flex: 1 }}>
         {/* Address skeleton */}
-        <Skeleton variant="text" width="90%" height={26} sx={{ mb: 0.5 }} />
-        <Skeleton variant="text" width="70%" height={26} sx={{ mb: 2 }} />
+        <Skeleton variant="text" width="90%" height={22} sx={{ mb: 0.5 }} />
+        <Skeleton variant="text" width="70%" height={22} sx={{ mb: 1.5 }} />
 
         {/* Metrics skeleton - 2 large boxes */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mb: 2 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mb: 1.5 }}>
           {[...Array(2)].map((_, idx) => (
-            <Skeleton key={idx} variant="rectangular" height={70} sx={{ borderRadius: 2 }} />
+            <Skeleton key={idx} variant="rectangular" height={60} sx={{ borderRadius: 2 }} />
           ))}
         </Box>
 
         {/* Footer skeleton */}
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 'auto', pt: 1.5 }}>
-          <Skeleton variant="text" width="30%" height={40} />
-          <Skeleton variant="rectangular" width="25%" height={40} sx={{ borderRadius: 2 }} />
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 'auto', pt: 1 }}>
+          <Skeleton variant="text" width="30%" height={36} />
+          <Skeleton variant="rectangular" width="25%" height={36} sx={{ borderRadius: 2 }} />
         </Box>
       </CardContent>
     </Card>
