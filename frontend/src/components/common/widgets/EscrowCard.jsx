@@ -86,6 +86,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
 
   // Calculate days to close
   const closingDate = escrow.scheduledCoeDate || escrow.closingDate;
+  const acceptanceDate = escrow.acceptanceDate;
   let daysToClose = null;
   let isUrgent = false;
   let isPastDue = false;
@@ -580,13 +581,23 @@ const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
                     borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
                   }}
                 >
-                  <Box>
-                    <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
-                      Closes
-                    </Typography>
-                    <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary }}>
-                      {formatDate(closingDate) || 'TBD'}
-                    </Typography>
+                  <Box sx={{ display: 'flex', gap: 3 }}>
+                    <Box>
+                      <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
+                        DOA
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary }}>
+                        {formatDate(acceptanceDate) || 'TBD'}
+                      </Typography>
+                    </Box>
+                    <Box>
+                      <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
+                        COE
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary }}>
+                        {formatDate(closingDate) || 'TBD'}
+                      </Typography>
+                    </Box>
                   </Box>
 
                   {/* Days Badge */}
