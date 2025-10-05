@@ -112,7 +112,7 @@ const EscrowWidgetSmall = ({ escrow, index = 0, loading = false }) => {
       <Card
         onClick={() => navigate(`/escrows/${escrow.id}`)}
         sx={{
-          height: 360,
+          height: 400,
           cursor: 'pointer',
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           border: 'none',
@@ -344,7 +344,7 @@ const EscrowWidgetSmallSkeleton = () => {
   return (
     <Card
       sx={{
-        height: 360,
+        height: 400,
         border: 'none',
         borderRadius: 3,
         overflow: 'hidden',
