@@ -2581,10 +2581,10 @@ const EscrowsDashboard = () => {
             display: 'grid',
             gridTemplateColumns:
               viewMode === 'small'
-                ? { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' }
+                ? 'repeat(auto-fill, minmax(280px, 1fr))'
                 : viewMode === 'medium'
-                ? { xs: '1fr', md: 'repeat(2, 1fr)' }
-                : '1fr',
+                ? 'repeat(auto-fill, minmax(580px, 1fr))'
+                : 'repeat(auto-fill, minmax(1180px, 1fr))',
             gap: 3
           }}>
         <AnimatePresence>
