@@ -686,8 +686,8 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
               style={{
-                flex: 1, // Take remaining space
-                minWidth: 0, // Allow flex shrink
+                width: viewMode === 'medium' ? 'calc(25% - 18px)' : 'calc(75% - 18px - 12px)', // Medium: same as Card 1, Large: remaining space
+                flexShrink: 0,
               }}
               transition={{
                 opacity: { duration: 0.2 },
