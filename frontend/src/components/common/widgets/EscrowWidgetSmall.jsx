@@ -129,19 +129,6 @@ const EscrowWidgetSmall = ({ escrow, index = 0, loading = false }) => {
           },
         }}
       >
-        {/* STATUS ACCENT BAR - Left edge, full height */}
-        <Box
-          sx={{
-            position: 'absolute',
-            left: 0,
-            top: 0,
-            bottom: 0,
-            width: 4,
-            background: statusConfig.bg,
-            zIndex: 2,
-          }}
-        />
-
         {/* Property Image - Larger, more prominent */}
         <Box
           sx={{
