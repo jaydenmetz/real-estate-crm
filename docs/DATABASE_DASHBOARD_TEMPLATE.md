@@ -513,35 +513,62 @@ const EscrowWidgetSmallSkeleton = () => (
 **Grid:** `xs={12} md={6}`
 **Use Case:** Moderate detail for comparison
 
-**Visual Structure:**
+**NEW DESIGN - Visual-First Approach:**
 ```
-┌────────────┬────────────────────────────────────────┐
-│            │ Street Address (Bold)                  │
-│            │ City, State                            │
-│  Property  │                                        │
-│  Image     │ ┌──────┐ ┌──────┐ ┌──────┐           │
-│  280px     │ │Price │ │Close │ │Days  │           │
-│  wide      │ └──────┘ └──────┘ └──────┘           │
-│            │                                        │
-│  [Status]  │ ────────────────── (Progress Bar)     │
-│            │                                        │
-│  Progress  │ Commission:    $6,625                 │
-│  Bar       │ Loan Amount:   $212K                  │
-│            │ EMD:           $5,000                  │
-│            │ Down Payment:  $53K                   │
-│            │                                        │
-│            │ ┌──────────────┐ ┌──────────────┐    │
-│            │ │🏦 Escrow Co. │ │💰 Lender     │    │
-│            │ └──────────────┘ └──────────────┘    │
-└────────────┴────────────────────────────────────────┘
+┌──┬──────────────────┬──────────────────────────────────────┐
+│█ │                  │ FULL ADDRESS (2 lines)               │
+│█ │  LARGE Image     │ 9081 Soledad Road, Mojave            │
+│█ │  280px wide      │                                      │
+│█ │  320px tall      │ ┌──────┐ ┌──────┐ ┌──────┐         │ ← 4px STATUS
+│█ │                  │ │PRICE │ │COMM. │ │DAYS  │         │   ACCENT BAR
+│█ │  [STATUS CHIP]   │ │$280K │ │$2.8K │ │ 23d  │         │
+│█ │                  │ └──────┘ └──────┘ └──────┘         │   3 LARGE
+│█ │                  │ (gradient)(gradient)(gradient)       │   gradient
+│█ │  ████░░░ 8px     │                                      │   boxes
+│█ │  Progress Bar    │ Loan:         $212K                 │
+│█ │  with glow       │ Down Payment: $53K                  │   2×2 grid
+│█ │                  │ EMD:          $5,000                │   financial
+│█ │  75%             │ Close Date:   Apr 12, 25            │   details
+│█ │                  │                                      │
+│█ │                  │ ────────────────────────────────    │
+│█ │                  │ Escrow: Prominence  Lender: Guild   │   Footer
+└──┴──────────────────┴──────────────────────────────────────┘
 ```
 
+**KEY DESIGN ELEMENTS:**
+
+1. **Status Accent Bar (4px left edge)**
+   - Same as Small widget
+   - Full height gradient
+
+2. **Large Image (280px × 320px)**
+   - 8px progress bar at bottom (vs 6px in Small)
+   - Status chip floating top right
+   - Progress percentage bottom left
+
+3. **Full Address (2 lines, 1.1rem)**
+   - Same full address display as Small
+   - No truncation
+
+4. **3 LARGE Metric Boxes (vs 2 in Small)**
+   - Price + Commission + Days
+   - All with gradient backgrounds
+   - Hover scale animation
+
+5. **2×2 Financial Details Grid**
+   - Loan Amount, Down Payment, EMD, Close Date
+   - Plain text labels, no icons
+
+6. **Footer: 2 Companies**
+   - Escrow Company + Lender
+   - Bordered top divider
+
 **Key Differences from Small:**
-- Image on LEFT (280px × 320px)
+- Image on LEFT (280px × 320px) instead of top
 - Horizontal layout, not vertical
-- Shows 11-13 fields vs 8-10
+- 3 metric boxes vs 2
+- Shows 12 fields vs 8
 - Includes loan details (loan amount, EMD, down payment)
-- Only 2 company boxes (most important)
 
 **Data Points Displayed (11-13):**
 1. Property image (280px × 320px)
@@ -567,34 +594,65 @@ const EscrowWidgetSmallSkeleton = () => (
 **Grid:** `xs={12}` (one per row)
 **Use Case:** Complete detail view without clicking
 
-**Visual Structure:**
+**NEW DESIGN - Maximum Detail:**
 ```
-┌─────────────┬──────────────────────────────────────────────────────────────┐
-│             │ Full Address (Street, City, State ZIP)                      │
-│             │                                                              │
-│  Property   │ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐                       │
-│  Image      │ │Price │ │Comm. │ │Close │ │Days  │                       │
-│  360px      │ └──────┘ └──────┘ └──────┘ └──────┘                       │
-│  wide       │                                                              │
-│             │ ──────────────────────────────────────                      │
-│  [Status]   │                                                              │
-│             │ Loan:        $212K      Client:      John Doe               │
-│  Animated   │ Down:        $53K       Escrow #:    ESC-755                │
-│  Progress   │ EMD:         $5K        Open Date:   Aug 1, 2023            │
-│  Bar        │                                                              │
-│             │ ┌────────────┬────────────┬────────────┬────────────┐      │
-│             │ │🏦 Escrow   │💰 Lender   │📋 Title    │🏘️ NHD      │      │
-│             │ │Prominence  │Guild Mtg   │First Am.   │REOTRANS    │      │
-│             │ └────────────┴────────────┴────────────┴────────────┘      │
-└─────────────┴──────────────────────────────────────────────────────────────┘
+┌──┬─────────────────────┬────────────────────────────────────────────────────────┐
+│█ │                     │ FULL ADDRESS (2 lines, 1.2rem bold)                   │
+│█ │  LARGE Image        │ 9081 Soledad Road, Mojave                             │
+│█ │  360px wide         │                                                        │
+│█ │  320px tall         │ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐                 │ ← 4px STATUS
+│█ │                     │ │PRICE │ │COMM. │ │GROSS │ │DAYS  │                 │   ACCENT BAR
+│█ │                     │ │$280K │ │$2.8K │ │$8.4K │ │ 23d  │                 │
+│█ │  [STATUS CHIP]      │ └──────┘ └──────┘ └──────┘ └──────┘                 │   4 LARGE
+│█ │                     │ (gradient)(gradient)(gradient)(gradient)               │   gradient
+│█ │  ████████░░ 10px    │                                                        │   boxes
+│█ │  Progress Bar       │ Loan:       $212K     Comm %:    2.5%                │
+│█ │  with glow          │ Down:       $53K      Close:     Apr 12, 25          │   3×2 grid
+│█ │                     │ EMD:        $5,000    Escrow #:  ESC-755             │   financial
+│█ │  75%                │                                                        │   details
+│█ │                     │ ──────────────────────────────────────────────────── │
+│█ │                     │ Escrow: Prominence │ Lender: Guild │ Title │ NHD    │   4 companies
+└──┴─────────────────────┴────────────────────────────────────────────────────────┘
 ```
 
+**KEY DESIGN ELEMENTS:**
+
+1. **Status Accent Bar (4px left edge)**
+   - Same as Small/Medium widgets
+   - Full height gradient
+
+2. **Large Image (360px × 320px)**
+   - 10px progress bar at bottom (vs 6px Small, 8px Medium)
+   - Thicker glow effect on progress bar
+   - Status chip floating top right
+   - Progress percentage bottom left (16px font)
+
+3. **Full Address (2 lines, 1.2rem)**
+   - Larger font than Medium (1.2rem vs 1.1rem)
+   - Full address display
+
+4. **4 LARGE Metric Boxes (vs 3 in Medium)**
+   - Price + Commission + Gross Commission + Days
+   - Added Gross Commission (purple gradient)
+   - All with gradient backgrounds
+   - Hover scale animation
+
+5. **3×2 Financial Details Grid (vs 2×2 in Medium)**
+   - Loan Amount, Down Payment, EMD
+   - Commission %, Close Date, Escrow #
+   - More data than Medium
+
+6. **Footer: 4 Companies (vs 2 in Medium)**
+   - Escrow + Lender + Title + NHD
+   - All major parties visible
+   - Bordered top divider
+
 **Key Differences from Medium:**
-- Image 360px wide (larger)
-- Shows 16-20 fields vs 11-13
-- Includes client name, escrow number, open date
-- 4 company sections (all parties)
-- Animated progress bar
+- Image 360px wide (vs 280px)
+- 4 metric boxes vs 3
+- Shows 18 fields vs 12
+- Includes Gross Commission, Commission %, Escrow #
+- Shows all 4 companies (Escrow, Lender, Title, NHD)
 
 **Data Points Displayed (16-20):**
 1. Property image (360px × 320px)

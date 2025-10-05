@@ -5,20 +5,11 @@ import {
   Typography,
   Box,
   Chip,
-  Divider,
   Skeleton,
   useTheme,
   alpha,
 } from '@mui/material';
-import {
-  Home,
-  AttachMoney,
-  CalendarToday,
-  TrendingUp,
-  Schedule,
-  Business,
-  AccountBalance,
-} from '@mui/icons-material';
+import { Home } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { differenceInDays, isValid } from 'date-fns';
@@ -34,9 +25,10 @@ const EscrowWidgetMedium = ({ escrow, index = 0, loading = false }) => {
   // Parse data
   const purchasePrice = parseFloat(escrow.purchasePrice) || 0;
   const loanAmount = parseFloat(escrow.loanAmount) || 0;
-  const earnestMoney = parseFloat(escrow.earnestMoney) || 0;
+  const earnestMoney = parseFloat(escrow.earnestMoneyDeposit) || 0;
   const commission = parseFloat(escrow.myCommission) || 0;
   const checklistProgress = parseInt(escrow.checklistProgress) || 0;
+  const downPayment = purchasePrice - loanAmount;
 
   // Calculate days to close
   const closingDate = escrow.scheduledCoeDate || escrow.closingDate;
@@ -56,10 +48,10 @@ const EscrowWidgetMedium = ({ escrow, index = 0, loading = false }) => {
     } catch (e) {}
   }
 
-  // Format currency
+  // Format currency - BOLD numbers, no decimals for K/M
   const formatCurrency = (value) => {
-    if (value >= 1000000) return `$${(value / 1000000).toFixed(2)}M`;
-    if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
+    if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
+    if (value >= 1000) return `$${Math.round(value / 1000)}K`;
     return `$${value.toLocaleString()}`;
   };
 
@@ -75,13 +67,33 @@ const EscrowWidgetMedium = ({ escrow, index = 0, loading = false }) => {
     return null;
   };
 
-  // Status config
+  // Status config with VIBRANT colors
   const getStatusConfig = (status) => {
     const configs = {
-      'Active': { color: 'success', bg: '#4caf50', label: 'Active' },
-      'Pending': { color: 'warning', bg: '#ff9800', label: 'Pending' },
-      'Closed': { color: 'default', bg: '#9e9e9e', label: 'Closed' },
-      'Cancelled': { color: 'error', bg: '#f44336', label: 'Cancelled' },
+      'Active': {
+        color: '#10b981',
+        bg: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+        label: 'Active',
+        glow: '0 8px 32px rgba(16, 185, 129, 0.25)'
+      },
+      'Pending': {
+        color: '#f59e0b',
+        bg: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+        label: 'Pending',
+        glow: '0 8px 32px rgba(245, 158, 11, 0.25)'
+      },
+      'Closed': {
+        color: '#6366f1',
+        bg: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+        label: 'Closed',
+        glow: '0 8px 32px rgba(99, 102, 241, 0.25)'
+      },
+      'Cancelled': {
+        color: '#ef4444',
+        bg: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+        label: 'Cancelled',
+        glow: '0 8px 32px rgba(239, 68, 68, 0.25)'
+      },
     };
     return configs[status] || configs['Pending'];
   };
@@ -91,20 +103,8 @@ const EscrowWidgetMedium = ({ escrow, index = 0, loading = false }) => {
   // Get property image or default
   const propertyImage = escrow.propertyImageUrl || escrow.zillowImageUrl;
 
-  // Parse address for compact display
-  const parseAddress = (address) => {
-    if (!address) return { street: 'No Address', cityState: '' };
-    const parts = address.split(',');
-    const street = parts[0]?.trim() || 'No Address';
-    const city = parts[1]?.trim() || '';
-    const state = parts[2]?.trim() || '';
-    return {
-      street,
-      cityState: city && state ? `${city}, ${state}` : city || state || '',
-    };
-  };
-
-  const { street, cityState } = parseAddress(escrow.propertyAddress);
+  // Full address
+  const address = escrow.propertyAddress || 'No Address';
 
   return (
     <motion.div
@@ -117,282 +117,311 @@ const EscrowWidgetMedium = ({ escrow, index = 0, loading = false }) => {
         sx={{
           height: 320,
           cursor: 'pointer',
-          transition: 'all 0.2s ease-in-out',
-          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          border: 'none',
+          borderRadius: 3,
           overflow: 'hidden',
+          position: 'relative',
           display: 'flex',
+          flexDirection: 'row',
+          background: theme.palette.mode === 'dark'
+            ? 'linear-gradient(135deg, rgba(30,30,30,1) 0%, rgba(20,20,20,1) 100%)'
+            : 'linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(250,250,250,1) 100%)',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
           '&:hover': {
-            transform: 'translateY(-4px)',
-            boxShadow: `0 12px 24px ${alpha(statusConfig.bg, 0.2)}`,
-            borderColor: alpha(statusConfig.bg, 0.3),
+            transform: 'translateY(-8px) scale(1.02)',
+            boxShadow: statusConfig.glow,
+            '& .overlay-gradient': {
+              opacity: 0.15,
+            },
           },
         }}
       >
-        {/* Left: Property Image */}
+        {/* STATUS ACCENT BAR - Left edge, full height */}
+        <Box
+          sx={{
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: 4,
+            background: statusConfig.bg,
+            zIndex: 2,
+          }}
+        />
+
+        {/* ANIMATED OVERLAY GRADIENT on hover */}
+        <Box
+          className="overlay-gradient"
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: statusConfig.bg,
+            opacity: 0,
+            transition: 'opacity 0.3s',
+            pointerEvents: 'none',
+            zIndex: 1,
+          }}
+        />
+
+        {/* LEFT: Property Image - 280px wide */}
         <Box
           sx={{
             width: 280,
             minWidth: 280,
+            height: 320,
             position: 'relative',
             background: propertyImage
               ? `url(${propertyImage})`
-              : `linear-gradient(135deg, ${alpha(theme.palette.grey[400], 0.2)} 0%, ${alpha(theme.palette.grey[500], 0.3)} 100%)`,
+              : statusConfig.bg,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            '&::after': {
+              content: '""',
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: '40%',
+              background: 'linear-gradient(to top, rgba(0,0,0,0.5), transparent)',
+            },
           }}
         >
           {!propertyImage && (
-            <Home sx={{ fontSize: 96, color: alpha(theme.palette.grey[500], 0.5) }} />
+            <Home sx={{ fontSize: 100, color: 'rgba(255,255,255,0.9)' }} />
           )}
 
-          {/* Status Chip */}
+          {/* Status Chip - FLOATING top right */}
           <Chip
             label={statusConfig.label}
             size="small"
             sx={{
               position: 'absolute',
               top: 12,
-              left: 12,
-              fontWeight: 600,
+              right: 12,
+              fontWeight: 700,
               fontSize: 11,
-              backgroundColor: statusConfig.bg,
+              letterSpacing: '0.5px',
+              textTransform: 'uppercase',
+              background: statusConfig.bg,
               color: 'white',
-              '& .MuiChip-label': { px: 1.5 },
+              border: '2px solid rgba(255,255,255,0.3)',
+              backdropFilter: 'blur(10px)',
+              zIndex: 3,
+              '& .MuiChip-label': { px: 1.5, py: 0.5 },
             }}
           />
 
-          {/* Progress Badge */}
+          {/* Progress Bar - BOTTOM overlay */}
           <Box
             sx={{
               position: 'absolute',
-              bottom: 12,
-              left: 12,
-              right: 12,
-              backgroundColor: alpha(theme.palette.common.black, 0.75),
-              color: 'white',
-              px: 2,
-              py: 1,
-              borderRadius: 1,
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: 8,
+              backgroundColor: 'rgba(0,0,0,0.4)',
+              zIndex: 3,
             }}
           >
-            <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600 }}>
-              Progress
-            </Typography>
-            <Typography variant="caption" sx={{ fontSize: 11, fontWeight: 700 }}>
-              {checklistProgress}%
-            </Typography>
+            <Box
+              sx={{
+                height: '100%',
+                width: `${checklistProgress}%`,
+                background: statusConfig.bg,
+                transition: 'width 0.5s ease-in-out',
+                boxShadow: `0 0 12px ${alpha(statusConfig.color, 0.7)}`,
+              }}
+            />
           </Box>
+
+          {/* Progress percentage - FLOATING bottom left */}
+          <Typography
+            sx={{
+              position: 'absolute',
+              bottom: 14,
+              left: 14,
+              fontSize: 14,
+              fontWeight: 700,
+              color: 'white',
+              textShadow: '0 2px 8px rgba(0,0,0,0.6)',
+              zIndex: 3,
+            }}
+          >
+            {checklistProgress}%
+          </Typography>
         </Box>
 
-        {/* Right: Content */}
-        <CardContent sx={{ flex: 1, p: 2.5, display: 'flex', flexDirection: 'column' }}>
-          {/* Address */}
+        {/* RIGHT: Content */}
+        <CardContent sx={{ flex: 1, p: 3, display: 'flex', flexDirection: 'column' }}>
+          {/* Address - FULL ADDRESS */}
           <Typography
             variant="h6"
             sx={{
               fontWeight: 700,
-              fontSize: '1.05rem',
-              mb: 0.25,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {street}
-          </Typography>
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{
-              fontSize: '0.8rem',
+              fontSize: '1.1rem',
+              lineHeight: 1.3,
               mb: 2,
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
+              color: theme.palette.text.primary,
             }}
           >
-            {cityState || escrow.clientName || 'No Client'}
+            {address}
           </Typography>
 
-          {/* Top Metrics - 3 columns */}
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2, mb: 2 }}>
-            <Box sx={{ textAlign: 'center' }}>
-              <AttachMoney sx={{ fontSize: 18, color: 'success.main', mb: 0.5 }} />
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: 9 }}>
-                Sale Price
+          {/* TOP ROW: 3 Key Metrics */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.5, mb: 2 }}>
+            {/* Price */}
+            <Box
+              sx={{
+                p: 1.5,
+                borderRadius: 2,
+                background: 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(5,150,105,0.12) 100%)',
+                border: `1px solid ${alpha('#10b981', 0.15)}`,
+                transition: 'all 0.2s',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(5,150,105,0.16) 100%)',
+                  transform: 'scale(1.05)',
+                },
+              }}
+            >
+              <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: '#059669', mb: 0.5, display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Price
               </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.9rem' }}>
+              <Typography variant="body1" sx={{ fontWeight: 800, fontSize: '1rem', color: '#10b981', letterSpacing: '-0.5px' }}>
                 {formatCurrency(purchasePrice)}
               </Typography>
             </Box>
 
-            <Box sx={{ textAlign: 'center' }}>
-              <CalendarToday sx={{ fontSize: 18, color: 'primary.main', mb: 0.5 }} />
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: 9 }}>
-                Close Date
-              </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.9rem' }}>
-                {formatDate(closingDate) || 'TBD'}
-              </Typography>
-            </Box>
-
-            <Box sx={{ textAlign: 'center' }}>
-              <Schedule
-                sx={{
-                  fontSize: 18,
-                  color: isPastDue ? 'error.main' : isUrgent ? 'warning.main' : 'info.main',
-                  mb: 0.5,
-                }}
-              />
-              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', fontSize: 9 }}>
-                Days Left
-              </Typography>
-              <Typography
-                variant="body2"
-                sx={{
-                  fontWeight: 700,
-                  fontSize: '0.9rem',
-                  color: isPastDue ? 'error.main' : isUrgent ? 'warning.main' : 'text.primary',
-                }}
-              >
-                {daysToClose !== null ? (isPastDue ? `${Math.abs(daysToClose)} late` : daysToClose) : 'TBD'}
-              </Typography>
-            </Box>
-          </Box>
-
-          <Divider sx={{ mb: 2 }} />
-
-          {/* Financial Details - 2 columns */}
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mb: 2 }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="caption" color="text.secondary" sx={{ fontSize: 10 }}>
+            {/* Commission */}
+            <Box
+              sx={{
+                p: 1.5,
+                borderRadius: 2,
+                background: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(79,70,229,0.12) 100%)',
+                border: `1px solid ${alpha('#6366f1', 0.15)}`,
+                transition: 'all 0.2s',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(79,70,229,0.16) 100%)',
+                  transform: 'scale(1.05)',
+                },
+              }}
+            >
+              <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: '#4f46e5', mb: 0.5, display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Commission
               </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.85rem' }}>
+              <Typography variant="body1" sx={{ fontWeight: 800, fontSize: '1rem', color: '#6366f1', letterSpacing: '-0.5px' }}>
                 {formatCurrency(commission)}
               </Typography>
             </Box>
 
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="caption" color="text.secondary" sx={{ fontSize: 10 }}>
+            {/* Days Badge */}
+            {daysToClose !== null ? (
+              <Box
+                sx={{
+                  p: 1.5,
+                  borderRadius: 2,
+                  background: isPastDue
+                    ? 'linear-gradient(135deg, rgba(239,68,68,0.1) 0%, rgba(220,38,38,0.15) 100%)'
+                    : isUrgent
+                    ? 'linear-gradient(135deg, rgba(245,158,11,0.1) 0%, rgba(217,119,6,0.15) 100%)'
+                    : 'linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(37,99,235,0.15) 100%)',
+                  border: `1px solid ${isPastDue ? alpha('#ef4444', 0.2) : isUrgent ? alpha('#f59e0b', 0.2) : alpha('#3b82f6', 0.2)}`,
+                  transition: 'all 0.2s',
+                  '&:hover': {
+                    transform: 'scale(1.05)',
+                  },
+                }}
+              >
+                <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: isPastDue ? '#dc2626' : isUrgent ? '#d97706' : '#2563eb', mb: 0.5, display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Days
+                </Typography>
+                <Typography variant="body1" sx={{ fontWeight: 800, fontSize: '1rem', color: isPastDue ? '#ef4444' : isUrgent ? '#f59e0b' : '#3b82f6', letterSpacing: '-0.5px' }}>
+                  {isPastDue ? `${Math.abs(daysToClose)} late` : daysToClose}
+                </Typography>
+              </Box>
+            ) : (
+              <Box sx={{ p: 1.5, borderRadius: 2, background: alpha(theme.palette.grey[200], 0.5) }}>
+                <Typography variant="caption" sx={{ fontSize: 9, color: 'text.secondary' }}>Days</Typography>
+                <Typography variant="body1" sx={{ fontWeight: 700, color: 'text.secondary' }}>TBD</Typography>
+              </Box>
+            )}
+          </Box>
+
+          {/* FINANCIAL DETAILS: 2x2 Grid */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mb: 2 }}>
+            <Box>
+              <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Loan Amount
               </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.85rem' }}>
+              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.95rem', color: 'text.primary' }}>
                 {formatCurrency(loanAmount)}
               </Typography>
             </Box>
 
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="caption" color="text.secondary" sx={{ fontSize: 10 }}>
+            <Box>
+              <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Down Payment
+              </Typography>
+              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.95rem', color: 'text.primary' }}>
+                {formatCurrency(downPayment)}
+              </Typography>
+            </Box>
+
+            <Box>
+              <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 EMD
               </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.85rem' }}>
+              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.95rem', color: 'text.primary' }}>
                 {formatCurrency(earnestMoney)}
               </Typography>
             </Box>
 
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <Typography variant="caption" color="text.secondary" sx={{ fontSize: 10 }}>
-                Down Payment
+            <Box>
+              <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Close Date
               </Typography>
-              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.85rem' }}>
-                {formatCurrency(purchasePrice - loanAmount)}
+              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.95rem', color: 'text.primary' }}>
+                {formatDate(closingDate) || 'TBD'}
               </Typography>
             </Box>
           </Box>
 
-          {/* Company Logos - 2 boxes side by side */}
+          {/* FOOTER: Companies */}
           <Box
             sx={{
+              mt: 'auto',
+              pt: 2,
+              borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
-              gap: 1,
-              mt: 'auto',
+              gap: 1.5,
             }}
           >
-            <Box
-              title={escrow.escrowCompany || 'Escrow Company N/A'}
-              sx={{
-                height: 36,
-                borderRadius: 1,
-                border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 0.75,
-                backgroundColor: escrow.escrowCompany
-                  ? alpha(theme.palette.primary.main, 0.04)
-                  : alpha(theme.palette.grey[300], 0.3),
-                px: 1.5,
-                transition: 'all 0.2s',
-                '&:hover': {
-                  backgroundColor: escrow.escrowCompany
-                    ? alpha(theme.palette.primary.main, 0.08)
-                    : alpha(theme.palette.grey[300], 0.5),
-                },
-              }}
-            >
-              <Business sx={{ fontSize: 16, color: 'text.secondary' }} />
-              <Typography
-                variant="caption"
-                sx={{
-                  fontSize: 10,
-                  fontWeight: 600,
-                  color: escrow.escrowCompany ? 'text.primary' : 'text.disabled',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {escrow.escrowCompany
-                  ? escrow.escrowCompany.split(' ')[0]
-                  : 'Escrow'}
+            <Box>
+              <Typography variant="caption" sx={{ fontSize: 9, color: 'text.secondary', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Escrow
+              </Typography>
+              <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.85rem', color: 'text.primary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {escrow.escrowCompany || 'TBD'}
               </Typography>
             </Box>
 
-            <Box
-              title={escrow.lenderName || 'Lender N/A'}
-              sx={{
-                height: 36,
-                borderRadius: 1,
-                border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 0.75,
-                backgroundColor: escrow.lenderName
-                  ? alpha(theme.palette.primary.main, 0.04)
-                  : alpha(theme.palette.grey[300], 0.3),
-                px: 1.5,
-                transition: 'all 0.2s',
-                '&:hover': {
-                  backgroundColor: escrow.lenderName
-                    ? alpha(theme.palette.primary.main, 0.08)
-                    : alpha(theme.palette.grey[300], 0.5),
-                },
-              }}
-            >
-              <AccountBalance sx={{ fontSize: 16, color: 'text.secondary' }} />
-              <Typography
-                variant="caption"
-                sx={{
-                  fontSize: 10,
-                  fontWeight: 600,
-                  color: escrow.lenderName ? 'text.primary' : 'text.disabled',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {escrow.lenderName
-                  ? escrow.lenderName.split(' ')[0]
-                  : 'Lender'}
+            <Box>
+              <Typography variant="caption" sx={{ fontSize: 9, color: 'text.secondary', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Lender
+              </Typography>
+              <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.85rem', color: 'text.primary', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {escrow.lenderName || 'TBD'}
               </Typography>
             </Box>
           </Box>
@@ -410,44 +439,46 @@ const EscrowWidgetMediumSkeleton = () => {
     <Card
       sx={{
         height: 320,
-        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+        border: 'none',
+        borderRadius: 3,
         overflow: 'hidden',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
         display: 'flex',
+        flexDirection: 'row',
       }}
     >
       {/* Image skeleton */}
       <Skeleton variant="rectangular" width={280} height={320} animation="wave" />
 
-      {/* Content skeleton */}
-      <CardContent sx={{ flex: 1, p: 2.5 }}>
+      <CardContent sx={{ flex: 1, p: 3 }}>
         {/* Address skeleton */}
-        <Skeleton variant="text" width="85%" height={26} sx={{ mb: 0.5 }} />
-        <Skeleton variant="text" width="65%" height={20} sx={{ mb: 2 }} />
+        <Skeleton variant="text" width="90%" height={28} sx={{ mb: 0.5 }} />
+        <Skeleton variant="text" width="70%" height={28} sx={{ mb: 2 }} />
 
-        {/* Top metrics skeleton - 3 columns */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2, mb: 2 }}>
+        {/* Top metrics skeleton - 3 boxes */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.5, mb: 2 }}>
           {[...Array(3)].map((_, idx) => (
-            <Box key={idx} sx={{ textAlign: 'center' }}>
-              <Skeleton variant="circular" width={18} height={18} sx={{ mx: 'auto', mb: 0.5 }} />
-              <Skeleton variant="text" width="60%" height={12} sx={{ mx: 'auto', mb: 0.5 }} />
-              <Skeleton variant="text" width="80%" height={18} sx={{ mx: 'auto' }} />
+            <Skeleton key={idx} variant="rectangular" height={60} sx={{ borderRadius: 2 }} />
+          ))}
+        </Box>
+
+        {/* Financial grid skeleton - 2x2 */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mb: 2 }}>
+          {[...Array(4)].map((_, idx) => (
+            <Box key={idx}>
+              <Skeleton variant="text" width="60%" height={14} sx={{ mb: 0.5 }} />
+              <Skeleton variant="text" width="80%" height={20} />
             </Box>
           ))}
         </Box>
 
-        <Divider sx={{ mb: 2 }} />
-
-        {/* Financial details skeleton */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mb: 2 }}>
-          {[...Array(4)].map((_, idx) => (
-            <Skeleton key={idx} variant="text" width="100%" height={18} />
-          ))}
-        </Box>
-
-        {/* Company logos skeleton */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mt: 'auto' }}>
+        {/* Footer skeleton */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mt: 'auto', pt: 2 }}>
           {[...Array(2)].map((_, idx) => (
-            <Skeleton key={idx} variant="rectangular" height={36} sx={{ borderRadius: 1 }} />
+            <Box key={idx}>
+              <Skeleton variant="text" width="40%" height={12} sx={{ mb: 0.5 }} />
+              <Skeleton variant="text" width="70%" height={18} />
+            </Box>
           ))}
         </Box>
       </CardContent>
