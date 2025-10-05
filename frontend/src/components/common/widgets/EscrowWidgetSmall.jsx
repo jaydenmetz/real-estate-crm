@@ -98,7 +98,7 @@ const EscrowWidgetSmall = ({ escrow, index = 0, loading = false }) => {
   const statusConfig = getStatusConfig(escrow.escrowStatus);
 
   // Get property image or default
-  const propertyImage = escrow.propertyImageUrl || escrow.zillowImageUrl;
+  const propertyImage = escrow.propertyImage || escrow.zillowUrl;
 
   // Parse address - FULL ADDRESS on card
   const address = escrow.propertyAddress || 'No Address';
