@@ -9,12 +9,7 @@ import {
   useTheme,
   alpha,
 } from '@mui/material';
-import {
-  Home,
-  AttachMoney,
-  CalendarToday,
-  TrendingUp,
-} from '@mui/icons-material';
+import { Home } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { differenceInDays, isValid } from 'date-fns';
@@ -50,14 +45,14 @@ const EscrowWidgetSmall = ({ escrow, index = 0, loading = false }) => {
     } catch (e) {}
   }
 
-  // Format currency
+  // Format currency - BOLD numbers, no decimals for K/M
   const formatCurrency = (value) => {
-    if (value >= 1000000) return `$${(value / 1000000).toFixed(2)}M`;
-    if (value >= 1000) return `$${(value / 1000).toFixed(0)}K`;
+    if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
+    if (value >= 1000) return `$${Math.round(value / 1000)}K`;
     return `$${value.toLocaleString()}`;
   };
 
-  // Format date
+  // Format date - Short and sweet
   const formatDate = (date) => {
     if (!date) return null;
     try {
@@ -69,13 +64,33 @@ const EscrowWidgetSmall = ({ escrow, index = 0, loading = false }) => {
     return null;
   };
 
-  // Status config
+  // Status config with VIBRANT colors
   const getStatusConfig = (status) => {
     const configs = {
-      'Active': { color: 'success', bg: '#4caf50', label: 'Active' },
-      'Pending': { color: 'warning', bg: '#ff9800', label: 'Pending' },
-      'Closed': { color: 'default', bg: '#9e9e9e', label: 'Closed' },
-      'Cancelled': { color: 'error', bg: '#f44336', label: 'Cancelled' },
+      'Active': {
+        color: '#10b981',
+        bg: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+        label: 'Active',
+        glow: '0 8px 32px rgba(16, 185, 129, 0.25)'
+      },
+      'Pending': {
+        color: '#f59e0b',
+        bg: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+        label: 'Pending',
+        glow: '0 8px 32px rgba(245, 158, 11, 0.25)'
+      },
+      'Closed': {
+        color: '#6366f1',
+        bg: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+        label: 'Closed',
+        glow: '0 8px 32px rgba(99, 102, 241, 0.25)'
+      },
+      'Cancelled': {
+        color: '#ef4444',
+        bg: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+        label: 'Cancelled',
+        glow: '0 8px 32px rgba(239, 68, 68, 0.25)'
+      },
     };
     return configs[status] || configs['Pending'];
   };
@@ -85,17 +100,8 @@ const EscrowWidgetSmall = ({ escrow, index = 0, loading = false }) => {
   // Get property image or default
   const propertyImage = escrow.propertyImageUrl || escrow.zillowImageUrl;
 
-  // Parse address for compact display
-  const parseAddress = (address) => {
-    if (!address) return { street: 'No Address', city: '' };
-    const parts = address.split(',');
-    return {
-      street: parts[0]?.trim() || 'No Address',
-      city: parts[1]?.trim() || '',
-    };
-  };
-
-  const { street, city } = parseAddress(escrow.propertyAddress);
+  // Parse address - FULL ADDRESS on card
+  const address = escrow.propertyAddress || 'No Address';
 
   return (
     <motion.div
@@ -108,205 +114,255 @@ const EscrowWidgetSmall = ({ escrow, index = 0, loading = false }) => {
         sx={{
           height: 320,
           cursor: 'pointer',
-          transition: 'all 0.2s ease-in-out',
-          border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          border: 'none',
+          borderRadius: 3,
           overflow: 'hidden',
+          position: 'relative',
+          background: theme.palette.mode === 'dark'
+            ? 'linear-gradient(135deg, rgba(30,30,30,1) 0%, rgba(20,20,20,1) 100%)'
+            : 'linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(250,250,250,1) 100%)',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
           '&:hover': {
-            transform: 'translateY(-4px)',
-            boxShadow: `0 12px 24px ${alpha(statusConfig.bg, 0.2)}`,
-            borderColor: alpha(statusConfig.bg, 0.3),
+            transform: 'translateY(-8px) scale(1.02)',
+            boxShadow: statusConfig.glow,
+            '& .overlay-gradient': {
+              opacity: 0.15,
+            },
           },
         }}
       >
-        {/* Property Image */}
+        {/* STATUS ACCENT BAR - Left edge, full height */}
         <Box
           sx={{
-            height: 140,
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            bottom: 0,
+            width: 4,
+            background: statusConfig.bg,
+            zIndex: 2,
+          }}
+        />
+
+        {/* ANIMATED OVERLAY GRADIENT on hover */}
+        <Box
+          className="overlay-gradient"
+          sx={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: statusConfig.bg,
+            opacity: 0,
+            transition: 'opacity 0.3s',
+            pointerEvents: 'none',
+            zIndex: 1,
+          }}
+        />
+
+        {/* Property Image - Larger, more prominent */}
+        <Box
+          sx={{
+            height: 160,
             position: 'relative',
             background: propertyImage
               ? `url(${propertyImage})`
-              : `linear-gradient(135deg, ${alpha(theme.palette.grey[400], 0.2)} 0%, ${alpha(theme.palette.grey[500], 0.3)} 100%)`,
+              : statusConfig.bg,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            '&::after': {
+              content: '""',
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: '50%',
+              background: 'linear-gradient(to top, rgba(0,0,0,0.4), transparent)',
+            },
           }}
         >
           {!propertyImage && (
-            <Home sx={{ fontSize: 64, color: alpha(theme.palette.grey[500], 0.5) }} />
+            <Home sx={{ fontSize: 80, color: 'rgba(255,255,255,0.9)' }} />
           )}
 
-          {/* Status Chip */}
+          {/* Status Chip - FLOATING top right */}
           <Chip
             label={statusConfig.label}
             size="small"
             sx={{
               position: 'absolute',
-              top: 10,
-              right: 10,
-              fontWeight: 600,
+              top: 12,
+              right: 12,
+              fontWeight: 700,
               fontSize: 11,
-              backgroundColor: statusConfig.bg,
+              letterSpacing: '0.5px',
+              textTransform: 'uppercase',
+              background: statusConfig.bg,
               color: 'white',
-              '& .MuiChip-label': { px: 1.5 },
+              border: '2px solid rgba(255,255,255,0.3)',
+              backdropFilter: 'blur(10px)',
+              zIndex: 3,
+              '& .MuiChip-label': { px: 1.5, py: 0.5 },
             }}
           />
 
-          {/* Progress Badge */}
+          {/* Progress Bar - BOTTOM overlay */}
           <Box
             sx={{
               position: 'absolute',
-              bottom: 10,
-              left: 10,
-              backgroundColor: alpha(theme.palette.common.black, 0.7),
-              color: 'white',
-              px: 1.5,
-              py: 0.5,
-              borderRadius: 1,
-              fontSize: 11,
-              fontWeight: 600,
+              bottom: 0,
+              left: 0,
+              right: 0,
+              height: 6,
+              backgroundColor: 'rgba(0,0,0,0.3)',
+              zIndex: 3,
             }}
           >
-            {checklistProgress}% Complete
+            <Box
+              sx={{
+                height: '100%',
+                width: `${checklistProgress}%`,
+                background: statusConfig.bg,
+                transition: 'width 0.5s ease-in-out',
+                boxShadow: `0 0 10px ${alpha(statusConfig.color, 0.6)}`,
+              }}
+            />
           </Box>
+
+          {/* Progress percentage - FLOATING bottom left */}
+          <Typography
+            sx={{
+              position: 'absolute',
+              bottom: 12,
+              left: 12,
+              fontSize: 13,
+              fontWeight: 700,
+              color: 'white',
+              textShadow: '0 2px 8px rgba(0,0,0,0.5)',
+              zIndex: 3,
+            }}
+          >
+            {checklistProgress}%
+          </Typography>
         </Box>
 
-        <CardContent sx={{ p: 2, height: 'calc(100% - 140px)', display: 'flex', flexDirection: 'column' }}>
-          {/* Address */}
+        <CardContent sx={{ p: 2.5, height: 'calc(100% - 160px)', display: 'flex', flexDirection: 'column' }}>
+          {/* Address - FULL ADDRESS, larger text */}
           <Typography
             variant="h6"
             sx={{
               fontWeight: 700,
-              fontSize: '0.95rem',
-              mb: 0.25,
+              fontSize: '1rem',
+              lineHeight: 1.3,
+              mb: 1.5,
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
+              color: theme.palette.text.primary,
             }}
           >
-            {street}
-          </Typography>
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{
-              fontSize: '0.75rem',
-              mb: 2,
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {city || escrow.clientName || 'No Client'}
+            {address}
           </Typography>
 
-          {/* Key Metrics - 2 rows x 2 columns */}
+          {/* KEY METRICS - 2 LARGE boxes */}
           <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mb: 2 }}>
-            <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.25 }}>
-                <AttachMoney sx={{ fontSize: 12, color: 'success.main' }} />
-                <Typography variant="caption" color="text.secondary" sx={{ fontSize: 10 }}>
-                  Price
-                </Typography>
-              </Box>
-              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem' }}>
+            {/* Price */}
+            <Box
+              sx={{
+                p: 1.5,
+                borderRadius: 2,
+                background: 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(5,150,105,0.12) 100%)',
+                border: `1px solid ${alpha('#10b981', 0.15)}`,
+                transition: 'all 0.2s',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(5,150,105,0.16) 100%)',
+                  transform: 'scale(1.05)',
+                },
+              }}
+            >
+              <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: '#059669', mb: 0.5, display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Price
+              </Typography>
+              <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1.1rem', color: '#10b981', letterSpacing: '-0.5px' }}>
                 {formatCurrency(purchasePrice)}
               </Typography>
             </Box>
 
-            <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.25 }}>
-                <CalendarToday sx={{ fontSize: 12, color: 'primary.main' }} />
-                <Typography variant="caption" color="text.secondary" sx={{ fontSize: 10 }}>
-                  Close
-                </Typography>
-              </Box>
-              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem' }}>
-                {formatDate(closingDate) || 'TBD'}
+            {/* Commission */}
+            <Box
+              sx={{
+                p: 1.5,
+                borderRadius: 2,
+                background: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(79,70,229,0.12) 100%)',
+                border: `1px solid ${alpha('#6366f1', 0.15)}`,
+                transition: 'all 0.2s',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(79,70,229,0.16) 100%)',
+                  transform: 'scale(1.05)',
+                },
+              }}
+            >
+              <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: '#4f46e5', mb: 0.5, display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Commission
               </Typography>
-            </Box>
-
-            <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.25 }}>
-                <TrendingUp sx={{ fontSize: 12, color: 'secondary.main' }} />
-                <Typography variant="caption" color="text.secondary" sx={{ fontSize: 10 }}>
-                  Commission
-                </Typography>
-              </Box>
-              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem' }}>
+              <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1.1rem', color: '#6366f1', letterSpacing: '-0.5px' }}>
                 {formatCurrency(commission)}
-              </Typography>
-            </Box>
-
-            <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.25 }}>
-                <CalendarToday sx={{ fontSize: 12, color: isPastDue ? 'error.main' : isUrgent ? 'warning.main' : 'info.main' }} />
-                <Typography variant="caption" color="text.secondary" sx={{ fontSize: 10 }}>
-                  Days
-                </Typography>
-              </Box>
-              <Typography
-                variant="body2"
-                sx={{
-                  fontWeight: 700,
-                  fontSize: '0.875rem',
-                  color: isPastDue ? 'error.main' : isUrgent ? 'warning.main' : 'text.primary',
-                }}
-              >
-                {daysToClose !== null ? (isPastDue ? `${Math.abs(daysToClose)} late` : daysToClose) : 'TBD'}
               </Typography>
             </Box>
           </Box>
 
-          {/* Company Logos - 4 boxes */}
+          {/* FOOTER - Close date and days */}
           <Box
             sx={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: 0.5,
               mt: 'auto',
+              pt: 1.5,
+              borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
             }}
           >
-            {[
-              { name: escrow.escrowCompany, label: 'ESC' },
-              { name: escrow.lenderName, label: 'LDR' },
-              { name: escrow.titleCompany, label: 'TTL' },
-              { name: escrow.nhdCompany, label: 'NHD' },
-            ].map((company, idx) => (
+            <Box>
+              <Typography variant="caption" sx={{ fontSize: 9, color: 'text.secondary', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>
+                Closes
+              </Typography>
+              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: 'text.primary' }}>
+                {formatDate(closingDate) || 'TBD'}
+              </Typography>
+            </Box>
+
+            {daysToClose !== null && (
               <Box
-                key={idx}
-                title={company.name || 'N/A'}
                 sx={{
-                  height: 28,
-                  borderRadius: 0.75,
-                  border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  backgroundColor: company.name ? alpha(theme.palette.primary.main, 0.04) : alpha(theme.palette.grey[300], 0.3),
-                  transition: 'all 0.2s',
-                  '&:hover': {
-                    backgroundColor: company.name ? alpha(theme.palette.primary.main, 0.08) : alpha(theme.palette.grey[300], 0.5),
-                  },
+                  px: 2,
+                  py: 1,
+                  borderRadius: 2,
+                  background: isPastDue
+                    ? 'linear-gradient(135deg, rgba(239,68,68,0.1) 0%, rgba(220,38,38,0.15) 100%)'
+                    : isUrgent
+                    ? 'linear-gradient(135deg, rgba(245,158,11,0.1) 0%, rgba(217,119,6,0.15) 100%)'
+                    : 'linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(37,99,235,0.15) 100%)',
+                  border: `1px solid ${isPastDue ? alpha('#ef4444', 0.2) : isUrgent ? alpha('#f59e0b', 0.2) : alpha('#3b82f6', 0.2)}`,
                 }}
               >
                 <Typography
-                  variant="caption"
+                  variant="body2"
                   sx={{
-                    fontSize: 9,
-                    fontWeight: 600,
-                    color: company.name ? 'text.primary' : 'text.disabled',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    px: 0.5,
+                    fontWeight: 800,
+                    fontSize: '1rem',
+                    color: isPastDue ? '#ef4444' : isUrgent ? '#f59e0b' : '#3b82f6',
                   }}
                 >
-                  {company.label}
+                  {isPastDue ? `${Math.abs(daysToClose)}d late` : `${daysToClose}d`}
                 </Typography>
               </Box>
-            ))}
+            )}
           </Box>
         </CardContent>
       </Card>
@@ -322,33 +378,31 @@ const EscrowWidgetSmallSkeleton = () => {
     <Card
       sx={{
         height: 320,
-        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+        border: 'none',
+        borderRadius: 3,
         overflow: 'hidden',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
       }}
     >
       {/* Image skeleton */}
-      <Skeleton variant="rectangular" height={140} animation="wave" />
+      <Skeleton variant="rectangular" height={160} animation="wave" />
 
-      <CardContent sx={{ p: 2 }}>
+      <CardContent sx={{ p: 2.5 }}>
         {/* Address skeleton */}
-        <Skeleton variant="text" width="80%" height={24} sx={{ mb: 0.5 }} />
-        <Skeleton variant="text" width="60%" height={18} sx={{ mb: 2 }} />
+        <Skeleton variant="text" width="90%" height={26} sx={{ mb: 0.5 }} />
+        <Skeleton variant="text" width="70%" height={26} sx={{ mb: 2 }} />
 
-        {/* Metrics skeleton - 2x2 grid */}
+        {/* Metrics skeleton - 2 large boxes */}
         <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mb: 2 }}>
-          {[...Array(4)].map((_, idx) => (
-            <Box key={idx}>
-              <Skeleton variant="text" width="50%" height={14} sx={{ mb: 0.5 }} />
-              <Skeleton variant="text" width="70%" height={20} />
-            </Box>
+          {[...Array(2)].map((_, idx) => (
+            <Skeleton key={idx} variant="rectangular" height={70} sx={{ borderRadius: 2 }} />
           ))}
         </Box>
 
-        {/* Company logos skeleton */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0.5 }}>
-          {[...Array(4)].map((_, idx) => (
-            <Skeleton key={idx} variant="rectangular" height={28} sx={{ borderRadius: 0.75 }} />
-          ))}
+        {/* Footer skeleton */}
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 'auto', pt: 1.5 }}>
+          <Skeleton variant="text" width="30%" height={40} />
+          <Skeleton variant="rectangular" width="25%" height={40} sx={{ borderRadius: 2 }} />
         </Box>
       </CardContent>
     </Card>
