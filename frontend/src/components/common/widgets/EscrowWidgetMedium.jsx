@@ -115,7 +115,7 @@ const EscrowWidgetMedium = ({ escrow, index = 0, loading = false }) => {
       <Card
         onClick={() => navigate(`/escrows/${escrow.id}`)}
         sx={{
-          height: 320,
+          height: 400,
           cursor: 'pointer',
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           border: 'none',
@@ -134,12 +134,12 @@ const EscrowWidgetMedium = ({ escrow, index = 0, loading = false }) => {
           },
         }}
       >
-        {/* LEFT: Property Image - 200px wide (proportional to card width) */}
+        {/* LEFT: Property Image - 267px wide (maintains 3:2 MLS ratio at 400px height) */}
         <Box
           sx={{
-            width: 200,
-            minWidth: 200,
-            height: 320,
+            width: 267,
+            minWidth: 267,
+            height: 400,
             position: 'relative',
             background: propertyImage
               ? `url(${propertyImage})`
@@ -226,15 +226,15 @@ const EscrowWidgetMedium = ({ escrow, index = 0, loading = false }) => {
         </Box>
 
         {/* RIGHT: Content */}
-        <CardContent sx={{ flex: 1, p: 3.5, display: 'flex', flexDirection: 'column' }}>
+        <CardContent sx={{ flex: 1, p: 4, display: 'flex', flexDirection: 'column' }}>
           {/* Address - FULL ADDRESS */}
           <Typography
             variant="h6"
             sx={{
               fontWeight: 700,
-              fontSize: '1.1rem',
+              fontSize: '1.15rem',
               lineHeight: 1.3,
-              mb: 2,
+              mb: 2.5,
               display: '-webkit-box',
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
@@ -246,7 +246,7 @@ const EscrowWidgetMedium = ({ escrow, index = 0, loading = false }) => {
           </Typography>
 
           {/* TOP ROW: 3 Key Metrics */}
-          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 1.5, mb: 2 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 2, mb: 2.5 }}>
             {/* Price */}
             <Box
               sx={{
@@ -325,7 +325,7 @@ const EscrowWidgetMedium = ({ escrow, index = 0, loading = false }) => {
           </Box>
 
           {/* FINANCIAL DETAILS: 2x2 Grid */}
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mb: 2 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2, mb: 2.5 }}>
             <Box>
               <Typography variant="caption" sx={{ fontSize: 10, color: 'text.secondary', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 Loan Amount
@@ -405,7 +405,7 @@ const EscrowWidgetMediumSkeleton = () => {
   return (
     <Card
       sx={{
-        height: 320,
+        height: 400,
         border: 'none',
         borderRadius: 3,
         overflow: 'hidden',
@@ -415,9 +415,9 @@ const EscrowWidgetMediumSkeleton = () => {
       }}
     >
       {/* Image skeleton */}
-      <Skeleton variant="rectangular" width={200} height={320} animation="wave" />
+      <Skeleton variant="rectangular" width={267} height={400} animation="wave" />
 
-      <CardContent sx={{ flex: 1, p: 3.5 }}>
+      <CardContent sx={{ flex: 1, p: 4 }}>
         {/* Address skeleton */}
         <Skeleton variant="text" width="90%" height={28} sx={{ mb: 0.5 }} />
         <Skeleton variant="text" width="70%" height={28} sx={{ mb: 2 }} />
