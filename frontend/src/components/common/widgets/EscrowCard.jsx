@@ -354,16 +354,30 @@ const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
         >
           <Card
             component={motion.div}
-            layout
+            layout="position"
             initial={false}
             animate={{
-              scale: 1,
+              scaleX: 1,
+              x: 0,
             }}
             transition={{
               layout: {
-                duration: 0.4,
-                ease: [0.4, 0, 0.2, 1],
+                type: 'spring',
+                stiffness: 200,
+                damping: 20,
+                mass: 0.8,
+                duration: 1, // 1 second for testing
               },
+              scaleX: {
+                type: 'spring',
+                stiffness: 200,
+                damping: 20,
+                mass: 0.8,
+                duration: 1,
+              },
+            }}
+            style={{
+              originX: 0, // Anchor left edge - expansion happens to the right
             }}
             onClick={() => navigate(`/escrows/${escrow.id}`)}
             sx={{
