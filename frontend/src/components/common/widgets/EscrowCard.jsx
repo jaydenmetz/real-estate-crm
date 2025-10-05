@@ -356,6 +356,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
             width: viewMode === 'small' ? '100%' : viewMode === 'medium' ? 'calc(45.71% - 12px)' : 'calc(27.12% - 12px)',
             flexShrink: 0,
             display: 'flex',
+            flexDirection: 'column',
           }}
           transition={{
             layout: { type: 'spring', stiffness: 300, damping: 30 }
@@ -365,7 +366,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
             onClick={() => navigate(`/escrows/${escrow.id}`)}
             sx={{
               width: '100%',
-              height: '100%', // Let content determine height naturally
+              // No height specified - let content (image 3:2 + content section) determine height
               cursor: 'pointer',
               borderRadius: 4,
               overflow: 'hidden',
@@ -598,13 +599,14 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     mt: 'auto',
-                    pt: 0.75,
+                    pt: 1,
+                    px: 0.5,
                     borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
                   }}
                 >
-                  <Box sx={{ display: 'flex', gap: 3 }}>
+                  <Box sx={{ display: 'flex', gap: 2.5 }}>
                     <Box>
-                      <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
+                      <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', mb: 0.25 }}>
                         DOA
                       </Typography>
                       <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary }}>
@@ -612,7 +614,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                       </Typography>
                     </Box>
                     <Box>
-                      <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
+                      <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', mb: 0.25 }}>
                         COE
                       </Typography>
                       <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary }}>
