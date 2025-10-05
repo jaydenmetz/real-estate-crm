@@ -1713,9 +1713,14 @@ const EscrowsDashboard = () => {
         <>
           {/* Escrow Cards */}
           <Box sx={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 3
+            display: 'grid',
+            gridTemplateColumns: viewMode === 'small'
+              ? 'repeat(4, 1fr)'
+              : viewMode === 'medium'
+              ? 'repeat(2, 1fr)'
+              : '1fr',
+            gap: 3,
+            width: '100%',
           }}>
         <AnimatePresence>
           {(() => {

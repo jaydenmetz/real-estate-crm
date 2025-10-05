@@ -195,14 +195,40 @@ const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
     { group: 'Disclosures', completed: 4, total: 4 },
   ];
 
-  // Calculate container width based on visible panels
-  const getContainerWidth = () => {
-    if (isDesktop) return 1180; // All panels
-    if (isTablet) return 700; // 2 panels (small + people)
-    return 320; // 1 panel
+  // Calculate which panels to show based on viewMode and viewport
+  const getVisiblePanelWidths = () => {
+    // Mobile/Tablet: Use carousel system
+    if (!isDesktop) {
+      if (isMobile) return [PANEL_WIDTHS.small]; // Show 1 panel
+      if (isTablet) return [PANEL_WIDTHS.small, PANEL_WIDTHS.people]; // Show 2 panels
+    }
+
+    // Desktop: Show panels based on viewMode
+    if (viewMode === 'small') {
+      return [PANEL_WIDTHS.small]; // 320px
+    } else if (viewMode === 'medium') {
+      return [PANEL_WIDTHS.small, PANEL_WIDTHS.people]; // 700px
+    } else {
+      return [PANEL_WIDTHS.small, PANEL_WIDTHS.people, PANEL_WIDTHS.timeline, PANEL_WIDTHS.checklists]; // 1180px
+    }
   };
 
-  const containerWidth = getContainerWidth();
+  const visiblePanelWidths = getVisiblePanelWidths();
+  const containerWidth = visiblePanelWidths.reduce((sum, width) => sum + width, 0);
+
+  // Helper to check if a panel should be shown
+  const showPanel = (panelIndex) => {
+    // panelIndex: 0=small, 1=people, 2=timeline, 3=checklists
+    if (!isDesktop) {
+      // Mobile/tablet: controlled by carousel
+      return true; // Always render all panels, carousel will hide them
+    }
+
+    // Desktop: Show based on viewMode
+    if (viewMode === 'small') return panelIndex === 0;
+    if (viewMode === 'medium') return panelIndex <= 1;
+    return true; // large: show all
+  };
 
   // Calculate translate offset based on current panel
   const getTranslateX = () => {
@@ -228,7 +254,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, delay: index * 0.05 }}
-      style={{ width: '100%', maxWidth: containerWidth, position: 'relative' }}
+      style={{ width: '100%', position: 'relative' }}
     >
       {/* Navigation Arrows - Only show on mobile/tablet */}
       {!isDesktop && (
@@ -322,10 +348,10 @@ const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
             onClick={() => navigate(`/escrows/${escrow.id}`)}
             sx={{
               height: 400,
-              width: 1180, // Total width of all panels
+              width: '100%', // Fill grid cell
               cursor: 'pointer',
               borderRadius: 4,
-              overflow: 'visible',
+              overflow: 'hidden', // Hide panels that don't fit
               position: 'relative',
               transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
               boxShadow: `0 4px 20px ${alpha(statusConfig.color, 0.15)}`,
@@ -598,18 +624,19 @@ const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
             </Box>
 
             {/* PANEL 2: People (380px) */}
-            <Box
-              sx={{
-                width: 380,
-                flexShrink: 0,
-                height: '100%',
-                background: 'linear-gradient(135deg, rgba(99,102,241,0.02) 0%, rgba(139,92,246,0.03) 100%)',
-                borderLeft: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-                p: 3,
-                display: 'flex',
-                flexDirection: 'column',
-              }}
-            >
+            {showPanel(1) && (
+              <Box
+                sx={{
+                  width: 380,
+                  flexShrink: 0,
+                  height: '100%',
+                  background: 'linear-gradient(135deg, rgba(99,102,241,0.02) 0%, rgba(139,92,246,0.03) 100%)',
+                  borderLeft: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
+                  p: 3,
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
               <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 3, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
                 People
               </Typography>
@@ -722,18 +749,20 @@ const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
                 </Box>
               </Box>
             </Box>
+            )}
 
             {/* PANEL 3: Timeline (240px) */}
-            <Box
-              sx={{
-                width: 240,
-                flexShrink: 0,
-                height: '100%',
-                background: 'linear-gradient(135deg, rgba(139,92,246,0.02) 0%, rgba(168,85,247,0.03) 100%)',
-                borderLeft: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-                p: 3,
-              }}
-            >
+            {showPanel(2) && (
+              <Box
+                sx={{
+                  width: 240,
+                  flexShrink: 0,
+                  height: '100%',
+                  background: 'linear-gradient(135deg, rgba(139,92,246,0.02) 0%, rgba(168,85,247,0.03) 100%)',
+                  borderLeft: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
+                  p: 3,
+                }}
+              >
               <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 3, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
                 Timeline
               </Typography>
@@ -776,18 +805,20 @@ const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
                 </Box>
               ))}
             </Box>
+            )}
 
             {/* PANEL 4: Checklists (240px) */}
-            <Box
-              sx={{
-                width: 240,
-                flexShrink: 0,
-                height: '100%',
-                background: 'linear-gradient(135deg, rgba(168,85,247,0.02) 0%, rgba(217,70,239,0.03) 100%)',
-                borderLeft: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-                p: 3,
-              }}
-            >
+            {showPanel(3) && (
+              <Box
+                sx={{
+                  width: 240,
+                  flexShrink: 0,
+                  height: '100%',
+                  background: 'linear-gradient(135deg, rgba(168,85,247,0.02) 0%, rgba(217,70,239,0.03) 100%)',
+                  borderLeft: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
+                  p: 3,
+                }}
+              >
               <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 3, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
                 Checklists
               </Typography>
@@ -825,6 +856,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
                 );
               })}
             </Box>
+            )}
           </Card>
         </motion.div>
       </Box>
