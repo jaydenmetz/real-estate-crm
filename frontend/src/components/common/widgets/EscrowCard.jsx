@@ -359,7 +359,6 @@ const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
           <Card
             onClick={() => navigate(`/escrows/${escrow.id}`)}
             sx={{
-              height: 400,
               width: '100%',
               maxWidth: viewMode === 'small' ? 320 : viewMode === 'medium' ? 700 : 1180,
               cursor: 'pointer',
@@ -383,10 +382,11 @@ const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
               display: 'flex',
               flexDirection: 'column'
             }}>
-              {/* Property Image - 50% of card height */}
+              {/* Property Image - maintains aspect ratio */}
               <Box
                 sx={{
-                  height: '50%', // 200px out of 400px
+                  aspectRatio: '1 / 1', // Square aspect ratio
+                  width: '100%',
                   position: 'relative',
                   background: propertyImage
                     ? `url(${propertyImage})`
@@ -476,7 +476,8 @@ const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
               {/* Card Content */}
               <CardContent sx={{
                 p: 2.5,
-                height: '50%', // Other 50% of card height
+                aspectRatio: '1 / 1', // Same square aspect ratio as image
+                width: '100%',
                 display: 'flex',
                 flexDirection: 'column',
                 overflow: 'hidden'
