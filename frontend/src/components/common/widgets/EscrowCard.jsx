@@ -217,15 +217,10 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
   const visiblePanelWidths = getVisiblePanelWidths();
   const containerWidth = visiblePanelWidths.reduce((sum, width) => sum + width, 0);
 
-  // Calculate fixed card height based on small card width
-  // Small view: 4 cards + 3 dividers (24px each) = 100% container width
-  // Small card width = (100% - 72px) / 4 = 25% - 18px
-  //
-  // Card structure:
-  // - Image: 3:2 aspect ratio → height = width * (2/3) = (25vw - 18px) * 2/3
-  // - Content: Compact fixed height → 140px for minimal white space
-  // Total height = image height + content height
-  const cardHeight = 'calc((25vw - 18px) * 2 / 3 + 140px)'; // Image (3:2 ratio) + compact content section
+  // Card height is determined naturally by content:
+  // - Image: 3:2 aspect ratio (responsive to card width)
+  // - Content section: Compact padding for minimal white space
+  // Card 2 matches Card 1's height automatically via flexbox stretch
 
   // Helper to check if a panel should be shown
   const showPanel = (panelIndex) => {
@@ -351,7 +346,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
         position: 'relative',
         display: 'flex',
         flexDirection: 'row',
-        gap: 3, // 24px gap between cards
+        gap: 1.5, // 12px gap between cards
         alignItems: 'stretch', // Make both cards same height
       }}>
         {/* Card 1: Small Card (Always visible) */}
@@ -370,7 +365,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
             onClick={() => navigate(`/escrows/${escrow.id}`)}
             sx={{
               width: '100%',
-              height: cardHeight, // Fixed height based on small card width
+              height: '100%', // Let content determine height naturally
               cursor: 'pointer',
               borderRadius: 4,
               overflow: 'hidden',
@@ -692,9 +687,9 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
             <motion.div
               key={`extension-${viewMode}`}
               layoutId={`escrow-extension-${escrow.id}`}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               style={{
                 width: viewMode === 'medium' ? 'calc(54.29% - 12px)' : 'calc(72.88% - 12px)',
                 flexShrink: 0,
@@ -702,9 +697,8 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                 display: 'flex',
               }}
               transition={{
-                layout: { type: 'spring', stiffness: 300, damping: 30 },
-                opacity: { duration: 0.2 },
-                scale: { duration: 0.2 }
+                layout: { type: 'spring', stiffness: 400, damping: 35 },
+                opacity: { duration: 0.15 }
               }}
             >
               <Card
@@ -728,7 +722,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                       ? 'linear-gradient(135deg, rgba(139,92,246,0.02) 0%, rgba(168,85,247,0.03) 100%)'
                       : 'linear-gradient(135deg, rgba(99,102,241,0.02) 0%, rgba(139,92,246,0.03) 100%)',
                     borderRight: viewMode === 'large' ? `1px solid ${alpha(theme.palette.divider, 0.08)}` : 'none',
-                    p: 3,
+                    p: 2,
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'center', // Center content vertically
@@ -903,7 +897,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                       flexShrink: 0,
                       background: 'linear-gradient(135deg, rgba(139,92,246,0.02) 0%, rgba(168,85,247,0.03) 100%)',
                       borderRight: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-                      p: 3,
+                      p: 2,
                       display: 'flex',
                       flexDirection: 'column',
                       justifyContent: 'center', // Center content vertically
@@ -960,7 +954,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                       width: 'calc(33.34%)', // 1/3 width (last panel, no border subtraction)
                       flexShrink: 0,
                       background: 'linear-gradient(135deg, rgba(168,85,247,0.02) 0%, rgba(217,70,239,0.03) 100%)',
-                      p: 3,
+                      p: 2,
                       display: 'flex',
                       flexDirection: 'column',
                       justifyContent: 'center', // Center content vertically
