@@ -68,7 +68,7 @@ function buildRestructuredEscrowResponse(escrow) {
       id: escrow.id,
       escrowNumber: escrow.display_id,
       propertyAddress: escrow.property_address,
-      propertyImage: escrow.property_image_url || 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800',
+      propertyImage: escrow.property_image_url || null,
       zillowUrl: escrow.zillow_url || null,
       escrowStatus: escrow.escrow_status,
       purchasePrice: parseFloat(escrow.purchase_price) || 0,
