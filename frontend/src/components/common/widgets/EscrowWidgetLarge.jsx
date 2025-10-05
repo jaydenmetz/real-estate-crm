@@ -8,6 +8,7 @@ import {
   Skeleton,
   useTheme,
   alpha,
+  Tooltip,
 } from '@mui/material';
 import { Home, CheckCircle, Cancel } from '@mui/icons-material';
 import { motion } from 'framer-motion';
@@ -50,11 +51,27 @@ const EscrowWidgetLarge = ({ escrow, index = 0, loading = false }) => {
     } catch (e) {}
   }
 
-  // Format currency
+  // Format currency - exact number (no K/M)
   const formatCurrency = (value) => {
+    return `$${value.toLocaleString()}`;
+  };
+
+  // Format currency compact (for hero totals with K/M)
+  const formatCurrencyCompact = (value) => {
     if (value >= 1000000) return `$${(value / 1000000).toFixed(1)}M`;
     if (value >= 1000) return `$${Math.round(value / 1000)}K`;
     return `$${value.toLocaleString()}`;
+  };
+
+  // Mask commission for privacy
+  const maskCommission = (value) => {
+    const absValue = Math.abs(value);
+    if (absValue >= 100000) return '$***,***';      // $100,000+
+    if (absValue >= 10000) return '$**,***';        // $10,000-99,999
+    if (absValue >= 1000) return '$*,***';          // $1,000-9,999
+    if (absValue >= 100) return '$***';             // $100-999
+    if (absValue >= 10) return '$**';               // $10-99
+    return '$*';                                     // $0-9
   };
 
   // Format date
@@ -289,7 +306,7 @@ const EscrowWidgetLarge = ({ escrow, index = 0, loading = false }) => {
                 Commission
               </Typography>
               <Typography variant="body1" sx={{ fontWeight: 800, fontSize: '1.05rem', color: '#6366f1', letterSpacing: '-0.5px' }}>
-                {formatCurrency(commission)}
+                {maskCommission(commission)}
               </Typography>
             </Box>
 
@@ -311,7 +328,7 @@ const EscrowWidgetLarge = ({ escrow, index = 0, loading = false }) => {
                 Gross
               </Typography>
               <Typography variant="body1" sx={{ fontWeight: 800, fontSize: '1.05rem', color: '#a855f7', letterSpacing: '-0.5px' }}>
-                {formatCurrency(grossCommission)}
+                {maskCommission(grossCommission)}
               </Typography>
             </Box>
 
