@@ -221,13 +221,11 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
   // Small view: 4 cards + 3 dividers (24px each) = 100% container width
   // Small card width = (100% - 72px) / 4 = 25% - 18px
   //
-  // For aspect ratio calculation:
-  // Using 3:3 aspect ratio (width:height) for compact cards
-  // If small card width = calc(25% - 18px), height = calc((25% - 18px) * 1)
-  //
-  // We need ALL cards (small/medium/large) to have the SAME height
-  // So we calculate height from the small card's width, then use that fixed height for all
-  const cardHeight = 'calc(25vw - 18px)'; // Height = width (1:1 ratio) for compact design
+  // Card structure:
+  // - Image: 3:2 aspect ratio → height = width * (2/3) = (25vw - 18px) * 2/3
+  // - Content: Compact fixed height → 140px for minimal white space
+  // Total height = image height + content height
+  const cardHeight = 'calc((25vw - 18px) * 2 / 3 + 140px)'; // Image (3:2 ratio) + compact content section
 
   // Helper to check if a panel should be shown
   const showPanel = (panelIndex) => {
@@ -501,7 +499,8 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
 
               {/* Card Content */}
               <CardContent sx={{
-                p: 1.5,
+                p: 1.25,
+                '&:last-child': { pb: 1.25 }, // Override MUI default
                 flex: 1,
                 width: '100%',
                 display: 'flex',
@@ -513,22 +512,22 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                   variant="h6"
                   sx={{
                     fontWeight: 800,
-                    fontSize: '0.95rem',
-                    mb: 1.25,
+                    fontSize: '0.9rem',
+                    mb: 1,
                     color: theme.palette.text.primary,
-                    lineHeight: 1.3,
+                    lineHeight: 1.2,
                   }}
                 >
                   {address}
                 </Typography>
 
                 {/* Metrics Grid */}
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1.25, mb: 1.25 }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1, mb: 1 }}>
                   {/* Price */}
                   <Box
                     sx={{
-                      p: 1,
-                      borderRadius: 2,
+                      p: 0.75,
+                      borderRadius: 1.5,
                       background: 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(5,150,105,0.12) 100%)',
                       border: `1px solid ${alpha('#10b981', 0.15)}`,
                       transition: 'all 0.2s',
@@ -550,8 +549,8 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                   <Box
                     sx={{
                       position: 'relative',
-                      p: 1,
-                      borderRadius: 2,
+                      p: 0.75,
+                      borderRadius: 1.5,
                       background: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(79,70,229,0.12) 100%)',
                       border: `1px solid ${alpha('#6366f1', 0.15)}`,
                       transition: 'all 0.2s',
@@ -604,7 +603,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     mt: 'auto',
-                    pt: 1,
+                    pt: 0.75,
                     borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
                   }}
                 >
