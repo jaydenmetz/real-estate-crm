@@ -112,7 +112,7 @@ const EscrowWidgetSmall = ({ escrow, index = 0, loading = false }) => {
       <Card
         onClick={() => navigate(`/escrows/${escrow.id}`)}
         sx={{
-          height: 320,
+          height: 360,
           cursor: 'pointer',
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           border: 'none',
@@ -129,10 +129,10 @@ const EscrowWidgetSmall = ({ escrow, index = 0, loading = false }) => {
           },
         }}
       >
-        {/* Property Image - Larger, more prominent */}
+        {/* Property Image - Optimized for MLS 3:2 ratio */}
         <Box
           sx={{
-            height: 160,
+            height: 213,
             position: 'relative',
             background: propertyImage
               ? `url(${propertyImage})`
@@ -344,7 +344,7 @@ const EscrowWidgetSmallSkeleton = () => {
   return (
     <Card
       sx={{
-        height: 320,
+        height: 360,
         border: 'none',
         borderRadius: 3,
         overflow: 'hidden',
@@ -352,7 +352,7 @@ const EscrowWidgetSmallSkeleton = () => {
       }}
     >
       {/* Image skeleton */}
-      <Skeleton variant="rectangular" height={160} animation="wave" />
+      <Skeleton variant="rectangular" height={213} animation="wave" />
 
       <CardContent sx={{ p: 2.5, display: 'flex', flexDirection: 'column', flex: 1 }}>
         {/* Address skeleton */}
