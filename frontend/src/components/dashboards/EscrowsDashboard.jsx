@@ -1714,11 +1714,12 @@ const EscrowsDashboard = () => {
           {/* Escrow Cards */}
           <Box sx={{
             display: 'grid',
-            gridTemplateColumns: viewMode === 'small'
-              ? 'repeat(4, 1fr)'
-              : viewMode === 'medium'
-              ? 'repeat(2, 1fr)'
-              : '1fr',
+            gridTemplateColumns: {
+              xs: '1fr', // Mobile: Always 1 column
+              sm: '1fr', // Tablet: Always 1 column
+              md: viewMode === 'small' ? 'repeat(2, 1fr)' : viewMode === 'medium' ? 'repeat(2, 1fr)' : '1fr', // Medium screens: 2 cols for small, 2 for medium, 1 for large
+              lg: viewMode === 'small' ? 'repeat(4, 1fr)' : viewMode === 'medium' ? 'repeat(2, 1fr)' : '1fr', // Large screens: Respect viewMode
+            },
             gap: 3,
             width: '100%',
           }}>
