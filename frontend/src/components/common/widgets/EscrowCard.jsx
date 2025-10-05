@@ -353,28 +353,81 @@ const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
           }}
         >
           <Card
+            component={motion.div}
+            layout
+            initial={false}
+            animate={{
+              scale: 1,
+            }}
+            transition={{
+              layout: {
+                duration: 0.4,
+                ease: [0.4, 0, 0.2, 1],
+              },
+            }}
             onClick={() => navigate(`/escrows/${escrow.id}`)}
             sx={{
               width: '100%',
               cursor: 'pointer',
               borderRadius: 4,
-              overflow: 'hidden',
+              overflow: 'visible',
               position: 'relative',
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              boxShadow: `0 4px 20px ${alpha(statusConfig.color, 0.15)}`,
-              '&:hover': {
-                boxShadow: statusConfig.glow,
+              // Subtle gradient border effect
+              '&::before': {
+                content: '""',
+                position: 'absolute',
+                inset: -1,
+                borderRadius: 4,
+                padding: '1px',
+                background: `linear-gradient(135deg, ${alpha(statusConfig.color, 0.2)}, ${alpha(statusConfig.color, 0.05)}, transparent)`,
+                WebkitMask: 'linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0)',
+                WebkitMaskComposite: 'xor',
+                maskComposite: 'exclude',
+                pointerEvents: 'none',
               },
+              // Dynamic shadow that changes with viewMode
+              boxShadow: viewMode === 'small'
+                ? `0 8px 32px ${alpha(statusConfig.color, 0.12)}, 0 2px 8px ${alpha(statusConfig.color, 0.08)}`
+                : viewMode === 'medium'
+                ? `0 12px 48px ${alpha(statusConfig.color, 0.15)}, 0 4px 16px ${alpha(statusConfig.color, 0.1)}, inset 0 0 0 1px ${alpha(statusConfig.color, 0.1)}`
+                : `0 20px 64px ${alpha(statusConfig.color, 0.18)}, 0 8px 24px ${alpha(statusConfig.color, 0.12)}, inset 0 0 0 1px ${alpha(statusConfig.color, 0.15)}`,
+              '&:hover': {
+                boxShadow: viewMode === 'small'
+                  ? `0 12px 48px ${alpha(statusConfig.color, 0.2)}, 0 4px 12px ${alpha(statusConfig.color, 0.15)}`
+                  : viewMode === 'medium'
+                  ? `0 16px 64px ${alpha(statusConfig.color, 0.25)}, 0 8px 24px ${alpha(statusConfig.color, 0.18)}, inset 0 0 0 1px ${alpha(statusConfig.color, 0.2)}`
+                  : `0 24px 80px ${alpha(statusConfig.color, 0.3)}, 0 12px 32px ${alpha(statusConfig.color, 0.2)}, inset 0 0 0 1px ${alpha(statusConfig.color, 0.25)}`,
+                transform: 'translateY(-2px)',
+              },
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
               display: 'flex',
               flexDirection: 'row',
             }}
           >
+            {/* Subtle accent glow on right edge for medium/large */}
+            {viewMode !== 'small' && (
+              <Box
+                sx={{
+                  position: 'absolute',
+                  right: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: 4,
+                  background: `linear-gradient(to right, transparent, ${alpha(statusConfig.color, 0.4)})`,
+                  pointerEvents: 'none',
+                  zIndex: 10,
+                }}
+              />
+            )}
+
             {/* PANEL 1: Small Card - Base */}
             <Box sx={{
               width: viewMode === 'small' ? '100%' : viewMode === 'medium' ? '45.71%' : '27.12%', // Proportional to total width
               flexShrink: 0,
               display: 'flex',
-              flexDirection: 'column'
+              flexDirection: 'column',
+              position: 'relative',
+              overflow: 'hidden',
             }}>
               {/* Property Image - 3:2 aspect ratio (standard MLS photos) */}
               <Box
