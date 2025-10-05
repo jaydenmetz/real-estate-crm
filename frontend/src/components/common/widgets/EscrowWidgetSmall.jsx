@@ -226,7 +226,7 @@ const EscrowWidgetSmall = ({ escrow, index = 0, loading = false }) => {
               fontWeight: 700,
               fontSize: '1rem',
               lineHeight: 1.3,
-              mb: 1.5,
+              mb: 1,
               display: '-webkit-box',
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
@@ -238,11 +238,11 @@ const EscrowWidgetSmall = ({ escrow, index = 0, loading = false }) => {
           </Typography>
 
           {/* KEY METRICS - 2 LARGE boxes */}
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mb: 1.5 }}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mb: 1 }}>
             {/* Price */}
             <Box
               sx={{
-                p: 1.5,
+                p: 1,
                 borderRadius: 2,
                 background: 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(5,150,105,0.12) 100%)',
                 border: `1px solid ${alpha('#10b981', 0.15)}`,
@@ -264,7 +264,7 @@ const EscrowWidgetSmall = ({ escrow, index = 0, loading = false }) => {
             {/* Commission */}
             <Box
               sx={{
-                p: 1.5,
+                p: 1,
                 borderRadius: 2,
                 background: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(79,70,229,0.12) 100%)',
                 border: `1px solid ${alpha('#6366f1', 0.15)}`,
@@ -356,13 +356,13 @@ const EscrowWidgetSmallSkeleton = () => {
 
       <CardContent sx={{ p: 2, display: 'flex', flexDirection: 'column', flex: 1 }}>
         {/* Address skeleton */}
-        <Skeleton variant="text" width="90%" height={22} sx={{ mb: 0.5 }} />
-        <Skeleton variant="text" width="70%" height={22} sx={{ mb: 1.5 }} />
+        <Skeleton variant="text" width="90%" height={20} sx={{ mb: 0.5 }} />
+        <Skeleton variant="text" width="70%" height={20} sx={{ mb: 1 }} />
 
         {/* Metrics skeleton - 2 large boxes */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mb: 1.5 }}>
+        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1, mb: 1 }}>
           {[...Array(2)].map((_, idx) => (
-            <Skeleton key={idx} variant="rectangular" height={60} sx={{ borderRadius: 2 }} />
+            <Skeleton key={idx} variant="rectangular" height={50} sx={{ borderRadius: 2 }} />
           ))}
         </Box>
 
