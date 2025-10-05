@@ -293,6 +293,7 @@ const EscrowsDashboard = () => {
   const [showNewEscrowModal, setShowNewEscrowModal] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState('active');
   const [viewMode, setViewMode] = useState('small'); // 'small', 'medium', 'large'
+  const [animationType, setAnimationType] = useState('spring'); // 'spring', 'stagger', 'parallax', 'blur', 'magnetic'
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [calendarDialogOpen, setCalendarDialogOpen] = useState(false);
@@ -1400,6 +1401,40 @@ const EscrowsDashboard = () => {
           </Tabs>
 
           <Stack direction="row" spacing={2} alignItems="center">
+            {/* Animation Type Selector */}
+            <ToggleButtonGroup
+              value={animationType}
+              exclusive
+              onChange={(e, newAnim) => newAnim && setAnimationType(newAnim)}
+              size="small"
+              sx={{
+                '& .MuiToggleButton-root': {
+                  px: 1.5,
+                  py: 0.5,
+                  textTransform: 'none',
+                  fontWeight: 500,
+                  fontSize: '0.75rem',
+                },
+              }}
+            >
+              <ToggleButton value="spring" aria-label="spring physics animation">
+                Spring
+              </ToggleButton>
+              <ToggleButton value="stagger" aria-label="staggered reveal animation">
+                Stagger
+              </ToggleButton>
+              <ToggleButton value="parallax" aria-label="parallax depth animation">
+                Parallax
+              </ToggleButton>
+              <ToggleButton value="blur" aria-label="morphing blur animation">
+                Blur
+              </ToggleButton>
+              <ToggleButton value="magnetic" aria-label="magnetic snap animation">
+                Magnetic
+              </ToggleButton>
+            </ToggleButtonGroup>
+
+            {/* View Mode Selector */}
             <ToggleButtonGroup
               value={viewMode}
               exclusive
@@ -1905,6 +1940,7 @@ const EscrowsDashboard = () => {
                   key={escrow.id}
                   escrow={escrow}
                   viewMode={viewMode}
+                  animationType={animationType}
                   index={index}
                 />
               ));

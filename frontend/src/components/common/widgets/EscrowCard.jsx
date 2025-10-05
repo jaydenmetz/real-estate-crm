@@ -29,7 +29,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from '
 import { useNavigate } from 'react-router-dom';
 import { differenceInDays, isValid, format } from 'date-fns';
 
-const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
+const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', index = 0 }) => {
   const navigate = useNavigate();
   const theme = useTheme();
   const [showCommission, setShowCommission] = React.useState(false);
@@ -356,26 +356,43 @@ const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
             component={motion.div}
             layout="position"
             initial={false}
-            animate={{
-              scaleX: 1,
-              x: 0,
-            }}
-            transition={{
-              layout: {
-                type: 'spring',
-                stiffness: 200,
-                damping: 20,
-                mass: 0.8,
-                duration: 1, // 1 second for testing
-              },
-              scaleX: {
-                type: 'spring',
-                stiffness: 200,
-                damping: 20,
-                mass: 0.8,
-                duration: 1,
-              },
-            }}
+            animate={
+              animationType === 'spring' ? { scaleX: 1, x: 0 }
+              : animationType === 'stagger' ? { scaleX: 1, x: 0, opacity: 1 }
+              : animationType === 'parallax' ? { x: 0, opacity: 1 }
+              : animationType === 'blur' ? { scaleX: 1, filter: 'blur(0px)' }
+              : animationType === 'magnetic' ? { x: 0, scaleX: 1 }
+              : { scaleX: 1, x: 0 }
+            }
+            transition={
+              animationType === 'spring' ? {
+                layout: { type: 'spring', stiffness: 200, damping: 20, mass: 0.8, duration: 1 },
+                scaleX: { type: 'spring', stiffness: 200, damping: 20, mass: 0.8, duration: 1 },
+              }
+              : animationType === 'stagger' ? {
+                layout: { type: 'spring', stiffness: 300, damping: 30, delay: index * 0.05 },
+                scaleX: { duration: 0.6, delay: index * 0.05, ease: [0.4, 0, 0.2, 1] },
+                opacity: { duration: 0.3, delay: index * 0.05 },
+              }
+              : animationType === 'parallax' ? {
+                layout: { type: 'spring', stiffness: 250, damping: 25, mass: 1 },
+                x: { duration: 0.8, ease: [0.65, 0, 0.35, 1] },
+                opacity: { duration: 0.4 },
+              }
+              : animationType === 'blur' ? {
+                layout: { duration: 0.7, ease: [0.4, 0, 0.2, 1] },
+                scaleX: { duration: 0.7, ease: [0.4, 0, 0.2, 1] },
+                filter: { duration: 0.5, ease: [0.4, 0, 0.2, 1] },
+              }
+              : animationType === 'magnetic' ? {
+                layout: { type: 'spring', stiffness: 150, damping: 12, mass: 1.2 },
+                x: { type: 'spring', stiffness: 150, damping: 12 },
+                scaleX: { type: 'spring', stiffness: 150, damping: 12, restSpeed: 0.5 },
+              }
+              : {
+                layout: { type: 'spring', stiffness: 200, damping: 20, mass: 0.8, duration: 1 },
+              }
+            }
             style={{
               originX: 0, // Anchor left edge - expansion happens to the right
             }}
