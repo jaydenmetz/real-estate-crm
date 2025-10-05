@@ -340,7 +340,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
         width: '100%',
         borderRadius: 4,
         display: 'flex',
-        justifyContent: 'center',
+        justifyContent: viewMode === 'large' ? 'flex-start' : 'center', // Left-align large, center small/medium
         alignItems: 'center',
       }}>
         <motion.div
@@ -351,16 +351,15 @@ const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
           animate={{ x: getTranslateX() }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
           style={{
-            width: '100%',
-            maxWidth: viewMode === 'small' ? 320 : viewMode === 'medium' ? 700 : 1180,
-            margin: '0 auto',
+            width: viewMode === 'large' ? '100%' : 'auto',
+            maxWidth: viewMode === 'small' ? 320 : viewMode === 'medium' ? 700 : 'none',
           }}
         >
           <Card
             onClick={() => navigate(`/escrows/${escrow.id}`)}
             sx={{
               width: '100%',
-              maxWidth: viewMode === 'small' ? 320 : viewMode === 'medium' ? 700 : 1180,
+              maxWidth: viewMode === 'small' ? 320 : viewMode === 'medium' ? 700 : 'none',
               cursor: 'pointer',
               borderRadius: 4,
               overflow: 'hidden',
@@ -372,7 +371,6 @@ const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
               },
               display: 'flex',
               flexDirection: 'row',
-              margin: '0 auto',
             }}
           >
             {/* PANEL 1: Small Card - Base */}
