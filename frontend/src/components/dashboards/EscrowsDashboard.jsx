@@ -1,9 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NewEscrowModal from '../forms/NewEscrowModal';
-import EscrowWidgetSmall from '../common/widgets/EscrowWidgetSmall';
-import EscrowWidgetMedium from '../common/widgets/EscrowWidgetMedium';
-import EscrowWidgetLarge from '../common/widgets/EscrowWidgetLarge';
+import EscrowCard from '../common/widgets/EscrowCard';
 import {
   Container,
   Box,
@@ -2578,13 +2576,8 @@ const EscrowsDashboard = () => {
         <>
           {/* Escrow Cards */}
           <Box sx={{
-            display: 'grid',
-            gridTemplateColumns:
-              viewMode === 'small'
-                ? 'repeat(auto-fill, minmax(280px, 1fr))'
-                : viewMode === 'medium'
-                ? 'repeat(auto-fill, minmax(580px, 1fr))'
-                : 'repeat(auto-fill, minmax(1180px, 1fr))',
+            display: 'flex',
+            flexDirection: 'column',
             gap: 3
           }}>
         <AnimatePresence>
@@ -2763,35 +2756,14 @@ const EscrowsDashboard = () => {
             </Paper>
               );
             } else {
-              return filteredEscrows.map((escrow, index) => {
-                // Choose widget component based on view mode
-                if (viewMode === 'small') {
-                  return (
-                    <EscrowWidgetSmall
-                      key={escrow.id}
-                      escrow={escrow}
-                      index={index}
-                    />
-                  );
-                } else if (viewMode === 'medium') {
-                  return (
-                    <EscrowWidgetMedium
-                      key={escrow.id}
-                      escrow={escrow}
-                      index={index}
-                    />
-                  );
-                } else {
-                  // Large view - comprehensive details
-                  return (
-                    <EscrowWidgetLarge
-                      key={escrow.id}
-                      escrow={escrow}
-                      index={index}
-                    />
-                  );
-                }
-              });
+              return filteredEscrows.map((escrow, index) => (
+                <EscrowCard
+                  key={escrow.id}
+                  escrow={escrow}
+                  viewMode={viewMode}
+                  index={index}
+                />
+              ));
             }
           })()}
         </AnimatePresence>
