@@ -218,7 +218,7 @@ const EscrowWidgetSmall = ({ escrow, index = 0, loading = false }) => {
           </Typography>
         </Box>
 
-        <CardContent sx={{ p: 2, display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+        <CardContent sx={{ p: 2.5, display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
           {/* Address - FULL ADDRESS, larger text */}
           <Typography
             variant="h6"
@@ -354,7 +354,7 @@ const EscrowWidgetSmallSkeleton = () => {
       {/* Image skeleton */}
       <Skeleton variant="rectangular" height={160} animation="wave" />
 
-      <CardContent sx={{ p: 2, display: 'flex', flexDirection: 'column', flex: 1 }}>
+      <CardContent sx={{ p: 2.5, display: 'flex', flexDirection: 'column', flex: 1 }}>
         {/* Address skeleton */}
         <Skeleton variant="text" width="90%" height={20} sx={{ mb: 0.5 }} />
         <Skeleton variant="text" width="70%" height={20} sx={{ mb: 1 }} />

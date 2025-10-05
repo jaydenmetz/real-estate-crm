@@ -228,7 +228,7 @@ const EscrowWidgetLarge = ({ escrow, index = 0, loading = false }) => {
         </Box>
 
         {/* RIGHT: Content */}
-        <CardContent sx={{ flex: 1, p: 3, display: 'flex', flexDirection: 'column' }}>
+        <CardContent sx={{ flex: 1, p: 4, display: 'flex', flexDirection: 'column' }}>
           {/* Address - FULL ADDRESS */}
           <Typography
             variant="h5"
@@ -477,7 +477,7 @@ const EscrowWidgetLargeSkeleton = () => {
       {/* Image skeleton */}
       <Skeleton variant="rectangular" width={320} height={320} animation="wave" />
 
-      <CardContent sx={{ flex: 1, p: 3 }}>
+      <CardContent sx={{ flex: 1, p: 4 }}>
         {/* Address skeleton */}
         <Skeleton variant="text" width="90%" height={32} sx={{ mb: 0.5 }} />
         <Skeleton variant="text" width="70%" height={32} sx={{ mb: 2.5 }} />

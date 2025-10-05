@@ -226,7 +226,7 @@ const EscrowWidgetMedium = ({ escrow, index = 0, loading = false }) => {
         </Box>
 
         {/* RIGHT: Content */}
-        <CardContent sx={{ flex: 1, p: 3, display: 'flex', flexDirection: 'column' }}>
+        <CardContent sx={{ flex: 1, p: 3.5, display: 'flex', flexDirection: 'column' }}>
           {/* Address - FULL ADDRESS */}
           <Typography
             variant="h6"
@@ -417,7 +417,7 @@ const EscrowWidgetMediumSkeleton = () => {
       {/* Image skeleton */}
       <Skeleton variant="rectangular" width={200} height={320} animation="wave" />
 
-      <CardContent sx={{ flex: 1, p: 3 }}>
+      <CardContent sx={{ flex: 1, p: 3.5 }}>
         {/* Address skeleton */}
         <Skeleton variant="text" width="90%" height={28} sx={{ mb: 0.5 }} />
         <Skeleton variant="text" width="70%" height={28} sx={{ mb: 2 }} />
