@@ -222,12 +222,12 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
   // Small card width = (100% - 72px) / 4 = 25% - 18px
   //
   // For aspect ratio calculation:
-  // Using 3:3.5 aspect ratio (width:height) for shorter cards
-  // If small card width = calc(25% - 18px), height = calc((25% - 18px) * 3.5/3)
+  // Using 3:3 aspect ratio (width:height) for compact cards
+  // If small card width = calc(25% - 18px), height = calc((25% - 18px) * 1)
   //
   // We need ALL cards (small/medium/large) to have the SAME height
   // So we calculate height from the small card's width, then use that fixed height for all
-  const cardHeight = 'calc((25vw - 18px) * 3.5 / 3)'; // Height based on small card width with 3:3.5 ratio
+  const cardHeight = 'calc(25vw - 18px)'; // Height = width (1:1 ratio) for compact design
 
   // Helper to check if a panel should be shown
   const showPanel = (panelIndex) => {
@@ -501,8 +501,8 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
 
               {/* Card Content */}
               <CardContent sx={{
-                p: 2.5,
-                aspectRatio: '3 / 2', // Same 3:2 aspect ratio as image
+                p: 1.5,
+                flex: 1,
                 width: '100%',
                 display: 'flex',
                 flexDirection: 'column',
@@ -513,8 +513,8 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                   variant="h6"
                   sx={{
                     fontWeight: 800,
-                    fontSize: '1rem',
-                    mb: 2,
+                    fontSize: '0.95rem',
+                    mb: 1.25,
                     color: theme.palette.text.primary,
                     lineHeight: 1.3,
                   }}
@@ -523,7 +523,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                 </Typography>
 
                 {/* Metrics Grid */}
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1.5, mb: 2 }}>
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1.25, mb: 1.25 }}>
                   {/* Price */}
                   <Box
                     sx={{
@@ -604,7 +604,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     mt: 'auto',
-                    pt: 1.5,
+                    pt: 1,
                     borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
                   }}
                 >
