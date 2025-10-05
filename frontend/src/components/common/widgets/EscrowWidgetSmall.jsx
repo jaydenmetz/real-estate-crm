@@ -169,7 +169,7 @@ const EscrowWidgetSmall = ({ escrow, index = 0, loading = false }) => {
             position: 'relative',
             background: propertyImage
               ? `url(${propertyImage})`
-              : statusConfig.bg,
+              : 'linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             display: 'flex',
@@ -187,7 +187,7 @@ const EscrowWidgetSmall = ({ escrow, index = 0, loading = false }) => {
           }}
         >
           {!propertyImage && (
-            <Home sx={{ fontSize: 80, color: 'rgba(255,255,255,0.9)' }} />
+            <Home sx={{ fontSize: 80, color: alpha('#757575', 0.5) }} />
           )}
 
           {/* Status Chip - FLOATING top right */}
@@ -251,7 +251,7 @@ const EscrowWidgetSmall = ({ escrow, index = 0, loading = false }) => {
           </Typography>
         </Box>
 
-        <CardContent sx={{ p: 2.5, height: 'calc(100% - 160px)', display: 'flex', flexDirection: 'column' }}>
+        <CardContent sx={{ p: 2, display: 'flex', flexDirection: 'column', flex: 1 }}>
           {/* Address - FULL ADDRESS, larger text */}
           <Typography
             variant="h6"

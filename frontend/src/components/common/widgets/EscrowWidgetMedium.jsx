@@ -176,7 +176,7 @@ const EscrowWidgetMedium = ({ escrow, index = 0, loading = false }) => {
             position: 'relative',
             background: propertyImage
               ? `url(${propertyImage})`
-              : statusConfig.bg,
+              : 'linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             display: 'flex',
@@ -194,7 +194,7 @@ const EscrowWidgetMedium = ({ escrow, index = 0, loading = false }) => {
           }}
         >
           {!propertyImage && (
-            <Home sx={{ fontSize: 100, color: 'rgba(255,255,255,0.9)' }} />
+            <Home sx={{ fontSize: 100, color: alpha('#757575', 0.5) }} />
           )}
 
           {/* Status Chip - FLOATING top right */}
