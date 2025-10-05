@@ -217,6 +217,12 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
   const visiblePanelWidths = getVisiblePanelWidths();
   const containerWidth = visiblePanelWidths.reduce((sum, width) => sum + width, 0);
 
+  // Calculate consistent card height based on small card's aspect ratios
+  // Image: 3/2 aspect = 66.67% of width
+  // Content: 3/2 aspect = 66.67% of width
+  // Total height = 133.33% of card width (or 4/3 aspect ratio for entire card)
+  const cardAspectRatio = '3 / 4'; // Total card aspect (width/height)
+
   // Helper to check if a panel should be shown
   const showPanel = (panelIndex) => {
     // panelIndex: 0=small, 1=people, 2=timeline, 3=checklists
@@ -358,6 +364,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
             onClick={() => navigate(`/escrows/${escrow.id}`)}
             sx={{
               width: '100%',
+              aspectRatio: cardAspectRatio, // Fixed 3:4 aspect ratio
               cursor: 'pointer',
               borderRadius: 4,
               overflow: 'hidden',
@@ -673,33 +680,34 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
         </motion.div>
 
         {/* Card 2: Extension Panels (Slides from behind Card 1) */}
-        <AnimatePresence>
+        <AnimatePresence mode="wait">
           {viewMode !== 'small' && (
             <motion.div
+              key={`extension-${viewMode}`}
               layoutId={`escrow-extension-${escrow.id}`}
-              initial={{ x: -100, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -100, opacity: 0 }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
               style={{
                 width: viewMode === 'medium' ? 'calc(54.29% - 12px)' : 'calc(72.88% - 12px)',
                 flexShrink: 0,
               }}
               transition={{
                 layout: { type: 'spring', stiffness: 300, damping: 30 },
-                x: { type: 'spring', stiffness: 300, damping: 30 },
-                opacity: { duration: 0.3 }
+                opacity: { duration: 0.2 },
+                scale: { duration: 0.2 }
               }}
             >
               <Card
                 sx={{
                   width: '100%',
+                  aspectRatio: cardAspectRatio, // Match Card 1 aspect ratio (3:4)
                   borderRadius: 4,
                   overflow: 'hidden',
                   position: 'relative',
                   boxShadow: `0 8px 32px ${alpha(statusConfig.color, 0.12)}, 0 2px 8px ${alpha(statusConfig.color, 0.08)}`,
                   display: 'flex',
                   flexDirection: 'row',
-                  height: '100%',
                 }}
               >
                 {/* PANEL 2: People */}
