@@ -217,19 +217,17 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
   const visiblePanelWidths = getVisiblePanelWidths();
   const containerWidth = visiblePanelWidths.reduce((sum, width) => sum + width, 0);
 
-  // Calculate fixed card dimensions based on container width
-  // Container width = 100vw or parent container width
-  // For small view: 4 cards + 3 dividers (24px each) = 100% width
-  // Card width = (containerWidth - (3 * 24px)) / 4
+  // Calculate fixed card height based on small card width
+  // Small view: 4 cards + 3 dividers (24px each) = 100% container width
+  // Small card width = (100% - 72px) / 4 = 25% - 18px
   //
-  // Example with 1272px container:
-  // Card width = (1272 - 72) / 4 = 300px
-  // Image height = 300px * (2/3) = 200px (1500x1000 = 3:2 ratio)
-  // Content height = 300px * (2/3) = 200px (same 3:2 ratio)
-  // Total card height = 200px + 200px = 400px
+  // For aspect ratio calculation:
+  // Small card has 3:4 aspect ratio (width:height)
+  // If small card width = calc(25% - 18px), height = calc((25% - 18px) * 4/3)
   //
-  // For any container width, card height = card width * (4/3)
-  const cardAspectRatio = '3 / 4'; // width/height = 3:4, so height = width * (4/3)
+  // We need ALL cards (small/medium/large) to have the SAME height
+  // So we calculate height from the small card's width, then use that fixed height for all
+  const cardHeight = 'calc((25vw - 18px) * 4 / 3)'; // Height based on small card width
 
   // Helper to check if a panel should be shown
   const showPanel = (panelIndex) => {
@@ -374,7 +372,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
             onClick={() => navigate(`/escrows/${escrow.id}`)}
             sx={{
               width: '100%',
-              aspectRatio: cardAspectRatio, // Fixed 3:4 aspect ratio - sets the height
+              height: cardHeight, // Fixed height based on small card width
               cursor: 'pointer',
               borderRadius: 4,
               overflow: 'hidden',
