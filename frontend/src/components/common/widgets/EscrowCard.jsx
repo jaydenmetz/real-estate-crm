@@ -217,11 +217,19 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
   const visiblePanelWidths = getVisiblePanelWidths();
   const containerWidth = visiblePanelWidths.reduce((sum, width) => sum + width, 0);
 
-  // Calculate consistent card height based on small card's aspect ratios
-  // Image: 3/2 aspect = 66.67% of width
-  // Content: 3/2 aspect = 66.67% of width
-  // Total height = 133.33% of card width (or 4/3 aspect ratio for entire card)
-  const cardAspectRatio = '3 / 4'; // Total card aspect (width/height)
+  // Calculate fixed card dimensions based on container width
+  // Container width = 100vw or parent container width
+  // For small view: 4 cards + 3 dividers (24px each) = 100% width
+  // Card width = (containerWidth - (3 * 24px)) / 4
+  //
+  // Example with 1272px container:
+  // Card width = (1272 - 72) / 4 = 300px
+  // Image height = 300px * (2/3) = 200px (1500x1000 = 3:2 ratio)
+  // Content height = 300px * (2/3) = 200px (same 3:2 ratio)
+  // Total card height = 200px + 200px = 400px
+  //
+  // For any container width, card height = card width * (4/3)
+  const cardAspectRatio = '3 / 4'; // width/height = 3:4, so height = width * (4/3)
 
   // Helper to check if a panel should be shown
   const showPanel = (panelIndex) => {
@@ -714,12 +722,14 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                   flexDirection: 'row',
                 }}
               >
-                {/* PANEL 2: People */}
+                {/* PANEL 2: Timeline (medium) or People (large) */}
                 <Box
                   sx={{
-                    width: viewMode === 'medium' ? '100%' : '44.19%', // 380/860 for large
+                    width: viewMode === 'medium' ? '100%' : 'calc(33.33% - 1px)', // Full width for medium, 1/3 for large (minus border)
                     flexShrink: 0,
-                    background: 'linear-gradient(135deg, rgba(99,102,241,0.02) 0%, rgba(139,92,246,0.03) 100%)',
+                    background: viewMode === 'medium'
+                      ? 'linear-gradient(135deg, rgba(139,92,246,0.02) 0%, rgba(168,85,247,0.03) 100%)'
+                      : 'linear-gradient(135deg, rgba(99,102,241,0.02) 0%, rgba(139,92,246,0.03) 100%)',
                     borderRight: viewMode === 'large' ? `1px solid ${alpha(theme.palette.divider, 0.08)}` : 'none',
                     p: 3,
                     display: 'flex',
@@ -727,9 +737,55 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                     justifyContent: 'center', // Center content vertically
                   }}
                 >
-              <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 3, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
-                People
-              </Typography>
+              {viewMode === 'medium' ? (
+                <>
+                  <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 3, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                    Timeline
+                  </Typography>
+
+                  {timeline.map((milestone, idx) => (
+                    <Box
+                      key={milestone.label}
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'flex-start',
+                        gap: 1.5,
+                        mb: 3,
+                        position: 'relative',
+                        '&::after': idx < timeline.length - 1 ? {
+                          content: '""',
+                          position: 'absolute',
+                          left: 11,
+                          top: 28,
+                          bottom: -24,
+                          width: 2,
+                          background: milestone.completed
+                            ? 'linear-gradient(to bottom, #10b981, #059669)'
+                            : alpha(theme.palette.divider, 0.2),
+                        } : {},
+                      }}
+                    >
+                      {milestone.completed ? (
+                        <CheckCircleOutline sx={{ fontSize: 24, color: '#10b981', flexShrink: 0 }} />
+                      ) : (
+                        <RadioButtonUnchecked sx={{ fontSize: 24, color: alpha(theme.palette.text.disabled, 0.3), flexShrink: 0 }} />
+                      )}
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: milestone.completed ? theme.palette.text.primary : theme.palette.text.secondary }}>
+                          {milestone.label}
+                        </Typography>
+                        <Typography variant="caption" sx={{ fontSize: 11, color: theme.palette.text.secondary }}>
+                          {milestone.date ? formatDate(milestone.date) : 'Pending'}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  ))}
+                </>
+              ) : (
+                <>
+                  <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 3, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                    People
+                  </Typography>
 
               {/* Buyer */}
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
@@ -838,13 +894,15 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                   </Typography>
                 </Box>
               </Box>
+                </>
+              )}
                 </Box>
 
                 {/* PANEL 3: Timeline (Only in large view) */}
                 {viewMode === 'large' && (
                   <Box
                     sx={{
-                      width: '27.91%', // 240/860 for large
+                      width: 'calc(33.33% - 1px)', // 1/3 width (minus border)
                       flexShrink: 0,
                       background: 'linear-gradient(135deg, rgba(139,92,246,0.02) 0%, rgba(168,85,247,0.03) 100%)',
                       borderRight: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
@@ -902,7 +960,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                 {viewMode === 'large' && (
                   <Box
                     sx={{
-                      width: '27.91%', // 240/860 for large
+                      width: 'calc(33.34%)', // 1/3 width (last panel, no border subtraction)
                       flexShrink: 0,
                       background: 'linear-gradient(135deg, rgba(168,85,247,0.02) 0%, rgba(217,70,239,0.03) 100%)',
                       p: 3,
