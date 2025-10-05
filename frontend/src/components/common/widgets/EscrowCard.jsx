@@ -348,6 +348,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
         display: 'flex',
         flexDirection: 'row',
         gap: 3, // 24px gap between cards
+        alignItems: 'stretch', // Make both cards same height
       }}>
         {/* Card 1: Small Card (Always visible) */}
         <motion.div
@@ -355,6 +356,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
           style={{
             width: viewMode === 'small' ? '100%' : viewMode === 'medium' ? 'calc(45.71% - 12px)' : 'calc(27.12% - 12px)',
             flexShrink: 0,
+            display: 'flex',
           }}
           transition={{
             layout: { type: 'spring', stiffness: 300, damping: 30 }
@@ -364,7 +366,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
             onClick={() => navigate(`/escrows/${escrow.id}`)}
             sx={{
               width: '100%',
-              aspectRatio: cardAspectRatio, // Fixed 3:4 aspect ratio
+              aspectRatio: cardAspectRatio, // Fixed 3:4 aspect ratio - sets the height
               cursor: 'pointer',
               borderRadius: 4,
               overflow: 'hidden',
@@ -691,6 +693,8 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
               style={{
                 width: viewMode === 'medium' ? 'calc(54.29% - 12px)' : 'calc(72.88% - 12px)',
                 flexShrink: 0,
+                flexGrow: 1,
+                display: 'flex',
               }}
               transition={{
                 layout: { type: 'spring', stiffness: 300, damping: 30 },
@@ -701,7 +705,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
               <Card
                 sx={{
                   width: '100%',
-                  aspectRatio: cardAspectRatio, // Match Card 1 aspect ratio (3:4)
+                  height: '100%', // Match Card 1's height (from flex stretch)
                   borderRadius: 4,
                   overflow: 'hidden',
                   position: 'relative',
@@ -720,6 +724,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                     p: 3,
                     display: 'flex',
                     flexDirection: 'column',
+                    justifyContent: 'center', // Center content vertically
                   }}
                 >
               <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 3, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
@@ -844,6 +849,9 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                       background: 'linear-gradient(135deg, rgba(139,92,246,0.02) 0%, rgba(168,85,247,0.03) 100%)',
                       borderRight: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
                       p: 3,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center', // Center content vertically
                     }}
                   >
                     <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 3, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
@@ -898,6 +906,9 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                       flexShrink: 0,
                       background: 'linear-gradient(135deg, rgba(168,85,247,0.02) 0%, rgba(217,70,239,0.03) 100%)',
                       p: 3,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center', // Center content vertically
                     }}
                   >
                     <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 3, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
