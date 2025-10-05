@@ -335,7 +335,14 @@ const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
       )}
 
       {/* Card Container with Overflow Hidden */}
-      <Box sx={{ overflow: 'hidden', width: '100%', borderRadius: 4 }}>
+      <Box sx={{
+        overflow: 'hidden',
+        width: '100%',
+        borderRadius: 4,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}>
         <motion.div
           drag={!isDesktop ? 'x' : false}
           dragConstraints={{ left: 0, right: 0 }}
@@ -343,15 +350,21 @@ const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
           onDragEnd={handleDragEnd}
           animate={{ x: getTranslateX() }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          style={{
+            width: '100%',
+            maxWidth: viewMode === 'small' ? 320 : viewMode === 'medium' ? 700 : 1180,
+            margin: '0 auto',
+          }}
         >
           <Card
             onClick={() => navigate(`/escrows/${escrow.id}`)}
             sx={{
               height: 400,
-              width: '100%', // Fill grid cell
+              width: '100%',
+              maxWidth: viewMode === 'small' ? 320 : viewMode === 'medium' ? 700 : 1180,
               cursor: 'pointer',
               borderRadius: 4,
-              overflow: 'hidden', // Hide panels that don't fit
+              overflow: 'hidden',
               position: 'relative',
               transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
               boxShadow: `0 4px 20px ${alpha(statusConfig.color, 0.15)}`,
@@ -360,14 +373,20 @@ const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
               },
               display: 'flex',
               flexDirection: 'row',
+              margin: '0 auto',
             }}
           >
-            {/* PANEL 1: Small Card - Base (320px) */}
-            <Box sx={{ width: 320, flexShrink: 0, display: 'flex', flexDirection: 'column' }}>
-              {/* Property Image */}
+            {/* PANEL 1: Small Card - Base */}
+            <Box sx={{
+              width: viewMode === 'small' ? '100%' : viewMode === 'medium' ? '45.71%' : '27.12%', // Proportional to total width
+              flexShrink: 0,
+              display: 'flex',
+              flexDirection: 'column'
+            }}>
+              {/* Property Image - 50% of card height */}
               <Box
                 sx={{
-                  height: 213,
+                  height: '50%', // 200px out of 400px
                   position: 'relative',
                   background: propertyImage
                     ? `url(${propertyImage})`
@@ -455,7 +474,13 @@ const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
               </Box>
 
               {/* Card Content */}
-              <CardContent sx={{ p: 2.5, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+              <CardContent sx={{
+                p: 2.5,
+                height: '50%', // Other 50% of card height
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden'
+              }}>
                 {/* Address */}
                 <Typography
                   variant="h6"
@@ -623,11 +648,11 @@ const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
               </CardContent>
             </Box>
 
-            {/* PANEL 2: People (380px) */}
+            {/* PANEL 2: People */}
             {showPanel(1) && (
               <Box
                 sx={{
-                  width: 380,
+                  width: viewMode === 'medium' ? '54.29%' : '32.20%', // 380/700 for medium, 380/1180 for large
                   flexShrink: 0,
                   height: '100%',
                   background: 'linear-gradient(135deg, rgba(99,102,241,0.02) 0%, rgba(139,92,246,0.03) 100%)',
@@ -751,11 +776,11 @@ const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
             </Box>
             )}
 
-            {/* PANEL 3: Timeline (240px) */}
+            {/* PANEL 3: Timeline */}
             {showPanel(2) && (
               <Box
                 sx={{
-                  width: 240,
+                  width: '20.34%', // 240/1180 for large
                   flexShrink: 0,
                   height: '100%',
                   background: 'linear-gradient(135deg, rgba(139,92,246,0.02) 0%, rgba(168,85,247,0.03) 100%)',
@@ -807,11 +832,11 @@ const EscrowCard = ({ escrow, viewMode = 'small', index = 0 }) => {
             </Box>
             )}
 
-            {/* PANEL 4: Checklists (240px) */}
+            {/* PANEL 4: Checklists */}
             {showPanel(3) && (
               <Box
                 sx={{
-                  width: 240,
+                  width: '20.34%', // 240/1180 for large
                   flexShrink: 0,
                   height: '100%',
                   background: 'linear-gradient(135deg, rgba(168,85,247,0.02) 0%, rgba(217,70,239,0.03) 100%)',
