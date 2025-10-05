@@ -43,6 +43,7 @@ import {
   ListItemText,
   ListItemIcon,
   Badge,
+  Slider,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
@@ -294,6 +295,8 @@ const EscrowsDashboard = () => {
   const [selectedStatus, setSelectedStatus] = useState('active');
   const [viewMode, setViewMode] = useState('small'); // 'small', 'medium', 'large'
   const [animationType, setAnimationType] = useState('spring'); // 'spring', 'stagger', 'parallax', 'blur', 'magnetic'
+  const [animationDuration, setAnimationDuration] = useState(1); // 0.5 to 5 seconds
+  const [animationIntensity, setAnimationIntensity] = useState(1); // 0.5 to 2 (multiplier for overshoot/bounce)
   const [showCalendar, setShowCalendar] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [calendarDialogOpen, setCalendarDialogOpen] = useState(false);
@@ -1434,6 +1437,40 @@ const EscrowsDashboard = () => {
               </ToggleButton>
             </ToggleButtonGroup>
 
+            {/* Animation Duration Slider */}
+            <Box sx={{ width: 180 }}>
+              <Typography variant="caption" sx={{ fontSize: '0.7rem', color: 'text.secondary', mb: 0.5, display: 'block' }}>
+                Duration: {animationDuration.toFixed(1)}s
+              </Typography>
+              <Slider
+                value={animationDuration}
+                onChange={(e, val) => setAnimationDuration(val)}
+                min={0.5}
+                max={5}
+                step={0.1}
+                size="small"
+                valueLabelDisplay="auto"
+                sx={{ mt: 0.5 }}
+              />
+            </Box>
+
+            {/* Animation Intensity Slider */}
+            <Box sx={{ width: 180 }}>
+              <Typography variant="caption" sx={{ fontSize: '0.7rem', color: 'text.secondary', mb: 0.5, display: 'block' }}>
+                Intensity: {animationIntensity.toFixed(1)}x
+              </Typography>
+              <Slider
+                value={animationIntensity}
+                onChange={(e, val) => setAnimationIntensity(val)}
+                min={0.5}
+                max={2}
+                step={0.1}
+                size="small"
+                valueLabelDisplay="auto"
+                sx={{ mt: 0.5 }}
+              />
+            </Box>
+
             {/* View Mode Selector */}
             <ToggleButtonGroup
               value={viewMode}
@@ -1941,6 +1978,8 @@ const EscrowsDashboard = () => {
                   escrow={escrow}
                   viewMode={viewMode}
                   animationType={animationType}
+                  animationDuration={animationDuration}
+                  animationIntensity={animationIntensity}
                   index={index}
                 />
               ));
