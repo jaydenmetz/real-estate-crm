@@ -335,73 +335,32 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
         </Box>
       )}
 
-      {/* Card Container - fills grid cell completely */}
+      {/* Card Container - 2-card approach with scroll-like slide */}
       <Box sx={{
-        overflow: 'hidden',
         width: '100%',
-        borderRadius: 4,
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'row',
+        gap: 3, // 24px gap between cards
       }}>
+        {/* Card 1: Small Card (Always visible) */}
         <motion.div
-          drag={!isDesktop ? 'x' : false}
-          dragConstraints={{ left: 0, right: 0 }}
-          dragElastic={0.1}
-          onDragEnd={handleDragEnd}
-          animate={{ x: getTranslateX() }}
-          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          layoutId={`escrow-small-${escrow.id}`}
           style={{
-            width: '100%',
+            width: viewMode === 'small' ? '100%' : viewMode === 'medium' ? 'calc(45.71% - 12px)' : 'calc(27.12% - 12px)',
+            flexShrink: 0,
+          }}
+          transition={{
+            layout: { type: 'spring', stiffness: 300, damping: 30 }
           }}
         >
           <Card
-            component={motion.div}
-            layout="position"
-            initial={false}
-            animate={
-              animationType === 'spring' ? { scaleX: 1, x: 0 }
-              : animationType === 'stagger' ? { scaleX: 1, x: 0, opacity: 1 }
-              : animationType === 'parallax' ? { x: 0, opacity: 1 }
-              : animationType === 'blur' ? { scaleX: 1, filter: 'blur(0px)' }
-              : animationType === 'magnetic' ? { x: 0, scaleX: 1 }
-              : { scaleX: 1, x: 0 }
-            }
-            transition={
-              animationType === 'spring' ? {
-                layout: { type: 'spring', stiffness: 200 / animationIntensity, damping: 20 / animationIntensity, mass: 0.8, duration: animationDuration },
-                scaleX: { type: 'spring', stiffness: 200 / animationIntensity, damping: 20 / animationIntensity, mass: 0.8, duration: animationDuration },
-              }
-              : animationType === 'stagger' ? {
-                layout: { type: 'spring', stiffness: 300 / animationIntensity, damping: 30, delay: index * 0.05 * animationDuration },
-                scaleX: { duration: 0.6 * animationDuration, delay: index * 0.05 * animationDuration, ease: [0.4, 0, 0.2, 1] },
-                opacity: { duration: 0.3 * animationDuration, delay: index * 0.05 * animationDuration },
-              }
-              : animationType === 'parallax' ? {
-                layout: { type: 'spring', stiffness: 250 / animationIntensity, damping: 25, mass: 1 },
-                x: { duration: 0.8 * animationDuration, ease: [0.65, 0, 0.35, 1] },
-                opacity: { duration: 0.4 * animationDuration },
-              }
-              : animationType === 'blur' ? {
-                layout: { duration: 0.7 * animationDuration, ease: [0.4, 0, 0.2, 1] },
-                scaleX: { duration: 0.7 * animationDuration, ease: [0.4, 0, 0.2, 1] },
-                filter: { duration: 0.5 * animationDuration, ease: [0.4, 0, 0.2, 1] },
-              }
-              : animationType === 'magnetic' ? {
-                layout: { type: 'spring', stiffness: 150 / animationIntensity, damping: 12 / animationIntensity, mass: 1.2 * animationIntensity },
-                x: { type: 'spring', stiffness: 150 / animationIntensity, damping: 12 / animationIntensity },
-                scaleX: { type: 'spring', stiffness: 150 / animationIntensity, damping: 12 / animationIntensity, restSpeed: 0.5 / animationIntensity },
-              }
-              : {
-                layout: { type: 'spring', stiffness: 200, damping: 20, mass: 0.8, duration: animationDuration },
-              }
-            }
-            style={{
-              originX: 0, // Anchor left edge - expansion happens to the right
-            }}
             onClick={() => navigate(`/escrows/${escrow.id}`)}
             sx={{
               width: '100%',
               cursor: 'pointer',
               borderRadius: 4,
-              overflow: 'visible',
+              overflow: 'hidden',
               position: 'relative',
               // Subtle gradient border effect
               '&::before': {
@@ -416,49 +375,23 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                 maskComposite: 'exclude',
                 pointerEvents: 'none',
               },
-              // Dynamic shadow that changes with viewMode
-              boxShadow: viewMode === 'small'
-                ? `0 8px 32px ${alpha(statusConfig.color, 0.12)}, 0 2px 8px ${alpha(statusConfig.color, 0.08)}`
-                : viewMode === 'medium'
-                ? `0 12px 48px ${alpha(statusConfig.color, 0.15)}, 0 4px 16px ${alpha(statusConfig.color, 0.1)}, inset 0 0 0 1px ${alpha(statusConfig.color, 0.1)}`
-                : `0 20px 64px ${alpha(statusConfig.color, 0.18)}, 0 8px 24px ${alpha(statusConfig.color, 0.12)}, inset 0 0 0 1px ${alpha(statusConfig.color, 0.15)}`,
+              // Dynamic shadow
+              boxShadow: `0 8px 32px ${alpha(statusConfig.color, 0.12)}, 0 2px 8px ${alpha(statusConfig.color, 0.08)}`,
               '&:hover': {
-                boxShadow: viewMode === 'small'
-                  ? `0 12px 48px ${alpha(statusConfig.color, 0.2)}, 0 4px 12px ${alpha(statusConfig.color, 0.15)}`
-                  : viewMode === 'medium'
-                  ? `0 16px 64px ${alpha(statusConfig.color, 0.25)}, 0 8px 24px ${alpha(statusConfig.color, 0.18)}, inset 0 0 0 1px ${alpha(statusConfig.color, 0.2)}`
-                  : `0 24px 80px ${alpha(statusConfig.color, 0.3)}, 0 12px 32px ${alpha(statusConfig.color, 0.2)}, inset 0 0 0 1px ${alpha(statusConfig.color, 0.25)}`,
+                boxShadow: `0 12px 48px ${alpha(statusConfig.color, 0.2)}, 0 4px 12px ${alpha(statusConfig.color, 0.15)}`,
                 transform: 'translateY(-2px)',
               },
               transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
               display: 'flex',
-              flexDirection: 'row',
+              flexDirection: 'column',
             }}
           >
-            {/* Subtle accent glow on right edge for medium/large */}
-            {viewMode !== 'small' && (
-              <Box
-                sx={{
-                  position: 'absolute',
-                  right: 0,
-                  top: 0,
-                  bottom: 0,
-                  width: 4,
-                  background: `linear-gradient(to right, transparent, ${alpha(statusConfig.color, 0.4)})`,
-                  pointerEvents: 'none',
-                  zIndex: 10,
-                }}
-              />
-            )}
-
-            {/* PANEL 1: Small Card - Base */}
+            {/* PANEL 1: Small Card Content */}
             <Box sx={{
-              width: viewMode === 'small' ? '100%' : viewMode === 'medium' ? '45.71%' : '27.12%', // Proportional to total width
-              flexShrink: 0,
+              width: '100%',
               display: 'flex',
               flexDirection: 'column',
               position: 'relative',
-              overflow: 'hidden',
             }}>
               {/* Property Image - 3:2 aspect ratio (standard MLS photos) */}
               <Box
@@ -736,21 +669,51 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                 </Box>
               </CardContent>
             </Box>
+          </Card>
+        </motion.div>
 
-            {/* PANEL 2: People */}
-            {showPanel(1) && (
-              <Box
+        {/* Card 2: Extension Panels (Slides from behind Card 1) */}
+        <AnimatePresence>
+          {viewMode !== 'small' && (
+            <motion.div
+              layoutId={`escrow-extension-${escrow.id}`}
+              initial={{ x: -100, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -100, opacity: 0 }}
+              style={{
+                width: viewMode === 'medium' ? 'calc(54.29% - 12px)' : 'calc(72.88% - 12px)',
+                flexShrink: 0,
+              }}
+              transition={{
+                layout: { type: 'spring', stiffness: 300, damping: 30 },
+                x: { type: 'spring', stiffness: 300, damping: 30 },
+                opacity: { duration: 0.3 }
+              }}
+            >
+              <Card
                 sx={{
-                  width: viewMode === 'medium' ? '54.29%' : '32.20%', // 380/700 for medium, 380/1180 for large
-                  flexShrink: 0,
-                  height: '100%',
-                  background: 'linear-gradient(135deg, rgba(99,102,241,0.02) 0%, rgba(139,92,246,0.03) 100%)',
-                  borderLeft: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-                  p: 3,
+                  width: '100%',
+                  borderRadius: 4,
+                  overflow: 'hidden',
+                  position: 'relative',
+                  boxShadow: `0 8px 32px ${alpha(statusConfig.color, 0.12)}, 0 2px 8px ${alpha(statusConfig.color, 0.08)}`,
                   display: 'flex',
-                  flexDirection: 'column',
+                  flexDirection: 'row',
+                  height: '100%',
                 }}
               >
+                {/* PANEL 2: People */}
+                <Box
+                  sx={{
+                    width: viewMode === 'medium' ? '100%' : '44.19%', // 380/860 for large
+                    flexShrink: 0,
+                    background: 'linear-gradient(135deg, rgba(99,102,241,0.02) 0%, rgba(139,92,246,0.03) 100%)',
+                    borderRight: viewMode === 'large' ? `1px solid ${alpha(theme.palette.divider, 0.08)}` : 'none',
+                    p: 3,
+                    display: 'flex',
+                    flexDirection: 'column',
+                  }}
+                >
               <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 3, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
                 People
               </Typography>
@@ -862,117 +825,115 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                   </Typography>
                 </Box>
               </Box>
-            </Box>
-            )}
-
-            {/* PANEL 3: Timeline */}
-            {showPanel(2) && (
-              <Box
-                sx={{
-                  width: '20.34%', // 240/1180 for large
-                  flexShrink: 0,
-                  height: '100%',
-                  background: 'linear-gradient(135deg, rgba(139,92,246,0.02) 0%, rgba(168,85,247,0.03) 100%)',
-                  borderLeft: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-                  p: 3,
-                }}
-              >
-              <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 3, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
-                Timeline
-              </Typography>
-
-              {timeline.map((milestone, idx) => (
-                <Box
-                  key={milestone.label}
-                  sx={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    gap: 1.5,
-                    mb: 3,
-                    position: 'relative',
-                    '&::after': idx < timeline.length - 1 ? {
-                      content: '""',
-                      position: 'absolute',
-                      left: 11,
-                      top: 28,
-                      bottom: -24,
-                      width: 2,
-                      background: milestone.completed
-                        ? 'linear-gradient(to bottom, #10b981, #059669)'
-                        : alpha(theme.palette.divider, 0.2),
-                    } : {},
-                  }}
-                >
-                  {milestone.completed ? (
-                    <CheckCircleOutline sx={{ fontSize: 24, color: '#10b981', flexShrink: 0 }} />
-                  ) : (
-                    <RadioButtonUnchecked sx={{ fontSize: 24, color: alpha(theme.palette.text.disabled, 0.3), flexShrink: 0 }} />
-                  )}
-                  <Box sx={{ flex: 1 }}>
-                    <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: milestone.completed ? theme.palette.text.primary : theme.palette.text.secondary }}>
-                      {milestone.label}
-                    </Typography>
-                    <Typography variant="caption" sx={{ fontSize: 11, color: theme.palette.text.secondary }}>
-                      {milestone.date ? formatDate(milestone.date) : 'Pending'}
-                    </Typography>
-                  </Box>
                 </Box>
-              ))}
-            </Box>
-            )}
 
-            {/* PANEL 4: Checklists */}
-            {showPanel(3) && (
-              <Box
-                sx={{
-                  width: '20.34%', // 240/1180 for large
-                  flexShrink: 0,
-                  height: '100%',
-                  background: 'linear-gradient(135deg, rgba(168,85,247,0.02) 0%, rgba(217,70,239,0.03) 100%)',
-                  borderLeft: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-                  p: 3,
-                }}
-              >
-              <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 3, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
-                Checklists
-              </Typography>
+                {/* PANEL 3: Timeline (Only in large view) */}
+                {viewMode === 'large' && (
+                  <Box
+                    sx={{
+                      width: '27.91%', // 240/860 for large
+                      flexShrink: 0,
+                      background: 'linear-gradient(135deg, rgba(139,92,246,0.02) 0%, rgba(168,85,247,0.03) 100%)',
+                      borderRight: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
+                      p: 3,
+                    }}
+                  >
+                    <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 3, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                      Timeline
+                    </Typography>
 
-              {checklists.map((checklist, idx) => {
-                const progress = (checklist.completed / checklist.total) * 100;
-                const isComplete = checklist.completed === checklist.total;
-
-                return (
-                  <Box key={checklist.group} sx={{ mb: 3 }}>
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                      <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary }}>
-                        {checklist.group}
-                      </Typography>
-                      <Typography variant="caption" sx={{ fontSize: 11, fontWeight: 600, color: isComplete ? '#10b981' : theme.palette.text.secondary }}>
-                        {checklist.completed}/{checklist.total}
-                      </Typography>
-                    </Box>
-                    <LinearProgress
-                      variant="determinate"
-                      value={progress}
-                      sx={{
-                        height: 6,
-                        borderRadius: 3,
-                        backgroundColor: alpha(theme.palette.divider, 0.1),
-                        '& .MuiLinearProgress-bar': {
-                          background: isComplete
-                            ? 'linear-gradient(90deg, #10b981 0%, #059669 100%)'
-                            : 'linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%)',
-                          borderRadius: 3,
-                        },
-                      }}
-                    />
+                    {timeline.map((milestone, idx) => (
+                      <Box
+                        key={milestone.label}
+                        sx={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: 1.5,
+                          mb: 3,
+                          position: 'relative',
+                          '&::after': idx < timeline.length - 1 ? {
+                            content: '""',
+                            position: 'absolute',
+                            left: 11,
+                            top: 28,
+                            bottom: -24,
+                            width: 2,
+                            background: milestone.completed
+                              ? 'linear-gradient(to bottom, #10b981, #059669)'
+                              : alpha(theme.palette.divider, 0.2),
+                          } : {},
+                        }}
+                      >
+                        {milestone.completed ? (
+                          <CheckCircleOutline sx={{ fontSize: 24, color: '#10b981', flexShrink: 0 }} />
+                        ) : (
+                          <RadioButtonUnchecked sx={{ fontSize: 24, color: alpha(theme.palette.text.disabled, 0.3), flexShrink: 0 }} />
+                        )}
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: milestone.completed ? theme.palette.text.primary : theme.palette.text.secondary }}>
+                            {milestone.label}
+                          </Typography>
+                          <Typography variant="caption" sx={{ fontSize: 11, color: theme.palette.text.secondary }}>
+                            {milestone.date ? formatDate(milestone.date) : 'Pending'}
+                          </Typography>
+                        </Box>
+                      </Box>
+                    ))}
                   </Box>
-                );
-              })}
-            </Box>
-            )}
-          </Card>
-        </motion.div>
+                )}
+
+                {/* PANEL 4: Checklists (Only in large view) */}
+                {viewMode === 'large' && (
+                  <Box
+                    sx={{
+                      width: '27.91%', // 240/860 for large
+                      flexShrink: 0,
+                      background: 'linear-gradient(135deg, rgba(168,85,247,0.02) 0%, rgba(217,70,239,0.03) 100%)',
+                      p: 3,
+                    }}
+                  >
+                    <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 3, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                      Checklists
+                    </Typography>
+
+                    {checklists.map((checklist, idx) => {
+                      const progress = (checklist.completed / checklist.total) * 100;
+                      const isComplete = checklist.completed === checklist.total;
+
+                      return (
+                        <Box key={checklist.group} sx={{ mb: 3 }}>
+                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                            <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary }}>
+                              {checklist.group}
+                            </Typography>
+                            <Typography variant="caption" sx={{ fontSize: 11, fontWeight: 600, color: isComplete ? '#10b981' : theme.palette.text.secondary }}>
+                              {checklist.completed}/{checklist.total}
+                            </Typography>
+                          </Box>
+                          <LinearProgress
+                            variant="determinate"
+                            value={progress}
+                            sx={{
+                              height: 6,
+                              borderRadius: 3,
+                              backgroundColor: alpha(theme.palette.divider, 0.1),
+                              '& .MuiLinearProgress-bar': {
+                                background: isComplete
+                                  ? 'linear-gradient(90deg, #10b981 0%, #059669 100%)'
+                                  : 'linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%)',
+                                borderRadius: 3,
+                              },
+                            }}
+                          />
+                        </Box>
+                      );
+                    })}
+                  </Box>
+                )}
+              </Card>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </Box>
     </motion.div>
   );
