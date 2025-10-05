@@ -197,7 +197,7 @@ class EscrowController {
           ${displayIdField} as "displayId",
           ${displayIdField} as "escrowNumber",
           property_address || '${envSuffix}' as "propertyAddress",
-          COALESCE(property_image_url, 'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800') as "propertyImage",
+          property_image_url as "propertyImage",
           zillow_url as "zillowUrl",
           escrow_status as "escrowStatus",
           purchase_price as "purchasePrice",
@@ -320,7 +320,6 @@ class EscrowController {
       const escrowQuery = `
         SELECT 
           e.*,
-          'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800' as propertyImage
         FROM escrows e
         WHERE ${whereClause}
       `;
@@ -1106,7 +1105,6 @@ class EscrowController {
       const escrowQuery = `
         SELECT 
           e.*,
-          'https://images.unsplash.com/photo-1568605114967-8130f3a36994?w=800' as propertyImage
         FROM escrows e
         WHERE ${whereClause}
       `;
