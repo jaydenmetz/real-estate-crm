@@ -9,7 +9,7 @@ import {
   useTheme,
   alpha,
 } from '@mui/material';
-import { Home } from '@mui/icons-material';
+import { Home, CheckCircle, Cancel } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { differenceInDays, isValid } from 'date-fns';
@@ -291,8 +291,46 @@ const EscrowWidgetMedium = ({ escrow, index = 0, loading = false }) => {
               </Typography>
             </Box>
 
-            {/* Days Badge */}
-            {daysToClose !== null ? (
+            {/* Status Badge Logic */}
+            {escrow.escrowStatus === 'Closed' ? (
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 0.5,
+                  p: 1.5,
+                  borderRadius: 2,
+                  background: 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(5,150,105,0.15) 100%)',
+                  border: `1px solid ${alpha('#10b981', 0.2)}`,
+                }}
+              >
+                <CheckCircle sx={{ fontSize: 20, color: '#10b981' }} />
+                <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 700, color: '#10b981', textTransform: 'uppercase' }}>
+                  Closed
+                </Typography>
+              </Box>
+            ) : escrow.escrowStatus === 'Cancelled' ? (
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 0.5,
+                  p: 1.5,
+                  borderRadius: 2,
+                  background: 'linear-gradient(135deg, rgba(239,68,68,0.1) 0%, rgba(220,38,38,0.15) 100%)',
+                  border: `1px solid ${alpha('#ef4444', 0.2)}`,
+                }}
+              >
+                <Cancel sx={{ fontSize: 20, color: '#ef4444' }} />
+                <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 700, color: '#ef4444', textTransform: 'uppercase' }}>
+                  Cancelled
+                </Typography>
+              </Box>
+            ) : daysToClose !== null ? (
               <Box
                 sx={{
                   p: 1.5,

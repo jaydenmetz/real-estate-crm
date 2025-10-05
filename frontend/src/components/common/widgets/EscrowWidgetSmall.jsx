@@ -9,7 +9,7 @@ import {
   useTheme,
   alpha,
 } from '@mui/material';
-import { Home } from '@mui/icons-material';
+import { Home, CheckCircle, Cancel } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { differenceInDays, isValid } from 'date-fns';
@@ -304,7 +304,44 @@ const EscrowWidgetSmall = ({ escrow, index = 0, loading = false }) => {
               </Typography>
             </Box>
 
-            {daysToClose !== null && (
+            {/* Status Badge Logic */}
+            {escrow.escrowStatus === 'Closed' ? (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.75,
+                  px: 2,
+                  py: 1,
+                  borderRadius: 2,
+                  background: 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(5,150,105,0.15) 100%)',
+                  border: `1px solid ${alpha('#10b981', 0.2)}`,
+                }}
+              >
+                <CheckCircle sx={{ fontSize: 18, color: '#10b981' }} />
+                <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: '#10b981' }}>
+                  Closed
+                </Typography>
+              </Box>
+            ) : escrow.escrowStatus === 'Cancelled' ? (
+              <Box
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 0.75,
+                  px: 2,
+                  py: 1,
+                  borderRadius: 2,
+                  background: 'linear-gradient(135deg, rgba(239,68,68,0.1) 0%, rgba(220,38,38,0.15) 100%)',
+                  border: `1px solid ${alpha('#ef4444', 0.2)}`,
+                }}
+              >
+                <Cancel sx={{ fontSize: 18, color: '#ef4444' }} />
+                <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: '#ef4444' }}>
+                  Cancelled
+                </Typography>
+              </Box>
+            ) : daysToClose !== null ? (
               <Box
                 sx={{
                   px: 2,
@@ -329,7 +366,7 @@ const EscrowWidgetSmall = ({ escrow, index = 0, loading = false }) => {
                   {isPastDue ? `${Math.abs(daysToClose)}d late` : `${daysToClose}d`}
                 </Typography>
               </Box>
-            )}
+            ) : null}
           </Box>
         </CardContent>
       </Card>
