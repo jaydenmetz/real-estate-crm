@@ -10,7 +10,7 @@ import {
   alpha,
   Tooltip,
 } from '@mui/material';
-import { Home, CheckCircle, Cancel } from '@mui/icons-material';
+import { Home, CheckCircle, Cancel, Visibility, VisibilityOff } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { differenceInDays, isValid } from 'date-fns';
@@ -18,6 +18,7 @@ import { differenceInDays, isValid } from 'date-fns';
 const EscrowWidgetSmall = ({ escrow, index = 0, loading = false }) => {
   const navigate = useNavigate();
   const theme = useTheme();
+  const [showCommission, setShowCommission] = React.useState(false);
 
   if (loading) {
     return <EscrowWidgetSmallSkeleton />;
@@ -46,9 +47,9 @@ const EscrowWidgetSmall = ({ escrow, index = 0, loading = false }) => {
     } catch (e) {}
   }
 
-  // Format currency - exact number (no K/M)
+  // Format currency - exact number with decimals
   const formatCurrency = (value) => {
-    return `$${value.toLocaleString()}`;
+    return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
   // Format currency compact (for hero totals with K/M)
@@ -281,6 +282,7 @@ const EscrowWidgetSmall = ({ escrow, index = 0, loading = false }) => {
             {/* Commission */}
             <Box
               sx={{
+                position: 'relative',
                 p: 1,
                 borderRadius: 2,
                 background: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(79,70,229,0.12) 100%)',
@@ -292,11 +294,38 @@ const EscrowWidgetSmall = ({ escrow, index = 0, loading = false }) => {
                 },
               }}
             >
-              <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: '#4f46e5', mb: 0.25, display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Commission
-              </Typography>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: '#4f46e5', mb: 0.25, display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Commission
+                </Typography>
+                <Box
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowCommission(!showCommission);
+                  }}
+                  sx={{
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: 20,
+                    height: 20,
+                    borderRadius: 1,
+                    transition: 'all 0.2s',
+                    '&:hover': {
+                      background: alpha('#6366f1', 0.1),
+                    },
+                  }}
+                >
+                  {showCommission ? (
+                    <VisibilityOff sx={{ fontSize: 14, color: '#6366f1' }} />
+                  ) : (
+                    <Visibility sx={{ fontSize: 14, color: '#6366f1' }} />
+                  )}
+                </Box>
+              </Box>
               <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1rem', color: '#6366f1', letterSpacing: '-0.5px' }}>
-                {maskCommission(commission)}
+                {showCommission ? formatCurrency(commission) : maskCommission(commission)}
               </Typography>
             </Box>
           </Box>
