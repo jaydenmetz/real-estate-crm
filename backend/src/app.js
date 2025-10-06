@@ -232,8 +232,6 @@ apiRouter.use('/gdpr', require('./routes/gdpr.routes'));
 const escrowsRouter = express.Router();
 escrowsRouter.use('/', require('./routes/escrows.routes'));
 escrowsRouter.use('/', require('./routes/escrows-health.routes')); // Health endpoints at /escrows/health/*
-escrowsRouter.use('/', require('./routes/escrows-health-enhanced.routes'));
-// Enhanced health at /escrows/health/enhanced
 apiRouter.use('/escrows', escrowsRouter);
 
 // Listings routes - including health checks

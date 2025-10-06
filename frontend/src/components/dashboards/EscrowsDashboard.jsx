@@ -1115,15 +1115,15 @@ const EscrowsDashboard = () => {
             >
               <ToggleButton
                 value="small"
-                aria-label="Grid view - shows escrows in compact grid layout (Press V to toggle)"
+                aria-label="Grid view - shows escrows in compact 4-column grid layout (Press V to toggle)"
                 title="Grid view (V)"
               >
-                {/* 2x2 grid icon - total width 16px */}
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 0.5 }}>
-                  <Box sx={{ width: 7, height: 6, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 7, height: 6, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 7, height: 6, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 7, height: 6, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                {/* 4-column grid icon matching actual card layout */}
+                <Box sx={{ display: 'flex', gap: 0.4 }}>
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                 </Box>
               </ToggleButton>
               <ToggleButton
