@@ -1718,15 +1718,15 @@ const EscrowsDashboard = () => {
         <>
           {/* Escrow Cards with proper dividers and edge alignment */}
           <Box sx={{
-            display: 'grid',
+            display: viewMode === 'medium' ? 'flex' : 'grid',
+            flexWrap: viewMode === 'medium' ? 'wrap' : undefined,
             gridTemplateColumns: {
               xs: '1fr', // Mobile: Always 1 column
               sm: '1fr', // Tablet: Always 1 column
-              md: viewMode === 'small' ? 'repeat(2, 1fr)' : viewMode === 'medium' ? 'repeat(2, 1fr)' : '1fr',
-              lg: viewMode === 'small' ? 'repeat(4, 1fr)' : viewMode === 'medium' ? 'repeat(2, 1fr)' : '1fr',
+              md: viewMode === 'small' ? 'repeat(2, 1fr)' : '1fr',
+              lg: viewMode === 'small' ? 'repeat(4, 1fr)' : '1fr',
             },
-            columnGap: 3, // 24px gap = divider width
-            rowGap: 3,
+            gap: 3, // 24px gap
             width: '100%',
           }}>
         <AnimatePresence>
