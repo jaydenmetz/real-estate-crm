@@ -346,14 +346,15 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
         position: 'relative',
         display: 'flex',
         flexDirection: 'row',
-        gap: 1.5, // 12px gap between cards
-        alignItems: 'flex-start', // Align to top, let cards determine own height
+        gap: viewMode === 'medium' ? 1 : 1.5, // Tighter gap for medium (8px) to show connection
+        alignItems: 'stretch', // Force both cards to match height
       }}>
         {/* Card 1: Small Card (Fixed width - never moves) */}
         <Box
           sx={{
             width: viewMode === 'small' ? '100%' : 'calc(25% - 18px)', // Small card width from grid calculation
             flexShrink: 0,
+            display: 'flex', // Make this a flex container so Card stretches to full height
           }}
         >
           <Card
@@ -688,6 +689,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
               style={{
                 width: viewMode === 'medium' ? 'calc(25% - 18px)' : 'calc(75% - 18px - 12px)', // Medium: same as Card 1, Large: remaining space
                 flexShrink: 0,
+                display: 'flex', // Make flex container to allow Card to stretch
               }}
               transition={{
                 opacity: { duration: 0.2 },
@@ -697,10 +699,13 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
               <Card
                 sx={{
                   width: '100%',
+                  height: '100%', // Match Card 1 height
                   borderRadius: 4,
                   overflow: 'hidden',
                   position: 'relative',
-                  boxShadow: `0 8px 32px ${alpha(statusConfig.color, 0.12)}, 0 2px 8px ${alpha(statusConfig.color, 0.08)}`,
+                  boxShadow: viewMode === 'medium'
+                    ? `0 8px 32px ${alpha(statusConfig.color, 0.12)}, 0 2px 8px ${alpha(statusConfig.color, 0.08)}, -4px 0 16px ${alpha(statusConfig.color, 0.08)}` // Add left shadow for connection
+                    : `0 8px 32px ${alpha(statusConfig.color, 0.12)}, 0 2px 8px ${alpha(statusConfig.color, 0.08)}`,
                   display: 'flex',
                   flexDirection: 'row', // Always horizontal layout for both medium and large
                 }}
