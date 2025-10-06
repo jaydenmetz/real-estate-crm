@@ -3,4 +3,6 @@
 .flaskenv*
 !.env.project
 !.env.vault
-!.env.example
+!.env.example.env.production
+railway-env-vars.txt
+server.log

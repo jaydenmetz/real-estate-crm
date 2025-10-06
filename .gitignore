@@ -78,4 +78,4 @@ backend/scripts/.env
 backend/backups/*.sql
 backend/backups/*.sql.gz
 *.backup
-*.dump
+*.dump*.log

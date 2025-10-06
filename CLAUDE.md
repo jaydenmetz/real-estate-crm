@@ -188,12 +188,21 @@ Use clear, descriptive names based on functionality:
 - **Monitoring**: Sentry for error tracking (when configured)
 
 ## Database Credentials (Railway Production)
+
+**IMPORTANT:** Database credentials are stored in environment variables and should NEVER be committed to version control.
+
+Access credentials from:
+- Railway dashboard: https://railway.app (Environment Variables tab)
+- Local development: `.env` file (never commit this file)
+- Backend scripts: Use environment variables (`$PGPASSWORD`, `$DATABASE_HOST`, etc.)
+
+**Required Environment Variables:**
 ```bash
-PGPASSWORD=ueLIWnvALZWVbRdnOmpLGsrrukeGLGQQ
-Host: ballast.proxy.rlwy.net
-Port: 20017
-User: postgres
-Database: railway
+PGPASSWORD=<from Railway dashboard>
+DATABASE_HOST=<from Railway dashboard>
+DATABASE_PORT=<from Railway dashboard>
+DATABASE_USER=postgres
+DATABASE_NAME=railway
 ```
 
 ## Key Business Entities
@@ -632,8 +641,8 @@ npm run build      # Build for production
 
 ### Database Operations
 ```bash
-# Run migration on Railway
-PGPASSWORD=ueLIWnvALZWVbRdnOmpLGsrrukeGLGQQ psql -h ballast.proxy.rlwy.net -p 20017 -U postgres -d railway -f backend/migrations/XXX_migration_name.sql
+# Run migration on Railway (use environment variables from Railway dashboard)
+PGPASSWORD=$PGPASSWORD psql -h $DATABASE_HOST -p $DATABASE_PORT -U postgres -d railway -f backend/migrations/XXX_migration_name.sql
 
 # Backup database
 ./backend/scripts/backup.sh
