@@ -1719,7 +1719,12 @@ const EscrowsDashboard = () => {
               md: viewMode === 'medium' ? 'flex' : 'grid',
               lg: viewMode === 'medium' ? 'flex' : 'grid',
             },
-            flexWrap: viewMode === 'medium' ? 'wrap' : undefined,
+            flexWrap: {
+              xs: undefined,
+              sm: undefined,
+              md: viewMode === 'medium' ? 'wrap' : undefined,
+              lg: viewMode === 'medium' ? 'wrap' : undefined,
+            },
             gridTemplateColumns: {
               xs: '1fr', // Mobile: Always 1 column
               sm: '1fr', // Tablet: Always 1 column
