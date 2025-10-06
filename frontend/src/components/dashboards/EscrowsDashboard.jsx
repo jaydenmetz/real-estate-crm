@@ -1421,28 +1421,23 @@ const EscrowsDashboard = () => {
             >
               <ToggleButton value="small" aria-label="small widget view">
                 {/* 4 columns with tiny gaps - total width 20px */}
-                <Box sx={{ display: 'flex', gap: 0.25, mr: 1 }}>
+                <Box sx={{ display: 'flex', gap: 0.25 }}>
                   <Box sx={{ width: 4.5, height: 14, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                   <Box sx={{ width: 4.5, height: 14, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                   <Box sx={{ width: 4.5, height: 14, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                   <Box sx={{ width: 4.5, height: 14, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                 </Box>
-                Small
               </ToggleButton>
               <ToggleButton value="medium" aria-label="medium widget view">
                 {/* 2 wide columns with tiny gap - total width 20px */}
-                <Box sx={{ display: 'flex', gap: 0.25, mr: 1 }}>
+                <Box sx={{ display: 'flex', gap: 0.25 }}>
                   <Box sx={{ width: 9.5, height: 14, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                   <Box sx={{ width: 9.5, height: 14, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                 </Box>
-                Medium
               </ToggleButton>
               <ToggleButton value="large" aria-label="large widget view">
                 {/* Solid wide battery - total width 20px */}
-                <Box sx={{ mr: 1 }}>
-                  <Box sx={{ width: 20, height: 14, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                </Box>
-                Large
+                <Box sx={{ width: 20, height: 14, bgcolor: 'currentColor', borderRadius: 0.5 }} />
               </ToggleButton>
             </ToggleButtonGroup>
 
