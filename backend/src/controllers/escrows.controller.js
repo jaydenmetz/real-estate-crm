@@ -2,19 +2,21 @@ const { pool } = require('../config/database');
 const { asyncHandler } = require('../middleware/errorLogging.middleware');
 const { buildRestructuredEscrowResponse } = require('../helpers/escrows.helper');
 
-// Cache for schema detection
+// Cache for schema detection (persists across requests for performance)
 let schemaInfo = null;
-
-// Clear schema cache on startup to ensure fresh detection
-if (process.env.NODE_ENV === 'production') {
-  schemaInfo = null;
-}
+let schemaPromise = null; // Prevents multiple concurrent schema detection calls
 
 // Helper function to detect database schema
 async function detectSchema() {
+  // Return cached schema immediately
   if (schemaInfo) return schemaInfo;
 
-  try {
+  // If another request is already detecting schema, wait for it
+  if (schemaPromise) return schemaPromise;
+
+  // Start schema detection and cache the promise
+  schemaPromise = (async () => {
+    try {
     // Check what columns exist in the escrows table
     const result = await pool.query(`
       SELECT column_name 
@@ -36,22 +38,28 @@ async function detectSchema() {
       hasUuid: columns.includes('uuid'),
     };
 
-    return schemaInfo;
-  } catch (error) {
-    console.error('Schema detection error:', error);
-    // Default to production schema if detection fails
-    schemaInfo = {
-      hasId: true, // Production should have id column
-      hasNumericId: true,
-      hasTeamSequenceId: true,
-      hasNetCommission: true,
-      hasAcceptanceDate: true,
-      hasBuyerSideCommission: false,
-      hasOpeningDate: false,
-      hasUuid: false,
-    };
-    return schemaInfo;
-  }
+      return schemaInfo;
+    } catch (error) {
+      console.error('Schema detection error:', error);
+      // Default to production schema if detection fails
+      schemaInfo = {
+        hasId: true, // Production should have id column
+        hasNumericId: true,
+        hasTeamSequenceId: true,
+        hasNetCommission: true,
+        hasAcceptanceDate: true,
+        hasBuyerSideCommission: false,
+        hasOpeningDate: false,
+        hasUuid: false,
+      };
+      return schemaInfo;
+    } finally {
+      // Clear the promise so future errors can retry
+      schemaPromise = null;
+    }
+  })();
+
+  return schemaPromise;
 }
 
 class EscrowController {
