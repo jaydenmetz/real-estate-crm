@@ -342,7 +342,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
 
       {/* Card Container - Card 1 stays fixed, Card 2 slides in */}
       <Box sx={{
-        width: viewMode === 'medium' ? 'calc((100% - 24px) / 2)' : '100%', // Medium: half of available width accounting for gap
+        width: viewMode === 'medium' ? 'calc(50% - 12px)' : '100%', // Medium: 50% minus half the flex gap (24px/2)
         flexShrink: 0, // Prevent shrinking
         position: 'relative',
         display: 'flex',
