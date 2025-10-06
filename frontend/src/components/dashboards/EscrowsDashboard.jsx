@@ -293,7 +293,11 @@ const EscrowsDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [showNewEscrowModal, setShowNewEscrowModal] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState('active');
-  const [viewMode, setViewMode] = useState('small'); // 'small', 'large'
+  // Load saved view mode from localStorage, default to 'small'
+  const [viewMode, setViewMode] = useState(() => {
+    const saved = localStorage.getItem('escrowsViewMode');
+    return saved || 'small';
+  });
   const [animationType, setAnimationType] = useState('spring'); // 'spring', 'stagger', 'parallax', 'blur', 'magnetic'
   const [animationDuration, setAnimationDuration] = useState(1); // 0.5 to 5 seconds
   const [animationIntensity, setAnimationIntensity] = useState(1); // 0.5 to 2 (multiplier for overshoot/bounce)
@@ -331,6 +335,45 @@ const EscrowsDashboard = () => {
     requests: networkMonitor.getRequests(),
     errors: networkMonitor.getErrors()
   });
+
+  // Save view mode to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('escrowsViewMode', viewMode);
+  }, [viewMode]);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      // Don't trigger shortcuts if user is typing in an input
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      switch(e.key.toLowerCase()) {
+        case 'n':
+          // N = New escrow
+          if (!showNewEscrowModal) {
+            setShowNewEscrowModal(true);
+          }
+          break;
+        case 'v':
+          // V = Toggle view mode
+          setViewMode(prev => prev === 'small' ? 'large' : 'small');
+          break;
+        case 'escape':
+          // ESC = Close modal
+          if (showNewEscrowModal) {
+            setShowNewEscrowModal(false);
+          }
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [showNewEscrowModal]);
 
   useEffect(() => {
     fetchEscrows();
@@ -1060,6 +1103,7 @@ const EscrowsDashboard = () => {
               exclusive
               onChange={(e, newView) => newView && setViewMode(newView)}
               size="small"
+              aria-label="View mode selection"
               sx={{
                 '& .MuiToggleButton-root': {
                   px: 2,
@@ -1069,7 +1113,11 @@ const EscrowsDashboard = () => {
                 },
               }}
             >
-              <ToggleButton value="small" aria-label="grid view">
+              <ToggleButton
+                value="small"
+                aria-label="Grid view - shows escrows in compact grid layout (Press V to toggle)"
+                title="Grid view (V)"
+              >
                 {/* 2x2 grid icon - total width 16px */}
                 <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 0.5 }}>
                   <Box sx={{ width: 7, height: 6, bgcolor: 'currentColor', borderRadius: 0.5 }} />
@@ -1078,7 +1126,11 @@ const EscrowsDashboard = () => {
                   <Box sx={{ width: 7, height: 6, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                 </Box>
               </ToggleButton>
-              <ToggleButton value="large" aria-label="full width view">
+              <ToggleButton
+                value="large"
+                aria-label="Full width view - shows escrows in detailed full-width layout (Press V to toggle)"
+                title="Full width view (V)"
+              >
                 {/* Wide horizontal bar representing full-width card - total width 24px */}
                 <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
               </ToggleButton>
