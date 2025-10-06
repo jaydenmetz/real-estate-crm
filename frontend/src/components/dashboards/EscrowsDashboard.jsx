@@ -1718,7 +1718,12 @@ const EscrowsDashboard = () => {
         <>
           {/* Escrow Cards with proper dividers and edge alignment */}
           <Box sx={{
-            display: viewMode === 'medium' ? 'flex' : 'grid',
+            display: {
+              xs: 'grid',
+              sm: 'grid',
+              md: viewMode === 'medium' ? 'flex' : 'grid',
+              lg: viewMode === 'medium' ? 'flex' : 'grid',
+            },
             flexWrap: viewMode === 'medium' ? 'wrap' : undefined,
             gridTemplateColumns: {
               xs: '1fr', // Mobile: Always 1 column
