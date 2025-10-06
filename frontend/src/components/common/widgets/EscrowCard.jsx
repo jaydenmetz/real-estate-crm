@@ -705,69 +705,70 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                   flexDirection: 'row', // Always horizontal layout for both medium and large
                 }}
               >
-                {/* PANEL 1: Timeline (medium) or People (large) */}
-                <Box
-                  sx={{
-                    width: viewMode === 'medium' ? '100%' : 'calc(33.33% - 1px)',
-                    flexShrink: 0,
-                    background: viewMode === 'medium'
-                      ? 'linear-gradient(135deg, rgba(139,92,246,0.02) 0%, rgba(168,85,247,0.03) 100%)'
-                      : 'linear-gradient(135deg, rgba(99,102,241,0.02) 0%, rgba(139,92,246,0.03) 100%)',
-                    borderRight: viewMode === 'large' ? `1px solid ${alpha(theme.palette.divider, 0.08)}` : 'none',
-                    p: 2,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                  }}
-                >
-                  {viewMode === 'medium' ? (
-                    // Timeline for medium view
-                    <>
-                      <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 3, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
-                        Timeline
-                      </Typography>
+                {/* PANEL 1: Timeline (medium) or People (large) - COPIED FROM LARGE VIEW */}
+                {(viewMode === 'medium' || viewMode === 'large') && (
+                  <Box
+                    sx={{
+                      width: viewMode === 'medium' ? '100%' : 'calc(33.33% - 1px)',
+                      flexShrink: 0,
+                      background: viewMode === 'medium'
+                        ? 'linear-gradient(135deg, rgba(139,92,246,0.02) 0%, rgba(168,85,247,0.03) 100%)'
+                        : 'linear-gradient(135deg, rgba(99,102,241,0.02) 0%, rgba(139,92,246,0.03) 100%)',
+                      borderRight: viewMode === 'large' ? `1px solid ${alpha(theme.palette.divider, 0.08)}` : 'none',
+                      p: 2,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center', // Center content vertically
+                    }}
+                  >
+                    {viewMode === 'medium' ? (
+                      // Timeline for medium view
+                      <>
+                        <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 3, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                          Timeline
+                        </Typography>
 
-                      {timeline.map((milestone, idx) => (
-                        <Box
-                          key={milestone.label}
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'flex-start',
-                            gap: 1.5,
-                            mb: 3,
-                            position: 'relative',
-                            '&::after': idx < timeline.length - 1 ? {
-                              content: '""',
-                              position: 'absolute',
-                              left: 11,
-                              top: 28,
-                              bottom: -24,
-                              width: 2,
-                              background: milestone.completed
-                                ? 'linear-gradient(to bottom, #10b981, #059669)'
-                                : alpha(theme.palette.divider, 0.2),
-                            } : {},
-                          }}
-                        >
-                          {milestone.completed ? (
-                            <CheckCircleOutline sx={{ fontSize: 24, color: '#10b981', flexShrink: 0 }} />
-                          ) : (
-                            <RadioButtonUnchecked sx={{ fontSize: 24, color: alpha(theme.palette.text.disabled, 0.3), flexShrink: 0 }} />
-                          )}
-                          <Box sx={{ flex: 1 }}>
-                            <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: milestone.completed ? theme.palette.text.primary : theme.palette.text.secondary }}>
-                              {milestone.label}
-                            </Typography>
-                            <Typography variant="caption" sx={{ fontSize: 11, color: theme.palette.text.secondary }}>
-                              {milestone.date ? formatDate(milestone.date) : 'Pending'}
-                            </Typography>
+                        {timeline.map((milestone, idx) => (
+                          <Box
+                            key={milestone.label}
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'flex-start',
+                              gap: 1.5,
+                              mb: 3,
+                              position: 'relative',
+                              '&::after': idx < timeline.length - 1 ? {
+                                content: '""',
+                                position: 'absolute',
+                                left: 11,
+                                top: 28,
+                                bottom: -24,
+                                width: 2,
+                                background: milestone.completed
+                                  ? 'linear-gradient(to bottom, #10b981, #059669)'
+                                  : alpha(theme.palette.divider, 0.2),
+                              } : {},
+                            }}
+                          >
+                            {milestone.completed ? (
+                              <CheckCircleOutline sx={{ fontSize: 24, color: '#10b981', flexShrink: 0 }} />
+                            ) : (
+                              <RadioButtonUnchecked sx={{ fontSize: 24, color: alpha(theme.palette.text.disabled, 0.3), flexShrink: 0 }} />
+                            )}
+                            <Box sx={{ flex: 1 }}>
+                              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: milestone.completed ? theme.palette.text.primary : theme.palette.text.secondary }}>
+                                {milestone.label}
+                              </Typography>
+                              <Typography variant="caption" sx={{ fontSize: 11, color: theme.palette.text.secondary }}>
+                                {milestone.date ? formatDate(milestone.date) : 'Pending'}
+                              </Typography>
+                            </Box>
                           </Box>
-                        </Box>
-                      ))}
-                    </>
-                  ) : (
-                    // People for large view
-                    <>
+                        ))}
+                      </>
+                    ) : (
+                      // People for large view
+                      <>
                       <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 3, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
                         People
                       </Typography>
