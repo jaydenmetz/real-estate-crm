@@ -293,7 +293,7 @@ const EscrowsDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [showNewEscrowModal, setShowNewEscrowModal] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState('active');
-  const [viewMode, setViewMode] = useState('small'); // 'small', 'medium', 'large'
+  const [viewMode, setViewMode] = useState('small'); // 'small', 'large'
   const [animationType, setAnimationType] = useState('spring'); // 'spring', 'stagger', 'parallax', 'blur', 'magnetic'
   const [animationDuration, setAnimationDuration] = useState(1); // 0.5 to 5 seconds
   const [animationIntensity, setAnimationIntensity] = useState(1); // 0.5 to 2 (multiplier for overshoot/bounce)
@@ -1419,25 +1419,18 @@ const EscrowsDashboard = () => {
                 },
               }}
             >
-              <ToggleButton value="small" aria-label="small widget view">
-                {/* 4 columns with tiny gaps - total width 20px */}
-                <Box sx={{ display: 'flex', gap: 0.25 }}>
-                  <Box sx={{ width: 4.5, height: 14, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 4.5, height: 14, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 4.5, height: 14, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 4.5, height: 14, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+              <ToggleButton value="small" aria-label="grid view">
+                {/* 2x2 grid icon - total width 16px */}
+                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 0.5 }}>
+                  <Box sx={{ width: 7, height: 6, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 7, height: 6, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 7, height: 6, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 7, height: 6, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                 </Box>
               </ToggleButton>
-              <ToggleButton value="medium" aria-label="medium widget view">
-                {/* 2 wide columns with tiny gap - total width 20px */}
-                <Box sx={{ display: 'flex', gap: 0.25 }}>
-                  <Box sx={{ width: 9.5, height: 14, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 9.5, height: 14, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                </Box>
-              </ToggleButton>
-              <ToggleButton value="large" aria-label="large widget view">
-                {/* Solid wide battery - total width 20px */}
-                <Box sx={{ width: 20, height: 14, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+              <ToggleButton value="large" aria-label="full width view">
+                {/* Wide horizontal bar representing full-width card - total width 24px */}
+                <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
               </ToggleButton>
             </ToggleButtonGroup>
 
@@ -1713,18 +1706,7 @@ const EscrowsDashboard = () => {
         <>
           {/* Escrow Cards with proper dividers and edge alignment */}
           <Box sx={{
-            display: {
-              xs: 'grid',
-              sm: 'grid',
-              md: viewMode === 'medium' ? 'flex' : 'grid',
-              lg: viewMode === 'medium' ? 'flex' : 'grid',
-            },
-            flexWrap: {
-              xs: undefined,
-              sm: undefined,
-              md: viewMode === 'medium' ? 'wrap' : undefined,
-              lg: viewMode === 'medium' ? 'wrap' : undefined,
-            },
+            display: 'grid',
             gridTemplateColumns: {
               xs: '1fr', // Mobile: Always 1 column
               sm: '1fr', // Tablet: Always 1 column
