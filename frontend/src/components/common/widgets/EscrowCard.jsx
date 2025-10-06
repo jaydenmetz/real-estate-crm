@@ -836,7 +836,6 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                 </Box>
               </Box>
                     </>
-                  )}
                   </Box>
                 )}
 
