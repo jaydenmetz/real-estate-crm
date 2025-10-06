@@ -342,7 +342,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
 
       {/* Card Container - Card 1 stays fixed, Card 2 slides in */}
       <Box sx={{
-        width: '100%',
+        width: viewMode === 'medium' ? 'calc(50% - 12px)' : '100%', // Medium: 50% minus half the outer gap (24px/2)
         position: 'relative',
         display: 'flex',
         flexDirection: 'row',
@@ -352,7 +352,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
         {/* Card 1: Small Card (Fixed width - never moves) */}
         <Box
           sx={{
-            width: viewMode === 'small' ? '100%' : 'calc(25% - 18px)', // Small card width from grid calculation
+            width: viewMode === 'small' ? '100%' : viewMode === 'medium' ? 'calc(50% - 4px)' : 'calc(25% - 18px)', // Medium: 50% of container minus half gap, Small: 100%, Large: 25% of full width
             flexShrink: 0,
             display: 'flex', // Make this a flex container so Card stretches to full height
           }}
@@ -687,7 +687,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
               style={{
-                width: viewMode === 'medium' ? 'calc(25% - 18px)' : 'calc(75% - 18px - 12px)', // Medium: same as Card 1, Large: remaining space
+                width: viewMode === 'medium' ? 'calc(50% - 4px)' : 'calc(75% - 18px - 12px)', // Medium: 50% of container minus half gap, Large: remaining space
                 flexShrink: 0,
                 display: 'flex', // Make flex container to allow Card to stretch
               }}
