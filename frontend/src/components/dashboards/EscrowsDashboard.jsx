@@ -1722,8 +1722,8 @@ const EscrowsDashboard = () => {
             gridTemplateColumns: {
               xs: '1fr', // Mobile: Always 1 column
               sm: '1fr', // Tablet: Always 1 column
-              md: viewMode === 'small' ? 'repeat(2, 1fr)' : viewMode === 'medium' ? '1fr' : '1fr',
-              lg: viewMode === 'small' ? 'repeat(4, 1fr)' : viewMode === 'medium' ? '1fr' : '1fr',
+              md: viewMode === 'small' ? 'repeat(2, 1fr)' : viewMode === 'medium' ? 'repeat(2, 1fr)' : '1fr',
+              lg: viewMode === 'small' ? 'repeat(4, 1fr)' : viewMode === 'medium' ? 'repeat(2, 1fr)' : '1fr',
             },
             columnGap: 3, // 24px gap = divider width
             rowGap: 3,
