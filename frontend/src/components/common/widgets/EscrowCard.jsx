@@ -353,7 +353,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
         {/* Card 1: Small Card (Fixed width - never moves) */}
         <Box
           sx={{
-            width: viewMode === 'small' ? '100%' : viewMode === 'medium' ? 'calc(50% - 4px)' : 'calc(25% - 18px)', // Medium: 50% of container minus half gap, Small: 100%, Large: 25% of full width
+            width: viewMode === 'small' ? '100%' : viewMode === 'medium' ? 'calc(50% - 4px)' : '25%', // Medium: 50% of container minus half gap, Small: 100%, Large: 25%
             flexShrink: 0,
             display: 'flex', // Make this a flex container so Card stretches to full height
           }}
@@ -600,7 +600,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                     borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
                   }}
                 >
-                  <Box sx={{ display: 'flex', gap: 2.5 }}>
+                  <Box sx={{ display: 'flex', gap: 2.5, pl: 1.5 }}>
                     <Box>
                       <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', mb: 0.25 }}>
                         DOA
@@ -688,7 +688,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: 20 }}
               style={{
-                width: viewMode === 'medium' ? 'calc(50% - 4px)' : 'calc(75% - 18px - 12px)', // Medium: 50% of container minus half gap, Large: remaining space
+                width: viewMode === 'medium' ? 'calc(50% - 4px)' : 'calc(75% - 12px)', // Medium: 50% of container minus half gap, Large: 75% minus gap
                 flexShrink: 0,
                 display: 'flex', // Make flex container to allow Card to stretch
               }}
