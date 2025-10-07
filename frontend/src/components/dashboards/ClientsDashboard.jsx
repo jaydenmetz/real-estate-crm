@@ -317,10 +317,10 @@ const ClientsDashboard = () => {
 
           {/* Stats Grid */}
           <Grid container spacing={3}>
-            <StatCard icon={People} title="Total Clients" value={stats.totalClients || 0} color="#8b5cf6" delay={0} />
-            <StatCard icon={CheckCircle} title="Active Clients" value={stats.activeClients || 0} color="#6366f1" delay={1} />
-            <StatCard icon={TrendingUp} title="Total Transactions" value={stats.totalTransactions || 0} color="#14b8a6" delay={2} />
-            <StatCard icon={AttachMoney} title="Avg Client Value" value={(stats.avgClientValue || 0) / 1000} prefix="$" suffix="K" color="#3b82f6" delay={3} />
+            <StatCard icon={People} title="Total Clients" value={stats.totalClients || 0} color="#ffffff" delay={0} />
+            <StatCard icon={CheckCircle} title="Active Clients" value={stats.activeClients || 0} color="#ffffff" delay={1} />
+            <StatCard icon={TrendingUp} title="Total Transactions" value={stats.totalTransactions || 0} color="#ffffff" delay={2} />
+            <StatCard icon={AttachMoney} title="Avg Client Value" value={(stats.avgClientValue || 0) / 1000} prefix="$" suffix="K" color="#ffffff" delay={3} />
           </Grid>
 
           {/* Action Buttons */}

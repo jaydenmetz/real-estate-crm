@@ -860,20 +860,20 @@ const EscrowsDashboard = () => {
             </Typography>
           </motion.div>
 
-          {/* Stats Grid - Colored Cards */}
+          {/* Stats Grid - White Cards */}
           <Grid container spacing={3}>
             <StatCard
               icon={Home}
               title="Total Escrows"
               value={stats.totalEscrows || 0}
-              color="#2196f3"
+              color="#ffffff"
               delay={0}
             />
             <StatCard
               icon={CheckCircle}
               title="Active Escrows"
               value={stats.activeEscrows || 0}
-              color="#4caf50"
+              color="#ffffff"
               delay={1}
             />
             <StatCard
@@ -882,7 +882,7 @@ const EscrowsDashboard = () => {
               value={(stats.totalVolume || 0) / 1000000}
               prefix="$"
               suffix="M"
-              color="#ff9800"
+              color="#ffffff"
               delay={2}
             />
             <StatCard
@@ -891,7 +891,7 @@ const EscrowsDashboard = () => {
               value={(stats.projectedCommission || 0) / 1000}
               prefix="$"
               suffix="K"
-              color="#9c27b0"
+              color="#ffffff"
               delay={3}
             />
           </Grid>

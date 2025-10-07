@@ -214,10 +214,10 @@ const LeadsDashboard = () => {
           <Typography variant="h6" sx={{ mb: 4, opacity: 0.9 }}>Track and manage all your leads in one place</Typography>
         </motion.div>
         <Grid container spacing={3}>
-          <StatCard icon={PersonAdd} title="Total Leads" value={stats.totalLeads || 0} color="#f59e0b" delay={0} />
-          <StatCard icon={Add} title="New Leads" value={stats.newLeads || 0} color="#ef4444" delay={1} />
-          <StatCard icon={CheckCircle} title="Qualified Leads" value={stats.qualifiedLeads || 0} color="#10b981" delay={2} />
-          <StatCard icon={TrendingUp} title="Conversion Rate" value={stats.conversionRate || 0} suffix="%" color="#8b5cf6" delay={3} />
+          <StatCard icon={PersonAdd} title="Total Leads" value={stats.totalLeads || 0} color="#ffffff" delay={0} />
+          <StatCard icon={Add} title="New Leads" value={stats.newLeads || 0} color="#ffffff" delay={1} />
+          <StatCard icon={CheckCircle} title="Qualified Leads" value={stats.qualifiedLeads || 0} color="#ffffff" delay={2} />
+          <StatCard icon={TrendingUp} title="Conversion Rate" value={stats.conversionRate || 0} suffix="%" color="#ffffff" delay={3} />
         </Grid>
         <Box sx={{ mt: 4, display: 'flex', gap: 2 }}>
           <Button variant="contained" size="large" startIcon={<Add />} onClick={() => navigate('/leads/new')} sx={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', color: 'white', backdropFilter: 'blur(10px)', fontWeight: 600, px: 3, py: 1.5, borderRadius: 2, '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.3)' } }}>Add New Lead</Button>

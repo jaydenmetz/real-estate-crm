@@ -235,10 +235,10 @@ const AppointmentsDashboard = () => {
           <Typography variant="h6" sx={{ mb: 4, opacity: 0.9 }}>Track and manage all your appointments in one place</Typography>
         </motion.div>
         <Grid container spacing={3}>
-          <StatCard icon={Event} title="Total Appointments" value={stats.totalAppointments || 0} color="#3b82f6" delay={0} />
-          <StatCard icon={CalendarToday} title="Upcoming" value={stats.upcomingAppointments || 0} color="#06b6d4" delay={1} />
-          <StatCard icon={CheckCircle} title="Completed This Month" value={stats.completedThisMonth || 0} color="#10b981" delay={2} />
-          <StatCard icon={TrendingUp} title="Avg Per Week" value={stats.avgPerWeek || 0} color="#f97316" delay={3} />
+          <StatCard icon={Event} title="Total Appointments" value={stats.totalAppointments || 0} color="#ffffff" delay={0} />
+          <StatCard icon={CalendarToday} title="Upcoming" value={stats.upcomingAppointments || 0} color="#ffffff" delay={1} />
+          <StatCard icon={CheckCircle} title="Completed This Month" value={stats.completedThisMonth || 0} color="#ffffff" delay={2} />
+          <StatCard icon={TrendingUp} title="Avg Per Week" value={stats.avgPerWeek || 0} color="#ffffff" delay={3} />
         </Grid>
         <Box sx={{ mt: 4, display: 'flex', gap: 2 }}>
           <Button variant="contained" size="large" startIcon={<Add />} onClick={() => navigate('/appointments/new')} sx={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', color: 'white', backdropFilter: 'blur(10px)', fontWeight: 600, px: 3, py: 1.5, borderRadius: 2, '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.3)' } }}>Schedule Appointment</Button>
