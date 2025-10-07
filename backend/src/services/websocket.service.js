@@ -47,22 +47,29 @@ class WebSocketService {
     this.io.use(this.authenticateSocket.bind(this));
 
     this.io.on('connection', (socket) => {
-      const { userId } = socket;
-      const { teamId } = socket;
+      const { userId, teamId, brokerId } = socket;
 
-      logger.info(`WebSocket client connected: ${userId} (Team: ${teamId})`);
-      this.connectedClients.set(socket.id, { userId, teamId, socket });
+      logger.info(`WebSocket client connected: ${userId} (Broker: ${brokerId}, Team: ${teamId})`);
+      this.connectedClients.set(socket.id, { userId, teamId, brokerId, socket });
 
-      socket.join(`team-${teamId}`);
+      // Join 3-tier room hierarchy: broker → team → user
+      if (brokerId) {
+        socket.join(`broker-${brokerId}`);
+      }
+      if (teamId) {
+        socket.join(`team-${teamId}`);
+      }
       socket.join(`user-${userId}`);
 
-      socket.emit('connection', { status: 'connected', userId, teamId });
+      socket.emit('connection', { status: 'connected', userId, teamId, brokerId });
 
       // Broadcast connection to team
-      socket.to(`team-${teamId}`).emit('team:userConnected', {
-        userId,
-        timestamp: new Date(),
-      });
+      if (teamId) {
+        socket.to(`team-${teamId}`).emit('team:userConnected', {
+          userId,
+          timestamp: new Date(),
+        });
+      }
 
       // Handle generic messaging
       socket.on('message', (data) => {
@@ -90,17 +97,19 @@ class WebSocketService {
         this.connectedClients.delete(socket.id);
 
         // Notify team of disconnection
-        socket.to(`team-${teamId}`).emit('team:userDisconnected', {
-          userId,
-          timestamp: new Date(),
-        });
+        if (teamId) {
+          socket.to(`team-${teamId}`).emit('team:userDisconnected', {
+            userId,
+            timestamp: new Date(),
+          });
+        }
       });
     });
 
     logger.info('WebSocket server initialized');
   }
 
-  authenticateSocket(socket, next) {
+  async authenticateSocket(socket, next) {
     try {
       const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.split(' ')[1];
 
@@ -113,10 +122,47 @@ class WebSocketService {
       socket.teamId = decoded.teamId || decoded.team_id;
       socket.userRole = decoded.role;
 
+      // Fetch broker_id from database for the user
+      // This requires database query, so we'll use a helper
+      socket.brokerId = await this.getBrokerIdForUser(socket.userId, socket.teamId);
+
       next();
     } catch (error) {
       logger.error('Socket authentication error:', error);
       next(new Error('Invalid token'));
+    }
+  }
+
+  async getBrokerIdForUser(userId, teamId) {
+    try {
+      const { pool } = require('../config/database');
+
+      // Try to get broker_id from broker_users table
+      const brokerUserResult = await pool.query(
+        'SELECT broker_id FROM broker_users WHERE user_id = $1 AND is_active = true LIMIT 1',
+        [userId]
+      );
+
+      if (brokerUserResult.rows.length > 0) {
+        return brokerUserResult.rows[0].broker_id;
+      }
+
+      // If no direct broker_users link, try via team
+      if (teamId) {
+        const teamResult = await pool.query(
+          'SELECT primary_broker_id FROM teams WHERE team_id = $1',
+          [teamId]
+        );
+
+        if (teamResult.rows.length > 0 && teamResult.rows[0].primary_broker_id) {
+          return teamResult.rows[0].primary_broker_id;
+        }
+      }
+
+      return null;
+    } catch (error) {
+      logger.error('Error fetching broker_id for user:', error);
+      return null;
     }
   }
 
@@ -125,7 +171,15 @@ class WebSocketService {
   }
 
   sendToTeam(teamId, event, data) {
-    this.io.to(`team-${teamId}`).emit(event, data);
+    if (teamId) {
+      this.io.to(`team-${teamId}`).emit(event, data);
+    }
+  }
+
+  sendToBroker(brokerId, event, data) {
+    if (brokerId) {
+      this.io.to(`broker-${brokerId}`).emit(event, data);
+    }
   }
 
   broadcastToAll(event, data) {
@@ -140,6 +194,7 @@ class WebSocketService {
     return Array.from(this.connectedClients.values()).map((client) => ({
       userId: client.userId,
       teamId: client.teamId,
+      brokerId: client.brokerId,
     }));
   }
 

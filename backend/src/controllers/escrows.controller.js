@@ -639,9 +639,10 @@ class EscrowController {
         id: updatedEscrow.id,
       });
 
-      // Emit WebSocket event for real-time updates
+      // Emit WebSocket event for real-time updates (3-tier: broker → team → user)
       const teamId = req.user?.teamId || req.user?.team_id;
       const userId = req.user?.id;
+      const brokerId = updatedEscrow.broker_id;
       const eventData = {
         entityType: 'escrow',
         entityId: updatedEscrow.id || updatedEscrow.display_id,
@@ -653,12 +654,17 @@ class EscrowController {
         }
       };
 
+      // Send to broker room (all users under this broker)
+      if (brokerId) {
+        websocketService.sendToBroker(brokerId, 'data:update', eventData);
+      }
+
       // Send to team room if user has a team
       if (teamId) {
         websocketService.sendToTeam(teamId, 'data:update', eventData);
       }
 
-      // Always send to user's personal room as fallback (for users without teams)
+      // Always send to user's personal room as fallback
       if (userId) {
         websocketService.sendToUser(userId, 'data:update', eventData);
       }
@@ -1086,9 +1092,10 @@ class EscrowController {
 
       await client.query('COMMIT');
 
-      // Emit WebSocket event for real-time updates
+      // Emit WebSocket event for real-time updates (3-tier: broker → team → user)
       const teamId = req.user?.teamId || req.user?.team_id;
       const userId = req.user?.id;
+      const brokerId = newEscrow.broker_id;
       const eventData = {
         entityType: 'escrow',
         entityId: newEscrow.id || newEscrow.display_id,
@@ -1100,12 +1107,17 @@ class EscrowController {
         }
       };
 
+      // Send to broker room (all users under this broker)
+      if (brokerId) {
+        websocketService.sendToBroker(brokerId, 'data:update', eventData);
+      }
+
       // Send to team room if user has a team
       if (teamId) {
         websocketService.sendToTeam(teamId, 'data:update', eventData);
       }
 
-      // Always send to user's personal room as fallback (for users without teams)
+      // Always send to user's personal room as fallback
       if (userId) {
         websocketService.sendToUser(userId, 'data:update', eventData);
       }
