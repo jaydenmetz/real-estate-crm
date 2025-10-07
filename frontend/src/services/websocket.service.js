@@ -15,14 +15,16 @@ class WebSocketService {
   connect() {
     return new Promise((resolve, reject) => {
       try {
-        const token = localStorage.getItem('authToken');
-        
+        const token = localStorage.getItem('crm_auth_token') ||
+                     localStorage.getItem('authToken') ||
+                     localStorage.getItem('token');
+
         // Use React environment variable and ensure HTTPS in production
         const wsUrl = process.env.REACT_APP_WS_URL || 'wss://api.jaydenmetz.com';
         console.log('Connecting to WebSocket:', wsUrl);
-        
+
         this.socket = io(wsUrl, {
-        // auth: { token },  // ← Commented out temporarily
+        auth: { token },
         reconnection: true,
         reconnectionAttempts: this.maxReconnectAttempts,
         reconnectionDelay: this.reconnectDelay,
