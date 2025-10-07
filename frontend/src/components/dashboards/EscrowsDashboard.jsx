@@ -93,6 +93,7 @@ import { escrowsAPI } from '../../services/api.service';
 import { useAuth } from '../../contexts/AuthContext';
 import CopyButton from '../common/CopyButton';
 import networkMonitor from '../../services/networkMonitor.service';
+import { useWebSocket } from '../../hooks/useWebSocket';
 
 // Styled Components
 const HeroSection = styled(Box)(({ theme }) => ({
@@ -298,6 +299,7 @@ const MiniContactCard = ({ title, name, initials, color = '#2196f3' }) => (
 const EscrowsDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isConnected, connectionStatus } = useWebSocket();
   const [escrows, setEscrows] = useState([]);
   const [archivedEscrows, setArchivedEscrows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -421,6 +423,29 @@ const EscrowsDashboard = () => {
       return () => clearInterval(interval);
     }
   }, [debugExpanded]);
+
+  // WebSocket real-time updates
+  useEffect(() => {
+    if (!isConnected) return;
+
+    // Import websocket service
+    const websocketService = require('../../services/websocket.service').default;
+
+    // Subscribe to data updates
+    const unsubscribe = websocketService.on('data:update', (data) => {
+      console.log('📡 WebSocket data update received:', data);
+
+      // Only refetch if it's an escrow update
+      if (data.entityType === 'escrow') {
+        console.log('🔄 Refetching escrows due to real-time update');
+        fetchEscrows();
+      }
+    });
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [isConnected]);
 
   const fetchEscrows = async () => {
     try {

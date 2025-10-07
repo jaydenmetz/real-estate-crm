@@ -1,6 +1,7 @@
 const { pool } = require('../config/database');
 const { asyncHandler } = require('../middleware/errorLogging.middleware');
 const { buildRestructuredEscrowResponse } = require('../helpers/escrows.helper');
+const websocketService = require('../services/websocket.service');
 
 // Cache for schema detection (persists across requests for performance)
 let schemaInfo = null;
@@ -638,6 +639,21 @@ class EscrowController {
         id: updatedEscrow.id,
       });
 
+      // Emit WebSocket event for real-time updates
+      const teamId = req.user?.teamId || req.user?.team_id;
+      if (teamId) {
+        websocketService.sendToTeam(teamId, 'data:update', {
+          entityType: 'escrow',
+          entityId: updatedEscrow.id || updatedEscrow.display_id,
+          action: 'updated',
+          data: {
+            id: updatedEscrow.id || updatedEscrow.display_id,
+            displayId: updatedEscrow.display_id,
+            propertyAddress: updatedEscrow.property_address
+          }
+        });
+      }
+
       // Return the raw database row - the frontend handles both formats
       res.json({
         success: true,
@@ -777,6 +793,19 @@ class EscrowController {
             code: 'NOT_FOUND',
             message: 'Escrow not found in archives. Only archived escrows can be permanently deleted.',
           },
+        });
+      }
+
+      // Emit WebSocket event for real-time updates
+      const teamId = req.user?.teamId || req.user?.team_id;
+      if (teamId) {
+        websocketService.sendToTeam(teamId, 'data:update', {
+          entityType: 'escrow',
+          entityId: id,
+          action: 'deleted',
+          data: {
+            displayId: result.rows[0].display_id
+          }
         });
       }
 
@@ -1047,6 +1076,21 @@ class EscrowController {
       */
 
       await client.query('COMMIT');
+
+      // Emit WebSocket event for real-time updates
+      const teamId = req.user?.teamId || req.user?.team_id;
+      if (teamId) {
+        websocketService.sendToTeam(teamId, 'data:update', {
+          entityType: 'escrow',
+          entityId: newEscrow.id || newEscrow.display_id,
+          action: 'created',
+          data: {
+            id: newEscrow.id || newEscrow.display_id,
+            displayId: newEscrow.display_id,
+            propertyAddress: newEscrow.property_address
+          }
+        });
+      }
 
       // Return success
       res.status(201).json({
