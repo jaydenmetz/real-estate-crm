@@ -357,6 +357,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
             maxWidth: viewMode === 'small' ? '100%' : '320px', // Prevent growing in large mode
             flexShrink: 0,
             display: 'flex', // Make this a flex container so Card stretches to full height
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', // Smooth bidirectional transition
           }}
         >
           <Card
@@ -685,17 +686,17 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
           {viewMode !== 'small' && (
             <motion.div
               key={`extension-${viewMode}`}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: 20, width: 0 }}
+              animate={{ opacity: 1, x: 0, width: 'calc(75% - 12px)' }}
+              exit={{ opacity: 0, x: 20, width: 0 }}
               style={{
-                width: 'calc(75% - 12px)', // Large: 75% minus gap
                 flexShrink: 0,
                 display: 'flex', // Make flex container to allow Card to stretch
               }}
               transition={{
-                opacity: { duration: 0.2 },
-                x: { type: 'spring', stiffness: 400, damping: 35 }
+                opacity: { duration: 0.3 },
+                x: { duration: 0.3, ease: [0.4, 0, 0.2, 1] },
+                width: { duration: 0.3, ease: [0.4, 0, 0.2, 1] }
               }}
             >
               <Card
