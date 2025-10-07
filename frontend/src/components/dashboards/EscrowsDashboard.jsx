@@ -1069,7 +1069,7 @@ const EscrowsDashboard = () => {
                 },
               }}
             >
-              <CalendarTodayIcon fontSize="small" />
+              <CalendarToday fontSize="small" />
             </IconButton>
 
             {/* Archive/Trash Icon - moved from left side */}
