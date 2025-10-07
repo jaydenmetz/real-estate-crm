@@ -375,7 +375,8 @@ const HealthDashboardBase = ({
     ERROR: [],
     EDGE: [],
     PERFORMANCE: [],
-    WORKFLOW: []
+    WORKFLOW: [],
+    REALTIME: []
   });
   const [expandedSections, setExpandedSections] = useState({
     CORE: true,
@@ -383,7 +384,8 @@ const HealthDashboardBase = ({
     ERROR: true,
     EDGE: true,
     PERFORMANCE: true,
-    WORKFLOW: true
+    WORKFLOW: true,
+    REALTIME: true
   });
   const [wsConnected, setWsConnected] = useState(false);
   const [wsSocketId, setWsSocketId] = useState(null);
@@ -396,7 +398,8 @@ const HealthDashboardBase = ({
     ERROR: BugIcon,
     EDGE: WarningIcon,
     PERFORMANCE: SpeedIcon,
-    WORKFLOW: EditIcon
+    WORKFLOW: EditIcon,
+    REALTIME: WebSocketIcon
   };
 
   const icons = { ...defaultIcons, ...categoryIcons };
@@ -473,7 +476,8 @@ const HealthDashboardBase = ({
       ERROR: [],
       EDGE: [],
       PERFORMANCE: [],
-      WORKFLOW: []
+      WORKFLOW: [],
+      REALTIME: []
     });
     setExpandedSections({
       CORE: true,
@@ -481,7 +485,8 @@ const HealthDashboardBase = ({
       ERROR: true,
       EDGE: true,
       PERFORMANCE: true,
-      WORKFLOW: true
+      WORKFLOW: true,
+      REALTIME: true
     });
   };
 
@@ -506,7 +511,7 @@ const HealthDashboardBase = ({
   const runAllTests = useCallback(async (forceNewKey = true) => {
     setLoading(true);
     setTests([]);
-    setGroupedTests({ CORE: [], FILTERS: [], ERROR: [], EDGE: [], PERFORMANCE: [], WORKFLOW: [] });
+    setGroupedTests({ CORE: [], FILTERS: [], ERROR: [], EDGE: [], PERFORMANCE: [], WORKFLOW: [], REALTIME: [] });
 
     let API_URL = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
     if (!API_URL.endsWith('/v1')) {
@@ -561,7 +566,7 @@ const HealthDashboardBase = ({
     }
 
     const allTests = [];
-    const grouped = { CORE: [], FILTERS: [], ERROR: [], EDGE: [], PERFORMANCE: [], WORKFLOW: [] };
+    const grouped = { CORE: [], FILTERS: [], ERROR: [], EDGE: [], PERFORMANCE: [], WORKFLOW: [], REALTIME: [] };
 
     const createCurlCommand = (method, endpoint, body = null) => {
       let curlCmd = `curl -X ${method} "${API_URL}${endpoint}"`;
@@ -622,6 +627,7 @@ const HealthDashboardBase = ({
         else if (test.category === 'Edge Case') grouped.EDGE.push(test);
         else if (test.category === 'Performance') grouped.PERFORMANCE.push(test);
         else if (test.category === 'Workflow') grouped.WORKFLOW.push(test);
+        else if (test.category === 'REALTIME') grouped.REALTIME.push(test);
         allTests.push(test);
       });
 
@@ -635,7 +641,8 @@ const HealthDashboardBase = ({
         ERROR: true,
         EDGE: true,
         PERFORMANCE: true,
-        WORKFLOW: true
+        WORKFLOW: true,
+        REALTIME: true
       });
 
       if (authTab === 1 && temporaryApiKeyId) {
@@ -1008,6 +1015,13 @@ const HealthDashboardBase = ({
             icon={icons.WORKFLOW}
             expanded={expandedSections.WORKFLOW}
             onToggle={() => toggleSection('WORKFLOW')}
+          />
+          <TestSection
+            title="Real-Time WebSocket"
+            tests={groupedTests.REALTIME}
+            icon={icons.REALTIME}
+            expanded={expandedSections.REALTIME}
+            onToggle={() => toggleSection('REALTIME')}
           />
 
           {lastRefresh && (

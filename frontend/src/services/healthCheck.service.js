@@ -155,22 +155,15 @@ export class HealthCheckService {
     const widgetLargeTest = await this.runWidgetDataTest('large', 'Widget Data - Large View', 'Widget Data');
     tests.push(widgetLargeTest);
 
-    // WEBSOCKET REAL-TIME TESTS - DISABLED
-    // These tests were failing due to:
-    // 1. Events scoped to team rooms (test listeners not in correct room)
-    // 2. Not rendering in UI (dashboard doesn't display Real-Time category)
-    // 3. Race conditions between listener setup and event emission
-    // WebSocket functionality still works in production - just not testable via health checks
-    // TODO: Implement proper WebSocket testing with team context and UI rendering
-
-    // const wsConnectionTest = await this.runWebSocketConnectionTest();
-    // tests.push(wsConnectionTest);
-    // const wsEventTest = await this.runWebSocketEventTest();
-    // tests.push(wsEventTest);
-    // const wsWidgetSmallTest = await this.runWebSocketWidgetUpdateTest('small');
-    // tests.push(wsWidgetSmallTest);
-    // const wsWidgetLargeTest = await this.runWebSocketWidgetUpdateTest('large');
-    // tests.push(wsWidgetLargeTest);
+    // WEBSOCKET REAL-TIME TESTS
+    const wsConnectionTest = await this.runWebSocketConnectionTest();
+    tests.push(wsConnectionTest);
+    const wsEventTest = await this.runWebSocketEventTest();
+    tests.push(wsEventTest);
+    const wsWidgetSmallTest = await this.runWebSocketWidgetUpdateTest('small');
+    tests.push(wsWidgetSmallTest);
+    const wsWidgetLargeTest = await this.runWebSocketWidgetUpdateTest('large');
+    tests.push(wsWidgetLargeTest);
 
     return tests;
   }
@@ -977,7 +970,7 @@ export class HealthCheckService {
         const timeout = setTimeout(() => {
           resolve({
             name: 'WebSocket Connection',
-            category: 'Real-Time',
+            category: 'REALTIME',
             status: 'failed',
             message: 'WebSocket connection timeout (5s)',
             responseTime: 5000,
@@ -990,7 +983,7 @@ export class HealthCheckService {
           clearTimeout(timeout);
           resolve({
             name: 'WebSocket Connection',
-            category: 'Real-Time',
+            category: 'REALTIME',
             status: 'success',
             message: 'WebSocket already connected',
             responseTime: Date.now() - startTime,
@@ -1014,7 +1007,7 @@ export class HealthCheckService {
                 clearInterval(checkConnection);
                 resolve({
                   name: 'WebSocket Connection',
-                  category: 'Real-Time',
+                  category: 'REALTIME',
                   status: 'success',
                   message: `Connected via ${websocketService.socket.io.engine.transport.name}`,
                   responseTime: Date.now() - startTime,
@@ -1033,7 +1026,7 @@ export class HealthCheckService {
               if (!websocketService.socket?.connected) {
                 resolve({
                   name: 'WebSocket Connection',
-                  category: 'Real-Time',
+                  category: 'REALTIME',
                   status: 'failed',
                   message: 'Connection established but not ready',
                   responseTime: Date.now() - startTime,
@@ -1046,7 +1039,7 @@ export class HealthCheckService {
             clearTimeout(timeout);
             resolve({
               name: 'WebSocket Connection',
-              category: 'Real-Time',
+              category: 'REALTIME',
               status: 'failed',
               message: error.message || 'Failed to connect',
               responseTime: Date.now() - startTime,
@@ -1057,7 +1050,7 @@ export class HealthCheckService {
     } catch (error) {
       return {
         name: 'WebSocket Connection',
-        category: 'Real-Time',
+        category: 'REALTIME',
         status: 'failed',
         message: error.message || 'Failed to initialize WebSocket',
         responseTime: Date.now() - startTime,
@@ -1077,7 +1070,7 @@ export class HealthCheckService {
       if (!websocketService.socket?.connected) {
         return {
           name: 'WebSocket Events',
-          category: 'Real-Time',
+          category: 'REALTIME',
           status: 'failed',
           message: 'WebSocket not connected. Click the Connect button in the WebSocket panel above.',
           responseTime: Date.now() - startTime,
@@ -1096,7 +1089,7 @@ export class HealthCheckService {
           if (unsubscribe) unsubscribe();
           resolve({
             name: 'WebSocket Events',
-            category: 'Real-Time',
+            category: 'REALTIME',
             status: 'failed',
             message: 'No data:update event received within 3s',
             responseTime: 3000,
@@ -1110,7 +1103,7 @@ export class HealthCheckService {
           if (unsubscribe) unsubscribe();
           resolve({
             name: 'WebSocket Events',
-            category: 'Real-Time',
+            category: 'REALTIME',
             status: 'success',
             message: `Received ${data.entityType || 'unknown'} ${data.action || 'update'} event`,
             responseTime: Date.now() - startTime,
@@ -1147,7 +1140,7 @@ export class HealthCheckService {
               if (unsubscribe) unsubscribe();
               resolve({
                 name: 'WebSocket Events',
-                category: 'Real-Time',
+                category: 'REALTIME',
                 status: 'failed',
                 message: `Test escrow creation failed: HTTP ${response.status}`,
                 responseTime: Date.now() - startTime,
@@ -1177,7 +1170,7 @@ export class HealthCheckService {
             if (unsubscribe) unsubscribe();
             resolve({
               name: 'WebSocket Events',
-              category: 'Real-Time',
+              category: 'REALTIME',
               status: 'failed',
               message: `Failed to trigger test event: ${error.message}`,
               responseTime: Date.now() - startTime,
@@ -1189,7 +1182,7 @@ export class HealthCheckService {
     } catch (error) {
       return {
         name: 'WebSocket Events',
-        category: 'Real-Time',
+        category: 'REALTIME',
         status: 'failed',
         message: error.message || 'Failed to test WebSocket events',
         responseTime: Date.now() - startTime,
@@ -1211,7 +1204,7 @@ export class HealthCheckService {
       if (!websocketService.socket?.connected) {
         return {
           name: testName,
-          category: 'Real-Time',
+          category: 'REALTIME',
           status: 'failed',
           message: 'WebSocket not connected. Click the Connect button in the WebSocket panel above.',
           responseTime: Date.now() - startTime,
@@ -1234,7 +1227,7 @@ export class HealthCheckService {
           cleanup();
           resolve({
             name: testName,
-            category: 'Real-Time',
+            category: 'REALTIME',
             status: 'failed',
             message: 'Widget update not received within 5s',
             responseTime: 5000,
@@ -1277,7 +1270,7 @@ export class HealthCheckService {
             cleanup();
             resolve({
               name: testName,
-              category: 'Real-Time',
+              category: 'REALTIME',
               status: hasRequiredFields ? 'success' : 'failed',
               message: hasRequiredFields
                 ? `Widget update received with all ${viewMode} view fields (${Date.now() - startTime}ms)`
@@ -1320,7 +1313,7 @@ export class HealthCheckService {
               cleanup();
               resolve({
                 name: testName,
-                category: 'Real-Time',
+                category: 'REALTIME',
                 status: 'failed',
                 message: `Escrow creation failed: HTTP ${response.status}`,
                 responseTime: Date.now() - startTime,
@@ -1334,7 +1327,7 @@ export class HealthCheckService {
               cleanup();
               resolve({
                 name: testName,
-                category: 'Real-Time',
+                category: 'REALTIME',
                 status: 'failed',
                 message: 'Failed to create test escrow - no ID returned',
                 responseTime: Date.now() - startTime,
@@ -1366,7 +1359,7 @@ export class HealthCheckService {
                   cleanup();
                   resolve({
                     name: testName,
-                    category: 'Real-Time',
+                    category: 'REALTIME',
                     status: 'failed',
                     message: `Failed to update test escrow: ${error.message}`,
                     responseTime: Date.now() - startTime,
@@ -1380,7 +1373,7 @@ export class HealthCheckService {
             cleanup();
             resolve({
               name: testName,
-              category: 'Real-Time',
+              category: 'REALTIME',
               status: 'failed',
               message: `Failed to create test escrow: ${error.message}`,
               responseTime: Date.now() - startTime,
@@ -1392,7 +1385,7 @@ export class HealthCheckService {
     } catch (error) {
       return {
         name: testName,
-        category: 'Real-Time',
+        category: 'REALTIME',
         status: 'failed',
         message: error.message || 'Failed to test widget updates',
         responseTime: Date.now() - startTime,
