@@ -2,76 +2,99 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## 📋 SYSTEM DOCUMENTATION
+## 📂 DOCUMENTATION MANAGEMENT
 
-### Primary Documentation: SYSTEM_WHITEPAPER.md
+### Documentation Philosophy
 
-**Location:** `/docs/SYSTEM_WHITEPAPER.md`
-**Purpose:** Single source of truth for entire system
-**Audience:** New developers, stakeholders, Claude agents, external reviewers
-**Status:** Living document, updated monthly or after major changes
+**The `/docs` folder is for ACTIVE REFERENCE ONLY.**
+- Only keep docs that are currently useful for implementation
+- Archive completed plans, one-time reports, and superseded documents
+- No duplicate information across files
+- Never create documentation files automatically - only when explicitly requested
 
-**This whitepaper contains:**
-- Complete system architecture and design philosophy
-- All 6 modules (Escrows, Listings, Clients, Leads, Appointments, Brokers)
-- Database schema (all 26 tables)
-- Authentication & security architecture
-- API and frontend architecture
-- Deployment and infrastructure
-- Current status and future roadmap
-- Everything someone needs to understand the system
+### Active Documentation (Keep in `/docs`)
 
-**When to update SYSTEM_WHITEPAPER.md:**
-- ✅ New module or major feature added
-- ✅ Security changes implemented (MFA, session management, etc.)
-- ✅ Architecture refactoring (database changes, API restructuring)
-- ✅ Technology upgrades (Node.js version, new libraries)
-- ✅ Major bug fixes that change behavior
-- ✅ Compliance changes (SOC 2, GDPR updates)
-- ✅ Production metrics change significantly (users, performance, scale)
-
-**How to update:**
-1. Read current SYSTEM_WHITEPAPER.md
-2. Identify which section(s) changed
-3. Update relevant sections with new information
-4. Update "Last Updated" date at top
-5. Update "Current Status" section if applicable
-6. Update "Future Roadmap" if priorities changed
-7. Commit with message: "Update SYSTEM_WHITEPAPER.md: [brief description of changes]"
-
-**Example update commit message:**
-```
-Update SYSTEM_WHITEPAPER.md: Add MFA implementation details
-
-- Added MFA/2FA section under Authentication & Security
-- Updated security score from 7.5/10 to 9.0/10
-- Moved MFA from Future Roadmap to Current Status
-- Updated technology stack (added speakeasy library)
-```
-
-### Secondary Documentation: CLAUDE.md (This File)
-
-**Purpose:** Working instructions for Claude Code agents
-**Scope:** Developer preferences, naming conventions, project organization, quick reference
-**Audience:** Claude Code only
-
-**Do NOT duplicate information from SYSTEM_WHITEPAPER.md in this file.**
-Keep CLAUDE.md focused on "how to work on this project" not "what the project is."
-
-### Other Documentation
-
-**Keep These (Still Useful):**
-- `SECURITY_REFERENCE.md` - Detailed security implementation (technical deep dive)
+**Core Reference (Always Keep):**
+- `README.md` - Project overview and getting started
+- `ARCHITECTURE.md` - System architecture patterns
+- `API_REFERENCE.md` - Current API documentation
+- `DATABASE_STRUCTURE.md` - Database schema
+- `DATABASE_RELATIONSHIPS.md` - Entity relationships
+- `SECURITY_REFERENCE.md` - Security architecture (10/10 score)
 - `SECURITY_OPERATIONS.md` - Day-to-day security procedures
-- `ARCHITECTURE.md` - Technical architecture patterns (backend/frontend structure)
-- `DATABASE_STRUCTURE.md` - Detailed schema with relationships
+- `SCALING_GUIDE.md` - Production scaling strategies
 
-**Archive These (Outdated/Redundant):**
-- Most phase-specific docs (PHASE1_CODE_REVIEW.md, WEEK_2_STATUS.md, etc.)
-- Duplicate API docs (API_ESCROWS.md, API_ESCROWS_COMPLETE.md, API_ESCROWS_ORGANIZED.md)
-- Old planning docs (IMPROVEMENT_PLAN_TO_A_MINUS.md, ROADMAP_TO_100_PERCENT.md)
+**Setup Guides (Keep if Active):**
+- `RAILWAY_ENVIRONMENT_SETUP.md` - Deployment configuration
+- `GOOGLE_OAUTH_SETUP.md` - OAuth integration
+- `SENTRY_SETUP.md` - Error tracking setup
+- `ENVIRONMENTS.md` - Environment variables
 
-The whitepaper consolidates all this information into one comprehensive document.
+**Development Guides:**
+- `QUICK_START_NEW_DASHBOARD.md` - How to create new dashboards
+- `KEYBOARD_SHORTCUTS.md` - User shortcuts reference
+
+### What to Archive
+
+**Archive to `/docs/archive/` if:**
+- ✅ One-time plans that are now complete (roadmaps, remediation plans)
+- ✅ Point-in-time audits or assessments (quarterly reviews, security audits with dates)
+- ✅ Historical context documents (implementation history, "how we got here" docs)
+- ✅ Superseded/duplicate documentation (old API docs, template docs replaced by newer versions)
+- ✅ Educational/motivational content not needed for implementation (playbooks, strategy docs)
+- ✅ Design specs for completed features (UI designs, mockups once implemented)
+- ✅ Future feature plans not yet started (multi-tenant architecture, features on hold)
+
+**Archive Structure:**
+```
+docs/archive/
+  ├── 2025-plans/          # Completed roadmaps, remediation plans
+  ├── 2025-audits/         # Security audits, performance reviews
+  ├── design-specs/        # UI designs, mockups (completed)
+  ├── superseded/          # Replaced by newer docs
+  └── [year-category]/     # Organize by year and category
+```
+
+**Move to `/media/` if:**
+- ✅ Screenshots, screen recordings
+- ✅ PDFs, presentations
+- ✅ Large reference files not directly related to code
+
+### Creating New Documentation
+
+**IMPORTANT: Only create docs when explicitly requested by the user.**
+
+When user asks for documentation:
+1. Check if similar doc already exists (update instead of creating new)
+2. Determine if it's temporary (plan/report) or permanent (reference)
+3. Use clear, descriptive filenames (UPPERCASE_WITH_UNDERSCORES.md)
+4. Include at top:
+   ```markdown
+   # Document Title
+   **Created:** [Date]
+   **Purpose:** [Why this exists]
+   **Status:** [Active Reference / Completed Plan / etc.]
+   ```
+5. After user confirms doc is no longer needed, move to archive
+
+### Cleaning Up Documentation
+
+**When archiving:**
+1. Extract any critical information that should live in active docs
+2. Update active docs with that information
+3. Move the rest to appropriate archive folder
+4. Commit with clear message: `Archive [filename]: [reason]`
+
+**Example:**
+```bash
+# Extract key info from old security audit
+grep "CRITICAL" docs/SECURITY_AUDIT_2025.md >> docs/SECURITY_REFERENCE.md
+
+# Archive the full audit
+mv docs/SECURITY_AUDIT_2025.md docs/archive/2025-audits/
+
+git commit -m "Archive SECURITY_AUDIT_2025.md: Point-in-time audit, key findings added to SECURITY_REFERENCE.md"
+```
 
 ---
 
