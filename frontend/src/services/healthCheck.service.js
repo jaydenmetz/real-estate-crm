@@ -1116,7 +1116,7 @@ export class HealthCheckService {
           });
         });
 
-        // Wait 100ms to ensure listener is registered before triggering event
+        // Wait 250ms to ensure listener is registered and WebSocket connection is stable
         setTimeout(() => {
           // Trigger a test event by creating an escrow
           const testData = { propertyAddress: `WS-TEST-${Date.now()}` };
@@ -1127,7 +1127,7 @@ export class HealthCheckService {
             'Content-Type': 'application/json',
             ...(this.authType === 'apikey'
               ? { 'X-API-Key': this.authValue }
-              : { 'Authorization': `Bearer ${localStorage.getItem('crm_auth_token')}` })
+              : { 'Authorization': `Bearer ${this.authValue}` })
           },
           body: JSON.stringify(testData)
         })
@@ -1159,7 +1159,7 @@ export class HealthCheckService {
                     'Content-Type': 'application/json',
                     ...(this.authType === 'apikey'
                       ? { 'X-API-Key': this.authValue }
-                      : { 'Authorization': `Bearer ${localStorage.getItem('crm_auth_token')}` })
+                      : { 'Authorization': `Bearer ${this.authValue}` })
                   }
                 }).catch(console.error);
               }, 1000);
@@ -1177,7 +1177,7 @@ export class HealthCheckService {
               error: error.message
             });
           });
-        }, 100); // Wait 100ms before triggering
+        }, 250); // Wait 250ms before triggering to ensure WebSocket is ready
       });
     } catch (error) {
       return {
@@ -1246,7 +1246,7 @@ export class HealthCheckService {
                 'Content-Type': 'application/json',
                 ...(this.authType === 'apikey'
                   ? { 'X-API-Key': this.authValue }
-                  : { 'Authorization': `Bearer ${localStorage.getItem('crm_auth_token')}` })
+                  : { 'Authorization': `Bearer ${this.authValue}` })
               }
             }).catch(console.error);
           }
@@ -1301,7 +1301,7 @@ export class HealthCheckService {
             'Content-Type': 'application/json',
             ...(this.authType === 'apikey'
               ? { 'X-API-Key': this.authValue }
-              : { 'Authorization': `Bearer ${localStorage.getItem('crm_auth_token')}` })
+              : { 'Authorization': `Bearer ${this.authValue}` })
           },
           body: JSON.stringify(testData)
         })
@@ -1348,7 +1348,7 @@ export class HealthCheckService {
                   'Content-Type': 'application/json',
                   ...(this.authType === 'apikey'
                     ? { 'X-API-Key': this.authValue }
-                    : { 'Authorization': `Bearer ${localStorage.getItem('crm_auth_token')}` })
+                    : { 'Authorization': `Bearer ${this.authValue}` })
                 },
                 body: JSON.stringify({
                   purchasePrice: 550000,
@@ -1380,7 +1380,7 @@ export class HealthCheckService {
               error: error.message
             });
           });
-        }, 100); // Wait 100ms before triggering
+        }, 250); // Wait 250ms before triggering to ensure WebSocket is ready
       });
     } catch (error) {
       return {
@@ -1396,7 +1396,7 @@ export class HealthCheckService {
 
   // Run all module health checks
   async runAllHealthChecks() {
-    const token = localStorage.getItem('crm_auth_token') ||
+    const token = this.authValue ||
                  localStorage.getItem('authToken') ||
                  localStorage.getItem('token');
 

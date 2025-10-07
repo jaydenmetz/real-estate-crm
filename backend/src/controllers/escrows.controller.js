@@ -641,17 +641,26 @@ class EscrowController {
 
       // Emit WebSocket event for real-time updates
       const teamId = req.user?.teamId || req.user?.team_id;
+      const userId = req.user?.id;
+      const eventData = {
+        entityType: 'escrow',
+        entityId: updatedEscrow.id || updatedEscrow.display_id,
+        action: 'updated',
+        data: {
+          id: updatedEscrow.id || updatedEscrow.display_id,
+          displayId: updatedEscrow.display_id,
+          propertyAddress: updatedEscrow.property_address
+        }
+      };
+
+      // Send to team room if user has a team
       if (teamId) {
-        websocketService.sendToTeam(teamId, 'data:update', {
-          entityType: 'escrow',
-          entityId: updatedEscrow.id || updatedEscrow.display_id,
-          action: 'updated',
-          data: {
-            id: updatedEscrow.id || updatedEscrow.display_id,
-            displayId: updatedEscrow.display_id,
-            propertyAddress: updatedEscrow.property_address
-          }
-        });
+        websocketService.sendToTeam(teamId, 'data:update', eventData);
+      }
+
+      // Always send to user's personal room as fallback (for users without teams)
+      if (userId) {
+        websocketService.sendToUser(userId, 'data:update', eventData);
       }
 
       // Return the raw database row - the frontend handles both formats
@@ -1079,17 +1088,26 @@ class EscrowController {
 
       // Emit WebSocket event for real-time updates
       const teamId = req.user?.teamId || req.user?.team_id;
+      const userId = req.user?.id;
+      const eventData = {
+        entityType: 'escrow',
+        entityId: newEscrow.id || newEscrow.display_id,
+        action: 'created',
+        data: {
+          id: newEscrow.id || newEscrow.display_id,
+          displayId: newEscrow.display_id,
+          propertyAddress: newEscrow.property_address
+        }
+      };
+
+      // Send to team room if user has a team
       if (teamId) {
-        websocketService.sendToTeam(teamId, 'data:update', {
-          entityType: 'escrow',
-          entityId: newEscrow.id || newEscrow.display_id,
-          action: 'created',
-          data: {
-            id: newEscrow.id || newEscrow.display_id,
-            displayId: newEscrow.display_id,
-            propertyAddress: newEscrow.property_address
-          }
-        });
+        websocketService.sendToTeam(teamId, 'data:update', eventData);
+      }
+
+      // Always send to user's personal room as fallback (for users without teams)
+      if (userId) {
+        websocketService.sendToUser(userId, 'data:update', eventData);
       }
 
       // Return success
