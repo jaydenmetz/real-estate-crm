@@ -1069,8 +1069,8 @@ export class HealthCheckService {
         return {
           name: 'WebSocket Events',
           category: 'Real-Time',
-          status: 'warning',
-          message: 'Cannot test events - WebSocket not connected',
+          status: 'failed',
+          message: 'WebSocket not connected - cannot test events',
           responseTime: Date.now() - startTime,
           error: 'Socket not connected'
         };
