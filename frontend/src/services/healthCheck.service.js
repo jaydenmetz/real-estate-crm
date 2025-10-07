@@ -1224,18 +1224,34 @@ export class HealthCheckService {
 
             // Clean up test record
             if (result?.data?.id) {
-              setTimeout(() => {
+              setTimeout(async () => {
                 const deleteAuthHeaders = this.authType === 'apikey'
                   ? { 'X-API-Key': this.authValue }
                   : { 'Authorization': `Bearer ${localStorage.getItem('crm_auth_token') || localStorage.getItem('authToken') || localStorage.getItem('token')}` };
 
-                fetch(`${this.API_URL}${endpoint}/${result.data.id}`, {
-                  method: 'DELETE',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    ...deleteAuthHeaders
+                try {
+                  // Escrows must be archived before deletion
+                  if (entityType === 'escrow') {
+                    await fetch(`${this.API_URL}${endpoint}/${result.data.id}/archive`, {
+                      method: 'PUT',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        ...deleteAuthHeaders
+                      }
+                    });
                   }
-                }).catch(console.error);
+
+                  // Delete the record
+                  await fetch(`${this.API_URL}${endpoint}/${result.data.id}`, {
+                    method: 'DELETE',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      ...deleteAuthHeaders
+                    }
+                  });
+                } catch (error) {
+                  console.error(`Failed to cleanup test ${entityType}:`, error);
+                }
               }, 1000);
             }
           })
@@ -1344,7 +1360,7 @@ export class HealthCheckService {
           });
         }, 5000);
 
-        const cleanup = () => {
+        const cleanup = async () => {
           clearTimeout(timeout);
           if (unsubscribe) unsubscribe();
           // Clean up test record
@@ -1353,13 +1369,29 @@ export class HealthCheckService {
               ? { 'X-API-Key': this.authValue }
               : { 'Authorization': `Bearer ${localStorage.getItem('crm_auth_token') || localStorage.getItem('authToken') || localStorage.getItem('token')}` };
 
-            fetch(`${this.API_URL}${endpoint}/${testEscrowId}`, {
-              method: 'DELETE',
-              headers: {
-                'Content-Type': 'application/json',
-                ...deleteAuthHeaders
+            try {
+              // Escrows must be archived before deletion
+              if (entityType === 'escrow') {
+                await fetch(`${this.API_URL}${endpoint}/${testEscrowId}/archive`, {
+                  method: 'PUT',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    ...deleteAuthHeaders
+                  }
+                });
               }
-            }).catch(console.error);
+
+              // Delete the record
+              await fetch(`${this.API_URL}${endpoint}/${testEscrowId}`, {
+                method: 'DELETE',
+                headers: {
+                  'Content-Type': 'application/json',
+                  ...deleteAuthHeaders
+                }
+              });
+            } catch (error) {
+              console.error(`Failed to cleanup test ${entityType}:`, error);
+            }
           }
         };
 
