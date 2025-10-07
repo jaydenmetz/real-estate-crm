@@ -147,6 +147,14 @@ export class HealthCheckService {
       tests.push(verifyTest);
     }
 
+    // WIDGET DATA VALIDATION TESTS
+    // Test that widget data is properly populated from database
+    const widgetSmallTest = await this.runWidgetDataTest('small', 'Widget Data - Small View', 'Widget Data');
+    tests.push(widgetSmallTest);
+
+    const widgetLargeTest = await this.runWidgetDataTest('large', 'Widget Data - Large View', 'Widget Data');
+    tests.push(widgetLargeTest);
+
     return tests;
   }
 
@@ -821,6 +829,124 @@ export class HealthCheckService {
         variance: max - min
       }
     };
+  }
+
+  // Test widget data population from database
+  async runWidgetDataTest(viewMode, name, category) {
+    const startTime = Date.now();
+    try {
+      // Get all escrows to test widget data
+      const cleanEndpoint = '/escrows';
+      let data;
+
+      if (this.authType === 'jwt') {
+        data = await apiInstance.request(cleanEndpoint, { method: 'GET' });
+      } else {
+        data = await apiInstance.requestWithApiKey(cleanEndpoint, this.authValue, { method: 'GET' });
+      }
+
+      const escrows = data?.data?.escrows || data?.data || [];
+
+      if (escrows.length === 0) {
+        return {
+          name,
+          category,
+          method: 'GET',
+          endpoint: '/escrows',
+          status: 'warning',
+          responseTime: Date.now() - startTime,
+          response: {
+            message: 'No escrows found to validate widget data',
+            viewMode
+          }
+        };
+      }
+
+      // Pick first active escrow
+      const testEscrow = escrows[0];
+
+      // Validate required widget data fields
+      const requiredFields = {
+        small: ['id', 'propertyAddress', 'purchasePrice', 'myCommission', 'checklistProgress', 'escrowStatus'],
+        large: ['id', 'propertyAddress', 'purchasePrice', 'myCommission', 'checklistProgress', 'escrowStatus', 'scheduledCoeDate', 'acceptanceDate']
+      };
+
+      const fields = requiredFields[viewMode];
+      const missingFields = [];
+      const presentFields = [];
+      const calculatedData = {};
+
+      // Check each field
+      fields.forEach(field => {
+        if (testEscrow[field] !== undefined && testEscrow[field] !== null) {
+          presentFields.push(field);
+          calculatedData[field] = testEscrow[field];
+        } else {
+          missingFields.push(field);
+        }
+      });
+
+      // Additional calculations that widgets perform
+      if (testEscrow.purchasePrice) {
+        calculatedData.formattedPrice = `$${(testEscrow.purchasePrice / 1000000).toFixed(2)}M`;
+      }
+
+      if (testEscrow.myCommission) {
+        calculatedData.formattedCommission = `$${(testEscrow.myCommission / 1000).toFixed(1)}K`;
+      }
+
+      if (testEscrow.scheduledCoeDate || testEscrow.closingDate) {
+        const closeDate = new Date(testEscrow.scheduledCoeDate || testEscrow.closingDate);
+        const daysToClose = Math.ceil((closeDate - new Date()) / (1000 * 60 * 60 * 24));
+        calculatedData.daysToClose = daysToClose;
+        calculatedData.isUrgent = daysToClose <= 7 && daysToClose > 0;
+        calculatedData.isPastDue = daysToClose < 0;
+      }
+
+      const allFieldsPresent = missingFields.length === 0;
+
+      return {
+        name,
+        category,
+        method: 'GET',
+        endpoint: '/escrows',
+        status: allFieldsPresent ? 'success' : 'warning',
+        responseTime: Date.now() - startTime,
+        response: {
+          viewMode,
+          testedEscrow: {
+            id: testEscrow.id,
+            address: testEscrow.propertyAddress
+          },
+          requiredFields: fields.length,
+          presentFields: presentFields.length,
+          missingFields: missingFields.length > 0 ? missingFields : undefined,
+          sampleCalculations: calculatedData,
+          validation: {
+            hasPrice: !!testEscrow.purchasePrice,
+            hasCommission: !!testEscrow.myCommission,
+            hasProgress: testEscrow.checklistProgress >= 0,
+            hasStatus: !!testEscrow.escrowStatus,
+            hasDates: !!(testEscrow.scheduledCoeDate || testEscrow.closingDate)
+          }
+        }
+      };
+
+    } catch (error) {
+      return {
+        name,
+        category,
+        method: 'GET',
+        endpoint: '/escrows',
+        status: 'failed',
+        responseTime: Date.now() - startTime,
+        error: error.message,
+        response: {
+          viewMode,
+          error: 'Failed to fetch escrow data for widget validation'
+        }
+      };
+    }
   }
 
   // Run all module health checks
