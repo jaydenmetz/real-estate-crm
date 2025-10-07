@@ -21,6 +21,7 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  useTheme,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
@@ -48,6 +49,118 @@ const HeroSection = styled(Box)(({ theme }) => ({
     padding: theme.spacing(4),
   },
 }));
+
+// Enhanced animated stat card component with gradient animations
+const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, delay = 0, trend }) => {
+  const theme = useTheme();
+  return (
+    <Grid item xs={12} sm={6} md={3}>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: delay * 0.1 }}
+      >
+        <Card
+          elevation={0}
+          sx={{
+            height: '100%',
+            minHeight: 140,
+            position: 'relative',
+            overflow: 'hidden',
+            background: `linear-gradient(135deg, ${alpha(color, 0.15)} 0%, ${alpha(color, 0.08)} 100%)`,
+            backdropFilter: 'blur(10px)',
+            border: `1px solid ${alpha(color, 0.3)}`,
+            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            '&:hover': {
+              transform: 'translateY(-8px) scale(1.02)',
+              boxShadow: `0 20px 40px ${alpha(color, 0.25)}`,
+              border: `1px solid ${alpha(color, 0.5)}`,
+            },
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: '4px',
+              background: `linear-gradient(90deg, ${color} 0%, ${alpha(color, 0.6)} 100%)`,
+            },
+          }}
+        >
+          <CardContent sx={{ position: 'relative', zIndex: 1, p: 2.5, '&:last-child': { pb: 2.5 } }}>
+            <Box display="flex" alignItems="center" justifyContent="space-between">
+              <Box>
+                <Typography
+                  color="textSecondary"
+                  gutterBottom
+                  variant="body2"
+                  sx={{ fontWeight: 500, letterSpacing: 0.5 }}
+                >
+                  {title}
+                </Typography>
+                <Typography
+                  variant="h3"
+                  component="div"
+                  sx={{
+                    fontWeight: 'bold',
+                    color,
+                    display: 'flex',
+                    alignItems: 'baseline',
+                    gap: 0.5,
+                  }}
+                >
+                  <span style={{ fontSize: '0.7em' }}>{prefix}</span>
+                  <CountUp
+                    end={value}
+                    duration={2.5}
+                    separator=","
+                    decimals={suffix === 'M' || suffix === 'K' ? 1 : 0}
+                  />
+                  <span style={{ fontSize: '0.7em' }}>{suffix}</span>
+                </Typography>
+                {trend && (
+                  <Box display="flex" alignItems="center" gap={0.5} mt={1}>
+                    <TrendingUp sx={{ fontSize: 16, color: '#4caf50' }} />
+                    <Typography variant="caption" color="success.main">
+                      {trend}% from last month
+                    </Typography>
+                  </Box>
+                )}
+              </Box>
+              <Box
+                sx={{
+                  position: 'relative',
+                  width: 80,
+                  height: 80,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: '50%',
+                    background: `radial-gradient(circle, ${alpha(color, 0.15)} 0%, transparent 70%)`,
+                    animation: 'pulse 2s infinite',
+                    '@keyframes pulse': {
+                      '0%': { transform: 'scale(0.8)', opacity: 1 },
+                      '50%': { transform: 'scale(1.2)', opacity: 0.5 },
+                      '100%': { transform: 'scale(0.8)', opacity: 1 },
+                    },
+                  }}
+                />
+                <Icon sx={{ fontSize: 48, color, zIndex: 1 }} />
+              </Box>
+            </Box>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </Grid>
+  );
+};
 
 const AppointmentsDashboard = () => {
   const navigate = useNavigate();
@@ -118,24 +231,10 @@ const AppointmentsDashboard = () => {
           <Typography variant="h6" sx={{ mb: 4, opacity: 0.9 }}>Track and manage all your appointments in one place</Typography>
         </motion.div>
         <Grid container spacing={3}>
-          {[
-            { title: 'Total Appointments', value: stats.totalAppointments, icon: Event },
-            { title: 'Upcoming', value: stats.upcomingAppointments, icon: CalendarToday },
-            { title: 'Completed This Month', value: stats.completedThisMonth, icon: CheckCircle },
-            { title: 'Avg Per Week', value: stats.avgPerWeek, icon: TrendingUp }
-          ].map(({ title, value, icon: Icon }) => (
-            <Grid item xs={12} sm={6} md={3} key={title}>
-              <Box sx={{ backgroundColor: 'rgba(255, 255, 255, 0.1)', borderRadius: 2, p: 2.5, backdropFilter: 'blur(10px)', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
-                <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
-                  <Box>
-                    <Typography variant="body2" sx={{ opacity: 0.9, mb: 0.5 }}>{title}</Typography>
-                    <Typography variant="h4" sx={{ fontWeight: 'bold' }}><CountUp end={value || 0} duration={2} separator="," /></Typography>
-                  </Box>
-                  <Icon sx={{ fontSize: 40, opacity: 0.6 }} />
-                </Box>
-              </Box>
-            </Grid>
-          ))}
+          <StatCard icon={Event} title="Total Appointments" value={stats.totalAppointments || 0} color="#3b82f6" delay={0} />
+          <StatCard icon={CalendarToday} title="Upcoming" value={stats.upcomingAppointments || 0} color="#06b6d4" delay={1} />
+          <StatCard icon={CheckCircle} title="Completed This Month" value={stats.completedThisMonth || 0} color="#10b981" delay={2} />
+          <StatCard icon={TrendingUp} title="Avg Per Week" value={stats.avgPerWeek || 0} color="#f97316" delay={3} />
         </Grid>
         <Box sx={{ mt: 4, display: 'flex', gap: 2 }}>
           <Button variant="contained" size="large" startIcon={<Add />} onClick={() => navigate('/appointments/new')} sx={{ backgroundColor: 'rgba(255, 255, 255, 0.2)', color: 'white', backdropFilter: 'blur(10px)', fontWeight: 600, px: 3, py: 1.5, borderRadius: 2, '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.3)' } }}>Schedule Appointment</Button>
