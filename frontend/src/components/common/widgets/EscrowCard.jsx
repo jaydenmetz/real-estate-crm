@@ -26,7 +26,7 @@ import {
   ChevronRight,
   Close,
 } from '@mui/icons-material';
-import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from 'framer-motion';
+import { useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { differenceInDays, isValid, format } from 'date-fns';
 
@@ -729,17 +729,16 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
           </Card>
         </Box>
 
-        {/* Card 2: Extension Panels (Slides in from right) */}
-        <AnimatePresence mode="wait">
-          {viewMode !== 'small' && (
-            <Box
-              style={{
-                width: 'calc(100% - 332px)', // Full width minus Card 1 (320px) and gap (12px)
-                flexShrink: 0,
-                display: 'flex',
-                opacity: 1,
-              }}
-            >
+        {/* Card 2: Extension Panels */}
+        {viewMode !== 'small' && (
+          <Box
+            style={{
+              width: 'calc(100% - 332px)', // Full width minus Card 1 (320px) and gap (12px)
+              flexShrink: 0,
+              display: 'flex',
+              opacity: 1,
+            }}
+          >
               <Card
                 sx={{
                   width: '100%',
@@ -995,7 +994,6 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
               </Card>
             </Box>
           )}
-        </AnimatePresence>
       </Box>
     </Box>
   );
