@@ -685,18 +685,18 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
         <AnimatePresence mode="wait">
           {viewMode !== 'small' && (
             <motion.div
-              key={`extension-${viewMode}`}
-              initial={{ opacity: 0, x: 20, width: 0 }}
-              animate={{ opacity: 1, x: 0, width: 'calc(75% - 12px)' }}
-              exit={{ opacity: 0, x: 20, width: 0 }}
+              key="extension-panel"
+              initial={false}
+              animate={{ width: 'calc(75% - 12px)' }}
+              exit={{ width: 0, opacity: 0 }}
               style={{
                 flexShrink: 0,
-                display: 'flex', // Make flex container to allow Card to stretch
+                display: 'flex',
+                opacity: 1,
               }}
               transition={{
-                opacity: { duration: 0.3 },
-                x: { duration: 0.3, ease: [0.4, 0, 0.2, 1] },
-                width: { duration: 0.3, ease: [0.4, 0, 0.2, 1] }
+                width: { duration: 0.3, ease: [0.4, 0, 0.2, 1] },
+                opacity: { duration: 0.2 }
               }}
             >
               <Card
