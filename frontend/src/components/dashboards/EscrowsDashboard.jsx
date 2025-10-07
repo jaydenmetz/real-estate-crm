@@ -858,6 +858,10 @@ const EscrowsDashboard = () => {
     }
   };
 
+  const handleCalendarOpen = () => {
+    setShowCalendar(!showCalendar);
+  };
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">

@@ -257,10 +257,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.05 }}
+    <Box
       style={{ width: '100%', position: 'relative' }}
     >
       {/* Navigation Arrows - Only show on mobile/tablet */}
@@ -735,19 +732,12 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
         {/* Card 2: Extension Panels (Slides in from right) */}
         <AnimatePresence mode="wait">
           {viewMode !== 'small' && (
-            <motion.div
-              key="extension-panel"
-              initial={false}
-              animate={{ width: 'calc(75% - 12px)' }}
-              exit={{ width: 0, opacity: 0 }}
+            <Box
               style={{
+                width: 'calc(100% - 332px)', // Full width minus Card 1 (320px) and gap (12px)
                 flexShrink: 0,
                 display: 'flex',
                 opacity: 1,
-              }}
-              transition={{
-                width: { duration: 0.3, ease: [0.4, 0, 0.2, 1] },
-                opacity: { duration: 0.2 }
               }}
             >
               <Card
@@ -1003,11 +993,11 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                   </Box>
                 )}
               </Card>
-            </motion.div>
+            </Box>
           )}
         </AnimatePresence>
       </Box>
-    </motion.div>
+    </Box>
   );
 };
 
