@@ -430,14 +430,14 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                   <Home sx={{ fontSize: 80, color: alpha('#757575', 0.5), zIndex: 1 }} />
                 )}
 
-                {/* Status Chip */}
+                {/* Status Chip - Now in TOP LEFT */}
                 <Chip
                   label={statusConfig.label}
                   size="small"
                   sx={{
                     position: 'absolute',
                     top: 12,
-                    right: 12,
+                    left: 12,
                     fontWeight: 700,
                     fontSize: 11,
                     letterSpacing: '0.5px',
@@ -451,38 +451,54 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                   }}
                 />
 
-                {/* Delete/Archive Button (Red X) */}
+                {/* Hover Zone for Delete Button - TOP RIGHT */}
                 {(onArchive || onDelete || onRestore) && (
-                  <IconButton
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (isArchived && onDelete) {
-                        onDelete(escrow.id);
-                      } else if (isArchived && onRestore) {
-                        onRestore(escrow.id);
-                      } else if (onArchive) {
-                        onArchive(escrow.id);
-                      }
-                    }}
+                  <Box
                     sx={{
                       position: 'absolute',
-                      top: 8,
-                      left: 8,
+                      top: 0,
+                      right: 0,
+                      width: 80,
+                      height: 80,
                       zIndex: 3,
-                      backgroundColor: 'rgba(239, 68, 68, 0.9)',
-                      color: 'white',
-                      width: 32,
-                      height: 32,
-                      '&:hover': {
-                        backgroundColor: 'rgba(220, 38, 38, 1)',
-                        transform: 'scale(1.1)',
+                      '&:hover .delete-button': {
+                        opacity: 1,
                       },
-                      transition: 'all 0.2s',
-                      backdropFilter: 'blur(10px)',
                     }}
                   >
-                    <Close sx={{ fontSize: 18 }} />
-                  </IconButton>
+                    <IconButton
+                      className="delete-button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (isArchived && onDelete) {
+                          onDelete(escrow.id);
+                        } else if (isArchived && onRestore) {
+                          onRestore(escrow.id);
+                        } else if (onArchive) {
+                          onArchive(escrow.id);
+                        }
+                      }}
+                      sx={{
+                        position: 'absolute',
+                        top: 8,
+                        right: 8,
+                        opacity: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        width: 28,
+                        height: 28,
+                        backdropFilter: 'blur(8px)',
+                        '&:hover': {
+                          backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                          color: 'rgba(255, 255, 255, 0.95)',
+                          transform: 'scale(1.15)',
+                        },
+                        transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                      }}
+                    >
+                      <Close sx={{ fontSize: 16 }} />
+                    </IconButton>
+                  </Box>
                 )}
 
                 {/* Progress Bar */}
