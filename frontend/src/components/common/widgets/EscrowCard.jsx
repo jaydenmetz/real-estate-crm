@@ -352,7 +352,9 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
         {/* Card 1: Escrow Card (Fixed width - never moves) */}
         <Box
           sx={{
-            width: viewMode === 'small' ? '100%' : '25%', // Small: 100%, Large: 25%
+            width: viewMode === 'small' ? '100%' : '320px', // Small: full grid cell, Large: fixed 320px
+            minWidth: viewMode === 'small' ? 'unset' : '320px', // Prevent shrinking in large mode
+            maxWidth: viewMode === 'small' ? '100%' : '320px', // Prevent growing in large mode
             flexShrink: 0,
             display: 'flex', // Make this a flex container so Card stretches to full height
           }}
