@@ -168,7 +168,7 @@ export class HealthCheckService {
     return tests;
   }
 
-  // Run comprehensive health checks for Listings (26 tests)
+  // Run comprehensive health checks for Listings (30 tests)
   async runListingsHealthCheck() {
     const tests = [];
     const createdIds = [];
@@ -282,10 +282,16 @@ export class HealthCheckService {
       }
     }
 
+    // WEBSOCKET REAL-TIME TESTS
+    tests.push(await this.runWebSocketConnectionTest());
+    tests.push(await this.runWebSocketEventTest());
+    tests.push(await this.runWebSocketWidgetUpdateTest('small'));
+    tests.push(await this.runWebSocketWidgetUpdateTest('large'));
+
     return tests;
   }
 
-  // Run comprehensive health checks for Clients (22 tests)
+  // Run comprehensive health checks for Clients (26 tests)
   async runClientsHealthCheck() {
     const tests = [];
     const createdIds = [];
@@ -400,10 +406,16 @@ export class HealthCheckService {
       tests.push(verifyTest);
     }
 
+    // WEBSOCKET REAL-TIME TESTS
+    tests.push(await this.runWebSocketConnectionTest());
+    tests.push(await this.runWebSocketEventTest());
+    tests.push(await this.runWebSocketWidgetUpdateTest('small'));
+    tests.push(await this.runWebSocketWidgetUpdateTest('large'));
+
     return tests;
   }
 
-  // Run comprehensive health checks for Appointments (23 tests)
+  // Run comprehensive health checks for Appointments (27 tests)
   async runAppointmentsHealthCheck() {
     const tests = [];
     const createdIds = [];
@@ -523,10 +535,16 @@ export class HealthCheckService {
       tests.push(verifyTest);
     }
 
+    // WEBSOCKET REAL-TIME TESTS
+    tests.push(await this.runWebSocketConnectionTest());
+    tests.push(await this.runWebSocketEventTest());
+    tests.push(await this.runWebSocketWidgetUpdateTest('small'));
+    tests.push(await this.runWebSocketWidgetUpdateTest('large'));
+
     return tests;
   }
 
-  // Run comprehensive health checks for Leads (23 tests)
+  // Run comprehensive health checks for Leads (27 tests)
   async runLeadsHealthCheck() {
     const tests = [];
     const createdIds = [];
@@ -646,6 +664,12 @@ export class HealthCheckService {
       }
       tests.push(verifyTest);
     }
+
+    // WEBSOCKET REAL-TIME TESTS
+    tests.push(await this.runWebSocketConnectionTest());
+    tests.push(await this.runWebSocketEventTest());
+    tests.push(await this.runWebSocketWidgetUpdateTest('small'));
+    tests.push(await this.runWebSocketWidgetUpdateTest('large'));
 
     return tests;
   }
