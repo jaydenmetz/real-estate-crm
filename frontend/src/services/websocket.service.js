@@ -190,6 +190,14 @@ class WebSocketService {
     };
   }
 
+  once(event, callback) {
+    const wrapper = (data) => {
+      callback(data);
+      this.off(event, wrapper);
+    };
+    return this.on(event, wrapper);
+  }
+
   off(event, callback) {
     const eventListeners = this.listeners.get(event);
     if (eventListeners) {

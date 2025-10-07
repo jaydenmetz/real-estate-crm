@@ -978,63 +978,93 @@ export class HealthCheckService {
           });
         }, 5000);
 
+        // Get token for request display
+        const token = localStorage.getItem('crm_auth_token') ||
+                     localStorage.getItem('authToken') ||
+                     localStorage.getItem('token');
+        const wsUrl = process.env.REACT_APP_WS_URL || 'wss://api.jaydenmetz.com';
+
         // Check if already connected
         if (websocketService.socket?.connected) {
+          clearTimeout(timeout);
+
+          // Listen for connection event to get user/team/broker details
+          const connectionListener = (data) => {
+            clearTimeout(timeout);
+            resolve({
+              name: 'WebSocket Connection',
+              category: 'REALTIME',
+              status: 'success',
+              message: 'WebSocket already connected',
+              responseTime: Date.now() - startTime,
+              request: `io('${wsUrl}', {\n  auth: { token: '${token ? token.substring(0, 20) + '...' : 'none'}' },\n  transports: ['websocket', 'polling']\n})`,
+              response: {
+                status: 'connected',
+                socketId: websocketService.socket.id,
+                transport: websocketService.socket.io.engine.transport.name,
+                userId: data.userId || 'unknown',
+                teamId: data.teamId || 'none',
+                brokerId: data.brokerId || 'none',
+                roomsJoined: [
+                  data.brokerId ? `broker-${data.brokerId}` : null,
+                  data.teamId ? `team-${data.teamId}` : null,
+                  data.userId ? `user-${data.userId}` : null
+                ].filter(Boolean)
+              }
+            });
+          };
+
+          // Request connection status or use existing data
+          websocketService.once('connection', connectionListener);
+
+          // Fallback if no connection event fires (already connected scenario)
+          setTimeout(() => {
+            resolve({
+              name: 'WebSocket Connection',
+              category: 'REALTIME',
+              status: 'success',
+              message: 'WebSocket already connected',
+              responseTime: Date.now() - startTime,
+              request: `io('${wsUrl}', {\n  auth: { token: '${token ? token.substring(0, 20) + '...' : 'none'}' },\n  transports: ['websocket', 'polling']\n})`,
+              response: {
+                status: 'connected',
+                socketId: websocketService.socket.id,
+                transport: websocketService.socket.io.engine.transport.name,
+                connected: true
+              }
+            });
+          }, 500);
+          return;
+        }
+
+        // Listen for connection event BEFORE attempting connection
+        websocketService.once('connection', (data) => {
           clearTimeout(timeout);
           resolve({
             name: 'WebSocket Connection',
             category: 'REALTIME',
             status: 'success',
-            message: 'WebSocket already connected',
+            message: `Connected via ${websocketService.socket?.io?.engine?.transport?.name || 'websocket'}`,
             responseTime: Date.now() - startTime,
+            request: `io('${wsUrl}', {\n  auth: { token: '${token ? token.substring(0, 20) + '...' : 'none'}' },\n  transports: ['websocket', 'polling']\n})`,
             response: {
-              connected: true,
-              socketId: websocketService.socket.id,
-              transport: websocketService.socket.io.engine.transport.name
+              status: data.status || 'connected',
+              socketId: websocketService.socket?.id || 'unknown',
+              transport: websocketService.socket?.io?.engine?.transport?.name || 'websocket',
+              userId: data.userId || 'unknown',
+              teamId: data.teamId || 'none',
+              brokerId: data.brokerId || 'none',
+              roomsJoined: [
+                data.brokerId ? `broker-${data.brokerId}` : null,
+                data.teamId ? `team-${data.teamId}` : null,
+                data.userId ? `user-${data.userId}` : null
+              ].filter(Boolean)
             }
           });
-          return;
-        }
+        });
 
         // Attempt connection
         websocketService.connect()
-          .then(() => {
-            clearTimeout(timeout);
-
-            // Wait for connection event
-            const checkConnection = setInterval(() => {
-              if (websocketService.socket?.connected) {
-                clearInterval(checkConnection);
-                resolve({
-                  name: 'WebSocket Connection',
-                  category: 'REALTIME',
-                  status: 'success',
-                  message: `Connected via ${websocketService.socket.io.engine.transport.name}`,
-                  responseTime: Date.now() - startTime,
-                  response: {
-                    connected: true,
-                    socketId: websocketService.socket.id,
-                    transport: websocketService.socket.io.engine.transport.name
-                  }
-                });
-              }
-            }, 100);
-
-            // Give it 3 seconds to connect after promise resolves
-            setTimeout(() => {
-              clearInterval(checkConnection);
-              if (!websocketService.socket?.connected) {
-                resolve({
-                  name: 'WebSocket Connection',
-                  category: 'REALTIME',
-                  status: 'failed',
-                  message: 'Connection established but not ready',
-                  responseTime: Date.now() - startTime,
-                  error: 'Socket not connected'
-                });
-              }
-            }, 3000);
-          })
           .catch((error) => {
             clearTimeout(timeout);
             resolve({
@@ -1043,6 +1073,7 @@ export class HealthCheckService {
               status: 'failed',
               message: error.message || 'Failed to connect',
               responseTime: Date.now() - startTime,
+              request: `io('${wsUrl}', {\n  auth: { token: '${token ? token.substring(0, 20) + '...' : 'none'}' },\n  transports: ['websocket', 'polling']\n})`,
               error: error.message
             });
           });
@@ -1093,7 +1124,8 @@ export class HealthCheckService {
             status: 'failed',
             message: 'No data:update event received within 3s',
             responseTime: 3000,
-            error: 'Event timeout'
+            error: 'Event timeout',
+            request: `// Listening for event:\nsocket.on('data:update', (data) => {\n  console.log('Event received:', data);\n});`
           });
         }, 3000);
 
@@ -1101,17 +1133,23 @@ export class HealthCheckService {
         let unsubscribe = websocketService.on('data:update', (data) => {
           clearTimeout(timeout);
           if (unsubscribe) unsubscribe();
+
+          const receivedAt = new Date().toISOString();
           resolve({
             name: 'WebSocket Events',
             category: 'REALTIME',
             status: 'success',
             message: `Received ${data.entityType || 'unknown'} ${data.action || 'update'} event`,
             responseTime: Date.now() - startTime,
+            request: `// Listening for event:\nsocket.on('data:update', (data) => {\n  console.log('Event received:', data);\n});`,
             response: {
+              receivedAt: receivedAt,
               eventType: 'data:update',
               entityType: data.entityType,
+              entityId: data.entityId,
               action: data.action,
-              hasData: !!data.data
+              data: data.data,
+              fullPayload: data
             }
           });
         });
@@ -1268,6 +1306,8 @@ export class HealthCheckService {
             );
 
             cleanup();
+
+            const receivedAt = new Date().toISOString();
             resolve({
               name: testName,
               category: 'REALTIME',
@@ -1276,11 +1316,20 @@ export class HealthCheckService {
                 ? `Widget update received with all ${viewMode} view fields (${Date.now() - startTime}ms)`
                 : `Widget update received but missing required ${viewMode} view fields`,
               responseTime: Date.now() - startTime,
+              request: `// Listening for widget update:\nsocket.on('data:update', (data) => {\n  if (data.entityType === 'escrow' && data.action === 'updated') {\n    // Update widget display\n  }\n});`,
               response: {
+                receivedAt: receivedAt,
                 updateReceived: true,
                 hasRequiredFields,
-                fieldsPresent: data.data ? Object.keys(data.data).length : 0,
-                requiredFieldCount: requiredFields[viewMode].length
+                eventType: 'data:update',
+                entityType: data.entityType,
+                entityId: data.entityId,
+                action: data.action,
+                viewMode: viewMode,
+                requiredFields: requiredFields[viewMode],
+                fieldsPresent: data.data ? Object.keys(data.data) : [],
+                data: data.data,
+                fullPayload: data
               }
             });
           }
