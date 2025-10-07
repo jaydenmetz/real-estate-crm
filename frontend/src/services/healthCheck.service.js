@@ -163,6 +163,14 @@ export class HealthCheckService {
     const wsEventTest = await this.runWebSocketEventTest();
     tests.push(wsEventTest);
 
+    // WEBSOCKET WIDGET UPDATE TESTS
+    // Test that widgets update in real-time when data changes
+    const wsWidgetSmallTest = await this.runWebSocketWidgetUpdateTest('small');
+    tests.push(wsWidgetSmallTest);
+
+    const wsWidgetLargeTest = await this.runWebSocketWidgetUpdateTest('large');
+    tests.push(wsWidgetLargeTest);
+
     return tests;
   }
 
@@ -1158,6 +1166,183 @@ export class HealthCheckService {
         category: 'Real-Time',
         status: 'failed',
         message: error.message || 'Failed to test WebSocket events',
+        responseTime: Date.now() - startTime,
+        error: error.message
+      };
+    }
+  }
+
+  // Test widget real-time updates via WebSocket
+  async runWebSocketWidgetUpdateTest(viewMode) {
+    const startTime = Date.now();
+    const testName = viewMode === 'small' ? 'Widget Updates - Small View' : 'Widget Updates - Large View';
+
+    try {
+      // Dynamically import WebSocket service
+      const { default: websocketService } = await import('./websocket.service');
+
+      // Check if connected first
+      if (!websocketService.socket?.connected) {
+        return {
+          name: testName,
+          category: 'Real-Time',
+          status: 'failed',
+          message: 'WebSocket not connected - cannot test widget updates',
+          responseTime: Date.now() - startTime,
+          error: 'Socket not connected'
+        };
+      }
+
+      return new Promise((resolve) => {
+        let testEscrowId = null;
+        let initialData = null;
+        let updateReceived = false;
+
+        const timeout = setTimeout(() => {
+          cleanup();
+          resolve({
+            name: testName,
+            category: 'Real-Time',
+            status: 'failed',
+            message: 'Widget update not received within 15s',
+            responseTime: 15000,
+            error: 'Update timeout'
+          });
+        }, 15000);
+
+        const cleanup = () => {
+          clearTimeout(timeout);
+          if (unsubscribe) unsubscribe();
+          // Clean up test escrow
+          if (testEscrowId) {
+            fetch(`${this.API_URL}/escrows/${testEscrowId}`, {
+              method: 'DELETE',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(this.authType === 'apikey'
+                  ? { 'X-API-Key': this.authValue }
+                  : { 'Authorization': `Bearer ${localStorage.getItem('crm_auth_token')}` })
+              }
+            }).catch(console.error);
+          }
+        };
+
+        // Listen for data:update event
+        const unsubscribe = websocketService.on('data:update', (data) => {
+          if (data.entityType === 'escrow' && data.entityId === testEscrowId && data.action === 'updated') {
+            updateReceived = true;
+
+            // Validate widget fields based on view mode
+            const requiredFields = {
+              small: ['id', 'propertyAddress', 'purchasePrice', 'myCommission', 'checklistProgress', 'escrowStatus'],
+              large: ['id', 'propertyAddress', 'purchasePrice', 'myCommission', 'checklistProgress', 'escrowStatus', 'scheduledCoeDate', 'acceptanceDate']
+            };
+
+            const hasRequiredFields = requiredFields[viewMode].every(field =>
+              data.data && (data.data[field] !== undefined || data.data[field] !== null)
+            );
+
+            cleanup();
+            resolve({
+              name: testName,
+              category: 'Real-Time',
+              status: hasRequiredFields ? 'success' : 'failed',
+              message: hasRequiredFields
+                ? `Widget update received with all ${viewMode} view fields (${Date.now() - startTime}ms)`
+                : `Widget update received but missing required ${viewMode} view fields`,
+              responseTime: Date.now() - startTime,
+              response: {
+                updateReceived: true,
+                hasRequiredFields,
+                fieldsPresent: data.data ? Object.keys(data.data).length : 0,
+                requiredFieldCount: requiredFields[viewMode].length
+              }
+            });
+          }
+        });
+
+        // Step 1: Create test escrow
+        const testData = {
+          propertyAddress: `WS-WIDGET-TEST-${Date.now()}`,
+          purchasePrice: 500000,
+          myCommission: 15000
+        };
+
+        fetch(`${this.API_URL}/escrows`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(this.authType === 'apikey'
+              ? { 'X-API-Key': this.authValue }
+              : { 'Authorization': `Bearer ${localStorage.getItem('crm_auth_token')}` })
+          },
+          body: JSON.stringify(testData)
+        })
+          .then(async (response) => {
+            const result = await response.json();
+            if (!result?.data?.id) {
+              cleanup();
+              resolve({
+                name: testName,
+                category: 'Real-Time',
+                status: 'failed',
+                message: 'Failed to create test escrow',
+                responseTime: Date.now() - startTime,
+                error: 'Escrow creation failed'
+              });
+              return;
+            }
+
+            testEscrowId = result.data.id;
+            initialData = result.data;
+
+            // Step 2: Update the escrow to trigger WebSocket event
+            setTimeout(() => {
+              fetch(`${this.API_URL}/escrows/${testEscrowId}`, {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json',
+                  ...(this.authType === 'apikey'
+                    ? { 'X-API-Key': this.authValue }
+                    : { 'Authorization': `Bearer ${localStorage.getItem('crm_auth_token')}` })
+                },
+                body: JSON.stringify({
+                  purchasePrice: 550000,
+                  myCommission: 16500
+                })
+              }).catch((error) => {
+                if (!updateReceived) {
+                  cleanup();
+                  resolve({
+                    name: testName,
+                    category: 'Real-Time',
+                    status: 'failed',
+                    message: `Failed to update test escrow: ${error.message}`,
+                    responseTime: Date.now() - startTime,
+                    error: error.message
+                  });
+                }
+              });
+            }, 500);
+          })
+          .catch((error) => {
+            cleanup();
+            resolve({
+              name: testName,
+              category: 'Real-Time',
+              status: 'failed',
+              message: `Failed to create test escrow: ${error.message}`,
+              responseTime: Date.now() - startTime,
+              error: error.message
+            });
+          });
+      });
+    } catch (error) {
+      return {
+        name: testName,
+        category: 'Real-Time',
+        status: 'failed',
+        message: error.message || 'Failed to test widget updates',
         responseTime: Date.now() - startTime,
         error: error.message
       };
