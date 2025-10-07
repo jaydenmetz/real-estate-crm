@@ -24,12 +24,13 @@ import {
   RadioButtonUnchecked,
   ChevronLeft,
   ChevronRight,
+  Close,
 } from '@mui/icons-material';
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { differenceInDays, isValid, format } from 'date-fns';
 
-const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', animationDuration = 1, animationIntensity = 1, index = 0 }) => {
+const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', animationDuration = 1, animationIntensity = 1, index = 0, onArchive, onDelete, onRestore, isArchived = false }) => {
   const navigate = useNavigate();
   const theme = useTheme();
   const [showCommission, setShowCommission] = React.useState(false);
@@ -449,6 +450,40 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                     '& .MuiChip-label': { px: 1.5, py: 0.5 },
                   }}
                 />
+
+                {/* Delete/Archive Button (Red X) */}
+                {(onArchive || onDelete || onRestore) && (
+                  <IconButton
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (isArchived && onDelete) {
+                        onDelete(escrow.id);
+                      } else if (isArchived && onRestore) {
+                        onRestore(escrow.id);
+                      } else if (onArchive) {
+                        onArchive(escrow.id);
+                      }
+                    }}
+                    sx={{
+                      position: 'absolute',
+                      top: 8,
+                      left: 8,
+                      zIndex: 3,
+                      backgroundColor: 'rgba(239, 68, 68, 0.9)',
+                      color: 'white',
+                      width: 32,
+                      height: 32,
+                      '&:hover': {
+                        backgroundColor: 'rgba(220, 38, 38, 1)',
+                        transform: 'scale(1.1)',
+                      },
+                      transition: 'all 0.2s',
+                      backdropFilter: 'blur(10px)',
+                    }}
+                  >
+                    <Close sx={{ fontSize: 18 }} />
+                  </IconButton>
+                )}
 
                 {/* Progress Bar */}
                 <Box

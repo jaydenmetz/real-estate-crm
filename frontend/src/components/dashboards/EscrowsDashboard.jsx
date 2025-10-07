@@ -994,14 +994,28 @@ const EscrowsDashboard = () => {
             <Tab label="Active Escrows" value="active" />
             <Tab label="Closed Escrows" value="closed" />
             <Tab label="Cancelled Escrows" value="cancelled" />
-            <Tab
-              label={`Archived Escrows${archivedCount > 0 ? ` (${archivedCount})` : ''}`}
-              value="archived"
-              sx={{
-                color: selectedStatus === 'archived' ? 'warning.main' : 'text.secondary'
-              }}
-            />
           </Tabs>
+
+          {/* Separate Trash Icon Button */}
+          <IconButton
+            onClick={() => setSelectedStatus('archived')}
+            sx={{
+              ml: 1,
+              mr: 2,
+              backgroundColor: selectedStatus === 'archived' ? 'warning.main' : 'background.paper',
+              color: selectedStatus === 'archived' ? 'white' : 'text.secondary',
+              border: selectedStatus === 'archived' ? 'none' : '1px solid',
+              borderColor: 'divider',
+              '&:hover': {
+                backgroundColor: selectedStatus === 'archived' ? 'warning.dark' : alpha('#000', 0.04),
+              },
+              transition: 'all 0.2s',
+            }}
+          >
+            <Badge badgeContent={archivedCount} color="error" max={99}>
+              <DeleteIcon />
+            </Badge>
+          </IconButton>
 
           <Stack direction="row" spacing={2} alignItems="center">
             {/* Sort Selector */}
@@ -1556,6 +1570,7 @@ const EscrowsDashboard = () => {
                   animationDuration={animationDuration}
                   animationIntensity={animationIntensity}
                   index={index}
+                  onArchive={handleArchive}
                 />
               ));
             }
