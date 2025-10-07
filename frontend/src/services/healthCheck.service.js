@@ -1086,7 +1086,7 @@ export class HealthCheckService {
 
       return new Promise((resolve) => {
         const timeout = setTimeout(() => {
-          unsubscribe();
+          if (unsubscribe) unsubscribe();
           resolve({
             name: 'WebSocket Events',
             category: 'Real-Time',
@@ -1098,9 +1098,9 @@ export class HealthCheckService {
         }, 3000);
 
         // Listen for any data:update event
-        const unsubscribe = websocketService.on('data:update', (data) => {
+        let unsubscribe = websocketService.on('data:update', (data) => {
           clearTimeout(timeout);
-          unsubscribe();
+          if (unsubscribe) unsubscribe();
           resolve({
             name: 'WebSocket Events',
             category: 'Real-Time',
@@ -1116,10 +1116,12 @@ export class HealthCheckService {
           });
         });
 
-        // Trigger a test event by creating an escrow
-        const testData = { propertyAddress: `WS-TEST-${Date.now()}` };
+        // Wait 100ms to ensure listener is registered before triggering event
+        setTimeout(() => {
+          // Trigger a test event by creating an escrow
+          const testData = { propertyAddress: `WS-TEST-${Date.now()}` };
 
-        fetch(`${this.API_URL}/escrows`, {
+          fetch(`${this.API_URL}/escrows`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1149,7 +1151,7 @@ export class HealthCheckService {
           })
           .catch((error) => {
             clearTimeout(timeout);
-            unsubscribe();
+            if (unsubscribe) unsubscribe();
             resolve({
               name: 'WebSocket Events',
               category: 'Real-Time',
@@ -1159,6 +1161,7 @@ export class HealthCheckService {
               error: error.message
             });
           });
+        }, 100); // Wait 100ms before triggering
       });
     } catch (error) {
       return {
@@ -1261,14 +1264,16 @@ export class HealthCheckService {
           }
         });
 
-        // Step 1: Create test escrow
-        const testData = {
-          propertyAddress: `WS-WIDGET-TEST-${Date.now()}`,
-          purchasePrice: 500000,
-          myCommission: 15000
-        };
+        // Wait 100ms to ensure listener is registered before triggering events
+        setTimeout(() => {
+          // Step 1: Create test escrow
+          const testData = {
+            propertyAddress: `WS-WIDGET-TEST-${Date.now()}`,
+            purchasePrice: 500000,
+            myCommission: 15000
+          };
 
-        fetch(`${this.API_URL}/escrows`, {
+          fetch(`${this.API_URL}/escrows`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -1336,6 +1341,7 @@ export class HealthCheckService {
               error: error.message
             });
           });
+        }, 100); // Wait 100ms before triggering
       });
     } catch (error) {
       return {
