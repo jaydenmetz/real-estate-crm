@@ -1159,13 +1159,16 @@ export class HealthCheckService {
           // Trigger a test event by creating an escrow
           const testData = { propertyAddress: `WS-TEST-${Date.now()}` };
 
+          // Get fresh token for JWT auth
+          const authHeaders = this.authType === 'apikey'
+            ? { 'X-API-Key': this.authValue }
+            : { 'Authorization': `Bearer ${localStorage.getItem('crm_auth_token') || localStorage.getItem('authToken') || localStorage.getItem('token')}` };
+
           fetch(`${this.API_URL}/escrows`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            ...(this.authType === 'apikey'
-              ? { 'X-API-Key': this.authValue }
-              : { 'Authorization': `Bearer ${this.authValue}` })
+            ...authHeaders
           },
           body: JSON.stringify(testData)
         })
@@ -1191,13 +1194,15 @@ export class HealthCheckService {
             // Clean up test escrow
             if (result?.data?.id) {
               setTimeout(() => {
+                const deleteAuthHeaders = this.authType === 'apikey'
+                  ? { 'X-API-Key': this.authValue }
+                  : { 'Authorization': `Bearer ${localStorage.getItem('crm_auth_token') || localStorage.getItem('authToken') || localStorage.getItem('token')}` };
+
                 fetch(`${this.API_URL}/escrows/${result.data.id}`, {
                   method: 'DELETE',
                   headers: {
                     'Content-Type': 'application/json',
-                    ...(this.authType === 'apikey'
-                      ? { 'X-API-Key': this.authValue }
-                      : { 'Authorization': `Bearer ${this.authValue}` })
+                    ...deleteAuthHeaders
                   }
                 }).catch(console.error);
               }, 1000);
@@ -1278,13 +1283,15 @@ export class HealthCheckService {
           if (unsubscribe) unsubscribe();
           // Clean up test escrow
           if (testEscrowId) {
+            const deleteAuthHeaders = this.authType === 'apikey'
+              ? { 'X-API-Key': this.authValue }
+              : { 'Authorization': `Bearer ${localStorage.getItem('crm_auth_token') || localStorage.getItem('authToken') || localStorage.getItem('token')}` };
+
             fetch(`${this.API_URL}/escrows/${testEscrowId}`, {
               method: 'DELETE',
               headers: {
                 'Content-Type': 'application/json',
-                ...(this.authType === 'apikey'
-                  ? { 'X-API-Key': this.authValue }
-                  : { 'Authorization': `Bearer ${this.authValue}` })
+                ...deleteAuthHeaders
               }
             }).catch(console.error);
           }
@@ -1344,13 +1351,16 @@ export class HealthCheckService {
             myCommission: 15000
           };
 
+          // Get fresh token for JWT auth
+          const createAuthHeaders = this.authType === 'apikey'
+            ? { 'X-API-Key': this.authValue }
+            : { 'Authorization': `Bearer ${localStorage.getItem('crm_auth_token') || localStorage.getItem('authToken') || localStorage.getItem('token')}` };
+
           fetch(`${this.API_URL}/escrows`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            ...(this.authType === 'apikey'
-              ? { 'X-API-Key': this.authValue }
-              : { 'Authorization': `Bearer ${this.authValue}` })
+            ...createAuthHeaders
           },
           body: JSON.stringify(testData)
         })
@@ -1391,13 +1401,15 @@ export class HealthCheckService {
 
             // Step 2: Update the escrow to trigger WebSocket event
             setTimeout(() => {
+              const updateAuthHeaders = this.authType === 'apikey'
+                ? { 'X-API-Key': this.authValue }
+                : { 'Authorization': `Bearer ${localStorage.getItem('crm_auth_token') || localStorage.getItem('authToken') || localStorage.getItem('token')}` };
+
               fetch(`${this.API_URL}/escrows/${testEscrowId}`, {
                 method: 'PUT',
                 headers: {
                   'Content-Type': 'application/json',
-                  ...(this.authType === 'apikey'
-                    ? { 'X-API-Key': this.authValue }
-                    : { 'Authorization': `Bearer ${this.authValue}` })
+                  ...updateAuthHeaders
                 },
                 body: JSON.stringify({
                   purchasePrice: 550000,
