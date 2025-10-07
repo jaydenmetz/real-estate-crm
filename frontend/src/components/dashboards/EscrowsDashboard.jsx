@@ -1052,6 +1052,22 @@ const EscrowsDashboard = () => {
               </ToggleButton>
             </ToggleButtonGroup>
 
+            {/* Calendar Icon */}
+            <IconButton
+              onClick={handleCalendarOpen}
+              size="small"
+              sx={{
+                width: 40,
+                height: 40,
+                backgroundColor: alpha('#000', 0.06),
+                '&:hover': {
+                  backgroundColor: alpha('#000', 0.1),
+                },
+              }}
+            >
+              <CalendarTodayIcon fontSize="small" />
+            </IconButton>
+
             {/* Archive/Trash Icon - moved from left side */}
             <IconButton
               size="small"
