@@ -244,11 +244,13 @@ export const TestResult = ({ test }) => {
             <Typography variant="subtitle1" fontWeight="bold">
               {test.name}
             </Typography>
-            <Chip
-              label={test.method}
-              size="small"
-              color={getMethodColor(test.method)}
-            />
+            {test.method && (
+              <Chip
+                label={test.method}
+                size="small"
+                color={getMethodColor(test.method)}
+              />
+            )}
             <Chip
               label={test.category}
               size="small"
@@ -280,27 +282,48 @@ export const TestResult = ({ test }) => {
         <Box
           sx={{ p: 2, backgroundColor: 'rgba(0,0,0,0.02)' }}
           onClick={(e) => e.stopPropagation()}>
-          <Typography variant="subtitle2" gutterBottom fontWeight="bold">
-            Endpoint:
-          </Typography>
-          <Typography variant="body2" component="code" sx={{ fontFamily: 'monospace' }}>
-            {test.endpoint}
-          </Typography>
 
-          {test.curl && (
+          {/* WebSocket tests show request code instead of endpoint/curl */}
+          {test.category === 'REALTIME' && test.request ? (
             <>
-              <Typography variant="subtitle2" sx={{ mt: 2, mb: 1, fontWeight: 'bold' }}>
-                cURL Command:
+              <Typography variant="subtitle2" sx={{ mb: 1, fontWeight: 'bold' }}>
+                {test.name.includes('Connection') ? 'Connection Code:' : 'Event Listener:'}
               </Typography>
               <CodeBlock>
                 <CopyButton size="small" onClick={(e) => {
                   e.stopPropagation();
-                  copyToClipboard(formatCurlCommand(test.curl));
+                  copyToClipboard(test.request);
                 }}>
                   <CopyIcon fontSize="small" />
                 </CopyButton>
-                <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{formatCurlCommand(test.curl)}</pre>
+                <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{test.request}</pre>
               </CodeBlock>
+            </>
+          ) : (
+            <>
+              <Typography variant="subtitle2" gutterBottom fontWeight="bold">
+                Endpoint:
+              </Typography>
+              <Typography variant="body2" component="code" sx={{ fontFamily: 'monospace' }}>
+                {test.endpoint}
+              </Typography>
+
+              {test.curl && (
+                <>
+                  <Typography variant="subtitle2" sx={{ mt: 2, mb: 1, fontWeight: 'bold' }}>
+                    cURL Command:
+                  </Typography>
+                  <CodeBlock>
+                    <CopyButton size="small" onClick={(e) => {
+                      e.stopPropagation();
+                      copyToClipboard(formatCurlCommand(test.curl));
+                    }}>
+                      <CopyIcon fontSize="small" />
+                    </CopyButton>
+                    <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{formatCurlCommand(test.curl)}</pre>
+                  </CodeBlock>
+                </>
+              )}
             </>
           )}
 
