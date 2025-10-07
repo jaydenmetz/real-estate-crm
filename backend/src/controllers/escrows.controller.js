@@ -326,8 +326,8 @@ class EscrowController {
 
       // Get escrow details
       const escrowQuery = `
-        SELECT 
-          e.*,
+        SELECT
+          e.*
         FROM escrows e
         WHERE ${whereClause}
       `;
@@ -1111,8 +1111,8 @@ class EscrowController {
 
       // Get escrow details
       const escrowQuery = `
-        SELECT 
-          e.*,
+        SELECT
+          e.*
         FROM escrows e
         WHERE ${whereClause}
       `;
