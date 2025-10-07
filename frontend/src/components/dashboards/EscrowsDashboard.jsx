@@ -44,6 +44,10 @@ import {
   ListItemIcon,
   Badge,
   Slider,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
@@ -298,6 +302,7 @@ const EscrowsDashboard = () => {
     const saved = localStorage.getItem('escrowsViewMode');
     return saved || 'small';
   });
+  const [sortBy, setSortBy] = useState('closing_date'); // Sort field
   const [animationType, setAnimationType] = useState('spring'); // 'spring', 'stagger', 'parallax', 'blur', 'magnetic'
   const [animationDuration, setAnimationDuration] = useState(1); // 0.5 to 5 seconds
   const [animationIntensity, setAnimationIntensity] = useState(1); // 0.5 to 2 (multiplier for overshoot/bounce)
@@ -1097,6 +1102,22 @@ const EscrowsDashboard = () => {
           </Tabs>
 
           <Stack direction="row" spacing={2} alignItems="center">
+            {/* Sort Selector */}
+            <FormControl size="small" sx={{ minWidth: 180 }}>
+              <InputLabel>Sort By</InputLabel>
+              <Select
+                value={sortBy}
+                label="Sort By"
+                onChange={(e) => setSortBy(e.target.value)}
+              >
+                <MenuItem value="closing_date">Closing Date</MenuItem>
+                <MenuItem value="created_at">Date Created</MenuItem>
+                <MenuItem value="sale_price">Sale Price</MenuItem>
+                <MenuItem value="property_address">Address</MenuItem>
+                <MenuItem value="escrow_status">Status</MenuItem>
+              </Select>
+            </FormControl>
+
             {/* View Mode Selector */}
             <ToggleButtonGroup
               value={viewMode}
@@ -1568,8 +1589,38 @@ const EscrowsDashboard = () => {
                   return true;
               }
             });
-            
-            if (!filteredEscrows || filteredEscrows.length === 0) {
+
+            // Sort escrows based on sortBy state
+            const sortedEscrows = [...filteredEscrows].sort((a, b) => {
+              let aVal, bVal;
+
+              switch(sortBy) {
+                case 'closing_date':
+                  aVal = new Date(a.closingDate || a.closing_date || 0);
+                  bVal = new Date(b.closingDate || b.closing_date || 0);
+                  return bVal - aVal; // Newest first
+                case 'created_at':
+                  aVal = new Date(a.createdAt || a.created_at || 0);
+                  bVal = new Date(b.createdAt || b.created_at || 0);
+                  return bVal - aVal; // Newest first
+                case 'sale_price':
+                  aVal = Number(a.purchasePrice || a.sale_price || 0);
+                  bVal = Number(b.purchasePrice || b.sale_price || 0);
+                  return bVal - aVal; // Highest first
+                case 'property_address':
+                  aVal = (a.propertyAddress || a.property_address || '').toLowerCase();
+                  bVal = (b.propertyAddress || b.property_address || '').toLowerCase();
+                  return aVal.localeCompare(bVal); // A-Z
+                case 'escrow_status':
+                  aVal = (a.escrowStatus || a.escrow_status || '').toLowerCase();
+                  bVal = (b.escrowStatus || b.escrow_status || '').toLowerCase();
+                  return aVal.localeCompare(bVal); // A-Z
+                default:
+                  return 0;
+              }
+            });
+
+            if (!sortedEscrows || sortedEscrows.length === 0) {
               return (
             <Paper
               sx={{
@@ -1594,7 +1645,7 @@ const EscrowsDashboard = () => {
             </Paper>
               );
             } else {
-              return filteredEscrows.map((escrow, index) => (
+              return sortedEscrows.map((escrow, index) => (
                 <EscrowCard
                   key={escrow.id}
                   escrow={escrow}
