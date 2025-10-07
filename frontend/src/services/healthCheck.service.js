@@ -1091,11 +1091,11 @@ export class HealthCheckService {
             name: 'WebSocket Events',
             category: 'Real-Time',
             status: 'failed',
-            message: 'No data:update event received within 10s',
-            responseTime: 10000,
+            message: 'No data:update event received within 3s',
+            responseTime: 3000,
             error: 'Event timeout'
           });
-        }, 10000);
+        }, 3000);
 
         // Listen for any data:update event
         const unsubscribe = websocketService.on('data:update', (data) => {
@@ -1204,11 +1204,11 @@ export class HealthCheckService {
             name: testName,
             category: 'Real-Time',
             status: 'failed',
-            message: 'Widget update not received within 15s',
-            responseTime: 15000,
+            message: 'Widget update not received within 5s',
+            responseTime: 5000,
             error: 'Update timeout'
           });
-        }, 15000);
+        }, 5000);
 
         const cleanup = () => {
           clearTimeout(timeout);
