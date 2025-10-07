@@ -1140,6 +1140,22 @@ export class HealthCheckService {
           .then(async (response) => {
             const result = await response.json();
 
+            // Check for HTTP errors
+            if (!response.ok) {
+              clearTimeout(timeout);
+              if (unsubscribe) unsubscribe();
+              resolve({
+                name: 'WebSocket Events',
+                category: 'Real-Time',
+                status: 'failed',
+                message: `Test escrow creation failed: HTTP ${response.status}`,
+                responseTime: Date.now() - startTime,
+                error: `HTTP ${response.status}: ${result.error?.message || result.message || 'Unknown error'}`,
+                details: result
+              });
+              return;
+            }
+
             // Clean up test escrow
             if (result?.data?.id) {
               setTimeout(() => {
@@ -1297,15 +1313,32 @@ export class HealthCheckService {
         })
           .then(async (response) => {
             const result = await response.json();
+
+            // Check HTTP status
+            if (!response.ok) {
+              cleanup();
+              resolve({
+                name: testName,
+                category: 'Real-Time',
+                status: 'failed',
+                message: `Escrow creation failed: HTTP ${response.status}`,
+                responseTime: Date.now() - startTime,
+                error: `HTTP ${response.status}: ${result.error?.message || result.message || 'Unknown error'}`,
+                details: result
+              });
+              return;
+            }
+
             if (!result?.data?.id) {
               cleanup();
               resolve({
                 name: testName,
                 category: 'Real-Time',
                 status: 'failed',
-                message: 'Failed to create test escrow',
+                message: 'Failed to create test escrow - no ID returned',
                 responseTime: Date.now() - startTime,
-                error: 'Escrow creation failed'
+                error: 'Escrow creation failed: No ID in response',
+                details: result
               });
               return;
             }
