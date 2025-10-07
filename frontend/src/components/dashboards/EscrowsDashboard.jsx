@@ -995,25 +995,6 @@ const EscrowsDashboard = () => {
           </Tabs>
         </Paper>
 
-        {/* Trash Icon - Separate with Circle Background */}
-        <IconButton
-          onClick={() => setSelectedStatus('archived')}
-          sx={{
-            width: 56,
-            height: 56,
-            backgroundColor: selectedStatus === 'archived' ? 'warning.main' : alpha('#000', 0.06),
-            color: selectedStatus === 'archived' ? 'white' : 'text.secondary',
-            '&:hover': {
-              backgroundColor: selectedStatus === 'archived' ? 'warning.dark' : alpha('#000', 0.1),
-            },
-            transition: 'all 0.2s',
-          }}
-        >
-          <Badge badgeContent={archivedCount} color="error" max={99}>
-            <DeleteIcon />
-          </Badge>
-        </IconButton>
-
         {/* Right-side Controls */}
         <Box sx={{ ml: 'auto', display: 'flex', gap: 2, alignItems: 'center' }}>
             {/* Sort Selector */}
@@ -1071,18 +1052,24 @@ const EscrowsDashboard = () => {
               </ToggleButton>
             </ToggleButtonGroup>
 
+            {/* Archive/Trash Icon - moved from left side */}
             <IconButton
               size="small"
-              onClick={() => setShowCalendar(!showCalendar)}
+              onClick={() => setSelectedStatus('archived')}
               sx={{
-                color: showCalendar ? 'primary.main' : 'text.secondary',
-                backgroundColor: showCalendar ? (theme) => alpha(theme.palette.primary.main, 0.1) : 'transparent',
+                width: 40,
+                height: 40,
+                backgroundColor: selectedStatus === 'archived' ? 'warning.main' : alpha('#000', 0.06),
+                color: selectedStatus === 'archived' ? 'white' : 'text.secondary',
                 '&:hover': {
-                  backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.15),
+                  backgroundColor: selectedStatus === 'archived' ? 'warning.dark' : alpha('#000', 0.1),
                 },
+                transition: 'all 0.2s',
               }}
             >
-              <CalendarToday />
+              <Badge badgeContent={archivedCount} color="error" max={99}>
+                <DeleteIcon />
+              </Badge>
             </IconButton>
           </Box>
       </Box>
