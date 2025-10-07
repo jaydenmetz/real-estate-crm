@@ -224,31 +224,31 @@ const LeadsDashboard = () => {
           <Button variant="outlined" size="large" startIcon={<Assessment />} sx={{ color: 'white', borderColor: 'rgba(255, 255, 255, 0.5)', '&:hover': { borderColor: 'white', backgroundColor: 'rgba(255, 255, 255, 0.1)' } }}>Lead Analytics</Button>
         </Box>
       </HeroSection>
-      <Box sx={{ mb: 4 }}>
-        <Paper elevation={0} sx={{ backgroundColor: 'background.paper', borderRadius: 2, boxShadow: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center', pr: 2 }}>
-          <Tabs value={selectedStatus} onChange={(e, v) => setSelectedStatus(v)} sx={{ flex: 1, '& .MuiTab-root': { textTransform: 'none', fontSize: '1rem', fontWeight: 500, minHeight: 56 }, '& .Mui-selected': { fontWeight: 700 } }}>
+      <Box sx={{ mb: 4, display: 'flex', gap: 2, alignItems: 'center' }}>
+        <Paper sx={{ display: 'inline-flex' }}>
+          <Tabs value={selectedStatus} onChange={(e, v) => setSelectedStatus(v)} sx={{ '& .MuiTab-root': { textTransform: 'none', fontSize: '1rem', fontWeight: 500, minHeight: 56 }, '& .Mui-selected': { fontWeight: 700 } }}>
             <Tab label="New Leads" value="new" />
             <Tab label="Contacted" value="contacted" />
             <Tab label="Qualified" value="qualified" />
             <Tab label="Converted" value="converted" />
           </Tabs>
-          <Stack direction="row" spacing={2} alignItems="center">
-            <FormControl size="small" sx={{ minWidth: 180 }}>
-              <InputLabel>Sort By</InputLabel>
-              <Select value={sortBy} label="Sort By" onChange={(e) => setSortBy(e.target.value)}>
-                <MenuItem value="created_at">Date Created</MenuItem>
-                <MenuItem value="last_contact">Last Contact</MenuItem>
-                <MenuItem value="lead_source">Source</MenuItem>
-                <MenuItem value="lead_score">Score</MenuItem>
-                <MenuItem value="lead_status">Status</MenuItem>
-              </Select>
-            </FormControl>
-            <ToggleButtonGroup value={viewMode} exclusive onChange={(e, v) => v && setViewMode(v)} size="small" sx={{ '& .MuiToggleButton-root': { px: 2, py: 0.5, textTransform: 'none', fontWeight: 500 } }}>
-              <ToggleButton value="small"><Box sx={{ display: 'flex', gap: 0.4 }}>{[...Array(4)].map((_, i) => <Box key={i} sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />)}</Box></ToggleButton>
-              <ToggleButton value="large"><Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} /></ToggleButton>
-            </ToggleButtonGroup>
-          </Stack>
         </Paper>
+        <Box sx={{ ml: 'auto', display: 'flex', gap: 2, alignItems: 'center' }}>
+          <FormControl size="small" sx={{ minWidth: 180 }}>
+            <InputLabel>Sort By</InputLabel>
+            <Select value={sortBy} label="Sort By" onChange={(e) => setSortBy(e.target.value)}>
+              <MenuItem value="created_at">Date Created</MenuItem>
+              <MenuItem value="last_contact">Last Contact</MenuItem>
+              <MenuItem value="lead_source">Source</MenuItem>
+              <MenuItem value="lead_score">Score</MenuItem>
+              <MenuItem value="lead_status">Status</MenuItem>
+            </Select>
+          </FormControl>
+          <ToggleButtonGroup value={viewMode} exclusive onChange={(e, v) => v && setViewMode(v)} size="small" sx={{ '& .MuiToggleButton-root': { px: 2, py: 0.5, textTransform: 'none', fontWeight: 500 } }}>
+            <ToggleButton value="small"><Box sx={{ display: 'flex', gap: 0.4 }}>{[...Array(4)].map((_, i) => <Box key={i} sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />)}</Box></ToggleButton>
+            <ToggleButton value="large"><Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} /></ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
       </Box>
       <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr', md: viewMode === 'small' ? 'repeat(2, 1fr)' : '1fr', lg: viewMode === 'small' ? 'repeat(4, 1fr)' : '1fr' }, gap: 3, width: '100%' }}>
         <AnimatePresence>

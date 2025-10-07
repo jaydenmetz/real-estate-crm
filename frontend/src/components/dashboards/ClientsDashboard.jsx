@@ -364,24 +364,12 @@ const ClientsDashboard = () => {
         </HeroSection>
 
       {/* Status Tabs with View Mode Toggle */}
-      <Box sx={{ mb: 4 }}>
-        <Paper
-          elevation={0}
-          sx={{
-            backgroundColor: 'background.paper',
-            borderRadius: 2,
-            boxShadow: 1,
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            pr: 2,
-          }}
-        >
+      <Box sx={{ mb: 4, display: 'flex', gap: 2, alignItems: 'center' }}>
+        <Paper sx={{ display: 'inline-flex' }}>
           <Tabs
             value={selectedStatus}
             onChange={(e, newValue) => setSelectedStatus(newValue)}
             sx={{
-              flex: 1,
               '& .MuiTab-root': {
                 textTransform: 'none',
                 fontSize: '1rem',
@@ -398,54 +386,54 @@ const ClientsDashboard = () => {
             <Tab label="Past Clients" value="past" />
             <Tab label="Inactive" value="inactive" />
           </Tabs>
-
-          <Stack direction="row" spacing={2} alignItems="center">
-            {/* Sort Selector */}
-            <FormControl size="small" sx={{ minWidth: 180 }}>
-              <InputLabel>Sort By</InputLabel>
-              <Select
-                value={sortBy}
-                label="Sort By"
-                onChange={(e) => setSortBy(e.target.value)}
-              >
-                <MenuItem value="created_at">Date Added</MenuItem>
-                <MenuItem value="last_contact">Last Contact</MenuItem>
-                <MenuItem value="name">Name</MenuItem>
-                <MenuItem value="total_value">Total Value</MenuItem>
-                <MenuItem value="client_status">Status</MenuItem>
-              </Select>
-            </FormControl>
-
-            {/* View Mode Selector */}
-            <ToggleButtonGroup
-              value={viewMode}
-              exclusive
-              onChange={(e, newView) => newView && setViewMode(newView)}
-              size="small"
-              aria-label="View mode selection"
-              sx={{
-                '& .MuiToggleButton-root': {
-                  px: 2,
-                  py: 0.5,
-                  textTransform: 'none',
-                  fontWeight: 500,
-                },
-              }}
-            >
-              <ToggleButton value="small" aria-label="Grid view" title="Grid view">
-                <Box sx={{ display: 'flex', gap: 0.4 }}>
-                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                </Box>
-              </ToggleButton>
-              <ToggleButton value="large" aria-label="Full width view" title="Full width view">
-                <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-              </ToggleButton>
-            </ToggleButtonGroup>
-          </Stack>
         </Paper>
+
+        <Box sx={{ ml: 'auto', display: 'flex', gap: 2, alignItems: 'center' }}>
+          {/* Sort Selector */}
+          <FormControl size="small" sx={{ minWidth: 180 }}>
+            <InputLabel>Sort By</InputLabel>
+            <Select
+              value={sortBy}
+              label="Sort By"
+              onChange={(e) => setSortBy(e.target.value)}
+            >
+              <MenuItem value="created_at">Date Added</MenuItem>
+              <MenuItem value="last_contact">Last Contact</MenuItem>
+              <MenuItem value="name">Name</MenuItem>
+              <MenuItem value="total_value">Total Value</MenuItem>
+              <MenuItem value="client_status">Status</MenuItem>
+            </Select>
+          </FormControl>
+
+          {/* View Mode Selector */}
+          <ToggleButtonGroup
+            value={viewMode}
+            exclusive
+            onChange={(e, newView) => newView && setViewMode(newView)}
+            size="small"
+            aria-label="View mode selection"
+            sx={{
+              '& .MuiToggleButton-root': {
+                px: 2,
+                py: 0.5,
+                textTransform: 'none',
+                fontWeight: 500,
+              },
+            }}
+          >
+            <ToggleButton value="small" aria-label="Grid view" title="Grid view">
+              <Box sx={{ display: 'flex', gap: 0.4 }}>
+                <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+              </Box>
+            </ToggleButton>
+            <ToggleButton value="large" aria-label="Full width view" title="Full width view">
+              <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+            </ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
       </Box>
 
         {/* Clients Grid - Placeholder for now */}
