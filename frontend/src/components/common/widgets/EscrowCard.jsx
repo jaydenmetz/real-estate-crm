@@ -355,7 +355,6 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
             maxWidth: viewMode === 'small' ? '100%' : '320px', // Prevent growing in large mode
             flexShrink: 0,
             display: 'flex', // Make this a flex container so Card stretches to full height
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', // Smooth bidirectional transition
           }}
         >
           <Card
@@ -386,7 +385,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
                 boxShadow: `0 12px 48px ${alpha(statusConfig.color, 0.2)}, 0 4px 12px ${alpha(statusConfig.color, 0.15)}`,
                 transform: 'translateY(-2px)',
               },
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              transition: 'box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
               display: 'flex',
               flexDirection: 'column',
             }}
