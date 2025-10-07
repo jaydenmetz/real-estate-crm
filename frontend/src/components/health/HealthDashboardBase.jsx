@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { api, apiKeysAPI } from '../../services/api.service';
 import { formatCurlCommand } from '../../utils/formatCurl';
+import websocketService from '../../services/websocket.service';
 import {
   Box,
   Container,
@@ -37,7 +38,9 @@ import {
   Edit as EditIcon,
   VpnKey as ApiKeyIcon,
   Token as JwtIcon,
-  Dashboard as DashboardIcon
+  Dashboard as DashboardIcon,
+  WifiTethering as WebSocketIcon,
+  PowerSettingsNew as PowerIcon
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 
@@ -382,6 +385,10 @@ const HealthDashboardBase = ({
     PERFORMANCE: true,
     WORKFLOW: true
   });
+  const [wsConnected, setWsConnected] = useState(false);
+  const [wsSocketId, setWsSocketId] = useState(null);
+  const [wsTransport, setWsTransport] = useState(null);
+  const [wsLastEvent, setWsLastEvent] = useState(null);
 
   const defaultIcons = {
     CORE: AddIcon,
@@ -393,6 +400,67 @@ const HealthDashboardBase = ({
   };
 
   const icons = { ...defaultIcons, ...categoryIcons };
+
+  // WebSocket monitoring
+  useEffect(() => {
+    const checkWSStatus = () => {
+      if (websocketService.socket?.connected) {
+        setWsConnected(true);
+        setWsSocketId(websocketService.socket.id);
+        setWsTransport(websocketService.socket.io.engine.transport.name);
+      } else {
+        setWsConnected(false);
+        setWsSocketId(null);
+        setWsTransport(null);
+      }
+    };
+
+    // Check immediately
+    checkWSStatus();
+
+    // Listen for WebSocket events
+    const unsubscribeConnection = websocketService.on('connection', () => {
+      checkWSStatus();
+    });
+
+    const unsubscribeDataUpdate = websocketService.on('data:update', (data) => {
+      setWsLastEvent({
+        type: 'data:update',
+        entityType: data.entityType,
+        action: data.action,
+        timestamp: new Date().toISOString()
+      });
+    });
+
+    // Check status every 5 seconds
+    const interval = setInterval(checkWSStatus, 5000);
+
+    return () => {
+      clearInterval(interval);
+      if (unsubscribeConnection) unsubscribeConnection();
+      if (unsubscribeDataUpdate) unsubscribeDataUpdate();
+    };
+  }, []);
+
+  const handleWSToggle = async () => {
+    if (wsConnected) {
+      websocketService.disconnect();
+      setWsConnected(false);
+      setWsSocketId(null);
+      setWsTransport(null);
+      setSnackbarMessage('WebSocket disconnected');
+      setSnackbarOpen(true);
+    } else {
+      try {
+        await websocketService.connect();
+        setSnackbarMessage('WebSocket connected');
+        setSnackbarOpen(true);
+      } catch (error) {
+        setSnackbarMessage('Failed to connect WebSocket: ' + error.message);
+        setSnackbarOpen(true);
+      }
+    }
+  };
 
   const handleAuthTabChange = (event, newValue) => {
     setAuthTab(newValue);
@@ -756,6 +824,68 @@ const HealthDashboardBase = ({
               </Box>
             </AuthInputBox>
           ) : null}
+
+          {/* WebSocket Status Toggle Section */}
+          <Paper
+            elevation={2}
+            sx={{
+              p: 2,
+              mb: 3,
+              border: '2px solid',
+              borderColor: wsConnected ? 'success.main' : 'error.main',
+              backgroundColor: wsConnected ? 'success.50' : 'error.50'
+            }}
+          >
+            <Box display="flex" alignItems="center" justifyContent="space-between">
+              <Box display="flex" alignItems="center" gap={2}>
+                <WebSocketIcon
+                  sx={{
+                    fontSize: 40,
+                    color: wsConnected ? 'success.main' : 'error.main'
+                  }}
+                />
+                <Box>
+                  <Typography variant="h6" fontWeight="bold">
+                    WebSocket Real-Time Connection
+                  </Typography>
+                  <Stack direction="row" spacing={2} alignItems="center">
+                    <Chip
+                      label={wsConnected ? 'Connected' : 'Disconnected'}
+                      color={wsConnected ? 'success' : 'error'}
+                      size="small"
+                      icon={wsConnected ? <CheckIcon /> : <ErrorIcon />}
+                    />
+                    {wsConnected && wsSocketId && (
+                      <Typography variant="caption" color="text.secondary">
+                        Socket ID: {wsSocketId.substring(0, 12)}...
+                      </Typography>
+                    )}
+                    {wsConnected && wsTransport && (
+                      <Chip
+                        label={`Transport: ${wsTransport}`}
+                        size="small"
+                        variant="outlined"
+                      />
+                    )}
+                  </Stack>
+                  {wsLastEvent && (
+                    <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                      Last Event: {wsLastEvent.entityType} {wsLastEvent.action} at {new Date(wsLastEvent.timestamp).toLocaleTimeString()}
+                    </Typography>
+                  )}
+                </Box>
+              </Box>
+              <Button
+                variant="contained"
+                color={wsConnected ? 'error' : 'success'}
+                startIcon={<PowerIcon />}
+                onClick={handleWSToggle}
+                sx={{ minWidth: 140 }}
+              >
+                {wsConnected ? 'Disconnect' : 'Connect'}
+              </Button>
+            </Box>
+          </Paper>
 
           <Grid container spacing={3} mb={3}>
             <Grid item xs={12} sm={3}>
