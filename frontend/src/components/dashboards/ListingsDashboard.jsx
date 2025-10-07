@@ -380,24 +380,22 @@ const ListingsDashboard = () => {
         </HeroSection>
 
       {/* Status Tabs with View Mode Toggle */}
-      <Box sx={{ mb: 4 }}>
+      <Box sx={{ mb: 4, display: 'flex', gap: 2, alignItems: 'center' }}>
+        {/* Tab Bar - Contained */}
         <Paper
           elevation={0}
           sx={{
             backgroundColor: 'background.paper',
             borderRadius: 2,
             boxShadow: 1,
-            display: 'flex',
-            justifyContent: 'space-between',
+            display: 'inline-flex',
             alignItems: 'center',
-            pr: 2,
           }}
         >
           <Tabs
             value={selectedStatus}
             onChange={(e, newValue) => setSelectedStatus(newValue)}
             sx={{
-              flex: 1,
               '& .MuiTab-root': {
                 textTransform: 'none',
                 fontSize: '1rem',
@@ -414,8 +412,10 @@ const ListingsDashboard = () => {
             <Tab label="Sold Listings" value="sold" />
             <Tab label="Expired Listings" value="expired" />
           </Tabs>
+        </Paper>
 
-          <Stack direction="row" spacing={2} alignItems="center">
+        {/* Right-side Controls */}
+        <Box sx={{ ml: 'auto', display: 'flex', gap: 2, alignItems: 'center' }}>
             {/* Sort Selector */}
             <FormControl size="small" sx={{ minWidth: 180 }}>
               <InputLabel>Sort By</InputLabel>
@@ -468,8 +468,7 @@ const ListingsDashboard = () => {
                 <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
               </ToggleButton>
             </ToggleButtonGroup>
-          </Stack>
-        </Paper>
+          </Box>
       </Box>
 
         {/* Listings Grid - Placeholder for now */}

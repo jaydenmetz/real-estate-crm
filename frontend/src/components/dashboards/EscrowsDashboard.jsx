@@ -962,24 +962,22 @@ const EscrowsDashboard = () => {
         </HeroSection>
 
       {/* Status Tabs with View Mode Toggle */}
-      <Box sx={{ mb: 4 }}>
+      <Box sx={{ mb: 4, display: 'flex', gap: 2, alignItems: 'center' }}>
+        {/* Tab Bar - Contained */}
         <Paper
           elevation={0}
           sx={{
             backgroundColor: 'background.paper',
             borderRadius: 2,
             boxShadow: 1,
-            display: 'flex',
-            justifyContent: 'space-between',
+            display: 'inline-flex',
             alignItems: 'center',
-            pr: 2,
           }}
         >
           <Tabs
             value={selectedStatus}
             onChange={(e, newValue) => setSelectedStatus(newValue)}
             sx={{
-              flex: 1,
               '& .MuiTab-root': {
                 textTransform: 'none',
                 fontSize: '1rem',
@@ -995,29 +993,29 @@ const EscrowsDashboard = () => {
             <Tab label="Closed Escrows" value="closed" />
             <Tab label="Cancelled Escrows" value="cancelled" />
           </Tabs>
+        </Paper>
 
-          {/* Separate Trash Icon Button */}
-          <IconButton
-            onClick={() => setSelectedStatus('archived')}
-            sx={{
-              ml: 1,
-              mr: 2,
-              backgroundColor: selectedStatus === 'archived' ? 'warning.main' : 'background.paper',
-              color: selectedStatus === 'archived' ? 'white' : 'text.secondary',
-              border: selectedStatus === 'archived' ? 'none' : '1px solid',
-              borderColor: 'divider',
-              '&:hover': {
-                backgroundColor: selectedStatus === 'archived' ? 'warning.dark' : alpha('#000', 0.04),
-              },
-              transition: 'all 0.2s',
-            }}
-          >
-            <Badge badgeContent={archivedCount} color="error" max={99}>
-              <DeleteIcon />
-            </Badge>
-          </IconButton>
+        {/* Trash Icon - Separate with Circle Background */}
+        <IconButton
+          onClick={() => setSelectedStatus('archived')}
+          sx={{
+            width: 56,
+            height: 56,
+            backgroundColor: selectedStatus === 'archived' ? 'warning.main' : alpha('#000', 0.06),
+            color: selectedStatus === 'archived' ? 'white' : 'text.secondary',
+            '&:hover': {
+              backgroundColor: selectedStatus === 'archived' ? 'warning.dark' : alpha('#000', 0.1),
+            },
+            transition: 'all 0.2s',
+          }}
+        >
+          <Badge badgeContent={archivedCount} color="error" max={99}>
+            <DeleteIcon />
+          </Badge>
+        </IconButton>
 
-          <Stack direction="row" spacing={2} alignItems="center">
+        {/* Right-side Controls */}
+        <Box sx={{ ml: 'auto', display: 'flex', gap: 2, alignItems: 'center' }}>
             {/* Sort Selector */}
             <FormControl size="small" sx={{ minWidth: 180 }}>
               <InputLabel>Sort By</InputLabel>
@@ -1086,8 +1084,7 @@ const EscrowsDashboard = () => {
             >
               <CalendarToday />
             </IconButton>
-          </Stack>
-        </Paper>
+          </Box>
       </Box>
 
 
