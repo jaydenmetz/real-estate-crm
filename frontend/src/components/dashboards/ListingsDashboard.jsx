@@ -42,11 +42,11 @@ const HeroSection = styled(Box)(({ theme }) => ({
   position: 'relative',
   borderRadius: theme.spacing(3),
   overflow: 'hidden',
-  background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
+  background: 'linear-gradient(135deg, #2E7D32 0%, #66BB6A 100%)',
   color: 'white',
   padding: theme.spacing(6),
   marginBottom: theme.spacing(4),
-  boxShadow: '0 20px 60px rgba(25, 118, 210, 0.3)',
+  boxShadow: '0 20px 60px rgba(46, 125, 50, 0.3)',
   [theme.breakpoints.down('md')]: {
     padding: theme.spacing(4),
   },
