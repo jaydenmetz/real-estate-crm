@@ -284,9 +284,9 @@ export class HealthCheckService {
 
     // WEBSOCKET REAL-TIME TESTS
     tests.push(await this.runWebSocketConnectionTest());
-    tests.push(await this.runWebSocketEventTest());
-    tests.push(await this.runWebSocketWidgetUpdateTest('small'));
-    tests.push(await this.runWebSocketWidgetUpdateTest('large'));
+    tests.push(await this.runWebSocketEventTest('listing', '/listings'));
+    tests.push(await this.runWebSocketWidgetUpdateTest('small', 'listing', '/listings'));
+    tests.push(await this.runWebSocketWidgetUpdateTest('large', 'listing', '/listings'));
 
     return tests;
   }
@@ -408,9 +408,9 @@ export class HealthCheckService {
 
     // WEBSOCKET REAL-TIME TESTS
     tests.push(await this.runWebSocketConnectionTest());
-    tests.push(await this.runWebSocketEventTest());
-    tests.push(await this.runWebSocketWidgetUpdateTest('small'));
-    tests.push(await this.runWebSocketWidgetUpdateTest('large'));
+    tests.push(await this.runWebSocketEventTest('client', '/clients'));
+    tests.push(await this.runWebSocketWidgetUpdateTest('small', 'client', '/clients'));
+    tests.push(await this.runWebSocketWidgetUpdateTest('large', 'client', '/clients'));
 
     return tests;
   }
@@ -537,9 +537,9 @@ export class HealthCheckService {
 
     // WEBSOCKET REAL-TIME TESTS
     tests.push(await this.runWebSocketConnectionTest());
-    tests.push(await this.runWebSocketEventTest());
-    tests.push(await this.runWebSocketWidgetUpdateTest('small'));
-    tests.push(await this.runWebSocketWidgetUpdateTest('large'));
+    tests.push(await this.runWebSocketEventTest('appointment', '/appointments'));
+    tests.push(await this.runWebSocketWidgetUpdateTest('small', 'appointment', '/appointments'));
+    tests.push(await this.runWebSocketWidgetUpdateTest('large', 'appointment', '/appointments'));
 
     return tests;
   }
@@ -667,9 +667,9 @@ export class HealthCheckService {
 
     // WEBSOCKET REAL-TIME TESTS
     tests.push(await this.runWebSocketConnectionTest());
-    tests.push(await this.runWebSocketEventTest());
-    tests.push(await this.runWebSocketWidgetUpdateTest('small'));
-    tests.push(await this.runWebSocketWidgetUpdateTest('large'));
+    tests.push(await this.runWebSocketEventTest('lead', '/leads'));
+    tests.push(await this.runWebSocketWidgetUpdateTest('small', 'lead', '/leads'));
+    tests.push(await this.runWebSocketWidgetUpdateTest('large', 'lead', '/leads'));
 
     return tests;
   }
@@ -1114,8 +1114,18 @@ export class HealthCheckService {
     }
   }
 
-  // Test WebSocket event emission and reception
-  async runWebSocketEventTest() {
+  // Test WebSocket event emission and reception (generic - supports all entity types)
+  async runWebSocketEventTest(entityType = 'escrow', endpoint = '/escrows', testData = null) {
+    // Default test data for each entity type
+    const defaultTestData = {
+      escrow: { propertyAddress: `WS-TEST-${Date.now()}` },
+      listing: { propertyAddress: `WS-TEST-${Date.now()}`, listPrice: 500000, propertyType: 'Single Family' },
+      client: { firstName: 'WebSocket', lastName: `Test-${Date.now()}`, email: `ws-test-${Date.now()}@test.com`, clientType: 'Buyer' },
+      appointment: { title: `WS-TEST-${Date.now()}`, appointmentType: 'Showing', appointmentDate: new Date(Date.now() + 86400000).toISOString() },
+      lead: { firstName: 'WebSocket', lastName: `Test-${Date.now()}`, email: `ws-test-${Date.now()}@test.com`, leadSource: 'Website' }
+    };
+
+    const dataToUse = testData || defaultTestData[entityType] || defaultTestData.escrow;
     const startTime = Date.now();
     try {
       // Dynamically import WebSocket service
@@ -1180,21 +1190,18 @@ export class HealthCheckService {
 
         // Wait 250ms to ensure listener is registered and WebSocket connection is stable
         setTimeout(() => {
-          // Trigger a test event by creating an escrow
-          const testData = { propertyAddress: `WS-TEST-${Date.now()}` };
-
           // Get fresh token for JWT auth
           const authHeaders = this.authType === 'apikey'
             ? { 'X-API-Key': this.authValue }
             : { 'Authorization': `Bearer ${localStorage.getItem('crm_auth_token') || localStorage.getItem('authToken') || localStorage.getItem('token')}` };
 
-          fetch(`${this.API_URL}/escrows`, {
+          fetch(`${this.API_URL}${endpoint}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             ...authHeaders
           },
-          body: JSON.stringify(testData)
+          body: JSON.stringify(dataToUse)
         })
           .then(async (response) => {
             const result = await response.json();
@@ -1207,7 +1214,7 @@ export class HealthCheckService {
                 name: 'WebSocket Events',
                 category: 'REALTIME',
                 status: 'failed',
-                message: `Test escrow creation failed: HTTP ${response.status}`,
+                message: `Test ${entityType} creation failed: HTTP ${response.status}`,
                 responseTime: Date.now() - startTime,
                 error: `HTTP ${response.status}: ${result.error?.message || result.message || 'Unknown error'}`,
                 details: result
@@ -1215,14 +1222,14 @@ export class HealthCheckService {
               return;
             }
 
-            // Clean up test escrow
+            // Clean up test record
             if (result?.data?.id) {
               setTimeout(() => {
                 const deleteAuthHeaders = this.authType === 'apikey'
                   ? { 'X-API-Key': this.authValue }
                   : { 'Authorization': `Bearer ${localStorage.getItem('crm_auth_token') || localStorage.getItem('authToken') || localStorage.getItem('token')}` };
 
-                fetch(`${this.API_URL}/escrows/${result.data.id}`, {
+                fetch(`${this.API_URL}${endpoint}/${result.data.id}`, {
                   method: 'DELETE',
                   headers: {
                     'Content-Type': 'application/json',
@@ -1258,8 +1265,43 @@ export class HealthCheckService {
     }
   }
 
-  // Test widget real-time updates via WebSocket
-  async runWebSocketWidgetUpdateTest(viewMode) {
+  // Test widget real-time updates via WebSocket (generic - supports all entity types)
+  async runWebSocketWidgetUpdateTest(viewMode, entityType = 'escrow', endpoint = '/escrows', testData = null, requiredFields = null) {
+    // Default test data for each entity type
+    const defaultTestData = {
+      escrow: { propertyAddress: `WS-WIDGET-TEST-${Date.now()}`, purchasePrice: 500000, myCommission: 15000 },
+      listing: { propertyAddress: `WS-WIDGET-TEST-${Date.now()}`, listPrice: 500000, propertyType: 'Single Family' },
+      client: { firstName: 'Widget', lastName: `Test-${Date.now()}`, email: `widget-${Date.now()}@test.com`, clientType: 'Buyer' },
+      appointment: { title: `WIDGET-TEST-${Date.now()}`, appointmentType: 'Showing', appointmentDate: new Date(Date.now() + 86400000).toISOString() },
+      lead: { firstName: 'Widget', lastName: `Test-${Date.now()}`, email: `widget-${Date.now()}@test.com`, leadSource: 'Website', leadScore: 50 }
+    };
+
+    const defaultRequiredFields = {
+      escrow: {
+        small: ['id', 'propertyAddress', 'purchasePrice', 'myCommission', 'checklistProgress', 'escrowStatus'],
+        large: ['id', 'propertyAddress', 'purchasePrice', 'myCommission', 'checklistProgress', 'escrowStatus', 'scheduledCoeDate', 'acceptanceDate']
+      },
+      listing: {
+        small: ['id', 'propertyAddress', 'listPrice', 'listingStatus', 'propertyType'],
+        large: ['id', 'propertyAddress', 'listPrice', 'listingStatus', 'propertyType', 'bedrooms', 'bathrooms']
+      },
+      client: {
+        small: ['id', 'firstName', 'lastName', 'email', 'clientType'],
+        large: ['id', 'firstName', 'lastName', 'email', 'clientType', 'phone', 'address']
+      },
+      appointment: {
+        small: ['id', 'title', 'appointmentType', 'appointmentDate', 'status'],
+        large: ['id', 'title', 'appointmentType', 'appointmentDate', 'status', 'location', 'notes']
+      },
+      lead: {
+        small: ['id', 'firstName', 'lastName', 'email', 'leadSource', 'leadScore'],
+        large: ['id', 'firstName', 'lastName', 'email', 'leadSource', 'leadScore', 'phone', 'status']
+      }
+    };
+
+    const dataToUse = testData || defaultTestData[entityType] || defaultTestData.escrow;
+    const fieldsToCheck = requiredFields || defaultRequiredFields[entityType] || defaultRequiredFields.escrow;
+
     const startTime = Date.now();
     const testName = viewMode === 'small' ? 'Widget Updates - Small View' : 'Widget Updates - Large View';
 
@@ -1305,13 +1347,13 @@ export class HealthCheckService {
         const cleanup = () => {
           clearTimeout(timeout);
           if (unsubscribe) unsubscribe();
-          // Clean up test escrow
+          // Clean up test record
           if (testEscrowId) {
             const deleteAuthHeaders = this.authType === 'apikey'
               ? { 'X-API-Key': this.authValue }
               : { 'Authorization': `Bearer ${localStorage.getItem('crm_auth_token') || localStorage.getItem('authToken') || localStorage.getItem('token')}` };
 
-            fetch(`${this.API_URL}/escrows/${testEscrowId}`, {
+            fetch(`${this.API_URL}${endpoint}/${testEscrowId}`, {
               method: 'DELETE',
               headers: {
                 'Content-Type': 'application/json',
@@ -1323,16 +1365,11 @@ export class HealthCheckService {
 
         // Listen for data:update event
         const unsubscribe = websocketService.on('data:update', (data) => {
-          if (data.entityType === 'escrow' && data.entityId === testEscrowId && data.action === 'updated') {
+          if (data.entityType === entityType && data.entityId === testEscrowId && data.action === 'updated') {
             updateReceived = true;
 
             // Validate widget fields based on view mode
-            const requiredFields = {
-              small: ['id', 'propertyAddress', 'purchasePrice', 'myCommission', 'checklistProgress', 'escrowStatus'],
-              large: ['id', 'propertyAddress', 'purchasePrice', 'myCommission', 'checklistProgress', 'escrowStatus', 'scheduledCoeDate', 'acceptanceDate']
-            };
-
-            const hasRequiredFields = requiredFields[viewMode].every(field =>
+            const hasRequiredFields = fieldsToCheck[viewMode].every(field =>
               data.data && (data.data[field] !== undefined || data.data[field] !== null)
             );
 
@@ -1357,7 +1394,7 @@ export class HealthCheckService {
                 entityId: data.entityId,
                 action: data.action,
                 viewMode: viewMode,
-                requiredFields: requiredFields[viewMode],
+                requiredFields: fieldsToCheck[viewMode],
                 fieldsPresent: data.data ? Object.keys(data.data) : [],
                 data: data.data,
                 fullPayload: data
@@ -1368,25 +1405,18 @@ export class HealthCheckService {
 
         // Wait 100ms to ensure listener is registered before triggering events
         setTimeout(() => {
-          // Step 1: Create test escrow
-          const testData = {
-            propertyAddress: `WS-WIDGET-TEST-${Date.now()}`,
-            purchasePrice: 500000,
-            myCommission: 15000
-          };
-
           // Get fresh token for JWT auth
           const createAuthHeaders = this.authType === 'apikey'
             ? { 'X-API-Key': this.authValue }
             : { 'Authorization': `Bearer ${localStorage.getItem('crm_auth_token') || localStorage.getItem('authToken') || localStorage.getItem('token')}` };
 
-          fetch(`${this.API_URL}/escrows`, {
+          fetch(`${this.API_URL}${endpoint}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             ...createAuthHeaders
           },
-          body: JSON.stringify(testData)
+          body: JSON.stringify(dataToUse)
         })
           .then(async (response) => {
             const result = await response.json();
@@ -1398,7 +1428,7 @@ export class HealthCheckService {
                 name: testName,
                 category: 'REALTIME',
                 status: 'failed',
-                message: `Escrow creation failed: HTTP ${response.status}`,
+                message: `${entityType.charAt(0).toUpperCase() + entityType.slice(1)} creation failed: HTTP ${response.status}`,
                 responseTime: Date.now() - startTime,
                 error: `HTTP ${response.status}: ${result.error?.message || result.message || 'Unknown error'}`,
                 details: result
@@ -1412,9 +1442,9 @@ export class HealthCheckService {
                 name: testName,
                 category: 'REALTIME',
                 status: 'failed',
-                message: 'Failed to create test escrow - no ID returned',
+                message: `Failed to create test ${entityType} - no ID returned`,
                 responseTime: Date.now() - startTime,
-                error: 'Escrow creation failed: No ID in response',
+                error: `${entityType.charAt(0).toUpperCase() + entityType.slice(1)} creation failed: No ID in response`,
                 details: result
               });
               return;
@@ -1423,22 +1453,27 @@ export class HealthCheckService {
             testEscrowId = result.data.id;
             initialData = result.data;
 
-            // Step 2: Update the escrow to trigger WebSocket event
+            // Step 2: Update the record to trigger WebSocket event
+            const updateData = {
+              escrow: { purchasePrice: 550000, myCommission: 16500 },
+              listing: { listPrice: 550000 },
+              client: { phone: '555-1234' },
+              appointment: { notes: 'Updated via WebSocket test' },
+              lead: { leadScore: 75 }
+            };
+
             setTimeout(() => {
               const updateAuthHeaders = this.authType === 'apikey'
                 ? { 'X-API-Key': this.authValue }
                 : { 'Authorization': `Bearer ${localStorage.getItem('crm_auth_token') || localStorage.getItem('authToken') || localStorage.getItem('token')}` };
 
-              fetch(`${this.API_URL}/escrows/${testEscrowId}`, {
+              fetch(`${this.API_URL}${endpoint}/${testEscrowId}`, {
                 method: 'PUT',
                 headers: {
                   'Content-Type': 'application/json',
                   ...updateAuthHeaders
                 },
-                body: JSON.stringify({
-                  purchasePrice: 550000,
-                  myCommission: 16500
-                })
+                body: JSON.stringify(updateData[entityType] || updateData.escrow)
               }).catch((error) => {
                 if (!updateReceived) {
                   cleanup();
