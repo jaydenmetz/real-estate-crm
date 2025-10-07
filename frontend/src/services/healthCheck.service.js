@@ -155,6 +155,14 @@ export class HealthCheckService {
     const widgetLargeTest = await this.runWidgetDataTest('large', 'Widget Data - Large View', 'Widget Data');
     tests.push(widgetLargeTest);
 
+    // WEBSOCKET REAL-TIME TESTS
+    // Test WebSocket connection and real-time event system
+    const wsConnectionTest = await this.runWebSocketConnectionTest();
+    tests.push(wsConnectionTest);
+
+    const wsEventTest = await this.runWebSocketEventTest();
+    tests.push(wsEventTest);
+
     return tests;
   }
 
@@ -945,6 +953,213 @@ export class HealthCheckService {
           viewMode,
           error: 'Failed to fetch escrow data for widget validation'
         }
+      };
+    }
+  }
+
+  // Test WebSocket connection establishment
+  async runWebSocketConnectionTest() {
+    const startTime = Date.now();
+    try {
+      // Dynamically import WebSocket service to avoid circular dependencies
+      const { default: websocketService } = await import('./websocket.service');
+
+      return new Promise((resolve) => {
+        const timeout = setTimeout(() => {
+          resolve({
+            name: 'WebSocket Connection',
+            category: 'Real-Time',
+            status: 'failed',
+            message: 'WebSocket connection timeout (5s)',
+            responseTime: 5000,
+            error: 'Connection timeout'
+          });
+        }, 5000);
+
+        // Check if already connected
+        if (websocketService.socket?.connected) {
+          clearTimeout(timeout);
+          resolve({
+            name: 'WebSocket Connection',
+            category: 'Real-Time',
+            status: 'success',
+            message: 'WebSocket already connected',
+            responseTime: Date.now() - startTime,
+            response: {
+              connected: true,
+              socketId: websocketService.socket.id,
+              transport: websocketService.socket.io.engine.transport.name
+            }
+          });
+          return;
+        }
+
+        // Attempt connection
+        websocketService.connect()
+          .then(() => {
+            clearTimeout(timeout);
+
+            // Wait for connection event
+            const checkConnection = setInterval(() => {
+              if (websocketService.socket?.connected) {
+                clearInterval(checkConnection);
+                resolve({
+                  name: 'WebSocket Connection',
+                  category: 'Real-Time',
+                  status: 'success',
+                  message: `Connected via ${websocketService.socket.io.engine.transport.name}`,
+                  responseTime: Date.now() - startTime,
+                  response: {
+                    connected: true,
+                    socketId: websocketService.socket.id,
+                    transport: websocketService.socket.io.engine.transport.name
+                  }
+                });
+              }
+            }, 100);
+
+            // Give it 3 seconds to connect after promise resolves
+            setTimeout(() => {
+              clearInterval(checkConnection);
+              if (!websocketService.socket?.connected) {
+                resolve({
+                  name: 'WebSocket Connection',
+                  category: 'Real-Time',
+                  status: 'failed',
+                  message: 'Connection established but not ready',
+                  responseTime: Date.now() - startTime,
+                  error: 'Socket not connected'
+                });
+              }
+            }, 3000);
+          })
+          .catch((error) => {
+            clearTimeout(timeout);
+            resolve({
+              name: 'WebSocket Connection',
+              category: 'Real-Time',
+              status: 'failed',
+              message: error.message || 'Failed to connect',
+              responseTime: Date.now() - startTime,
+              error: error.message
+            });
+          });
+      });
+    } catch (error) {
+      return {
+        name: 'WebSocket Connection',
+        category: 'Real-Time',
+        status: 'failed',
+        message: error.message || 'Failed to initialize WebSocket',
+        responseTime: Date.now() - startTime,
+        error: error.message
+      };
+    }
+  }
+
+  // Test WebSocket event emission and reception
+  async runWebSocketEventTest() {
+    const startTime = Date.now();
+    try {
+      // Dynamically import WebSocket service
+      const { default: websocketService } = await import('./websocket.service');
+
+      // Check if connected first
+      if (!websocketService.socket?.connected) {
+        return {
+          name: 'WebSocket Events',
+          category: 'Real-Time',
+          status: 'warning',
+          message: 'Cannot test events - WebSocket not connected',
+          responseTime: Date.now() - startTime,
+          error: 'Socket not connected'
+        };
+      }
+
+      return new Promise((resolve) => {
+        const timeout = setTimeout(() => {
+          unsubscribe();
+          resolve({
+            name: 'WebSocket Events',
+            category: 'Real-Time',
+            status: 'failed',
+            message: 'No data:update event received within 10s',
+            responseTime: 10000,
+            error: 'Event timeout'
+          });
+        }, 10000);
+
+        // Listen for any data:update event
+        const unsubscribe = websocketService.on('data:update', (data) => {
+          clearTimeout(timeout);
+          unsubscribe();
+          resolve({
+            name: 'WebSocket Events',
+            category: 'Real-Time',
+            status: 'success',
+            message: `Received ${data.entityType || 'unknown'} ${data.action || 'update'} event`,
+            responseTime: Date.now() - startTime,
+            response: {
+              eventType: 'data:update',
+              entityType: data.entityType,
+              action: data.action,
+              hasData: !!data.data
+            }
+          });
+        });
+
+        // Trigger a test event by creating an escrow
+        const testData = { propertyAddress: `WS-TEST-${Date.now()}` };
+
+        fetch(`${this.API_URL}/escrows`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(this.authType === 'apikey'
+              ? { 'X-API-Key': this.authValue }
+              : { 'Authorization': `Bearer ${localStorage.getItem('crm_auth_token')}` })
+          },
+          body: JSON.stringify(testData)
+        })
+          .then(async (response) => {
+            const result = await response.json();
+
+            // Clean up test escrow
+            if (result?.data?.id) {
+              setTimeout(() => {
+                fetch(`${this.API_URL}/escrows/${result.data.id}`, {
+                  method: 'DELETE',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    ...(this.authType === 'apikey'
+                      ? { 'X-API-Key': this.authValue }
+                      : { 'Authorization': `Bearer ${localStorage.getItem('crm_auth_token')}` })
+                  }
+                }).catch(console.error);
+              }, 1000);
+            }
+          })
+          .catch((error) => {
+            clearTimeout(timeout);
+            unsubscribe();
+            resolve({
+              name: 'WebSocket Events',
+              category: 'Real-Time',
+              status: 'failed',
+              message: `Failed to trigger test event: ${error.message}`,
+              responseTime: Date.now() - startTime,
+              error: error.message
+            });
+          });
+      });
+    } catch (error) {
+      return {
+        name: 'WebSocket Events',
+        category: 'Real-Time',
+        status: 'failed',
+        message: error.message || 'Failed to test WebSocket events',
+        responseTime: Date.now() - startTime,
+        error: error.message
       };
     }
   }
