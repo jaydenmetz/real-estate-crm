@@ -1078,9 +1078,15 @@ export class HealthCheckService {
           name: 'WebSocket Events',
           category: 'Real-Time',
           status: 'failed',
-          message: 'WebSocket not connected - cannot test events',
+          message: 'WebSocket not connected. Click the Connect button in the WebSocket panel above.',
           responseTime: Date.now() - startTime,
-          error: 'Socket not connected'
+          error: 'Socket not connected',
+          details: {
+            isConnected: websocketService.isConnected,
+            hasSocket: !!websocketService.socket,
+            socketConnected: websocketService.socket?.connected,
+            hint: 'Use the WebSocket Real-Time Connection toggle to connect first'
+          }
         };
       }
 
@@ -1190,9 +1196,15 @@ export class HealthCheckService {
           name: testName,
           category: 'Real-Time',
           status: 'failed',
-          message: 'WebSocket not connected - cannot test widget updates',
+          message: 'WebSocket not connected. Click the Connect button in the WebSocket panel above.',
           responseTime: Date.now() - startTime,
-          error: 'Socket not connected'
+          error: 'Socket not connected',
+          details: {
+            isConnected: websocketService.isConnected,
+            hasSocket: !!websocketService.socket,
+            socketConnected: websocketService.socket?.connected,
+            hint: 'Use the WebSocket Real-Time Connection toggle to connect first'
+          }
         };
       }
 
