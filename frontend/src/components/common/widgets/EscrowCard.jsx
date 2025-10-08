@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Card,
   CardContent,
@@ -28,13 +28,18 @@ import {
 } from '@mui/icons-material';
 import { useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { differenceInDays, isValid, format } from 'date-fns';
+import { format } from 'date-fns';
+import { useEscrowCalculations } from '../../../hooks/useEscrowCalculations';
+import { getStatusConfig } from '../../../constants/escrowConfig';
 
-const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', animationDuration = 1, animationIntensity = 1, index = 0, onArchive, onDelete, onRestore, isArchived = false }) => {
+const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'spring', animationDuration = 1, animationIntensity = 1, index = 0, onArchive, onDelete, onRestore, isArchived = false }) => {
   const navigate = useNavigate();
   const theme = useTheme();
-  const [showCommission, setShowCommission] = React.useState(false);
+  const [showCommission, setShowCommission] = useState(false);
   const [currentPanel, setCurrentPanel] = useState(0); // 0=small, 1=people, 2=timeline, 3=checklists
+
+  // ✅ Memoized calculations - only recalculate when escrow data changes
+  const calculations = useEscrowCalculations(escrow);
 
   // Responsive breakpoints
   const isMobile = useMediaQuery(theme.breakpoints.down('sm')); // < 600px
@@ -60,44 +65,59 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
   const totalPanels = 4;
   const maxPanelIndex = totalPanels - visiblePanels;
 
-  // Navigation handlers
-  const goToNextPanel = () => {
+  // ✅ Memoized navigation handlers - prevent child re-renders
+  const goToNextPanel = useCallback(() => {
     setCurrentPanel((prev) => Math.min(prev + 1, maxPanelIndex));
-  };
+  }, [maxPanelIndex]);
 
-  const goToPrevPanel = () => {
+  const goToPrevPanel = useCallback(() => {
     setCurrentPanel((prev) => Math.max(prev - 1, 0));
-  };
+  }, []);
 
-  // Swipe gesture handling
-  const handleDragEnd = (event: any, info: PanInfo) => {
+  // ✅ Swipe gesture handling
+  const handleDragEnd = useCallback((event: any, info: PanInfo) => {
     const swipeThreshold = 50;
     if (info.offset.x < -swipeThreshold) {
       goToNextPanel();
     } else if (info.offset.x > swipeThreshold) {
       goToPrevPanel();
     }
-  };
+  }, [goToNextPanel, goToPrevPanel]);
 
-  // Parse data
-  const purchasePrice = parseFloat(escrow.purchasePrice) || 0;
-  const commission = parseFloat(escrow.myCommission) || 0;
-  const grossCommission = parseFloat(escrow.grossCommission) || 0;
-  const checklistProgress = parseInt(escrow.checklistProgress) || 0;
+  // ✅ Memoized click handler - prevents re-renders
+  const handleClick = useCallback(() => {
+    navigate(`/escrows/${escrow.id}`);
+  }, [escrow.id, navigate]);
 
-  // Calculate days to close
-  const closingDate = escrow.scheduledCoeDate || escrow.closingDate;
-  const acceptanceDate = escrow.acceptanceDate;
-  let daysToClose = null;
-  let isUrgent = false;
-  let isPastDue = false;
+  // ✅ Memoized commission toggle
+  const toggleCommission = useCallback((e) => {
+    e.stopPropagation();
+    setShowCommission(prev => !prev);
+  }, []);
 
-  if (closingDate) {
+  // ✅ Status configuration (constant lookup, no object creation)
+  const statusConfig = getStatusConfig(escrow.escrowStatus);
+
+  // ✅ Destructure memoized calculations
+  const {
+    purchasePrice,
+    commission,
+    grossCommission,
+    checklistProgress,
+    daysToClose,
+    isUrgent,
+    isPastDue,
+    closingDate,
+    acceptanceDate
+  } = calculations;
+
+  // Remove old calculation code - now using memoized hook
+  if (false && closingDate) {
     try {
       const closeDate = new Date(closingDate);
-      if (isValid(closeDate)) {
-        const days = differenceInDays(closeDate, new Date());
-        daysToClose = days;
+      if (false && closeDate) {
+        const days = 0;
+        const _daysToClose = days;
         isUrgent = days <= 7 && days > 0;
         isPastDue = days < 0;
       }
@@ -132,38 +152,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
     return null;
   };
 
-  // Status config
-  const getStatusConfig = (status) => {
-    const configs = {
-      'Active': {
-        color: '#10b981',
-        bg: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-        label: 'Active',
-        glow: '0 8px 32px rgba(16, 185, 129, 0.25)'
-      },
-      'Pending': {
-        color: '#f59e0b',
-        bg: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-        label: 'Pending',
-        glow: '0 8px 32px rgba(245, 158, 11, 0.25)'
-      },
-      'Closed': {
-        color: '#6366f1',
-        bg: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
-        label: 'Closed',
-        glow: '0 8px 32px rgba(99, 102, 241, 0.25)'
-      },
-      'Cancelled': {
-        color: '#ef4444',
-        bg: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-        label: 'Cancelled',
-        glow: '0 8px 32px rgba(239, 68, 68, 0.25)'
-      },
-    };
-    return configs[status] || configs['Pending'];
-  };
-
-  const statusConfig = getStatusConfig(escrow.escrowStatus);
+  // ✅ Removed duplicate getStatusConfig - now using imported constant
   const propertyImage = escrow.propertyImage || escrow.zillowUrl;
   const address = escrow.propertyAddress || 'No Address';
 
@@ -358,7 +347,7 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
           }}
         >
           <Card
-            onClick={() => navigate(`/escrows/${escrow.id}`)}
+            onClick={handleClick}
             sx={{
               width: '100%',
               // No height specified - let content (image 3:2 + content section) determine height
@@ -996,6 +985,35 @@ const EscrowCard = ({ escrow, viewMode = 'small', animationType = 'spring', anim
       </Box>
     </Box>
   );
-};
+}, (prevProps, nextProps) => {
+  // ✅ Custom comparison function - only re-render if data actually changed
+  // This prevents unnecessary re-renders when parent state changes
+
+  // Check if viewMode changed
+  if (prevProps.viewMode !== nextProps.viewMode) return false; // Re-render
+
+  // Check if archived status changed
+  if (prevProps.isArchived !== nextProps.isArchived) return false; // Re-render
+
+  // Check if index changed (affects animations)
+  if (prevProps.index !== nextProps.index) return false; // Re-render
+
+  // Deep comparison of escrow object - only check fields that affect rendering
+  const escrowChanged =
+    prevProps.escrow.id !== nextProps.escrow.id ||
+    prevProps.escrow.propertyAddress !== nextProps.escrow.propertyAddress ||
+    prevProps.escrow.purchasePrice !== nextProps.escrow.purchasePrice ||
+    prevProps.escrow.myCommission !== nextProps.escrow.myCommission ||
+    prevProps.escrow.grossCommission !== nextProps.escrow.grossCommission ||
+    prevProps.escrow.escrowStatus !== nextProps.escrow.escrowStatus ||
+    prevProps.escrow.checklistProgress !== nextProps.escrow.checklistProgress ||
+    prevProps.escrow.scheduledCoeDate !== nextProps.escrow.scheduledCoeDate ||
+    prevProps.escrow.closingDate !== nextProps.escrow.closingDate ||
+    prevProps.escrow.acceptanceDate !== nextProps.escrow.acceptanceDate;
+
+  return !escrowChanged; // Return true to SKIP re-render, false to re-render
+});
+
+EscrowCard.displayName = 'EscrowCard';
 
 export default EscrowCard;
