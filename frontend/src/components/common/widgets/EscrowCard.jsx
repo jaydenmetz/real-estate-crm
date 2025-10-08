@@ -415,14 +415,14 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                   <Home sx={{ fontSize: 80, color: alpha('#757575', 0.5), zIndex: 1 }} />
                 )}
 
-                {/* Status Chip - Now in TOP LEFT */}
+                {/* Status Chip - TOP LEFT */}
                 <Chip
                   label={statusConfig.label}
                   size="small"
                   sx={{
                     position: 'absolute',
-                    top: 12,
-                    left: 12,
+                    top: 10,
+                    left: 10,
                     fontWeight: 700,
                     fontSize: 11,
                     letterSpacing: '0.5px',
@@ -465,8 +465,8 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                       }}
                       sx={{
                         position: 'absolute',
-                        top: 8,
-                        right: 8,
+                        top: 10,
+                        right: 10,
                         opacity: 0,
                         backgroundColor: 'rgba(0, 0, 0, 0.3)',
                         color: 'rgba(255, 255, 255, 0.7)',
