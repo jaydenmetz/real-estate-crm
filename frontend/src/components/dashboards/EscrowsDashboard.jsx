@@ -448,33 +448,50 @@ const EscrowsDashboard = () => {
     };
   }, [isConnected]);
 
-  const fetchEscrows = async () => {
+  const fetchEscrows = async (pageNum = 1, appendData = false, accumulatedEscrows = [], accumulatedArchived = []) => {
     try {
-      setLoading(true);
-      console.log('Fetching escrows...');
+      if (!appendData) {
+        setLoading(true);
+      }
+      console.log(`Fetching escrows... (page ${pageNum})`);
 
-      // Fetch all escrows including archived
-      const response = await escrowsAPI.getAll({ includeArchived: true });
+      // Fetch escrows with pagination (50 per page for optimal performance)
+      const response = await escrowsAPI.getAll({
+        includeArchived: true,
+        page: pageNum,
+        limit: 50
+      });
       console.log('API Response:', response);
 
       if (response.success) {
         const allData = response.data.escrows || response.data || [];
+        const totalPages = response.data.pagination?.totalPages || 1;
+        const hasMore = pageNum < totalPages;
 
         // Separate active and archived escrows based on deleted_at field
         const escrowData = allData.filter(escrow => !escrow.deleted_at && !escrow.deletedAt);
         const archivedData = allData.filter(escrow => escrow.deleted_at || escrow.deletedAt);
 
-        console.log('All escrows received:', allData.length);
-        console.log('Active escrows found:', escrowData.length);
-        console.log('Archived escrows found:', archivedData.length);
+        console.log(`Page ${pageNum}/${totalPages} - Escrows: ${allData.length}, Active: ${escrowData.length}, Archived: ${archivedData.length}`);
 
-        setEscrows(escrowData);
-        setArchivedEscrows(archivedData);
-        setArchivedCount(archivedData.length);
+        // Accumulate data
+        const updatedEscrows = appendData ? [...accumulatedEscrows, ...escrowData] : escrowData;
+        const updatedArchived = appendData ? [...accumulatedArchived, ...archivedData] : archivedData;
 
-        // Calculate stats only for active escrows
-        calculateStats(escrowData, selectedStatus);
-        generateChartData(escrowData);
+        // Update state with accumulated data
+        setEscrows(updatedEscrows);
+        setArchivedEscrows(updatedArchived);
+        setArchivedCount(updatedArchived.length);
+
+        // Load next page automatically if there's more data
+        if (hasMore) {
+          // Recursively load all pages for stats calculation
+          await fetchEscrows(pageNum + 1, true, updatedEscrows, updatedArchived);
+        } else {
+          // Calculate stats only after all data is loaded
+          calculateStats(updatedEscrows, selectedStatus);
+          generateChartData(updatedEscrows);
+        }
       } else {
         console.error('API returned success: false', response);
       }
