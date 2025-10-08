@@ -1005,9 +1005,9 @@ const EscrowsDashboard = () => {
           </Box>
         </HeroSection>
 
-      {/* Status Tabs with View Mode Toggle */}
-      <Box sx={{ mb: 4, display: 'flex', gap: 2, alignItems: 'center' }}>
-        {/* Tab Bar - Extended to fill space */}
+      {/* Status Tabs with Controls Overlay */}
+      <Box sx={{ mb: 4, position: 'relative' }}>
+        {/* Tab Bar - Full width */}
         <Paper
           elevation={0}
           sx={{
@@ -1016,14 +1016,13 @@ const EscrowsDashboard = () => {
             boxShadow: 1,
             display: 'flex',
             alignItems: 'center',
-            flex: 1, // Fill available space
           }}
         >
           <Tabs
             value={selectedStatus}
             onChange={(e, newValue) => setSelectedStatus(newValue)}
             sx={{
-              width: '100%', // Fill parent width
+              width: '100%',
               '& .MuiTab-root': {
                 textTransform: 'none',
                 fontSize: '1rem',
@@ -1041,99 +1040,120 @@ const EscrowsDashboard = () => {
           </Tabs>
         </Paper>
 
-        {/* Right-side Controls */}
-        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-            {/* Sort Selector */}
-            <FormControl size="small" sx={{ minWidth: 180 }}>
-              <InputLabel>Sort By</InputLabel>
-              <Select
-                value={sortBy}
-                label="Sort By"
-                onChange={(e) => setSortBy(e.target.value)}
-              >
-                <MenuItem value="closing_date">Closing Date</MenuItem>
-                <MenuItem value="created_at">Date Created</MenuItem>
-                <MenuItem value="sale_price">Sale Price</MenuItem>
-                <MenuItem value="property_address">Address</MenuItem>
-                <MenuItem value="escrow_status">Status</MenuItem>
-              </Select>
-            </FormControl>
-
-            {/* View Mode Selector */}
-            <ToggleButtonGroup
-              value={viewMode}
-              exclusive
-              onChange={(e, newView) => newView && setViewMode(newView)}
-              size="small"
-              aria-label="View mode selection"
-              sx={{
-                '& .MuiToggleButton-root': {
-                  px: 2,
-                  py: 0.5,
-                  textTransform: 'none',
-                  fontWeight: 500,
-                },
-              }}
+        {/* Controls Overlay - Positioned on top right of tab bar */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            right: 16,
+            transform: 'translateY(-50%)',
+            display: 'flex',
+            gap: 2,
+            alignItems: 'center',
+            zIndex: 10,
+          }}
+        >
+          {/* Sort Selector */}
+          <FormControl size="small" sx={{ minWidth: 180 }}>
+            <InputLabel>Sort By</InputLabel>
+            <Select
+              value={sortBy}
+              label="Sort By"
+              onChange={(e) => setSortBy(e.target.value)}
             >
-              <ToggleButton
-                value="small"
-                aria-label="Grid view - shows escrows in compact 4-column grid layout (Press V to toggle)"
-                title="Grid view (V)"
-              >
-                {/* 4-column grid icon matching actual card layout */}
-                <Box sx={{ display: 'flex', gap: 0.4 }}>
-                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                </Box>
-              </ToggleButton>
-              <ToggleButton
-                value="large"
-                aria-label="Full width view - shows escrows in detailed full-width layout (Press V to toggle)"
-                title="Full width view (V)"
-              >
-                {/* Wide horizontal bar representing full-width card - total width 24px */}
-                <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-              </ToggleButton>
-            </ToggleButtonGroup>
+              <MenuItem value="closing_date">Closing Date</MenuItem>
+              <MenuItem value="created_at">Date Created</MenuItem>
+              <MenuItem value="sale_price">Sale Price</MenuItem>
+              <MenuItem value="property_address">Address</MenuItem>
+              <MenuItem value="escrow_status">Status</MenuItem>
+            </Select>
+          </FormControl>
 
-            {/* Calendar Icon */}
-            <IconButton
-              onClick={handleCalendarOpen}
-              size="small"
-              sx={{
-                width: 40,
-                height: 40,
-                backgroundColor: alpha('#000', 0.06),
-                '&:hover': {
-                  backgroundColor: alpha('#000', 0.1),
-                },
-              }}
+          {/* View Mode Selector */}
+          <ToggleButtonGroup
+            value={viewMode}
+            exclusive
+            onChange={(e, newView) => newView && setViewMode(newView)}
+            size="small"
+            aria-label="View mode selection"
+            sx={{
+              '& .MuiToggleButton-root': {
+                px: 2,
+                py: 0.5,
+                textTransform: 'none',
+                fontWeight: 500,
+              },
+            }}
+          >
+            <ToggleButton
+              value="small"
+              aria-label="Grid view - shows escrows in compact 4-column grid layout (Press V to toggle)"
+              title="Grid view (V)"
             >
-              <CalendarToday fontSize="small" />
-            </IconButton>
+              {/* 4-column grid icon matching actual card layout */}
+              <Box sx={{ display: 'flex', gap: 0.4 }}>
+                <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+              </Box>
+            </ToggleButton>
+            <ToggleButton
+              value="large"
+              aria-label="Full width view - shows escrows in detailed full-width layout (Press V to toggle)"
+              title="Full width view (V)"
+            >
+              {/* Wide horizontal bar representing full-width card - total width 24px */}
+              <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+            </ToggleButton>
+          </ToggleButtonGroup>
 
-            {/* Archive/Trash Icon - moved from left side */}
-            <IconButton
-              size="small"
-              onClick={() => setSelectedStatus('archived')}
-              sx={{
-                width: 40,
-                height: 40,
-                backgroundColor: selectedStatus === 'archived' ? 'warning.main' : alpha('#000', 0.06),
-                color: selectedStatus === 'archived' ? 'white' : 'text.secondary',
-                '&:hover': {
-                  backgroundColor: selectedStatus === 'archived' ? 'warning.dark' : alpha('#000', 0.1),
-                },
-                transition: 'all 0.2s',
-              }}
-            >
-              <Badge badgeContent={archivedCount} color="error" max={99}>
-                <DeleteIcon />
-              </Badge>
-            </IconButton>
-          </Box>
+          {/* Calendar Icon */}
+          <IconButton
+            onClick={handleCalendarOpen}
+            size="small"
+            sx={{
+              width: 40,
+              height: 40,
+              backgroundColor: alpha('#000', 0.06),
+              '&:hover': {
+                backgroundColor: alpha('#000', 0.1),
+              },
+            }}
+          >
+            <CalendarToday fontSize="small" />
+          </IconButton>
+        </Box>
+
+        {/* Archive/Trash Icon - Separate from overlay, positioned after tab bar */}
+        <Box
+          sx={{
+            position: 'absolute',
+            top: '50%',
+            right: -56, // Position outside tab bar to the right
+            transform: 'translateY(-50%)',
+            zIndex: 10,
+          }}
+        >
+          <IconButton
+            size="small"
+            onClick={() => setSelectedStatus('archived')}
+            sx={{
+              width: 40,
+              height: 40,
+              backgroundColor: selectedStatus === 'archived' ? 'warning.main' : alpha('#000', 0.06),
+              color: selectedStatus === 'archived' ? 'white' : 'text.secondary',
+              '&:hover': {
+                backgroundColor: selectedStatus === 'archived' ? 'warning.dark' : alpha('#000', 0.1),
+              },
+              transition: 'all 0.2s',
+            }}
+          >
+            <Badge badgeContent={archivedCount} color="error" max={99}>
+              <DeleteIcon />
+            </Badge>
+          </IconButton>
+        </Box>
       </Box>
 
 
