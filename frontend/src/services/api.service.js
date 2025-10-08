@@ -33,10 +33,12 @@ class ApiService {
   constructor() {
     // If API_BASE_URL already includes /v1, use it as is, otherwise append /v1
     this.baseURL = API_BASE_URL.includes('/v1') ? API_BASE_URL : `${API_BASE_URL}/v1`;
-    
-    // Get authentication tokens
-    this.token = localStorage.getItem('authToken');
-    this.apiKey = localStorage.getItem('apiKey');
+
+    // DO NOT read JWT from localStorage (XSS vulnerability fixed - Phase 4)
+    // Token is managed by auth.service.js in memory only
+    // Refresh tokens are stored in httpOnly cookies (secure)
+    this.token = null;
+    this.apiKey = localStorage.getItem('apiKey'); // API keys are safe to store
     
     // Log initialization (only in development)
     if (process.env.NODE_ENV === 'development') {
@@ -67,8 +69,9 @@ class ApiService {
       }
     });
 
-    // Refresh authentication from localStorage
-    this.token = localStorage.getItem('authToken');
+    // DO NOT refresh JWT from localStorage (XSS protection - Phase 4)
+    // Token is managed by auth.service.js and set via setToken() method
+    // API keys are safe to refresh from localStorage
     this.apiKey = localStorage.getItem('apiKey');
     
     // Ensure endpoint starts with /
@@ -148,11 +151,11 @@ class ApiService {
           // Only redirect to login if refresh failed or wasn't attempted
           if (!isAuthEndpoint && !isApiKeysEndpoint && !isLoginPage && !isSettingsPage) {
             console.log('⚠️ Authentication failed, redirecting to login...');
-            // Clear invalid authentication
-            localStorage.removeItem('authToken');
+            // Clear invalid authentication (Phase 4: only clear user data, NOT tokens from localStorage)
             localStorage.removeItem('apiKey');
             localStorage.removeItem('user');
             localStorage.removeItem('tokenExpiry');
+            // JWT tokens are already NOT stored in localStorage (XSS protection)
             // Redirect to login page after a brief delay
             setTimeout(() => {
               window.location.href = '/login';
@@ -267,14 +270,12 @@ class ApiService {
     });
   }
 
-  // Set authentication token
+  // Set authentication token (MEMORY ONLY - XSS protection Phase 4)
   setToken(token) {
     this.token = token;
-    if (token) {
-      localStorage.setItem('authToken', token);
-    } else {
-      localStorage.removeItem('authToken');
-    }
+    // DO NOT store in localStorage (XSS vulnerability)
+    // Tokens are now stored in memory only
+    // Refresh tokens are stored in httpOnly cookies by backend
   }
 
   // Set API key
@@ -392,10 +393,9 @@ class ApiService {
 // Create the API instance
 const apiInstance = new ApiService();
 
-// Initialize with stored token if available
-if (typeof window !== 'undefined' && localStorage.getItem('authToken')) {
-  apiInstance.setToken(localStorage.getItem('authToken'));
-}
+// DO NOT initialize token from localStorage (XSS protection - Phase 4)
+// Token will be set by auth.service.js after login
+// This ensures tokens are NEVER persisted in localStorage
 
 // Export specific API methods for better organization
 export const escrowsAPI = {
