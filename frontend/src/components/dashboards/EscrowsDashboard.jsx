@@ -1054,7 +1054,15 @@ const EscrowsDashboard = () => {
           }}
         >
           {/* Sort Selector */}
-          <FormControl size="small" sx={{ minWidth: 180 }}>
+          <FormControl
+            size="small"
+            sx={{
+              minWidth: 180,
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: 'background.paper',
+              },
+            }}
+          >
             <InputLabel>Sort By</InputLabel>
             <Select
               value={sortBy}
