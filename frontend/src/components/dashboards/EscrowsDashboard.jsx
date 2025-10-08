@@ -1398,6 +1398,7 @@ const EscrowsDashboard = () => {
             },
             gap: 3, // 24px gap
             width: '100%',
+            minHeight: '600px', // Prevent scroll jump when switching tabs
           }}>
         <AnimatePresence>
           {(() => {
@@ -1610,6 +1611,9 @@ const EscrowsDashboard = () => {
               const useVirtualization = sortedEscrows.length >= 50;
 
               if (useVirtualization) {
+                // Calculate dynamic height: viewport height minus header/padding (~400px)
+                const dynamicHeight = Math.max(600, window.innerHeight - 400);
+
                 return (
                   <Box sx={{ gridColumn: '1 / -1', width: '100%' }}>
                     <VirtualizedEscrowList
@@ -1619,7 +1623,7 @@ const EscrowsDashboard = () => {
                       animationDuration={animationDuration}
                       animationIntensity={animationIntensity}
                       onArchive={handleArchive}
-                      containerHeight={800}
+                      containerHeight={dynamicHeight}
                     />
                   </Box>
                 );
