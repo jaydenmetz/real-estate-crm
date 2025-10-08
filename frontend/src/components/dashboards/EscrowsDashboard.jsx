@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NewEscrowModal from '../forms/NewEscrowModal';
 import EscrowCard from '../common/widgets/EscrowCard';
+import VirtualizedEscrowList from '../common/VirtualizedEscrowList';
 import {
   Container,
   Box,
@@ -1565,18 +1566,38 @@ const EscrowsDashboard = () => {
             </Paper>
               );
             } else {
-              return sortedEscrows.map((escrow, index) => (
-                <EscrowCard
-                  key={escrow.id}
-                  escrow={escrow}
-                  viewMode={viewMode}
-                  animationType={animationType}
-                  animationDuration={animationDuration}
-                  animationIntensity={animationIntensity}
-                  index={index}
-                  onArchive={handleArchive}
-                />
-              ));
+              // Use virtualization for large lists (100+ escrows) to improve performance
+              // For smaller lists, use regular rendering to maintain grid layout
+              const useVirtualization = sortedEscrows.length >= 100 && viewMode !== 'small';
+
+              if (useVirtualization) {
+                return (
+                  <Box sx={{ gridColumn: '1 / -1', width: '100%' }}>
+                    <VirtualizedEscrowList
+                      escrows={sortedEscrows}
+                      viewMode={viewMode}
+                      animationType={animationType}
+                      animationDuration={animationDuration}
+                      animationIntensity={animationIntensity}
+                      onArchive={handleArchive}
+                      containerHeight={800}
+                    />
+                  </Box>
+                );
+              } else {
+                return sortedEscrows.map((escrow, index) => (
+                  <EscrowCard
+                    key={escrow.id}
+                    escrow={escrow}
+                    viewMode={viewMode}
+                    animationType={animationType}
+                    animationDuration={animationDuration}
+                    animationIntensity={animationIntensity}
+                    index={index}
+                    onArchive={handleArchive}
+                  />
+                ));
+              }
             }
           })()}
         </AnimatePresence>
