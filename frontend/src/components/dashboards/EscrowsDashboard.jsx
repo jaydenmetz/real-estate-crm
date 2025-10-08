@@ -304,6 +304,10 @@ const EscrowsDashboard = () => {
   const [escrows, setEscrows] = useState([]);
   const [archivedEscrows, setArchivedEscrows] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMorePages, setHasMorePages] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
   const [showNewEscrowModal, setShowNewEscrowModal] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState('active');
   // Load saved view mode from localStorage, default to 'small'
@@ -448,11 +452,16 @@ const EscrowsDashboard = () => {
     };
   }, [isConnected]);
 
-  const fetchEscrows = async (pageNum = 1, appendData = false, accumulatedEscrows = [], accumulatedArchived = []) => {
+  const fetchEscrows = async (pageNum = 1, appendData = false) => {
     try {
-      if (!appendData) {
+      // Show appropriate loading state
+      if (appendData) {
+        setLoadingMore(true);
+      } else {
         setLoading(true);
+        setCurrentPage(1);
       }
+
       console.log(`Fetching escrows... (page ${pageNum})`);
 
       // Fetch escrows with pagination (50 per page for optimal performance)
@@ -465,33 +474,37 @@ const EscrowsDashboard = () => {
 
       if (response.success) {
         const allData = response.data.escrows || response.data || [];
-        const totalPages = response.data.pagination?.totalPages || 1;
+        const pagination = response.data.pagination || {};
+        const totalPages = pagination.totalPages || 1;
+        const totalRecords = pagination.total || allData.length;
         const hasMore = pageNum < totalPages;
 
         // Separate active and archived escrows based on deleted_at field
         const escrowData = allData.filter(escrow => !escrow.deleted_at && !escrow.deletedAt);
         const archivedData = allData.filter(escrow => escrow.deleted_at || escrow.deletedAt);
 
-        console.log(`Page ${pageNum}/${totalPages} - Escrows: ${allData.length}, Active: ${escrowData.length}, Archived: ${archivedData.length}`);
+        console.log(`Page ${pageNum}/${totalPages} - Total: ${totalRecords}, Loaded: ${allData.length}, Active: ${escrowData.length}, Archived: ${archivedData.length}`);
 
-        // Accumulate data
-        const updatedEscrows = appendData ? [...accumulatedEscrows, ...escrowData] : escrowData;
-        const updatedArchived = appendData ? [...accumulatedArchived, ...archivedData] : archivedData;
-
-        // Update state with accumulated data
-        setEscrows(updatedEscrows);
-        setArchivedEscrows(updatedArchived);
-        setArchivedCount(updatedArchived.length);
-
-        // Load next page automatically if there's more data
-        if (hasMore) {
-          // Recursively load all pages for stats calculation
-          await fetchEscrows(pageNum + 1, true, updatedEscrows, updatedArchived);
+        // Update state based on whether we're appending or replacing
+        if (appendData) {
+          setEscrows(prev => [...prev, ...escrowData]);
+          setArchivedEscrows(prev => [...prev, ...archivedData]);
         } else {
-          // Calculate stats only after all data is loaded
-          calculateStats(updatedEscrows, selectedStatus);
-          generateChartData(updatedEscrows);
+          setEscrows(escrowData);
+          setArchivedEscrows(archivedData);
         }
+
+        // Update pagination state
+        setCurrentPage(pageNum);
+        setHasMorePages(hasMore);
+        setTotalCount(totalRecords);
+        setArchivedCount(archivedData.length);
+
+        // Calculate stats from currently loaded data only
+        // This allows instant display without waiting for all pages
+        const currentEscrows = appendData ? [...escrows, ...escrowData] : escrowData;
+        calculateStats(currentEscrows, selectedStatus);
+        generateChartData(currentEscrows);
       } else {
         console.error('API returned success: false', response);
       }
@@ -500,8 +513,17 @@ const EscrowsDashboard = () => {
       console.error('Full error:', error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
+
+  // Load more escrows (infinite scroll handler)
+  const loadMoreEscrows = useCallback(() => {
+    if (!loadingMore && hasMorePages) {
+      console.log(`Loading page ${currentPage + 1}...`);
+      fetchEscrows(currentPage + 1, true);
+    }
+  }, [loadingMore, hasMorePages, currentPage]);
 
   const calculateStats = (escrowData, statusFilter = 'active') => {
     // Safety check for escrowData or if it's archived with no data
@@ -912,7 +934,7 @@ const EscrowsDashboard = () => {
             <StatCard
               icon={Home}
               title="Total Escrows"
-              value={stats.totalEscrows || 0}
+              value={hasMorePages ? `${stats.totalEscrows}+` : stats.totalEscrows || 0}
               color="#ffffff"
               delay={0}
             />
@@ -1583,9 +1605,9 @@ const EscrowsDashboard = () => {
             </Paper>
               );
             } else {
-              // Use virtualization for large lists (100+ escrows) to improve performance
+              // Use virtualization for large lists (50+ escrows) to improve performance
               // For smaller lists, use regular rendering to maintain grid layout
-              const useVirtualization = sortedEscrows.length >= 100 && viewMode !== 'small';
+              const useVirtualization = sortedEscrows.length >= 50;
 
               if (useVirtualization) {
                 return (
@@ -1618,6 +1640,35 @@ const EscrowsDashboard = () => {
             }
           })()}
         </AnimatePresence>
+
+        {/* Load More Button */}
+        {hasMorePages && !loading && selectedStatus !== 'archived' && (
+          <Box sx={{
+            gridColumn: '1 / -1',
+            display: 'flex',
+            justifyContent: 'center',
+            mt: 4,
+            mb: 2
+          }}>
+            <Button
+              variant="outlined"
+              size="large"
+              onClick={loadMoreEscrows}
+              disabled={loadingMore}
+              startIcon={loadingMore ? <CircularProgress size={20} /> : null}
+              sx={{
+                px: 6,
+                py: 1.5,
+                borderRadius: '12px',
+                textTransform: 'none',
+                fontSize: '1rem',
+                fontWeight: 600
+              }}
+            >
+              {loadingMore ? 'Loading...' : `Load More (${totalCount - escrows.length} remaining)`}
+            </Button>
+          </Box>
+        )}
       </Box>
         </>
       )}
