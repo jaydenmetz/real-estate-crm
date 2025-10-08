@@ -1007,21 +1007,23 @@ const EscrowsDashboard = () => {
 
       {/* Status Tabs with View Mode Toggle */}
       <Box sx={{ mb: 4, display: 'flex', gap: 2, alignItems: 'center' }}>
-        {/* Tab Bar - Contained */}
+        {/* Tab Bar - Extended to fill space */}
         <Paper
           elevation={0}
           sx={{
             backgroundColor: 'background.paper',
             borderRadius: 2,
             boxShadow: 1,
-            display: 'inline-flex',
+            display: 'flex',
             alignItems: 'center',
+            flex: 1, // Fill available space
           }}
         >
           <Tabs
             value={selectedStatus}
             onChange={(e, newValue) => setSelectedStatus(newValue)}
             sx={{
+              width: '100%', // Fill parent width
               '& .MuiTab-root': {
                 textTransform: 'none',
                 fontSize: '1rem',
@@ -1040,7 +1042,7 @@ const EscrowsDashboard = () => {
         </Paper>
 
         {/* Right-side Controls */}
-        <Box sx={{ ml: 'auto', display: 'flex', gap: 2, alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
             {/* Sort Selector */}
             <FormControl size="small" sx={{ minWidth: 180 }}>
               <InputLabel>Sort By</InputLabel>
