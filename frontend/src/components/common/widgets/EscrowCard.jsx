@@ -336,12 +336,12 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
         gap: 1.5, // 12px gap between cards
         alignItems: 'stretch', // Force both cards to match height
       }}>
-        {/* Card 1: Escrow Card (Fixed width - never moves) */}
+        {/* Card 1: Escrow Card (Fixed 320px width in all modes) */}
         <Box
           sx={{
-            width: viewMode === 'small' ? '100%' : '320px', // Small: full grid cell, Large: fixed 320px
-            minWidth: viewMode === 'small' ? 'unset' : '320px', // Prevent shrinking in large mode
-            maxWidth: viewMode === 'small' ? '100%' : '320px', // Prevent growing in large mode
+            width: '320px', // Always 320px width
+            minWidth: '320px', // Prevent shrinking
+            maxWidth: '320px', // Prevent growing
             flexShrink: 0,
             display: 'flex', // Make this a flex container so Card stretches to full height
           }}
