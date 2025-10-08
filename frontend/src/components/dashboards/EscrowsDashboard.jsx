@@ -1056,18 +1056,38 @@ const EscrowsDashboard = () => {
           {/* Sort Selector */}
           <FormControl
             size="small"
+            variant="outlined"
             sx={{
               minWidth: 180,
               '& .MuiOutlinedInput-root': {
                 backgroundColor: 'background.paper',
+                borderRadius: 2,
+              },
+              '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: alpha('#000', 0.12),
               },
             }}
           >
-            <InputLabel>Sort By</InputLabel>
             <Select
               value={sortBy}
-              label="Sort By"
               onChange={(e) => setSortBy(e.target.value)}
+              displayEmpty
+              renderValue={(value) => {
+                const labels = {
+                  closing_date: 'Closing Date',
+                  created_at: 'Date Created',
+                  sale_price: 'Sale Price',
+                  property_address: 'Address',
+                  escrow_status: 'Status',
+                };
+                return (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="body2" sx={{ fontSize: '0.875rem', fontWeight: 500 }}>
+                      Sort: {labels[value]}
+                    </Typography>
+                  </Box>
+                );
+              }}
             >
               <MenuItem value="closing_date">Closing Date</MenuItem>
               <MenuItem value="created_at">Date Created</MenuItem>
