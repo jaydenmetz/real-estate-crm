@@ -1053,9 +1053,9 @@ const EscrowsDashboard = () => {
           </Box>
         </HeroSection>
 
-      {/* Status Tabs with Controls Overlay */}
-      <Box sx={{ mb: 4, position: 'relative' }}>
-        {/* Tab Bar - Full width */}
+      {/* Status Tabs with Controls - Responsive Layout */}
+      <Box sx={{ mb: 4 }}>
+        {/* Tab Bar */}
         <Paper
           elevation={0}
           sx={{
@@ -1064,18 +1064,23 @@ const EscrowsDashboard = () => {
             boxShadow: 1,
             display: 'flex',
             alignItems: 'center',
+            position: 'relative',
           }}
         >
           <Tabs
             value={selectedStatus}
             onChange={(e, newValue) => setSelectedStatus(newValue)}
+            variant="scrollable"
+            scrollButtons="auto"
             sx={{
               width: '100%',
               '& .MuiTab-root': {
                 textTransform: 'none',
-                fontSize: '1rem',
+                fontSize: { xs: '0.875rem', md: '1rem' },
                 fontWeight: 500,
                 minHeight: 56,
+                minWidth: { xs: 'auto', md: 90 },
+                px: { xs: 2, md: 3 },
               },
               '& .Mui-selected': {
                 fontWeight: 700,
@@ -1086,21 +1091,20 @@ const EscrowsDashboard = () => {
             <Tab label="Closed Escrows" value="closed" />
             <Tab label="Cancelled Escrows" value="cancelled" />
           </Tabs>
-        </Paper>
 
-        {/* Controls Overlay - Positioned on top right of tab bar */}
-        <Box
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            right: 16,
-            transform: 'translateY(-50%)',
-            display: 'flex',
-            gap: 2,
-            alignItems: 'center',
-            zIndex: 10,
-          }}
-        >
+          {/* Controls Overlay - Desktop only */}
+          <Box
+            sx={{
+              position: 'absolute',
+              top: '50%',
+              right: 16,
+              transform: 'translateY(-50%)',
+              display: { xs: 'none', lg: 'flex' },
+              gap: 2,
+              alignItems: 'center',
+              zIndex: 10,
+            }}
+          >
           {/* Sort Selector */}
           <FormControl
             size="small"
@@ -1201,7 +1205,7 @@ const EscrowsDashboard = () => {
           </IconButton>
         </Box>
 
-        {/* Archive/Trash Icon - Separate from overlay, positioned after tab bar */}
+        {/* Archive/Trash Icon - Desktop only, positioned after tab bar */}
         <Box
           sx={{
             position: 'absolute',
@@ -1209,6 +1213,7 @@ const EscrowsDashboard = () => {
             right: -56, // Position outside tab bar to the right
             transform: 'translateY(-50%)',
             zIndex: 10,
+            display: { xs: 'none', lg: 'block' },
           }}
         >
           <IconButton
@@ -1229,6 +1234,139 @@ const EscrowsDashboard = () => {
               <DeleteIcon />
             </Badge>
           </IconButton>
+        </Box>
+        </Paper>
+
+        {/* Mobile Controls - Below tabs on small screens */}
+        <Box
+          sx={{
+            display: { xs: 'flex', lg: 'none' },
+            gap: 2,
+            mt: 2,
+            flexWrap: 'wrap',
+            alignItems: 'center',
+          }}
+        >
+          {/* Sort Selector - Mobile */}
+          <FormControl
+            size="small"
+            variant="outlined"
+            sx={{
+              flex: '1 1 auto',
+              minWidth: 180,
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: 'background.paper',
+                borderRadius: 2,
+              },
+              '& .MuiOutlinedInput-notchedOutline': {
+                borderColor: alpha('#000', 0.12),
+              },
+            }}
+          >
+            <Select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              displayEmpty
+              renderValue={(value) => {
+                const labels = {
+                  closing_date: 'Closing Date',
+                  created_at: 'Date Created',
+                  sale_price: 'Sale Price',
+                  property_address: 'Address',
+                  escrow_status: 'Status',
+                };
+                return (
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography variant="body2" sx={{ fontSize: '0.875rem', fontWeight: 500 }}>
+                      Sort: {labels[value]}
+                    </Typography>
+                  </Box>
+                );
+              }}
+            >
+              <MenuItem value="closing_date">Closing Date</MenuItem>
+              <MenuItem value="created_at">Date Created</MenuItem>
+              <MenuItem value="sale_price">Sale Price</MenuItem>
+              <MenuItem value="property_address">Address</MenuItem>
+              <MenuItem value="escrow_status">Status</MenuItem>
+            </Select>
+          </FormControl>
+
+          {/* View Mode, Calendar, Archive - Mobile */}
+          <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+            {/* View Mode Selector */}
+            <ToggleButtonGroup
+              value={viewMode}
+              exclusive
+              onChange={(e, newView) => newView && setViewMode(newView)}
+              size="small"
+              aria-label="View mode selection"
+              sx={{
+                '& .MuiToggleButton-root': {
+                  px: 2,
+                  py: 0.5,
+                  textTransform: 'none',
+                  fontWeight: 500,
+                },
+              }}
+            >
+              <ToggleButton
+                value="small"
+                aria-label="Grid view"
+                title="Grid view (V)"
+              >
+                <Box sx={{ display: 'flex', gap: 0.4 }}>
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                </Box>
+              </ToggleButton>
+              <ToggleButton
+                value="large"
+                aria-label="Full width view"
+                title="Full width view (V)"
+              >
+                <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+              </ToggleButton>
+            </ToggleButtonGroup>
+
+            {/* Calendar Icon */}
+            <IconButton
+              onClick={handleCalendarOpen}
+              size="small"
+              sx={{
+                width: 40,
+                height: 40,
+                backgroundColor: alpha('#000', 0.06),
+                '&:hover': {
+                  backgroundColor: alpha('#000', 0.1),
+                },
+              }}
+            >
+              <CalendarToday fontSize="small" />
+            </IconButton>
+
+            {/* Archive/Trash Icon */}
+            <IconButton
+              size="small"
+              onClick={() => setSelectedStatus('archived')}
+              sx={{
+                width: 40,
+                height: 40,
+                backgroundColor: selectedStatus === 'archived' ? 'warning.main' : alpha('#000', 0.06),
+                color: selectedStatus === 'archived' ? 'white' : 'text.secondary',
+                '&:hover': {
+                  backgroundColor: selectedStatus === 'archived' ? 'warning.dark' : alpha('#000', 0.1),
+                },
+                transition: 'all 0.2s',
+              }}
+            >
+              <Badge badgeContent={archivedCount} color="error" max={99}>
+                <DeleteIcon />
+              </Badge>
+            </IconButton>
+          </Box>
         </Box>
       </Box>
 
