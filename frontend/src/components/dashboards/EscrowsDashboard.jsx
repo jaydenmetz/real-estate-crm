@@ -1589,9 +1589,21 @@ const EscrowsDashboard = () => {
                 onOpen={() => setStartDatePickerOpen(true)}
                 onClose={() => setStartDatePickerOpen(false)}
                 value={(() => {
-                  const date = customStartDate || dateRange.startDate;
-                  if (!date || !(date instanceof Date) || isNaN(date.getTime())) return null;
-                  return date;
+                  try {
+                    const date = customStartDate || dateRange?.startDate;
+                    if (!date) return null;
+                    if (typeof date === 'string') {
+                      const parsed = new Date(date);
+                      if (isNaN(parsed.getTime())) return null;
+                      return parsed;
+                    }
+                    if (!(date instanceof Date)) return null;
+                    if (isNaN(date.getTime())) return null;
+                    return date;
+                  } catch (e) {
+                    console.error('DatePicker value error:', e);
+                    return null;
+                  }
                 })()}
                 onChange={(newDate) => {
                   setCustomStartDate(newDate);
@@ -1646,9 +1658,21 @@ const EscrowsDashboard = () => {
                 onOpen={() => setEndDatePickerOpen(true)}
                 onClose={() => setEndDatePickerOpen(false)}
                 value={(() => {
-                  const date = customEndDate || dateRange.endDate;
-                  if (!date || !(date instanceof Date) || isNaN(date.getTime())) return null;
-                  return date;
+                  try {
+                    const date = customEndDate || dateRange?.endDate;
+                    if (!date) return null;
+                    if (typeof date === 'string') {
+                      const parsed = new Date(date);
+                      if (isNaN(parsed.getTime())) return null;
+                      return parsed;
+                    }
+                    if (!(date instanceof Date)) return null;
+                    if (isNaN(date.getTime())) return null;
+                    return date;
+                  } catch (e) {
+                    console.error('DatePicker value error:', e);
+                    return null;
+                  }
                 })()}
                 onChange={(newDate) => {
                   setCustomEndDate(newDate);
