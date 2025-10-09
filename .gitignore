@@ -79,3 +79,12 @@ backend/backups/*.sql
 backend/backups/*.sql.gz
 *.backup
 *.dump*.log
+
+# Media files (PDFs, videos, large files)
+*.pdf
+*.mov
+*.mp4
+*.avi
+*.mkv
+*.wmv
+*.flv
