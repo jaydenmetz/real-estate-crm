@@ -1588,7 +1588,7 @@ const EscrowsDashboard = () => {
                   boxShadow: '0 2px 8px rgba(25, 118, 210, 0.15)',
                 },
               }}>
-              {/* Start Date Picker */}
+              {/* Start Date Picker - TEST: slotProps commented out */}
               <DatePicker
                 open={startDatePickerOpen}
                 onOpen={() => setStartDatePickerOpen(true)}
@@ -1619,7 +1619,8 @@ const EscrowsDashboard = () => {
                     setDateRangeFilter(null);
                   }
                 }}
-                slotProps={{
+                {/* STRATEGIC COMMENT: slotProps disabled to test if error is in textField.value */}
+                {false && slotProps={{
                   textField: {
                     size: 'small',
                     onClick: () => setStartDatePickerOpen(true),
