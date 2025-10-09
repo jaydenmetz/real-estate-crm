@@ -383,6 +383,8 @@ const EscrowsDashboard = () => {
   const [dateRangeFilter, setDateRangeFilter] = useState('1M'); // '1D', '1M', '1Y', 'YTD', or null for custom
   const [customStartDate, setCustomStartDate] = useState(null);
   const [customEndDate, setCustomEndDate] = useState(null);
+  const [startDatePickerOpen, setStartDatePickerOpen] = useState(false);
+  const [endDatePickerOpen, setEndDatePickerOpen] = useState(false);
   const [stats, setStats] = useState({
     totalEscrows: 0,
     activeEscrows: 0,
@@ -1574,6 +1576,9 @@ const EscrowsDashboard = () => {
             }}>
               {/* Start Date Picker */}
               <DatePicker
+                open={startDatePickerOpen}
+                onOpen={() => setStartDatePickerOpen(true)}
+                onClose={() => setStartDatePickerOpen(false)}
                 value={customStartDate || dateRange.startDate}
                 onChange={(newDate) => {
                   setCustomStartDate(newDate);
@@ -1588,6 +1593,7 @@ const EscrowsDashboard = () => {
                 slotProps={{
                   textField: {
                     size: 'small',
+                    onClick: () => setStartDatePickerOpen(true),
                     sx: {
                       width: 130,
                       '& .MuiInputBase-input': {
@@ -1597,6 +1603,9 @@ const EscrowsDashboard = () => {
                         cursor: 'pointer',
                       },
                     },
+                  },
+                  openPickerButton: {
+                    sx: { display: 'none' },
                   },
                 }}
               />
@@ -1612,6 +1621,9 @@ const EscrowsDashboard = () => {
 
               {/* End Date Picker */}
               <DatePicker
+                open={endDatePickerOpen}
+                onOpen={() => setEndDatePickerOpen(true)}
+                onClose={() => setEndDatePickerOpen(false)}
                 value={customEndDate || dateRange.endDate}
                 onChange={(newDate) => {
                   setCustomEndDate(newDate);
@@ -1626,6 +1638,7 @@ const EscrowsDashboard = () => {
                 slotProps={{
                   textField: {
                     size: 'small',
+                    onClick: () => setEndDatePickerOpen(true),
                     sx: {
                       width: 130,
                       '& .MuiInputBase-input': {
@@ -1635,6 +1648,9 @@ const EscrowsDashboard = () => {
                         cursor: 'pointer',
                       },
                     },
+                  },
+                  openPickerButton: {
+                    sx: { display: 'none' },
                   },
                 }}
               />
