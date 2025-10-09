@@ -1586,14 +1586,12 @@ const EscrowsDashboard = () => {
                 }}
                 format="MMM d, yyyy"
                 slotProps={{
-                  field: {
-                    readOnly: true,
-                  },
                   textField: {
                     size: 'small',
                     variant: 'standard',
                     InputProps: {
                       disableUnderline: true,
+                      readOnly: true,
                     },
                     sx: {
                       width: 100,
@@ -1614,6 +1612,20 @@ const EscrowsDashboard = () => {
                   openPickerButton: {
                     sx: {
                       display: 'none',
+                    },
+                  },
+                  popper: {
+                    sx: {
+                      '& .MuiPickersDay-root': {
+                        '&.Mui-selected': {
+                          backgroundColor: 'primary.main',
+                          color: 'white',
+                          fontWeight: 600,
+                          '&:hover': {
+                            backgroundColor: 'primary.dark',
+                          },
+                        },
+                      },
                     },
                   },
                 }}
@@ -1642,14 +1654,12 @@ const EscrowsDashboard = () => {
                 }}
                 format="MMM d, yyyy"
                 slotProps={{
-                  field: {
-                    readOnly: true,
-                  },
                   textField: {
                     size: 'small',
                     variant: 'standard',
                     InputProps: {
                       disableUnderline: true,
+                      readOnly: true,
                     },
                     sx: {
                       width: 100,
@@ -1670,6 +1680,20 @@ const EscrowsDashboard = () => {
                   openPickerButton: {
                     sx: {
                       display: 'none',
+                    },
+                  },
+                  popper: {
+                    sx: {
+                      '& .MuiPickersDay-root': {
+                        '&.Mui-selected': {
+                          backgroundColor: 'primary.main',
+                          color: 'white',
+                          fontWeight: 600,
+                          '&:hover': {
+                            backgroundColor: 'primary.dark',
+                          },
+                        },
+                      },
                     },
                   },
                 }}
