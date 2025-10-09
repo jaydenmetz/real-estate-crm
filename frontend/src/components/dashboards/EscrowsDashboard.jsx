@@ -131,7 +131,7 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
   };
 
   return (
-    <Grid item xs={12} sm={6} md={3}>
+    <Grid item xs={12} sm={6} md={6} lg={3}>
       <motion.div
         initial={{ opacity: 0, x: -12 }}
         animate={{ opacity: 1, x: 0 }}
@@ -1104,58 +1104,158 @@ const EscrowsDashboard = () => {
 
           {/* Stats Grid - White Cards - Dynamic based on selected tab */}
           <Grid container spacing={3}>
-            {(() => {
-              // Calculate cancellation rate from all non-archived escrows
-              const totalAllStatuses = (escrows || []).length;
-              const totalCancelled = (escrows || []).filter(e =>
-                e.escrowStatus?.toLowerCase() === 'cancelled'
-              ).length;
-              const cancellationRate = totalAllStatuses > 0
-                ? ((totalCancelled / totalAllStatuses) * 100).toFixed(1)
-                : 0;
+            {/* AI Assistant Placeholder - Takes up full height */}
+            <Grid item xs={12} md={3}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Card
+                  elevation={0}
+                  sx={{
+                    height: '100%',
+                    minHeight: { xs: 200, md: 320 },
+                    position: 'relative',
+                    overflow: 'hidden',
+                    background: 'linear-gradient(135deg, rgba(30, 60, 114, 0.12) 0%, rgba(42, 82, 152, 0.08) 100%)',
+                    backdropFilter: 'blur(10px)',
+                    border: '2px dashed rgba(255, 255, 255, 0.3)',
+                    borderRadius: 3,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      transform: 'scale(1.02)',
+                      border: '2px dashed rgba(255, 255, 255, 0.5)',
+                      background: 'linear-gradient(135deg, rgba(30, 60, 114, 0.18) 0%, rgba(42, 82, 152, 0.12) 100%)',
+                    }
+                  }}
+                >
+                  <CardContent sx={{ textAlign: 'center', p: 3 }}>
+                    <Box sx={{ mb: 2 }}>
+                      <Box
+                        sx={{
+                          width: 64,
+                          height: 64,
+                          borderRadius: '50%',
+                          background: 'rgba(255, 255, 255, 0.15)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          margin: '0 auto',
+                          mb: 2,
+                        }}
+                      >
+                        <Typography sx={{ fontSize: '2rem' }}>🤖</Typography>
+                      </Box>
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          color: 'rgba(255, 255, 255, 0.95)',
+                          fontWeight: 700,
+                          mb: 1,
+                          letterSpacing: '0.02em',
+                        }}
+                      >
+                        AI Escrow Manager
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: 'rgba(255, 255, 255, 0.7)',
+                          mb: 2,
+                          fontSize: '0.875rem',
+                        }}
+                      >
+                        Hire an AI assistant to automate escrow tasks, send reminders, and manage deadlines.
+                      </Typography>
+                      <Box
+                        sx={{
+                          display: 'inline-block',
+                          px: 2,
+                          py: 0.75,
+                          borderRadius: 2,
+                          background: 'rgba(255, 255, 255, 0.2)',
+                          backdropFilter: 'blur(5px)',
+                        }}
+                      >
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: 'white',
+                            fontWeight: 600,
+                            letterSpacing: '0.1em',
+                            textTransform: 'uppercase',
+                            fontSize: '0.75rem',
+                          }}
+                        >
+                          Coming Soon
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </Grid>
 
-              // Max archived limit (will be user setting based on subscription)
-              const maxArchivedLimit = 100;
+            {/* Stat Cards - Now take up 9 columns (3 columns each on desktop) */}
+            <Grid item xs={12} md={9}>
+              <Grid container spacing={3}>
+                {(() => {
+                  // Calculate cancellation rate from all non-archived escrows
+                  const totalAllStatuses = (escrows || []).length;
+                  const totalCancelled = (escrows || []).filter(e =>
+                    e.escrowStatus?.toLowerCase() === 'cancelled'
+                  ).length;
+                  const cancellationRate = totalAllStatuses > 0
+                    ? ((totalCancelled / totalAllStatuses) * 100).toFixed(1)
+                    : 0;
 
-              switch(selectedStatus) {
-                case 'active':
-                  return (
-                    <>
-                      <StatCard
-                        icon={Home}
-                        title="Total Active Escrows"
-                        value={stats.totalEscrows || 0}
-                        color="#ffffff"
-                        delay={0}
-                      />
-                      <StatCard
-                        icon={Schedule}
-                        title="Escrows This Month"
-                        value={stats.monthClosed || 0}
-                        color="#ffffff"
-                        delay={1}
-                      />
-                      <StatCard
-                        icon={TrendingUp}
-                        title="Total Volume"
-                        value={stats.totalVolume || 0}
-                        prefix="$"
-                        suffix=""
-                        color="#ffffff"
-                        delay={2}
-                      />
-                      <StatCard
-                        icon={AttachMoney}
-                        title="Total Commission"
-                        value={stats.projectedCommission || 0}
-                        prefix="$"
-                        suffix=""
-                        color="#ffffff"
-                        delay={3}
-                        showPrivacy={true}
-                      />
-                    </>
-                  );
+                  // Max archived limit (will be user setting based on subscription)
+                  const maxArchivedLimit = 100;
+
+                  switch(selectedStatus) {
+                    case 'active':
+                      return (
+                        <>
+                          <StatCard
+                            icon={Home}
+                            title="Total Active Escrows"
+                            value={stats.totalEscrows || 0}
+                            color="#ffffff"
+                            delay={0}
+                          />
+                          <StatCard
+                            icon={Schedule}
+                            title="Escrows This Month"
+                            value={stats.monthClosed || 0}
+                            color="#ffffff"
+                            delay={1}
+                          />
+                          <StatCard
+                            icon={TrendingUp}
+                            title="Total Volume"
+                            value={stats.totalVolume || 0}
+                            prefix="$"
+                            suffix=""
+                            color="#ffffff"
+                            delay={2}
+                          />
+                          <StatCard
+                            icon={AttachMoney}
+                            title="Total Commission"
+                            value={stats.projectedCommission || 0}
+                            prefix="$"
+                            suffix=""
+                            color="#ffffff"
+                            delay={3}
+                            showPrivacy={true}
+                          />
+                        </>
+                      );
 
                 case 'closed':
                   return (
@@ -1315,6 +1415,8 @@ const EscrowsDashboard = () => {
                   );
               }
             })()}
+              </Grid>
+            </Grid>
           </Grid>
 
           {/* Action Buttons */}
