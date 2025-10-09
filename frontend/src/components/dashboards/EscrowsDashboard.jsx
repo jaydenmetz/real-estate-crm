@@ -1602,7 +1602,15 @@ const EscrowsDashboard = () => {
                   textField: {
                     size: 'small',
                     onClick: () => setStartDatePickerOpen(true),
-                    value: (customStartDate || dateRange.startDate) ? formatDate(customStartDate || dateRange.startDate, 'MMM d, yyyy') : '',
+                    value: (() => {
+                      const date = customStartDate || dateRange.startDate;
+                      if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '';
+                      try {
+                        return formatDate(date, 'MMM d, yyyy');
+                      } catch (e) {
+                        return '';
+                      }
+                    })(),
                     sx: {
                       width: 130,
                       '& .MuiInputBase-input': {
@@ -1647,7 +1655,15 @@ const EscrowsDashboard = () => {
                   textField: {
                     size: 'small',
                     onClick: () => setEndDatePickerOpen(true),
-                    value: (customEndDate || dateRange.endDate) ? formatDate(customEndDate || dateRange.endDate, 'MMM d, yyyy') : '',
+                    value: (() => {
+                      const date = customEndDate || dateRange.endDate;
+                      if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '';
+                      try {
+                        return formatDate(date, 'MMM d, yyyy');
+                      } catch (e) {
+                        return '';
+                      }
+                    })(),
                     sx: {
                       width: 130,
                       '& .MuiInputBase-input': {
