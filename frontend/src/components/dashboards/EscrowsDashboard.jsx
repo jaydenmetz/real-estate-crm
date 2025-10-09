@@ -1017,8 +1017,8 @@ const EscrowsDashboard = () => {
           <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', md: 'row' } }}>
             {/* Left side: Header, Date Range, and Stats */}
             <Box sx={{ flex: 1 }}>
-              {/* Header with Date Range Filter */}
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
+              {/* Header Only - No Date Range */}
+              <Box sx={{ mb: 4 }}>
                 <motion.div
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -1030,79 +1030,6 @@ const EscrowsDashboard = () => {
                   <Typography variant="h6" sx={{ opacity: 0.9 }}>
                     Track and manage all your real estate transactions in one place
                   </Typography>
-                </motion.div>
-
-                {/* Date Range Filter */}
-                <motion.div
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, delay: 0.2 }}
-                >
-                  <Box sx={{
-                    textAlign: 'right',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'flex-end',
-                    gap: 1.5
-                  }}>
-                    {/* Date range label - prominent and professional */}
-                    <Typography
-                      sx={{
-                        color: 'white',
-                        fontWeight: 600,
-                        fontSize: '1rem',
-                        letterSpacing: '0.02em',
-                        textShadow: '0 1px 2px rgba(0,0,0,0.1)',
-                      }}
-                    >
-                      {dateRange.label}
-                    </Typography>
-
-                    {/* Toggle buttons - clean and minimal */}
-                    <ToggleButtonGroup
-                      value={dateRangeFilter}
-                      exclusive
-                      onChange={(e, newValue) => {
-                        if (newValue !== null) {
-                          setDateRangeFilter(newValue);
-                        }
-                      }}
-                      size="small"
-                      sx={{
-                        backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                        backdropFilter: 'blur(10px)',
-                        border: '1px solid rgba(255, 255, 255, 0.25)',
-                        borderRadius: 2,
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                        '& .MuiToggleButton-root': {
-                          color: 'rgba(255, 255, 255, 0.8)',
-                          border: 'none',
-                          px: 2.5,
-                          py: 0.75,
-                          fontSize: '0.8125rem',
-                          fontWeight: 600,
-                          letterSpacing: '0.05em',
-                          transition: 'all 0.2s ease',
-                          '&.Mui-selected': {
-                            backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                            color: 'white',
-                            transform: 'scale(1.05)',
-                            '&:hover': {
-                              backgroundColor: 'rgba(255, 255, 255, 0.35)',
-                            },
-                          },
-                          '&:hover': {
-                            backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                          },
-                        },
-                      }}
-                    >
-                      <ToggleButton value="1D">1D</ToggleButton>
-                      <ToggleButton value="1M">1M</ToggleButton>
-                      <ToggleButton value="1Y">1Y</ToggleButton>
-                      <ToggleButton value="YTD">YTD</ToggleButton>
-                    </ToggleButtonGroup>
-                  </Box>
                 </motion.div>
               </Box>
 
@@ -1502,7 +1429,7 @@ const EscrowsDashboard = () => {
 
       {/* Status Tabs with Controls - Side by Side Layout */}
       <Box sx={{ mb: 4, display: 'flex', gap: 2, alignItems: 'center' }}>
-        {/* Tab Bar - Takes available space */}
+        {/* Tab Bar - Grey background ends after All Escrows */}
         <Paper
           elevation={0}
           sx={{
@@ -1511,14 +1438,12 @@ const EscrowsDashboard = () => {
             boxShadow: 1,
             display: { xs: 'none', lg: 'flex' },
             alignItems: 'center',
-            flex: '1 1 auto',
           }}
         >
           <Tabs
             value={selectedStatus}
             onChange={(e, newValue) => setSelectedStatus(newValue)}
             sx={{
-              width: '100%',
               '& .MuiTab-root': {
                 textTransform: 'none',
                 fontSize: '1rem',
@@ -1537,6 +1462,47 @@ const EscrowsDashboard = () => {
           </Tabs>
         </Paper>
 
+        {/* Date Range Filter - Between tabs and controls */}
+        <Box sx={{ display: { xs: 'none', lg: 'flex' }, gap: 1.5, alignItems: 'center' }}>
+          {/* Date range label */}
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 600,
+              fontSize: '0.9rem',
+              color: 'text.primary',
+            }}
+          >
+            {dateRange.label}
+          </Typography>
+
+          {/* Toggle buttons */}
+          <ToggleButtonGroup
+            value={dateRangeFilter}
+            exclusive
+            onChange={(e, newValue) => {
+              if (newValue !== null) {
+                setDateRangeFilter(newValue);
+              }
+            }}
+            size="small"
+            sx={{
+              '& .MuiToggleButton-root': {
+                px: 1.5,
+                py: 0.5,
+                fontSize: '0.8125rem',
+                fontWeight: 600,
+                letterSpacing: '0.05em',
+              },
+            }}
+          >
+            <ToggleButton value="1D">1D</ToggleButton>
+            <ToggleButton value="1M">1M</ToggleButton>
+            <ToggleButton value="1Y">1Y</ToggleButton>
+            <ToggleButton value="YTD">YTD</ToggleButton>
+          </ToggleButtonGroup>
+        </Box>
+
         {/* Desktop Controls - Side by Side */}
         <Box
           sx={{
@@ -1546,12 +1512,12 @@ const EscrowsDashboard = () => {
             flexShrink: 0,
           }}
         >
-          {/* Sort Selector */}
+          {/* Sort Selector with icon */}
           <FormControl
             size="small"
             variant="outlined"
             sx={{
-              minWidth: 180,
+              minWidth: 160,
               '& .MuiOutlinedInput-root': {
                 backgroundColor: 'background.paper',
                 borderRadius: 2,
@@ -1565,6 +1531,9 @@ const EscrowsDashboard = () => {
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
               displayEmpty
+              startAdornment={
+                <Sort sx={{ mr: 1, fontSize: '1.25rem', color: 'text.secondary' }} />
+              }
               renderValue={(value) => {
                 const labels = {
                   closing_date: 'Closing Date',
@@ -1574,11 +1543,9 @@ const EscrowsDashboard = () => {
                   escrow_status: 'Status',
                 };
                 return (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="body2" sx={{ fontSize: '0.875rem', fontWeight: 500 }}>
-                      Sort: {labels[value]}
-                    </Typography>
-                  </Box>
+                  <Typography variant="body2" sx={{ fontSize: '0.875rem', fontWeight: 500 }}>
+                    {labels[value]}
+                  </Typography>
                 );
               }}
             >
