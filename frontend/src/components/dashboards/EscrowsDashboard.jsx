@@ -1279,6 +1279,45 @@ const EscrowsDashboard = () => {
                     </>
                   );
 
+                case 'all':
+                  return (
+                    <>
+                      <StatCard
+                        icon={Home}
+                        title="Total Escrows"
+                        value={stats.totalEscrows || 0}
+                        color="#ffffff"
+                        delay={0}
+                      />
+                      <StatCard
+                        icon={CheckCircle}
+                        title="Active"
+                        value={(escrows || []).filter(e => e.escrowStatus?.toLowerCase() === 'active').length}
+                        color="#ffffff"
+                        delay={1}
+                      />
+                      <StatCard
+                        icon={TrendingUp}
+                        title="Total Volume"
+                        value={stats.totalVolume || 0}
+                        prefix="$"
+                        suffix=""
+                        color="#ffffff"
+                        delay={2}
+                      />
+                      <StatCard
+                        icon={AttachMoney}
+                        title="Total Commission"
+                        value={stats.projectedCommission || 0}
+                        prefix="$"
+                        suffix=""
+                        color="#ffffff"
+                        delay={3}
+                        showPrivacy={true}
+                      />
+                    </>
+                  );
+
                 default:
                   return (
                     <>
@@ -1494,6 +1533,7 @@ const EscrowsDashboard = () => {
             <Tab label="Active Escrows" value="active" />
             <Tab label="Closed Escrows" value="closed" />
             <Tab label="Cancelled Escrows" value="cancelled" />
+            <Tab label="All Escrows" value="all" />
           </Tabs>
         </Paper>
 
@@ -1661,6 +1701,7 @@ const EscrowsDashboard = () => {
             <Tab label="Active Escrows" value="active" />
             <Tab label="Closed Escrows" value="closed" />
             <Tab label="Cancelled Escrows" value="cancelled" />
+            <Tab label="All Escrows" value="all" />
           </Tabs>
         </Paper>
 
@@ -2209,6 +2250,8 @@ const EscrowsDashboard = () => {
                          e.escrowStatus === 'withdrawn' ||
                          e.escrowStatus === 'Expired' ||
                          e.escrowStatus === 'expired';
+                case 'all':
+                  return true; // Show all non-archived escrows
                 default:
                   return true;
               }
