@@ -1569,7 +1569,8 @@ const EscrowsDashboard = () => {
         >
           {/* Left Side: Date Range Controls */}
           <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
+            {/* STRATEGIC COMMENT: Commenting out DatePickers to test if they're the issue */}
+            {false && <LocalizationProvider dateAdapter={AdapterDateFns}>
               <Box sx={{
                 display: 'flex',
                 gap: 1.5,
@@ -1716,7 +1717,7 @@ const EscrowsDashboard = () => {
                 }}
               />
               </Box>
-            </LocalizationProvider>
+            </LocalizationProvider>}
 
             {/* Preset Range Buttons */}
             <ToggleButtonGroup
