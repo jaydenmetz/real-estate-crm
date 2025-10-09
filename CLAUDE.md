@@ -100,6 +100,73 @@ git commit -m "Archive SECURITY_AUDIT_2025.md: Point-in-time audit, key findings
 
 ## IMPORTANT DEVELOPER PREFERENCES
 
+### 🚨 CRITICAL: Debugging Philosophy - Code First, Deployment Second
+
+**When encountering production errors, ALWAYS assume the code is the problem, not the deployment.**
+
+#### The Problem That Must Never Happen Again:
+On October 9, 2025, an "Invalid time value" error appeared in production. Instead of thoroughly auditing ALL code for the bug, I jumped to the conclusion that Railway deployment was broken. I spent 30+ minutes trying to "fix" deployment issues that didn't exist, making multiple commits and builds, when the actual bug was in `AllDataEditor.jsx` line 406 - a simple unvalidated `new Date()` call.
+
+#### New Debugging Protocol:
+
+**Step 1: ALWAYS Audit Code First (30+ minutes minimum)**
+1. **Search exhaustively** for ALL instances of the error pattern across the ENTIRE codebase
+2. **Read every file** that could cause the error, not just the "obvious" one
+3. **Validate all assumptions** - don't assume previous "fixes" worked
+4. **Check ALL similar patterns** - if one DatePicker has the bug, check ALL DatePickers
+5. **Test locally** before assuming deployment issues
+
+**Step 2: Only After Thorough Code Audit, Check Deployment**
+6. If code audit finds nothing, THEN check if deployment is serving old code
+7. Verify bundle hash with `curl -s https://crm.jaydenmetz.com/ | grep -o 'main\.[a-f0-9]*\.js'`
+8. Compare with local build hash
+9. Check Railway deployment logs for actual build failures
+
+**Step 3: Never Trust Commits Blindly**
+10. **Commit messages lie** - just because a commit says "Fix X" doesn't mean it fixed X
+11. **Always re-audit** the supposedly "fixed" code with fresh eyes
+12. **Assume your previous fix was wrong** until proven otherwise by reading the actual code
+
+#### Red Flags That Mean "Audit Code First":
+- ❌ "Railway isn't deploying" (without checking if code is actually fixed)
+- ❌ "The fix is in the code but not in production" (without verifying the fix works)
+- ❌ "Browser cache issue" (before confirming code is correct)
+- ❌ Making 3+ commits for the "same" fix (sign the original fix was wrong)
+- ❌ Focusing on bundle hashes before reading the code
+
+#### Correct Debugging Sequence:
+```
+1. Read error stack trace carefully
+2. Search ENTIRE codebase for error pattern (grep, not assumptions)
+3. Read ALL files that match the pattern
+4. Fix ALL instances of the bug (not just one)
+5. Test locally with npm run build
+6. THEN commit and push
+7. THEN check if deployment worked
+```
+
+#### Example - What I Should Have Done:
+```bash
+# ✅ CORRECT (What I did eventually):
+grep -rn "new Date(" frontend/src --include="*.jsx" | grep -v "new Date()"
+# Found AllDataEditor.jsx line 406 with unvalidated new Date()
+# Fixed it immediately
+# One commit, problem solved
+
+# ❌ WRONG (What I actually did):
+# "Fixed" EscrowsDashboard.jsx (which wasn't the problem)
+# Assumed Railway wasn't deploying
+# Made 6 commits trying to force deployment
+# Wasted 30+ minutes on non-existent deployment issues
+```
+
+#### Key Principle:
+**"Code is guilty until proven innocent. Deployment is innocent until proven guilty."**
+
+99% of production errors are code bugs, not deployment issues. Always start with code.
+
+---
+
 ### Auto-commit and Push
 - **ALWAYS commit and push to GitHub after making changes**
 - Use descriptive commit messages
