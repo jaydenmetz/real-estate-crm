@@ -92,6 +92,9 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { safeFormatDate, safeParseDate } from '../../utils/safeDateUtils';
 import { escrowsAPI } from '../../services/api.service';
 import { useAuth } from '../../contexts/AuthContext';
@@ -377,7 +380,9 @@ const EscrowsDashboard = () => {
   const [archivedCount, setArchivedCount] = useState(0);
   const [selectedArchivedIds, setSelectedArchivedIds] = useState([]);
   const [batchDeleting, setBatchDeleting] = useState(false);
-  const [dateRangeFilter, setDateRangeFilter] = useState('1M'); // '1D', '1M', '1Y', 'YTD'
+  const [dateRangeFilter, setDateRangeFilter] = useState('1M'); // '1D', '1M', '1Y', 'YTD', or null for custom
+  const [customStartDate, setCustomStartDate] = useState(null);
+  const [customEndDate, setCustomEndDate] = useState(null);
   const [stats, setStats] = useState({
     totalEscrows: 0,
     activeEscrows: 0,
@@ -955,40 +960,98 @@ const EscrowsDashboard = () => {
     setShowCalendar(!showCalendar);
   };
 
-  // Calculate date range based on filter
+  // Helper to check if two dates are the same day
+  const isSameDay = (date1, date2) => {
+    return date1.getFullYear() === date2.getFullYear() &&
+           date1.getMonth() === date2.getMonth() &&
+           date1.getDate() === date2.getDate();
+  };
+
+  // Check if custom dates match a preset range
+  const detectPresetRange = (start, end) => {
+    const now = new Date();
+
+    // Check 1D (today)
+    const todayStart = new Date(now);
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(now);
+    todayEnd.setHours(23, 59, 59, 999);
+    if (isSameDay(start, todayStart) && isSameDay(end, todayEnd)) {
+      return '1D';
+    }
+
+    // Check 1M (last 30 days)
+    const oneMonthAgo = new Date(now);
+    oneMonthAgo.setDate(now.getDate() - 30);
+    if (isSameDay(start, oneMonthAgo) && isSameDay(end, now)) {
+      return '1M';
+    }
+
+    // Check 1Y (last 365 days)
+    const oneYearAgo = new Date(now);
+    oneYearAgo.setDate(now.getDate() - 365);
+    if (isSameDay(start, oneYearAgo) && isSameDay(end, now)) {
+      return '1Y';
+    }
+
+    // Check YTD (year to date)
+    const ytdStart = new Date(now.getFullYear(), 0, 1);
+    if (isSameDay(start, ytdStart) && isSameDay(end, now)) {
+      return 'YTD';
+    }
+
+    return null;
+  };
+
+  // Calculate date range based on filter or custom dates
   const getDateRange = () => {
     const now = new Date();
     let startDate, endDate;
 
-    switch(dateRangeFilter) {
-      case '1D':
-        // Today from 12:00 AM to 11:59 PM
-        startDate = new Date(now);
-        startDate.setHours(0, 0, 0, 0); // Midnight
-        endDate = new Date(now);
-        endDate.setHours(23, 59, 59, 999); // End of day
-        break;
-      case '1M':
-        // Last 30 days
-        startDate = new Date(now);
-        startDate.setDate(now.getDate() - 30);
-        endDate = now;
-        break;
-      case '1Y':
-        // Last 365 days
-        startDate = new Date(now);
-        startDate.setDate(now.getDate() - 365);
-        endDate = now;
-        break;
-      case 'YTD':
-        // Year to date
-        startDate = new Date(now.getFullYear(), 0, 1);
-        endDate = now;
-        break;
-      default:
-        startDate = new Date(now);
-        startDate.setDate(now.getDate() - 30);
-        endDate = now;
+    // Use custom dates if both are set
+    if (customStartDate && customEndDate) {
+      startDate = customStartDate;
+      endDate = customEndDate;
+
+      // Auto-detect if custom dates match a preset
+      const matchedPreset = detectPresetRange(startDate, endDate);
+      if (matchedPreset && dateRangeFilter !== matchedPreset) {
+        setDateRangeFilter(matchedPreset);
+      } else if (!matchedPreset && dateRangeFilter !== null) {
+        setDateRangeFilter(null);
+      }
+    } else {
+      // Use preset ranges
+      switch(dateRangeFilter) {
+        case '1D':
+          // Today from 12:00 AM to 11:59 PM
+          startDate = new Date(now);
+          startDate.setHours(0, 0, 0, 0); // Midnight
+          endDate = new Date(now);
+          endDate.setHours(23, 59, 59, 999); // End of day
+          break;
+        case '1M':
+          // Last 30 days
+          startDate = new Date(now);
+          startDate.setDate(now.getDate() - 30);
+          endDate = now;
+          break;
+        case '1Y':
+          // Last 365 days
+          startDate = new Date(now);
+          startDate.setDate(now.getDate() - 365);
+          endDate = now;
+          break;
+        case 'YTD':
+          // Year to date
+          startDate = new Date(now.getFullYear(), 0, 1);
+          endDate = now;
+          break;
+        default:
+          startDate = new Date(now);
+          startDate.setDate(now.getDate() - 30);
+          endDate = now;
+      }
     }
 
     return {
@@ -1388,11 +1451,11 @@ const EscrowsDashboard = () => {
             </Box>
           </Box>
 
-          {/* Action Buttons */}
-          <Box sx={{ mt: 4, display: 'flex', gap: 2 }}>
+          {/* Action Buttons - Reduced vertical spacing */}
+          <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
             <Button
               variant="contained"
-              size="large"
+              size="medium"
               startIcon={<Add />}
               onClick={handleCreateNew}
               sx={{
@@ -1401,7 +1464,7 @@ const EscrowsDashboard = () => {
                 backdropFilter: 'blur(10px)',
                 fontWeight: 600,
                 px: 3,
-                py: 1.5,
+                py: 1,
                 borderRadius: 2,
                 '&:hover': {
                   backgroundColor: 'rgba(255, 255, 255, 0.3)',
@@ -1412,11 +1475,13 @@ const EscrowsDashboard = () => {
             </Button>
             <Button
               variant="outlined"
-              size="large"
+              size="medium"
               startIcon={<Assessment />}
               sx={{
                 color: 'white',
                 borderColor: 'rgba(255, 255, 255, 0.5)',
+                px: 3,
+                py: 1,
                 '&:hover': {
                   borderColor: 'white',
                   backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -1428,8 +1493,8 @@ const EscrowsDashboard = () => {
           </Box>
         </HeroSection>
 
-      {/* Status Tabs with Controls - Side by Side Layout */}
-      <Box sx={{ mb: 4, display: 'flex', gap: 2, alignItems: 'center' }}>
+      {/* Status Tabs with Controls - Right-justified Layout */}
+      <Box sx={{ mb: 4, display: 'flex', gap: 2, alignItems: 'center', justifyContent: 'space-between' }}>
         {/* Tab Bar - Grey background ends after All Escrows */}
         <Paper
           elevation={0}
@@ -1463,48 +1528,7 @@ const EscrowsDashboard = () => {
           </Tabs>
         </Paper>
 
-        {/* Date Range Filter - Between tabs and controls */}
-        <Box sx={{ display: { xs: 'none', lg: 'flex' }, gap: 1.5, alignItems: 'center' }}>
-          {/* Date range label */}
-          <Typography
-            variant="body2"
-            sx={{
-              fontWeight: 600,
-              fontSize: '0.9rem',
-              color: 'text.primary',
-            }}
-          >
-            {dateRange.label}
-          </Typography>
-
-          {/* Toggle buttons */}
-          <ToggleButtonGroup
-            value={dateRangeFilter}
-            exclusive
-            onChange={(e, newValue) => {
-              if (newValue !== null) {
-                setDateRangeFilter(newValue);
-              }
-            }}
-            size="small"
-            sx={{
-              '& .MuiToggleButton-root': {
-                px: 1.5,
-                py: 0.5,
-                fontSize: '0.8125rem',
-                fontWeight: 600,
-                letterSpacing: '0.05em',
-              },
-            }}
-          >
-            <ToggleButton value="1D">1D</ToggleButton>
-            <ToggleButton value="1M">1M</ToggleButton>
-            <ToggleButton value="1Y">1Y</ToggleButton>
-            <ToggleButton value="YTD">YTD</ToggleButton>
-          </ToggleButtonGroup>
-        </Box>
-
-        {/* Desktop Controls - Side by Side */}
+        {/* Right-justified Controls Section */}
         <Box
           sx={{
             display: { xs: 'none', lg: 'flex' },
@@ -1513,6 +1537,94 @@ const EscrowsDashboard = () => {
             flexShrink: 0,
           }}
         >
+          {/* Date Range Filter with Pickers */}
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+              {/* Start Date Picker */}
+              <DatePicker
+                value={customStartDate || dateRange.startDate}
+                onChange={(newDate) => {
+                  setCustomStartDate(newDate);
+                  if (newDate && customEndDate) {
+                    const matched = detectPresetRange(newDate, customEndDate);
+                    setDateRangeFilter(matched);
+                  } else {
+                    setDateRangeFilter(null);
+                  }
+                }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    sx: {
+                      width: 140,
+                      '& .MuiOutlinedInput-root': {
+                        backgroundColor: 'background.paper',
+                        fontSize: '0.875rem',
+                      },
+                    },
+                  },
+                }}
+              />
+
+              <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                -
+              </Typography>
+
+              {/* End Date Picker */}
+              <DatePicker
+                value={customEndDate || dateRange.endDate}
+                onChange={(newDate) => {
+                  setCustomEndDate(newDate);
+                  if (customStartDate && newDate) {
+                    const matched = detectPresetRange(customStartDate, newDate);
+                    setDateRangeFilter(matched);
+                  } else {
+                    setDateRangeFilter(null);
+                  }
+                }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    sx: {
+                      width: 140,
+                      '& .MuiOutlinedInput-root': {
+                        backgroundColor: 'background.paper',
+                        fontSize: '0.875rem',
+                      },
+                    },
+                  },
+                }}
+              />
+
+              {/* Toggle buttons */}
+              <ToggleButtonGroup
+                value={dateRangeFilter}
+                exclusive
+                onChange={(e, newValue) => {
+                  if (newValue !== null) {
+                    setDateRangeFilter(newValue);
+                    setCustomStartDate(null);
+                    setCustomEndDate(null);
+                  }
+                }}
+                size="small"
+                sx={{
+                  '& .MuiToggleButton-root': {
+                    px: 1.5,
+                    py: 0.5,
+                    fontSize: '0.8125rem',
+                    fontWeight: 600,
+                    letterSpacing: '0.05em',
+                  },
+                }}
+              >
+                <ToggleButton value="1D">1D</ToggleButton>
+                <ToggleButton value="1M">1M</ToggleButton>
+                <ToggleButton value="1Y">1Y</ToggleButton>
+                <ToggleButton value="YTD">YTD</ToggleButton>
+              </ToggleButtonGroup>
+            </Box>
+          </LocalizationProvider>
           {/* Sort Selector with icon */}
           <FormControl
             size="small"
