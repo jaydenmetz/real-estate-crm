@@ -76,6 +76,7 @@ import websocketService from './services/websocket.service';
 
 // Utils
 import { setupGlobalErrorHandlers } from './utils/globalErrorHandler';
+import { cleanupOldTokens } from './utils/auth';
 
 // Create enhanced theme
 const theme = createTheme({
@@ -168,11 +169,14 @@ function NavigationTracker() {
 
 function App() {
   useEffect(() => {
+    // Clean up old/expired tokens from localStorage
+    cleanupOldTokens();
+
     // Setup global error handlers
     setupGlobalErrorHandlers();
-    
+
     let unsubscribe = null;
-    
+
     const initializeWebSocket = async () => {
       try {
         if (!websocketService.isConnected) {

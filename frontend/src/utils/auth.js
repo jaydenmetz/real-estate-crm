@@ -85,6 +85,46 @@ export const getTimeUntilExpiry = () => {
   return Math.max(0, expiry - now);
 };
 
+/**
+ * Clean up old/expired tokens from localStorage
+ * Removes legacy token keys and expired tokens
+ * Called automatically on app initialization
+ */
+export const cleanupOldTokens = () => {
+  try {
+    // List of old token keys that should be removed
+    const oldTokenKeys = [
+      'crm_auth_token',  // Old key from before Phase 4
+      'token',           // Generic key from early development
+      'api_token',       // Old API token key
+    ];
+
+    // Remove old token keys
+    oldTokenKeys.forEach(key => {
+      if (localStorage.getItem(key)) {
+        console.log(`🧹 Removing old token key: ${key}`);
+        localStorage.removeItem(key);
+      }
+    });
+
+    // Check if current token is expired
+    const expiry = getTokenExpiry();
+    if (expiry) {
+      const now = Math.floor(Date.now() / 1000);
+      if (now > expiry) {
+        console.log('🧹 Removing expired token and user data');
+        localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
+        localStorage.removeItem(STORAGE_KEYS.TOKEN_EXPIRY);
+        localStorage.removeItem(STORAGE_KEYS.USER);
+      }
+    }
+
+    console.log('✅ Token cleanup complete');
+  } catch (error) {
+    console.error('Error cleaning up tokens:', error);
+  }
+};
+
 // Default export with all utilities
 export default {
   STORAGE_KEYS,
@@ -94,5 +134,6 @@ export default {
   isAuthenticated,
   getTokenExpiry,
   isTokenExpiringSoon,
-  getTimeUntilExpiry
+  getTimeUntilExpiry,
+  cleanupOldTokens
 };
