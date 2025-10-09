@@ -1354,7 +1354,7 @@ const EscrowsDashboard = () => {
               </Grid>
 
               {/* Action Buttons Row */}
-              <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
+              <Box sx={{ mt: 1.5, display: 'flex', gap: 2 }}>
                 <Button
                   variant="contained"
                   size="medium"
