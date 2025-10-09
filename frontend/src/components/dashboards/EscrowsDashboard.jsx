@@ -1502,32 +1502,30 @@ const EscrowsDashboard = () => {
           </Box>
         </HeroSection>
 
-      {/* Status Tabs with Controls - Beautiful Redesign */}
-      <Box sx={{ mb: 4, display: 'flex', gap: 3, alignItems: 'stretch', justifyContent: 'space-between', flexWrap: 'nowrap', overflow: 'visible' }}>
-        {/* Tab Bar - Clean grey background */}
+      {/* Split-Level Navigation - Modern SaaS Pattern */}
+      <Box sx={{ mb: 4 }}>
+        {/* Row 1: Tabs Only - Clean Navigation */}
         <Paper
           elevation={0}
           sx={{
             backgroundColor: 'background.paper',
-            borderRadius: 2,
-            boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-            display: { xs: 'none', lg: 'flex' },
-            alignItems: 'center',
-            flexShrink: 0,
-            overflow: 'visible',
+            borderRadius: '8px 8px 0 0',
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+            display: { xs: 'none', lg: 'block' },
           }}
         >
           <Tabs
             value={selectedStatus}
             onChange={(e, newValue) => setSelectedStatus(newValue)}
             sx={{
-              minHeight: 52,
+              minHeight: 48,
               '& .MuiTab-root': {
                 textTransform: 'none',
-                fontSize: '0.95rem',
+                fontSize: '0.9375rem',
                 fontWeight: 500,
-                minHeight: 52,
-                px: 2.5,
+                minHeight: 48,
+                px: 3,
                 color: 'text.secondary',
                 transition: 'all 0.2s ease',
                 '&:hover': {
@@ -1552,35 +1550,39 @@ const EscrowsDashboard = () => {
           </Tabs>
         </Paper>
 
-        {/* Right-justified Controls - Sleek Design */}
+        {/* Row 2: Filter Bar - Grouped Controls */}
         <Box
           sx={{
             display: { xs: 'none', lg: 'flex' },
-            gap: 1.5,
+            justifyContent: 'space-between',
             alignItems: 'center',
-            flexShrink: 0,
-            flexWrap: 'nowrap',
+            backgroundColor: alpha('#f5f5f5', 0.4),
+            borderRadius: '0 0 8px 8px',
+            px: 3,
+            py: 1.5,
+            gap: 2,
           }}
         >
-          {/* Date Range Filter - Premium Clean Style */}
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <Box sx={{
-              display: 'flex',
-              gap: 1.5,
-              alignItems: 'center',
-              backgroundColor: 'white',
-              borderRadius: 2,
-              px: 2,
-              py: 1,
-              border: '1px solid',
-              borderColor: 'divider',
-              boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
-              transition: 'all 0.2s ease',
-              '&:hover': {
-                borderColor: 'primary.main',
-                boxShadow: '0 2px 8px rgba(25, 118, 210, 0.15)',
-              },
-            }}>
+          {/* Left Side: Date Range Controls */}
+          <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <Box sx={{
+                display: 'flex',
+                gap: 1.5,
+                alignItems: 'center',
+                backgroundColor: 'white',
+                borderRadius: 2,
+                px: 2,
+                py: 0.75,
+                border: '1px solid',
+                borderColor: 'divider',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                transition: 'all 0.2s ease',
+                '&:hover': {
+                  borderColor: 'primary.main',
+                  boxShadow: '0 2px 8px rgba(25, 118, 210, 0.15)',
+                },
+              }}>
               {/* Start Date Picker */}
               <DatePicker
                 open={startDatePickerOpen}
@@ -1661,52 +1663,55 @@ const EscrowsDashboard = () => {
                   },
                 }}
               />
-            </Box>
-          </LocalizationProvider>
+              </Box>
+            </LocalizationProvider>
 
-          {/* Preset Range Buttons - Minimal Design */}
-          <ToggleButtonGroup
-            value={dateRangeFilter}
-            exclusive
-            onChange={(e, newValue) => {
-              if (newValue !== null) {
-                setDateRangeFilter(newValue);
-                setCustomStartDate(null);
-                setCustomEndDate(null);
-              }
-            }}
-            size="small"
-            sx={{
-              backgroundColor: alpha('#f5f5f5', 0.5),
-              borderRadius: 1.5,
-              '& .MuiToggleButton-root': {
-                px: 1.5,
-                py: 0.5,
-                fontSize: '0.8125rem',
-                fontWeight: 600,
-                border: 'none',
-                color: 'text.secondary',
-                '&.Mui-selected': {
-                  backgroundColor: 'primary.main',
-                  color: 'white',
+            {/* Preset Range Buttons */}
+            <ToggleButtonGroup
+              value={dateRangeFilter}
+              exclusive
+              onChange={(e, newValue) => {
+                if (newValue !== null) {
+                  setDateRangeFilter(newValue);
+                  setCustomStartDate(null);
+                  setCustomEndDate(null);
+                }
+              }}
+              size="small"
+              sx={{
+                '& .MuiToggleButton-root': {
+                  px: 2,
+                  py: 0.5,
+                  fontSize: '0.8125rem',
+                  fontWeight: 600,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  color: 'text.secondary',
+                  '&.Mui-selected': {
+                    backgroundColor: 'primary.main',
+                    borderColor: 'primary.main',
+                    color: 'white',
+                    '&:hover': {
+                      backgroundColor: 'primary.dark',
+                    },
+                  },
                   '&:hover': {
-                    backgroundColor: 'primary.dark',
+                    backgroundColor: alpha('#1976d2', 0.08),
                   },
                 },
-                '&:hover': {
-                  backgroundColor: alpha('#1976d2', 0.08),
-                },
-              },
-            }}
-          >
-            <ToggleButton value="1D">1D</ToggleButton>
-            <ToggleButton value="1M">1M</ToggleButton>
-            <ToggleButton value="1Y">1Y</ToggleButton>
-            <ToggleButton value="YTD">YTD</ToggleButton>
-          </ToggleButtonGroup>
+              }}
+            >
+              <ToggleButton value="1D">1D</ToggleButton>
+              <ToggleButton value="1M">1M</ToggleButton>
+              <ToggleButton value="1Y">1Y</ToggleButton>
+              <ToggleButton value="YTD">YTD</ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
 
-          {/* Sort Dropdown - Premium Clean Style */}
-          <FormControl
+          {/* Right Side: Sort & View Controls */}
+          <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+            {/* Sort Dropdown */}
+            <FormControl
             size="small"
             variant="standard"
             sx={{
@@ -1821,26 +1826,28 @@ const EscrowsDashboard = () => {
             >
               <CalendarToday sx={{ fontSize: 16 }} />
             </ToggleButton>
-          </ToggleButtonGroup>
-          {/* Archive/Trash Icon */}
-          <IconButton
-            size="small"
-            onClick={() => setSelectedStatus('archived')}
-            sx={{
-              width: 40,
-              height: 40,
-              backgroundColor: selectedStatus === 'archived' ? 'warning.main' : alpha('#000', 0.06),
-              color: selectedStatus === 'archived' ? 'white' : 'text.secondary',
-              '&:hover': {
-                backgroundColor: selectedStatus === 'archived' ? 'warning.dark' : alpha('#000', 0.1),
-              },
-              transition: 'all 0.2s',
-            }}
-          >
-            <Badge badgeContent={archivedCount} color="error" max={99}>
-              <DeleteIcon />
-            </Badge>
-          </IconButton>
+            </ToggleButtonGroup>
+
+            {/* Archive/Trash Icon */}
+            <IconButton
+              size="small"
+              onClick={() => setSelectedStatus('archived')}
+              sx={{
+                width: 40,
+                height: 40,
+                backgroundColor: selectedStatus === 'archived' ? 'warning.main' : alpha('#000', 0.06),
+                color: selectedStatus === 'archived' ? 'white' : 'text.secondary',
+                '&:hover': {
+                  backgroundColor: selectedStatus === 'archived' ? 'warning.dark' : alpha('#000', 0.1),
+                },
+                transition: 'all 0.2s',
+              }}
+            >
+              <Badge badgeContent={archivedCount} color="error" max={99}>
+                <DeleteIcon />
+              </Badge>
+            </IconButton>
+          </Box>
         </Box>
       </Box>
 
