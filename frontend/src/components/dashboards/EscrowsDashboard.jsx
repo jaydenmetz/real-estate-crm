@@ -1092,9 +1092,9 @@ const EscrowsDashboard = () => {
           {/* Stats Grid - White Cards - Dynamic based on selected tab */}
           <Grid container spacing={3}>
             {(() => {
-              // Calculate cancellation rate
-              const totalAllStatuses = (allEscrows || []).length;
-              const totalCancelled = (allEscrows || []).filter(e =>
+              // Calculate cancellation rate from all non-archived escrows
+              const totalAllStatuses = (escrows || []).length;
+              const totalCancelled = (escrows || []).filter(e =>
                 e.escrowStatus?.toLowerCase() === 'cancelled'
               ).length;
               const cancellationRate = totalAllStatuses > 0
