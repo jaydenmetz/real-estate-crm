@@ -1063,10 +1063,14 @@ const EscrowsDashboard = () => {
       }
     }
 
+    // Validate dates before formatting
+    const validStart = startDate instanceof Date && !isNaN(startDate.getTime()) ? startDate : new Date();
+    const validEnd = endDate instanceof Date && !isNaN(endDate.getTime()) ? endDate : new Date();
+
     return {
-      startDate,
-      endDate,
-      label: `${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+      startDate: validStart,
+      endDate: validEnd,
+      label: `${validStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${validEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
     };
   };
 
