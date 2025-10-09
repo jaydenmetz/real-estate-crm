@@ -1591,6 +1591,8 @@ const EscrowsDashboard = () => {
                     variant: 'standard',
                     InputProps: {
                       disableUnderline: true,
+                    },
+                    inputProps: {
                       readOnly: true,
                     },
                     sx: {
@@ -1659,6 +1661,8 @@ const EscrowsDashboard = () => {
                     variant: 'standard',
                     InputProps: {
                       disableUnderline: true,
+                    },
+                    inputProps: {
                       readOnly: true,
                     },
                     sx: {
