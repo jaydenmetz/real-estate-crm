@@ -991,7 +991,7 @@ const EscrowsDashboard = () => {
               delay={1}
             />
             <StatCard
-              icon={AttachMoney}
+              icon={TrendingUp}
               title="Total Volume"
               value={stats.totalVolume || 0}
               prefix="$"
@@ -1000,7 +1000,7 @@ const EscrowsDashboard = () => {
               delay={2}
             />
             <StatCard
-              icon={TrendingUp}
+              icon={AttachMoney}
               title="Total Commission"
               value={stats.projectedCommission || 0}
               prefix="$"
