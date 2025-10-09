@@ -1149,24 +1149,24 @@ const EscrowsDashboard = () => {
             </Select>
           </FormControl>
 
-          {/* View Mode Selector */}
+          {/* View Mode & Calendar Selector */}
           <ToggleButtonGroup
-            value={viewMode}
-            exclusive
-            onChange={(e, newView) => newView && setViewMode(newView)}
             size="small"
-            aria-label="View mode selection"
+            aria-label="View mode and calendar selection"
             sx={{
               '& .MuiToggleButton-root': {
                 px: 2,
                 py: 0.5,
                 textTransform: 'none',
                 fontWeight: 500,
+                height: '32px', // Match height across all buttons
               },
             }}
           >
             <ToggleButton
               value="small"
+              selected={viewMode === 'small'}
+              onClick={() => setViewMode('small')}
               aria-label="Grid view - shows escrows in compact 4-column grid layout (Press V to toggle)"
               title="Grid view (V)"
             >
@@ -1180,29 +1180,23 @@ const EscrowsDashboard = () => {
             </ToggleButton>
             <ToggleButton
               value="large"
+              selected={viewMode === 'large'}
+              onClick={() => setViewMode('large')}
               aria-label="Full width view - shows escrows in detailed full-width layout (Press V to toggle)"
               title="Full width view (V)"
             >
               {/* Wide horizontal bar representing full-width card - total width 24px */}
               <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
             </ToggleButton>
+            <ToggleButton
+              value="calendar"
+              onClick={handleCalendarOpen}
+              aria-label="Calendar view - shows escrows by closing date"
+              title="Calendar view"
+            >
+              <CalendarToday sx={{ fontSize: 16 }} />
+            </ToggleButton>
           </ToggleButtonGroup>
-
-          {/* Calendar Icon */}
-          <IconButton
-            onClick={handleCalendarOpen}
-            size="small"
-            sx={{
-              width: 40,
-              height: 40,
-              backgroundColor: alpha('#000', 0.06),
-              '&:hover': {
-                backgroundColor: alpha('#000', 0.1),
-              },
-            }}
-          >
-            <CalendarToday fontSize="small" />
-          </IconButton>
         </Box>
 
         {/* Archive/Trash Icon - Desktop only, positioned after tab bar */}
@@ -1294,24 +1288,24 @@ const EscrowsDashboard = () => {
 
           {/* View Mode, Calendar, Archive - Mobile */}
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-            {/* View Mode Selector */}
+            {/* View Mode & Calendar Selector */}
             <ToggleButtonGroup
-              value={viewMode}
-              exclusive
-              onChange={(e, newView) => newView && setViewMode(newView)}
               size="small"
-              aria-label="View mode selection"
+              aria-label="View mode and calendar selection"
               sx={{
                 '& .MuiToggleButton-root': {
                   px: 2,
                   py: 0.5,
                   textTransform: 'none',
                   fontWeight: 500,
+                  height: '32px', // Match height across all buttons
                 },
               }}
             >
               <ToggleButton
                 value="small"
+                selected={viewMode === 'small'}
+                onClick={() => setViewMode('small')}
                 aria-label="Grid view"
                 title="Grid view (V)"
               >
@@ -1324,28 +1318,22 @@ const EscrowsDashboard = () => {
               </ToggleButton>
               <ToggleButton
                 value="large"
+                selected={viewMode === 'large'}
+                onClick={() => setViewMode('large')}
                 aria-label="Full width view"
                 title="Full width view (V)"
               >
                 <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
               </ToggleButton>
+              <ToggleButton
+                value="calendar"
+                onClick={handleCalendarOpen}
+                aria-label="Calendar view"
+                title="Calendar view"
+              >
+                <CalendarToday sx={{ fontSize: 16 }} />
+              </ToggleButton>
             </ToggleButtonGroup>
-
-            {/* Calendar Icon */}
-            <IconButton
-              onClick={handleCalendarOpen}
-              size="small"
-              sx={{
-                width: 40,
-                height: 40,
-                backgroundColor: alpha('#000', 0.06),
-                '&:hover': {
-                  backgroundColor: alpha('#000', 0.1),
-                },
-              }}
-            >
-              <CalendarToday fontSize="small" />
-            </IconButton>
 
             {/* Archive/Trash Icon */}
             <IconButton
