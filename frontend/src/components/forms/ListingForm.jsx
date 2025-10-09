@@ -22,22 +22,46 @@ const ListingForm = ({ open, onClose, listing, onSuccess }) => {
   const { enqueueSnackbar } = useSnackbar();
   const [loading, setLoading] = useState(false);
   
-  const { control, handleSubmit, reset, formState: { errors } } = useForm({
-    defaultValues: listing || {
-      address: '',
-      listPrice: '',
-      listDate: new Date(),
-      status: 'Active',
-      mlsNumber: '',
-      bedrooms: '',
-      bathrooms: '',
-      squareFeet: '',
-      yearBuilt: '',
-      propertyType: 'Single Family',
-      description: '',
-      features: [],
-      sellers: [],
+  // Transform listing data to ensure dates are Date objects
+  const getDefaultValues = () => {
+    if (!listing) {
+      return {
+        address: '',
+        listPrice: '',
+        listDate: new Date(),
+        status: 'Active',
+        mlsNumber: '',
+        bedrooms: '',
+        bathrooms: '',
+        squareFeet: '',
+        yearBuilt: '',
+        propertyType: 'Single Family',
+        description: '',
+        features: [],
+        sellers: [],
+      };
     }
+
+    // Convert listDate string to Date object if needed
+    const listDate = listing.listDate
+      ? (listing.listDate instanceof Date
+          ? listing.listDate
+          : new Date(listing.listDate))
+      : new Date();
+
+    // Validate the date
+    const validListDate = listDate instanceof Date && !isNaN(listDate.getTime())
+      ? listDate
+      : new Date();
+
+    return {
+      ...listing,
+      listDate: validListDate
+    };
+  };
+
+  const { control, handleSubmit, reset, formState: { errors } } = useForm({
+    defaultValues: getDefaultValues()
   });
 
   const onSubmit = async (data) => {
