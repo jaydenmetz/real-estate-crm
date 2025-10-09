@@ -961,10 +961,11 @@ const EscrowsDashboard = () => {
 
     switch(dateRangeFilter) {
       case '1D':
-        // Last 24 hours
+        // Today from 12:00 AM to 11:59 PM
         startDate = new Date(now);
-        startDate.setDate(now.getDate() - 1);
-        endDate = now;
+        startDate.setHours(0, 0, 0, 0); // Midnight
+        endDate = new Date(now);
+        endDate.setHours(23, 59, 59, 999); // End of day
         break;
       case '1M':
         // Last 30 days
