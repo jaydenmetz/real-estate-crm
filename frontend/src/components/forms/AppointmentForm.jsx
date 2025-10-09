@@ -16,20 +16,55 @@ import { useSnackbar } from 'notistack';
 
 const AppointmentForm = ({ open, onClose, appointment, onSuccess }) => {
   const { enqueueSnackbar } = useSnackbar();
-  
-  const { control, handleSubmit, reset, formState: { errors } } = useForm({
-    defaultValues: appointment || {
-      title: '',
-      description: '',
-      startTime: new Date(),
-      endTime: new Date(),
-      location: '',
-      type: 'Showing',
-      status: 'Scheduled',
-      clientName: '',
-      propertyAddress: '',
-      notes: '',
+
+  // Transform appointment data to ensure dates are Date objects
+  const getDefaultValues = () => {
+    if (!appointment) {
+      return {
+        title: '',
+        description: '',
+        startTime: new Date(),
+        endTime: new Date(),
+        location: '',
+        type: 'Showing',
+        status: 'Scheduled',
+        clientName: '',
+        propertyAddress: '',
+        notes: '',
+      };
     }
+
+    // Convert date strings to Date objects if needed
+    const startTime = appointment.startTime
+      ? (appointment.startTime instanceof Date
+          ? appointment.startTime
+          : new Date(appointment.startTime))
+      : new Date();
+
+    const endTime = appointment.endTime
+      ? (appointment.endTime instanceof Date
+          ? appointment.endTime
+          : new Date(appointment.endTime))
+      : new Date();
+
+    // Validate the dates
+    const validStartTime = startTime instanceof Date && !isNaN(startTime.getTime())
+      ? startTime
+      : new Date();
+
+    const validEndTime = endTime instanceof Date && !isNaN(endTime.getTime())
+      ? endTime
+      : new Date();
+
+    return {
+      ...appointment,
+      startTime: validStartTime,
+      endTime: validEndTime,
+    };
+  };
+
+  const { control, handleSubmit, reset, formState: { errors } } = useForm({
+    defaultValues: getDefaultValues()
   });
 
   const onSubmit = async (data) => {
