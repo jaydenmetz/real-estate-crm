@@ -1588,7 +1588,11 @@ const EscrowsDashboard = () => {
                 open={startDatePickerOpen}
                 onOpen={() => setStartDatePickerOpen(true)}
                 onClose={() => setStartDatePickerOpen(false)}
-                value={customStartDate || dateRange.startDate}
+                value={(() => {
+                  const date = customStartDate || dateRange.startDate;
+                  if (!date || !(date instanceof Date) || isNaN(date.getTime())) return null;
+                  return date;
+                })()}
                 onChange={(newDate) => {
                   setCustomStartDate(newDate);
                   if (newDate && customEndDate) {
@@ -1641,7 +1645,11 @@ const EscrowsDashboard = () => {
                 open={endDatePickerOpen}
                 onOpen={() => setEndDatePickerOpen(true)}
                 onClose={() => setEndDatePickerOpen(false)}
-                value={customEndDate || dateRange.endDate}
+                value={(() => {
+                  const date = customEndDate || dateRange.endDate;
+                  if (!date || !(date instanceof Date) || isNaN(date.getTime())) return null;
+                  return date;
+                })()}
                 onChange={(newDate) => {
                   setCustomEndDate(newDate);
                   if (customStartDate && newDate) {
