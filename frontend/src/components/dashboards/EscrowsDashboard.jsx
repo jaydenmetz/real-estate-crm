@@ -1589,11 +1589,14 @@ const EscrowsDashboard = () => {
                   textField: {
                     size: 'small',
                     variant: 'standard',
+                    onClick: (e) => {
+                      e.target.blur(); // Prevent keyboard from showing
+                    },
                     InputProps: {
                       disableUnderline: true,
-                    },
-                    inputProps: {
-                      readOnly: true,
+                      onKeyDown: (e) => {
+                        e.preventDefault(); // Prevent typing
+                      },
                     },
                     sx: {
                       width: 100,
@@ -1605,6 +1608,7 @@ const EscrowsDashboard = () => {
                         cursor: 'pointer',
                         textAlign: 'center',
                         letterSpacing: '0.01em',
+                        caretColor: 'transparent', // Hide cursor
                         '&:hover': {
                           color: 'primary.main',
                         },
@@ -1659,11 +1663,14 @@ const EscrowsDashboard = () => {
                   textField: {
                     size: 'small',
                     variant: 'standard',
+                    onClick: (e) => {
+                      e.target.blur(); // Prevent keyboard from showing
+                    },
                     InputProps: {
                       disableUnderline: true,
-                    },
-                    inputProps: {
-                      readOnly: true,
+                      onKeyDown: (e) => {
+                        e.preventDefault(); // Prevent typing
+                      },
                     },
                     sx: {
                       width: 100,
@@ -1675,6 +1682,7 @@ const EscrowsDashboard = () => {
                         cursor: 'pointer',
                         textAlign: 'center',
                         letterSpacing: '0.01em',
+                        caretColor: 'transparent', // Hide cursor
                         '&:hover': {
                           color: 'primary.main',
                         },
