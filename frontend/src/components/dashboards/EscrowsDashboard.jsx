@@ -95,7 +95,6 @@ import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { format } from 'date-fns';
 import { safeFormatDate, safeParseDate } from '../../utils/safeDateUtils';
 import { escrowsAPI } from '../../services/api.service';
 import { useAuth } from '../../contexts/AuthContext';
@@ -1585,7 +1584,7 @@ const EscrowsDashboard = () => {
                     setDateRangeFilter(null);
                   }
                 }}
-                format={(date) => date ? format(date, 'MMM d') : ''}
+                format="MMM d"
                 slotProps={{
                   textField: {
                     size: 'small',
@@ -1644,7 +1643,7 @@ const EscrowsDashboard = () => {
                     setDateRangeFilter(null);
                   }
                 }}
-                format={(date) => date ? format(date, 'MMM d, yyyy') : ''}
+                format="MMM d, yyyy"
                 slotProps={{
                   textField: {
                     size: 'small',
