@@ -1569,8 +1569,8 @@ const EscrowsDashboard = () => {
         >
           {/* Left Side: Date Range Controls */}
           <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
-            {/* STRATEGIC COMMENT: Commenting out DatePickers to test if they're the issue */}
-            {false && <LocalizationProvider dateAdapter={AdapterDateFns}>
+            {/* STRATEGIC COMMENT: Testing START DatePicker only */}
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
               <Box sx={{
                 display: 'flex',
                 gap: 1.5,
@@ -1657,8 +1657,8 @@ const EscrowsDashboard = () => {
                 →
               </Typography>
 
-              {/* End Date Picker */}
-              <DatePicker
+              {/* End Date Picker - COMMENTED OUT FOR TESTING */}
+              {false && <DatePicker
                 open={endDatePickerOpen}
                 onOpen={() => setEndDatePickerOpen(true)}
                 onClose={() => setEndDatePickerOpen(false)}
@@ -1715,9 +1715,9 @@ const EscrowsDashboard = () => {
                     sx: { display: 'none' },
                   },
                 }}
-              />
+              />}
               </Box>
-            </LocalizationProvider>}
+            </LocalizationProvider>
 
             {/* Preset Range Buttons */}
             <ToggleButtonGroup
