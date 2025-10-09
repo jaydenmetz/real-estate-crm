@@ -207,7 +207,11 @@ const TimelineWidget = ({ data = {}, onEdit }) => {
   const formatDate = (dateString) => {
     if (!dateString) return 'Not Set';
     try {
-      return format(parseISO(dateString), 'MMM d, yyyy');
+      const parsed = parseISO(dateString);
+      if (parsed instanceof Date && !isNaN(parsed.getTime())) {
+        return format(parsed, 'MMM d, yyyy');
+      }
+      return dateString;
     } catch {
       return dateString;
     }
