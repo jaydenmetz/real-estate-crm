@@ -1553,21 +1553,26 @@ const EscrowsDashboard = () => {
             flexWrap: 'nowrap',
           }}
         >
-          {/* Date Range Filter - Glass Morphism Style */}
+          {/* Date Range Filter - Premium Clean Style */}
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <Box sx={{
               display: 'flex',
-              gap: 1,
+              gap: 1.5,
               alignItems: 'center',
-              backgroundColor: alpha('#f5f5f5', 0.8),
-              backdropFilter: 'blur(10px)',
+              backgroundColor: 'white',
               borderRadius: 2,
-              px: 1.5,
-              py: 0.5,
+              px: 2,
+              py: 1,
               border: '1px solid',
-              borderColor: alpha('#000', 0.08),
+              borderColor: 'divider',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+              transition: 'all 0.2s ease',
+              '&:hover': {
+                borderColor: 'primary.main',
+                boxShadow: '0 2px 8px rgba(25, 118, 210, 0.15)',
+              },
             }}>
-              {/* Start Date Picker - No Calendar Icon */}
+              {/* Start Date Picker - Clean Typography */}
               <DatePicker
                 value={customStartDate || dateRange.startDate}
                 onChange={(newDate) => {
@@ -1588,27 +1593,37 @@ const EscrowsDashboard = () => {
                       disableUnderline: true,
                     },
                     sx: {
-                      width: 70,
+                      width: 65,
                       '& .MuiInputBase-input': {
-                        fontSize: '0.875rem',
-                        fontWeight: 600,
+                        fontSize: '0.9375rem',
+                        fontWeight: 500,
                         color: 'text.primary',
-                        padding: '4px 0',
+                        padding: 0,
                         cursor: 'pointer',
+                        textAlign: 'center',
+                        letterSpacing: '0.01em',
+                        '&:hover': {
+                          color: 'primary.main',
+                        },
                       },
                     },
                   },
                   openPickerButton: {
-                    sx: { display: 'none' }, // Hide calendar icon
+                    sx: { display: 'none' },
                   },
                 }}
               />
 
-              <Typography variant="body2" sx={{ color: 'text.disabled', fontWeight: 500 }}>
-                —
+              <Typography variant="body2" sx={{
+                color: 'text.disabled',
+                fontWeight: 400,
+                fontSize: '0.875rem',
+                mx: -0.5,
+              }}>
+                →
               </Typography>
 
-              {/* End Date Picker - No Calendar Icon */}
+              {/* End Date Picker - Clean Typography */}
               <DatePicker
                 value={customEndDate || dateRange.endDate}
                 onChange={(newDate) => {
@@ -1629,18 +1644,23 @@ const EscrowsDashboard = () => {
                       disableUnderline: true,
                     },
                     sx: {
-                      width: 95,
+                      width: 100,
                       '& .MuiInputBase-input': {
-                        fontSize: '0.875rem',
-                        fontWeight: 600,
+                        fontSize: '0.9375rem',
+                        fontWeight: 500,
                         color: 'text.primary',
-                        padding: '4px 0',
+                        padding: 0,
                         cursor: 'pointer',
+                        textAlign: 'center',
+                        letterSpacing: '0.01em',
+                        '&:hover': {
+                          color: 'primary.main',
+                        },
                       },
                     },
                   },
                   openPickerButton: {
-                    sx: { display: 'none' }, // Hide calendar icon
+                    sx: { display: 'none' },
                   },
                 }}
               />
@@ -1688,7 +1708,7 @@ const EscrowsDashboard = () => {
             <ToggleButton value="YTD">YTD</ToggleButton>
           </ToggleButtonGroup>
 
-          {/* Sort Dropdown - Clean Design */}
+          {/* Sort Dropdown - Premium Clean Style */}
           <FormControl
             size="small"
             variant="standard"
@@ -1701,7 +1721,7 @@ const EscrowsDashboard = () => {
               onChange={(e) => setSortBy(e.target.value)}
               disableUnderline
               startAdornment={
-                <Sort sx={{ mr: 0.75, fontSize: '1.125rem', color: 'text.secondary' }} />
+                <Sort sx={{ mr: 1, fontSize: '1.125rem', color: 'text.secondary' }} />
               }
               renderValue={(value) => {
                 const labels = {
@@ -1712,23 +1732,33 @@ const EscrowsDashboard = () => {
                   escrow_status: 'Status',
                 };
                 return (
-                  <Typography variant="body2" sx={{ fontSize: '0.875rem', fontWeight: 600, color: 'text.primary' }}>
+                  <Typography variant="body2" sx={{
+                    fontSize: '0.9375rem',
+                    fontWeight: 500,
+                    color: 'text.primary',
+                    letterSpacing: '0.01em',
+                  }}>
                     {labels[value]}
                   </Typography>
                 );
               }}
               sx={{
-                backgroundColor: alpha('#f5f5f5', 0.8),
+                backgroundColor: 'white',
                 borderRadius: 2,
-                px: 1.5,
-                py: 0.75,
+                px: 2,
+                py: 1,
                 border: '1px solid',
-                borderColor: alpha('#000', 0.08),
+                borderColor: 'divider',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                transition: 'all 0.2s ease',
                 '&:hover': {
-                  backgroundColor: alpha('#f5f5f5', 1),
+                  borderColor: 'primary.main',
+                  boxShadow: '0 2px 8px rgba(25, 118, 210, 0.15)',
                 },
                 '& .MuiSelect-select': {
                   paddingRight: '32px !important',
+                  display: 'flex',
+                  alignItems: 'center',
                 },
               }}
             >
