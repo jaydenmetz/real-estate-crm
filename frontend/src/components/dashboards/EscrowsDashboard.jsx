@@ -112,8 +112,22 @@ const HeroSection = styled(Box)(({ theme }) => ({
 }));
 
 // Enhanced animated stat card component with gradient animations
-const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, delay = 0, trend }) => {
+const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, delay = 0, trend, showPrivacy = false }) => {
   const theme = useTheme();
+  const [showValue, setShowValue] = useState(false);
+
+  // Mask commission for privacy
+  const maskValue = (val) => {
+    const absValue = Math.abs(val);
+    if (absValue >= 1000000) return '$***,***,***';
+    if (absValue >= 100000) return '$***,***';
+    if (absValue >= 10000) return '$**,***';
+    if (absValue >= 1000) return '$*,***';
+    if (absValue >= 100) return '$***';
+    if (absValue >= 10) return '$**';
+    return '$*';
+  };
+
   return (
     <Grid item xs={12} sm={6} md={3}>
       <motion.div
@@ -155,14 +169,39 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
           <CardContent sx={{ position: 'relative', zIndex: 1, p: 2.5, '&:last-child': { pb: 2.5 } }}>
             <Box display="flex" alignItems="center" justifyContent="space-between">
               <Box>
-                <Typography
-                  color="textSecondary"
-                  gutterBottom
-                  variant="body2"
-                  sx={{ fontWeight: 500, letterSpacing: 0.5 }}
-                >
-                  {title}
-                </Typography>
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Typography
+                    color="textSecondary"
+                    gutterBottom
+                    variant="body2"
+                    sx={{ fontWeight: 500, letterSpacing: 0.5 }}
+                  >
+                    {title}
+                  </Typography>
+                  {showPrivacy && (
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowValue(!showValue);
+                      }}
+                      sx={{
+                        width: 24,
+                        height: 24,
+                        color: 'textSecondary',
+                        '&:hover': {
+                          backgroundColor: alpha(color, 0.1),
+                        },
+                      }}
+                    >
+                      {showValue ? (
+                        <VisibilityOff sx={{ fontSize: 16 }} />
+                      ) : (
+                        <Visibility sx={{ fontSize: 16 }} />
+                      )}
+                    </IconButton>
+                  )}
+                </Box>
                 <Typography
                   variant="h3"
                   component="div"
@@ -174,14 +213,20 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
                     gap: 0.5,
                   }}
                 >
-                  <span style={{ fontSize: '0.7em' }}>{prefix}</span>
-                  <CountUp
-                    end={value}
-                    duration={2.5}
-                    separator=","
-                    decimals={suffix === 'M' ? 2 : 0}
-                  />
-                  <span style={{ fontSize: '0.7em' }}>{suffix}</span>
+                  {showPrivacy && !showValue ? (
+                    <span>{maskValue(value)}</span>
+                  ) : (
+                    <>
+                      <span style={{ fontSize: '0.7em' }}>{prefix}</span>
+                      <CountUp
+                        end={value}
+                        duration={2.5}
+                        separator=","
+                        decimals={0}
+                      />
+                      <span style={{ fontSize: '0.7em' }}>{suffix}</span>
+                    </>
+                  )}
                 </Typography>
                 {trend && (
                   <Box display="flex" alignItems="center" gap={0.5} mt={1}>
@@ -948,20 +993,21 @@ const EscrowsDashboard = () => {
             <StatCard
               icon={AttachMoney}
               title="Total Volume"
-              value={(stats.totalVolume || 0) / 1000000}
+              value={stats.totalVolume || 0}
               prefix="$"
-              suffix="M"
+              suffix=""
               color="#ffffff"
               delay={2}
             />
             <StatCard
               icon={TrendingUp}
-              title="Commission"
-              value={(stats.projectedCommission || 0) / 1000}
+              title="Total Commission"
+              value={stats.projectedCommission || 0}
               prefix="$"
-              suffix="K"
+              suffix=""
               color="#ffffff"
               delay={3}
+              showPrivacy={true}
             />
           </Grid>
 
