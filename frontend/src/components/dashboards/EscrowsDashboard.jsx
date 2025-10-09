@@ -1033,7 +1033,27 @@ const EscrowsDashboard = () => {
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              <Box sx={{ textAlign: 'right' }}>
+              <Box sx={{
+                textAlign: 'right',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-end',
+                gap: 1.5
+              }}>
+                {/* Date range label - prominent and professional */}
+                <Typography
+                  sx={{
+                    color: 'white',
+                    fontWeight: 600,
+                    fontSize: '1rem',
+                    letterSpacing: '0.02em',
+                    textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                  }}
+                >
+                  {dateRange.label}
+                </Typography>
+
+                {/* Toggle buttons - clean and minimal */}
                 <ToggleButtonGroup
                   value={dateRangeFilter}
                   exclusive
@@ -1044,27 +1064,30 @@ const EscrowsDashboard = () => {
                   }}
                   size="small"
                   sx={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.15)',
                     backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    border: '1px solid rgba(255, 255, 255, 0.25)',
                     borderRadius: 2,
-                    mb: 1,
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                     '& .MuiToggleButton-root': {
-                      color: 'rgba(255, 255, 255, 0.7)',
+                      color: 'rgba(255, 255, 255, 0.8)',
                       border: 'none',
-                      px: 2,
-                      py: 0.5,
-                      fontSize: '0.875rem',
+                      px: 2.5,
+                      py: 0.75,
+                      fontSize: '0.8125rem',
                       fontWeight: 600,
+                      letterSpacing: '0.05em',
+                      transition: 'all 0.2s ease',
                       '&.Mui-selected': {
-                        backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.3)',
                         color: 'white',
+                        transform: 'scale(1.05)',
                         '&:hover': {
-                          backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                          backgroundColor: 'rgba(255, 255, 255, 0.35)',
                         },
                       },
                       '&:hover': {
-                        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
                       },
                     },
                   }}
@@ -1074,17 +1097,6 @@ const EscrowsDashboard = () => {
                   <ToggleButton value="1Y">1Y</ToggleButton>
                   <ToggleButton value="YTD">YTD</ToggleButton>
                 </ToggleButtonGroup>
-                <Typography
-                  variant="caption"
-                  sx={{
-                    color: 'rgba(255, 255, 255, 0.8)',
-                    fontWeight: 500,
-                    display: 'block',
-                    fontSize: '0.75rem',
-                  }}
-                >
-                  {dateRange.label}
-                </Typography>
               </Box>
             </motion.div>
           </Box>
