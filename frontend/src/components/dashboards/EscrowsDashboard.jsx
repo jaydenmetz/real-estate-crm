@@ -1572,7 +1572,7 @@ const EscrowsDashboard = () => {
                 boxShadow: '0 2px 8px rgba(25, 118, 210, 0.15)',
               },
             }}>
-              {/* Start Date Picker - Clean Typography */}
+              {/* Start Date Picker */}
               <DatePicker
                 value={customStartDate || dateRange.startDate}
                 onChange={(newDate) => {
@@ -1588,49 +1588,13 @@ const EscrowsDashboard = () => {
                 slotProps={{
                   textField: {
                     size: 'small',
-                    variant: 'standard',
-                    onClick: (e) => {
-                      e.target.blur(); // Prevent keyboard from showing
-                    },
-                    InputProps: {
-                      disableUnderline: true,
-                      onKeyDown: (e) => {
-                        e.preventDefault(); // Prevent typing
-                      },
-                    },
                     sx: {
-                      width: 100,
+                      width: 130,
                       '& .MuiInputBase-input': {
-                        fontSize: '0.9375rem',
+                        fontSize: '0.875rem',
                         fontWeight: 500,
-                        color: 'text.primary',
-                        padding: 0,
-                        cursor: 'pointer',
                         textAlign: 'center',
-                        letterSpacing: '0.01em',
-                        caretColor: 'transparent', // Hide cursor
-                        '&:hover': {
-                          color: 'primary.main',
-                        },
-                      },
-                    },
-                  },
-                  openPickerButton: {
-                    sx: {
-                      display: 'none',
-                    },
-                  },
-                  popper: {
-                    sx: {
-                      '& .MuiPickersDay-root': {
-                        '&.Mui-selected': {
-                          backgroundColor: 'primary.main',
-                          color: 'white',
-                          fontWeight: 600,
-                          '&:hover': {
-                            backgroundColor: 'primary.dark',
-                          },
-                        },
+                        cursor: 'pointer',
                       },
                     },
                   },
@@ -1646,7 +1610,7 @@ const EscrowsDashboard = () => {
                 →
               </Typography>
 
-              {/* End Date Picker - Clean Typography */}
+              {/* End Date Picker */}
               <DatePicker
                 value={customEndDate || dateRange.endDate}
                 onChange={(newDate) => {
@@ -1662,49 +1626,13 @@ const EscrowsDashboard = () => {
                 slotProps={{
                   textField: {
                     size: 'small',
-                    variant: 'standard',
-                    onClick: (e) => {
-                      e.target.blur(); // Prevent keyboard from showing
-                    },
-                    InputProps: {
-                      disableUnderline: true,
-                      onKeyDown: (e) => {
-                        e.preventDefault(); // Prevent typing
-                      },
-                    },
                     sx: {
-                      width: 100,
+                      width: 130,
                       '& .MuiInputBase-input': {
-                        fontSize: '0.9375rem',
+                        fontSize: '0.875rem',
                         fontWeight: 500,
-                        color: 'text.primary',
-                        padding: 0,
-                        cursor: 'pointer',
                         textAlign: 'center',
-                        letterSpacing: '0.01em',
-                        caretColor: 'transparent', // Hide cursor
-                        '&:hover': {
-                          color: 'primary.main',
-                        },
-                      },
-                    },
-                  },
-                  openPickerButton: {
-                    sx: {
-                      display: 'none',
-                    },
-                  },
-                  popper: {
-                    sx: {
-                      '& .MuiPickersDay-root': {
-                        '&.Mui-selected': {
-                          backgroundColor: 'primary.main',
-                          color: 'white',
-                          fontWeight: 600,
-                          '&:hover': {
-                            backgroundColor: 'primary.dark',
-                          },
-                        },
+                        cursor: 'pointer',
                       },
                     },
                   },
