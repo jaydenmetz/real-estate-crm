@@ -19,10 +19,18 @@ const limiter = rateLimit({
     const skipPaths = ['/health', '/ws/', '/auth/', '/api-keys'];
     return skipPaths.some((path) => req.path.includes(path));
   },
+  // Validate trust proxy - only trust Railway proxy headers
+  validate: {
+    trustProxy: false, // Disable validation error for Railway's reverse proxy
+    xForwardedForHeader: false,
+  },
   keyGenerator: (req) => {
     // Use a combination of IP and user ID if authenticated
     const userId = req.user?.id || 'anonymous';
-    const ip = req.ip || req.connection.remoteAddress;
+    // Get the real IP from Railway's forwarded headers
+    const ip = req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
+               req.ip ||
+               req.connection.remoteAddress;
     return `${ip}-${userId}`;
   },
 });
