@@ -403,14 +403,26 @@ function AllDataEditor({ data, onUpdate, isSaving }) {
               <Grid item xs={12} sm={6} md={3} key={dateField}>
                 <DatePicker
                   label={formatFieldLabel(dateField)}
-                  value={formData.timeline?.[dateField] ? new Date(formData.timeline[dateField]) : null}
+                  value={(() => {
+                    const dateString = formData.timeline?.[dateField];
+                    if (!dateString) return null;
+                    try {
+                      const date = new Date(dateString);
+                      if (date instanceof Date && !isNaN(date.getTime())) {
+                        return date;
+                      }
+                      return null;
+                    } catch (e) {
+                      return null;
+                    }
+                  })()}
                   onChange={(newValue) => handleFieldChange('timeline', dateField, newValue?.toISOString())}
                   disabled={!editingSections.timeline}
-                  slotProps={{ 
-                    textField: { 
-                      fullWidth: true, 
-                      size: 'small' 
-                    } 
+                  slotProps={{
+                    textField: {
+                      fullWidth: true,
+                      size: 'small'
+                    }
                   }}
                 />
               </Grid>
