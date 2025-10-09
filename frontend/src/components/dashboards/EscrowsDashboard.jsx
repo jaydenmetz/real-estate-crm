@@ -1536,10 +1536,10 @@ const EscrowsDashboard = () => {
               },
             }}
           >
-            <Tab label="Active" value="active" />
-            <Tab label="Closed" value="closed" />
-            <Tab label="Cancelled" value="cancelled" />
-            <Tab label="All" value="all" />
+            <Tab label="Active Escrows" value="active" />
+            <Tab label="Closed Escrows" value="closed" />
+            <Tab label="Cancelled Escrows" value="cancelled" />
+            <Tab label="All Escrows" value="all" />
           </Tabs>
         </Paper>
 
