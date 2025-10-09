@@ -477,7 +477,15 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
             {type === 'date' ? (
               <LocalizationProvider dateAdapter={AdapterDateFns}>
                 <DatePicker
-                  value={tempValue ? parseISO(tempValue) : null}
+                  value={(() => {
+                    if (!tempValue) return null;
+                    try {
+                      const parsed = parseISO(tempValue);
+                      return isValid(parsed) ? parsed : null;
+                    } catch (e) {
+                      return null;
+                    }
+                  })()}
                   onChange={(newValue) => {
                     if (newValue && isValid(newValue)) {
                       setTempValue(format(newValue, 'yyyy-MM-dd'));
