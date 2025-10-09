@@ -217,7 +217,11 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
                 >
                   {showPrivacy && !showValue ? (
                     <span>{maskValue(value)}</span>
+                  ) : typeof value === 'string' ? (
+                    // Custom string value (no CountUp animation)
+                    <span>{prefix}{value}{suffix}</span>
                   ) : (
+                    // Numeric value with CountUp animation
                     <>
                       <span style={{ fontSize: '0.7em' }}>{prefix}</span>
                       <CountUp
@@ -976,41 +980,219 @@ const EscrowsDashboard = () => {
             </Typography>
           </motion.div>
 
-          {/* Stats Grid - White Cards */}
+          {/* Stats Grid - White Cards - Dynamic based on selected tab */}
           <Grid container spacing={3}>
-            <StatCard
-              icon={Home}
-              title="Total Escrows"
-              value={hasMorePages ? `${stats.totalEscrows}+` : stats.totalEscrows || 0}
-              color="#ffffff"
-              delay={0}
-            />
-            <StatCard
-              icon={CheckCircle}
-              title="Active Escrows"
-              value={stats.activeEscrows || 0}
-              color="#ffffff"
-              delay={1}
-            />
-            <StatCard
-              icon={TrendingUp}
-              title="Total Volume"
-              value={stats.totalVolume || 0}
-              prefix="$"
-              suffix=""
-              color="#ffffff"
-              delay={2}
-            />
-            <StatCard
-              icon={AttachMoney}
-              title="Total Commission"
-              value={stats.projectedCommission || 0}
-              prefix="$"
-              suffix=""
-              color="#ffffff"
-              delay={3}
-              showPrivacy={true}
-            />
+            {(() => {
+              // Calculate cancellation rate
+              const totalAllStatuses = (allEscrows || []).length;
+              const totalCancelled = (allEscrows || []).filter(e =>
+                e.escrowStatus?.toLowerCase() === 'cancelled'
+              ).length;
+              const cancellationRate = totalAllStatuses > 0
+                ? ((totalCancelled / totalAllStatuses) * 100).toFixed(1)
+                : 0;
+
+              // Max archived limit (will be user setting based on subscription)
+              const maxArchivedLimit = 100;
+
+              switch(selectedStatus) {
+                case 'active':
+                  return (
+                    <>
+                      <StatCard
+                        icon={Home}
+                        title="Total Active Escrows"
+                        value={stats.totalEscrows || 0}
+                        color="#ffffff"
+                        delay={0}
+                      />
+                      <StatCard
+                        icon={Schedule}
+                        title="Escrows This Month"
+                        value={stats.monthClosed || 0}
+                        color="#ffffff"
+                        delay={1}
+                      />
+                      <StatCard
+                        icon={TrendingUp}
+                        title="Total Volume"
+                        value={stats.totalVolume || 0}
+                        prefix="$"
+                        suffix=""
+                        color="#ffffff"
+                        delay={2}
+                      />
+                      <StatCard
+                        icon={AttachMoney}
+                        title="Total Commission"
+                        value={stats.projectedCommission || 0}
+                        prefix="$"
+                        suffix=""
+                        color="#ffffff"
+                        delay={3}
+                        showPrivacy={true}
+                      />
+                    </>
+                  );
+
+                case 'closed':
+                  return (
+                    <>
+                      <StatCard
+                        icon={CheckCircle}
+                        title="Total Closed Escrows"
+                        value={stats.totalEscrows || 0}
+                        color="#ffffff"
+                        delay={0}
+                      />
+                      <StatCard
+                        icon={CalendarToday}
+                        title="Closed This Year"
+                        value={stats.ytdClosed || 0}
+                        color="#ffffff"
+                        delay={1}
+                      />
+                      <StatCard
+                        icon={TrendingUp}
+                        title="Total Volume"
+                        value={stats.totalVolume || 0}
+                        prefix="$"
+                        suffix=""
+                        color="#ffffff"
+                        delay={2}
+                      />
+                      <StatCard
+                        icon={AttachMoney}
+                        title="Total Commission"
+                        value={stats.projectedCommission || 0}
+                        prefix="$"
+                        suffix=""
+                        color="#ffffff"
+                        delay={3}
+                        showPrivacy={true}
+                      />
+                    </>
+                  );
+
+                case 'cancelled':
+                  return (
+                    <>
+                      <StatCard
+                        icon={ErrorIcon}
+                        title="Total Cancelled Escrows"
+                        value={stats.totalEscrows || 0}
+                        color="#ffffff"
+                        delay={0}
+                      />
+                      <StatCard
+                        icon={Assessment}
+                        title="Cancellation Rate"
+                        value={cancellationRate}
+                        suffix="%"
+                        color="#ffffff"
+                        delay={1}
+                      />
+                      <StatCard
+                        icon={TrendingUp}
+                        title="Total Volume"
+                        value={stats.totalVolume || 0}
+                        prefix="$"
+                        suffix=""
+                        color="#ffffff"
+                        delay={2}
+                      />
+                      <StatCard
+                        icon={AttachMoney}
+                        title="Total Commission"
+                        value={stats.projectedCommission || 0}
+                        prefix="$"
+                        suffix=""
+                        color="#ffffff"
+                        delay={3}
+                        showPrivacy={true}
+                      />
+                    </>
+                  );
+
+                case 'archived':
+                  return (
+                    <>
+                      <StatCard
+                        icon={ArchiveIcon}
+                        title="Total Archived Escrows"
+                        value={archivedCount || 0}
+                        color="#ffffff"
+                        delay={0}
+                      />
+                      <StatCard
+                        icon={Storage}
+                        title="Max Archived"
+                        value={`${archivedCount || 0}/${maxArchivedLimit}`}
+                        color="#ffffff"
+                        delay={1}
+                      />
+                      <StatCard
+                        icon={TrendingUp}
+                        title="Total Volume"
+                        value={stats.totalVolume || 0}
+                        prefix="$"
+                        suffix=""
+                        color="#ffffff"
+                        delay={2}
+                      />
+                      <StatCard
+                        icon={AttachMoney}
+                        title="Total Commission"
+                        value={stats.projectedCommission || 0}
+                        prefix="$"
+                        suffix=""
+                        color="#ffffff"
+                        delay={3}
+                        showPrivacy={true}
+                      />
+                    </>
+                  );
+
+                default:
+                  return (
+                    <>
+                      <StatCard
+                        icon={Home}
+                        title="Total Escrows"
+                        value={hasMorePages ? `${stats.totalEscrows}+` : stats.totalEscrows || 0}
+                        color="#ffffff"
+                        delay={0}
+                      />
+                      <StatCard
+                        icon={CheckCircle}
+                        title="Active Escrows"
+                        value={stats.activeEscrows || 0}
+                        color="#ffffff"
+                        delay={1}
+                      />
+                      <StatCard
+                        icon={TrendingUp}
+                        title="Total Volume"
+                        value={stats.totalVolume || 0}
+                        prefix="$"
+                        suffix=""
+                        color="#ffffff"
+                        delay={2}
+                      />
+                      <StatCard
+                        icon={AttachMoney}
+                        title="Total Commission"
+                        value={stats.projectedCommission || 0}
+                        prefix="$"
+                        suffix=""
+                        color="#ffffff"
+                        delay={3}
+                        showPrivacy={true}
+                      />
+                    </>
+                  );
+              }
+            })()}
           </Grid>
 
           {/* Action Buttons */}
