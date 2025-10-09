@@ -1350,6 +1350,47 @@ const EscrowsDashboard = () => {
               }
             })()}
               </Grid>
+
+              {/* Action Buttons Row */}
+              <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
+                <Button
+                  variant="contained"
+                  size="medium"
+                  startIcon={<Add />}
+                  onClick={handleCreateNew}
+                  sx={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    color: 'white',
+                    backdropFilter: 'blur(10px)',
+                    fontWeight: 600,
+                    px: 3,
+                    py: 1,
+                    borderRadius: 2,
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                    }
+                  }}
+                >
+                  Create New Escrow
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="medium"
+                  startIcon={<Assessment />}
+                  sx={{
+                    color: 'white',
+                    borderColor: 'rgba(255, 255, 255, 0.5)',
+                    px: 3,
+                    py: 1,
+                    '&:hover': {
+                      borderColor: 'white',
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    }
+                  }}
+                >
+                  Transaction Analytics
+                </Button>
+              </Box>
             </Box>
 
             {/* Right side: AI Assistant - Spans full height */}
@@ -1449,47 +1490,6 @@ const EscrowsDashboard = () => {
                 </Card>
               </motion.div>
             </Box>
-          </Box>
-
-          {/* Action Buttons - Reduced vertical spacing */}
-          <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
-            <Button
-              variant="contained"
-              size="medium"
-              startIcon={<Add />}
-              onClick={handleCreateNew}
-              sx={{
-                backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                color: 'white',
-                backdropFilter: 'blur(10px)',
-                fontWeight: 600,
-                px: 3,
-                py: 1,
-                borderRadius: 2,
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                }
-              }}
-            >
-              Create New Escrow
-            </Button>
-            <Button
-              variant="outlined"
-              size="medium"
-              startIcon={<Assessment />}
-              sx={{
-                color: 'white',
-                borderColor: 'rgba(255, 255, 255, 0.5)',
-                px: 3,
-                py: 1,
-                '&:hover': {
-                  borderColor: 'white',
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                }
-              }}
-            >
-              Transaction Analytics
-            </Button>
           </Box>
         </HeroSection>
 
