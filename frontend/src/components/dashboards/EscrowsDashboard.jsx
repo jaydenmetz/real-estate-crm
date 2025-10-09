@@ -1619,14 +1619,13 @@ const EscrowsDashboard = () => {
                     setDateRangeFilter(null);
                   }
                 }}
-                // STRATEGIC COMMENT: slotProps disabled to test if error is in textField.value
-                /*
                 slotProps={{
                   textField: {
                     size: 'small',
                     onClick: () => setStartDatePickerOpen(true),
                     value: (() => {
-                      const date = customStartDate || dateRange.startDate;
+                      // Use customStartDate if set, otherwise get validated date from getDateRange()
+                      const date = customStartDate || (dateRange?.startDate instanceof Date && !isNaN(dateRange.startDate.getTime()) ? dateRange.startDate : null);
                       if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '';
                       try {
                         return formatDate(date, 'MMM d, yyyy');
@@ -1648,7 +1647,6 @@ const EscrowsDashboard = () => {
                     sx: { display: 'none' },
                   },
                 }}
-                */
               />
 
               <Typography variant="body2" sx={{
@@ -1660,8 +1658,8 @@ const EscrowsDashboard = () => {
                 →
               </Typography>
 
-              {/* End Date Picker - COMMENTED OUT FOR TESTING */}
-              {false && <DatePicker
+              {/* End Date Picker */}
+              <DatePicker
                 open={endDatePickerOpen}
                 onOpen={() => setEndDatePickerOpen(true)}
                 onClose={() => setEndDatePickerOpen(false)}
@@ -1696,7 +1694,8 @@ const EscrowsDashboard = () => {
                     size: 'small',
                     onClick: () => setEndDatePickerOpen(true),
                     value: (() => {
-                      const date = customEndDate || dateRange.endDate;
+                      // Use customEndDate if set, otherwise get validated date from getDateRange()
+                      const date = customEndDate || (dateRange?.endDate instanceof Date && !isNaN(dateRange.endDate.getTime()) ? dateRange.endDate : null);
                       if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '';
                       try {
                         return formatDate(date, 'MMM d, yyyy');
@@ -1718,7 +1717,7 @@ const EscrowsDashboard = () => {
                     sx: { display: 'none' },
                   },
                 }}
-              />}
+              />
               </Box>
             </LocalizationProvider>
 
