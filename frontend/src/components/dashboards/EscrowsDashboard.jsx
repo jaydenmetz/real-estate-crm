@@ -1053,34 +1053,30 @@ const EscrowsDashboard = () => {
           </Box>
         </HeroSection>
 
-      {/* Status Tabs with Controls - Responsive Layout */}
-      <Box sx={{ mb: 4 }}>
-        {/* Tab Bar */}
+      {/* Status Tabs with Controls - Side by Side Layout */}
+      <Box sx={{ mb: 4, display: 'flex', gap: 2, alignItems: 'center' }}>
+        {/* Tab Bar - Takes available space */}
         <Paper
           elevation={0}
           sx={{
             backgroundColor: 'background.paper',
             borderRadius: 2,
             boxShadow: 1,
-            display: 'flex',
+            display: { xs: 'none', lg: 'flex' },
             alignItems: 'center',
-            position: 'relative',
+            flex: '1 1 auto',
           }}
         >
           <Tabs
             value={selectedStatus}
             onChange={(e, newValue) => setSelectedStatus(newValue)}
-            variant="scrollable"
-            scrollButtons="auto"
             sx={{
               width: '100%',
               '& .MuiTab-root': {
                 textTransform: 'none',
-                fontSize: { xs: '0.875rem', md: '1rem' },
+                fontSize: '1rem',
                 fontWeight: 500,
                 minHeight: 56,
-                minWidth: { xs: 'auto', md: 90 },
-                px: { xs: 2, md: 3 },
               },
               '& .Mui-selected': {
                 fontWeight: 700,
@@ -1091,20 +1087,17 @@ const EscrowsDashboard = () => {
             <Tab label="Closed Escrows" value="closed" />
             <Tab label="Cancelled Escrows" value="cancelled" />
           </Tabs>
+        </Paper>
 
-          {/* Controls Overlay - Desktop only */}
-          <Box
-            sx={{
-              position: 'absolute',
-              top: '50%',
-              right: 16,
-              transform: 'translateY(-50%)',
-              display: { xs: 'none', lg: 'flex' },
-              gap: 2,
-              alignItems: 'center',
-              zIndex: 10,
-            }}
-          >
+        {/* Desktop Controls - Side by Side */}
+        <Box
+          sx={{
+            display: { xs: 'none', lg: 'flex' },
+            gap: 2,
+            alignItems: 'center',
+            flexShrink: 0,
+          }}
+        >
           {/* Sort Selector */}
           <FormControl
             size="small"
@@ -1204,19 +1197,7 @@ const EscrowsDashboard = () => {
               <CalendarToday sx={{ fontSize: 16 }} />
             </ToggleButton>
           </ToggleButtonGroup>
-        </Box>
-
-        {/* Archive/Trash Icon - Desktop only, positioned after tab bar */}
-        <Box
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            right: -56, // Position outside tab bar to the right
-            transform: 'translateY(-50%)',
-            zIndex: 10,
-            display: { xs: 'none', lg: 'block' },
-          }}
-        >
+          {/* Archive/Trash Icon */}
           <IconButton
             size="small"
             onClick={() => setSelectedStatus('archived')}
@@ -1236,14 +1217,50 @@ const EscrowsDashboard = () => {
             </Badge>
           </IconButton>
         </Box>
+      </Box>
+
+      {/* Mobile/Tablet Layout - Full width tabs with controls below */}
+      <Box sx={{ mb: 4, display: { xs: 'block', lg: 'none' } }}>
+        {/* Tab Bar - Mobile */}
+        <Paper
+          elevation={0}
+          sx={{
+            backgroundColor: 'background.paper',
+            borderRadius: 2,
+            boxShadow: 1,
+            mb: 2,
+          }}
+        >
+          <Tabs
+            value={selectedStatus}
+            onChange={(e, newValue) => setSelectedStatus(newValue)}
+            variant="scrollable"
+            scrollButtons="auto"
+            sx={{
+              '& .MuiTab-root': {
+                textTransform: 'none',
+                fontSize: '0.875rem',
+                fontWeight: 500,
+                minHeight: 56,
+                minWidth: 'auto',
+                px: 2,
+              },
+              '& .Mui-selected': {
+                fontWeight: 700,
+              },
+            }}
+          >
+            <Tab label="Active Escrows" value="active" />
+            <Tab label="Closed Escrows" value="closed" />
+            <Tab label="Cancelled Escrows" value="cancelled" />
+          </Tabs>
         </Paper>
 
-        {/* Mobile Controls - Below tabs on small screens */}
+        {/* Mobile Controls - Below tabs */}
         <Box
           sx={{
-            display: { xs: 'flex', lg: 'none' },
+            display: 'flex',
             gap: 2,
-            mt: 2,
             flexWrap: 'wrap',
             alignItems: 'center',
           }}
