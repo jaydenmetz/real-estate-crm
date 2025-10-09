@@ -1190,6 +1190,7 @@ const EscrowsDashboard = () => {
             </ToggleButton>
             <ToggleButton
               value="calendar"
+              selected={showCalendar}
               onClick={handleCalendarOpen}
               aria-label="Calendar view - shows escrows by closing date"
               title="Calendar view"
@@ -1327,6 +1328,7 @@ const EscrowsDashboard = () => {
               </ToggleButton>
               <ToggleButton
                 value="calendar"
+                selected={showCalendar}
                 onClick={handleCalendarOpen}
                 aria-label="Calendar view"
                 title="Calendar view"
