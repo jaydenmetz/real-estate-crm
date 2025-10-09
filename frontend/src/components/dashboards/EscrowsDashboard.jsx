@@ -85,6 +85,8 @@ import {
   Archive as ArchiveIcon,
   Restore as RestoreIcon,
   DeleteForever as DeleteForeverIcon,
+  Visibility,
+  VisibilityOff,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
