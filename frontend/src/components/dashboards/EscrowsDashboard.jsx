@@ -131,7 +131,7 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
   };
 
   return (
-    <Grid item xs={12} sm={6} md={6} lg={3}>
+    <Grid item xs={12} sm={6} md={3}>
       <motion.div
         initial={{ opacity: 0, x: -12 }}
         animate={{ opacity: 1, x: 0 }}
@@ -1013,196 +1013,100 @@ const EscrowsDashboard = () => {
 
         {/* Hero Section with Stats */}
         <HeroSection>
-          {/* Header with Date Range Filter */}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <Typography variant="h3" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
-                Escrow Management
-              </Typography>
-              <Typography variant="h6" sx={{ opacity: 0.9 }}>
-                Track and manage all your real estate transactions in one place
-              </Typography>
-            </motion.div>
-
-            {/* Date Range Filter */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <Box sx={{
-                textAlign: 'right',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'flex-end',
-                gap: 1.5
-              }}>
-                {/* Date range label - prominent and professional */}
-                <Typography
-                  sx={{
-                    color: 'white',
-                    fontWeight: 600,
-                    fontSize: '1rem',
-                    letterSpacing: '0.02em',
-                    textShadow: '0 1px 2px rgba(0,0,0,0.1)',
-                  }}
+          {/* Main layout: Content on left, AI Assistant on right */}
+          <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', md: 'row' } }}>
+            {/* Left side: Header, Date Range, and Stats */}
+            <Box sx={{ flex: 1 }}>
+              {/* Header with Date Range Filter */}
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
                 >
-                  {dateRange.label}
-                </Typography>
+                  <Typography variant="h3" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
+                    Escrow Management
+                  </Typography>
+                  <Typography variant="h6" sx={{ opacity: 0.9 }}>
+                    Track and manage all your real estate transactions in one place
+                  </Typography>
+                </motion.div>
 
-                {/* Toggle buttons - clean and minimal */}
-                <ToggleButtonGroup
-                  value={dateRangeFilter}
-                  exclusive
-                  onChange={(e, newValue) => {
-                    if (newValue !== null) {
-                      setDateRangeFilter(newValue);
-                    }
-                  }}
-                  size="small"
-                  sx={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                    backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255, 255, 255, 0.25)',
-                    borderRadius: 2,
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                    '& .MuiToggleButton-root': {
-                      color: 'rgba(255, 255, 255, 0.8)',
-                      border: 'none',
-                      px: 2.5,
-                      py: 0.75,
-                      fontSize: '0.8125rem',
-                      fontWeight: 600,
-                      letterSpacing: '0.05em',
-                      transition: 'all 0.2s ease',
-                      '&.Mui-selected': {
-                        backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                        color: 'white',
-                        transform: 'scale(1.05)',
-                        '&:hover': {
-                          backgroundColor: 'rgba(255, 255, 255, 0.35)',
-                        },
-                      },
-                      '&:hover': {
-                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                      },
-                    },
-                  }}
+                {/* Date Range Filter */}
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.5, delay: 0.2 }}
                 >
-                  <ToggleButton value="1D">1D</ToggleButton>
-                  <ToggleButton value="1M">1M</ToggleButton>
-                  <ToggleButton value="1Y">1Y</ToggleButton>
-                  <ToggleButton value="YTD">YTD</ToggleButton>
-                </ToggleButtonGroup>
-              </Box>
-            </motion.div>
-          </Box>
-
-          {/* Stats Grid - White Cards - Dynamic based on selected tab */}
-          <Grid container spacing={3}>
-            {/* AI Assistant Placeholder - Takes up full height */}
-            <Grid item xs={12} md={3}>
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5 }}
-              >
-                <Card
-                  elevation={0}
-                  sx={{
-                    height: '100%',
-                    minHeight: { xs: 200, md: 320 },
-                    position: 'relative',
-                    overflow: 'hidden',
-                    background: 'linear-gradient(135deg, rgba(30, 60, 114, 0.12) 0%, rgba(42, 82, 152, 0.08) 100%)',
-                    backdropFilter: 'blur(10px)',
-                    border: '2px dashed rgba(255, 255, 255, 0.3)',
-                    borderRadius: 3,
+                  <Box sx={{
+                    textAlign: 'right',
                     display: 'flex',
                     flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
-                      transform: 'scale(1.02)',
-                      border: '2px dashed rgba(255, 255, 255, 0.5)',
-                      background: 'linear-gradient(135deg, rgba(30, 60, 114, 0.18) 0%, rgba(42, 82, 152, 0.12) 100%)',
-                    }
-                  }}
-                >
-                  <CardContent sx={{ textAlign: 'center', p: 3 }}>
-                    <Box sx={{ mb: 2 }}>
-                      <Box
-                        sx={{
-                          width: 64,
-                          height: 64,
-                          borderRadius: '50%',
-                          background: 'rgba(255, 255, 255, 0.15)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          margin: '0 auto',
-                          mb: 2,
-                        }}
-                      >
-                        <Typography sx={{ fontSize: '2rem' }}>🤖</Typography>
-                      </Box>
-                      <Typography
-                        variant="h6"
-                        sx={{
-                          color: 'rgba(255, 255, 255, 0.95)',
-                          fontWeight: 700,
-                          mb: 1,
-                          letterSpacing: '0.02em',
-                        }}
-                      >
-                        AI Escrow Manager
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: 'rgba(255, 255, 255, 0.7)',
-                          mb: 2,
-                          fontSize: '0.875rem',
-                        }}
-                      >
-                        Hire an AI assistant to automate escrow tasks, send reminders, and manage deadlines.
-                      </Typography>
-                      <Box
-                        sx={{
-                          display: 'inline-block',
-                          px: 2,
-                          py: 0.75,
-                          borderRadius: 2,
-                          background: 'rgba(255, 255, 255, 0.2)',
-                          backdropFilter: 'blur(5px)',
-                        }}
-                      >
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            color: 'white',
-                            fontWeight: 600,
-                            letterSpacing: '0.1em',
-                            textTransform: 'uppercase',
-                            fontSize: '0.75rem',
-                          }}
-                        >
-                          Coming Soon
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            </Grid>
+                    alignItems: 'flex-end',
+                    gap: 1.5
+                  }}>
+                    {/* Date range label - prominent and professional */}
+                    <Typography
+                      sx={{
+                        color: 'white',
+                        fontWeight: 600,
+                        fontSize: '1rem',
+                        letterSpacing: '0.02em',
+                        textShadow: '0 1px 2px rgba(0,0,0,0.1)',
+                      }}
+                    >
+                      {dateRange.label}
+                    </Typography>
 
-            {/* Stat Cards - Now take up 9 columns (3 columns each on desktop) */}
-            <Grid item xs={12} md={9}>
+                    {/* Toggle buttons - clean and minimal */}
+                    <ToggleButtonGroup
+                      value={dateRangeFilter}
+                      exclusive
+                      onChange={(e, newValue) => {
+                        if (newValue !== null) {
+                          setDateRangeFilter(newValue);
+                        }
+                      }}
+                      size="small"
+                      sx={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                        backdropFilter: 'blur(10px)',
+                        border: '1px solid rgba(255, 255, 255, 0.25)',
+                        borderRadius: 2,
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                        '& .MuiToggleButton-root': {
+                          color: 'rgba(255, 255, 255, 0.8)',
+                          border: 'none',
+                          px: 2.5,
+                          py: 0.75,
+                          fontSize: '0.8125rem',
+                          fontWeight: 600,
+                          letterSpacing: '0.05em',
+                          transition: 'all 0.2s ease',
+                          '&.Mui-selected': {
+                            backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                            color: 'white',
+                            transform: 'scale(1.05)',
+                            '&:hover': {
+                              backgroundColor: 'rgba(255, 255, 255, 0.35)',
+                            },
+                          },
+                          '&:hover': {
+                            backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                          },
+                        },
+                      }}
+                    >
+                      <ToggleButton value="1D">1D</ToggleButton>
+                      <ToggleButton value="1M">1M</ToggleButton>
+                      <ToggleButton value="1Y">1Y</ToggleButton>
+                      <ToggleButton value="YTD">YTD</ToggleButton>
+                    </ToggleButtonGroup>
+                  </Box>
+                </motion.div>
+              </Box>
+
+              {/* Stats Grid - White Cards - Dynamic based on selected tab */}
               <Grid container spacing={3}>
                 {(() => {
                   // Calculate cancellation rate from all non-archived escrows
@@ -1416,8 +1320,106 @@ const EscrowsDashboard = () => {
               }
             })()}
               </Grid>
-            </Grid>
-          </Grid>
+            </Box>
+
+            {/* Right side: AI Assistant - Spans full height */}
+            <Box sx={{ width: { xs: '100%', md: '300px' }, flexShrink: 0 }}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5 }}
+                style={{ height: '100%' }}
+              >
+                <Card
+                  elevation={0}
+                  sx={{
+                    height: '100%',
+                    minHeight: { xs: 250, md: 'auto' },
+                    position: 'relative',
+                    overflow: 'hidden',
+                    background: 'linear-gradient(135deg, rgba(30, 60, 114, 0.12) 0%, rgba(42, 82, 152, 0.08) 100%)',
+                    backdropFilter: 'blur(10px)',
+                    border: '2px dashed rgba(255, 255, 255, 0.3)',
+                    borderRadius: 3,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      transform: 'scale(1.02)',
+                      border: '2px dashed rgba(255, 255, 255, 0.5)',
+                      background: 'linear-gradient(135deg, rgba(30, 60, 114, 0.18) 0%, rgba(42, 82, 152, 0.12) 100%)',
+                    }
+                  }}
+                >
+                  <CardContent sx={{ textAlign: 'center', p: 3 }}>
+                    <Box>
+                      <Box
+                        sx={{
+                          width: 64,
+                          height: 64,
+                          borderRadius: '50%',
+                          background: 'rgba(255, 255, 255, 0.15)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          margin: '0 auto',
+                          mb: 2,
+                        }}
+                      >
+                        <Typography sx={{ fontSize: '2rem' }}>🤖</Typography>
+                      </Box>
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          color: 'rgba(255, 255, 255, 0.95)',
+                          fontWeight: 700,
+                          mb: 1,
+                          letterSpacing: '0.02em',
+                        }}
+                      >
+                        AI Escrow Manager
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: 'rgba(255, 255, 255, 0.7)',
+                          mb: 2,
+                          fontSize: '0.875rem',
+                        }}
+                      >
+                        Hire an AI assistant to automate escrow tasks, send reminders, and manage deadlines.
+                      </Typography>
+                      <Box
+                        sx={{
+                          display: 'inline-block',
+                          px: 2,
+                          py: 0.75,
+                          borderRadius: 2,
+                          background: 'rgba(255, 255, 255, 0.2)',
+                          backdropFilter: 'blur(5px)',
+                        }}
+                      >
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: 'white',
+                            fontWeight: 600,
+                            letterSpacing: '0.1em',
+                            textTransform: 'uppercase',
+                            fontSize: '0.75rem',
+                          }}
+                        >
+                          Coming Soon
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </Box>
+          </Box>
 
           {/* Action Buttons */}
           <Box sx={{ mt: 4, display: 'flex', gap: 2 }}>
