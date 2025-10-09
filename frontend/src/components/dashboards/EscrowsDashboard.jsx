@@ -376,6 +376,7 @@ const EscrowsDashboard = () => {
   const [archivedCount, setArchivedCount] = useState(0);
   const [selectedArchivedIds, setSelectedArchivedIds] = useState([]);
   const [batchDeleting, setBatchDeleting] = useState(false);
+  const [dateRangeFilter, setDateRangeFilter] = useState('1M'); // '1D', '1M', '1Y', 'YTD'
   const [stats, setStats] = useState({
     totalEscrows: 0,
     activeEscrows: 0,
@@ -953,6 +954,50 @@ const EscrowsDashboard = () => {
     setShowCalendar(!showCalendar);
   };
 
+  // Calculate date range based on filter
+  const getDateRange = () => {
+    const now = new Date();
+    let startDate, endDate;
+
+    switch(dateRangeFilter) {
+      case '1D':
+        // Last 24 hours
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - 1);
+        endDate = now;
+        break;
+      case '1M':
+        // Last 30 days
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - 30);
+        endDate = now;
+        break;
+      case '1Y':
+        // Last 365 days
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - 365);
+        endDate = now;
+        break;
+      case 'YTD':
+        // Year to date
+        startDate = new Date(now.getFullYear(), 0, 1);
+        endDate = now;
+        break;
+      default:
+        startDate = new Date(now);
+        startDate.setDate(now.getDate() - 30);
+        endDate = now;
+    }
+
+    return {
+      startDate,
+      endDate,
+      label: `${startDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${endDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+    };
+  };
+
+  const dateRange = getDateRange();
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
@@ -967,18 +1012,82 @@ const EscrowsDashboard = () => {
 
         {/* Hero Section with Stats */}
         <HeroSection>
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Typography variant="h3" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
-              Escrow Management
-            </Typography>
-            <Typography variant="h6" sx={{ mb: 4, opacity: 0.9 }}>
-              Track and manage all your real estate transactions in one place
-            </Typography>
-          </motion.div>
+          {/* Header with Date Range Filter */}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 4 }}>
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Typography variant="h3" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
+                Escrow Management
+              </Typography>
+              <Typography variant="h6" sx={{ opacity: 0.9 }}>
+                Track and manage all your real estate transactions in one place
+              </Typography>
+            </motion.div>
+
+            {/* Date Range Filter */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <Box sx={{ textAlign: 'right' }}>
+                <ToggleButtonGroup
+                  value={dateRangeFilter}
+                  exclusive
+                  onChange={(e, newValue) => {
+                    if (newValue !== null) {
+                      setDateRangeFilter(newValue);
+                    }
+                  }}
+                  size="small"
+                  sx={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    borderRadius: 2,
+                    mb: 1,
+                    '& .MuiToggleButton-root': {
+                      color: 'rgba(255, 255, 255, 0.7)',
+                      border: 'none',
+                      px: 2,
+                      py: 0.5,
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      '&.Mui-selected': {
+                        backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                        color: 'white',
+                        '&:hover': {
+                          backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                        },
+                      },
+                      '&:hover': {
+                        backgroundColor: 'rgba(255, 255, 255, 0.15)',
+                      },
+                    },
+                  }}
+                >
+                  <ToggleButton value="1D">1D</ToggleButton>
+                  <ToggleButton value="1M">1M</ToggleButton>
+                  <ToggleButton value="1Y">1Y</ToggleButton>
+                  <ToggleButton value="YTD">YTD</ToggleButton>
+                </ToggleButtonGroup>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    fontWeight: 500,
+                    display: 'block',
+                    fontSize: '0.75rem',
+                  }}
+                >
+                  {dateRange.label}
+                </Typography>
+              </Box>
+            </motion.div>
+          </Box>
 
           {/* Stats Grid - White Cards - Dynamic based on selected tab */}
           <Grid container spacing={3}>
