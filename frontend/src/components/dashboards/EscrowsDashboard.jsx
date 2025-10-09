@@ -1586,6 +1586,9 @@ const EscrowsDashboard = () => {
                 }}
                 format="MMM d"
                 slotProps={{
+                  field: {
+                    readOnly: true,
+                  },
                   textField: {
                     size: 'small',
                     variant: 'standard',
@@ -1610,13 +1613,7 @@ const EscrowsDashboard = () => {
                   },
                   openPickerButton: {
                     sx: {
-                      fontSize: '1rem',
-                      color: 'text.secondary',
-                      padding: 0,
-                      marginLeft: '-4px',
-                      '&:hover': {
-                        color: 'primary.main',
-                      },
+                      display: 'none',
                     },
                   },
                 }}
@@ -1645,6 +1642,9 @@ const EscrowsDashboard = () => {
                 }}
                 format="MMM d, yyyy"
                 slotProps={{
+                  field: {
+                    readOnly: true,
+                  },
                   textField: {
                     size: 'small',
                     variant: 'standard',
@@ -1669,13 +1669,7 @@ const EscrowsDashboard = () => {
                   },
                   openPickerButton: {
                     sx: {
-                      fontSize: '1rem',
-                      color: 'text.secondary',
-                      padding: 0,
-                      marginLeft: '-4px',
-                      '&:hover': {
-                        color: 'primary.main',
-                      },
+                      display: 'none',
                     },
                   },
                 }}
