@@ -972,34 +972,40 @@ const EscrowsDashboard = () => {
 
   // Check if custom dates match a preset range
   const detectPresetRange = (start, end) => {
+    if (!start || !end) return null;
+
     const now = new Date();
+    const today = new Date(now);
+    today.setHours(0, 0, 0, 0);
+
+    // Normalize the input dates to compare (ignore time)
+    const startDay = new Date(start);
+    startDay.setHours(0, 0, 0, 0);
+    const endDay = new Date(end);
+    endDay.setHours(0, 0, 0, 0);
 
     // Check 1D (today)
-    const todayStart = new Date(now);
-    todayStart.setHours(0, 0, 0, 0);
-    const todayEnd = new Date(now);
-    todayEnd.setHours(23, 59, 59, 999);
-    if (isSameDay(start, todayStart) && isSameDay(end, todayEnd)) {
+    if (isSameDay(startDay, today) && isSameDay(endDay, today)) {
       return '1D';
     }
 
-    // Check 1M (last 30 days)
-    const oneMonthAgo = new Date(now);
-    oneMonthAgo.setDate(now.getDate() - 30);
-    if (isSameDay(start, oneMonthAgo) && isSameDay(end, now)) {
+    // Check 1M (last 30 days) - end should be today
+    const oneMonthAgo = new Date(today);
+    oneMonthAgo.setDate(today.getDate() - 30);
+    if (isSameDay(startDay, oneMonthAgo) && isSameDay(endDay, today)) {
       return '1M';
     }
 
-    // Check 1Y (last 365 days)
-    const oneYearAgo = new Date(now);
-    oneYearAgo.setDate(now.getDate() - 365);
-    if (isSameDay(start, oneYearAgo) && isSameDay(end, now)) {
+    // Check 1Y (last 365 days) - end should be today
+    const oneYearAgo = new Date(today);
+    oneYearAgo.setDate(today.getDate() - 365);
+    if (isSameDay(startDay, oneYearAgo) && isSameDay(endDay, today)) {
       return '1Y';
     }
 
-    // Check YTD (year to date)
+    // Check YTD (year to date) - end should be today
     const ytdStart = new Date(now.getFullYear(), 0, 1);
-    if (isSameDay(start, ytdStart) && isSameDay(end, now)) {
+    if (isSameDay(startDay, ytdStart) && isSameDay(endDay, today)) {
       return 'YTD';
     }
 
