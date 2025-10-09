@@ -95,6 +95,7 @@ import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { format as formatDate } from 'date-fns';
 import { safeFormatDate, safeParseDate } from '../../utils/safeDateUtils';
 import { escrowsAPI } from '../../services/api.service';
 import { useAuth } from '../../contexts/AuthContext';
@@ -1589,11 +1590,11 @@ const EscrowsDashboard = () => {
                     setDateRangeFilter(null);
                   }
                 }}
-                format="MMM d, yyyy"
                 slotProps={{
                   textField: {
                     size: 'small',
                     onClick: () => setStartDatePickerOpen(true),
+                    value: (customStartDate || dateRange.startDate) ? formatDate(customStartDate || dateRange.startDate, 'MMM d, yyyy') : '',
                     sx: {
                       width: 130,
                       '& .MuiInputBase-input': {
@@ -1634,11 +1635,11 @@ const EscrowsDashboard = () => {
                     setDateRangeFilter(null);
                   }
                 }}
-                format="MMM d, yyyy"
                 slotProps={{
                   textField: {
                     size: 'small',
                     onClick: () => setEndDatePickerOpen(true),
+                    value: (customEndDate || dateRange.endDate) ? formatDate(customEndDate || dateRange.endDate, 'MMM d, yyyy') : '',
                     sx: {
                       width: 130,
                       '& .MuiInputBase-input': {
