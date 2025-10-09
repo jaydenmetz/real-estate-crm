@@ -1151,6 +1151,18 @@ const EscrowsDashboard = () => {
 
           {/* View Mode & Calendar Selector */}
           <ToggleButtonGroup
+            value={showCalendar ? 'calendar' : viewMode}
+            exclusive
+            onChange={(e, newValue) => {
+              if (newValue !== null) {
+                if (newValue === 'calendar') {
+                  setShowCalendar(true);
+                } else {
+                  setShowCalendar(false);
+                  setViewMode(newValue);
+                }
+              }
+            }}
             size="small"
             aria-label="View mode and calendar selection"
             sx={{
@@ -1165,8 +1177,6 @@ const EscrowsDashboard = () => {
           >
             <ToggleButton
               value="small"
-              selected={viewMode === 'small'}
-              onClick={() => setViewMode('small')}
               aria-label="Grid view - shows escrows in compact 4-column grid layout (Press V to toggle)"
               title="Grid view (V)"
             >
@@ -1180,8 +1190,6 @@ const EscrowsDashboard = () => {
             </ToggleButton>
             <ToggleButton
               value="large"
-              selected={viewMode === 'large'}
-              onClick={() => setViewMode('large')}
               aria-label="Full width view - shows escrows in detailed full-width layout (Press V to toggle)"
               title="Full width view (V)"
             >
@@ -1190,8 +1198,6 @@ const EscrowsDashboard = () => {
             </ToggleButton>
             <ToggleButton
               value="calendar"
-              selected={showCalendar}
-              onClick={handleCalendarOpen}
               aria-label="Calendar view - shows escrows by closing date"
               title="Calendar view"
             >
@@ -1291,6 +1297,18 @@ const EscrowsDashboard = () => {
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
             {/* View Mode & Calendar Selector */}
             <ToggleButtonGroup
+              value={showCalendar ? 'calendar' : viewMode}
+              exclusive
+              onChange={(e, newValue) => {
+                if (newValue !== null) {
+                  if (newValue === 'calendar') {
+                    setShowCalendar(true);
+                  } else {
+                    setShowCalendar(false);
+                    setViewMode(newValue);
+                  }
+                }
+              }}
               size="small"
               aria-label="View mode and calendar selection"
               sx={{
@@ -1305,8 +1323,6 @@ const EscrowsDashboard = () => {
             >
               <ToggleButton
                 value="small"
-                selected={viewMode === 'small'}
-                onClick={() => setViewMode('small')}
                 aria-label="Grid view"
                 title="Grid view (V)"
               >
@@ -1319,8 +1335,6 @@ const EscrowsDashboard = () => {
               </ToggleButton>
               <ToggleButton
                 value="large"
-                selected={viewMode === 'large'}
-                onClick={() => setViewMode('large')}
                 aria-label="Full width view"
                 title="Full width view (V)"
               >
@@ -1328,8 +1342,6 @@ const EscrowsDashboard = () => {
               </ToggleButton>
               <ToggleButton
                 value="calendar"
-                selected={showCalendar}
-                onClick={handleCalendarOpen}
                 aria-label="Calendar view"
                 title="Calendar view"
               >
