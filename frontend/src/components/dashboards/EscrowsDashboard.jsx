@@ -1584,7 +1584,7 @@ const EscrowsDashboard = () => {
                     setDateRangeFilter(null);
                   }
                 }}
-                format="MMM d"
+                format="MMM d, yyyy"
                 slotProps={{
                   field: {
                     readOnly: true,
@@ -1596,7 +1596,7 @@ const EscrowsDashboard = () => {
                       disableUnderline: true,
                     },
                     sx: {
-                      width: 65,
+                      width: 100,
                       '& .MuiInputBase-input': {
                         fontSize: '0.9375rem',
                         fontWeight: 500,
