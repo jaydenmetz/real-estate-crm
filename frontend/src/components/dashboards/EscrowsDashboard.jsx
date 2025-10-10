@@ -1787,8 +1787,6 @@ const EscrowsDashboard = () => {
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center',
-              overflow: 'hidden', // Contain the card within boundaries
-              padding: '0 4px', // Small padding to ensure card doesn't touch edges
             }}>
               {/* Spacer */}
               <Box sx={{ flexGrow: 1 }} />
