@@ -291,23 +291,28 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
             </Box>
           </Box>
 
-          {/* Bottom: Goal section */}
+          {/* Bottom: Goal section with blue background */}
           {goal && (
             <Box
               sx={{
                 mt: 2,
-                pt: 1.5,
-                borderTop: '1px solid #e2e8f0',
+                mx: -2.5,
+                mb: -2.5,
+                px: 2.5,
+                py: 1.5,
+                background: `linear-gradient(135deg, ${alpha(color, 0.06)} 0%, ${alpha(color, 0.03)} 100%)`,
+                borderTop: `1px solid ${alpha(color, 0.15)}`,
+                borderRadius: '0 0 8px 8px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
-                <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 500, fontSize: '0.75rem' }}>
+                <Typography variant="caption" sx={{ color: alpha(color, 0.7), fontWeight: 500, fontSize: '0.75rem' }}>
                   Goal:
                 </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>
+                <Typography variant="body2" sx={{ fontWeight: 600, color: alpha(color, 0.9), fontSize: '0.875rem' }}>
                   {prefix}{typeof goal === 'number' ? goal.toLocaleString() : goal}{suffix}
                 </Typography>
               </Box>
@@ -317,13 +322,13 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
                   {isAboveGoal ? (
                     <TrendingUp sx={{ fontSize: 18, color: '#10b981' }} />
                   ) : (
-                    <TrendingDown sx={{ fontSize: 18, color: '#64748b' }} />
+                    <TrendingDown sx={{ fontSize: 18, color: alpha(color, 0.6) }} />
                   )}
                   <Typography
                     variant="body2"
                     sx={{
                       fontWeight: 600,
-                      color: isAboveGoal ? '#10b981' : '#64748b',
+                      color: isAboveGoal ? '#10b981' : alpha(color, 0.6),
                       fontSize: '0.875rem',
                     }}
                   >
