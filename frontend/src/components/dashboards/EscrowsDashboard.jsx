@@ -2628,10 +2628,10 @@ const EscrowsDashboard = () => {
           <Box sx={{
             display: 'grid',
             gridTemplateColumns: {
-              xs: '1fr', // Mobile: Always 1 column
-              sm: '1fr', // Tablet: Always 1 column
-              md: viewMode === 'small' ? 'repeat(2, 1fr)' : '1fr',
-              lg: viewMode === 'small' ? 'repeat(4, 1fr)' : '1fr',
+              xs: '1fr', // Mobile: 1 column
+              sm: viewMode === 'small' ? 'repeat(2, 1fr)' : '1fr', // Tablet: 2 columns in small view
+              md: viewMode === 'small' ? 'repeat(2, 1fr)' : '1fr', // Medium: 2 columns in small view
+              lg: viewMode === 'small' ? 'repeat(4, 1fr)' : '1fr', // Desktop: 4 columns in small view
             },
             gap: 3, // 24px gap
             width: '100%',
