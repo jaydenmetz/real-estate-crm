@@ -1167,8 +1167,8 @@ const EscrowsDashboard = () => {
               <Box sx={{
                 display: 'flex',
                 gap: 3,
-                alignItems: { xs: 'flex-start', sm: 'center' },
-                flexDirection: { xs: 'column', sm: 'row' },
+                alignItems: { xs: 'flex-start', md: 'center' },
+                flexDirection: { xs: 'column', md: 'row' },
                 mb: 4,
                 width: '100%',
               }}>
@@ -1183,8 +1183,8 @@ const EscrowsDashboard = () => {
                   </Typography>
                 </motion.div>
 
-                {/* Spacer */}
-                <Box sx={{ flexGrow: 1 }} />
+                {/* Spacer - only on larger screens */}
+                <Box sx={{ display: { xs: 'none', md: 'block' }, flexGrow: 1 }} />
 
                 {/* Date Controls - Now on the right side */}
                 <Box sx={{
@@ -1246,11 +1246,11 @@ const EscrowsDashboard = () => {
                   <LocalizationProvider dateAdapter={AdapterDateFns}>
                     <Box sx={{
                       display: 'flex',
-                      gap: 1,
+                      gap: 0.5, // Smaller gap
                       alignItems: 'center',
                       backgroundColor: 'rgba(255, 255, 255, 0.1)',
                       borderRadius: 1,
-                      px: 1, // Reduced padding
+                      px: 0.5, // Minimal padding
                       height: 36, // Match date button height
                       border: '1px solid transparent',
                       flexShrink: 0, // Don't shrink
@@ -1293,7 +1293,7 @@ const EscrowsDashboard = () => {
                             placeholder: 'Start',
                             onClick: () => setStartDatePickerOpen(true),
                             sx: {
-                              width: { xs: 110, md: 130 }, // Adjust width for better fit
+                              width: { xs: 105, md: 115 }, // Narrower width
                               '& .MuiInputBase-root': {
                                 backgroundColor: 'transparent',
                                 borderColor: 'rgba(255, 255, 255, 0.3)',
@@ -1374,7 +1374,7 @@ const EscrowsDashboard = () => {
                             placeholder: 'End',
                             onClick: () => setEndDatePickerOpen(true),
                             sx: {
-                              width: { xs: 110, md: 130 }, // Adjust width for better fit
+                              width: { xs: 105, md: 115 }, // Narrower width
                               '& .MuiInputBase-root': {
                                 backgroundColor: 'transparent',
                                 borderColor: 'rgba(255, 255, 255, 0.3)',
