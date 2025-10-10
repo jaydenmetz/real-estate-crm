@@ -1824,26 +1824,26 @@ const EscrowsDashboard = () => {
 
       {/* Navigation Bar with Tabs and Controls */}
       <Box sx={{ mb: 4 }}>
-        {/* Combined Tabs and Controls Bar */}
-        <Paper
-          elevation={0}
+        {/* Tab Bar Container */}
+        <Box
           sx={{
-            backgroundColor: 'background.paper',
-            borderRadius: '8px',
-            border: '1px solid',
-            borderColor: 'divider',
-            display: { xs: 'none', md: 'block' },
+            display: { xs: 'none', md: 'flex' },
+            flexWrap: 'wrap',
+            gap: 2,
+            alignItems: 'flex-start',
           }}
         >
-          <Box sx={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            px: 2,
-            borderBottom: '1px solid',
-            borderColor: 'divider',
-          }}>
-            {/* Left: Tabs */}
+          {/* Left: Tabs with gray background */}
+          <Paper
+            elevation={0}
+            sx={{
+              backgroundColor: 'background.paper',
+              borderRadius: '8px',
+              border: '1px solid',
+              borderColor: 'divider',
+              flex: '0 0 auto',
+            }}
+          >
             <Tabs
               value={selectedStatus}
               onChange={(e, newValue) => setSelectedStatus(newValue)}
@@ -1877,51 +1877,63 @@ const EscrowsDashboard = () => {
               <Tab label="Cancelled Escrows" value="cancelled" />
               <Tab label="All Escrows" value="all" />
             </Tabs>
+          </Paper>
 
-            {/* Right: Controls */}
-            <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
-              {/* Sort Dropdown */}
-              <FormControl size="small" variant="standard" sx={{ minWidth: 140 }}>
-                <Select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  disableUnderline
-                  startAdornment={
-                    <Sort sx={{ mr: 1, fontSize: '1.125rem', color: 'text.secondary' }} />
-                  }
-                  renderValue={(value) => {
-                    const labels = {
-                      closing_date: 'Closing Date',
-                      created_at: 'Date Created',
-                      sale_price: 'Sale Price',
-                      property_address: 'Address',
-                      escrow_status: 'Status',
-                    };
-                    return (
-                      <Typography variant="body2" sx={{
-                        fontSize: '0.875rem',
-                        fontWeight: 500,
-                        color: 'text.primary',
-                      }}>
-                        {labels[value]}
-                      </Typography>
-                    );
-                  }}
-                  sx={{
-                    backgroundColor: alpha('#f5f5f5', 0.4),
-                    borderRadius: 1,
-                    px: 1.5,
-                    py: 0.5,
-                    '&:hover': {
-                      backgroundColor: alpha('#f5f5f5', 0.6),
-                    },
-                    '& .MuiSelect-select': {
-                      paddingRight: '32px !important',
-                      display: 'flex',
-                      alignItems: 'center',
-                    },
-                  }}
-                >
+          {/* Spacer */}
+          <Box sx={{ flexGrow: 1 }} />
+
+          {/* Right: Controls (no background) */}
+          <Box sx={{
+            display: 'flex',
+            gap: 1.5,
+            alignItems: 'center',
+            flexWrap: 'wrap',
+          }}>
+            {/* Sort Dropdown */}
+            <FormControl size="small" variant="standard" sx={{ minWidth: 140 }}>
+              <Select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                disableUnderline
+                startAdornment={
+                  <Sort sx={{ mr: 1, fontSize: '1.125rem', color: 'text.secondary' }} />
+                }
+                renderValue={(value) => {
+                  const labels = {
+                    closing_date: 'Closing Date',
+                    created_at: 'Date Created',
+                    sale_price: 'Sale Price',
+                    property_address: 'Address',
+                    escrow_status: 'Status',
+                  };
+                  return (
+                    <Typography variant="body2" sx={{
+                      fontSize: '0.875rem',
+                      fontWeight: 500,
+                      color: 'text.primary',
+                    }}>
+                      {labels[value]}
+                    </Typography>
+                  );
+                }}
+                sx={{
+                  backgroundColor: 'transparent',
+                  borderRadius: 1,
+                  px: 1.5,
+                  py: 0.5,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  '&:hover': {
+                    backgroundColor: alpha('#000', 0.04),
+                    borderColor: 'primary.main',
+                  },
+                  '& .MuiSelect-select': {
+                    paddingRight: '32px !important',
+                    display: 'flex',
+                    alignItems: 'center',
+                  },
+                }}
+              >
                   <MenuItem value="closing_date">Closing Date</MenuItem>
                   <MenuItem value="created_at">Date Created</MenuItem>
                   <MenuItem value="sale_price">Sale Price</MenuItem>
@@ -1990,9 +2002,8 @@ const EscrowsDashboard = () => {
                   <DeleteIcon sx={{ fontSize: 20 }} />
                 </Badge>
               </IconButton>
-            </Box>
           </Box>
-        </Paper>
+        </Box>
       </Box>
 
       {/* Mobile/Tablet Layout - Responsive Design with All Features */}
