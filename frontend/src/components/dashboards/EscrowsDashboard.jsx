@@ -1156,7 +1156,13 @@ const EscrowsDashboard = () => {
           {/* Main layout: Content on left, AI Assistant on right */}
           <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', md: 'row' }, height: '100%' }}>
             {/* Left container: Header, description with date controls, stats, and buttons */}
-            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <Box sx={{
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              minWidth: 0, // Allow container to shrink below its content's natural width
+              overflow: 'hidden' // Prevent content from overflowing
+            }}>
               {/* Standalone Header */}
               <motion.div
                 initial={{ opacity: 0, y: -20 }}
@@ -1178,8 +1184,9 @@ const EscrowsDashboard = () => {
               }}>
                 {/* Description */}
                 <Box sx={{ flex: { xs: '1', lg: '0 0 auto' }, minWidth: { lg: '400px' } }}>
-                  <Typography variant="h6" sx={{ opacity: 0.9 }}>
-                    Track and manage all your real estate transactions in one place
+                  <Typography variant="h6" sx={{ opacity: 0.9, lineHeight: 1.4 }}>
+                    Track and manage all your real estate transactions<br />
+                    in one place with powerful tools and insights
                   </Typography>
                 </Box>
 
@@ -1772,8 +1779,9 @@ const EscrowsDashboard = () => {
 
             {/* Right container: AI Assistant */}
             <Box sx={{
-              width: { xs: '100%', md: '320px' },
-              flexShrink: 0,
+              width: { xs: '100%', md: '280px', lg: '320px' },
+              minWidth: { md: '280px' }, // Ensure minimum width
+              flexShrink: 0, // Prevent shrinking
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center'
