@@ -1155,30 +1155,32 @@ const EscrowsDashboard = () => {
         <HeroSection>
           {/* Main layout: Content on left, AI Assistant on right */}
           <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', md: 'row' }, height: '100%' }}>
-            {/* Left container: Header with date controls, stats, and buttons */}
+            {/* Left container: Header, description with date controls, stats, and buttons */}
             <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-              {/* Header Row: Title/Description on left, Date Controls on right */}
+              {/* Standalone Header */}
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Typography variant="h3" component="h1" sx={{ fontWeight: 700, mb: 3 }}>
+                  Escrow Management
+                </Typography>
+              </motion.div>
+
+              {/* Container: Description on left, Date Controls on right */}
               <Box sx={{
                 display: 'flex',
                 gap: 3,
-                alignItems: 'flex-start',
+                alignItems: 'center',
                 flexDirection: { xs: 'column', lg: 'row' },
                 mb: 4
               }}>
-                {/* Title and Description */}
+                {/* Description */}
                 <Box sx={{ flex: { xs: '1', lg: '0 0 auto' }, minWidth: { lg: '400px' } }}>
-                  <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <Typography variant="h3" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
-                      Escrow Management
-                    </Typography>
-                    <Typography variant="h6" sx={{ opacity: 0.9 }}>
-                      Track and manage all your real estate transactions in one place
-                    </Typography>
-                  </motion.div>
+                  <Typography variant="h6" sx={{ opacity: 0.9 }}>
+                    Track and manage all your real estate transactions in one place
+                  </Typography>
                 </Box>
 
                 {/* Date Controls - Always Side by Side, Shrinks to Fit */}
