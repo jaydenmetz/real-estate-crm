@@ -1181,14 +1181,16 @@ const EscrowsDashboard = () => {
                   </motion.div>
                 </Box>
 
-                {/* Date Controls - Side by Side */}
+                {/* Date Controls - Always Side by Side, Shrinks to Fit */}
                 <Box sx={{
                   flex: 1,
                   display: 'flex',
                   gap: 2,
                   alignItems: 'center',
                   justifyContent: { xs: 'flex-start', lg: 'flex-end' },
-                  flexWrap: { xs: 'wrap', md: 'nowrap' }
+                  flexWrap: 'nowrap', // Never wrap
+                  minWidth: 0, // Allow shrinking
+                  overflow: 'hidden',
                 }}>
                   {/* Date Buttons */}
                   <ToggleButtonGroup
@@ -1205,13 +1207,16 @@ const EscrowsDashboard = () => {
                     sx={{
                       backgroundColor: 'rgba(255, 255, 255, 0.1)',
                       borderRadius: 1,
+                      flexShrink: 1, // Allow shrinking
+                      minWidth: 0,
                       '& .MuiToggleButton-root': {
                         color: 'rgba(255, 255, 255, 0.8)',
                         borderColor: 'rgba(255, 255, 255, 0.3)',
-                        fontSize: '0.875rem',
+                        fontSize: { xs: '0.75rem', md: '0.875rem' },
                         fontWeight: 600,
-                        px: 2,
+                        px: { xs: 1, md: 2 },
                         py: 0.75,
+                        minWidth: 'auto',
                         '&.Mui-selected': {
                           backgroundColor: 'rgba(255, 255, 255, 0.2)',
                           color: 'white',
@@ -1232,20 +1237,21 @@ const EscrowsDashboard = () => {
                     <ToggleButton value="YTD">YTD</ToggleButton>
                   </ToggleButtonGroup>
 
-                  {/* Date Range Pickers */}
+                  {/* Date Range Pickers - No Labels */}
                   <LocalizationProvider dateAdapter={AdapterDateFns}>
                     <Box sx={{
                       display: 'flex',
-                      gap: 1.5,
+                      gap: 1,
                       alignItems: 'center',
                       backgroundColor: 'rgba(255, 255, 255, 0.1)',
                       borderRadius: 1,
-                      px: 2,
+                      px: { xs: 1, md: 2 },
                       py: 0.5,
                       border: '1px solid rgba(255, 255, 255, 0.2)',
+                      flexShrink: 1, // Allow shrinking
+                      minWidth: 0,
                     }}>
                       <DatePicker
-                        label="Start"
                         open={startDatePickerOpen}
                         onOpen={() => setStartDatePickerOpen(true)}
                         onClose={() => setStartDatePickerOpen(false)}
@@ -1278,16 +1284,24 @@ const EscrowsDashboard = () => {
                         slotProps={{
                           textField: {
                             size: 'small',
+                            placeholder: 'Start',
                             onClick: () => setStartDatePickerOpen(true),
                             sx: {
-                              width: 110,
+                              width: { xs: 90, md: 110 },
                               '& .MuiInputBase-root': {
                                 backgroundColor: 'rgba(255, 255, 255, 0.9)',
                               },
                               '& .MuiInputBase-input': {
-                                fontSize: '0.875rem',
+                                fontSize: { xs: '0.75rem', md: '0.875rem' },
                                 fontWeight: 500,
                                 cursor: 'pointer',
+                                textAlign: 'center',
+                              },
+                              '& .MuiInputLabel-root': {
+                                display: 'none', // Hide label
+                              },
+                              '& .MuiOutlinedInput-notchedOutline legend': {
+                                display: 'none', // Hide legend space
                               },
                             },
                           },
@@ -1296,9 +1310,8 @@ const EscrowsDashboard = () => {
                           },
                         }}
                       />
-                      <Typography sx={{ color: 'rgba(255, 255, 255, 0.7)', mx: 0.5 }}>→</Typography>
+                      <Typography sx={{ color: 'rgba(255, 255, 255, 0.7)', mx: 0.5, flexShrink: 0 }}>→</Typography>
                       <DatePicker
-                        label="End"
                         open={endDatePickerOpen}
                         onOpen={() => setEndDatePickerOpen(true)}
                         onClose={() => setEndDatePickerOpen(false)}
@@ -1331,16 +1344,24 @@ const EscrowsDashboard = () => {
                         slotProps={{
                           textField: {
                             size: 'small',
+                            placeholder: 'End',
                             onClick: () => setEndDatePickerOpen(true),
                             sx: {
-                              width: 110,
+                              width: { xs: 90, md: 110 },
                               '& .MuiInputBase-root': {
                                 backgroundColor: 'rgba(255, 255, 255, 0.9)',
                               },
                               '& .MuiInputBase-input': {
-                                fontSize: '0.875rem',
+                                fontSize: { xs: '0.75rem', md: '0.875rem' },
                                 fontWeight: 500,
                                 cursor: 'pointer',
+                                textAlign: 'center',
+                              },
+                              '& .MuiInputLabel-root': {
+                                display: 'none', // Hide label
+                              },
+                              '& .MuiOutlinedInput-notchedOutline legend': {
+                                display: 'none', // Hide legend space
                               },
                             },
                           },
@@ -1373,7 +1394,7 @@ const EscrowsDashboard = () => {
                     case 'active':
                       return (
                         <>
-                          <Grid item xs={12} sm={6} lg={3}>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
                             <StatCard
                               icon={Home}
                               title="Total Active Escrows"
@@ -1383,7 +1404,7 @@ const EscrowsDashboard = () => {
                               goal={15}
                             />
                           </Grid>
-                          <Grid item xs={12} sm={6} lg={3}>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
                             <StatCard
                               icon={Schedule}
                               title="Escrows This Month"
@@ -1393,7 +1414,7 @@ const EscrowsDashboard = () => {
                               goal={5}
                             />
                           </Grid>
-                          <Grid item xs={12} sm={6} lg={3}>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
                             <StatCard
                               icon={TrendingUp}
                               title="Total Volume"
@@ -1405,7 +1426,7 @@ const EscrowsDashboard = () => {
                               goal={5000000}
                             />
                           </Grid>
-                          <Grid item xs={12} sm={6} lg={3}>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
                             <StatCard
                               icon={AttachMoney}
                               title="Total Commission"
@@ -1424,7 +1445,7 @@ const EscrowsDashboard = () => {
                 case 'closed':
                   return (
                     <>
-                      <Grid item xs={12} sm={6} lg={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={3}>
                         <StatCard
                           icon={CheckCircle}
                           title="Total Closed Escrows"
@@ -1434,7 +1455,7 @@ const EscrowsDashboard = () => {
                           goal={50}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6} lg={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={3}>
                         <StatCard
                           icon={CalendarToday}
                           title="Closed This Year"
@@ -1444,7 +1465,7 @@ const EscrowsDashboard = () => {
                           goal={60}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6} lg={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={3}>
                         <StatCard
                           icon={TrendingUp}
                           title="Total Volume"
@@ -1456,7 +1477,7 @@ const EscrowsDashboard = () => {
                           goal={20000000}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6} lg={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={3}>
                         <StatCard
                           icon={AttachMoney}
                           title="Total Commission"
@@ -1475,7 +1496,7 @@ const EscrowsDashboard = () => {
                 case 'cancelled':
                   return (
                     <>
-                      <Grid item xs={12} sm={6} lg={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={3}>
                         <StatCard
                           icon={ErrorIcon}
                           title="Total Cancelled Escrows"
@@ -1485,7 +1506,7 @@ const EscrowsDashboard = () => {
                           goal={5}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6} lg={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={3}>
                         <StatCard
                           icon={Assessment}
                           title="Cancellation Rate"
@@ -1496,7 +1517,7 @@ const EscrowsDashboard = () => {
                           goal={10}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6} lg={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={3}>
                         <StatCard
                           icon={TrendingUp}
                           title="Total Volume"
@@ -1508,7 +1529,7 @@ const EscrowsDashboard = () => {
                           goal={1000000}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6} lg={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={3}>
                         <StatCard
                           icon={AttachMoney}
                           title="Total Commission"
@@ -1527,7 +1548,7 @@ const EscrowsDashboard = () => {
                 case 'archived':
                   return (
                     <>
-                      <Grid item xs={12} sm={6} lg={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={3}>
                         <StatCard
                           icon={ArchiveIcon}
                           title="Total Archived Escrows"
@@ -1536,7 +1557,7 @@ const EscrowsDashboard = () => {
                           delay={0}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6} lg={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={3}>
                         <StatCard
                           icon={Storage}
                           title="Max Archived"
@@ -1545,7 +1566,7 @@ const EscrowsDashboard = () => {
                           delay={1}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6} lg={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={3}>
                         <StatCard
                           icon={TrendingUp}
                           title="Total Volume"
@@ -1556,7 +1577,7 @@ const EscrowsDashboard = () => {
                           delay={2}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6} lg={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={3}>
                         <StatCard
                           icon={AttachMoney}
                           title="Total Commission"
@@ -1574,7 +1595,7 @@ const EscrowsDashboard = () => {
                 case 'all':
                   return (
                     <>
-                      <Grid item xs={12} sm={6} lg={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={3}>
                         <StatCard
                           icon={Home}
                           title="Total Escrows"
@@ -1583,7 +1604,7 @@ const EscrowsDashboard = () => {
                           delay={0}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6} lg={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={3}>
                         <StatCard
                           icon={CheckCircle}
                           title="Active"
@@ -1592,7 +1613,7 @@ const EscrowsDashboard = () => {
                           delay={1}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6} lg={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={3}>
                         <StatCard
                           icon={TrendingUp}
                           title="Total Volume"
@@ -1603,7 +1624,7 @@ const EscrowsDashboard = () => {
                           delay={2}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6} lg={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={3}>
                         <StatCard
                           icon={AttachMoney}
                           title="Total Commission"
@@ -1621,7 +1642,7 @@ const EscrowsDashboard = () => {
                 default:
                   return (
                     <>
-                      <Grid item xs={12} sm={6} lg={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={3}>
                         <StatCard
                           icon={Home}
                           title="Total Escrows"
@@ -1630,7 +1651,7 @@ const EscrowsDashboard = () => {
                           delay={0}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6} lg={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={3}>
                         <StatCard
                           icon={CheckCircle}
                           title="Active Escrows"
@@ -1639,7 +1660,7 @@ const EscrowsDashboard = () => {
                           delay={1}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6} lg={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={3}>
                         <StatCard
                           icon={TrendingUp}
                           title="Total Volume"
@@ -1650,7 +1671,7 @@ const EscrowsDashboard = () => {
                           delay={2}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6} lg={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={3}>
                         <StatCard
                           icon={AttachMoney}
                           title="Total Commission"
