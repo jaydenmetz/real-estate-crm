@@ -1208,15 +1208,16 @@ const EscrowsDashboard = () => {
                       backgroundColor: 'rgba(255, 255, 255, 0.1)',
                       borderRadius: 1,
                       flexShrink: 0, // Don't shrink
-                      height: 40, // Fixed height to match date range
+                      flexGrow: 0, // Don't grow
+                      height: 36, // Match date picker height
                       '& .MuiToggleButton-root': {
                         color: 'rgba(255, 255, 255, 0.8)',
                         borderColor: 'transparent',
                         fontSize: { xs: '0.75rem', md: '0.875rem' },
                         fontWeight: 600,
-                        px: { xs: 1, md: 2 },
+                        px: { xs: 1.5, md: 2 },
                         py: 0,
-                        height: 40, // Match parent height
+                        height: 36, // Match container height
                         minWidth: 'auto',
                         '&.Mui-selected': {
                           backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -1247,10 +1248,11 @@ const EscrowsDashboard = () => {
                       alignItems: 'center',
                       backgroundColor: 'rgba(255, 255, 255, 0.1)',
                       borderRadius: 1,
-                      px: { xs: 1, md: 2 },
-                      height: 40, // Fixed height to match date buttons
+                      px: 1, // Reduced padding
+                      height: 36, // Match date button height
                       border: '1px solid transparent',
                       flexShrink: 0, // Don't shrink
+                      flexGrow: 0, // Don't grow
                     }}>
                       <DatePicker
                         open={startDatePickerOpen}
@@ -1289,11 +1291,12 @@ const EscrowsDashboard = () => {
                             placeholder: 'Start',
                             onClick: () => setStartDatePickerOpen(true),
                             sx: {
-                              width: { xs: 120, md: 140 }, // Increased width to prevent text cutoff
+                              width: { xs: 110, md: 130 }, // Adjust width for better fit
                               '& .MuiInputBase-root': {
                                 backgroundColor: 'transparent',
                                 borderColor: 'rgba(255, 255, 255, 0.3)',
-                                height: 40, // Match the height of date buttons
+                                height: 36, // Slightly smaller height
+                                paddingRight: '8px !important', // Override default padding
                               },
                               '& .MuiOutlinedInput-root': {
                                 '& fieldset': {
@@ -1312,7 +1315,11 @@ const EscrowsDashboard = () => {
                                 cursor: 'pointer',
                                 textAlign: 'center',
                                 color: 'rgba(255, 255, 255, 0.9)',
-                                padding: '8px 12px', // Proper padding for 40px height
+                                padding: '6px 8px', // Reduced padding
+                              },
+                              // Hide the calendar icon
+                              '& .MuiInputAdornment-root': {
+                                display: 'none',
                               },
                               '& .MuiInputLabel-root': {
                                 display: 'none', // Hide label
@@ -1365,11 +1372,12 @@ const EscrowsDashboard = () => {
                             placeholder: 'End',
                             onClick: () => setEndDatePickerOpen(true),
                             sx: {
-                              width: { xs: 120, md: 140 }, // Increased width to prevent text cutoff
+                              width: { xs: 110, md: 130 }, // Adjust width for better fit
                               '& .MuiInputBase-root': {
                                 backgroundColor: 'transparent',
                                 borderColor: 'rgba(255, 255, 255, 0.3)',
-                                height: 40, // Match the height of date buttons
+                                height: 36, // Slightly smaller height
+                                paddingRight: '8px !important', // Override default padding
                               },
                               '& .MuiOutlinedInput-root': {
                                 '& fieldset': {
@@ -1388,7 +1396,11 @@ const EscrowsDashboard = () => {
                                 cursor: 'pointer',
                                 textAlign: 'center',
                                 color: 'rgba(255, 255, 255, 0.9)',
-                                padding: '8px 12px', // Proper padding for 40px height
+                                padding: '6px 8px', // Reduced padding
+                              },
+                              // Hide the calendar icon
+                              '& .MuiInputAdornment-root': {
+                                display: 'none',
                               },
                               '& .MuiInputLabel-root': {
                                 display: 'none', // Hide label
