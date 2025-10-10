@@ -1111,7 +1111,7 @@ const EscrowsDashboard = () => {
               </Box>
 
               {/* Stats Grid - White Cards - Dynamic based on selected tab */}
-              <Grid container spacing={1.5}>
+              <Grid container spacing={2}>
                 {(() => {
                   // Calculate cancellation rate from all non-archived escrows
                   const totalAllStatuses = (escrows || []).length;
@@ -1413,7 +1413,7 @@ const EscrowsDashboard = () => {
               </Grid>
 
               {/* Action Buttons Row */}
-              <Box sx={{ mt: 2, display: 'flex', gap: 2 }}>
+              <Box sx={{ mt: 1.5, display: 'flex', gap: 2 }}>
                 <Button
                   variant="contained"
                   size="medium"
