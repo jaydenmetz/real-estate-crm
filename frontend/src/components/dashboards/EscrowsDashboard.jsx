@@ -1111,7 +1111,7 @@ const EscrowsDashboard = () => {
               </Box>
 
               {/* Stats Grid - White Cards - Dynamic based on selected tab */}
-              <Grid container spacing={2}>
+              <Grid container spacing={{ xs: 2, sm: 1 }}>
                 {(() => {
                   // Calculate cancellation rate from all non-archived escrows
                   const totalAllStatuses = (escrows || []).length;
