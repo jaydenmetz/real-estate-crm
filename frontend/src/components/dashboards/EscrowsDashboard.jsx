@@ -1089,9 +1089,9 @@ const EscrowsDashboard = () => {
         {/* Hero Section with Stats */}
         <HeroSection>
           {/* Main layout: Content on left, AI Assistant on right */}
-          <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', md: 'row' } }}>
+          <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', md: 'row' }, height: '100%' }}>
             {/* Left side: Header, Date Range, and Stats */}
-            <Box sx={{ flex: 1 }}>
+            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
               {/* Header Only - No Date Range */}
               <Box sx={{ mb: 4 }}>
                 <motion.div
@@ -1410,8 +1410,11 @@ const EscrowsDashboard = () => {
             })()}
               </Grid>
 
-              {/* Action Buttons Row */}
-              <Box sx={{ mt: 1.5, display: 'flex', gap: 2 }}>
+              {/* Flexible spacer to push buttons to bottom */}
+              <Box sx={{ flexGrow: 1, minHeight: '20px' }} />
+
+              {/* Action Buttons Row - Aligned to bottom */}
+              <Box sx={{ display: 'flex', gap: 2 }}>
                 <Button
                   variant="contained"
                   size="medium"
