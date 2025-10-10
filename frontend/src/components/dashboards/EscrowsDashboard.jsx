@@ -201,7 +201,7 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
 
           {/* Middle: Count on left, Icon on right */}
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flex: 1, my: 1 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1, minWidth: 0 }}>
               {showPrivacy && (
                 <IconButton
                   size="small"
@@ -213,6 +213,7 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
                     width: 28,
                     height: 28,
                     color: 'rgba(255,255,255,0.8)',
+                    flexShrink: 0,
                     '&:hover': {
                       backgroundColor: 'rgba(255,255,255,0.1)',
                       color: 'white',
@@ -235,8 +236,11 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
                   display: 'flex',
                   alignItems: 'baseline',
                   gap: 0.5,
-                  fontSize: '2.25rem',
+                  fontSize: 'clamp(1.5rem, 4vw, 2.25rem)',
                   textShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
                 }}
               >
                 {showPrivacy && !showValue ? (
@@ -265,6 +269,7 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
                 position: 'relative',
                 width: 56,
                 height: 56,
+                flexShrink: 0,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
