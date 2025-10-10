@@ -1499,86 +1499,63 @@ const EscrowsDashboard = () => {
           </Box>
         </HeroSection>
 
-      {/* Split-Level Navigation - Modern SaaS Pattern */}
-      <Box sx={{ mb: 4 }}>
-        {/* Row 1: Tabs Only - Clean Navigation */}
+      {/* Consolidated Sticky Filter Bar */}
+      <Box sx={{ mb: 2, position: 'sticky', top: 0, zIndex: 100 }}>
+        {/* Single Row: Tabs + Filters - Maximized Space */}
         <Paper
-          elevation={0}
+          elevation={1}
           sx={{
             backgroundColor: 'background.paper',
-            borderRadius: '8px 8px 0 0',
-            borderBottom: '1px solid',
+            borderRadius: 2,
+            border: '1px solid',
             borderColor: 'divider',
             display: { xs: 'none', lg: 'block' },
           }}
         >
-          <Tabs
-            value={selectedStatus}
-            onChange={(e, newValue) => setSelectedStatus(newValue)}
-            sx={{
-              minHeight: 48,
-              '& .MuiTab-root': {
-                textTransform: 'none',
-                fontSize: '0.9375rem',
-                fontWeight: 500,
-                minHeight: 48,
-                px: 3,
-                color: 'text.secondary',
-                transition: 'all 0.2s ease',
-                '&:hover': {
-                  color: 'primary.main',
-                  backgroundColor: alpha('#1976d2', 0.04),
+          <Box sx={{ display: 'flex', alignItems: 'center', px: 2, py: 1, gap: 2 }}>
+            {/* Left: Compact Tabs */}
+            <Tabs
+              value={selectedStatus}
+              onChange={(e, newValue) => setSelectedStatus(newValue)}
+              sx={{
+                minHeight: 36,
+                '& .MuiTab-root': {
+                  textTransform: 'none',
+                  fontSize: '0.8125rem',
+                  fontWeight: 500,
+                  minHeight: 36,
+                  px: 2,
+                  py: 0.5,
+                  minWidth: 'auto',
+                  color: 'text.secondary',
                 },
-              },
-              '& .Mui-selected': {
-                fontWeight: 600,
-                color: 'primary.main',
-              },
-              '& .MuiTabs-indicator': {
-                height: 3,
-                borderRadius: '3px 3px 0 0',
-              },
-            }}
-          >
-            <Tab label="Active Escrows" value="active" />
-            <Tab label="Closed Escrows" value="closed" />
-            <Tab label="Cancelled Escrows" value="cancelled" />
-            <Tab label="All Escrows" value="all" />
-          </Tabs>
-        </Paper>
+                '& .Mui-selected': {
+                  fontWeight: 600,
+                  color: 'primary.main',
+                },
+                '& .MuiTabs-indicator': {
+                  height: 2,
+                },
+              }}
+            >
+              <Tab label="Active" value="active" />
+              <Tab label="Closed" value="closed" />
+              <Tab label="Cancelled" value="cancelled" />
+              <Tab label="All" value="all" />
+            </Tabs>
 
-        {/* Row 2: Filter Bar - Grouped Controls */}
-        <Box
-          sx={{
-            display: { xs: 'none', lg: 'flex' },
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            backgroundColor: alpha('#f5f5f5', 0.4),
-            borderRadius: '0 0 8px 8px',
-            px: 3,
-            py: 1.5,
-            gap: 2,
-          }}
-        >
-          {/* Left Side: Date Range Controls */}
-          <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+            <Box sx={{ flexGrow: 1 }} />
+
+            {/* Right: Compact Filters */}
+            <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
             <LocalizationProvider dateAdapter={AdapterDateFns}>
               <Box sx={{
                 display: 'flex',
-                gap: 1.5,
+                gap: 0.75,
                 alignItems: 'center',
-                backgroundColor: 'white',
-                borderRadius: 2,
-                px: 2,
-                py: 0.75,
-                border: '1px solid',
-                borderColor: 'divider',
-                boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
-                transition: 'all 0.2s ease',
-                '&:hover': {
-                  borderColor: 'primary.main',
-                  boxShadow: '0 2px 8px rgba(25, 118, 210, 0.15)',
-                },
+                borderRadius: 1,
+                px: 1,
+                py: 0.25,
               }}>
               {/* Start Date Picker */}
               <DatePicker
@@ -1618,12 +1595,16 @@ const EscrowsDashboard = () => {
                     size: 'small',
                     onClick: () => setStartDatePickerOpen(true),
                     sx: {
-                      width: 130,
+                      width: 110,
+                      '& .MuiInputBase-root': {
+                        height: 32,
+                      },
                       '& .MuiInputBase-input': {
-                        fontSize: '0.875rem',
+                        fontSize: '0.75rem',
                         fontWeight: 500,
                         textAlign: 'center',
                         cursor: 'pointer',
+                        py: 0.5,
                       },
                     },
                   },
@@ -1680,12 +1661,16 @@ const EscrowsDashboard = () => {
                     size: 'small',
                     onClick: () => setEndDatePickerOpen(true),
                     sx: {
-                      width: 130,
+                      width: 110,
+                      '& .MuiInputBase-root': {
+                        height: 32,
+                      },
                       '& .MuiInputBase-input': {
-                        fontSize: '0.875rem',
+                        fontSize: '0.75rem',
                         fontWeight: 500,
                         textAlign: 'center',
                         cursor: 'pointer',
+                        py: 0.5,
                       },
                     },
                   },
@@ -1710,11 +1695,14 @@ const EscrowsDashboard = () => {
               }}
               size="small"
               sx={{
+                height: 32,
                 '& .MuiToggleButton-root': {
-                  px: 2,
-                  py: 0.5,
-                  fontSize: '0.8125rem',
+                  px: 1,
+                  py: 0.25,
+                  fontSize: '0.7rem',
                   fontWeight: 600,
+                  minWidth: 36,
+                  height: 32,
                   border: '1px solid',
                   borderColor: 'divider',
                   color: 'text.secondary',
@@ -1726,9 +1714,6 @@ const EscrowsDashboard = () => {
                       backgroundColor: 'primary.dark',
                     },
                   },
-                  '&:hover': {
-                    backgroundColor: alpha('#1976d2', 0.08),
-                  },
                 },
               }}
             >
@@ -1737,59 +1722,39 @@ const EscrowsDashboard = () => {
               <ToggleButton value="1Y">1Y</ToggleButton>
               <ToggleButton value="YTD">YTD</ToggleButton>
             </ToggleButtonGroup>
-          </Box>
 
-          {/* Right Side: Sort & View Controls */}
-          <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
-            {/* Sort Dropdown */}
-            <FormControl
-            size="small"
-            variant="standard"
-            sx={{
-              minWidth: 140,
-            }}
-          >
+            {/* Sort & View Controls */}
+            <Box sx={{ display: 'flex', gap: 0.75, alignItems: 'center', ml: 1 }}>
+            {/* Sort Dropdown - Compact */}
+            <FormControl size="small" variant="standard" sx={{ minWidth: 100 }}>
             <Select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
               disableUnderline
-              startAdornment={
-                <Sort sx={{ mr: 1, fontSize: '1.125rem', color: 'text.secondary' }} />
-              }
+              startAdornment={<Sort sx={{ mr: 0.5, fontSize: '1rem', color: 'text.secondary' }} />}
               renderValue={(value) => {
                 const labels = {
-                  closing_date: 'Closing Date',
-                  created_at: 'Date Created',
-                  sale_price: 'Sale Price',
+                  closing_date: 'Date',
+                  created_at: 'Created',
+                  sale_price: 'Price',
                   property_address: 'Address',
                   escrow_status: 'Status',
                 };
                 return (
-                  <Typography variant="body2" sx={{
-                    fontSize: '0.9375rem',
-                    fontWeight: 500,
-                    color: 'text.primary',
-                    letterSpacing: '0.01em',
-                  }}>
+                  <Typography variant="caption" sx={{ fontSize: '0.7rem', fontWeight: 500 }}>
                     {labels[value]}
                   </Typography>
                 );
               }}
               sx={{
-                backgroundColor: 'white',
-                borderRadius: 2,
-                px: 2,
-                py: 1,
+                height: 32,
+                px: 1,
+                py: 0.5,
                 border: '1px solid',
                 borderColor: 'divider',
-                boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
-                transition: 'all 0.2s ease',
-                '&:hover': {
-                  borderColor: 'primary.main',
-                  boxShadow: '0 2px 8px rgba(25, 118, 210, 0.15)',
-                },
+                borderRadius: 1,
                 '& .MuiSelect-select': {
-                  paddingRight: '32px !important',
+                  paddingRight: '24px !important',
                   display: 'flex',
                   alignItems: 'center',
                 },
@@ -1818,14 +1783,14 @@ const EscrowsDashboard = () => {
               }
             }}
             size="small"
-            aria-label="View mode and calendar selection"
+            aria-label="View mode"
             sx={{
+              height: 32,
               '& .MuiToggleButton-root': {
-                px: 2,
+                px: 1,
                 py: 0.5,
-                textTransform: 'none',
-                fontWeight: 500,
-                height: '32px', // Match height across all buttons
+                minWidth: 32,
+                height: 32,
               },
             }}
           >
@@ -1864,22 +1829,22 @@ const EscrowsDashboard = () => {
               size="small"
               onClick={() => setSelectedStatus('archived')}
               sx={{
-                width: 40,
-                height: 40,
+                width: 32,
+                height: 32,
                 backgroundColor: selectedStatus === 'archived' ? 'warning.main' : alpha('#000', 0.06),
                 color: selectedStatus === 'archived' ? 'white' : 'text.secondary',
                 '&:hover': {
                   backgroundColor: selectedStatus === 'archived' ? 'warning.dark' : alpha('#000', 0.1),
                 },
-                transition: 'all 0.2s',
               }}
             >
               <Badge badgeContent={archivedCount} color="error" max={99}>
-                <DeleteIcon />
+                <DeleteIcon sx={{ fontSize: 16 }} />
               </Badge>
             </IconButton>
+            </Box>
           </Box>
-        </Box>
+        </Paper>
       </Box>
 
       {/* Mobile/Tablet Layout - Full width tabs with controls below */}
