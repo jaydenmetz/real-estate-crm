@@ -1167,9 +1167,10 @@ const EscrowsDashboard = () => {
               <Box sx={{
                 display: 'flex',
                 gap: 3,
-                alignItems: 'center',
+                alignItems: { xs: 'flex-start', sm: 'center' },
                 flexDirection: { xs: 'column', sm: 'row' },
                 mb: 4,
+                width: '100%',
               }}>
                 {/* Header */}
                 <motion.div
@@ -1191,6 +1192,7 @@ const EscrowsDashboard = () => {
                   gap: 2,
                   alignItems: 'center',
                   flexWrap: 'nowrap', // Never wrap
+                  width: { xs: 'auto', sm: 'auto' }, // Don't stretch on mobile
                 }}>
                   {/* Date Buttons */}
                   <ToggleButtonGroup
