@@ -1843,6 +1843,7 @@ const EscrowsDashboard = () => {
               </Badge>
             </IconButton>
             </Box>
+            </Box>
           </Box>
         </Paper>
       </Box>
