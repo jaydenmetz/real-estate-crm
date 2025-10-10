@@ -1163,42 +1163,31 @@ const EscrowsDashboard = () => {
               minWidth: 0, // Allow container to shrink below its content's natural width
               overflow: 'visible' // Allow content to be visible
             }}>
-              {/* Standalone Header */}
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-              >
-                <Typography variant="h3" component="h1" sx={{ fontWeight: 700, mb: 3 }}>
-                  Escrow Management
-                </Typography>
-              </motion.div>
-
-              {/* Container: Description on left, Date Controls on right */}
+              {/* Header with Date Controls */}
               <Box sx={{
                 display: 'flex',
                 gap: 3,
-                alignItems: { xs: 'flex-start', lg: 'center' },
-                flexDirection: { xs: 'column', md: 'column', lg: 'row' },
+                alignItems: 'center',
+                flexDirection: { xs: 'column', sm: 'row' },
                 mb: 4,
               }}>
-                {/* Description */}
-                <Box sx={{ flex: { xs: '1', lg: '0 0 auto' }, minWidth: { lg: '400px' } }}>
-                  <Typography variant="h6" sx={{ opacity: 0.9, lineHeight: 1.4 }}>
-                    Track and manage all your real estate transactions<br />
-                    in one place with powerful tools and insights
+                {/* Header */}
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Typography variant="h3" component="h1" sx={{ fontWeight: 700 }}>
+                    Escrows
                   </Typography>
-                </Box>
+                </motion.div>
 
-                {/* Date Controls - Fixed Size, No Flexing */}
+                {/* Date Controls - Now on the left side */}
                 <Box sx={{
-                  flex: '0 0 auto', // Don't grow or shrink
                   display: 'flex',
                   gap: 2,
                   alignItems: 'center',
                   flexWrap: 'nowrap', // Never wrap
-                  width: { xs: '100%', lg: 'auto' }, // Full width on small screens
-                  justifyContent: { xs: 'flex-start', lg: 'flex-end' },
                 }}>
                   {/* Date Buttons */}
                   <ToggleButtonGroup
