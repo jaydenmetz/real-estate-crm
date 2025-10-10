@@ -1157,11 +1157,11 @@ const EscrowsDashboard = () => {
           <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', md: 'row' }, height: '100%' }}>
             {/* Left container: Header, description with date controls, stats, and buttons */}
             <Box sx={{
-              flex: 1,
+              flex: '1 1 auto', // Grow and shrink as needed
               display: 'flex',
               flexDirection: 'column',
               minWidth: 0, // Allow container to shrink below its content's natural width
-              overflow: 'visible' // Allow content to be visible
+              overflow: 'visible', // Allow content to be visible
             }}>
               {/* Header with Date Controls */}
               <Box sx={{
@@ -1789,6 +1789,7 @@ const EscrowsDashboard = () => {
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center',
+              pr: { md: 2, lg: 0 }, // Add padding-right on smaller screens
             }}>
               {/* Spacer */}
               <Box sx={{ flexGrow: 1 }} />
