@@ -1619,20 +1619,12 @@ const EscrowsDashboard = () => {
                     setDateRangeFilter(null);
                   }
                 }}
+                // TEMPORARY FIX: Remove slotProps.textField.value to prevent formatDate error
+                // The DatePicker will use its internal formatting instead
                 slotProps={{
                   textField: {
                     size: 'small',
                     onClick: () => setStartDatePickerOpen(true),
-                    value: (() => {
-                      // Use customStartDate if set, otherwise get validated date from getDateRange()
-                      const date = customStartDate || (dateRange?.startDate instanceof Date && !isNaN(dateRange.startDate.getTime()) ? dateRange.startDate : null);
-                      if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '';
-                      try {
-                        return formatDate(date, 'MMM d, yyyy');
-                      } catch (e) {
-                        return '';
-                      }
-                    })(),
                     sx: {
                       width: 130,
                       '& .MuiInputBase-input': {
@@ -1689,20 +1681,12 @@ const EscrowsDashboard = () => {
                     setDateRangeFilter(null);
                   }
                 }}
+                // TEMPORARY FIX: Remove slotProps.textField.value to prevent formatDate error
+                // The DatePicker will use its internal formatting instead
                 slotProps={{
                   textField: {
                     size: 'small',
                     onClick: () => setEndDatePickerOpen(true),
-                    value: (() => {
-                      // Use customEndDate if set, otherwise get validated date from getDateRange()
-                      const date = customEndDate || (dateRange?.endDate instanceof Date && !isNaN(dateRange.endDate.getTime()) ? dateRange.endDate : null);
-                      if (!date || !(date instanceof Date) || isNaN(date.getTime())) return '';
-                      try {
-                        return formatDate(date, 'MMM d, yyyy');
-                      } catch (e) {
-                        return '';
-                      }
-                    })(),
                     sx: {
                       width: 130,
                       '& .MuiInputBase-input': {
