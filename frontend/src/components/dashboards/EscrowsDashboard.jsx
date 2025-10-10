@@ -158,15 +158,15 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
           height: 200, // Fixed height for consistency
           position: 'relative',
           overflow: 'hidden',
-          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.95) 100%)',
+          background: `linear-gradient(135deg, ${alpha(color, 0.15)} 0%, ${alpha(color, 0.08)} 100%)`,
           backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255, 255, 255, 0.8)',
+          border: `1px solid ${alpha(color, 0.3)}`,
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           '&:hover': {
             transform: 'translateY(-8px) scale(1.02)',
-            boxShadow: '0 12px 40px rgba(0, 0, 0, 0.15)',
-            border: '1px solid rgba(255, 255, 255, 0.9)',
+            boxShadow: `0 20px 40px ${alpha(color, 0.25)}`,
+            border: `1px solid ${alpha(color, 0.5)}`,
           },
           '&::before': {
             content: '""',
@@ -174,8 +174,8 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
             top: 0,
             left: 0,
             right: 0,
-            height: '3px',
-            background: `linear-gradient(90deg, ${color} 0%, ${alpha(color, 0.7)} 100%)`,
+            height: '4px',
+            background: `linear-gradient(90deg, ${color} 0%, ${alpha(color, 0.6)} 100%)`,
           },
         }}
       >
@@ -190,16 +190,17 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
                   letterSpacing: 0.3,
                   textTransform: 'uppercase',
                   fontSize: '0.8125rem',
-                  color: '#64748b',
-                  background: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)',
+                  color: 'rgba(255, 255, 255, 0.95)',
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 100%)',
                   px: 2,
                   py: 0.75,
                   borderRadius: '8px',
                   display: 'inline-flex',
                   alignItems: 'center',
-                  boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.08)',
-                  border: '1px solid #e2e8f0',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                  border: '1px solid rgba(255,255,255,0.2)',
                   whiteSpace: 'nowrap',
+                  backdropFilter: 'blur(10px)',
                 }}
               >
                 {title}
@@ -237,14 +238,12 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
               component="div"
               sx={{
                 fontWeight: 700,
-                background: `linear-gradient(135deg, ${color} 0%, ${alpha(color, 0.8)} 100%)`,
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
+                color: 'white',
                 display: 'flex',
                 alignItems: 'baseline',
                 gap: 0.5,
                 fontSize: '2.25rem',
+                textShadow: '0 2px 4px rgba(0,0,0,0.1)',
               }}
             >
               {showPrivacy && !showValue ? (
@@ -283,15 +282,15 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
                   width: '100%',
                   height: '100%',
                   borderRadius: '50%',
-                  background: `linear-gradient(135deg, ${alpha(color, 0.08)} 0%, ${alpha(color, 0.03)} 100%)`,
-                  border: `2px solid ${alpha(color, 0.1)}`,
+                  background: 'rgba(255,255,255,0.15)',
+                  border: '2px solid rgba(255,255,255,0.2)',
                 }}
               />
-              <Icon sx={{ fontSize: 32, color: alpha(color, 0.7), zIndex: 1 }} />
+              <Icon sx={{ fontSize: 32, color: 'rgba(255,255,255,0.9)', zIndex: 1 }} />
             </Box>
           </Box>
 
-          {/* Bottom: Goal section with blue background */}
+          {/* Bottom: Goal section with white background */}
           {goal && (
             <Box
               sx={{
@@ -300,8 +299,8 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
                 mb: -2.5,
                 px: 2.5,
                 py: 1.5,
-                background: `linear-gradient(135deg, ${alpha(color, 0.06)} 0%, ${alpha(color, 0.03)} 100%)`,
-                borderTop: `1px solid ${alpha(color, 0.15)}`,
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.9) 100%)',
+                borderTop: '1px solid rgba(255,255,255,0.3)',
                 borderRadius: '0 0 8px 8px',
                 display: 'flex',
                 alignItems: 'center',
@@ -309,10 +308,10 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
-                <Typography variant="caption" sx={{ color: alpha(color, 0.7), fontWeight: 500, fontSize: '0.75rem' }}>
+                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500, fontSize: '0.75rem' }}>
                   Goal:
                 </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 600, color: alpha(color, 0.9), fontSize: '0.875rem' }}>
+                <Typography variant="body2" sx={{ fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>
                   {prefix}{typeof goal === 'number' ? goal.toLocaleString() : goal}{suffix}
                 </Typography>
               </Box>
@@ -322,13 +321,13 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
                   {isAboveGoal ? (
                     <TrendingUp sx={{ fontSize: 18, color: '#10b981' }} />
                   ) : (
-                    <TrendingDown sx={{ fontSize: 18, color: alpha(color, 0.6) }} />
+                    <TrendingDown sx={{ fontSize: 18, color: '#ef4444' }} />
                   )}
                   <Typography
                     variant="body2"
                     sx={{
                       fontWeight: 600,
-                      color: isAboveGoal ? '#10b981' : alpha(color, 0.6),
+                      color: isAboveGoal ? '#10b981' : '#ef4444',
                       fontSize: '0.875rem',
                     }}
                   >
