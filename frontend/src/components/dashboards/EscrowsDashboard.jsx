@@ -1190,7 +1190,7 @@ const EscrowsDashboard = () => {
                   </Typography>
                 </Box>
 
-                {/* Date Controls - Always Side by Side, Shrinks to Fit */}
+                {/* Date Controls - Fixed Size, No Flexing */}
                 <Box sx={{
                   flex: 1,
                   display: 'flex',
@@ -1198,8 +1198,6 @@ const EscrowsDashboard = () => {
                   alignItems: 'center',
                   justifyContent: { xs: 'flex-start', lg: 'flex-end' },
                   flexWrap: 'nowrap', // Never wrap
-                  minWidth: 0, // Allow shrinking
-                  overflow: 'hidden',
                 }}>
                   {/* Date Buttons */}
                   <ToggleButtonGroup
@@ -1216,12 +1214,11 @@ const EscrowsDashboard = () => {
                     sx={{
                       backgroundColor: 'rgba(255, 255, 255, 0.1)',
                       borderRadius: 1,
-                      flexShrink: 1, // Allow shrinking
-                      minWidth: 0,
+                      flexShrink: 0, // Don't shrink
                       height: 40, // Fixed height to match date range
                       '& .MuiToggleButton-root': {
                         color: 'rgba(255, 255, 255, 0.8)',
-                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                        borderColor: 'transparent',
                         fontSize: { xs: '0.75rem', md: '0.875rem' },
                         fontWeight: 600,
                         px: { xs: 1, md: 2 },
@@ -1231,13 +1228,14 @@ const EscrowsDashboard = () => {
                         '&.Mui-selected': {
                           backgroundColor: 'rgba(255, 255, 255, 0.2)',
                           color: 'white',
-                          borderColor: 'rgba(255, 255, 255, 0.4)',
+                          borderColor: 'transparent',
                           '&:hover': {
                             backgroundColor: 'rgba(255, 255, 255, 0.3)',
                           },
                         },
                         '&:hover': {
                           backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                          borderColor: 'transparent',
                         },
                       },
                     }}
@@ -1258,9 +1256,8 @@ const EscrowsDashboard = () => {
                       borderRadius: 1,
                       px: { xs: 1, md: 2 },
                       height: 40, // Fixed height to match date buttons
-                      border: '1px solid rgba(255, 255, 255, 0.3)',
-                      flexShrink: 1, // Allow shrinking
-                      minWidth: 0,
+                      border: '1px solid transparent',
+                      flexShrink: 0, // Don't shrink
                     }}>
                       <DatePicker
                         open={startDatePickerOpen}
@@ -1307,13 +1304,13 @@ const EscrowsDashboard = () => {
                               },
                               '& .MuiOutlinedInput-root': {
                                 '& fieldset': {
-                                  borderColor: 'rgba(255, 255, 255, 0.3)',
+                                  borderColor: 'transparent',
                                 },
                                 '&:hover fieldset': {
-                                  borderColor: 'rgba(255, 255, 255, 0.5)',
+                                  borderColor: 'transparent',
                                 },
                                 '&.Mui-focused fieldset': {
-                                  borderColor: 'rgba(255, 255, 255, 0.7)',
+                                  borderColor: 'transparent',
                                 },
                               },
                               '& .MuiInputBase-input': {
@@ -1383,13 +1380,13 @@ const EscrowsDashboard = () => {
                               },
                               '& .MuiOutlinedInput-root': {
                                 '& fieldset': {
-                                  borderColor: 'rgba(255, 255, 255, 0.3)',
+                                  borderColor: 'transparent',
                                 },
                                 '&:hover fieldset': {
-                                  borderColor: 'rgba(255, 255, 255, 0.5)',
+                                  borderColor: 'transparent',
                                 },
                                 '&.Mui-focused fieldset': {
-                                  borderColor: 'rgba(255, 255, 255, 0.7)',
+                                  borderColor: 'transparent',
                                 },
                               },
                               '& .MuiInputBase-input': {
