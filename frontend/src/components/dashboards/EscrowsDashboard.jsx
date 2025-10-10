@@ -1182,7 +1182,10 @@ const EscrowsDashboard = () => {
                   </Typography>
                 </motion.div>
 
-                {/* Date Controls - Now on the left side */}
+                {/* Spacer */}
+                <Box sx={{ flexGrow: 1 }} />
+
+                {/* Date Controls - Now on the right side */}
                 <Box sx={{
                   display: 'flex',
                   gap: 2,
