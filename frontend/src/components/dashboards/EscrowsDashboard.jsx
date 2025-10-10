@@ -1256,7 +1256,7 @@ const EscrowsDashboard = () => {
                         open={startDatePickerOpen}
                         onOpen={() => setStartDatePickerOpen(true)}
                         onClose={() => setStartDatePickerOpen(false)}
-                        format="MMM d, yyyy" // Format: Jan 5, 2025 (no leading zeros)
+                        format="MMM d, yyyy" // Format: Sep 4, 2025 (no leading zeros)
                         value={(() => {
                           try {
                             const date = customStartDate || dateRange?.startDate;
@@ -1332,7 +1332,7 @@ const EscrowsDashboard = () => {
                         open={endDatePickerOpen}
                         onOpen={() => setEndDatePickerOpen(true)}
                         onClose={() => setEndDatePickerOpen(false)}
-                        format="MMM d, yyyy" // Format: Jan 5, 2025 (no leading zeros)
+                        format="MMM d, yyyy" // Format: Sep 4, 2025 (no leading zeros)
                         value={(() => {
                           try {
                             const date = customEndDate || dateRange?.endDate;
