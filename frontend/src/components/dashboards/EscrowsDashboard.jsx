@@ -1774,7 +1774,9 @@ const EscrowsDashboard = () => {
               flexShrink: 0, // Prevent shrinking
               display: 'flex',
               flexDirection: 'column',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              overflow: 'hidden', // Contain the card within boundaries
+              padding: '0 4px', // Small padding to ensure card doesn't touch edges
             }}>
               {/* Spacer */}
               <Box sx={{ flexGrow: 1 }} />
@@ -1800,7 +1802,6 @@ const EscrowsDashboard = () => {
                     justifyContent: 'center',
                     transition: 'all 0.3s ease',
                     '&:hover': {
-                      transform: 'scale(1.02)',
                       border: '2px dashed rgba(255, 255, 255, 0.5)',
                       background: 'linear-gradient(135deg, rgba(30, 60, 114, 0.18) 0%, rgba(42, 82, 152, 0.12) 100%)',
                     }
