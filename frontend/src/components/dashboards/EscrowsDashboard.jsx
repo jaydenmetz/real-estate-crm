@@ -247,18 +247,22 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
                   <span>{maskValue(value)}</span>
                 ) : typeof value === 'string' ? (
                   // Custom string value (no CountUp animation)
-                  <span>{prefix}{value}{suffix}</span>
+                  <>
+                    {prefix && <span style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.5rem)' }}>{prefix}</span>}
+                    <span>{value}</span>
+                    {suffix && <span style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.5rem)' }}>{suffix}</span>}
+                  </>
                 ) : (
                   // Numeric value with CountUp animation
                   <>
-                    <span style={{ fontSize: '0.65em' }}>{prefix}</span>
+                    {prefix && <span style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.5rem)' }}>{prefix}</span>}
                     <CountUp
                       end={value}
                       duration={2.5}
                       separator=","
                       decimals={0}
                     />
-                    <span style={{ fontSize: '0.65em' }}>{suffix}</span>
+                    {suffix && <span style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.5rem)' }}>{suffix}</span>}
                   </>
                 )}
               </Typography>
@@ -1149,11 +1153,11 @@ const EscrowsDashboard = () => {
 
         {/* Hero Section with Stats */}
         <HeroSection>
-          {/* Main layout: Content on left, AI Assistant on right */}
+          {/* Main layout: Content on left, Date Controls and AI Assistant on right */}
           <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', md: 'row' }, height: '100%' }}>
-            {/* Left side: Header, Date Range, and Stats */}
+            {/* Left container: Title and description */}
             <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-              {/* Header Only - No Date Range */}
+              {/* Title and Description */}
               <Box sx={{ mb: 4 }}>
                 <motion.div
                   initial={{ opacity: 0, y: -20 }}
@@ -1528,14 +1532,182 @@ const EscrowsDashboard = () => {
               </Box>
             </Box>
 
-            {/* Right side: AI Assistant - Square aspect ratio - Vertically Centered */}
+            {/* Right container: Date controls and AI Assistant */}
             <Box sx={{
               width: { xs: '100%', md: '320px' },
               flexShrink: 0,
               display: 'flex',
               flexDirection: 'column',
-              justifyContent: 'center'  // Vertically center the AI Manager
+              gap: 2
             }}>
+              {/* Spacer */}
+              <Box sx={{ height: 20 }} />
+
+              {/* Date Controls Container */}
+              <Box sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1.5,
+                p: 2,
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: 2,
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)',
+              }}>
+                {/* Date Buttons */}
+                <ToggleButtonGroup
+                  value={dateRangeFilter}
+                  exclusive
+                  onChange={(e, newValue) => {
+                    if (newValue !== null) {
+                      setDateRangeFilter(newValue);
+                      setCustomStartDate(null);
+                      setCustomEndDate(null);
+                    }
+                  }}
+                  size="small"
+                  fullWidth
+                  sx={{
+                    '& .MuiToggleButton-root': {
+                      flex: 1,
+                      color: 'rgba(255, 255, 255, 0.8)',
+                      borderColor: 'rgba(255, 255, 255, 0.3)',
+                      fontSize: '0.875rem',
+                      fontWeight: 600,
+                      py: 0.75,
+                      '&.Mui-selected': {
+                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                        color: 'white',
+                        borderColor: 'rgba(255, 255, 255, 0.4)',
+                        '&:hover': {
+                          backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                        },
+                      },
+                      '&:hover': {
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      },
+                    },
+                  }}
+                >
+                  <ToggleButton value="1D">1D</ToggleButton>
+                  <ToggleButton value="1M">1M</ToggleButton>
+                  <ToggleButton value="1Y">1Y</ToggleButton>
+                  <ToggleButton value="YTD">YTD</ToggleButton>
+                </ToggleButtonGroup>
+
+                {/* Date Pickers */}
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <DatePicker
+                      label="Start Date"
+                      open={startDatePickerOpen}
+                      onOpen={() => setStartDatePickerOpen(true)}
+                      onClose={() => setStartDatePickerOpen(false)}
+                      value={(() => {
+                        try {
+                          const date = customStartDate || dateRange?.startDate;
+                          if (!date) return null;
+                          if (typeof date === 'string') {
+                            const parsed = new Date(date);
+                            if (isNaN(parsed.getTime())) return null;
+                            return parsed;
+                          }
+                          if (!(date instanceof Date)) return null;
+                          if (isNaN(date.getTime())) return null;
+                          return date;
+                        } catch (e) {
+                          console.error('DatePicker value error:', e);
+                          return null;
+                        }
+                      })()}
+                      onChange={(newDate) => {
+                        setCustomStartDate(newDate);
+                        if (newDate && customEndDate) {
+                          const matched = detectPresetRange(newDate, customEndDate);
+                          setDateRangeFilter(matched);
+                        } else {
+                          setDateRangeFilter(null);
+                        }
+                      }}
+                      slotProps={{
+                        textField: {
+                          size: 'small',
+                          onClick: () => setStartDatePickerOpen(true),
+                          sx: {
+                            flex: 1,
+                            '& .MuiInputBase-root': {
+                              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            },
+                            '& .MuiInputBase-input': {
+                              fontSize: '0.875rem',
+                              fontWeight: 500,
+                              cursor: 'pointer',
+                            },
+                          },
+                        },
+                        openPickerButton: {
+                          sx: { display: 'none' },
+                        },
+                      }}
+                    />
+                    <DatePicker
+                      label="End Date"
+                      open={endDatePickerOpen}
+                      onOpen={() => setEndDatePickerOpen(true)}
+                      onClose={() => setEndDatePickerOpen(false)}
+                      value={(() => {
+                        try {
+                          const date = customEndDate || dateRange?.endDate;
+                          if (!date) return null;
+                          if (typeof date === 'string') {
+                            const parsed = new Date(date);
+                            if (isNaN(parsed.getTime())) return null;
+                            return parsed;
+                          }
+                          if (!(date instanceof Date)) return null;
+                          if (isNaN(date.getTime())) return null;
+                          return date;
+                        } catch (e) {
+                          console.error('DatePicker value error:', e);
+                          return null;
+                        }
+                      })()}
+                      onChange={(newDate) => {
+                        setCustomEndDate(newDate);
+                        if (customStartDate && newDate) {
+                          const matched = detectPresetRange(customStartDate, newDate);
+                          setDateRangeFilter(matched);
+                        } else {
+                          setDateRangeFilter(null);
+                        }
+                      }}
+                      slotProps={{
+                        textField: {
+                          size: 'small',
+                          onClick: () => setEndDatePickerOpen(true),
+                          sx: {
+                            flex: 1,
+                            '& .MuiInputBase-root': {
+                              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            },
+                            '& .MuiInputBase-input': {
+                              fontSize: '0.875rem',
+                              fontWeight: 500,
+                              cursor: 'pointer',
+                            },
+                          },
+                        },
+                        openPickerButton: {
+                          sx: { display: 'none' },
+                        },
+                      }}
+                    />
+                  </Box>
+                </LocalizationProvider>
+              </Box>
+
+              {/* Spacer */}
+              <Box sx={{ height: 10 }} />
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -1633,405 +1805,177 @@ const EscrowsDashboard = () => {
           </Box>
         </HeroSection>
 
-      {/* Split-Level Navigation - Modern SaaS Pattern */}
+      {/* Navigation Bar with Tabs and Controls */}
       <Box sx={{ mb: 4 }}>
-        {/* Row 1: Tabs Only - Clean Navigation */}
+        {/* Combined Tabs and Controls Bar */}
         <Paper
           elevation={0}
           sx={{
             backgroundColor: 'background.paper',
-            borderRadius: '8px 8px 0 0',
-            borderBottom: '1px solid',
+            borderRadius: '8px',
+            border: '1px solid',
             borderColor: 'divider',
             display: { xs: 'none', md: 'block' },
           }}
         >
-          <Tabs
-            value={selectedStatus}
-            onChange={(e, newValue) => setSelectedStatus(newValue)}
-            sx={{
-              minHeight: 48,
-              '& .MuiTab-root': {
-                textTransform: 'none',
-                fontSize: '0.9375rem',
-                fontWeight: 500,
-                minHeight: 48,
-                px: 3,
-                color: 'text.secondary',
-                transition: 'all 0.2s ease',
-                '&:hover': {
-                  color: 'primary.main',
-                  backgroundColor: alpha('#1976d2', 0.04),
-                },
-              },
-              '& .Mui-selected': {
-                fontWeight: 600,
-                color: 'primary.main',
-              },
-              '& .MuiTabs-indicator': {
-                height: 3,
-                borderRadius: '3px 3px 0 0',
-              },
-            }}
-          >
-            <Tab label="Active Escrows" value="active" />
-            <Tab label="Closed Escrows" value="closed" />
-            <Tab label="Cancelled Escrows" value="cancelled" />
-            <Tab label="All Escrows" value="all" />
-          </Tabs>
-        </Paper>
-
-        {/* Row 2: Filter Bar - Responsive Design for All Screen Sizes */}
-        <Box
-          sx={{
-            display: { xs: 'none', md: 'flex' },
-            flexDirection: { md: 'row', lg: 'row' },
+          <Box sx={{
+            display: 'flex',
+            alignItems: 'center',
             justifyContent: 'space-between',
-            alignItems: { md: 'stretch', lg: 'center' },
-            backgroundColor: alpha('#f5f5f5', 0.4),
-            borderRadius: '0 0 8px 8px',
-            px: 4,
-            py: 1.5,
-            gap: 2,
-            // Prevent unwanted wrapping on large screens
-            flexWrap: { md: 'wrap', lg: 'nowrap' },
-            // Ensure minimum height for consistent appearance
-            minHeight: { md: 'auto', lg: '64px' }
-          }}
-        >
-          {/* Left Side: Date Controls - Responsive Layout */}
-          <Box sx={{
-            display: 'flex',
-            gap: 1.5,
-            alignItems: 'center',
-            flex: { md: '1 1 100%', lg: '0 1 auto' },
-            justifyContent: { md: 'flex-start', lg: 'flex-start' },
-            flexWrap: { md: 'wrap', lg: 'nowrap' },
-            mb: { md: 1, lg: 0 }
+            px: 2,
+            borderBottom: '1px solid',
+            borderColor: 'divider',
           }}>
-            {/* Preset Range Buttons - Moved to LEFT and first */}
-            <ToggleButtonGroup
-              value={dateRangeFilter}
-              exclusive
-              onChange={(e, newValue) => {
-                if (newValue !== null) {
-                  setDateRangeFilter(newValue);
-                  setCustomStartDate(null);
-                  setCustomEndDate(null);
-                }
-              }}
-              size="small"
+            {/* Left: Tabs */}
+            <Tabs
+              value={selectedStatus}
+              onChange={(e, newValue) => setSelectedStatus(newValue)}
               sx={{
-                '& .MuiToggleButton-root': {
-                  px: 2,
-                  py: 0.75,
-                  fontSize: '0.875rem',
-                  fontWeight: 600,
-                  border: '1px solid',
-                  borderColor: 'divider',
+                minHeight: 48,
+                '& .MuiTab-root': {
+                  textTransform: 'none',
+                  fontSize: '0.9375rem',
+                  fontWeight: 500,
+                  minHeight: 48,
+                  px: 3,
                   color: 'text.secondary',
-                  '&.Mui-selected': {
-                    backgroundColor: 'primary.main',
-                    borderColor: 'primary.main',
-                    color: 'white',
-                    '&:hover': {
-                      backgroundColor: 'primary.dark',
-                    },
-                  },
+                  transition: 'all 0.2s ease',
                   '&:hover': {
-                    backgroundColor: alpha('#1976d2', 0.08),
+                    color: 'primary.main',
+                    backgroundColor: alpha('#1976d2', 0.04),
                   },
+                },
+                '& .Mui-selected': {
+                  fontWeight: 600,
+                  color: 'primary.main',
+                },
+                '& .MuiTabs-indicator': {
+                  height: 3,
+                  borderRadius: '3px 3px 0 0',
                 },
               }}
             >
-              <ToggleButton value="1D">1D</ToggleButton>
-              <ToggleButton value="1M">1M</ToggleButton>
-              <ToggleButton value="1Y">1Y</ToggleButton>
-              <ToggleButton value="YTD">YTD</ToggleButton>
-            </ToggleButtonGroup>
+              <Tab label="Active Escrows" value="active" />
+              <Tab label="Closed Escrows" value="closed" />
+              <Tab label="Cancelled Escrows" value="cancelled" />
+              <Tab label="All Escrows" value="all" />
+            </Tabs>
 
-            {/* Date Range Pickers - Moved to RIGHT of preset buttons */}
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <Box sx={{
-                display: 'flex',
-                gap: 1.5,
-                alignItems: 'center',
-                backgroundColor: 'white',
-                borderRadius: 2,
-                px: 2,
-                py: 0.75,
-                border: '1px solid',
-                borderColor: 'divider',
-                boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
-                transition: 'all 0.2s ease',
-                '&:hover': {
-                  borderColor: 'primary.main',
-                  boxShadow: '0 2px 8px rgba(25, 118, 210, 0.15)',
-                },
-              }}>
-              {/* Start Date Picker */}
-              <DatePicker
-                open={startDatePickerOpen}
-                onOpen={() => setStartDatePickerOpen(true)}
-                onClose={() => setStartDatePickerOpen(false)}
-                value={(() => {
-                  try {
-                    const date = customStartDate || dateRange?.startDate;
-                    if (!date) return null;
-                    if (typeof date === 'string') {
-                      const parsed = new Date(date);
-                      if (isNaN(parsed.getTime())) return null;
-                      return parsed;
-                    }
-                    if (!(date instanceof Date)) return null;
-                    if (isNaN(date.getTime())) return null;
-                    return date;
-                  } catch (e) {
-                    console.error('DatePicker value error:', e);
-                    return null;
+            {/* Right: Controls */}
+            <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
+              {/* Sort Dropdown */}
+              <FormControl size="small" variant="standard" sx={{ minWidth: 140 }}>
+                <Select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  disableUnderline
+                  startAdornment={
+                    <Sort sx={{ mr: 1, fontSize: '1.125rem', color: 'text.secondary' }} />
                   }
-                })()}
-                onChange={(newDate) => {
-                  setCustomStartDate(newDate);
-                  if (newDate && customEndDate) {
-                    const matched = detectPresetRange(newDate, customEndDate);
-                    setDateRangeFilter(matched);
-                  } else {
-                    setDateRangeFilter(null);
-                  }
-                }}
-                // TEMPORARY FIX: Remove slotProps.textField.value to prevent formatDate error
-                // The DatePicker will use its internal formatting instead
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    onClick: () => setStartDatePickerOpen(true),
-                    sx: {
-                      width: 130,
-                      '& .MuiInputBase-input': {
+                  renderValue={(value) => {
+                    const labels = {
+                      closing_date: 'Closing Date',
+                      created_at: 'Date Created',
+                      sale_price: 'Sale Price',
+                      property_address: 'Address',
+                      escrow_status: 'Status',
+                    };
+                    return (
+                      <Typography variant="body2" sx={{
                         fontSize: '0.875rem',
                         fontWeight: 500,
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                      },
+                        color: 'text.primary',
+                      }}>
+                        {labels[value]}
+                      </Typography>
+                    );
+                  }}
+                  sx={{
+                    backgroundColor: alpha('#f5f5f5', 0.4),
+                    borderRadius: 1,
+                    px: 1.5,
+                    py: 0.5,
+                    '&:hover': {
+                      backgroundColor: alpha('#f5f5f5', 0.6),
                     },
-                  },
-                  openPickerButton: {
-                    sx: { display: 'none' },
-                  },
-                }}
-              />
+                    '& .MuiSelect-select': {
+                      paddingRight: '32px !important',
+                      display: 'flex',
+                      alignItems: 'center',
+                    },
+                  }}
+                >
+                  <MenuItem value="closing_date">Closing Date</MenuItem>
+                  <MenuItem value="created_at">Date Created</MenuItem>
+                  <MenuItem value="sale_price">Sale Price</MenuItem>
+                  <MenuItem value="property_address">Address</MenuItem>
+                  <MenuItem value="escrow_status">Status</MenuItem>
+                </Select>
+              </FormControl>
 
-              <Typography variant="body2" sx={{
-                color: 'text.disabled',
-                fontWeight: 400,
-                fontSize: '0.875rem',
-                mx: -0.5,
-              }}>
-                →
-              </Typography>
-
-              {/* End Date Picker */}
-              <DatePicker
-                open={endDatePickerOpen}
-                onOpen={() => setEndDatePickerOpen(true)}
-                onClose={() => setEndDatePickerOpen(false)}
-                value={(() => {
-                  try {
-                    const date = customEndDate || dateRange?.endDate;
-                    if (!date) return null;
-                    if (typeof date === 'string') {
-                      const parsed = new Date(date);
-                      if (isNaN(parsed.getTime())) return null;
-                      return parsed;
+              {/* View Mode & Calendar Selector */}
+              <ToggleButtonGroup
+                value={showCalendar ? 'calendar' : viewMode}
+                exclusive
+                onChange={(e, newValue) => {
+                  if (newValue !== null) {
+                    if (newValue === 'calendar') {
+                      setShowCalendar(true);
+                    } else {
+                      setShowCalendar(false);
+                      setViewMode(newValue);
                     }
-                    if (!(date instanceof Date)) return null;
-                    if (isNaN(date.getTime())) return null;
-                    return date;
-                  } catch (e) {
-                    console.error('DatePicker value error:', e);
-                    return null;
-                  }
-                })()}
-                onChange={(newDate) => {
-                  setCustomEndDate(newDate);
-                  if (customStartDate && newDate) {
-                    const matched = detectPresetRange(customStartDate, newDate);
-                    setDateRangeFilter(matched);
-                  } else {
-                    setDateRangeFilter(null);
                   }
                 }}
-                // TEMPORARY FIX: Remove slotProps.textField.value to prevent formatDate error
-                // The DatePicker will use its internal formatting instead
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    onClick: () => setEndDatePickerOpen(true),
-                    sx: {
-                      width: 130,
-                      '& .MuiInputBase-input': {
-                        fontSize: '0.875rem',
-                        fontWeight: 500,
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                      },
-                    },
-                  },
-                  openPickerButton: {
-                    sx: { display: 'none' },
-                  },
-                }}
-              />
-              </Box>
-            </LocalizationProvider>
-          </Box>
-
-          {/* Right Side: Sort & View Controls - Responsive Layout */}
-          <Box sx={{
-            display: 'flex',
-            gap: 1.5,
-            alignItems: 'center',
-            flex: { md: '1 1 100%', lg: '0 1 auto' },
-            justifyContent: { md: 'flex-start', lg: 'flex-end' },
-            flexWrap: 'nowrap'
-          }}>
-            {/* Sort Dropdown - Fixed Width */}
-            <FormControl size="small" variant="standard" sx={{
-              width: { md: 160, lg: 160 },  // Fixed width, no expansion
-              flexShrink: 0  // Prevent shrinking
-            }}>
-            <Select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              disableUnderline
-              startAdornment={
-                <Sort sx={{ mr: 1, fontSize: '1.125rem', color: 'text.secondary' }} />
-              }
-              renderValue={(value) => {
-                const labels = {
-                  closing_date: 'Closing Date',
-                  created_at: 'Date Created',
-                  sale_price: 'Sale Price',
-                  property_address: 'Address',
-                  escrow_status: 'Status',
-                };
-                return (
-                  <Typography variant="body2" sx={{
-                    fontSize: '0.9375rem',
+                size="small"
+                sx={{
+                  '& .MuiToggleButton-root': {
+                    px: 1.5,
+                    py: 0.5,
+                    textTransform: 'none',
                     fontWeight: 500,
-                    color: 'text.primary',
-                    letterSpacing: '0.01em',
-                  }}>
-                    {labels[value]}
-                  </Typography>
-                );
-              }}
-              sx={{
-                backgroundColor: 'white',
-                borderRadius: 2,
-                px: 2,
-                py: 1,
-                border: '1px solid',
-                borderColor: 'divider',
-                boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
-                transition: 'all 0.2s ease',
-                '&:hover': {
-                  borderColor: 'primary.main',
-                  boxShadow: '0 2px 8px rgba(25, 118, 210, 0.15)',
-                },
-                '& .MuiSelect-select': {
-                  paddingRight: '32px !important',
-                  display: 'flex',
-                  alignItems: 'center',
-                },
-              }}
-            >
-              <MenuItem value="closing_date">Closing Date</MenuItem>
-              <MenuItem value="created_at">Date Created</MenuItem>
-              <MenuItem value="sale_price">Sale Price</MenuItem>
-              <MenuItem value="property_address">Address</MenuItem>
-              <MenuItem value="escrow_status">Status</MenuItem>
-            </Select>
-          </FormControl>
+                    height: '32px',
+                  },
+                }}
+              >
+                <ToggleButton value="small" title="Grid view (V)">
+                  <Box sx={{ display: 'flex', gap: 0.4 }}>
+                    <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                    <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                    <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                    <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  </Box>
+                </ToggleButton>
+                <ToggleButton value="large" title="Full width view (V)">
+                  <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                </ToggleButton>
+                <ToggleButton value="calendar" title="Calendar view">
+                  <CalendarToday sx={{ fontSize: 16 }} />
+                </ToggleButton>
+              </ToggleButtonGroup>
 
-          {/* View Mode & Calendar Selector */}
-          <ToggleButtonGroup
-            value={showCalendar ? 'calendar' : viewMode}
-            exclusive
-            onChange={(e, newValue) => {
-              if (newValue !== null) {
-                if (newValue === 'calendar') {
-                  setShowCalendar(true);
-                } else {
-                  setShowCalendar(false);
-                  setViewMode(newValue);
-                }
-              }
-            }}
-            size="small"
-            aria-label="View mode and calendar selection"
-            sx={{
-              '& .MuiToggleButton-root': {
-                px: 2,
-                py: 0.5,
-                textTransform: 'none',
-                fontWeight: 500,
-                height: '32px',
-              },
-            }}
-          >
-            <ToggleButton
-              value="small"
-              aria-label="Grid view - shows escrows in compact 4-column grid layout (Press V to toggle)"
-              title="Grid view (V)"
-            >
-              {/* 4-column grid icon matching actual card layout */}
-              <Box sx={{ display: 'flex', gap: 0.4 }}>
-                <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-              </Box>
-            </ToggleButton>
-            <ToggleButton
-              value="large"
-              aria-label="Full width view - shows escrows in detailed full-width layout (Press V to toggle)"
-              title="Full width view (V)"
-            >
-              {/* Wide horizontal bar representing full-width card - total width 24px */}
-              <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-            </ToggleButton>
-            <ToggleButton
-              value="calendar"
-              aria-label="Calendar view - shows escrows by closing date"
-              title="Calendar view"
-            >
-              <CalendarToday sx={{ fontSize: 16 }} />
-            </ToggleButton>
-            </ToggleButtonGroup>
-
-            {/* Archive/Trash Icon */}
-            <IconButton
-              size="small"
-              onClick={() => setSelectedStatus('archived')}
-              sx={{
-                width: 40,
-                height: 40,
-                backgroundColor: selectedStatus === 'archived' ? 'warning.main' : alpha('#000', 0.06),
-                color: selectedStatus === 'archived' ? 'white' : 'text.secondary',
-                '&:hover': {
-                  backgroundColor: selectedStatus === 'archived' ? 'warning.dark' : alpha('#000', 0.1),
-                },
-                transition: 'all 0.2s',
-              }}
-            >
-              <Badge badgeContent={archivedCount} color="error" max={99}>
-                <DeleteIcon />
-              </Badge>
-            </IconButton>
+              {/* Archive/Trash Icon */}
+              <IconButton
+                size="small"
+                onClick={() => setSelectedStatus('archived')}
+                sx={{
+                  width: 36,
+                  height: 36,
+                  backgroundColor: selectedStatus === 'archived' ? 'warning.main' : alpha('#000', 0.06),
+                  color: selectedStatus === 'archived' ? 'white' : 'text.secondary',
+                  '&:hover': {
+                    backgroundColor: selectedStatus === 'archived' ? 'warning.dark' : alpha('#000', 0.1),
+                  },
+                  transition: 'all 0.2s',
+                }}
+              >
+                <Badge badgeContent={archivedCount} color="error" max={99}>
+                  <Delete sx={{ fontSize: 20 }} />
+                </Badge>
+              </IconButton>
+            </Box>
           </Box>
-        </Box>
+        </Paper>
       </Box>
 
       {/* Mobile/Tablet Layout - Responsive Design with All Features */}
