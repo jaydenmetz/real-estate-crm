@@ -106,15 +106,15 @@ import { useWebSocket } from '../../hooks/useWebSocket';
 // Styled Components
 const HeroSection = styled(Box)(({ theme }) => ({
   position: 'relative',
-  borderRadius: theme.spacing(3),
+  borderRadius: theme.spacing(2),
   overflow: 'hidden',
   background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
   color: 'white',
-  padding: theme.spacing(4),
-  marginBottom: theme.spacing(4),
-  boxShadow: '0 20px 60px rgba(25, 118, 210, 0.3)',
+  padding: theme.spacing(2.5), // Reduced from 4 to 2.5
+  marginBottom: theme.spacing(2), // Reduced from 4 to 2
+  boxShadow: '0 8px 24px rgba(25, 118, 210, 0.2)', // Softer shadow
   [theme.breakpoints.down('md')]: {
-    padding: theme.spacing(3),
+    padding: theme.spacing(2),
   },
 }));
 
@@ -150,17 +150,17 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
           elevation={0}
           sx={{
             height: '100%',
-            minHeight: 140,
+            minHeight: 80, // Reduced from 140 to 80
             position: 'relative',
             overflow: 'hidden',
             background: `linear-gradient(135deg, ${alpha(color, 0.15)} 0%, ${alpha(color, 0.08)} 100%)`,
             backdropFilter: 'blur(10px)',
             border: `1px solid ${alpha(color, 0.3)}`,
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            transition: 'all 0.2s ease',
             '&:hover': {
-              transform: 'translateY(-8px) scale(1.02)',
-              boxShadow: `0 20px 40px ${alpha(color, 0.25)}`,
-              border: `1px solid ${alpha(color, 0.5)}`,
+              transform: 'translateY(-2px)',
+              boxShadow: `0 8px 16px ${alpha(color, 0.2)}`,
+              border: `1px solid ${alpha(color, 0.4)}`,
             },
             '&::before': {
               content: '""',
@@ -168,20 +168,19 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
               top: 0,
               left: 0,
               right: 0,
-              height: '4px',
+              height: '3px',
               background: `linear-gradient(90deg, ${color} 0%, ${alpha(color, 0.6)} 100%)`,
             },
           }}
         >
-          <CardContent sx={{ position: 'relative', zIndex: 1, p: 2.5, '&:last-child': { pb: 2.5 } }}>
+          <CardContent sx={{ position: 'relative', zIndex: 1, p: 1.5, '&:last-child': { pb: 1.5 } }}>
             <Box display="flex" alignItems="center" justifyContent="space-between">
-              <Box>
-                <Box display="flex" alignItems="center" gap={1}>
+              <Box flex={1}>
+                <Box display="flex" alignItems="center" gap={0.5} mb={0.5}>
                   <Typography
                     color="textSecondary"
-                    gutterBottom
-                    variant="body2"
-                    sx={{ fontWeight: 500, letterSpacing: 0.5 }}
+                    variant="caption"
+                    sx={{ fontWeight: 500, letterSpacing: 0.3, fontSize: '0.7rem' }}
                   >
                     {title}
                   </Typography>
@@ -193,8 +192,8 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
                         setShowValue(!showValue);
                       }}
                       sx={{
-                        width: 24,
-                        height: 24,
+                        width: 18,
+                        height: 18,
                         color: 'textSecondary',
                         '&:hover': {
                           backgroundColor: alpha(color, 0.1),
@@ -202,22 +201,23 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
                       }}
                     >
                       {showValue ? (
-                        <VisibilityOff sx={{ fontSize: 16 }} />
+                        <VisibilityOff sx={{ fontSize: 14 }} />
                       ) : (
-                        <Visibility sx={{ fontSize: 16 }} />
+                        <Visibility sx={{ fontSize: 14 }} />
                       )}
                     </IconButton>
                   )}
                 </Box>
                 <Typography
-                  variant="h3"
+                  variant="h5"
                   component="div"
                   sx={{
-                    fontWeight: 'bold',
+                    fontWeight: 700,
                     color,
                     display: 'flex',
                     alignItems: 'baseline',
                     gap: 0.5,
+                    lineHeight: 1.2,
                   }}
                 >
                   {showPrivacy && !showValue ? (
@@ -239,23 +239,16 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
                     </>
                   )}
                 </Typography>
-                {trend && (
-                  <Box display="flex" alignItems="center" gap={0.5} mt={1}>
-                    <TrendingUp sx={{ fontSize: 16, color: '#4caf50' }} />
-                    <Typography variant="caption" color="success.main">
-                      {trend}% from last month
-                    </Typography>
-                  </Box>
-                )}
               </Box>
               <Box
                 sx={{
                   position: 'relative',
-                  width: 80,
-                  height: 80,
+                  width: 48,
+                  height: 48,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  flexShrink: 0,
                 }}
               >
                 <Box
@@ -273,7 +266,7 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
                     },
                   }}
                 />
-                <Icon sx={{ fontSize: 48, color, zIndex: 1 }} />
+                <Icon sx={{ fontSize: 32, color, zIndex: 1 }} />
               </Box>
             </Box>
           </CardContent>
