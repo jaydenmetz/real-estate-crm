@@ -168,15 +168,6 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
             boxShadow: `0 20px 40px ${alpha(color, 0.25)}`,
             border: `1px solid ${alpha(color, 0.5)}`,
           },
-          '&::before': {
-            content: '""',
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '4px',
-            background: `linear-gradient(90deg, ${color} 0%, ${alpha(color, 0.6)} 100%)`,
-          },
         }}
       >
         <CardContent sx={{ position: 'relative', zIndex: 1, p: 2.5, '&:last-child': { pb: 2.5 }, display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
@@ -205,6 +196,12 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
               >
                 {title}
               </Typography>
+            </Box>
+          </Box>
+
+          {/* Middle: Count on left, Icon on right */}
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flex: 1, my: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               {showPrivacy && (
                 <IconButton
                   size="small"
@@ -213,58 +210,55 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
                     setShowValue(!showValue);
                   }}
                   sx={{
-                    width: 24,
-                    height: 24,
-                    color: 'textSecondary',
+                    width: 28,
+                    height: 28,
+                    color: 'rgba(255,255,255,0.8)',
                     '&:hover': {
-                      backgroundColor: alpha(color, 0.1),
+                      backgroundColor: 'rgba(255,255,255,0.1)',
+                      color: 'white',
                     },
                   }}
                 >
                   {showValue ? (
-                    <VisibilityOff sx={{ fontSize: 16 }} />
+                    <VisibilityOff sx={{ fontSize: 18 }} />
                   ) : (
-                    <Visibility sx={{ fontSize: 16 }} />
+                    <Visibility sx={{ fontSize: 18 }} />
                   )}
                 </IconButton>
               )}
+              <Typography
+                variant="h3"
+                component="div"
+                sx={{
+                  fontWeight: 700,
+                  color: 'white',
+                  display: 'flex',
+                  alignItems: 'baseline',
+                  gap: 0.5,
+                  fontSize: '2.25rem',
+                  textShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                }}
+              >
+                {showPrivacy && !showValue ? (
+                  <span>{maskValue(value)}</span>
+                ) : typeof value === 'string' ? (
+                  // Custom string value (no CountUp animation)
+                  <span>{prefix}{value}{suffix}</span>
+                ) : (
+                  // Numeric value with CountUp animation
+                  <>
+                    <span style={{ fontSize: '0.65em' }}>{prefix}</span>
+                    <CountUp
+                      end={value}
+                      duration={2.5}
+                      separator=","
+                      decimals={0}
+                    />
+                    <span style={{ fontSize: '0.65em' }}>{suffix}</span>
+                  </>
+                )}
+              </Typography>
             </Box>
-          </Box>
-
-          {/* Middle: Count on left, Icon on right */}
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flex: 1, my: 1 }}>
-            <Typography
-              variant="h3"
-              component="div"
-              sx={{
-                fontWeight: 700,
-                color: 'white',
-                display: 'flex',
-                alignItems: 'baseline',
-                gap: 0.5,
-                fontSize: '2.25rem',
-                textShadow: '0 2px 4px rgba(0,0,0,0.1)',
-              }}
-            >
-              {showPrivacy && !showValue ? (
-                <span>{maskValue(value)}</span>
-              ) : typeof value === 'string' ? (
-                // Custom string value (no CountUp animation)
-                <span>{prefix}{value}{suffix}</span>
-              ) : (
-                // Numeric value with CountUp animation
-                <>
-                  <span style={{ fontSize: '0.65em' }}>{prefix}</span>
-                  <CountUp
-                    end={value}
-                    duration={2.5}
-                    separator=","
-                    decimals={0}
-                  />
-                  <span style={{ fontSize: '0.65em' }}>{suffix}</span>
-                </>
-              )}
-            </Typography>
 
             <Box
               sx={{
@@ -298,7 +292,7 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
                 mx: -2.5,
                 mb: -2.5,
                 px: 2.5,
-                py: 1.5,
+                py: 1,
                 background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.9) 100%)',
                 borderTop: '1px solid rgba(255,255,255,0.3)',
                 borderRadius: '0 0 8px 8px',
