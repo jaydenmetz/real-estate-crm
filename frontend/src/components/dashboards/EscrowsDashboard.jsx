@@ -1569,7 +1569,6 @@ const EscrowsDashboard = () => {
         >
           {/* Left Side: Date Range Controls */}
           <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center' }}>
-            {/* STRATEGIC COMMENT: Testing START DatePicker only */}
             <LocalizationProvider dateAdapter={AdapterDateFns}>
               <Box sx={{
                 display: 'flex',
@@ -1588,7 +1587,7 @@ const EscrowsDashboard = () => {
                   boxShadow: '0 2px 8px rgba(25, 118, 210, 0.15)',
                 },
               }}>
-              {/* Start Date Picker - TEST: slotProps commented out */}
+              {/* Start Date Picker */}
               <DatePicker
                 open={startDatePickerOpen}
                 onOpen={() => setStartDatePickerOpen(true)}
