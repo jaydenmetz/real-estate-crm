@@ -1970,7 +1970,7 @@ const EscrowsDashboard = () => {
                 }}
               >
                 <Badge badgeContent={archivedCount} color="error" max={99}>
-                  <Delete sx={{ fontSize: 20 }} />
+                  <DeleteIcon sx={{ fontSize: 20 }} />
                 </Badge>
               </IconButton>
             </Box>
