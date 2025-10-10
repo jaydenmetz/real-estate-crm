@@ -1153,47 +1153,40 @@ const EscrowsDashboard = () => {
 
         {/* Hero Section with Stats */}
         <HeroSection>
-          {/* Main layout: Content on left, AI Assistant on right */}
-          <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', md: 'row' }, height: '100%' }}>
-            {/* Left container: Header, description with date controls, stats, and buttons */}
+          {/* Wrapper for header and main content */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+
+            {/* Header Row - Full width above both containers */}
             <Box sx={{
-              flex: '1 1 auto', // Grow and shrink as needed
               display: 'flex',
-              flexDirection: 'column',
-              minWidth: 0, // Allow container to shrink below its content's natural width
-              overflow: 'visible', // Allow content to be visible
+              gap: 3,
+              alignItems: { xs: 'flex-start', lg: 'center' },
+              flexDirection: { xs: 'column', lg: 'row' },
+              mb: 3,
+              width: '100%',
             }}>
-              {/* Header with Date Controls */}
+              {/* Header */}
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Typography variant="h3" component="h1" sx={{ fontWeight: 700 }}>
+                  Escrows
+                </Typography>
+              </motion.div>
+
+              {/* Spacer - only on larger screens */}
+              <Box sx={{ display: { xs: 'none', lg: 'block' }, flexGrow: 1 }} />
+
+              {/* Date Controls Container - show in header on xs and lg, hide on md */}
               <Box sx={{
-                display: 'flex',
-                gap: 3,
-                alignItems: { xs: 'flex-start', md: 'center' },
-                flexDirection: { xs: 'column', md: 'row' },
-                mb: 4,
-                width: '100%',
+                display: { xs: 'flex', md: 'none', lg: 'flex' },
+                gap: 2,
+                alignItems: 'center',
+                flexWrap: 'nowrap',
+                width: { xs: 'auto', lg: 'auto' },
               }}>
-                {/* Header */}
-                <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <Typography variant="h3" component="h1" sx={{ fontWeight: 700 }}>
-                    Escrows
-                  </Typography>
-                </motion.div>
-
-                {/* Spacer - only on larger screens */}
-                <Box sx={{ display: { xs: 'none', md: 'block' }, flexGrow: 1 }} />
-
-                {/* Date Controls - Now on the right side */}
-                <Box sx={{
-                  display: 'flex',
-                  gap: 2,
-                  alignItems: 'center',
-                  flexWrap: 'nowrap', // Never wrap
-                  width: { xs: 'auto', sm: 'auto' }, // Don't stretch on mobile
-                }}>
                   {/* Date Buttons */}
                   <ToggleButtonGroup
                     value={dateRangeFilter}
@@ -1420,10 +1413,25 @@ const EscrowsDashboard = () => {
                     </Box>
                   </LocalizationProvider>
                 </Box>
-              </Box>
+            </Box>
 
-              {/* Stats Grid - White Cards - Dynamic based on selected tab */}
-              <Grid container spacing={2}>
+            {/* Main Content Row - Left and Right Containers */}
+            <Box sx={{
+              display: 'flex',
+              gap: 3,
+              alignItems: 'stretch',
+              flexDirection: { xs: 'column', md: 'row' },
+              height: '100%',
+            }}>
+              {/* Left container: Stats Grid */}
+              <Box sx={{
+                flex: '1 1 auto',
+                display: 'flex',
+                flexDirection: 'column',
+                minWidth: 0, // Allow shrinking
+              }}>
+                {/* Stats Grid - White Cards - Dynamic based on selected tab */}
+                <Grid container spacing={2}>
                 {(() => {
                   // Calculate cancellation rate from all non-archived escrows
                   const totalAllStatuses = (escrows || []).length;
@@ -1779,18 +1787,249 @@ const EscrowsDashboard = () => {
                   Transaction Analytics
                 </Button>
               </Box>
-            </Box>
+              </Box>
 
-            {/* Right container: AI Assistant */}
-            <Box sx={{
-              width: { xs: '100%', md: '280px', lg: '320px' },
-              minWidth: { md: '280px' }, // Ensure minimum width
-              flexShrink: 0, // Prevent shrinking
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              pr: { md: 2, lg: 0 }, // Add padding-right on smaller screens
-            }}>
+              {/* Right container: Date Controls (md only) + AI Assistant */}
+              <Box sx={{
+                width: { xs: '100%', md: '280px', lg: '320px' },
+                minWidth: { md: '280px' }, // Ensure minimum width
+                flexShrink: 0, // Prevent shrinking
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+              }}>
+              {/* Date Controls - Show here on md screens only */}
+              <Box sx={{
+                display: { xs: 'none', md: 'flex', lg: 'none' },
+                flexDirection: 'column',
+                gap: 1,
+                mb: 2,
+              }}>
+                {/* Date Buttons */}
+                <ToggleButtonGroup
+                  value={dateRangeFilter}
+                  exclusive
+                  onChange={(e, newValue) => {
+                    if (newValue !== null) {
+                      setDateRangeFilter(newValue);
+                      setCustomStartDate(null);
+                      setCustomEndDate(null);
+                    }
+                  }}
+                  size="small"
+                  sx={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    borderRadius: 1,
+                    flexShrink: 0,
+                    flexGrow: 0,
+                    height: 36,
+                    '& .MuiToggleButton-root': {
+                      color: 'rgba(255, 255, 255, 0.8)',
+                      borderColor: 'transparent',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      px: 1.5,
+                      py: 0,
+                      height: 36,
+                      minWidth: 'auto',
+                      '&.Mui-selected': {
+                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                        color: 'white',
+                        borderColor: 'transparent',
+                        '&:hover': {
+                          backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                        },
+                      },
+                      '&:hover': {
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                        borderColor: 'transparent',
+                      },
+                    },
+                  }}
+                >
+                  <ToggleButton value="1D">1D</ToggleButton>
+                  <ToggleButton value="1M">1M</ToggleButton>
+                  <ToggleButton value="1Y">1Y</ToggleButton>
+                  <ToggleButton value="YTD">YTD</ToggleButton>
+                </ToggleButtonGroup>
+
+                {/* Date Range */}
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                  <Box sx={{
+                    display: 'flex',
+                    gap: 0.5,
+                    alignItems: 'center',
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    borderRadius: 1,
+                    px: 0.5,
+                    height: 36,
+                    border: '1px solid transparent',
+                    flexShrink: 0,
+                    flexGrow: 0,
+                  }}>
+                    <DatePicker
+                      open={startDatePickerOpen}
+                      onOpen={() => setStartDatePickerOpen(true)}
+                      onClose={() => setStartDatePickerOpen(false)}
+                      value={(() => {
+                        try {
+                          const date = customStartDate || dateRange?.startDate;
+                          if (!date) return null;
+                          if (typeof date === 'string') {
+                            const parsed = new Date(date);
+                            if (isNaN(parsed.getTime())) return null;
+                            return parsed;
+                          }
+                          if (!(date instanceof Date)) return null;
+                          if (isNaN(date.getTime())) return null;
+                          return date;
+                        } catch (e) {
+                          console.error('DatePicker value error:', e);
+                          return null;
+                        }
+                      })()}
+                      onChange={(newDate) => {
+                        setCustomStartDate(newDate);
+                        if (newDate && customEndDate) {
+                          const matched = detectPresetRange(newDate, customEndDate);
+                          setDateRangeFilter(matched);
+                        } else {
+                          setDateRangeFilter(null);
+                        }
+                      }}
+                      format="MMM d, yyyy"
+                      slotProps={{
+                        textField: {
+                          size: 'small',
+                          placeholder: 'Start',
+                          onClick: () => setStartDatePickerOpen(true),
+                          sx: {
+                            width: 105,
+                            '& .MuiInputBase-root': {
+                              backgroundColor: 'transparent',
+                              borderColor: 'rgba(255, 255, 255, 0.3)',
+                              height: 36,
+                              paddingRight: '8px !important',
+                            },
+                            '& .MuiOutlinedInput-root': {
+                              '& fieldset': {
+                                borderColor: 'transparent',
+                              },
+                              '&:hover fieldset': {
+                                borderColor: 'transparent',
+                              },
+                              '&.Mui-focused fieldset': {
+                                borderColor: 'transparent',
+                              },
+                            },
+                            '& .MuiInputBase-input': {
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              textAlign: 'center',
+                              color: 'rgba(255, 255, 255, 0.9)',
+                              padding: '6px 8px',
+                            },
+                            '& .MuiInputAdornment-root': {
+                              display: 'none',
+                            },
+                            '& .MuiInputLabel-root': {
+                              display: 'none',
+                            },
+                            '& .MuiOutlinedInput-notchedOutline legend': {
+                              display: 'none',
+                            },
+                          },
+                        },
+                        openPickerButton: {
+                          sx: { display: 'none' },
+                        },
+                      }}
+                    />
+                    <Typography sx={{ color: 'rgba(255, 255, 255, 0.7)', mx: 0.5, flexShrink: 0 }}>→</Typography>
+                    <DatePicker
+                      open={endDatePickerOpen}
+                      onOpen={() => setEndDatePickerOpen(true)}
+                      onClose={() => setEndDatePickerOpen(false)}
+                      value={(() => {
+                        try {
+                          const date = customEndDate || dateRange?.endDate;
+                          if (!date) return null;
+                          if (typeof date === 'string') {
+                            const parsed = new Date(date);
+                            if (isNaN(parsed.getTime())) return null;
+                            return parsed;
+                          }
+                          if (!(date instanceof Date)) return null;
+                          if (isNaN(date.getTime())) return null;
+                          return date;
+                        } catch (e) {
+                          console.error('DatePicker value error:', e);
+                          return null;
+                        }
+                      })()}
+                      onChange={(newDate) => {
+                        setCustomEndDate(newDate);
+                        if (customStartDate && newDate) {
+                          const matched = detectPresetRange(customStartDate, newDate);
+                          setDateRangeFilter(matched);
+                        } else {
+                          setDateRangeFilter(null);
+                        }
+                      }}
+                      format="MMM d, yyyy"
+                      slotProps={{
+                        textField: {
+                          size: 'small',
+                          placeholder: 'End',
+                          onClick: () => setEndDatePickerOpen(true),
+                          sx: {
+                            width: 105,
+                            '& .MuiInputBase-root': {
+                              backgroundColor: 'transparent',
+                              borderColor: 'rgba(255, 255, 255, 0.3)',
+                              height: 36,
+                              paddingRight: '8px !important',
+                            },
+                            '& .MuiOutlinedInput-root': {
+                              '& fieldset': {
+                                borderColor: 'transparent',
+                              },
+                              '&:hover fieldset': {
+                                borderColor: 'transparent',
+                              },
+                              '&.Mui-focused fieldset': {
+                                borderColor: 'transparent',
+                              },
+                            },
+                            '& .MuiInputBase-input': {
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              textAlign: 'center',
+                              color: 'rgba(255, 255, 255, 0.9)',
+                              padding: '6px 8px',
+                            },
+                            '& .MuiInputAdornment-root': {
+                              display: 'none',
+                            },
+                            '& .MuiInputLabel-root': {
+                              display: 'none',
+                            },
+                            '& .MuiOutlinedInput-notchedOutline legend': {
+                              display: 'none',
+                            },
+                          },
+                        },
+                        openPickerButton: {
+                          sx: { display: 'none' },
+                        },
+                      }}
+                    />
+                  </Box>
+                </LocalizationProvider>
+              </Box>
+
               {/* Spacer */}
               <Box sx={{ flexGrow: 1 }} />
               <motion.div
@@ -1887,6 +2126,7 @@ const EscrowsDashboard = () => {
               </motion.div>
               {/* Spacer */}
               <Box sx={{ flexGrow: 1 }} />
+            </Box>
             </Box>
           </Box>
         </HeroSection>
