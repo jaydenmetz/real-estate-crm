@@ -1455,8 +1455,14 @@ const EscrowsDashboard = () => {
               </Box>
             </Box>
 
-            {/* Right side: AI Assistant - Square aspect ratio */}
-            <Box sx={{ width: { xs: '100%', md: '320px' }, flexShrink: 0 }}>
+            {/* Right side: AI Assistant - Square aspect ratio - Vertically Centered */}
+            <Box sx={{
+              width: { xs: '100%', md: '320px' },
+              flexShrink: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center'  // Vertically center the AI Manager
+            }}>
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -1602,21 +1608,34 @@ const EscrowsDashboard = () => {
           </Tabs>
         </Paper>
 
-        {/* Row 2: Filter Bar - Grouped Controls */}
+        {/* Row 2: Filter Bar - Responsive Design for All Screen Sizes */}
         <Box
           sx={{
             display: { xs: 'none', md: 'flex' },
+            flexDirection: { md: 'row', lg: 'row' },
             justifyContent: 'space-between',
-            alignItems: 'center',
+            alignItems: { md: 'stretch', lg: 'center' },
             backgroundColor: alpha('#f5f5f5', 0.4),
             borderRadius: '0 0 8px 8px',
             px: 4,
             py: 1.5,
             gap: 2,
+            // Prevent unwanted wrapping on large screens
+            flexWrap: { md: 'wrap', lg: 'nowrap' },
+            // Ensure minimum height for consistent appearance
+            minHeight: { md: 'auto', lg: '64px' }
           }}
         >
-          {/* Left Side: Date Preset Buttons First, Then Date Range */}
-          <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', flexWrap: 'wrap' }}>
+          {/* Left Side: Date Controls - Responsive Layout */}
+          <Box sx={{
+            display: 'flex',
+            gap: 1.5,
+            alignItems: 'center',
+            flex: { md: '1 1 100%', lg: '0 1 auto' },
+            justifyContent: { md: 'flex-start', lg: 'flex-start' },
+            flexWrap: { md: 'wrap', lg: 'nowrap' },
+            mb: { md: 1, lg: 0 }
+          }}>
             {/* Preset Range Buttons - Moved to LEFT and first */}
             <ToggleButtonGroup
               value={dateRangeFilter}
@@ -1795,10 +1814,20 @@ const EscrowsDashboard = () => {
             </LocalizationProvider>
           </Box>
 
-          {/* Right Side: Sort & View Controls */}
-          <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-            {/* Sort Dropdown */}
-            <FormControl size="small" variant="standard" sx={{ minWidth: 140, maxWidth: 180 }}>
+          {/* Right Side: Sort & View Controls - Responsive Layout */}
+          <Box sx={{
+            display: 'flex',
+            gap: 1.5,
+            alignItems: 'center',
+            flex: { md: '1 1 100%', lg: '0 1 auto' },
+            justifyContent: { md: 'flex-start', lg: 'flex-end' },
+            flexWrap: 'nowrap'
+          }}>
+            {/* Sort Dropdown - Fixed Width */}
+            <FormControl size="small" variant="standard" sx={{
+              width: { md: 160, lg: 160 },  // Fixed width, no expansion
+              flexShrink: 0  // Prevent shrinking
+            }}>
             <Select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
@@ -1932,16 +1961,17 @@ const EscrowsDashboard = () => {
         </Box>
       </Box>
 
-      {/* Mobile/Tablet Layout - Full width tabs with controls below */}
+      {/* Mobile/Tablet Layout - Responsive Design with All Features */}
       <Box sx={{ mb: 4, display: { xs: 'block', md: 'none' } }}>
-        {/* Tab Bar - Mobile */}
+        {/* Tab Bar - Mobile/Tablet */}
         <Paper
           elevation={0}
           sx={{
             backgroundColor: 'background.paper',
-            borderRadius: 2,
-            boxShadow: 1,
-            mb: 2,
+            borderRadius: '8px 8px 0 0',
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+            mb: 0,
           }}
         >
           <Tabs
@@ -1952,55 +1982,223 @@ const EscrowsDashboard = () => {
             sx={{
               '& .MuiTab-root': {
                 textTransform: 'none',
-                fontSize: '0.875rem',
+                fontSize: { xs: '0.875rem', sm: '0.9375rem' },
                 fontWeight: 500,
-                minHeight: 56,
-                minWidth: 'auto',
-                px: 2,
+                minHeight: { xs: 48, sm: 52 },
+                px: { xs: 2, sm: 2.5 },
               },
               '& .Mui-selected': {
-                fontWeight: 700,
+                fontWeight: 600,
+                color: 'primary.main',
+              },
+              '& .MuiTabs-indicator': {
+                height: 3,
+                borderRadius: '3px 3px 0 0',
               },
             }}
           >
-            <Tab label="Active Escrows" value="active" />
-            <Tab label="Closed Escrows" value="closed" />
-            <Tab label="Cancelled Escrows" value="cancelled" />
-            <Tab label="All Escrows" value="all" />
+            <Tab label="Active" value="active" />
+            <Tab label="Closed" value="closed" />
+            <Tab label="Cancelled" value="cancelled" />
+            <Tab label="All" value="all" />
+            {/* Archive Badge for Mobile */}
+            <Tab
+              label={
+                <Badge badgeContent={archivedCount} color="error" max={99}>
+                  <span>Archived</span>
+                </Badge>
+              }
+              value="archived"
+            />
           </Tabs>
         </Paper>
 
-        {/* Mobile Controls - Below tabs */}
+        {/* Mobile/Tablet Filter Controls - Organized in Rows */}
         <Box
           sx={{
+            backgroundColor: alpha('#f5f5f5', 0.4),
+            borderRadius: '0 0 8px 8px',
+            p: 2,
             display: 'flex',
+            flexDirection: 'column',
             gap: 2,
-            flexWrap: 'wrap',
-            alignItems: 'center',
           }}
         >
-          {/* Sort Selector - Mobile */}
-          <FormControl
-            size="small"
-            variant="outlined"
-            sx={{
-              flex: '1 1 auto',
-              minWidth: 180,
-              '& .MuiOutlinedInput-root': {
-                backgroundColor: 'background.paper',
-                borderRadius: 2,
-              },
-              '& .MuiOutlinedInput-notchedOutline': {
-                borderColor: alpha('#000', 0.12),
-              },
-            }}
-          >
-            <Select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              displayEmpty
-              renderValue={(value) => {
-                const labels = {
+          {/* Row 1: Date Range Controls - Mobile/Tablet */}
+          <Box sx={{
+            display: 'flex',
+            gap: 1.5,
+            alignItems: 'center',
+            flexWrap: { xs: 'wrap', sm: 'nowrap' },
+          }}>
+            {/* Date Preset Buttons */}
+            <ToggleButtonGroup
+              value={dateRangeFilter}
+              exclusive
+              onChange={(e, newValue) => {
+                if (newValue !== null) {
+                  setDateRangeFilter(newValue);
+                  setCustomStartDate(null);
+                  setCustomEndDate(null);
+                }
+              }}
+              size="small"
+              sx={{
+                flexShrink: 0,
+                '& .MuiToggleButton-root': {
+                  px: { xs: 1.5, sm: 2 },
+                  py: 0.5,
+                  fontSize: '0.875rem',
+                  fontWeight: 600,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  color: 'text.secondary',
+                  '&.Mui-selected': {
+                    backgroundColor: 'primary.main',
+                    borderColor: 'primary.main',
+                    color: 'white',
+                    '&:hover': {
+                      backgroundColor: 'primary.dark',
+                    },
+                  },
+                  '&:hover': {
+                    backgroundColor: alpha('#1976d2', 0.08),
+                  },
+                },
+              }}
+            >
+              <ToggleButton value="1D">1D</ToggleButton>
+              <ToggleButton value="1M">1M</ToggleButton>
+              <ToggleButton value="1Y">1Y</ToggleButton>
+              <ToggleButton value="YTD">YTD</ToggleButton>
+            </ToggleButtonGroup>
+
+            {/* Custom Date Range - Compact for Mobile */}
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <Box sx={{
+                display: 'flex',
+                gap: 1,
+                alignItems: 'center',
+                flex: 1,
+                minWidth: 0,
+              }}>
+                <DatePicker
+                  value={(() => {
+                    try {
+                      const date = customStartDate || dateRange?.startDate;
+                      if (!date) return null;
+                      if (typeof date === 'string') {
+                        const parsed = new Date(date);
+                        if (isNaN(parsed.getTime())) return null;
+                        return parsed;
+                      }
+                      if (!(date instanceof Date)) return null;
+                      if (isNaN(date.getTime())) return null;
+                      return date;
+                    } catch (e) {
+                      console.error('DatePicker value error:', e);
+                      return null;
+                    }
+                  })()}
+                  onChange={(newDate) => {
+                    setCustomStartDate(newDate);
+                    if (newDate && customEndDate) {
+                      const matched = detectPresetRange(newDate, customEndDate);
+                      setDateRangeFilter(matched);
+                    } else {
+                      setDateRangeFilter(null);
+                    }
+                  }}
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      placeholder: 'Start',
+                      sx: {
+                        width: { xs: '100%', sm: 120 },
+                        backgroundColor: 'white',
+                        borderRadius: 1,
+                        '& .MuiInputBase-input': {
+                          fontSize: '0.875rem',
+                          py: 0.75,
+                        },
+                      },
+                    },
+                  }}
+                />
+                <Typography variant="body2" sx={{ color: 'text.disabled', mx: -0.5 }}>→</Typography>
+                <DatePicker
+                  value={(() => {
+                    try {
+                      const date = customEndDate || dateRange?.endDate;
+                      if (!date) return null;
+                      if (typeof date === 'string') {
+                        const parsed = new Date(date);
+                        if (isNaN(parsed.getTime())) return null;
+                        return parsed;
+                      }
+                      if (!(date instanceof Date)) return null;
+                      if (isNaN(date.getTime())) return null;
+                      return date;
+                    } catch (e) {
+                      console.error('DatePicker value error:', e);
+                      return null;
+                    }
+                  })()}
+                  onChange={(newDate) => {
+                    setCustomEndDate(newDate);
+                    if (customStartDate && newDate) {
+                      const matched = detectPresetRange(customStartDate, newDate);
+                      setDateRangeFilter(matched);
+                    } else {
+                      setDateRangeFilter(null);
+                    }
+                  }}
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      placeholder: 'End',
+                      sx: {
+                        width: { xs: '100%', sm: 120 },
+                        backgroundColor: 'white',
+                        borderRadius: 1,
+                        '& .MuiInputBase-input': {
+                          fontSize: '0.875rem',
+                          py: 0.75,
+                        },
+                      },
+                    },
+                  }}
+                />
+              </Box>
+            </LocalizationProvider>
+          </Box>
+
+          {/* Row 2: Sort and View Controls - Mobile/Tablet */}
+          <Box sx={{
+            display: 'flex',
+            gap: 1.5,
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}>
+            {/* Sort Dropdown */}
+            <FormControl
+              size="small"
+              variant="outlined"
+              sx={{
+                flex: '1 1 auto',
+                maxWidth: { xs: '60%', sm: '200px' },
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: 'white',
+                  borderRadius: 2,
+                },
+              }}
+            >
+              <Select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                startAdornment={<Sort sx={{ mr: 1, fontSize: '1.125rem', color: 'text.secondary' }} />}
+                renderValue={(value) => {
+                  const labels = {
                   closing_date: 'Closing Date',
                   created_at: 'Date Created',
                   sale_price: 'Sale Price',
@@ -2102,7 +2300,7 @@ const EscrowsDashboard = () => {
           </Box>
         </Box>
       </Box>
-
+    </Box>
 
         {/* Enhanced Charts - REMOVED PER USER REQUEST */}
         {/* <Grid container spacing={3} sx={{ mt: 2 }}>
