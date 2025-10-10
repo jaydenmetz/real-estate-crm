@@ -1293,7 +1293,7 @@ const EscrowsDashboard = () => {
                               '& .MuiInputBase-root': {
                                 backgroundColor: 'transparent',
                                 borderColor: 'rgba(255, 255, 255, 0.3)',
-                                height: 32, // Smaller height to fit within container
+                                height: 36, // Adjusted height to prevent text cutoff
                               },
                               '& .MuiOutlinedInput-root': {
                                 '& fieldset': {
@@ -1312,7 +1312,7 @@ const EscrowsDashboard = () => {
                                 cursor: 'pointer',
                                 textAlign: 'center',
                                 color: 'rgba(255, 255, 255, 0.9)',
-                                py: 0.5, // Adjust vertical padding
+                                padding: '6px 8px', // Better padding to prevent cutoff
                               },
                               '& .MuiInputLabel-root': {
                                 display: 'none', // Hide label
@@ -1369,7 +1369,7 @@ const EscrowsDashboard = () => {
                               '& .MuiInputBase-root': {
                                 backgroundColor: 'transparent',
                                 borderColor: 'rgba(255, 255, 255, 0.3)',
-                                height: 32, // Smaller height to fit within container
+                                height: 36, // Adjusted height to prevent text cutoff
                               },
                               '& .MuiOutlinedInput-root': {
                                 '& fieldset': {
@@ -1388,7 +1388,7 @@ const EscrowsDashboard = () => {
                                 cursor: 'pointer',
                                 textAlign: 'center',
                                 color: 'rgba(255, 255, 255, 0.9)',
-                                py: 0.5, // Adjust vertical padding
+                                padding: '6px 8px', // Better padding to prevent cutoff
                               },
                               '& .MuiInputLabel-root': {
                                 display: 'none', // Hide label
