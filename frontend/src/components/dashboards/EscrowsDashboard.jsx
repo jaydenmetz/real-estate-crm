@@ -1160,8 +1160,9 @@ const EscrowsDashboard = () => {
             <Box sx={{
               display: 'flex',
               gap: 3,
-              alignItems: { xs: 'flex-start', lg: 'center' },
-              flexDirection: { xs: 'column', lg: 'row' },
+              alignItems: 'center',
+              flexDirection: 'row',
+              flexWrap: 'wrap',
               mb: 3,
               width: '100%',
             }}>
