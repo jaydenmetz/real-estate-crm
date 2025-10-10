@@ -1211,13 +1211,15 @@ const EscrowsDashboard = () => {
                       borderRadius: 1,
                       flexShrink: 1, // Allow shrinking
                       minWidth: 0,
+                      height: 40, // Fixed height to match date range
                       '& .MuiToggleButton-root': {
                         color: 'rgba(255, 255, 255, 0.8)',
                         borderColor: 'rgba(255, 255, 255, 0.3)',
                         fontSize: { xs: '0.75rem', md: '0.875rem' },
                         fontWeight: 600,
                         px: { xs: 1, md: 2 },
-                        py: 0.75,
+                        py: 0,
+                        height: 40, // Match parent height
                         minWidth: 'auto',
                         '&.Mui-selected': {
                           backgroundColor: 'rgba(255, 255, 255, 0.2)',
@@ -1248,8 +1250,8 @@ const EscrowsDashboard = () => {
                       backgroundColor: 'rgba(255, 255, 255, 0.1)',
                       borderRadius: 1,
                       px: { xs: 1, md: 2 },
-                      py: 0.5,
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      height: 40, // Fixed height to match date buttons
+                      border: '1px solid rgba(255, 255, 255, 0.3)',
                       flexShrink: 1, // Allow shrinking
                       minWidth: 0,
                     }}>
@@ -1257,6 +1259,7 @@ const EscrowsDashboard = () => {
                         open={startDatePickerOpen}
                         onOpen={() => setStartDatePickerOpen(true)}
                         onClose={() => setStartDatePickerOpen(false)}
+                        format="MMM d, yyyy" // Format: Jan 5, 2025 (no leading zeros)
                         value={(() => {
                           try {
                             const date = customStartDate || dateRange?.startDate;
@@ -1289,15 +1292,30 @@ const EscrowsDashboard = () => {
                             placeholder: 'Start',
                             onClick: () => setStartDatePickerOpen(true),
                             sx: {
-                              width: { xs: 90, md: 110 },
+                              width: { xs: 100, md: 120 },
                               '& .MuiInputBase-root': {
-                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                backgroundColor: 'transparent',
+                                borderColor: 'rgba(255, 255, 255, 0.3)',
+                                height: 32, // Smaller height to fit within container
+                              },
+                              '& .MuiOutlinedInput-root': {
+                                '& fieldset': {
+                                  borderColor: 'rgba(255, 255, 255, 0.3)',
+                                },
+                                '&:hover fieldset': {
+                                  borderColor: 'rgba(255, 255, 255, 0.5)',
+                                },
+                                '&.Mui-focused fieldset': {
+                                  borderColor: 'rgba(255, 255, 255, 0.7)',
+                                },
                               },
                               '& .MuiInputBase-input': {
                                 fontSize: { xs: '0.75rem', md: '0.875rem' },
-                                fontWeight: 500,
+                                fontWeight: 600,
                                 cursor: 'pointer',
                                 textAlign: 'center',
+                                color: 'rgba(255, 255, 255, 0.9)',
+                                py: 0.5, // Adjust vertical padding
                               },
                               '& .MuiInputLabel-root': {
                                 display: 'none', // Hide label
@@ -1317,6 +1335,7 @@ const EscrowsDashboard = () => {
                         open={endDatePickerOpen}
                         onOpen={() => setEndDatePickerOpen(true)}
                         onClose={() => setEndDatePickerOpen(false)}
+                        format="MMM d, yyyy" // Format: Jan 5, 2025 (no leading zeros)
                         value={(() => {
                           try {
                             const date = customEndDate || dateRange?.endDate;
@@ -1349,15 +1368,30 @@ const EscrowsDashboard = () => {
                             placeholder: 'End',
                             onClick: () => setEndDatePickerOpen(true),
                             sx: {
-                              width: { xs: 90, md: 110 },
+                              width: { xs: 100, md: 120 },
                               '& .MuiInputBase-root': {
-                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                                backgroundColor: 'transparent',
+                                borderColor: 'rgba(255, 255, 255, 0.3)',
+                                height: 32, // Smaller height to fit within container
+                              },
+                              '& .MuiOutlinedInput-root': {
+                                '& fieldset': {
+                                  borderColor: 'rgba(255, 255, 255, 0.3)',
+                                },
+                                '&:hover fieldset': {
+                                  borderColor: 'rgba(255, 255, 255, 0.5)',
+                                },
+                                '&.Mui-focused fieldset': {
+                                  borderColor: 'rgba(255, 255, 255, 0.7)',
+                                },
                               },
                               '& .MuiInputBase-input': {
                                 fontSize: { xs: '0.75rem', md: '0.875rem' },
-                                fontWeight: 500,
+                                fontWeight: 600,
                                 cursor: 'pointer',
                                 textAlign: 'center',
+                                color: 'rgba(255, 255, 255, 0.9)',
+                                py: 0.5, // Adjust vertical padding
                               },
                               '& .MuiInputLabel-root': {
                                 display: 'none', // Hide label
@@ -1957,12 +1991,12 @@ const EscrowsDashboard = () => {
                   },
                 }}
               >
-                  <MenuItem value="closing_date">Closing Date</MenuItem>
-                  <MenuItem value="created_at">Date Created</MenuItem>
-                  <MenuItem value="sale_price">Sale Price</MenuItem>
-                  <MenuItem value="property_address">Address</MenuItem>
-                  <MenuItem value="escrow_status">Status</MenuItem>
-                </Select>
+                <MenuItem value="closing_date">Closing Date</MenuItem>
+                <MenuItem value="created_at">Date Created</MenuItem>
+                <MenuItem value="sale_price">Sale Price</MenuItem>
+                <MenuItem value="property_address">Address</MenuItem>
+                <MenuItem value="escrow_status">Status</MenuItem>
+              </Select>
               </FormControl>
 
               {/* View Mode & Calendar Selector */}
