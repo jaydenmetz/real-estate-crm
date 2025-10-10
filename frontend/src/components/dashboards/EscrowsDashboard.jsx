@@ -1161,7 +1161,7 @@ const EscrowsDashboard = () => {
               display: 'flex',
               flexDirection: 'column',
               minWidth: 0, // Allow container to shrink below its content's natural width
-              overflow: 'hidden' // Prevent content from overflowing
+              overflow: 'visible' // Allow content to be visible
             }}>
               {/* Standalone Header */}
               <motion.div
@@ -1178,9 +1178,9 @@ const EscrowsDashboard = () => {
               <Box sx={{
                 display: 'flex',
                 gap: 3,
-                alignItems: 'center',
-                flexDirection: { xs: 'column', lg: 'row' },
-                mb: 4
+                alignItems: { xs: 'flex-start', lg: 'center' },
+                flexDirection: { xs: 'column', md: 'column', lg: 'row' },
+                mb: 4,
               }}>
                 {/* Description */}
                 <Box sx={{ flex: { xs: '1', lg: '0 0 auto' }, minWidth: { lg: '400px' } }}>
@@ -1192,12 +1192,13 @@ const EscrowsDashboard = () => {
 
                 {/* Date Controls - Fixed Size, No Flexing */}
                 <Box sx={{
-                  flex: 1,
+                  flex: '0 0 auto', // Don't grow or shrink
                   display: 'flex',
                   gap: 2,
                   alignItems: 'center',
-                  justifyContent: { xs: 'flex-start', lg: 'flex-end' },
                   flexWrap: 'nowrap', // Never wrap
+                  width: { xs: '100%', lg: 'auto' }, // Full width on small screens
+                  justifyContent: { xs: 'flex-start', lg: 'flex-end' },
                 }}>
                   {/* Date Buttons */}
                   <ToggleButtonGroup
