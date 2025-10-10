@@ -155,18 +155,18 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
       <Card
         elevation={0}
         sx={{
-          height: '100%',
-          minHeight: 180,
+          height: 200, // Fixed height for consistency
           position: 'relative',
           overflow: 'hidden',
-          background: `linear-gradient(135deg, ${alpha(color, 0.15)} 0%, ${alpha(color, 0.08)} 100%)`,
+          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.95) 100%)',
           backdropFilter: 'blur(10px)',
-          border: `1px solid ${alpha(color, 0.3)}`,
+          border: '1px solid rgba(255, 255, 255, 0.8)',
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           '&:hover': {
             transform: 'translateY(-8px) scale(1.02)',
-            boxShadow: `0 20px 40px ${alpha(color, 0.25)}`,
-            border: `1px solid ${alpha(color, 0.5)}`,
+            boxShadow: '0 12px 40px rgba(0, 0, 0, 0.15)',
+            border: '1px solid rgba(255, 255, 255, 0.9)',
           },
           '&::before': {
             content: '""',
@@ -174,31 +174,32 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
             top: 0,
             left: 0,
             right: 0,
-            height: '4px',
-            background: `linear-gradient(90deg, ${color} 0%, ${alpha(color, 0.6)} 100%)`,
+            height: '3px',
+            background: `linear-gradient(90deg, ${color} 0%, ${alpha(color, 0.7)} 100%)`,
           },
         }}
       >
-        <CardContent sx={{ position: 'relative', zIndex: 1, p: 2.5, '&:last-child': { pb: 2.5 }, display: 'flex', flexDirection: 'column', height: '100%' }}>
+        <CardContent sx={{ position: 'relative', zIndex: 1, p: 2.5, '&:last-child': { pb: 2.5 }, display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
           {/* Top: Title with enhanced styling */}
-          <Box sx={{ mb: 2 }}>
+          <Box sx={{ mb: 2, minHeight: 40, display: 'flex', alignItems: 'center' }}>
             <Box display="flex" alignItems="center" gap={1}>
               <Typography
                 variant="body2"
                 sx={{
-                  fontWeight: 700,
-                  letterSpacing: 0.5,
+                  fontWeight: 600,
+                  letterSpacing: 0.3,
                   textTransform: 'uppercase',
-                  fontSize: '0.75rem',
-                  color: color,
-                  backgroundColor: alpha(color, 0.1),
-                  px: 1.5,
-                  py: 0.5,
-                  borderRadius: 1,
+                  fontSize: '0.8125rem',
+                  color: '#64748b',
+                  background: 'linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)',
+                  px: 2,
+                  py: 0.75,
+                  borderRadius: '8px',
                   display: 'inline-flex',
                   alignItems: 'center',
-                  boxShadow: `0 2px 8px ${alpha(color, 0.2)}`,
-                  border: `1px solid ${alpha(color, 0.2)}`,
+                  boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.08)',
+                  border: '1px solid #e2e8f0',
+                  whiteSpace: 'nowrap',
                 }}
               >
                 {title}
@@ -230,16 +231,20 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
           </Box>
 
           {/* Middle: Count on left, Icon on right */}
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flex: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flex: 1, my: 1 }}>
             <Typography
               variant="h3"
               component="div"
               sx={{
-                fontWeight: 'bold',
-                color,
+                fontWeight: 700,
+                background: `linear-gradient(135deg, ${color} 0%, ${alpha(color, 0.8)} 100%)`,
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
                 display: 'flex',
                 alignItems: 'baseline',
                 gap: 0.5,
+                fontSize: '2.25rem',
               }}
             >
               {showPrivacy && !showValue ? (
@@ -250,14 +255,14 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
               ) : (
                 // Numeric value with CountUp animation
                 <>
-                  <span style={{ fontSize: '0.7em' }}>{prefix}</span>
+                  <span style={{ fontSize: '0.65em' }}>{prefix}</span>
                   <CountUp
                     end={value}
                     duration={2.5}
                     separator=","
                     decimals={0}
                   />
-                  <span style={{ fontSize: '0.7em' }}>{suffix}</span>
+                  <span style={{ fontSize: '0.65em' }}>{suffix}</span>
                 </>
               )}
             </Typography>
@@ -265,8 +270,8 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
             <Box
               sx={{
                 position: 'relative',
-                width: 60,
-                height: 60,
+                width: 56,
+                height: 56,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -278,16 +283,11 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
                   width: '100%',
                   height: '100%',
                   borderRadius: '50%',
-                  background: `radial-gradient(circle, ${alpha(color, 0.15)} 0%, transparent 70%)`,
-                  animation: 'pulse 2s infinite',
-                  '@keyframes pulse': {
-                    '0%': { transform: 'scale(0.8)', opacity: 1 },
-                    '50%': { transform: 'scale(1.2)', opacity: 0.5 },
-                    '100%': { transform: 'scale(0.8)', opacity: 1 },
-                  },
+                  background: `linear-gradient(135deg, ${alpha(color, 0.08)} 0%, ${alpha(color, 0.03)} 100%)`,
+                  border: `2px solid ${alpha(color, 0.1)}`,
                 }}
               />
-              <Icon sx={{ fontSize: 36, color, zIndex: 1 }} />
+              <Icon sx={{ fontSize: 32, color: alpha(color, 0.7), zIndex: 1 }} />
             </Box>
           </Box>
 
@@ -296,18 +296,18 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
             <Box
               sx={{
                 mt: 2,
-                pt: 2,
-                borderTop: `1px solid ${alpha(color, 0.2)}`,
+                pt: 1.5,
+                borderTop: '1px solid #e2e8f0',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
               }}
             >
               <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
-                <Typography variant="caption" sx={{ color: 'text.secondary', fontWeight: 500 }}>
+                <Typography variant="caption" sx={{ color: '#94a3b8', fontWeight: 500, fontSize: '0.75rem' }}>
                   Goal:
                 </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 600, color: alpha(color, 0.8) }}>
+                <Typography variant="body2" sx={{ fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>
                   {prefix}{typeof goal === 'number' ? goal.toLocaleString() : goal}{suffix}
                 </Typography>
               </Box>
@@ -315,15 +315,16 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
               {percentageToGoal && (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                   {isAboveGoal ? (
-                    <TrendingUp sx={{ fontSize: 16, color: '#4caf50' }} />
+                    <TrendingUp sx={{ fontSize: 18, color: '#10b981' }} />
                   ) : (
-                    <TrendingDown sx={{ fontSize: 16, color: '#f44336' }} />
+                    <TrendingDown sx={{ fontSize: 18, color: '#64748b' }} />
                   )}
                   <Typography
                     variant="body2"
                     sx={{
                       fontWeight: 600,
-                      color: isAboveGoal ? '#4caf50' : '#f44336',
+                      color: isAboveGoal ? '#10b981' : '#64748b',
+                      fontSize: '0.875rem',
                     }}
                   >
                     ({isAboveGoal ? '+' : ''}{percentageToGoal}%)
