@@ -1153,24 +1153,205 @@ const EscrowsDashboard = () => {
 
         {/* Hero Section with Stats */}
         <HeroSection>
-          {/* Main layout: Content on left, Date Controls and AI Assistant on right */}
+          {/* Main layout: Content on left, AI Assistant on right */}
           <Box sx={{ display: 'flex', gap: 3, flexDirection: { xs: 'column', md: 'row' }, height: '100%' }}>
-            {/* Left container: Title and description */}
+            {/* Left container: Header with date controls, stats, and buttons */}
             <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
-              {/* Title and Description */}
-              <Box sx={{ mb: 4 }}>
-                <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <Typography variant="h3" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
-                    Escrow Management
-                  </Typography>
-                  <Typography variant="h6" sx={{ opacity: 0.9 }}>
-                    Track and manage all your real estate transactions in one place
-                  </Typography>
-                </motion.div>
+              {/* Header Row: Title/Description on left, Date Controls on right */}
+              <Box sx={{
+                display: 'flex',
+                gap: 3,
+                alignItems: 'flex-start',
+                flexDirection: { xs: 'column', lg: 'row' },
+                mb: 4
+              }}>
+                {/* Title and Description */}
+                <Box sx={{ flex: { xs: '1', lg: '0 0 auto' }, minWidth: { lg: '400px' } }}>
+                  <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    <Typography variant="h3" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
+                      Escrow Management
+                    </Typography>
+                    <Typography variant="h6" sx={{ opacity: 0.9 }}>
+                      Track and manage all your real estate transactions in one place
+                    </Typography>
+                  </motion.div>
+                </Box>
+
+                {/* Date Controls - Side by Side */}
+                <Box sx={{
+                  flex: 1,
+                  display: 'flex',
+                  gap: 2,
+                  alignItems: 'center',
+                  justifyContent: { xs: 'flex-start', lg: 'flex-end' },
+                  flexWrap: { xs: 'wrap', md: 'nowrap' }
+                }}>
+                  {/* Date Buttons */}
+                  <ToggleButtonGroup
+                    value={dateRangeFilter}
+                    exclusive
+                    onChange={(e, newValue) => {
+                      if (newValue !== null) {
+                        setDateRangeFilter(newValue);
+                        setCustomStartDate(null);
+                        setCustomEndDate(null);
+                      }
+                    }}
+                    size="small"
+                    sx={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      borderRadius: 1,
+                      '& .MuiToggleButton-root': {
+                        color: 'rgba(255, 255, 255, 0.8)',
+                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                        fontSize: '0.875rem',
+                        fontWeight: 600,
+                        px: 2,
+                        py: 0.75,
+                        '&.Mui-selected': {
+                          backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                          color: 'white',
+                          borderColor: 'rgba(255, 255, 255, 0.4)',
+                          '&:hover': {
+                            backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                          },
+                        },
+                        '&:hover': {
+                          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                        },
+                      },
+                    }}
+                  >
+                    <ToggleButton value="1D">1D</ToggleButton>
+                    <ToggleButton value="1M">1M</ToggleButton>
+                    <ToggleButton value="1Y">1Y</ToggleButton>
+                    <ToggleButton value="YTD">YTD</ToggleButton>
+                  </ToggleButtonGroup>
+
+                  {/* Date Range Pickers */}
+                  <LocalizationProvider dateAdapter={AdapterDateFns}>
+                    <Box sx={{
+                      display: 'flex',
+                      gap: 1.5,
+                      alignItems: 'center',
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      borderRadius: 1,
+                      px: 2,
+                      py: 0.5,
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                    }}>
+                      <DatePicker
+                        label="Start"
+                        open={startDatePickerOpen}
+                        onOpen={() => setStartDatePickerOpen(true)}
+                        onClose={() => setStartDatePickerOpen(false)}
+                        value={(() => {
+                          try {
+                            const date = customStartDate || dateRange?.startDate;
+                            if (!date) return null;
+                            if (typeof date === 'string') {
+                              const parsed = new Date(date);
+                              if (isNaN(parsed.getTime())) return null;
+                              return parsed;
+                            }
+                            if (!(date instanceof Date)) return null;
+                            if (isNaN(date.getTime())) return null;
+                            return date;
+                          } catch (e) {
+                            console.error('DatePicker value error:', e);
+                            return null;
+                          }
+                        })()}
+                        onChange={(newDate) => {
+                          setCustomStartDate(newDate);
+                          if (newDate && customEndDate) {
+                            const matched = detectPresetRange(newDate, customEndDate);
+                            setDateRangeFilter(matched);
+                          } else {
+                            setDateRangeFilter(null);
+                          }
+                        }}
+                        slotProps={{
+                          textField: {
+                            size: 'small',
+                            onClick: () => setStartDatePickerOpen(true),
+                            sx: {
+                              width: 110,
+                              '& .MuiInputBase-root': {
+                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                              },
+                              '& .MuiInputBase-input': {
+                                fontSize: '0.875rem',
+                                fontWeight: 500,
+                                cursor: 'pointer',
+                              },
+                            },
+                          },
+                          openPickerButton: {
+                            sx: { display: 'none' },
+                          },
+                        }}
+                      />
+                      <Typography sx={{ color: 'rgba(255, 255, 255, 0.7)', mx: 0.5 }}>→</Typography>
+                      <DatePicker
+                        label="End"
+                        open={endDatePickerOpen}
+                        onOpen={() => setEndDatePickerOpen(true)}
+                        onClose={() => setEndDatePickerOpen(false)}
+                        value={(() => {
+                          try {
+                            const date = customEndDate || dateRange?.endDate;
+                            if (!date) return null;
+                            if (typeof date === 'string') {
+                              const parsed = new Date(date);
+                              if (isNaN(parsed.getTime())) return null;
+                              return parsed;
+                            }
+                            if (!(date instanceof Date)) return null;
+                            if (isNaN(date.getTime())) return null;
+                            return date;
+                          } catch (e) {
+                            console.error('DatePicker value error:', e);
+                            return null;
+                          }
+                        })()}
+                        onChange={(newDate) => {
+                          setCustomEndDate(newDate);
+                          if (customStartDate && newDate) {
+                            const matched = detectPresetRange(customStartDate, newDate);
+                            setDateRangeFilter(matched);
+                          } else {
+                            setDateRangeFilter(null);
+                          }
+                        }}
+                        slotProps={{
+                          textField: {
+                            size: 'small',
+                            onClick: () => setEndDatePickerOpen(true),
+                            sx: {
+                              width: 110,
+                              '& .MuiInputBase-root': {
+                                backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                              },
+                              '& .MuiInputBase-input': {
+                                fontSize: '0.875rem',
+                                fontWeight: 500,
+                                cursor: 'pointer',
+                              },
+                            },
+                          },
+                          openPickerButton: {
+                            sx: { display: 'none' },
+                          },
+                        }}
+                      />
+                    </Box>
+                  </LocalizationProvider>
+                </Box>
               </Box>
 
               {/* Stats Grid - White Cards - Dynamic based on selected tab */}
@@ -1532,182 +1713,16 @@ const EscrowsDashboard = () => {
               </Box>
             </Box>
 
-            {/* Right container: Date controls and AI Assistant */}
+            {/* Right container: AI Assistant */}
             <Box sx={{
               width: { xs: '100%', md: '320px' },
               flexShrink: 0,
               display: 'flex',
               flexDirection: 'column',
-              gap: 2
+              justifyContent: 'center'
             }}>
               {/* Spacer */}
-              <Box sx={{ height: 20 }} />
-
-              {/* Date Controls Container */}
-              <Box sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 1.5,
-                p: 2,
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                borderRadius: 2,
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255, 255, 255, 0.2)',
-              }}>
-                {/* Date Buttons */}
-                <ToggleButtonGroup
-                  value={dateRangeFilter}
-                  exclusive
-                  onChange={(e, newValue) => {
-                    if (newValue !== null) {
-                      setDateRangeFilter(newValue);
-                      setCustomStartDate(null);
-                      setCustomEndDate(null);
-                    }
-                  }}
-                  size="small"
-                  fullWidth
-                  sx={{
-                    '& .MuiToggleButton-root': {
-                      flex: 1,
-                      color: 'rgba(255, 255, 255, 0.8)',
-                      borderColor: 'rgba(255, 255, 255, 0.3)',
-                      fontSize: '0.875rem',
-                      fontWeight: 600,
-                      py: 0.75,
-                      '&.Mui-selected': {
-                        backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                        color: 'white',
-                        borderColor: 'rgba(255, 255, 255, 0.4)',
-                        '&:hover': {
-                          backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                        },
-                      },
-                      '&:hover': {
-                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      },
-                    },
-                  }}
-                >
-                  <ToggleButton value="1D">1D</ToggleButton>
-                  <ToggleButton value="1M">1M</ToggleButton>
-                  <ToggleButton value="1Y">1Y</ToggleButton>
-                  <ToggleButton value="YTD">YTD</ToggleButton>
-                </ToggleButtonGroup>
-
-                {/* Date Pickers */}
-                <LocalizationProvider dateAdapter={AdapterDateFns}>
-                  <Box sx={{ display: 'flex', gap: 1 }}>
-                    <DatePicker
-                      label="Start Date"
-                      open={startDatePickerOpen}
-                      onOpen={() => setStartDatePickerOpen(true)}
-                      onClose={() => setStartDatePickerOpen(false)}
-                      value={(() => {
-                        try {
-                          const date = customStartDate || dateRange?.startDate;
-                          if (!date) return null;
-                          if (typeof date === 'string') {
-                            const parsed = new Date(date);
-                            if (isNaN(parsed.getTime())) return null;
-                            return parsed;
-                          }
-                          if (!(date instanceof Date)) return null;
-                          if (isNaN(date.getTime())) return null;
-                          return date;
-                        } catch (e) {
-                          console.error('DatePicker value error:', e);
-                          return null;
-                        }
-                      })()}
-                      onChange={(newDate) => {
-                        setCustomStartDate(newDate);
-                        if (newDate && customEndDate) {
-                          const matched = detectPresetRange(newDate, customEndDate);
-                          setDateRangeFilter(matched);
-                        } else {
-                          setDateRangeFilter(null);
-                        }
-                      }}
-                      slotProps={{
-                        textField: {
-                          size: 'small',
-                          onClick: () => setStartDatePickerOpen(true),
-                          sx: {
-                            flex: 1,
-                            '& .MuiInputBase-root': {
-                              backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                            },
-                            '& .MuiInputBase-input': {
-                              fontSize: '0.875rem',
-                              fontWeight: 500,
-                              cursor: 'pointer',
-                            },
-                          },
-                        },
-                        openPickerButton: {
-                          sx: { display: 'none' },
-                        },
-                      }}
-                    />
-                    <DatePicker
-                      label="End Date"
-                      open={endDatePickerOpen}
-                      onOpen={() => setEndDatePickerOpen(true)}
-                      onClose={() => setEndDatePickerOpen(false)}
-                      value={(() => {
-                        try {
-                          const date = customEndDate || dateRange?.endDate;
-                          if (!date) return null;
-                          if (typeof date === 'string') {
-                            const parsed = new Date(date);
-                            if (isNaN(parsed.getTime())) return null;
-                            return parsed;
-                          }
-                          if (!(date instanceof Date)) return null;
-                          if (isNaN(date.getTime())) return null;
-                          return date;
-                        } catch (e) {
-                          console.error('DatePicker value error:', e);
-                          return null;
-                        }
-                      })()}
-                      onChange={(newDate) => {
-                        setCustomEndDate(newDate);
-                        if (customStartDate && newDate) {
-                          const matched = detectPresetRange(customStartDate, newDate);
-                          setDateRangeFilter(matched);
-                        } else {
-                          setDateRangeFilter(null);
-                        }
-                      }}
-                      slotProps={{
-                        textField: {
-                          size: 'small',
-                          onClick: () => setEndDatePickerOpen(true),
-                          sx: {
-                            flex: 1,
-                            '& .MuiInputBase-root': {
-                              backgroundColor: 'rgba(255, 255, 255, 0.9)',
-                            },
-                            '& .MuiInputBase-input': {
-                              fontSize: '0.875rem',
-                              fontWeight: 500,
-                              cursor: 'pointer',
-                            },
-                          },
-                        },
-                        openPickerButton: {
-                          sx: { display: 'none' },
-                        },
-                      }}
-                    />
-                  </Box>
-                </LocalizationProvider>
-              </Box>
-
-              {/* Spacer */}
-              <Box sx={{ height: 10 }} />
+              <Box sx={{ flexGrow: 1 }} />
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -1801,6 +1816,8 @@ const EscrowsDashboard = () => {
                   </CardContent>
                 </Card>
               </motion.div>
+              {/* Spacer */}
+              <Box sx={{ flexGrow: 1 }} />
             </Box>
           </Box>
         </HeroSection>
