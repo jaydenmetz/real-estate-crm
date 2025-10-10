@@ -136,150 +136,148 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
   };
 
   return (
-    <Grid item xs={12} sm={6} md={3}>
-      <motion.div
-        initial={{ opacity: 0, x: -12 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{
-          duration: 0.4,
-          delay: delay * 0.08,
-          ease: [0.34, 1.56, 0.64, 1]
+    <motion.div
+      initial={{ opacity: 0, x: -12 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{
+        duration: 0.4,
+        delay: delay * 0.08,
+        ease: [0.34, 1.56, 0.64, 1]
+      }}
+    >
+      <Card
+        elevation={0}
+        sx={{
+          height: '100%',
+          minHeight: 140,
+          position: 'relative',
+          overflow: 'hidden',
+          background: `linear-gradient(135deg, ${alpha(color, 0.15)} 0%, ${alpha(color, 0.08)} 100%)`,
+          backdropFilter: 'blur(10px)',
+          border: `1px solid ${alpha(color, 0.3)}`,
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          '&:hover': {
+            transform: 'translateY(-8px) scale(1.02)',
+            boxShadow: `0 20px 40px ${alpha(color, 0.25)}`,
+            border: `1px solid ${alpha(color, 0.5)}`,
+          },
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '4px',
+            background: `linear-gradient(90deg, ${color} 0%, ${alpha(color, 0.6)} 100%)`,
+          },
         }}
       >
-        <Card
-          elevation={0}
-          sx={{
-            height: '100%',
-            minHeight: 140,
-            position: 'relative',
-            overflow: 'hidden',
-            background: `linear-gradient(135deg, ${alpha(color, 0.15)} 0%, ${alpha(color, 0.08)} 100%)`,
-            backdropFilter: 'blur(10px)',
-            border: `1px solid ${alpha(color, 0.3)}`,
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            '&:hover': {
-              transform: 'translateY(-8px) scale(1.02)',
-              boxShadow: `0 20px 40px ${alpha(color, 0.25)}`,
-              border: `1px solid ${alpha(color, 0.5)}`,
-            },
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              height: '4px',
-              background: `linear-gradient(90deg, ${color} 0%, ${alpha(color, 0.6)} 100%)`,
-            },
-          }}
-        >
-          <CardContent sx={{ position: 'relative', zIndex: 1, p: 2.5, '&:last-child': { pb: 2.5 } }}>
-            <Box display="flex" alignItems="center" justifyContent="space-between">
-              <Box flex={1}>
-                <Box display="flex" alignItems="center" gap={1}>
-                  <Typography
-                    color="textSecondary"
-                    gutterBottom
-                    variant="body2"
-                    sx={{ fontWeight: 500, letterSpacing: 0.5 }}
-                  >
-                    {title}
-                  </Typography>
-                  {showPrivacy && (
-                    <IconButton
-                      size="small"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowValue(!showValue);
-                      }}
-                      sx={{
-                        width: 24,
-                        height: 24,
-                        color: 'textSecondary',
-                        '&:hover': {
-                          backgroundColor: alpha(color, 0.1),
-                        },
-                      }}
-                    >
-                      {showValue ? (
-                        <VisibilityOff sx={{ fontSize: 16 }} />
-                      ) : (
-                        <Visibility sx={{ fontSize: 16 }} />
-                      )}
-                    </IconButton>
-                  )}
-                </Box>
+        <CardContent sx={{ position: 'relative', zIndex: 1, p: 2.5, '&:last-child': { pb: 2.5 } }}>
+          <Box display="flex" alignItems="center" justifyContent="space-between">
+            <Box flex={1}>
+              <Box display="flex" alignItems="center" gap={1}>
                 <Typography
-                  variant="h3"
-                  component="div"
-                  sx={{
-                    fontWeight: 'bold',
-                    color,
-                    display: 'flex',
-                    alignItems: 'baseline',
-                    gap: 0.5,
-                  }}
+                  color="textSecondary"
+                  gutterBottom
+                  variant="body2"
+                  sx={{ fontWeight: 500, letterSpacing: 0.5 }}
                 >
-                  {showPrivacy && !showValue ? (
-                    <span>{maskValue(value)}</span>
-                  ) : typeof value === 'string' ? (
-                    // Custom string value (no CountUp animation)
-                    <span>{prefix}{value}{suffix}</span>
-                  ) : (
-                    // Numeric value with CountUp animation
-                    <>
-                      <span style={{ fontSize: '0.7em' }}>{prefix}</span>
-                      <CountUp
-                        end={value}
-                        duration={2.5}
-                        separator=","
-                        decimals={0}
-                      />
-                      <span style={{ fontSize: '0.7em' }}>{suffix}</span>
-                    </>
-                  )}
+                  {title}
                 </Typography>
-                {trend && (
-                  <Box display="flex" alignItems="center" gap={0.5} mt={1}>
-                    <TrendingUp sx={{ fontSize: 16, color: '#4caf50' }} />
-                    <Typography variant="caption" color="success.main">
-                      {trend}% from last month
-                    </Typography>
-                  </Box>
+                {showPrivacy && (
+                  <IconButton
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowValue(!showValue);
+                    }}
+                    sx={{
+                      width: 24,
+                      height: 24,
+                      color: 'textSecondary',
+                      '&:hover': {
+                        backgroundColor: alpha(color, 0.1),
+                      },
+                    }}
+                  >
+                    {showValue ? (
+                      <VisibilityOff sx={{ fontSize: 16 }} />
+                    ) : (
+                      <Visibility sx={{ fontSize: 16 }} />
+                    )}
+                  </IconButton>
                 )}
               </Box>
-              <Box
+              <Typography
+                variant="h3"
+                component="div"
                 sx={{
-                  position: 'relative',
-                  width: 80,
-                  height: 80,
+                  fontWeight: 'bold',
+                  color,
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                  alignItems: 'baseline',
+                  gap: 0.5,
                 }}
               >
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    width: '100%',
-                    height: '100%',
-                    borderRadius: '50%',
-                    background: `radial-gradient(circle, ${alpha(color, 0.15)} 0%, transparent 70%)`,
-                    animation: 'pulse 2s infinite',
-                    '@keyframes pulse': {
-                      '0%': { transform: 'scale(0.8)', opacity: 1 },
-                      '50%': { transform: 'scale(1.2)', opacity: 0.5 },
-                      '100%': { transform: 'scale(0.8)', opacity: 1 },
-                    },
-                  }}
-                />
-                <Icon sx={{ fontSize: 48, color, zIndex: 1 }} />
-              </Box>
+                {showPrivacy && !showValue ? (
+                  <span>{maskValue(value)}</span>
+                ) : typeof value === 'string' ? (
+                  // Custom string value (no CountUp animation)
+                  <span>{prefix}{value}{suffix}</span>
+                ) : (
+                  // Numeric value with CountUp animation
+                  <>
+                    <span style={{ fontSize: '0.7em' }}>{prefix}</span>
+                    <CountUp
+                      end={value}
+                      duration={2.5}
+                      separator=","
+                      decimals={0}
+                    />
+                    <span style={{ fontSize: '0.7em' }}>{suffix}</span>
+                  </>
+                )}
+              </Typography>
+              {trend && (
+                <Box display="flex" alignItems="center" gap={0.5} mt={1}>
+                  <TrendingUp sx={{ fontSize: 16, color: '#4caf50' }} />
+                  <Typography variant="caption" color="success.main">
+                    {trend}% from last month
+                  </Typography>
+                </Box>
+              )}
             </Box>
-          </CardContent>
-        </Card>
-      </motion.div>
-    </Grid>
+            <Box
+              sx={{
+                position: 'relative',
+                width: 80,
+                height: 80,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Box
+                sx={{
+                  position: 'absolute',
+                  width: '100%',
+                  height: '100%',
+                  borderRadius: '50%',
+                  background: `radial-gradient(circle, ${alpha(color, 0.15)} 0%, transparent 70%)`,
+                  animation: 'pulse 2s infinite',
+                  '@keyframes pulse': {
+                    '0%': { transform: 'scale(0.8)', opacity: 1 },
+                    '50%': { transform: 'scale(1.2)', opacity: 0.5 },
+                    '100%': { transform: 'scale(0.8)', opacity: 1 },
+                  },
+                }}
+              />
+              <Icon sx={{ fontSize: 48, color, zIndex: 1 }} />
+            </Box>
+          </Box>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 };
 
