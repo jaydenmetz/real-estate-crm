@@ -30,6 +30,7 @@ import {
 import { listingsAPI, clientsAPI } from '../../services/api.service';
 import { useAuth } from '../../contexts/AuthContext';
 import { loadGoogleMapsScript } from '../../utils/googleMapsLoader';
+import NewClientModal from './NewClientModal';
 
 const NewListingModal = ({ open, onClose, onSuccess }) => {
   const { user } = useAuth();
@@ -37,6 +38,7 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
   const [error, setError] = useState('');
   const [clients, setClients] = useState([]);
   const [loadingClients, setLoadingClients] = useState(false);
+  const [newClientModalOpen, setNewClientModalOpen] = useState(false);
   const [addressSuggestions, setAddressSuggestions] = useState([]);
   const [loadingAddress, setLoadingAddress] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState(null);
@@ -109,10 +111,28 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
     try {
       const response = await clientsAPI.getAll();
       if (response.success) {
-        setClients(response.data || []);
+        // Ensure we have an array
+        const clientsData = Array.isArray(response.data) ? response.data : [];
+
+        // Sort by created date descending (most recent first) and take top 5
+        const sortedClients = clientsData
+          .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
+          .slice(0, 5);
+
+        // Add "Add New Client" option at the end
+        const clientsWithAddNew = [
+          ...sortedClients,
+          { id: 'add_new', firstName: '+ Add', lastName: 'New Client', email: '', isAddNew: true }
+        ];
+
+        setClients(clientsWithAddNew);
       }
     } catch (err) {
       console.error('Error fetching clients:', err);
+      // Set empty array with just "Add New Client" option on error
+      setClients([
+        { id: 'add_new', firstName: '+ Add', lastName: 'New Client', email: '', isAddNew: true }
+      ]);
     } finally {
       setLoadingClients(false);
     }
@@ -672,17 +692,46 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
               <Autocomplete
                 options={clients}
                 loading={loadingClients}
-                getOptionLabel={(option) => `${option.firstName} ${option.lastName} - ${option.email}`}
+                getOptionLabel={(option) => {
+                  if (option.isAddNew) {
+                    return '+ Add New Client';
+                  }
+                  return option.email
+                    ? `${option.firstName} ${option.lastName} - ${option.email}`
+                    : `${option.firstName} ${option.lastName}`;
+                }}
+                renderOption={(props, option) => (
+                  <li {...props} style={{
+                    fontWeight: option.isAddNew ? 600 : 400,
+                    color: option.isAddNew ? '#2E7D32' : 'inherit',
+                    borderTop: option.isAddNew ? '1px solid #e0e0e0' : 'none',
+                    paddingTop: option.isAddNew ? '12px' : '8px',
+                    marginTop: option.isAddNew ? '4px' : '0'
+                  }}>
+                    {option.isAddNew ? '+ Add New Client' : (
+                      option.email
+                        ? `${option.firstName} ${option.lastName} - ${option.email}`
+                        : `${option.firstName} ${option.lastName}`
+                    )}
+                  </li>
+                )}
                 renderInput={(params) => (
                   <TextField
                     {...params}
                     label="Client"
                     placeholder="Select a client"
-                    helperText="Select the client for this listing"
+                    helperText="Select the client for this listing (showing 5 most recent)"
                     required
                   />
                 )}
-                onChange={(e, value) => setFormData({ ...formData, clientId: value?.id || null })}
+                onChange={(e, value) => {
+                  if (value?.isAddNew) {
+                    // Open new client modal
+                    setNewClientModalOpen(true);
+                  } else {
+                    setFormData({ ...formData, clientId: value?.id || null });
+                  }
+                }}
               />
             </Box>
           </Box>
@@ -706,6 +755,19 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
           </Button>
         </DialogActions>
       </form>
+
+      {/* New Client Modal */}
+      <NewClientModal
+        open={newClientModalOpen}
+        onClose={() => setNewClientModalOpen(false)}
+        onSuccess={(newClientId) => {
+          // Refresh clients list and select the new client
+          fetchClients().then(() => {
+            setFormData({ ...formData, clientId: newClientId });
+          });
+          setNewClientModalOpen(false);
+        }}
+      />
     </Dialog>
   );
 };
