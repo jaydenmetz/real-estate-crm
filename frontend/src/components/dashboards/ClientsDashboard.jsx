@@ -23,6 +23,12 @@ import {
   FormControl,
   InputLabel,
   useTheme,
+  Badge,
+  Checkbox,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
@@ -40,7 +46,9 @@ import {
   CalendarToday,
   Delete as DeleteIcon,
   Sort,
-  Badge,
+  Archive as ArchiveIcon,
+  Storage,
+  DeleteForever as DeleteForeverIcon,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
@@ -50,6 +58,8 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { clientsAPI } from '../../services/api.service';
 import { useAuth } from '../../contexts/AuthContext';
 import NewClientModal from '../forms/NewClientModal';
+import networkMonitor from '../../services/networkMonitor.service';
+import { useWebSocket } from '../../hooks/useWebSocket';
 
 // Styled Components
 const HeroSection = styled(Box)(({ theme }) => ({
@@ -296,14 +306,29 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
 const ClientsDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isConnected, connectionStatus } = useWebSocket();
   const [clients, setClients] = useState([]);
+  const [archivedClients, setArchivedClients] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMorePages, setHasMorePages] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
   const [selectedStatus, setSelectedStatus] = useState('active');
   const [viewMode, setViewMode] = useState(() => {
     const saved = localStorage.getItem('clientsViewMode');
     return saved || 'small';
   });
   const [sortBy, setSortBy] = useState('created_at');
+  const [animationType, setAnimationType] = useState('spring');
+  const [animationDuration, setAnimationDuration] = useState(1);
+  const [animationIntensity, setAnimationIntensity] = useState(1);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [calendarDialogOpen, setCalendarDialogOpen] = useState(false);
+  const [archivedCount, setArchivedCount] = useState(0);
+  const [selectedArchivedIds, setSelectedArchivedIds] = useState([]);
+  const [batchDeleting, setBatchDeleting] = useState(false);
 
   // Date range filter state
   const [dateRangeFilter, setDateRangeFilter] = useState('1M'); // '1D', '1M', '1Y', 'YTD', or null for custom
@@ -311,9 +336,13 @@ const ClientsDashboard = () => {
   const [customEndDate, setCustomEndDate] = useState(null);
   const [startDatePickerOpen, setStartDatePickerOpen] = useState(false);
   const [endDatePickerOpen, setEndDatePickerOpen] = useState(false);
-  const [showCalendar, setShowCalendar] = useState(false);
-  const [archivedCount, setArchivedCount] = useState(0);
   const [newClientModalOpen, setNewClientModalOpen] = useState(false);
+
+  // Network monitoring state
+  const [networkData, setNetworkData] = useState({
+    stats: networkMonitor.getStats(),
+    requests: networkMonitor.getRequests(),
+  });
 
   const [stats, setStats] = useState({
     totalClients: 0,
@@ -338,31 +367,147 @@ const ClientsDashboard = () => {
     localStorage.setItem('clientsViewMode', viewMode);
   }, [viewMode]);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      // Don't trigger shortcuts if user is typing in an input
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      // Cmd/Ctrl + K: Create new client
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setNewClientModalOpen(true);
+        return;
+      }
+
+      // Cmd/Ctrl + F: Focus search (not implemented yet, but reserved)
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        // Future: focus search input
+        return;
+      }
+
+      // Cmd/Ctrl + R: Refresh clients
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'r') {
+        e.preventDefault();
+        fetchClients();
+        return;
+      }
+
+      // Cmd/Ctrl + A: Toggle select all (archived view only)
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'a' && selectedStatus === 'archived') {
+        e.preventDefault();
+        const allSelected = selectedArchivedIds.length === archivedClients.length;
+        handleSelectAll(!allSelected);
+        return;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [newClientModalOpen, selectedStatus, selectedArchivedIds.length, archivedClients.length]);
+
   useEffect(() => {
     fetchClients();
   }, []);
 
   useEffect(() => {
-    if (clients.length > 0) {
+    if (selectedStatus === 'archived') {
+      // Calculate stats for archived clients
+      calculateStats(archivedClients, 'archived');
+    } else if (clients.length > 0) {
       calculateStats(clients, selectedStatus);
     } else {
       calculateStats([], selectedStatus);
     }
-  }, [selectedStatus, clients, dateRangeFilter, customStartDate, customEndDate]);
+  }, [selectedStatus, clients, archivedClients, dateRangeFilter, customStartDate, customEndDate]);
 
-  const fetchClients = async () => {
+  // Sync archived count with archived clients array
+  useEffect(() => {
+    setArchivedCount(archivedClients.length);
+  }, [archivedClients]);
+
+  // WebSocket integration for real-time updates
+  useEffect(() => {
+    if (!isConnected) return;
+
+    // Import websocket service
+    const websocketService = require('../../services/websocket.service').default;
+
+    // Subscribe to client updates
+    const unsubscribe = websocketService.subscribe('client_updated', (data) => {
+      console.log('Client updated via WebSocket:', data);
+      // Refresh clients to get latest data
+      fetchClients();
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [isConnected]);
+
+  // Network monitoring polling
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNetworkData({
+        stats: networkMonitor.getStats(),
+        requests: networkMonitor.getRequests(),
+      });
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const fetchClients = async (pageNum = 1, appendData = false) => {
     try {
-      setLoading(true);
+      if (pageNum === 1) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
       console.log('Fetching clients...');
 
-      const response = await clientsAPI.getAll();
+      // Fetch clients with pagination (50 per page for optimal performance)
+      const response = await clientsAPI.getAll({
+        includeArchived: true,
+        page: pageNum,
+        limit: 50
+      });
       console.log('API Response:', response);
 
       if (response.success) {
-        const clientData = response.data.clients || response.data || [];
-        console.log('Clients received:', clientData.length);
-        setClients(clientData);
-        calculateStats(clientData, selectedStatus);
+        const allData = response.data.clients || response.data || [];
+        const pagination = response.data.pagination || {};
+        const totalPages = pagination.totalPages || 1;
+        const totalRecords = pagination.total || allData.length;
+        const hasMore = pageNum < totalPages;
+
+        // Separate active and archived clients based on deleted_at field
+        const clientData = allData.filter(client => !client.deleted_at && !client.deletedAt);
+        const archivedData = allData.filter(client => client.deleted_at || client.deletedAt);
+
+        console.log(`Page ${pageNum}/${totalPages} - Total: ${totalRecords}, Loaded: ${allData.length}, Active: ${clientData.length}, Archived: ${archivedData.length}`);
+
+        // Update state based on whether we're appending or replacing
+        if (appendData) {
+          setClients(prev => [...prev, ...clientData]);
+          setArchivedClients(prev => [...prev, ...archivedData]);
+        } else {
+          setClients(clientData);
+          setArchivedClients(archivedData);
+        }
+
+        // Update pagination state
+        setCurrentPage(pageNum);
+        setHasMorePages(hasMore);
+        setTotalCount(totalRecords);
+        setArchivedCount(archivedData.length);
+
+        // Calculate stats from currently loaded data only
+        const currentClients = appendData ? [...clients, ...clientData] : clientData;
+        calculateStats(currentClients, selectedStatus);
       } else {
         console.error('API returned success: false', response);
       }
@@ -371,8 +516,16 @@ const ClientsDashboard = () => {
       console.error('Full error:', error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
+
+  const loadMoreClients = useCallback(() => {
+    if (!loadingMore && hasMorePages) {
+      console.log(`Loading page ${currentPage + 1}...`);
+      fetchClients(currentPage + 1, true);
+    }
+  }, [loadingMore, hasMorePages, currentPage]);
 
   // Check if custom dates match a preset range
   const detectPresetRange = (start, end) => {
@@ -596,6 +749,54 @@ const ClientsDashboard = () => {
   const handleClientClick = (clientId) => {
     console.log('Client clicked - ID:', clientId);
     navigate(`/clients/${clientId}`);
+  };
+
+  // Batch delete handler
+  const handleBatchDelete = async () => {
+    if (selectedArchivedIds.length === 0) return;
+
+    const count = selectedArchivedIds.length;
+    if (!window.confirm(`Are you sure you want to permanently delete ${count} client${count > 1 ? 's' : ''}? This action cannot be undone.`)) {
+      return;
+    }
+
+    setBatchDeleting(true);
+    try {
+      const response = await clientsAPI.batchDelete(selectedArchivedIds);
+      if (response.success) {
+        // Remove deleted clients from both lists locally
+        const deletedIds = new Set(selectedArchivedIds);
+        setArchivedClients(prev => prev.filter(c => !deletedIds.has(c.id)));
+        setClients(prev => prev.filter(c => !deletedIds.has(c.id)));
+        setArchivedCount(prev => Math.max(0, prev - selectedArchivedIds.length));
+        setSelectedArchivedIds([]);
+
+        // Recalculate stats with remaining active clients only
+        const remainingClients = clients.filter(c => !deletedIds.has(c.id));
+        calculateStats(remainingClients, selectedStatus);
+      }
+    } catch (error) {
+      console.error('Error batch deleting clients:', error);
+      alert('Failed to delete clients. Please try again.');
+    } finally {
+      setBatchDeleting(false);
+    }
+  };
+
+  const handleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedArchivedIds(archivedClients.map(c => c.id));
+    } else {
+      setSelectedArchivedIds([]);
+    }
+  };
+
+  const handleSelectClient = (clientId, checked) => {
+    if (checked) {
+      setSelectedArchivedIds(prev => [...prev, clientId]);
+    } else {
+      setSelectedArchivedIds(prev => prev.filter(id => id !== clientId));
+    }
   };
 
   if (loading) {
@@ -1030,6 +1231,52 @@ const ClientsDashboard = () => {
                               icon={Schedule}
                               title="Avg Days Inactive"
                               value={stats.avgDaysInactive || 0}
+                              suffix=" days"
+                              color="#ffffff"
+                              delay={3}
+                            />
+                          </Grid>
+                        </>
+                      );
+
+                    case 'archived':
+                      return (
+                        <>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={ArchiveIcon}
+                              title="Total Archived Clients"
+                              value={archivedCount || 0}
+                              color="#ffffff"
+                              delay={0}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={Storage}
+                              title="Max Archived"
+                              value={`${archivedCount || 0}/1000`}
+                              color="#ffffff"
+                              delay={1}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={AttachMoney}
+                              title="Total Lifetime Value"
+                              value={stats.totalClientValue || 0}
+                              prefix="$"
+                              suffix=""
+                              color="#ffffff"
+                              delay={2}
+                              showPrivacy={true}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={CalendarToday}
+                              title="Avg Client Age"
+                              value={stats.avgClientLifetime ? `${Math.round(stats.avgClientLifetime / 365)}` : '0'}
                               suffix=" days"
                               color="#ffffff"
                               delay={3}
@@ -1614,7 +1861,10 @@ const ClientsDashboard = () => {
         }}>
           <AnimatePresence>
             {(() => {
-              const filteredClients = clients.filter(c => {
+              // Use archived clients for archived view, otherwise use active clients
+              const sourceClients = selectedStatus === 'archived' ? archivedClients : clients;
+
+              const filteredClients = sourceClients.filter(c => {
                 switch (selectedStatus) {
                   case 'active':
                     return c.clientStatus === 'Active' || c.client_status === 'Active' ||
@@ -1625,6 +1875,8 @@ const ClientsDashboard = () => {
                   case 'inactive':
                     return c.clientStatus === 'Inactive' || c.client_status === 'Inactive' ||
                            c.clientStatus === 'inactive' || c.client_status === 'inactive';
+                  case 'archived':
+                    return true; // Show all archived clients
                   case 'all':
                     return true;
                   default:
@@ -1687,52 +1939,172 @@ const ClientsDashboard = () => {
                   </Paper>
                 );
               } else {
-                return sortedClients.map((client, index) => (
-                  <motion.div
-                    key={client.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.3, delay: index * 0.05 }}
-                  >
-                    <Card
-                      onClick={() => handleClientClick(client.id)}
+                // Show batch selection controls in archived view
+                const elements = [];
+
+                if (selectedStatus === 'archived') {
+                  elements.push(
+                    <Box
+                      key="batch-controls"
                       sx={{
-                        cursor: 'pointer',
-                        height: '100%',
-                        minHeight: 200,
-                        '&:hover': {
-                          transform: 'translateY(-4px)',
-                          boxShadow: 6,
-                        },
-                        transition: 'all 0.3s',
+                        gridColumn: '1 / -1',
+                        mb: 2,
+                        p: 2,
+                        backgroundColor: alpha('#f97316', 0.1),
+                        border: `1px solid ${alpha('#f97316', 0.3)}`,
+                        borderRadius: 2,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 2,
                       }}
                     >
-                      <CardContent>
-                        <Typography variant="h6" gutterBottom>
-                          {`${client.firstName || client.first_name || ''} ${client.lastName || client.last_name || ''}`}
-                        </Typography>
-                        <Stack spacing={1}>
-                          <Chip
-                            label={client.clientStatus || client.client_status || 'Unknown'}
-                            size="small"
-                            color="primary"
-                          />
-                          <Typography variant="body2" color="textSecondary">
-                            Email: {client.email || 'N/A'}
-                          </Typography>
-                          <Typography variant="body2" color="textSecondary">
-                            Phone: {client.phone || 'N/A'}
-                          </Typography>
-                        </Stack>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ));
+                      <Checkbox
+                        checked={selectedArchivedIds.length === archivedClients.length && archivedClients.length > 0}
+                        indeterminate={selectedArchivedIds.length > 0 && selectedArchivedIds.length < archivedClients.length}
+                        onChange={(e) => handleSelectAll(e.target.checked)}
+                      />
+                      <Typography variant="body2">
+                        {selectedArchivedIds.length > 0
+                          ? `${selectedArchivedIds.length} selected`
+                          : 'Select all'}
+                      </Typography>
+                      {selectedArchivedIds.length > 0 && (
+                        <Button
+                          variant="contained"
+                          color="error"
+                          size="small"
+                          startIcon={batchDeleting ? <CircularProgress size={16} color="inherit" /> : <DeleteForeverIcon />}
+                          onClick={handleBatchDelete}
+                          disabled={batchDeleting}
+                        >
+                          Delete {selectedArchivedIds.length} Client{selectedArchivedIds.length > 1 ? 's' : ''}
+                        </Button>
+                      )}
+                    </Box>
+                  );
+                }
+
+                // Add client cards
+                sortedClients.forEach((client, index) => {
+                  const isSelected = selectedArchivedIds.includes(client.id);
+
+                  elements.push(
+                    <Box key={client.id} sx={{ position: 'relative' }}>
+                      {/* Selection checkbox for archived view */}
+                      {selectedStatus === 'archived' && (
+                        <Checkbox
+                          checked={isSelected}
+                          onChange={(e) => handleSelectClient(client.id, e.target.checked)}
+                          sx={{
+                            position: 'absolute',
+                            top: 8,
+                            left: 8,
+                            zIndex: 10,
+                            backgroundColor: 'white',
+                            borderRadius: '4px',
+                            '&:hover': {
+                              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            },
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      )}
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3, delay: index * 0.05 }}
+                      >
+                        <Card
+                          onClick={() => !isSelected && handleClientClick(client.id)}
+                          sx={{
+                            cursor: 'pointer',
+                            height: '100%',
+                            minHeight: 200,
+                            opacity: isSelected ? 0.7 : 1,
+                            '&:hover': {
+                              transform: 'translateY(-4px)',
+                              boxShadow: 6,
+                            },
+                            transition: 'all 0.3s',
+                          }}
+                        >
+                          <CardContent>
+                            <Typography variant="h6" gutterBottom>
+                              {`${client.firstName || client.first_name || ''} ${client.lastName || client.last_name || ''}`}
+                            </Typography>
+                            <Stack spacing={1}>
+                              <Chip
+                                label={client.clientStatus || client.client_status || 'Unknown'}
+                                size="small"
+                                color="primary"
+                              />
+                              <Typography variant="body2" color="textSecondary">
+                                Email: {client.email || 'N/A'}
+                              </Typography>
+                              <Typography variant="body2" color="textSecondary">
+                                Phone: {client.phone || 'N/A'}
+                              </Typography>
+                            </Stack>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    </Box>
+                  );
+                });
+
+                return elements;
               }
             })()}
           </AnimatePresence>
+
+          {/* Load More Button */}
+          {hasMorePages && !loading && selectedStatus !== 'archived' && (
+            <Box sx={{
+              gridColumn: '1 / -1',
+              display: 'flex',
+              justifyContent: 'center',
+              mt: 4,
+              mb: 2
+            }}>
+              <Button
+                variant="outlined"
+                size="large"
+                onClick={loadMoreClients}
+                disabled={loadingMore}
+                startIcon={loadingMore ? <CircularProgress size={20} /> : null}
+                sx={{
+                  px: 6,
+                  py: 1.5,
+                  borderRadius: '12px',
+                  textTransform: 'none',
+                  fontSize: '1rem',
+                  fontWeight: 600
+                }}
+              >
+                {loadingMore ? 'Loading...' : `Load More (${totalCount - clients.length} remaining)`}
+              </Button>
+            </Box>
+          )}
         </Box>
+
+        {/* Calendar Dialog (placeholder for future implementation) */}
+        <Dialog
+          open={calendarDialogOpen}
+          onClose={() => setCalendarDialogOpen(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>Calendar View</DialogTitle>
+          <DialogContent>
+            <Typography variant="body1" sx={{ p: 3, textAlign: 'center' }}>
+              Calendar view coming soon...
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setCalendarDialogOpen(false)}>Close</Button>
+          </DialogActions>
+        </Dialog>
 
         {/* New Client Modal */}
         <NewClientModal
