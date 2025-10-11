@@ -1495,7 +1495,7 @@ const ClientsDashboard = () => {
         {/* Conditional Date Controls - Show between hero and tabs when AI Manager wraps below */}
         <Box
           sx={{
-            display: { xs: 'none', sm: 'none', md: 'flex', lg: 'none', xl: 'none' },
+            display: { xs: 'flex', lg: 'none' },
             justifyContent: 'flex-end',
             alignItems: 'center',
             gap: 2,
