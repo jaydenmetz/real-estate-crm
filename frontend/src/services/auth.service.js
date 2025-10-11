@@ -254,13 +254,31 @@ class AuthService {
     this.apiKey = localStorage.getItem(API_KEY_KEY); // API keys are safe to load
     this.user = this.getStoredUser();
 
+    // If user has no token in memory but has user data, try to refresh using httpOnly cookie
+    if (this.user && !this.token && !this.apiKey) {
+      console.log('🔄 No token in memory, attempting to refresh from httpOnly cookie...');
+      try {
+        const refreshResult = await this.refreshAccessToken();
+        if (refreshResult.success) {
+          console.log('✅ Token refreshed successfully from httpOnly cookie');
+          // Token is now set in memory, continue with verification
+        } else {
+          console.warn('❌ Token refresh failed:', refreshResult.error);
+          // Continue with cached user data anyway
+        }
+      } catch (error) {
+        console.error('❌ Token refresh error:', error);
+        // Continue with cached user data anyway
+      }
+    }
+
     // If we have a stored user and either token or API key, consider it valid
     // This prevents unnecessary logout on page navigation
     if (this.user && (this.token || this.apiKey)) {
       // Optionally verify with server (but don't logout on failure)
       try {
         const response = await apiInstance.get('/auth/verify');
-        
+
         if (response.success && response.data) {
           // Update user data with fresh data from server
           this.user = response.data.user;
@@ -279,14 +297,14 @@ class AuthService {
           };
         }
       }
-      
+
       // Return success if we have user data
       return {
         success: true,
         user: this.user
       };
     }
-    
+
     // No auth found
     return { success: false, error: 'No authentication found' };
   }
@@ -366,18 +384,25 @@ class AuthService {
 
   // Check if user is authenticated
   isAuthenticated() {
-    // Check localStorage for tokens if not in memory
-    if (!this.token) {
-      this.token = localStorage.getItem(TOKEN_KEY);
-    }
+    // DO NOT check localStorage for JWT tokens (they're never stored there - XSS protection)
+    // JWT tokens are only in memory, refresh tokens are in httpOnly cookies
+
+    // Check for API key (safe to store)
     if (!this.apiKey) {
       this.apiKey = localStorage.getItem(API_KEY_KEY);
     }
     if (!this.user) {
       this.user = this.getStoredUser();
     }
-    // User is authenticated if they have either a JWT token or API key
-    return (!!this.token || !!this.apiKey) && !!this.user;
+
+    // User is authenticated if they have:
+    // 1. JWT token in memory (set after login/refresh)
+    // 2. API key in localStorage
+    // 3. User data in localStorage (indicates they logged in before page refresh)
+    //
+    // If user has no token in memory but has user data, they likely just refreshed the page.
+    // The refresh token (httpOnly cookie) will be used automatically on next API call.
+    return (!!this.token || !!this.apiKey || !!this.user);
   }
 
   // Check if user has specific role
