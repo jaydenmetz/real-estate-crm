@@ -2331,115 +2331,158 @@ const EscrowsDashboard = () => {
       {/* Mobile/Tablet Layout - Responsive Design with All Features */}
       <Box sx={{ mb: 4, display: { xs: 'block', md: 'none' } }}>
         {/* Tab Bar - Mobile/Tablet */}
-        <Paper
-          elevation={0}
-          sx={{
-            backgroundColor: 'background.paper',
-            borderRadius: '8px 8px 0 0',
-            borderBottom: '1px solid',
-            borderColor: 'divider',
-            mb: 0,
-          }}
-        >
-          <Tabs
-            value={selectedStatus}
-            onChange={(e, newValue) => setSelectedStatus(newValue)}
-            variant="scrollable"
-            scrollButtons="auto"
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+          {/* Tabs (not full width) */}
+          <Paper
+            elevation={0}
             sx={{
-              '& .MuiTab-root': {
-                textTransform: 'none',
-                fontSize: { xs: '0.875rem', sm: '0.9375rem' },
-                fontWeight: 500,
-                minHeight: { xs: 48, sm: 52 },
-                px: { xs: 2, sm: 2.5 },
-              },
-              '& .Mui-selected': {
-                fontWeight: 600,
-                color: 'primary.main',
-              },
-              '& .MuiTabs-indicator': {
-                height: 3,
-                borderRadius: '3px 3px 0 0',
-              },
+              backgroundColor: 'background.paper',
+              borderRadius: '8px',
+              border: '1px solid',
+              borderColor: 'divider',
+              flex: '0 0 auto',
             }}
           >
-            <Tab label="Active" value="active" />
-            <Tab label="Closed" value="closed" />
-            <Tab label="Cancelled" value="cancelled" />
-            <Tab label="All" value="all" />
-            {/* Archive Badge for Mobile */}
-            <Tab
-              label={
-                <Badge badgeContent={archivedCount} color="error" max={99}>
-                  <span>Archived</span>
-                </Badge>
-              }
-              value="archived"
-            />
-          </Tabs>
-        </Paper>
+            <Tabs
+              value={selectedStatus}
+              onChange={(e, newValue) => setSelectedStatus(newValue)}
+              sx={{
+                minHeight: 48,
+                '& .MuiTab-root': {
+                  textTransform: 'none',
+                  fontSize: { xs: '0.875rem', sm: '0.9375rem' },
+                  fontWeight: 500,
+                  minHeight: { xs: 48, sm: 52 },
+                  px: { xs: 1.5, sm: 2.5 },
+                },
+                '& .Mui-selected': {
+                  fontWeight: 600,
+                  color: 'primary.main',
+                },
+                '& .MuiTabs-indicator': {
+                  height: 3,
+                  borderRadius: '3px 3px 0 0',
+                },
+              }}
+            >
+              {/* Show full labels at sm breakpoint, short labels at xs */}
+              <Tab
+                label={
+                  <Box>
+                    <Box sx={{ display: { xs: 'none', sm: 'block' } }}>Active Escrows</Box>
+                    <Box sx={{ display: { xs: 'block', sm: 'none' } }}>Active</Box>
+                  </Box>
+                }
+                value="active"
+              />
+              <Tab
+                label={
+                  <Box>
+                    <Box sx={{ display: { xs: 'none', sm: 'block' } }}>Closed Escrows</Box>
+                    <Box sx={{ display: { xs: 'block', sm: 'none' } }}>Closed</Box>
+                  </Box>
+                }
+                value="closed"
+              />
+              <Tab
+                label={
+                  <Box>
+                    <Box sx={{ display: { xs: 'none', sm: 'block' } }}>Cancelled Escrows</Box>
+                    <Box sx={{ display: { xs: 'block', sm: 'none' } }}>Cancelled</Box>
+                  </Box>
+                }
+                value="cancelled"
+              />
+              <Tab
+                label={
+                  <Box>
+                    <Box sx={{ display: { xs: 'none', sm: 'block' } }}>All Escrows</Box>
+                    <Box sx={{ display: { xs: 'block', sm: 'none' } }}>All</Box>
+                  </Box>
+                }
+                value="all"
+              />
+              {/* Archive Badge for Mobile */}
+              <Tab
+                label={
+                  <Badge badgeContent={archivedCount} color="error" max={99}>
+                    <span>Archived</span>
+                  </Badge>
+                }
+                value="archived"
+              />
+            </Tabs>
+          </Paper>
 
-        {/* Mobile/Tablet Filter Controls - Organized in Rows */}
+          {/* Right side controls */}
+          <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', flex: '0 0 auto', marginLeft: 'auto' }}>
+            {/* Sort Dropdown */}
+            <FormControl size="small" variant="standard" sx={{ minWidth: 120 }}>
+              <Select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                disableUnderline
+                startAdornment={
+                  <Sort sx={{ mr: 1, fontSize: '1.125rem', color: 'text.secondary' }} />
+                }
+                renderValue={(value) => {
+                  const labels = {
+                    closing_date: 'Date',
+                    created_at: 'Created',
+                    sale_price: 'Price',
+                    property_address: 'Address',
+                    escrow_status: 'Status',
+                  };
+                  return (
+                    <Typography variant="body2" sx={{
+                      fontSize: '0.875rem',
+                      fontWeight: 500,
+                      color: 'text.primary',
+                    }}>
+                      {labels[value]}
+                    </Typography>
+                  );
+                }}
+                sx={{
+                  backgroundColor: 'transparent',
+                  borderRadius: 1,
+                  px: 1.5,
+                  py: 0.5,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  '&:hover': {
+                    backgroundColor: alpha('#000', 0.04),
+                    borderColor: 'primary.main',
+                  },
+                  '& .MuiSelect-select': {
+                    paddingRight: '32px !important',
+                    display: 'flex',
+                    alignItems: 'center',
+                  },
+                }}
+              >
+                <MenuItem value="closing_date">Closing Date</MenuItem>
+                <MenuItem value="created_at">Date Created</MenuItem>
+                <MenuItem value="sale_price">Sale Price</MenuItem>
+                <MenuItem value="property_address">Address</MenuItem>
+                <MenuItem value="escrow_status">Status</MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </Box>
+
+        {/* View Mode & Archive Controls - Mobile/Tablet */}
         <Box
           sx={{
             backgroundColor: alpha('#f5f5f5', 0.4),
-            borderRadius: '0 0 8px 8px',
+            borderRadius: '8px',
             p: 2,
+            mt: 2,
             display: 'flex',
             flexDirection: 'column',
             gap: 2,
           }}
         >
-          {/* Sort and View Controls - Mobile/Tablet */}
-          <Box sx={{
-            display: 'flex',
-            gap: 1.5,
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}>
-            {/* Sort Dropdown */}
-            <FormControl
-              size="small"
-              variant="outlined"
-              sx={{
-                flex: '1 1 auto',
-                maxWidth: { xs: '60%', sm: '200px' },
-                '& .MuiOutlinedInput-root': {
-                  backgroundColor: 'white',
-                  borderRadius: 2,
-                },
-              }}
-            >
-              <Select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                startAdornment={<Sort sx={{ mr: 1, fontSize: '1.125rem', color: 'text.secondary' }} />}
-                renderValue={(value) => {
-                  const labels = {
-                  closing_date: 'Closing Date',
-                  created_at: 'Date Created',
-                  sale_price: 'Sale Price',
-                  property_address: 'Address',
-                  escrow_status: 'Status',
-                };
-                return (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Typography variant="body2" sx={{ fontSize: '0.875rem', fontWeight: 500 }}>
-                      Sort: {labels[value]}
-                    </Typography>
-                  </Box>
-                );
-              }}
-            >
-              <MenuItem value="closing_date">Closing Date</MenuItem>
-              <MenuItem value="created_at">Date Created</MenuItem>
-              <MenuItem value="sale_price">Sale Price</MenuItem>
-              <MenuItem value="property_address">Address</MenuItem>
-              <MenuItem value="escrow_status">Status</MenuItem>
-            </Select>
-          </FormControl>
-
           {/* View Mode, Calendar, Archive - Mobile */}
           <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
             {/* View Mode & Calendar Selector */}
@@ -2518,7 +2561,6 @@ const EscrowsDashboard = () => {
           </Box>
         </Box>
       </Box>
-    </Box>
 
         {/* Enhanced Charts - REMOVED PER USER REQUEST */}
         {/* <Grid container spacing={3} sx={{ mt: 2 }}>
