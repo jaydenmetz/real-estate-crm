@@ -1499,6 +1499,142 @@ const LeadsDashboard = () => {
           </Box>
         </HeroSection>
 
+        {/* Conditional Date Controls - Show between hero and tabs when AI Manager wraps below */}
+        <Box
+          sx={{
+            display: { xs: 'none', sm: 'none', md: 'none', lg: 'flex', xl: 'none' },
+            justifyContent: 'flex-end',
+            alignItems: 'center',
+            gap: 2,
+            mb: 3,
+            mt: -2,
+          }}
+        >
+          {/* Date Range Toggle Buttons */}
+          <ToggleButtonGroup
+            value={dateRangeFilter}
+            exclusive
+            onChange={(e, newValue) => {
+              if (newValue !== null) {
+                setDateRangeFilter(newValue);
+                setCustomStartDate(null);
+                setCustomEndDate(null);
+              }
+            }}
+            size="small"
+            sx={{
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: 1,
+              flexShrink: 0,
+              height: 36,
+              '& .MuiToggleButton-root': {
+                color: 'rgba(0, 0, 0, 0.7)',
+                borderColor: 'rgba(0, 0, 0, 0.12)',
+                fontSize: '0.875rem',
+                fontWeight: 600,
+                px: 2,
+                py: 0,
+                height: 36,
+                '&.Mui-selected': {
+                  backgroundColor: 'primary.main',
+                  color: 'white',
+                  '&:hover': {
+                    backgroundColor: 'primary.dark',
+                  },
+                },
+              },
+            }}
+          >
+            <ToggleButton value="1D">1D</ToggleButton>
+            <ToggleButton value="1M">1M</ToggleButton>
+            <ToggleButton value="1Y">1Y</ToggleButton>
+            <ToggleButton value="YTD">YTD</ToggleButton>
+          </ToggleButtonGroup>
+
+          {/* Date Range Pickers */}
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+              <DatePicker
+                open={startDatePickerOpen}
+                onOpen={() => setStartDatePickerOpen(true)}
+                onClose={() => setStartDatePickerOpen(false)}
+                format="MMM d, yyyy"
+                value={(() => {
+                  try {
+                    const date = customStartDate || getDateRange()?.startDate;
+                    if (!date) return null;
+                    if (typeof date === 'string') {
+                      const parsed = new Date(date);
+                      if (isNaN(parsed.getTime())) return null;
+                      return parsed;
+                    }
+                    if (!(date instanceof Date)) return null;
+                    if (isNaN(date.getTime())) return null;
+                    return date;
+                  } catch (e) {
+                    console.error('DatePicker value error:', e);
+                    return null;
+                  }
+                })()}
+                onChange={(newDate) => {
+                  setCustomStartDate(newDate);
+                  if (newDate && customEndDate) {
+                    const matched = detectPresetRange(newDate, customEndDate);
+                    setDateRangeFilter(matched);
+                  } else {
+                    setDateRangeFilter(null);
+                  }
+                }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    sx: { width: 115 }
+                  }
+                }}
+              />
+              <Typography sx={{ mx: 0.5, color: 'text.secondary' }}>→</Typography>
+              <DatePicker
+                open={endDatePickerOpen}
+                onOpen={() => setEndDatePickerOpen(true)}
+                onClose={() => setEndDatePickerOpen(false)}
+                format="MMM d, yyyy"
+                value={(() => {
+                  try {
+                    const date = customEndDate || getDateRange()?.endDate;
+                    if (!date) return null;
+                    if (typeof date === 'string') {
+                      const parsed = new Date(date);
+                      if (isNaN(parsed.getTime())) return null;
+                      return parsed;
+                    }
+                    if (!(date instanceof Date)) return null;
+                    if (isNaN(date.getTime())) return null;
+                    return date;
+                  } catch (e) {
+                    console.error('DatePicker value error:', e);
+                    return null;
+                  }
+                })()}
+                onChange={(newDate) => {
+                  setCustomEndDate(newDate);
+                  if (customStartDate && newDate) {
+                    const matched = detectPresetRange(customStartDate, newDate);
+                    setDateRangeFilter(matched);
+                  } else {
+                    setDateRangeFilter(null);
+                  }
+                }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                    sx: { width: 115 }
+                  }
+                }}
+              />
+            </Box>
+          </LocalizationProvider>
+        </Box>
+
         {/* Navigation Bar with Tabs and Controls */}
         <Box sx={{ mb: 4 }}>
           {/* Desktop Layout */}
