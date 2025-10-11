@@ -1571,18 +1571,25 @@ const AppointmentsDashboard = () => {
           sx={{
             display: { xs: 'flex', sm: 'flex', md: 'none' },
             justifyContent: 'flex-end',
-            alignItems: 'center',
-            gap: 2,
             mb: 3,
             mt: -2,
-            background: 'linear-gradient(135deg, #f97316 0%, #fb923c 100%)',
-            borderRadius: 3,
-            p: 3,
-            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)',
           }}
         >
-          {/* Date Range Toggle Buttons */}
-          <ToggleButtonGroup
+          {/* Compact rounded rectangle around date controls */}
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 2,
+              background: 'linear-gradient(135deg, #f97316 0%, #fb923c 100%)',
+              borderRadius: 2,
+              px: 2,
+              py: 1.5,
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+            }}
+          >
+            {/* Date Range Toggle Buttons */}
+            <ToggleButtonGroup
             value={dateRangeFilter}
             exclusive
             onChange={(e, newValue) => {
@@ -1797,6 +1804,7 @@ const AppointmentsDashboard = () => {
               />
             </Box>
           </LocalizationProvider>
+          </Box>
         </Box>
 
         {/* Navigation Bar with Tabs and Controls */}
