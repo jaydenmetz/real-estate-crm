@@ -159,11 +159,59 @@ const EnhancedNavigation = () => {
             </ListItemButton>
           </ListItem>
         ))}
-        
+
         <Divider sx={{ my: 1 }} />
-        
-        {otherDataItems.map((item) => (
-          <ListItem key={item.path} disablePadding>
+
+        <ListItem disablePadding>
+          <ListItemButton onClick={() => {}}>
+            <ListItemIcon><Storage /></ListItemIcon>
+            <ListItemText primary="Data" />
+          </ListItemButton>
+        </ListItem>
+        {dataMenuItems.map((item) => (
+          <ListItem key={item.path} disablePadding sx={{ pl: 4 }}>
+            <ListItemButton
+              component={NavLink}
+              to={item.path}
+              onClick={() => setMobileOpen(false)}
+            >
+              <ListItemIcon>{item.icon}</ListItemIcon>
+              <ListItemText primary={item.label} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+
+        <Divider sx={{ my: 1 }} />
+
+        <ListItem disablePadding>
+          <ListItemButton onClick={() => {}}>
+            <ListItemIcon><People /></ListItemIcon>
+            <ListItemText primary="People" />
+          </ListItemButton>
+        </ListItem>
+        {peopleMenuItems.map((item) => (
+          <ListItem key={item.path} disablePadding sx={{ pl: 4 }}>
+            <ListItemButton
+              component={NavLink}
+              to={item.path}
+              onClick={() => setMobileOpen(false)}
+            >
+              <ListItemIcon>{item.icon}</ListItemIcon>
+              <ListItemText primary={item.label} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+
+        <Divider sx={{ my: 1 }} />
+
+        <ListItem disablePadding>
+          <ListItemButton onClick={() => {}}>
+            <ListItemIcon><MoreVert /></ListItemIcon>
+            <ListItemText primary="Other" />
+          </ListItemButton>
+        </ListItem>
+        {otherMenuItems.map((item) => (
+          <ListItem key={item.path} disablePadding sx={{ pl: 4 }}>
             <ListItemButton
               component={NavLink}
               to={item.path}
