@@ -287,7 +287,14 @@ const EnhancedNavigation = () => {
             <Avatar sx={{ bgcolor: 'white', color: 'primary.main', mr: 1 }}>
               <Business />
             </Avatar>
-            <Typography variant="h6" component="div" sx={{ display: { xs: 'none', sm: 'block' } }}>
+            <Typography
+              variant="h6"
+              component="div"
+              sx={{
+                display: { xs: 'none', sm: 'block' },
+                whiteSpace: 'nowrap',
+              }}
+            >
               Real Estate CRM
             </Typography>
           </Box>
