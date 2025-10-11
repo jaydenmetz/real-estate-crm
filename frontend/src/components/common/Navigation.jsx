@@ -52,33 +52,66 @@ const EnhancedNavigation = () => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
 
-  const [otherDataAnchor, setOtherDataAnchor] = useState(null);
+  const [dataMenuAnchor, setDataMenuAnchor] = useState(null);
+  const [peopleMenuAnchor, setPeopleMenuAnchor] = useState(null);
+  const [otherMenuAnchor, setOtherMenuAnchor] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notificationAnchor, setNotificationAnchor] = useState(null);
   const [brandMenuAnchor, setBrandMenuAnchor] = useState(null);
 
-  const handleOtherDataClick = (event) => {
-    setOtherDataAnchor(event.currentTarget);
+  const handleDataMenuClick = (event) => {
+    setDataMenuAnchor(event.currentTarget);
+  };
+
+  const handlePeopleMenuClick = (event) => {
+    setPeopleMenuAnchor(event.currentTarget);
+  };
+
+  const handleOtherMenuClick = (event) => {
+    setOtherMenuAnchor(event.currentTarget);
   };
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
   };
 
-  // Main navigation items
+  // Main navigation items (removed Listings)
   const mainNavItems = [
     { path: '/escrows', label: 'Escrows', icon: <Business /> },
-    { path: '/listings', label: 'Listings', icon: <Home /> },
     { path: '/clients', label: 'Clients', icon: <People /> },
     { path: '/appointments', label: 'Appointments', icon: <Event /> },
     { path: '/leads', label: 'Leads', icon: <TrendingUp /> },
   ];
 
-  // Other data menu items
-  const otherDataItems = [
+  // Data menu items
+  const dataMenuItems = [
+    { path: '/listings', label: 'Listings', icon: <Home /> },
+    { path: '/open-houses', label: 'Open Houses', icon: <Home /> },
+    { path: '/lead-sources', label: 'Lead Sources', icon: <TrendingUp /> },
+    { path: '/expenses', label: 'Expenses', icon: <AccountBalanceWallet /> },
+    { path: '/listing-interest', label: 'Listing Interest', icon: <TrendingUp /> },
+    { path: '/automations', label: 'Automations', icon: <Storage /> },
+  ];
+
+  // People menu items
+  const peopleMenuItems = [
+    { path: '/realtors', label: 'Realtors', icon: <People /> },
+    { path: '/loan-officers', label: 'Loan Officers', icon: <People /> },
+    { path: '/escrow-officers', label: 'Escrow Officers', icon: <People /> },
+    { path: '/transaction-coordinators', label: 'Transaction Coordinators', icon: <People /> },
+    { path: '/home-inspection-companies', label: 'Home Inspection Companies', icon: <Business /> },
+    { path: '/termite-inspection-companies', label: 'Termite Inspection Companies', icon: <Business /> },
+    { path: '/home-warranty-companies', label: 'Home Warranty Companies', icon: <Business /> },
+    { path: '/nhd-companies', label: 'NHD Companies', icon: <Business /> },
+    { path: '/vendors', label: 'Vendors', icon: <Business /> },
+    { path: '/companies', label: 'Companies', icon: <Business /> },
+  ];
+
+  // Other menu items
+  const otherMenuItems = [
     { path: '/commissions', label: 'Commission tracking', icon: <AttachMoney /> },
     { path: '/invoices', label: 'Invoice management', icon: <Receipt /> },
-    { path: '/expenses', label: 'Expense tracking', icon: <AccountBalanceWallet /> },
+    { path: '/expense-tracking', label: 'Expense tracking', icon: <AccountBalanceWallet /> },
     { path: '/activity-log', label: 'Activity Log', icon: <Timeline /> },
     { path: '/all-notes', label: 'All Notes', icon: <Article /> },
     { path: '/reports', label: 'Reports', icon: <Assessment /> },
@@ -225,15 +258,35 @@ const EnhancedNavigation = () => {
                   {item.label}
                 </Button>
               ))}
-              
-              {/* Other Data Dropdown */}
+
+              {/* Data Dropdown */}
               <Button
                 color="inherit"
-                startIcon={<MoreVert />}
-                onClick={handleOtherDataClick}
+                startIcon={<Storage />}
+                onClick={handleDataMenuClick}
                 sx={{ mx: 0.5 }}
               >
                 Data
+              </Button>
+
+              {/* People Dropdown */}
+              <Button
+                color="inherit"
+                startIcon={<People />}
+                onClick={handlePeopleMenuClick}
+                sx={{ mx: 0.5 }}
+              >
+                People
+              </Button>
+
+              {/* Other Dropdown */}
+              <Button
+                color="inherit"
+                startIcon={<MoreVert />}
+                onClick={handleOtherMenuClick}
+                sx={{ mx: 0.5 }}
+              >
+                Other
               </Button>
             </Box>
           )}
@@ -287,14 +340,52 @@ const EnhancedNavigation = () => {
         {drawer}
       </Drawer>
 
-      {/* Other Data Menu */}
+      {/* Data Menu */}
       <Menu
-        anchorEl={otherDataAnchor}
-        open={Boolean(otherDataAnchor)}
-        onClose={() => setOtherDataAnchor(null)}
-        onClick={() => setOtherDataAnchor(null)}
+        anchorEl={dataMenuAnchor}
+        open={Boolean(dataMenuAnchor)}
+        onClose={() => setDataMenuAnchor(null)}
+        onClick={() => setDataMenuAnchor(null)}
       >
-        {otherDataItems.map((item) => (
+        {dataMenuItems.map((item) => (
+          <MenuItem
+            key={item.path}
+            component={NavLink}
+            to={item.path}
+          >
+            <ListItemIcon>{item.icon}</ListItemIcon>
+            <ListItemText primary={item.label} />
+          </MenuItem>
+        ))}
+      </Menu>
+
+      {/* People Menu */}
+      <Menu
+        anchorEl={peopleMenuAnchor}
+        open={Boolean(peopleMenuAnchor)}
+        onClose={() => setPeopleMenuAnchor(null)}
+        onClick={() => setPeopleMenuAnchor(null)}
+      >
+        {peopleMenuItems.map((item) => (
+          <MenuItem
+            key={item.path}
+            component={NavLink}
+            to={item.path}
+          >
+            <ListItemIcon>{item.icon}</ListItemIcon>
+            <ListItemText primary={item.label} />
+          </MenuItem>
+        ))}
+      </Menu>
+
+      {/* Other Menu */}
+      <Menu
+        anchorEl={otherMenuAnchor}
+        open={Boolean(otherMenuAnchor)}
+        onClose={() => setOtherMenuAnchor(null)}
+        onClick={() => setOtherMenuAnchor(null)}
+      >
+        {otherMenuItems.map((item) => (
           <MenuItem
             key={item.path}
             component={NavLink}
