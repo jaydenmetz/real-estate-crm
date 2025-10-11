@@ -23,6 +23,17 @@ import {
   InputLabel,
   useTheme,
   IconButton,
+  Badge,
+  Checkbox,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemIcon,
+  Slider,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
@@ -39,7 +50,9 @@ import {
   VisibilityOff,
   Delete as DeleteIcon,
   Sort,
-  Badge,
+  Archive as ArchiveIcon,
+  Restore as RestoreIcon,
+  DeleteForever as DeleteForeverIcon,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
@@ -48,6 +61,9 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { appointmentsAPI } from '../../services/api.service';
 import NewAppointmentModal from '../forms/NewAppointmentModal';
+import { useAuth } from '../../contexts/AuthContext';
+import networkMonitor from '../../services/networkMonitor.service';
+import { useWebSocket } from '../../hooks/useWebSocket';
 
 // Styled Components
 const HeroSection = styled(Box)(({ theme }) => ({
@@ -286,8 +302,15 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
 
 const AppointmentsDashboard = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { isConnected, connectionStatus } = useWebSocket();
   const [appointments, setAppointments] = useState([]);
+  const [archivedAppointments, setArchivedAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMorePages, setHasMorePages] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
   const [selectedStatus, setSelectedStatus] = useState('upcoming');
   const [viewMode, setViewMode] = useState(() => localStorage.getItem('appointmentsViewMode') || 'small');
   const [sortBy, setSortBy] = useState('appointment_date');
@@ -297,8 +320,19 @@ const AppointmentsDashboard = () => {
   const [startDatePickerOpen, setStartDatePickerOpen] = useState(false);
   const [endDatePickerOpen, setEndDatePickerOpen] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [calendarDialogOpen, setCalendarDialogOpen] = useState(false);
   const [archivedCount, setArchivedCount] = useState(0);
+  const [selectedArchivedIds, setSelectedArchivedIds] = useState([]);
+  const [batchDeleting, setBatchDeleting] = useState(false);
   const [newAppointmentModalOpen, setNewAppointmentModalOpen] = useState(false);
+  const [animationType, setAnimationType] = useState('spring');
+  const [animationDuration, setAnimationDuration] = useState(1);
+  const [animationIntensity, setAnimationIntensity] = useState(1);
+  const [networkData, setNetworkData] = useState({
+    stats: networkMonitor.getStats(),
+    requests: networkMonitor.getRequests(),
+    errors: networkMonitor.getErrors()
+  });
   const [stats, setStats] = useState({
     totalUpcoming: 0,
     thisWeek: 0,
@@ -318,28 +352,171 @@ const AppointmentsDashboard = () => {
     avgPerWeek: 0,
   });
 
+  const maxArchivedLimit = 500;
+
   useEffect(() => { localStorage.setItem('appointmentsViewMode', viewMode); }, [viewMode]);
   useEffect(() => { fetchAppointments(); }, []);
-  useEffect(() => {
-    if (appointments.length > 0) calculateStats(appointments, selectedStatus);
-    else calculateStats([], selectedStatus);
-  }, [selectedStatus, appointments, customStartDate, customEndDate, dateRangeFilter]);
 
-  const fetchAppointments = async () => {
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      // Don't trigger shortcuts if user is typing in an input
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      // Check for Cmd/Ctrl key combinations
+      if ((e.metaKey || e.ctrlKey)) {
+        switch(e.key.toLowerCase()) {
+          case 'k':
+            e.preventDefault();
+            setNewAppointmentModalOpen(true);
+            break;
+          case 'f':
+            e.preventDefault();
+            // Focus search (if exists)
+            break;
+          case 'r':
+            e.preventDefault();
+            fetchAppointments();
+            break;
+          case 'a':
+            e.preventDefault();
+            if (selectedStatus === 'archived') {
+              handleSelectAll(selectedArchivedIds.length !== archivedAppointments.length);
+            }
+            break;
+          default:
+            break;
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [selectedStatus, selectedArchivedIds, archivedAppointments]);
+
+  useEffect(() => {
+    if (selectedStatus === 'archived') {
+      calculateStats(archivedAppointments, 'archived');
+    } else if (appointments.length > 0) {
+      calculateStats(appointments, selectedStatus);
+    } else {
+      calculateStats([], selectedStatus);
+    }
+  }, [selectedStatus, appointments, archivedAppointments, customStartDate, customEndDate, dateRangeFilter]);
+
+  // Sync archived count with archived appointments array
+  useEffect(() => {
+    setArchivedCount(archivedAppointments.length);
+  }, [archivedAppointments]);
+
+  // Auto-refresh network data
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNetworkData({
+        stats: networkMonitor.getStats(),
+        requests: networkMonitor.getRequests(),
+        errors: networkMonitor.getErrors()
+      });
+    }, 2000); // Update every 2 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // WebSocket real-time updates
+  useEffect(() => {
+    if (!isConnected) return;
+
+    // Import websocket service
+    const websocketService = require('../../services/websocket.service').default;
+
+    // Subscribe to data updates
+    const unsubscribe = websocketService.on('data:update', (data) => {
+      console.log('📡 WebSocket data update received:', data);
+
+      // Only refetch if it's an appointment update
+      if (data.entityType === 'appointment') {
+        console.log('🔄 Refetching appointments due to real-time update');
+        fetchAppointments();
+      }
+    });
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [isConnected]);
+
+  const fetchAppointments = async (pageNum = 1, appendData = false) => {
     try {
-      setLoading(true);
-      const response = await appointmentsAPI.getAll();
+      // Show appropriate loading state
+      if (appendData) {
+        setLoadingMore(true);
+      } else {
+        setLoading(true);
+        setCurrentPage(1);
+      }
+
+      console.log(`Fetching appointments... (page ${pageNum})`);
+
+      // Fetch appointments with pagination (50 per page for optimal performance)
+      const response = await appointmentsAPI.getAll({
+        includeArchived: true,
+        page: pageNum,
+        limit: 50
+      });
+      console.log('API Response:', response);
+
       if (response.success) {
-        const data = response.data.appointments || response.data || [];
-        setAppointments(data);
-        calculateStats(data, selectedStatus);
+        const allData = response.data.appointments || response.data || [];
+        const pagination = response.data.pagination || {};
+        const totalPages = pagination.totalPages || 1;
+        const totalRecords = pagination.total || allData.length;
+        const hasMore = pageNum < totalPages;
+
+        // Separate active and archived appointments based on deleted_at field
+        const appointmentData = allData.filter(appt => !appt.deleted_at && !appt.deletedAt);
+        const archivedData = allData.filter(appt => appt.deleted_at || appt.deletedAt);
+
+        console.log(`Page ${pageNum}/${totalPages} - Total: ${totalRecords}, Loaded: ${allData.length}, Active: ${appointmentData.length}, Archived: ${archivedData.length}`);
+
+        // Update state based on whether we're appending or replacing
+        if (appendData) {
+          setAppointments(prev => [...prev, ...appointmentData]);
+          setArchivedAppointments(prev => [...prev, ...archivedData]);
+        } else {
+          setAppointments(appointmentData);
+          setArchivedAppointments(archivedData);
+        }
+
+        // Update pagination state
+        setCurrentPage(pageNum);
+        setHasMorePages(hasMore);
+        setTotalCount(totalRecords);
+        setArchivedCount(archivedData.length);
+
+        // Calculate stats from currently loaded data only
+        const currentAppointments = appendData ? [...appointments, ...appointmentData] : appointmentData;
+        calculateStats(currentAppointments, selectedStatus);
+      } else {
+        console.error('API returned success: false', response);
       }
     } catch (error) {
-      console.error('Error fetching appointments:', error);
+      console.error('Error fetching appointments:', error.message);
+      console.error('Full error:', error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
+
+  // Load more appointments (infinite scroll handler)
+  const loadMoreAppointments = useCallback(() => {
+    if (!loadingMore && hasMorePages) {
+      console.log(`Loading page ${currentPage + 1}...`);
+      fetchAppointments(currentPage + 1, true);
+    }
+  }, [loadingMore, hasMorePages, currentPage]);
 
   // Helper to check if two dates are the same day
   const isSameDay = (date1, date2) => {
@@ -558,6 +735,151 @@ const AppointmentsDashboard = () => {
       completionRate: completionRate,
       avgPerWeek: avgPerWeek,
     });
+  };
+
+  const handleArchive = async (appointmentId) => {
+    try {
+      const response = await appointmentsAPI.archive(appointmentId);
+      if (response && response.success) {
+        // Move appointment from active to archived
+        const archivedAppointment = appointments.find(a => a.id === appointmentId);
+        if (archivedAppointment) {
+          // Mark as archived
+          archivedAppointment.deleted_at = new Date().toISOString();
+
+          setAppointments(prev => prev.filter(a => a.id !== appointmentId));
+          setArchivedAppointments(prev => [...prev, archivedAppointment]);
+          setArchivedCount(prev => prev + 1);
+
+          // Recalculate stats with remaining active appointments
+          const remainingAppointments = appointments.filter(a => a.id !== appointmentId);
+          calculateStats(remainingAppointments, selectedStatus);
+        }
+      } else {
+        console.error('Archive failed - no success response');
+      }
+    } catch (error) {
+      const errorMessage = error?.message || error?.toString() || 'Unknown error';
+      console.error('Failed to archive appointment:', errorMessage);
+    }
+  };
+
+  const handleRestore = async (appointmentId) => {
+    try {
+      const response = await appointmentsAPI.restore(appointmentId);
+      if (response.success) {
+        // Move appointment from archived to active
+        const restoredAppointment = archivedAppointments.find(a => a.id === appointmentId);
+        if (restoredAppointment) {
+          // Remove archived marker
+          delete restoredAppointment.deleted_at;
+          delete restoredAppointment.deletedAt;
+
+          setArchivedAppointments(prev => prev.filter(a => a.id !== appointmentId));
+          setAppointments(prev => [...prev, restoredAppointment]);
+          setArchivedCount(prev => Math.max(0, prev - 1));
+
+          // Recalculate stats with updated active appointments
+          const updatedAppointments = [...appointments, restoredAppointment];
+          calculateStats(updatedAppointments, selectedStatus);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to restore appointment:', error);
+    }
+  };
+
+  const handlePermanentDelete = async (appointmentId, skipConfirmation = false) => {
+    // Check if running in test mode
+    const isTestMode = window.location.search.includes('testMode=true') ||
+                       window.__APPOINTMENT_TEST_MODE__ === true ||
+                       skipConfirmation === true;
+
+    // Single confirmation dialog unless in test mode
+    if (!isTestMode && !window.confirm('Are you sure you want to permanently delete this appointment? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      // Check if appointment is already archived
+      const appointmentToDelete = archivedAppointments.find(a => a.id === appointmentId) ||
+                                  appointments.find(a => a.id === appointmentId);
+
+      // If not archived, archive first
+      if (appointmentToDelete && !appointmentToDelete.deleted_at && !appointmentToDelete.deletedAt) {
+        const archiveResponse = await appointmentsAPI.archive(appointmentId);
+        if (!archiveResponse.success) {
+          console.error('Failed to archive appointment before deletion');
+          return;
+        }
+      }
+
+      // Now permanently delete the archived appointment
+      const response = await appointmentsAPI.delete(appointmentId);
+      if (response.success) {
+        // Remove from both lists
+        setArchivedAppointments(prev => prev.filter(a => a.id !== appointmentId));
+        setAppointments(prev => prev.filter(a => a.id !== appointmentId));
+        setArchivedCount(prev => Math.max(0, prev - 1));
+
+        // Recalculate stats with remaining active appointments only
+        const remainingAppointments = appointments.filter(a => a.id !== appointmentId);
+        calculateStats(remainingAppointments, selectedStatus);
+
+        console.log('Successfully permanently deleted appointment:', appointmentId);
+      }
+    } catch (error) {
+      console.error('Failed to permanently delete appointment:', error);
+    }
+  };
+
+  const handleBatchDelete = async () => {
+    if (selectedArchivedIds.length === 0) return;
+
+    const count = selectedArchivedIds.length;
+    if (!window.confirm(`Are you sure you want to permanently delete ${count} appointment${count > 1 ? 's' : ''}? This action cannot be undone.`)) {
+      return;
+    }
+
+    setBatchDeleting(true);
+    try {
+      const response = await appointmentsAPI.batchDelete(selectedArchivedIds);
+      if (response.success) {
+        // Remove deleted appointments from both lists locally
+        const deletedIds = new Set(selectedArchivedIds);
+        setArchivedAppointments(prev => prev.filter(a => !deletedIds.has(a.id)));
+        setAppointments(prev => prev.filter(a => !deletedIds.has(a.id)));
+        setArchivedCount(prev => Math.max(0, prev - selectedArchivedIds.length));
+        setSelectedArchivedIds([]);
+
+        // Recalculate stats with remaining active appointments only
+        const remainingAppointments = appointments.filter(a => !deletedIds.has(a.id));
+        calculateStats(remainingAppointments, selectedStatus);
+
+        console.log(`Successfully permanently deleted ${response.data.deletedCount || selectedArchivedIds.length} appointments`);
+      }
+    } catch (error) {
+      console.error('Failed to batch delete appointments:', error);
+      alert('Failed to delete appointments. Please try again.');
+    } finally {
+      setBatchDeleting(false);
+    }
+  };
+
+  const handleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedArchivedIds(archivedAppointments.map(a => a.id));
+    } else {
+      setSelectedArchivedIds([]);
+    }
+  };
+
+  const handleSelectAppointment = (appointmentId, checked) => {
+    if (checked) {
+      setSelectedArchivedIds(prev => [...prev, appointmentId]);
+    } else {
+      setSelectedArchivedIds(prev => prev.filter(id => id !== appointmentId));
+    }
   };
 
   if (loading) {
@@ -991,6 +1313,50 @@ const AppointmentsDashboard = () => {
                               color="#ffffff"
                               delay={3}
                               goal={8}
+                            />
+                          </Grid>
+                        </>
+                      );
+
+                    case 'archived':
+                      return (
+                        <>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={ArchiveIcon}
+                              title="Total Archived Appointments"
+                              value={archivedCount || 0}
+                              color="#ffffff"
+                              delay={0}
+                              goal={maxArchivedLimit}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={TrendingUp}
+                              title="Max Archived"
+                              value={archivedCount || 0}
+                              suffix={` / ${maxArchivedLimit}`}
+                              color="#ffffff"
+                              delay={1}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={Cancel}
+                              title="Cancelled Appointments"
+                              value={stats.totalCancelled || 0}
+                              color="#ffffff"
+                              delay={2}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={Schedule}
+                              title="No-Shows"
+                              value={stats.lastMinuteCancellations || 0}
+                              color="#ffffff"
+                              delay={3}
                             />
                           </Grid>
                         </>
@@ -1446,6 +1812,193 @@ const AppointmentsDashboard = () => {
                 gap: 2,
               }}
             >
+              {/* Mobile Date Controls */}
+              <Box sx={{
+                display: 'flex',
+                gap: 1,
+                alignItems: 'center',
+                flexWrap: 'wrap',
+              }}>
+                {/* Date Preset Buttons */}
+                <ToggleButtonGroup
+                  value={dateRangeFilter}
+                  exclusive
+                  onChange={(e, newValue) => {
+                    if (newValue !== null) {
+                      setDateRangeFilter(newValue);
+                      setCustomStartDate(null);
+                      setCustomEndDate(null);
+                    }
+                  }}
+                  size="small"
+                  sx={{
+                    backgroundColor: 'white',
+                    borderRadius: 1,
+                    '& .MuiToggleButton-root': {
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      px: 1.5,
+                      py: 0.5,
+                      height: 32,
+                      minWidth: 'auto',
+                      '&.Mui-selected': {
+                        backgroundColor: 'primary.main',
+                        color: 'white',
+                        '&:hover': {
+                          backgroundColor: 'primary.dark',
+                        },
+                      },
+                    },
+                  }}
+                >
+                  <ToggleButton value="1D">1D</ToggleButton>
+                  <ToggleButton value="1M">1M</ToggleButton>
+                  <ToggleButton value="1Y">1Y</ToggleButton>
+                  <ToggleButton value="YTD">YTD</ToggleButton>
+                </ToggleButtonGroup>
+
+                {/* Date Range Pickers */}
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                  <Box sx={{
+                    display: 'flex',
+                    gap: 0.5,
+                    alignItems: 'center',
+                    backgroundColor: 'white',
+                    borderRadius: 1,
+                    px: 0.5,
+                    height: 32,
+                  }}>
+                    <DatePicker
+                      open={startDatePickerOpen}
+                      onOpen={() => setStartDatePickerOpen(true)}
+                      onClose={() => setStartDatePickerOpen(false)}
+                      format="MMM d"
+                      value={(() => {
+                        try {
+                          const date = customStartDate || dateRange?.startDate;
+                          if (!date) return null;
+                          if (typeof date === 'string') {
+                            const parsed = new Date(date);
+                            if (isNaN(parsed.getTime())) return null;
+                            return parsed;
+                          }
+                          if (!(date instanceof Date)) return null;
+                          if (isNaN(date.getTime())) return null;
+                          return date;
+                        } catch (e) {
+                          console.error('DatePicker value error:', e);
+                          return null;
+                        }
+                      })()}
+                      onChange={(newDate) => {
+                        setCustomStartDate(newDate);
+                        if (newDate && customEndDate) {
+                          const matched = detectPresetRange(newDate, customEndDate);
+                          setDateRangeFilter(matched);
+                        } else {
+                          setDateRangeFilter(null);
+                        }
+                      }}
+                      slotProps={{
+                        textField: {
+                          size: 'small',
+                          placeholder: 'Start',
+                          onClick: () => setStartDatePickerOpen(true),
+                          sx: {
+                            width: 90,
+                            '& .MuiInputBase-root': {
+                              backgroundColor: 'transparent',
+                              height: 32,
+                              paddingRight: '8px !important',
+                            },
+                            '& .MuiOutlinedInput-root': {
+                              '& fieldset': { borderColor: 'transparent' },
+                              '&:hover fieldset': { borderColor: 'transparent' },
+                              '&.Mui-focused fieldset': { borderColor: 'transparent' },
+                            },
+                            '& .MuiInputBase-input': {
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              textAlign: 'center',
+                              padding: '4px 8px',
+                            },
+                            '& .MuiInputAdornment-root': { display: 'none' },
+                            '& .MuiInputLabel-root': { display: 'none' },
+                            '& .MuiOutlinedInput-notchedOutline legend': { display: 'none' },
+                          },
+                        },
+                        openPickerButton: { sx: { display: 'none' } },
+                      }}
+                    />
+                    <Typography sx={{ color: 'text.secondary', mx: 0.5, fontSize: '0.875rem' }}>→</Typography>
+                    <DatePicker
+                      open={endDatePickerOpen}
+                      onOpen={() => setEndDatePickerOpen(true)}
+                      onClose={() => setEndDatePickerOpen(false)}
+                      format="MMM d"
+                      value={(() => {
+                        try {
+                          const date = customEndDate || dateRange?.endDate;
+                          if (!date) return null;
+                          if (typeof date === 'string') {
+                            const parsed = new Date(date);
+                            if (isNaN(parsed.getTime())) return null;
+                            return parsed;
+                          }
+                          if (!(date instanceof Date)) return null;
+                          if (isNaN(date.getTime())) return null;
+                          return date;
+                        } catch (e) {
+                          console.error('DatePicker value error:', e);
+                          return null;
+                        }
+                      })()}
+                      onChange={(newDate) => {
+                        setCustomEndDate(newDate);
+                        if (customStartDate && newDate) {
+                          const matched = detectPresetRange(customStartDate, newDate);
+                          setDateRangeFilter(matched);
+                        } else {
+                          setDateRangeFilter(null);
+                        }
+                      }}
+                      slotProps={{
+                        textField: {
+                          size: 'small',
+                          placeholder: 'End',
+                          onClick: () => setEndDatePickerOpen(true),
+                          sx: {
+                            width: 90,
+                            '& .MuiInputBase-root': {
+                              backgroundColor: 'transparent',
+                              height: 32,
+                              paddingRight: '8px !important',
+                            },
+                            '& .MuiOutlinedInput-root': {
+                              '& fieldset': { borderColor: 'transparent' },
+                              '&:hover fieldset': { borderColor: 'transparent' },
+                              '&.Mui-focused fieldset': { borderColor: 'transparent' },
+                            },
+                            '& .MuiInputBase-input': {
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              textAlign: 'center',
+                              padding: '4px 8px',
+                            },
+                            '& .MuiInputAdornment-root': { display: 'none' },
+                            '& .MuiInputLabel-root': { display: 'none' },
+                            '& .MuiOutlinedInput-notchedOutline legend': { display: 'none' },
+                          },
+                        },
+                        openPickerButton: { sx: { display: 'none' } },
+                      }}
+                    />
+                  </Box>
+                </LocalizationProvider>
+              </Box>
+
               {/* Sort and View Controls */}
               <Box sx={{
                 display: 'flex',
