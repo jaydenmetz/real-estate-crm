@@ -1502,7 +1502,7 @@ const LeadsDashboard = () => {
         {/* Conditional Date Controls - Show between hero and tabs when AI Manager wraps below */}
         <Box
           sx={{
-            display: { xs: 'none', sm: 'none', md: 'none', lg: 'flex', xl: 'none' },
+            display: { xs: 'none', sm: 'none', md: 'flex', lg: 'none', xl: 'none' },
             justifyContent: 'flex-end',
             alignItems: 'center',
             gap: 2,
