@@ -29,6 +29,7 @@ import {
   DialogContent,
   DialogActions,
   Tooltip,
+  Badge,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
@@ -48,7 +49,6 @@ import {
   Delete as DeleteIcon,
   DeleteForever as DeleteForeverIcon,
   Sort,
-  Badge,
   Storage,
   Refresh,
   NetworkCheck,
