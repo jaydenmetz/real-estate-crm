@@ -46,6 +46,8 @@ import {
   AccountBalanceWallet,
   HealthAndSafety,
   Groups,
+  ExpandMore,
+  ExpandLess,
 } from '@mui/icons-material';
 import UserMenu from './UserMenu';
 
