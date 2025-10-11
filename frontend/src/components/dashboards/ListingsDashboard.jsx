@@ -39,6 +39,9 @@ import {
   Schedule,
   CalendarToday,
   Error as ErrorIcon,
+  Delete as DeleteIcon,
+  Sort,
+  Badge,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
@@ -307,6 +310,8 @@ const ListingsDashboard = () => {
   const [customEndDate, setCustomEndDate] = useState(null);
   const [startDatePickerOpen, setStartDatePickerOpen] = useState(false);
   const [endDatePickerOpen, setEndDatePickerOpen] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [archivedCount, setArchivedCount] = useState(0);
   const [stats, setStats] = useState({
     totalListings: 0,
     activeListings: 0,
@@ -1338,68 +1343,117 @@ const ListingsDashboard = () => {
           </Box>
         </HeroSection>
 
-      {/* Status Tabs with View Mode Toggle */}
-      <Box sx={{
-        mb: 4,
-        display: 'flex',
-        gap: 2,
-        alignItems: 'center',
-        flexWrap: { xs: 'wrap', md: 'nowrap' },
-        flexDirection: { xs: 'column', md: 'row' },
-      }}>
-        {/* Tab Bar - Contained */}
-        <Paper
-          elevation={0}
+      {/* Navigation Bar with Tabs and Controls */}
+      <Box sx={{ mb: 4 }}>
+        {/* Desktop Layout */}
+        <Box
           sx={{
-            backgroundColor: 'background.paper',
-            borderRadius: 2,
-            boxShadow: 1,
-            display: 'inline-flex',
-            alignItems: 'center',
-            width: { xs: '100%', md: 'auto' },
+            display: { xs: 'none', md: 'flex' },
+            flexWrap: 'wrap',
+            gap: 2,
+            alignItems: 'flex-start',
           }}
         >
-          <Tabs
-            value={selectedStatus}
-            onChange={(e, newValue) => setSelectedStatus(newValue)}
-            variant="scrollable"
-            scrollButtons="auto"
+          {/* Left: Tabs with gray background */}
+          <Paper
+            elevation={0}
             sx={{
-              '& .MuiTab-root': {
-                textTransform: 'none',
-                fontSize: '1rem',
-                fontWeight: 500,
-                minHeight: 56,
-              },
-              '& .Mui-selected': {
-                fontWeight: 700,
-              },
+              backgroundColor: 'background.paper',
+              borderRadius: '8px',
+              border: '1px solid',
+              borderColor: 'divider',
+              flex: '0 0 auto',
             }}
           >
-            <Tab label="Active Listings" value="active" />
-            <Tab label="Pending Listings" value="pending" />
-            <Tab label="Sold Listings" value="sold" />
-            <Tab label="Expired Listings" value="expired" />
-            <Tab label="All Listings" value="all" />
-          </Tabs>
-        </Paper>
+            <Tabs
+              value={selectedStatus}
+              onChange={(e, newValue) => setSelectedStatus(newValue)}
+              sx={{
+                minHeight: 48,
+                '& .MuiTab-root': {
+                  textTransform: 'none',
+                  fontSize: '0.9375rem',
+                  fontWeight: 500,
+                  minHeight: 48,
+                  px: 3,
+                  color: 'text.secondary',
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    color: 'primary.main',
+                    backgroundColor: alpha('#1976d2', 0.04),
+                  },
+                },
+                '& .Mui-selected': {
+                  fontWeight: 600,
+                  color: 'primary.main',
+                },
+                '& .MuiTabs-indicator': {
+                  height: 3,
+                  borderRadius: '3px 3px 0 0',
+                },
+              }}
+            >
+              <Tab label="Active Listings" value="active" />
+              <Tab label="Pending Listings" value="pending" />
+              <Tab label="Sold Listings" value="sold" />
+              <Tab label="All Listings" value="all" />
+            </Tabs>
+          </Paper>
 
-        {/* Right-side Controls */}
-        <Box sx={{
-          ml: { xs: 0, md: 'auto' },
-          display: 'flex',
-          gap: 2,
-          alignItems: 'center',
-          width: { xs: '100%', md: 'auto' },
-          justifyContent: { xs: 'space-between', md: 'flex-start' },
-        }}>
-            {/* Sort Selector */}
-            <FormControl size="small" sx={{ minWidth: 180, flex: { xs: 1, md: 'none' } }}>
-              <InputLabel>Sort By</InputLabel>
+          {/* Spacer */}
+          <Box sx={{ flexGrow: 1 }} />
+
+          {/* Right: Controls */}
+          <Box sx={{
+            display: 'flex',
+            gap: 1.5,
+            alignItems: 'center',
+            flexWrap: 'wrap',
+          }}>
+            {/* Sort Dropdown */}
+            <FormControl size="small" variant="standard" sx={{ minWidth: 140 }}>
               <Select
                 value={sortBy}
-                label="Sort By"
                 onChange={(e) => setSortBy(e.target.value)}
+                disableUnderline
+                startAdornment={
+                  <Sort sx={{ mr: 1, fontSize: '1.125rem', color: 'text.secondary' }} />
+                }
+                renderValue={(value) => {
+                  const labels = {
+                    listing_date: 'Listing Date',
+                    list_price: 'Price',
+                    property_address: 'Address',
+                    days_on_market: 'Days on Market',
+                    listing_status: 'Status',
+                  };
+                  return (
+                    <Typography variant="body2" sx={{
+                      fontSize: '0.875rem',
+                      fontWeight: 500,
+                      color: 'text.primary',
+                    }}>
+                      {labels[value]}
+                    </Typography>
+                  );
+                }}
+                sx={{
+                  backgroundColor: 'transparent',
+                  borderRadius: 1,
+                  px: 1.5,
+                  py: 0.5,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  '&:hover': {
+                    backgroundColor: alpha('#000', 0.04),
+                    borderColor: 'primary.main',
+                  },
+                  '& .MuiSelect-select': {
+                    paddingRight: '32px !important',
+                    display: 'flex',
+                    alignItems: 'center',
+                  },
+                }}
               >
                 <MenuItem value="listing_date">Listing Date</MenuItem>
                 <MenuItem value="list_price">Price</MenuItem>
@@ -1409,27 +1463,32 @@ const ListingsDashboard = () => {
               </Select>
             </FormControl>
 
-            {/* View Mode Selector */}
+            {/* View Mode & Calendar Selector */}
             <ToggleButtonGroup
-              value={viewMode}
+              value={showCalendar ? 'calendar' : viewMode}
               exclusive
-              onChange={(e, newView) => newView && setViewMode(newView)}
+              onChange={(e, newValue) => {
+                if (newValue !== null) {
+                  if (newValue === 'calendar') {
+                    setShowCalendar(true);
+                  } else {
+                    setShowCalendar(false);
+                    setViewMode(newValue);
+                  }
+                }
+              }}
               size="small"
-              aria-label="View mode selection"
               sx={{
                 '& .MuiToggleButton-root': {
-                  px: 2,
+                  px: 1.5,
                   py: 0.5,
                   textTransform: 'none',
                   fontWeight: 500,
+                  height: '32px',
                 },
               }}
             >
-              <ToggleButton
-                value="small"
-                aria-label="Grid view"
-                title="Grid view"
-              >
+              <ToggleButton value="small" title="Grid view (V)">
                 <Box sx={{ display: 'flex', gap: 0.4 }}>
                   <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                   <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
@@ -1437,29 +1496,206 @@ const ListingsDashboard = () => {
                   <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                 </Box>
               </ToggleButton>
-              <ToggleButton
-                value="large"
-                aria-label="Full width view"
-                title="Full width view"
-              >
+              <ToggleButton value="large" title="Full width view (V)">
                 <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+              </ToggleButton>
+              <ToggleButton value="calendar" title="Calendar view">
+                <CalendarToday sx={{ fontSize: 16 }} />
               </ToggleButton>
             </ToggleButtonGroup>
 
-            {/* Archive Button */}
-            <Button
-              variant="outlined"
+            {/* Archive/Trash Icon */}
+            <IconButton
               size="small"
-              startIcon={<ArchiveIcon />}
+              onClick={() => setSelectedStatus('archived')}
               sx={{
-                minWidth: 'auto',
-                px: 2,
-                display: { xs: 'none', md: 'flex' },
+                width: 36,
+                height: 36,
+                backgroundColor: selectedStatus === 'archived' ? 'warning.main' : alpha('#000', 0.06),
+                color: selectedStatus === 'archived' ? 'white' : 'text.secondary',
+                '&:hover': {
+                  backgroundColor: selectedStatus === 'archived' ? 'warning.dark' : alpha('#000', 0.1),
+                },
+                transition: 'all 0.2s',
               }}
             >
-              Archive
-            </Button>
+              <Badge badgeContent={archivedCount} color="error" max={99}>
+                <DeleteIcon sx={{ fontSize: 20 }} />
+              </Badge>
+            </IconButton>
           </Box>
+        </Box>
+
+        {/* Mobile/Tablet Layout */}
+        <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+          {/* Tab Bar - Mobile/Tablet */}
+          <Paper
+            elevation={0}
+            sx={{
+              backgroundColor: 'background.paper',
+              borderRadius: '8px 8px 0 0',
+              borderBottom: '1px solid',
+              borderColor: 'divider',
+              mb: 0,
+            }}
+          >
+            <Tabs
+              value={selectedStatus}
+              onChange={(e, newValue) => setSelectedStatus(newValue)}
+              variant="scrollable"
+              scrollButtons="auto"
+              sx={{
+                '& .MuiTab-root': {
+                  textTransform: 'none',
+                  fontSize: { xs: '0.875rem', sm: '0.9375rem' },
+                  fontWeight: 500,
+                  minHeight: { xs: 48, sm: 52 },
+                  px: { xs: 2, sm: 2.5 },
+                },
+                '& .Mui-selected': {
+                  fontWeight: 600,
+                  color: 'primary.main',
+                },
+                '& .MuiTabs-indicator': {
+                  height: 3,
+                  borderRadius: '3px 3px 0 0',
+                },
+              }}
+            >
+              <Tab label="Active" value="active" />
+              <Tab label="Pending" value="pending" />
+              <Tab label="Sold" value="sold" />
+              <Tab label="All" value="all" />
+              {/* Archive Badge for Mobile */}
+              <Tab
+                label={
+                  <Badge badgeContent={archivedCount} color="error" max={99}>
+                    <span>Archived</span>
+                  </Badge>
+                }
+                value="archived"
+              />
+            </Tabs>
+          </Paper>
+
+          {/* Mobile/Tablet Filter Controls */}
+          <Box
+            sx={{
+              backgroundColor: alpha('#f5f5f5', 0.4),
+              borderRadius: '0 0 8px 8px',
+              p: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
+            }}
+          >
+            {/* Sort and View Controls */}
+            <Box sx={{
+              display: 'flex',
+              gap: 1.5,
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}>
+              {/* Sort Dropdown */}
+              <FormControl
+                size="small"
+                variant="outlined"
+                sx={{
+                  flex: '1 1 auto',
+                  maxWidth: { xs: '60%', sm: '200px' },
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: 'white',
+                    borderRadius: 2,
+                  },
+                }}
+              >
+                <Select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  startAdornment={<Sort sx={{ mr: 1, fontSize: '1.125rem', color: 'text.secondary' }} />}
+                  renderValue={(value) => {
+                    const labels = {
+                      listing_date: 'Listing Date',
+                      list_price: 'Price',
+                      property_address: 'Address',
+                      days_on_market: 'Days on Market',
+                      listing_status: 'Status',
+                    };
+                    return (
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography variant="body2" sx={{ fontSize: '0.875rem', fontWeight: 500 }}>
+                          Sort: {labels[value]}
+                        </Typography>
+                      </Box>
+                    );
+                  }}
+                >
+                  <MenuItem value="listing_date">Listing Date</MenuItem>
+                  <MenuItem value="list_price">Price</MenuItem>
+                  <MenuItem value="property_address">Address</MenuItem>
+                  <MenuItem value="days_on_market">Days on Market</MenuItem>
+                  <MenuItem value="listing_status">Status</MenuItem>
+                </Select>
+              </FormControl>
+
+              {/* View Mode & Calendar - Mobile */}
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                <ToggleButtonGroup
+                  value={showCalendar ? 'calendar' : viewMode}
+                  exclusive
+                  onChange={(e, newValue) => {
+                    if (newValue !== null) {
+                      if (newValue === 'calendar') {
+                        setShowCalendar(true);
+                      } else {
+                        setShowCalendar(false);
+                        setViewMode(newValue);
+                      }
+                    }
+                  }}
+                  size="small"
+                  aria-label="View mode and calendar selection"
+                  sx={{
+                    '& .MuiToggleButton-root': {
+                      px: 2,
+                      py: 0.5,
+                      textTransform: 'none',
+                      fontWeight: 500,
+                      height: '32px',
+                    },
+                  }}
+                >
+                  <ToggleButton
+                    value="small"
+                    aria-label="Grid view"
+                    title="Grid view (V)"
+                  >
+                    <Box sx={{ display: 'flex', gap: 0.4 }}>
+                      <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                      <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                      <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                      <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                    </Box>
+                  </ToggleButton>
+                  <ToggleButton
+                    value="large"
+                    aria-label="Full width view"
+                    title="Full width view (V)"
+                  >
+                    <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  </ToggleButton>
+                  <ToggleButton
+                    value="calendar"
+                    aria-label="Calendar view"
+                    title="Calendar view"
+                  >
+                    <CalendarToday sx={{ fontSize: 16 }} />
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              </Box>
+            </Box>
+          </Box>
+        </Box>
       </Box>
 
         {/* Listings Grid */}
