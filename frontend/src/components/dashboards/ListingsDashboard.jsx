@@ -8,6 +8,7 @@ import {
   Card,
   CardContent,
   Paper,
+  IconButton,
   Button,
   Chip,
   CircularProgress,
@@ -26,14 +27,25 @@ import {
 import { styled } from '@mui/material/styles';
 import {
   TrendingUp,
+  TrendingDown,
   AttachMoney,
   Home,
   CheckCircle,
   Add,
   Assessment,
+  Archive as ArchiveIcon,
+  Visibility,
+  VisibilityOff,
+  Schedule,
+  CalendarToday,
+  Error as ErrorIcon,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { format as formatDate } from 'date-fns';
 import { listingsAPI } from '../../services/api.service';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -44,127 +56,238 @@ const HeroSection = styled(Box)(({ theme }) => ({
   overflow: 'hidden',
   background: 'linear-gradient(135deg, #2E7D32 0%, #66BB6A 100%)',
   color: 'white',
-  padding: theme.spacing(6),
+  padding: theme.spacing(4),
   marginBottom: theme.spacing(4),
   boxShadow: '0 20px 60px rgba(46, 125, 50, 0.3)',
   [theme.breakpoints.down('md')]: {
-    padding: theme.spacing(4),
+    padding: theme.spacing(3),
   },
 }));
 
-// Enhanced animated stat card component with gradient animations
-const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, delay = 0, trend }) => {
+// Enhanced animated stat card component with new layout structure
+const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, delay = 0, trend, showPrivacy = false, goal }) => {
   const theme = useTheme();
+  const [showValue, setShowValue] = useState(false);
+
+  // Mask commission for privacy
+  const maskValue = (val) => {
+    const absValue = Math.abs(val);
+    if (absValue >= 1000000) return '$***,***,***';
+    if (absValue >= 100000) return '$***,***';
+    if (absValue >= 10000) return '$**,***';
+    if (absValue >= 1000) return '$*,***';
+    if (absValue >= 100) return '$***';
+    if (absValue >= 10) return '$**';
+    return '$*';
+  };
+
+  // Calculate percentage difference from goal
+  const percentageToGoal = goal && typeof value === 'number' && typeof goal === 'number'
+    ? ((value / goal - 1) * 100).toFixed(1)
+    : null;
+  const isAboveGoal = percentageToGoal && parseFloat(percentageToGoal) >= 0;
+
   return (
-    <Grid item xs={12} sm={6} md={3}>
-      <motion.div
-        initial={{ opacity: 0, x: -12 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{
-          duration: 0.4,
-          delay: delay * 0.08,
-          ease: [0.34, 1.56, 0.64, 1]
+    <motion.div
+      initial={{ opacity: 0, x: -12 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{
+        duration: 0.4,
+        delay: delay * 0.08,
+        ease: [0.34, 1.56, 0.64, 1]
+      }}
+    >
+      <Card
+        elevation={0}
+        sx={{
+          height: 200, // Fixed height for consistency
+          position: 'relative',
+          overflow: 'hidden',
+          background: `linear-gradient(135deg, ${alpha(color, 0.15)} 0%, ${alpha(color, 0.08)} 100%)`,
+          backdropFilter: 'blur(10px)',
+          border: `1px solid ${alpha(color, 0.3)}`,
+          boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
+          transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+          '&:hover': {
+            transform: 'translateY(-8px) scale(1.02)',
+            boxShadow: `0 20px 40px ${alpha(color, 0.25)}`,
+            border: `1px solid ${alpha(color, 0.5)}`,
+          },
         }}
       >
-        <Card
-          elevation={0}
-          sx={{
-            height: '100%',
-            minHeight: 140,
-            position: 'relative',
-            overflow: 'hidden',
-            background: `linear-gradient(135deg, ${alpha(color, 0.15)} 0%, ${alpha(color, 0.08)} 100%)`,
-            backdropFilter: 'blur(10px)',
-            border: `1px solid ${alpha(color, 0.3)}`,
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            '&:hover': {
-              transform: 'translateY(-8px) scale(1.02)',
-              boxShadow: `0 20px 40px ${alpha(color, 0.25)}`,
-              border: `1px solid ${alpha(color, 0.5)}`,
-            },
-            '&::before': {
-              content: '""',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              height: '4px',
-              background: `linear-gradient(90deg, ${color} 0%, ${alpha(color, 0.6)} 100%)`,
-            },
-          }}
-        >
-          <CardContent sx={{ position: 'relative', zIndex: 1, p: 2.5, '&:last-child': { pb: 2.5 } }}>
-            <Box display="flex" alignItems="center" justifyContent="space-between">
-              <Box>
-                <Typography
-                  color="textSecondary"
-                  gutterBottom
-                  variant="body2"
-                  sx={{ fontWeight: 500, letterSpacing: 0.5 }}
-                >
-                  {title}
-                </Typography>
-                <Typography
-                  variant="h3"
-                  component="div"
-                  sx={{
-                    fontWeight: 'bold',
-                    color,
-                    display: 'flex',
-                    alignItems: 'baseline',
-                    gap: 0.5,
-                  }}
-                >
-                  <span style={{ fontSize: '0.7em' }}>{prefix}</span>
-                  <CountUp
-                    end={value}
-                    duration={2.5}
-                    separator=","
-                    decimals={suffix === 'M' || suffix === 'K' ? 1 : 0}
-                  />
-                  <span style={{ fontSize: '0.7em' }}>{suffix}</span>
-                </Typography>
-                {trend && (
-                  <Box display="flex" alignItems="center" gap={0.5} mt={1}>
-                    <TrendingUp sx={{ fontSize: 16, color: '#4caf50' }} />
-                    <Typography variant="caption" color="success.main">
-                      {trend}% from last month
-                    </Typography>
-                  </Box>
-                )}
-              </Box>
-              <Box
+        <CardContent sx={{ position: 'relative', zIndex: 1, p: 2.5, '&:last-child': { pb: 2.5 }, display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'space-between' }}>
+          {/* Top: Title with enhanced styling */}
+          <Box sx={{ mb: 2, minHeight: 40, display: 'flex', alignItems: 'center' }}>
+            <Box display="flex" alignItems="center" gap={1}>
+              <Typography
+                variant="body2"
                 sx={{
-                  position: 'relative',
-                  width: 80,
-                  height: 80,
-                  display: 'flex',
+                  fontWeight: 600,
+                  letterSpacing: 0.3,
+                  textTransform: 'uppercase',
+                  fontSize: '0.8125rem',
+                  color: 'rgba(255, 255, 255, 0.95)',
+                  background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 100%)',
+                  px: 2,
+                  py: 0.75,
+                  borderRadius: '8px',
+                  display: 'inline-flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  whiteSpace: 'nowrap',
+                  backdropFilter: 'blur(10px)',
                 }}
               >
-                <Box
+                {title}
+              </Typography>
+            </Box>
+          </Box>
+
+          {/* Middle: Count on left, Icon on right */}
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flex: 1, my: 1 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1, minWidth: 0 }}>
+              {showPrivacy && (
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowValue(!showValue);
+                  }}
                   sx={{
-                    position: 'absolute',
-                    width: '100%',
-                    height: '100%',
-                    borderRadius: '50%',
-                    background: `radial-gradient(circle, ${alpha(color, 0.15)} 0%, transparent 70%)`,
-                    animation: 'pulse 2s infinite',
-                    '@keyframes pulse': {
-                      '0%': { transform: 'scale(0.8)', opacity: 1 },
-                      '50%': { transform: 'scale(1.2)', opacity: 0.5 },
-                      '100%': { transform: 'scale(0.8)', opacity: 1 },
+                    width: 28,
+                    height: 28,
+                    color: 'rgba(255,255,255,0.8)',
+                    flexShrink: 0,
+                    '&:hover': {
+                      backgroundColor: 'rgba(255,255,255,0.1)',
+                      color: 'white',
                     },
                   }}
-                />
-                <Icon sx={{ fontSize: 48, color, zIndex: 1 }} />
-              </Box>
+                >
+                  {showValue ? (
+                    <VisibilityOff sx={{ fontSize: 18 }} />
+                  ) : (
+                    <Visibility sx={{ fontSize: 18 }} />
+                  )}
+                </IconButton>
+              )}
+              <Typography
+                variant="h3"
+                component="div"
+                sx={{
+                  fontWeight: 700,
+                  color: 'white',
+                  display: 'flex',
+                  alignItems: 'baseline',
+                  gap: 0.5,
+                  fontSize: 'clamp(1.5rem, 4vw, 2.25rem)',
+                  textShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {showPrivacy && !showValue ? (
+                  <span>{maskValue(value)}</span>
+                ) : typeof value === 'string' ? (
+                  // Custom string value (no CountUp animation)
+                  <>
+                    {prefix && <span style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.5rem)' }}>{prefix}</span>}
+                    <span>{value}</span>
+                    {suffix && <span style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.5rem)' }}>{suffix}</span>}
+                  </>
+                ) : (
+                  // Numeric value with CountUp animation
+                  <>
+                    {prefix && <span style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.5rem)' }}>{prefix}</span>}
+                    <CountUp
+                      end={value}
+                      duration={2.5}
+                      separator=","
+                      decimals={0}
+                    />
+                    {suffix && <span style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.5rem)' }}>{suffix}</span>}
+                  </>
+                )}
+              </Typography>
             </Box>
-          </CardContent>
-        </Card>
-      </motion.div>
-    </Grid>
+
+            <Box
+              sx={{
+                position: 'relative',
+                width: 56,
+                height: 56,
+                flexShrink: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <Box
+                sx={{
+                  position: 'absolute',
+                  width: '100%',
+                  height: '100%',
+                  borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.15)',
+                  border: '2px solid rgba(255,255,255,0.2)',
+                }}
+              />
+              <Icon sx={{ fontSize: 32, color: 'rgba(255,255,255,0.9)', zIndex: 1 }} />
+            </Box>
+          </Box>
+
+          {/* Bottom: Goal section with white background */}
+          {goal && (
+            <Box
+              sx={{
+                mt: 2,
+                mx: -2.5,
+                mb: -2.5,
+                px: 2.5,
+                py: 1,
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(248,250,252,0.9) 100%)',
+                borderTop: '1px solid rgba(255,255,255,0.3)',
+                borderRadius: '0 0 8px 8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
+                <Typography variant="caption" sx={{ color: '#64748b', fontWeight: 500, fontSize: '0.75rem' }}>
+                  Goal:
+                </Typography>
+                <Typography variant="body2" sx={{ fontWeight: 600, color: '#475569', fontSize: '0.875rem' }}>
+                  {prefix}{typeof goal === 'number' ? goal.toLocaleString() : goal}{suffix}
+                </Typography>
+              </Box>
+
+              {percentageToGoal && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  {isAboveGoal ? (
+                    <TrendingUp sx={{ fontSize: 18, color: '#10b981' }} />
+                  ) : (
+                    <TrendingDown sx={{ fontSize: 18, color: '#ef4444' }} />
+                  )}
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontWeight: 600,
+                      color: isAboveGoal ? '#10b981' : '#ef4444',
+                      fontSize: '0.875rem',
+                    }}
+                  >
+                    ({isAboveGoal ? '+' : ''}{percentageToGoal}%)
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 };
 
@@ -179,11 +302,27 @@ const ListingsDashboard = () => {
     return saved || 'small';
   });
   const [sortBy, setSortBy] = useState('listing_date'); // Sort field
+  const [dateRangeFilter, setDateRangeFilter] = useState('1M'); // '1D', '1M', '1Y', 'YTD', or null for custom
+  const [customStartDate, setCustomStartDate] = useState(null);
+  const [customEndDate, setCustomEndDate] = useState(null);
+  const [startDatePickerOpen, setStartDatePickerOpen] = useState(false);
+  const [endDatePickerOpen, setEndDatePickerOpen] = useState(false);
   const [stats, setStats] = useState({
     totalListings: 0,
     activeListings: 0,
     totalValue: 0,
     avgDaysOnMarket: 0,
+    newThisMonth: 0,
+    pendingListings: 0,
+    pendingThisMonth: 0,
+    projectedCommission: 0,
+    soldListings: 0,
+    soldThisYear: 0,
+    totalCommission: 0,
+    expiredListings: 0,
+    expirationRate: 0,
+    lostValue: 0,
+    avgDaysListed: 0,
   });
 
   // Save view mode to localStorage when it changes
@@ -201,7 +340,108 @@ const ListingsDashboard = () => {
     } else {
       calculateStats([], selectedStatus);
     }
-  }, [selectedStatus, listings]);
+  }, [selectedStatus, listings, dateRangeFilter, customStartDate, customEndDate]);
+
+  // Check if dates are the same day
+  const isSameDay = (date1, date2) => {
+    return date1.getFullYear() === date2.getFullYear() &&
+           date1.getMonth() === date2.getMonth() &&
+           date1.getDate() === date2.getDate();
+  };
+
+  // Check if custom dates match a preset range
+  const detectPresetRange = (start, end) => {
+    if (!start || !end) return null;
+
+    const now = new Date();
+    const today = new Date(now);
+    today.setHours(0, 0, 0, 0);
+
+    // 1D - Today only
+    if (isSameDay(start, today) && isSameDay(end, today)) {
+      return '1D';
+    }
+
+    // 1M - Last 30 days
+    const oneMonthAgo = new Date(now);
+    oneMonthAgo.setDate(oneMonthAgo.getDate() - 30);
+    oneMonthAgo.setHours(0, 0, 0, 0);
+    if (isSameDay(start, oneMonthAgo) && isSameDay(end, today)) {
+      return '1M';
+    }
+
+    // 1Y - Last 365 days
+    const oneYearAgo = new Date(now);
+    oneYearAgo.setDate(oneYearAgo.getDate() - 365);
+    oneYearAgo.setHours(0, 0, 0, 0);
+    if (isSameDay(start, oneYearAgo) && isSameDay(end, today)) {
+      return '1Y';
+    }
+
+    // YTD - Start of year to today
+    const yearStart = new Date(now.getFullYear(), 0, 1);
+    yearStart.setHours(0, 0, 0, 0);
+    if (isSameDay(start, yearStart) && isSameDay(end, today)) {
+      return 'YTD';
+    }
+
+    return null;
+  };
+
+  const getDateRange = () => {
+    const now = new Date();
+    let startDate, endDate;
+
+    // Use custom dates if both are set
+    if (customStartDate && customEndDate) {
+      startDate = customStartDate;
+      endDate = customEndDate;
+
+      // Auto-detect if custom dates match a preset
+      const matchedPreset = detectPresetRange(startDate, endDate);
+      if (matchedPreset && dateRangeFilter !== matchedPreset) {
+        setDateRangeFilter(matchedPreset);
+      } else if (!matchedPreset && dateRangeFilter !== null) {
+        setDateRangeFilter(null);
+      }
+
+      return { startDate, endDate };
+    }
+
+    // Calculate preset range
+    switch (dateRangeFilter) {
+      case '1D':
+        startDate = new Date(now);
+        startDate.setHours(0, 0, 0, 0);
+        endDate = new Date(now);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      case '1M':
+        startDate = new Date(now);
+        startDate.setDate(startDate.getDate() - 30);
+        startDate.setHours(0, 0, 0, 0);
+        endDate = new Date(now);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      case '1Y':
+        startDate = new Date(now);
+        startDate.setDate(startDate.getDate() - 365);
+        startDate.setHours(0, 0, 0, 0);
+        endDate = new Date(now);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      case 'YTD':
+        startDate = new Date(now.getFullYear(), 0, 1);
+        startDate.setHours(0, 0, 0, 0);
+        endDate = new Date(now);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      default:
+        return { startDate: null, endDate: null };
+    }
+
+    return { startDate, endDate };
+  };
 
   const fetchListings = async () => {
     try {
@@ -234,8 +474,31 @@ const ListingsDashboard = () => {
         activeListings: 0,
         totalValue: 0,
         avgDaysOnMarket: 0,
+        newThisMonth: 0,
+        pendingListings: 0,
+        pendingThisMonth: 0,
+        projectedCommission: 0,
+        soldListings: 0,
+        soldThisYear: 0,
+        totalCommission: 0,
+        expiredListings: 0,
+        expirationRate: 0,
+        lostValue: 0,
+        avgDaysListed: 0,
       });
       return;
+    }
+
+    // Get date range for filtering
+    const dateRange = getDateRange();
+
+    // Filter by date range if applicable
+    let dateFilteredListings = listingData;
+    if (dateRange.startDate && dateRange.endDate) {
+      dateFilteredListings = listingData.filter(listing => {
+        const listingDate = new Date(listing.listingDate || listing.listing_date);
+        return listingDate >= dateRange.startDate && listingDate <= dateRange.endDate;
+      });
     }
 
     let filteredListings = [];
@@ -243,7 +506,7 @@ const ListingsDashboard = () => {
     // Filter based on selected status
     switch (statusFilter) {
       case 'active':
-        filteredListings = listingData.filter(l =>
+        filteredListings = dateFilteredListings.filter(l =>
           l.listingStatus === 'Active' ||
           l.listing_status === 'Active' ||
           l.listingStatus === 'active' ||
@@ -251,7 +514,7 @@ const ListingsDashboard = () => {
         );
         break;
       case 'pending':
-        filteredListings = listingData.filter(l =>
+        filteredListings = dateFilteredListings.filter(l =>
           l.listingStatus === 'Pending' ||
           l.listing_status === 'Pending' ||
           l.listingStatus === 'pending' ||
@@ -259,7 +522,7 @@ const ListingsDashboard = () => {
         );
         break;
       case 'sold':
-        filteredListings = listingData.filter(l =>
+        filteredListings = dateFilteredListings.filter(l =>
           l.listingStatus === 'Sold' ||
           l.listing_status === 'Sold' ||
           l.listingStatus === 'sold' ||
@@ -267,7 +530,7 @@ const ListingsDashboard = () => {
         );
         break;
       case 'expired':
-        filteredListings = listingData.filter(l =>
+        filteredListings = dateFilteredListings.filter(l =>
           l.listingStatus === 'Expired' ||
           l.listing_status === 'Expired' ||
           l.listingStatus === 'expired' ||
@@ -275,7 +538,7 @@ const ListingsDashboard = () => {
         );
         break;
       default:
-        filteredListings = listingData;
+        filteredListings = dateFilteredListings;
     }
 
     // Calculate stats for filtered listings
@@ -283,19 +546,92 @@ const ListingsDashboard = () => {
 
     // Calculate average days on market
     const now = new Date();
-    const avgDaysOnMarket = Math.round(
+    const avgDaysOnMarket = filteredListings.length > 0 ? Math.round(
       filteredListings.reduce((sum, l) => {
         const listingDate = new Date(l.listingDate || l.listing_date);
         const days = Math.floor((now - listingDate) / (1000 * 60 * 60 * 24));
         return sum + days;
-      }, 0) / (filteredListings.length || 1)
+      }, 0) / filteredListings.length
+    ) : 0;
+
+    // Calculate month-specific stats
+    const thisMonth = new Date();
+    thisMonth.setDate(1);
+    thisMonth.setHours(0, 0, 0, 0);
+
+    const newThisMonth = filteredListings.filter(l => {
+      const listingDate = new Date(l.listingDate || l.listing_date);
+      return listingDate >= thisMonth;
+    }).length;
+
+    // Calculate projected commission (2.5% of total value)
+    const projectedCommission = totalValue * 0.025;
+
+    // Calculate this year stats
+    const thisYear = new Date().getFullYear();
+    const soldThisYear = listingData.filter(l => {
+      const isSold = l.listingStatus === 'Sold' || l.listing_status === 'Sold' ||
+                     l.listingStatus === 'sold' || l.listing_status === 'sold';
+      if (!isSold) return false;
+      const soldDate = new Date(l.closeDate || l.close_date || l.listingDate || l.listing_date);
+      return soldDate.getFullYear() === thisYear;
+    }).length;
+
+    // Calculate total commission (from sold listings)
+    const soldListings = listingData.filter(l =>
+      l.listingStatus === 'Sold' || l.listing_status === 'Sold' ||
+      l.listingStatus === 'sold' || l.listing_status === 'sold'
     );
+    const totalSoldValue = soldListings.reduce((sum, l) => sum + Number(l.listPrice || l.list_price || 0), 0);
+    const totalCommission = totalSoldValue * 0.025;
+
+    // Calculate expiration rate
+    const totalListings = listingData.length;
+    const expiredListings = listingData.filter(l =>
+      l.listingStatus === 'Expired' || l.listing_status === 'Expired' ||
+      l.listingStatus === 'expired' || l.listing_status === 'expired'
+    );
+    const expirationRate = totalListings > 0 ? ((expiredListings.length / totalListings) * 100).toFixed(1) : 0;
+
+    // Calculate lost value (from expired listings)
+    const lostValue = expiredListings.reduce((sum, l) => sum + Number(l.listPrice || l.list_price || 0), 0);
+
+    // Calculate average days listed for expired
+    const avgDaysListed = expiredListings.length > 0 ? Math.round(
+      expiredListings.reduce((sum, l) => {
+        const listingDate = new Date(l.listingDate || l.listing_date);
+        const expiryDate = new Date(l.expirationDate || l.expiration_date || now);
+        const days = Math.floor((expiryDate - listingDate) / (1000 * 60 * 60 * 24));
+        return sum + days;
+      }, 0) / expiredListings.length
+    ) : 0;
+
+    // Calculate pending this month
+    const pendingListings = listingData.filter(l =>
+      l.listingStatus === 'Pending' || l.listing_status === 'Pending' ||
+      l.listingStatus === 'pending' || l.listing_status === 'pending'
+    );
+    const pendingThisMonth = pendingListings.filter(l => {
+      const listingDate = new Date(l.listingDate || l.listing_date);
+      return listingDate >= thisMonth;
+    }).length;
 
     setStats({
       totalListings: filteredListings.length,
       activeListings: filteredListings.length,
       totalValue,
       avgDaysOnMarket,
+      newThisMonth,
+      pendingListings: pendingListings.length,
+      pendingThisMonth,
+      projectedCommission,
+      soldListings: soldListings.length,
+      soldThisYear,
+      totalCommission,
+      expiredListings: expiredListings.length,
+      expirationRate: parseFloat(expirationRate),
+      lostValue,
+      avgDaysListed,
     });
   };
 
@@ -312,75 +648,705 @@ const ListingsDashboard = () => {
     );
   }
 
+  const dateRange = getDateRange();
+
   return (
     <>
       <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
 
         {/* Hero Section with Stats */}
         <HeroSection>
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-          >
-            <Typography variant="h3" component="h1" sx={{ fontWeight: 700, mb: 1 }}>
-              Listing Management
-            </Typography>
-            <Typography variant="h6" sx={{ mb: 4, opacity: 0.9 }}>
-              Track and manage all your real estate listings in one place
-            </Typography>
-          </motion.div>
+          {/* Wrapper for header and main content */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
 
-          {/* Stats Grid */}
-          <Grid container spacing={3}>
-            <StatCard icon={Home} title="Total Listings" value={stats.totalListings || 0} color="#ffffff" delay={0} />
-            <StatCard icon={CheckCircle} title="Active Listings" value={stats.activeListings || 0} color="#ffffff" delay={1} />
-            <StatCard icon={AttachMoney} title="Total Value" value={(stats.totalValue || 0) / 1000000} prefix="$" suffix="M" color="#ffffff" delay={2} />
-            <StatCard icon={TrendingUp} title="Avg Days on Market" value={stats.avgDaysOnMarket || 0} color="#ffffff" delay={3} />
-          </Grid>
+            {/* Header Row - Full width above both containers */}
+            <Box sx={{
+              display: 'flex',
+              gap: 3,
+              alignItems: 'center',
+              flexDirection: 'row',
+              flexWrap: 'wrap',
+              justifyContent: 'space-between',
+              mb: 3,
+              width: '100%',
+            }}>
+              {/* Header */}
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+                style={{ flexShrink: 0 }}
+              >
+                <Typography variant="h3" component="h1" sx={{ fontWeight: 700 }}>
+                  Listings
+                </Typography>
+              </motion.div>
 
-          {/* Action Buttons */}
-          <Box sx={{ mt: 4, display: 'flex', gap: 2 }}>
-            <Button
-              variant="contained"
-              size="large"
-              startIcon={<Add />}
-              onClick={() => navigate('/listings/new')}
-              sx={{
-                backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                color: 'white',
-                backdropFilter: 'blur(10px)',
-                fontWeight: 600,
-                px: 3,
-                py: 1.5,
-                borderRadius: 2,
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                }
-              }}
-            >
-              Create New Listing
-            </Button>
-            <Button
-              variant="outlined"
-              size="large"
-              startIcon={<Assessment />}
-              sx={{
-                color: 'white',
-                borderColor: 'rgba(255, 255, 255, 0.5)',
-                '&:hover': {
-                  borderColor: 'white',
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                }
-              }}
-            >
-              Listing Analytics
-            </Button>
+              {/* Date Controls Container - always show in header, right-aligned */}
+              <Box sx={{
+                display: 'flex',
+                gap: 2,
+                alignItems: 'center',
+                flexWrap: 'nowrap',
+                flexShrink: 0,
+                marginLeft: 'auto',
+              }}>
+                  {/* Date Buttons */}
+                  <ToggleButtonGroup
+                    value={dateRangeFilter}
+                    exclusive
+                    onChange={(e, newValue) => {
+                      if (newValue !== null) {
+                        setDateRangeFilter(newValue);
+                        setCustomStartDate(null);
+                        setCustomEndDate(null);
+                      }
+                    }}
+                    size="small"
+                    sx={{
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      borderRadius: 1,
+                      flexShrink: 0, // Don't shrink
+                      flexGrow: 0, // Don't grow
+                      height: 36, // Match date picker height
+                      '& .MuiToggleButton-root': {
+                        color: 'rgba(255, 255, 255, 0.8)',
+                        borderColor: 'transparent',
+                        fontSize: { xs: '0.75rem', md: '0.875rem' },
+                        fontWeight: 600,
+                        px: { xs: 1.5, md: 2 },
+                        py: 0,
+                        height: 36, // Match container height
+                        minWidth: 'auto',
+                        '&.Mui-selected': {
+                          backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                          color: 'white',
+                          borderColor: 'transparent',
+                          '&:hover': {
+                            backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                          },
+                        },
+                        '&:hover': {
+                          backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                          borderColor: 'transparent',
+                        },
+                      },
+                    }}
+                  >
+                    <ToggleButton value="1D">1D</ToggleButton>
+                    <ToggleButton value="1M">1M</ToggleButton>
+                    <ToggleButton value="1Y">1Y</ToggleButton>
+                    <ToggleButton value="YTD">YTD</ToggleButton>
+                  </ToggleButtonGroup>
+
+                  {/* Date Range Pickers - No Labels */}
+                  <LocalizationProvider dateAdapter={AdapterDateFns}>
+                    <Box sx={{
+                      display: 'flex',
+                      gap: 0.5, // Smaller gap
+                      alignItems: 'center',
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      borderRadius: 1,
+                      px: 0.5, // Minimal padding
+                      height: 36, // Match date button height
+                      border: '1px solid transparent',
+                      flexShrink: 0, // Don't shrink
+                      flexGrow: 0, // Don't grow
+                    }}>
+                      <DatePicker
+                        open={startDatePickerOpen}
+                        onOpen={() => setStartDatePickerOpen(true)}
+                        onClose={() => setStartDatePickerOpen(false)}
+                        format="MMM d, yyyy" // Format: Sep 4, 2025 (no leading zeros)
+                        value={(() => {
+                          try {
+                            const date = customStartDate || dateRange?.startDate;
+                            if (!date) return null;
+                            if (typeof date === 'string') {
+                              const parsed = new Date(date);
+                              if (isNaN(parsed.getTime())) return null;
+                              return parsed;
+                            }
+                            if (!(date instanceof Date)) return null;
+                            if (isNaN(date.getTime())) return null;
+                            return date;
+                          } catch (e) {
+                            console.error('DatePicker value error:', e);
+                            return null;
+                          }
+                        })()}
+                        onChange={(newDate) => {
+                          setCustomStartDate(newDate);
+                          if (newDate && customEndDate) {
+                            const matched = detectPresetRange(newDate, customEndDate);
+                            setDateRangeFilter(matched);
+                          } else {
+                            setDateRangeFilter(null);
+                          }
+                        }}
+                        slotProps={{
+                          textField: {
+                            size: 'small',
+                            placeholder: 'Start',
+                            onClick: () => setStartDatePickerOpen(true),
+                            sx: {
+                              width: { xs: 105, md: 115 }, // Narrower width
+                              '& .MuiInputBase-root': {
+                                backgroundColor: 'transparent',
+                                borderColor: 'rgba(255, 255, 255, 0.3)',
+                                height: 36, // Slightly smaller height
+                                paddingRight: '8px !important', // Override default padding
+                              },
+                              '& .MuiOutlinedInput-root': {
+                                '& fieldset': {
+                                  borderColor: 'transparent',
+                                },
+                                '&:hover fieldset': {
+                                  borderColor: 'transparent',
+                                },
+                                '&.Mui-focused fieldset': {
+                                  borderColor: 'transparent',
+                                },
+                              },
+                              '& .MuiInputBase-input': {
+                                fontSize: { xs: '0.75rem', md: '0.875rem' },
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                textAlign: 'center',
+                                color: 'rgba(255, 255, 255, 0.9)',
+                                padding: '6px 8px', // Reduced padding
+                              },
+                              // Hide the calendar icon
+                              '& .MuiInputAdornment-root': {
+                                display: 'none',
+                              },
+                              '& .MuiInputLabel-root': {
+                                display: 'none', // Hide label
+                              },
+                              '& .MuiOutlinedInput-notchedOutline legend': {
+                                display: 'none', // Hide legend space
+                              },
+                            },
+                          },
+                          openPickerButton: {
+                            sx: { display: 'none' },
+                          },
+                        }}
+                      />
+                      <Typography sx={{ color: 'rgba(255, 255, 255, 0.7)', mx: 0.5, flexShrink: 0 }}>→</Typography>
+                      <DatePicker
+                        open={endDatePickerOpen}
+                        onOpen={() => setEndDatePickerOpen(true)}
+                        onClose={() => setEndDatePickerOpen(false)}
+                        format="MMM d, yyyy" // Format: Sep 4, 2025 (no leading zeros)
+                        value={(() => {
+                          try {
+                            const date = customEndDate || dateRange?.endDate;
+                            if (!date) return null;
+                            if (typeof date === 'string') {
+                              const parsed = new Date(date);
+                              if (isNaN(parsed.getTime())) return null;
+                              return parsed;
+                            }
+                            if (!(date instanceof Date)) return null;
+                            if (isNaN(date.getTime())) return null;
+                            return date;
+                          } catch (e) {
+                            console.error('DatePicker value error:', e);
+                            return null;
+                          }
+                        })()}
+                        onChange={(newDate) => {
+                          setCustomEndDate(newDate);
+                          if (customStartDate && newDate) {
+                            const matched = detectPresetRange(customStartDate, newDate);
+                            setDateRangeFilter(matched);
+                          } else {
+                            setDateRangeFilter(null);
+                          }
+                        }}
+                        slotProps={{
+                          textField: {
+                            size: 'small',
+                            placeholder: 'End',
+                            onClick: () => setEndDatePickerOpen(true),
+                            sx: {
+                              width: { xs: 105, md: 115 },
+                              '& .MuiInputBase-root': {
+                                backgroundColor: 'transparent',
+                                borderColor: 'rgba(255, 255, 255, 0.3)',
+                                height: 36,
+                                paddingRight: '8px !important',
+                              },
+                              '& .MuiOutlinedInput-root': {
+                                '& fieldset': {
+                                  borderColor: 'transparent',
+                                },
+                                '&:hover fieldset': {
+                                  borderColor: 'transparent',
+                                },
+                                '&.Mui-focused fieldset': {
+                                  borderColor: 'transparent',
+                                },
+                              },
+                              '& .MuiInputBase-input': {
+                                fontSize: { xs: '0.75rem', md: '0.875rem' },
+                                fontWeight: 600,
+                                cursor: 'pointer',
+                                textAlign: 'center',
+                                color: 'rgba(255, 255, 255, 0.9)',
+                                padding: '6px 8px',
+                              },
+                              '& .MuiInputAdornment-root': {
+                                display: 'none',
+                              },
+                              '& .MuiInputLabel-root': {
+                                display: 'none',
+                              },
+                              '& .MuiOutlinedInput-notchedOutline legend': {
+                                display: 'none',
+                              },
+                            },
+                          },
+                          openPickerButton: {
+                            sx: { display: 'none' },
+                          },
+                        }}
+                      />
+                    </Box>
+                  </LocalizationProvider>
+                </Box>
+            </Box>
+
+            {/* Main Content Row - Left and Right Containers */}
+            <Box sx={{
+              display: 'flex',
+              gap: 3,
+              alignItems: 'stretch',
+              flexDirection: { xs: 'column', md: 'row' },
+              height: '100%',
+            }}>
+              {/* Left container: Stats Grid */}
+              <Box sx={{
+                flex: '1 1 auto',
+                display: 'flex',
+                flexDirection: 'column',
+                minWidth: 0, // Allow shrinking
+              }}>
+                {/* Stats Grid - White Cards - Dynamic based on selected tab */}
+                <Grid container spacing={2}>
+                {(() => {
+                  switch(selectedStatus) {
+                    case 'active':
+                      return (
+                        <>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={Home}
+                              title="Total Active Listings"
+                              value={stats.totalListings || 0}
+                              color="#ffffff"
+                              delay={0}
+                              goal={20}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={Schedule}
+                              title="New This Month"
+                              value={stats.newThisMonth || 0}
+                              color="#ffffff"
+                              delay={1}
+                              goal={5}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={TrendingUp}
+                              title="Total Value"
+                              value={stats.totalValue || 0}
+                              prefix="$"
+                              suffix=""
+                              color="#ffffff"
+                              delay={2}
+                              goal={10000000}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={CalendarToday}
+                              title="Avg Days on Market"
+                              value={stats.avgDaysOnMarket || 0}
+                              color="#ffffff"
+                              delay={3}
+                              goal={30}
+                            />
+                          </Grid>
+                        </>
+                      );
+
+                    case 'pending':
+                      return (
+                        <>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={Home}
+                              title="Total Pending Listings"
+                              value={stats.pendingListings || 0}
+                              color="#ffffff"
+                              delay={0}
+                              goal={10}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={Schedule}
+                              title="Pending This Month"
+                              value={stats.pendingThisMonth || 0}
+                              color="#ffffff"
+                              delay={1}
+                              goal={3}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={TrendingUp}
+                              title="Total Value"
+                              value={stats.totalValue || 0}
+                              prefix="$"
+                              suffix=""
+                              color="#ffffff"
+                              delay={2}
+                              goal={5000000}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={AttachMoney}
+                              title="Projected Commission"
+                              value={stats.projectedCommission || 0}
+                              prefix="$"
+                              suffix=""
+                              color="#ffffff"
+                              delay={3}
+                              showPrivacy={true}
+                              goal={125000}
+                            />
+                          </Grid>
+                        </>
+                      );
+
+                    case 'sold':
+                      return (
+                        <>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={CheckCircle}
+                              title="Total Sold Listings"
+                              value={stats.soldListings || 0}
+                              color="#ffffff"
+                              delay={0}
+                              goal={50}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={CalendarToday}
+                              title="Sold This Year"
+                              value={stats.soldThisYear || 0}
+                              color="#ffffff"
+                              delay={1}
+                              goal={40}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={TrendingUp}
+                              title="Total Value"
+                              value={stats.totalValue || 0}
+                              prefix="$"
+                              suffix=""
+                              color="#ffffff"
+                              delay={2}
+                              goal={15000000}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={AttachMoney}
+                              title="Total Commission"
+                              value={stats.totalCommission || 0}
+                              prefix="$"
+                              suffix=""
+                              color="#ffffff"
+                              delay={3}
+                              showPrivacy={true}
+                              goal={375000}
+                            />
+                          </Grid>
+                        </>
+                      );
+
+                    case 'expired':
+                      return (
+                        <>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={ErrorIcon}
+                              title="Total Expired Listings"
+                              value={stats.expiredListings || 0}
+                              color="#ffffff"
+                              delay={0}
+                              goal={5}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={Assessment}
+                              title="Expiration Rate"
+                              value={stats.expirationRate || 0}
+                              suffix="%"
+                              color="#ffffff"
+                              delay={1}
+                              goal={10}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={TrendingDown}
+                              title="Lost Value"
+                              value={stats.lostValue || 0}
+                              prefix="$"
+                              suffix=""
+                              color="#ffffff"
+                              delay={2}
+                              goal={1000000}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={CalendarToday}
+                              title="Avg Days Listed"
+                              value={stats.avgDaysListed || 0}
+                              color="#ffffff"
+                              delay={3}
+                              goal={90}
+                            />
+                          </Grid>
+                        </>
+                      );
+
+                    default:
+                      return (
+                        <>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={Home}
+                              title="Total Listings"
+                              value={stats.totalListings || 0}
+                              color="#ffffff"
+                              delay={0}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={CheckCircle}
+                              title="Active Listings"
+                              value={stats.activeListings || 0}
+                              color="#ffffff"
+                              delay={1}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={TrendingUp}
+                              title="Total Value"
+                              value={stats.totalValue || 0}
+                              prefix="$"
+                              suffix=""
+                              color="#ffffff"
+                              delay={2}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={CalendarToday}
+                              title="Avg Days on Market"
+                              value={stats.avgDaysOnMarket || 0}
+                              color="#ffffff"
+                              delay={3}
+                            />
+                          </Grid>
+                        </>
+                      );
+                  }
+                })()}
+              </Grid>
+
+              {/* Flexible spacer to push buttons to bottom */}
+              <Box sx={{ flexGrow: 1, minHeight: '20px' }} />
+
+              {/* Action Buttons Row - Aligned to bottom */}
+              <Box sx={{ display: 'flex', gap: 2 }}>
+                <Button
+                  variant="contained"
+                  size="medium"
+                  startIcon={<Add />}
+                  onClick={() => navigate('/listings/new')}
+                  sx={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    color: 'white',
+                    backdropFilter: 'blur(10px)',
+                    fontWeight: 600,
+                    px: 3,
+                    py: 1,
+                    borderRadius: 2,
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                    }
+                  }}
+                >
+                  Create New Listing
+                </Button>
+                <Button
+                  variant="outlined"
+                  size="medium"
+                  startIcon={<Assessment />}
+                  sx={{
+                    color: 'white',
+                    borderColor: 'rgba(255, 255, 255, 0.5)',
+                    px: 3,
+                    py: 1,
+                    '&:hover': {
+                      borderColor: 'white',
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    }
+                  }}
+                >
+                  Listing Analytics
+                </Button>
+              </Box>
+              </Box>
+
+              {/* Right container: AI Assistant */}
+              <Box sx={{
+                width: { xs: '100%', md: '280px', lg: '320px' },
+                minWidth: { md: '280px' }, // Ensure minimum width
+                flexShrink: 0, // Prevent shrinking
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+              }}>
+              {/* Spacer */}
+              <Box sx={{ flexGrow: 1 }} />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Card
+                  elevation={0}
+                  sx={{
+                    aspectRatio: { xs: 'auto', md: '1 / 1' },
+                    minHeight: { xs: 250, md: 320 },
+                    position: 'relative',
+                    overflow: 'hidden',
+                    background: 'linear-gradient(135deg, rgba(23, 63, 26, 0.12) 0%, rgba(51, 105, 55, 0.08) 100%)',
+                    backdropFilter: 'blur(10px)',
+                    border: '2px dashed rgba(255, 255, 255, 0.3)',
+                    borderRadius: 3,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      border: '2px dashed rgba(255, 255, 255, 0.5)',
+                      background: 'linear-gradient(135deg, rgba(23, 63, 26, 0.18) 0%, rgba(51, 105, 55, 0.12) 100%)',
+                    }
+                  }}
+                >
+                  <CardContent sx={{ textAlign: 'center', p: 3 }}>
+                    <Box>
+                      <Box
+                        sx={{
+                          width: 64,
+                          height: 64,
+                          borderRadius: '50%',
+                          background: 'rgba(255, 255, 255, 0.15)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          margin: '0 auto',
+                          mb: 2,
+                        }}
+                      >
+                        <Typography sx={{ fontSize: '2rem' }}>🤖</Typography>
+                      </Box>
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          color: 'rgba(255, 255, 255, 0.95)',
+                          fontWeight: 700,
+                          mb: 1,
+                          letterSpacing: '0.02em',
+                        }}
+                      >
+                        AI Listings Manager
+                      </Typography>
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          color: 'rgba(255, 255, 255, 0.7)',
+                          mb: 2,
+                          fontSize: '0.875rem',
+                        }}
+                      >
+                        Hire an AI assistant to automate listing tasks, send reminders, and manage showings.
+                      </Typography>
+                      <Box
+                        sx={{
+                          display: 'inline-block',
+                          px: 2,
+                          py: 0.75,
+                          borderRadius: 2,
+                          background: 'rgba(255, 255, 255, 0.2)',
+                          backdropFilter: 'blur(5px)',
+                        }}
+                      >
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: 'white',
+                            fontWeight: 600,
+                            letterSpacing: '0.1em',
+                            textTransform: 'uppercase',
+                            fontSize: '0.75rem',
+                          }}
+                        >
+                          Coming Soon
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </CardContent>
+                </Card>
+              </motion.div>
+              {/* Spacer */}
+              <Box sx={{ flexGrow: 1 }} />
+            </Box>
+            </Box>
           </Box>
         </HeroSection>
 
       {/* Status Tabs with View Mode Toggle */}
-      <Box sx={{ mb: 4, display: 'flex', gap: 2, alignItems: 'center' }}>
+      <Box sx={{
+        mb: 4,
+        display: 'flex',
+        gap: 2,
+        alignItems: 'center',
+        flexWrap: { xs: 'wrap', md: 'nowrap' },
+        flexDirection: { xs: 'column', md: 'row' },
+      }}>
         {/* Tab Bar - Contained */}
         <Paper
           elevation={0}
@@ -390,11 +1356,14 @@ const ListingsDashboard = () => {
             boxShadow: 1,
             display: 'inline-flex',
             alignItems: 'center',
+            width: { xs: '100%', md: 'auto' },
           }}
         >
           <Tabs
             value={selectedStatus}
             onChange={(e, newValue) => setSelectedStatus(newValue)}
+            variant="scrollable"
+            scrollButtons="auto"
             sx={{
               '& .MuiTab-root': {
                 textTransform: 'none',
@@ -411,13 +1380,21 @@ const ListingsDashboard = () => {
             <Tab label="Pending Listings" value="pending" />
             <Tab label="Sold Listings" value="sold" />
             <Tab label="Expired Listings" value="expired" />
+            <Tab label="All Listings" value="all" />
           </Tabs>
         </Paper>
 
         {/* Right-side Controls */}
-        <Box sx={{ ml: 'auto', display: 'flex', gap: 2, alignItems: 'center' }}>
+        <Box sx={{
+          ml: { xs: 0, md: 'auto' },
+          display: 'flex',
+          gap: 2,
+          alignItems: 'center',
+          width: { xs: '100%', md: 'auto' },
+          justifyContent: { xs: 'space-between', md: 'flex-start' },
+        }}>
             {/* Sort Selector */}
-            <FormControl size="small" sx={{ minWidth: 180 }}>
+            <FormControl size="small" sx={{ minWidth: 180, flex: { xs: 1, md: 'none' } }}>
               <InputLabel>Sort By</InputLabel>
               <Select
                 value={sortBy}
@@ -468,10 +1445,24 @@ const ListingsDashboard = () => {
                 <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
               </ToggleButton>
             </ToggleButtonGroup>
+
+            {/* Archive Button */}
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<ArchiveIcon />}
+              sx={{
+                minWidth: 'auto',
+                px: 2,
+                display: { xs: 'none', md: 'flex' },
+              }}
+            >
+              Archive
+            </Button>
           </Box>
       </Box>
 
-        {/* Listings Grid - Placeholder for now */}
+        {/* Listings Grid */}
         <Box sx={{
           display: 'grid',
           gridTemplateColumns: {
