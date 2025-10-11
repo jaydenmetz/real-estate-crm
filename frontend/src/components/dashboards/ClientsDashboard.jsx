@@ -49,6 +49,7 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { clientsAPI } from '../../services/api.service';
 import { useAuth } from '../../contexts/AuthContext';
+import NewClientModal from '../forms/NewClientModal';
 
 // Styled Components
 const HeroSection = styled(Box)(({ theme }) => ({
@@ -312,6 +313,7 @@ const ClientsDashboard = () => {
   const [endDatePickerOpen, setEndDatePickerOpen] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [archivedCount, setArchivedCount] = useState(0);
+  const [newClientModalOpen, setNewClientModalOpen] = useState(false);
 
   const [stats, setStats] = useState({
     totalClients: 0,
@@ -1097,7 +1099,7 @@ const ClientsDashboard = () => {
                   variant="contained"
                   size="medium"
                   startIcon={<Add />}
-                  onClick={() => navigate('/clients/new')}
+                  onClick={() => setNewClientModalOpen(true)}
                   sx={{
                     backgroundColor: 'rgba(255, 255, 255, 0.2)',
                     color: 'white',
@@ -1732,6 +1734,15 @@ const ClientsDashboard = () => {
           </AnimatePresence>
         </Box>
 
+        {/* New Client Modal */}
+        <NewClientModal
+          open={newClientModalOpen}
+          onClose={() => setNewClientModalOpen(false)}
+          onSuccess={(newClientId) => {
+            setNewClientModalOpen(false);
+            fetchClients();
+          }}
+        />
       </Container>
     </>
   );

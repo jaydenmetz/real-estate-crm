@@ -47,6 +47,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { appointmentsAPI } from '../../services/api.service';
+import NewAppointmentModal from '../forms/NewAppointmentModal';
 
 // Styled Components
 const HeroSection = styled(Box)(({ theme }) => ({
@@ -297,6 +298,7 @@ const AppointmentsDashboard = () => {
   const [endDatePickerOpen, setEndDatePickerOpen] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [archivedCount, setArchivedCount] = useState(0);
+  const [newAppointmentModalOpen, setNewAppointmentModalOpen] = useState(false);
   const [stats, setStats] = useState({
     totalUpcoming: 0,
     thisWeek: 0,
@@ -1051,7 +1053,7 @@ const AppointmentsDashboard = () => {
                   variant="contained"
                   size="medium"
                   startIcon={<Add />}
-                  onClick={() => navigate('/appointments/new')}
+                  onClick={() => setNewAppointmentModalOpen(true)}
                   sx={{
                     backgroundColor: 'rgba(255, 255, 255, 0.2)',
                     color: 'white',
@@ -1636,6 +1638,15 @@ const AppointmentsDashboard = () => {
           </AnimatePresence>
         </Box>
 
+        {/* New Appointment Modal */}
+        <NewAppointmentModal
+          open={newAppointmentModalOpen}
+          onClose={() => setNewAppointmentModalOpen(false)}
+          onSuccess={(newAppointmentId) => {
+            setNewAppointmentModalOpen(false);
+            fetchAppointments();
+          }}
+        />
       </Container>
     </>
   );

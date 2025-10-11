@@ -51,6 +51,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { format as formatDate } from 'date-fns';
 import { listingsAPI } from '../../services/api.service';
 import { useAuth } from '../../contexts/AuthContext';
+import NewListingModal from '../forms/NewListingModal';
 
 // Styled Components
 const HeroSection = styled(Box)(({ theme }) => ({
@@ -312,6 +313,7 @@ const ListingsDashboard = () => {
   const [endDatePickerOpen, setEndDatePickerOpen] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [archivedCount, setArchivedCount] = useState(0);
+  const [newListingModalOpen, setNewListingModalOpen] = useState(false);
   const [stats, setStats] = useState({
     totalListings: 0,
     activeListings: 0,
@@ -1197,7 +1199,7 @@ const ListingsDashboard = () => {
                   variant="contained"
                   size="medium"
                   startIcon={<Add />}
-                  onClick={() => navigate('/listings/new')}
+                  onClick={() => setNewListingModalOpen(true)}
                   sx={{
                     backgroundColor: 'rgba(255, 255, 255, 0.2)',
                     color: 'white',
@@ -1834,6 +1836,15 @@ const ListingsDashboard = () => {
           </AnimatePresence>
         </Box>
 
+        {/* New Listing Modal */}
+        <NewListingModal
+          open={newListingModalOpen}
+          onClose={() => setNewListingModalOpen(false)}
+          onSuccess={(newListing) => {
+            setNewListingModalOpen(false);
+            fetchListings();
+          }}
+        />
       </Container>
     </>
   );

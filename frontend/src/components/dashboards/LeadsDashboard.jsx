@@ -48,6 +48,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { leadsAPI } from '../../services/api.service';
+import NewLeadModal from '../forms/NewLeadModal';
 
 const HeroSection = styled(Box)(({ theme }) => ({
   position: 'relative',
@@ -264,6 +265,7 @@ const LeadsDashboard = () => {
   const [endDatePickerOpen, setEndDatePickerOpen] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [archivedCount, setArchivedCount] = useState(0);
+  const [newLeadModalOpen, setNewLeadModalOpen] = useState(false);
   const [stats, setStats] = useState({
     totalLeads: 0,
     newLeads: 0,
@@ -1058,7 +1060,7 @@ const LeadsDashboard = () => {
                   variant="contained"
                   size="medium"
                   startIcon={<Add />}
-                  onClick={() => navigate('/leads/new')}
+                  onClick={() => setNewLeadModalOpen(true)}
                   sx={{
                     backgroundColor: 'rgba(255, 255, 255, 0.2)',
                     color: 'white',
@@ -1626,6 +1628,16 @@ const LeadsDashboard = () => {
             })()}
           </AnimatePresence>
         </Box>
+
+        {/* New Lead Modal */}
+        <NewLeadModal
+          open={newLeadModalOpen}
+          onClose={() => setNewLeadModalOpen(false)}
+          onSuccess={(newLeadId) => {
+            setNewLeadModalOpen(false);
+            fetchLeads();
+          }}
+        />
       </Container>
     </>
   );
