@@ -248,6 +248,9 @@ function App() {
                     </React.Suspense>
                   } />
 
+                  {/* Health Check - Public for debugging */}
+                  <Route path="/health" element={<HealthOverviewDashboard />} />
+
                   {/* Onboarding Routes (Protected) */}
                   <Route path="/onboarding" element={<ProtectedRoute><OnboardingLayout /></ProtectedRoute>}>
                     <Route index element={<Navigate to="/onboarding/welcome" />} />
@@ -312,10 +315,7 @@ function App() {
                                     <HomeDashboard />
                                   </UserAwareErrorBoundary>
                                 } />
-                                
-                    
-                                {/* Health Check - Main system health page (Admin Only) */}
-                                <Route path="/health" element={<ProtectedRoute requiredRole="system_admin"><HealthOverviewDashboard /></ProtectedRoute>} />
+
 
                                 {/* Main Features */}
                                 <Route path="/escrows" element={<EscrowsDashboard />} />
