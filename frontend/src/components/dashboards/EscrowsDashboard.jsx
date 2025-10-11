@@ -1909,6 +1909,10 @@ const EscrowsDashboard = () => {
             gap: 2,
             mb: 3,
             mt: -2,
+            background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
+            borderRadius: 3,
+            p: 3,
+            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.1)',
           }}
         >
           {/* Date Range Toggle Buttons */}
@@ -1929,19 +1933,25 @@ const EscrowsDashboard = () => {
               flexShrink: 0,
               height: 36,
               '& .MuiToggleButton-root': {
-                color: 'rgba(0, 0, 0, 0.7)',
-                borderColor: 'rgba(0, 0, 0, 0.12)',
-                fontSize: '0.875rem',
+                color: 'rgba(255, 255, 255, 0.8)',
+                borderColor: 'transparent',
+                fontSize: { xs: '0.75rem', md: '0.875rem' },
                 fontWeight: 600,
-                px: 2,
+                px: { xs: 1.5, md: 2 },
                 py: 0,
                 height: 36,
+                minWidth: 'auto',
                 '&.Mui-selected': {
-                  backgroundColor: 'primary.main',
+                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
                   color: 'white',
+                  borderColor: 'transparent',
                   '&:hover': {
-                    backgroundColor: 'primary.dark',
+                    backgroundColor: 'rgba(255, 255, 255, 0.3)',
                   },
+                },
+                '&:hover': {
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  borderColor: 'transparent',
                 },
               },
             }}
@@ -1954,7 +1964,16 @@ const EscrowsDashboard = () => {
 
           {/* Date Range Pickers */}
           <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+            <Box sx={{
+              display: 'flex',
+              gap: 0.5,
+              alignItems: 'center',
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+              borderRadius: 1,
+              px: 0.5,
+              height: 36,
+              border: '1px solid transparent',
+            }}>
               <DatePicker
                 open={startDatePickerOpen}
                 onOpen={() => setStartDatePickerOpen(true)}
@@ -1989,11 +2008,50 @@ const EscrowsDashboard = () => {
                 slotProps={{
                   textField: {
                     size: 'small',
-                    sx: { width: 115 }
-                  }
+                    sx: {
+                      width: { xs: 105, md: 115 },
+                      '& .MuiInputBase-root': {
+                        backgroundColor: 'transparent',
+                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                        height: 36,
+                        paddingRight: '8px !important',
+                      },
+                      '& .MuiOutlinedInput-root': {
+                        '& fieldset': {
+                          borderColor: 'transparent',
+                        },
+                        '&:hover fieldset': {
+                          borderColor: 'transparent',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: 'transparent',
+                        },
+                      },
+                      '& .MuiInputBase-input': {
+                        fontSize: { xs: '0.75rem', md: '0.875rem' },
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                        color: 'rgba(255, 255, 255, 0.9)',
+                        padding: '6px 8px',
+                      },
+                      '& .MuiInputAdornment-root': {
+                        display: 'none',
+                      },
+                      '& .MuiInputLabel-root': {
+                        display: 'none',
+                      },
+                      '& .MuiOutlinedInput-notchedOutline legend': {
+                        display: 'none',
+                      },
+                    },
+                  },
+                  openPickerButton: {
+                    sx: { display: 'none' },
+                  },
                 }}
               />
-              <Typography sx={{ mx: 0.5, color: 'text.secondary' }}>→</Typography>
+              <Typography sx={{ color: 'rgba(255, 255, 255, 0.7)', mx: 0.5, flexShrink: 0 }}>→</Typography>
               <DatePicker
                 open={endDatePickerOpen}
                 onOpen={() => setEndDatePickerOpen(true)}
@@ -2028,8 +2086,47 @@ const EscrowsDashboard = () => {
                 slotProps={{
                   textField: {
                     size: 'small',
-                    sx: { width: 115 }
-                  }
+                    sx: {
+                      width: { xs: 105, md: 115 },
+                      '& .MuiInputBase-root': {
+                        backgroundColor: 'transparent',
+                        borderColor: 'rgba(255, 255, 255, 0.3)',
+                        height: 36,
+                        paddingRight: '8px !important',
+                      },
+                      '& .MuiOutlinedInput-root': {
+                        '& fieldset': {
+                          borderColor: 'transparent',
+                        },
+                        '&:hover fieldset': {
+                          borderColor: 'transparent',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: 'transparent',
+                        },
+                      },
+                      '& .MuiInputBase-input': {
+                        fontSize: { xs: '0.75rem', md: '0.875rem' },
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        textAlign: 'center',
+                        color: 'rgba(255, 255, 255, 0.9)',
+                        padding: '6px 8px',
+                      },
+                      '& .MuiInputAdornment-root': {
+                        display: 'none',
+                      },
+                      '& .MuiInputLabel-root': {
+                        display: 'none',
+                      },
+                      '& .MuiOutlinedInput-notchedOutline legend': {
+                        display: 'none',
+                      },
+                    },
+                  },
+                  openPickerButton: {
+                    sx: { display: 'none' },
+                  },
                 }}
               />
             </Box>
