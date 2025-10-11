@@ -1578,7 +1578,7 @@ const ListingsDashboard = () => {
         <Box
           sx={{
             display: { xs: 'flex', sm: 'flex', md: 'none' },
-            justifyContent: 'flex-end',
+            justifyContent: 'center',
             mb: 3,
             mt: -2,
           }}
