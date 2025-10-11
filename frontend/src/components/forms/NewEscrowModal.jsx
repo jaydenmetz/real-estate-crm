@@ -27,7 +27,7 @@ import {
   LocationOn,
   Search,
 } from '@mui/icons-material';
-import { escrowsAPI } from '../../services/api.service';
+import { escrowsAPI, clientsAPI } from '../../services/api.service';
 import { useAuth } from '../../contexts/AuthContext';
 import { loadGoogleMapsScript } from '../../utils/googleMapsLoader';
 
@@ -35,6 +35,8 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [clients, setClients] = useState([]);
+  const [loadingClients, setLoadingClients] = useState(false);
   const [addressSuggestions, setAddressSuggestions] = useState([]);
   const [loadingAddress, setLoadingAddress] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState(null);
@@ -133,6 +135,8 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
     closeOfEscrowDate: calculateDefaultCOE(), // 30 days from today
     commissionPercentage: '',
     commissionFlat: '',
+    clientId: null,
+    representationType: 'buyer', // Default to buyer
   });
 
   // Check for Google API key
@@ -163,6 +167,27 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         });
     }
   }, [open, hasValidGoogleKey, googleMapsLoaded]);
+
+  // Fetch clients when modal opens
+  useEffect(() => {
+    if (open) {
+      fetchClients();
+    }
+  }, [open]);
+
+  const fetchClients = async () => {
+    setLoadingClients(true);
+    try {
+      const response = await clientsAPI.getAll();
+      if (response.success) {
+        setClients(response.data || []);
+      }
+    } catch (err) {
+      console.error('Error fetching clients:', err);
+    } finally {
+      setLoadingClients(false);
+    }
+  };
 
   // Reset session token after a place is selected
   const resetSessionToken = () => {
@@ -420,6 +445,11 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
       return;
     }
 
+    if (!formData.clientId) {
+      setError('Please select a client');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
@@ -447,7 +477,9 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         closeOfEscrowDate: formData.closeOfEscrowDate,
         escrowNumber: `ESC-${Date.now()}`,
         openDate: formData.acceptanceDate, // Use acceptance date as open date
-        status: 'active'
+        status: 'active',
+        clientId: formData.clientId,
+        representationType: formData.representationType,
       };
 
       const response = await escrowsAPI.create(escrowData);
@@ -482,6 +514,8 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         closeOfEscrowDate: calculateDefaultCOE(),
         commissionPercentage: '',
         commissionFlat: '',
+        clientId: null,
+        representationType: 'buyer',
       });
       setSelectedAddress(null);
       setAddressSuggestions([]);
@@ -747,6 +781,38 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
                 }}
                 helperText="Or enter a flat commission amount"
               />
+
+              {/* Client Selection */}
+              <Autocomplete
+                options={clients}
+                loading={loadingClients}
+                getOptionLabel={(option) => `${option.firstName} ${option.lastName} - ${option.email}`}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Client"
+                    placeholder="Select a client"
+                    helperText="Select the client for this escrow"
+                    required
+                  />
+                )}
+                onChange={(e, value) => setFormData({ ...formData, clientId: value?.id || null })}
+              />
+
+              {/* Representation Type */}
+              <FormControl fullWidth required>
+                <InputLabel>Representation Type</InputLabel>
+                <Select
+                  value={formData.representationType}
+                  onChange={(e) => setFormData({ ...formData, representationType: e.target.value })}
+                  label="Representation Type"
+                >
+                  <MenuItem value="buyer">Buyer</MenuItem>
+                  <MenuItem value="seller">Seller</MenuItem>
+                  <MenuItem value="dual">Dual Agency</MenuItem>
+                </Select>
+                <FormHelperText>Are you representing the buyer, seller, or both?</FormHelperText>
+              </FormControl>
             </Box>
           </Box>
         </DialogContent>

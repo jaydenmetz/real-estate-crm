@@ -27,7 +27,7 @@ import {
   Search,
   Home,
 } from '@mui/icons-material';
-import { listingsAPI } from '../../services/api.service';
+import { listingsAPI, clientsAPI } from '../../services/api.service';
 import { useAuth } from '../../contexts/AuthContext';
 import { loadGoogleMapsScript } from '../../utils/googleMapsLoader';
 
@@ -35,6 +35,8 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [clients, setClients] = useState([]);
+  const [loadingClients, setLoadingClients] = useState(false);
   const [addressSuggestions, setAddressSuggestions] = useState([]);
   const [loadingAddress, setLoadingAddress] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState(null);
@@ -63,6 +65,7 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
     bathrooms: '',
     squareFootage: '',
     listingStatus: 'Coming Soon',
+    clientId: null,
   });
 
   // Check for Google API key
@@ -93,6 +96,27 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
         });
     }
   }, [open, hasValidGoogleKey, googleMapsLoaded]);
+
+  // Fetch clients when modal opens
+  useEffect(() => {
+    if (open) {
+      fetchClients();
+    }
+  }, [open]);
+
+  const fetchClients = async () => {
+    setLoadingClients(true);
+    try {
+      const response = await clientsAPI.getAll();
+      if (response.success) {
+        setClients(response.data || []);
+      }
+    } catch (err) {
+      console.error('Error fetching clients:', err);
+    } finally {
+      setLoadingClients(false);
+    }
+  };
 
   // Reset session token after a place is selected
   const resetSessionToken = () => {
@@ -347,6 +371,11 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
       return;
     }
 
+    if (!formData.clientId) {
+      setError('Please select a client');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
@@ -359,6 +388,7 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
         propertyAddress: fullAddress,
         propertyType: formData.propertyType,
         listingStatus: formData.listingStatus,
+        clientId: formData.clientId,
       };
 
       // Only add optional fields if they have values
@@ -419,6 +449,7 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
         bathrooms: '',
         squareFootage: '',
         listingStatus: 'Coming Soon',
+        clientId: null,
       });
       setSelectedAddress(null);
       setAddressSuggestions([]);
@@ -637,6 +668,22 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
                   sx={{ flex: 1 }}
                 />
               </Box>
+
+              <Autocomplete
+                options={clients}
+                loading={loadingClients}
+                getOptionLabel={(option) => `${option.firstName} ${option.lastName} - ${option.email}`}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Client"
+                    placeholder="Select a client"
+                    helperText="Select the client for this listing"
+                    required
+                  />
+                )}
+                onChange={(e, value) => setFormData({ ...formData, clientId: value?.id || null })}
+              />
             </Box>
           </Box>
         </DialogContent>
@@ -652,7 +699,7 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
           <Button
             type="submit"
             variant="contained"
-            disabled={loading || !formData.propertyAddress}
+            disabled={loading || !formData.propertyAddress || !formData.clientId}
             startIcon={loading ? <CircularProgress size={20} /> : <Home />}
           >
             {loading ? 'Creating...' : 'Create Listing'}
