@@ -44,6 +44,7 @@ import {
   Receipt,
   AccountBalanceWallet,
   HealthAndSafety,
+  Groups,
 } from '@mui/icons-material';
 import UserMenu from './UserMenu';
 
@@ -185,7 +186,7 @@ const EnhancedNavigation = () => {
 
         <ListItem disablePadding>
           <ListItemButton onClick={() => {}}>
-            <ListItemIcon><People /></ListItemIcon>
+            <ListItemIcon><Groups /></ListItemIcon>
             <ListItemText primary="People" />
           </ListItemButton>
         </ListItem>
@@ -307,27 +308,7 @@ const EnhancedNavigation = () => {
                 </Button>
               ))}
 
-              {/* Data Dropdown */}
-              <Button
-                color="inherit"
-                startIcon={<Storage />}
-                onClick={handleDataMenuClick}
-                sx={{ mx: 0.5 }}
-              >
-                Data
-              </Button>
-
-              {/* People Dropdown */}
-              <Button
-                color="inherit"
-                startIcon={<People />}
-                onClick={handlePeopleMenuClick}
-                sx={{ mx: 0.5 }}
-              >
-                People
-              </Button>
-
-              {/* Other Dropdown */}
+              {/* Other Dropdown - Keep as text button for now */}
               <Button
                 color="inherit"
                 startIcon={<MoreVert />}
@@ -343,10 +324,34 @@ const EnhancedNavigation = () => {
 
           {/* Right side icons */}
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            {/* Data Dropdown - Icon Only */}
+            {!isMobile && (
+              <Tooltip title="Data">
+                <IconButton
+                  color="inherit"
+                  onClick={handleDataMenuClick}
+                >
+                  <Storage />
+                </IconButton>
+              </Tooltip>
+            )}
+
+            {/* People Dropdown - Icon Only with Groups icon */}
+            {!isMobile && (
+              <Tooltip title="People">
+                <IconButton
+                  color="inherit"
+                  onClick={handlePeopleMenuClick}
+                >
+                  <Groups />
+                </IconButton>
+              </Tooltip>
+            )}
+
             {/* Notifications */}
             <Tooltip title="Notifications">
-              <IconButton 
-                color="inherit" 
+              <IconButton
+                color="inherit"
                 onClick={(e) => setNotificationAnchor(e.currentTarget)}
               >
                 <Badge badgeContent={unreadCount} color="error">
@@ -357,7 +362,7 @@ const EnhancedNavigation = () => {
 
             {/* Settings */}
             <Tooltip title="Settings">
-              <IconButton 
+              <IconButton
                 color="inherit"
                 component={NavLink}
                 to="/settings"
