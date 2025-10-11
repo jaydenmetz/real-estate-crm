@@ -22,6 +22,7 @@ import {
   ListItem,
   ListItemButton,
   Chip,
+  Collapse,
 } from '@mui/material';
 import {
   Dashboard,
@@ -59,6 +60,11 @@ const EnhancedNavigation = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [notificationAnchor, setNotificationAnchor] = useState(null);
   const [brandMenuAnchor, setBrandMenuAnchor] = useState(null);
+
+  // Mobile drawer collapsible sections
+  const [dataExpanded, setDataExpanded] = useState(false);
+  const [peopleExpanded, setPeopleExpanded] = useState(false);
+  const [otherExpanded, setOtherExpanded] = useState(false);
 
   const handleDataMenuClick = (event) => {
     setDataMenuAnchor(event.currentTarget);
@@ -163,66 +169,84 @@ const EnhancedNavigation = () => {
 
         <Divider sx={{ my: 1 }} />
 
+        {/* Data Section - Collapsible */}
         <ListItem disablePadding>
-          <ListItemButton onClick={() => {}}>
+          <ListItemButton onClick={() => setDataExpanded(!dataExpanded)}>
             <ListItemIcon><Storage /></ListItemIcon>
             <ListItemText primary="Data" />
+            {dataExpanded ? <ExpandLess /> : <ExpandMore />}
           </ListItemButton>
         </ListItem>
-        {dataMenuItems.map((item) => (
-          <ListItem key={item.path} disablePadding sx={{ pl: 4 }}>
-            <ListItemButton
-              component={NavLink}
-              to={item.path}
-              onClick={() => setMobileOpen(false)}
-            >
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.label} />
-            </ListItemButton>
-          </ListItem>
-        ))}
+        <Collapse in={dataExpanded} timeout="auto" unmountOnExit>
+          <List component="div" disablePadding>
+            {dataMenuItems.map((item) => (
+              <ListItem key={item.path} disablePadding sx={{ pl: 4 }}>
+                <ListItemButton
+                  component={NavLink}
+                  to={item.path}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <ListItemIcon>{item.icon}</ListItemIcon>
+                  <ListItemText primary={item.label} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        </Collapse>
 
         <Divider sx={{ my: 1 }} />
 
+        {/* People Section - Collapsible */}
         <ListItem disablePadding>
-          <ListItemButton onClick={() => {}}>
+          <ListItemButton onClick={() => setPeopleExpanded(!peopleExpanded)}>
             <ListItemIcon><Groups /></ListItemIcon>
             <ListItemText primary="People" />
+            {peopleExpanded ? <ExpandLess /> : <ExpandMore />}
           </ListItemButton>
         </ListItem>
-        {peopleMenuItems.map((item) => (
-          <ListItem key={item.path} disablePadding sx={{ pl: 4 }}>
-            <ListItemButton
-              component={NavLink}
-              to={item.path}
-              onClick={() => setMobileOpen(false)}
-            >
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.label} />
-            </ListItemButton>
-          </ListItem>
-        ))}
+        <Collapse in={peopleExpanded} timeout="auto" unmountOnExit>
+          <List component="div" disablePadding>
+            {peopleMenuItems.map((item) => (
+              <ListItem key={item.path} disablePadding sx={{ pl: 4 }}>
+                <ListItemButton
+                  component={NavLink}
+                  to={item.path}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <ListItemIcon>{item.icon}</ListItemIcon>
+                  <ListItemText primary={item.label} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        </Collapse>
 
         <Divider sx={{ my: 1 }} />
 
+        {/* Other Section - Collapsible */}
         <ListItem disablePadding>
-          <ListItemButton onClick={() => {}}>
+          <ListItemButton onClick={() => setOtherExpanded(!otherExpanded)}>
             <ListItemIcon><MoreVert /></ListItemIcon>
             <ListItemText primary="Other" />
+            {otherExpanded ? <ExpandLess /> : <ExpandMore />}
           </ListItemButton>
         </ListItem>
-        {otherMenuItems.map((item) => (
-          <ListItem key={item.path} disablePadding sx={{ pl: 4 }}>
-            <ListItemButton
-              component={NavLink}
-              to={item.path}
-              onClick={() => setMobileOpen(false)}
-            >
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.label} />
-            </ListItemButton>
-          </ListItem>
-        ))}
+        <Collapse in={otherExpanded} timeout="auto" unmountOnExit>
+          <List component="div" disablePadding>
+            {otherMenuItems.map((item) => (
+              <ListItem key={item.path} disablePadding sx={{ pl: 4 }}>
+                <ListItemButton
+                  component={NavLink}
+                  to={item.path}
+                  onClick={() => setMobileOpen(false)}
+                >
+                  <ListItemIcon>{item.icon}</ListItemIcon>
+                  <ListItemText primary={item.label} />
+                </ListItemButton>
+              </ListItem>
+            ))}
+          </List>
+        </Collapse>
       </List>
     </Box>
   );
