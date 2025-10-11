@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -23,6 +23,21 @@ import {
   InputLabel,
   useTheme,
   IconButton,
+  Badge,
+  Checkbox,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Slider,
+  Divider,
+  List,
+  ListItem,
+  ListItemText,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Tooltip as MuiTooltip,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
@@ -39,8 +54,14 @@ import {
   Cancel,
   Delete as DeleteIcon,
   Sort,
-  Badge,
   CalendarToday,
+  Archive as ArchiveIcon,
+  Restore as RestoreIcon,
+  DeleteForever as DeleteForeverIcon,
+  Storage,
+  Refresh,
+  NetworkCheck,
+  ExpandMore,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
@@ -49,6 +70,9 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { leadsAPI } from '../../services/api.service';
 import NewLeadModal from '../forms/NewLeadModal';
+import { useAuth } from '../../contexts/AuthContext';
+import networkMonitor from '../../services/networkMonitor.service';
+import { useWebSocket } from '../../hooks/useWebSocket';
 
 const HeroSection = styled(Box)(({ theme }) => ({
   position: 'relative',
@@ -253,19 +277,39 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
 
 const LeadsDashboard = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { isConnected, connectionStatus } = useWebSocket();
   const [leads, setLeads] = useState([]);
+  const [archivedLeads, setArchivedLeads] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMorePages, setHasMorePages] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
   const [selectedStatus, setSelectedStatus] = useState('new');
   const [viewMode, setViewMode] = useState(() => localStorage.getItem('leadsViewMode') || 'small');
   const [sortBy, setSortBy] = useState('created_at');
+  const [animationType, setAnimationType] = useState('spring');
+  const [animationDuration, setAnimationDuration] = useState(1);
+  const [animationIntensity, setAnimationIntensity] = useState(1);
   const [dateRangeFilter, setDateRangeFilter] = useState('1M'); // '1D', '1M', '1Y', 'YTD', or null for custom
   const [customStartDate, setCustomStartDate] = useState(null);
   const [customEndDate, setCustomEndDate] = useState(null);
   const [startDatePickerOpen, setStartDatePickerOpen] = useState(false);
   const [endDatePickerOpen, setEndDatePickerOpen] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [calendarDialogOpen, setCalendarDialogOpen] = useState(false);
   const [archivedCount, setArchivedCount] = useState(0);
+  const [selectedArchivedIds, setSelectedArchivedIds] = useState([]);
+  const [batchDeleting, setBatchDeleting] = useState(false);
   const [newLeadModalOpen, setNewLeadModalOpen] = useState(false);
+  const [debugExpanded, setDebugExpanded] = useState(false);
+  const [networkData, setNetworkData] = useState({
+    stats: networkMonitor.getStats(),
+    requests: networkMonitor.getRequests(),
+    errors: networkMonitor.getErrors()
+  });
   const [stats, setStats] = useState({
     totalLeads: 0,
     newLeads: 0,
@@ -289,27 +333,183 @@ const LeadsDashboard = () => {
   });
 
   useEffect(() => { localStorage.setItem('leadsViewMode', viewMode); }, [viewMode]);
-  useEffect(() => { fetchLeads(); }, []);
-  useEffect(() => {
-    if (leads.length > 0) calculateStats(leads, selectedStatus);
-    else calculateStats([], selectedStatus);
-  }, [selectedStatus, leads, dateRangeFilter, customStartDate, customEndDate]);
 
-  const fetchLeads = async () => {
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      // Don't trigger shortcuts if user is typing in an input
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      // Check for Cmd/Ctrl modifiers
+      const isModKey = e.metaKey || e.ctrlKey;
+
+      if (isModKey) {
+        switch(e.key.toLowerCase()) {
+          case 'k':
+            // Cmd/Ctrl+K = Create new lead
+            e.preventDefault();
+            if (!newLeadModalOpen) {
+              setNewLeadModalOpen(true);
+            }
+            break;
+          case 'f':
+            // Cmd/Ctrl+F = Focus search (if search input exists)
+            e.preventDefault();
+            const searchInput = document.querySelector('input[type="search"], input[placeholder*="Search"]');
+            if (searchInput) {
+              searchInput.focus();
+            }
+            break;
+          case 'r':
+            // Cmd/Ctrl+R = Refresh leads
+            e.preventDefault();
+            fetchLeads();
+            break;
+          case 'a':
+            // Cmd/Ctrl+A = Toggle select all (archived view only)
+            if (selectedStatus === 'archived') {
+              e.preventDefault();
+              if (selectedArchivedIds.length === archivedLeads.length) {
+                setSelectedArchivedIds([]);
+              } else {
+                setSelectedArchivedIds(archivedLeads.map(l => l.id));
+              }
+            }
+            break;
+          default:
+            break;
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [newLeadModalOpen, selectedStatus, selectedArchivedIds, archivedLeads]);
+
+  useEffect(() => { fetchLeads(); }, []);
+
+  useEffect(() => {
+    if (selectedStatus === 'archived') {
+      calculateStats(archivedLeads, 'archived');
+    } else if (leads.length > 0) {
+      calculateStats(leads, selectedStatus);
+    } else {
+      calculateStats([], selectedStatus);
+    }
+  }, [selectedStatus, leads, archivedLeads, dateRangeFilter, customStartDate, customEndDate]);
+
+  // Sync archived count with archived leads array
+  useEffect(() => {
+    setArchivedCount(archivedLeads.length);
+  }, [archivedLeads]);
+
+  // Auto-refresh network data when debug panel is expanded
+  useEffect(() => {
+    if (debugExpanded) {
+      const interval = setInterval(() => {
+        setNetworkData({
+          stats: networkMonitor.getStats(),
+          requests: networkMonitor.getRequests(),
+          errors: networkMonitor.getErrors()
+        });
+      }, 2000); // Update every 2 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [debugExpanded]);
+
+  // WebSocket real-time updates
+  useEffect(() => {
+    if (!isConnected) return;
+
+    // Import websocket service
+    const websocketService = require('../../services/websocket.service').default;
+
+    // Subscribe to data updates
+    const unsubscribe = websocketService.on('data:update', (data) => {
+      console.log('📡 WebSocket data update received:', data);
+
+      // Only refetch if it's a lead update
+      if (data.entityType === 'lead') {
+        console.log('🔄 Refetching leads due to real-time update');
+        fetchLeads();
+      }
+    });
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [isConnected]);
+
+  const fetchLeads = async (pageNum = 1, appendData = false) => {
     try {
-      setLoading(true);
-      const response = await leadsAPI.getAll();
+      // Show appropriate loading state
+      if (appendData) {
+        setLoadingMore(true);
+      } else {
+        setLoading(true);
+      }
+
+      // Fetch leads with pagination (50 per page for optimal performance)
+      const response = await leadsAPI.getAll({
+        includeArchived: true,
+        page: pageNum,
+        limit: 50
+      });
+
+      console.log('API Response:', response);
+
       if (response.success) {
-        const data = response.data.leads || response.data || [];
-        setLeads(data);
-        calculateStats(data, selectedStatus);
+        const allData = response.data.leads || response.data || [];
+        const pagination = response.data.pagination || {};
+        const totalPages = pagination.totalPages || 1;
+        const totalRecords = pagination.total || allData.length;
+        const hasMore = pageNum < totalPages;
+
+        // Separate active and archived leads based on deleted_at field
+        const leadData = allData.filter(lead => !lead.deleted_at && !lead.deletedAt);
+        const archivedData = allData.filter(lead => lead.deleted_at || lead.deletedAt);
+
+        console.log(`Page ${pageNum}/${totalPages} - Total: ${totalRecords}, Loaded: ${allData.length}, Active: ${leadData.length}, Archived: ${archivedData.length}`);
+
+        // Update state based on whether we're appending or replacing
+        if (appendData) {
+          setLeads(prev => [...prev, ...leadData]);
+          setArchivedLeads(prev => [...prev, ...archivedData]);
+        } else {
+          setLeads(leadData);
+          setArchivedLeads(archivedData);
+        }
+
+        // Update pagination state
+        setCurrentPage(pageNum);
+        setHasMorePages(hasMore);
+        setTotalCount(totalRecords);
+        setArchivedCount(archivedData.length);
+
+        // Calculate stats from currently loaded data only
+        const currentLeads = appendData ? [...leads, ...leadData] : leadData;
+        calculateStats(currentLeads, selectedStatus);
+      } else {
+        console.error('API returned success: false', response);
       }
     } catch (error) {
-      console.error('Error fetching leads:', error);
+      console.error('Error fetching leads:', error.message);
+      console.error('Full error:', error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
+
+  const loadMoreLeads = useCallback(() => {
+    if (!loadingMore && hasMorePages) {
+      console.log(`Loading page ${currentPage + 1}...`);
+      fetchLeads(currentPage + 1, true);
+    }
+  }, [loadingMore, hasMorePages, currentPage]);
 
   // Helper to check if two dates are the same day
   const isSameDay = (date1, date2) => {
@@ -517,6 +717,59 @@ const LeadsDashboard = () => {
       activeLeads,
       avgLeadValue,
     });
+  };
+
+  // Batch delete handler for archived leads
+  const handleBatchDelete = async () => {
+    if (selectedArchivedIds.length === 0) return;
+
+    const count = selectedArchivedIds.length;
+    if (!window.confirm(`Are you sure you want to permanently delete ${count} lead${count > 1 ? 's' : ''}? This action cannot be undone.`)) {
+      return;
+    }
+
+    setBatchDeleting(true);
+    try {
+      const response = await leadsAPI.batchDelete(selectedArchivedIds);
+      if (response.success) {
+        // Remove deleted leads from both lists locally
+        const deletedIds = new Set(selectedArchivedIds);
+        setArchivedLeads(prev => prev.filter(l => !deletedIds.has(l.id)));
+        setLeads(prev => prev.filter(l => !deletedIds.has(l.id)));
+        setArchivedCount(prev => Math.max(0, prev - selectedArchivedIds.length));
+        setSelectedArchivedIds([]);
+
+        // Recalculate stats with remaining active leads only
+        const remainingLeads = leads.filter(l => !deletedIds.has(l.id));
+        calculateStats(remainingLeads, selectedStatus);
+
+        console.log(`✅ Batch deleted ${count} lead${count > 1 ? 's' : ''}`);
+      } else {
+        console.error('Batch delete failed:', response.error);
+        alert('Failed to delete leads. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error during batch delete:', error);
+      alert('An error occurred while deleting leads. Please try again.');
+    } finally {
+      setBatchDeleting(false);
+    }
+  };
+
+  const handleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedArchivedIds(archivedLeads.map(l => l.id));
+    } else {
+      setSelectedArchivedIds([]);
+    }
+  };
+
+  const handleSelectLead = (leadId, checked) => {
+    if (checked) {
+      setSelectedArchivedIds(prev => [...prev, leadId]);
+    } else {
+      setSelectedArchivedIds(prev => prev.filter(id => id !== leadId));
+    }
   };
 
   if (loading) return <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh"><CircularProgress size={60} /></Box>;
@@ -992,6 +1245,52 @@ const LeadsDashboard = () => {
                               value={stats.topLostReason || 'N/A'}
                               color="#ffffff"
                               delay={3}
+                            />
+                          </Grid>
+                        </>
+                      );
+
+                    case 'archived':
+                      return (
+                        <>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={ArchiveIcon}
+                              title="Total Archived Leads"
+                              value={archivedCount || 0}
+                              color="#ffffff"
+                              delay={0}
+                              goal={100}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={Storage}
+                              title="Max Archived"
+                              value={archivedCount || 0}
+                              suffix=" / 500"
+                              color="#ffffff"
+                              delay={1}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={CheckCircle}
+                              title="Qualified Leads"
+                              value={stats.qualifiedLeads || 0}
+                              color="#ffffff"
+                              delay={2}
+                              goal={25}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={Cancel}
+                              title="Lost Leads"
+                              value={stats.lostLeads || 0}
+                              color="#ffffff"
+                              delay={3}
+                              goal={10}
                             />
                           </Grid>
                         </>
@@ -1553,81 +1852,378 @@ const LeadsDashboard = () => {
                   </ToggleButtonGroup>
                 </Box>
               </Box>
+
+              {/* Mobile Date Controls */}
+              <Box sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 1.5,
+              }}>
+                {/* Date Preset Buttons */}
+                <ToggleButtonGroup
+                  value={dateRangeFilter}
+                  exclusive
+                  onChange={(e, newValue) => {
+                    if (newValue !== null) {
+                      setDateRangeFilter(newValue);
+                      setCustomStartDate(null);
+                      setCustomEndDate(null);
+                    }
+                  }}
+                  size="small"
+                  sx={{
+                    width: '100%',
+                    '& .MuiToggleButton-root': {
+                      flex: 1,
+                      color: 'text.secondary',
+                      borderColor: 'divider',
+                      fontSize: '0.8125rem',
+                      fontWeight: 600,
+                      '&.Mui-selected': {
+                        backgroundColor: 'primary.main',
+                        color: 'white',
+                        '&:hover': {
+                          backgroundColor: 'primary.dark',
+                        },
+                      },
+                    },
+                  }}
+                >
+                  <ToggleButton value="1D">1D</ToggleButton>
+                  <ToggleButton value="1M">1M</ToggleButton>
+                  <ToggleButton value="1Y">1Y</ToggleButton>
+                  <ToggleButton value="YTD">YTD</ToggleButton>
+                </ToggleButtonGroup>
+
+                {/* Date Range Pickers */}
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                  <Box sx={{
+                    display: 'flex',
+                    gap: 1,
+                    alignItems: 'center',
+                  }}>
+                    <DatePicker
+                      open={startDatePickerOpen}
+                      onOpen={() => setStartDatePickerOpen(true)}
+                      onClose={() => setStartDatePickerOpen(false)}
+                      format="MMM d, yyyy"
+                      value={(() => {
+                        try {
+                          const date = customStartDate || getDateRange()?.startDate;
+                          if (!date) return null;
+                          if (typeof date === 'string') {
+                            const parsed = new Date(date);
+                            if (isNaN(parsed.getTime())) return null;
+                            return parsed;
+                          }
+                          if (!(date instanceof Date)) return null;
+                          if (isNaN(date.getTime())) return null;
+                          return date;
+                        } catch (e) {
+                          console.error('DatePicker value error:', e);
+                          return null;
+                        }
+                      })()}
+                      onChange={(newDate) => {
+                        setCustomStartDate(newDate);
+                        if (newDate && customEndDate) {
+                          const matched = detectPresetRange(newDate, customEndDate);
+                          setDateRangeFilter(matched);
+                        } else {
+                          setDateRangeFilter(null);
+                        }
+                      }}
+                      slotProps={{
+                        textField: {
+                          size: 'small',
+                          placeholder: 'Start Date',
+                          onClick: () => setStartDatePickerOpen(true),
+                          sx: {
+                            flex: 1,
+                            '& .MuiInputBase-root': {
+                              backgroundColor: 'white',
+                            },
+                          },
+                        },
+                      }}
+                    />
+                    <DatePicker
+                      open={endDatePickerOpen}
+                      onOpen={() => setEndDatePickerOpen(true)}
+                      onClose={() => setEndDatePickerOpen(false)}
+                      format="MMM d, yyyy"
+                      value={(() => {
+                        try {
+                          const date = customEndDate || getDateRange()?.endDate;
+                          if (!date) return null;
+                          if (typeof date === 'string') {
+                            const parsed = new Date(date);
+                            if (isNaN(parsed.getTime())) return null;
+                            return parsed;
+                          }
+                          if (!(date instanceof Date)) return null;
+                          if (isNaN(date.getTime())) return null;
+                          return date;
+                        } catch (e) {
+                          console.error('DatePicker value error:', e);
+                          return null;
+                        }
+                      })()}
+                      onChange={(newDate) => {
+                        setCustomEndDate(newDate);
+                        if (customStartDate && newDate) {
+                          const matched = detectPresetRange(customStartDate, newDate);
+                          setDateRangeFilter(matched);
+                        } else {
+                          setDateRangeFilter(null);
+                        }
+                      }}
+                      slotProps={{
+                        textField: {
+                          size: 'small',
+                          placeholder: 'End Date',
+                          onClick: () => setEndDatePickerOpen(true),
+                          sx: {
+                            flex: 1,
+                            '& .MuiInputBase-root': {
+                              backgroundColor: 'white',
+                            },
+                          },
+                        },
+                      }}
+                    />
+                  </Box>
+                </LocalizationProvider>
+              </Box>
             </Box>
           </Box>
         </Box>
 
         {/* Lead Cards Grid */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr', md: viewMode === 'small' ? 'repeat(2, 1fr)' : '1fr', lg: viewMode === 'small' ? 'repeat(4, 1fr)' : '1fr' }, gap: 3, width: '100%' }}>
-          <AnimatePresence>
-            {(() => {
-              const filtered = leads.filter(l => {
-                const status = (l.leadStatus || l.lead_status || '').toLowerCase();
-                if (selectedStatus === 'new') return status === 'new';
-                if (selectedStatus === 'qualified') return status === 'qualified';
-                if (selectedStatus === 'converted') return status === 'converted';
-                if (selectedStatus === 'lost') return status === 'lost';
-                return true; // 'all'
-              });
-              const sorted = [...filtered].sort((a, b) => {
-                if (sortBy === 'created_at') return new Date(b.createdAt || b.created_at || 0) - new Date(a.createdAt || a.created_at || 0);
-                if (sortBy === 'last_contact') return new Date(b.lastContact || b.last_contact || 0) - new Date(a.lastContact || a.last_contact || 0);
-                if (sortBy === 'lead_source') return (a.leadSource || a.lead_source || '').localeCompare(b.leadSource || b.lead_source || '');
-                if (sortBy === 'lead_score') return Number(b.leadScore || b.lead_score || 0) - Number(a.leadScore || a.lead_score || 0);
-                if (sortBy === 'lead_status') return (a.leadStatus || a.lead_status || '').localeCompare(b.leadStatus || b.lead_status || '');
-                return 0;
-              });
-              if (sorted.length === 0) return (
-                <Paper sx={{ p: 6, height: 240, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', background: t => alpha(t.palette.primary.main, 0.03), border: t => `1px solid ${alpha(t.palette.primary.main, 0.1)}`, gridColumn: '1 / -1' }}>
-                  <Typography variant="h6" color="textSecondary">No {selectedStatus} leads found</Typography>
-                  <Typography variant="body2" color="textSecondary">{selectedStatus === 'new' ? 'Add a new lead to get started' : `No ${selectedStatus} leads in the system`}</Typography>
-                </Paper>
-              );
-              return sorted.map((l, i) => (
-                <motion.div
-                  key={l.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3, delay: i * 0.05 }}
-                >
-                  <Card
-                    onClick={() => navigate(`/leads/${l.id}`)}
-                    sx={{
-                      cursor: 'pointer',
-                      height: '100%',
-                      minHeight: 200,
-                      '&:hover': {
-                        transform: 'translateY(-4px)',
-                        boxShadow: 6
-                      },
-                      transition: 'all 0.3s'
-                    }}
+        {selectedStatus === 'archived' ? (
+          /* Archived View with Batch Delete */
+          <Box>
+            {archivedLeads.length > 0 && (
+              <Box sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 2,
+                mb: 2,
+                p: 2,
+                backgroundColor: alpha('#ff9800', 0.1),
+                borderRadius: 2,
+                border: '1px solid',
+                borderColor: alpha('#ff9800', 0.3),
+              }}>
+                <Checkbox
+                  checked={selectedArchivedIds.length === archivedLeads.length}
+                  indeterminate={selectedArchivedIds.length > 0 && selectedArchivedIds.length < archivedLeads.length}
+                  onChange={(e) => handleSelectAll(e.target.checked)}
+                />
+                <Typography variant="body2">
+                  {selectedArchivedIds.length > 0
+                    ? `${selectedArchivedIds.length} selected`
+                    : 'Select all'}
+                </Typography>
+                {selectedArchivedIds.length > 0 && (
+                  <Button
+                    variant="contained"
+                    color="error"
+                    size="small"
+                    startIcon={batchDeleting ? <CircularProgress size={16} color="inherit" /> : <DeleteForeverIcon />}
+                    onClick={handleBatchDelete}
+                    disabled={batchDeleting}
                   >
-                    <CardContent>
-                      <Typography variant="h6" gutterBottom>
-                        {`${l.firstName || l.first_name || ''} ${l.lastName || l.last_name || ''}`}
-                      </Typography>
-                      <Stack spacing={1}>
-                        <Chip
-                          label={l.leadStatus || l.lead_status || 'Unknown'}
-                          size="small"
-                          color="primary"
+                    Delete {selectedArchivedIds.length} Lead{selectedArchivedIds.length > 1 ? 's' : ''}
+                  </Button>
+                )}
+              </Box>
+            )}
+
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr', md: viewMode === 'small' ? 'repeat(2, 1fr)' : '1fr', lg: viewMode === 'small' ? 'repeat(4, 1fr)' : '1fr' }, gap: 3, width: '100%' }}>
+              <AnimatePresence>
+                {archivedLeads.length === 0 ? (
+                  <Paper sx={{ p: 6, height: 240, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', background: t => alpha(t.palette.warning.main, 0.03), border: t => `1px solid ${alpha(t.palette.warning.main, 0.1)}`, gridColumn: '1 / -1' }}>
+                    <Typography variant="h6" color="textSecondary">No archived leads</Typography>
+                    <Typography variant="body2" color="textSecondary">Archived leads will appear here</Typography>
+                  </Paper>
+                ) : (
+                  archivedLeads.map((lead, index) => {
+                    const isSelected = selectedArchivedIds.includes(lead.id);
+                    return (
+                      <Box key={lead.id} sx={{ position: 'relative' }}>
+                        {/* Selection checkbox */}
+                        <Checkbox
+                          checked={isSelected}
+                          onChange={(e) => handleSelectLead(lead.id, e.target.checked)}
+                          sx={{
+                            position: 'absolute',
+                            top: 8,
+                            left: 8,
+                            zIndex: 2,
+                            backgroundColor: 'white',
+                            borderRadius: 1,
+                            '&:hover': {
+                              backgroundColor: alpha('#fff', 0.9),
+                            },
+                          }}
                         />
-                        <Typography variant="body2" color="textSecondary">
-                          Source: {l.leadSource || l.lead_source || 'N/A'}
-                        </Typography>
-                        <Typography variant="body2" color="textSecondary">
-                          Score: {l.leadScore || l.lead_score || 0}/100
-                        </Typography>
-                      </Stack>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ));
-            })()}
-          </AnimatePresence>
-        </Box>
+                        <motion.div
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -20 }}
+                          transition={{ duration: 0.3, delay: index * 0.05 }}
+                        >
+                          <Card
+                            onClick={(e) => {
+                              if (!e.target.closest('.MuiCheckbox-root')) {
+                                navigate(`/leads/${lead.id}`);
+                              }
+                            }}
+                            sx={{
+                              cursor: 'pointer',
+                              height: '100%',
+                              minHeight: 200,
+                              opacity: 0.7,
+                              border: isSelected ? `2px solid ${alpha('#ff9800', 0.5)}` : '1px solid transparent',
+                              '&:hover': {
+                                opacity: 1,
+                                transform: 'translateY(-4px)',
+                                boxShadow: 6
+                              },
+                              transition: 'all 0.3s'
+                            }}
+                          >
+                            <CardContent sx={{ pt: 5 }}>
+                              <Typography variant="h6" gutterBottom>
+                                {`${lead.firstName || lead.first_name || ''} ${lead.lastName || lead.last_name || ''}`}
+                              </Typography>
+                              <Stack spacing={1}>
+                                <Chip
+                                  label="Archived"
+                                  size="small"
+                                  color="warning"
+                                />
+                                <Chip
+                                  label={lead.leadStatus || lead.lead_status || 'Unknown'}
+                                  size="small"
+                                  variant="outlined"
+                                />
+                                <Typography variant="body2" color="textSecondary">
+                                  Source: {lead.leadSource || lead.lead_source || 'N/A'}
+                                </Typography>
+                                <Typography variant="body2" color="textSecondary">
+                                  Score: {lead.leadScore || lead.lead_score || 0}/100
+                                </Typography>
+                              </Stack>
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      </Box>
+                    );
+                  })
+                )}
+              </AnimatePresence>
+            </Box>
+          </Box>
+        ) : (
+          /* Active Leads View */
+          <Box>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr', md: viewMode === 'small' ? 'repeat(2, 1fr)' : '1fr', lg: viewMode === 'small' ? 'repeat(4, 1fr)' : '1fr' }, gap: 3, width: '100%' }}>
+              <AnimatePresence>
+                {(() => {
+                  const filtered = leads.filter(l => {
+                    const status = (l.leadStatus || l.lead_status || '').toLowerCase();
+                    if (selectedStatus === 'new') return status === 'new';
+                    if (selectedStatus === 'qualified') return status === 'qualified';
+                    if (selectedStatus === 'converted') return status === 'converted';
+                    if (selectedStatus === 'lost') return status === 'lost';
+                    return true; // 'all'
+                  });
+                  const sorted = [...filtered].sort((a, b) => {
+                    if (sortBy === 'created_at') return new Date(b.createdAt || b.created_at || 0) - new Date(a.createdAt || a.created_at || 0);
+                    if (sortBy === 'last_contact') return new Date(b.lastContact || b.last_contact || 0) - new Date(a.lastContact || a.last_contact || 0);
+                    if (sortBy === 'lead_source') return (a.leadSource || a.lead_source || '').localeCompare(b.leadSource || b.lead_source || '');
+                    if (sortBy === 'lead_score') return Number(b.leadScore || b.lead_score || 0) - Number(a.leadScore || a.lead_score || 0);
+                    if (sortBy === 'lead_status') return (a.leadStatus || a.lead_status || '').localeCompare(b.leadStatus || b.lead_status || '');
+                    return 0;
+                  });
+                  if (sorted.length === 0) return (
+                    <Paper sx={{ p: 6, height: 240, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', background: t => alpha(t.palette.primary.main, 0.03), border: t => `1px solid ${alpha(t.palette.primary.main, 0.1)}`, gridColumn: '1 / -1' }}>
+                      <Typography variant="h6" color="textSecondary">No {selectedStatus} leads found</Typography>
+                      <Typography variant="body2" color="textSecondary">{selectedStatus === 'new' ? 'Add a new lead to get started' : `No ${selectedStatus} leads in the system`}</Typography>
+                    </Paper>
+                  );
+                  return sorted.map((l, i) => (
+                    <motion.div
+                      key={l.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                      transition={{ duration: 0.3, delay: i * 0.05 }}
+                    >
+                      <Card
+                        onClick={() => navigate(`/leads/${l.id}`)}
+                        sx={{
+                          cursor: 'pointer',
+                          height: '100%',
+                          minHeight: 200,
+                          '&:hover': {
+                            transform: 'translateY(-4px)',
+                            boxShadow: 6
+                          },
+                          transition: 'all 0.3s'
+                        }}
+                      >
+                        <CardContent>
+                          <Typography variant="h6" gutterBottom>
+                            {`${l.firstName || l.first_name || ''} ${l.lastName || l.last_name || ''}`}
+                          </Typography>
+                          <Stack spacing={1}>
+                            <Chip
+                              label={l.leadStatus || l.lead_status || 'Unknown'}
+                              size="small"
+                              color="primary"
+                            />
+                            <Typography variant="body2" color="textSecondary">
+                              Source: {l.leadSource || l.lead_source || 'N/A'}
+                            </Typography>
+                            <Typography variant="body2" color="textSecondary">
+                              Score: {l.leadScore || l.lead_score || 0}/100
+                            </Typography>
+                          </Stack>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ));
+                })()}
+              </AnimatePresence>
+            </Box>
+
+            {/* Load More Button */}
+            {hasMorePages && selectedStatus !== 'archived' && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
+                <Button
+                  variant="contained"
+                  size="large"
+                  onClick={loadMoreLeads}
+                  disabled={loadingMore}
+                  startIcon={loadingMore ? <CircularProgress size={20} /> : null}
+                  sx={{
+                    px: 6,
+                    py: 1.5,
+                    borderRadius: '12px',
+                    textTransform: 'none',
+                    fontSize: '1rem',
+                    fontWeight: 600
+                  }}
+                >
+                  {loadingMore ? 'Loading...' : `Load More (${totalCount - leads.length} remaining)`}
+                </Button>
+              </Box>
+            )}
+          </Box>
+        )}
 
         {/* New Lead Modal */}
         <NewLeadModal
