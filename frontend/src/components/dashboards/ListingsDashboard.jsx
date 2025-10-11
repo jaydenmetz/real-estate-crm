@@ -23,6 +23,12 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  Checkbox,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Tooltip,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
@@ -40,8 +46,12 @@ import {
   CalendarToday,
   Error as ErrorIcon,
   Delete as DeleteIcon,
+  DeleteForever as DeleteForeverIcon,
   Sort,
   Badge,
+  Storage,
+  Refresh,
+  NetworkCheck,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
@@ -52,6 +62,8 @@ import { format as formatDate } from 'date-fns';
 import { listingsAPI } from '../../services/api.service';
 import { useAuth } from '../../contexts/AuthContext';
 import NewListingModal from '../forms/NewListingModal';
+import networkMonitor from '../../services/networkMonitor.service';
+import { useWebSocket } from '../../hooks/useWebSocket';
 
 // Styled Components
 const HeroSection = styled(Box)(({ theme }) => ({
@@ -298,8 +310,14 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
 const ListingsDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isConnected, connectionStatus } = useWebSocket();
   const [listings, setListings] = useState([]);
+  const [archivedListings, setArchivedListings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [hasMorePages, setHasMorePages] = useState(false);
+  const [totalCount, setTotalCount] = useState(0);
   const [selectedStatus, setSelectedStatus] = useState('active');
   const [viewMode, setViewMode] = useState(() => {
     const saved = localStorage.getItem('listingsViewMode');
@@ -312,8 +330,17 @@ const ListingsDashboard = () => {
   const [startDatePickerOpen, setStartDatePickerOpen] = useState(false);
   const [endDatePickerOpen, setEndDatePickerOpen] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [calendarDialogOpen, setCalendarDialogOpen] = useState(false);
   const [archivedCount, setArchivedCount] = useState(0);
+  const [selectedArchivedIds, setSelectedArchivedIds] = useState([]);
+  const [batchDeleting, setBatchDeleting] = useState(false);
   const [newListingModalOpen, setNewListingModalOpen] = useState(false);
+  const [networkData, setNetworkData] = useState({
+    stats: networkMonitor.getStats(),
+    requests: networkMonitor.getRequests(),
+    errors: networkMonitor.getErrors()
+  });
+  const maxArchivedLimit = 100;
   const [stats, setStats] = useState({
     totalListings: 0,
     activeListings: 0,
@@ -337,17 +364,85 @@ const ListingsDashboard = () => {
     localStorage.setItem('listingsViewMode', viewMode);
   }, [viewMode]);
 
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyPress = (e) => {
+      // Don't trigger shortcuts if user is typing in an input
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
+
+      // Cmd/Ctrl key combinations
+      if (e.metaKey || e.ctrlKey) {
+        switch(e.key.toLowerCase()) {
+          case 'k':
+            e.preventDefault();
+            setNewListingModalOpen(true);
+            break;
+          case 'f':
+            e.preventDefault();
+            // Focus search if exists (can add search later)
+            break;
+          case 'r':
+            e.preventDefault();
+            fetchListings();
+            break;
+          case 'a':
+            e.preventDefault();
+            if (selectedStatus === 'archived' && archivedListings.length > 0) {
+              // Toggle select all
+              if (selectedArchivedIds.length === archivedListings.length) {
+                setSelectedArchivedIds([]);
+              } else {
+                setSelectedArchivedIds(archivedListings.map(l => l.id));
+              }
+            }
+            break;
+          default:
+            break;
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [selectedStatus, archivedListings, selectedArchivedIds, newListingModalOpen]);
+
+  // Network monitoring
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNetworkData({
+        stats: networkMonitor.getStats(),
+        requests: networkMonitor.getRequests(),
+        errors: networkMonitor.getErrors()
+      });
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // WebSocket real-time updates
+  useEffect(() => {
+    if (isConnected) {
+      console.log('WebSocket connected, real-time updates active');
+    } else {
+      console.log('WebSocket disconnected');
+    }
+  }, [isConnected]);
+
   useEffect(() => {
     fetchListings();
   }, []);
 
   useEffect(() => {
-    if (listings.length > 0) {
+    if (selectedStatus === 'archived') {
+      // Calculate stats for archived listings
+      calculateStats(archivedListings, 'archived');
+    } else if (listings.length > 0) {
       calculateStats(listings, selectedStatus);
     } else {
       calculateStats([], selectedStatus);
     }
-  }, [selectedStatus, listings, dateRangeFilter, customStartDate, customEndDate]);
+  }, [selectedStatus, listings, archivedListings, dateRangeFilter, customStartDate, customEndDate]);
 
   // Check if dates are the same day
   const isSameDay = (date1, date2) => {
@@ -450,19 +545,57 @@ const ListingsDashboard = () => {
     return { startDate, endDate };
   };
 
-  const fetchListings = async () => {
+  const fetchListings = async (pageNum = 1, appendData = false) => {
     try {
-      setLoading(true);
-      console.log('Fetching listings...');
+      // Show appropriate loading state
+      if (appendData) {
+        setLoadingMore(true);
+      } else {
+        setLoading(true);
+        setCurrentPage(1);
+      }
 
-      const response = await listingsAPI.getAll();
+      console.log(`Fetching listings... (page ${pageNum})`);
+
+      // Fetch listings with pagination (50 per page for optimal performance)
+      const response = await listingsAPI.getAll({
+        includeArchived: true,
+        page: pageNum,
+        limit: 50
+      });
       console.log('API Response:', response);
 
       if (response.success) {
-        const listingData = response.data.listings || response.data || [];
-        console.log('Listings received:', listingData.length);
-        setListings(listingData);
-        calculateStats(listingData, selectedStatus);
+        const allData = response.data.listings || response.data || [];
+        const pagination = response.data.pagination || {};
+        const totalPages = pagination.totalPages || 1;
+        const totalRecords = pagination.total || allData.length;
+        const hasMore = pageNum < totalPages;
+
+        // Separate active and archived listings based on deleted_at field
+        const listingData = allData.filter(listing => !listing.deleted_at && !listing.deletedAt);
+        const archivedData = allData.filter(listing => listing.deleted_at || listing.deletedAt);
+
+        console.log(`Page ${pageNum}/${totalPages} - Total: ${totalRecords}, Loaded: ${allData.length}, Active: ${listingData.length}, Archived: ${archivedData.length}`);
+
+        // Update state based on whether we're appending or replacing
+        if (appendData) {
+          setListings(prev => [...prev, ...listingData]);
+          setArchivedListings(prev => [...prev, ...archivedData]);
+        } else {
+          setListings(listingData);
+          setArchivedListings(archivedData);
+        }
+
+        // Update pagination state
+        setCurrentPage(pageNum);
+        setHasMorePages(hasMore);
+        setTotalCount(totalRecords);
+        setArchivedCount(archivedData.length);
+
+        // Calculate stats from currently loaded data only
+        const currentListings = appendData ? [...listings, ...listingData] : listingData;
+        calculateStats(currentListings, selectedStatus);
       } else {
         console.error('API returned success: false', response);
       }
@@ -471,6 +604,13 @@ const ListingsDashboard = () => {
       console.error('Full error:', error);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  const loadMoreListings = () => {
+    if (!loadingMore && hasMorePages) {
+      fetchListings(currentPage + 1, true);
     }
   };
 
@@ -543,6 +683,10 @@ const ListingsDashboard = () => {
           l.listingStatus === 'expired' ||
           l.listing_status === 'expired'
         );
+        break;
+      case 'archived':
+        // For archived, just use all the data since it's already filtered
+        filteredListings = dateFilteredListings;
         break;
       default:
         filteredListings = dateFilteredListings;
@@ -645,6 +789,47 @@ const ListingsDashboard = () => {
   const handleListingClick = (listingId) => {
     console.log('Listing clicked - ID:', listingId);
     navigate(`/listings/${listingId}`);
+  };
+
+  const handleSelectAll = (checked) => {
+    if (checked) {
+      setSelectedArchivedIds(archivedListings.map(l => l.id));
+    } else {
+      setSelectedArchivedIds([]);
+    }
+  };
+
+  const handleBatchDelete = async () => {
+    if (selectedArchivedIds.length === 0) return;
+
+    const count = selectedArchivedIds.length;
+    if (!window.confirm(`Are you sure you want to permanently delete ${count} listing${count > 1 ? 's' : ''}? This action cannot be undone.`)) {
+      return;
+    }
+
+    setBatchDeleting(true);
+    try {
+      const response = await listingsAPI.batchDelete(selectedArchivedIds);
+      if (response.success) {
+        // Remove deleted listings from both lists locally
+        const deletedIds = new Set(selectedArchivedIds);
+        setArchivedListings(prev => prev.filter(l => !deletedIds.has(l.id)));
+        setListings(prev => prev.filter(l => !deletedIds.has(l.id)));
+        setArchivedCount(prev => Math.max(0, prev - selectedArchivedIds.length));
+        setSelectedArchivedIds([]);
+
+        // Recalculate stats with remaining active listings only
+        const remainingListings = listings.filter(l => !deletedIds.has(l.id));
+        calculateStats(remainingListings, selectedStatus);
+
+        console.log(`Successfully permanently deleted ${response.data.deletedCount || selectedArchivedIds.length} listings`);
+      }
+    } catch (error) {
+      console.error('Failed to batch delete listings:', error);
+      alert('Failed to delete listings. Please try again.');
+    } finally {
+      setBatchDeleting(false);
+    }
   };
 
   if (loading) {
@@ -1143,6 +1328,50 @@ const ListingsDashboard = () => {
                         </>
                       );
 
+                    case 'archived':
+                      return (
+                        <>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={ArchiveIcon}
+                              title="Total Archived Listings"
+                              value={archivedCount || 0}
+                              color="#ffffff"
+                              delay={0}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={Storage}
+                              title="Max Archived"
+                              value={`${archivedCount || 0}/${maxArchivedLimit}`}
+                              color="#ffffff"
+                              delay={1}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={TrendingUp}
+                              title="Total Value"
+                              value={stats.totalValue || 0}
+                              prefix="$"
+                              suffix=""
+                              color="#ffffff"
+                              delay={2}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={CalendarToday}
+                              title="Avg Days on Market"
+                              value={stats.avgDaysOnMarket || 0}
+                              color="#ffffff"
+                              delay={3}
+                            />
+                          </Grid>
+                        </>
+                      );
+
                     default:
                       return (
                         <>
@@ -1467,16 +1696,11 @@ const ListingsDashboard = () => {
 
             {/* View Mode & Calendar Selector */}
             <ToggleButtonGroup
-              value={showCalendar ? 'calendar' : viewMode}
+              value={viewMode}
               exclusive
               onChange={(e, newValue) => {
                 if (newValue !== null) {
-                  if (newValue === 'calendar') {
-                    setShowCalendar(true);
-                  } else {
-                    setShowCalendar(false);
-                    setViewMode(newValue);
-                  }
+                  setViewMode(newValue);
                 }
               }}
               size="small"
@@ -1501,10 +1725,23 @@ const ListingsDashboard = () => {
               <ToggleButton value="large" title="Full width view (V)">
                 <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
               </ToggleButton>
-              <ToggleButton value="calendar" title="Calendar view">
-                <CalendarToday sx={{ fontSize: 16 }} />
-              </ToggleButton>
             </ToggleButtonGroup>
+
+            {/* Calendar Button */}
+            <IconButton
+              size="small"
+              onClick={() => setCalendarDialogOpen(true)}
+              sx={{
+                width: 36,
+                height: 36,
+                backgroundColor: alpha('#000', 0.06),
+                '&:hover': {
+                  backgroundColor: alpha('#000', 0.1),
+                },
+              }}
+            >
+              <CalendarToday sx={{ fontSize: 16 }} />
+            </IconButton>
 
             {/* Archive/Trash Icon */}
             <IconButton
@@ -1591,6 +1828,106 @@ const ListingsDashboard = () => {
               gap: 2,
             }}
           >
+            {/* Date Controls - Mobile */}
+            <Box sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1.5,
+            }}>
+              {/* Date Preset Buttons */}
+              <ToggleButtonGroup
+                value={dateRangeFilter}
+                exclusive
+                onChange={(e, newValue) => {
+                  if (newValue !== null) {
+                    setDateRangeFilter(newValue);
+                    setCustomStartDate(null);
+                    setCustomEndDate(null);
+                  }
+                }}
+                size="small"
+                fullWidth
+                sx={{
+                  backgroundColor: 'white',
+                  borderRadius: 1,
+                  '& .MuiToggleButton-root': {
+                    color: 'text.secondary',
+                    borderColor: 'divider',
+                    fontSize: '0.875rem',
+                    fontWeight: 600,
+                    py: 1,
+                    '&.Mui-selected': {
+                      backgroundColor: 'primary.main',
+                      color: 'white',
+                      '&:hover': {
+                        backgroundColor: 'primary.dark',
+                      },
+                    },
+                  },
+                }}
+              >
+                <ToggleButton value="1D">1D</ToggleButton>
+                <ToggleButton value="1M">1M</ToggleButton>
+                <ToggleButton value="1Y">1Y</ToggleButton>
+                <ToggleButton value="YTD">YTD</ToggleButton>
+              </ToggleButtonGroup>
+
+              {/* Date Range Pickers */}
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                  <DatePicker
+                    label="Start Date"
+                    value={customStartDate || dateRange?.startDate}
+                    onChange={(newDate) => {
+                      setCustomStartDate(newDate);
+                      if (newDate && customEndDate) {
+                        const matched = detectPresetRange(newDate, customEndDate);
+                        setDateRangeFilter(matched);
+                      } else {
+                        setDateRangeFilter(null);
+                      }
+                    }}
+                    slotProps={{
+                      textField: {
+                        size: 'small',
+                        fullWidth: true,
+                        sx: {
+                          '& .MuiOutlinedInput-root': {
+                            backgroundColor: 'white',
+                          },
+                        },
+                      },
+                    }}
+                  />
+                  <Typography sx={{ color: 'text.secondary', mx: 1 }}>→</Typography>
+                  <DatePicker
+                    label="End Date"
+                    value={customEndDate || dateRange?.endDate}
+                    onChange={(newDate) => {
+                      setCustomEndDate(newDate);
+                      if (customStartDate && newDate) {
+                        const matched = detectPresetRange(customStartDate, newDate);
+                        setDateRangeFilter(matched);
+                      } else {
+                        setDateRangeFilter(null);
+                      }
+                    }}
+                    slotProps={{
+                      textField: {
+                        size: 'small',
+                        fullWidth: true,
+                        sx: {
+                          '& .MuiOutlinedInput-root': {
+                            backgroundColor: 'white',
+                          },
+                        },
+                      },
+                    }}
+                  />
+                </Box>
+              </LocalizationProvider>
+            </Box>
+
             {/* Sort and View Controls */}
             <Box sx={{
               display: 'flex',
@@ -1641,22 +1978,17 @@ const ListingsDashboard = () => {
               </FormControl>
 
               {/* View Mode & Calendar - Mobile */}
-              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+              <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                 <ToggleButtonGroup
-                  value={showCalendar ? 'calendar' : viewMode}
+                  value={viewMode}
                   exclusive
                   onChange={(e, newValue) => {
                     if (newValue !== null) {
-                      if (newValue === 'calendar') {
-                        setShowCalendar(true);
-                      } else {
-                        setShowCalendar(false);
-                        setViewMode(newValue);
-                      }
+                      setViewMode(newValue);
                     }
                   }}
                   size="small"
-                  aria-label="View mode and calendar selection"
+                  aria-label="View mode selection"
                   sx={{
                     '& .MuiToggleButton-root': {
                       px: 2,
@@ -1686,14 +2018,25 @@ const ListingsDashboard = () => {
                   >
                     <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                   </ToggleButton>
-                  <ToggleButton
-                    value="calendar"
-                    aria-label="Calendar view"
-                    title="Calendar view"
-                  >
-                    <CalendarToday sx={{ fontSize: 16 }} />
-                  </ToggleButton>
                 </ToggleButtonGroup>
+
+                {/* Calendar Button */}
+                <IconButton
+                  size="small"
+                  onClick={() => setCalendarDialogOpen(true)}
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    backgroundColor: 'white',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    '&:hover': {
+                      backgroundColor: alpha('#000', 0.04),
+                    },
+                  }}
+                >
+                  <CalendarToday sx={{ fontSize: 16 }} />
+                </IconButton>
               </Box>
             </Box>
           </Box>
@@ -1714,6 +2057,150 @@ const ListingsDashboard = () => {
         }}>
           <AnimatePresence>
             {(() => {
+              // Handle archived view separately
+              if (selectedStatus === 'archived') {
+                if (!archivedListings || archivedListings.length === 0) {
+                  return (
+                    <Paper
+                      sx={{
+                        p: 6,
+                        height: 240,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        textAlign: 'center',
+                        background: theme => alpha(theme.palette.warning.main, 0.03),
+                        border: theme => `1px solid ${alpha(theme.palette.warning.main, 0.1)}`,
+                        gridColumn: '1 / -1',
+                      }}
+                    >
+                      <Typography variant="h6" color="textSecondary" gutterBottom>
+                        No archived listings
+                      </Typography>
+                      <Typography variant="body2" color="textSecondary">
+                        Archived listings will appear here
+                      </Typography>
+                    </Paper>
+                  );
+                }
+
+                return (
+                  <>
+                    {/* Batch Delete Controls */}
+                    <Box sx={{
+                      gridColumn: '1 / -1',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 2,
+                      p: 2,
+                      backgroundColor: alpha('#ff9800', 0.1),
+                      borderRadius: 1,
+                      border: '1px solid',
+                      borderColor: alpha('#ff9800', 0.3),
+                    }}>
+                      <Checkbox
+                        checked={selectedArchivedIds.length === archivedListings.length && archivedListings.length > 0}
+                        indeterminate={selectedArchivedIds.length > 0 && selectedArchivedIds.length < archivedListings.length}
+                        onChange={(e) => handleSelectAll(e.target.checked)}
+                      />
+                      <Typography variant="body2">
+                        {selectedArchivedIds.length > 0
+                          ? `${selectedArchivedIds.length} selected`
+                          : 'Select all'}
+                      </Typography>
+                      {selectedArchivedIds.length > 0 && (
+                        <Button
+                          variant="contained"
+                          color="error"
+                          size="small"
+                          startIcon={batchDeleting ? <CircularProgress size={16} color="inherit" /> : <DeleteForeverIcon />}
+                          onClick={handleBatchDelete}
+                          disabled={batchDeleting}
+                        >
+                          Delete {selectedArchivedIds.length} Listing{selectedArchivedIds.length > 1 ? 's' : ''}
+                        </Button>
+                      )}
+                    </Box>
+
+                    {archivedListings.map((listing, index) => {
+                      const isSelected = selectedArchivedIds.includes(listing.id);
+
+                      return (
+                        <Box key={listing.id} sx={{ position: 'relative' }}>
+                          {/* Selection checkbox */}
+                          <Checkbox
+                            checked={isSelected}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setSelectedArchivedIds(prev => [...prev, listing.id]);
+                              } else {
+                                setSelectedArchivedIds(prev => prev.filter(id => id !== listing.id));
+                              }
+                            }}
+                            sx={{
+                              position: 'absolute',
+                              top: 8,
+                              left: 8,
+                              zIndex: 1,
+                              backgroundColor: 'white',
+                              borderRadius: '4px',
+                              '&:hover': {
+                                backgroundColor: alpha('#fff', 0.9),
+                              },
+                            }}
+                          />
+                          <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            transition={{ duration: 0.3, delay: index * 0.05 }}
+                          >
+                            <Card
+                              onClick={() => handleListingClick(listing.id)}
+                              sx={{
+                                cursor: 'pointer',
+                                height: '100%',
+                                minHeight: 200,
+                                opacity: 0.7,
+                                '&:hover': {
+                                  opacity: 1,
+                                  transform: 'translateY(-4px)',
+                                  boxShadow: 6,
+                                },
+                                transition: 'all 0.3s',
+                                border: '2px solid',
+                                borderColor: isSelected ? 'error.main' : 'transparent',
+                              }}
+                            >
+                              <CardContent sx={{ pt: 5 }}>
+                                <Typography variant="h6" gutterBottom>
+                                  {listing.propertyAddress || listing.property_address || 'No Address'}
+                                </Typography>
+                                <Typography variant="h5" color="primary" gutterBottom>
+                                  ${(listing.listPrice || listing.list_price || 0).toLocaleString()}
+                                </Typography>
+                                <Stack spacing={1}>
+                                  <Chip
+                                    label="Archived"
+                                    size="small"
+                                    color="warning"
+                                  />
+                                  <Typography variant="body2" color="textSecondary">
+                                    MLS: {listing.mlsNumber || listing.mls_number || 'N/A'}
+                                  </Typography>
+                                </Stack>
+                              </CardContent>
+                            </Card>
+                          </motion.div>
+                        </Box>
+                      );
+                    })}
+                  </>
+                );
+              }
+
+              // Regular listings view
               const filteredListings = listings.filter(l => {
                 switch (selectedStatus) {
                   case 'active':
@@ -1836,6 +2323,34 @@ const ListingsDashboard = () => {
           </AnimatePresence>
         </Box>
 
+        {/* Load More Button */}
+        {hasMorePages && !loading && selectedStatus !== 'archived' && (
+          <Box sx={{
+            display: 'flex',
+            justifyContent: 'center',
+            mt: 4,
+            mb: 2
+          }}>
+            <Button
+              variant="outlined"
+              size="large"
+              onClick={loadMoreListings}
+              disabled={loadingMore}
+              startIcon={loadingMore ? <CircularProgress size={20} /> : <Refresh />}
+              sx={{
+                px: 6,
+                py: 1.5,
+                borderRadius: '12px',
+                textTransform: 'none',
+                fontSize: '1rem',
+                fontWeight: 600
+              }}
+            >
+              {loadingMore ? 'Loading...' : `Load More (${totalCount - listings.length} remaining)`}
+            </Button>
+          </Box>
+        )}
+
         {/* New Listing Modal */}
         <NewListingModal
           open={newListingModalOpen}
@@ -1845,6 +2360,32 @@ const ListingsDashboard = () => {
             fetchListings();
           }}
         />
+
+        {/* Calendar Dialog */}
+        <Dialog
+          open={calendarDialogOpen}
+          onClose={() => setCalendarDialogOpen(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>
+            Calendar View
+            <IconButton
+              onClick={() => setCalendarDialogOpen(false)}
+              sx={{ position: 'absolute', right: 8, top: 8 }}
+            >
+              ✕
+            </IconButton>
+          </DialogTitle>
+          <DialogContent>
+            <Typography variant="body2" color="textSecondary">
+              Calendar view coming soon. View your listings by listing date, close date, or expiration date.
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setCalendarDialogOpen(false)}>Close</Button>
+          </DialogActions>
+        </Dialog>
       </Container>
     </>
   );
