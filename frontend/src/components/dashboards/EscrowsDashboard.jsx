@@ -1162,7 +1162,7 @@ const EscrowsDashboard = () => {
               gap: 3,
               alignItems: 'center',
               flexDirection: 'row',
-              flexWrap: 'wrap',
+              flexWrap: 'nowrap',
               mb: 3,
               width: '100%',
             }}>
@@ -1171,14 +1171,15 @@ const EscrowsDashboard = () => {
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
+                style={{ flexShrink: 0 }}
               >
                 <Typography variant="h3" component="h1" sx={{ fontWeight: 700 }}>
                   Escrows
                 </Typography>
               </motion.div>
 
-              {/* Spacer - only on larger screens */}
-              <Box sx={{ display: { xs: 'none', lg: 'block' }, flexGrow: 1 }} />
+              {/* Spacer - pushes date controls to the right */}
+              <Box sx={{ flexGrow: 1 }} />
 
               {/* Date Controls Container - always show in header */}
               <Box sx={{
@@ -1186,6 +1187,7 @@ const EscrowsDashboard = () => {
                 gap: 2,
                 alignItems: 'center',
                 flexWrap: 'nowrap',
+                flexShrink: 0,
               }}>
                   {/* Date Buttons */}
                   <ToggleButtonGroup
