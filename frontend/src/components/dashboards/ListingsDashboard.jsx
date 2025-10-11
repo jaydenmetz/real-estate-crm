@@ -1719,6 +1719,7 @@ const ListingsDashboard = () => {
             flexWrap: 'wrap',
             gap: 2,
             alignItems: 'flex-start',
+            justifyContent: 'space-between',
           }}
         >
           {/* Left: Tabs with gray background */}
@@ -1776,6 +1777,8 @@ const ListingsDashboard = () => {
             gap: 1.5,
             alignItems: 'center',
             flexWrap: 'wrap',
+            flex: '0 0 auto',
+            marginLeft: 'auto',
           }}>
             {/* Sort Dropdown */}
             <FormControl size="small" variant="standard" sx={{ minWidth: 140 }}>
