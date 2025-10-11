@@ -23,7 +23,6 @@ import {
   FormControl,
   InputLabel,
   useTheme,
-  IconButton,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
