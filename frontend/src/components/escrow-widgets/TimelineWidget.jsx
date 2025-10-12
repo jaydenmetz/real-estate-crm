@@ -4,7 +4,9 @@ import {
   CardContent,
   Typography,
   Box,
-  Chip,
+  Chip
+} from '@mui/material';
+import {
   Timeline,
   TimelineItem,
   TimelineSeparator,
@@ -12,7 +14,7 @@ import {
   TimelineContent,
   TimelineDot,
   timelineItemClasses
-} from '@mui/material';
+} from '@mui/lab';
 import { Schedule, CheckCircle, Event } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import { format, parseISO, isPast, isFuture } from 'date-fns';
