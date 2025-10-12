@@ -1,6 +1,7 @@
 const { validationResult } = require('express-validator');
 const { pool, query, transaction } = require('../config/database');
 const logger = require('../utils/logger');
+const websocketService = require('../services/websocket.service');
 
 // Helper to generate MLS number
 function generateMLSNumber() {
@@ -273,18 +274,44 @@ exports.createListing = async (req, res) => {
       return listing;
     });
 
-    // Emit real-time update
-    const io = req.app.get('io');
-    if (io) {
-      io.to('listings').emit('listing:created', result);
-    }
-
     logger.info('New listing created', {
       listingId: result.id,
       mlsNumber: result.mls_number,
       propertyAddress: result.property_address,
       listPrice: result.list_price,
     });
+
+    // Emit WebSocket event for real-time updates (3-tier: broker → team → user)
+    const teamId = req.user?.teamId || req.user?.team_id;
+    const userId = req.user?.id;
+    const brokerId = result.broker_id;
+    const eventData = {
+      entityType: 'listing',
+      entityId: result.id,
+      action: 'created',
+      data: {
+        id: result.id,
+        mlsNumber: result.mls_number,
+        propertyAddress: result.property_address,
+        listPrice: result.list_price,
+        listingStatus: result.listing_status
+      }
+    };
+
+    // Send to broker room (all users under this broker)
+    if (brokerId) {
+      websocketService.sendToBroker(brokerId, 'data:update', eventData);
+    }
+
+    // Send to team room if user has a team
+    if (teamId) {
+      websocketService.sendToTeam(teamId, 'data:update', eventData);
+    }
+
+    // Always send to user's personal room as fallback
+    if (userId) {
+      websocketService.sendToUser(userId, 'data:update', eventData);
+    }
 
     res.status(201).json({
       success: true,
@@ -447,10 +474,37 @@ exports.updateListing = async (req, res) => {
       });
     }
 
-    // Emit real-time update
-    const io = req.app.get('io');
-    if (io) {
-      io.to('listings').emit('listing:updated', result.rows[0]);
+    // Emit WebSocket event for real-time updates (3-tier: broker → team → user)
+    const updatedListing = result.rows[0];
+    const teamId = req.user?.teamId || req.user?.team_id;
+    const userId = req.user?.id;
+    const brokerId = updatedListing.broker_id;
+    const eventData = {
+      entityType: 'listing',
+      entityId: updatedListing.id,
+      action: 'updated',
+      data: {
+        id: updatedListing.id,
+        mlsNumber: updatedListing.mls_number,
+        propertyAddress: updatedListing.property_address,
+        listPrice: updatedListing.list_price,
+        listingStatus: updatedListing.listing_status
+      }
+    };
+
+    // Send to broker room (all users under this broker)
+    if (brokerId) {
+      websocketService.sendToBroker(brokerId, 'data:update', eventData);
+    }
+
+    // Send to team room if user has a team
+    if (teamId) {
+      websocketService.sendToTeam(teamId, 'data:update', eventData);
+    }
+
+    // Always send to user's personal room as fallback
+    if (userId) {
+      websocketService.sendToUser(userId, 'data:update', eventData);
     }
 
     res.json({
@@ -987,6 +1041,36 @@ exports.deleteListing = async (req, res) => {
       listingId: id,
       deletedBy: req.user?.email || 'unknown',
     });
+
+    // Emit WebSocket event for real-time updates (3-tier: broker → team → user)
+    const deletedListing = result.rows[0];
+    const teamId = req.user?.teamId || req.user?.team_id;
+    const userId = req.user?.id;
+    const brokerId = checkResult.rows[0].broker_id; // from earlier check query
+    const eventData = {
+      entityType: 'listing',
+      entityId: deletedListing.id,
+      action: 'deleted',
+      data: {
+        id: deletedListing.id,
+        propertyAddress: deletedListing.property_address
+      }
+    };
+
+    // Send to broker room (all users under this broker)
+    if (brokerId) {
+      websocketService.sendToBroker(brokerId, 'data:update', eventData);
+    }
+
+    // Send to team room if user has a team
+    if (teamId) {
+      websocketService.sendToTeam(teamId, 'data:update', eventData);
+    }
+
+    // Always send to user's personal room as fallback
+    if (userId) {
+      websocketService.sendToUser(userId, 'data:update', eventData);
+    }
 
     res.json({
       success: true,

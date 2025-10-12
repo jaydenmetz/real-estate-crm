@@ -1,5 +1,6 @@
 const { pool } = require('../config/database');
 const logger = require('../utils/logger');
+const websocketService = require('../services/websocket.service');
 
 // GET /api/v1/appointments
 exports.getAppointments = async (req, res) => {
@@ -176,6 +177,19 @@ exports.createAppointment = async (req, res) => {
     ];
 
     const result = await pool.query(query, values);
+    const newAppt = result.rows[0];
+
+    // Emit WebSocket event for real-time updates
+    const teamId = req.user?.teamId || req.user?.team_id;
+    const userId = req.user?.id;
+    const eventData = {
+      entityType: 'appointment',
+      entityId: newAppt.id,
+      action: 'created',
+      data: { id: newAppt.id, title: newAppt.title, appointmentDate: newAppt.appointment_date }
+    };
+    if (teamId) websocketService.sendToTeam(teamId, 'data:update', eventData);
+    if (userId) websocketService.sendToUser(userId, 'data:update', eventData);
 
     res.status(201).json({
       success: true,
@@ -255,6 +269,21 @@ exports.updateAppointment = async (req, res) => {
     `;
 
     const result = await pool.query(query, values);
+
+    // Emit WebSocket event for updated appointment
+    if (result.rows.length > 0) {
+      const updatedAppt = result.rows[0];
+      const teamId = req.user?.teamId || req.user?.team_id;
+      const userId = req.user?.id;
+      const eventData = {
+        entityType: 'appointment',
+        entityId: updatedAppt.id,
+        action: 'updated',
+        data: { id: updatedAppt.id, title: updatedAppt.title }
+      };
+      if (teamId) websocketService.sendToTeam(teamId, 'data:update', eventData);
+      if (userId) websocketService.sendToUser(userId, 'data:update', eventData);
+    }
 
     if (result.rows.length === 0) {
       // Check if record exists but version mismatch
@@ -383,6 +412,18 @@ exports.deleteAppointment = async (req, res) => {
 
     const deleteQuery = 'DELETE FROM appointments WHERE id = $1';
     await pool.query(deleteQuery, [id]);
+
+    // Emit WebSocket event for deleted appointment
+    const teamId = req.user?.teamId || req.user?.team_id;
+    const userId = req.user?.id;
+    const eventData = {
+      entityType: 'appointment',
+      entityId: id,
+      action: 'deleted',
+      data: { id: id }
+    };
+    if (teamId) websocketService.sendToTeam(teamId, 'data:update', eventData);
+    if (userId) websocketService.sendToUser(userId, 'data:update', eventData);
 
     res.json({
       success: true,

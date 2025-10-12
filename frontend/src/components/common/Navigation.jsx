@@ -48,13 +48,18 @@ import {
   Groups,
   ExpandMore,
   ExpandLess,
+  CheckCircle,
+  Error,
+  WifiOff,
 } from '@mui/icons-material';
 import UserMenu from './UserMenu';
+import { useWebSocket } from '../../hooks/useWebSocket';
 
 const EnhancedNavigation = () => {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const { isConnected, connectionStatus } = useWebSocket();
 
   const [dataMenuAnchor, setDataMenuAnchor] = useState(null);
   const [peopleMenuAnchor, setPeopleMenuAnchor] = useState(null);
@@ -402,6 +407,22 @@ const EnhancedNavigation = () => {
               >
                 <Settings />
               </IconButton>
+            </Tooltip>
+
+            {/* WebSocket Connection Status Indicator */}
+            <Tooltip title={isConnected ? "Real-time sync active" : "Real-time sync disconnected"}>
+              <Chip
+                icon={isConnected ? <CheckCircle /> : <WifiOff />}
+                label="Live"
+                color={isConnected ? "success" : "default"}
+                size="small"
+                variant={isConnected ? "filled" : "outlined"}
+                sx={{
+                  mr: 1,
+                  height: 24,
+                  '& .MuiChip-icon': { fontSize: 16 }
+                }}
+              />
             </Tooltip>
 
             {/* User Menu */}

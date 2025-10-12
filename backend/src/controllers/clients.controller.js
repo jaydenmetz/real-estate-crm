@@ -1,5 +1,6 @@
 const { pool } = require('../config/database');
 const logger = require('../utils/logger');
+const websocketService = require('../services/websocket.service');
 
 // GET /api/v1/clients
 exports.getAllClients = async (req, res) => {
@@ -237,19 +238,52 @@ exports.createClient = async (req, res) => {
 
     await client.query('COMMIT');
 
+    // Emit WebSocket event for real-time updates (3-tier: broker → team → user)
+    const newClient = {
+      id: clientResult.rows[0].id,
+      contact_id: contactId,
+      first_name: firstName,
+      last_name: lastName,
+      email,
+      phone,
+      client_type: clientType,
+      status: 'active',
+    };
+    const teamId = req.user?.teamId || req.user?.team_id;
+    const userId = req.user?.id;
+    const brokerId = null; // clients don't have broker_id, so send to team/user only
+    const eventData = {
+      entityType: 'client',
+      entityId: newClient.id,
+      action: 'created',
+      data: {
+        id: newClient.id,
+        firstName: newClient.first_name,
+        lastName: newClient.last_name,
+        email: newClient.email,
+        clientType: newClient.client_type
+      }
+    };
+
+    // Send to broker room (all users under this broker)
+    if (brokerId) {
+      websocketService.sendToBroker(brokerId, 'data:update', eventData);
+    }
+
+    // Send to team room if user has a team
+    if (teamId) {
+      websocketService.sendToTeam(teamId, 'data:update', eventData);
+    }
+
+    // Always send to user's personal room as fallback
+    if (userId) {
+      websocketService.sendToUser(userId, 'data:update', eventData);
+    }
+
     // Return combined data
     res.status(201).json({
       success: true,
-      data: {
-        id: clientResult.rows[0].id,
-        contact_id: contactId,
-        first_name: firstName,
-        last_name: lastName,
-        email,
-        phone,
-        client_type: clientType,
-        status: 'active',
-      },
+      data: newClient,
     });
   } catch (error) {
     await client.query('ROLLBACK');
@@ -394,6 +428,39 @@ exports.updateClient = async (req, res) => {
 
     // Get updated data
     const updatedResult = await pool.query(getQuery, [id]);
+    const updatedClient = updatedResult.rows[0];
+
+    // Emit WebSocket event for real-time updates (3-tier: broker → team → user)
+    const teamId = req.user?.teamId || req.user?.team_id;
+    const userId = req.user?.id;
+    const brokerId = null; // clients don't have broker_id
+    const eventData = {
+      entityType: 'client',
+      entityId: updatedClient.id,
+      action: 'updated',
+      data: {
+        id: updatedClient.id,
+        firstName: updatedClient.first_name,
+        lastName: updatedClient.last_name,
+        email: updatedClient.email,
+        clientType: updatedClient.client_type
+      }
+    };
+
+    // Send to broker room (all users under this broker)
+    if (brokerId) {
+      websocketService.sendToBroker(brokerId, 'data:update', eventData);
+    }
+
+    // Send to team room if user has a team
+    if (teamId) {
+      websocketService.sendToTeam(teamId, 'data:update', eventData);
+    }
+
+    // Always send to user's personal room as fallback
+    if (userId) {
+      websocketService.sendToUser(userId, 'data:update', eventData);
+    }
 
     res.json({
       success: true,
@@ -492,6 +559,34 @@ exports.deleteClient = async (req, res) => {
     }
 
     await client.query('COMMIT');
+
+    // Emit WebSocket event for real-time updates (3-tier: broker → team → user)
+    const teamId = req.user?.teamId || req.user?.team_id;
+    const userId = req.user?.id;
+    const brokerId = null; // clients don't have broker_id
+    const eventData = {
+      entityType: 'client',
+      entityId: id,
+      action: 'deleted',
+      data: {
+        id: id
+      }
+    };
+
+    // Send to broker room (all users under this broker)
+    if (brokerId) {
+      websocketService.sendToBroker(brokerId, 'data:update', eventData);
+    }
+
+    // Send to team room if user has a team
+    if (teamId) {
+      websocketService.sendToTeam(teamId, 'data:update', eventData);
+    }
+
+    // Always send to user's personal room as fallback
+    if (userId) {
+      websocketService.sendToUser(userId, 'data:update', eventData);
+    }
 
     res.json({
       success: true,

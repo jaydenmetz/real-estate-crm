@@ -1,5 +1,6 @@
 const { pool } = require('../config/database');
 const logger = require('../utils/logger');
+const websocketService = require('../services/websocket.service');
 
 // GET /api/v1/leads
 exports.getLeads = async (req, res) => {
@@ -176,6 +177,14 @@ exports.createLead = async (req, res) => {
     ];
 
     const result = await pool.query(query, values);
+    const newLead = result.rows[0];
+
+    // Emit WebSocket event
+    const teamId = req.user?.teamId || req.user?.team_id;
+    const userId = req.user?.id;
+    const eventData = { entityType: 'lead', entityId: newLead.id, action: 'created', data: { id: newLead.id } };
+    if (teamId) websocketService.sendToTeam(teamId, 'data:update', eventData);
+    if (userId) websocketService.sendToUser(userId, 'data:update', eventData);
 
     res.status(201).json({
       success: true,
@@ -293,6 +302,14 @@ exports.updateLead = async (req, res) => {
       });
     }
 
+    // Emit WebSocket event
+    const updatedLead = result.rows[0];
+    const teamId = req.user?.teamId || req.user?.team_id;
+    const userId = req.user?.id;
+    const eventData = { entityType: 'lead', entityId: updatedLead.id, action: 'updated', data: { id: updatedLead.id } };
+    if (teamId) websocketService.sendToTeam(teamId, 'data:update', eventData);
+    if (userId) websocketService.sendToUser(userId, 'data:update', eventData);
+
     res.json({
       success: true,
       data: result.rows[0],
@@ -385,6 +402,13 @@ exports.deleteLead = async (req, res) => {
 
     const deleteQuery = 'DELETE FROM leads WHERE id = $1';
     await pool.query(deleteQuery, [id]);
+
+    // Emit WebSocket event
+    const teamId = req.user?.teamId || req.user?.team_id;
+    const userId = req.user?.id;
+    const eventData = { entityType: 'lead', entityId: id, action: 'deleted', data: { id: id } };
+    if (teamId) websocketService.sendToTeam(teamId, 'data:update', eventData);
+    if (userId) websocketService.sendToUser(userId, 'data:update', eventData);
 
     res.json({
       success: true,

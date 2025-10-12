@@ -460,6 +460,26 @@ const ClientsDashboard = () => {
     return () => clearInterval(interval);
   }, []);
 
+  // WebSocket real-time updates
+  useEffect(() => {
+    if (!isConnected) return;
+
+    const websocketService = require('../../services/websocket.service').default;
+
+    const unsubscribe = websocketService.on('data:update', (data) => {
+      console.log('📡 WebSocket data update received:', data);
+
+      if (data.entityType === 'client') {
+        console.log('🔄 Refetching clients due to real-time update');
+        fetchClients();
+      }
+    });
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [isConnected]);
+
   const fetchClients = async (pageNum = 1, appendData = false) => {
     try {
       if (pageNum === 1) {

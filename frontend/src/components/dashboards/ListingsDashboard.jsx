@@ -545,6 +545,26 @@ const ListingsDashboard = () => {
     return { startDate, endDate };
   };
 
+  // WebSocket real-time updates
+  useEffect(() => {
+    if (!isConnected) return;
+
+    const websocketService = require('../../services/websocket.service').default;
+
+    const unsubscribe = websocketService.on('data:update', (data) => {
+      console.log('📡 WebSocket data update received:', data);
+
+      if (data.entityType === 'listing') {
+        console.log('🔄 Refetching listings due to real-time update');
+        fetchListings();
+      }
+    });
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [isConnected]);
+
   const fetchListings = async (pageNum = 1, appendData = false) => {
     try {
       // Show appropriate loading state
