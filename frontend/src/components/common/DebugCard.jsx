@@ -36,12 +36,22 @@ import { styled } from '@mui/material/styles';
 import authService from '../../services/auth.service';
 
 const DebugContainer = styled(Card)(({ theme }) => ({
-  margin: theme.spacing(2),
-  backgroundColor: '#1a1a1a',
-  color: '#e0e0e0',
-  borderRadius: theme.spacing(1),
-  border: '2px solid #764ba2',
-  position: 'relative'
+  backgroundColor: 'white',
+  color: '#1a1a1a',
+  borderRadius: theme.spacing(2),
+  boxShadow: '0 4px 16px rgba(118, 75, 162, 0.15)',
+  border: '1px solid rgba(118, 75, 162, 0.2)',
+  position: 'relative',
+  overflow: 'hidden',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 4,
+    background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)'
+  }
 }));
 
 const StatsGrid = styled(Grid)(({ theme }) => ({
@@ -49,34 +59,44 @@ const StatsGrid = styled(Grid)(({ theme }) => ({
 }));
 
 const StatCard = styled(Paper)(({ theme }) => ({
-  padding: theme.spacing(2),
-  backgroundColor: '#2d2d2d',
-  color: '#e0e0e0',
+  padding: theme.spacing(2.5),
+  backgroundColor: '#f8f9fa',
+  border: '1px solid rgba(118, 75, 162, 0.1)',
+  color: '#1a1a1a',
   height: '100%',
   display: 'flex',
   flexDirection: 'column',
-  gap: theme.spacing(1)
+  gap: theme.spacing(1),
+  borderRadius: theme.spacing(1.5),
+  transition: 'all 0.3s ease',
+  '&:hover': {
+    boxShadow: '0 4px 12px rgba(118, 75, 162, 0.12)',
+    borderColor: 'rgba(118, 75, 162, 0.3)'
+  }
 }));
 
 const CodeBlock = styled(Box)(({ theme }) => ({
-  backgroundColor: '#0d0d0d',
-  padding: theme.spacing(1),
-  borderRadius: theme.spacing(0.5),
+  backgroundColor: '#1e1e1e',
+  padding: theme.spacing(2),
+  borderRadius: theme.spacing(1),
   fontFamily: 'Consolas, Monaco, monospace',
   fontSize: '0.875rem',
   overflow: 'auto',
   maxHeight: 300,
-  border: '1px solid #3d3d3d'
+  border: '1px solid rgba(118, 75, 162, 0.2)',
+  color: '#e0e0e0'
 }));
 
 const TestCard = styled(Card)(({ status }) => ({
   marginBottom: '16px',
   border: '2px solid',
-  borderColor: status === 'success' ? '#4caf50' : 
+  borderColor: status === 'success' ? '#4caf50' :
                status === 'failed' ? '#f44336' : '#e0e0e0',
-  backgroundColor: status === 'success' ? '#1a2e1a' : 
-                   status === 'failed' ? '#2e1a1a' : '#1a1a1a',
-  transition: 'all 0.3s ease'
+  backgroundColor: status === 'success' ? 'rgba(76, 175, 80, 0.05)' :
+                   status === 'failed' ? 'rgba(244, 67, 54, 0.05)' : 'white',
+  transition: 'all 0.3s ease',
+  borderRadius: '12px',
+  overflow: 'hidden'
 }));
 
 const TestItem = ({ test }) => {
@@ -147,7 +167,17 @@ const TestItem = ({ test }) => {
           )}
           
           {test.error && (
-            <Alert severity="error" sx={{ backgroundColor: '#2e1a1a', color: '#ff6b6b' }}>
+            <Alert
+              severity="error"
+              sx={{
+                backgroundColor: 'rgba(244, 67, 54, 0.1)',
+                color: '#1a1a1a',
+                border: '1px solid #f44336',
+                '& .MuiAlert-icon': {
+                  color: '#f44336'
+                }
+              }}
+            >
               {test.error}
             </Alert>
           )}
@@ -559,41 +589,59 @@ function DebugCard({ pageType = 'dashboard', pageData = {} }) {
       )}
 
       {/* Header */}
-      <CardContent sx={{ pb: expanded ? 0 : 2 }}>
+      <CardContent sx={{ pb: expanded ? 0 : 2, pt: 3 }}>
         <Stack direction="row" alignItems="center" spacing={2}>
           <IconButton
             onClick={() => setExpanded(!expanded)}
-            sx={{ color: '#764ba2' }}
+            sx={{
+              color: 'white',
+              backgroundColor: '#764ba2',
+              '&:hover': {
+                backgroundColor: '#5a3a80'
+              }
+            }}
           >
             {expanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
           </IconButton>
-          <BugIcon sx={{ color: '#764ba2' }} />
-          <Typography variant="h6" sx={{ flex: 1, fontWeight: 600 }}>
+          <BugIcon sx={{ color: '#764ba2', fontSize: 28 }} />
+          <Typography variant="h6" sx={{ flex: 1, fontWeight: 700, color: '#1a1a1a' }}>
             System Admin Debug Panel
           </Typography>
-          
+
           {/* Quick stats chips */}
           <Stack direction="row" spacing={1}>
             <Chip
               icon={getStatusIcon(stats.api.status)}
               label={`API: ${stats.api.latency}ms`}
               size="small"
-              sx={{ backgroundColor: '#2d2d2d' }}
+              sx={{
+                backgroundColor: 'rgba(118, 75, 162, 0.1)',
+                color: '#1a1a1a',
+                fontWeight: 600,
+                border: '1px solid rgba(118, 75, 162, 0.2)'
+              }}
             />
             <Chip
               icon={getStatusIcon(stats.auth.status)}
               label={stats.auth.user?.username || 'No User'}
               size="small"
-              sx={{ backgroundColor: '#2d2d2d' }}
+              sx={{
+                backgroundColor: 'rgba(118, 75, 162, 0.1)',
+                color: '#1a1a1a',
+                fontWeight: 600,
+                border: '1px solid rgba(118, 75, 162, 0.2)'
+              }}
             />
             {pageType === 'escrow-detail' && apiTests.length > 0 && (
               <Chip
                 icon={<CheckIcon sx={{ color: stats.tests.failed === 0 ? '#4caf50' : '#f44336' }} />}
                 label={`${stats.tests.passed}/${stats.tests.total} APIs`}
                 size="small"
-                sx={{ 
-                  backgroundColor: stats.tests.failed === 0 ? '#1a2e1a' : '#2e1a1a',
-                  color: stats.tests.failed === 0 ? '#4caf50' : '#ff6b6b'
+                sx={{
+                  backgroundColor: stats.tests.failed === 0 ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)',
+                  color: stats.tests.failed === 0 ? '#4caf50' : '#f44336',
+                  fontWeight: 600,
+                  border: `1px solid ${stats.tests.failed === 0 ? '#4caf50' : '#f44336'}`
                 }}
               />
             )}
@@ -603,7 +651,7 @@ function DebugCard({ pageType = 'dashboard', pageData = {} }) {
 
       {/* Expanded Content */}
       <Collapse in={expanded}>
-        <Divider sx={{ backgroundColor: '#3d3d3d' }} />
+        <Divider sx={{ backgroundColor: 'rgba(118, 75, 162, 0.1)' }} />
         <CardContent>
           <StatsGrid container spacing={2}>
             {/* API Stats */}
@@ -712,24 +760,32 @@ function DebugCard({ pageType = 'dashboard', pageData = {} }) {
             {/* API Tests Section for Escrow Detail */}
             {pageType === 'escrow-detail' && (
               <Grid item xs={12}>
-                <Accordion 
-                  expanded={apiTestsExpanded} 
+                <Accordion
+                  expanded={apiTestsExpanded}
                   onChange={(e, isExpanded) => setApiTestsExpanded(isExpanded)}
-                  sx={{ backgroundColor: '#2d2d2d', color: '#e0e0e0' }}
+                  sx={{
+                    backgroundColor: '#f8f9fa',
+                    color: '#1a1a1a',
+                    borderRadius: '12px !important',
+                    border: '1px solid rgba(118, 75, 162, 0.2)',
+                    '&:before': { display: 'none' },
+                    boxShadow: '0 2px 8px rgba(118, 75, 162, 0.08)'
+                  }}
                 >
                   <AccordionSummary expandIcon={<ExpandMoreIcon sx={{ color: '#764ba2' }} />}>
                     <Stack direction="row" alignItems="center" spacing={2}>
-                      <ApiIcon sx={{ color: '#764ba2' }} />
-                      <Typography variant="h6" fontWeight={600}>
+                      <ApiIcon sx={{ color: '#764ba2', fontSize: 28 }} />
+                      <Typography variant="h6" fontWeight={700}>
                         Escrow Detail API Health Check
                       </Typography>
                       {apiTests.length > 0 && (
                         <Chip
                           label={`${stats.tests.passed}/${stats.tests.total} Passing`}
                           sx={{
-                            backgroundColor: stats.tests.failed === 0 ? '#1a2e1a' : '#2e1a1a',
-                            color: stats.tests.failed === 0 ? '#4caf50' : '#ff6b6b',
-                            fontWeight: 600
+                            backgroundColor: stats.tests.failed === 0 ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)',
+                            color: stats.tests.failed === 0 ? '#4caf50' : '#f44336',
+                            fontWeight: 600,
+                            border: `1px solid ${stats.tests.failed === 0 ? '#4caf50' : '#f44336'}`
                           }}
                         />
                       )}
@@ -760,7 +816,17 @@ function DebugCard({ pageType = 'dashboard', pageData = {} }) {
                           <TestItem key={index} test={test} />
                         ))
                       ) : (
-                        <Alert severity="info" sx={{ backgroundColor: '#1a1a2e', color: '#60a5fa' }}>
+                        <Alert
+                          severity="info"
+                          sx={{
+                            backgroundColor: 'rgba(96, 165, 250, 0.1)',
+                            color: '#1a1a1a',
+                            border: '1px solid rgba(96, 165, 250, 0.3)',
+                            '& .MuiAlert-icon': {
+                              color: '#60a5fa'
+                            }
+                          }}
+                        >
                           Click "Rerun Tests" to check all API endpoints for this escrow
                         </Alert>
                       )}

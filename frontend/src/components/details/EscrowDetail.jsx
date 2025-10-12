@@ -341,22 +341,6 @@ function EscrowDetail() {
 
   return (
     <PageContainer>
-      <DebugCard
-        pageType="escrow-detail"
-        pageData={{
-          id: escrowData?.id,
-          display_id: escrowData?.display_id,
-          property_address: escrowData?.property_address,
-          purchase_price: escrowData?.purchase_price,
-          escrow_status: escrowData?.escrow_status,
-          buyer: escrowData?.buyer_name,
-          seller: escrowData?.seller_name,
-          closing_date: escrowData?.closing_date,
-          viewMode: viewMode,
-          loading,
-          error: error?.message
-        }}
-      />
       <Container maxWidth="xl">
         {/* Breadcrumbs */}
         <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 3 }}>
@@ -472,6 +456,26 @@ function EscrowDetail() {
             />
           </Grid>
         </Grid>
+
+        {/* System Admin Debug Panel - Bottom of page */}
+        <Box sx={{ mt: 4 }}>
+          <DebugCard
+            pageType="escrow-detail"
+            pageData={{
+              id: escrowData?.id,
+              display_id: escrowData?.display_id,
+              property_address: escrowData?.property_address,
+              purchase_price: escrowData?.purchase_price,
+              escrow_status: escrowData?.escrow_status,
+              buyer: escrowData?.buyer_name,
+              seller: escrowData?.seller_name,
+              closing_date: escrowData?.closing_date,
+              viewMode: viewMode,
+              loading,
+              error: error?.message
+            }}
+          />
+        </Box>
       </Container>
     </PageContainer>
   );
