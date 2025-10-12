@@ -262,13 +262,32 @@ class AuthService {
         if (refreshResult.success) {
           console.log('✅ Token refreshed successfully from httpOnly cookie');
           // Token is now set in memory, continue with verification
+          // Verify the token was actually set
+          if (!this.token) {
+            console.error('❌ Token refresh succeeded but token is still null');
+            await this.logout();
+            return {
+              success: false,
+              error: 'Token restoration failed'
+            };
+          }
         } else {
           console.warn('❌ Token refresh failed:', refreshResult.error);
-          // Continue with cached user data anyway
+          // If refresh fails, user must log in again
+          await this.logout();
+          return {
+            success: false,
+            error: refreshResult.error || 'Session expired'
+          };
         }
       } catch (error) {
         console.error('❌ Token refresh error:', error);
-        // Continue with cached user data anyway
+        // If refresh throws error, user must log in again
+        await this.logout();
+        return {
+          success: false,
+          error: 'Session expired'
+        };
       }
     }
 

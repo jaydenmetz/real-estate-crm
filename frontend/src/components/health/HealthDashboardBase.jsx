@@ -515,7 +515,9 @@ const HealthDashboardBase = ({
 
   const getAuthHeader = () => {
     if (authTab === 0) {
-      const token = localStorage.getItem('authToken');
+      // Get token from authService (memory) instead of localStorage (Phase 4)
+      const authService = require('../../services/auth.service').default;
+      const token = authService.token;
       return token ? { 'Authorization': `Bearer ${token}` } : {};
     } else {
       return testApiKey ? { 'X-API-Key': testApiKey } : {};
@@ -524,7 +526,9 @@ const HealthDashboardBase = ({
 
   const getAuthDisplay = () => {
     if (authTab === 0) {
-      const token = localStorage.getItem('authToken');
+      // Get token from authService (memory) instead of localStorage (Phase 4)
+      const authService = require('../../services/auth.service').default;
+      const token = authService.token;
       return token ? `Bearer ${token.substring(0, 20)}...` : 'No JWT token found';
     } else {
       return testApiKey ? `${testApiKey.substring(0, 20)}...` : 'No API key yet';

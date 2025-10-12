@@ -1002,10 +1002,9 @@ export class HealthCheckService {
           });
         }, 5000);
 
-        // Get token for request display
-        const token = localStorage.getItem('crm_auth_token') ||
-                     localStorage.getItem('authToken') ||
-                     localStorage.getItem('token');
+        // Note: JWT tokens are no longer in localStorage (Phase 4 XSS protection)
+        // They are stored in memory only and managed by auth.service.js
+        const token = null; // For display purposes only
         const wsUrl = process.env.REACT_APP_WS_URL || 'wss://api.jaydenmetz.com';
 
         // Check if already connected
@@ -1190,10 +1189,10 @@ export class HealthCheckService {
 
         // Wait 250ms to ensure listener is registered and WebSocket connection is stable
         setTimeout(() => {
-          // Get fresh token for JWT auth
+          // Get auth headers (JWT tokens now managed by apiInstance, not localStorage)
           const authHeaders = this.authType === 'apikey'
             ? { 'X-API-Key': this.authValue }
-            : { 'Authorization': `Bearer ${localStorage.getItem('crm_auth_token') || localStorage.getItem('authToken') || localStorage.getItem('token')}` };
+            : { 'Authorization': `Bearer ${this.authValue || ''}` }; // authValue should contain JWT for jwt authType
 
           fetch(`${this.API_URL}${endpoint}`, {
           method: 'POST',
@@ -1227,7 +1226,7 @@ export class HealthCheckService {
               setTimeout(async () => {
                 const deleteAuthHeaders = this.authType === 'apikey'
                   ? { 'X-API-Key': this.authValue }
-                  : { 'Authorization': `Bearer ${localStorage.getItem('crm_auth_token') || localStorage.getItem('authToken') || localStorage.getItem('token')}` };
+                  : { 'Authorization': `Bearer ${this.authValue || ''}` };
 
                 try {
                   // Escrows must be archived before deletion
@@ -1367,7 +1366,7 @@ export class HealthCheckService {
           if (testEscrowId) {
             const deleteAuthHeaders = this.authType === 'apikey'
               ? { 'X-API-Key': this.authValue }
-              : { 'Authorization': `Bearer ${localStorage.getItem('crm_auth_token') || localStorage.getItem('authToken') || localStorage.getItem('token')}` };
+              : { 'Authorization': `Bearer ${this.authValue || ''}` };
 
             try {
               // Escrows must be archived before deletion
@@ -1437,10 +1436,10 @@ export class HealthCheckService {
 
         // Wait 100ms to ensure listener is registered before triggering events
         setTimeout(() => {
-          // Get fresh token for JWT auth
+          // Get auth headers
           const createAuthHeaders = this.authType === 'apikey'
             ? { 'X-API-Key': this.authValue }
-            : { 'Authorization': `Bearer ${localStorage.getItem('crm_auth_token') || localStorage.getItem('authToken') || localStorage.getItem('token')}` };
+            : { 'Authorization': `Bearer ${this.authValue || ''}` };
 
           fetch(`${this.API_URL}${endpoint}`, {
           method: 'POST',
@@ -1497,7 +1496,7 @@ export class HealthCheckService {
             setTimeout(() => {
               const updateAuthHeaders = this.authType === 'apikey'
                 ? { 'X-API-Key': this.authValue }
-                : { 'Authorization': `Bearer ${localStorage.getItem('crm_auth_token') || localStorage.getItem('authToken') || localStorage.getItem('token')}` };
+                : { 'Authorization': `Bearer ${this.authValue || ''}` };
 
               fetch(`${this.API_URL}${endpoint}/${testEscrowId}`, {
                 method: 'PUT',
@@ -1548,9 +1547,8 @@ export class HealthCheckService {
 
   // Run all module health checks
   async runAllHealthChecks() {
-    const token = this.authValue ||
-                 localStorage.getItem('authToken') ||
-                 localStorage.getItem('token');
+    // Use authValue which is set during construction
+    const token = this.authValue;
 
     const results = {
       timestamp: new Date().toISOString(),
