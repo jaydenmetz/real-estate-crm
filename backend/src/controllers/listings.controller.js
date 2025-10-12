@@ -1044,8 +1044,7 @@ exports.deleteListing = async (req, res) => {
 
     // Emit WebSocket event for real-time updates (3-tier: broker → team → user)
     const deletedListing = result.rows[0];
-    const teamId = req.user?.teamId || req.user?.team_id;
-    const userId = req.user?.id;
+    // teamId and userId already declared at top of function
     const brokerId = checkResult.rows[0].broker_id; // from earlier check query
     const eventData = {
       entityType: 'listing',
