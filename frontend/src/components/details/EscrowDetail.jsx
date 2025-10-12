@@ -226,6 +226,30 @@ function EscrowDetail() {
     }
   };
 
+  // Handle field updates
+  const handleFieldUpdate = async (field, value) => {
+    try {
+      const result = await apiCall(`escrows/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ [field]: value })
+      });
+
+      if (result.success) {
+        // Optimistically update local state
+        setEscrowData(prev => ({
+          ...prev,
+          [field]: value
+        }));
+
+        // Refetch to ensure sync
+        fetchEscrowData();
+      }
+    } catch (err) {
+      console.error('Error updating field:', err);
+      throw err; // Re-throw so EditableField knows it failed
+    }
+  };
+
   // Handle checklist item toggle
   const handleChecklistToggle = async (category, item, value) => {
     try {
@@ -420,6 +444,7 @@ function EscrowDetail() {
             <PropertyWidget
               viewMode={viewMode}
               data={escrowData}
+              onUpdate={handleFieldUpdate}
             />
           </Grid>
 
@@ -428,6 +453,7 @@ function EscrowDetail() {
             <FinancialWidget
               viewMode={viewMode}
               data={escrowData.financials || escrowData}
+              onUpdate={handleFieldUpdate}
             />
           </Grid>
 
@@ -436,6 +462,7 @@ function EscrowDetail() {
             <PeopleWidget
               viewMode={viewMode}
               data={escrowData.people || escrowData}
+              onUpdate={handleFieldUpdate}
             />
           </Grid>
 
@@ -444,6 +471,7 @@ function EscrowDetail() {
             <TimelineWidget
               viewMode={viewMode}
               data={escrowData.timeline || escrowData}
+              onUpdate={handleFieldUpdate}
             />
           </Grid>
 

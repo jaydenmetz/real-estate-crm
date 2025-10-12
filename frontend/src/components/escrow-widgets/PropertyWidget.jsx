@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import { Home, Straighten, CalendarToday } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
+import EditableField from '../common/EditableField';
 
 const WidgetCard = styled(Card)(({ theme }) => ({
   height: '100%',
@@ -24,18 +25,24 @@ const WidgetCard = styled(Card)(({ theme }) => ({
   }
 }));
 
-const PropertyWidget = ({ viewMode = 'medium', data = {} }) => {
+const PropertyWidget = ({ viewMode = 'medium', data = {}, onUpdate }) => {
   const bedrooms = data?.bedrooms || data?.bedroom_count || 0;
   const bathrooms = data?.bathrooms || data?.bathroom_count || 0;
   const squareFeet = data?.square_feet || data?.squareFeet || 0;
   const yearBuilt = data?.year_built || data?.yearBuilt;
   const propertyType = data?.property_type || data?.propertyType || 'Unknown';
-  const lotSize = data?.lot_size || data?.lotSize;
-  const features = data?.features || [];
+  const lotSize = data?.lot_size_sqft || data?.lot_size || data?.lotSize;
+  const features = data?.property_features || data?.features || {};
 
   const formatNumber = (num) => {
     if (!num) return '0';
     return new Intl.NumberFormat('en-US').format(num);
+  };
+
+  const handleFieldUpdate = async (field, value) => {
+    if (onUpdate) {
+      await onUpdate(field, value);
+    }
   };
 
   return (
@@ -66,33 +73,46 @@ const PropertyWidget = ({ viewMode = 'medium', data = {} }) => {
                 <Typography variant="caption" color="text.secondary">
                   Bedrooms
                 </Typography>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  {bedrooms}
-                </Typography>
+                <EditableField
+                  value={bedrooms}
+                  onSave={(value) => handleFieldUpdate('bedrooms', value)}
+                  type="number"
+                  variant="h6"
+                />
               </Grid>
               <Grid item xs={6}>
                 <Typography variant="caption" color="text.secondary">
                   Bathrooms
                 </Typography>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  {bathrooms}
-                </Typography>
+                <EditableField
+                  value={bathrooms}
+                  onSave={(value) => handleFieldUpdate('bathrooms', value)}
+                  type="number"
+                  variant="h6"
+                />
               </Grid>
               <Grid item xs={6}>
                 <Typography variant="caption" color="text.secondary">
                   Square Feet
                 </Typography>
-                <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  {formatNumber(squareFeet)}
-                </Typography>
+                <EditableField
+                  value={squareFeet}
+                  onSave={(value) => handleFieldUpdate('square_feet', value)}
+                  type="number"
+                  variant="h6"
+                  suffix=" sqft"
+                />
               </Grid>
               <Grid item xs={6}>
                 <Typography variant="caption" color="text.secondary">
                   Property Type
                 </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 500, mt: 0.5 }}>
-                  {propertyType}
-                </Typography>
+                <EditableField
+                  value={propertyType}
+                  onSave={(value) => handleFieldUpdate('property_type', value)}
+                  type="text"
+                  variant="body2"
+                />
               </Grid>
             </Grid>
 

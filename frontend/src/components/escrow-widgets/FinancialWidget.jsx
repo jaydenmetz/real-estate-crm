@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import { AttachMoney, TrendingUp } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
+import EditableField from '../common/EditableField';
 
 const WidgetCard = styled(Card)(({ theme }) => ({
   height: '100%',
@@ -34,14 +35,20 @@ const formatCurrency = (value) => {
   }).format(value);
 };
 
-const FinancialWidget = ({ viewMode = 'medium', data = {} }) => {
+const FinancialWidget = ({ viewMode = 'medium', data = {}, onUpdate }) => {
   const purchasePrice = data?.purchase_price || data?.purchasePrice || 0;
   const downPayment = data?.down_payment || data?.downPayment || 0;
   const loanAmount = data?.loan_amount || data?.loanAmount || 0;
   const earnestMoney = data?.earnest_money_deposit || data?.earnestMoneyDeposit || 0;
   const myCommission = data?.my_commission || data?.myCommission || 0;
-  const commissionRate = data?.commission_rate || data?.commissionRate;
+  const commissionRate = data?.commission_percentage || data?.commission_rate || data?.commissionRate;
   const closingCosts = data?.closing_costs || data?.closingCosts || 0;
+
+  const handleFieldUpdate = async (field, value) => {
+    if (onUpdate) {
+      await onUpdate(field, value);
+    }
+  };
 
   return (
     <WidgetCard>
@@ -81,33 +88,47 @@ const FinancialWidget = ({ viewMode = 'medium', data = {} }) => {
                 <Typography variant="caption" color="text.secondary">
                   Purchase Price
                 </Typography>
-                <Typography variant="h6" sx={{ fontWeight: 600, color: '#764ba2' }}>
-                  {formatCurrency(purchasePrice)}
-                </Typography>
+                <EditableField
+                  value={purchasePrice}
+                  onSave={(value) => handleFieldUpdate('purchase_price', value)}
+                  type="currency"
+                  variant="h6"
+                  sx={{ color: '#764ba2' }}
+                />
               </Grid>
               <Grid item xs={6}>
                 <Typography variant="caption" color="text.secondary">
                   My Commission
                 </Typography>
-                <Typography variant="h6" sx={{ fontWeight: 600, color: '#4caf50' }}>
-                  {formatCurrency(myCommission)}
-                </Typography>
+                <EditableField
+                  value={myCommission}
+                  onSave={(value) => handleFieldUpdate('my_commission', value)}
+                  type="currency"
+                  variant="h6"
+                  sx={{ color: '#4caf50' }}
+                />
               </Grid>
               <Grid item xs={6}>
                 <Typography variant="caption" color="text.secondary">
                   Down Payment
                 </Typography>
-                <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                  {formatCurrency(downPayment)}
-                </Typography>
+                <EditableField
+                  value={downPayment}
+                  onSave={(value) => handleFieldUpdate('down_payment', value)}
+                  type="currency"
+                  variant="body1"
+                />
               </Grid>
               <Grid item xs={6}>
                 <Typography variant="caption" color="text.secondary">
                   Loan Amount
                 </Typography>
-                <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                  {formatCurrency(loanAmount)}
-                </Typography>
+                <EditableField
+                  value={loanAmount}
+                  onSave={(value) => handleFieldUpdate('loan_amount', value)}
+                  type="currency"
+                  variant="body1"
+                />
               </Grid>
             </Grid>
 
