@@ -429,25 +429,6 @@ const ClientsDashboard = () => {
     setArchivedCount(archivedClients.length);
   }, [archivedClients]);
 
-  // WebSocket integration for real-time updates
-  useEffect(() => {
-    if (!isConnected) return;
-
-    // Import websocket service
-    const websocketService = require('../../services/websocket.service').default;
-
-    // Subscribe to client updates
-    const unsubscribe = websocketService.subscribe('client_updated', (data) => {
-      console.log('Client updated via WebSocket:', data);
-      // Refresh clients to get latest data
-      fetchClients();
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, [isConnected]);
-
   // Network monitoring polling
   useEffect(() => {
     const interval = setInterval(() => {
