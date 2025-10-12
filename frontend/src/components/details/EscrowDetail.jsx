@@ -4,38 +4,39 @@ import * as Sentry from '@sentry/react';
 import {
   Container,
   Box,
-  Tabs,
-  Tab,
   Grid,
   Typography,
   CircularProgress,
   Alert,
   Breadcrumbs,
   Link,
-  Paper,
   Button,
-  Stack
+  ToggleButtonGroup,
+  ToggleButton,
+  Tooltip
 } from '@mui/material';
 import {
   Home as HomeIcon,
   Dashboard as DashboardIcon,
-  DataObject as DataIcon,
-  BugReport as BugIcon
+  BugReport as BugIcon,
+  ViewModule as ViewModuleIcon,
+  ViewQuilt as ViewQuiltIcon,
+  ViewAgenda as ViewAgendaIcon
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
+import { useWebSocket } from '../../hooks/useWebSocket';
 
 // Import API configuration
 import { apiCall, API_BASE_URL } from '../../services/api.service';
 import { testApiConnection, testEscrowEndpoint } from '../../utils/testApi';
 
 // Import components
-import EscrowCardGrid from '../common/EscrowCardGrid';
-import PropertyHeroWidget from '../escrow-detail/PropertyHeroWidget';
-import PeopleWidget from '../escrow-detail/PeopleWidget';
-import TimelineWidget from '../escrow-detail/TimelineWidget';
-import FinancialsWidget from '../escrow-detail/FinancialsWidget';
-import ChecklistsWidget from '../escrow-detail/ChecklistsWidget';
-import AllDataEditor from '../escrow-detail/AllDataEditor';
+import EscrowHeroCard from '../escrow-widgets/EscrowHeroCard';
+import PropertyWidget from '../escrow-widgets/PropertyWidget';
+import FinancialWidget from '../escrow-widgets/FinancialWidget';
+import PeopleWidget from '../escrow-widgets/PeopleWidget';
+import TimelineWidget from '../escrow-widgets/TimelineWidget';
+import ChecklistWidget from '../escrow-widgets/ChecklistWidget';
 import DebugError from '../common/DebugError';
 import DebugCard from '../common/DebugCard';
 
@@ -47,25 +48,6 @@ const PageContainer = styled(Box)(({ theme }) => ({
   paddingBottom: theme.spacing(4)
 }));
 
-const StyledTabs = styled(Tabs)(({ theme }) => ({
-  backgroundColor: 'white',
-  borderRadius: theme.spacing(1),
-  marginBottom: theme.spacing(2),
-  boxShadow: '0 2px 4px rgba(118, 75, 162, 0.08)',
-  '& .MuiTab-root': {
-    textTransform: 'none',
-    fontWeight: 600,
-    color: theme.palette.grey[600],
-    '&.Mui-selected': {
-      color: '#764ba2'
-    }
-  },
-  '& .MuiTabs-indicator': {
-    backgroundColor: '#764ba2',
-    height: 3
-  }
-}));
-
 const LoadingContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
   justifyContent: 'center',
@@ -73,19 +55,28 @@ const LoadingContainer = styled(Box)(({ theme }) => ({
   minHeight: '60vh'
 }));
 
-// Tab panel component
-function TabPanel({ children, value, index }) {
-  return (
-    <Box
-      role="tabpanel"
-      hidden={value !== index}
-      id={`escrow-tabpanel-${index}`}
-      aria-labelledby={`escrow-tab-${index}`}
-    >
-      {value === index && children}
-    </Box>
-  );
-}
+const ViewModeToggle = styled(ToggleButtonGroup)(({ theme }) => ({
+  backgroundColor: 'white',
+  borderRadius: theme.spacing(1),
+  boxShadow: '0 2px 4px rgba(118, 75, 162, 0.08)',
+  marginBottom: theme.spacing(3),
+  '& .MuiToggleButton-root': {
+    textTransform: 'none',
+    fontWeight: 600,
+    border: 'none',
+    color: theme.palette.grey[600],
+    '&.Mui-selected': {
+      color: 'white',
+      backgroundColor: '#764ba2',
+      '&:hover': {
+        backgroundColor: '#5a3a80'
+      }
+    },
+    '&:hover': {
+      backgroundColor: 'rgba(118, 75, 162, 0.08)'
+    }
+  }
+}));
 
 // Helper function to transform database escrow to display format
 const transformEscrowData = (dbData) => {
@@ -112,12 +103,19 @@ const transformEscrowData = (dbData) => {
 function EscrowDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState(0);
+  const { isConnected } = useWebSocket();
+  const [viewMode, setViewMode] = useState(() => {
+    return localStorage.getItem('escrowDetailViewMode') || 'medium';
+  });
   const [escrowData, setEscrowData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [errorDetails, setErrorDetails] = useState(null);
-  const [isSaving, setIsSaving] = useState(false);
+
+  // Save viewMode to localStorage
+  useEffect(() => {
+    localStorage.setItem('escrowDetailViewMode', viewMode);
+  }, [viewMode]);
 
   // Fetch escrow data
   useEffect(() => {
@@ -144,6 +142,24 @@ function EscrowDetail() {
       Sentry.setContext('escrow', null);
     };
   }, [id]);
+
+  // WebSocket real-time updates
+  useEffect(() => {
+    if (!isConnected) return;
+
+    const websocketService = require('../../services/websocket.service').default;
+
+    const unsubscribe = websocketService.on('data:update', (data) => {
+      if (data.entityType === 'escrow' && data.entityId === id) {
+        console.log('🔄 Refetching escrow due to real-time update');
+        fetchEscrowData();
+      }
+    });
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [isConnected, id]);
 
   const fetchEscrowData = async () => {
     try {
@@ -210,35 +226,55 @@ function EscrowDetail() {
     }
   };
 
-  // Handle data updates from All Data tab
-  const handleDataUpdate = async (endpoint, data) => {
+  // Handle checklist item toggle
+  const handleChecklistToggle = async (category, item, value) => {
     try {
-      setIsSaving(true);
-      
-      const result = await apiCall(`escrows/${id}/${endpoint}`, {
+      const updatedChecklists = {
+        ...escrowData.checklists,
+        [category]: {
+          ...escrowData.checklists?.[category],
+          [item]: value
+        }
+      };
+
+      const result = await apiCall(`escrows/${id}/checklists`, {
         method: 'PUT',
-        body: JSON.stringify(data)
+        body: JSON.stringify(updatedChecklists)
       });
-      
-      if (!result.success) {
-        throw new Error(result.error?.message || `Failed to update ${endpoint}`);
+
+      if (result.success) {
+        // Optimistically update local state
+        setEscrowData(prev => ({
+          ...prev,
+          checklists: updatedChecklists
+        }));
       }
-      
-      // Refresh data after successful update
-      await fetchEscrowData();
-      
-      return { success: true };
     } catch (err) {
-      console.error(`Error updating ${endpoint}:`, err);
-      return { success: false, error: err.message };
-    } finally {
-      setIsSaving(false);
+      console.error('Error updating checklist:', err);
     }
   };
 
-  const handleTabChange = (event, newValue) => {
-    setActiveTab(newValue);
+  const handleViewModeChange = (event, newViewMode) => {
+    if (newViewMode !== null) {
+      setViewMode(newViewMode);
+    }
   };
+
+  // Calculate grid columns based on viewMode
+  const getGridColumns = () => {
+    switch (viewMode) {
+      case 'small':
+        return { xs: 12, sm: 6, md: 4, xl: 3 };
+      case 'medium':
+        return { xs: 12, md: 6 };
+      case 'large':
+        return { xs: 12 };
+      default:
+        return { xs: 12, md: 6 };
+    }
+  };
+
+  const gridCols = getGridColumns();
 
   if (loading) {
     return (
@@ -305,8 +341,8 @@ function EscrowDetail() {
 
   return (
     <PageContainer>
-      <DebugCard 
-        pageType="escrow-detail" 
+      <DebugCard
+        pageType="escrow-detail"
         pageData={{
           id: escrowData?.id,
           display_id: escrowData?.display_id,
@@ -316,21 +352,21 @@ function EscrowDetail() {
           buyer: escrowData?.buyer_name,
           seller: escrowData?.seller_name,
           closing_date: escrowData?.closing_date,
-          tab: activeTab,
+          viewMode: viewMode,
           loading,
           error: error?.message
         }}
       />
       <Container maxWidth="xl">
         {/* Breadcrumbs */}
-        <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 2 }}>
+        <Breadcrumbs aria-label="breadcrumb" sx={{ mb: 3 }}>
           <Link
             underline="hover"
             color="inherit"
             href="/dashboard"
             onClick={(e) => {
               e.preventDefault();
-              navigate('/dashboard');
+              navigate('/');
             }}
             sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}
           >
@@ -351,78 +387,91 @@ function EscrowDetail() {
             Escrows
           </Link>
           <Typography color="text.primary" sx={{ fontWeight: 600 }}>
-            {escrowData.displayId || escrowData.display_id || escrowData.escrowNumber}
+            {escrowData.displayId || escrowData.display_id || escrowData.escrowNumber || escrowData.escrow_number}
           </Typography>
         </Breadcrumbs>
 
-        {/* Escrow Card Header */}
-        <Box sx={{ mb: 3 }}>
-          <EscrowCardGrid 
-            escrow={escrowData} 
-            showCommission={false}
-            onQuickAction={(action) => {
-              if (action === 'edit') {
-                setActiveTab(1); // Switch to All Data tab
-              }
-            }}
-          />
+        {/* Hero Card */}
+        <EscrowHeroCard escrow={escrowData} />
+
+        {/* ViewMode Toggle */}
+        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 3 }}>
+          <ViewModeToggle
+            value={viewMode}
+            exclusive
+            onChange={handleViewModeChange}
+            aria-label="view mode"
+          >
+            <ToggleButton value="small" aria-label="compact view">
+              <Tooltip title="Compact View">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <ViewModuleIcon />
+                  <Typography variant="body2">Compact</Typography>
+                </Box>
+              </Tooltip>
+            </ToggleButton>
+            <ToggleButton value="medium" aria-label="balanced view">
+              <Tooltip title="Balanced View">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <ViewQuiltIcon />
+                  <Typography variant="body2">Balanced</Typography>
+                </Box>
+              </Tooltip>
+            </ToggleButton>
+            <ToggleButton value="large" aria-label="detailed view">
+              <Tooltip title="Detailed View">
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <ViewAgendaIcon />
+                  <Typography variant="body2">Detailed</Typography>
+                </Box>
+              </Tooltip>
+            </ToggleButton>
+          </ViewModeToggle>
         </Box>
 
-        {/* Property Hero Widget */}
-        <PropertyHeroWidget data={escrowData} />
-
-        {/* Tabs */}
-        <StyledTabs value={activeTab} onChange={handleTabChange}>
-          <Tab icon={<DashboardIcon />} label="Overview" />
-          <Tab icon={<DataIcon />} label="All Data" />
-        </StyledTabs>
-
-        {/* Tab Panels */}
-        <TabPanel value={activeTab} index={0}>
-          <Stack spacing={3}>
-            {/* People Widget */}
-            <PeopleWidget 
-              data={escrowData.people || escrowData} 
-              onEdit={(section) => handleDataUpdate(section, escrowData[section])}
+        {/* Category Widgets Grid */}
+        <Grid container spacing={3}>
+          {/* Property Details Widget */}
+          <Grid item {...gridCols}>
+            <PropertyWidget
+              viewMode={viewMode}
+              data={escrowData}
             />
+          </Grid>
 
-            {/* Timeline Widget */}
-            <TimelineWidget 
-              data={escrowData.timeline || escrowData} 
-              onEdit={(section) => handleDataUpdate(section, escrowData[section])}
+          {/* Financial Details Widget */}
+          <Grid item {...gridCols}>
+            <FinancialWidget
+              viewMode={viewMode}
+              data={escrowData.financials || escrowData}
             />
+          </Grid>
 
-            {/* Financials Widget */}
-            <FinancialsWidget 
-              data={escrowData.financials || escrowData} 
-              onEdit={(section) => handleDataUpdate(section, escrowData[section])}
+          {/* People & Contacts Widget */}
+          <Grid item {...gridCols}>
+            <PeopleWidget
+              viewMode={viewMode}
+              data={escrowData.people || escrowData}
             />
+          </Grid>
 
-            {/* Checklists Widget */}
-            <ChecklistsWidget 
-              data={escrowData.checklists || escrowData} 
-              onEdit={(section) => handleDataUpdate(section, escrowData[section])}
-              onToggleItem={async (category, item, value) => {
-                const updatedChecklists = {
-                  ...escrowData.checklists,
-                  [category]: {
-                    ...escrowData.checklists?.[category],
-                    [item]: value
-                  }
-                };
-                await handleDataUpdate('checklists', updatedChecklists);
-              }}
+          {/* Timeline Widget */}
+          <Grid item {...gridCols}>
+            <TimelineWidget
+              viewMode={viewMode}
+              data={escrowData.timeline || escrowData}
             />
-          </Stack>
-        </TabPanel>
+          </Grid>
 
-        <TabPanel value={activeTab} index={1}>
-          <AllDataEditor 
-            data={escrowData} 
-            onUpdate={handleDataUpdate}
-            isSaving={isSaving}
-          />
-        </TabPanel>
+          {/* Checklists Widget */}
+          <Grid item {...gridCols}>
+            <ChecklistWidget
+              viewMode={viewMode}
+              data={escrowData.checklists || {}}
+              onToggleItem={handleChecklistToggle}
+            />
+          </Grid>
+        </Grid>
       </Container>
     </PageContainer>
   );
