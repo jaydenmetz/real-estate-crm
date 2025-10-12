@@ -15,9 +15,9 @@ class WebSocketService {
   connect() {
     return new Promise((resolve, reject) => {
       try {
-        const token = localStorage.getItem('crm_auth_token') ||
-                     localStorage.getItem('authToken') ||
-                     localStorage.getItem('token');
+        // Get token from authService (memory) instead of localStorage (Phase 4)
+        const authService = require('./auth.service').default;
+        const token = authService.token;
 
         // Use React environment variable and ensure HTTPS in production
         const wsUrl = process.env.REACT_APP_WS_URL || 'wss://api.jaydenmetz.com';

@@ -1002,9 +1002,9 @@ export class HealthCheckService {
           });
         }, 5000);
 
-        // Note: JWT tokens are no longer in localStorage (Phase 4 XSS protection)
-        // They are stored in memory only and managed by auth.service.js
-        const token = null; // For display purposes only
+        // Get token from authService for display purposes (Phase 4)
+        const authService = require('./auth.service').default;
+        const token = this.authType === 'jwt' ? authService.token : this.authValue;
         const wsUrl = process.env.REACT_APP_WS_URL || 'wss://api.jaydenmetz.com';
 
         // Check if already connected
