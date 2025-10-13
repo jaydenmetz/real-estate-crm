@@ -290,6 +290,10 @@ const LeadsDashboard = () => {
   const [selectedStatus, setSelectedStatus] = useState('new');
   const [viewMode, setViewMode] = useState(() => localStorage.getItem('leadsViewMode') || 'large');
   const [sortBy, setSortBy] = useState('created_at');
+  const [scope, setScope] = useState(() => {
+    const saved = localStorage.getItem('leadsScope');
+    return saved || 'team';
+  }); // 'brokerage', 'team', 'user'
   const [animationType, setAnimationType] = useState('spring');
   const [animationDuration, setAnimationDuration] = useState(1);
   const [animationIntensity, setAnimationIntensity] = useState(1);
@@ -334,6 +338,11 @@ const LeadsDashboard = () => {
   });
 
   useEffect(() => { localStorage.setItem('leadsViewMode', viewMode); }, [viewMode]);
+
+  // Save scope to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('leadsScope', scope);
+  }, [scope]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -1809,6 +1818,52 @@ const LeadsDashboard = () => {
               alignItems: 'center',
               flexWrap: 'wrap',
             }}>
+              {/* Scope Dropdown */}
+              <FormControl size="small" variant="standard" sx={{ minWidth: 110 }}>
+                <Select
+                  value={scope}
+                  onChange={(e) => setScope(e.target.value)}
+                  disableUnderline
+                  renderValue={(value) => {
+                    const labels = {
+                      brokerage: 'Brokerage',
+                      team: 'Team',
+                      user: 'User',
+                    };
+                    return (
+                      <Typography variant="body2" sx={{
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        color: 'text.primary',
+                      }}>
+                        {labels[value]}
+                      </Typography>
+                    );
+                  }}
+                  sx={{
+                    backgroundColor: 'transparent',
+                    borderRadius: 1,
+                    px: 1.5,
+                    py: 0.5,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    '&:hover': {
+                      backgroundColor: alpha('#000', 0.04),
+                      borderColor: 'primary.main',
+                    },
+                    '& .MuiSelect-select': {
+                      paddingRight: '32px !important',
+                      display: 'flex',
+                      alignItems: 'center',
+                    },
+                  }}
+                >
+                  <MenuItem value="brokerage">Brokerage</MenuItem>
+                  <MenuItem value="team">Team</MenuItem>
+                  <MenuItem value="user">User</MenuItem>
+                </Select>
+              </FormControl>
+
               {/* Sort Dropdown */}
               <FormControl size="small" variant="standard" sx={{ minWidth: 140 }}>
                 <Select
@@ -1996,6 +2051,43 @@ const LeadsDashboard = () => {
                 alignItems: 'center',
                 justifyContent: 'space-between',
               }}>
+                {/* Scope Dropdown */}
+                <FormControl
+                  size="small"
+                  variant="outlined"
+                  sx={{
+                    flex: '0 1 auto',
+                    minWidth: 100,
+                    '& .MuiOutlinedInput-root': {
+                      backgroundColor: 'white',
+                      borderRadius: 2,
+                    },
+                  }}
+                >
+                  <Select
+                    value={scope}
+                    onChange={(e) => setScope(e.target.value)}
+                    renderValue={(value) => {
+                      const labels = {
+                        brokerage: 'Brokerage',
+                        team: 'Team',
+                        user: 'User',
+                      };
+                      return (
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Typography variant="body2" sx={{ fontSize: '0.875rem', fontWeight: 500 }}>
+                            {labels[value]}
+                          </Typography>
+                        </Box>
+                      );
+                    }}
+                  >
+                    <MenuItem value="brokerage">Brokerage</MenuItem>
+                    <MenuItem value="team">Team</MenuItem>
+                    <MenuItem value="user">User</MenuItem>
+                  </Select>
+                </FormControl>
+
                 {/* Sort Dropdown */}
                 <FormControl
                   size="small"
