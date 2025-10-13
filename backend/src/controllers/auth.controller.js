@@ -306,7 +306,7 @@ class AuthController {
         res.cookie('refreshToken', refreshTokenData.token, {
           httpOnly: true,
           secure: true, // Always use HTTPS (production is always HTTPS)
-          sameSite: 'none', // Allow cross-origin requests (crm.jaydenmetz.com → api.jaydenmetz.com)
+          sameSite: 'lax', // Same-site navigation allowed (crm.jaydenmetz.com → api.jaydenmetz.com share root domain)
           domain: '.jaydenmetz.com',
           maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         });
@@ -690,7 +690,7 @@ class AuthController {
       res.cookie('refreshToken', newRefreshToken.token, {
         httpOnly: true,
         secure: true, // Always use HTTPS (production is always HTTPS)
-        sameSite: 'none', // Allow cross-origin requests (crm.jaydenmetz.com → api.jaydenmetz.com)
+        sameSite: 'lax', // Same-site navigation allowed (crm.jaydenmetz.com → api.jaydenmetz.com share root domain)
         domain: '.jaydenmetz.com',
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
@@ -865,7 +865,7 @@ class AuthController {
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: true, // Always use HTTPS (production is always HTTPS)
-        sameSite: 'none', // Allow cross-origin requests (crm.jaydenmetz.com → api.jaydenmetz.com)
+        sameSite: 'lax', // Same-site navigation allowed (crm.jaydenmetz.com → api.jaydenmetz.com share root domain)
         domain: '.jaydenmetz.com',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
       });
