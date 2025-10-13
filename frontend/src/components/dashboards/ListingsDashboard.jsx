@@ -63,6 +63,7 @@ import { listingsAPI } from '../../services/api.service';
 import { useAuth } from '../../contexts/AuthContext';
 import NewListingModal from '../forms/NewListingModal';
 import networkMonitor from '../../services/networkMonitor.service';
+import ListingCard from '../common/widgets/ListingCard';
 import { useWebSocket } from '../../hooks/useWebSocket';
 
 // Styled Components
@@ -2448,38 +2449,11 @@ const ListingsDashboard = () => {
                     exit={{ opacity: 0, y: -20 }}
                     transition={{ duration: 0.3, delay: index * 0.05 }}
                   >
-                    <Card
-                      onClick={() => handleListingClick(listing.id)}
-                      sx={{
-                        cursor: 'pointer',
-                        height: '100%',
-                        minHeight: 200,
-                        '&:hover': {
-                          transform: 'translateY(-4px)',
-                          boxShadow: 6,
-                        },
-                        transition: 'all 0.3s',
-                      }}
-                    >
-                      <CardContent>
-                        <Typography variant="h6" gutterBottom>
-                          {listing.propertyAddress || listing.property_address || 'No Address'}
-                        </Typography>
-                        <Typography variant="h5" color="primary" gutterBottom>
-                          ${(listing.listPrice || listing.list_price || 0).toLocaleString()}
-                        </Typography>
-                        <Stack spacing={1}>
-                          <Chip
-                            label={listing.listingStatus || listing.listing_status || 'Unknown'}
-                            size="small"
-                            color="primary"
-                          />
-                          <Typography variant="body2" color="textSecondary">
-                            MLS: {listing.mlsNumber || listing.mls_number || 'N/A'}
-                          </Typography>
-                        </Stack>
-                      </CardContent>
-                    </Card>
+                    <ListingCard
+                      listing={listing}
+                      viewMode="small"
+                      index={index}
+                    />
                   </motion.div>
                 ));
               }

@@ -60,6 +60,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import NewClientModal from '../forms/NewClientModal';
 import networkMonitor from '../../services/networkMonitor.service';
 import { useWebSocket } from '../../hooks/useWebSocket';
+import ClientCard from '../common/widgets/ClientCard';
 
 // Styled Components
 const HeroSection = styled(Box)(({ theme }) => ({
@@ -2256,40 +2257,14 @@ const ClientsDashboard = () => {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.3, delay: index * 0.05 }}
+                        style={{ opacity: isSelected ? 0.7 : 1 }}
                       >
-                        <Card
-                          onClick={() => !isSelected && handleClientClick(client.id)}
-                          sx={{
-                            cursor: 'pointer',
-                            height: '100%',
-                            minHeight: 200,
-                            opacity: isSelected ? 0.7 : 1,
-                            '&:hover': {
-                              transform: 'translateY(-4px)',
-                              boxShadow: 6,
-                            },
-                            transition: 'all 0.3s',
-                          }}
-                        >
-                          <CardContent>
-                            <Typography variant="h6" gutterBottom>
-                              {`${client.firstName || client.first_name || ''} ${client.lastName || client.last_name || ''}`}
-                            </Typography>
-                            <Stack spacing={1}>
-                              <Chip
-                                label={client.clientStatus || client.client_status || 'Unknown'}
-                                size="small"
-                                color="primary"
-                              />
-                              <Typography variant="body2" color="textSecondary">
-                                Email: {client.email || 'N/A'}
-                              </Typography>
-                              <Typography variant="body2" color="textSecondary">
-                                Phone: {client.phone || 'N/A'}
-                              </Typography>
-                            </Stack>
-                          </CardContent>
-                        </Card>
+                        <ClientCard
+                          client={client}
+                          viewMode="small"
+                          index={index}
+                          isArchived={selectedStatus === 'archived'}
+                        />
                       </motion.div>
                     </Box>
                   );

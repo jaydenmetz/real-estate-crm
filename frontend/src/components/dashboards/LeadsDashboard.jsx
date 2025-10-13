@@ -73,6 +73,7 @@ import NewLeadModal from '../forms/NewLeadModal';
 import { useAuth } from '../../contexts/AuthContext';
 import networkMonitor from '../../services/networkMonitor.service';
 import { useWebSocket } from '../../hooks/useWebSocket';
+import LeadCard from '../common/widgets/LeadCard';
 
 const HeroSection = styled(Box)(({ theme }) => ({
   position: 'relative',
@@ -2260,38 +2261,11 @@ const LeadsDashboard = () => {
                       exit={{ opacity: 0, y: -20 }}
                       transition={{ duration: 0.3, delay: i * 0.05 }}
                     >
-                      <Card
-                        onClick={() => navigate(`/leads/${l.id}`)}
-                        sx={{
-                          cursor: 'pointer',
-                          height: '100%',
-                          minHeight: 200,
-                          '&:hover': {
-                            transform: 'translateY(-4px)',
-                            boxShadow: 6
-                          },
-                          transition: 'all 0.3s'
-                        }}
-                      >
-                        <CardContent>
-                          <Typography variant="h6" gutterBottom>
-                            {`${l.firstName || l.first_name || ''} ${l.lastName || l.last_name || ''}`}
-                          </Typography>
-                          <Stack spacing={1}>
-                            <Chip
-                              label={l.leadStatus || l.lead_status || 'Unknown'}
-                              size="small"
-                              color="primary"
-                            />
-                            <Typography variant="body2" color="textSecondary">
-                              Source: {l.leadSource || l.lead_source || 'N/A'}
-                            </Typography>
-                            <Typography variant="body2" color="textSecondary">
-                              Score: {l.leadScore || l.lead_score || 0}/100
-                            </Typography>
-                          </Stack>
-                        </CardContent>
-                      </Card>
+                      <LeadCard
+                        lead={l}
+                        viewMode="small"
+                        index={i}
+                      />
                     </motion.div>
                   ));
                 })()}

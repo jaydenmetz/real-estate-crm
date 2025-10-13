@@ -64,6 +64,7 @@ import NewAppointmentModal from '../forms/NewAppointmentModal';
 import { useAuth } from '../../contexts/AuthContext';
 import networkMonitor from '../../services/networkMonitor.service';
 import { useWebSocket } from '../../hooks/useWebSocket';
+import AppointmentCard from '../common/widgets/AppointmentCard';
 
 // Styled Components
 const HeroSection = styled(Box)(({ theme }) => ({
