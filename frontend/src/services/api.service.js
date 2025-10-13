@@ -34,12 +34,10 @@ class ApiService {
     // If API_BASE_URL already includes /v1, use it as is, otherwise append /v1
     this.baseURL = API_BASE_URL.includes('/v1') ? API_BASE_URL : `${API_BASE_URL}/v1`;
 
-    // DO NOT read JWT from localStorage (XSS vulnerability fixed - Phase 4)
-    // Token is managed by auth.service.js in memory only
-    // Refresh tokens are stored in httpOnly cookies (secure)
-    this.token = null;
+    // PHASE 1: Load JWT from localStorage for persistence
+    this.token = localStorage.getItem('authToken');
     this.apiKey = localStorage.getItem('apiKey'); // API keys are safe to store
-    
+
     // Log initialization (only in development)
     if (process.env.NODE_ENV === 'development') {
       console.log('API Service initialized:', {
@@ -69,8 +67,10 @@ class ApiService {
       }
     });
 
-    // DO NOT refresh JWT from localStorage (XSS protection - Phase 4)
-    // Token is managed by auth.service.js and set via setToken() method
+    // PHASE 1: Refresh JWT from localStorage if not in memory
+    if (!this.token) {
+      this.token = localStorage.getItem('authToken');
+    }
     // API keys are safe to refresh from localStorage
     this.apiKey = localStorage.getItem('apiKey');
     

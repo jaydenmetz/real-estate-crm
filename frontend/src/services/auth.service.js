@@ -7,13 +7,18 @@ const API_KEY_KEY = 'apiKey';  // Match what api.service.js expects
 
 class AuthService {
   constructor() {
-    // DO NOT load token from localStorage (XSS vulnerability fixed)
-    // Tokens are now stored in memory only and refresh token in httpOnly cookie
-    this.token = null;
+    // PHASE 1: Load JWT from localStorage for persistence across page refreshes
+    // Security: Short 15-min expiration + refresh token in httpOnly cookie mitigates XSS risk
+    this.token = localStorage.getItem(TOKEN_KEY);
     this.user = this.getStoredUser();
     this.apiKey = localStorage.getItem(API_KEY_KEY);
 
-    // Only set API key header if exists (API keys are safe to store)
+    // Set token in apiInstance if available
+    if (this.token) {
+      apiInstance.setToken(this.token);
+    }
+
+    // Set API key header if exists (API keys are safe to store)
     if (this.apiKey) {
       apiInstance.setApiKey(this.apiKey);
     }
@@ -47,15 +52,16 @@ class AuthService {
         const { token, accessToken, user, expiresIn } = response.data;
         const authToken = accessToken || token;
 
-        // Store ONLY user data in localStorage (not tokens - XSS protection)
+        // PHASE 1: Store JWT in localStorage for persistence
+        this.token = authToken;
+        localStorage.setItem(TOKEN_KEY, authToken);
+        apiInstance.setToken(authToken);
+
+        // Store user data in localStorage
         this.user = user;
         localStorage.setItem(USER_KEY, JSON.stringify(user));
 
-        // Store access token in MEMORY ONLY (not localStorage)
-        this.token = authToken;
-        apiInstance.setToken(authToken);
-
-        // Store token expiry for auto-refresh logic (not sensitive)
+        // Store token expiry for auto-refresh logic
         if (expiresIn) {
           const expiryTime = Date.now() + this.parseExpiry(expiresIn);
           localStorage.setItem('tokenExpiry', expiryTime.toString());
@@ -68,7 +74,7 @@ class AuthService {
           apiInstance.setApiKey(user.apiKey);
         }
 
-        console.log('✅ Registration successful - JWT stored in memory only (XSS-safe)');
+        console.log('✅ Registration successful - JWT stored in localStorage (Phase 1)');
 
         return {
           success: true,
@@ -104,17 +110,17 @@ class AuthService {
         const { token, accessToken, user, expiresIn } = response.data;
         const authToken = accessToken || token;
 
-        // Store ONLY user data in localStorage (not tokens - XSS protection)
-        // Access token is sent in Authorization header (memory only)
+        // PHASE 1: Store JWT in localStorage for persistence
         // Refresh token is stored in httpOnly cookie by backend (XSS-proof)
+        this.token = authToken;
+        localStorage.setItem(TOKEN_KEY, authToken);
+        apiInstance.setToken(authToken);
+
+        // Store user data in localStorage
         this.user = user;
         localStorage.setItem(USER_KEY, JSON.stringify(user));
 
-        // Store access token in MEMORY ONLY (not localStorage)
-        this.token = authToken;
-        apiInstance.setToken(authToken);
-
-        // Store token expiry for auto-refresh logic (not sensitive)
+        // Store token expiry for auto-refresh logic
         if (expiresIn) {
           const expiryTime = Date.now() + this.parseExpiry(expiresIn);
           localStorage.setItem('tokenExpiry', expiryTime.toString());
@@ -127,7 +133,7 @@ class AuthService {
           apiInstance.setApiKey(user.apiKey);
         }
 
-        console.log('✅ Login successful - JWT stored in memory only (XSS-safe)');
+        console.log('✅ Login successful - JWT stored in localStorage (Phase 1)');
 
         return {
           success: true,
@@ -173,17 +179,18 @@ class AuthService {
       if (response.success && response.data) {
         const { accessToken, expiresIn } = response.data;
 
-        // Update token in MEMORY ONLY (not localStorage - XSS protection)
+        // PHASE 1: Store refreshed JWT in localStorage
         this.token = accessToken;
+        localStorage.setItem(TOKEN_KEY, accessToken);
         apiInstance.setToken(accessToken);
 
-        // Update expiry time (not sensitive data)
+        // Update expiry time
         if (expiresIn) {
           const expiryTime = Date.now() + this.parseExpiry(expiresIn);
           localStorage.setItem('tokenExpiry', expiryTime.toString());
         }
 
-        console.log('✅ Token refreshed - JWT in memory only (XSS-safe)');
+        console.log('✅ Token refreshed - JWT stored in localStorage (Phase 1)');
 
         return {
           success: true,
@@ -225,7 +232,8 @@ class AuthService {
       // Continue with local logout even if API fails
     }
 
-    // Clear user data from localStorage (Phase 4: JWT tokens NOT stored here)
+    // PHASE 1: Clear JWT from localStorage
+    localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     localStorage.removeItem(API_KEY_KEY);
     localStorage.removeItem('tokenExpiry');
@@ -235,34 +243,39 @@ class AuthService {
     localStorage.removeItem('crm_user_data');
     localStorage.removeItem('crm_api_key');
 
-    // Clear instance variables (token is in memory only)
+    // Clear instance variables
     this.token = null;
     this.user = null;
     this.apiKey = null;
-    
+
     // Clear auth header
     apiInstance.setToken(null);
     apiInstance.setApiKey(null);
-    
+
     return { success: true };
   }
 
   // Verify current token
   async verify() {
-    // DO NOT load JWT from localStorage (XSS protection - Phase 4)
-    // Token is already in memory from login/refresh
-    this.apiKey = localStorage.getItem(API_KEY_KEY); // API keys are safe to load
+    // PHASE 1: Load JWT from localStorage if not in memory
+    if (!this.token) {
+      this.token = localStorage.getItem(TOKEN_KEY);
+      if (this.token) {
+        apiInstance.setToken(this.token);
+      }
+    }
+
+    this.apiKey = localStorage.getItem(API_KEY_KEY);
     this.user = this.getStoredUser();
 
-    // If user has no token in memory but has user data, try to refresh using httpOnly cookie
+    // If user has no token in localStorage but has user data, try to refresh using httpOnly cookie
     if (this.user && !this.token && !this.apiKey) {
-      console.log('🔄 No token in memory, attempting to refresh from httpOnly cookie...');
+      console.log('🔄 No token found, attempting to refresh from httpOnly cookie...');
       try {
         const refreshResult = await this.refreshAccessToken();
         if (refreshResult.success) {
           console.log('✅ Token refreshed successfully from httpOnly cookie');
-          // Token is now set in memory, continue with verification
-          // Verify the token was actually set
+          // Token is now set in localStorage and memory
           if (!this.token) {
             console.error('❌ Token refresh succeeded but token is still null');
             await this.logout();
@@ -292,7 +305,6 @@ class AuthService {
     }
 
     // If we have a stored user and either token or API key, consider it valid
-    // This prevents unnecessary logout on page navigation
     if (this.user && (this.token || this.apiKey)) {
       // Optionally verify with server (but don't logout on failure)
       try {
@@ -403,8 +415,13 @@ class AuthService {
 
   // Check if user is authenticated
   isAuthenticated() {
-    // DO NOT check localStorage for JWT tokens (they're never stored there - XSS protection)
-    // JWT tokens are only in memory, refresh tokens are in httpOnly cookies
+    // PHASE 1: Check localStorage for JWT token
+    if (!this.token) {
+      this.token = localStorage.getItem(TOKEN_KEY);
+      if (this.token) {
+        apiInstance.setToken(this.token);
+      }
+    }
 
     // Check for API key (safe to store)
     if (!this.apiKey) {
@@ -415,12 +432,9 @@ class AuthService {
     }
 
     // User is authenticated if they have:
-    // 1. JWT token in memory (set after login/refresh)
+    // 1. JWT token in localStorage/memory
     // 2. API key in localStorage
-    // 3. User data in localStorage (indicates they logged in before page refresh)
-    //
-    // If user has no token in memory but has user data, they likely just refreshed the page.
-    // The refresh token (httpOnly cookie) will be used automatically on next API call.
+    // 3. User data in localStorage
     return (!!this.token || !!this.apiKey || !!this.user);
   }
 

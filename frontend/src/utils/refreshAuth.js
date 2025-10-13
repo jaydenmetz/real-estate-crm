@@ -17,17 +17,21 @@ export const refreshAuthToken = async () => {
       const data = await response.json();
       
       if (data.success && data.data.token) {
-        // Save new token to all possible locations
+        // PHASE 1: Save token only to 'authToken' (standardized)
         const token = data.data.token;
-        localStorage.setItem('crm_auth_token', token);
         localStorage.setItem('authToken', token);
-        localStorage.setItem('token', token);
-        
+
         // Save user data
         if (data.data.user) {
           localStorage.setItem('user', JSON.stringify(data.data.user));
         }
-        
+
+        // Store token expiry
+        if (data.data.expiresIn) {
+          const expiryTime = Date.now() + 15 * 60 * 1000; // 15 minutes
+          localStorage.setItem('tokenExpiry', expiryTime.toString());
+        }
+
         console.log('Authentication token refreshed successfully');
         return { success: true, token };
       }
@@ -47,17 +51,21 @@ export const refreshAuthToken = async () => {
       const data = await regularResponse.json();
       
       if (data.success && data.data.token) {
-        // Save new token to all possible locations
+        // PHASE 1: Save token only to 'authToken' (standardized)
         const token = data.data.token;
-        localStorage.setItem('crm_auth_token', token);
         localStorage.setItem('authToken', token);
-        localStorage.setItem('token', token);
-        
+
         // Save user data
         if (data.data.user) {
           localStorage.setItem('user', JSON.stringify(data.data.user));
         }
-        
+
+        // Store token expiry
+        if (data.data.expiresIn) {
+          const expiryTime = Date.now() + 15 * 60 * 1000; // 15 minutes
+          localStorage.setItem('tokenExpiry', expiryTime.toString());
+        }
+
         console.log('Authentication token refreshed successfully (regular login)');
         return { success: true, token };
       }
