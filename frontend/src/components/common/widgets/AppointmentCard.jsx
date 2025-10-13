@@ -106,13 +106,14 @@ const AppointmentCard = React.memo(({ appointment, viewMode = 'small', index = 0
     return { date: 'TBD', time: 'TBD' };
   };
 
-  const { date: appointmentDate, time: appointmentTime, dayOfWeek } = formatDateTime(appointment.date || appointment.scheduledDate);
+  const { date: appointmentDate, time: appointmentTime, dayOfWeek } = formatDateTime(appointment.appointmentDate || appointment.appointment_date || appointment.date);
 
   // Get relative time
   const getRelativeTime = () => {
-    if (!appointment.date && !appointment.scheduledDate) return 'Date TBD';
+    const dateField = appointment.appointmentDate || appointment.appointment_date || appointment.date;
+    if (!dateField) return 'Date TBD';
     try {
-      const d = new Date(appointment.date || appointment.scheduledDate);
+      const d = new Date(dateField);
       if (isToday(d)) return 'Today';
       if (isTomorrow(d)) return 'Tomorrow';
       if (isPast(d)) return formatDistance(d, new Date(), { addSuffix: true });
@@ -122,13 +123,14 @@ const AppointmentCard = React.memo(({ appointment, viewMode = 'small', index = 0
   };
 
   const relativeTime = getRelativeTime();
-  const appointmentIsPast = appointment.date ? isPast(new Date(appointment.date)) : false;
-  const appointmentIsToday = appointment.date ? isToday(new Date(appointment.date)) : false;
-  const appointmentIsSoon = appointment.date ? (new Date(appointment.date) - new Date()) / (1000 * 60 * 60) < 24 : false; // < 24 hours
+  const dateField = appointment.appointmentDate || appointment.appointment_date || appointment.date;
+  const appointmentIsPast = dateField ? isPast(new Date(dateField)) : false;
+  const appointmentIsToday = dateField ? isToday(new Date(dateField)) : false;
+  const appointmentIsSoon = dateField ? (new Date(dateField) - new Date()) / (1000 * 60 * 60) < 24 : false; // < 24 hours
 
   // Get appointment type icon
   const getTypeIcon = () => {
-    const type = (appointment.type || 'In-Person').toLowerCase();
+    const type = (appointment.appointmentType || appointment.appointment_type || appointment.type || 'In-Person').toLowerCase();
     if (type.includes('video') || type.includes('zoom') || type.includes('virtual')) {
       return <VideoCall sx={{ fontSize: 80, color: alpha('#3b82f6', 0.5), zIndex: 1 }} />;
     }
@@ -153,9 +155,9 @@ const AppointmentCard = React.memo(({ appointment, viewMode = 'small', index = 0
   // Mock appointment details
   const details = {
     location: appointment.location || 'Location TBD',
-    type: appointment.type || 'In-Person',
+    type: appointment.appointmentType || appointment.appointment_type || appointment.type || 'In-Person',
     duration: appointment.duration || '30 min',
-    purpose: appointment.purpose || appointment.notes || 'Consultation',
+    purpose: appointment.title || appointment.purpose || appointment.description || appointment.notes || 'Consultation',
   };
 
   // Mock notes timeline
