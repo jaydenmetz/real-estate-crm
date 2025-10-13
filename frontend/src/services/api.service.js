@@ -122,6 +122,7 @@ class ApiService {
           const isApiKeysEndpoint = url.includes('/api-keys');
           const isLoginPage = window.location.pathname === '/login';
           const isSettingsPage = window.location.pathname === '/settings';
+          const isHealthPage = window.location.pathname.includes('/health');
 
           // Try to refresh token if we have JWT (not API key) and not already refreshing
           if (!isAuthEndpoint && !isApiKeysEndpoint && this.token && !this.apiKey && !options._isRetry) {
@@ -149,7 +150,8 @@ class ApiService {
           }
 
           // Only redirect to login if refresh failed or wasn't attempted
-          if (!isAuthEndpoint && !isApiKeysEndpoint && !isLoginPage && !isSettingsPage) {
+          // Don't redirect on health pages (they're running tests that may intentionally fail)
+          if (!isAuthEndpoint && !isApiKeysEndpoint && !isLoginPage && !isSettingsPage && !isHealthPage) {
             console.log('⚠️ Authentication failed, redirecting to login...');
             // Clear invalid authentication (Phase 4: only clear user data, NOT tokens from localStorage)
             localStorage.removeItem('apiKey');
