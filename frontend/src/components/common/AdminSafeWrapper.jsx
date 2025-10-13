@@ -6,8 +6,9 @@ import { useAuth } from '../../contexts/AuthContext';
  * This helps debug and prevent style-related errors that only affect admin users
  */
 const AdminSafeWrapper = ({ children, fallback = null }) => {
-  const { user } = useAuth();
-  const isAdmin = user?.username === 'admin';
+  const { user, isAdmin: isAdminFn } = useAuth();
+  // PHASE 3: Use AuthContext isAdmin() instead of hardcoded username check
+  const isAdmin = isAdminFn();
 
   // Log for debugging
   if (isAdmin && process.env.NODE_ENV === 'development') {
