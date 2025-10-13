@@ -87,7 +87,7 @@ const LeadCard = React.memo(({ lead, viewMode = 'small', animationType = 'spring
     return configs[status] || configs.New;
   };
 
-  const statusConfig = getStatusConfig(lead.leadStatus || lead.status);
+  const statusConfig = getStatusConfig(lead.lead_status || lead.status);
 
   // Lead score calculation (0-100)
   const leadScore = lead.leadScore || 50;
@@ -117,9 +117,9 @@ const LeadCard = React.memo(({ lead, viewMode = 'small', animationType = 'spring
 
   // Get time since created
   const getTimeSinceCreated = () => {
-    if (!lead.createdAt) return null;
+    if (!lead.created_at) return null;
     try {
-      return formatDistanceToNow(new Date(lead.createdAt), { addSuffix: true });
+      return formatDistanceToNow(new Date(lead.created_at), { addSuffix: true });
     } catch (e) {
       return null;
     }
@@ -132,20 +132,20 @@ const LeadCard = React.memo(({ lead, viewMode = 'small', animationType = 'spring
     return (first + last).toUpperCase() || '?';
   };
 
-  const fullName = `${lead.firstName || ''} ${lead.lastName || ''}`.trim() || 'No Name';
-  const initials = getInitials(lead.firstName, lead.lastName);
+  const fullName = `${lead.first_name || ''} ${lead.last_name || ''}`.trim() || 'No Name';
+  const initials = getInitials(lead.first_name, lead.last_name);
   const timeSinceCreated = getTimeSinceCreated();
 
   // Mock activity data (replace with actual data)
   const activities = [
-    { type: 'call', date: lead.lastContactDate || lead.createdAt, note: 'Initial contact' },
-    { type: 'email', date: lead.createdAt, note: 'Welcome email sent' },
-    { type: 'note', date: lead.createdAt, note: lead.notes?.substring(0, 30) || 'Lead created' },
+    { type: 'call', date: lead.last_contactDate || lead.created_at, note: 'Initial contact' },
+    { type: 'email', date: lead.created_at, note: 'Welcome email sent' },
+    { type: 'note', date: lead.created_at, note: lead.notes?.substring(0, 30) || 'Lead created' },
   ].filter(a => a.date);
 
   // Mock notes data
   const notes = lead.notes ? [
-    { date: lead.createdAt, text: lead.notes, author: 'You' }
+    { date: lead.created_at, text: lead.notes, author: 'You' }
   ] : [];
 
   // Calculate which panels to show based on viewMode and viewport

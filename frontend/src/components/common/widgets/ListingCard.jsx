@@ -97,7 +97,7 @@ const ListingCard = React.memo(({ listing, viewMode = 'small', index = 0, onArch
     return configs[status] || configs['Active'];
   };
 
-  const statusConfig = getStatusConfig(listing.status);
+  const statusConfig = getStatusConfig(listing.listing_status);
 
   // Format currency with decimals
   const formatCurrency = (value) => {
@@ -128,9 +128,9 @@ const ListingCard = React.memo(({ listing, viewMode = 'small', index = 0, onArch
 
   // Get days on market
   const getDaysOnMarket = () => {
-    if (!listing.listDate) return 0;
+    if (!listing.listing_date) return 0;
     try {
-      const listDate = new Date(listing.listDate);
+      const listDate = new Date(listing.listing_date);
       const today = new Date();
       const diffTime = Math.abs(today - listDate);
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -145,7 +145,7 @@ const ListingCard = React.memo(({ listing, viewMode = 'small', index = 0, onArch
   const isStale = daysOnMarket > 90;
 
   const propertyImage = listing.photos?.[0] || listing.imageUrl;
-  const address = listing.address || 'No Address';
+  const address = listing.property_address || 'No Address';
 
   // Get initials from name
   const getInitials = (name) => {
@@ -157,24 +157,24 @@ const ListingCard = React.memo(({ listing, viewMode = 'small', index = 0, onArch
   const propertyDetails = {
     beds: listing.bedrooms || listing.beds || 0,
     baths: listing.bathrooms || listing.baths || 0,
-    sqft: listing.sqft || listing.squareFeet || 0,
-    yearBuilt: listing.yearBuilt || 'N/A',
-    lotSize: listing.lotSize || 'N/A',
-    propertyType: listing.propertyType || 'Single Family',
+    sqft: listing.sqft || listing.square_feet || 0,
+    yearBuilt: listing.year_built || 'N/A',
+    lotSize: listing.lot_size || 'N/A',
+    propertyType: listing.property_type || 'Single Family',
   };
 
   // Mock activity data
   const activity = [
-    { type: 'Listed', date: listing.listDate || listing.createdAt, icon: <Home sx={{ fontSize: 16 }} /> },
-    { type: 'Price Change', date: listing.priceChangeDate, icon: <AttachMoney sx={{ fontSize: 16 }} /> },
-    { type: 'Showing', date: listing.lastShowingDate, icon: <Visibility sx={{ fontSize: 16 }} /> },
-    { type: 'Open House', date: listing.openHouseDate, icon: <CalendarToday sx={{ fontSize: 16 }} /> },
+    { type: 'Listed', date: listing.listing_date || listing.created_at, icon: <Home sx={{ fontSize: 16 }} /> },
+    { type: 'Price Change', date: listing.price_change_date, icon: <AttachMoney sx={{ fontSize: 16 }} /> },
+    { type: 'Showing', date: listing.last_showing_date, icon: <Visibility sx={{ fontSize: 16 }} /> },
+    { type: 'Open House', date: listing.open_house_date, icon: <CalendarToday sx={{ fontSize: 16 }} /> },
   ].filter(a => a.date); // Only show activities with dates
 
   // Mock documents
   const documents = [
     { name: 'Listing Agreement', completed: true },
-    { name: 'Disclosure Package', completed: !!listing.disclosuresComplete },
+    { name: 'Disclosure Package', completed: !!listing.disclosures_complete },
     { name: 'MLS Photos', completed: !!propertyImage },
     { name: 'Marketing Materials', completed: false },
   ];
@@ -496,7 +496,7 @@ const ListingCard = React.memo(({ listing, viewMode = 'small', index = 0, onArch
                       fontFamily: '"SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif',
                     }}
                   >
-                    {showPrice ? formatCurrency(listing.listPrice) : maskPrice(listing.listPrice)}
+                    {showPrice ? formatCurrency(listing.list_price) : maskPrice(listing.list_price)}
                   </Typography>
                   <IconButton
                     onClick={togglePrice}
@@ -556,14 +556,14 @@ const ListingCard = React.memo(({ listing, viewMode = 'small', index = 0, onArch
                       background: statusConfig.bg,
                     }}
                   >
-                    {getInitials(listing.agentName || 'Agent')}
+                    {getInitials(listing.agent_name || 'Agent')}
                   </Avatar>
                   <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Typography variant="body2" sx={{ fontWeight: 600, fontSize: 13, lineHeight: 1.2 }}>
-                      {listing.agentName || 'Listing Agent'}
+                      {listing.agent_name || 'Listing Agent'}
                     </Typography>
                     <Typography variant="caption" sx={{ color: theme.palette.text.secondary, fontSize: 11 }}>
-                      {listing.brokerageName || 'Associated Real Estate'}
+                      {listing.brokerage_name || 'Associated Real Estate'}
                     </Typography>
                   </Box>
                 </Box>
@@ -601,12 +601,12 @@ const ListingCard = React.memo(({ listing, viewMode = 'small', index = 0, onArch
                   <DetailRow label="Lot Size" value={propertyDetails.lotSize} />
                   <DetailRow label="Property Type" value={propertyDetails.propertyType} />
                   <Divider sx={{ my: 1 }} />
-                  <DetailRow label="List Date" value={formatDate(listing.listDate) || 'N/A'} />
+                  <DetailRow label="List Date" value={formatDate(listing.listing_date) || 'N/A'} />
                   <DetailRow label="Days on Market" value={daysOnMarket} />
-                  {listing.originalPrice && listing.originalPrice !== listing.listPrice && (
+                  {listing.original_list_price && listing.original_list_price !== listing.list_price && (
                     <DetailRow
                       label="Original Price"
-                      value={formatCurrency(listing.originalPrice)}
+                      value={formatCurrency(listing.original_list_price)}
                       valueColor={theme.palette.text.secondary}
                     />
                   )}

@@ -96,7 +96,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
   }, []);
 
   // ✅ Status configuration (constant lookup, no object creation)
-  const statusConfig = getStatusConfig(escrow.escrowStatus);
+  const statusConfig = getStatusConfig(escrow.escrow_status);
 
   // ✅ Destructure memoized calculations
   const {
@@ -153,8 +153,8 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
   };
 
   // ✅ Removed duplicate getStatusConfig - now using imported constant
-  const propertyImage = escrow.propertyImage || escrow.zillowUrl;
-  const address = escrow.propertyAddress || 'No Address';
+  const propertyImage = escrow.property_image || escrow.zillow_url;
+  const address = escrow.property_address || 'No Address';
 
   // Get initials from name
   const getInitials = (name) => {
@@ -164,18 +164,18 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
 
   // Mock people data (replace with actual data from escrow object)
   const people = {
-    buyer: { name: escrow.buyerName || 'TBD', email: escrow.buyerEmail },
-    seller: { name: escrow.sellerName || 'TBD', email: escrow.sellerEmail },
-    listingAgent: { name: escrow.listingAgentName || 'TBD', brokerage: 'Associated Real Estate' },
-    buyerAgent: { name: escrow.buyerAgentName || 'You', brokerage: 'Associated Real Estate' },
+    buyer: { name: escrow.buyer_name || 'TBD', email: escrow.buyer_email },
+    seller: { name: escrow.seller_name || 'TBD', email: escrow.seller_email },
+    listingAgent: { name: escrow.listing_agent_name || 'TBD', brokerage: 'Associated Real Estate' },
+    buyerAgent: { name: escrow.buyer_agent_name || 'You', brokerage: 'Associated Real Estate' },
   };
 
   // Mock timeline milestones
   const timeline = [
-    { label: 'Opened', date: escrow.createdAt, completed: true },
-    { label: 'Inspection', date: escrow.inspectionDate, completed: !!escrow.inspectionDate },
-    { label: 'Appraisal', date: escrow.appraisalDate, completed: !!escrow.appraisalDate },
-    { label: 'Closing', date: closingDate, completed: escrow.escrowStatus === 'Closed' },
+    { label: 'Opened', date: escrow.created_at, completed: true },
+    { label: 'Inspection', date: escrow.inspection_date, completed: !!escrow.inspection_date },
+    { label: 'Appraisal', date: escrow.appraisal_date, completed: !!escrow.appraisal_date },
+    { label: 'Closing', date: closingDate, completed: escrow.escrow_status === 'Closed' },
   ];
 
   // Mock checklist groups
@@ -658,7 +658,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                   </Box>
 
                   {/* Days Badge */}
-                  {escrow.escrowStatus === 'Closed' ? (
+                  {escrow.escrow_status === 'Closed' ? (
                     <Box sx={{
                       display: 'flex', alignItems: 'center', gap: 0.75,
                       px: 2, py: 1, borderRadius: 2,
@@ -670,7 +670,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                         Closed
                       </Typography>
                     </Box>
-                  ) : escrow.escrowStatus === 'Cancelled' ? (
+                  ) : escrow.escrow_status === 'Cancelled' ? (
                     <Box sx={{
                       display: 'flex', alignItems: 'center', gap: 0.75,
                       px: 2, py: 1, borderRadius: 2,
@@ -1001,14 +1001,14 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
   // Deep comparison of escrow object - only check fields that affect rendering
   const escrowChanged =
     prevProps.escrow.id !== nextProps.escrow.id ||
-    prevProps.escrow.propertyAddress !== nextProps.escrow.propertyAddress ||
-    prevProps.escrow.purchasePrice !== nextProps.escrow.purchasePrice ||
+    prevProps.escrow.property_address !== nextProps.escrow.property_address ||
+    prevProps.escrow.purchase_price !== nextProps.escrow.purchase_price ||
     prevProps.escrow.myCommission !== nextProps.escrow.myCommission ||
     prevProps.escrow.grossCommission !== nextProps.escrow.grossCommission ||
-    prevProps.escrow.escrowStatus !== nextProps.escrow.escrowStatus ||
+    prevProps.escrow.escrow_status !== nextProps.escrow.escrow_status ||
     prevProps.escrow.checklistProgress !== nextProps.escrow.checklistProgress ||
     prevProps.escrow.scheduledCoeDate !== nextProps.escrow.scheduledCoeDate ||
-    prevProps.escrow.closingDate !== nextProps.escrow.closingDate ||
+    prevProps.escrow.closing_date !== nextProps.escrow.closing_date ||
     prevProps.escrow.acceptanceDate !== nextProps.escrow.acceptanceDate;
 
   return !escrowChanged; // Return true to SKIP re-render, false to re-render

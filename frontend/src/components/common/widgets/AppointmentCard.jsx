@@ -106,11 +106,11 @@ const AppointmentCard = React.memo(({ appointment, viewMode = 'small', index = 0
     return { date: 'TBD', time: 'TBD' };
   };
 
-  const { date: appointmentDate, time: appointmentTime, dayOfWeek } = formatDateTime(appointment.appointmentDate || appointment.appointment_date || appointment.date);
+  const { date: appointmentDate, time: appointmentTime, dayOfWeek } = formatDateTime(appointment.appointment_date || appointment.appointment_date || appointment.date);
 
   // Get relative time
   const getRelativeTime = () => {
-    const dateField = appointment.appointmentDate || appointment.appointment_date || appointment.date;
+    const dateField = appointment.appointment_date || appointment.appointment_date || appointment.date;
     if (!dateField) return 'Date TBD';
     try {
       const d = new Date(dateField);
@@ -123,14 +123,14 @@ const AppointmentCard = React.memo(({ appointment, viewMode = 'small', index = 0
   };
 
   const relativeTime = getRelativeTime();
-  const dateField = appointment.appointmentDate || appointment.appointment_date || appointment.date;
+  const dateField = appointment.appointment_date || appointment.appointment_date || appointment.date;
   const appointmentIsPast = dateField ? isPast(new Date(dateField)) : false;
   const appointmentIsToday = dateField ? isToday(new Date(dateField)) : false;
   const appointmentIsSoon = dateField ? (new Date(dateField) - new Date()) / (1000 * 60 * 60) < 24 : false; // < 24 hours
 
   // Get appointment type icon
   const getTypeIcon = () => {
-    const type = (appointment.appointmentType || appointment.appointment_type || appointment.type || 'In-Person').toLowerCase();
+    const type = (appointment.appointment_type || appointment.appointment_type || appointment.type || 'In-Person').toLowerCase();
     if (type.includes('video') || type.includes('zoom') || type.includes('virtual')) {
       return <VideoCall sx={{ fontSize: 80, color: alpha('#3b82f6', 0.5), zIndex: 1 }} />;
     }
@@ -148,23 +148,23 @@ const AppointmentCard = React.memo(({ appointment, viewMode = 'small', index = 0
 
   // Mock attendees
   const attendees = [
-    { name: appointment.clientName || 'Client Name', type: 'Client', email: appointment.clientEmail },
+    { name: appointment.client_name || 'Client Name', type: 'Client', email: appointment.clientEmail },
     { name: appointment.agentName || 'Agent Name', type: 'Agent', email: appointment.agentEmail },
   ].filter(a => a.name !== 'Client Name' && a.name !== 'Agent Name');
 
   // Mock appointment details
   const details = {
     location: appointment.location || 'Location TBD',
-    type: appointment.appointmentType || appointment.appointment_type || appointment.type || 'In-Person',
+    type: appointment.appointment_type || appointment.appointment_type || appointment.type || 'In-Person',
     duration: appointment.duration || '30 min',
     purpose: appointment.title || appointment.purpose || appointment.description || appointment.notes || 'Consultation',
   };
 
   // Mock notes timeline
   const notesTimeline = [
-    { date: appointment.createdAt, note: 'Appointment scheduled', author: appointment.agentName || 'Agent' },
+    { date: appointment.created_at, note: 'Appointment scheduled', author: appointment.agentName || 'Agent' },
     appointment.confirmedAt ? { date: appointment.confirmedAt, note: 'Confirmed by client', author: 'System' } : null,
-    appointment.notes ? { date: appointment.updatedAt || appointment.createdAt, note: appointment.notes, author: appointment.agentName || 'Agent' } : null,
+    appointment.notes ? { date: appointment.updatedAt || appointment.created_at, note: appointment.notes, author: appointment.agentName || 'Agent' } : null,
   ].filter(Boolean);
 
   // Calculate which panels to show
@@ -597,10 +597,10 @@ const AppointmentCard = React.memo(({ appointment, viewMode = 'small', index = 0
                   <Divider sx={{ my: 1 }} />
                   <DetailRow label="Location" value={details.location} icon={<LocationOn sx={{ fontSize: 16 }} />} />
                   <DetailRow label="Purpose" value={details.purpose} />
-                  {appointment.clientName && (
+                  {appointment.client_name && (
                     <>
                       <Divider sx={{ my: 1 }} />
-                      <DetailRow label="Client" value={appointment.clientName} icon={<Person sx={{ fontSize: 16 }} />} />
+                      <DetailRow label="Client" value={appointment.client_name} icon={<Person sx={{ fontSize: 16 }} />} />
                     </>
                   )}
                   {appointment.agentName && (

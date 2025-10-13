@@ -94,12 +94,12 @@ const ClientCard = React.memo(({ client, viewMode = 'small', index = 0, onArchiv
   };
 
   // Client details
-  const fullName = `${client.firstName || ''} ${client.lastName || ''}`.trim();
-  const initials = getInitials(client.firstName, client.lastName);
+  const fullName = `${client.first_name || ''} ${client.last_name || ''}`.trim();
+  const initials = getInitials(client.first_name, client.last_name);
 
   // Mock activity timeline
   const timeline = [
-    { label: 'Initial Contact', date: client.createdAt, completed: true },
+    { label: 'Initial Contact', date: client.created_at, completed: true },
     { label: 'Qualified', date: client.qualifiedDate, completed: client.stage !== 'New' },
     { label: 'Showing Properties', date: client.showingDate, completed: ['Showing', 'Offer', 'Contract', 'Closed'].includes(client.stage) },
     { label: 'Offer Submitted', date: client.offerDate, completed: ['Offer', 'Contract', 'Closed'].includes(client.stage) },
@@ -107,7 +107,7 @@ const ClientCard = React.memo(({ client, viewMode = 'small', index = 0, onArchiv
 
   // Mock activity/communication log
   const activityLog = [
-    { type: 'call', date: client.lastContactDate, description: 'Phone consultation' },
+    { type: 'call', date: client.last_contactDate, description: 'Phone consultation' },
     { type: 'email', date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), description: 'Sent listings' },
     { type: 'meeting', date: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000), description: 'Property showing' },
     { type: 'note', date: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), description: 'Updated preferences' },
@@ -467,7 +467,7 @@ const ClientCard = React.memo(({ client, viewMode = 'small', index = 0, onArchiv
                       Last
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.75rem', color: theme.palette.text.primary }}>
-                      {formatDate(client.lastContactDate) || 'Never'}
+                      {formatDate(client.last_contactDate) || 'Never'}
                     </Typography>
                   </Box>
                   <Box>
@@ -475,7 +475,7 @@ const ClientCard = React.memo(({ client, viewMode = 'small', index = 0, onArchiv
                       Next
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.75rem', color: theme.palette.text.primary }}>
-                      {formatDate(client.nextFollowUpDate) || 'TBD'}
+                      {formatDate(client.next_follow_upDate) || 'TBD'}
                     </Typography>
                   </Box>
                 </Box>
