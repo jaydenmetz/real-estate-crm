@@ -762,6 +762,12 @@ const HealthDashboardBase = ({
     setSnackbarOpen(true);
   };
 
+  // Run tests on initial page load
+  useEffect(() => {
+    runAllTests(true);
+  }, []); // Empty dependency array = run once on mount
+
+  // Run tests when switching between JWT/API Key tabs
   useEffect(() => {
     if (authTab === 0) {
       const token = localStorage.getItem('authToken');
