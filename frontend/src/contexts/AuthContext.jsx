@@ -206,14 +206,25 @@ export const AuthProvider = ({ children }) => {
     return user?.preferences?.[key] ?? defaultValue;
   }, [user]);
 
-  // Check if user has role
+  // PHASE 3: Check if user has specific role
   const hasRole = useCallback((role) => {
     return user?.role === role;
   }, [user]);
 
-  // Check if user is admin
+  // PHASE 3: Check if user has any of the specified roles
+  const hasAnyRole = useCallback((roles) => {
+    if (!Array.isArray(roles)) return false;
+    return roles.includes(user?.role);
+  }, [user]);
+
+  // PHASE 3: Check if user is system admin (fixed from 'admin' to 'system_admin')
   const isAdmin = useCallback(() => {
-    return hasRole('admin');
+    return hasRole('system_admin');
+  }, [hasRole]);
+
+  // PHASE 3: Alias for clarity (same as isAdmin)
+  const isSystemAdmin = useCallback(() => {
+    return hasRole('system_admin');
   }, [hasRole]);
 
   // Get error display mode based on user preferences
@@ -236,7 +247,9 @@ export const AuthProvider = ({ children }) => {
     updateProfile,
     getPreference,
     hasRole,
+    hasAnyRole, // PHASE 3: Check if user has any of multiple roles
     isAdmin,
+    isSystemAdmin, // PHASE 3: Alias for isAdmin (clarity)
     getErrorDisplayMode,
     shouldShowDebugInfo,
     apiKey: user?.apiKey,
