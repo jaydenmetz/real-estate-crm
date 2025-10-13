@@ -168,14 +168,14 @@ class GeoAnomalyService {
       // Check for anomaly
       const anomalyCheck = await this.checkLoginAnomaly(user.id, ipAddress);
 
-      // If anomaly detected, log it
+      // If anomaly detected, log it (fire-and-forget, non-blocking)
       if (anomalyCheck.isAnomaly) {
-        await SecurityEventService.logGeoAnomaly(
+        SecurityEventService.logGeoAnomaly(
           req,
           user,
           anomalyCheck.geo.country,
           anomalyCheck.expectedCountry
-        );
+        ).catch(console.error);
       }
 
       // Update login success event with geolocation metadata
