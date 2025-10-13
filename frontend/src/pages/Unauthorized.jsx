@@ -22,13 +22,16 @@ import authService from '../services/auth.service';
 const Unauthorized = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout, login } = useAuth();
+  const { logout, login, user } = useAuth();
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   // Get the page the user was trying to access (if any)
   const from = location.state?.from?.pathname || '/admin';
+
+  // Get current logged-in username for display
+  const currentUsername = user?.username || user?.email?.split('@')[0] || 'Unknown User';
 
   const handleAdminLogin = async (e) => {
     e.preventDefault();
@@ -43,10 +46,10 @@ const Unauthorized = () => {
         console.log('Logout error (may already be logged out):', logoutErr);
       }
 
-      console.log('Attempting admin login with username: admin');
+      console.log('Attempting admin login with email: admin@jaydenmetz.com');
 
-      // Login as admin with explicit username
-      const result = await authService.login('admin', password);
+      // Login as admin with email (not username)
+      const result = await authService.login('admin@jaydenmetz.com', password);
 
       console.log('Login result:', result);
 
@@ -134,6 +137,15 @@ const Unauthorized = () => {
             onSubmit={handleAdminLogin}
             sx={{ mb: 3 }}
           >
+            {/* Show current logged-in username (read-only) */}
+            <TextField
+              fullWidth
+              label="Currently Logged In As"
+              value={currentUsername}
+              disabled
+              sx={{ mb: 2, backgroundColor: '#f5f5f5' }}
+            />
+
             <TextField
               fullWidth
               type="password"
@@ -189,7 +201,7 @@ const Unauthorized = () => {
           </Button>
 
           <Typography variant="caption" color="textSecondary" display="block">
-            Username for admin login: <strong>admin</strong>
+            Admin email: <strong>admin@jaydenmetz.com</strong>
           </Typography>
         </Paper>
       </Container>

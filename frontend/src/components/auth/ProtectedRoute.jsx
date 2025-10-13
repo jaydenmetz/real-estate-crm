@@ -22,9 +22,8 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
 
       try {
         // Call backend to verify role (checks JWT token, not localStorage)
-        const response = await apiInstance.get('/auth/verify-role', {
-          params: { requiredRole }
-        });
+        // Pass params directly as second argument (apiInstance.get handles query string conversion)
+        const response = await apiInstance.get('/auth/verify-role', { requiredRole });
 
         if (response.success && response.data.authorized) {
           console.log(`✅ Role verified: ${response.data.userRole} === ${requiredRole}`);
