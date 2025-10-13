@@ -30,7 +30,7 @@ import { styled } from '@mui/material/styles';
 // Import custom hooks and API
 import { useEscrowData } from './hooks/useEscrowData';
 import { useThemeMode } from '../../hooks/useThemeMode';
-import { refreshAuthToken } from '../../utils/refreshAuth';
+// PHASE 2: Removed emergency auth utility (now handled by AuthContext auto-refresh)
 
 // Import Dashboard widgets
 import DetailsWidget from './widgets/DetailsWidget';
@@ -153,21 +153,12 @@ function EscrowDetailPage() {
     setExpandedWidget(expandedWidget === widgetId ? null : widgetId);
   }, [expandedWidget]);
 
-  // Handle refresh
+  // PHASE 2: Handle refresh (removed emergency auth logic)
   const handleRefresh = async () => {
     setIsRefreshing(true);
-    
-    // Try to refresh auth token first if we have an error
-    if (error && error.message === 'Endpoint not found') {
-      console.log('Attempting to refresh authentication...');
-      const authResult = await refreshAuthToken();
-      if (authResult.success) {
-        console.log('Authentication refreshed, retrying data fetch...');
-        window.location.reload(); // Reload to use new token
-        return;
-      }
-    }
-    
+
+    // PHASE 2: AuthContext now handles token refresh automatically
+    // No need for manual emergency auth here
     await refetch();
     setTimeout(() => setIsRefreshing(false), 500);
   };

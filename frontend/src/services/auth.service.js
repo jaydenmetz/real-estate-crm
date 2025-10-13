@@ -174,6 +174,11 @@ class AuthService {
   // Refresh access token using refresh token (stored in httpOnly cookie)
   async refreshAccessToken() {
     try {
+      // PHASE 2: Log refresh attempt for debugging
+      const oldExpiry = localStorage.getItem('tokenExpiry');
+      const timeUntilExpiry = oldExpiry ? Math.round((parseInt(oldExpiry) - Date.now()) / 1000) : 0;
+      console.log(`🔄 Refreshing token (expires in ${timeUntilExpiry}s)...`);
+
       const response = await apiInstance.post('/auth/refresh', {});
 
       if (response.success && response.data) {
@@ -188,9 +193,13 @@ class AuthService {
         if (expiresIn) {
           const expiryTime = Date.now() + this.parseExpiry(expiresIn);
           localStorage.setItem('tokenExpiry', expiryTime.toString());
-        }
 
-        console.log('✅ Token refreshed - JWT stored in localStorage (Phase 1)');
+          // PHASE 2: Log new expiry for debugging
+          const newExpirySeconds = Math.round((expiryTime - Date.now()) / 1000);
+          console.log(`✅ Token refreshed - new expiry in ${newExpirySeconds}s (~${Math.round(newExpirySeconds / 60)} minutes)`);
+        } else {
+          console.log('✅ Token refreshed - JWT stored in localStorage');
+        }
 
         return {
           success: true,
@@ -198,12 +207,13 @@ class AuthService {
         };
       }
 
+      console.error('❌ Token refresh failed:', response.error);
       return {
         success: false,
         error: response.error || 'Token refresh failed'
       };
     } catch (error) {
-      console.error('Token refresh error:', error);
+      console.error('❌ Token refresh error:', error);
       return {
         success: false,
         error: error.message || 'Network error during token refresh'
@@ -211,13 +221,24 @@ class AuthService {
     }
   }
 
-  // Check if token is about to expire (within 2 minutes)
+  // PHASE 2: Check if token is about to expire (within 2 minutes)
   isTokenExpiringSoon() {
     const expiryTime = localStorage.getItem('tokenExpiry');
-    if (!expiryTime) return false;
+    if (!expiryTime) {
+      console.warn('⚠️ No tokenExpiry found in localStorage');
+      return false;
+    }
 
     const timeUntilExpiry = parseInt(expiryTime) - Date.now();
-    return timeUntilExpiry < 2 * 60 * 1000; // Less than 2 minutes
+    const minutes = Math.round(timeUntilExpiry / 60000);
+    const isExpiringSoon = timeUntilExpiry < 2 * 60 * 1000; // Less than 2 minutes
+
+    // PHASE 2: Only log when check matters (either expiring soon or at key intervals)
+    if (isExpiringSoon) {
+      console.log(`⏰ Token expiring soon: ${Math.round(timeUntilExpiry / 1000)}s remaining`);
+    }
+
+    return isExpiringSoon;
   }
 
   // Logout user

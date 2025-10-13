@@ -98,26 +98,43 @@ export const AuthProvider = ({ children }) => {
     };
   }, []);
 
-  // Auto-refresh token before it expires
+  // PHASE 2: Auto-refresh token before it expires
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    // Check if token needs refresh every 10 minutes
+    // Check if token needs refresh every 5 minutes (PHASE 2: reduced from 10 min)
     const refreshInterval = setInterval(async () => {
       if (authService.isTokenExpiringSoon()) {
         try {
+          console.log('🔄 Token expiring soon, refreshing...');
           const result = await authService.refreshAccessToken();
           if (!result.success) {
-            console.warn('Token refresh failed:', result.error);
+            console.warn('⚠️ Token refresh failed:', result.error);
             // If refresh fails, user will be logged out on next API call
           } else {
-            console.log('✅ Token refreshed successfully');
+            console.log('✅ Token refreshed successfully (auto-refresh)');
           }
         } catch (error) {
-          console.error('Auto-refresh error:', error);
+          console.error('❌ Auto-refresh error:', error);
         }
       }
-    }, 10 * 60 * 1000); // Check every 10 minutes
+    }, 5 * 60 * 1000); // PHASE 2: Check every 5 minutes (was 10)
+
+    // PHASE 2: Initial check on mount (don't wait 5 minutes)
+    const checkTokenNow = async () => {
+      if (authService.isTokenExpiringSoon()) {
+        try {
+          console.log('🔄 Token expiring soon (initial check), refreshing...');
+          const result = await authService.refreshAccessToken();
+          if (result.success) {
+            console.log('✅ Token refreshed successfully (initial check)');
+          }
+        } catch (error) {
+          console.error('❌ Initial token refresh error:', error);
+        }
+      }
+    };
+    checkTokenNow();
 
     return () => clearInterval(refreshInterval);
   }, [isAuthenticated]);
