@@ -2451,7 +2451,7 @@ const ListingsDashboard = () => {
                   >
                     <ListingCard
                       listing={listing}
-                      viewMode="small"
+                      viewMode={viewMode}
                       index={index}
                     />
                   </motion.div>

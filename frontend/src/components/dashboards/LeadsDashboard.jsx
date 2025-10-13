@@ -2263,7 +2263,7 @@ const LeadsDashboard = () => {
                     >
                       <LeadCard
                         lead={l}
-                        viewMode="small"
+                        viewMode={viewMode}
                         index={i}
                       />
                     </motion.div>

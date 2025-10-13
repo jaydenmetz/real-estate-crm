@@ -2206,40 +2206,11 @@ const AppointmentsDashboard = () => {
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.3, delay: i * 0.05 }}
                 >
-                  <Card
-                    onClick={() => navigate(`/appointments/${a.id}`)}
-                    sx={{
-                      cursor: 'pointer',
-                      height: '100%',
-                      minHeight: 200,
-                      '&:hover': {
-                        transform: 'translateY(-4px)',
-                        boxShadow: 6
-                      },
-                      transition: 'all 0.3s'
-                    }}
-                  >
-                    <CardContent>
-                      <Typography variant="h6" gutterBottom>{a.appointmentType || 'Appointment'}</Typography>
-                      <Stack spacing={1}>
-                        <Chip
-                          label={a.appointmentStatus || 'Unknown'}
-                          size="small"
-                          color={
-                            (a.appointmentStatus || '').toLowerCase() === 'completed' ? 'success' :
-                            (a.appointmentStatus || '').toLowerCase() === 'cancelled' ? 'error' :
-                            'primary'
-                          }
-                        />
-                        <Typography variant="body2" color="textSecondary">
-                          Client: {a.clientName || 'N/A'}
-                        </Typography>
-                        <Typography variant="body2" color="textSecondary">
-                          Date: {new Date(a.appointmentDate || a.appointment_date).toLocaleDateString()}
-                        </Typography>
-                      </Stack>
-                    </CardContent>
-                  </Card>
+                  <AppointmentCard
+                    appointment={a}
+                    viewMode={viewMode}
+                    index={i}
+                  />
                 </motion.div>
               ));
             })()}

@@ -2261,7 +2261,7 @@ const ClientsDashboard = () => {
                       >
                         <ClientCard
                           client={client}
-                          viewMode="small"
+                          viewMode={viewMode}
                           index={index}
                           isArchived={selectedStatus === 'archived'}
                         />
