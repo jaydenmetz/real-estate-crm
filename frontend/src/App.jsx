@@ -21,6 +21,7 @@ import UserAwareErrorBoundary from './components/common/UserAwareErrorBoundary';
 import Navigation from './components/common/Navigation';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import GlobalErrorBoundary from './components/common/GlobalErrorBoundary';
+import ConnectionStatus from './components/common/ConnectionStatus';
 
 // Dashboard Components
 import HomeDashboard from './components/dashboards/HomeDashboard';
@@ -378,6 +379,8 @@ function App() {
                     }
                   />
                 </Routes>
+                {/* PHASE 6: Connection Status Indicator */}
+                <ConnectionStatus />
               </AuthProvider>
             </Router>
           </SnackbarProvider>
