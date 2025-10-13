@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import {
   Box,
   Card,
@@ -37,6 +38,7 @@ import {
 
 const HealthOverviewDashboard = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState({});
   const [healthData, setHealthData] = useState({});
@@ -82,19 +84,17 @@ const HealthOverviewDashboard = () => {
   const runFullHealthCheck = async (module) => {
     setRefreshing(prev => ({ ...prev, [module.key]: true }));
 
-    const token = localStorage.getItem('crm_auth_token') ||
-                  localStorage.getItem('authToken') ||
-                  localStorage.getItem('token');
-
-    if (!token) {
-      console.error('No authentication token found');
+    if (!isAuthenticated) {
+      console.error('User not authenticated');
       setRefreshing(prev => ({ ...prev, [module.key]: false }));
       return;
     }
 
     try {
       const { HealthCheckService } = await import('../../services/healthCheck.service');
-      const healthService = new HealthCheckService(API_URL, token);
+      // HealthCheckService will get the token from the apiInstance, which has it in memory
+      // Pass null for authValue and 'jwt' for authType
+      const healthService = new HealthCheckService(API_URL, null, 'jwt');
 
       let jwtTests = [];
       let apiTests = [];
@@ -185,12 +185,8 @@ const HealthOverviewDashboard = () => {
 
   useEffect(() => {
     const fetchAllHealth = async () => {
-      const token = localStorage.getItem('crm_auth_token') ||
-                    localStorage.getItem('authToken') ||
-                    localStorage.getItem('token');
-
-      if (!token) {
-        console.warn('No authentication token found. Please log in to run health checks.');
+      if (!isAuthenticated) {
+        console.warn('User not authenticated. Waiting for auth...');
         setLoading(false);
         return;
       }
@@ -207,8 +203,11 @@ const HealthOverviewDashboard = () => {
       setLoading(false);
     };
 
-    fetchAllHealth();
-  }, []);
+    // Only run health checks once auth is ready
+    if (!authLoading) {
+      fetchAllHealth();
+    }
+  }, [isAuthenticated, authLoading]);
 
   const calculateOverallHealth = () => {
     let totalPassed = 0;
@@ -268,7 +267,7 @@ const HealthOverviewDashboard = () => {
         score: `${overallHealth.passed}/${overallHealth.total_tests} tests passing`,
         timestamp: new Date().toISOString().split('T')[0] + ' ' + new Date().toLocaleTimeString(),
         environment: window.location.hostname,
-        auth: localStorage.getItem('crm_auth_token') ? 'Valid' : 'Missing'
+        auth: isAuthenticated ? 'Valid' : 'Missing'
       },
       "MODULES": modulesSummary
     };
@@ -289,9 +288,9 @@ const HealthOverviewDashboard = () => {
           "4. Check browser console for errors: F12"
         ]
       };
-    } else if (!localStorage.getItem('crm_auth_token')) {
+    } else if (!isAuthenticated) {
       report["LIKELY_ISSUE"] = {
-        problem: "No authentication token",
+        problem: "No authentication",
         fixes: ["Login at: https://crm.jaydenmetz.com/login"]
       };
     }
@@ -431,11 +430,24 @@ const HealthOverviewDashboard = () => {
     );
   };
 
-  const token = localStorage.getItem('crm_auth_token') ||
-                localStorage.getItem('authToken') ||
-                localStorage.getItem('token');
+  // Show loading spinner while auth is being verified
+  if (authLoading) {
+    return (
+      <Container maxWidth={false} sx={{ py: 4 }}>
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+          <Box textAlign="center">
+            <CircularProgress size={60} sx={{ mb: 2 }} />
+            <Typography variant="body1" color="textSecondary">
+              Verifying authentication...
+            </Typography>
+          </Box>
+        </Box>
+      </Container>
+    );
+  }
 
-  if (!token) {
+  // Show auth required message if not authenticated after auth check is complete
+  if (!isAuthenticated) {
     return (
       <Container maxWidth={false} sx={{ py: 4 }}>
         <Alert severity="warning" sx={{ mb: 3 }}>
