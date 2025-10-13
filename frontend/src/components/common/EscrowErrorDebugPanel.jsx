@@ -93,16 +93,14 @@ const EscrowErrorDebugPanel = ({ error, escrowId }) => {
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.data.token) {
-          // Save new token
+          // PHASE 1: Save token with standardized key only
           const token = data.data.token;
-          localStorage.setItem('crm_auth_token', token);
           localStorage.setItem('authToken', token);
-          localStorage.setItem('token', token);
-          
+
           if (data.data.user) {
             localStorage.setItem('user', JSON.stringify(data.data.user));
           }
-          
+
           console.log('Authentication refreshed successfully, reloading page...');
           setTimeout(() => window.location.reload(), 1000);
         }

@@ -105,8 +105,8 @@ const LoginPage = ({ hasGoogleAuth = false }) => {
         // Update auth context
         login(result.data.user);
 
-        // Store tokens
-        localStorage.setItem('token', result.data.token);
+        // PHASE 1: Store tokens with standardized key
+        localStorage.setItem('authToken', result.data.token);
         localStorage.setItem('user', JSON.stringify(result.data.user));
 
         // Navigate to previous page or default dashboard

@@ -192,7 +192,8 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
 
       if (result.success) {
         if (result.data?.token) {
-          localStorage.setItem('token', result.data.token);
+          // PHASE 1: Store tokens with standardized key
+          localStorage.setItem('authToken', result.data.token);
           localStorage.setItem('user', JSON.stringify(result.data.user));
 
           // Update auth context to log user in
@@ -235,8 +236,8 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
       const result = await response.json();
 
       if (result.success) {
-        // Store token and user info
-        localStorage.setItem('token', result.data.token);
+        // PHASE 1: Store tokens with standardized key
+        localStorage.setItem('authToken', result.data.token);
         localStorage.setItem('user', JSON.stringify(result.data.user));
 
         // Update auth context to log user in
