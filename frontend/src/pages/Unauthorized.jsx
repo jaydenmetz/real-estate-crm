@@ -22,16 +22,14 @@ import authService from '../services/auth.service';
 const Unauthorized = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { logout, login, user } = useAuth();
+  const { logout, login } = useAuth();
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   // Get the page the user was trying to access (if any)
   const from = location.state?.from?.pathname || '/admin';
-
-  // Get current logged-in username for display
-  const currentUsername = user?.username || user?.email?.split('@')[0] || 'Unknown User';
 
   const handleAdminLogin = async (e) => {
     e.preventDefault();
@@ -46,29 +44,40 @@ const Unauthorized = () => {
         console.log('Logout error (may already be logged out):', logoutErr);
       }
 
-      console.log('Attempting admin login with email: admin@jaydenmetz.com');
+      console.log('Attempting admin login with email:', email);
 
-      // Login as admin with email (not username)
-      const result = await authService.login('admin@jaydenmetz.com', password);
+      // Login with provided credentials
+      const result = await authService.login(email, password);
 
       console.log('Login result:', result);
 
       if (result.success) {
         console.log('Login successful, user:', result.user);
 
-        // Update auth context with just the user data (not the token)
+        // Check if logged-in user has system_admin role
+        // This check happens on backend via ProtectedRoute's server-side verification
+        // We verify the role here too for immediate feedback
+        if (result.user.role !== 'system_admin') {
+          setError('Access denied. Only system administrators can access this page.');
+          // Logout the non-admin user
+          await logout();
+          return;
+        }
+
+        // Update auth context with user data
         login(result.user);
 
-        console.log('Navigating to:', from);
-        // Redirect to the page the user was trying to access, or /admin by default
+        console.log('System admin verified, navigating to:', from);
+        // Redirect to the page the user was trying to access
+        // ProtectedRoute will do server-side verification as well
         navigate(from, { replace: true });
       } else {
         console.error('Login failed:', result.error);
-        setError(result.error || 'Invalid admin password');
+        setError(result.error || 'Invalid credentials');
       }
     } catch (err) {
       console.error('Admin login error:', err);
-      setError(`Failed to login as admin: ${err.message || 'Please check your password.'}`);
+      setError(`Login failed: ${err.message || 'Please check your credentials.'}`);
     } finally {
       setLoading(false);
     }
@@ -126,10 +135,10 @@ const Unauthorized = () => {
 
           {/* Admin Login Section */}
           <Typography variant="h6" fontWeight="bold" gutterBottom>
-            Admin Login
+            Admin Login Required
           </Typography>
           <Typography variant="body2" color="textSecondary" paragraph>
-            If you're an admin, enter the admin password to switch accounts:
+            Please login with a system administrator account to continue:
           </Typography>
 
           <Box
@@ -137,15 +146,20 @@ const Unauthorized = () => {
             onSubmit={handleAdminLogin}
             sx={{ mb: 3 }}
           >
-            {/* Show current logged-in username (read-only) */}
+            {/* Admin Username/Email */}
             <TextField
               fullWidth
-              label="Currently Logged In As"
-              value={currentUsername}
-              disabled
-              sx={{ mb: 2, backgroundColor: '#f5f5f5' }}
+              label="Admin Username"
+              placeholder="Enter admin username or email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              disabled={loading}
+              sx={{ mb: 2 }}
+              autoFocus
+              autoComplete="username"
             />
 
+            {/* Admin Password */}
             <TextField
               fullWidth
               type="password"
@@ -155,7 +169,7 @@ const Unauthorized = () => {
               onChange={(e) => setPassword(e.target.value)}
               disabled={loading}
               sx={{ mb: 2 }}
-              autoFocus
+              autoComplete="current-password"
             />
 
             {error && (
@@ -169,7 +183,7 @@ const Unauthorized = () => {
               variant="contained"
               fullWidth
               size="large"
-              disabled={loading || !password}
+              disabled={loading || !email || !password}
               startIcon={<LoginIcon />}
               sx={{
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -201,7 +215,7 @@ const Unauthorized = () => {
           </Button>
 
           <Typography variant="caption" color="textSecondary" display="block">
-            Admin email: <strong>admin@jaydenmetz.com</strong>
+            Only users with <strong>system_admin</strong> role can access this page
           </Typography>
         </Paper>
       </Container>
