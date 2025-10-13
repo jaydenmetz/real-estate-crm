@@ -534,8 +534,46 @@ const ListingDetail = () => {
     errors: networkMonitor.getErrors()
   });
   
-  // In a real app, this would fetch from API
-  const listing = mockListingDetail;
+  // Fetch listing data from API
+  const { data: listing, isLoading, error } = useQuery(
+    ['listing', id],
+    () => listingsAPI.getById(id),
+    {
+      enabled: !!id,
+      onError: (err) => {
+        enqueueSnackbar(`Failed to load listing: ${err.message}`, { variant: 'error' });
+      }
+    }
+  );
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
+          <CircularProgress size={60} />
+        </Box>
+      </Container>
+    );
+  }
+
+  // Error state
+  if (error || !listing) {
+    return (
+      <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {error?.message || 'Listing not found'}
+        </Alert>
+        <Button
+          variant="contained"
+          startIcon={<ArrowBack />}
+          onClick={() => navigate('/listings')}
+        >
+          Back to Listings
+        </Button>
+      </Container>
+    );
+  }
 
   // Auto-refresh network data when debug panel is expanded
   useEffect(() => {
@@ -553,14 +591,15 @@ const ListingDetail = () => {
   }, [debugExpanded]);
   
   // Calculate derived values
-  const priceChange = listing.listPrice - listing.originalListPrice;
-  const priceChangePercent = (priceChange / listing.originalListPrice) * 100;
-  const monthlyPayment = Math.round((listing.listPrice * 0.8 * 0.065 / 12) / (1 - Math.pow(1 + 0.065/12, -360)));
-  const potentialRent = Math.round(listing.listPrice * 0.004);
+  const priceChange = listing.list_price - (listing.original_list_price || listing.list_price);
+  const priceChangePercent = listing.original_list_price ? (priceChange / listing.original_list_price) * 100 : 0;
+  const monthlyPayment = Math.round((listing.list_price * 0.8 * 0.065 / 12) / (1 - Math.pow(1 + 0.065/12, -360)));
+  const potentialRent = Math.round(listing.list_price * 0.004);
+  const pricePerSqFt = listing.square_feet ? Math.round(listing.list_price / listing.square_feet) : 0;
   
   const handleShare = (platform) => {
     const url = window.location.href;
-    const text = `Check out this amazing property: ${listing.propertyAddress}`;
+    const text = `Check out this amazing property: ${listing.property_address}`;
     
     switch(platform) {
       case 'copy':
@@ -721,16 +760,16 @@ const ListingDetail = () => {
                       },
                       listingData: {
                         id: listing.id,
-                        address: listing.propertyAddress,
-                        status: listing.listingStatus,
-                        listPrice: listing.listPrice,
-                        mlsNumber: listing.mlsNumber,
-                        propertyType: listing.propertyType,
+                        address: listing.property_address,
+                        status: listing.listing_status,
+                        listPrice: listing.list_price,
+                        mlsNumber: listing.mls_number,
+                        propertyType: listing.property_type,
                         bedrooms: listing.bedrooms,
                         bathrooms: listing.bathrooms,
-                        squareFootage: listing.squareFootage,
-                        yearBuilt: listing.yearBuilt,
-                        daysOnMarket: listing.daysOnMarket
+                        squareFootage: listing.square_feet,
+                        yearBuilt: listing.year_built,
+                        daysOnMarket: listing.days_on_market
                       },
                       networkActivity: {
                         stats: networkData.stats,
@@ -778,15 +817,15 @@ const ListingDetail = () => {
                     <Grid container spacing={2}>
                       <Grid item xs={6}>
                         <Typography variant="caption" color="text.secondary">List Price</Typography>
-                        <Typography variant="h5">${listing.listPrice.toLocaleString()}</Typography>
+                        <Typography variant="h5">${listing.list_price.toLocaleString()}</Typography>
                       </Grid>
                       <Grid item xs={6}>
                         <Typography variant="caption" color="text.secondary">Price/SqFt</Typography>
-                        <Typography variant="h5">${listing.pricePerSqFt}</Typography>
+                        <Typography variant="h5">${pricePerSqFt}</Typography>
                       </Grid>
                       <Grid item xs={6}>
                         <Typography variant="caption" color="text.secondary">Days on Market</Typography>
-                        <Typography variant="h5">{listing.daysOnMarket || 0}</Typography>
+                        <Typography variant="h5">{listing.days_on_market || 0}</Typography>
                       </Grid>
                       <Grid item xs={6}>
                         <Typography variant="caption" color="text.secondary">Total Views</Typography>
@@ -869,19 +908,19 @@ const ListingDetail = () => {
                       fontSize: '0.85rem'
                     }}>
                       <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                        MLS: {listing.mlsNumber} | Status: {listing.listingStatus}
+                        MLS: {listing.mls_number} | Status: {listing.listing_status}
                       </Typography>
                       <Typography variant="body2" sx={{ mt: 1 }}>
-                        {listing.propertyAddress}
+                        {listing.property_address}
                       </Typography>
                       <Typography variant="body2" sx={{ mt: 1 }}>
-                        Type: {listing.propertyType} | Year: {listing.yearBuilt}
+                        Type: {listing.property_type} | Year: {listing.year_built}
                       </Typography>
                       <Typography variant="body2">
-                        {listing.bedrooms} beds | {listing.bathrooms} baths | {listing.squareFootage.toLocaleString()} sqft
+                        {listing.bedrooms} beds | {listing.bathrooms} baths | {listing.square_feet.toLocaleString()} sqft
                       </Typography>
                       <Typography variant="body2">
-                        Lot: {listing.lotSize.toLocaleString()} sqft | Garage: {listing.garage} cars
+                        Lot: {listing.lot_size.toLocaleString()} sqft | Garage: {(listing.parking_spaces || 0)} cars
                       </Typography>
                     </Box>
                   </Box>
@@ -976,7 +1015,7 @@ const ListingDetail = () => {
         >
           Listings
         </Link>
-        <Typography color="text.primary">{listing.propertyAddress}</Typography>
+        <Typography color="text.primary">{listing.property_address}</Typography>
       </Breadcrumbs>
 
       {/* Beautiful Hero Section with Carousel */}
@@ -1010,10 +1049,10 @@ const ListingDetail = () => {
                     overlap="circular"
                     anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                     variant="dot"
-                    status={listing.listingStatus}
+                    status={listing.listing_status}
                   >
                     <Chip
-                      label={listing.listingStatus}
+                      label={listing.listing_status}
                       sx={{ 
                         bgcolor: 'rgba(255, 255, 255, 0.9)',
                         fontWeight: 'bold'
@@ -1023,16 +1062,16 @@ const ListingDetail = () => {
                 </Box>
 
                 <Typography variant="h3" fontWeight="bold" gutterBottom>
-                  {listing.propertyAddress.split(',')[0]}
+                  {listing.property_address.split(',')[0]}
                 </Typography>
                 <Typography variant="h5" sx={{ mb: 3, opacity: 0.9 }}>
-                  {listing.propertyAddress.split(',').slice(1).join(',')}
+                  {listing.property_address.split(',').slice(1).join(',')}
                 </Typography>
 
                 <Stack direction="row" spacing={2} sx={{ mb: 3 }}>
                   <Box>
                     <Typography variant="h3" fontWeight="bold">
-                      ${(listing.listPrice || 0).toLocaleString()}
+                      ${(listing.list_price || 0).toLocaleString()}
                     </Typography>
                     {priceChange !== 0 && (
                       <Chip
@@ -1049,7 +1088,7 @@ const ListingDetail = () => {
                 </Stack>
 
                 <Typography variant="h6" sx={{ mb: 3, opacity: 0.9 }}>
-                  {listing.propertyType} • MLS# {listing.mlsNumber}
+                  {listing.property_type} • MLS# {listing.mls_number}
                 </Typography>
 
                 <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', mb: 3 }}>
@@ -1083,7 +1122,7 @@ const ListingDetail = () => {
                 <Grid container spacing={2}>
                   <Grid item xs={6} sm={3}>
                     <Box sx={{ textAlign: 'center', bgcolor: 'rgba(255,255,255,0.1)', borderRadius: 2, p: 2 }}>
-                      <Typography variant="h5" fontWeight="bold">{listing.daysOnMarket}</Typography>
+                      <Typography variant="h5" fontWeight="bold">{listing.days_on_market}</Typography>
                       <Typography variant="caption">Days on Market</Typography>
                     </Box>
                   </Grid>
@@ -1155,10 +1194,10 @@ const ListingDetail = () => {
                               <PropertyFeature icon={Bathroom} label="Baths" value={listing.bathrooms} />
                             </Grid>
                             <Grid item xs={3}>
-                              <PropertyFeature icon={SquareFoot} label="Sq Ft" value={(listing.squareFootage || 0).toLocaleString()} />
+                              <PropertyFeature icon={SquareFoot} label="Sq Ft" value={(listing.square_feet || 0).toLocaleString()} />
                             </Grid>
                             <Grid item xs={3}>
-                              <PropertyFeature icon={DirectionsCar} label="Garage" value={listing.garage} />
+                              <PropertyFeature icon={DirectionsCar} label="Garage" value={(listing.parking_spaces || 0)} />
                             </Grid>
                           </Grid>
                         </Box>
@@ -1233,7 +1272,7 @@ const ListingDetail = () => {
                     Price per Sq Ft
                   </Typography>
                   <Typography variant="h4" fontWeight="bold">
-                    $<CountUp end={listing.pricePerSqFt} duration={2} />
+                    $<CountUp end={pricePerSqFt} duration={2} />
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
                     Avg area: $750
@@ -1414,7 +1453,7 @@ const ListingDetail = () => {
                     Property Description
                   </Typography>
                   <Typography variant="body1" paragraph>
-                    {listing.propertyDescription}
+                    {listing.description}
                   </Typography>
                   
                   <Divider sx={{ my: 3 }} />
@@ -1476,10 +1515,10 @@ const ListingDetail = () => {
                     </Typography>
                     <List dense>
                       <ListItem>
-                        <ListItemText primary="Year Built" secondary={listing.yearBuilt} />
+                        <ListItemText primary="Year Built" secondary={listing.year_built} />
                       </ListItem>
                       <ListItem>
-                        <ListItemText primary="Lot Size" secondary={`${(listing.lotSize || 0).toLocaleString()} sq ft`} />
+                        <ListItemText primary="Lot Size" secondary={`${(listing.lot_size || 0).toLocaleString()} sq ft`} />
                       </ListItem>
                       <ListItem>
                         <ListItemText primary="Stories" secondary={listing.stories} />
@@ -1504,7 +1543,7 @@ const ListingDetail = () => {
                         </ListItemIcon>
                         <ListItemText 
                           primary="Listing Agent" 
-                          secondary={listing.listingAgent.name}
+                          secondary={listing.listing_agent.name}
                         />
                       </ListItem>
                       <ListItem>
@@ -1513,7 +1552,7 @@ const ListingDetail = () => {
                         </ListItemIcon>
                         <ListItemText 
                           primary="Phone" 
-                          secondary={listing.listingAgent.phone}
+                          secondary={listing.listing_agent.phone}
                         />
                       </ListItem>
                       <ListItem>
@@ -1522,7 +1561,7 @@ const ListingDetail = () => {
                         </ListItemIcon>
                         <ListItemText 
                           primary="Email" 
-                          secondary={listing.listingAgent.email}
+                          secondary={listing.listing_agent.email}
                         />
                       </ListItem>
                     </List>
@@ -1624,12 +1663,12 @@ const ListingDetail = () => {
                       <TableRow>
                         <TableCell>List Price</TableCell>
                         <TableCell align="right">
-                          <Typography variant="h6">${(listing.listPrice || 0).toLocaleString()}</Typography>
+                          <Typography variant="h6">${(listing.list_price || 0).toLocaleString()}</Typography>
                         </TableCell>
                       </TableRow>
                       <TableRow>
                         <TableCell>Original Price</TableCell>
-                        <TableCell align="right">${(listing.originalListPrice || 0).toLocaleString()}</TableCell>
+                        <TableCell align="right">${(listing.original_list_price || 0).toLocaleString()}</TableCell>
                       </TableRow>
                       <TableRow>
                         <TableCell>Price Change</TableCell>
@@ -1639,7 +1678,7 @@ const ListingDetail = () => {
                       </TableRow>
                       <TableRow>
                         <TableCell>Price per Sq Ft</TableCell>
-                        <TableCell align="right">${listing.pricePerSqFt}</TableCell>
+                        <TableCell align="right">${pricePerSqFt}</TableCell>
                       </TableRow>
                     </TableBody>
                   </Table>
@@ -1698,25 +1737,25 @@ const ListingDetail = () => {
                       <Grid item xs={12} md={4}>
                         <Box sx={{ textAlign: 'center', p: 2 }}>
                           <Typography variant="h4" color="primary">
-                            ${(((listing.listPrice || 0) * ((listing.commission && listing.commission.listing) || 0)) / 100).toLocaleString()}
+                            ${(((listing.list_price || 0) * ((listing.commission && listing.listing_commission) || 0)) / 100).toLocaleString()}
                           </Typography>
-                          <Typography variant="body1">Listing Side ({listing.commission.listing}%)</Typography>
+                          <Typography variant="body1">Listing Side ({listing.listing_commission}%)</Typography>
                         </Box>
                       </Grid>
                       <Grid item xs={12} md={4}>
                         <Box sx={{ textAlign: 'center', p: 2 }}>
                           <Typography variant="h4" color="secondary">
-                            ${(((listing.listPrice || 0) * ((listing.commission && listing.commission.buyer) || 0)) / 100).toLocaleString()}
+                            ${(((listing.list_price || 0) * ((listing.commission && listing.buyer_commission) || 0)) / 100).toLocaleString()}
                           </Typography>
-                          <Typography variant="body1">Buyer Side ({listing.commission.buyer}%)</Typography>
+                          <Typography variant="body1">Buyer Side ({listing.buyer_commission}%)</Typography>
                         </Box>
                       </Grid>
                       <Grid item xs={12} md={4}>
                         <Box sx={{ textAlign: 'center', p: 2, bgcolor: 'action.hover', borderRadius: 2 }}>
                           <Typography variant="h4" color="success.main">
-                            ${(((listing.listPrice || 0) * ((listing.commission && listing.commission.total) || 0)) / 100).toLocaleString()}
+                            ${(((listing.list_price || 0) * ((listing.commission && listing.total_commission) || 0)) / 100).toLocaleString()}
                           </Typography>
-                          <Typography variant="body1">Total Commission ({listing.commission.total}%)</Typography>
+                          <Typography variant="body1">Total Commission ({listing.total_commission}%)</Typography>
                         </Box>
                       </Grid>
                     </Grid>
