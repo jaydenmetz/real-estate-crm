@@ -129,11 +129,41 @@ export const AuthInputBox = styled(Box)(({ theme }) => ({
 
 // TestSection Component
 export const TestSection = ({ title, tests, icon: Icon, expanded, onToggle }) => {
+  const [copySuccess, setCopySuccess] = useState(false);
+
   if (!tests || tests.length === 0) return null;
 
   const passedCount = tests.filter(t => t.status === 'success').length;
   const failedCount = tests.filter(t => t.status === 'failed').length;
   const warningCount = tests.filter(t => t.status === 'warning').length;
+
+  const copySectionTests = (e) => {
+    e.stopPropagation(); // Prevent toggle when clicking copy
+
+    const report = {
+      section: title,
+      summary: {
+        total: tests.length,
+        passed: passedCount,
+        failed: failedCount,
+        warnings: warningCount,
+        successRate: `${Math.round((passedCount / tests.length) * 100)}%`
+      },
+      tests: tests.map(test => ({
+        name: test.name,
+        status: test.status,
+        responseTime: test.responseTime ? `${test.responseTime}ms` : 'N/A',
+        method: test.method,
+        endpoint: test.endpoint,
+        message: test.message || test.error,
+        category: test.category
+      }))
+    };
+
+    navigator.clipboard.writeText(JSON.stringify(report, null, 2));
+    setCopySuccess(true);
+    setTimeout(() => setCopySuccess(false), 2000);
+  };
 
   return (
     <Box mb={3}>
@@ -182,9 +212,23 @@ export const TestSection = ({ title, tests, icon: Icon, expanded, onToggle }) =>
               />
             )}
           </Box>
-          <ExpandButton expanded={expanded}>
-            <ExpandIcon />
-          </ExpandButton>
+          <Box display="flex" alignItems="center" gap={1}>
+            <Tooltip title={copySuccess ? "Copied!" : `Copy ${title} tests`}>
+              <IconButton
+                size="small"
+                onClick={copySectionTests}
+                sx={{
+                  color: copySuccess ? '#4caf50' : 'inherit',
+                  '&:hover': { backgroundColor: 'rgba(0,0,0,0.05)' }
+                }}
+              >
+                <CopyIcon fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <ExpandButton expanded={expanded}>
+              <ExpandIcon />
+            </ExpandButton>
+          </Box>
         </Box>
       </Paper>
       <Collapse in={expanded}>
