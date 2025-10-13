@@ -427,6 +427,47 @@ class AuthController {
   }
 
   /**
+   * PHASE 3.5: Verify user role (server-side)
+   * This endpoint checks if the authenticated user has the required role
+   * Cannot be bypassed by modifying localStorage (uses JWT token)
+   */
+  static async verifyRole(req, res) {
+    try {
+      const { requiredRole } = req.query;
+
+      // req.user comes from JWT token (verified by authenticate middleware)
+      // This is SERVER data, not client localStorage
+      const userRole = req.user.role;
+
+      // Check if user has the required role
+      const authorized = userRole === requiredRole;
+
+      // Log for security audit
+      console.log(`[Role Verification] User ${req.user.email} (${userRole}) attempting to access role: ${requiredRole} → ${authorized ? 'GRANTED' : 'DENIED'}`);
+
+      res.json({
+        success: true,
+        data: {
+          authorized,
+          userRole,
+          requiredRole,
+          userId: req.user.id,
+          email: req.user.email,
+        },
+      });
+    } catch (error) {
+      console.error('Verify role error:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'ROLE_VERIFICATION_ERROR',
+          message: 'Failed to verify role',
+        },
+      });
+    }
+  }
+
+  /**
    * Update user profile
    */
   static async updateProfile(req, res) {

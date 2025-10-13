@@ -13,6 +13,7 @@ router.get('/check-username/:username', AuthController.checkUsername); // Check 
 
 // Protected routes (require JWT authentication)
 router.get('/verify', authenticate, AuthController.getProfile); // Verify token endpoint
+router.get('/verify-role', authenticate, AuthController.verifyRole); // PHASE 3.5: Verify user role (server-side)
 router.get('/profile', authenticate, AuthController.getProfile);
 router.put('/profile', authenticate, AuthController.updateProfile);
 router.post('/logout', AuthController.logout); // No auth required (uses cookie)
