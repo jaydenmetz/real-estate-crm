@@ -322,7 +322,7 @@ const ListingsDashboard = () => {
   const [selectedStatus, setSelectedStatus] = useState('active');
   const [viewMode, setViewMode] = useState(() => {
     const saved = localStorage.getItem('listingsViewMode');
-    return saved || 'small';
+    return saved || 'large';
   });
   const [sortBy, setSortBy] = useState('listing_date'); // Sort field
   const [dateRangeFilter, setDateRangeFilter] = useState('1M'); // '1D', '1M', '1Y', 'YTD', or null for custom

@@ -313,7 +313,7 @@ const AppointmentsDashboard = () => {
   const [hasMorePages, setHasMorePages] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const [selectedStatus, setSelectedStatus] = useState('upcoming');
-  const [viewMode, setViewMode] = useState(() => localStorage.getItem('appointmentsViewMode') || 'small');
+  const [viewMode, setViewMode] = useState(() => localStorage.getItem('appointmentsViewMode') || 'large');
   const [sortBy, setSortBy] = useState('appointment_date');
   const [dateRangeFilter, setDateRangeFilter] = useState('1M');
   const [customStartDate, setCustomStartDate] = useState(null);

@@ -318,7 +318,7 @@ const ClientsDashboard = () => {
   const [selectedStatus, setSelectedStatus] = useState('active');
   const [viewMode, setViewMode] = useState(() => {
     const saved = localStorage.getItem('clientsViewMode');
-    return saved || 'small';
+    return saved || 'large';
   });
   const [sortBy, setSortBy] = useState('created_at');
   const [animationType, setAnimationType] = useState('spring');

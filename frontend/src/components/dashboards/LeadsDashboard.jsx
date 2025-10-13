@@ -288,7 +288,7 @@ const LeadsDashboard = () => {
   const [hasMorePages, setHasMorePages] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const [selectedStatus, setSelectedStatus] = useState('new');
-  const [viewMode, setViewMode] = useState(() => localStorage.getItem('leadsViewMode') || 'small');
+  const [viewMode, setViewMode] = useState(() => localStorage.getItem('leadsViewMode') || 'large');
   const [sortBy, setSortBy] = useState('created_at');
   const [animationType, setAnimationType] = useState('spring');
   const [animationDuration, setAnimationDuration] = useState(1);
