@@ -12,16 +12,32 @@ class WebSocketService {
     this.listeners = new Map();
   }
 
-  connect() {
-    return new Promise((resolve, reject) => {
+  async connect() {
+    return new Promise(async (resolve, reject) => {
       try {
         // Get token from authService (memory) instead of localStorage (Phase 4)
         const authService = require('./auth.service').default;
-        const token = authService.token;
+
+        // If no token in memory, try to refresh from httpOnly cookie first
+        let token = authService.token;
+        if (!token) {
+          console.log('🔄 No token in memory, attempting to refresh before WebSocket connection...');
+          try {
+            const refreshResult = await authService.refreshAccessToken();
+            if (refreshResult.success) {
+              token = authService.token;
+              console.log('✅ Token refreshed successfully for WebSocket');
+            } else {
+              console.warn('❌ Token refresh failed, WebSocket may fail to authenticate');
+            }
+          } catch (error) {
+            console.error('❌ Token refresh error:', error);
+          }
+        }
 
         // Use React environment variable and ensure HTTPS in production
         const wsUrl = process.env.REACT_APP_WS_URL || 'wss://api.jaydenmetz.com';
-        console.log('Connecting to WebSocket:', wsUrl);
+        console.log('Connecting to WebSocket:', wsUrl, token ? '(with token)' : '(no token)');
 
         this.socket = io(wsUrl, {
         auth: { token },
