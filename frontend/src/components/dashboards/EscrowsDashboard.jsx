@@ -435,6 +435,10 @@ const EscrowsDashboard = () => {
     return saved || 'small';
   });
   const [sortBy, setSortBy] = useState('closing_date'); // Sort field
+  const [scope, setScope] = useState(() => {
+    const saved = localStorage.getItem('escrowsScope');
+    return saved || 'team';
+  }); // 'brokerage', 'team', 'user'
   const [animationType, setAnimationType] = useState('spring'); // 'spring', 'stagger', 'parallax', 'blur', 'magnetic'
   const [animationDuration, setAnimationDuration] = useState(1); // 0.5 to 5 seconds
   const [animationIntensity, setAnimationIntensity] = useState(1); // 0.5 to 2 (multiplier for overshoot/bounce)
@@ -482,6 +486,11 @@ const EscrowsDashboard = () => {
   useEffect(() => {
     localStorage.setItem('escrowsViewMode', viewMode);
   }, [viewMode]);
+
+  // Save scope to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('escrowsScope', scope);
+  }, [scope]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -2211,6 +2220,52 @@ const EscrowsDashboard = () => {
             flex: '0 0 auto',
             marginLeft: 'auto',
           }}>
+            {/* Scope Dropdown */}
+            <FormControl size="small" variant="standard" sx={{ minWidth: 110 }}>
+              <Select
+                value={scope}
+                onChange={(e) => setScope(e.target.value)}
+                disableUnderline
+                renderValue={(value) => {
+                  const labels = {
+                    brokerage: 'Brokerage',
+                    team: 'Team',
+                    user: 'User',
+                  };
+                  return (
+                    <Typography variant="body2" sx={{
+                      fontSize: '0.875rem',
+                      fontWeight: 500,
+                      color: 'text.primary',
+                    }}>
+                      {labels[value]}
+                    </Typography>
+                  );
+                }}
+                sx={{
+                  backgroundColor: 'transparent',
+                  borderRadius: 1,
+                  px: 1.5,
+                  py: 0.5,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  '&:hover': {
+                    backgroundColor: alpha('#000', 0.04),
+                    borderColor: 'primary.main',
+                  },
+                  '& .MuiSelect-select': {
+                    paddingRight: '32px !important',
+                    display: 'flex',
+                    alignItems: 'center',
+                  },
+                }}
+              >
+                <MenuItem value="brokerage">Brokerage</MenuItem>
+                <MenuItem value="team">Team</MenuItem>
+                <MenuItem value="user">User</MenuItem>
+              </Select>
+            </FormControl>
+
             {/* Sort Dropdown */}
             <FormControl size="small" variant="standard" sx={{ minWidth: 140 }}>
               <Select
@@ -2416,6 +2471,52 @@ const EscrowsDashboard = () => {
 
           {/* Right side controls */}
           <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', flex: '0 0 auto', marginLeft: 'auto' }}>
+            {/* Scope Dropdown - Mobile */}
+            <FormControl size="small" variant="standard" sx={{ minWidth: 100 }}>
+              <Select
+                value={scope}
+                onChange={(e) => setScope(e.target.value)}
+                disableUnderline
+                renderValue={(value) => {
+                  const labels = {
+                    brokerage: 'Brokerage',
+                    team: 'Team',
+                    user: 'User',
+                  };
+                  return (
+                    <Typography variant="body2" sx={{
+                      fontSize: '0.875rem',
+                      fontWeight: 500,
+                      color: 'text.primary',
+                    }}>
+                      {labels[value]}
+                    </Typography>
+                  );
+                }}
+                sx={{
+                  backgroundColor: 'transparent',
+                  borderRadius: 1,
+                  px: 1.5,
+                  py: 0.5,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  '&:hover': {
+                    backgroundColor: alpha('#000', 0.04),
+                    borderColor: 'primary.main',
+                  },
+                  '& .MuiSelect-select': {
+                    paddingRight: '32px !important',
+                    display: 'flex',
+                    alignItems: 'center',
+                  },
+                }}
+              >
+                <MenuItem value="brokerage">Brokerage</MenuItem>
+                <MenuItem value="team">Team</MenuItem>
+                <MenuItem value="user">User</MenuItem>
+              </Select>
+            </FormControl>
+
             {/* Sort Dropdown */}
             <FormControl size="small" variant="standard" sx={{ minWidth: 120 }}>
               <Select
