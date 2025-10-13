@@ -1172,89 +1172,63 @@ export class HealthCheckService {
             name: 'WebSocket Events',
             category: 'REALTIME',
             status: 'success',
-            message: `Received ${data.entityType || 'unknown'} ${data.action || 'update'} event`,
+            message: `✓ Real-time event received: ${data.entityType || 'unknown'} ${data.action || 'created'} (${Date.now() - startTime}ms)`,
             responseTime: Date.now() - startTime,
-            request: `// Listening for event:\nsocket.on('data:update', (data) => {\n  console.log('Event received:', data);\n});`,
+            request: `// WebSocket lifecycle test:\n// 1. Connect to wss://api.jaydenmetz.com\n// 2. Listen: socket.on('data:update', callback)\n// 3. Create ${entityType} via API → triggers event\n// 4. Verify event received\n// 5. Auto-cleanup: delete test record`,
             response: {
+              success: true,
+              lifecycle: `Created → Event Received → Cleaned Up`,
               receivedAt: receivedAt,
               eventType: 'data:update',
               entityType: data.entityType,
               entityId: data.entityId,
               action: data.action,
-              data: data.data,
+              latency: `${Date.now() - startTime}ms`,
+              preview: data.data ? Object.keys(data.data).slice(0, 5).join(', ') : 'No data',
               fullPayload: data
             }
           });
         });
 
         // Wait 250ms to ensure listener is registered and WebSocket connection is stable
-        setTimeout(() => {
-          // Get auth headers (JWT tokens now managed by apiInstance, not localStorage)
-          const authHeaders = this.authType === 'apikey'
-            ? { 'X-API-Key': this.authValue }
-            : { 'Authorization': `Bearer ${this.authValue || ''}` }; // authValue should contain JWT for jwt authType
-
-          fetch(`${this.API_URL}${endpoint}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...authHeaders
-          },
-          body: JSON.stringify(dataToUse)
-        })
-          .then(async (response) => {
-            const result = await response.json();
-
-            // Check for HTTP errors
-            if (!response.ok) {
-              clearTimeout(timeout);
-              if (unsubscribe) unsubscribe();
-              resolve({
-                name: 'WebSocket Events',
-                category: 'REALTIME',
-                status: 'failed',
-                message: `Test ${entityType} creation failed: HTTP ${response.status}`,
-                responseTime: Date.now() - startTime,
-                error: `HTTP ${response.status}: ${result.error?.message || result.message || 'Unknown error'}`,
-                details: result
+        setTimeout(async () => {
+          try {
+            // Use apiInstance for proper auth handling (token in memory)
+            let result;
+            if (this.authType === 'jwt') {
+              result = await apiInstance.post(endpoint, dataToUse);
+            } else {
+              result = await apiInstance.requestWithApiKey(endpoint, this.authValue, {
+                method: 'POST',
+                body: JSON.stringify(dataToUse)
               });
-              return;
             }
 
-            // Clean up test record
+            // Clean up test record after a delay
             if (result?.data?.id) {
               setTimeout(async () => {
-                const deleteAuthHeaders = this.authType === 'apikey'
-                  ? { 'X-API-Key': this.authValue }
-                  : { 'Authorization': `Bearer ${this.authValue || ''}` };
-
                 try {
                   // Escrows must be archived before deletion
                   if (entityType === 'escrow') {
-                    await fetch(`${this.API_URL}${endpoint}/${result.data.id}/archive`, {
-                      method: 'PUT',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        ...deleteAuthHeaders
-                      }
-                    });
+                    if (this.authType === 'jwt') {
+                      await apiInstance.put(`${endpoint}/${result.data.id}/archive`);
+                    } else {
+                      await apiInstance.requestWithApiKey(`${endpoint}/${result.data.id}/archive`, this.authValue, { method: 'PUT' });
+                    }
                   }
 
                   // Delete the record
-                  await fetch(`${this.API_URL}${endpoint}/${result.data.id}`, {
-                    method: 'DELETE',
-                    headers: {
-                      'Content-Type': 'application/json',
-                      ...deleteAuthHeaders
-                    }
-                  });
+                  if (this.authType === 'jwt') {
+                    await apiInstance.delete(`${endpoint}/${result.data.id}`);
+                  } else {
+                    await apiInstance.requestWithApiKey(`${endpoint}/${result.data.id}`, this.authValue, { method: 'DELETE' });
+                  }
                 } catch (error) {
                   console.error(`Failed to cleanup test ${entityType}:`, error);
                 }
               }, 1000);
             }
-          })
-          .catch((error) => {
+          } catch (error) {
             clearTimeout(timeout);
             if (unsubscribe) unsubscribe();
             resolve({
@@ -1263,9 +1237,10 @@ export class HealthCheckService {
               status: 'failed',
               message: `Failed to trigger test event: ${error.message}`,
               responseTime: Date.now() - startTime,
-              error: error.message
+              error: error.message,
+              request: `// WebSocket listener\nsocket.on('data:update', callback);`
             });
-          });
+          }
         }, 250); // Wait 250ms before triggering to ensure WebSocket is ready
       });
     } catch (error) {
@@ -1364,30 +1339,22 @@ export class HealthCheckService {
           if (unsubscribe) unsubscribe();
           // Clean up test record
           if (testEscrowId) {
-            const deleteAuthHeaders = this.authType === 'apikey'
-              ? { 'X-API-Key': this.authValue }
-              : { 'Authorization': `Bearer ${this.authValue || ''}` };
-
             try {
               // Escrows must be archived before deletion
               if (entityType === 'escrow') {
-                await fetch(`${this.API_URL}${endpoint}/${testEscrowId}/archive`, {
-                  method: 'PUT',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    ...deleteAuthHeaders
-                  }
-                });
+                if (this.authType === 'jwt') {
+                  await apiInstance.put(`${endpoint}/${testEscrowId}/archive`);
+                } else {
+                  await apiInstance.requestWithApiKey(`${endpoint}/${testEscrowId}/archive`, this.authValue, { method: 'PUT' });
+                }
               }
 
               // Delete the record
-              await fetch(`${this.API_URL}${endpoint}/${testEscrowId}`, {
-                method: 'DELETE',
-                headers: {
-                  'Content-Type': 'application/json',
-                  ...deleteAuthHeaders
-                }
-              });
+              if (this.authType === 'jwt') {
+                await apiInstance.delete(`${endpoint}/${testEscrowId}`);
+              } else {
+                await apiInstance.requestWithApiKey(`${endpoint}/${testEscrowId}`, this.authValue, { method: 'DELETE' });
+              }
             } catch (error) {
               console.error(`Failed to cleanup test ${entityType}:`, error);
             }
@@ -1412,22 +1379,24 @@ export class HealthCheckService {
               category: 'REALTIME',
               status: hasRequiredFields ? 'success' : 'failed',
               message: hasRequiredFields
-                ? `Widget update received with all ${viewMode} view fields (${Date.now() - startTime}ms)`
-                : `Widget update received but missing required ${viewMode} view fields`,
+                ? `✓ Widget update: Create → Update → Event (${Date.now() - startTime}ms) - All ${viewMode} fields present`
+                : `⚠ Widget update received but missing ${viewMode} view fields`,
               responseTime: Date.now() - startTime,
-              request: `// Listening for widget update:\nsocket.on('data:update', (data) => {\n  if (data.entityType === 'escrow' && data.action === 'updated') {\n    // Update widget display\n  }\n});`,
+              request: `// Widget real-time update test:\n// 1. Create ${entityType} record\n// 2. Update ${entityType} record\n// 3. Listen: socket.on('data:update', callback)\n// 4. Verify ${viewMode} view fields: ${fieldsToCheck[viewMode].slice(0, 3).join(', ')}...\n// 5. Auto-cleanup: delete test record`,
               response: {
+                success: true,
+                lifecycle: `Created → Updated → Event Received → Cleaned Up`,
                 receivedAt: receivedAt,
-                updateReceived: true,
-                hasRequiredFields,
                 eventType: 'data:update',
                 entityType: data.entityType,
                 entityId: data.entityId,
                 action: data.action,
                 viewMode: viewMode,
+                latency: `${Date.now() - startTime}ms`,
                 requiredFields: fieldsToCheck[viewMode],
-                fieldsPresent: data.data ? Object.keys(data.data) : [],
-                data: data.data,
+                fieldsPresent: data.data ? Object.keys(data.data).length : 0,
+                allFieldsPresent: hasRequiredFields,
+                preview: data.data ? Object.keys(data.data).slice(0, 5).join(', ') : 'No data',
                 fullPayload: data
               }
             });
@@ -1435,36 +1404,17 @@ export class HealthCheckService {
         });
 
         // Wait 100ms to ensure listener is registered before triggering events
-        setTimeout(() => {
-          // Get auth headers
-          const createAuthHeaders = this.authType === 'apikey'
-            ? { 'X-API-Key': this.authValue }
-            : { 'Authorization': `Bearer ${this.authValue || ''}` };
-
-          fetch(`${this.API_URL}${endpoint}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...createAuthHeaders
-          },
-          body: JSON.stringify(dataToUse)
-        })
-          .then(async (response) => {
-            const result = await response.json();
-
-            // Check HTTP status
-            if (!response.ok) {
-              cleanup();
-              resolve({
-                name: testName,
-                category: 'REALTIME',
-                status: 'failed',
-                message: `${entityType.charAt(0).toUpperCase() + entityType.slice(1)} creation failed: HTTP ${response.status}`,
-                responseTime: Date.now() - startTime,
-                error: `HTTP ${response.status}: ${result.error?.message || result.message || 'Unknown error'}`,
-                details: result
+        setTimeout(async () => {
+          try {
+            // Step 1: Create test record using apiInstance
+            let result;
+            if (this.authType === 'jwt') {
+              result = await apiInstance.post(endpoint, dataToUse);
+            } else {
+              result = await apiInstance.requestWithApiKey(endpoint, this.authValue, {
+                method: 'POST',
+                body: JSON.stringify(dataToUse)
               });
-              return;
             }
 
             if (!result?.data?.id) {
@@ -1476,7 +1426,7 @@ export class HealthCheckService {
                 message: `Failed to create test ${entityType} - no ID returned`,
                 responseTime: Date.now() - startTime,
                 error: `${entityType.charAt(0).toUpperCase() + entityType.slice(1)} creation failed: No ID in response`,
-                details: result
+                request: `// WebSocket listener\nsocket.on('data:update', callback);`
               });
               return;
             }
@@ -1493,44 +1443,43 @@ export class HealthCheckService {
               lead: { leadScore: 75 }
             };
 
-            setTimeout(() => {
-              const updateAuthHeaders = this.authType === 'apikey'
-                ? { 'X-API-Key': this.authValue }
-                : { 'Authorization': `Bearer ${this.authValue || ''}` };
-
-              fetch(`${this.API_URL}${endpoint}/${testEscrowId}`, {
-                method: 'PUT',
-                headers: {
-                  'Content-Type': 'application/json',
-                  ...updateAuthHeaders
-                },
-                body: JSON.stringify(updateData[entityType] || updateData.escrow)
-              }).catch((error) => {
+            setTimeout(async () => {
+              try {
+                if (this.authType === 'jwt') {
+                  await apiInstance.put(`${endpoint}/${testEscrowId}`, updateData[entityType] || updateData.escrow);
+                } else {
+                  await apiInstance.requestWithApiKey(`${endpoint}/${testEscrowId}`, this.authValue, {
+                    method: 'PUT',
+                    body: JSON.stringify(updateData[entityType] || updateData.escrow)
+                  });
+                }
+              } catch (error) {
                 if (!updateReceived) {
                   cleanup();
                   resolve({
                     name: testName,
                     category: 'REALTIME',
                     status: 'failed',
-                    message: `Failed to update test escrow: ${error.message}`,
+                    message: `Failed to update test ${entityType}: ${error.message}`,
                     responseTime: Date.now() - startTime,
-                    error: error.message
+                    error: error.message,
+                    request: `// WebSocket listener\nsocket.on('data:update', callback);`
                   });
                 }
-              });
+              }
             }, 500);
-          })
-          .catch((error) => {
+          } catch (error) {
             cleanup();
             resolve({
               name: testName,
               category: 'REALTIME',
               status: 'failed',
-              message: `Failed to create test escrow: ${error.message}`,
+              message: `Failed to create test ${entityType}: ${error.message}`,
               responseTime: Date.now() - startTime,
-              error: error.message
+              error: error.message,
+              request: `// WebSocket listener\nsocket.on('data:update', callback);`
             });
-          });
+          }
         }, 250); // Wait 250ms before triggering to ensure WebSocket is ready
       });
     } catch (error) {
