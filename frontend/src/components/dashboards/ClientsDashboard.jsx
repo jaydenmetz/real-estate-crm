@@ -377,6 +377,11 @@ const ClientsDashboard = () => {
     localStorage.setItem('clientsScope', scope);
   }, [scope]);
 
+  // PHASE 6: Refetch clients when scope changes
+  useEffect(() => {
+    fetchClients();
+  }, [scope]);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyPress = (e) => {
@@ -481,10 +486,12 @@ const ClientsDashboard = () => {
       console.log('Fetching clients...');
 
       // Fetch clients with pagination (50 per page for optimal performance)
+      // PHASE 6: Include scope filter (brokerage, team, user)
       const response = await clientsAPI.getAll({
         includeArchived: true,
         page: pageNum,
-        limit: 50
+        limit: 50,
+        scope: scope // Pass scope from state
       });
       console.log('API Response:', response);
 

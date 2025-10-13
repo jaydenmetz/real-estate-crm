@@ -366,6 +366,11 @@ const AppointmentsDashboard = () => {
     localStorage.setItem('appointmentsScope', scope);
   }, [scope]);
 
+  // PHASE 6: Refetch appointments when scope changes
+  useEffect(() => {
+    fetchAppointments();
+  }, [scope]);
+
   useEffect(() => { fetchAppointments(); }, []);
 
   // Keyboard shortcuts
@@ -471,10 +476,12 @@ const AppointmentsDashboard = () => {
       console.log(`Fetching appointments... (page ${pageNum})`);
 
       // Fetch appointments with pagination (50 per page for optimal performance)
+      // PHASE 6: Include scope filter (brokerage, team, user)
       const response = await appointmentsAPI.getAll({
         includeArchived: true,
         page: pageNum,
-        limit: 50
+        limit: 50,
+        scope: scope // Pass scope from state
       });
       console.log('API Response:', response);
 

@@ -344,6 +344,11 @@ const LeadsDashboard = () => {
     localStorage.setItem('leadsScope', scope);
   }, [scope]);
 
+  // PHASE 6: Refetch leads when scope changes
+  useEffect(() => {
+    fetchLeads();
+  }, [scope]);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyPress = (e) => {
@@ -463,10 +468,12 @@ const LeadsDashboard = () => {
       }
 
       // Fetch leads with pagination (50 per page for optimal performance)
+      // PHASE 6: Include scope filter (brokerage, team, user)
       const response = await leadsAPI.getAll({
         includeArchived: true,
         page: pageNum,
-        limit: 50
+        limit: 50,
+        scope: scope // Pass scope from state
       });
 
       console.log('API Response:', response);

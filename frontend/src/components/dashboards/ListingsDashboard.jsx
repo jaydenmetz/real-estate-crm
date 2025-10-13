@@ -374,6 +374,11 @@ const ListingsDashboard = () => {
     localStorage.setItem('listingsScope', scope);
   }, [scope]);
 
+  // PHASE 6: Refetch listings when scope changes
+  useEffect(() => {
+    fetchListings();
+  }, [scope]);
+
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyPress = (e) => {
@@ -588,10 +593,12 @@ const ListingsDashboard = () => {
       console.log(`Fetching listings... (page ${pageNum})`);
 
       // Fetch listings with pagination (50 per page for optimal performance)
+      // PHASE 6: Include scope filter (brokerage, team, user)
       const response = await listingsAPI.getAll({
         includeArchived: true,
         page: pageNum,
-        limit: 50
+        limit: 50,
+        scope: scope // Pass scope from state
       });
       console.log('API Response:', response);
 
