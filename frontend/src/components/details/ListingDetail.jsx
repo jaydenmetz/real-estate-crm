@@ -170,7 +170,8 @@ import CountUp from 'react-countup';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { useSnackbar } from 'notistack';
 import { format, differenceInDays, parseISO, isValid } from 'date-fns';
-import { listingsAPI } from '../../services/api.service';
+import { listingsAPI, appointmentsAPI } from '../../services/api.service';
+import websocketService from '../../services/websocket.service';
 import ListingForm from '../forms/ListingForm';
 import {
   LineChart,
@@ -533,7 +534,18 @@ const ListingDetail = () => {
     requests: networkMonitor.getRequests(),
     errors: networkMonitor.getErrors()
   });
-  
+
+  // Edit mode state
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editedFields, setEditedFields] = useState({});
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Schedule showing state
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
+  const [appointmentDate, setAppointmentDate] = useState('');
+  const [appointmentTime, setAppointmentTime] = useState('');
+  const [appointmentNotes, setAppointmentNotes] = useState('');
+
   // Fetch listing data from API
   const { data: listing, isLoading, error } = useQuery(
     ['listing', id],
@@ -596,7 +608,82 @@ const ListingDetail = () => {
   const monthlyPayment = Math.round((listing.list_price * 0.8 * 0.065 / 12) / (1 - Math.pow(1 + 0.065/12, -360)));
   const potentialRent = Math.round(listing.list_price * 0.004);
   const pricePerSqFt = listing.square_feet ? Math.round(listing.list_price / listing.square_feet) : 0;
-  
+
+  // Check if user can edit this listing
+  const canEdit = user && (
+    user.role === 'system_admin' ||
+    user.role === 'team_owner' ||
+    listing.listing_agent_id === user.id
+  );
+
+  // Auto-save function with debounce
+  const saveFieldUpdate = async (field, value) => {
+    if (!canEdit) return;
+
+    setIsSaving(true);
+    try {
+      await listingsAPI.update(listing.id, { [field]: value });
+      enqueueSnackbar(`${field} updated successfully`, { variant: 'success' });
+      queryClient.invalidateQueries(['listing', id]); // Refresh listing data
+    } catch (error) {
+      enqueueSnackbar(`Failed to save ${field}: ${error.message}`, { variant: 'error' });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Debounced save (2 seconds after last change)
+  useEffect(() => {
+    if (Object.keys(editedFields).length === 0) return;
+
+    const timer = setTimeout(() => {
+      Object.entries(editedFields).forEach(([field, value]) => {
+        saveFieldUpdate(field, value);
+      });
+      setEditedFields({});
+    }, 2000);
+
+    return () => clearTimeout(timer);
+  }, [editedFields]);
+
+  // WebSocket real-time updates
+  useEffect(() => {
+    if (!listing) return;
+
+    const handleDataUpdate = (event) => {
+      // Check if update is for this listing
+      if (
+        event.entityType === 'listing' &&
+        event.data?.id === listing.id
+      ) {
+        if (event.action === 'update') {
+          // Another user edited this listing
+          queryClient.invalidateQueries(['listing', id]); // Refresh data
+
+          // Show notification if not current user's edit
+          if (event.userId !== user?.id) {
+            enqueueSnackbar(
+              `Listing updated by ${event.data.listing_agent_name || 'another user'}`,
+              { variant: 'info' }
+            );
+          }
+        } else if (event.action === 'delete') {
+          // Listing was deleted
+          enqueueSnackbar('This listing has been deleted', { variant: 'error' });
+          setTimeout(() => navigate('/listings'), 2000);
+        }
+      }
+    };
+
+    // Subscribe to data:update events
+    websocketService.on('data:update', handleDataUpdate);
+
+    // Cleanup on unmount
+    return () => {
+      websocketService.off('data:update', handleDataUpdate);
+    };
+  }, [listing, id, user, queryClient, navigate, enqueueSnackbar]);
+
   const handleShare = (platform) => {
     const url = window.location.href;
     const text = `Check out this amazing property: ${listing.property_address}`;
@@ -622,7 +709,38 @@ const ListingDetail = () => {
   const handlePrint = () => {
     window.print();
   };
-  
+
+  const handleScheduleShowing = async () => {
+    if (!appointmentDate || !appointmentTime) {
+      enqueueSnackbar('Please select date and time', { variant: 'warning' });
+      return;
+    }
+
+    try {
+      // Combine date and time
+      const appointmentDateTime = `${appointmentDate}T${appointmentTime}:00`;
+
+      // Create appointment
+      await appointmentsAPI.create({
+        title: `Property Showing: ${listing.property_address}`,
+        appointment_type: 'Showing',
+        appointment_date: appointmentDateTime,
+        location: listing.property_address,
+        notes: appointmentNotes || `Showing for listing ${listing.mls_number || listing.id}`,
+        related_listing_id: listing.id,
+        status: 'Scheduled'
+      });
+
+      enqueueSnackbar('Showing scheduled successfully!', { variant: 'success' });
+      setScheduleDialogOpen(false);
+      setAppointmentDate('');
+      setAppointmentTime('');
+      setAppointmentNotes('');
+    } catch (error) {
+      enqueueSnackbar(`Failed to schedule showing: ${error.message}`, { variant: 'error' });
+    }
+  };
+
   const getStatusColor = (status) => {
     const colors = {
       'Active': 'success',
@@ -636,6 +754,66 @@ const ListingDetail = () => {
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+      {/* Edit Mode Toggle - Top Right (Only for authorized users) */}
+      {canEdit && (
+        <Box sx={{ position: 'fixed', top: 80, right: 24, zIndex: 1200 }}>
+          <ToggleButtonGroup
+            value={isEditMode ? 'edit' : 'view'}
+            exclusive
+            onChange={(e, newValue) => {
+              if (newValue !== null) {
+                setIsEditMode(newValue === 'edit');
+                if (newValue === 'view') {
+                  setEditedFields({}); // Clear pending changes on cancel
+                }
+              }
+            }}
+            size="small"
+            sx={{
+              bgcolor: 'background.paper',
+              boxShadow: 3,
+              '& .MuiToggleButton-root': {
+                border: '1px solid',
+                borderColor: 'divider',
+                '&.Mui-selected': {
+                  bgcolor: 'primary.main',
+                  color: 'white',
+                  '&:hover': {
+                    bgcolor: 'primary.dark'
+                  }
+                }
+              }
+            }}
+          >
+            <ToggleButton value="view">
+              <RemoveRedEye sx={{ mr: 0.5, fontSize: 18 }} />
+              View
+            </ToggleButton>
+            <ToggleButton value="edit">
+              <Edit sx={{ mr: 0.5, fontSize: 18 }} />
+              Edit
+            </ToggleButton>
+          </ToggleButtonGroup>
+
+          {/* Saving indicator */}
+          {isSaving && (
+            <Box sx={{
+              mt: 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              bgcolor: 'background.paper',
+              p: 1,
+              borderRadius: 1,
+              boxShadow: 2
+            }}>
+              <CircularProgress size={16} sx={{ mr: 1 }} />
+              <Typography variant="caption">Saving...</Typography>
+            </Box>
+          )}
+        </Box>
+      )}
+
       {/* Stunning Debug Interface - Admin Only */}
       {user?.username === 'admin' && (
         <Box sx={{ mb: 4 }}>
@@ -1096,8 +1274,9 @@ const ListingDetail = () => {
                     variant="contained"
                     size="large"
                     startIcon={<Schedule />}
-                    sx={{ 
-                      bgcolor: 'white', 
+                    onClick={() => setScheduleDialogOpen(true)}
+                    sx={{
+                      bgcolor: 'white',
                       color: 'primary.main',
                       '&:hover': { bgcolor: 'grey.100' }
                     }}
@@ -1565,10 +1744,11 @@ const ListingDetail = () => {
                         />
                       </ListItem>
                     </List>
-                    <Button 
-                      fullWidth 
-                      variant="contained" 
+                    <Button
+                      fullWidth
+                      variant="contained"
                       startIcon={<Schedule />}
+                      onClick={() => setScheduleDialogOpen(true)}
                       sx={{ mt: 2 }}
                     >
                       Schedule a Showing
@@ -2184,6 +2364,74 @@ const ListingDetail = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setShareDialogOpen(false)}>Cancel</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Schedule Showing Dialog */}
+      <Dialog open={scheduleDialogOpen} onClose={() => setScheduleDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Schedule color="primary" />
+            <Typography variant="h6">Schedule Property Showing</Typography>
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {/* Property Info */}
+            <Alert severity="info" sx={{ mb: 2 }}>
+              <Typography variant="subtitle2" fontWeight="bold">
+                {listing.property_address}
+              </Typography>
+              <Typography variant="caption">
+                {listing.bedrooms} beds • {listing.bathrooms} baths • {listing.square_feet?.toLocaleString()} sqft
+              </Typography>
+            </Alert>
+
+            {/* Date Picker */}
+            <TextField
+              label="Date"
+              type="date"
+              value={appointmentDate}
+              onChange={(e) => setAppointmentDate(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              inputProps={{ min: new Date().toISOString().split('T')[0] }}
+              fullWidth
+              required
+            />
+
+            {/* Time Picker */}
+            <TextField
+              label="Time"
+              type="time"
+              value={appointmentTime}
+              onChange={(e) => setAppointmentTime(e.target.value)}
+              InputLabelProps={{ shrink: true }}
+              fullWidth
+              required
+            />
+
+            {/* Notes */}
+            <TextField
+              label="Notes (Optional)"
+              multiline
+              rows={3}
+              value={appointmentNotes}
+              onChange={(e) => setAppointmentNotes(e.target.value)}
+              placeholder="Any special requests or questions..."
+              fullWidth
+            />
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setScheduleDialogOpen(false)}>Cancel</Button>
+          <Button
+            variant="contained"
+            onClick={handleScheduleShowing}
+            disabled={!appointmentDate || !appointmentTime}
+            startIcon={<Schedule />}
+          >
+            Schedule Showing
+          </Button>
         </DialogActions>
       </Dialog>
 
