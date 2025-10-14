@@ -855,24 +855,13 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
 
                   {/* Commission */}
                   <Box
-                    onClick={(e) => {
-                      if (onUpdate && showCommission) {
-                        e.stopPropagation();
-                        setCommissionEditorOpen(true);
-                      }
-                    }}
                     sx={{
                       position: 'relative',
                       p: 0.75,
                       borderRadius: 1.5,
                       background: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(79,70,229,0.12) 100%)',
                       border: `1px solid ${alpha('#6366f1', 0.15)}`,
-                      cursor: (onUpdate && showCommission) ? 'pointer' : 'default',
                       transition: 'all 0.2s',
-                      '&:hover': (onUpdate && showCommission) ? {
-                        background: 'linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(79,70,229,0.16) 100%)',
-                        transform: 'scale(1.05)',
-                      } : {},
                     }}
                   >
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -905,7 +894,26 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                         )}
                       </Box>
                     </Box>
-                    <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1rem', color: '#6366f1', letterSpacing: '-0.5px' }}>
+                    <Typography
+                      variant="h6"
+                      onClick={(e) => {
+                        if (onUpdate) {
+                          e.stopPropagation();
+                          setCommissionEditorOpen(true);
+                        }
+                      }}
+                      sx={{
+                        fontWeight: 800,
+                        fontSize: '1rem',
+                        color: '#6366f1',
+                        letterSpacing: '-0.5px',
+                        cursor: onUpdate ? 'pointer' : 'default',
+                        transition: 'all 0.2s',
+                        '&:hover': onUpdate ? {
+                          transform: 'scale(1.05)',
+                        } : {},
+                      }}
+                    >
                       {showCommission ? formatCurrency(commission) : maskCommission(commission)}
                     </Typography>
                   </Box>
