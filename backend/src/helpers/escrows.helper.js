@@ -90,6 +90,7 @@ function buildRestructuredEscrowResponse(escrow) {
       leadSource: escrow.lead_source || financials.leadSource || null,
       createdAt: escrow.created_at,
       updatedAt: escrow.updated_at,
+      deletedAt: escrow.deleted_at || null, // Include archive status
     },
 
     // Property details (renamed from propertyDetails)

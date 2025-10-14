@@ -714,8 +714,17 @@ const EscrowsDashboard = () => {
         const hasMore = pageNum < totalPages;
 
         // Separate active and archived escrows based on deleted_at field
-        const escrowData = allData.filter(escrow => !escrow.deleted_at && !escrow.deletedAt);
-        const archivedData = allData.filter(escrow => escrow.deleted_at || escrow.deletedAt);
+        // Check both top-level and details.deletedAt for flexibility
+        const escrowData = allData.filter(escrow =>
+          !escrow.deleted_at &&
+          !escrow.deletedAt &&
+          !escrow.details?.deletedAt
+        );
+        const archivedData = allData.filter(escrow =>
+          escrow.deleted_at ||
+          escrow.deletedAt ||
+          escrow.details?.deletedAt
+        );
 
         console.log(`Page ${pageNum}/${totalPages} - Total: ${totalRecords}, Loaded: ${allData.length}, Active: ${escrowData.length}, Archived: ${archivedData.length}`);
 
@@ -3263,7 +3272,8 @@ const EscrowsDashboard = () => {
             // Otherwise show regular escrows filtered by status (exclude archived)
             const filteredEscrows = escrows.filter(e => {
               // Filter out archived escrows (those with deleted_at set)
-              if (e.deleted_at || e.deletedAt) return false;
+              // Check both top-level and details.deletedAt
+              if (e.deleted_at || e.deletedAt || e.details?.deletedAt) return false;
 
               switch (selectedStatus) {
                 case 'active':
