@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Box, Avatar, Typography, IconButton, useTheme, alpha } from '@mui/material';
-import { Remove, MoreHoriz } from '@mui/icons-material';
+import { Remove, MoreHoriz, Add } from '@mui/icons-material';
 
 /**
  * PersonRoleContainer - Fixed-height container for displaying people in a role
  *
  * Supports 3 display modes:
- * - 1 person: Shows single card centered
- * - 2 people: First at top 1/3, second at bottom 2/3
+ * - 1 person: Shows single card centered + Add button below
+ * - 2 people: First at top 1/3, second at bottom 2/3 + Add button below
  * - 3-6 people: Shows first 2 people + ellipsis button to open popup
  *
  * @param {string} roleName - Display name (e.g., "Buyer", "Seller")
@@ -16,6 +16,7 @@ import { Remove, MoreHoriz } from '@mui/icons-material';
  * @param {Function} onPersonClick - Handler for clicking a person
  * @param {Function} onRemovePerson - Handler for removing a person (optional)
  * @param {Function} onViewAll - Handler for viewing all people in popup
+ * @param {Function} onAddPerson - Handler for adding a new person
  * @param {Function} getInitials - Helper to get initials from name
  * @param {Function} truncateName - Helper to truncate long names
  */
@@ -26,6 +27,7 @@ const PersonRoleContainer = ({
   onPersonClick,
   onRemovePerson,
   onViewAll,
+  onAddPerson,
   getInitials,
   truncateName,
 }) => {
@@ -166,6 +168,54 @@ const PersonRoleContainer = ({
     </Box>
   );
 
+  // Render add button for 1-2 people
+  const renderAddButton = () => (
+    <Box
+      onClick={(e) => {
+        e.stopPropagation();
+        onAddPerson && onAddPerson();
+      }}
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'pointer',
+        p: 1,
+        borderRadius: 2,
+        transition: 'all 0.2s',
+        '&:hover': {
+          background: alpha(color.primary, 0.05),
+        },
+      }}
+    >
+      <IconButton
+        size="small"
+        sx={{
+          width: 36,
+          height: 36,
+          backgroundColor: alpha(color.primary, 0.1),
+          color: color.primary,
+          '&:hover': {
+            backgroundColor: alpha(color.primary, 0.2),
+          },
+        }}
+      >
+        <Add sx={{ fontSize: 20 }} />
+      </IconButton>
+      <Typography
+        variant="caption"
+        sx={{
+          ml: 1,
+          fontSize: 11,
+          fontWeight: 600,
+          color: color.primary,
+        }}
+      >
+        Add {roleName}
+      </Typography>
+    </Box>
+  );
+
   // Container with fixed height
   return (
     <Box
@@ -178,22 +228,26 @@ const PersonRoleContainer = ({
         position: 'relative',
       }}
     >
-      {/* 1 person: Centered */}
+      {/* 1 person: Centered + Add button below */}
       {people.length === 1 && (
-        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
-          {renderPersonCard(people[0], 0)}
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 1 }}>
+          <Box sx={{ flex: 1, display: 'flex', alignItems: 'center' }}>
+            {renderPersonCard(people[0], 0)}
+          </Box>
+          {onAddPerson && renderAddButton()}
         </Box>
       )}
 
-      {/* 2 people: Top 1/3 and Bottom 2/3 */}
+      {/* 2 people: Top 1/3, Bottom 2/3, + Add button */}
       {people.length === 2 && (
-        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-          <Box sx={{ flex: '0 0 33.33%', display: 'flex', alignItems: 'center' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 1 }}>
+          <Box sx={{ flex: '0 0 30%', display: 'flex', alignItems: 'center' }}>
             {renderPersonCard(people[0], 0)}
           </Box>
-          <Box sx={{ flex: '0 0 66.67%', display: 'flex', alignItems: 'center' }}>
+          <Box sx={{ flex: '0 0 50%', display: 'flex', alignItems: 'center' }}>
             {renderPersonCard(people[1], 1)}
           </Box>
+          {onAddPerson && renderAddButton()}
         </Box>
       )}
 

@@ -46,6 +46,7 @@ import { ContactSelectionModal } from '../../modals/ContactSelectionModal';
 import { BadgeEditor } from '../BadgeEditor';
 import PersonRoleContainer from '../PersonRoleContainer';
 import ViewAllPeopleModal from '../../modals/ViewAllPeopleModal';
+import TeamManagementModal from '../../modals/TeamManagementModal';
 
 const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'spring', animationDuration = 1, animationIntensity = 1, index = 0, onArchive, onDelete, onRestore, isArchived = false, onUpdate }) => {
   const navigate = useNavigate();
@@ -101,6 +102,10 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
   // View All modal states
   const [viewAllModalOpen, setViewAllModalOpen] = useState(false);
   const [viewAllModalRole, setViewAllModalRole] = useState(null); // 'buyer' or 'seller'
+
+  // Team Management modal states
+  const [teamModalOpen, setTeamModalOpen] = useState(false);
+  const [teamModalRoleType, setTeamModalRoleType] = useState(null); // 'buyer_agent', 'listing_agent', 'lender', 'escrow_officer'
 
   // Sync state when escrow data changes from parent
   useEffect(() => {
@@ -272,6 +277,33 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
   const handleCloseViewAllModal = useCallback(() => {
     setViewAllModalOpen(false);
     setViewAllModalRole(null);
+  }, []);
+
+  // ✅ Team Management modal handlers
+  const handleOpenTeamModal = useCallback((roleType, e) => {
+    e?.stopPropagation();
+    setTeamModalRoleType(roleType);
+    setTeamModalOpen(true);
+  }, []);
+
+  const handleCloseTeamModal = useCallback(() => {
+    setTeamModalOpen(false);
+    setTeamModalRoleType(null);
+  }, []);
+
+  const handleTeamPersonClick = useCallback(async (person, section, personIndex) => {
+    // TODO: Open contact selection modal to edit person
+    console.log('Edit person:', person, 'in section:', section);
+  }, []);
+
+  const handleTeamAddPerson = useCallback(async (section) => {
+    // TODO: Open contact selection modal to add person
+    console.log('Add person to section:', section);
+  }, []);
+
+  const handleTeamRemovePerson = useCallback(async (section, personIndex) => {
+    // TODO: Remove person from team section
+    console.log('Remove person:', personIndex, 'from section:', section);
   }, []);
 
   // ✅ Contact selection modal handlers
@@ -1158,6 +1190,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                             }
                             onRemovePerson={handleRemoveBuyer}
                             onViewAll={handleViewAllBuyers}
+                            onAddPerson={handleViewAllBuyers}
                             getInitials={getInitials}
                             truncateName={truncateName}
                           />
@@ -1174,6 +1207,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                             }
                             onRemovePerson={handleRemoveSeller}
                             onViewAll={handleViewAllSellers}
+                            onAddPerson={handleViewAllSellers}
                             getInitials={getInitials}
                             truncateName={truncateName}
                           />
@@ -1181,7 +1215,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
 
                         {/* LEFT COLUMN - Row 2: Buyer Agent */}
                         <Box
-                          onClick={(e) => handlePersonClick('buyer_agent', people.buyerAgent.color, null, e)}
+                          onClick={(e) => handleOpenTeamModal('buyer_agent', e)}
                           sx={{
                             display: 'flex',
                             alignItems: 'center',
@@ -1223,7 +1257,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
 
                         {/* RIGHT COLUMN - Row 2: Listing Agent */}
                         <Box
-                          onClick={(e) => handlePersonClick('listing_agent', people.listingAgent.color, null, e)}
+                          onClick={(e) => handleOpenTeamModal('listing_agent', e)}
                           sx={{
                             display: 'flex',
                             alignItems: 'center',
@@ -1265,7 +1299,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
 
                         {/* LEFT COLUMN - Row 3: Lender */}
                         <Box
-                          onClick={(e) => handlePersonClick('lender', people.lender.color, null, e)}
+                          onClick={(e) => handleOpenTeamModal('lender', e)}
                           sx={{
                             display: 'flex',
                             alignItems: 'center',
@@ -1307,7 +1341,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
 
                         {/* RIGHT COLUMN - Row 3: Escrow Officer */}
                         <Box
-                          onClick={(e) => handlePersonClick('escrow_officer', people.escrowOfficer.color, null, e)}
+                          onClick={(e) => handleOpenTeamModal('escrow_officer', e)}
                           sx={{
                             display: 'flex',
                             alignItems: 'center',
@@ -1501,6 +1535,27 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
           onPersonClick={(person, index) => handlePersonClick('seller', people.seller.color, index)}
           onAddPerson={handleAddSeller}
           onRemovePerson={(index) => handleRemoveSeller(index, null)}
+          getInitials={getInitials}
+          truncateName={truncateName}
+        />
+      )}
+
+      {/* Team Management Modal */}
+      {teamModalOpen && teamModalRoleType && (
+        <TeamManagementModal
+          open={teamModalOpen}
+          onClose={handleCloseTeamModal}
+          roleType={teamModalRoleType}
+          teamData={escrow.people || {}}
+          color={
+            teamModalRoleType === 'buyer_agent' ? people.buyerAgent.color :
+            teamModalRoleType === 'listing_agent' ? people.listingAgent.color :
+            teamModalRoleType === 'lender' ? people.lender.color :
+            people.escrowOfficer.color
+          }
+          onPersonClick={handleTeamPersonClick}
+          onAddPerson={handleTeamAddPerson}
+          onRemovePerson={handleTeamRemovePerson}
           getInitials={getInitials}
           truncateName={truncateName}
         />
