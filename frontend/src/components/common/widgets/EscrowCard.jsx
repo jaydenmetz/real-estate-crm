@@ -162,12 +162,40 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
-  // Mock people data (replace with actual data from escrow object)
+  // People data with lender and escrow officer
   const people = {
-    buyer: { name: escrow.buyer_name || 'TBD', email: escrow.buyer_email },
-    seller: { name: escrow.seller_name || 'TBD', email: escrow.seller_email },
-    listingAgent: { name: escrow.listing_agent_name || 'TBD', brokerage: 'Associated Real Estate' },
-    buyerAgent: { name: escrow.buyer_agent_name || 'You', brokerage: 'Associated Real Estate' },
+    buyer: {
+      name: escrow.buyer_name || 'TBD',
+      email: escrow.buyer_email,
+      company: null,
+      color: { primary: '#10b981', secondary: '#059669' }
+    },
+    buyerAgent: {
+      name: escrow.buyer_agent_name || 'You',
+      company: 'Associated Real Estate',
+      color: { primary: '#8b5cf6', secondary: '#7c3aed' }
+    },
+    lender: {
+      name: escrow.lender_name || 'TBD',
+      company: escrow.lender_company || 'TBD',
+      color: { primary: '#14b8a6', secondary: '#0d9488' }
+    },
+    seller: {
+      name: escrow.seller_name || 'TBD',
+      email: escrow.seller_email,
+      company: null,
+      color: { primary: '#f59e0b', secondary: '#d97706' }
+    },
+    listingAgent: {
+      name: escrow.listing_agent_name || 'TBD',
+      company: 'Associated Real Estate',
+      color: { primary: '#6366f1', secondary: '#4f46e5' }
+    },
+    escrowOfficer: {
+      name: escrow.escrow_officer_name || 'TBD',
+      company: escrow.escrow_company || 'TBD',
+      color: { primary: '#ec4899', secondary: '#db2777' }
+    },
   };
 
   // Mock timeline milestones
@@ -753,119 +781,266 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                       justifyContent: 'center', // Center content vertically
                     }}
                   >
-                    {/* People content for large view */}
+                    {/* People content for large view - Two Column Layout */}
                     <>
                       <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 3, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
                         People
                       </Typography>
 
-              {/* Buyer */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                <Avatar
-                  sx={{
-                    width: 56,
-                    height: 56,
-                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                    fontWeight: 700,
-                    fontSize: '1.25rem',
-                  }}
-                >
-                  {getInitials(people.buyer.name)}
-                </Avatar>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
-                    Buyer
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', color: theme.palette.text.primary }}>
-                    {people.buyer.name}
-                  </Typography>
-                  {people.buyer.email && (
-                    <Typography variant="caption" sx={{ fontSize: 11, color: theme.palette.text.secondary }}>
-                      {people.buyer.email}
-                    </Typography>
-                  )}
-                </Box>
-              </Box>
+                      {/* Two Column Grid */}
+                      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3 }}>
+                        {/* LEFT COLUMN */}
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                          {/* Buyer */}
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 2,
+                              cursor: 'pointer',
+                              p: 1.5,
+                              borderRadius: 2,
+                              transition: 'all 0.2s',
+                              '&:hover': {
+                                background: alpha(people.buyer.color.primary, 0.05),
+                              },
+                            }}
+                          >
+                            <Avatar
+                              sx={{
+                                width: 48,
+                                height: 48,
+                                background: `linear-gradient(135deg, ${people.buyer.color.primary} 0%, ${people.buyer.color.secondary} 100%)`,
+                                fontWeight: 700,
+                                fontSize: '1.1rem',
+                              }}
+                            >
+                              {getInitials(people.buyer.name)}
+                            </Avatar>
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: people.buyer.color.primary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
+                                Buyer
+                              </Typography>
+                              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {people.buyer.name}
+                              </Typography>
+                              {people.buyer.company && (
+                                <Typography variant="caption" sx={{ fontSize: 10, color: theme.palette.text.secondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                                  {people.buyer.company}
+                                </Typography>
+                              )}
+                            </Box>
+                          </Box>
 
-              {/* Seller */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                <Avatar
-                  sx={{
-                    width: 56,
-                    height: 56,
-                    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                    fontWeight: 700,
-                    fontSize: '1.25rem',
-                  }}
-                >
-                  {getInitials(people.seller.name)}
-                </Avatar>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
-                    Seller
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', color: theme.palette.text.primary }}>
-                    {people.seller.name}
-                  </Typography>
-                  {people.seller.email && (
-                    <Typography variant="caption" sx={{ fontSize: 11, color: theme.palette.text.secondary }}>
-                      {people.seller.email}
-                    </Typography>
-                  )}
-                </Box>
-              </Box>
+                          {/* Buyer Agent */}
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 2,
+                              cursor: 'pointer',
+                              p: 1.5,
+                              borderRadius: 2,
+                              transition: 'all 0.2s',
+                              '&:hover': {
+                                background: alpha(people.buyerAgent.color.primary, 0.05),
+                              },
+                            }}
+                          >
+                            <Avatar
+                              sx={{
+                                width: 48,
+                                height: 48,
+                                background: `linear-gradient(135deg, ${people.buyerAgent.color.primary} 0%, ${people.buyerAgent.color.secondary} 100%)`,
+                                fontWeight: 700,
+                                fontSize: '1.1rem',
+                              }}
+                            >
+                              {getInitials(people.buyerAgent.name)}
+                            </Avatar>
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: people.buyerAgent.color.primary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
+                                Buyer Agent
+                              </Typography>
+                              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {people.buyerAgent.name}
+                              </Typography>
+                              {people.buyerAgent.company && (
+                                <Typography variant="caption" sx={{ fontSize: 10, color: theme.palette.text.secondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                                  {people.buyerAgent.company}
+                                </Typography>
+                              )}
+                            </Box>
+                          </Box>
 
-              {/* Listing Agent */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 3 }}>
-                <Avatar
-                  sx={{
-                    width: 56,
-                    height: 56,
-                    background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
-                    fontWeight: 700,
-                    fontSize: '1.25rem',
-                  }}
-                >
-                  {getInitials(people.listingAgent.name)}
-                </Avatar>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
-                    Listing Agent
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', color: theme.palette.text.primary }}>
-                    {people.listingAgent.name}
-                  </Typography>
-                  <Typography variant="caption" sx={{ fontSize: 11, color: theme.palette.text.secondary }}>
-                    {people.listingAgent.brokerage}
-                  </Typography>
-                </Box>
-              </Box>
+                          {/* Lender */}
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 2,
+                              cursor: 'pointer',
+                              p: 1.5,
+                              borderRadius: 2,
+                              transition: 'all 0.2s',
+                              '&:hover': {
+                                background: alpha(people.lender.color.primary, 0.05),
+                              },
+                            }}
+                          >
+                            <Avatar
+                              sx={{
+                                width: 48,
+                                height: 48,
+                                background: `linear-gradient(135deg, ${people.lender.color.primary} 0%, ${people.lender.color.secondary} 100%)`,
+                                fontWeight: 700,
+                                fontSize: '1.1rem',
+                              }}
+                            >
+                              {getInitials(people.lender.name)}
+                            </Avatar>
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: people.lender.color.primary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
+                                Lender
+                              </Typography>
+                              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {people.lender.name}
+                              </Typography>
+                              {people.lender.company && (
+                                <Typography variant="caption" sx={{ fontSize: 10, color: theme.palette.text.secondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                                  {people.lender.company}
+                                </Typography>
+                              )}
+                            </Box>
+                          </Box>
+                        </Box>
 
-              {/* Buyer Agent */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Avatar
-                  sx={{
-                    width: 56,
-                    height: 56,
-                    background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',
-                    fontWeight: 700,
-                    fontSize: '1.25rem',
-                  }}
-                >
-                  {getInitials(people.buyerAgent.name)}
-                </Avatar>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
-                    Buyer Agent
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', color: theme.palette.text.primary }}>
-                    {people.buyerAgent.name}
-                  </Typography>
-                  <Typography variant="caption" sx={{ fontSize: 11, color: theme.palette.text.secondary }}>
-                    {people.buyerAgent.brokerage}
-                  </Typography>
-                </Box>
-              </Box>
+                        {/* RIGHT COLUMN */}
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                          {/* Seller */}
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 2,
+                              cursor: 'pointer',
+                              p: 1.5,
+                              borderRadius: 2,
+                              transition: 'all 0.2s',
+                              '&:hover': {
+                                background: alpha(people.seller.color.primary, 0.05),
+                              },
+                            }}
+                          >
+                            <Avatar
+                              sx={{
+                                width: 48,
+                                height: 48,
+                                background: `linear-gradient(135deg, ${people.seller.color.primary} 0%, ${people.seller.color.secondary} 100%)`,
+                                fontWeight: 700,
+                                fontSize: '1.1rem',
+                              }}
+                            >
+                              {getInitials(people.seller.name)}
+                            </Avatar>
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: people.seller.color.primary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
+                                Seller
+                              </Typography>
+                              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {people.seller.name}
+                              </Typography>
+                              {people.seller.company && (
+                                <Typography variant="caption" sx={{ fontSize: 10, color: theme.palette.text.secondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                                  {people.seller.company}
+                                </Typography>
+                              )}
+                            </Box>
+                          </Box>
+
+                          {/* Listing Agent */}
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 2,
+                              cursor: 'pointer',
+                              p: 1.5,
+                              borderRadius: 2,
+                              transition: 'all 0.2s',
+                              '&:hover': {
+                                background: alpha(people.listingAgent.color.primary, 0.05),
+                              },
+                            }}
+                          >
+                            <Avatar
+                              sx={{
+                                width: 48,
+                                height: 48,
+                                background: `linear-gradient(135deg, ${people.listingAgent.color.primary} 0%, ${people.listingAgent.color.secondary} 100%)`,
+                                fontWeight: 700,
+                                fontSize: '1.1rem',
+                              }}
+                            >
+                              {getInitials(people.listingAgent.name)}
+                            </Avatar>
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: people.listingAgent.color.primary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
+                                Listing Agent
+                              </Typography>
+                              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {people.listingAgent.name}
+                              </Typography>
+                              {people.listingAgent.company && (
+                                <Typography variant="caption" sx={{ fontSize: 10, color: theme.palette.text.secondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                                  {people.listingAgent.company}
+                                </Typography>
+                              )}
+                            </Box>
+                          </Box>
+
+                          {/* Escrow Officer */}
+                          <Box
+                            sx={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 2,
+                              cursor: 'pointer',
+                              p: 1.5,
+                              borderRadius: 2,
+                              transition: 'all 0.2s',
+                              '&:hover': {
+                                background: alpha(people.escrowOfficer.color.primary, 0.05),
+                              },
+                            }}
+                          >
+                            <Avatar
+                              sx={{
+                                width: 48,
+                                height: 48,
+                                background: `linear-gradient(135deg, ${people.escrowOfficer.color.primary} 0%, ${people.escrowOfficer.color.secondary} 100%)`,
+                                fontWeight: 700,
+                                fontSize: '1.1rem',
+                              }}
+                            >
+                              {getInitials(people.escrowOfficer.name)}
+                            </Avatar>
+                            <Box sx={{ flex: 1, minWidth: 0 }}>
+                              <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: people.escrowOfficer.color.primary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
+                                Escrow Officer
+                              </Typography>
+                              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {people.escrowOfficer.name}
+                              </Typography>
+                              {people.escrowOfficer.company && (
+                                <Typography variant="caption" sx={{ fontSize: 10, color: theme.palette.text.secondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                                  {people.escrowOfficer.company}
+                                </Typography>
+                              )}
+                            </Box>
+                          </Box>
+                        </Box>
+                      </Box>
                     </>
                   </Box>
                 )}
