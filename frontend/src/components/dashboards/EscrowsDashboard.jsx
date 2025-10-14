@@ -428,7 +428,7 @@ const EscrowsDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isConnected, connectionStatus } = useWebSocket();
-  const skipStatsRecalculation = useRef(false); // Ref to prevent unnecessary stats updates
+  const skipStatsRecalculation = useRef(0); // Counter for pending non-stats updates
   const [escrows, setEscrows] = useState([]);
   const [archivedEscrows, setArchivedEscrows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -546,11 +546,13 @@ const EscrowsDashboard = () => {
 
   useEffect(() => {
     // Skip stats recalculation if we're doing a non-stats update
-    if (skipStatsRecalculation.current) {
-      skipStatsRecalculation.current = false; // Reset flag
+    if (skipStatsRecalculation.current > 0) {
+      skipStatsRecalculation.current -= 1; // Decrement counter
+      console.log('🛑 Skipping stats recalculation, remaining:', skipStatsRecalculation.current);
       return;
     }
 
+    console.log('✅ Recalculating stats');
     if (selectedStatus === 'archived') {
       // Calculate stats for archived escrows (should show 0s when empty)
       calculateStats(archivedEscrows, 'archived');
@@ -970,9 +972,10 @@ const EscrowsDashboard = () => {
         updateData.closing_date !== undefined
       );
 
-      // Set flag to skip stats recalculation in useEffect if this doesn't affect stats
+      // Increment counter to skip next 2 stats recalculations (optimistic + server response)
       if (!affectsStats) {
-        skipStatsRecalculation.current = true;
+        skipStatsRecalculation.current += 2; // Will skip both optimistic and server response updates
+        console.log('🚫 Non-stats update detected, skip counter set to:', skipStatsRecalculation.current);
       }
 
       // Optimistic update - update UI immediately
@@ -995,11 +998,6 @@ const EscrowsDashboard = () => {
       const response = await escrowsAPI.update(escrowId, updateData);
 
       if (response.success && response.data) {
-        // Set flag again for server response if update doesn't affect stats
-        if (!affectsStats) {
-          skipStatsRecalculation.current = true;
-        }
-
         // Update with server response (in case server modified data)
         setEscrows((prev) =>
           prev.map((e) =>
