@@ -182,8 +182,6 @@ const PersonRoleContainer = ({
 
     return (
       <Box
-        onMouseEnter={() => setAddButtonHovered(true)}
-        onMouseLeave={() => setAddButtonHovered(false)}
         onClick={(e) => {
           e.stopPropagation();
           onAddPerson && onAddPerson();
@@ -239,8 +237,6 @@ const PersonRoleContainer = ({
   // Container with fixed height - content shifts internally on hover
   return (
     <Box
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
       sx={{
         height: '100%',
         display: 'flex',
@@ -262,7 +258,19 @@ const PersonRoleContainer = ({
           }}
         >
           {renderPersonCard(people[0], 0)}
-          {onAddPerson && renderAddButton()}
+          {onAddPerson && (
+            <Box
+              onMouseEnter={() => setAddButtonHovered(true)}
+              onMouseLeave={() => setAddButtonHovered(false)}
+              sx={{
+                minHeight: addButtonHovered ? 0 : 20, // Small hover zone when collapsed
+                display: 'flex',
+                alignItems: 'flex-end',
+              }}
+            >
+              {renderAddButton()}
+            </Box>
+          )}
         </Box>
       )}
 
@@ -281,7 +289,19 @@ const PersonRoleContainer = ({
         >
           {renderPersonCard(people[0], 0)}
           {renderPersonCard(people[1], 1)}
-          {onAddPerson && renderAddButton()}
+          {onAddPerson && (
+            <Box
+              onMouseEnter={() => setAddButtonHovered(true)}
+              onMouseLeave={() => setAddButtonHovered(false)}
+              sx={{
+                minHeight: addButtonHovered ? 0 : 20, // Small hover zone when collapsed
+                display: 'flex',
+                alignItems: 'flex-end',
+              }}
+            >
+              {renderAddButton()}
+            </Box>
+          )}
         </Box>
       )}
 
