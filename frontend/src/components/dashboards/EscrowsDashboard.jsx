@@ -568,15 +568,27 @@ const EscrowsDashboard = () => {
     fetchEscrows();
   }, []);
 
+  // Track previous selectedStatus to detect tab changes
+  const prevSelectedStatusRef = useRef(selectedStatus);
+
   useEffect(() => {
-    // Skip stats recalculation if we're doing a non-stats update
-    if (skipStatsRecalculation.current > 0) {
+    const statusChanged = prevSelectedStatusRef.current !== selectedStatus;
+    prevSelectedStatusRef.current = selectedStatus;
+
+    // Always recalculate stats when tab changes (selectedStatus changes)
+    // Skip counter only applies to same-tab updates
+    if (!statusChanged && skipStatsRecalculation.current > 0) {
       skipStatsRecalculation.current -= 1; // Decrement counter
       console.log('🛑 Skipping stats recalculation, remaining:', skipStatsRecalculation.current);
       return;
     }
 
-    console.log('✅ Recalculating stats');
+    if (statusChanged) {
+      console.log('🔄 Tab changed to:', selectedStatus, '- recalculating stats');
+    } else {
+      console.log('✅ Recalculating stats');
+    }
+
     if (selectedStatus === 'archived') {
       // Calculate stats for archived escrows (should show 0s when empty)
       calculateStats(archivedEscrows, 'archived');
