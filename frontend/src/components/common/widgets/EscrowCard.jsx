@@ -11,6 +11,10 @@ import {
   LinearProgress,
   IconButton,
   useMediaQuery,
+  Menu,
+  MenuItem,
+  ListItemIcon,
+  ListItemText,
 } from '@mui/material';
 import {
   Home,
@@ -27,6 +31,8 @@ import {
   Close,
   Add,
   Remove,
+  TrendingUp,
+  Schedule,
 } from '@mui/icons-material';
 import { useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -48,6 +54,9 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
   // Badge editor states
   const [priceEditorOpen, setPriceEditorOpen] = useState(false);
   const [commissionEditorOpen, setCommissionEditorOpen] = useState(false);
+
+  // Status menu state
+  const [statusMenuAnchor, setStatusMenuAnchor] = useState(null);
 
   // Inline editing states
   const [editingField, setEditingField] = useState(null);
@@ -670,10 +679,16 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                   <Home sx={{ fontSize: 80, color: alpha('#757575', 0.5), zIndex: 1 }} />
                 )}
 
-                {/* Status Chip - TOP LEFT */}
+                {/* Status Chip - TOP LEFT - Clickable to change status */}
                 <Chip
                   label={statusConfig.label}
                   size="small"
+                  onClick={(e) => {
+                    if (onUpdate) {
+                      e.stopPropagation();
+                      setStatusMenuAnchor(e.currentTarget);
+                    }
+                  }}
                   sx={{
                     position: 'absolute',
                     top: 10,
@@ -687,6 +702,12 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                     border: '2px solid rgba(255,255,255,0.3)',
                     backdropFilter: 'blur(10px)',
                     zIndex: 3,
+                    cursor: onUpdate ? 'pointer' : 'default',
+                    transition: 'all 0.2s',
+                    '&:hover': onUpdate ? {
+                      transform: 'scale(1.05)',
+                      boxShadow: `0 4px 12px ${alpha(statusConfig.color, 0.4)}`,
+                    } : {},
                     '& .MuiChip-label': { px: 1.5, py: 0.5 },
                   }}
                 />
@@ -1558,6 +1579,78 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
         color="#6366f1"
         prefix="$"
       />
+
+      {/* Status Change Menu */}
+      <Menu
+        anchorEl={statusMenuAnchor}
+        open={Boolean(statusMenuAnchor)}
+        onClose={() => setStatusMenuAnchor(null)}
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            mt: 1,
+            minWidth: 180,
+            boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+          },
+        }}
+      >
+        <MenuItem
+          onClick={() => {
+            onUpdate(escrow.id, { escrow_status: 'Active' });
+            setStatusMenuAnchor(null);
+          }}
+          sx={{
+            '&:hover': { background: alpha('#10b981', 0.1) },
+          }}
+        >
+          <ListItemIcon>
+            <TrendingUp sx={{ color: '#10b981' }} />
+          </ListItemIcon>
+          <ListItemText primary="Active" />
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            onUpdate(escrow.id, { escrow_status: 'Pending Acceptance' });
+            setStatusMenuAnchor(null);
+          }}
+          sx={{
+            '&:hover': { background: alpha('#f59e0b', 0.1) },
+          }}
+        >
+          <ListItemIcon>
+            <Schedule sx={{ color: '#f59e0b' }} />
+          </ListItemIcon>
+          <ListItemText primary="Pending Acceptance" />
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            onUpdate(escrow.id, { escrow_status: 'Closed' });
+            setStatusMenuAnchor(null);
+          }}
+          sx={{
+            '&:hover': { background: alpha('#6366f1', 0.1) },
+          }}
+        >
+          <ListItemIcon>
+            <CheckCircle sx={{ color: '#6366f1' }} />
+          </ListItemIcon>
+          <ListItemText primary="Closed" />
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
+            onUpdate(escrow.id, { escrow_status: 'Cancelled' });
+            setStatusMenuAnchor(null);
+          }}
+          sx={{
+            '&:hover': { background: alpha('#ef4444', 0.1) },
+          }}
+        >
+          <ListItemIcon>
+            <Cancel sx={{ color: '#ef4444' }} />
+          </ListItemIcon>
+          <ListItemText primary="Cancelled" />
+        </MenuItem>
+      </Menu>
     </Box>
   );
 }, (prevProps, nextProps) => {
