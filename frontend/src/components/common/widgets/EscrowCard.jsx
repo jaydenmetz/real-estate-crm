@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   Card,
   CardContent,
@@ -283,6 +283,44 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
   const getInitials = (name) => {
     if (!name) return '?';
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  /**
+   * Smart name truncation that prioritizes first and last names
+   * Examples:
+   *   "John Doe" → "John Doe" (fits)
+   *   "John Michael Doe" → "John M. Doe" (middle initial)
+   *   "John Michael Christopher Doe" → "John M. C. Doe" (all middle initials)
+   *   "Christopher Emmanuel Rodriguez Martinez" → "Christopher E. R. Martinez"
+   * @param {string} name - Full name to truncate
+   * @param {number} maxLength - Maximum character length (default 25)
+   * @returns {string} Truncated name
+   */
+  const truncateName = (name, maxLength = 25) => {
+    if (!name || name.length <= maxLength) return name;
+
+    const parts = name.trim().split(/\s+/);
+    if (parts.length <= 2) {
+      // Just first and last, use ellipsis if too long
+      return name.length > maxLength ? `${name.substring(0, maxLength - 3)}...` : name;
+    }
+
+    // First name + middle initials + last name
+    const firstName = parts[0];
+    const lastName = parts[parts.length - 1];
+    const middleNames = parts.slice(1, -1);
+
+    // Create middle initials
+    const middleInitials = middleNames.map(n => `${n[0]}.`).join(' ');
+
+    const truncated = `${firstName} ${middleInitials} ${lastName}`;
+
+    // If still too long, just show "First L."
+    if (truncated.length > maxLength) {
+      return `${firstName} ${lastName[0]}.`;
+    }
+
+    return truncated;
   };
 
   // People data with lender and escrow officer
@@ -950,7 +988,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                 {viewMode === 'large' && (
                   <Box
                     sx={{
-                      width: '40%',
+                      width: '60%',
                       flexShrink: 0,
                       background: 'linear-gradient(135deg, rgba(99,102,241,0.02) 0%, rgba(139,92,246,0.03) 100%)',
                       borderRight: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
@@ -1002,8 +1040,8 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                                 <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: people.buyer.color.primary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
                                   {buyers.length > 1 ? `Buyer ${index + 1}` : 'Buyer'}
                                 </Typography>
-                                <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                  {buyer.name}
+                                <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={buyer.name}>
+                                  {truncateName(buyer.name, 28)}
                                 </Typography>
                                 {buyer.company && (
                                   <Typography variant="caption" sx={{ fontSize: 10, color: theme.palette.text.secondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
@@ -1081,8 +1119,8 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                               <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: people.buyerAgent.color.primary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
                                 Buyer Agent
                               </Typography>
-                              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {people.buyerAgent.name}
+                              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={people.buyerAgent.name}>
+                                {truncateName(people.buyerAgent.name, 28)}
                               </Typography>
                               {people.buyerAgent.company && (
                                 <Typography variant="caption" sx={{ fontSize: 10, color: theme.palette.text.secondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
@@ -1122,8 +1160,8 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                               <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: people.lender.color.primary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
                                 Lender
                               </Typography>
-                              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {people.lender.name}
+                              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={people.lender.name}>
+                                {truncateName(people.lender.name, 28)}
                               </Typography>
                               {people.lender.company && (
                                 <Typography variant="caption" sx={{ fontSize: 10, color: theme.palette.text.secondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
@@ -1168,8 +1206,8 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                                 <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: people.seller.color.primary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
                                   {sellers.length > 1 ? `Seller ${index + 1}` : 'Seller'}
                                 </Typography>
-                                <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                  {seller.name}
+                                <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={seller.name}>
+                                  {truncateName(seller.name, 28)}
                                 </Typography>
                                 {seller.company && (
                                   <Typography variant="caption" sx={{ fontSize: 10, color: theme.palette.text.secondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
@@ -1247,8 +1285,8 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                               <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: people.listingAgent.color.primary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
                                 Listing Agent
                               </Typography>
-                              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {people.listingAgent.name}
+                              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={people.listingAgent.name}>
+                                {truncateName(people.listingAgent.name, 28)}
                               </Typography>
                               {people.listingAgent.company && (
                                 <Typography variant="caption" sx={{ fontSize: 10, color: theme.palette.text.secondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
@@ -1288,8 +1326,8 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                               <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: people.escrowOfficer.color.primary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
                                 Escrow Officer
                               </Typography>
-                              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {people.escrowOfficer.name}
+                              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={people.escrowOfficer.name}>
+                                {truncateName(people.escrowOfficer.name, 28)}
                               </Typography>
                               {people.escrowOfficer.company && (
                                 <Typography variant="caption" sx={{ fontSize: 10, color: theme.palette.text.secondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
@@ -1308,7 +1346,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                 {viewMode === 'large' && (
                   <Box
                     sx={{
-                      width: '30%',
+                      width: '20%',
                       flexShrink: 0,
                       background: 'linear-gradient(135deg, rgba(139,92,246,0.02) 0%, rgba(168,85,247,0.03) 100%)',
                       borderRight: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
@@ -1366,7 +1404,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                 {viewMode === 'large' && (
                   <Box
                     sx={{
-                      width: '30%',
+                      width: '20%',
                       flexShrink: 0,
                       background: 'linear-gradient(135deg, rgba(168,85,247,0.02) 0%, rgba(217,70,239,0.03) 100%)',
                       p: 2.5,
