@@ -189,13 +189,12 @@ const PersonRoleContainer = ({
           display: 'flex',
           alignItems: 'center',
           gap: 1,
-          cursor: 'pointer',
+          cursor: hovered ? 'pointer' : 'default',
           p: 0.75,
           borderRadius: 2,
-          height: hovered ? 'auto' : 0,
           opacity: hovered ? 1 : 0,
-          overflow: 'hidden',
-          transition: 'all 0.2s ease-in-out',
+          pointerEvents: hovered ? 'auto' : 'none', // Disable clicks when invisible
+          transition: 'opacity 0.2s ease-in-out',
           '&:hover': {
             background: alpha(color.primary, 0.05),
           },
@@ -232,7 +231,7 @@ const PersonRoleContainer = ({
     );
   };
 
-  // Container with fixed height
+  // Container with fixed height - content shifts internally on hover
   return (
     <Box
       onMouseEnter={() => setHovered(true)}
@@ -242,19 +241,39 @@ const PersonRoleContainer = ({
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
+        overflow: 'hidden', // Prevent content from expanding container
       }}
     >
-      {/* 1 person: Centered + Add button below on hover */}
+      {/* 1 person: Shifts up when Add button appears */}
       {people.length === 1 && (
-        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
+            justifyContent: hovered ? 'flex-start' : 'center',
+            pt: hovered ? 1 : 0,
+            transition: 'all 0.2s ease-in-out',
+          }}
+        >
           {renderPersonCard(people[0], 0)}
           {onAddPerson && renderAddButton()}
         </Box>
       )}
 
-      {/* 2 people: Equal spacing + Add button */}
+      {/* 2 people: Compress spacing when Add button appears */}
       {people.length === 2 && (
-        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 0.5, justifyContent: 'center' }}>
+        <Box
+          sx={{
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
+            gap: hovered ? 0 : 0.5,
+            justifyContent: hovered ? 'flex-start' : 'center',
+            pt: hovered ? 0.5 : 0,
+            transition: 'all 0.2s ease-in-out',
+          }}
+        >
           {renderPersonCard(people[0], 0)}
           {renderPersonCard(people[1], 1)}
           {onAddPerson && renderAddButton()}
