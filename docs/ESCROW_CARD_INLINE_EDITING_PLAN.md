@@ -605,16 +605,16 @@ const handleUpdateEscrow = async (escrowId, updateData) => {
 ### Completed ✅
 - Phase 1: Investigated archive issue
 - Phase 2: Added editing foundation to EscrowCard
+- Phase 3: Created editable field components (EditableTextField, EditableDateField, EditableNumberField)
+- Phase 4: Added inline editing UI for address, price, commission, dates
+- Phase 5: Contact selection modal ✅ **COMPLETE** (October 13, 2025)
+- Phase 7: Wired up dashboard with handleUpdateEscrow
 
 ### In Progress ⏳
-- Phase 3: Creating editable field components
-- Phase 4: Adding inline editing UI
+- Phase 6: Backend JSONB extraction (partially complete - full people object returned)
 
 ### Pending 📋
-- Phase 5: Contact selection modal
-- Phase 6: Backend JSONB extraction
-- Phase 7: Wire up dashboard
-- Phase 8: Testing
+- Phase 8: Testing and validation
 
 ### Estimated Time
 - Phase 3-4: 2-3 hours
