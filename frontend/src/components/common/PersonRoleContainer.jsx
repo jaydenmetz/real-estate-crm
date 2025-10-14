@@ -45,11 +45,12 @@ const PersonRoleContainer = ({
         alignItems: 'center',
         gap: 0.5,
         cursor: 'pointer',
-        p: 0.375,
-        borderRadius: 2,
+        p: 0.75,
+        borderRadius: 3,
+        background: alpha(color.primary, 0.08),
         transition: 'all 0.2s',
         '&:hover': {
-          background: alpha(color.primary, 0.05),
+          background: alpha(color.primary, 0.12),
         },
         ...sx,
       }}
