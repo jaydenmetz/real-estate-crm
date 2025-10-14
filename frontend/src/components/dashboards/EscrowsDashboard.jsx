@@ -1034,11 +1034,13 @@ const EscrowsDashboard = () => {
 
       // Only recalculate stats if the update affects them
       if (affectsStats) {
+        console.log('💰 Stats-affecting update detected:', Object.keys(updateData));
         const optimisticEscrows = escrows.map((e) =>
           e.id === escrowId ? { ...e, ...updateData } : e
         );
         calculateStats(optimisticEscrows, selectedStatus);
         generateChartData(optimisticEscrows);
+        console.log('✅ Stats recalculated immediately (optimistic)');
       }
 
       // Make the API call in the background
@@ -1054,11 +1056,13 @@ const EscrowsDashboard = () => {
 
         // Recalculate stats again with server data if needed
         if (affectsStats) {
+          console.log('💰 Recalculating stats with server response data');
           const finalEscrows = escrows.map((e) =>
             e.id === escrowId ? { ...e, ...response.data } : e
           );
           calculateStats(finalEscrows, selectedStatus);
           generateChartData(finalEscrows);
+          console.log('✅ Stats recalculated with server data');
         }
       } else {
         console.error('Update failed - no success response');
