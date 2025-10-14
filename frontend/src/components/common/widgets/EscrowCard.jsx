@@ -1487,12 +1487,12 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
             'People'
           }
           currentPeople={
-            peopleEditorRole === 'buyer' ? buyers :
-            peopleEditorRole === 'seller' ? sellers :
-            peopleEditorRole === 'buyer_agent' ? [people.buyerAgent] :
-            peopleEditorRole === 'listing_agent' ? [people.listingAgent] :
-            peopleEditorRole === 'lender' ? [people.lender] :
-            peopleEditorRole === 'escrow_officer' ? [people.escrowOfficer] :
+            peopleEditorRole === 'buyer' ? buyers.map((person, idx) => ({ ...person, id: person.id || `buyer-${idx}` })) :
+            peopleEditorRole === 'seller' ? sellers.map((person, idx) => ({ ...person, id: person.id || `seller-${idx}` })) :
+            peopleEditorRole === 'buyer_agent' ? (people.buyerAgent ? [{ ...people.buyerAgent, id: 'buyer-agent-1' }] : []) :
+            peopleEditorRole === 'listing_agent' ? (people.listingAgent ? [{ ...people.listingAgent, id: 'listing-agent-1' }] : []) :
+            peopleEditorRole === 'lender' ? (people.lender ? [{ ...people.lender, id: 'lender-1' }] : []) :
+            peopleEditorRole === 'escrow_officer' ? (people.escrowOfficer ? [{ ...people.escrowOfficer, id: 'escrow-officer-1' }] : []) :
             []
           }
           color={
