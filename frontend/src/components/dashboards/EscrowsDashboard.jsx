@@ -943,6 +943,34 @@ const EscrowsDashboard = () => {
     }
   };
 
+  const handleUpdateEscrow = async (escrowId, updateData) => {
+    try {
+      const response = await escrowsAPI.update(escrowId, updateData);
+      if (response.success && response.data) {
+        // Update local state with the updated escrow
+        setEscrows((prev) =>
+          prev.map((e) =>
+            e.id === escrowId ? { ...e, ...response.data } : e
+          )
+        );
+
+        // Recalculate stats with updated data
+        const updatedEscrows = escrows.map((e) =>
+          e.id === escrowId ? { ...e, ...response.data } : e
+        );
+        calculateStats(updatedEscrows, selectedStatus);
+        generateChartData(updatedEscrows);
+
+        console.log('Escrow updated successfully:', escrowId);
+      } else {
+        console.error('Update failed - no success response');
+      }
+    } catch (error) {
+      console.error('Failed to update escrow:', error);
+      // TODO: Show error toast to user
+    }
+  };
+
   const handlePermanentDelete = async (escrowId, skipConfirmation = false) => {
     // Check if running in test mode (can be set via window or query param)
     const isTestMode = window.location.search.includes('testMode=true') ||
@@ -3160,6 +3188,7 @@ const EscrowsDashboard = () => {
                       animationDuration={animationDuration}
                       animationIntensity={animationIntensity}
                       onArchive={handleArchive}
+                      onUpdate={handleUpdateEscrow}
                       containerHeight={dynamicHeight}
                     />
                   </Box>
@@ -3175,6 +3204,7 @@ const EscrowsDashboard = () => {
                     animationIntensity={animationIntensity}
                     index={index}
                     onArchive={handleArchive}
+                      onUpdate={handleUpdateEscrow}
                   />
                 ));
               }
