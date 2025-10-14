@@ -3230,8 +3230,11 @@ const EscrowsDashboard = () => {
               );
             }
 
-            // Otherwise show regular escrows filtered by status
+            // Otherwise show regular escrows filtered by status (exclude archived)
             const filteredEscrows = escrows.filter(e => {
+              // Filter out archived escrows (those with deleted_at set)
+              if (e.deleted_at || e.deletedAt) return false;
+
               switch (selectedStatus) {
                 case 'active':
                   return e.escrowStatus === 'Active Under Contract' ||
