@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NewEscrowModal from '../forms/NewEscrowModal';
 import EscrowCard from '../common/widgets/EscrowCard';
@@ -428,6 +428,7 @@ const EscrowsDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isConnected, connectionStatus } = useWebSocket();
+  const skipStatsRecalculation = useRef(false); // Ref to prevent unnecessary stats updates
   const [escrows, setEscrows] = useState([]);
   const [archivedEscrows, setArchivedEscrows] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -544,6 +545,12 @@ const EscrowsDashboard = () => {
   }, []);
 
   useEffect(() => {
+    // Skip stats recalculation if we're doing a non-stats update
+    if (skipStatsRecalculation.current) {
+      skipStatsRecalculation.current = false; // Reset flag
+      return;
+    }
+
     if (selectedStatus === 'archived') {
       // Calculate stats for archived escrows (should show 0s when empty)
       calculateStats(archivedEscrows, 'archived');
@@ -963,6 +970,11 @@ const EscrowsDashboard = () => {
         updateData.closing_date !== undefined
       );
 
+      // Set flag to skip stats recalculation in useEffect if this doesn't affect stats
+      if (!affectsStats) {
+        skipStatsRecalculation.current = true;
+      }
+
       // Optimistic update - update UI immediately
       setEscrows((prev) =>
         prev.map((e) =>
@@ -983,6 +995,11 @@ const EscrowsDashboard = () => {
       const response = await escrowsAPI.update(escrowId, updateData);
 
       if (response.success && response.data) {
+        // Set flag again for server response if update doesn't affect stats
+        if (!affectsStats) {
+          skipStatsRecalculation.current = true;
+        }
+
         // Update with server response (in case server modified data)
         setEscrows((prev) =>
           prev.map((e) =>
