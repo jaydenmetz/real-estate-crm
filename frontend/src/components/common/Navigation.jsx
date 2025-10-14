@@ -99,7 +99,6 @@ const EnhancedNavigation = () => {
 
   // Data menu items
   const dataMenuItems = [
-    { path: '/contacts', label: 'Contacts', icon: <People /> },
     { path: '/listings', label: 'Listings', icon: <Home /> },
     { path: '/open-houses', label: 'Open Houses', icon: <Home /> },
     { path: '/lead-sources', label: 'Lead Sources', icon: <TrendingUp /> },
@@ -110,6 +109,7 @@ const EnhancedNavigation = () => {
 
   // People menu items
   const peopleMenuItems = [
+    { path: '/contacts', label: 'Contacts', icon: <People /> },
     { path: '/realtors', label: 'Realtors', icon: <People /> },
     { path: '/loan-officers', label: 'Loan Officers', icon: <People /> },
     { path: '/escrow-officers', label: 'Escrow Officers', icon: <People /> },
