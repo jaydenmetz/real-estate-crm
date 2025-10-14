@@ -955,7 +955,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                   <Box sx={{ display: 'flex', gap: 2.5, pl: 1.5 }}>
                     <Box>
                       <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', mb: 0.25 }}>
-                        DOA
+                        Acceptance
                       </Typography>
                       {onUpdate ? (
                         <EditableDateField
@@ -972,7 +972,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                     </Box>
                     <Box>
                       <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', mb: 0.25 }}>
-                        COE
+                        Close
                       </Typography>
                       {onUpdate ? (
                         <EditableDateField
