@@ -120,7 +120,7 @@ const HeroSection = styled(Box)(({ theme }) => ({
 }));
 
 // Enhanced animated stat card component with new layout structure
-const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, delay = 0, trend, showPrivacy = false, goal }) => {
+const StatCard = React.memo(({ icon: Icon, title, value, prefix = '', suffix = '', color, delay = 0, trend, showPrivacy = false, goal }) => {
   const theme = useTheme();
   const [showValue, setShowValue] = useState(false);
 
