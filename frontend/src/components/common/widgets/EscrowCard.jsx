@@ -896,10 +896,10 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                       } : {},
                     }}
                   >
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: '#4f46e5', mb: 0.25, display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                        Commission
-                      </Typography>
+                    <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: '#4f46e5', mb: 0.25, display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      Commission
+                    </Typography>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                       <Box
                         onClick={(e) => {
                           e.stopPropagation();
@@ -914,6 +914,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                           height: 20,
                           borderRadius: 1,
                           transition: 'all 0.2s',
+                          flexShrink: 0,
                           '&:hover': {
                             background: alpha('#6366f1', 0.1),
                           },
@@ -925,18 +926,18 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                           <Visibility sx={{ fontSize: 14, color: '#6366f1' }} />
                         )}
                       </Box>
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontWeight: 800,
+                          fontSize: '1rem',
+                          color: '#6366f1',
+                          letterSpacing: '-0.5px',
+                        }}
+                      >
+                        {showCommission ? formatCurrency(commission) : maskCommission(commission)}
+                      </Typography>
                     </Box>
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        fontWeight: 800,
-                        fontSize: '1rem',
-                        color: '#6366f1',
-                        letterSpacing: '-0.5px',
-                      }}
-                    >
-                      {showCommission ? formatCurrency(commission) : maskCommission(commission)}
-                    </Typography>
                   </Box>
                 </Box>
 
