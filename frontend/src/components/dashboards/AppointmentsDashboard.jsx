@@ -665,14 +665,14 @@ const AppointmentsDashboard = () => {
 
     // Filter by date range
     const dateFiltered = data.filter(a => {
-      const apptDate = new Date(a.appointmentDate || a.appointment_date);
+      const apptDate = new Date(a.appointment_date || a.appointment_date);
       return apptDate >= startDate && apptDate <= endDate;
     });
 
     // Filter by status
     let filtered = dateFiltered.filter(a => {
-      const apptDate = new Date(a.appointmentDate || a.appointment_date);
-      const status = (a.appointmentStatus || a.appointment_status || '').toLowerCase();
+      const apptDate = new Date(a.appointment_date || a.appointment_date);
+      const status = (a.status || a.appointment_status || '').toLowerCase();
 
       if (statusFilter === 'upcoming') return apptDate >= now && status !== 'cancelled';
       if (statusFilter === 'completed') return status === 'completed';
@@ -681,18 +681,18 @@ const AppointmentsDashboard = () => {
     });
 
     const totalAll = dateFiltered.length;
-    const totalCompleted = dateFiltered.filter(a => (a.appointmentStatus || a.appointment_status || '').toLowerCase() === 'completed').length;
-    const totalCancelled = dateFiltered.filter(a => (a.appointmentStatus || a.appointment_status || '').toLowerCase() === 'cancelled').length;
+    const totalCompleted = dateFiltered.filter(a => (a.status || a.appointment_status || '').toLowerCase() === 'completed').length;
+    const totalCancelled = dateFiltered.filter(a => (a.status || a.appointment_status || '').toLowerCase() === 'cancelled').length;
     const totalUpcoming = dateFiltered.filter(a => {
-      const apptDate = new Date(a.appointmentDate || a.appointment_date);
-      return apptDate >= now && (a.appointmentStatus || a.appointment_status || '').toLowerCase() !== 'cancelled';
+      const apptDate = new Date(a.appointment_date || a.appointment_date);
+      return apptDate >= now && (a.status || a.appointment_status || '').toLowerCase() !== 'cancelled';
     }).length;
 
     // Week calculation
     const oneWeekFromNow = new Date(now);
     oneWeekFromNow.setDate(now.getDate() + 7);
     const thisWeek = dateFiltered.filter(a => {
-      const apptDate = new Date(a.appointmentDate || a.appointment_date);
+      const apptDate = new Date(a.appointment_date || a.appointment_date);
       return apptDate >= now && apptDate <= oneWeekFromNow;
     }).length;
 
@@ -700,15 +700,15 @@ const AppointmentsDashboard = () => {
     const oneMonthFromNow = new Date(now);
     oneMonthFromNow.setDate(now.getDate() + 30);
     const thisMonth = dateFiltered.filter(a => {
-      const apptDate = new Date(a.appointmentDate || a.appointment_date);
+      const apptDate = new Date(a.appointment_date || a.appointment_date);
       return apptDate >= now && apptDate <= oneMonthFromNow;
     }).length;
 
     const completedThisMonth = dateFiltered.filter(a => {
-      const apptDate = new Date(a.appointmentDate || a.appointment_date);
+      const apptDate = new Date(a.appointment_date || a.appointment_date);
       const monthAgo = new Date(now);
       monthAgo.setDate(now.getDate() - 30);
-      return (a.appointmentStatus || a.appointment_status || '').toLowerCase() === 'completed' && apptDate >= monthAgo && apptDate <= now;
+      return (a.status || a.appointment_status || '').toLowerCase() === 'completed' && apptDate >= monthAgo && apptDate <= now;
     }).length;
 
     // Calculate rates
@@ -719,9 +719,9 @@ const AppointmentsDashboard = () => {
 
     // Last minute cancellations (within 24 hours)
     const lastMinuteCancellations = dateFiltered.filter(a => {
-      const apptDate = new Date(a.appointmentDate || a.appointment_date);
+      const apptDate = new Date(a.appointment_date || a.appointment_date);
       const cancelledWithin24h = now - apptDate < 86400000; // 24 hours in ms
-      return (a.appointmentStatus || a.appointment_status || '').toLowerCase() === 'cancelled' && cancelledWithin24h;
+      return (a.status || a.appointment_status || '').toLowerCase() === 'cancelled' && cancelledWithin24h;
     }).length;
 
     // Avg duration (mock calculation)
@@ -2272,14 +2272,14 @@ const AppointmentsDashboard = () => {
 
               // Filter by date range first
               const dateFiltered = appointments.filter(a => {
-                const apptDate = new Date(a.appointmentDate || a.appointment_date);
+                const apptDate = new Date(a.appointment_date || a.appointment_date);
                 return apptDate >= startDate && apptDate <= endDate;
               });
 
               // Then filter by status
               const filtered = dateFiltered.filter(a => {
-                const apptDate = new Date(a.appointmentDate || a.appointment_date);
-                const status = (a.appointmentStatus || a.appointment_status || '').toLowerCase();
+                const apptDate = new Date(a.appointment_date || a.appointment_date);
+                const status = (a.status || a.appointment_status || '').toLowerCase();
 
                 if (selectedStatus === 'upcoming') return apptDate >= now && status !== 'cancelled';
                 if (selectedStatus === 'completed') return status === 'completed';
@@ -2288,11 +2288,11 @@ const AppointmentsDashboard = () => {
               });
 
               const sorted = [...filtered].sort((a, b) => {
-                if (sortBy === 'appointment_date') return new Date(b.appointmentDate || b.appointment_date) - new Date(a.appointmentDate || a.appointment_date);
-                if (sortBy === 'created_at') return new Date(b.createdAt || b.created_at) - new Date(a.createdAt || a.created_at);
-                if (sortBy === 'client_name') return (a.clientName || '').localeCompare(b.clientName || '');
-                if (sortBy === 'appointment_type') return (a.appointmentType || '').localeCompare(b.appointmentType || '');
-                if (sortBy === 'appointment_status') return (a.appointmentStatus || '').localeCompare(b.appointmentStatus || '');
+                if (sortBy === 'appointment_date') return new Date(b.appointment_date || b.appointment_date) - new Date(a.appointment_date || a.appointment_date);
+                if (sortBy === 'created_at') return new Date(b.created_at || b.created_at) - new Date(a.created_at || a.created_at);
+                if (sortBy === 'client_name') return (a.client_name || '').localeCompare(b.client_name || '');
+                if (sortBy === 'appointment_type') return (a.appointment_type || '').localeCompare(b.appointment_type || '');
+                if (sortBy === 'appointment_status') return (a.status || '').localeCompare(b.status || '');
                 return 0;
               });
 
