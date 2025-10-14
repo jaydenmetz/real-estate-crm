@@ -16,9 +16,11 @@ import {
   CircularProgress,
   Button,
   DialogActions,
+  alpha,
 } from '@mui/material';
 import { Search, Add, PersonAdd } from '@mui/icons-material';
 import { contactsAPI } from '../../services/api.service';
+import { NewContactModal } from './NewContactModal';
 
 /**
  * Contact Selection Modal
@@ -41,6 +43,7 @@ export const ContactSelectionModal = ({
   const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [newContactModalOpen, setNewContactModalOpen] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -108,14 +111,16 @@ export const ContactSelectionModal = ({
     }
   };
 
-  const filteredContacts = contacts.filter((contact) => {
-    const query = searchQuery.toLowerCase();
-    return (
-      contact.full_name?.toLowerCase().includes(query) ||
-      contact.email?.toLowerCase().includes(query) ||
-      contact.company_name?.toLowerCase().includes(query)
-    );
-  });
+  const filteredContacts = contacts
+    .filter((contact) => {
+      const query = searchQuery.toLowerCase();
+      return (
+        contact.full_name?.toLowerCase().includes(query) ||
+        contact.email?.toLowerCase().includes(query) ||
+        contact.company_name?.toLowerCase().includes(query)
+      );
+    })
+    .slice(0, 5); // Limit to top 5 results
 
   const getInitials = (name) => {
     if (!name) return '?';
@@ -138,6 +143,33 @@ export const ContactSelectionModal = ({
       escrow_officer: 'Escrow Officer',
     };
     return labels[roleType] || roleType?.replace(/_/g, ' ');
+  };
+
+  const getRoleColor = (roleType) => {
+    const colors = {
+      buyer: { primary: '#10b981', secondary: '#059669' },
+      seller: { primary: '#f59e0b', secondary: '#d97706' },
+      buyer_agent: { primary: '#3b82f6', secondary: '#2563eb' },
+      listing_agent: { primary: '#8b5cf6', secondary: '#7c3aed' },
+      seller_agent: { primary: '#8b5cf6', secondary: '#7c3aed' },
+      lender: { primary: '#ec4899', secondary: '#db2777' },
+      escrow_officer: { primary: '#6366f1', secondary: '#4f46e5' },
+    };
+    return colors[roleType] || { primary: '#6b7280', secondary: '#4b5563' };
+  };
+
+  const handleNewContactSave = async (newContact) => {
+    // Close new contact modal
+    setNewContactModalOpen(false);
+
+    // Add to contacts list
+    setContacts((prev) => [newContact, ...prev]);
+
+    // Auto-select the new contact
+    onSelect(newContact);
+
+    // Close selection modal
+    onClose();
   };
 
   return (
@@ -201,18 +233,22 @@ export const ContactSelectionModal = ({
                 </ListItemAvatar>
                 <ListItemText
                   primary={
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 1 }}>
                       <Typography variant="body1" sx={{ fontWeight: 600 }}>
                         {contact.full_name || 'Unnamed Contact'}
                       </Typography>
                       {contact.roles && contact.roles.length > 0 && (
                         <Chip
-                          label={contact.roles[0].type.replace(/_/g, ' ')}
+                          label={getRoleLabel(contact.roles[0].type)}
                           size="small"
                           sx={{
-                            height: 20,
+                            height: 22,
                             fontSize: '0.7rem',
                             textTransform: 'capitalize',
+                            fontWeight: 600,
+                            background: `linear-gradient(135deg, ${getRoleColor(contact.roles[0].type).primary} 0%, ${getRoleColor(contact.roles[0].type).secondary} 100%)`,
+                            color: 'white',
+                            border: '1px solid rgba(255,255,255,0.3)',
                           }}
                         />
                       )}
@@ -240,7 +276,48 @@ export const ContactSelectionModal = ({
                 />
               </ListItemButton>
             ))}
-            {filteredContacts.length === 0 && (
+
+            {/* Add New Contact - 6th item */}
+            {searchQuery && (
+              <ListItemButton
+                onClick={() => setNewContactModalOpen(true)}
+                sx={{
+                  borderRadius: 2,
+                  mb: 1,
+                  border: '2px dashed',
+                  borderColor: alpha(roleConfig.primary, 0.3),
+                  background: alpha(roleConfig.primary, 0.03),
+                  '&:hover': {
+                    borderColor: roleConfig.primary,
+                    background: alpha(roleConfig.primary, 0.08),
+                  },
+                }}
+              >
+                <ListItemAvatar>
+                  <Avatar
+                    sx={{
+                      background: `linear-gradient(135deg, ${roleConfig.primary} 0%, ${roleConfig.secondary} 100%)`,
+                    }}
+                  >
+                    <Add />
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={
+                    <Typography variant="body1" sx={{ fontWeight: 600, color: roleConfig.primary }}>
+                      Add New Contact
+                    </Typography>
+                  }
+                  secondary={
+                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                      Create a new {getRoleLabel(roleType).toLowerCase()} contact
+                    </Typography>
+                  }
+                />
+              </ListItemButton>
+            )}
+
+            {filteredContacts.length === 0 && !searchQuery && (
               <Box sx={{ py: 4, textAlign: 'center' }}>
                 <Typography variant="body2" color="text.secondary">
                   No contacts found
@@ -256,10 +333,7 @@ export const ContactSelectionModal = ({
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button
           startIcon={<Add />}
-          onClick={() => {
-            // TODO: Open create contact modal
-            console.log('Create new contact clicked');
-          }}
+          onClick={() => setNewContactModalOpen(true)}
           sx={{ mr: 'auto' }}
         >
           Create New
@@ -268,6 +342,15 @@ export const ContactSelectionModal = ({
           Cancel
         </Button>
       </DialogActions>
+
+      {/* New Contact Modal */}
+      <NewContactModal
+        open={newContactModalOpen}
+        onClose={() => setNewContactModalOpen(false)}
+        onSave={handleNewContactSave}
+        roleType={roleType}
+        roleConfig={roleConfig}
+      />
     </Dialog>
   );
 };

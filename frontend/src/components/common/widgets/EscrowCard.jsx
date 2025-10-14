@@ -205,9 +205,13 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
     }
   }, [escrow.id, escrow.people, onUpdate]);
 
-  // ✅ Multiple buyers/sellers handlers
+  // ✅ Multiple buyers/sellers handlers (max 6 each)
   const handleAddBuyer = useCallback(async (e) => {
     e?.stopPropagation();
+    if (buyers.length >= 6) {
+      console.warn('Maximum 6 buyers allowed');
+      return;
+    }
     const newBuyers = [...buyers, { name: 'TBD', email: '', phone: '', company: null }];
     setBuyers(newBuyers);
     await updatePeopleInDatabase(newBuyers, sellers);
@@ -215,6 +219,10 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
 
   const handleAddSeller = useCallback(async (e) => {
     e?.stopPropagation();
+    if (sellers.length >= 6) {
+      console.warn('Maximum 6 sellers allowed');
+      return;
+    }
     const newSellers = [...sellers, { name: 'TBD', email: '', phone: '', company: null }];
     setSellers(newSellers);
     await updatePeopleInDatabase(buyers, newSellers);
@@ -953,10 +961,12 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                     borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
                   }}
                 >
-                  <Box sx={{ display: 'flex', gap: 2.5, pl: 1.5 }}>
-                    <Box>
-                      <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', mb: 0.25 }}>
-                        Acceptance
+                  {/* Dates on one line */}
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, pl: 1.5 }}>
+                    {/* Acceptance Date */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                      <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        Acceptance:
                       </Typography>
                       {onUpdate ? (
                         <EditableDateField
@@ -971,9 +981,11 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                         </Typography>
                       )}
                     </Box>
-                    <Box>
-                      <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', mb: 0.25 }}>
-                        Close
+
+                    {/* Close Date */}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                      <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        Close:
                       </Typography>
                       {onUpdate ? (
                         <EditableDateField
@@ -1150,33 +1162,35 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                             </Box>
                           ))}
 
-                          {/* Add Buyer Button */}
-                          <Box
-                            onClick={handleAddBuyer}
-                            sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              cursor: 'pointer',
-                              mt: -1,
-                              mb: 1,
-                            }}
-                          >
-                            <IconButton
-                              size="small"
+                          {/* Add Buyer Button - Only show if less than 6 buyers */}
+                          {buyers.length < 6 && (
+                            <Box
+                              onClick={handleAddBuyer}
                               sx={{
-                                width: 28,
-                                height: 28,
-                                backgroundColor: alpha(people.buyer.color.primary, 0.1),
-                                color: people.buyer.color.primary,
-                                '&:hover': {
-                                  backgroundColor: alpha(people.buyer.color.primary, 0.2),
-                                },
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                mt: -1,
+                                mb: 1,
                               }}
                             >
-                              <Add sx={{ fontSize: 18 }} />
-                            </IconButton>
-                          </Box>
+                              <IconButton
+                                size="small"
+                                sx={{
+                                  width: 28,
+                                  height: 28,
+                                  backgroundColor: alpha(people.buyer.color.primary, 0.1),
+                                  color: people.buyer.color.primary,
+                                  '&:hover': {
+                                    backgroundColor: alpha(people.buyer.color.primary, 0.2),
+                                  },
+                                }}
+                              >
+                                <Add sx={{ fontSize: 18 }} />
+                              </IconButton>
+                            </Box>
+                          )}
 
                           {/* Buyer Agent */}
                           <Box
@@ -1319,33 +1333,35 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                             </Box>
                           ))}
 
-                          {/* Add Seller Button */}
-                          <Box
-                            onClick={handleAddSeller}
-                            sx={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              cursor: 'pointer',
-                              mt: -1,
-                              mb: 1,
-                            }}
-                          >
-                            <IconButton
-                              size="small"
+                          {/* Add Seller Button - Only show if less than 6 sellers */}
+                          {sellers.length < 6 && (
+                            <Box
+                              onClick={handleAddSeller}
                               sx={{
-                                width: 28,
-                                height: 28,
-                                backgroundColor: alpha(people.seller.color.primary, 0.1),
-                                color: people.seller.color.primary,
-                                '&:hover': {
-                                  backgroundColor: alpha(people.seller.color.primary, 0.2),
-                                },
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                mt: -1,
+                                mb: 1,
                               }}
                             >
-                              <Add sx={{ fontSize: 18 }} />
-                            </IconButton>
-                          </Box>
+                              <IconButton
+                                size="small"
+                                sx={{
+                                  width: 28,
+                                  height: 28,
+                                  backgroundColor: alpha(people.seller.color.primary, 0.1),
+                                  color: people.seller.color.primary,
+                                  '&:hover': {
+                                    backgroundColor: alpha(people.seller.color.primary, 0.2),
+                                  },
+                                }}
+                              >
+                                <Add sx={{ fontSize: 18 }} />
+                              </IconButton>
+                            </Box>
+                          )}
 
                           {/* Listing Agent */}
                           <Box
