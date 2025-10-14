@@ -168,7 +168,7 @@ const PersonRoleContainer = ({
     </Box>
   );
 
-  // Render add button for 1-2 people
+  // Render add button for 1-2 people (shows on hover)
   const renderAddButton = () => (
     <Box
       onClick={(e) => {
@@ -182,6 +182,7 @@ const PersonRoleContainer = ({
         cursor: 'pointer',
         p: 1,
         borderRadius: 2,
+        opacity: hovered ? 1 : 0,
         transition: 'all 0.2s',
         '&:hover': {
           background: alpha(color.primary, 0.05),

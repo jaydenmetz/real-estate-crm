@@ -266,7 +266,7 @@ const TeamManagementModal = ({
       maxWidth="md"
       fullWidth
       PaperProps={{
-        sx={{
+        sx: {
           borderRadius: 3,
           boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
           maxHeight: '90vh',
