@@ -9,6 +9,12 @@ import { Box, Avatar, Typography, useTheme, alpha } from '@mui/material';
  * - 2 people: Shows both cards centered (full width stacked)
  * - 3-6 people: Shows first 2 cards + row of initials for remaining
  *
+ * Features:
+ * - Hover highlighting (background + border)
+ * - Click anywhere to edit people in popup
+ * - Fixed height (no layout shift)
+ * - Role-colored backgrounds
+ *
  * @param {string} roleName - Display name (e.g., "Buyer", "Seller")
  * @param {Array} people - Array of person objects (max 6)
  * @param {Object} color - Color scheme { primary, secondary }
