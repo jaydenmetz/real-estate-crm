@@ -944,10 +944,15 @@ const EscrowsDashboard = () => {
 
   const handleArchive = async (escrowId) => {
     try {
+      console.log('🗄️ Archiving escrow:', escrowId);
       const response = await escrowsAPI.archive(escrowId);
+      console.log('🗄️ Archive API response:', response);
+
       if (response && response.success) {
         // Move escrow from active to archived
         const archivedEscrow = escrows.find(e => e.id === escrowId);
+        console.log('🗄️ Found escrow to archive:', archivedEscrow);
+
         if (archivedEscrow) {
           // Mark as archived
           archivedEscrow.deleted_at = new Date().toISOString();
@@ -960,18 +965,19 @@ const EscrowsDashboard = () => {
           const remainingEscrows = escrows.filter(e => e.id !== escrowId);
           calculateStats(remainingEscrows, selectedStatus);
           generateChartData(remainingEscrows);
+
+          console.log('✅ Escrow archived successfully');
+        } else {
+          console.error('❌ Escrow not found in active escrows array');
         }
       } else {
-        console.error('Archive failed - no success response');
+        console.error('❌ Archive failed - API returned success: false', response);
       }
     } catch (error) {
       // Safely log error - make sure we're not rendering an object
       const errorMessage = error?.message || error?.toString() || 'Unknown error';
-      console.error('Failed to archive escrow:', errorMessage);
-
-      // Optional: Show user-friendly error message
-      // You could set an error state here if you have one
-      console.log('Archive operation failed. Please try again.');
+      console.error('❌ Failed to archive escrow:', errorMessage);
+      console.error('Full error object:', error);
     }
   };
 
