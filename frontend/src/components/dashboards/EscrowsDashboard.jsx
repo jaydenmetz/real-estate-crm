@@ -200,8 +200,8 @@ const StatCard = React.memo(({ icon: Icon, title, value, prefix = '', suffix = '
           </Box>
 
           {/* Middle: Count on left, Icon on right */}
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flex: 1, my: 1 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1, minWidth: 0 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flex: 1, my: 1, gap: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1, minWidth: 0, pr: 1 }}>
               {showPrivacy && (
                 <IconButton
                   size="small"
@@ -238,9 +238,9 @@ const StatCard = React.memo(({ icon: Icon, title, value, prefix = '', suffix = '
                   gap: 0.5,
                   fontSize: 'clamp(1.5rem, 4vw, 2.25rem)',
                   textShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
+                  overflow: 'visible',
+                  flex: 1,
+                  minWidth: 0,
                 }}
               >
                 {showPrivacy && !showValue ? (
@@ -1613,7 +1613,7 @@ const EscrowsDashboard = () => {
                     case 'active':
                       return (
                         <>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                          <Grid item xs={12} sm={6} md={6} xl={4}>
                             <StatCard
                               icon={Home}
                               title="Total Active Escrows"
@@ -1623,7 +1623,7 @@ const EscrowsDashboard = () => {
                               goal={15}
                             />
                           </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                          <Grid item xs={12} sm={6} md={6} xl={4}>
                             <StatCard
                               icon={Schedule}
                               title="Escrows This Month"
@@ -1633,7 +1633,7 @@ const EscrowsDashboard = () => {
                               goal={5}
                             />
                           </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                          <Grid item xs={12} sm={6} md={6} xl={4}>
                             <StatCard
                               icon={TrendingUp}
                               title="Total Volume"
@@ -1645,7 +1645,7 @@ const EscrowsDashboard = () => {
                               goal={5000000}
                             />
                           </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                          <Grid item xs={12} sm={6} md={6} xl={4}>
                             <StatCard
                               icon={AttachMoney}
                               title="Total Commission"
@@ -1664,7 +1664,7 @@ const EscrowsDashboard = () => {
                 case 'closed':
                   return (
                     <>
-                      <Grid item xs={12} sm={6} md={6} xl={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={4}>
                         <StatCard
                           icon={CheckCircle}
                           title="Total Closed Escrows"
@@ -1674,7 +1674,7 @@ const EscrowsDashboard = () => {
                           goal={50}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6} md={6} xl={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={4}>
                         <StatCard
                           icon={CalendarToday}
                           title="Closed This Year"
@@ -1684,7 +1684,7 @@ const EscrowsDashboard = () => {
                           goal={60}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6} md={6} xl={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={4}>
                         <StatCard
                           icon={TrendingUp}
                           title="Total Volume"
@@ -1696,7 +1696,7 @@ const EscrowsDashboard = () => {
                           goal={20000000}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6} md={6} xl={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={4}>
                         <StatCard
                           icon={AttachMoney}
                           title="Total Commission"
@@ -1715,7 +1715,7 @@ const EscrowsDashboard = () => {
                 case 'cancelled':
                   return (
                     <>
-                      <Grid item xs={12} sm={6} md={6} xl={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={4}>
                         <StatCard
                           icon={ErrorIcon}
                           title="Total Cancelled Escrows"
@@ -1725,7 +1725,7 @@ const EscrowsDashboard = () => {
                           goal={5}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6} md={6} xl={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={4}>
                         <StatCard
                           icon={Assessment}
                           title="Cancellation Rate"
@@ -1736,7 +1736,7 @@ const EscrowsDashboard = () => {
                           goal={10}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6} md={6} xl={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={4}>
                         <StatCard
                           icon={TrendingUp}
                           title="Total Volume"
@@ -1748,7 +1748,7 @@ const EscrowsDashboard = () => {
                           goal={1000000}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6} md={6} xl={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={4}>
                         <StatCard
                           icon={AttachMoney}
                           title="Total Commission"
@@ -1767,7 +1767,7 @@ const EscrowsDashboard = () => {
                 case 'archived':
                   return (
                     <>
-                      <Grid item xs={12} sm={6} md={6} xl={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={4}>
                         <StatCard
                           icon={ArchiveIcon}
                           title="Total Archived Escrows"
@@ -1776,7 +1776,7 @@ const EscrowsDashboard = () => {
                           delay={0}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6} md={6} xl={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={4}>
                         <StatCard
                           icon={Storage}
                           title="Max Archived"
@@ -1785,7 +1785,7 @@ const EscrowsDashboard = () => {
                           delay={1}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6} md={6} xl={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={4}>
                         <StatCard
                           icon={TrendingUp}
                           title="Total Volume"
@@ -1796,7 +1796,7 @@ const EscrowsDashboard = () => {
                           delay={2}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6} md={6} xl={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={4}>
                         <StatCard
                           icon={AttachMoney}
                           title="Total Commission"
@@ -1814,7 +1814,7 @@ const EscrowsDashboard = () => {
                 case 'all':
                   return (
                     <>
-                      <Grid item xs={12} sm={6} md={6} xl={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={4}>
                         <StatCard
                           icon={Home}
                           title="Total Escrows"
@@ -1823,7 +1823,7 @@ const EscrowsDashboard = () => {
                           delay={0}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6} md={6} xl={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={4}>
                         <StatCard
                           icon={CheckCircle}
                           title="Active"
@@ -1832,7 +1832,7 @@ const EscrowsDashboard = () => {
                           delay={1}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6} md={6} xl={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={4}>
                         <StatCard
                           icon={TrendingUp}
                           title="Total Volume"
@@ -1843,7 +1843,7 @@ const EscrowsDashboard = () => {
                           delay={2}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6} md={6} xl={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={4}>
                         <StatCard
                           icon={AttachMoney}
                           title="Total Commission"
@@ -1861,7 +1861,7 @@ const EscrowsDashboard = () => {
                 default:
                   return (
                     <>
-                      <Grid item xs={12} sm={6} md={6} xl={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={4}>
                         <StatCard
                           icon={Home}
                           title="Total Escrows"
@@ -1870,7 +1870,7 @@ const EscrowsDashboard = () => {
                           delay={0}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6} md={6} xl={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={4}>
                         <StatCard
                           icon={CheckCircle}
                           title="Active Escrows"
@@ -1879,7 +1879,7 @@ const EscrowsDashboard = () => {
                           delay={1}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6} md={6} xl={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={4}>
                         <StatCard
                           icon={TrendingUp}
                           title="Total Volume"
@@ -1890,7 +1890,7 @@ const EscrowsDashboard = () => {
                           delay={2}
                         />
                       </Grid>
-                      <Grid item xs={12} sm={6} md={6} xl={3}>
+                      <Grid item xs={12} sm={6} md={6} xl={4}>
                         <StatCard
                           icon={AttachMoney}
                           title="Total Commission"
