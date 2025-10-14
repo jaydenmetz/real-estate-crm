@@ -264,6 +264,9 @@ const PersonRoleContainer = ({
               onMouseLeave={() => setAddButtonHovered(false)}
               sx={{
                 flexShrink: 0, // Don't compress button area
+                flex: 1, // Expand to fill all remaining space
+                display: 'flex',
+                alignItems: 'flex-end', // Button appears at bottom
               }}
             >
               {renderAddButton()}
@@ -292,6 +295,9 @@ const PersonRoleContainer = ({
               onMouseLeave={() => setAddButtonHovered(false)}
               sx={{
                 flexShrink: 0, // Don't compress button area
+                flex: 1, // Expand to fill all remaining space
+                display: 'flex',
+                alignItems: 'flex-end', // Button appears at bottom
               }}
             >
               {renderAddButton()}
