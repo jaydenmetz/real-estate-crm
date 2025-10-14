@@ -20,20 +20,20 @@ exports.getAppointments = async (req, res) => {
 
     // Date range filter
     if (startDate) {
-      whereConditions.push(`appointment_date >= $${paramIndex}`);
+      whereConditions.push(`a.appointment_date >= $${paramIndex}`);
       queryParams.push(startDate);
       paramIndex++;
     }
 
     if (endDate) {
-      whereConditions.push(`appointment_date <= $${paramIndex}`);
+      whereConditions.push(`a.appointment_date <= $${paramIndex}`);
       queryParams.push(endDate);
       paramIndex++;
     }
 
     // Status filter
     if (status) {
-      whereConditions.push(`status = $${paramIndex}`);
+      whereConditions.push(`a.status = $${paramIndex}`);
       queryParams.push(status);
       paramIndex++;
     }
@@ -45,19 +45,19 @@ exports.getAppointments = async (req, res) => {
 
     if (scope === 'user') {
       // User scope: Show only records created by this user
-      whereConditions.push(`agent_id = $${paramIndex}`);
+      whereConditions.push(`a.agent_id = $${paramIndex}`);
       queryParams.push(userId);
       paramIndex++;
     } else if (scope === 'team') {
       // Team scope: Show all records for this team (default behavior)
-      whereConditions.push(`(team_id = $${paramIndex} OR team_id IS NULL)`);
+      whereConditions.push(`(a.team_id = $${paramIndex} OR team_id IS NULL)`);
       queryParams.push(teamId);
       paramIndex++;
     } else if (scope === 'brokerage') {
       // Brokerage scope: Show all records across all teams under the same broker
       // First, get the broker_id from the user's team
       const brokerQuery = await pool.query(
-        'SELECT broker_id FROM teams WHERE team_id = $1',
+        'SELECT broker_id FROM teams WHERE a.team_id = $1',
         [teamId]
       );
 
@@ -79,7 +79,7 @@ exports.getAppointments = async (req, res) => {
         }
       } else {
         // If no broker_id found, fall back to team scope
-        whereConditions.push(`(team_id = $${paramIndex} OR team_id IS NULL)`);
+        whereConditions.push(`(a.team_id = $${paramIndex} OR team_id IS NULL)`);
         queryParams.push(teamId);
         paramIndex++;
       }
@@ -88,16 +88,21 @@ exports.getAppointments = async (req, res) => {
     const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
 
     // Query for total count
-    const countQuery = `SELECT COUNT(*) as count FROM appointments ${whereClause}`;
+    const countQuery = `SELECT COUNT(*) as count FROM appointments a ${whereClause}`;
     const countResult = await pool.query(countQuery, queryParams);
     const totalCount = parseInt(countResult.rows[0].count);
 
-    // Query for paginated data
+    // Query for paginated data (JOIN with clients and contacts to get client_name)
     queryParams.push(limit, offset);
     const dataQuery = `
-      SELECT * FROM appointments
+      SELECT
+        a.*,
+        COALESCE(c.full_name, c.first_name || ' ' || c.last_name) AS client_name
+      FROM appointments a
+      LEFT JOIN clients cl ON a.client_id = cl.id
+      LEFT JOIN contacts c ON cl.contact_id = c.id
       ${whereClause}
-      ORDER BY appointment_date DESC, start_time DESC
+      ORDER BY a.appointment_date DESC, a.start_time DESC
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
     const dataResult = await pool.query(dataQuery, queryParams);
