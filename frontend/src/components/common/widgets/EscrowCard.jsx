@@ -500,7 +500,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
     lender: {
       name: escrow.lender_name || 'TBD',
       company: escrow.lender_company || 'TBD',
-      color: { primary: '#14b8a6', secondary: '#0d9488' }
+      color: { primary: '#3b82f6', secondary: '#2563eb' }
     },
     seller: {
       name: escrow.seller_name || 'TBD',
