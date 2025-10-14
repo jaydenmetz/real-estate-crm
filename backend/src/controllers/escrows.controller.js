@@ -290,6 +290,14 @@ class EscrowController {
           people->'seller'->>'email' as seller_email,
           people->'buyer_agent'->>'name' as buyer_agent_name,
           people->'seller_agent'->>'name' as listing_agent_name,
+          people->'lender'->>'name' as lender_name,
+          people->'lender'->>'email' as lender_email,
+          people->'lender'->>'phone' as lender_phone,
+          people->'lender'->>'company' as lender_company,
+          people->'escrow_officer'->>'name' as escrow_officer_name,
+          people->'escrow_officer'->>'email' as escrow_officer_email,
+          people->'escrow_officer'->>'phone' as escrow_officer_phone,
+          people->'escrow_officer'->>'company' as escrow_company,
           checklists,
           timeline
         FROM escrows e
@@ -620,8 +628,18 @@ class EscrowController {
         if (key !== 'id' && key !== 'display_id' && key !== 'created_at') {
           // Use snake_case field name for database, but keep the value
           const dbFieldName = fieldMapping[key] || key;
+
+          // Handle JSONB fields - stringify objects if needed
+          let value = updates[key];
+          if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+            // For JSONB fields like people, checklists, timeline
+            if (['people', 'checklists', 'timeline'].includes(dbFieldName)) {
+              value = JSON.stringify(value);
+            }
+          }
+
           updateFields.push(`${dbFieldName} = $${paramIndex}`);
-          values.push(updates[key]);
+          values.push(value);
           paramIndex++;
         }
       });

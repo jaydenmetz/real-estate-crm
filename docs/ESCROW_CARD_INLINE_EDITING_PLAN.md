@@ -608,10 +608,12 @@ const handleUpdateEscrow = async (escrowId, updateData) => {
 - Phase 3: Created editable field components (EditableTextField, EditableDateField, EditableNumberField)
 - Phase 4: Added inline editing UI for address, price, commission, dates
 - Phase 5: Contact selection modal ✅ **COMPLETE** (October 13, 2025)
+- Phase 6: Backend JSONB extraction ✅ **COMPLETE** (October 13, 2025)
+  - Extract lender fields (name, email, phone, company)
+  - Extract escrow officer fields (name, email, phone, company)
+  - JSONB stringify handling in updateEscrow endpoint
+  - Dedicated /v1/escrows/:id/people endpoint
 - Phase 7: Wired up dashboard with handleUpdateEscrow
-
-### In Progress ⏳
-- Phase 6: Backend JSONB extraction (partially complete - full people object returned)
 
 ### Pending 📋
 - Phase 8: Testing and validation
