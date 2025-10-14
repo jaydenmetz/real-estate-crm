@@ -45,12 +45,11 @@ const PersonRoleContainer = ({
         alignItems: 'center',
         gap: 0.5,
         cursor: 'pointer',
-        p: 0.75,
-        borderRadius: 3,
-        background: alpha(color.primary, 0.08),
+        p: 0.375,
+        borderRadius: 2,
         transition: 'all 0.2s',
         '&:hover': {
-          background: alpha(color.primary, 0.12),
+          background: alpha(color.primary, 0.08),
         },
         ...sx,
       }}
@@ -235,7 +234,7 @@ const PersonRoleContainer = ({
     );
   };
 
-  // Container with fixed height - content shifts internally on hover
+  // Container with fixed height and role-colored background
   return (
     <Box
       sx={{
@@ -244,6 +243,9 @@ const PersonRoleContainer = ({
         flexDirection: 'column',
         position: 'relative',
         overflow: 'hidden', // Prevent content from expanding container
+        background: alpha(color.primary, 0.06),
+        borderRadius: 3,
+        p: 1,
       }}
     >
       {/* 1 person: Fixed height with button space always reserved */}
