@@ -957,105 +957,107 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                     alignItems: 'center',
                     mt: 'auto',
                     pt: 1,
-                    px: 0.5,
+                    px: 1,
                     borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
                   }}
                 >
-                  {/* Dates - labels above, dates on one line */}
-                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 3, pl: 1.5 }}>
-                    {/* Acceptance Date */}
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
-                      <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                        Acceptance
+                  {/* Acceptance Date - 3/8 width */}
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, width: '37.5%' }}>
+                    <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      Acceptance
+                    </Typography>
+                    {onUpdate ? (
+                      <EditableDateField
+                        value={acceptanceDate}
+                        onSave={(newValue) => onUpdate(escrow.id, { acceptance_date: newValue })}
+                        variant="body2"
+                        sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, whiteSpace: 'nowrap' }}
+                      />
+                    ) : (
+                      <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, whiteSpace: 'nowrap' }}>
+                        {formatDate(acceptanceDate) || 'TBD'}
                       </Typography>
-                      {onUpdate ? (
-                        <EditableDateField
-                          value={acceptanceDate}
-                          onSave={(newValue) => onUpdate(escrow.id, { acceptance_date: newValue })}
-                          variant="body2"
-                          sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, whiteSpace: 'nowrap' }}
-                        />
-                      ) : (
-                        <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, whiteSpace: 'nowrap' }}>
-                          {formatDate(acceptanceDate) || 'TBD'}
-                        </Typography>
-                      )}
-                    </Box>
-
-                    {/* Close Date */}
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
-                      <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                        Close
-                      </Typography>
-                      {onUpdate ? (
-                        <EditableDateField
-                          value={closingDate}
-                          onSave={(newValue) => onUpdate(escrow.id, { closing_date: newValue })}
-                          variant="body2"
-                          sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, whiteSpace: 'nowrap' }}
-                        />
-                      ) : (
-                        <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, whiteSpace: 'nowrap' }}>
-                          {formatDate(closingDate) || 'TBD'}
-                        </Typography>
-                      )}
-                    </Box>
+                    )}
                   </Box>
 
-                  {/* Days Badge */}
-                  {escrow.escrow_status === 'Closed' ? (
-                    <Box sx={{
-                      display: 'flex', alignItems: 'center', gap: 0.75,
-                      px: 2, py: 1, borderRadius: 2,
-                      background: 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(5,150,105,0.15) 100%)',
-                      border: `1px solid ${alpha('#10b981', 0.2)}`,
-                    }}>
-                      <CheckCircle sx={{ fontSize: 18, color: '#10b981' }} />
-                      <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: '#10b981' }}>
-                        Closed
-                      </Typography>
-                    </Box>
-                  ) : escrow.escrow_status === 'Cancelled' ? (
-                    <Box sx={{
-                      display: 'flex', alignItems: 'center', gap: 0.75,
-                      px: 2, py: 1, borderRadius: 2,
-                      background: 'linear-gradient(135deg, rgba(239,68,68,0.1) 0%, rgba(220,38,38,0.15) 100%)',
-                      border: `1px solid ${alpha('#ef4444', 0.2)}`,
-                    }}>
-                      <Cancel sx={{ fontSize: 18, color: '#ef4444' }} />
-                      <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: '#ef4444' }}>
-                        Cancelled
-                      </Typography>
-                    </Box>
-                  ) : daysToClose !== null ? (
-                    <Box
-                      sx={{
-                        px: 2,
-                        py: 1,
-                        borderRadius: 2,
-                        background: isPastDue
-                          ? 'linear-gradient(135deg, rgba(239,68,68,0.1) 0%, rgba(220,38,38,0.15) 100%)'
-                          : isUrgent
-                          ? 'linear-gradient(135deg, rgba(245,158,11,0.1) 0%, rgba(217,119,6,0.15) 100%)'
-                          : 'linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(37,99,235,0.15) 100%)',
-                        border: `1px solid ${alpha(
-                          isPastDue ? '#ef4444' : isUrgent ? '#f59e0b' : '#3b82f6',
-                          0.2
-                        )}`,
-                      }}
-                    >
-                      <Typography
+                  {/* Close Date - 3/8 width */}
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, width: '37.5%' }}>
+                    <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      Close
+                    </Typography>
+                    {onUpdate ? (
+                      <EditableDateField
+                        value={closingDate}
+                        onSave={(newValue) => onUpdate(escrow.id, { closing_date: newValue })}
                         variant="body2"
+                        sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, whiteSpace: 'nowrap' }}
+                      />
+                    ) : (
+                      <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, whiteSpace: 'nowrap' }}>
+                        {formatDate(closingDate) || 'TBD'}
+                      </Typography>
+                    )}
+                  </Box>
+
+                  {/* Days Badge - 1/4 width */}
+                  <Box sx={{ width: '25%', display: 'flex', justifyContent: 'flex-end' }}>
+                    {escrow.escrow_status === 'Closed' ? (
+                      <Box sx={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5,
+                        px: 1.5, py: 0.75, borderRadius: 2,
+                        background: 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(5,150,105,0.15) 100%)',
+                        border: `1px solid ${alpha('#10b981', 0.2)}`,
+                      }}>
+                        <CheckCircle sx={{ fontSize: 16, color: '#10b981' }} />
+                        <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.75rem', color: '#10b981' }}>
+                          Closed
+                        </Typography>
+                      </Box>
+                    ) : escrow.escrow_status === 'Cancelled' ? (
+                      <Box sx={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5,
+                        px: 1.5, py: 0.75, borderRadius: 2,
+                        background: 'linear-gradient(135deg, rgba(239,68,68,0.1) 0%, rgba(220,38,38,0.15) 100%)',
+                        border: `1px solid ${alpha('#ef4444', 0.2)}`,
+                      }}>
+                        <Cancel sx={{ fontSize: 16, color: '#ef4444' }} />
+                        <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.75rem', color: '#ef4444' }}>
+                          Cancelled
+                        </Typography>
+                      </Box>
+                    ) : daysToClose !== null ? (
+                      <Box
                         sx={{
-                          fontWeight: 700,
-                          fontSize: '0.875rem',
-                          color: isPastDue ? '#ef4444' : isUrgent ? '#f59e0b' : '#3b82f6',
+                          px: 1.5,
+                          py: 0.75,
+                          borderRadius: 2,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: isPastDue
+                            ? 'linear-gradient(135deg, rgba(239,68,68,0.1) 0%, rgba(220,38,38,0.15) 100%)'
+                            : isUrgent
+                            ? 'linear-gradient(135deg, rgba(245,158,11,0.1) 0%, rgba(217,119,6,0.15) 100%)'
+                            : 'linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(37,99,235,0.15) 100%)',
+                          border: `1px solid ${alpha(
+                            isPastDue ? '#ef4444' : isUrgent ? '#f59e0b' : '#3b82f6',
+                            0.2
+                          )}`,
                         }}
                       >
-                        {isPastDue ? `${Math.abs(daysToClose)}d late` : `${daysToClose}d`}
-                      </Typography>
-                    </Box>
-                  ) : null}
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontWeight: 700,
+                            fontSize: '0.875rem',
+                            color: isPastDue ? '#ef4444' : isUrgent ? '#f59e0b' : '#3b82f6',
+                          }}
+                        >
+                          {isPastDue ? `${Math.abs(daysToClose)}d late` : `${daysToClose}d`}
+                        </Typography>
+                      </Box>
+                    ) : null}
+                  </Box>
                 </Box>
               </CardContent>
             </Box>

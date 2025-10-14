@@ -1033,6 +1033,24 @@ const EscrowsDashboard = () => {
 
   const handleUpdateEscrow = async (escrowId, updateData) => {
     try {
+      // Normalize field names (convert snake_case to camelCase for consistency)
+      const normalizedData = { ...updateData };
+      if (updateData.escrow_status !== undefined) {
+        normalizedData.escrowStatus = updateData.escrow_status;
+      }
+      if (updateData.purchase_price !== undefined) {
+        normalizedData.purchasePrice = updateData.purchase_price;
+      }
+      if (updateData.my_commission !== undefined) {
+        normalizedData.myCommission = updateData.my_commission;
+      }
+      if (updateData.closing_date !== undefined) {
+        normalizedData.closingDate = updateData.closing_date;
+      }
+      if (updateData.acceptance_date !== undefined) {
+        normalizedData.acceptanceDate = updateData.acceptance_date;
+      }
+
       // Determine if this update affects stats/charts
       const affectsStats = Boolean(
         updateData.purchase_price !== undefined ||
@@ -1049,10 +1067,10 @@ const EscrowsDashboard = () => {
         console.log('🚫 Non-stats update detected, skip counter set to:', skipStatsRecalculation.current);
       }
 
-      // Optimistic update - update UI immediately
+      // Optimistic update - update UI immediately with normalized data
       setEscrows((prev) =>
         prev.map((e) =>
-          e.id === escrowId ? { ...e, ...updateData } : e
+          e.id === escrowId ? { ...e, ...normalizedData } : e
         )
       );
 
@@ -1060,7 +1078,7 @@ const EscrowsDashboard = () => {
       if (affectsStats) {
         console.log('💰 Stats-affecting update detected:', Object.keys(updateData));
         const optimisticEscrows = escrows.map((e) =>
-          e.id === escrowId ? { ...e, ...updateData } : e
+          e.id === escrowId ? { ...e, ...normalizedData } : e
         );
         calculateStats(optimisticEscrows, selectedStatus);
         generateChartData(optimisticEscrows);
