@@ -299,7 +299,8 @@ class EscrowController {
           people->'escrow_officer'->>'phone' as escrow_officer_phone,
           people->'escrow_officer'->>'company' as escrow_company,
           checklists,
-          timeline
+          timeline,
+          deleted_at
         FROM escrows e
         WHERE ${whereClause}
         ORDER BY ${sort} ${order.toUpperCase()}

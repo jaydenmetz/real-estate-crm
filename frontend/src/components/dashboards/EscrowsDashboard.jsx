@@ -715,39 +715,39 @@ const EscrowsDashboard = () => {
         const totalRecords = pagination.total || allData.length;
         const hasMore = pageNum < totalPages;
 
-        // Separate active and archived escrows based on deleted_at field
-        // Check both top-level and details.deletedAt for flexibility
-        const escrowData = allData.filter(escrow =>
-          !escrow.deleted_at &&
-          !escrow.deletedAt &&
-          !escrow.details?.deletedAt
-        );
-        const archivedData = allData.filter(escrow =>
-          escrow.deleted_at ||
-          escrow.deletedAt ||
-          escrow.details?.deletedAt
-        );
+        // Backend now handles filtering by selectedStatus, so we just use the data as-is
+        // If viewing archived, allData will be archived escrows
+        // If viewing active/closed/cancelled/all, allData will be non-archived escrows
+        const isViewingArchived = selectedStatus === 'archived';
 
-        console.log(`Page ${pageNum}/${totalPages} - Total: ${totalRecords}, Loaded: ${allData.length}, Active: ${escrowData.length}, Archived: ${archivedData.length}`);
+        console.log(`Page ${pageNum}/${totalPages} - Total: ${totalRecords}, Loaded: ${allData.length}, Status: ${selectedStatus}`);
 
         // Update state based on whether we're appending or replacing
         if (appendData) {
-          setEscrows(prev => [...prev, ...escrowData]);
-          setArchivedEscrows(prev => [...prev, ...archivedData]);
+          if (isViewingArchived) {
+            setArchivedEscrows(prev => [...prev, ...allData]);
+          } else {
+            setEscrows(prev => [...prev, ...allData]);
+          }
         } else {
-          setEscrows(escrowData);
-          setArchivedEscrows(archivedData);
+          if (isViewingArchived) {
+            setArchivedEscrows(allData);
+            setEscrows([]); // Clear active escrows when viewing archived
+          } else {
+            setEscrows(allData);
+            setArchivedEscrows([]); // Clear archived when viewing active
+          }
         }
 
         // Update pagination state
         setCurrentPage(pageNum);
         setHasMorePages(hasMore);
         setTotalCount(totalRecords);
-        setArchivedCount(archivedData.length);
+        setArchivedCount(isViewingArchived ? totalRecords : 0);
 
         // Calculate stats from currently loaded data only
         // This allows instant display without waiting for all pages
-        const currentEscrows = appendData ? [...escrows, ...escrowData] : escrowData;
+        const currentEscrows = isViewingArchived ? [] : (appendData ? [...escrows, ...allData] : allData);
         calculateStats(currentEscrows, selectedStatus);
         generateChartData(currentEscrows);
       } else {
