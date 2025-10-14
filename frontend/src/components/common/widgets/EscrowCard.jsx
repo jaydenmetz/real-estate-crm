@@ -36,6 +36,7 @@ import { getStatusConfig } from '../../../constants/escrowConfig';
 import { EditableTextField } from '../EditableTextField';
 import { EditableDateField } from '../EditableDateField';
 import { EditableNumberField } from '../EditableNumberField';
+import { ContactSelectionModal } from '../../modals/ContactSelectionModal';
 
 const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'spring', animationDuration = 1, animationIntensity = 1, index = 0, onArchive, onDelete, onRestore, isArchived = false, onUpdate }) => {
   const navigate = useNavigate();
@@ -71,6 +72,11 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
 
   const [buyers, setBuyers] = useState(initializeBuyers());
   const [sellers, setSellers] = useState(initializeSellers());
+
+  // Contact selection modal state
+  const [contactModalOpen, setContactModalOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState(null);
+  const [selectedRoleIndex, setSelectedRoleIndex] = useState(null);
 
   // Sync state when escrow data changes from parent
   useEffect(() => {
@@ -217,6 +223,61 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
       await updatePeopleInDatabase(buyers, newSellers);
     }
   }, [buyers, sellers, updatePeopleInDatabase]);
+
+  // ✅ Contact selection modal handlers
+  const handlePersonClick = useCallback((role, roleConfig, index = null, e) => {
+    e?.stopPropagation();
+    setSelectedRole({ type: role, config: roleConfig });
+    setSelectedRoleIndex(index);
+    setContactModalOpen(true);
+  }, []);
+
+  const handleContactSelect = useCallback(async (contact) => {
+    if (!onUpdate || !selectedRole) return;
+
+    try {
+      const roleType = selectedRole.type;
+
+      // Update based on role type
+      if (roleType === 'buyer' && selectedRoleIndex !== null) {
+        const newBuyers = [...buyers];
+        newBuyers[selectedRoleIndex] = {
+          name: contact.full_name,
+          email: contact.email,
+          phone: contact.phone,
+          company: contact.company_name,
+        };
+        setBuyers(newBuyers);
+        await updatePeopleInDatabase(newBuyers, sellers);
+      } else if (roleType === 'seller' && selectedRoleIndex !== null) {
+        const newSellers = [...sellers];
+        newSellers[selectedRoleIndex] = {
+          name: contact.full_name,
+          email: contact.email,
+          phone: contact.phone,
+          company: contact.company_name,
+        };
+        setSellers(newSellers);
+        await updatePeopleInDatabase(buyers, newSellers);
+      } else {
+        // For single-person roles (agents, lender, escrow officer)
+        const updatedPeople = {
+          ...escrow.people,
+          [roleType]: {
+            name: contact.full_name,
+            email: contact.email,
+            phone: contact.phone,
+            company: contact.company_name,
+          },
+        };
+        await onUpdate(escrow.id, { people: updatedPeople });
+      }
+
+      setContactModalOpen(false);
+    } catch (error) {
+      console.error('Failed to update contact:', error);
+    }
+  }, [selectedRole, selectedRoleIndex, buyers, sellers, escrow.id, escrow.people, onUpdate, updatePeopleInDatabase]);
 
   // ✅ Status configuration (constant lookup, no object creation)
   const statusConfig = getStatusConfig(escrow.escrow_status);
@@ -1012,6 +1073,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                           {buyers.map((buyer, index) => (
                             <Box
                               key={`buyer-${index}`}
+                              onClick={(e) => handlePersonClick('buyer', people.buyer.color, index, e)}
                               sx={{
                                 display: 'flex',
                                 alignItems: 'center',
@@ -1091,6 +1153,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
 
                           {/* Buyer Agent */}
                           <Box
+                            onClick={(e) => handlePersonClick('buyer_agent', people.buyerAgent.color, null, e)}
                             sx={{
                               display: 'flex',
                               alignItems: 'center',
@@ -1132,6 +1195,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
 
                           {/* Lender */}
                           <Box
+                            onClick={(e) => handlePersonClick('lender', people.lender.color, null, e)}
                             sx={{
                               display: 'flex',
                               alignItems: 'center',
@@ -1178,6 +1242,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                           {sellers.map((seller, index) => (
                             <Box
                               key={`seller-${index}`}
+                              onClick={(e) => handlePersonClick('seller', people.seller.color, index, e)}
                               sx={{
                                 display: 'flex',
                                 alignItems: 'center',
@@ -1257,6 +1322,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
 
                           {/* Listing Agent */}
                           <Box
+                            onClick={(e) => handlePersonClick('listing_agent', people.listingAgent.color, null, e)}
                             sx={{
                               display: 'flex',
                               alignItems: 'center',
@@ -1298,6 +1364,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
 
                           {/* Escrow Officer */}
                           <Box
+                            onClick={(e) => handlePersonClick('escrow_officer', people.escrowOfficer.color, null, e)}
                             sx={{
                               display: 'flex',
                               alignItems: 'center',
@@ -1455,6 +1522,15 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
             </Box>
           )}
       </Box>
+
+      {/* Contact Selection Modal */}
+      <ContactSelectionModal
+        open={contactModalOpen}
+        onClose={() => setContactModalOpen(false)}
+        onSelect={handleContactSelect}
+        roleType={selectedRole?.type}
+        roleConfig={selectedRole?.config || { primary: '#6366f1', secondary: '#8b5cf6' }}
+      />
     </Box>
   );
 }, (prevProps, nextProps) => {

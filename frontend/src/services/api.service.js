@@ -530,6 +530,16 @@ export const settingsAPI = {
   toggleTheme: () => apiInstance.post('/settings/theme/toggle')
 };
 
+// Contacts API
+export const contactsAPI = {
+  getAll: (params) => apiInstance.get('/contacts', { params }),
+  getById: (id) => apiInstance.get(`/contacts/${id}`),
+  create: (data) => apiInstance.post('/contacts', data),
+  update: (id, data) => apiInstance.put(`/contacts/${id}`, data),
+  delete: (id) => apiInstance.delete(`/contacts/${id}`),
+  search: (query) => apiInstance.get('/contacts/search', { params: { q: query } }),
+};
+
 // API Keys API
 export const apiKeysAPI = {
   getAll: () => apiInstance.get('/api-keys'),
@@ -571,6 +581,7 @@ export const api = {
   webhooksAPI,
   profilesAPI,
   settingsAPI,
+  contactsAPI,
   apiKeysAPI,
   // Include the raw instance methods for flexibility
   get: (...args) => apiInstance.get(...args),
