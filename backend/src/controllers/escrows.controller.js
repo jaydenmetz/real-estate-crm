@@ -159,7 +159,7 @@ class EscrowController {
 
       if (scope === 'user') {
         // User scope: Show only records created by this user
-        whereConditions.push(`e.user_id = $${paramIndex}`);
+        whereConditions.push(`e.created_by = $${paramIndex}`);
         queryParams.push(userId);
         paramIndex++;
       } else if (scope === 'team') {
