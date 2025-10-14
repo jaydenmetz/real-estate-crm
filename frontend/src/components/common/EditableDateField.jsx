@@ -8,7 +8,7 @@ export const EditableDateField = ({ value, onSave, label, variant = 'body1', sx 
     try {
       const date = typeof dateValue === 'string' ? parseISO(dateValue) : new Date(dateValue);
       if (!isValid(date)) return 'Invalid date';
-      return format(date, 'MMM dd, yyyy');
+      return format(date, 'MMM d, yyyy');
     } catch (error) {
       return 'Invalid date';
     }

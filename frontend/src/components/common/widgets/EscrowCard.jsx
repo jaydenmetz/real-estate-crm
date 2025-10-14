@@ -961,41 +961,41 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                     borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
                   }}
                 >
-                  {/* Dates on one line */}
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, pl: 1.5 }}>
+                  {/* Dates - labels above, dates on one line */}
+                  <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 3, pl: 1.5 }}>
                     {/* Acceptance Date */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
                       <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                        Acceptance:
+                        Acceptance
                       </Typography>
                       {onUpdate ? (
                         <EditableDateField
                           value={acceptanceDate}
                           onSave={(newValue) => onUpdate(escrow.id, { acceptance_date: newValue })}
                           variant="body2"
-                          sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary }}
+                          sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, whiteSpace: 'nowrap' }}
                         />
                       ) : (
-                        <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary }}>
+                        <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, whiteSpace: 'nowrap' }}>
                           {formatDate(acceptanceDate) || 'TBD'}
                         </Typography>
                       )}
                     </Box>
 
                     {/* Close Date */}
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25 }}>
                       <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                        Close:
+                        Close
                       </Typography>
                       {onUpdate ? (
                         <EditableDateField
                           value={closingDate}
                           onSave={(newValue) => onUpdate(escrow.id, { closing_date: newValue })}
                           variant="body2"
-                          sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary }}
+                          sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, whiteSpace: 'nowrap' }}
                         />
                       ) : (
-                        <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary }}>
+                        <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, whiteSpace: 'nowrap' }}>
                           {formatDate(closingDate) || 'TBD'}
                         </Typography>
                       )}
