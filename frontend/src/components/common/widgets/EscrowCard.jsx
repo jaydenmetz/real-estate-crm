@@ -44,6 +44,8 @@ import { EditableDateField } from '../EditableDateField';
 import { EditableNumberField } from '../EditableNumberField';
 import { ContactSelectionModal } from '../../modals/ContactSelectionModal';
 import { BadgeEditor } from '../BadgeEditor';
+import PersonRoleContainer from '../PersonRoleContainer';
+import ViewAllPeopleModal from '../../modals/ViewAllPeopleModal';
 
 const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'spring', animationDuration = 1, animationIntensity = 1, index = 0, onArchive, onDelete, onRestore, isArchived = false, onUpdate }) => {
   const navigate = useNavigate();
@@ -95,6 +97,10 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
   // Hover states for Add Buyer/Seller buttons
   const [showAddBuyerButton, setShowAddBuyerButton] = useState(false);
   const [showAddSellerButton, setShowAddSellerButton] = useState(false);
+
+  // View All modal states
+  const [viewAllModalOpen, setViewAllModalOpen] = useState(false);
+  const [viewAllModalRole, setViewAllModalRole] = useState(null); // 'buyer' or 'seller'
 
   // Sync state when escrow data changes from parent
   useEffect(() => {
@@ -249,6 +255,24 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
       await updatePeopleInDatabase(buyers, newSellers);
     }
   }, [buyers, sellers, updatePeopleInDatabase]);
+
+  // ✅ View All modal handlers
+  const handleViewAllBuyers = useCallback((e) => {
+    e?.stopPropagation();
+    setViewAllModalRole('buyer');
+    setViewAllModalOpen(true);
+  }, []);
+
+  const handleViewAllSellers = useCallback((e) => {
+    e?.stopPropagation();
+    setViewAllModalRole('seller');
+    setViewAllModalOpen(true);
+  }, []);
+
+  const handleCloseViewAllModal = useCallback(() => {
+    setViewAllModalOpen(false);
+    setViewAllModalRole(null);
+  }, []);
 
   // ✅ Contact selection modal handlers
   const handlePersonClick = useCallback((role, roleConfig, index = null, e) => {
