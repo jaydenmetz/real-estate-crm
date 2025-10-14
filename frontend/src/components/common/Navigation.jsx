@@ -99,6 +99,7 @@ const EnhancedNavigation = () => {
 
   // Data menu items
   const dataMenuItems = [
+    { path: '/contacts', label: 'Contacts', icon: <People /> },
     { path: '/listings', label: 'Listings', icon: <Home /> },
     { path: '/open-houses', label: 'Open Houses', icon: <Home /> },
     { path: '/lead-sources', label: 'Lead Sources', icon: <TrendingUp /> },
