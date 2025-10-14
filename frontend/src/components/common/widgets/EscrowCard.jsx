@@ -1214,171 +1214,55 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                         </Box>
 
                         {/* LEFT COLUMN - Row 2: Buyer Agent */}
-                        <Box
-                          onClick={(e) => handleOpenTeamModal('buyer_agent', e)}
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1,
-                            cursor: 'pointer',
-                            p: 0.75,
-                            borderRadius: 2,
-                            transition: 'all 0.2s',
-                            '&:hover': {
-                              background: alpha(people.buyerAgent.color.primary, 0.05),
-                            },
-                          }}
-                        >
-                          <Avatar
-                            sx={{
-                              width: 40,
-                              height: 40,
-                              background: `linear-gradient(135deg, ${people.buyerAgent.color.primary} 0%, ${people.buyerAgent.color.secondary} 100%)`,
-                              fontWeight: 700,
-                              fontSize: '1.1rem',
-                            }}
-                          >
-                            {getInitials(people.buyerAgent.name)}
-                          </Avatar>
-                          <Box sx={{ flex: 1, minWidth: 0 }}>
-                            <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: people.buyerAgent.color.primary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
-                              Buyer Agent
-                            </Typography>
-                            <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={people.buyerAgent.name}>
-                              {truncateName(people.buyerAgent.name, 28)}
-                            </Typography>
-                            {people.buyerAgent.company && (
-                              <Typography variant="caption" sx={{ fontSize: 10, color: theme.palette.text.secondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
-                                {people.buyerAgent.company}
-                              </Typography>
-                            )}
-                          </Box>
+                        <Box sx={{ minHeight: 0, overflow: 'hidden' }}>
+                          <PersonRoleContainer
+                            roleName="Buyer Agent"
+                            people={[people.buyerAgent]}
+                            color={people.buyerAgent.color}
+                            onPersonClick={(person, index) => handleOpenTeamModal('buyer_agent')}
+                            onAddPerson={(e) => handleOpenTeamModal('buyer_agent', e)}
+                            getInitials={getInitials}
+                            truncateName={truncateName}
+                          />
                         </Box>
 
                         {/* RIGHT COLUMN - Row 2: Listing Agent */}
-                        <Box
-                          onClick={(e) => handleOpenTeamModal('listing_agent', e)}
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1,
-                            cursor: 'pointer',
-                            p: 0.75,
-                            borderRadius: 2,
-                            transition: 'all 0.2s',
-                            '&:hover': {
-                              background: alpha(people.listingAgent.color.primary, 0.05),
-                            },
-                          }}
-                        >
-                          <Avatar
-                            sx={{
-                              width: 40,
-                              height: 40,
-                              background: `linear-gradient(135deg, ${people.listingAgent.color.primary} 0%, ${people.listingAgent.color.secondary} 100%)`,
-                              fontWeight: 700,
-                              fontSize: '1.1rem',
-                            }}
-                          >
-                            {getInitials(people.listingAgent.name)}
-                          </Avatar>
-                          <Box sx={{ flex: 1, minWidth: 0 }}>
-                            <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: people.listingAgent.color.primary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
-                              Listing Agent
-                            </Typography>
-                            <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={people.listingAgent.name}>
-                              {truncateName(people.listingAgent.name, 28)}
-                            </Typography>
-                            {people.listingAgent.company && (
-                              <Typography variant="caption" sx={{ fontSize: 10, color: theme.palette.text.secondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
-                                {people.listingAgent.company}
-                              </Typography>
-                            )}
-                          </Box>
+                        <Box sx={{ minHeight: 0, overflow: 'hidden' }}>
+                          <PersonRoleContainer
+                            roleName="Listing Agent"
+                            people={[people.listingAgent]}
+                            color={people.listingAgent.color}
+                            onPersonClick={(person, index) => handleOpenTeamModal('listing_agent')}
+                            onAddPerson={(e) => handleOpenTeamModal('listing_agent', e)}
+                            getInitials={getInitials}
+                            truncateName={truncateName}
+                          />
                         </Box>
 
                         {/* LEFT COLUMN - Row 3: Lender */}
-                        <Box
-                          onClick={(e) => handleOpenTeamModal('lender', e)}
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1,
-                            cursor: 'pointer',
-                            p: 0.75,
-                            borderRadius: 2,
-                            transition: 'all 0.2s',
-                            '&:hover': {
-                              background: alpha(people.lender.color.primary, 0.05),
-                            },
-                          }}
-                        >
-                          <Avatar
-                            sx={{
-                              width: 40,
-                              height: 40,
-                              background: `linear-gradient(135deg, ${people.lender.color.primary} 0%, ${people.lender.color.secondary} 100%)`,
-                              fontWeight: 700,
-                              fontSize: '1.1rem',
-                            }}
-                          >
-                            {getInitials(people.lender.name)}
-                          </Avatar>
-                          <Box sx={{ flex: 1, minWidth: 0 }}>
-                            <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: people.lender.color.primary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
-                              Lender
-                            </Typography>
-                            <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={people.lender.name}>
-                              {truncateName(people.lender.name, 28)}
-                            </Typography>
-                            {people.lender.company && (
-                              <Typography variant="caption" sx={{ fontSize: 10, color: theme.palette.text.secondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
-                                {people.lender.company}
-                              </Typography>
-                            )}
-                          </Box>
+                        <Box sx={{ minHeight: 0, overflow: 'hidden' }}>
+                          <PersonRoleContainer
+                            roleName="Lender"
+                            people={[people.lender]}
+                            color={people.lender.color}
+                            onPersonClick={(person, index) => handleOpenTeamModal('lender')}
+                            onAddPerson={(e) => handleOpenTeamModal('lender', e)}
+                            getInitials={getInitials}
+                            truncateName={truncateName}
+                          />
                         </Box>
 
                         {/* RIGHT COLUMN - Row 3: Escrow Officer */}
-                        <Box
-                          onClick={(e) => handleOpenTeamModal('escrow_officer', e)}
-                          sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1,
-                            cursor: 'pointer',
-                            p: 0.75,
-                            borderRadius: 2,
-                            transition: 'all 0.2s',
-                            '&:hover': {
-                              background: alpha(people.escrowOfficer.color.primary, 0.05),
-                            },
-                          }}
-                        >
-                          <Avatar
-                            sx={{
-                              width: 40,
-                              height: 40,
-                              background: `linear-gradient(135deg, ${people.escrowOfficer.color.primary} 0%, ${people.escrowOfficer.color.secondary} 100%)`,
-                              fontWeight: 700,
-                              fontSize: '1.1rem',
-                            }}
-                          >
-                            {getInitials(people.escrowOfficer.name)}
-                          </Avatar>
-                          <Box sx={{ flex: 1, minWidth: 0 }}>
-                            <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: people.escrowOfficer.color.primary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
-                              Escrow Officer
-                            </Typography>
-                            <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={people.escrowOfficer.name}>
-                              {truncateName(people.escrowOfficer.name, 28)}
-                            </Typography>
-                            {people.escrowOfficer.company && (
-                              <Typography variant="caption" sx={{ fontSize: 10, color: theme.palette.text.secondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
-                                {people.escrowOfficer.company}
-                              </Typography>
-                            )}
-                          </Box>
+                        <Box sx={{ minHeight: 0, overflow: 'hidden' }}>
+                          <PersonRoleContainer
+                            roleName="Escrow Officer"
+                            people={[people.escrowOfficer]}
+                            color={people.escrowOfficer.color}
+                            onPersonClick={(person, index) => handleOpenTeamModal('escrow_officer')}
+                            onAddPerson={(e) => handleOpenTeamModal('escrow_officer', e)}
+                            getInitials={getInitials}
+                            truncateName={truncateName}
+                          />
                         </Box>
                       </Box>
                     </>

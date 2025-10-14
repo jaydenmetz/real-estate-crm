@@ -168,56 +168,69 @@ const PersonRoleContainer = ({
     </Box>
   );
 
-  // Render add button for 1-2 people (shows on hover)
-  const renderAddButton = () => (
-    <Box
-      onClick={(e) => {
-        e.stopPropagation();
-        onAddPerson && onAddPerson();
-      }}
-      sx={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        cursor: 'pointer',
-        p: 0.5,
-        borderRadius: 2,
-        height: hovered ? 'auto' : 0,
-        opacity: hovered ? 1 : 0,
-        overflow: 'hidden',
-        transition: 'all 0.2s ease-in-out',
-        '&:hover': {
-          background: alpha(color.primary, 0.05),
-        },
-      }}
-    >
-      <IconButton
-        size="small"
+  // Render add button for all people types (shows on hover)
+  const renderAddButton = () => {
+    // Determine label based on role
+    const getAddLabel = () => {
+      if (roleName === 'Buyer' || roleName === 'Seller') {
+        return `Add ${roleName}`;
+      }
+      // For agents and vendors, use team terminology
+      return `Add to Team`;
+    };
+
+    return (
+      <Box
+        onClick={(e) => {
+          e.stopPropagation();
+          onAddPerson && onAddPerson();
+        }}
         sx={{
-          width: 32,
-          height: 32,
-          backgroundColor: alpha(color.primary, 0.1),
-          color: color.primary,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 1,
+          cursor: 'pointer',
+          p: 0.75,
+          borderRadius: 2,
+          height: hovered ? 'auto' : 0,
+          opacity: hovered ? 1 : 0,
+          overflow: 'hidden',
+          transition: 'all 0.2s ease-in-out',
           '&:hover': {
-            backgroundColor: alpha(color.primary, 0.2),
+            background: alpha(color.primary, 0.05),
           },
         }}
       >
-        <Add sx={{ fontSize: 18 }} />
-      </IconButton>
-      <Typography
-        variant="caption"
-        sx={{
-          ml: 1,
-          fontSize: 10,
-          fontWeight: 600,
-          color: color.primary,
-        }}
-      >
-        Add {roleName}
-      </Typography>
-    </Box>
-  );
+        <IconButton
+          size="small"
+          sx={{
+            width: 40,
+            height: 40,
+            backgroundColor: alpha(color.primary, 0.1),
+            color: color.primary,
+            flexShrink: 0,
+            '&:hover': {
+              backgroundColor: alpha(color.primary, 0.2),
+            },
+          }}
+        >
+          <Add sx={{ fontSize: 20 }} />
+        </IconButton>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography
+            variant="body2"
+            sx={{
+              fontWeight: 700,
+              fontSize: '0.875rem',
+              color: color.primary,
+            }}
+          >
+            {getAddLabel()}
+          </Typography>
+        </Box>
+      </Box>
+    );
+  };
 
   // Container with fixed height
   return (
