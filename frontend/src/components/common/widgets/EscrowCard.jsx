@@ -949,20 +949,20 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                   </Box>
                 </Box>
 
-                {/* Footer - Close date and days */}
+                {/* Footer - Acceptance, Close, and Days count */}
                 <Box
                   sx={{
                     display: 'flex',
-                    justifyContent: 'space-between',
                     alignItems: 'center',
                     mt: 'auto',
                     pt: 1,
                     px: 1,
                     borderTop: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+                    gap: 1,
                   }}
                 >
-                  {/* Acceptance Date - 3/8 width */}
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, width: '37.5%' }}>
+                  {/* Acceptance Date - 33.33% width */}
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, width: '33.33%' }}>
                     <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                       Acceptance
                     </Typography>
@@ -980,8 +980,8 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                     )}
                   </Box>
 
-                  {/* Close Date - 3/8 width */}
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, width: '37.5%' }}>
+                  {/* Close Date - 33.33% width */}
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, width: '33.33%' }}>
                     <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                       Close
                     </Typography>
@@ -999,16 +999,19 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                     )}
                   </Box>
 
-                  {/* Days Badge - 1/4 width */}
-                  <Box sx={{ width: '25%', display: 'flex', justifyContent: 'flex-end' }}>
+                  {/* Days Count - 33.33% width */}
+                  <Box sx={{ width: '33.33%', display: 'flex', flexDirection: 'column', gap: 0.25, alignItems: 'flex-end' }}>
+                    <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      {escrow.escrow_status === 'Closed' ? 'Status' : escrow.escrow_status === 'Cancelled' ? 'Status' : 'Days'}
+                    </Typography>
                     {escrow.escrow_status === 'Closed' ? (
                       <Box sx={{
                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5,
-                        px: 1.5, py: 0.75, borderRadius: 2,
+                        px: 1.5, py: 0.5, borderRadius: 2,
                         background: 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(5,150,105,0.15) 100%)',
                         border: `1px solid ${alpha('#10b981', 0.2)}`,
                       }}>
-                        <CheckCircle sx={{ fontSize: 16, color: '#10b981' }} />
+                        <CheckCircle sx={{ fontSize: 14, color: '#10b981' }} />
                         <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.75rem', color: '#10b981' }}>
                           Closed
                         </Typography>
@@ -1016,47 +1019,32 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                     ) : escrow.escrow_status === 'Cancelled' ? (
                       <Box sx={{
                         display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 0.5,
-                        px: 1.5, py: 0.75, borderRadius: 2,
+                        px: 1.5, py: 0.5, borderRadius: 2,
                         background: 'linear-gradient(135deg, rgba(239,68,68,0.1) 0%, rgba(220,38,38,0.15) 100%)',
                         border: `1px solid ${alpha('#ef4444', 0.2)}`,
                       }}>
-                        <Cancel sx={{ fontSize: 16, color: '#ef4444' }} />
+                        <Cancel sx={{ fontSize: 14, color: '#ef4444' }} />
                         <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.75rem', color: '#ef4444' }}>
                           Cancelled
                         </Typography>
                       </Box>
                     ) : daysToClose !== null ? (
-                      <Box
+                      <Typography
+                        variant="body2"
                         sx={{
-                          px: 1.5,
-                          py: 0.75,
-                          borderRadius: 2,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          background: isPastDue
-                            ? 'linear-gradient(135deg, rgba(239,68,68,0.1) 0%, rgba(220,38,38,0.15) 100%)'
-                            : isUrgent
-                            ? 'linear-gradient(135deg, rgba(245,158,11,0.1) 0%, rgba(217,119,6,0.15) 100%)'
-                            : 'linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(37,99,235,0.15) 100%)',
-                          border: `1px solid ${alpha(
-                            isPastDue ? '#ef4444' : isUrgent ? '#f59e0b' : '#3b82f6',
-                            0.2
-                          )}`,
+                          fontWeight: 700,
+                          fontSize: '0.875rem',
+                          color: isPastDue ? '#ef4444' : isUrgent ? '#f59e0b' : '#3b82f6',
+                          whiteSpace: 'nowrap',
                         }}
                       >
-                        <Typography
-                          variant="body2"
-                          sx={{
-                            fontWeight: 700,
-                            fontSize: '0.875rem',
-                            color: isPastDue ? '#ef4444' : isUrgent ? '#f59e0b' : '#3b82f6',
-                          }}
-                        >
-                          {isPastDue ? `${Math.abs(daysToClose)}d late` : `${daysToClose}d`}
-                        </Typography>
-                      </Box>
-                    ) : null}
+                        {isPastDue ? `${Math.abs(daysToClose)}d late` : `${daysToClose}d`}
+                      </Typography>
+                    ) : (
+                      <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.secondary }}>
+                        TBD
+                      </Typography>
+                    )}
                   </Box>
                 </Box>
               </CardContent>
