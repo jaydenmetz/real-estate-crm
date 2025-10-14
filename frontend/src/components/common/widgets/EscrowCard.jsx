@@ -37,12 +37,17 @@ import { EditableTextField } from '../EditableTextField';
 import { EditableDateField } from '../EditableDateField';
 import { EditableNumberField } from '../EditableNumberField';
 import { ContactSelectionModal } from '../../modals/ContactSelectionModal';
+import { BadgeEditor } from '../BadgeEditor';
 
 const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'spring', animationDuration = 1, animationIntensity = 1, index = 0, onArchive, onDelete, onRestore, isArchived = false, onUpdate }) => {
   const navigate = useNavigate();
   const theme = useTheme();
   const [showCommission, setShowCommission] = useState(false);
   const [currentPanel, setCurrentPanel] = useState(0); // 0=small, 1=people, 2=timeline, 3=checklists
+
+  // Badge editor states
+  const [priceEditorOpen, setPriceEditorOpen] = useState(false);
+  const [commissionEditorOpen, setCommissionEditorOpen] = useState(false);
 
   // Inline editing states
   const [editingField, setEditingField] = useState(null);
@@ -821,50 +826,53 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                 <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1, mb: 1 }}>
                   {/* Price - Editable */}
                   <Box
+                    onClick={(e) => {
+                      if (onUpdate) {
+                        e.stopPropagation();
+                        setPriceEditorOpen(true);
+                      }
+                    }}
                     sx={{
                       p: 0.75,
                       borderRadius: 1.5,
                       background: 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(5,150,105,0.12) 100%)',
                       border: `1px solid ${alpha('#10b981', 0.15)}`,
+                      cursor: onUpdate ? 'pointer' : 'default',
                       transition: 'all 0.2s',
-                      '&:hover': {
+                      '&:hover': onUpdate ? {
                         background: 'linear-gradient(135deg, rgba(16,185,129,0.12) 0%, rgba(5,150,105,0.16) 100%)',
                         transform: 'scale(1.05)',
-                      },
+                      } : {},
                     }}
                   >
                     <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: '#059669', mb: 0.25, display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                       Price
                     </Typography>
-                    {onUpdate ? (
-                      <EditableNumberField
-                        value={purchasePrice}
-                        onSave={(newValue) => onUpdate(escrow.id, { purchase_price: newValue })}
-                        prefix="$"
-                        decimals={2}
-                        variant="h6"
-                        sx={{ fontWeight: 800, fontSize: '1rem', color: '#10b981', letterSpacing: '-0.5px' }}
-                      />
-                    ) : (
-                      <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1rem', color: '#10b981', letterSpacing: '-0.5px' }}>
-                        {formatCurrency(purchasePrice)}
-                      </Typography>
-                    )}
+                    <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1rem', color: '#10b981', letterSpacing: '-0.5px' }}>
+                      {formatCurrency(purchasePrice)}
+                    </Typography>
                   </Box>
 
                   {/* Commission */}
                   <Box
+                    onClick={(e) => {
+                      if (onUpdate && showCommission) {
+                        e.stopPropagation();
+                        setCommissionEditorOpen(true);
+                      }
+                    }}
                     sx={{
                       position: 'relative',
                       p: 0.75,
                       borderRadius: 1.5,
                       background: 'linear-gradient(135deg, rgba(99,102,241,0.08) 0%, rgba(79,70,229,0.12) 100%)',
                       border: `1px solid ${alpha('#6366f1', 0.15)}`,
+                      cursor: (onUpdate && showCommission) ? 'pointer' : 'default',
                       transition: 'all 0.2s',
-                      '&:hover': {
+                      '&:hover': (onUpdate && showCommission) ? {
                         background: 'linear-gradient(135deg, rgba(99,102,241,0.12) 0%, rgba(79,70,229,0.16) 100%)',
                         transform: 'scale(1.05)',
-                      },
+                      } : {},
                     }}
                   >
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -897,20 +905,9 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                         )}
                       </Box>
                     </Box>
-                    {onUpdate && showCommission ? (
-                      <EditableNumberField
-                        value={commission}
-                        onSave={(newValue) => onUpdate(escrow.id, { my_commission: newValue })}
-                        prefix="$"
-                        decimals={2}
-                        variant="h6"
-                        sx={{ fontWeight: 800, fontSize: '1rem', color: '#6366f1', letterSpacing: '-0.5px' }}
-                      />
-                    ) : (
-                      <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1rem', color: '#6366f1', letterSpacing: '-0.5px' }}>
-                        {showCommission ? formatCurrency(commission) : maskCommission(commission)}
-                      </Typography>
-                    )}
+                    <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1rem', color: '#6366f1', letterSpacing: '-0.5px' }}>
+                      {showCommission ? formatCurrency(commission) : maskCommission(commission)}
+                    </Typography>
                   </Box>
                 </Box>
 
@@ -1530,6 +1527,28 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
         onSelect={handleContactSelect}
         roleType={selectedRole?.type}
         roleConfig={selectedRole?.config || { primary: '#6366f1', secondary: '#8b5cf6' }}
+      />
+
+      {/* Price Badge Editor */}
+      <BadgeEditor
+        open={priceEditorOpen}
+        onClose={() => setPriceEditorOpen(false)}
+        onSave={(newValue) => onUpdate(escrow.id, { purchase_price: newValue })}
+        label="Purchase Price"
+        value={purchasePrice}
+        color="#10b981"
+        prefix="$"
+      />
+
+      {/* Commission Badge Editor */}
+      <BadgeEditor
+        open={commissionEditorOpen}
+        onClose={() => setCommissionEditorOpen(false)}
+        onSave={(newValue) => onUpdate(escrow.id, { my_commission: newValue })}
+        label="Commission"
+        value={commission}
+        color="#6366f1"
+        prefix="$"
       />
     </Box>
   );
