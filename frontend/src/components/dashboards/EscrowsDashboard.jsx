@@ -595,11 +595,14 @@ const EscrowsDashboard = () => {
     const unsubscribe = websocketService.on('data:update', (data) => {
       console.log('📡 WebSocket data update received:', data);
 
-      // Only refetch if it's an escrow update
-      if (data.entityType === 'escrow') {
-        console.log('🔄 Refetching escrows due to real-time update');
-        fetchEscrows();
-      }
+      // ⚠️ DISABLED: Full refetch causes hero stats to refresh unnecessarily
+      // We already have optimistic updates working perfectly in handleUpdateEscrow
+      // Only needed for multi-user collaboration (future: check if update is from another user)
+
+      // if (data.entityType === 'escrow') {
+      //   console.log('🔄 Refetching escrows due to real-time update');
+      //   fetchEscrows();
+      // }
     });
 
     return () => {
