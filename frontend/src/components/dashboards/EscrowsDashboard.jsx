@@ -344,7 +344,15 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
       </Card>
     </motion.div>
   );
-};
+}, (prevProps, nextProps) => {
+  // Only re-render if value, trend, or showPrivacy changes
+  return (
+    prevProps.value === nextProps.value &&
+    prevProps.trend === nextProps.trend &&
+    prevProps.showPrivacy === nextProps.showPrivacy &&
+    prevProps.goal === nextProps.goal
+  );
+});
 
 // Helper function to get initials from name
 const getInitials = (name) => {
@@ -945,29 +953,74 @@ const EscrowsDashboard = () => {
 
   const handleUpdateEscrow = async (escrowId, updateData) => {
     try {
+      // Determine if this update affects stats/charts
+      const affectsStats = Boolean(
+        updateData.purchase_price !== undefined ||
+        updateData.my_commission !== undefined ||
+        updateData.net_commission !== undefined ||
+        updateData.gross_commission !== undefined ||
+        updateData.escrow_status !== undefined ||
+        updateData.closing_date !== undefined
+      );
+
+      // Optimistic update - update UI immediately
+      setEscrows((prev) =>
+        prev.map((e) =>
+          e.id === escrowId ? { ...e, ...updateData } : e
+        )
+      );
+
+      // Only recalculate stats if the update affects them
+      if (affectsStats) {
+        const optimisticEscrows = escrows.map((e) =>
+          e.id === escrowId ? { ...e, ...updateData } : e
+        );
+        calculateStats(optimisticEscrows, selectedStatus);
+        generateChartData(optimisticEscrows);
+      }
+
+      // Make the API call in the background
       const response = await escrowsAPI.update(escrowId, updateData);
+
       if (response.success && response.data) {
-        // Update local state with the updated escrow
+        // Update with server response (in case server modified data)
         setEscrows((prev) =>
           prev.map((e) =>
             e.id === escrowId ? { ...e, ...response.data } : e
           )
         );
 
-        // Recalculate stats with updated data
-        const updatedEscrows = escrows.map((e) =>
-          e.id === escrowId ? { ...e, ...response.data } : e
-        );
-        calculateStats(updatedEscrows, selectedStatus);
-        generateChartData(updatedEscrows);
-
-        console.log('Escrow updated successfully:', escrowId);
+        // Recalculate stats again with server data if needed
+        if (affectsStats) {
+          const finalEscrows = escrows.map((e) =>
+            e.id === escrowId ? { ...e, ...response.data } : e
+          );
+          calculateStats(finalEscrows, selectedStatus);
+          generateChartData(finalEscrows);
+        }
       } else {
         console.error('Update failed - no success response');
+        // Rollback optimistic update on failure
+        const response = await escrowsAPI.getAll();
+        if (response.success) {
+          setEscrows(response.data);
+          calculateStats(response.data, selectedStatus);
+          generateChartData(response.data);
+        }
       }
     } catch (error) {
       console.error('Failed to update escrow:', error);
-      // TODO: Show error toast to user
+      // Rollback optimistic update on error
+      try {
+        const response = await escrowsAPI.getAll();
+        if (response.success) {
+          setEscrows(response.data);
+          calculateStats(response.data, selectedStatus);
+          generateChartData(response.data);
+        }
+      } catch (rollbackError) {
+        console.error('Failed to rollback:', rollbackError);
+      }
     }
   };
 
