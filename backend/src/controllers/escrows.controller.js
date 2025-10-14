@@ -283,7 +283,7 @@ class EscrowController {
           FLOOR(RANDOM() * 5 + 1)::integer as "upcomingDeadlines",
           created_at,
           updated_at,
-          people->>'buyer' as buyer_json,
+          people as people,
           people->'buyer'->>'name' as buyer_name,
           people->'buyer'->>'email' as buyer_email,
           people->'seller'->>'name' as seller_name,

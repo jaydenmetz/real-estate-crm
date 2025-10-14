@@ -48,9 +48,35 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
   const [editValue, setEditValue] = useState('');
   const [saving, setSaving] = useState(false);
 
-  // Multiple buyers/sellers state
-  const [buyers, setBuyers] = useState([{ name: escrow.buyer_name || 'TBD', email: escrow.buyer_email }]);
-  const [sellers, setSellers] = useState([{ name: escrow.seller_name || 'TBD', email: escrow.seller_email }])
+  // Multiple buyers/sellers state - Initialize from people JSONB or legacy fields
+  const initializeBuyers = () => {
+    if (escrow.people?.buyers && Array.isArray(escrow.people.buyers)) {
+      return escrow.people.buyers;
+    }
+    if (escrow.people?.buyer) {
+      return [escrow.people.buyer];
+    }
+    return [{ name: escrow.buyer_name || 'TBD', email: escrow.buyer_email || '' }];
+  };
+
+  const initializeSellers = () => {
+    if (escrow.people?.sellers && Array.isArray(escrow.people.sellers)) {
+      return escrow.people.sellers;
+    }
+    if (escrow.people?.seller) {
+      return [escrow.people.seller];
+    }
+    return [{ name: escrow.seller_name || 'TBD', email: escrow.seller_email || '' }];
+  };
+
+  const [buyers, setBuyers] = useState(initializeBuyers());
+  const [sellers, setSellers] = useState(initializeSellers());
+
+  // Sync state when escrow data changes from parent
+  useEffect(() => {
+    setBuyers(initializeBuyers());
+    setSellers(initializeSellers());
+  }, [escrow.people, escrow.buyer_name, escrow.seller_name]);
 
   // ✅ Memoized calculations - only recalculate when escrow data changes
   const calculations = useEscrowCalculations(escrow);
@@ -142,30 +168,55 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
     }
   }, [escrow.id, editValue, onUpdate, handleCancelEdit]);
 
+  // ✅ Helper to update people in database
+  const updatePeopleInDatabase = useCallback(async (updatedBuyers, updatedSellers) => {
+    if (!onUpdate) return;
+
+    const updatedPeople = {
+      ...escrow.people,
+      buyers: updatedBuyers,
+      sellers: updatedSellers,
+    };
+
+    try {
+      await onUpdate(escrow.id, { people: updatedPeople });
+    } catch (error) {
+      console.error('Failed to update people:', error);
+    }
+  }, [escrow.id, escrow.people, onUpdate]);
+
   // ✅ Multiple buyers/sellers handlers
-  const handleAddBuyer = useCallback((e) => {
+  const handleAddBuyer = useCallback(async (e) => {
     e?.stopPropagation();
-    setBuyers(prev => [...prev, { name: 'TBD', email: '' }]);
-  }, []);
+    const newBuyers = [...buyers, { name: 'TBD', email: '', phone: '', company: null }];
+    setBuyers(newBuyers);
+    await updatePeopleInDatabase(newBuyers, sellers);
+  }, [buyers, sellers, updatePeopleInDatabase]);
 
-  const handleAddSeller = useCallback((e) => {
+  const handleAddSeller = useCallback(async (e) => {
     e?.stopPropagation();
-    setSellers(prev => [...prev, { name: 'TBD', email: '' }]);
-  }, []);
+    const newSellers = [...sellers, { name: 'TBD', email: '', phone: '', company: null }];
+    setSellers(newSellers);
+    await updatePeopleInDatabase(buyers, newSellers);
+  }, [buyers, sellers, updatePeopleInDatabase]);
 
-  const handleRemoveBuyer = useCallback((index, e) => {
+  const handleRemoveBuyer = useCallback(async (index, e) => {
     e?.stopPropagation();
     if (buyers.length > 1) {
-      setBuyers(prev => prev.filter((_, i) => i !== index));
+      const newBuyers = buyers.filter((_, i) => i !== index);
+      setBuyers(newBuyers);
+      await updatePeopleInDatabase(newBuyers, sellers);
     }
-  }, [buyers.length]);
+  }, [buyers, sellers, updatePeopleInDatabase]);
 
-  const handleRemoveSeller = useCallback((index, e) => {
+  const handleRemoveSeller = useCallback(async (index, e) => {
     e?.stopPropagation();
     if (sellers.length > 1) {
-      setSellers(prev => prev.filter((_, i) => i !== index));
+      const newSellers = sellers.filter((_, i) => i !== index);
+      setSellers(newSellers);
+      await updatePeopleInDatabase(buyers, newSellers);
     }
-  }, [sellers.length]);
+  }, [buyers, sellers, updatePeopleInDatabase]);
 
   // ✅ Status configuration (constant lookup, no object creation)
   const statusConfig = getStatusConfig(escrow.escrow_status);
