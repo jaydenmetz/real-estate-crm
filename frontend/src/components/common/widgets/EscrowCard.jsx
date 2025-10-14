@@ -1396,59 +1396,6 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
         roleConfig={selectedRole?.config || { primary: '#6366f1', secondary: '#8b5cf6' }}
       />
 
-      {/* View All Buyers Modal */}
-      {viewAllModalOpen && viewAllModalRole === 'buyer' && (
-        <ViewAllPeopleModal
-          open={viewAllModalOpen}
-          onClose={handleCloseViewAllModal}
-          roleName="Buyer"
-          people={buyers}
-          color={people.buyer.color}
-          onPersonClick={(person, index) => handlePersonClick('buyer', people.buyer.color, index)}
-          onAddPerson={handleAddBuyer}
-          onRemovePerson={(index) => handleRemoveBuyer(index, null)}
-          getInitials={getInitials}
-          truncateName={truncateName}
-        />
-      )}
-
-      {/* View All Sellers Modal */}
-      {viewAllModalOpen && viewAllModalRole === 'seller' && (
-        <ViewAllPeopleModal
-          open={viewAllModalOpen}
-          onClose={handleCloseViewAllModal}
-          roleName="Seller"
-          people={sellers}
-          color={people.seller.color}
-          onPersonClick={(person, index) => handlePersonClick('seller', people.seller.color, index)}
-          onAddPerson={handleAddSeller}
-          onRemovePerson={(index) => handleRemoveSeller(index, null)}
-          getInitials={getInitials}
-          truncateName={truncateName}
-        />
-      )}
-
-      {/* Team Management Modal */}
-      {teamModalOpen && teamModalRoleType && (
-        <TeamManagementModal
-          open={teamModalOpen}
-          onClose={handleCloseTeamModal}
-          roleType={teamModalRoleType}
-          teamData={escrow.people || {}}
-          color={
-            teamModalRoleType === 'buyer_agent' ? people.buyerAgent.color :
-            teamModalRoleType === 'listing_agent' ? people.listingAgent.color :
-            teamModalRoleType === 'lender' ? people.lender.color :
-            people.escrowOfficer.color
-          }
-          onPersonClick={handleTeamPersonClick}
-          onAddPerson={handleTeamAddPerson}
-          onRemovePerson={handleTeamRemovePerson}
-          getInitials={getInitials}
-          truncateName={truncateName}
-        />
-      )}
-
       {/* Price Badge Editor */}
       <BadgeEditor
         open={priceEditorOpen}
