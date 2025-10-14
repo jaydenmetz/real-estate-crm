@@ -1076,7 +1076,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                 {viewMode === 'large' && (
                   <Box
                     sx={{
-                      width: '60%',
+                      width: '50%',
                       flexShrink: 0,
                       background: 'linear-gradient(135deg, rgba(99,102,241,0.02) 0%, rgba(139,92,246,0.03) 100%)',
                       borderRight: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
@@ -1440,7 +1440,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                 {viewMode === 'large' && (
                   <Box
                     sx={{
-                      width: '20%',
+                      width: '25%',
                       flexShrink: 0,
                       background: 'linear-gradient(135deg, rgba(139,92,246,0.02) 0%, rgba(168,85,247,0.03) 100%)',
                       borderRight: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
@@ -1498,7 +1498,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                 {viewMode === 'large' && (
                   <Box
                     sx={{
-                      width: '20%',
+                      width: '25%',
                       flexShrink: 0,
                       background: 'linear-gradient(135deg, rgba(168,85,247,0.02) 0%, rgba(217,70,239,0.03) 100%)',
                       p: 2.5,
