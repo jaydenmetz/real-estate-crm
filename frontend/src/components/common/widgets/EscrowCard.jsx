@@ -868,14 +868,14 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                 {viewMode === 'large' && (
                   <Box
                     sx={{
-                      width: 'calc(33.33% - 1px)',
+                      width: '40%',
                       flexShrink: 0,
                       background: 'linear-gradient(135deg, rgba(99,102,241,0.02) 0%, rgba(139,92,246,0.03) 100%)',
                       borderRight: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-                      p: 2,
+                      p: 2.5,
                       display: 'flex',
                       flexDirection: 'column',
-                      justifyContent: 'center', // Center content vertically
+                      overflow: 'hidden',
                     }}
                   >
                     {/* People content for large view - Two Column Layout */}
@@ -885,17 +885,17 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                       </Typography>
 
                       {/* Two Column Grid */}
-                      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 3 }}>
+                      <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
                         {/* LEFT COLUMN */}
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                           {/* Buyer */}
                           <Box
                             sx={{
                               display: 'flex',
                               alignItems: 'center',
-                              gap: 2,
+                              gap: 1.5,
                               cursor: 'pointer',
-                              p: 1.5,
+                              p: 1,
                               borderRadius: 2,
                               transition: 'all 0.2s',
                               '&:hover': {
@@ -905,8 +905,8 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                           >
                             <Avatar
                               sx={{
-                                width: 48,
-                                height: 48,
+                                width: 40,
+                                height: 40,
                                 background: `linear-gradient(135deg, ${people.buyer.color.primary} 0%, ${people.buyer.color.secondary} 100%)`,
                                 fontWeight: 700,
                                 fontSize: '1.1rem',
@@ -934,9 +934,9 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                             sx={{
                               display: 'flex',
                               alignItems: 'center',
-                              gap: 2,
+                              gap: 1.5,
                               cursor: 'pointer',
-                              p: 1.5,
+                              p: 1,
                               borderRadius: 2,
                               transition: 'all 0.2s',
                               '&:hover': {
@@ -946,8 +946,8 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                           >
                             <Avatar
                               sx={{
-                                width: 48,
-                                height: 48,
+                                width: 40,
+                                height: 40,
                                 background: `linear-gradient(135deg, ${people.buyerAgent.color.primary} 0%, ${people.buyerAgent.color.secondary} 100%)`,
                                 fontWeight: 700,
                                 fontSize: '1.1rem',
@@ -975,9 +975,9 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                             sx={{
                               display: 'flex',
                               alignItems: 'center',
-                              gap: 2,
+                              gap: 1.5,
                               cursor: 'pointer',
-                              p: 1.5,
+                              p: 1,
                               borderRadius: 2,
                               transition: 'all 0.2s',
                               '&:hover': {
@@ -987,8 +987,8 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                           >
                             <Avatar
                               sx={{
-                                width: 48,
-                                height: 48,
+                                width: 40,
+                                height: 40,
                                 background: `linear-gradient(135deg, ${people.lender.color.primary} 0%, ${people.lender.color.secondary} 100%)`,
                                 fontWeight: 700,
                                 fontSize: '1.1rem',
@@ -1013,15 +1013,15 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                         </Box>
 
                         {/* RIGHT COLUMN */}
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                           {/* Seller */}
                           <Box
                             sx={{
                               display: 'flex',
                               alignItems: 'center',
-                              gap: 2,
+                              gap: 1.5,
                               cursor: 'pointer',
-                              p: 1.5,
+                              p: 1,
                               borderRadius: 2,
                               transition: 'all 0.2s',
                               '&:hover': {
@@ -1031,8 +1031,8 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                           >
                             <Avatar
                               sx={{
-                                width: 48,
-                                height: 48,
+                                width: 40,
+                                height: 40,
                                 background: `linear-gradient(135deg, ${people.seller.color.primary} 0%, ${people.seller.color.secondary} 100%)`,
                                 fontWeight: 700,
                                 fontSize: '1.1rem',
@@ -1060,9 +1060,9 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                             sx={{
                               display: 'flex',
                               alignItems: 'center',
-                              gap: 2,
+                              gap: 1.5,
                               cursor: 'pointer',
-                              p: 1.5,
+                              p: 1,
                               borderRadius: 2,
                               transition: 'all 0.2s',
                               '&:hover': {
@@ -1072,8 +1072,8 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                           >
                             <Avatar
                               sx={{
-                                width: 48,
-                                height: 48,
+                                width: 40,
+                                height: 40,
                                 background: `linear-gradient(135deg, ${people.listingAgent.color.primary} 0%, ${people.listingAgent.color.secondary} 100%)`,
                                 fontWeight: 700,
                                 fontSize: '1.1rem',
@@ -1101,9 +1101,9 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                             sx={{
                               display: 'flex',
                               alignItems: 'center',
-                              gap: 2,
+                              gap: 1.5,
                               cursor: 'pointer',
-                              p: 1.5,
+                              p: 1,
                               borderRadius: 2,
                               transition: 'all 0.2s',
                               '&:hover': {
@@ -1113,8 +1113,8 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                           >
                             <Avatar
                               sx={{
-                                width: 48,
-                                height: 48,
+                                width: 40,
+                                height: 40,
                                 background: `linear-gradient(135deg, ${people.escrowOfficer.color.primary} 0%, ${people.escrowOfficer.color.secondary} 100%)`,
                                 fontWeight: 700,
                                 fontSize: '1.1rem',
@@ -1146,14 +1146,14 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                 {viewMode === 'large' && (
                   <Box
                     sx={{
-                      width: 'calc(33.33% - 1px)', // 1/3 width (minus border)
+                      width: '30%',
                       flexShrink: 0,
                       background: 'linear-gradient(135deg, rgba(139,92,246,0.02) 0%, rgba(168,85,247,0.03) 100%)',
                       borderRight: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-                      p: 2,
+                      p: 2.5,
                       display: 'flex',
                       flexDirection: 'column',
-                      justifyContent: 'center', // Center content vertically
+                      overflow: 'hidden',
                     }}
                   >
                     <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 3, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
@@ -1166,7 +1166,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                         sx={{
                           display: 'flex',
                           alignItems: 'flex-start',
-                          gap: 1.5,
+                          gap: 1,
                           mb: 3,
                           position: 'relative',
                           '&::after': idx < timeline.length - 1 ? {
@@ -1204,13 +1204,13 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                 {viewMode === 'large' && (
                   <Box
                     sx={{
-                      width: 'calc(33.34%)', // 1/3 width (last panel, no border subtraction)
+                      width: '30%',
                       flexShrink: 0,
                       background: 'linear-gradient(135deg, rgba(168,85,247,0.02) 0%, rgba(217,70,239,0.03) 100%)',
-                      p: 2,
+                      p: 2.5,
                       display: 'flex',
                       flexDirection: 'column',
-                      justifyContent: 'center', // Center content vertically
+                      overflow: 'hidden',
                     }}
                   >
                     <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 3, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
