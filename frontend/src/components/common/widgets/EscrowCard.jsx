@@ -32,11 +32,16 @@ import { format } from 'date-fns';
 import { useEscrowCalculations } from '../../../hooks/useEscrowCalculations';
 import { getStatusConfig } from '../../../constants/escrowConfig';
 
-const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'spring', animationDuration = 1, animationIntensity = 1, index = 0, onArchive, onDelete, onRestore, isArchived = false }) => {
+const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'spring', animationDuration = 1, animationIntensity = 1, index = 0, onArchive, onDelete, onRestore, isArchived = false, onUpdate }) => {
   const navigate = useNavigate();
   const theme = useTheme();
   const [showCommission, setShowCommission] = useState(false);
   const [currentPanel, setCurrentPanel] = useState(0); // 0=small, 1=people, 2=timeline, 3=checklists
+
+  // Inline editing states
+  const [editingField, setEditingField] = useState(null);
+  const [editValue, setEditValue] = useState('');
+  const [saving, setSaving] = useState(false)
 
   // ✅ Memoized calculations - only recalculate when escrow data changes
   const calculations = useEscrowCalculations(escrow);
@@ -94,6 +99,39 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
     e.stopPropagation();
     setShowCommission(prev => !prev);
   }, []);
+
+  // ✅ Inline editing handlers
+  const handleStartEdit = useCallback((field, currentValue, e) => {
+    e?.stopPropagation();
+    setEditingField(field);
+    setEditValue(currentValue || '');
+  }, []);
+
+  const handleCancelEdit = useCallback((e) => {
+    e?.stopPropagation();
+    setEditingField(null);
+    setEditValue('');
+  }, []);
+
+  const handleSaveEdit = useCallback(async (field, e) => {
+    e?.stopPropagation();
+    if (!onUpdate || !editValue) {
+      handleCancelEdit();
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const updateData = { [field]: editValue };
+      await onUpdate(escrow.id, updateData);
+      setEditingField(null);
+      setEditValue('');
+    } catch (error) {
+      console.error('Failed to update field:', error);
+    } finally {
+      setSaving(false);
+    }
+  }, [escrow.id, editValue, onUpdate, handleCancelEdit]);
 
   // ✅ Status configuration (constant lookup, no object creation)
   const statusConfig = getStatusConfig(escrow.escrow_status);
