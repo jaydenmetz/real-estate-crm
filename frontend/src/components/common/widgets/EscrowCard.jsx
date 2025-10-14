@@ -31,6 +31,9 @@ import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { useEscrowCalculations } from '../../../hooks/useEscrowCalculations';
 import { getStatusConfig } from '../../../constants/escrowConfig';
+import { EditableTextField } from '../EditableTextField';
+import { EditableDateField } from '../EditableDateField';
+import { EditableNumberField } from '../EditableNumberField';
 
 const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'spring', animationDuration = 1, animationIntensity = 1, index = 0, onArchive, onDelete, onRestore, isArchived = false, onUpdate }) => {
   const navigate = useNavigate();
@@ -603,23 +606,39 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                 flexDirection: 'column',
                 overflow: 'hidden'
               }}>
-                {/* Address */}
-                <Typography
-                  variant="h6"
-                  sx={{
-                    fontWeight: 800,
-                    fontSize: '0.9rem',
-                    mb: 1,
-                    color: theme.palette.text.primary,
-                    lineHeight: 1.2,
-                  }}
-                >
-                  {address}
-                </Typography>
+                {/* Address - Editable */}
+                {onUpdate ? (
+                  <EditableTextField
+                    value={escrow.property_address}
+                    onSave={(newValue) => onUpdate(escrow.id, { property_address: newValue })}
+                    variant="h6"
+                    placeholder="No Address"
+                    sx={{
+                      fontWeight: 800,
+                      fontSize: '0.9rem',
+                      mb: 1,
+                      color: theme.palette.text.primary,
+                      lineHeight: 1.2,
+                    }}
+                  />
+                ) : (
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 800,
+                      fontSize: '0.9rem',
+                      mb: 1,
+                      color: theme.palette.text.primary,
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {address}
+                  </Typography>
+                )}
 
                 {/* Metrics Grid */}
                 <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1, mb: 1 }}>
-                  {/* Price */}
+                  {/* Price - Editable */}
                   <Box
                     sx={{
                       p: 0.75,
@@ -636,9 +655,20 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                     <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: '#059669', mb: 0.25, display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                       Price
                     </Typography>
-                    <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1rem', color: '#10b981', letterSpacing: '-0.5px' }}>
-                      {formatCurrency(purchasePrice)}
-                    </Typography>
+                    {onUpdate ? (
+                      <EditableNumberField
+                        value={purchasePrice}
+                        onSave={(newValue) => onUpdate(escrow.id, { purchase_price: newValue })}
+                        prefix="$"
+                        decimals={2}
+                        variant="h6"
+                        sx={{ fontWeight: 800, fontSize: '1rem', color: '#10b981', letterSpacing: '-0.5px' }}
+                      />
+                    ) : (
+                      <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1rem', color: '#10b981', letterSpacing: '-0.5px' }}>
+                        {formatCurrency(purchasePrice)}
+                      </Typography>
+                    )}
                   </Box>
 
                   {/* Commission */}
@@ -686,9 +716,20 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                         )}
                       </Box>
                     </Box>
-                    <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1rem', color: '#6366f1', letterSpacing: '-0.5px' }}>
-                      {showCommission ? formatCurrency(commission) : maskCommission(commission)}
-                    </Typography>
+                    {onUpdate && showCommission ? (
+                      <EditableNumberField
+                        value={commission}
+                        onSave={(newValue) => onUpdate(escrow.id, { my_commission: newValue })}
+                        prefix="$"
+                        decimals={2}
+                        variant="h6"
+                        sx={{ fontWeight: 800, fontSize: '1rem', color: '#6366f1', letterSpacing: '-0.5px' }}
+                      />
+                    ) : (
+                      <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1rem', color: '#6366f1', letterSpacing: '-0.5px' }}>
+                        {showCommission ? formatCurrency(commission) : maskCommission(commission)}
+                      </Typography>
+                    )}
                   </Box>
                 </Box>
 
@@ -709,17 +750,35 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                       <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', mb: 0.25 }}>
                         DOA
                       </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary }}>
-                        {formatDate(acceptanceDate) || 'TBD'}
-                      </Typography>
+                      {onUpdate ? (
+                        <EditableDateField
+                          value={acceptanceDate}
+                          onSave={(newValue) => onUpdate(escrow.id, { acceptance_date: newValue })}
+                          variant="body2"
+                          sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary }}
+                        />
+                      ) : (
+                        <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary }}>
+                          {formatDate(acceptanceDate) || 'TBD'}
+                        </Typography>
+                      )}
                     </Box>
                     <Box>
                       <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', mb: 0.25 }}>
                         COE
                       </Typography>
-                      <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary }}>
-                        {formatDate(closingDate) || 'TBD'}
-                      </Typography>
+                      {onUpdate ? (
+                        <EditableDateField
+                          value={closingDate}
+                          onSave={(newValue) => onUpdate(escrow.id, { closing_date: newValue })}
+                          variant="body2"
+                          sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary }}
+                        />
+                      ) : (
+                        <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary }}>
+                          {formatDate(closingDate) || 'TBD'}
+                        </Typography>
+                      )}
                     </Box>
                   </Box>
 
