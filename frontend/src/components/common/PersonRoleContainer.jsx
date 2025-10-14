@@ -245,27 +245,25 @@ const PersonRoleContainer = ({
         overflow: 'hidden', // Prevent content from expanding container
       }}
     >
-      {/* 1 person: Shifts up only when Add button is hovered */}
+      {/* 1 person: Fixed height with button space always reserved */}
       {people.length === 1 && (
         <Box
           sx={{
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
-            justifyContent: addButtonHovered ? 'flex-start' : 'center',
-            pt: addButtonHovered ? 0.5 : 0,
-            transition: 'all 0.2s ease-in-out',
+            justifyContent: 'space-between', // Always space between person and button area
           }}
         >
-          {renderPersonCard(people[0], 0)}
+          <Box sx={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+            {renderPersonCard(people[0], 0)}
+          </Box>
           {onAddPerson && (
             <Box
               onMouseEnter={() => setAddButtonHovered(true)}
               onMouseLeave={() => setAddButtonHovered(false)}
               sx={{
-                minHeight: addButtonHovered ? 0 : 20, // Small hover zone when collapsed
-                display: 'flex',
-                alignItems: 'flex-end',
+                flexShrink: 0, // Don't compress button area
               }}
             >
               {renderAddButton()}
@@ -274,29 +272,26 @@ const PersonRoleContainer = ({
         </Box>
       )}
 
-      {/* 2 people: Compress spacing only when Add button is hovered */}
+      {/* 2 people: Fixed height with button space always reserved */}
       {people.length === 2 && (
         <Box
           sx={{
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
-            gap: addButtonHovered ? 0 : 0.25,
-            justifyContent: addButtonHovered ? 'flex-start' : 'center',
-            pt: addButtonHovered ? 0.25 : 0,
-            transition: 'all 0.2s ease-in-out',
+            justifyContent: 'space-between', // Always space between people and button area
           }}
         >
-          {renderPersonCard(people[0], 0)}
-          {renderPersonCard(people[1], 1)}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, flex: 1, justifyContent: 'center' }}>
+            {renderPersonCard(people[0], 0)}
+            {renderPersonCard(people[1], 1)}
+          </Box>
           {onAddPerson && (
             <Box
               onMouseEnter={() => setAddButtonHovered(true)}
               onMouseLeave={() => setAddButtonHovered(false)}
               sx={{
-                minHeight: addButtonHovered ? 0 : 20, // Small hover zone when collapsed
-                display: 'flex',
-                alignItems: 'flex-end',
+                flexShrink: 0, // Don't compress button area
               }}
             >
               {renderAddButton()}
