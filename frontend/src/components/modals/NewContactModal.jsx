@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogTitle,
@@ -33,6 +33,19 @@ export const NewContactModal = ({
     role: roleType || '',
   });
   const [saving, setSaving] = useState(false);
+
+  // Reset form when modal opens or roleType changes
+  useEffect(() => {
+    if (open) {
+      setFormData({
+        full_name: '',
+        email: '',
+        phone: '',
+        company_name: '',
+        role: roleType || '',
+      });
+    }
+  }, [open, roleType]);
 
   const handleChange = (field) => (event) => {
     setFormData({ ...formData, [field]: event.target.value });
