@@ -1629,20 +1629,6 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
         </MenuItem>
         <MenuItem
           onClick={() => {
-            onUpdate(escrow.id, { escrow_status: 'Pending Acceptance' });
-            setStatusMenuAnchor(null);
-          }}
-          sx={{
-            '&:hover': { background: alpha('#f59e0b', 0.1) },
-          }}
-        >
-          <ListItemIcon>
-            <Schedule sx={{ color: '#f59e0b' }} />
-          </ListItemIcon>
-          <ListItemText primary="Pending Acceptance" />
-        </MenuItem>
-        <MenuItem
-          onClick={() => {
             onUpdate(escrow.id, { escrow_status: 'Closed' });
             setStatusMenuAnchor(null);
           }}
