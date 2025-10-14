@@ -45,8 +45,7 @@ import { EditableNumberField } from '../EditableNumberField';
 import { ContactSelectionModal } from '../../modals/ContactSelectionModal';
 import { BadgeEditor } from '../BadgeEditor';
 import PersonRoleContainer from '../PersonRoleContainer';
-import ViewAllPeopleModal from '../../modals/ViewAllPeopleModal';
-import TeamManagementModal from '../../modals/TeamManagementModal';
+import PeopleEditor from '../PeopleEditor';
 
 const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'spring', animationDuration = 1, animationIntensity = 1, index = 0, onArchive, onDelete, onRestore, isArchived = false, onUpdate }) => {
   const navigate = useNavigate();
@@ -99,13 +98,32 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
   const [showAddBuyerButton, setShowAddBuyerButton] = useState(false);
   const [showAddSellerButton, setShowAddSellerButton] = useState(false);
 
-  // View All modal states
-  const [viewAllModalOpen, setViewAllModalOpen] = useState(false);
-  const [viewAllModalRole, setViewAllModalRole] = useState(null); // 'buyer' or 'seller'
+  // People Editor modal states
+  const [peopleEditorOpen, setPeopleEditorOpen] = useState(false);
+  const [peopleEditorRole, setPeopleEditorRole] = useState(null); // 'buyer', 'seller', 'buyer_agent', etc.
 
-  // Team Management modal states
-  const [teamModalOpen, setTeamModalOpen] = useState(false);
-  const [teamModalRoleType, setTeamModalRoleType] = useState(null); // 'buyer_agent', 'listing_agent', 'lender', 'escrow_officer'
+  // Open People Editor for a specific role
+  const handleOpenPeopleEditor = useCallback((role) => {
+    setPeopleEditorRole(role);
+    setPeopleEditorOpen(true);
+  }, []);
+
+  // Close People Editor
+  const handleClosePeopleEditor = useCallback(() => {
+    setPeopleEditorOpen(false);
+    setPeopleEditorRole(null);
+  }, []);
+
+  // Save people from editor
+  const handleSavePeople = useCallback(async (updatedPeople) => {
+    if (!peopleEditorRole) return;
+
+    // TODO: Update the appropriate state and call onUpdate
+    console.log('Saving people for role:', peopleEditorRole, updatedPeople);
+
+    // For now, just close the modal
+    handleClosePeopleEditor();
+  }, [peopleEditorRole, handleClosePeopleEditor]);
 
   // Sync state when escrow data changes from parent
   useEffect(() => {
@@ -1185,12 +1203,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                             roleName="Buyer"
                             people={buyers}
                             color={people.buyer.color}
-                            onPersonClick={(person, index) =>
-                              handlePersonClick('buyer', people.buyer.color, index)
-                            }
-                            onRemovePerson={handleRemoveBuyer}
-                            onViewAll={handleViewAllBuyers}
-                            onAddPerson={handleViewAllBuyers}
+                            onContainerClick={() => handleOpenPeopleEditor('buyer')}
                             getInitials={getInitials}
                             truncateName={truncateName}
                           />
@@ -1202,12 +1215,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                             roleName="Seller"
                             people={sellers}
                             color={people.seller.color}
-                            onPersonClick={(person, index) =>
-                              handlePersonClick('seller', people.seller.color, index)
-                            }
-                            onRemovePerson={handleRemoveSeller}
-                            onViewAll={handleViewAllSellers}
-                            onAddPerson={handleViewAllSellers}
+                            onContainerClick={() => handleOpenPeopleEditor('seller')}
                             getInitials={getInitials}
                             truncateName={truncateName}
                           />
@@ -1219,8 +1227,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                             roleName="Buyer Agent"
                             people={[people.buyerAgent]}
                             color={people.buyerAgent.color}
-                            onPersonClick={(person, index) => handleOpenTeamModal('buyer_agent')}
-                            onAddPerson={(e) => handleOpenTeamModal('buyer_agent', e)}
+                            onContainerClick={() => handleOpenPeopleEditor('buyer_agent')}
                             getInitials={getInitials}
                             truncateName={truncateName}
                           />
@@ -1232,8 +1239,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                             roleName="Listing Agent"
                             people={[people.listingAgent]}
                             color={people.listingAgent.color}
-                            onPersonClick={(person, index) => handleOpenTeamModal('listing_agent')}
-                            onAddPerson={(e) => handleOpenTeamModal('listing_agent', e)}
+                            onContainerClick={() => handleOpenPeopleEditor('listing_agent')}
                             getInitials={getInitials}
                             truncateName={truncateName}
                           />
@@ -1245,8 +1251,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                             roleName="Lender"
                             people={[people.lender]}
                             color={people.lender.color}
-                            onPersonClick={(person, index) => handleOpenTeamModal('lender')}
-                            onAddPerson={(e) => handleOpenTeamModal('lender', e)}
+                            onContainerClick={() => handleOpenPeopleEditor('lender')}
                             getInitials={getInitials}
                             truncateName={truncateName}
                           />
@@ -1258,8 +1263,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                             roleName="Escrow Officer"
                             people={[people.escrowOfficer]}
                             color={people.escrowOfficer.color}
-                            onPersonClick={(person, index) => handleOpenTeamModal('escrow_officer')}
-                            onAddPerson={(e) => handleOpenTeamModal('escrow_officer', e)}
+                            onContainerClick={() => handleOpenPeopleEditor('escrow_officer')}
                             getInitials={getInitials}
                             truncateName={truncateName}
                           />
@@ -1466,6 +1470,44 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
         color="#6366f1"
         prefix="$"
       />
+
+      {/* People Editor Modal */}
+      {peopleEditorOpen && (
+        <PeopleEditor
+          open={peopleEditorOpen}
+          onClose={handleClosePeopleEditor}
+          onSave={handleSavePeople}
+          roleName={
+            peopleEditorRole === 'buyer' ? 'Buyers' :
+            peopleEditorRole === 'seller' ? 'Sellers' :
+            peopleEditorRole === 'buyer_agent' ? "Buyer's Agent Team" :
+            peopleEditorRole === 'listing_agent' ? "Listing Agent Team" :
+            peopleEditorRole === 'lender' ? 'Lender Team' :
+            peopleEditorRole === 'escrow_officer' ? 'Escrow Team' :
+            'People'
+          }
+          currentPeople={
+            peopleEditorRole === 'buyer' ? buyers :
+            peopleEditorRole === 'seller' ? sellers :
+            peopleEditorRole === 'buyer_agent' ? [people.buyerAgent] :
+            peopleEditorRole === 'listing_agent' ? [people.listingAgent] :
+            peopleEditorRole === 'lender' ? [people.lender] :
+            peopleEditorRole === 'escrow_officer' ? [people.escrowOfficer] :
+            []
+          }
+          color={
+            peopleEditorRole === 'buyer' ? people.buyer.color :
+            peopleEditorRole === 'seller' ? people.seller.color :
+            peopleEditorRole === 'buyer_agent' ? people.buyerAgent.color :
+            peopleEditorRole === 'listing_agent' ? people.listingAgent.color :
+            peopleEditorRole === 'lender' ? people.lender.color :
+            peopleEditorRole === 'escrow_officer' ? people.escrowOfficer.color :
+            { primary: '#6366f1', secondary: '#8b5cf6' }
+          }
+          allContacts={[]} // TODO: Pass actual contacts array
+          getInitials={getInitials}
+        />
+      )}
 
       {/* Status Change Menu */}
       <Menu
