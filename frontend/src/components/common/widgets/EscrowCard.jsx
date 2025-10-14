@@ -1157,7 +1157,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                       flexShrink: 0,
                       background: 'linear-gradient(135deg, rgba(99,102,241,0.02) 0%, rgba(139,92,246,0.03) 100%)',
                       borderRight: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-                      p: 2.5,
+                      p: 1.5,
                       display: 'flex',
                       flexDirection: 'column',
                       overflow: 'hidden',
@@ -1165,7 +1165,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                   >
                     {/* People content for large view - Fixed 2x3 Grid */}
                     <>
-                      <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 3, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                      <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 1.5, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
                         People
                       </Typography>
 
@@ -1175,8 +1175,8 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                           display: 'grid',
                           gridTemplateColumns: '1fr 1fr',
                           gridTemplateRows: '1fr 1fr 1fr',
-                          gap: 2,
-                          height: 'calc(100% - 40px)', // Subtract title height
+                          gap: 1,
+                          height: 'calc(100% - 35px)', // Subtract title height
                         }}
                       >
                         {/* LEFT COLUMN - Row 1: Buyers */}
@@ -1219,9 +1219,9 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                           sx={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: 1.5,
+                            gap: 1,
                             cursor: 'pointer',
-                            p: 1,
+                            p: 0.75,
                             borderRadius: 2,
                             transition: 'all 0.2s',
                             '&:hover': {
@@ -1261,9 +1261,9 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                           sx={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: 1.5,
+                            gap: 1,
                             cursor: 'pointer',
-                            p: 1,
+                            p: 0.75,
                             borderRadius: 2,
                             transition: 'all 0.2s',
                             '&:hover': {
@@ -1303,9 +1303,9 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                           sx={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: 1.5,
+                            gap: 1,
                             cursor: 'pointer',
-                            p: 1,
+                            p: 0.75,
                             borderRadius: 2,
                             transition: 'all 0.2s',
                             '&:hover': {
@@ -1345,9 +1345,9 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                           sx={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: 1.5,
+                            gap: 1,
                             cursor: 'pointer',
-                            p: 1,
+                            p: 0.75,
                             borderRadius: 2,
                             transition: 'all 0.2s',
                             '&:hover': {
@@ -1393,13 +1393,13 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                       flexShrink: 0,
                       background: 'linear-gradient(135deg, rgba(139,92,246,0.02) 0%, rgba(168,85,247,0.03) 100%)',
                       borderRight: `1px solid ${alpha(theme.palette.divider, 0.08)}`,
-                      p: 2.5,
+                      p: 1.5,
                       display: 'flex',
                       flexDirection: 'column',
                       overflow: 'hidden',
                     }}
                   >
-                    <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 3, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 1.5, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
                       Timeline
                     </Typography>
 
@@ -1450,13 +1450,13 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                       width: '25%',
                       flexShrink: 0,
                       background: 'linear-gradient(135deg, rgba(168,85,247,0.02) 0%, rgba(217,70,239,0.03) 100%)',
-                      p: 2.5,
+                      p: 1.5,
                       display: 'flex',
                       flexDirection: 'column',
                       overflow: 'hidden',
                     }}
                   >
-                    <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 3, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '0.875rem', mb: 1.5, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '1px' }}>
                       Checklists
                     </Typography>
 

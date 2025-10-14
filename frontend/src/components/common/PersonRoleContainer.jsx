@@ -42,9 +42,9 @@ const PersonRoleContainer = ({
       sx={{
         display: 'flex',
         alignItems: 'center',
-        gap: 1.5,
+        gap: 1,
         cursor: 'pointer',
-        p: 1,
+        p: 0.75,
         borderRadius: 2,
         transition: 'all 0.2s',
         '&:hover': {
@@ -180,10 +180,12 @@ const PersonRoleContainer = ({
         alignItems: 'center',
         justifyContent: 'center',
         cursor: 'pointer',
-        p: 1,
+        p: 0.5,
         borderRadius: 2,
+        height: hovered ? 'auto' : 0,
         opacity: hovered ? 1 : 0,
-        transition: 'all 0.2s',
+        overflow: 'hidden',
+        transition: 'all 0.2s ease-in-out',
         '&:hover': {
           background: alpha(color.primary, 0.05),
         },
@@ -192,8 +194,8 @@ const PersonRoleContainer = ({
       <IconButton
         size="small"
         sx={{
-          width: 36,
-          height: 36,
+          width: 32,
+          height: 32,
           backgroundColor: alpha(color.primary, 0.1),
           color: color.primary,
           '&:hover': {
@@ -201,13 +203,13 @@ const PersonRoleContainer = ({
           },
         }}
       >
-        <Add sx={{ fontSize: 20 }} />
+        <Add sx={{ fontSize: 18 }} />
       </IconButton>
       <Typography
         variant="caption"
         sx={{
           ml: 1,
-          fontSize: 11,
+          fontSize: 10,
           fontWeight: 600,
           color: color.primary,
         }}
@@ -229,25 +231,19 @@ const PersonRoleContainer = ({
         position: 'relative',
       }}
     >
-      {/* 1 person: Centered + Add button below */}
+      {/* 1 person: Centered + Add button below on hover */}
       {people.length === 1 && (
-        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 1 }}>
-          <Box sx={{ flex: 1, display: 'flex', alignItems: 'center' }}>
-            {renderPersonCard(people[0], 0)}
-          </Box>
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', justifyContent: 'center' }}>
+          {renderPersonCard(people[0], 0)}
           {onAddPerson && renderAddButton()}
         </Box>
       )}
 
-      {/* 2 people: Top 1/3, Bottom 2/3, + Add button */}
+      {/* 2 people: Equal spacing + Add button */}
       {people.length === 2 && (
-        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 1 }}>
-          <Box sx={{ flex: '0 0 30%', display: 'flex', alignItems: 'center' }}>
-            {renderPersonCard(people[0], 0)}
-          </Box>
-          <Box sx={{ flex: '0 0 50%', display: 'flex', alignItems: 'center' }}>
-            {renderPersonCard(people[1], 1)}
-          </Box>
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', gap: 0.5, justifyContent: 'center' }}>
+          {renderPersonCard(people[0], 0)}
+          {renderPersonCard(people[1], 1)}
           {onAddPerson && renderAddButton()}
         </Box>
       )}
