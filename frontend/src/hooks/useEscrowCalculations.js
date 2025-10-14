@@ -8,15 +8,15 @@ import { differenceInDays, isValid } from 'date-fns';
  */
 export const useEscrowCalculations = (escrow) => {
   return useMemo(() => {
-    // Parse numbers once
-    const purchasePrice = parseFloat(escrow.purchasePrice) || 0;
-    const commission = parseFloat(escrow.myCommission) || 0;
-    const grossCommission = parseFloat(escrow.grossCommission) || 0;
-    const checklistProgress = parseInt(escrow.checklistProgress) || 0;
+    // Parse numbers once - support both camelCase and snake_case
+    const purchasePrice = parseFloat(escrow.purchase_price || escrow.purchasePrice) || 0;
+    const commission = parseFloat(escrow.my_commission || escrow.myCommission) || 0;
+    const grossCommission = parseFloat(escrow.gross_commission || escrow.grossCommission) || 0;
+    const checklistProgress = parseInt(escrow.checklist_progress || escrow.checklistProgress) || 0;
 
-    // Parse dates once
-    const closingDate = escrow.scheduledCoeDate || escrow.closingDate;
-    const acceptanceDate = escrow.acceptanceDate;
+    // Parse dates once - support both camelCase and snake_case
+    const closingDate = escrow.closing_date || escrow.scheduledCoeDate || escrow.closingDate;
+    const acceptanceDate = escrow.acceptance_date || escrow.acceptanceDate;
     let daysToClose = null;
     let isUrgent = false;
     let isPastDue = false;
@@ -43,13 +43,19 @@ export const useEscrowCalculations = (escrow) => {
       acceptanceDate
     };
   }, [
-    // Only recalculate if these specific fields change
+    // Only recalculate if these specific fields change (support both naming conventions)
+    escrow.purchase_price,
     escrow.purchasePrice,
+    escrow.my_commission,
     escrow.myCommission,
+    escrow.gross_commission,
     escrow.grossCommission,
+    escrow.checklist_progress,
     escrow.checklistProgress,
+    escrow.closing_date,
     escrow.scheduledCoeDate,
     escrow.closingDate,
+    escrow.acceptance_date,
     escrow.acceptanceDate
   ]);
 };

@@ -246,31 +246,52 @@ class EscrowController {
       }
 
       const listQuery = `
-        SELECT 
+        SELECT
           ${idField} as id,
           ${displayIdField} as "displayId",
           ${displayIdField} as "escrowNumber",
           property_address || '${envSuffix}' as "propertyAddress",
+          property_address as property_address,
           property_image_url as "propertyImage",
+          property_image_url as property_image,
           zillow_url as "zillowUrl",
+          zillow_url as zillow_url,
           escrow_status as "escrowStatus",
+          escrow_status as escrow_status,
           purchase_price as "purchasePrice",
+          purchase_price as purchase_price,
           ${commissionField} as "myCommission",
+          ${commissionField} as my_commission,
+          gross_commission as gross_commission,
           '[]'::jsonb as clients,
           ${acceptanceDateField} as "acceptanceDate",
+          acceptance_date as acceptance_date,
           COALESCE(TO_CHAR(closing_date, 'YYYY-MM-DD'), TO_CHAR(CURRENT_DATE + INTERVAL '30 days', 'YYYY-MM-DD')) as "scheduledCoeDate",
-          CASE 
-            WHEN closing_date IS NOT NULL 
+          closing_date as closing_date,
+          CASE
+            WHEN closing_date IS NOT NULL
             THEN DATE_PART('day', closing_date::timestamp - CURRENT_TIMESTAMP)::integer
             ELSE 0
           END as "daysToClose",
           64 as "checklistProgress",
-          CASE 
+          64 as checklist_progress,
+          CASE
             WHEN updated_at IS NOT NULL THEN TO_CHAR(updated_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
             WHEN created_at IS NOT NULL THEN TO_CHAR(created_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
             ELSE TO_CHAR(NOW(), 'YYYY-MM-DD"T"HH24:MI:SS"Z"')
           END as "lastActivity",
-          FLOOR(RANDOM() * 5 + 1)::integer as "upcomingDeadlines"
+          FLOOR(RANDOM() * 5 + 1)::integer as "upcomingDeadlines",
+          created_at,
+          updated_at,
+          people->>'buyer' as buyer_json,
+          people->'buyer'->>'name' as buyer_name,
+          people->'buyer'->>'email' as buyer_email,
+          people->'seller'->>'name' as seller_name,
+          people->'seller'->>'email' as seller_email,
+          people->'buyer_agent'->>'name' as buyer_agent_name,
+          people->'seller_agent'->>'name' as listing_agent_name,
+          checklists,
+          timeline
         FROM escrows e
         WHERE ${whereClause}
         ORDER BY ${sort} ${order.toUpperCase()}
