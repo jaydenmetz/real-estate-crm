@@ -38,7 +38,7 @@ exports.getAllClients = async (req, res) => {
 
     if (scope === 'user') {
       // User scope: Show only records created by this user
-      whereConditions.push(`cl.created_by = $${paramIndex}`);
+      whereConditions.push(`cl.assigned_agent_id = $${paramIndex}`);
       queryParams.push(userId);
       paramIndex++;
     } else if (scope === 'team') {
