@@ -137,11 +137,16 @@ exports.getListings = async (req, res) => {
     const countResult = await query(countQuery, params);
     const total = parseInt(countResult.rows[0].total);
 
-    // Get listings with pagination
+    // Get listings with pagination (JOIN with users to get agent name)
     params.push(limit, offset);
     const listingsQuery = `
-      SELECT l.*
+      SELECT
+        l.*,
+        u.first_name || ' ' || u.last_name AS agent_name,
+        u.email AS agent_email,
+        u.phone AS agent_phone
       FROM listings l
+      LEFT JOIN users u ON l.listing_agent_id = u.id
       ${whereClause}
       ORDER BY l.${sortColumn} ${order}
       LIMIT $${params.length - 1} OFFSET $${params.length}
