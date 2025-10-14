@@ -1110,10 +1110,34 @@ const EscrowsDashboard = () => {
       const response = await escrowsAPI.update(escrowId, updateData);
 
       if (response.success && response.data) {
+        // Parse JSONB fields from server response (they come as strings from raw DB row)
+        const serverData = { ...response.data };
+        if (typeof serverData.people === 'string') {
+          try {
+            serverData.people = JSON.parse(serverData.people);
+          } catch (e) {
+            console.error('Failed to parse people JSON:', e);
+          }
+        }
+        if (typeof serverData.checklists === 'string') {
+          try {
+            serverData.checklists = JSON.parse(serverData.checklists);
+          } catch (e) {
+            console.error('Failed to parse checklists JSON:', e);
+          }
+        }
+        if (typeof serverData.timeline === 'string') {
+          try {
+            serverData.timeline = JSON.parse(serverData.timeline);
+          } catch (e) {
+            console.error('Failed to parse timeline JSON:', e);
+          }
+        }
+
         // Update with server response (in case server modified data)
         setEscrows((prev) =>
           prev.map((e) =>
-            e.id === escrowId ? { ...e, ...response.data } : e
+            e.id === escrowId ? { ...e, ...serverData } : e
           )
         );
 
