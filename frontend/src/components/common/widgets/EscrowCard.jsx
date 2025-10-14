@@ -25,6 +25,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Close,
+  Add,
+  Remove,
 } from '@mui/icons-material';
 import { useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -44,7 +46,11 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
   // Inline editing states
   const [editingField, setEditingField] = useState(null);
   const [editValue, setEditValue] = useState('');
-  const [saving, setSaving] = useState(false)
+  const [saving, setSaving] = useState(false);
+
+  // Multiple buyers/sellers state
+  const [buyers, setBuyers] = useState([{ name: escrow.buyer_name || 'TBD', email: escrow.buyer_email }]);
+  const [sellers, setSellers] = useState([{ name: escrow.seller_name || 'TBD', email: escrow.seller_email }])
 
   // ✅ Memoized calculations - only recalculate when escrow data changes
   const calculations = useEscrowCalculations(escrow);
@@ -135,6 +141,31 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
       setSaving(false);
     }
   }, [escrow.id, editValue, onUpdate, handleCancelEdit]);
+
+  // ✅ Multiple buyers/sellers handlers
+  const handleAddBuyer = useCallback((e) => {
+    e?.stopPropagation();
+    setBuyers(prev => [...prev, { name: 'TBD', email: '' }]);
+  }, []);
+
+  const handleAddSeller = useCallback((e) => {
+    e?.stopPropagation();
+    setSellers(prev => [...prev, { name: 'TBD', email: '' }]);
+  }, []);
+
+  const handleRemoveBuyer = useCallback((index, e) => {
+    e?.stopPropagation();
+    if (buyers.length > 1) {
+      setBuyers(prev => prev.filter((_, i) => i !== index));
+    }
+  }, [buyers.length]);
+
+  const handleRemoveSeller = useCallback((index, e) => {
+    e?.stopPropagation();
+    if (sellers.length > 1) {
+      setSellers(prev => prev.filter((_, i) => i !== index));
+    }
+  }, [sellers.length]);
 
   // ✅ Status configuration (constant lookup, no object creation)
   const statusConfig = getStatusConfig(escrow.escrow_status);
@@ -888,45 +919,85 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                       <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
                         {/* LEFT COLUMN */}
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                          {/* Buyer */}
+                          {/* Buyer(s) */}
+                          {buyers.map((buyer, index) => (
+                            <Box
+                              key={`buyer-${index}`}
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1.5,
+                                cursor: 'pointer',
+                                p: 1,
+                                borderRadius: 2,
+                                transition: 'all 0.2s',
+                                '&:hover': {
+                                  background: alpha(people.buyer.color.primary, 0.05),
+                                },
+                              }}
+                            >
+                              <Avatar
+                                sx={{
+                                  width: 40,
+                                  height: 40,
+                                  background: `linear-gradient(135deg, ${people.buyer.color.primary} 0%, ${people.buyer.color.secondary} 100%)`,
+                                  fontWeight: 700,
+                                  fontSize: '1.1rem',
+                                }}
+                              >
+                                {getInitials(buyer.name)}
+                              </Avatar>
+                              <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: people.buyer.color.primary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
+                                  {buyers.length > 1 ? `Buyer ${index + 1}` : 'Buyer'}
+                                </Typography>
+                                <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  {buyer.name}
+                                </Typography>
+                                {buyer.company && (
+                                  <Typography variant="caption" sx={{ fontSize: 10, color: theme.palette.text.secondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                                    {buyer.company}
+                                  </Typography>
+                                )}
+                              </Box>
+                              {buyers.length > 1 && (
+                                <IconButton
+                                  size="small"
+                                  onClick={(e) => handleRemoveBuyer(index, e)}
+                                  sx={{ width: 24, height: 24, color: 'error.main' }}
+                                >
+                                  <Remove sx={{ fontSize: 16 }} />
+                                </IconButton>
+                              )}
+                            </Box>
+                          ))}
+
+                          {/* Add Buyer Button */}
                           <Box
+                            onClick={handleAddBuyer}
                             sx={{
                               display: 'flex',
                               alignItems: 'center',
-                              gap: 1.5,
+                              justifyContent: 'center',
                               cursor: 'pointer',
-                              p: 1,
-                              borderRadius: 2,
-                              transition: 'all 0.2s',
-                              '&:hover': {
-                                background: alpha(people.buyer.color.primary, 0.05),
-                              },
+                              mt: -1,
+                              mb: 1,
                             }}
                           >
-                            <Avatar
+                            <IconButton
+                              size="small"
                               sx={{
-                                width: 40,
-                                height: 40,
-                                background: `linear-gradient(135deg, ${people.buyer.color.primary} 0%, ${people.buyer.color.secondary} 100%)`,
-                                fontWeight: 700,
-                                fontSize: '1.1rem',
+                                width: 28,
+                                height: 28,
+                                backgroundColor: alpha(people.buyer.color.primary, 0.1),
+                                color: people.buyer.color.primary,
+                                '&:hover': {
+                                  backgroundColor: alpha(people.buyer.color.primary, 0.2),
+                                },
                               }}
                             >
-                              {getInitials(people.buyer.name)}
-                            </Avatar>
-                            <Box sx={{ flex: 1, minWidth: 0 }}>
-                              <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: people.buyer.color.primary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
-                                Buyer
-                              </Typography>
-                              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {people.buyer.name}
-                              </Typography>
-                              {people.buyer.company && (
-                                <Typography variant="caption" sx={{ fontSize: 10, color: theme.palette.text.secondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
-                                  {people.buyer.company}
-                                </Typography>
-                              )}
-                            </Box>
+                              <Add sx={{ fontSize: 18 }} />
+                            </IconButton>
                           </Box>
 
                           {/* Buyer Agent */}
@@ -1014,45 +1085,85 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
 
                         {/* RIGHT COLUMN */}
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                          {/* Seller */}
+                          {/* Seller(s) */}
+                          {sellers.map((seller, index) => (
+                            <Box
+                              key={`seller-${index}`}
+                              sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 1.5,
+                                cursor: 'pointer',
+                                p: 1,
+                                borderRadius: 2,
+                                transition: 'all 0.2s',
+                                '&:hover': {
+                                  background: alpha(people.seller.color.primary, 0.05),
+                                },
+                              }}
+                            >
+                              <Avatar
+                                sx={{
+                                  width: 40,
+                                  height: 40,
+                                  background: `linear-gradient(135deg, ${people.seller.color.primary} 0%, ${people.seller.color.secondary} 100%)`,
+                                  fontWeight: 700,
+                                  fontSize: '1.1rem',
+                                }}
+                              >
+                                {getInitials(seller.name)}
+                              </Avatar>
+                              <Box sx={{ flex: 1, minWidth: 0 }}>
+                                <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: people.seller.color.primary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
+                                  {sellers.length > 1 ? `Seller ${index + 1}` : 'Seller'}
+                                </Typography>
+                                <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                  {seller.name}
+                                </Typography>
+                                {seller.company && (
+                                  <Typography variant="caption" sx={{ fontSize: 10, color: theme.palette.text.secondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
+                                    {seller.company}
+                                  </Typography>
+                                )}
+                              </Box>
+                              {sellers.length > 1 && (
+                                <IconButton
+                                  size="small"
+                                  onClick={(e) => handleRemoveSeller(index, e)}
+                                  sx={{ width: 24, height: 24, color: 'error.main' }}
+                                >
+                                  <Remove sx={{ fontSize: 16 }} />
+                                </IconButton>
+                              )}
+                            </Box>
+                          ))}
+
+                          {/* Add Seller Button */}
                           <Box
+                            onClick={handleAddSeller}
                             sx={{
                               display: 'flex',
                               alignItems: 'center',
-                              gap: 1.5,
+                              justifyContent: 'center',
                               cursor: 'pointer',
-                              p: 1,
-                              borderRadius: 2,
-                              transition: 'all 0.2s',
-                              '&:hover': {
-                                background: alpha(people.seller.color.primary, 0.05),
-                              },
+                              mt: -1,
+                              mb: 1,
                             }}
                           >
-                            <Avatar
+                            <IconButton
+                              size="small"
                               sx={{
-                                width: 40,
-                                height: 40,
-                                background: `linear-gradient(135deg, ${people.seller.color.primary} 0%, ${people.seller.color.secondary} 100%)`,
-                                fontWeight: 700,
-                                fontSize: '1.1rem',
+                                width: 28,
+                                height: 28,
+                                backgroundColor: alpha(people.seller.color.primary, 0.1),
+                                color: people.seller.color.primary,
+                                '&:hover': {
+                                  backgroundColor: alpha(people.seller.color.primary, 0.2),
+                                },
                               }}
                             >
-                              {getInitials(people.seller.name)}
-                            </Avatar>
-                            <Box sx={{ flex: 1, minWidth: 0 }}>
-                              <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: people.seller.color.primary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block' }}>
-                                Seller
-                              </Typography>
-                              <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {people.seller.name}
-                              </Typography>
-                              {people.seller.company && (
-                                <Typography variant="caption" sx={{ fontSize: 10, color: theme.palette.text.secondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'block' }}>
-                                  {people.seller.company}
-                                </Typography>
-                              )}
-                            </Box>
+                              <Add sx={{ fontSize: 18 }} />
+                            </IconButton>
                           </Box>
 
                           {/* Listing Agent */}
