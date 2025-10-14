@@ -33,6 +33,7 @@ const PersonRoleContainer = ({
 }) => {
   const theme = useTheme();
   const [hovered, setHovered] = useState(false);
+  const [addButtonHovered, setAddButtonHovered] = useState(false);
 
   // Render single person card
   const renderPersonCard = (person, index, sx = {}) => (
@@ -42,9 +43,9 @@ const PersonRoleContainer = ({
       sx={{
         display: 'flex',
         alignItems: 'center',
-        gap: 1,
+        gap: 0.5,
         cursor: 'pointer',
-        p: 0.75,
+        p: 0.375,
         borderRadius: 2,
         transition: 'all 0.2s',
         '&:hover': {
@@ -168,7 +169,7 @@ const PersonRoleContainer = ({
     </Box>
   );
 
-  // Render add button for all people types (shows on hover)
+  // Render add button for all people types (only shows on direct hover)
   const renderAddButton = () => {
     // Determine label based on role
     const getAddLabel = () => {
@@ -181,6 +182,8 @@ const PersonRoleContainer = ({
 
     return (
       <Box
+        onMouseEnter={() => setAddButtonHovered(true)}
+        onMouseLeave={() => setAddButtonHovered(false)}
         onClick={(e) => {
           e.stopPropagation();
           onAddPerson && onAddPerson();
@@ -188,13 +191,15 @@ const PersonRoleContainer = ({
         sx={{
           display: 'flex',
           alignItems: 'center',
-          gap: 1,
-          cursor: hovered ? 'pointer' : 'default',
-          p: 0.75,
+          gap: 0.5,
+          cursor: addButtonHovered ? 'pointer' : 'default',
+          p: 0.375,
           borderRadius: 2,
-          opacity: hovered ? 1 : 0,
-          pointerEvents: hovered ? 'auto' : 'none', // Disable clicks when invisible
-          transition: 'opacity 0.2s ease-in-out',
+          height: addButtonHovered ? 'auto' : 0,
+          opacity: addButtonHovered ? 1 : 0,
+          overflow: 'hidden',
+          pointerEvents: addButtonHovered ? 'auto' : 'none',
+          transition: 'all 0.2s ease-in-out',
           '&:hover': {
             background: alpha(color.primary, 0.05),
           },
@@ -244,15 +249,15 @@ const PersonRoleContainer = ({
         overflow: 'hidden', // Prevent content from expanding container
       }}
     >
-      {/* 1 person: Shifts up when Add button appears */}
+      {/* 1 person: Shifts up only when Add button is hovered */}
       {people.length === 1 && (
         <Box
           sx={{
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
-            justifyContent: hovered ? 'flex-start' : 'center',
-            pt: hovered ? 1 : 0,
+            justifyContent: addButtonHovered ? 'flex-start' : 'center',
+            pt: addButtonHovered ? 0.5 : 0,
             transition: 'all 0.2s ease-in-out',
           }}
         >
@@ -261,16 +266,16 @@ const PersonRoleContainer = ({
         </Box>
       )}
 
-      {/* 2 people: Compress spacing when Add button appears */}
+      {/* 2 people: Compress spacing only when Add button is hovered */}
       {people.length === 2 && (
         <Box
           sx={{
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
-            gap: hovered ? 0 : 0.5,
-            justifyContent: hovered ? 'flex-start' : 'center',
-            pt: hovered ? 0.5 : 0,
+            gap: addButtonHovered ? 0 : 0.25,
+            justifyContent: addButtonHovered ? 'flex-start' : 'center',
+            pt: addButtonHovered ? 0.25 : 0,
             transition: 'all 0.2s ease-in-out',
           }}
         >
