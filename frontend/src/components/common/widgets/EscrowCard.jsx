@@ -92,6 +92,10 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
   const [selectedRole, setSelectedRole] = useState(null);
   const [selectedRoleIndex, setSelectedRoleIndex] = useState(null);
 
+  // Hover states for Add Buyer/Seller buttons
+  const [showAddBuyerButton, setShowAddBuyerButton] = useState(false);
+  const [showAddSellerButton, setShowAddSellerButton] = useState(false);
+
   // Sync state when escrow data changes from parent
   useEffect(() => {
     setBuyers(initializeBuyers());
@@ -1029,17 +1033,32 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                         </Typography>
                       </Box>
                     ) : daysToClose !== null ? (
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          fontWeight: 700,
-                          fontSize: '0.875rem',
-                          color: isPastDue ? '#ef4444' : isUrgent ? '#f59e0b' : '#3b82f6',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        {isPastDue ? `${Math.abs(daysToClose)}d late` : `${daysToClose}d`}
-                      </Typography>
+                      <Box sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        px: 1.5,
+                        py: 0.5,
+                        borderRadius: 2,
+                        background: isPastDue
+                          ? 'linear-gradient(135deg, rgba(239,68,68,0.1) 0%, rgba(220,38,38,0.15) 100%)'
+                          : isUrgent
+                          ? 'linear-gradient(135deg, rgba(245,158,11,0.1) 0%, rgba(217,119,6,0.15) 100%)'
+                          : 'linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(37,99,235,0.15) 100%)',
+                        border: `1px solid ${alpha(isPastDue ? '#ef4444' : isUrgent ? '#f59e0b' : '#3b82f6', 0.2)}`,
+                      }}>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            fontWeight: 700,
+                            fontSize: '0.75rem',
+                            color: isPastDue ? '#ef4444' : isUrgent ? '#f59e0b' : '#3b82f6',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {isPastDue ? `${Math.abs(daysToClose)}d late` : `${daysToClose}d`}
+                        </Typography>
+                      </Box>
                     ) : (
                       <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.secondary }}>
                         TBD
@@ -1097,7 +1116,11 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                       {/* Two Column Grid */}
                       <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 2 }}>
                         {/* LEFT COLUMN */}
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <Box
+                          sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}
+                          onMouseEnter={() => setShowAddBuyerButton(true)}
+                          onMouseLeave={() => setShowAddBuyerButton(false)}
+                        >
                           {/* Buyer(s) */}
                           {buyers.map((buyer, index) => (
                             <Box
@@ -1152,7 +1175,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                             </Box>
                           ))}
 
-                          {/* Add Buyer Button - Only show if less than 6 buyers */}
+                          {/* Add Buyer Button - Only visible on hover */}
                           {buyers.length < 6 && (
                             <Box
                               onClick={handleAddBuyer}
@@ -1161,8 +1184,11 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 cursor: 'pointer',
-                                mt: -1,
-                                mb: 1,
+                                opacity: showAddBuyerButton ? 1 : 0,
+                                transition: 'opacity 0.2s',
+                                pointerEvents: showAddBuyerButton ? 'auto' : 'none',
+                                height: showAddBuyerButton ? 'auto' : 0,
+                                overflow: 'hidden',
                               }}
                             >
                               <IconButton
@@ -1268,7 +1294,11 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                         </Box>
 
                         {/* RIGHT COLUMN */}
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <Box
+                          sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}
+                          onMouseEnter={() => setShowAddSellerButton(true)}
+                          onMouseLeave={() => setShowAddSellerButton(false)}
+                        >
                           {/* Seller(s) */}
                           {sellers.map((seller, index) => (
                             <Box
@@ -1323,7 +1353,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                             </Box>
                           ))}
 
-                          {/* Add Seller Button - Only show if less than 6 sellers */}
+                          {/* Add Seller Button - Only visible on hover */}
                           {sellers.length < 6 && (
                             <Box
                               onClick={handleAddSeller}
@@ -1332,8 +1362,11 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                                 alignItems: 'center',
                                 justifyContent: 'center',
                                 cursor: 'pointer',
-                                mt: -1,
-                                mb: 1,
+                                opacity: showAddSellerButton ? 1 : 0,
+                                transition: 'opacity 0.2s',
+                                pointerEvents: showAddSellerButton ? 'auto' : 'none',
+                                height: showAddSellerButton ? 'auto' : 0,
+                                overflow: 'hidden',
                               }}
                             >
                               <IconButton
