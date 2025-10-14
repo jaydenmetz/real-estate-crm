@@ -584,7 +584,7 @@ const EscrowsDashboard = () => {
     }
   }, [debugExpanded]);
 
-  // WebSocket real-time updates
+  // WebSocket real-time updates - Selective, surgical updates only
   useEffect(() => {
     if (!isConnected) return;
 
@@ -595,20 +595,58 @@ const EscrowsDashboard = () => {
     const unsubscribe = websocketService.on('data:update', (data) => {
       console.log('📡 WebSocket data update received:', data);
 
-      // ⚠️ DISABLED: Full refetch causes hero stats to refresh unnecessarily
-      // We already have optimistic updates working perfectly in handleUpdateEscrow
-      // Only needed for multi-user collaboration (future: check if update is from another user)
+      if (data.entityType === 'escrow' && data.action === 'updated') {
+        // Surgical update: Only update the specific escrow that changed
+        const escrowId = data.entityId;
+        console.log('🔧 Applying surgical update to escrow:', escrowId);
 
-      // if (data.entityType === 'escrow') {
-      //   console.log('🔄 Refetching escrows due to real-time update');
-      //   fetchEscrows();
-      // }
+        // Fetch ONLY the updated escrow (not all escrows)
+        escrowsAPI.getById(escrowId).then((response) => {
+          if (response.success && response.data) {
+            const updatedEscrow = response.data;
+
+            // Determine if this update affects stats
+            const currentEscrow = escrows.find(e => e.id === escrowId);
+            const affectsStats = currentEscrow && (
+              currentEscrow.purchase_price !== updatedEscrow.purchase_price ||
+              currentEscrow.my_commission !== updatedEscrow.my_commission ||
+              currentEscrow.net_commission !== updatedEscrow.net_commission ||
+              currentEscrow.gross_commission !== updatedEscrow.gross_commission ||
+              currentEscrow.escrow_status !== updatedEscrow.escrow_status ||
+              currentEscrow.closing_date !== updatedEscrow.closing_date
+            );
+
+            // Set skip flag if update doesn't affect stats
+            if (!affectsStats) {
+              skipStatsRecalculation.current += 1;
+              console.log('📡 WebSocket: Non-stats update, skip counter set to:', skipStatsRecalculation.current);
+            }
+
+            // Update only the specific escrow in the array
+            setEscrows((prev) =>
+              prev.map((e) => (e.id === escrowId ? { ...e, ...updatedEscrow } : e))
+            );
+
+            // If it affects stats, recalculate manually
+            if (affectsStats) {
+              console.log('📡 WebSocket: Stats-affecting update, recalculating');
+              const updatedEscrows = escrows.map((e) =>
+                e.id === escrowId ? { ...e, ...updatedEscrow } : e
+              );
+              calculateStats(updatedEscrows, selectedStatus);
+              generateChartData(updatedEscrows);
+            }
+          }
+        }).catch((error) => {
+          console.error('Failed to fetch updated escrow from WebSocket:', error);
+        });
+      }
     });
 
     return () => {
       if (unsubscribe) unsubscribe();
     };
-  }, [isConnected]);
+  }, [isConnected, escrows, selectedStatus]);
 
   const fetchEscrows = async (pageNum = 1, appendData = false) => {
     try {
