@@ -525,10 +525,10 @@ const EscrowsDashboard = () => {
     localStorage.setItem('escrowsScope', scope);
   }, [scope]);
 
-  // PHASE 6: Refetch escrows when scope changes
+  // PHASE 6: Refetch escrows when scope or selectedStatus changes
   useEffect(() => {
     fetchEscrows();
-  }, [scope]);
+  }, [scope, selectedStatus]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -698,8 +698,10 @@ const EscrowsDashboard = () => {
 
       // Fetch escrows with pagination (50 per page for optimal performance)
       // PHASE 6: Include scope filter (brokerage, team, user)
+      // Only include archived if viewing archived status
       const response = await escrowsAPI.getAll({
-        includeArchived: true,
+        includeArchived: selectedStatus === 'archived',
+        archived: selectedStatus === 'archived' ? 'true' : undefined,
         page: pageNum,
         limit: 50,
         scope: scope // Pass scope from state
