@@ -14,7 +14,7 @@ exports.getAppointments = async (req, res) => {
     } = req.query;
 
     const offset = (page - 1) * limit;
-    const whereConditions = ['deleted_at IS NULL'];
+    const whereConditions = ['a.deleted_at IS NULL'];
     const queryParams = [];
     let paramIndex = 1;
 
