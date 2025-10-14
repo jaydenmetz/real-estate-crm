@@ -13,6 +13,7 @@ import {
   alpha,
 } from '@mui/material';
 import { PersonAdd, Save, Close } from '@mui/icons-material';
+import { contactsAPI } from '../../services/api.service';
 
 /**
  * New Contact Modal
@@ -58,28 +59,61 @@ export const NewContactModal = ({
 
     setSaving(true);
     try {
-      // Create contact object
-      const newContact = {
-        id: `temp-${Date.now()}`, // Temporary ID
-        full_name: formData.full_name,
-        email: formData.email,
-        phone: formData.phone,
-        company_name: formData.company_name,
-        roles: [{ type: formData.role }],
+      // Map role to contact_type for database
+      const roleToContactType = {
+        buyer: 'buyer',
+        seller: 'seller',
+        buyer_agent: 'agent',
+        listing_agent: 'agent',
+        lender: 'vendor',
+        escrow_officer: 'vendor',
       };
 
-      await onSave(newContact);
+      // Parse full name into first and last name
+      const nameParts = formData.full_name.trim().split(' ');
+      const firstName = nameParts[0] || '';
+      const lastName = nameParts.slice(1).join(' ') || '';
 
-      // Reset form
-      setFormData({
-        full_name: '',
-        email: '',
-        phone: '',
-        company_name: '',
-        role: roleType || '',
-      });
+      // Create contact in database
+      const contactData = {
+        contact_type: roleToContactType[formData.role] || 'other',
+        first_name: firstName,
+        last_name: lastName,
+        email: formData.email || null,
+        phone: formData.phone || null,
+        company_name: formData.company_name || null,
+      };
+
+      console.log('Creating contact:', contactData);
+      const response = await contactsAPI.create(contactData);
+
+      if (response.success && response.data) {
+        // Create contact object with role info for escrow assignment
+        const newContact = {
+          id: response.data.id,
+          full_name: response.data.full_name || formData.full_name,
+          email: response.data.email,
+          phone: response.data.phone,
+          company_name: response.data.company_name,
+          roles: [{ type: formData.role }],
+        };
+
+        await onSave(newContact);
+
+        // Reset form
+        setFormData({
+          full_name: '',
+          email: '',
+          phone: '',
+          company_name: '',
+          role: roleType || '',
+        });
+      } else {
+        throw new Error('Failed to create contact');
+      }
     } catch (error) {
       console.error('Failed to create contact:', error);
+      alert('Failed to create contact. Please try again.');
     } finally {
       setSaving(false);
     }
