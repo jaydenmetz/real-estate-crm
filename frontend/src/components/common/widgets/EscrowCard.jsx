@@ -33,6 +33,7 @@ import {
   Remove,
   TrendingUp,
   Schedule,
+  RestoreFromTrash as RestoreFromTrashIcon,
 } from '@mui/icons-material';
 import { useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -798,7 +799,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                   }}
                 />
 
-                {/* Hover Zone for Delete Button - TOP RIGHT */}
+                {/* Hover Zone for Delete/Restore Buttons - TOP RIGHT */}
                 {(onArchive || onDelete || onRestore) && (
                   <Box
                     sx={{
@@ -808,19 +809,48 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                       width: 80,
                       height: 80,
                       zIndex: 3,
-                      '&:hover .delete-button': {
+                      '&:hover .action-button': {
                         opacity: 1,
                       },
                     }}
                   >
+                    {/* Restore Button (for archived escrows) */}
+                    {isArchived && onRestore && (
+                      <IconButton
+                        className="action-button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRestore(escrow.id);
+                        }}
+                        sx={{
+                          position: 'absolute',
+                          top: 10,
+                          right: 46,
+                          opacity: 0,
+                          backgroundColor: 'rgba(34, 197, 94, 0.3)',
+                          color: 'rgba(255, 255, 255, 0.7)',
+                          width: 28,
+                          height: 28,
+                          backdropFilter: 'blur(8px)',
+                          '&:hover': {
+                            backgroundColor: 'rgba(34, 197, 94, 0.5)',
+                            color: 'rgba(255, 255, 255, 0.95)',
+                            transform: 'scale(1.15)',
+                          },
+                          transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                        }}
+                      >
+                        <RestoreFromTrashIcon sx={{ fontSize: 16 }} />
+                      </IconButton>
+                    )}
+
+                    {/* Delete/Archive Button */}
                     <IconButton
-                      className="delete-button"
+                      className="action-button"
                       onClick={(e) => {
                         e.stopPropagation();
                         if (isArchived && onDelete) {
                           onDelete(escrow.id);
-                        } else if (isArchived && onRestore) {
-                          onRestore(escrow.id);
                         } else if (onArchive) {
                           onArchive(escrow.id);
                         }

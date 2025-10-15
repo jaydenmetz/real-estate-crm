@@ -2610,10 +2610,10 @@ const EscrowsDashboard = () => {
                 sx={{
                   width: 36,
                   height: 36,
-                  backgroundColor: selectedStatus === 'archived' ? 'warning.main' : alpha('#000', 0.06),
+                  backgroundColor: selectedStatus === 'archived' ? 'error.main' : alpha('#000', 0.06),
                   color: selectedStatus === 'archived' ? 'white' : 'text.secondary',
                   '&:hover': {
-                    backgroundColor: selectedStatus === 'archived' ? 'warning.dark' : alpha('#000', 0.1),
+                    backgroundColor: selectedStatus === 'archived' ? 'error.dark' : alpha('#000', 0.1),
                   },
                   transition: 'all 0.2s',
                 }}
@@ -2890,10 +2890,10 @@ const EscrowsDashboard = () => {
               sx={{
                 width: 40,
                 height: 40,
-                backgroundColor: selectedStatus === 'archived' ? 'warning.main' : alpha('#000', 0.06),
+                backgroundColor: selectedStatus === 'archived' ? 'error.main' : alpha('#000', 0.06),
                 color: selectedStatus === 'archived' ? 'white' : 'text.secondary',
                 '&:hover': {
-                  backgroundColor: selectedStatus === 'archived' ? 'warning.dark' : alpha('#000', 0.1),
+                  backgroundColor: selectedStatus === 'archived' ? 'error.dark' : alpha('#000', 0.1),
                 },
                 transition: 'all 0.2s',
               }}
@@ -3201,98 +3201,22 @@ const EscrowsDashboard = () => {
                 );
               }
 
-              return (
-                <>
-                  {/* Batch action toolbar for archived escrows */}
-                  <Box sx={{ gridColumn: '1 / -1', mb: 2, display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Checkbox
-                      checked={selectedArchivedIds.length === archivedEscrows.length && archivedEscrows.length > 0}
-                      indeterminate={selectedArchivedIds.length > 0 && selectedArchivedIds.length < archivedEscrows.length}
-                      onChange={(e) => handleSelectAll(e.target.checked)}
-                    />
-                    <Typography variant="body2">
-                      {selectedArchivedIds.length > 0
-                        ? `${selectedArchivedIds.length} selected`
-                        : 'Select all'}
-                    </Typography>
-                    {selectedArchivedIds.length > 0 && (
-                      <Button
-                        variant="contained"
-                        color="error"
-                        size="small"
-                        startIcon={batchDeleting ? <CircularProgress size={16} color="inherit" /> : <DeleteForeverIcon />}
-                        onClick={handleBatchDelete}
-                        disabled={batchDeleting}
-                      >
-                        Delete {selectedArchivedIds.length} Escrow{selectedArchivedIds.length > 1 ? 's' : ''}
-                      </Button>
-                    )}
-                  </Box>
-
-                  {archivedEscrows.map((escrow, index) => {
-                const isSelected = selectedArchivedIds.includes(escrow.id);
-
-                return (
-                  <Box key={escrow.id} sx={{ position: 'relative' }}>
-                    {/* Selection checkbox */}
-                    <Checkbox
-                      checked={isSelected}
-                      onChange={(e) => handleSelectEscrow(escrow.id, e.target.checked)}
-                      sx={{
-                        position: 'absolute',
-                        top: 8,
-                        left: 8,
-                        zIndex: 10,
-                        bgcolor: 'background.paper',
-                        '&:hover': { bgcolor: 'background.paper' }
-                      }}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-
-                    {viewMode === 'grid' ? (
-                      <EscrowCardGrid
-                        escrow={escrow}
-                        index={index}
-                        showCommission={true}
-                        isArchived={true}
-                        onQuickAction={(action, escrowData) => {
-                          if (action === 'view') {
-                            handleEscrowClick(escrowData.id);
-                          } else if (action === 'restore') {
-                            handleRestore(escrowData.id);
-                          } else if (action === 'delete') {
-                            handlePermanentDelete(escrowData.id);
-                          }
-                        }}
-                        sx={{ pl: 5 }}
-                      />
-                    ) : viewMode === 'compact' ? (
-                      <EscrowCompactCard
-                        escrow={escrow}
-                        index={index}
-                        showCommission={true}
-                        isArchived={true}
-                        onRestore={() => handleRestore(escrow.id)}
-                        onDelete={() => handlePermanentDelete(escrow.id)}
-                        sx={{ pl: 5 }}
-                      />
-                    ) : (
-                      <EscrowCard
-                        escrow={escrow}
-                        onClick={handleEscrowClick}
-                        onChecklistUpdate={handleChecklistUpdate}
-                        onRestore={handleRestore}
-                        onDelete={handlePermanentDelete}
-                        isArchived={true}
-                        index={index}
-                        sx={{ pl: 5 }}
-                      />
-                    )}
-                  </Box>
-                );
-              })}
-                </>
-              );
+              // Use same display pattern as active escrows (no special grid/compact views)
+              return archivedEscrows.map((escrow, index) => (
+                <EscrowCard
+                  key={escrow.id}
+                  escrow={escrow}
+                  viewMode={viewMode}
+                  animationType={animationType}
+                  animationDuration={animationDuration}
+                  animationIntensity={animationIntensity}
+                  index={index}
+                  onRestore={handleRestore}
+                  onDelete={handlePermanentDelete}
+                  isArchived={true}
+                  onUpdate={handleUpdateEscrow}
+                />
+              ));
             }
 
             // Otherwise show regular escrows filtered by status (exclude archived)
