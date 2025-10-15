@@ -1446,6 +1446,8 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
         value={commission}
         color="#6366f1"
         prefix="$"
+        isCommission={true}
+        purchasePrice={parseFloat(escrow.purchase_price || escrow.purchasePrice || 0)}
       />
 
       {/* People Editor Modal */}

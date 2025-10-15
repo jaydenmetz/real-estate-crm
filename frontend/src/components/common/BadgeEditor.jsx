@@ -7,8 +7,11 @@ import {
   IconButton,
   InputAdornment,
   Zoom,
+  ToggleButtonGroup,
+  ToggleButton,
+  Divider,
 } from '@mui/material';
-import { Check, Close } from '@mui/icons-material';
+import { Check, Close, Percent, AttachMoney } from '@mui/icons-material';
 import { alpha } from '@mui/material/styles';
 
 /**
@@ -21,6 +24,8 @@ import { alpha } from '@mui/material/styles';
  * @param {number} value - Current value
  * @param {string} color - Badge color theme
  * @param {string} prefix - Currency prefix (default "$")
+ * @param {boolean} isCommission - Enable percentage/flat toggle for commission
+ * @param {number} purchasePrice - Purchase price for commission calculation
  */
 export const BadgeEditor = ({
   open,
@@ -30,8 +35,11 @@ export const BadgeEditor = ({
   value,
   color = '#10b981',
   prefix = '$',
+  isCommission = false,
+  purchasePrice = 0,
 }) => {
   const [editValue, setEditValue] = useState('');
+  const [commissionType, setCommissionType] = useState('flat'); // 'percentage' or 'flat'
   const [saving, setSaving] = useState(false);
 
   // Initialize editValue when dialog opens
@@ -48,13 +56,30 @@ export const BadgeEditor = ({
 
     setSaving(true);
     try {
-      await onSave(parseFloat(editValue));
+      let valueToSave = parseFloat(editValue);
+
+      // If commission and percentage type, calculate the dollar amount
+      if (isCommission && commissionType === 'percentage' && purchasePrice) {
+        valueToSave = (purchasePrice * parseFloat(editValue)) / 100;
+      }
+
+      await onSave(valueToSave);
       onClose();
     } catch (error) {
       console.error('Failed to save:', error);
     } finally {
       setSaving(false);
     }
+  };
+
+  // Calculate commission amount if percentage type
+  const getCalculatedCommission = () => {
+    if (!isCommission || commissionType !== 'percentage' || !editValue || !purchasePrice) {
+      return null;
+    }
+    const percentage = parseFloat(editValue);
+    if (isNaN(percentage)) return null;
+    return (purchasePrice * percentage) / 100;
   };
 
   const handleKeyPress = (e) => {
@@ -125,6 +150,51 @@ export const BadgeEditor = ({
           {formatDisplayValue(value)}
         </Typography>
 
+        {/* Commission Type Toggle */}
+        {isCommission && (
+          <Box sx={{ mb: 3 }}>
+            <ToggleButtonGroup
+              value={commissionType}
+              exclusive
+              onChange={(e, newType) => {
+                if (newType !== null) {
+                  setCommissionType(newType);
+                  setEditValue(''); // Clear value when switching types
+                }
+              }}
+              fullWidth
+              sx={{
+                backgroundColor: 'rgba(255,255,255,0.1)',
+                '& .MuiToggleButton-root': {
+                  color: 'rgba(255,255,255,0.7)',
+                  borderColor: 'rgba(255,255,255,0.3)',
+                  fontWeight: 600,
+                  '&.Mui-selected': {
+                    backgroundColor: 'rgba(255,255,255,0.25)',
+                    color: 'white',
+                    borderColor: 'rgba(255,255,255,0.5)',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255,255,255,0.35)',
+                    },
+                  },
+                  '&:hover': {
+                    backgroundColor: 'rgba(255,255,255,0.15)',
+                  },
+                },
+              }}
+            >
+              <ToggleButton value="percentage">
+                <Percent sx={{ mr: 1, fontSize: 18 }} />
+                Percentage
+              </ToggleButton>
+              <ToggleButton value="flat">
+                <AttachMoney sx={{ mr: 1, fontSize: 18 }} />
+                Flat Amount
+              </ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
+        )}
+
         {/* Edit Input */}
         <TextField
           fullWidth
@@ -136,13 +206,20 @@ export const BadgeEditor = ({
           placeholder="Enter new value"
           disabled={saving}
           InputProps={{
-            startAdornment: (
+            startAdornment: isCommission && commissionType === 'percentage' ? null : (
               <InputAdornment position="start">
                 <Typography sx={{ color: 'white', fontWeight: 700, fontSize: '1.5rem' }}>
                   {prefix}
                 </Typography>
               </InputAdornment>
             ),
+            endAdornment: isCommission && commissionType === 'percentage' ? (
+              <InputAdornment position="end">
+                <Typography sx={{ color: 'white', fontWeight: 700, fontSize: '1.5rem' }}>
+                  %
+                </Typography>
+              </InputAdornment>
+            ) : null,
           }}
           sx={{
             '& .MuiOutlinedInput-root': {
@@ -176,6 +253,29 @@ export const BadgeEditor = ({
             },
           }}
         />
+
+        {/* Calculated Commission Display */}
+        {isCommission && commissionType === 'percentage' && getCalculatedCommission() !== null && (
+          <Box
+            sx={{
+              mt: 2,
+              p: 2,
+              borderRadius: 2,
+              backgroundColor: 'rgba(255,255,255,0.2)',
+              border: '1px solid rgba(255,255,255,0.3)',
+            }}
+          >
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>
+              Calculated Commission Amount
+            </Typography>
+            <Typography variant="h5" sx={{ color: 'white', fontWeight: 900, mt: 0.5 }}>
+              ${getCalculatedCommission().toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </Typography>
+          </Box>
+        )}
 
         {/* Action Buttons */}
         <Box sx={{ display: 'flex', gap: 2, mt: 3, justifyContent: 'flex-end' }}>
