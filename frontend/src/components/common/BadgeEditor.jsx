@@ -45,9 +45,15 @@ export const BadgeEditor = ({
   // Initialize editValue when dialog opens
   useEffect(() => {
     if (open) {
-      setEditValue(value?.toString() || '');
+      // Only pre-populate if in flat mode or not a commission field
+      if (!isCommission || commissionType === 'flat') {
+        setEditValue(value?.toString() || '');
+      } else {
+        // Clear field when in percentage mode
+        setEditValue('');
+      }
     }
-  }, [open, value]);
+  }, [open, value, isCommission, commissionType]);
 
   const handleSave = async () => {
     if (!editValue || isNaN(parseFloat(editValue))) {
