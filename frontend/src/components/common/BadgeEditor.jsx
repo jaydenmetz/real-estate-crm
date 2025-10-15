@@ -78,15 +78,6 @@ export const BadgeEditor = ({
     }
   };
 
-  // Calculate commission amount if percentage type
-  const getCalculatedCommission = () => {
-    if (!isCommission || commissionType !== 'percentage' || !editValue || !purchasePrice) {
-      return null;
-    }
-    const percentage = parseFloat(editValue);
-    if (isNaN(percentage)) return null;
-    return (purchasePrice * percentage) / 100;
-  };
 
   const handleKeyPress = (e) => {
     if (e.key === 'Enter') {
@@ -259,29 +250,6 @@ export const BadgeEditor = ({
             },
           }}
         />
-
-        {/* Calculated Commission Display */}
-        {isCommission && commissionType === 'percentage' && getCalculatedCommission() !== null && (
-          <Box
-            sx={{
-              mt: 2,
-              p: 2,
-              borderRadius: 2,
-              backgroundColor: 'rgba(255,255,255,0.2)',
-              border: '1px solid rgba(255,255,255,0.3)',
-            }}
-          >
-            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>
-              Calculated Commission Amount
-            </Typography>
-            <Typography variant="h5" sx={{ color: 'white', fontWeight: 900, mt: 0.5 }}>
-              ${getCalculatedCommission().toLocaleString('en-US', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2,
-              })}
-            </Typography>
-          </Box>
-        )}
 
         {/* Action Buttons */}
         <Box sx={{ display: 'flex', gap: 2, mt: 3, justifyContent: 'flex-end' }}>
