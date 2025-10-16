@@ -19,6 +19,7 @@ router.put('/profile', authenticate, AuthController.updateProfile);
 router.post('/logout', AuthController.logout); // No auth required (uses cookie)
 router.post('/logout-all', authenticate, AuthController.logoutAll); // Logout from all devices
 router.get('/sessions', authenticate, AuthController.getSessions); // List active sessions
+router.post('/cleanup-tokens', AuthController.cleanupExpiredTokens); // Cleanup expired refresh tokens (cron job endpoint)
 
 // Export for backward compatibility
 const authenticateToken = authenticate;

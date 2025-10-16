@@ -1024,6 +1024,35 @@ class AuthController {
       });
     }
   }
+
+  /**
+   * Cleanup expired refresh tokens
+   * Endpoint for cron jobs or scheduled tasks to prevent database bloat
+   * No authentication required - can be called by Railway cron or external scheduler
+   */
+  static async cleanupExpiredTokens(req, res) {
+    try {
+      const deletedCount = await RefreshTokenService.cleanupExpiredTokens();
+
+      res.json({
+        success: true,
+        data: {
+          deletedCount,
+          message: `Cleaned up ${deletedCount} expired refresh tokens`,
+        },
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error('Token cleanup error:', error);
+      res.status(500).json({
+        success: false,
+        error: {
+          code: 'CLEANUP_ERROR',
+          message: 'Failed to cleanup expired tokens',
+        },
+      });
+    }
+  }
 }
 
 module.exports = AuthController;

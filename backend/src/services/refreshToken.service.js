@@ -93,7 +93,6 @@ class RefreshTokenService {
         FROM refresh_tokens rt
         JOIN users u ON rt.user_id = u.id
         WHERE rt.token = $1
-          AND rt.revoked_at IS NULL
           AND rt.expires_at > NOW()
           AND u.is_active = true
       `;
@@ -113,58 +112,58 @@ class RefreshTokenService {
   }
 
   /**
-   * Revoke a specific refresh token (logout)
-   * @param {string} token - Refresh token to revoke
-   * @returns {Promise<boolean>} True if revoked, false if not found
+   * Delete a specific refresh token (logout)
+   * Token is DELETED (not revoked) since security_events tracks all auth activity
+   * @param {string} token - Refresh token to delete
+   * @returns {Promise<boolean>} True if deleted, false if not found
    */
   static async revokeRefreshToken(token) {
     try {
       const query = `
-        UPDATE refresh_tokens
-        SET revoked_at = NOW()
-        WHERE token = $1 AND revoked_at IS NULL
+        DELETE FROM refresh_tokens
+        WHERE token = $1
         RETURNING id
       `;
 
       const result = await pool.query(query, [token]);
 
       if (result.rows.length > 0) {
-        logger.info('Refresh token revoked', { tokenId: result.rows[0].id });
+        logger.info('Refresh token deleted (logout)', { tokenId: result.rows[0].id });
         return true;
       }
 
       return false;
     } catch (error) {
-      logger.error('Error revoking refresh token:', error);
-      throw new Error('Failed to revoke refresh token');
+      logger.error('Error deleting refresh token:', error);
+      throw new Error('Failed to delete refresh token');
     }
   }
 
   /**
-   * Revoke all refresh tokens for a user (logout from all devices)
+   * Delete all refresh tokens for a user (logout from all devices)
+   * Tokens are DELETED (not revoked) since security_events tracks all auth activity
    * @param {string} userId - User UUID
-   * @returns {Promise<number>} Number of tokens revoked
+   * @returns {Promise<number>} Number of tokens deleted
    */
   static async revokeAllUserTokens(userId) {
     try {
       const query = `
-        UPDATE refresh_tokens
-        SET revoked_at = NOW()
-        WHERE user_id = $1 AND revoked_at IS NULL
+        DELETE FROM refresh_tokens
+        WHERE user_id = $1
         RETURNING id
       `;
 
       const result = await pool.query(query, [userId]);
 
-      logger.info('All user tokens revoked', {
+      logger.info('All user tokens deleted (logout all devices)', {
         userId,
         count: result.rowCount,
       });
 
       return result.rowCount;
     } catch (error) {
-      logger.error('Error revoking all user tokens:', error);
-      throw new Error('Failed to revoke all user tokens');
+      logger.error('Error deleting all user tokens:', error);
+      throw new Error('Failed to delete all user tokens');
     }
   }
 
@@ -185,7 +184,6 @@ class RefreshTokenService {
           device_info
         FROM refresh_tokens
         WHERE user_id = $1
-          AND revoked_at IS NULL
           AND expires_at > NOW()
         ORDER BY created_at DESC
       `;
@@ -200,14 +198,15 @@ class RefreshTokenService {
 
   /**
    * Clean up expired tokens (should be run as a cron job)
-   * Deletes tokens that expired more than 30 days ago
+   * Deletes tokens that expired (to prevent database bloat)
+   * Run daily to keep refresh_tokens table lean
    * @returns {Promise<number>} Number of tokens deleted
    */
   static async cleanupExpiredTokens() {
     try {
       const query = `
         DELETE FROM refresh_tokens
-        WHERE expires_at < NOW() - INTERVAL '30 days'
+        WHERE expires_at < NOW()
         RETURNING id
       `;
 
@@ -232,10 +231,9 @@ class RefreshTokenService {
     try {
       const query = `
         SELECT
-          COUNT(*) FILTER (WHERE revoked_at IS NULL AND expires_at > NOW()) as active_tokens,
+          COUNT(*) FILTER (WHERE expires_at > NOW()) as active_tokens,
           COUNT(*) FILTER (WHERE expires_at <= NOW()) as expired_tokens,
-          COUNT(*) FILTER (WHERE revoked_at IS NOT NULL) as revoked_tokens,
-          COUNT(DISTINCT user_id) FILTER (WHERE revoked_at IS NULL AND expires_at > NOW()) as active_users
+          COUNT(DISTINCT user_id) FILTER (WHERE expires_at > NOW()) as active_users
         FROM refresh_tokens
       `;
 
@@ -246,16 +244,16 @@ class RefreshTokenService {
       return {
         active_tokens: 0,
         expired_tokens: 0,
-        revoked_tokens: 0,
         active_users: 0,
       };
     }
   }
 
   /**
-   * Rotate refresh token (create new one, revoke old one)
+   * Rotate refresh token (create new one, delete old one)
    * Useful for added security - tokens are rotated on use
-   * @param {string} oldToken - Old token to revoke
+   * Old token is DELETED (not revoked) since security_events already tracks everything
+   * @param {string} oldToken - Old token to delete
    * @param {string} userId - User ID
    * @param {string} ipAddress - Client IP
    * @param {string} userAgent - Client user agent
@@ -267,9 +265,9 @@ class RefreshTokenService {
     try {
       await client.query('BEGIN');
 
-      // Revoke old token
+      // DELETE old token (not revoke) - security_events table tracks all auth activity
       await client.query(
-        'UPDATE refresh_tokens SET revoked_at = NOW() WHERE token = $1',
+        'DELETE FROM refresh_tokens WHERE token = $1',
         [oldToken],
       );
 
@@ -311,7 +309,7 @@ class RefreshTokenService {
 
       await client.query('COMMIT');
 
-      logger.info('Refresh token rotated', { userId });
+      logger.info('Refresh token rotated (old deleted)', { userId });
 
       return result.rows[0];
     } catch (error) {
