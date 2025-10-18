@@ -47,6 +47,9 @@ import DataEditorView from './data-editor/DataEditorView';
 import EscrowDebugPanel from './EscrowDebugPanel';
 import EscrowErrorDebugPanel from '../common/EscrowErrorDebugPanel';
 
+// PHASE 2: Import new hero card component for testing
+import EscrowHeroCard from '../../pages/escrow-detail/components/EscrowHeroCard';
+
 // Styled components with glassmorphism
 const StyledContainer = styled(Container)(({ theme }) => ({
   paddingTop: theme.spacing(3),
@@ -304,6 +307,14 @@ function EscrowDetailPage() {
               exit={{ opacity: 0, x: 20 }}
               transition={{ duration: 0.3 }}
             >
+              {/* PHASE 2: Test new hero card */}
+              <EscrowHeroCard
+                escrow={data}
+                onEmailParties={() => console.log('Email all parties')}
+                onGenerateStatement={() => console.log('Generate statement')}
+                onMoreActions={() => console.log('More actions')}
+              />
+
               <WidgetGrid>
                 {/* Details Widget */}
                 <Box gridColumn={isMobile ? 'span 1' : 'span 2'}>
