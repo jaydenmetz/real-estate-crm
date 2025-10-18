@@ -68,6 +68,7 @@ import { useWebSocket } from '../../../hooks/useWebSocket';
 import ListingHeroCard from './components/ListingHeroCard';
 import ListingNavigation from './components/ListingNavigation';
 import ListingContent from './components/ListingContent';
+import ListingStatCard from './components/ListingStatCard';
 import { useListingHandlers } from './hooks/useListingHandlers';
 
 // Styled Components
