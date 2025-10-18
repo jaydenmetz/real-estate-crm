@@ -10,7 +10,7 @@ import { escrowsAPI } from '../../../services/api.service';
 import { useEscrowWebSocket } from '../../../hooks/useEscrowWebSocket';
 
 // Components
-import EscrowHeroCard from './components/EscrowHeroCard';
+import EscrowHero from './components/EscrowHero';
 import LeftSidebar from './components/LeftSidebar';
 import RightSidebar from './components/RightSidebar';
 import TimelineWidget from './components/TimelineWidget';
@@ -205,11 +205,15 @@ const EscrowDetailCompact = () => {
         {/* Main Content (flex-grow) - Hero + 4 Widgets */}
         <MainContent>
           {/* Hero Card (100px height) */}
-          <EscrowHeroCard
+          <EscrowHero
             escrow={escrow}
-            onEmailParties={handleEmailParties}
-            onGenerateStatement={handleGenerateStatement}
-            onMoreActions={handleMoreActions}
+            onMetricClick={(metric) => {
+              if (metric === 'commission' || metric === 'price') {
+                setFinancialsModalOpen(true);
+              } else if (metric === 'closeDate') {
+                setTimelineModalOpen(true);
+              }
+            }}
           />
 
           {/* 4 Main Widgets (2x2 Grid) */}
