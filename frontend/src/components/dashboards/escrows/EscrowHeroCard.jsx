@@ -37,7 +37,7 @@ const EscrowHeroCard = ({
   detectPresetRange,
   children // For the stats cards that go inside
 }) => {
-  // Local state for date pickers
+  // Local state for date pickers - must be defined here, not in parent
   const [startDatePickerOpen, setStartDatePickerOpen] = useState(false);
   const [endDatePickerOpen, setEndDatePickerOpen] = useState(false);
 
