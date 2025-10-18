@@ -68,7 +68,7 @@ import { useWebSocket } from '../../../hooks/useWebSocket';
 import ListingHeroCard from './components/ListingHeroCard';
 import ListingNavigation from './components/ListingNavigation';
 import ListingContent from './components/ListingContent';
-import ListingStatCard from './components/ListingStatCard';
+import ListingStatsGrid from './components/ListingStatsGrid';
 import { useListingHandlers } from './hooks/useListingHandlers';
 
 // Styled Components
@@ -919,7 +919,7 @@ const ListingsDashboard = () => {
           detectPresetRange={detectPresetRange}
         >
           {/* Stats Grid passed as children */}
-          <ListingStatCard
+          <ListingStatsGrid
             selectedStatus={selectedStatus}
             stats={stats}
             archivedCount={archivedCount}
