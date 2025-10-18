@@ -1,6 +1,9 @@
 import React from 'react';
-import { Box, useTheme, useMediaQuery } from '@mui/material';
-import { styled } from '@mui/material/styles';
+import { Box } from '@mui/material';
+
+// Import responsive utilities
+import ResponsiveGrid from '../../../common/ResponsiveGrid';
+import useResponsiveLayout from '../../../../hooks/useResponsiveLayout';
 
 // Import widgets
 import DetailsWidget from './DetailsWidget';
@@ -10,18 +13,6 @@ import TimelineWidget from './TimelineWidget';
 import FinancialsWidget from './FinancialsWidget';
 import ChecklistWidget from './ChecklistWidget';
 import ActivityFeed from './ActivityFeed';
-
-const WidgetGrid = styled(Box)(({ theme }) => ({
-  display: 'grid',
-  gap: theme.spacing(3),
-  paddingBottom: theme.spacing(3),
-  [theme.breakpoints.up('xs')]: {
-    gridTemplateColumns: '1fr',
-  },
-  [theme.breakpoints.up('md')]: {
-    gridTemplateColumns: 'repeat(2, 1fr)',
-  },
-}));
 
 /**
  * EscrowMainContent - Main content area with widget grid
@@ -39,10 +30,12 @@ const EscrowMainContent = ({
   onWidgetExpand,
   onUpdateSection,
 }) => {
+  const { spacing } = useResponsiveLayout();
+
   return (
-    <Box flex={1} p={3}>
-      {/* Main 4 Widgets - 2×2 Grid */}
-      <WidgetGrid>
+    <Box flex={1} p={spacing.container}>
+      {/* Main 4 Widgets - Smart 2×2 Grid that wraps gracefully */}
+      <ResponsiveGrid variant="widgets" minWidth={320} sx={{ pb: spacing.section }}>
         {/* Timeline Widget */}
         <TimelineWidget
           data={data?.timeline}
@@ -76,12 +69,10 @@ const EscrowMainContent = ({
           onExpand={() => onWidgetExpand('progress')}
           onUpdate={(changes) => onUpdateSection('checklist-loan', changes)}
         />
-      </WidgetGrid>
+      </ResponsiveGrid>
 
       {/* Activity Feed - Full Width Below */}
-      <Box mt={3}>
-        <ActivityFeed />
-      </Box>
+      <ActivityFeed />
     </Box>
   );
 };

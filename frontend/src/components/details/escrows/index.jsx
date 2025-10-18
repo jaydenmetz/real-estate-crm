@@ -236,8 +236,8 @@ function EscrowDetailPage() {
 
               {/* PHASE 3-4: Three-column layout with sidebars (responsive) */}
               <Box display="flex" sx={{ backgroundColor: '#f9fafb' }}>
-                {/* Left Sidebar - Hidden on mobile/tablet, visible on large screens */}
-                <Box sx={{ display: { xs: 'none', lg: 'block' } }}>
+                {/* Left Sidebar - Hidden below 1536px (xl) to prevent widget squishing */}
+                <Box sx={{ display: { xs: 'none', xl: 'block' } }}>
                   <EscrowLeftSidebar
                     escrowId={id}
                     notes={notes}
@@ -257,8 +257,8 @@ function EscrowDetailPage() {
                   onUpdateSection={updateSection}
                 />
 
-                {/* Right Sidebar - Hidden on mobile/tablet, visible on large screens */}
-                <Box sx={{ display: { xs: 'none', lg: 'block' } }}>
+                {/* Right Sidebar - Hidden below 1536px (xl) to prevent widget squishing */}
+                <Box sx={{ display: { xs: 'none', xl: 'block' } }}>
                   <EscrowRightSidebar
                     escrowId={id}
                     automations={automations}
