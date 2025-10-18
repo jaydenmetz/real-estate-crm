@@ -19,6 +19,7 @@ import TimelineWidget from './components/TimelineWidget';
 import FinancialsWidget from './components/FinancialsWidget';
 import PeopleWidget from './components/PeopleWidget';
 import DocumentsWidget from './components/DocumentsWidget';
+import ActivityFeed from './components/ActivityFeed';
 
 // Modals
 import FinancialsDetailModal from './modals/FinancialsDetailModal';
@@ -263,8 +264,8 @@ const EscrowDetailCompact = () => {
         onUpdate={handleUpdate}
       />
 
-      {/* Activity Feed (Draggable Bottom Sheet) - Phase 7 */}
-      {/* Will be implemented in Phase 7 */}
+      {/* Phase 7: Draggable Activity Feed (Apple Maps-style Bottom Sheet) */}
+      <ActivityFeed escrow={escrow} />
     </PageContainer>
   );
 };

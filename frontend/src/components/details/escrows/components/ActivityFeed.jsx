@@ -1,177 +1,419 @@
-import React from 'react';
-import { Box, Typography, Button, Avatar } from '@mui/material';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  Box,
+  Typography,
+  List,
+  ListItem,
+  ListItemAvatar,
+  ListItemText,
+  Avatar,
+  Chip,
+  IconButton,
+  TextField,
+  InputAdornment,
+  Skeleton
+} from '@mui/material';
+import {
+  DragHandle,
+  Timeline as TimelineIcon,
+  Person,
+  Description,
+  AttachMoney,
+  Schedule,
+  Search,
+  FilterList
+} from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
-import { motion } from 'framer-motion';
+import { motion, useMotionValue, useTransform, animate } from 'framer-motion';
+import apiInstance from '../../../../services/api.service';
 
-const FeedContainer = styled(Box)(({ theme }) => ({
+// PHASE 7: Apple Maps-style Draggable Activity Feed
+const PEEK_HEIGHT = 80;
+const HALF_HEIGHT = 400;
+const getFullHeight = () => window.innerHeight - 120;
+
+const BottomSheetContainer = styled(motion.div)(({ theme }) => ({
+  position: 'fixed',
+  bottom: 0,
+  left: 0,
+  right: 0,
   backgroundColor: 'white',
-  borderRadius: theme.spacing(1.5),
-  padding: theme.spacing(3),
-  border: '1px solid #e5e7eb',
-  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+  borderTopLeftRadius: theme.spacing(3),
+  borderTopRightRadius: theme.spacing(3),
+  boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.15)',
+  zIndex: 1200,
+  overflow: 'hidden',
+  display: 'flex',
+  flexDirection: 'column',
 }));
 
-const FeedHeader = styled(Box)({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  marginBottom: 20,
-});
-
-const FilterButton = styled(Button)({
-  fontSize: '0.75rem',
-  padding: '4px 12px',
-  backgroundColor: '#f3f4f6',
-  color: '#374151',
-  borderRadius: 9999,
-  textTransform: 'none',
-  fontWeight: 500,
-  '&:hover': {
-    backgroundColor: '#e5e7eb',
+const DragHandleBar = styled(Box)(({ theme }) => ({
+  width: 40,
+  height: 4,
+  backgroundColor: theme.palette.grey[300],
+  borderRadius: 2,
+  margin: theme.spacing(1, 'auto', 0.5),
+  cursor: 'grab',
+  '&:active': {
+    cursor: 'grabbing',
   },
-});
+}));
 
-const ActivityItem = styled(Box)({
-  display: 'flex',
-  gap: 16,
-  paddingBottom: 16,
-  borderBottom: '1px solid #f3f4f6',
+const Header = styled(Box)(({ theme }) => ({
+  padding: theme.spacing(1, 2, 2),
+  borderBottom: `1px solid ${theme.palette.divider}`,
+  cursor: 'pointer',
+}));
+
+const ContentArea = styled(Box)(({ theme }) => ({
+  flex: 1,
+  overflow: 'auto',
+  padding: theme.spacing(2),
+  '&::-webkit-scrollbar': {
+    width: 6,
+  },
+  '&::-webkit-scrollbar-thumb': {
+    backgroundColor: theme.palette.grey[300],
+    borderRadius: 3,
+  },
+}));
+
+const ActivityItem = styled(ListItem)(({ theme }) => ({
+  padding: theme.spacing(1.5, 0),
+  borderBottom: `1px solid ${theme.palette.divider}`,
   '&:last-child': {
     borderBottom: 'none',
   },
-});
+}));
 
-const ActivityIcon = styled(Box)(({ color }) => {
-  const getBackgroundColor = () => {
-    switch (color) {
-      case 'blue':
-        return '#dbeafe';
-      case 'purple':
-        return '#e9d5ff';
-      case 'green':
-        return '#d1fae5';
-      case 'orange':
-        return '#fed7aa';
-      default:
-        return '#f3f4f6';
+const TimeAgo = styled(Typography)(({ theme}) => ({
+  fontSize: '0.75rem',
+  color: theme.palette.text.secondary,
+  whiteSpace: 'nowrap',
+}));
+
+const ActivityFeed = ({ escrow }) => {
+  const [height, setHeight] = useState(() => {
+    const saved = localStorage.getItem('activityFeedHeight');
+    return saved ? parseInt(saved) : PEEK_HEIGHT;
+  });
+  const [activities, setActivities] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const containerRef = useRef(null);
+  const y = useMotionValue(0);
+
+  useEffect(() => {
+    fetchActivities();
+  }, [escrow?.id]);
+
+  useEffect(() => {
+    localStorage.setItem('activityFeedHeight', height.toString());
+  }, [height]);
+
+  const fetchActivities = async () => {
+    if (!escrow?.id) return;
+
+    setLoading(true);
+    try {
+      const response = await apiInstance.get(`/escrows/${escrow.id}/activity`);
+      if (response.data?.success) {
+        setActivities(response.data.data || []);
+      }
+    } catch (err) {
+      console.error('Error fetching activities:', err);
+      // Use mock data if endpoint doesn't exist yet
+      setActivities(generateMockActivities());
+    } finally {
+      setLoading(false);
     }
   };
 
-  return {
-    width: 40,
-    height: 40,
-    backgroundColor: getBackgroundColor(),
-    borderRadius: '50%',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-    boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-    fontSize: '1.125rem',
+  const generateMockActivities = () => {
+    const now = new Date();
+    return [
+      {
+        id: 1,
+        type: 'escrow_opened',
+        user: 'Jayden Metz',
+        message: 'opened escrow',
+        timestamp: new Date(now - 2 * 60 * 60 * 1000).toISOString(),
+        icon: 'person'
+      },
+      {
+        id: 2,
+        type: 'timeline_updated',
+        user: 'System',
+        message: 'scheduled home inspection',
+        timestamp: new Date(now - 1 * 24 * 60 * 60 * 1000).toISOString(),
+        icon: 'schedule'
+      },
+      {
+        id: 3,
+        type: 'document_uploaded',
+        user: 'Mike Chen',
+        message: 'uploaded appraisal report',
+        timestamp: new Date(now - 3 * 24 * 60 * 60 * 1000).toISOString(),
+        icon: 'description'
+      },
+      {
+        id: 4,
+        type: 'financials_updated',
+        user: 'Jayden Metz',
+        message: 'updated commission breakdown',
+        timestamp: new Date(now - 5 * 24 * 60 * 60 * 1000).toISOString(),
+        icon: 'money'
+      },
+      {
+        id: 5,
+        type: 'people_added',
+        user: 'Sarah Johnson',
+        message: 'added as seller contact',
+        timestamp: new Date(now - 7 * 24 * 60 * 60 * 1000).toISOString(),
+        icon: 'person'
+      },
+      {
+        id: 6,
+        type: 'checklist_updated',
+        user: 'System',
+        message: 'marked "Purchase Agreement Signed" as complete',
+        timestamp: new Date(now - 10 * 24 * 60 * 60 * 1000).toISOString(),
+        icon: 'schedule'
+      },
+    ];
   };
-});
 
-/**
- * ActivityFeed - Shows timeline of all actions and updates
- *
- * Features:
- * - Timeline of all escrow activities
- * - User avatars and icons
- * - Timestamps
- * - Filter and Export buttons
- * - Load More functionality
- */
-const ActivityFeed = ({ activities = [] }) => {
-  // Default activities if none provided
-  const defaultActivities = [
-    {
-      time: '2 hours ago',
-      user: 'Jayden Metz',
-      action: 'opened this escrow',
-      color: 'blue',
-      icon: '🎉',
-    },
-    {
-      time: 'Yesterday',
-      user: 'System',
-      action: 'scheduled home inspection for Oct 20',
-      color: 'purple',
-      icon: '📅',
-    },
-    {
-      time: '2 days ago',
-      user: 'System',
-      action: 'received earnest money deposit of $5,000',
-      color: 'green',
-      icon: '💰',
-    },
-    {
-      time: '2 days ago',
-      user: 'You',
-      action: 'uploaded purchase agreement',
-      color: 'orange',
-      icon: '📄',
-    },
-  ];
+  const formatTimeAgo = (timestamp) => {
+    const now = new Date();
+    const date = new Date(timestamp);
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
 
-  const displayActivities = activities.length > 0 ? activities : defaultActivities;
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7) return `${diffDays}d ago`;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  const getActivityIcon = (type) => {
+    switch (type) {
+      case 'escrow_opened':
+      case 'people_added':
+        return <Person />;
+      case 'timeline_updated':
+      case 'checklist_updated':
+        return <Schedule />;
+      case 'document_uploaded':
+        return <Description />;
+      case 'financials_updated':
+        return <AttachMoney />;
+      default:
+        return <TimelineIcon />;
+    }
+  };
+
+  const getActivityColor = (type) => {
+    switch (type) {
+      case 'escrow_opened':
+        return '#4A90E2';
+      case 'timeline_updated':
+        return '#90E24A';
+      case 'document_uploaded':
+        return '#E2904A';
+      case 'financials_updated':
+        return '#10b981';
+      case 'people_added':
+        return '#9B59B6';
+      default:
+        return '#95A5A6';
+    }
+  };
+
+  const handleDragEnd = (event, info) => {
+    const { offset } = info;
+    const currentHeight = height;
+    const newY = currentHeight + offset.y;
+
+    // Determine which snap point to go to
+    let targetHeight;
+    if (newY < (PEEK_HEIGHT + HALF_HEIGHT) / 2) {
+      targetHeight = PEEK_HEIGHT;
+    } else if (newY < (HALF_HEIGHT + getFullHeight()) / 2) {
+      targetHeight = HALF_HEIGHT;
+    } else {
+      targetHeight = getFullHeight();
+    }
+
+    setHeight(targetHeight);
+    animate(y, 0, { type: 'spring', stiffness: 300, damping: 30 });
+  };
+
+  const cycleHeight = () => {
+    if (height === PEEK_HEIGHT) {
+      setHeight(HALF_HEIGHT);
+    } else if (height === HALF_HEIGHT) {
+      setHeight(getFullHeight());
+    } else {
+      setHeight(PEEK_HEIGHT);
+    }
+  };
+
+  const filteredActivities = searchTerm
+    ? activities.filter(
+        (a) =>
+          a.user?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          a.message?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : activities;
+
+  const visibleActivities =
+    height === PEEK_HEIGHT ? filteredActivities.slice(0, 2) : filteredActivities;
 
   return (
-    <FeedContainer>
-      <FeedHeader>
-        <Typography variant="h6" fontWeight={700} color="text.primary">
-          Activity Feed
-        </Typography>
-        <Box display="flex" alignItems="center" gap={1}>
-          <FilterButton>Filter</FilterButton>
-          <FilterButton>Export</FilterButton>
+    <BottomSheetContainer
+      ref={containerRef}
+      drag="y"
+      dragConstraints={{ top: 0, bottom: 0 }}
+      dragElastic={0.1}
+      dragMomentum={false}
+      onDragEnd={handleDragEnd}
+      style={{
+        height,
+        y,
+      }}
+      initial={{ y: window.innerHeight }}
+      animate={{ y: 0 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+    >
+      <DragHandleBar />
+
+      <Header onClick={cycleHeight}>
+        <Box display="flex" alignItems="center" justifyContent="space-between">
+          <Box display="flex" alignItems="center" gap={1}>
+            <TimelineIcon sx={{ color: 'primary.main' }} />
+            <Typography variant="h6" fontWeight="700">
+              Activity Feed
+            </Typography>
+            <Chip
+              label={activities.length}
+              size="small"
+              sx={{ height: 20, fontSize: '0.7rem', fontWeight: 600 }}
+            />
+          </Box>
+          {height === PEEK_HEIGHT && (
+            <Typography variant="caption" color="text.secondary">
+              Tap to expand ↑
+            </Typography>
+          )}
         </Box>
-      </FeedHeader>
+      </Header>
 
-      <Box display="flex" flexDirection="column" gap={2}>
-        {displayActivities.map((item, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.1 }}
+      {/* Search & Filter (only in Half/Full states) */}
+      {height > PEEK_HEIGHT && (
+        <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+          <TextField
+            fullWidth
+            size="small"
+            placeholder="Search activities..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search fontSize="small" />
+                </InputAdornment>
+              ),
+              endAdornment: (
+                <InputAdornment position="end">
+                  <IconButton size="small">
+                    <FilterList fontSize="small" />
+                  </IconButton>
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Box>
+      )}
+
+      {/* Activities List */}
+      <ContentArea>
+        {loading ? (
+          <List>
+            {[1, 2, 3].map((i) => (
+              <ActivityItem key={i}>
+                <ListItemAvatar>
+                  <Skeleton variant="circular" width={40} height={40} />
+                </ListItemAvatar>
+                <ListItemText
+                  primary={<Skeleton width="60%" />}
+                  secondary={<Skeleton width="40%" />}
+                />
+              </ActivityItem>
+            ))}
+          </List>
+        ) : visibleActivities.length === 0 ? (
+          <Box
+            sx={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              py: 4,
+            }}
           >
-            <ActivityItem>
-              <ActivityIcon color={item.color}>
-                <span>{item.icon}</span>
-              </ActivityIcon>
-              <Box flex={1}>
-                <Typography variant="body2" color="text.primary">
-                  <Box component="span" fontWeight={600}>
-                    {item.user}
-                  </Box>{' '}
-                  {item.action}
-                </Typography>
-                <Typography variant="caption" color="text.secondary" mt={0.5}>
-                  {item.time}
-                </Typography>
-              </Box>
-            </ActivityItem>
-          </motion.div>
-        ))}
-      </Box>
+            <TimelineIcon sx={{ fontSize: 48, color: 'text.secondary', mb: 1 }} />
+            <Typography variant="body2" color="text.secondary">
+              No activity yet
+            </Typography>
+          </Box>
+        ) : (
+          <List>
+            {visibleActivities.map((activity) => (
+              <ActivityItem key={activity.id}>
+                <ListItemAvatar>
+                  <Avatar sx={{ bgcolor: getActivityColor(activity.type), width: 36, height: 36 }}>
+                    {getActivityIcon(activity.type)}
+                  </Avatar>
+                </ListItemAvatar>
+                <ListItemText
+                  primary={
+                    <Box display="flex" alignItems="center" gap={1}>
+                      <Typography variant="body2" fontWeight="600">
+                        {activity.user}
+                      </Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        {activity.message}
+                      </Typography>
+                    </Box>
+                  }
+                  secondary={formatTimeAgo(activity.timestamp)}
+                />
+                <TimeAgo>{formatTimeAgo(activity.timestamp)}</TimeAgo>
+              </ActivityItem>
+            ))}
+          </List>
+        )}
 
-      <Button
-        fullWidth
-        sx={{
-          mt: 2,
-          color: 'primary.main',
-          textTransform: 'none',
-          fontWeight: 500,
-          fontSize: '0.875rem',
-          '&:hover': {
-            backgroundColor: 'rgba(59, 130, 246, 0.04)',
-          },
-        }}
-      >
-        Load More Activity
-      </Button>
-    </FeedContainer>
+        {/* Peek State Hint */}
+        {height === PEEK_HEIGHT && !loading && visibleActivities.length > 0 && (
+          <Box
+            sx={{
+              textAlign: 'center',
+              pt: 1,
+              pb: 2,
+              color: 'text.secondary',
+            }}
+          >
+            <Typography variant="caption">
+              Swipe up to see {activities.length - 2} more activities
+            </Typography>
+          </Box>
+        )}
+      </ContentArea>
+    </BottomSheetContainer>
   );
 };
 
