@@ -27,18 +27,11 @@ import {
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 
-// Import custom hooks and API
+// Import custom hooks and utilities
 import { useEscrowData } from './hooks/useEscrowData';
+import { checkIsAdmin } from './utils/eventHandlers';
 // import { useThemeMode } from '../../../hooks/useThemeMode'; // TODO: Create this hook or remove dark mode toggle
 // PHASE 2: Removed emergency auth utility (now handled by AuthContext auto-refresh)
-
-// Import Dashboard widgets
-import DetailsWidget from './components/DetailsWidget';
-import PropertyWidget from './components/PropertyWidget';
-import PeopleWidget from './components/PeopleWidget';
-import TimelineWidget from './components/TimelineWidget';
-import FinancialsWidget from './components/FinancialsWidget';
-import ChecklistWidget from './components/ChecklistWidget';
 
 // Import Data Editor components
 import DataEditorView from './components/DataEditorView';
@@ -47,10 +40,11 @@ import DataEditorView from './components/DataEditorView';
 import EscrowDebugPanel from './components/EscrowDebugPanel';
 import EscrowErrorDebugPanel from '../../common/EscrowErrorDebugPanel';
 
-// PHASE 2-3: Import new refactored components
+// PHASE 2-4: Import refactored components
 import EscrowHeroCard from './components/EscrowHeroCard';
 import EscrowLeftSidebar from './components/EscrowLeftSidebar';
 import EscrowRightSidebar from './components/EscrowRightSidebar';
+import EscrowMainContent from './components/EscrowMainContent';
 
 // Styled components with glassmorphism
 const StyledContainer = styled(Container)(({ theme }) => ({
@@ -105,24 +99,6 @@ const HeaderBar = styled(Box)(({ theme }) => ({
   background: theme.palette.mode === 'dark'
     ? 'rgba(0, 0, 0, 0.3)'
     : 'rgba(255, 255, 255, 0.5)',
-}));
-
-const WidgetGrid = styled(Box)(({ theme }) => ({
-  display: 'grid',
-  gap: theme.spacing(3),
-  padding: theme.spacing(3),
-  [theme.breakpoints.up('xs')]: {
-    gridTemplateColumns: '1fr',
-  },
-  [theme.breakpoints.up('sm')]: {
-    gridTemplateColumns: 'repeat(2, 1fr)',
-  },
-  [theme.breakpoints.up('md')]: {
-    gridTemplateColumns: 'repeat(3, 1fr)',
-  },
-  [theme.breakpoints.up('lg')]: {
-    gridTemplateColumns: 'repeat(4, 1fr)',
-  },
 }));
 
 function EscrowDetailPage() {
@@ -186,7 +162,7 @@ function EscrowDetailPage() {
     await saveAllChanges();
   };
 
-  // PHASE 3: Sidebar handlers
+  // PHASE 5-6: Sidebar handlers (using utilities)
   const handleReminderToggle = (id) => {
     setReminders(reminders.map(r =>
       r.id === id ? { ...r, completed: !r.completed } : r
@@ -228,9 +204,7 @@ function EscrowDetailPage() {
 
   if (error) {
     // Check if user is admin for debug panel
-    const userStr = localStorage.getItem('user');
-    const user = userStr ? JSON.parse(userStr) : null;
-    const isAdmin = user && (user.role === 'admin' || user.role === 'system_admin');
+    const isAdmin = checkIsAdmin();
     
     return (
       <StyledContainer maxWidth={false}>
@@ -367,84 +341,13 @@ function EscrowDetailPage() {
                   onDeleteReminder={handleDeleteReminder}
                 />
 
-                {/* Main Content - Keep existing widgets for now */}
-                <Box flex={1}>
-                  <WidgetGrid>
-                {/* Details Widget */}
-                <Box gridColumn={isMobile ? 'span 1' : 'span 2'}>
-                  <DetailsWidget
-                    data={data?.details}
-                    expanded={expandedWidget === 'details'}
-                    onExpand={() => handleWidgetExpand('details')}
-                    onUpdate={(changes) => updateSection('details', changes)}
-                  />
-                </Box>
-
-                {/* Property Widget */}
-                <Box gridColumn={isMobile ? 'span 1' : 'span 2'}>
-                  <PropertyWidget
-                    data={data?.['property-details']}
-                    expanded={expandedWidget === 'property'}
-                    onExpand={() => handleWidgetExpand('property')}
-                    onUpdate={(changes) => updateSection('property-details', changes)}
-                  />
-                </Box>
-
-                {/* People Widget */}
-                <PeopleWidget
-                  data={data?.people}
-                  expanded={expandedWidget === 'people'}
-                  onExpand={() => handleWidgetExpand('people')}
-                  onUpdate={(changes) => updateSection('people', changes)}
+                {/* PHASE 4: Main Content with widget grid */}
+                <EscrowMainContent
+                  data={data}
+                  expandedWidget={expandedWidget}
+                  onWidgetExpand={handleWidgetExpand}
+                  onUpdateSection={updateSection}
                 />
-
-                {/* Timeline Widget */}
-                <TimelineWidget
-                  data={data?.timeline}
-                  expanded={expandedWidget === 'timeline'}
-                  onExpand={() => handleWidgetExpand('timeline')}
-                  onUpdate={(changes) => updateSection('timeline', changes)}
-                />
-
-                {/* Financials Widget */}
-                <Box gridColumn={isMobile ? 'span 1' : 'span 2'}>
-                  <FinancialsWidget
-                    data={data?.financials}
-                    expanded={expandedWidget === 'financials'}
-                    onExpand={() => handleWidgetExpand('financials')}
-                    onUpdate={(changes) => updateSection('financials', changes)}
-                  />
-                </Box>
-
-                {/* Checklist Widgets */}
-                <ChecklistWidget
-                  title="Loan Checklist"
-                  data={data?.['checklist-loan']}
-                  type="loan"
-                  expanded={expandedWidget === 'checklist-loan'}
-                  onExpand={() => handleWidgetExpand('checklist-loan')}
-                  onUpdate={(changes) => updateSection('checklist-loan', changes)}
-                />
-
-                <ChecklistWidget
-                  title="House Checklist"
-                  data={data?.['checklist-house']}
-                  type="house"
-                  expanded={expandedWidget === 'checklist-house'}
-                  onExpand={() => handleWidgetExpand('checklist-house')}
-                  onUpdate={(changes) => updateSection('checklist-house', changes)}
-                />
-
-                <ChecklistWidget
-                  title="Admin Checklist"
-                  data={data?.['checklist-admin']}
-                  type="admin"
-                  expanded={expandedWidget === 'checklist-admin'}
-                  onExpand={() => handleWidgetExpand('checklist-admin')}
-                  onUpdate={(changes) => updateSection('checklist-admin', changes)}
-                />
-              </WidgetGrid>
-                </Box>
 
                 {/* Right Sidebar */}
                 <EscrowRightSidebar
