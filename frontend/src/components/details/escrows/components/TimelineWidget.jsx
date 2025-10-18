@@ -288,7 +288,7 @@ const TimelineWidget = ({ data = {}, onEdit }) => {
                 backgroundColor: 'primary.light',
                 '& .MuiLinearProgress-bar': {
                   borderRadius: 4,
-                  background: 'linear-gradient(90deg, #764ba2 0%, #667eea 100%)'
+                  background: 'linear-gradient(90deg, #4A90E2 0%, #5B9FED 100%)' // Blue gradient (escrows theme)
                 }
               }}
             />

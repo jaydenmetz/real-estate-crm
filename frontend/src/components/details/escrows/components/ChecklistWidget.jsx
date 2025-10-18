@@ -28,9 +28,9 @@ import {
 import { styled } from '@mui/material/styles';
 import { PieChart, Pie, Cell, ResponsiveContainer, RadialBarChart, RadialBar, Tooltip } from 'recharts';
 
-// Styled components
+// Styled components (blue theme for escrows)
 const WidgetCard = styled(motion.div)(({ theme, gradient }) => ({
-  background: gradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  background: gradient || 'linear-gradient(135deg, #4A90E2 0%, #5B9FED 100%)', // Blue gradient (escrows theme)
   borderRadius: theme.spacing(2),
   padding: theme.spacing(3),
   color: 'white',
@@ -167,8 +167,8 @@ function ChecklistWidget({ type, data, expanded, onExpand, onUpdate }) {
     house: {
       label: 'Property',
       icon: <HomeIcon />,
-      color: '#f093fb',
-      gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+      color: '#4A90E2',
+      gradient: 'linear-gradient(135deg, #4A90E2 0%, #5B9FED 100%)', // Blue gradient (escrows theme)
       items: [
         { key: 'homeInspectionOrdered', label: 'Inspection Ordered', priority: 'high' },
         { key: 'emd', label: 'Earnest Money Deposited', priority: 'critical' },

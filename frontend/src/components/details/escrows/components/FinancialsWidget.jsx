@@ -72,7 +72,7 @@ const AmountDisplay = styled(Typography)(({ theme, color = 'text.primary' }) => 
 
 const SummaryBox = styled(Box)(({ theme }) => ({
   padding: theme.spacing(3),
-  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  background: 'linear-gradient(135deg, #4A90E2 0%, #5B9FED 100%)', // Blue gradient (escrows theme)
   borderRadius: theme.spacing(2),
   color: 'white',
   position: 'relative',
@@ -135,12 +135,12 @@ const FinancialsWidget = ({ data = {}, onEdit }) => {
     return `${value.toFixed(1)}%`;
   };
 
-  // Pie chart data for fund distribution
+  // Pie chart data for fund distribution (blue theme for escrows)
   const fundDistribution = [
-    { name: 'Down Payment', value: downPayment, color: '#764ba2' },
-    { name: 'Loan Amount', value: loanAmount, color: '#667eea' },
-    { name: 'Closing Costs', value: closingCosts, color: '#f67280' },
-    { name: 'Seller Credits', value: sellerCredits, color: '#4ecdc4' }
+    { name: 'Down Payment', value: downPayment, color: '#4A90E2' }, // Blue
+    { name: 'Loan Amount', value: loanAmount, color: '#5B9FED' }, // Light blue
+    { name: 'Closing Costs', value: closingCosts, color: '#7CB9E8' }, // Sky blue
+    { name: 'Seller Credits', value: sellerCredits, color: '#4ecdc4' } // Teal (keep)
   ].filter(item => item.value > 0);
 
   // Transaction breakdown

@@ -32,9 +32,9 @@ const StyledContainer = styled(Container)(({ theme }) => ({
   paddingTop: theme.spacing(3),
   paddingBottom: theme.spacing(3),
   minHeight: '100vh',
-  background: theme.palette.mode === 'dark' 
+  background: theme.palette.mode === 'dark'
     ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-    : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+    : '#f5f7fa', // Clean light gray background for light mode (blue/white theme)
 }));
 
 const GlassCard = styled(Paper)(({ theme }) => ({
