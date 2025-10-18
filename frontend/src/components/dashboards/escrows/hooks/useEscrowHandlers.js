@@ -8,7 +8,7 @@
 
 import { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { escrowsAPI } from '../../../services/api.service';
+import { escrowsAPI } from '../../../../services/api.service';
 
 export const useEscrowHandlers = ({
   escrows,

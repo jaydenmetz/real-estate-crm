@@ -1,21 +1,21 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import NewEscrowModal from '../forms/NewEscrowModal';
+import NewEscrowModal from '../../forms/NewEscrowModal';
 // Import our new extracted components
-import EscrowHeroCard from './escrows/EscrowHeroCard';
-import EscrowStatsCards from './escrows/EscrowStatsCards';
-import EscrowNavigation from './escrows/EscrowNavigation';
-import EscrowContent from './escrows/EscrowContent';
-import EscrowDebugPanel from './escrows/EscrowDebugPanel';
-import { MiniContactCard, getInitials } from './escrows/EscrowCommonComponents';
+import EscrowHeroCard from './components/EscrowHeroCard';
+import EscrowStatsCards from './components/EscrowStatsCards';
+import EscrowNavigation from './components/EscrowNavigation';
+import EscrowContent from './components/EscrowContent';
+import EscrowDebugPanel from './components/EscrowDebugPanel';
+import { MiniContactCard, getInitials } from './components/EscrowCommon';
 import {
   detectPresetRange,
   getDateRangeFromFilter,
   generateChartData as generateChartDataUtil,
   filterEscrowsByStatus,
   sortEscrows
-} from './escrows/escrowUtils';
-import { useEscrowHandlers } from './escrows/useEscrowHandlers';
+} from './utils/escrowUtils';
+import { useEscrowHandlers } from './hooks/useEscrowHandlers';
 import {
   Container,
   Box,
@@ -104,12 +104,12 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { format as formatDate } from 'date-fns';
-import { safeFormatDate } from '../../utils/safeDateUtils';
-import { escrowsAPI } from '../../services/api.service';
-import { useAuth } from '../../contexts/AuthContext';
-import CopyButton from '../common/CopyButton';
-import networkMonitor from '../../services/networkMonitor.service';
-import { useWebSocket } from '../../hooks/useWebSocket';
+import { safeFormatDate } from '../../../utils/safeDateUtils';
+import { escrowsAPI } from '../../../services/api.service';
+import { useAuth } from '../../../contexts/AuthContext';
+import CopyButton from '../../common/CopyButton';
+import networkMonitor from '../../../services/networkMonitor.service';
+import { useWebSocket } from '../../../hooks/useWebSocket';
 
 // Styled Components - HeroSection moved to EscrowHeroCard.jsx
 // StatCard component moved to EscrowStatsCards.jsx
@@ -318,7 +318,7 @@ const EscrowsDashboard = () => {
     if (!isConnected) return;
 
     // Import websocket service
-    const websocketService = require('../../services/websocket.service').default;
+    const websocketService = require('../../../services/websocket.service').default;
 
     // Subscribe to data updates
     const unsubscribe = websocketService.on('data:update', (data) => {
