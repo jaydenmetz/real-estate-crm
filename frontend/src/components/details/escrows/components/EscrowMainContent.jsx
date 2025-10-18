@@ -32,9 +32,9 @@ const EscrowMainContent = ({
   const { spacing } = useResponsiveLayout();
 
   return (
-    <Box flex={1} p={spacing.container}>
+    <Box flex={1} p={1.5}>
       {/* 3 Main Widgets - Smart Responsive Grid (People, Financials, Documents) */}
-      <ResponsiveGrid variant="widgets" minWidth={320} sx={{ pb: spacing.section }}>
+      <ResponsiveGrid variant="widgets" minWidth={320} sx={{ pb: 1 }}>
         {/* People Widget */}
         <PeopleWidget
           data={data?.people}
@@ -51,7 +51,7 @@ const EscrowMainContent = ({
           onUpdate={(changes) => onUpdateSection('financials', changes)}
         />
 
-        {/* Documents Widget - NEW */}
+        {/* Documents Widget */}
         <DocumentsWidget
           data={data?.documents}
           expanded={expandedWidget === 'documents'}
