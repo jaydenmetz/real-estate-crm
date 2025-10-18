@@ -24,7 +24,7 @@ import {
   CheckCircleOutline,
   Cancel
 } from '@mui/icons-material';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '../../../../contexts/AuthContext';
 
 const EscrowDebugPanel = ({ error, escrowId }) => {
   const { user } = useAuth();
