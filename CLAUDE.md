@@ -144,6 +144,103 @@ git commit -m "Archive SECURITY_AUDIT_2025.md: Point-in-time audit, key findings
 
 ---
 
+## 🚨 CRITICAL: DUPLICATE FILE PREVENTION
+
+### The Problem That Must Never Happen Again:
+On October 17, 2025, we spent hours debugging "startDatePickerOpen is not defined" error in production. The code was perfect, but there were TWO files with the same name in different folders causing webpack bundler confusion.
+
+### MANDATORY File Checks Before ANY Component Work:
+
+**Before creating ANY new component file:**
+```bash
+# ALWAYS run this check first - look for files with similar names
+find frontend/src -name "*ComponentName*" -o -name "*PartialName*" 2>/dev/null
+
+# Example: Before creating EscrowHeroCard.jsx, check:
+find frontend/src -name "*EscrowHero*" -o -name "*HeroCard*" 2>/dev/null
+```
+
+**Before moving/extracting components:**
+```bash
+# Check for any existing files with the target name
+find frontend/src -name "ExactFileName.jsx" 2>/dev/null
+```
+
+**When debugging "X is not defined" errors:**
+```bash
+# FIRST: Check for duplicate files with same/similar names
+find frontend/src -name "*ComponentName*" 2>/dev/null
+
+# SECOND: Check which file is actually being imported
+grep -r "import.*ComponentName" frontend/src --include="*.jsx" --include="*.js"
+
+# THIRD: Only then check the code itself
+```
+
+### Rules for File Organization:
+
+1. **NEVER create a file with the same name in a different folder**
+   - ❌ WRONG: Having both `/components/widgets/Card.jsx` and `/components/common/Card.jsx`
+   - ✅ RIGHT: Use unique names like `EscrowCard.jsx` and `ClientCard.jsx`
+
+2. **ALWAYS check for existing files before creating new ones**
+   - Run the find command BEFORE creating any file
+   - If a similar file exists, either update it or use a different name
+
+3. **DELETE old/unused files immediately**
+   - Don't leave duplicate implementations in different folders
+   - Clean up after refactoring - don't keep "just in case" copies
+
+4. **When refactoring/moving files:**
+   - Move the file, don't copy it
+   - Update all imports immediately
+   - Delete the old file location
+   - Commit the move as a single operation
+
+### Webpack Bundler Gotchas:
+
+**Even if imports are correct**, webpack can get confused by:
+- Files with identical names in different folders
+- Cached modules from deleted files
+- Similar component names that differ only in casing
+- Old files in folders not being imported but still in the build path
+
+### The Correct Debugging Sequence for "undefined" Errors:
+
+```bash
+# 1. Check for duplicate files
+find frontend/src -name "*ComponentName*" 2>/dev/null | wc -l
+# If more than 1, you found the problem!
+
+# 2. Check what's actually being imported
+grep -r "ComponentName" frontend/src --include="*.jsx" --include="*.js"
+
+# 3. List all similar files to ensure no confusion
+ls -la frontend/src/**/*ComponentName* 2>/dev/null
+
+# 4. Check the build output for the actual bundled file
+npm run build 2>&1 | grep ComponentName
+
+# 5. Only after all above checks, then review the actual code
+```
+
+### Example of What Went Wrong:
+
+```bash
+# Two files with same name:
+/components/dashboards/escrows/EscrowHeroCard.jsx  # Correct file with state
+/components/escrow-widgets/EscrowHeroCard.jsx      # Old duplicate without state
+
+# Even though import was correct:
+import EscrowHeroCard from './escrows/EscrowHeroCard';
+
+# Webpack got confused and potentially cached or used the wrong file
+```
+
+**Key Lesson:** When the code looks perfect but the error persists, ALWAYS check for duplicate files first!
+
+---
+
 ## IMPORTANT DEVELOPER PREFERENCES
 
 ### 🚨 CRITICAL: Debugging Philosophy - Code First, Deployment Second
