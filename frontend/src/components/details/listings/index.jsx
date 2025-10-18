@@ -172,7 +172,7 @@ import { useSnackbar } from 'notistack';
 import { format, differenceInDays, parseISO, isValid } from 'date-fns';
 import { listingsAPI, appointmentsAPI } from '../../../services/api.service';
 import websocketService from '../../../services/websocket.service';
-import ListingForm from '../forms/ListingForm';
+import ListingForm from '../../forms/ListingForm';
 import {
   LineChart,
   Line,

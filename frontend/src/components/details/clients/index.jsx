@@ -251,7 +251,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, formatDistanceToNow } from 'date-fns';
 import { clientsAPI } from '../../../services/api.service';
-import { safeFormatDate } from '../../utils/safeDateUtils';
+import { safeFormatDate } from '../../../utils/safeDateUtils';
 import CountUp from 'react-countup';
 import {
   AreaChart,
