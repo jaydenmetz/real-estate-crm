@@ -29,7 +29,7 @@ import { styled } from '@mui/material/styles';
 
 // Import custom hooks and API
 import { useEscrowData } from './hooks/useEscrowData';
-import { useThemeMode } from '../../hooks/useThemeMode';
+// import { useThemeMode } from '../../../hooks/useThemeMode'; // TODO: Create this hook or remove dark mode toggle
 // PHASE 2: Removed emergency auth utility (now handled by AuthContext auto-refresh)
 
 // Import Dashboard widgets
@@ -44,13 +44,13 @@ import ChecklistWidget from './widgets/ChecklistWidget';
 import DataEditorView from './data-editor/DataEditorView';
 
 // Import Debug Panels
-import EscrowDebugPanel from './EscrowDebugPanel';
-import EscrowErrorDebugPanel from '../common/EscrowErrorDebugPanel';
+import EscrowDebugPanel from './components/EscrowDebugPanel';
+import EscrowErrorDebugPanel from '../../common/EscrowErrorDebugPanel';
 
-// PHASE 2-3: Import new components for testing
-import EscrowHeroCard from '../../pages/escrow-detail/components/EscrowHeroCard';
-import EscrowLeftSidebar from '../../pages/escrow-detail/components/EscrowLeftSidebar';
-import EscrowRightSidebar from '../../pages/escrow-detail/components/EscrowRightSidebar';
+// PHASE 2-3: Import new refactored components
+import EscrowHeroCard from './components/EscrowHeroCard';
+import EscrowLeftSidebar from './components/EscrowLeftSidebar';
+import EscrowRightSidebar from './components/EscrowRightSidebar';
 
 // Styled components with glassmorphism
 const StyledContainer = styled(Container)(({ theme }) => ({
@@ -130,7 +130,8 @@ function EscrowDetailPage() {
   const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-  const { isDarkMode, toggleDarkMode } = useThemeMode();
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const toggleDarkMode = () => setIsDarkMode(!isDarkMode);
   
   const [activeTab, setActiveTab] = useState(0);
   const [expandedWidget, setExpandedWidget] = useState(null);

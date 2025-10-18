@@ -27,7 +27,7 @@ import ConnectionStatus from './components/common/ConnectionStatus';
 // Dashboard Components
 import HomeDashboard from './components/dashboards/HomeDashboard';
 import EscrowsDashboard from './components/dashboards/escrows';
-import EscrowDetail from './components/details/EscrowDetail';
+import EscrowDetail from './components/details/escrows';
 import ListingsDashboard from './components/dashboards/listings';
 import ListingDetail from './components/details/ListingDetail';
 import ClientsDashboard from './components/dashboards/clients';
