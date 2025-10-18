@@ -1,5 +1,16 @@
 # 📐 Ultimate Responsive Design Guide
 
+## 🚨 CRITICAL RULE: Grids Inside Cards
+
+**⚠️ NEVER use more than 2 columns inside a card/widget!**
+
+When creating metric grids inside cards (like Financial Summary, Stats Box, etc.):
+- ✅ **USE**: `statsGrid2x2` (always 2×2 grid)
+- ❌ **NEVER**: `statsRow` (can go to 4 columns)
+- ❌ **NEVER**: `md={3}` or `md={4}` (causes text overlap)
+
+**Why:** Cards are width-constrained. 3-4 columns cause text to overlap and become unreadable.
+
 ## 🎯 Quick Start - The ONE Prompt
 
 **Copy-paste this into any component request:**
@@ -11,6 +22,8 @@ Make this fully responsive using our useResponsiveLayout() hook:
 - Desktop (1200px+): Full multi-column layout
 - Sidebars hide below 1536px (xl breakpoint)
 - No content squishing - wrap to next row instead
+
+CRITICAL: For metric grids INSIDE cards, use max 2 columns (statsGrid2x2)
 ```
 
 ---
@@ -82,7 +95,50 @@ function MyComponent() {
 - Tablet (md): 3 columns
 - Desktop (lg+): 4 columns
 
-### Example 4: Form Layout
+### Example 4: Metrics Inside a Card (⚠️ CRITICAL)
+
+```jsx
+import useResponsiveLayout from '../hooks/useResponsiveLayout';
+
+function FinancialSummaryCard() {
+  const { layouts } = useResponsiveLayout();
+
+  return (
+    <Card>
+      <CardContent>
+        {/* ❌ WRONG - Will cause text overlap! */}
+        <Grid container spacing={3}>
+          <Grid item xs={12} sm={6} md={3}>  {/* 4 columns = overlap */}
+            <Typography>Purchase Price</Typography>
+            <Typography variant="h4">$650,000</Typography>
+          </Grid>
+          {/* ... 3 more items */}
+        </Grid>
+
+        {/* ✅ CORRECT - Always 2×2 grid */}
+        <Box sx={layouts.statsGrid2x2}>
+          <Box>
+            <Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
+              Purchase Price
+            </Typography>
+            <Typography variant="h5" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
+              $650,000
+            </Typography>
+          </Box>
+          {/* ... 3 more items */}
+        </Box>
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+**Result:**
+- ✅ No text overlap at any width
+- ✅ Always 2×2 grid (never squished)
+- ✅ Responsive typography scales smoothly
+
+### Example 5: Form Layout
 
 ```jsx
 <ResponsiveGrid variant="form">

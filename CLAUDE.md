@@ -243,6 +243,80 @@ import EscrowHeroCard from './escrows/EscrowHeroCard';
 
 ## IMPORTANT DEVELOPER PREFERENCES
 
+### 🚨 CRITICAL: Responsive Design - Prevent Text Overlap in Grids
+
+**When creating grids INSIDE cards/widgets, NEVER use more than 2 columns!**
+
+#### The Problem That Must Never Happen Again:
+On October 18, 2025, the Financial Summary widget had overlapping text because it used a 4-column grid (`md={3}`) inside a constrained card width. The text "Purchase Price", "Total Cash Needed", "Loan Amount", and "LTV Ratio" were colliding and unreadable.
+
+#### New Grid Design Protocol:
+
+**Rule 1: Context Matters**
+- **Full-width page layouts**: Can use 3-4 columns (`statsRow`)
+- **Inside cards/widgets**: MUST use max 2 columns (`statsGrid2x2`)
+- **Never assume card width** - it might be in a 50% column
+
+**Rule 2: Use the Right Layout Preset**
+```jsx
+// ❌ WRONG - Inside a card
+<Grid container spacing={3}>
+  <Grid item xs={12} sm={6} md={3}>  // 4 columns = text overlap!
+
+// ✅ CORRECT - Inside a card
+<Grid container spacing={2}>
+  <Grid item xs={6} sm={6}>  // Always 2×2 grid
+
+// ✅ OR use the preset
+const { layouts } = useResponsiveLayout();
+<Box sx={layouts.statsGrid2x2}>  // Automatic 2×2 grid
+```
+
+**Rule 3: Scale Down Typography in Grids**
+```jsx
+// ✅ Smaller labels
+<Typography variant="body2" sx={{ fontSize: '0.75rem' }}>
+
+// ✅ Responsive amounts
+<Typography variant="h5" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
+```
+
+**Rule 4: Red Flags to Watch For**
+- ❌ `md={3}` or `md={4}` inside a Card component
+- ❌ `repeat(4, 1fr)` inside a widget
+- ❌ Large font sizes (`h3`, `h4`) in cramped grids
+- ❌ More than 4 metrics in a single row inside a card
+
+**Rule 5: When to Use Each Pattern**
+```
+Full Page Dashboard (statsRow):
+┌─────────────────────────────────────────────────┐
+│ Revenue │ Deals  │ Leads  │ Conversion │ (OK)   │
+└─────────────────────────────────────────────────┘
+
+Widget Card (statsGrid2x2):
+┌───────────────────┐
+│ Revenue │ Deals  │ (OK - 2 columns max)
+│ Leads   │ Conv   │
+└───────────────────┘
+
+Widget Card (WRONG):
+┌───────────────────┐
+│Rev│Deal│Lead│Con│ (BAD - 4 columns = overlap!)
+└───────────────────┘
+```
+
+**Quick Check:**
+Before committing a grid layout, ask:
+1. Is this inside a Card/Paper component? → Use 2 columns max
+2. Is this full-width on the page? → Can use 3-4 columns
+3. Could this widget be in a 50% column? → Use 2 columns max
+
+**Available Presets:**
+- `layouts.statsRow` - For full-width page sections (1-2-3-4 columns)
+- `layouts.statsGrid2x2` - For card interiors (always 2×2)
+- `layouts.widgetGrid` - For widget containers (2×2 locked on desktop)
+
 ### 🚨 CRITICAL: Debugging Philosophy - Code First, Deployment Second
 
 **When encountering production errors, ALWAYS assume the code is the problem, not the deployment.**

@@ -189,7 +189,9 @@ const useResponsiveLayout = () => {
       flexDirection: { xs: 'column', lg: 'row' },
     },
 
-    // Stats row (wrap on mobile)
+    // Stats row (ONLY for full-width page layouts)
+    // ⚠️ DO NOT use inside cards/widgets - causes text overlap!
+    // Use statsGrid2x2 instead for card interiors
     statsRow: {
       display: 'grid',
       gap: spacing.gap,
@@ -198,6 +200,18 @@ const useResponsiveLayout = () => {
         sm: 'repeat(2, 1fr)',
         md: 'repeat(3, 1fr)',
         lg: 'repeat(4, 1fr)',
+      },
+    },
+
+    // Stats grid 2×2 (for INSIDE widgets/cards)
+    // ✅ USE THIS for summary boxes, financial cards, metric grids
+    // Prevents text overlap by limiting to 2 columns max
+    statsGrid2x2: {
+      display: 'grid',
+      gap: spacing.compact,
+      gridTemplateColumns: {
+        xs: 'repeat(2, 1fr)', // Always 2×2 grid
+        sm: 'repeat(2, 1fr)', // Never 3 or 4 columns!
       },
     },
 
