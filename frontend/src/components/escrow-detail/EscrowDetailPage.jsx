@@ -47,8 +47,10 @@ import DataEditorView from './data-editor/DataEditorView';
 import EscrowDebugPanel from './EscrowDebugPanel';
 import EscrowErrorDebugPanel from '../common/EscrowErrorDebugPanel';
 
-// PHASE 2: Import new hero card component for testing
+// PHASE 2-3: Import new components for testing
 import EscrowHeroCard from '../../pages/escrow-detail/components/EscrowHeroCard';
+import EscrowLeftSidebar from '../../pages/escrow-detail/components/EscrowLeftSidebar';
+import EscrowRightSidebar from '../../pages/escrow-detail/components/EscrowRightSidebar';
 
 // Styled components with glassmorphism
 const StyledContainer = styled(Container)(({ theme }) => ({
@@ -133,6 +135,18 @@ function EscrowDetailPage() {
   const [activeTab, setActiveTab] = useState(0);
   const [expandedWidget, setExpandedWidget] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // PHASE 3: Sidebar state
+  const [notes, setNotes] = useState('');
+  const [reminders, setReminders] = useState([
+    { id: 1, text: 'Follow up on inspection report', completed: false },
+    { id: 2, text: 'Request appraisal update', completed: false },
+  ]);
+  const [automations, setAutomations] = useState({
+    contingencyReminders: true,
+    documentTracking: true,
+    closingReminders: false,
+  });
   
   // Fetch escrow data
   const {
@@ -169,6 +183,30 @@ function EscrowDetailPage() {
   // Handle save all (for data editor)
   const handleSaveAll = async () => {
     await saveAllChanges();
+  };
+
+  // PHASE 3: Sidebar handlers
+  const handleReminderToggle = (id) => {
+    setReminders(reminders.map(r =>
+      r.id === id ? { ...r, completed: !r.completed } : r
+    ));
+  };
+
+  const handleAddReminder = (text) => {
+    setReminders([...reminders, { id: Date.now(), text, completed: false }]);
+  };
+
+  const handleDeleteReminder = (id) => {
+    setReminders(reminders.filter(r => r.id !== id));
+  };
+
+  const handleToggleAutomation = (key) => {
+    setAutomations({ ...automations, [key]: !automations[key] });
+  };
+
+  const handleQuickAction = (action) => {
+    console.log('Quick action:', action);
+    // TODO: Implement actual quick actions
   };
 
   if (loading && !data) {
@@ -315,7 +353,22 @@ function EscrowDetailPage() {
                 onMoreActions={() => console.log('More actions')}
               />
 
-              <WidgetGrid>
+              {/* PHASE 3: Three-column layout with sidebars */}
+              <Box display="flex">
+                {/* Left Sidebar */}
+                <EscrowLeftSidebar
+                  escrowId={id}
+                  notes={notes}
+                  onNotesChange={setNotes}
+                  reminders={reminders}
+                  onReminderToggle={handleReminderToggle}
+                  onAddReminder={handleAddReminder}
+                  onDeleteReminder={handleDeleteReminder}
+                />
+
+                {/* Main Content - Keep existing widgets for now */}
+                <Box flex={1}>
+                  <WidgetGrid>
                 {/* Details Widget */}
                 <Box gridColumn={isMobile ? 'span 1' : 'span 2'}>
                   <DetailsWidget
@@ -390,6 +443,23 @@ function EscrowDetailPage() {
                   onUpdate={(changes) => updateSection('checklist-admin', changes)}
                 />
               </WidgetGrid>
+                </Box>
+
+                {/* Right Sidebar */}
+                <EscrowRightSidebar
+                  escrowId={id}
+                  automations={automations}
+                  onToggleAutomation={handleToggleAutomation}
+                  dealHealth={{
+                    percentage: 85,
+                    indicators: [
+                      { type: 'success', text: 'All documents received' },
+                      { type: 'warning', text: 'Appraisal pending' },
+                    ],
+                  }}
+                  onQuickAction={handleQuickAction}
+                />
+              </Box>
             </motion.div>
           ) : (
             <motion.div
