@@ -57,7 +57,7 @@ import {
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { safeFormatDate, getSafeTimestamp } from '../../utils/safeDateUtils';
 import { format, formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';

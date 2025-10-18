@@ -31,7 +31,7 @@ import {
   TrendingUp,
   AccessTime
 } from '@mui/icons-material';
-import { useQuery, useMutation, useQueryClient } from 'react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import OnboardingService from '../../services/onboarding.service';
 

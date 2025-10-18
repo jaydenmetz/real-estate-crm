@@ -35,7 +35,7 @@ import {
   Timeline,
   Assessment
 } from '@mui/icons-material';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { api } from '../../services/api.service';
 

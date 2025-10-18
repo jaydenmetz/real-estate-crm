@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useQueryClient } from 'react-query';
+import { useQueryClient } from '@tanstack/react-query';
 import websocketService from '../services/websocket.service';
 
 export const useWebSocket = () => {

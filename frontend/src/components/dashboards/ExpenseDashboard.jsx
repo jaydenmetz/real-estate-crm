@@ -54,7 +54,7 @@ import {
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import CountUp from 'react-countup';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';

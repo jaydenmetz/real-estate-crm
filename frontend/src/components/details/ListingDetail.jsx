@@ -167,7 +167,7 @@ import 'swiper/css/pagination';
 import 'swiper/css/effect-fade';
 import 'swiper/css/thumbs';
 import CountUp from 'react-countup';
-import { useQuery, useMutation, useQueryClient } from 'react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
 import { format, differenceInDays, parseISO, isValid } from 'date-fns';
 import { listingsAPI, appointmentsAPI } from '../../services/api.service';
