@@ -4,16 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Box,
   Container,
-  Tabs,
-  Tab,
   Paper,
   useTheme,
   Backdrop
 } from '@mui/material';
-import {
-  Dashboard as DashboardIcon,
-  Edit as EditIcon
-} from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 
 // Import custom hooks and utilities
@@ -21,10 +15,7 @@ import { useEscrowData } from './hooks/useEscrowData';
 // import { useThemeMode } from '../../../hooks/useThemeMode'; // TODO: Create this hook or remove dark mode toggle
 // PHASE 2: Removed emergency auth utility (now handled by AuthContext auto-refresh)
 
-// Import Data Editor components
-import DataEditorView from './components/DataEditorView';
-
-// Import Debug Panels
+// Import Debug Panels (keep for development)
 import EscrowDebugPanel from './components/EscrowDebugPanel';
 
 // PHASE 2-6: Import refactored components
@@ -60,25 +51,7 @@ const GlassCard = styled(Paper)(({ theme }) => ({
   transition: 'all 0.3s ease',
 }));
 
-const StyledTabs = styled(Tabs)(({ theme }) => ({
-  borderBottom: `1px solid ${theme.palette.divider}`,
-  '& .MuiTabs-indicator': {
-    height: 3,
-    borderRadius: '3px 3px 0 0',
-    background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
-  },
-}));
-
-const StyledTab = styled(Tab)(({ theme }) => ({
-  textTransform: 'none',
-  fontWeight: 600,
-  fontSize: '1rem',
-  marginRight: theme.spacing(4),
-  minHeight: 64,
-  '&.Mui-selected': {
-    color: theme.palette.mode === 'dark' ? '#fff' : '#667eea',
-  },
-}));
+// Removed tabs - simplified to single dashboard view
 
 function EscrowDetailPage() {
   const { id } = useParams();
@@ -86,8 +59,7 @@ function EscrowDetailPage() {
   const theme = useTheme();
   const [isDarkMode, setIsDarkMode] = useState(false);
   const toggleDarkMode = () => setIsDarkMode(!isDarkMode);
-  
-  const [activeTab, setActiveTab] = useState(0);
+
   const [expandedWidget, setExpandedWidget] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -113,12 +85,6 @@ function EscrowDetailPage() {
     hasUnsavedChanges,
     saveAllChanges
   } = useEscrowData(id);
-
-  // Handle tab change
-  const handleTabChange = (event, newValue) => {
-    setActiveTab(newValue);
-    setExpandedWidget(null);
-  };
 
   // Handle widget expansion
   const handleWidgetExpand = useCallback((widgetId) => {
@@ -195,102 +161,60 @@ function EscrowDetailPage() {
           onSave={handleSaveAll}
           onRefresh={handleRefresh}
           onToggleDarkMode={toggleDarkMode}
-          showSaveButton={activeTab === 1}
+          showSaveButton={false}
         />
 
-        {/* Tabs */}
-        <StyledTabs
-          value={activeTab}
-          onChange={handleTabChange}
-          aria-label="escrow detail tabs"
-        >
-          <StyledTab
-            icon={<DashboardIcon />}
-            iconPosition="start"
-            label="Dashboard"
+        {/* Main Dashboard Content - No tabs needed */}
+        <Box>
+          {/* Hero Card */}
+          <EscrowHeroCard
+            escrow={data}
+            onEmailParties={() => console.log('Email all parties')}
+            onGenerateStatement={() => console.log('Generate statement')}
+            onMoreActions={() => console.log('More actions')}
           />
-          <StyledTab
-            icon={<EditIcon />}
-            iconPosition="start"
-            label="Data Editor"
-          />
-        </StyledTabs>
 
-        {/* Tab Content */}
-        <AnimatePresence mode="wait">
-          {activeTab === 0 ? (
-            <motion.div
-              key="dashboard"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.3 }}
-            >
-              {/* PHASE 2: Test new hero card */}
-              <EscrowHeroCard
-                escrow={data}
-                onEmailParties={() => console.log('Email all parties')}
-                onGenerateStatement={() => console.log('Generate statement')}
-                onMoreActions={() => console.log('More actions')}
+          {/* Three-column layout with sidebars (responsive) */}
+          <Box display="flex" sx={{ backgroundColor: '#f9fafb' }}>
+            {/* Left Sidebar - Hidden below 1536px (xl) to prevent widget squishing */}
+            <Box sx={{ display: { xs: 'none', xl: 'block' } }}>
+              <EscrowLeftSidebar
+                escrowId={id}
+                notes={notes}
+                onNotesChange={setNotes}
+                reminders={reminders}
+                onReminderToggle={handleReminderToggle}
+                onAddReminder={handleAddReminder}
+                onDeleteReminder={handleDeleteReminder}
               />
+            </Box>
 
-              {/* PHASE 3-4: Three-column layout with sidebars (responsive) */}
-              <Box display="flex" sx={{ backgroundColor: '#f9fafb' }}>
-                {/* Left Sidebar - Hidden below 1536px (xl) to prevent widget squishing */}
-                <Box sx={{ display: { xs: 'none', xl: 'block' } }}>
-                  <EscrowLeftSidebar
-                    escrowId={id}
-                    notes={notes}
-                    onNotesChange={setNotes}
-                    reminders={reminders}
-                    onReminderToggle={handleReminderToggle}
-                    onAddReminder={handleAddReminder}
-                    onDeleteReminder={handleDeleteReminder}
-                  />
-                </Box>
+            {/* Main Content with widget grid - Always visible */}
+            <EscrowMainContent
+              data={data}
+              expandedWidget={expandedWidget}
+              onWidgetExpand={handleWidgetExpand}
+              onUpdateSection={updateSection}
+            />
 
-                {/* PHASE 4: Main Content with widget grid - Always visible */}
-                <EscrowMainContent
-                  data={data}
-                  expandedWidget={expandedWidget}
-                  onWidgetExpand={handleWidgetExpand}
-                  onUpdateSection={updateSection}
-                />
-
-                {/* Right Sidebar - Hidden below 1536px (xl) to prevent widget squishing */}
-                <Box sx={{ display: { xs: 'none', xl: 'block' } }}>
-                  <EscrowRightSidebar
-                    escrowId={id}
-                    automations={automations}
-                    onToggleAutomation={handleToggleAutomation}
-                    dealHealth={{
-                      percentage: 85,
-                      indicators: [
-                        { type: 'success', text: 'All documents received' },
-                        { type: 'warning', text: 'Appraisal pending' },
-                      ],
-                    }}
-                    onQuickAction={handleQuickAction}
-                  />
-                </Box>
-              </Box>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="editor"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
-            >
-              <DataEditorView
-                data={data}
-                onUpdate={updateSection}
-                hasUnsavedChanges={hasUnsavedChanges}
+            {/* Right Sidebar - Hidden below 1536px (xl) to prevent widget squishing */}
+            <Box sx={{ display: { xs: 'none', xl: 'block' } }}>
+              <EscrowRightSidebar
+                escrowId={id}
+                automations={automations}
+                onToggleAutomation={handleToggleAutomation}
+                dealHealth={{
+                  percentage: 85,
+                  indicators: [
+                    { type: 'success', text: 'All documents received' },
+                    { type: 'warning', text: 'Appraisal pending' },
+                  ],
+                }}
+                onQuickAction={handleQuickAction}
               />
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </Box>
+          </Box>
+        </Box>
       </GlassCard>
 
       {/* Expanded Widget Backdrop */}
