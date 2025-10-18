@@ -1878,7 +1878,9 @@ const ClientDetail = () => {
                   fullWidth
                   variant="outlined"
                   startIcon={<VideoCall />}
-                  onClick={() => // console.log('Video call')}
+                  onClick={() => {
+                    // console.log('Video call')
+                  }}
                 >
                   Schedule Video Call
                 </Button>
