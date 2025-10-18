@@ -6,22 +6,22 @@ import ResponsiveGrid from '../../../common/ResponsiveGrid';
 import useResponsiveLayout from '../../../../hooks/useResponsiveLayout';
 
 // Import widgets
-import TimelineWidgetHorizontal from './TimelineWidgetHorizontal';
 import PeopleWidget from './PeopleWidget';
 import FinancialsWidget from './FinancialsWidget';
 import DocumentsWidget from './DocumentsWidget';
 import ActivityFeed from './ActivityFeed';
 
 /**
- * EscrowMainContent - Main content area with new layout
+ * EscrowMainContent - Main content area with widget grid
  *
- * NEW LAYOUT:
- * - Horizontal Timeline (full-width at top)
- * - 3 widgets below in responsive grid:
+ * LAYOUT:
+ * - 3 widgets in responsive grid:
  *   - People (left)
  *   - Financials (middle)
  *   - Documents (right)
  * - Activity Feed (full-width below)
+ *
+ * NOTE: Timeline is now at top level in index.jsx (above sidebars)
  */
 const EscrowMainContent = ({
   data,
@@ -33,12 +33,6 @@ const EscrowMainContent = ({
 
   return (
     <Box flex={1} p={spacing.container}>
-      {/* Horizontal Timeline - Full Width at Top */}
-      <TimelineWidgetHorizontal
-        data={data?.timeline}
-        onUpdate={(changes) => onUpdateSection('timeline', changes)}
-      />
-
       {/* 3 Main Widgets - Smart Responsive Grid (People, Financials, Documents) */}
       <ResponsiveGrid variant="widgets" minWidth={320} sx={{ pb: spacing.section }}>
         {/* People Widget */}

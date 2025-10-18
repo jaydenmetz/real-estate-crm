@@ -26,6 +26,7 @@ import EscrowMainContent from './components/EscrowMainContent';
 import EscrowDetailHeader from './components/EscrowDetailHeader';
 import EscrowLoadingState from './components/EscrowLoadingState';
 import EscrowErrorState from './components/EscrowErrorState';
+import TimelineWidgetHorizontal from './components/TimelineWidgetHorizontal';
 
 // Styled components with glassmorphism
 const StyledContainer = styled(Container)(({ theme }) => ({
@@ -173,6 +174,14 @@ function EscrowDetailPage() {
             onGenerateStatement={() => console.log('Generate statement')}
             onMoreActions={() => console.log('More actions')}
           />
+
+          {/* Timeline - Full Width Above Everything */}
+          <Box sx={{ px: 3 }}>
+            <TimelineWidgetHorizontal
+              data={data?.timeline}
+              onUpdate={(changes) => updateSection('timeline', changes)}
+            />
+          </Box>
 
           {/* Three-column layout with sidebars (responsive) */}
           <Box display="flex" sx={{ backgroundColor: '#f9fafb' }}>
