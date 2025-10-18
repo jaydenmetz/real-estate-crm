@@ -33,15 +33,15 @@ import { useEscrowData } from './hooks/useEscrowData';
 // PHASE 2: Removed emergency auth utility (now handled by AuthContext auto-refresh)
 
 // Import Dashboard widgets
-import DetailsWidget from './widgets/DetailsWidget';
-import PropertyWidget from './widgets/PropertyWidget';
-import PeopleWidget from './widgets/PeopleWidget';
-import TimelineWidget from './widgets/TimelineWidget';
-import FinancialsWidget from './widgets/FinancialsWidget';
-import ChecklistWidget from './widgets/ChecklistWidget';
+import DetailsWidget from './components/DetailsWidget';
+import PropertyWidget from './components/PropertyWidget';
+import PeopleWidget from './components/PeopleWidget';
+import TimelineWidget from './components/TimelineWidget';
+import FinancialsWidget from './components/FinancialsWidget';
+import ChecklistWidget from './components/ChecklistWidget';
 
 // Import Data Editor components
-import DataEditorView from './data-editor/DataEditorView';
+import DataEditorView from './components/DataEditorView';
 
 // Import Debug Panels
 import EscrowDebugPanel from './components/EscrowDebugPanel';
