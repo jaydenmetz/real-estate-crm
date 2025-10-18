@@ -198,6 +198,74 @@ class WebSocketService {
     }));
   }
 
+  /**
+   * Broadcast escrow update to all team members
+   * Used by Phase 1 modular controllers (people, timeline, financials, checklists, documents)
+   * @param {string} escrowId - Escrow UUID or display ID
+   * @param {object} payload - Update payload with type and data
+   */
+  broadcastEscrowUpdate(escrowId, payload) {
+    if (!escrowId || !payload) {
+      logger.warn('broadcastEscrowUpdate called without escrowId or payload');
+      return;
+    }
+
+    // Broadcast to all connected clients (they will filter by escrowId on frontend)
+    this.broadcastToAll('escrow:updated', {
+      escrowId,
+      ...payload,
+      timestamp: new Date().toISOString(),
+    });
+
+    logger.debug(`Escrow update broadcasted: ${escrowId} - ${payload.type}`);
+  }
+
+  /**
+   * Broadcast specific escrow event types (for granular frontend filtering)
+   */
+  broadcastEscrowPeopleUpdate(escrowId, peopleData) {
+    this.broadcastEscrowUpdate(escrowId, {
+      type: 'people:updated',
+      data: peopleData,
+    });
+  }
+
+  broadcastEscrowTimelineUpdate(escrowId, timelineData) {
+    this.broadcastEscrowUpdate(escrowId, {
+      type: 'timeline:updated',
+      data: timelineData,
+    });
+  }
+
+  broadcastEscrowFinancialsUpdate(escrowId, financialsData) {
+    this.broadcastEscrowUpdate(escrowId, {
+      type: 'financials:updated',
+      data: financialsData,
+    });
+  }
+
+  broadcastEscrowChecklistUpdate(escrowId, category, checklistData) {
+    this.broadcastEscrowUpdate(escrowId, {
+      type: 'checklist:updated',
+      category, // 'loan', 'house', 'admin', or 'all'
+      data: checklistData,
+    });
+  }
+
+  broadcastEscrowDocumentAdded(escrowId, document) {
+    this.broadcastEscrowUpdate(escrowId, {
+      type: 'documents:added',
+      data: document,
+    });
+  }
+
+  broadcastEscrowDocumentDeleted(escrowId, documentId) {
+    this.broadcastEscrowUpdate(escrowId, {
+      type: 'documents:deleted',
+      documentId,
+    });
+  }
+
   disconnect() {
     if (this.io) {
       this.io.close();

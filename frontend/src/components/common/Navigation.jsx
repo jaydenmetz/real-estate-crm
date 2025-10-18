@@ -54,6 +54,7 @@ import {
 } from '@mui/icons-material';
 import UserMenu from './UserMenu';
 import { useWebSocket } from '../../hooks/useWebSocket';
+import WebSocketIndicator from './WebSocketIndicator';
 
 const EnhancedNavigation = () => {
   const navigate = useNavigate();
@@ -410,21 +411,8 @@ const EnhancedNavigation = () => {
               </IconButton>
             </Tooltip>
 
-            {/* WebSocket Connection Status Indicator */}
-            <Tooltip title={isConnected ? "Real-time sync active" : "Real-time sync disconnected"}>
-              <Chip
-                icon={isConnected ? <CheckCircle /> : <WifiOff />}
-                label="Live"
-                color={isConnected ? "success" : "default"}
-                size="small"
-                variant={isConnected ? "filled" : "outlined"}
-                sx={{
-                  mr: 1,
-                  height: 24,
-                  '& .MuiChip-icon': { fontSize: 16 }
-                }}
-              />
-            </Tooltip>
+            {/* WebSocket Connection Status Indicator (Phase 2) */}
+            <WebSocketIndicator />
 
             {/* User Menu */}
             <UserMenu />
