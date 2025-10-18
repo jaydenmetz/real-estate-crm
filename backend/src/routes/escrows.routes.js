@@ -4,7 +4,8 @@ const express = require('express');
 const { body, param, query } = require('express-validator');
 
 const router = express.Router();
-const escrowsController = require('../controllers/escrows.controller');
+// Use modular controller (Phase 1: Backend modularization)
+const escrowsController = require('../controllers/escrows');
 const { authenticate } = require('../middleware/apiKey.middleware');
 const {
   validate, escrowValidationRules, paginationValidationRules, idValidationRules,
