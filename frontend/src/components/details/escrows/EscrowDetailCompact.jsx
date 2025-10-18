@@ -19,7 +19,12 @@ import TimelineWidget from './components/TimelineWidget';
 import FinancialsWidget from './components/FinancialsWidget';
 import PeopleWidget from './components/PeopleWidget';
 import DocumentsWidget from './components/DocumentsWidget';
+
+// Modals
 import FinancialsDetailModal from './modals/FinancialsDetailModal';
+import TimelineDetailModal from './modals/TimelineDetailModal';
+import PeopleDetailModal from './modals/PeopleDetailModal';
+import DocumentsDetailModal from './modals/DocumentsDetailModal';
 
 // PHASE 5: F-Pattern Layout (Left Sidebar | Hero + Widgets | Right Sidebar)
 const PageContainer = styled(Container)(({ theme }) => ({
@@ -49,7 +54,14 @@ const EscrowDetailCompact = () => {
   const [escrow, setEscrow] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+
+  // Modal states
   const [financialsModalOpen, setFinancialsModalOpen] = useState(false);
+  const [timelineModalOpen, setTimelineModalOpen] = useState(false);
+  const [peopleModalOpen, setPeopleModalOpen] = useState(false);
+  const [documentsModalOpen, setDocumentsModalOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState(null);
 
   // Fetch escrow data
   useEffect(() => {
@@ -178,7 +190,7 @@ const EscrowDetailCompact = () => {
             <TimelineWidget
               escrow={escrow}
               loading={false}
-              onClick={() => alert('Timeline modal coming in Phase 6')}
+              onClick={() => setTimelineModalOpen(true)}
             />
 
             <FinancialsWidget
@@ -190,13 +202,16 @@ const EscrowDetailCompact = () => {
             <PeopleWidget
               escrow={escrow}
               loading={false}
-              onClick={() => alert('People modal coming in Phase 6')}
+              onClick={() => setPeopleModalOpen(true)}
             />
 
             <DocumentsWidget
               escrow={escrow}
               loading={false}
-              onClick={() => alert('Documents modal coming in Phase 6')}
+              onClick={() => {
+                setSelectedCategory('Purchase Agreement');
+                setDocumentsModalOpen(true);
+              }}
             />
           </WidgetsGrid>
         </Grid>
@@ -211,11 +226,41 @@ const EscrowDetailCompact = () => {
         </Grid>
       </FPatternGrid>
 
-      {/* Modals */}
+      {/* Phase 6: Detail Modals */}
       <FinancialsDetailModal
         open={financialsModalOpen}
         onClose={() => setFinancialsModalOpen(false)}
         escrow={escrow}
+        onUpdate={handleUpdate}
+      />
+
+      <TimelineDetailModal
+        open={timelineModalOpen}
+        onClose={() => setTimelineModalOpen(false)}
+        escrow={escrow}
+        onUpdate={handleUpdate}
+      />
+
+      <PeopleDetailModal
+        open={peopleModalOpen}
+        onClose={() => {
+          setPeopleModalOpen(false);
+          setSelectedRole(null);
+        }}
+        escrow={escrow}
+        selectedRole={selectedRole}
+        onUpdate={handleUpdate}
+      />
+
+      <DocumentsDetailModal
+        open={documentsModalOpen}
+        onClose={() => {
+          setDocumentsModalOpen(false);
+          setSelectedCategory(null);
+        }}
+        escrow={escrow}
+        category={selectedCategory}
+        onUpdate={handleUpdate}
       />
 
       {/* Activity Feed (Draggable Bottom Sheet) - Phase 7 */}
