@@ -10,7 +10,8 @@ import {
   ListItem,
   ListItemAvatar,
   ListItemText,
-  Divider
+  Divider,
+  Skeleton
 } from '@mui/material';
 import {
   Person,
@@ -53,42 +54,55 @@ const RoleBadge = styled(Chip)(({ theme }) => ({
   fontWeight: 600
 }));
 
-const PeopleWidget = ({ data = {}, expanded, onExpand, onUpdate }) => {
-  // Mock contacts - Phase 2 will connect to database
-  const contacts = [
-    {
-      id: 1,
-      name: 'John Smith',
-      role: 'Buyer',
-      phone: '(555) 123-4567',
-      email: 'john@example.com',
-      color: '#4A90E2'
-    },
-    {
-      id: 2,
-      name: 'Sarah Johnson',
-      role: 'Seller',
-      phone: '(555) 234-5678',
-      email: 'sarah@example.com',
-      color: '#E24A90'
-    },
-    {
-      id: 3,
-      name: 'Mike Chen',
-      role: 'Lender',
-      phone: '(555) 345-6789',
-      email: 'mike@loanbank.com',
-      color: '#90E24A'
-    },
-    {
-      id: 4,
-      name: 'Lisa Brown',
-      role: 'Title Officer',
-      phone: '(555) 456-7890',
-      email: 'lisa@titleco.com',
-      color: '#E2904A'
-    }
-  ];
+const PeopleWidget = ({ escrow, loading, onClick }) => {
+  // Extract people data (supports both formats)
+  const people = escrow?.people || {};
+
+  // Map people object to contacts array
+  const contacts = Object.entries(people)
+    .filter(([role, person]) => person && (person.name || person.contactId))
+    .map(([role, person], index) => ({
+      id: person.contactId || `temp-${index}`,
+      name: person.name || 'Unknown',
+      role: formatRole(role),
+      phone: person.phone || '',
+      email: person.email || '',
+      color: getRoleColorHex(role)
+    }));
+
+  function formatRole(roleKey) {
+    const roleMap = {
+      buyer: 'Buyer',
+      buyerAgent: 'Buyer Agent',
+      seller: 'Seller',
+      sellerAgent: 'Seller Agent',
+      escrowOfficer: 'Escrow Officer',
+      titleOfficer: 'Title Officer',
+      loanOfficer: 'Loan Officer',
+      homeInspector: 'Inspector',
+      appraiser: 'Appraiser',
+      transactionCoordinator: 'TC',
+      referralAgent: 'Referral'
+    };
+    return roleMap[roleKey] || roleKey;
+  }
+
+  function getRoleColorHex(role) {
+    const colorMap = {
+      buyer: '#4A90E2',
+      seller: '#E24A90',
+      loanOfficer: '#90E24A',
+      escrowOfficer: '#E2904A',
+      titleOfficer: '#9B59B6',
+      homeInspector: '#3498DB',
+      buyerAgent: '#1ABC9C',
+      sellerAgent: '#E74C3C',
+      appraiser: '#F39C12',
+      transactionCoordinator: '#34495E',
+      referralAgent: '#16A085'
+    };
+    return colorMap[role] || '#95A5A6';
+  }
 
   const getRoleColor = (role) => {
     switch (role.toLowerCase()) {
@@ -114,13 +128,33 @@ const PeopleWidget = ({ data = {}, expanded, onExpand, onUpdate }) => {
       .slice(0, 2);
   };
 
+  if (loading) {
+    return (
+      <CompactCard>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5}>
+          <Skeleton width="30%" height={24} />
+          <Skeleton width="15%" height={22} />
+        </Box>
+        {[1, 2, 3, 4].map((i) => (
+          <Box key={i} display="flex" alignItems="center" gap={1} mb={1.5}>
+            <Skeleton variant="circular" width={36} height={36} />
+            <Box flex={1}>
+              <Skeleton width="60%" height={18} />
+              <Skeleton width="40%" height={14} sx={{ mt: 0.5 }} />
+            </Box>
+          </Box>
+        ))}
+      </CompactCard>
+    );
+  }
+
   return (
     <CompactCard
       component={motion.div}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-      onClick={onExpand}
+      transition={{ duration: 0.3, delay: 0.2 }}
+      onClick={onClick}
     >
       {/* Header */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5}>

@@ -8,7 +8,8 @@ import {
   List,
   ListItem,
   ListItemIcon,
-  ListItemText
+  ListItemText,
+  Skeleton
 } from '@mui/material';
 import {
   Description,
@@ -52,18 +53,40 @@ const ProgressBar = styled(LinearProgress)(({ theme }) => ({
   }
 }));
 
-const DocumentsWidget = ({ data = {}, expanded, onExpand, onUpdate }) => {
+const DocumentsWidget = ({ escrow, loading, onClick }) => {
+  // Extract documents data (supports both formats)
+  const documents = escrow?.documents || [];
+
+  // Group documents by category
+  const categoryCounts = {
+    'Purchase Agreement': { uploaded: 0, total: 5 },
+    'Disclosures': { uploaded: 0, total: 8 },
+    'Inspection Reports': { uploaded: 0, total: 4 },
+    'Loan Documents': { uploaded: 0, total: 10 },
+    'Closing Documents': { uploaded: 0, total: 6 }
+  };
+
+  documents.forEach(doc => {
+    const category = doc.category || 'Uncategorized';
+    if (categoryCounts[category]) {
+      categoryCounts[category].uploaded++;
+    }
+  });
+
   const categories = [
-    { id: 1, name: 'Purchase Agreement', icon: '📄', uploaded: 5, total: 5, status: 'complete' },
-    { id: 2, name: 'Disclosures', icon: '📋', uploaded: 6, total: 8, status: 'partial' },
-    { id: 3, name: 'Inspection Reports', icon: '🏠', uploaded: 2, total: 4, status: 'partial' },
-    { id: 4, name: 'Loan Documents', icon: '💰', uploaded: 3, total: 10, status: 'partial' },
-    { id: 5, name: 'Closing Documents', icon: '📝', uploaded: 0, total: 6, status: 'missing' }
-  ];
+    { id: 1, name: 'Purchase Agreement', icon: '📄', ...categoryCounts['Purchase Agreement'] },
+    { id: 2, name: 'Disclosures', icon: '📋', ...categoryCounts['Disclosures'] },
+    { id: 3, name: 'Inspection Reports', icon: '🏠', ...categoryCounts['Inspection Reports'] },
+    { id: 4, name: 'Loan Documents', icon: '💰', ...categoryCounts['Loan Documents'] },
+    { id: 5, name: 'Closing Documents', icon: '📝', ...categoryCounts['Closing Documents'] }
+  ].map(cat => ({
+    ...cat,
+    status: cat.uploaded === 0 ? 'missing' : cat.uploaded === cat.total ? 'complete' : 'partial'
+  }));
 
   const totalUploaded = categories.reduce((sum, cat) => sum + cat.uploaded, 0);
   const totalDocuments = categories.reduce((sum, cat) => sum + cat.total, 0);
-  const progressPercent = Math.round((totalUploaded / totalDocuments) * 100);
+  const progressPercent = totalDocuments > 0 ? Math.round((totalUploaded / totalDocuments) * 100) : 0;
 
   const getStatusIcon = (status) => {
     switch (status) {
@@ -78,13 +101,35 @@ const DocumentsWidget = ({ data = {}, expanded, onExpand, onUpdate }) => {
     }
   };
 
+  if (loading) {
+    return (
+      <CompactCard>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5}>
+          <Skeleton width="35%" height={24} />
+          <Skeleton width="15%" height={22} />
+        </Box>
+        <Skeleton width="100%" height={6} sx={{ mb: 2, borderRadius: 3 }} />
+        {[1, 2, 3, 4, 5].map((i) => (
+          <Box key={i} display="flex" alignItems="center" gap={1} mb={1}>
+            <Skeleton width={24} height={24} />
+            <Box flex={1}>
+              <Skeleton width="70%" height={16} />
+              <Skeleton width="20%" height={12} sx={{ mt: 0.5 }} />
+            </Box>
+            <Skeleton variant="circular" width={18} height={18} />
+          </Box>
+        ))}
+      </CompactCard>
+    );
+  }
+
   return (
     <CompactCard
       component={motion.div}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: 0.2 }}
-      onClick={onExpand}
+      transition={{ duration: 0.3, delay: 0.25 }}
+      onClick={onClick}
     >
       {/* Header */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5}>

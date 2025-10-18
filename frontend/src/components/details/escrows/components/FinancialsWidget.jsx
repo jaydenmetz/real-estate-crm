@@ -4,7 +4,8 @@ import {
   Card,
   Typography,
   Divider,
-  Chip
+  Chip,
+  Skeleton
 } from '@mui/material';
 import {
   AttachMoney,
@@ -48,18 +49,9 @@ const HighlightRow = styled(Box)(({ theme }) => ({
   marginTop: theme.spacing(1)
 }));
 
-const FinancialsWidget = ({ data = {}, expanded, onExpand, onUpdate }) => {
-  // Mock data based on screenshot - Phase 2 will connect to database
-  const baseCommission = 2779.20;
-  const franchiseFee = 173.70;
-  const dealNet = baseCommission - franchiseFee;
-  const agentCommissionPercent = 80;
-  const agentCommission = dealNet * (agentCommissionPercent / 100);
-  const transactionFee = 285.00;
-  const tcFee = 250.00;
-  const agent1099Income = agentCommission - transactionFee - tcFee;
-
+const FinancialsWidget = ({ escrow, loading, onClick }) => {
   const formatCurrency = (value) => {
+    if (!value) return '$0.00';
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
@@ -67,13 +59,44 @@ const FinancialsWidget = ({ data = {}, expanded, onExpand, onUpdate }) => {
     }).format(value);
   };
 
+  if (loading) {
+    return (
+      <CompactCard>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5}>
+          <Skeleton width="40%" height={24} />
+          <Skeleton width="20%" height={22} />
+        </Box>
+        <Skeleton width="30%" height={16} sx={{ mb: 1 }} />
+        {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+          <Box key={i} display="flex" justifyContent="space-between" mb={1}>
+            <Skeleton width="45%" height={18} />
+            <Skeleton width="25%" height={18} />
+          </Box>
+        ))}
+        <Skeleton width="100%" height={50} sx={{ mt: 1, borderRadius: 1 }} />
+      </CompactCard>
+    );
+  }
+
+  // Extract financial data (supports both formats)
+  const financials = escrow?.financials || {};
+
+  const baseCommission = financials.grossCommission || 0;
+  const franchiseFee = financials.franchiseFees || 0;
+  const dealNet = financials.adjustedGross || (baseCommission - franchiseFee);
+  const agentCommissionPercent = financials.splitPercentage || 80;
+  const agentCommission = financials.agentSplit || (dealNet * (agentCommissionPercent / 100));
+  const transactionFee = financials.transactionFee || 285;
+  const tcFee = financials.tcFee || 250;
+  const agent1099Income = financials.agent1099Income || financials.agentNet || (agentCommission - transactionFee - tcFee);
+
   return (
     <CompactCard
       component={motion.div}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: 0.1 }}
-      onClick={onExpand}
+      transition={{ duration: 0.3, delay: 0.15 }}
+      onClick={onClick}
     >
       {/* Header */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5}>
