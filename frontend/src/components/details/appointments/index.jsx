@@ -86,10 +86,10 @@ import {
   Warning,
 } from '@mui/icons-material';
 import { format, formatDistanceToNow, isPast, differenceInMinutes } from 'date-fns';
-import { useAuth } from '../../contexts/AuthContext';
-import CopyButton from '../common/CopyButton';
-import networkMonitor from '../../services/networkMonitor.service';
-import api from '../../services/api.service';
+import { useAuth } from '../../../contexts/AuthContext';
+import CopyButton from '../../common/CopyButton';
+import networkMonitor from '../../../services/networkMonitor.service';
+import api from '../../../services/api.service';
 
 // Safe date parsing helper
 const safeParseDate = (dateValue) => {

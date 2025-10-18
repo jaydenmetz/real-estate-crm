@@ -156,9 +156,9 @@ import {
   Warning as WarningIcon,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../../contexts/AuthContext';
-import CopyButton from '../common/CopyButton';
-import networkMonitor from '../../services/networkMonitor.service';
+import { useAuth } from '../../../contexts/AuthContext';
+import CopyButton from '../../common/CopyButton';
+import networkMonitor from '../../../services/networkMonitor.service';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay, EffectFade, Thumbs } from 'swiper/modules';
 import 'swiper/css';
@@ -170,8 +170,8 @@ import CountUp from 'react-countup';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useSnackbar } from 'notistack';
 import { format, differenceInDays, parseISO, isValid } from 'date-fns';
-import { listingsAPI, appointmentsAPI } from '../../services/api.service';
-import websocketService from '../../services/websocket.service';
+import { listingsAPI, appointmentsAPI } from '../../../services/api.service';
+import websocketService from '../../../services/websocket.service';
 import ListingForm from '../forms/ListingForm';
 import {
   LineChart,

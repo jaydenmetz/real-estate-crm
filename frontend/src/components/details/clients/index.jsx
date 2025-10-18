@@ -239,9 +239,9 @@ import {
   Twitter,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../../contexts/AuthContext';
-import CopyButton from '../common/CopyButton';
-import networkMonitor from '../../services/networkMonitor.service';
+import { useAuth } from '../../../contexts/AuthContext';
+import CopyButton from '../../common/CopyButton';
+import networkMonitor from '../../../services/networkMonitor.service';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination, Autoplay, EffectFade } from 'swiper/modules';
 import 'swiper/css';
@@ -251,7 +251,7 @@ import 'swiper/css/effect-fade';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format, formatDistanceToNow } from 'date-fns';
-import { clientsAPI } from '../../services/api.service';
+import { clientsAPI } from '../../../services/api.service';
 import { safeFormatDate } from '../../utils/safeDateUtils';
 import CountUp from 'react-countup';
 import {
