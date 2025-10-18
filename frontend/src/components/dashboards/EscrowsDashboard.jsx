@@ -4,7 +4,7 @@ import NewEscrowModal from '../forms/NewEscrowModal';
 import EscrowCard from '../common/widgets/EscrowCard';
 import VirtualizedEscrowList from '../common/VirtualizedEscrowList';
 // Import shared dashboard components
-import { DashboardToolbar } from '../common/dashboard';
+import { DashboardToolbar, DashboardStats } from '../common/dashboard';
 import {
   Container,
   Box,
@@ -2418,6 +2418,139 @@ const EscrowsDashboard = () => {
               variant: 'contained'
             }
           ]}
+        />
+      </Box>
+
+      {/* TEST: New DashboardStats Component - CHUNK 2 */}
+      <Box sx={{ mb: 3 }}>
+        <DashboardStats
+          stats={(() => {
+            // Prepare stats based on selected status
+            const baseStats = [];
+
+            if (selectedStatus === 'active') {
+              baseStats.push(
+                {
+                  label: 'Total Active Escrows',
+                  value: stats.totalEscrows || 0,
+                  icon: <Home />,
+                  color: 'primary.main'
+                },
+                {
+                  label: 'Escrows This Month',
+                  value: stats.monthClosed || 0,
+                  icon: <Schedule />,
+                  color: 'info.main'
+                },
+                {
+                  label: 'Total Volume',
+                  value: `$${(stats.totalVolume || 0).toLocaleString()}`,
+                  icon: <TrendingUp />,
+                  color: 'success.main',
+                  change: stats.volumeChange || 0,
+                  changeLabel: 'vs last month'
+                },
+                {
+                  label: 'Total Commission',
+                  value: `$${(stats.projectedCommission || 0).toLocaleString()}`,
+                  icon: <AttachMoney />,
+                  color: 'warning.main'
+                }
+              );
+            } else if (selectedStatus === 'closed') {
+              baseStats.push(
+                {
+                  label: 'Total Closed Escrows',
+                  value: stats.totalEscrows || 0,
+                  icon: <CheckCircle />,
+                  color: 'success.main'
+                },
+                {
+                  label: 'Closed This Year',
+                  value: stats.ytdClosed || 0,
+                  icon: <CalendarToday />,
+                  color: 'info.main'
+                },
+                {
+                  label: 'Total Volume',
+                  value: `$${(stats.totalVolume || 0).toLocaleString()}`,
+                  icon: <TrendingUp />,
+                  color: 'primary.main'
+                },
+                {
+                  label: 'Total Commission',
+                  value: `$${(stats.projectedCommission || 0).toLocaleString()}`,
+                  icon: <AttachMoney />,
+                  color: 'warning.main'
+                }
+              );
+            } else if (selectedStatus === 'cancelled') {
+              const totalAllStatuses = (escrows || []).length;
+              const totalCancelled = (escrows || []).filter(e =>
+                e.escrowStatus?.toLowerCase() === 'cancelled'
+              ).length;
+              const cancellationRate = totalAllStatuses > 0
+                ? ((totalCancelled / totalAllStatuses) * 100).toFixed(1)
+                : 0;
+
+              baseStats.push(
+                {
+                  label: 'Total Cancelled Escrows',
+                  value: stats.totalEscrows || 0,
+                  icon: <ErrorIcon />,
+                  color: 'error.main'
+                },
+                {
+                  label: 'Cancellation Rate',
+                  value: `${cancellationRate}%`,
+                  icon: <Assessment />,
+                  color: 'error.main'
+                },
+                {
+                  label: 'Total Volume',
+                  value: `$${(stats.totalVolume || 0).toLocaleString()}`,
+                  icon: <TrendingUp />,
+                  color: 'text.secondary'
+                },
+                {
+                  label: 'Lost Commission',
+                  value: `$${(stats.projectedCommission || 0).toLocaleString()}`,
+                  icon: <AttachMoney />,
+                  color: 'error.main'
+                }
+              );
+            } else {
+              // 'all' status
+              baseStats.push(
+                {
+                  label: 'Total Escrows',
+                  value: stats.totalEscrows || 0,
+                  icon: <Home />,
+                  color: 'primary.main'
+                },
+                {
+                  label: 'Active Escrows',
+                  value: stats.activeEscrows || 0,
+                  icon: <Schedule />,
+                  color: 'success.main'
+                },
+                {
+                  label: 'Total Volume',
+                  value: `$${(stats.totalVolume || 0).toLocaleString()}`,
+                  icon: <TrendingUp />,
+                  color: 'info.main'
+                },
+                {
+                  label: 'Total Commission',
+                  value: `$${(stats.projectedCommission || 0).toLocaleString()}`,
+                  icon: <AttachMoney />,
+                  color: 'warning.main'
+                }
+              );
+            }
+
+            return baseStats;
+          })()}
         />
       </Box>
 
