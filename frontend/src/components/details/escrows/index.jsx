@@ -165,28 +165,12 @@ function EscrowDetailPage() {
           showSaveButton={false}
         />
 
-        {/* Main Dashboard Content - No tabs needed */}
+        {/* Main Dashboard Content - Optimized Layout */}
         <Box>
-          {/* Hero Card */}
-          <EscrowHeroCard
-            escrow={data}
-            onEmailParties={() => console.log('Email all parties')}
-            onGenerateStatement={() => console.log('Generate statement')}
-            onMoreActions={() => console.log('More actions')}
-          />
-
-          {/* Timeline - Full Width Above Everything */}
-          <Box sx={{ px: 3 }}>
-            <TimelineWidgetHorizontal
-              data={data?.timeline}
-              onUpdate={(changes) => updateSection('timeline', changes)}
-            />
-          </Box>
-
-          {/* Three-column layout with sidebars (responsive) */}
-          <Box display="flex" sx={{ backgroundColor: '#f9fafb' }}>
-            {/* Left Sidebar - Hidden below 1536px (xl) to prevent widget squishing */}
-            <Box sx={{ display: { xs: 'none', xl: 'block' } }}>
+          {/* Hero Card + Sidebars Row */}
+          <Box display="flex" gap={3} mb={3}>
+            {/* Left Sidebar - Hidden below 1536px (xl) */}
+            <Box sx={{ display: { xs: 'none', xl: 'block' }, width: 280, flexShrink: 0 }}>
               <EscrowLeftSidebar
                 escrowId={id}
                 notes={notes}
@@ -198,16 +182,18 @@ function EscrowDetailPage() {
               />
             </Box>
 
-            {/* Main Content with widget grid - Always visible */}
-            <EscrowMainContent
-              data={data}
-              expandedWidget={expandedWidget}
-              onWidgetExpand={handleWidgetExpand}
-              onUpdateSection={updateSection}
-            />
+            {/* Hero Card - Center */}
+            <Box flex={1}>
+              <EscrowHeroCard
+                escrow={data}
+                onEmailParties={() => console.log('Email all parties')}
+                onGenerateStatement={() => console.log('Generate statement')}
+                onMoreActions={() => console.log('More actions')}
+              />
+            </Box>
 
-            {/* Right Sidebar - Hidden below 1536px (xl) to prevent widget squishing */}
-            <Box sx={{ display: { xs: 'none', xl: 'block' } }}>
+            {/* Right Sidebar - Hidden below 1536px (xl) */}
+            <Box sx={{ display: { xs: 'none', xl: 'block' }, width: 280, flexShrink: 0 }}>
               <EscrowRightSidebar
                 escrowId={id}
                 automations={automations}
@@ -222,6 +208,24 @@ function EscrowDetailPage() {
                 onQuickAction={handleQuickAction}
               />
             </Box>
+          </Box>
+
+          {/* Timeline - Full Width Below Hero+Sidebars */}
+          <Box sx={{ px: 3 }}>
+            <TimelineWidgetHorizontal
+              data={data?.timeline}
+              onUpdate={(changes) => updateSection('timeline', changes)}
+            />
+          </Box>
+
+          {/* Main Content - Full Width Below Timeline */}
+          <Box sx={{ backgroundColor: '#f9fafb', px: 3 }}>
+            <EscrowMainContent
+              data={data}
+              expandedWidget={expandedWidget}
+              onWidgetExpand={handleWidgetExpand}
+              onUpdateSection={updateSection}
+            />
           </Box>
         </Box>
       </GlassCard>

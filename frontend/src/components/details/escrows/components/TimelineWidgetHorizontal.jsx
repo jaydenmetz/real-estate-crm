@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useRef } from 'react';
 import {
   Box,
   Card,
   Typography,
   Chip,
-  IconButton,
   LinearProgress,
   Tooltip,
   Paper
@@ -15,12 +14,10 @@ import {
   Schedule,
   Warning,
   CalendarToday,
-  Flag,
-  ChevronLeft,
-  ChevronRight
+  Flag
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import useResponsiveLayout from '../../../../hooks/useResponsiveLayout';
 
@@ -32,24 +29,40 @@ const HorizontalContainer = styled(Card)(({ theme }) => ({
   marginBottom: theme.spacing(3)
 }));
 
-const CarouselContainer = styled(Box)(({ theme }) => ({
-  position: 'relative',
-  overflow: 'hidden',
-  padding: theme.spacing(2, 0)
-}));
-
-const MilestoneTrack = styled(Box)(({ theme }) => ({
+const ScrollableTrack = styled(Box)(({ theme}) => ({
   display: 'flex',
   alignItems: 'center',
-  justifyContent: 'center',
   gap: theme.spacing(2),
-  minHeight: 180
+  overflowX: 'auto',
+  overflowY: 'hidden',
+  padding: theme.spacing(2, 0),
+  cursor: 'grab',
+  userSelect: 'none',
+  scrollbarWidth: 'thin',
+  scrollbarColor: `${theme.palette.primary.light} ${theme.palette.grey[200]}`,
+  '&:active': {
+    cursor: 'grabbing'
+  },
+  '&::-webkit-scrollbar': {
+    height: 8
+  },
+  '&::-webkit-scrollbar-track': {
+    background: theme.palette.grey[200],
+    borderRadius: 4
+  },
+  '&::-webkit-scrollbar-thumb': {
+    background: theme.palette.primary.light,
+    borderRadius: 4,
+    '&:hover': {
+      background: theme.palette.primary.main
+    }
+  },
+  scrollBehavior: 'smooth'
 }));
 
-const MilestoneNode = styled(Paper)(({ theme, status, isCurrent, scale = 1 }) => ({
-  minWidth: isCurrent ? 220 : 160,
-  maxWidth: isCurrent ? 220 : 160,
-  padding: theme.spacing(isCurrent ? 2.5 : 2),
+const MilestoneNode = styled(Paper)(({ theme, status }) => ({
+  minWidth: 200,
+  padding: theme.spacing(2.5),
   borderRadius: theme.spacing(1.5),
   border: `2px solid ${
     status === 'completed' ? theme.palette.success.main :
@@ -59,39 +72,39 @@ const MilestoneNode = styled(Paper)(({ theme, status, isCurrent, scale = 1 }) =>
   }`,
   backgroundColor:
     status === 'completed' ? theme.palette.success.light + '15' :
-    status === 'current' ? theme.palette.primary.light + '15' :
+    status === 'current' ? theme.palette.primary.light + '20' :
     status === 'overdue' ? theme.palette.error.light + '15' :
     'white',
   position: 'relative',
+  flexShrink: 0,
   transition: 'all 0.3s ease',
-  opacity: scale,
-  transform: `scale(${isCurrent ? 1 : 0.9})`,
-  boxShadow: isCurrent ? '0 8px 24px rgba(0, 0, 0, 0.12)' : '0 4px 12px rgba(0, 0, 0, 0.06)'
+  cursor: 'pointer',
+  '&:hover': {
+    transform: 'translateY(-4px)',
+    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
+    borderWidth: 3
+  }
 }));
 
 const ConnectorLine = styled(Box)(({ theme, status }) => ({
-  width: theme.spacing(3),
+  minWidth: theme.spacing(3),
   height: 2,
   background: status === 'completed'
     ? theme.palette.success.main
     : theme.palette.grey[300],
-  flexShrink: 0
-}));
-
-const NavigationButton = styled(IconButton)(({ theme }) => ({
-  position: 'absolute',
-  top: '50%',
-  transform: 'translateY(-50%)',
-  backgroundColor: 'white',
-  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-  zIndex: 2,
-  '&:hover': {
-    backgroundColor: theme.palette.primary.light + '20',
-    boxShadow: '0 6px 16px rgba(0, 0, 0, 0.15)'
-  },
-  '&.Mui-disabled': {
-    backgroundColor: theme.palette.grey[100],
-    opacity: 0.5
+  flexShrink: 0,
+  position: 'relative',
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    right: -4,
+    top: -3,
+    width: 8,
+    height: 8,
+    borderRadius: '50%',
+    background: status === 'completed'
+      ? theme.palette.success.main
+      : theme.palette.grey[300]
   }
 }));
 
@@ -107,107 +120,57 @@ const ProgressBar = styled(LinearProgress)(({ theme }) => ({
 
 const TimelineWidgetHorizontal = ({ data = {}, onUpdate }) => {
   const { spacing } = useResponsiveLayout();
+  const scrollRef = useRef(null);
+  const isDragging = useRef(false);
+  const startX = useRef(0);
+  const scrollLeft = useRef(0);
 
-  // Mock timeline milestones
   const allMilestones = [
-    {
-      id: 1,
-      title: 'Contract Accepted',
-      date: '2025-09-15',
-      status: 'completed',
-      priority: 'critical'
-    },
-    {
-      id: 2,
-      title: 'Earnest Money Deposited',
-      date: '2025-09-18',
-      status: 'completed',
-      priority: 'critical'
-    },
-    {
-      id: 3,
-      title: 'Inspection Completed',
-      date: '2025-10-05',
-      status: 'completed',
-      priority: 'high'
-    },
-    {
-      id: 4,
-      title: 'Appraisal Ordered',
-      date: '2025-10-10',
-      status: 'current',
-      priority: 'high'
-    },
-    {
-      id: 5,
-      title: 'Loan Approval',
-      date: '2025-10-25',
-      status: 'pending',
-      priority: 'critical'
-    },
-    {
-      id: 6,
-      title: 'Final Walkthrough',
-      date: '2025-11-10',
-      status: 'pending',
-      priority: 'high'
-    },
-    {
-      id: 7,
-      title: 'Closing',
-      date: '2025-11-15',
-      status: 'pending',
-      priority: 'critical'
-    }
+    { id: 1, title: 'Contract Accepted', date: '2025-09-15', status: 'completed', priority: 'critical' },
+    { id: 2, title: 'Earnest Money Deposited', date: '2025-09-18', status: 'completed', priority: 'critical' },
+    { id: 3, title: 'Inspection Completed', date: '2025-10-05', status: 'completed', priority: 'high' },
+    { id: 4, title: 'Appraisal Ordered', date: '2025-10-10', status: 'current', priority: 'high' },
+    { id: 5, title: 'Loan Approval', date: '2025-10-25', status: 'pending', priority: 'critical' },
+    { id: 6, title: 'Final Walkthrough', date: '2025-11-10', status: 'pending', priority: 'high' },
+    { id: 7, title: 'Closing', date: '2025-11-15', status: 'pending', priority: 'critical' }
   ];
-
-  // Find current milestone index
-  const currentIndex = allMilestones.findIndex(m => m.status === 'current') || 0;
-  const [centerIndex, setCenterIndex] = useState(currentIndex);
-
-  // Calculate visible milestones (2 before, current, 2 after)
-  const getVisibleMilestones = () => {
-    const visible = [];
-    for (let i = centerIndex - 2; i <= centerIndex + 2; i++) {
-      if (i >= 0 && i < allMilestones.length) {
-        visible.push({
-          ...allMilestones[i],
-          relativePosition: i - centerIndex, // -2, -1, 0, 1, 2
-          isCurrent: i === centerIndex
-        });
-      }
-    }
-    return visible;
-  };
-
-  const visibleMilestones = getVisibleMilestones();
 
   const completedMilestones = allMilestones.filter(m => m.status === 'completed').length;
   const totalMilestones = allMilestones.length;
   const progressPercentage = Math.round((completedMilestones / totalMilestones) * 100);
 
-  const handlePrevious = () => {
-    if (centerIndex > 0) {
-      setCenterIndex(centerIndex - 1);
-    }
+  const handleMouseDown = (e) => {
+    isDragging.current = true;
+    startX.current = e.pageX - scrollRef.current.offsetLeft;
+    scrollLeft.current = scrollRef.current.scrollLeft;
   };
 
-  const handleNext = () => {
-    if (centerIndex < allMilestones.length - 1) {
-      setCenterIndex(centerIndex + 1);
-    }
+  const handleMouseLeave = () => {
+    isDragging.current = false;
+  };
+
+  const handleMouseUp = () => {
+    isDragging.current = false;
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging.current) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX.current) * 2;
+    scrollRef.current.scrollLeft = scrollLeft.current - walk;
   };
 
   const getStatusIcon = (status) => {
     switch (status) {
       case 'completed':
-        return <CheckCircle sx={{ fontSize: 24, color: 'success.main' }} />;
+        return <CheckCircle sx={{ fontSize: 28, color: 'success.main' }} />;
       case 'current':
-        return <Schedule sx={{ fontSize: 24, color: 'primary.main' }} />;
+        return <Schedule sx={{ fontSize: 28, color: 'primary.main' }} />;
       case 'overdue':
-        return <Warning sx={{ fontSize: 24, color: 'error.main' }} />;
+        return <Warning sx={{ fontSize: 28, color: 'error.main' }} />;
       default:
-        return <RadioButtonUnchecked sx={{ fontSize: 24, color: 'grey.400' }} />;
+        return <RadioButtonUnchecked sx={{ fontSize: 28, color: 'grey.400' }} />;
     }
   };
 
@@ -227,7 +190,7 @@ const TimelineWidgetHorizontal = ({ data = {}, onUpdate }) => {
   const formatDate = (dateString) => {
     try {
       const date = parseISO(dateString);
-      return format(date, 'MMM d');
+      return format(date, 'MMM d, yyyy');
     } catch {
       return dateString;
     }
@@ -253,7 +216,6 @@ const TimelineWidgetHorizontal = ({ data = {}, onUpdate }) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
     >
-      {/* Header */}
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
         <Box display="flex" alignItems="center" gap={2}>
           <Box
@@ -280,122 +242,86 @@ const TimelineWidgetHorizontal = ({ data = {}, onUpdate }) => {
         </Box>
       </Box>
 
-      {/* Overall Progress Bar */}
       <Box mb={3}>
         <ProgressBar variant="determinate" value={progressPercentage} />
       </Box>
 
-      {/* Carousel Timeline */}
-      <CarouselContainer>
-        {/* Previous Button */}
-        <NavigationButton
-          onClick={handlePrevious}
-          disabled={centerIndex === 0}
-          sx={{ left: -16 }}
-          size="small"
-        >
-          <ChevronLeft />
-        </NavigationButton>
+      <ScrollableTrack
+        ref={scrollRef}
+        onMouseDown={handleMouseDown}
+        onMouseLeave={handleMouseLeave}
+        onMouseUp={handleMouseUp}
+        onMouseMove={handleMouseMove}
+      >
+        {allMilestones.map((milestone, index) => (
+          <React.Fragment key={milestone.id}>
+            {index > 0 && (
+              <ConnectorLine status={allMilestones[index - 1].status} />
+            )}
 
-        {/* Milestone Track */}
-        <MilestoneTrack>
-          <AnimatePresence mode="popLayout">
-            {visibleMilestones.map((milestone, index) => (
-              <React.Fragment key={milestone.id}>
-                {/* Connector Line (before each milestone except first) */}
-                {index > 0 && (
-                  <ConnectorLine
-                    component={motion.div}
-                    initial={{ opacity: 0, scaleX: 0 }}
-                    animate={{ opacity: 1, scaleX: 1 }}
-                    exit={{ opacity: 0, scaleX: 0 }}
-                    status={visibleMilestones[index - 1].status}
-                  />
+            <MilestoneNode
+              component={motion.div}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.3, delay: index * 0.05 }}
+              status={milestone.status}
+              whileHover={{ scale: 1.05 }}
+            >
+              <Box display="flex" justifyContent="space-between" alignItems="start" mb={1.5}>
+                {getStatusIcon(milestone.status)}
+                {milestone.priority === 'critical' && (
+                  <Tooltip title="Critical Milestone" arrow>
+                    <Flag sx={{ fontSize: 18, color: 'error.main' }} />
+                  </Tooltip>
                 )}
+              </Box>
 
-                {/* Milestone Node */}
-                <MilestoneNode
-                  component={motion.div}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ duration: 0.3 }}
-                  status={milestone.status}
-                  isCurrent={milestone.isCurrent}
-                  scale={milestone.isCurrent ? 1 : 0.95}
-                >
-                  {/* Status Icon */}
-                  <Box display="flex" justifyContent="space-between" alignItems="start" mb={1.5}>
-                    {getStatusIcon(milestone.status)}
-                    {milestone.priority === 'critical' && (
-                      <Tooltip title="Critical">
-                        <Flag sx={{ fontSize: 16, color: 'error.main' }} />
-                      </Tooltip>
-                    )}
-                  </Box>
+              <Typography
+                variant="body1"
+                fontWeight={milestone.status === 'current' ? 700 : 600}
+                color="text.primary"
+                mb={1}
+                sx={{
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  minHeight: 48
+                }}
+              >
+                {milestone.title}
+              </Typography>
 
-                  {/* Title */}
-                  <Typography
-                    variant={milestone.isCurrent ? 'body1' : 'body2'}
-                    fontWeight={milestone.isCurrent ? 700 : 600}
-                    color="text.primary"
-                    mb={1}
-                    sx={{
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical'
-                    }}
-                  >
-                    {milestone.title}
-                  </Typography>
+              <Typography variant="caption" color="text.secondary" display="block" mb={1.5}>
+                📅 {formatDate(milestone.date)}
+              </Typography>
 
-                  {/* Date */}
-                  <Typography variant="caption" color="text.secondary" display="block" mb={1}>
-                    {formatDate(milestone.date)}
-                  </Typography>
+              {milestone.status !== 'completed' && (
+                <Chip
+                  label={getDaysUntil(milestone.date)}
+                  size="small"
+                  color={getStatusColor(milestone.status)}
+                  sx={{ fontWeight: 600, fontSize: '0.7rem', width: '100%' }}
+                />
+              )}
 
-                  {/* Status Chip */}
-                  {milestone.status !== 'completed' && (
-                    <Chip
-                      label={getDaysUntil(milestone.date)}
-                      size="small"
-                      color={getStatusColor(milestone.status)}
-                      sx={{ fontWeight: 600, fontSize: '0.7rem' }}
-                    />
-                  )}
+              {milestone.status === 'completed' && (
+                <Chip
+                  label="✓ Complete"
+                  size="small"
+                  color="success"
+                  sx={{ fontWeight: 600, fontSize: '0.7rem', width: '100%' }}
+                />
+              )}
+            </MilestoneNode>
+          </React.Fragment>
+        ))}
+      </ScrollableTrack>
 
-                  {milestone.status === 'completed' && (
-                    <Chip
-                      label="Complete"
-                      size="small"
-                      color="success"
-                      icon={<CheckCircle sx={{ fontSize: 14 }} />}
-                      sx={{ fontWeight: 600, fontSize: '0.7rem' }}
-                    />
-                  )}
-                </MilestoneNode>
-              </React.Fragment>
-            ))}
-          </AnimatePresence>
-        </MilestoneTrack>
-
-        {/* Next Button */}
-        <NavigationButton
-          onClick={handleNext}
-          disabled={centerIndex === allMilestones.length - 1}
-          sx={{ right: -16 }}
-          size="small"
-        >
-          <ChevronRight />
-        </NavigationButton>
-      </CarouselContainer>
-
-      {/* Milestone Counter */}
       <Box mt={2} textAlign="center">
         <Typography variant="caption" color="text.secondary">
-          Showing milestone {centerIndex + 1} of {totalMilestones}
+          ← Drag or scroll to see all milestones →
         </Typography>
       </Box>
     </HorizontalContainer>
