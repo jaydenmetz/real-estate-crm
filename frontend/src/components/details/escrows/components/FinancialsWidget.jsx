@@ -182,45 +182,45 @@ const FinancialsWidget = ({ data = {}, onEdit }) => {
         </Stack>
       </Box>
 
-      {/* Summary Box */}
+      {/* Summary Box - 2×2 Grid (prevents text overlap) */}
       <SummaryBox sx={{ mb: 3 }}>
-        <Grid container spacing={3}>
-          <Grid item xs={12} sm={6} md={3}>
+        <Grid container spacing={2}>
+          <Grid item xs={6} sm={6}>
             <Box>
-              <Typography variant="body2" sx={{ opacity: 0.9, mb: 1 }}>
+              <Typography variant="body2" sx={{ opacity: 0.9, mb: 1, fontSize: '0.75rem' }}>
                 Purchase Price
               </Typography>
-              <Typography variant="h4" fontWeight="bold">
+              <Typography variant="h5" fontWeight="bold" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
                 {formatCurrency(purchasePrice)}
               </Typography>
             </Box>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={6} sm={6}>
             <Box>
-              <Typography variant="body2" sx={{ opacity: 0.9, mb: 1 }}>
+              <Typography variant="body2" sx={{ opacity: 0.9, mb: 1, fontSize: '0.75rem' }}>
                 Total Cash Needed
               </Typography>
-              <Typography variant="h4" fontWeight="bold">
+              <Typography variant="h5" fontWeight="bold" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
                 {formatCurrency(totalCashNeeded)}
               </Typography>
             </Box>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={6} sm={6}>
             <Box>
-              <Typography variant="body2" sx={{ opacity: 0.9, mb: 1 }}>
+              <Typography variant="body2" sx={{ opacity: 0.9, mb: 1, fontSize: '0.75rem' }}>
                 Loan Amount
               </Typography>
-              <Typography variant="h4" fontWeight="bold">
+              <Typography variant="h5" fontWeight="bold" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
                 {formatCurrency(loanAmount)}
               </Typography>
             </Box>
           </Grid>
-          <Grid item xs={12} sm={6} md={3}>
+          <Grid item xs={6} sm={6}>
             <Box>
-              <Typography variant="body2" sx={{ opacity: 0.9, mb: 1 }}>
+              <Typography variant="body2" sx={{ opacity: 0.9, mb: 1, fontSize: '0.75rem' }}>
                 LTV Ratio
               </Typography>
-              <Typography variant="h4" fontWeight="bold">
+              <Typography variant="h5" fontWeight="bold" sx={{ fontSize: { xs: '1.25rem', sm: '1.5rem' } }}>
                 {formatPercent(loanToValue)}
               </Typography>
             </Box>
