@@ -37,8 +37,8 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import { styled, alpha } from '@mui/material/styles';
-import DebugCard from '../common/DebugCard';
-import DetailPageErrorBoundary from '../common/DetailPageErrorBoundary';
+import DebugCard from '../../common/DebugCard';
+import DetailPageErrorBoundary from '../../common/DetailPageErrorBoundary';
 import {
   Timeline,
   TimelineItem,

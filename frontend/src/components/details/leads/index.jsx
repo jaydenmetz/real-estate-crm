@@ -29,8 +29,8 @@ import {
   Tooltip,
   Alert,
 } from '@mui/material';
-import DebugCard from '../common/DebugCard';
-import DetailPageErrorBoundary from '../common/DetailPageErrorBoundary';
+import DebugCard from '../../common/DebugCard';
+import DetailPageErrorBoundary from '../../common/DetailPageErrorBoundary';
 import {
   Timeline,
   TimelineItem,
