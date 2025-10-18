@@ -21,12 +21,12 @@ class WebSocketService {
         // If no token in memory, try to refresh from httpOnly cookie first
         let token = authService.token;
         if (!token) {
-          console.log('🔄 No token in memory, attempting to refresh before WebSocket connection...');
+          // console.log('🔄 No token in memory, attempting to refresh before WebSocket connection...');
           try {
             const refreshResult = await authService.refreshAccessToken();
             if (refreshResult.success) {
               token = authService.token;
-              console.log('✅ Token refreshed successfully for WebSocket');
+              // console.log('✅ Token refreshed successfully for WebSocket');
             } else {
               console.warn('❌ Token refresh failed, WebSocket may fail to authenticate');
             }
@@ -37,7 +37,7 @@ class WebSocketService {
 
         // Use React environment variable and ensure HTTPS in production
         const wsUrl = process.env.REACT_APP_WS_URL || 'wss://api.jaydenmetz.com';
-        console.log('Connecting to WebSocket:', wsUrl, token ? '(with token)' : '(no token)');
+        // console.log('Connecting to WebSocket:', wsUrl, token ? '(with token)' : '(no token)');
 
         this.socket = io(wsUrl, {
         auth: { token },
@@ -53,7 +53,7 @@ class WebSocketService {
 
       // Set up one-time connection handler for the promise
       const onConnect = () => {
-        console.log('✅ WebSocket connected');
+        // console.log('✅ WebSocket connected');
         this.isConnected = true;
         this.reconnectAttempts = 0;
         
@@ -75,7 +75,7 @@ class WebSocketService {
       
       // Set up persistent handlers
       this.socket.on('connect', () => {
-        console.log('✅ WebSocket reconnected');
+        // console.log('✅ WebSocket reconnected');
         this.isConnected = true;
         this.reconnectAttempts = 0;
         
@@ -84,7 +84,7 @@ class WebSocketService {
       });
 
       this.socket.on('disconnect', (reason) => {
-        console.log('❌ WebSocket disconnected:', reason);
+        // console.log('❌ WebSocket disconnected:', reason);
         this.isConnected = false;
         this.emit('connection', { status: 'disconnected', reason });
       });
@@ -107,7 +107,7 @@ class WebSocketService {
             details: error.message
           });
         } else {
-          console.log(`Reconnection attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts}...`);
+          // console.log(`Reconnection attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts}...`);
         }
       });
 

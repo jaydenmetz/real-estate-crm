@@ -1158,7 +1158,7 @@ export class HealthCheckService {
             message: 'No data:update event received within 3s',
             responseTime: 3000,
             error: 'Event timeout',
-            request: `// Listening for event:\nsocket.on('data:update', (data) => {\n  console.log('Event received:', data);\n});`
+            request: `// Listening for event:\nsocket.on('data:update', (data) => {\n  // console.log('Event received:', data);\n});`
           });
         }, 3000);
 

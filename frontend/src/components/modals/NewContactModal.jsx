@@ -84,7 +84,7 @@ export const NewContactModal = ({
         company_name: formData.company_name || null,
       };
 
-      console.log('Creating contact:', contactData);
+      // console.log('Creating contact:', contactData);
       const response = await contactsAPI.create(contactData);
 
       if (response.success && response.data) {

@@ -90,11 +90,11 @@ const PublicProfile = () => {
   const { data: profile, isLoading, error } = useQuery({
     queryKey: ['publicProfile', username],
     queryFn: async () => {
-      console.log('Fetching profile for:', username);
-      console.log('Auth token present:', apiInstance.hasToken());
+      // console.log('Fetching profile for:', username);
+      // console.log('Auth token present:', apiInstance.hasToken());
       try {
         const response = await api.profilesAPI.getPublic(username);
-        console.log('Profile response:', response);
+        // console.log('Profile response:', response);
         // API returns {success: true, data: {...}}
         if (response && response.success && response.data) {
           return response.data;

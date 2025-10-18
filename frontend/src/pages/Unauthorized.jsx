@@ -41,18 +41,18 @@ const Unauthorized = () => {
       try {
         await logout();
       } catch (logoutErr) {
-        console.log('Logout error (may already be logged out):', logoutErr);
+        // console.log('Logout error (may already be logged out):', logoutErr);
       }
 
-      console.log('Attempting admin login with email:', email);
+      // console.log('Attempting admin login with email:', email);
 
       // Login with provided credentials
       const result = await authService.login(email, password);
 
-      console.log('Login result:', result);
+      // console.log('Login result:', result);
 
       if (result.success) {
-        console.log('Login successful, user:', result.user);
+        // console.log('Login successful, user:', result.user);
 
         // Check if logged-in user has system_admin role
         // This check happens on backend via ProtectedRoute's server-side verification
@@ -67,7 +67,7 @@ const Unauthorized = () => {
         // Update auth context with user data
         login(result.user);
 
-        console.log('System admin verified, navigating to:', from);
+        // console.log('System admin verified, navigating to:', from);
         // Redirect to the page the user was trying to access
         // ProtectedRoute will do server-side verification as well
         navigate(from, { replace: true });

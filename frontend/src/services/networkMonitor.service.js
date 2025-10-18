@@ -27,10 +27,10 @@ class NetworkMonitor {
       this.isEnabled = true;
       this.interceptFetch();
       this.interceptXHR();
-      console.log('🔍 Network Monitor enabled:', { isDev, username: user.username });
+      // console.log('🔍 Network Monitor enabled:', { isDev, username: user.username });
     } else if (!shouldEnable && this.isEnabled) {
       this.isEnabled = false;
-      console.log('🔍 Network Monitor disabled');
+      // console.log('🔍 Network Monitor disabled');
     }
   }
 
@@ -304,7 +304,7 @@ if (typeof window !== 'undefined') {
       const user = JSON.parse(localStorage.getItem('user') || '{}');
       if (user.username === 'admin' || process.env.NODE_ENV === 'development') {
         networkMonitor.enable();
-        console.log('🔍 Network Monitor enabled for admin user:', user.username);
+        // console.log('🔍 Network Monitor enabled for admin user:', user.username);
         return true;
       }
     } catch (e) {

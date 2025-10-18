@@ -8,7 +8,7 @@ import './styles/globals.css';
 const SENTRY_DSN = 'https://2d2e91e606017090b37b82c997bd3eb9@o4510050439200768.ingest.us.sentry.io/4510050490253312';
 
 // Debug: Log to verify
-console.log('🔍 Sentry DSN:', SENTRY_DSN);
+// console.log('🔍 Sentry DSN:', SENTRY_DSN);
 
 // Initialize Sentry before anything else
 Sentry.init({
@@ -79,7 +79,7 @@ window.Sentry = Sentry;
 
 // Debug environment variables in development only
 if (process.env.NODE_ENV !== 'production') {
-  console.log('🔧 Environment Debug:', {
+  // console.log('🔧 Environment Debug:', {
     NODE_ENV: process.env.NODE_ENV,
     REACT_APP_API_URL: process.env.REACT_APP_API_URL,
     REACT_APP_WS_URL: process.env.REACT_APP_WS_URL

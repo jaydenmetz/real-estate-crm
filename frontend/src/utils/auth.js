@@ -102,7 +102,7 @@ export const cleanupOldTokens = () => {
     // Remove old token keys
     oldTokenKeys.forEach(key => {
       if (localStorage.getItem(key)) {
-        console.log(`🧹 Removing old token key: ${key}`);
+        // console.log(`🧹 Removing old token key: ${key}`);
         localStorage.removeItem(key);
       }
     });
@@ -112,14 +112,14 @@ export const cleanupOldTokens = () => {
     if (expiry) {
       const now = Math.floor(Date.now() / 1000);
       if (now > expiry) {
-        console.log('🧹 Removing expired token and user data');
+        // console.log('🧹 Removing expired token and user data');
         localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
         localStorage.removeItem(STORAGE_KEYS.TOKEN_EXPIRY);
         localStorage.removeItem(STORAGE_KEYS.USER);
       }
     }
 
-    console.log('✅ Token cleanup complete');
+    // console.log('✅ Token cleanup complete');
   } catch (error) {
     console.error('Error cleaning up tokens:', error);
   }

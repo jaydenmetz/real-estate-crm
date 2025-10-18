@@ -438,9 +438,9 @@ const ListingsDashboard = () => {
   // WebSocket real-time updates
   useEffect(() => {
     if (isConnected) {
-      console.log('WebSocket connected, real-time updates active');
+      // console.log('WebSocket connected, real-time updates active');
     } else {
-      console.log('WebSocket disconnected');
+      // console.log('WebSocket disconnected');
     }
   }, [isConnected]);
 
@@ -567,10 +567,10 @@ const ListingsDashboard = () => {
     const websocketService = require('../../services/websocket.service').default;
 
     const unsubscribe = websocketService.on('data:update', (data) => {
-      console.log('📡 WebSocket data update received:', data);
+      // console.log('📡 WebSocket data update received:', data);
 
       if (data.entityType === 'listing') {
-        console.log('🔄 Refetching listings due to real-time update');
+        // console.log('🔄 Refetching listings due to real-time update');
         fetchListings();
       }
     });
@@ -590,7 +590,7 @@ const ListingsDashboard = () => {
         setCurrentPage(1);
       }
 
-      console.log(`Fetching listings... (page ${pageNum})`);
+      // console.log(`Fetching listings... (page ${pageNum})`);
 
       // Fetch listings with pagination (50 per page for optimal performance)
       // PHASE 6: Include scope filter (brokerage, team, user)
@@ -600,7 +600,7 @@ const ListingsDashboard = () => {
         limit: 50,
         scope: scope // Pass scope from state
       });
-      console.log('API Response:', response);
+      // console.log('API Response:', response);
 
       if (response.success) {
         const allData = response.data.listings || response.data || [];
@@ -613,7 +613,7 @@ const ListingsDashboard = () => {
         const listingData = allData.filter(listing => !listing.deleted_at && !listing.deletedAt);
         const archivedData = allData.filter(listing => listing.deleted_at || listing.deletedAt);
 
-        console.log(`Page ${pageNum}/${totalPages} - Total: ${totalRecords}, Loaded: ${allData.length}, Active: ${listingData.length}, Archived: ${archivedData.length}`);
+        // console.log(`Page ${pageNum}/${totalPages} - Total: ${totalRecords}, Loaded: ${allData.length}, Active: ${listingData.length}, Archived: ${archivedData.length}`);
 
         // Update state based on whether we're appending or replacing
         if (appendData) {
@@ -824,7 +824,7 @@ const ListingsDashboard = () => {
   };
 
   const handleListingClick = (listingId) => {
-    console.log('Listing clicked - ID:', listingId);
+    // console.log('Listing clicked - ID:', listingId);
     navigate(`/listings/${listingId}`);
   };
 
@@ -859,7 +859,7 @@ const ListingsDashboard = () => {
         const remainingListings = listings.filter(l => !deletedIds.has(l.id));
         calculateStats(remainingListings, selectedStatus);
 
-        console.log(`Successfully permanently deleted ${response.data.deletedCount || selectedArchivedIds.length} listings`);
+        // console.log(`Successfully permanently deleted ${response.data.deletedCount || selectedArchivedIds.length} listings`);
       }
     } catch (error) {
       console.error('Failed to batch delete listings:', error);

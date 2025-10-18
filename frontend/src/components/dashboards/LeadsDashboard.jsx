@@ -444,11 +444,11 @@ const LeadsDashboard = () => {
 
     // Subscribe to data updates
     const unsubscribe = websocketService.on('data:update', (data) => {
-      console.log('📡 WebSocket data update received:', data);
+      // console.log('📡 WebSocket data update received:', data);
 
       // Only refetch if it's a lead update
       if (data.entityType === 'lead') {
-        console.log('🔄 Refetching leads due to real-time update');
+        // console.log('🔄 Refetching leads due to real-time update');
         fetchLeads();
       }
     });
@@ -476,7 +476,7 @@ const LeadsDashboard = () => {
         scope: scope // Pass scope from state
       });
 
-      console.log('API Response:', response);
+      // console.log('API Response:', response);
 
       if (response.success) {
         const allData = response.data.leads || response.data || [];
@@ -489,7 +489,7 @@ const LeadsDashboard = () => {
         const leadData = allData.filter(lead => !lead.deleted_at && !lead.deletedAt);
         const archivedData = allData.filter(lead => lead.deleted_at || lead.deletedAt);
 
-        console.log(`Page ${pageNum}/${totalPages} - Total: ${totalRecords}, Loaded: ${allData.length}, Active: ${leadData.length}, Archived: ${archivedData.length}`);
+        // console.log(`Page ${pageNum}/${totalPages} - Total: ${totalRecords}, Loaded: ${allData.length}, Active: ${leadData.length}, Archived: ${archivedData.length}`);
 
         // Update state based on whether we're appending or replacing
         if (appendData) {
@@ -523,7 +523,7 @@ const LeadsDashboard = () => {
 
   const loadMoreLeads = useCallback(() => {
     if (!loadingMore && hasMorePages) {
-      console.log(`Loading page ${currentPage + 1}...`);
+      // console.log(`Loading page ${currentPage + 1}...`);
       fetchLeads(currentPage + 1, true);
     }
   }, [loadingMore, hasMorePages, currentPage]);
@@ -760,7 +760,7 @@ const LeadsDashboard = () => {
         const remainingLeads = leads.filter(l => !deletedIds.has(l.id));
         calculateStats(remainingLeads, selectedStatus);
 
-        console.log(`✅ Batch deleted ${count} lead${count > 1 ? 's' : ''}`);
+        // console.log(`✅ Batch deleted ${count} lead${count > 1 ? 's' : ''}`);
       } else {
         console.error('Batch delete failed:', response.error);
         alert('Failed to delete leads. Please try again.');

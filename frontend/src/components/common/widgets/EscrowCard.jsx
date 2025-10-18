@@ -120,7 +120,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
     if (!peopleEditorRole) return;
 
     // TODO: Update the appropriate state and call onUpdate
-    console.log('Saving people for role:', peopleEditorRole, updatedPeople);
+    // console.log('Saving people for role:', peopleEditorRole, updatedPeople);
 
     // For now, just close the modal
     handleClosePeopleEditor();
@@ -312,17 +312,17 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
 
   const handleTeamPersonClick = useCallback(async (person, section, personIndex) => {
     // TODO: Open contact selection modal to edit person
-    console.log('Edit person:', person, 'in section:', section);
+    // console.log('Edit person:', person, 'in section:', section);
   }, []);
 
   const handleTeamAddPerson = useCallback(async (section) => {
     // TODO: Open contact selection modal to add person
-    console.log('Add person to section:', section);
+    // console.log('Add person to section:', section);
   }, []);
 
   const handleTeamRemovePerson = useCallback(async (section, personIndex) => {
     // TODO: Remove person from team section
-    console.log('Remove person:', personIndex, 'from section:', section);
+    // console.log('Remove person:', personIndex, 'from section:', section);
   }, []);
 
   // ✅ Contact selection modal handlers

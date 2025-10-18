@@ -718,7 +718,7 @@ class EscrowController {
 
       // Log the update for debugging
       const updatedEscrow = result.rows[0];
-      console.log('Updated escrow fields:', {
+      // console.log('Updated escrow fields:', {
         zillow_url: updatedEscrow.zillow_url,
         property_image_url: updatedEscrow.property_image_url,
         id: updatedEscrow.id,

@@ -52,7 +52,7 @@ const getLinkPreview = async (req, res) => {
     } catch (axiosError) {
       // If Zillow blocks us (403), provide a structured fallback
       if (axiosError.response?.status === 403 && validUrl.hostname.includes('zillow.com')) {
-        console.log('Zillow blocked request, using fallback data');
+        // console.log('Zillow blocked request, using fallback data');
 
         // Extract property ID from URL
         const zpidMatch = url.match(/(\d+)_zpid/);

@@ -29,7 +29,7 @@ const FeaturesStep = () => {
   };
 
   const handleFeedbackSubmit = (feedback) => {
-    console.log('Feedback submitted:', feedback);
+    // console.log('Feedback submitted:', feedback);
     navigate('/?welcome=true&feedback=submitted');
   };
 

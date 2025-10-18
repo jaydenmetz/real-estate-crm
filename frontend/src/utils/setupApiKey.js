@@ -14,7 +14,7 @@ import { setApiKey, getAuthStatus, clearAuth } from './auth';
 window.setupApiKey = function(apiKey) {
   if (!apiKey) {
     console.error('Please provide an API key');
-    console.log('Example: setupApiKey("64-character-hex-string-here")');
+    // console.log('Example: setupApiKey("64-character-hex-string-here")');
     return;
   }
   
@@ -26,8 +26,8 @@ window.setupApiKey = function(apiKey) {
   // Use the proper auth utility
   setApiKey(apiKey);
   
-  console.log('✅ API key configured successfully');
-  console.log('Refreshing page to apply changes...');
+  // console.log('✅ API key configured successfully');
+  // console.log('Refreshing page to apply changes...');
   
   setTimeout(() => {
     window.location.reload();
@@ -37,8 +37,8 @@ window.setupApiKey = function(apiKey) {
 // Helper to clear all authentication
 window.clearAuth = function() {
   clearAuth();
-  console.log('✅ All authentication cleared');
-  console.log('Redirecting to login...');
+  // console.log('✅ All authentication cleared');
+  // console.log('Redirecting to login...');
   setTimeout(() => {
     window.location.href = '/login';
   }, 1000);
@@ -48,13 +48,13 @@ window.clearAuth = function() {
 window.checkAuth = function() {
   const status = getAuthStatus();
   
-  console.log('Authentication Status:');
-  console.log('- Authenticated:', status.isAuthenticated);
-  console.log('- Method:', status.authMethod);
-  console.log('- Has JWT:', status.hasJWT);
-  console.log('- Has API Key:', status.hasApiKey);
+  // console.log('Authentication Status:');
+  // console.log('- Authenticated:', status.isAuthenticated);
+  // console.log('- Method:', status.authMethod);
+  // console.log('- Has JWT:', status.hasJWT);
+  // console.log('- Has API Key:', status.hasApiKey);
   if (status.user) {
-    console.log('- User:', status.user.email || status.user.username);
+    // console.log('- User:', status.user.email || status.user.username);
   }
 };
 

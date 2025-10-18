@@ -149,7 +149,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
     if (open && hasValidGoogleKey && !googleMapsLoaded) {
       loadGoogleMapsScript()
         .then(() => {
-          console.log('Google Maps loaded successfully');
+          // console.log('Google Maps loaded successfully');
           setGoogleMapsLoaded(true);
           // Initialize services
           if (window.google?.maps?.places) {

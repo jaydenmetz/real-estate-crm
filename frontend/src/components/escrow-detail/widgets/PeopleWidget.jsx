@@ -463,7 +463,7 @@ function PeopleWidget({ data, expanded, onExpand, onUpdate }) {
             startIcon={<AddIcon />}
             onClick={() => {
               // Handle creating new contact
-              console.log('Create new contact');
+              // console.log('Create new contact');
             }}
           >
             Create New Contact

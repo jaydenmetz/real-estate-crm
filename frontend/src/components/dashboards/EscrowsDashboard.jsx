@@ -579,14 +579,14 @@ const EscrowsDashboard = () => {
     // Skip counter only applies to same-tab updates
     if (!statusChanged && skipStatsRecalculation.current > 0) {
       skipStatsRecalculation.current -= 1; // Decrement counter
-      console.log('🛑 Skipping stats recalculation, remaining:', skipStatsRecalculation.current);
+      // console.log('🛑 Skipping stats recalculation, remaining:', skipStatsRecalculation.current);
       return;
     }
 
     if (statusChanged) {
-      console.log('🔄 Tab changed to:', selectedStatus, '- recalculating stats');
+      // console.log('🔄 Tab changed to:', selectedStatus, '- recalculating stats');
     } else {
-      console.log('✅ Recalculating stats');
+      // console.log('✅ Recalculating stats');
     }
 
     if (selectedStatus === 'archived') {
@@ -629,12 +629,12 @@ const EscrowsDashboard = () => {
 
     // Subscribe to data updates
     const unsubscribe = websocketService.on('data:update', (data) => {
-      console.log('📡 WebSocket data update received:', data);
+      // console.log('📡 WebSocket data update received:', data);
 
       if (data.entityType === 'escrow' && data.action === 'updated') {
         // Surgical update: Only update the specific escrow that changed
         const escrowId = data.entityId;
-        console.log('🔧 Applying surgical update to escrow:', escrowId);
+        // console.log('🔧 Applying surgical update to escrow:', escrowId);
 
         // Fetch ONLY the updated escrow (not all escrows)
         escrowsAPI.getById(escrowId).then((response) => {
@@ -655,7 +655,7 @@ const EscrowsDashboard = () => {
             // Set skip flag if update doesn't affect stats
             if (!affectsStats) {
               skipStatsRecalculation.current += 1;
-              console.log('📡 WebSocket: Non-stats update, skip counter set to:', skipStatsRecalculation.current);
+              // console.log('📡 WebSocket: Non-stats update, skip counter set to:', skipStatsRecalculation.current);
             }
 
             // Update only the specific escrow in the array
@@ -665,7 +665,7 @@ const EscrowsDashboard = () => {
 
             // If it affects stats, recalculate manually
             if (affectsStats) {
-              console.log('📡 WebSocket: Stats-affecting update, recalculating');
+              // console.log('📡 WebSocket: Stats-affecting update, recalculating');
               const updatedEscrows = escrows.map((e) =>
                 e.id === escrowId ? { ...e, ...updatedEscrow } : e
               );
@@ -694,7 +694,7 @@ const EscrowsDashboard = () => {
         setCurrentPage(1);
       }
 
-      console.log(`Fetching escrows... (page ${pageNum})`);
+      // console.log(`Fetching escrows... (page ${pageNum})`);
 
       // Fetch escrows with pagination (50 per page for optimal performance)
       // PHASE 6: Include scope filter (brokerage, team, user)
@@ -706,7 +706,7 @@ const EscrowsDashboard = () => {
         limit: 50,
         scope: scope // Pass scope from state
       });
-      console.log('API Response:', response);
+      // console.log('API Response:', response);
 
       if (response.success) {
         const allData = response.data.escrows || response.data || [];
@@ -720,7 +720,7 @@ const EscrowsDashboard = () => {
         // If viewing active/closed/cancelled/all, allData will be non-archived escrows
         const isViewingArchived = selectedStatus === 'archived';
 
-        console.log(`Page ${pageNum}/${totalPages} - Total: ${totalRecords}, Loaded: ${allData.length}, Status: ${selectedStatus}`);
+        // console.log(`Page ${pageNum}/${totalPages} - Total: ${totalRecords}, Loaded: ${allData.length}, Status: ${selectedStatus}`);
 
         // Update state based on whether we're appending or replacing
         if (appendData) {
@@ -765,7 +765,7 @@ const EscrowsDashboard = () => {
   // Load more escrows (infinite scroll handler)
   const loadMoreEscrows = useCallback(() => {
     if (!loadingMore && hasMorePages) {
-      console.log(`Loading page ${currentPage + 1}...`);
+      // console.log(`Loading page ${currentPage + 1}...`);
       fetchEscrows(currentPage + 1, true);
     }
   }, [loadingMore, hasMorePages, currentPage]);
@@ -956,7 +956,7 @@ const EscrowsDashboard = () => {
   };
 
   const handleEscrowClick = (escrowId) => {
-    console.log('Escrow clicked - ID:', escrowId);
+    // console.log('Escrow clicked - ID:', escrowId);
     navigate(`/escrows/${escrowId}`);
   };
 
@@ -991,14 +991,14 @@ const EscrowsDashboard = () => {
 
   const handleArchive = async (escrowId) => {
     try {
-      console.log('🗄️ Archiving escrow:', escrowId);
+      // console.log('🗄️ Archiving escrow:', escrowId);
       const response = await escrowsAPI.archive(escrowId);
-      console.log('🗄️ Archive API response:', response);
+      // console.log('🗄️ Archive API response:', response);
 
       if (response && response.success) {
         // Move escrow from active to archived
         const archivedEscrow = escrows.find(e => e.id === escrowId);
-        console.log('🗄️ Found escrow to archive:', archivedEscrow);
+        // console.log('🗄️ Found escrow to archive:', archivedEscrow);
 
         if (archivedEscrow) {
           // Mark as archived
@@ -1013,7 +1013,7 @@ const EscrowsDashboard = () => {
           calculateStats(remainingEscrows, selectedStatus);
           generateChartData(remainingEscrows);
 
-          console.log('✅ Escrow archived successfully');
+          // console.log('✅ Escrow archived successfully');
         } else {
           console.error('❌ Escrow not found in active escrows array');
         }
@@ -1087,7 +1087,7 @@ const EscrowsDashboard = () => {
       // Increment counter to skip next 2 stats recalculations (optimistic + server response)
       if (!affectsStats) {
         skipStatsRecalculation.current += 2; // Will skip both optimistic and server response updates
-        console.log('🚫 Non-stats update detected, skip counter set to:', skipStatsRecalculation.current);
+        // console.log('🚫 Non-stats update detected, skip counter set to:', skipStatsRecalculation.current);
       }
 
       // Optimistic update - update UI immediately with normalized data
@@ -1099,13 +1099,13 @@ const EscrowsDashboard = () => {
 
       // Only recalculate stats if the update affects them
       if (affectsStats) {
-        console.log('💰 Stats-affecting update detected:', Object.keys(updateData));
+        // console.log('💰 Stats-affecting update detected:', Object.keys(updateData));
         const optimisticEscrows = escrows.map((e) =>
           e.id === escrowId ? { ...e, ...normalizedData } : e
         );
         calculateStats(optimisticEscrows, selectedStatus);
         generateChartData(optimisticEscrows);
-        console.log('✅ Stats recalculated immediately (optimistic)');
+        // console.log('✅ Stats recalculated immediately (optimistic)');
       }
 
       // Make the API call in the background
@@ -1145,13 +1145,13 @@ const EscrowsDashboard = () => {
 
         // Recalculate stats again with server data if needed
         if (affectsStats) {
-          console.log('💰 Recalculating stats with server response data');
+          // console.log('💰 Recalculating stats with server response data');
           const finalEscrows = escrows.map((e) =>
             e.id === escrowId ? { ...e, ...response.data } : e
           );
           calculateStats(finalEscrows, selectedStatus);
           generateChartData(finalEscrows);
-          console.log('✅ Stats recalculated with server data');
+          // console.log('✅ Stats recalculated with server data');
         }
       } else {
         console.error('Update failed - no success response');
@@ -1217,7 +1217,7 @@ const EscrowsDashboard = () => {
         calculateStats(remainingEscrows, selectedStatus);
         generateChartData(remainingEscrows);
 
-        console.log('Successfully permanently deleted escrow:', escrowId);
+        // console.log('Successfully permanently deleted escrow:', escrowId);
       }
     } catch (error) {
       console.error('Failed to permanently delete escrow:', error);
@@ -1248,7 +1248,7 @@ const EscrowsDashboard = () => {
         calculateStats(remainingEscrows, selectedStatus);
         generateChartData(remainingEscrows);
 
-        console.log(`Successfully permanently deleted ${response.data.deletedCount || selectedArchivedIds.length} escrows`);
+        // console.log(`Successfully permanently deleted ${response.data.deletedCount || selectedArchivedIds.length} escrows`);
       }
     } catch (error) {
       console.error('Failed to batch delete escrows:', error);

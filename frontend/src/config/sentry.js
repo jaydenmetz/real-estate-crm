@@ -8,7 +8,7 @@ export const initializeSentry = () => {
   const SENTRY_DSN = process.env.REACT_APP_SENTRY_DSN;
 
   if (!SENTRY_DSN) {
-    console.log('Sentry not configured (no DSN provided)');
+    // console.log('Sentry not configured (no DSN provided)');
     return;
   }
 
@@ -53,7 +53,7 @@ export const initializeSentry = () => {
     beforeSend(event, hint) {
       // Don't send events in development unless specified
       if (process.env.NODE_ENV === 'development' && !process.env.REACT_APP_SENTRY_FORCE) {
-        console.log('Sentry event suppressed in development:', event);
+        // console.log('Sentry event suppressed in development:', event);
         return null;
       }
 
@@ -114,7 +114,7 @@ export const initializeSentry = () => {
     sendDefaultPii: false,
   });
 
-  console.log('✅ Sentry error tracking initialized');
+  // console.log('✅ Sentry error tracking initialized');
 };
 
 /**
@@ -166,7 +166,7 @@ export const captureError = (error, context = {}) => {
  */
 export const captureMessage = (message, level = 'info', context = {}) => {
   if (!process.env.REACT_APP_SENTRY_DSN) {
-    console.log('Message captured locally:', message, context);
+    // console.log('Message captured locally:', message, context);
     return;
   }
 

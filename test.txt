@@ -1,0 +1,611 @@
+import React, { useState } from 'react';
+import { Calendar, Home, User, DollarSign, Clock, TrendingUp, CheckCircle, AlertCircle, X, Edit, Eye, Phone, Mail, MapPin, FileText, ChevronRight, Grid, List, Layout, LayoutGrid } from 'lucide-react';
+
+// Mock data for demonstration
+const mockEscrows = [
+  {
+    id: 'esc_001',
+    escrowNumber: 'ESC-2025-001',
+    propertyAddress: '9613 Lake Pyramid Court',
+    propertyCity: 'Bakersfield, CA',
+    propertyImage: 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800',
+    purchasePrice: 650000,
+    listPrice: 650000,
+    status: 'Active',
+    currentStage: 'Inspection',
+    progressPercentage: 64,
+    acceptanceDate: 'Oct 17, 2025',
+    closingDate: 'Nov 16, 2025',
+    daysToClose: 29,
+    grossCommission: 19500,
+    commissionRate: 3,
+    buyers: [{ name: 'Michael Chen', phone: '555-0123', email: 'michael@email.com' }],
+    sellers: [{ name: 'Robert Johnson', phone: '555-0124', email: 'robert@email.com' }],
+    propertyType: 'Single Family',
+    bedrooms: 4,
+    bathrooms: 3,
+    squareFeet: 2850,
+    yearBuilt: 2015,
+    priority: 'high',
+  },
+  {
+    id: 'esc_002',
+    escrowNumber: 'ESC-2025-002',
+    propertyAddress: '456 Ocean View Dr',
+    propertyCity: 'La Jolla, CA',
+    propertyImage: 'https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=800',
+    purchasePrice: 1250000,
+    listPrice: 1300000,
+    status: 'Active',
+    currentStage: 'Appraisal',
+    progressPercentage: 45,
+    acceptanceDate: 'Oct 10, 2025',
+    closingDate: 'Nov 30, 2025',
+    daysToClose: 43,
+    grossCommission: 37500,
+    commissionRate: 3,
+    buyers: [{ name: 'Sarah Williams', phone: '555-0125', email: 'sarah@email.com' }],
+    sellers: [{ name: 'David Lee', phone: '555-0126', email: 'david@email.com' }],
+    propertyType: 'Condo',
+    bedrooms: 3,
+    bathrooms: 2.5,
+    squareFeet: 2200,
+    yearBuilt: 2020,
+    priority: 'medium',
+  },
+  {
+    id: 'esc_003',
+    escrowNumber: 'ESC-2025-003',
+    propertyAddress: '789 Mountain Ridge Rd',
+    propertyCity: 'Pasadena, CA',
+    propertyImage: 'https://images.unsplash.com/photo-1605146769289-440113cc3d00?w=800',
+    purchasePrice: 890000,
+    listPrice: 895000,
+    status: 'Pending',
+    currentStage: 'Loan Processing',
+    progressPercentage: 78,
+    acceptanceDate: 'Sep 25, 2025',
+    closingDate: 'Oct 28, 2025',
+    daysToClose: 10,
+    grossCommission: 26700,
+    commissionRate: 3,
+    buyers: [{ name: 'James Brown', phone: '555-0127', email: 'james@email.com' }],
+    sellers: [{ name: 'Emily Davis', phone: '555-0128', email: 'emily@email.com' }],
+    propertyType: 'Townhouse',
+    bedrooms: 3,
+    bathrooms: 3,
+    squareFeet: 1950,
+    yearBuilt: 2018,
+    priority: 'urgent',
+  },
+  {
+    id: 'esc_004',
+    escrowNumber: 'ESC-2025-004',
+    propertyAddress: '321 Sunset Boulevard',
+    propertyCity: 'Beverly Hills, CA',
+    propertyImage: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=800',
+    purchasePrice: 3200000,
+    listPrice: 3400000,
+    status: 'Active',
+    currentStage: 'Contract',
+    progressPercentage: 25,
+    acceptanceDate: 'Oct 12, 2025',
+    closingDate: 'Dec 15, 2025',
+    daysToClose: 58,
+    grossCommission: 96000,
+    commissionRate: 3,
+    buyers: [{ name: 'Alex Thompson', phone: '555-0129', email: 'alex@email.com' }],
+    sellers: [{ name: 'Maria Garcia', phone: '555-0130', email: 'maria@email.com' }],
+    propertyType: 'Luxury Estate',
+    bedrooms: 6,
+    bathrooms: 7,
+    squareFeet: 8500,
+    yearBuilt: 2019,
+    priority: 'medium',
+  },
+];
+
+const EscrowsGrid = () => {
+  const [viewMode, setViewMode] = useState('compact');
+  const [escrows] = useState(mockEscrows);
+  const [selectedEscrow, setSelectedEscrow] = useState(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  const handleEscrowClick = (escrow) => {
+    setSelectedEscrow(escrow);
+    setDrawerOpen(true);
+  };
+
+  const getStageColor = (stage) => {
+    const colors = {
+      'Contract': 'bg-blue-100 text-blue-800',
+      'Inspection': 'bg-amber-100 text-amber-800',
+      'Appraisal': 'bg-orange-100 text-orange-800',
+      'Loan Processing': 'bg-purple-100 text-purple-800',
+      'Final Walkthrough': 'bg-green-100 text-green-800',
+      'Closing': 'bg-emerald-100 text-emerald-800',
+    };
+    return colors[stage] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getPriorityColor = (priority) => {
+    const colors = {
+      'urgent': 'bg-red-100 text-red-800 border-red-300',
+      'high': 'bg-orange-100 text-orange-800 border-orange-300',
+      'medium': 'bg-blue-100 text-blue-800 border-blue-300',
+      'low': 'bg-gray-100 text-gray-800 border-gray-300',
+    };
+    return colors[priority] || 'bg-gray-100 text-gray-800 border-gray-300';
+  };
+
+  // Peek View Card - Minimal info, quick glance
+  const PeekCard = ({ escrow }) => (
+    <div 
+      className="bg-white rounded-lg shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1 overflow-hidden h-72"
+      onClick={() => handleEscrowClick(escrow)}
+    >
+      <div className="h-36 overflow-hidden">
+        <img
+          src={escrow.propertyImage}
+          alt={escrow.propertyAddress}
+          className="w-full h-full object-cover"
+        />
+      </div>
+      <div className="p-4">
+        <h3 className="font-semibold text-gray-900 truncate">{escrow.propertyAddress}</h3>
+        <p className="text-sm text-gray-500 mb-2">{escrow.propertyCity}</p>
+        <div className="text-2xl font-bold text-green-600 mb-2">
+          ${''}
+          {escrow.purchasePrice.toLocaleString()}
+        </div>
+        <div className="flex justify-between items-center">
+          <span className={'px-2 py-1 rounded-full text-xs font-medium ' +
+            (escrow.daysToClose < 15 ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800')
+          }>
+            {escrow.daysToClose}d
+          </span>
+          <div className="w-16 bg-gray-200 rounded-full h-2">
+            <div 
+              className="bg-blue-600 h-2 rounded-full transition-all duration-500"
+              style={{ width: escrow.progressPercentage + '%' }}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Compact View Card - Your screenshot style
+  const CompactCard = ({ escrow }) => (
+    <div 
+      className="bg-white rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer transform hover:-translate-y-1 overflow-hidden relative"
+      onClick={() => handleEscrowClick(escrow)}
+    >
+      {/* Status Badge */}
+      <div className="absolute top-4 left-4 z-10 bg-blue-600 text-white px-3 py-1 rounded-md text-sm font-bold">
+        ACTIVE
+      </div>
+      
+      {/* Progress Badge */}
+      <div className="absolute top-4 left-24 z-10 bg-white/95 backdrop-blur px-3 py-1 rounded-md flex items-center gap-2">
+        <div className="relative">
+          <svg className="w-10 h-10 transform -rotate-90">
+            <circle
+              cx="20"
+              cy="20"
+              r="18"
+              stroke="#e5e7eb"
+              strokeWidth="3"
+              fill="none"
+            />
+            <circle
+              cx="20"
+              cy="20"
+              r="18"
+              stroke="#3b82f6"
+              strokeWidth="3"
+              fill="none"
+              strokeDasharray={(escrow.progressPercentage * 1.13) + ' 113'}
+              className="transition-all duration-500"
+            />
+          </svg>
+          <span className="absolute inset-0 flex items-center justify-center text-xs font-bold">
+            {escrow.progressPercentage}%
+          </span>
+        </div>
+      </div>
+
+      <div className="h-48 overflow-hidden">
+        <img
+          src={escrow.propertyImage}
+          alt={escrow.propertyAddress}
+          className="w-full h-full object-cover"
+        />
+      </div>
+      
+      <div className="p-6">
+        <h3 className="text-xl font-bold text-gray-900 mb-4">{escrow.propertyAddress}</h3>
+        
+        {/* Price Section */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div className="bg-gray-50 p-3 rounded-lg">
+            <p className="text-xs text-gray-500 uppercase tracking-wide">Price</p>
+            <p className="text-xl font-bold text-green-600">
+              ${''}
+              {(escrow.purchasePrice / 1000).toFixed(0)}K
+            </p>
+          </div>
+          <div className="bg-blue-50 p-3 rounded-lg">
+            <p className="text-xs text-gray-500 uppercase tracking-wide">Commission</p>
+            <p className="text-xl font-bold text-blue-600">
+              ${''}
+              {(escrow.grossCommission / 1000).toFixed(0)}K
+            </p>
+          </div>
+        </div>
+
+        {/* Dates Section */}
+        <div className="grid grid-cols-2 gap-3 mb-4">
+          <div>
+            <p className="text-xs text-gray-500 uppercase tracking-wide">Acceptance</p>
+            <p className="text-sm font-semibold">{escrow.acceptanceDate}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-500 uppercase tracking-wide">Close</p>
+            <p className="text-sm font-semibold">{escrow.closingDate}</p>
+          </div>
+        </div>
+
+        {/* Days Badge */}
+        <div className="flex justify-end">
+          <span className="px-4 py-2 bg-blue-600 text-white rounded-full text-sm font-bold">
+            {escrow.daysToClose}d
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Detailed View Card
+  const DetailedCard = ({ escrow }) => (
+    <div 
+      className="bg-white rounded-lg shadow-lg hover:shadow-2xl transition-all duration-300 cursor-pointer overflow-hidden"
+      onClick={() => handleEscrowClick(escrow)}
+    >
+      <div className="lg:flex">
+        <div className="lg:w-2/5">
+          <img
+            src={escrow.propertyImage}
+            alt={escrow.propertyAddress}
+            className="w-full h-64 lg:h-full object-cover"
+          />
+        </div>
+        <div className="lg:w-3/5 p-6">
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h3 className="text-2xl font-bold text-gray-900">{escrow.propertyAddress}</h3>
+              <p className="text-gray-600">{escrow.propertyCity}</p>
+            </div>
+            <span className={'px-3 py-1 rounded-full text-sm font-medium ' + getStageColor(escrow.currentStage)}>
+              {escrow.currentStage}
+            </span>
+          </div>
+
+          <hr className="my-4" />
+
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <p className="text-sm text-gray-500">Purchase Price</p>
+              <p className="text-2xl font-bold text-green-600">
+                ${escrow.purchasePrice.toLocaleString()}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-gray-500">Commission ({escrow.commissionRate}%)</p>
+              <p className="text-2xl font-bold text-blue-600">
+                ${escrow.grossCommission.toLocaleString()}
+              </p>
+            </div>
+          </div>
+
+          <div className="mb-4">
+            <p className="text-sm text-gray-500 mb-2">Progress</p>
+            <div className="flex items-center gap-3">
+              <div className="flex-1 bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-500"
+                  style={{ width: `${escrow.progressPercentage}%` }}
+                />
+              </div>
+              <span className="text-sm font-bold">{escrow.progressPercentage}%</span>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4 mb-4">
+            <div>
+              <p className="text-xs text-gray-500">Acceptance</p>
+              <p className="text-sm font-medium">{escrow.acceptanceDate.split(',')[0]}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Closing</p>
+              <p className="text-sm font-medium">{escrow.closingDate.split(',')[0]}</p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">Days Left</p>
+              <p className={'text-sm font-bold ' + (escrow.daysToClose < 15 ? 'text-orange-600' : 'text-gray-900')}>
+                {escrow.daysToClose} days
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-xs">
+              <User className="w-3 h-3" />
+              {escrow.buyers[0].name}
+            </span>
+            <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-xs">
+              <Home className="w-3 h-3" />
+              {escrow.sellers[0].name}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // List View
+  const ListView = ({ escrow }) => (
+    <div 
+      className="bg-white rounded-lg shadow hover:shadow-lg transition-all duration-300 cursor-pointer p-4 mb-3"
+      onClick={() => handleEscrowClick(escrow)}
+    >
+      <div className="flex items-center gap-4">
+        <img
+          src={escrow.propertyImage}
+          alt={escrow.propertyAddress}
+          className="w-20 h-20 rounded-lg object-cover"
+        />
+        <div className="flex-1">
+          <h3 className="text-lg font-bold text-gray-900">{escrow.propertyAddress}</h3>
+          <p className="text-sm text-gray-500">
+            {escrow.propertyCity} • {escrow.propertyType} • {escrow.bedrooms} bed, {escrow.bathrooms} bath
+          </p>
+          <div className="flex gap-2 mt-2">
+            <span className="px-2 py-1 bg-gray-100 rounded text-xs">{escrow.escrowNumber}</span>
+            <span className={'px-2 py-1 rounded text-xs ' + getStageColor(escrow.currentStage)}>
+              {escrow.currentStage}
+            </span>
+            <span className={'px-2 py-1 rounded text-xs ' +
+              (escrow.daysToClose < 15 ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800')
+            }>
+              {escrow.daysToClose} days
+            </span>
+          </div>
+        </div>
+        <div className="text-right">
+          <p className="text-xl font-bold text-green-600">
+            ${escrow.purchasePrice.toLocaleString()}
+          </p>
+          <p className="text-sm text-gray-500">
+            Commission: ${escrow.grossCommission.toLocaleString()}
+          </p>
+          <div className="w-24 bg-gray-200 rounded-full h-2 mt-2">
+            <div 
+              className="bg-blue-600 h-2 rounded-full transition-all duration-500"
+              style={{ width: `${escrow.progressPercentage}%` }}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Mobile Drawer for Escrow Details
+  const EscrowDetailDrawer = () => (
+    <>
+      {/* Overlay */}
+      {drawerOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300"
+          onClick={() => setDrawerOpen(false)}
+        />
+      )}
+      
+      {/* Drawer */}
+      <div className={'fixed right-0 top-0 h-full w-full md:w-[450px] bg-white shadow-2xl z-50 transform transition-transform duration-300 ' + 
+        (drawerOpen ? 'translate-x-0' : 'translate-x-full')
+      }>
+        {selectedEscrow && (
+          <div className="h-full flex flex-col">
+            {/* Header */}
+            <div className="p-4 border-b flex justify-between items-center">
+              <h2 className="text-xl font-bold">Escrow Details</h2>
+              <button
+                onClick={() => setDrawerOpen(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-auto p-6">
+              {/* Property Image */}
+              <img
+                src={selectedEscrow.propertyImage}
+                alt={selectedEscrow.propertyAddress}
+                className="w-full h-48 object-cover rounded-lg mb-6"
+              />
+
+              {/* Property Info */}
+              <h3 className="text-2xl font-bold mb-2">{selectedEscrow.propertyAddress}</h3>
+              <p className="text-gray-600 mb-4">{selectedEscrow.propertyCity}</p>
+
+              {/* Status Badges */}
+              <div className="flex gap-2 mb-6">
+                <span className="px-3 py-1 bg-blue-600 text-white rounded-full text-sm font-medium">
+                  {selectedEscrow.status}
+                </span>
+                <span className={'px-3 py-1 rounded-full text-sm font-medium ' + getStageColor(selectedEscrow.currentStage)}>
+                  {selectedEscrow.currentStage}
+                </span>
+                <span className={'px-2 py-1 rounded-full text-xs font-medium border ' + getPriorityColor(selectedEscrow.priority)}>
+                  Priority: {selectedEscrow.priority}
+                </span>
+              </div>
+
+              {/* Progress */}
+              <div className="mb-6">
+                <div className="flex justify-between mb-2">
+                  <span className="text-sm font-semibold">Transaction Progress</span>
+                  <span className="text-sm text-blue-600">{selectedEscrow.progressPercentage}%</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-3">
+                  <div 
+                    className="bg-blue-600 h-3 rounded-full transition-all duration-500"
+                    style={{ width: `${selectedEscrow.progressPercentage}%` }}
+                  />
+                </div>
+              </div>
+
+              {/* Financial Details */}
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <h4 className="font-semibold mb-3">Financial Details</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-xs text-gray-500">Purchase Price</p>
+                    <p className="text-xl font-bold text-green-600">
+                      ${selectedEscrow.purchasePrice.toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">List Price</p>
+                    <p className="text-xl font-bold">
+                      ${selectedEscrow.listPrice.toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Commission ({selectedEscrow.commissionRate}%)</p>
+                    <p className="text-xl font-bold text-blue-600">
+                      ${selectedEscrow.grossCommission.toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Your Split (50%)</p>
+                    <p className="text-xl font-bold text-blue-600">
+                      ${(selectedEscrow.grossCommission * 0.5).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Important Dates */}
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <h4 className="font-semibold mb-3">Important Dates</h4>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Calendar className="w-4 h-4 text-gray-500" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">Acceptance Date</p>
+                      <p className="text-xs text-gray-500">{selectedEscrow.acceptanceDate}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Clock className="w-4 h-4 text-gray-500" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium">Closing Date</p>
+                      <p className="text-xs text-gray-500">{selectedEscrow.closingDate}</p>
+                    </div>
+                    <span className={'px-2 py-1 rounded-full text-xs font-medium ' +
+                      (selectedEscrow.daysToClose < 15 ? 'bg-orange-100 text-orange-800' : 'bg-gray-100 text-gray-800')
+                    }>
+                      {selectedEscrow.daysToClose} days
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Parties Involved */}
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <h4 className="font-semibold mb-3">Parties Involved</h4>
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-xs text-gray-500 mb-2">Buyer</p>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-bold text-blue-600">
+                          {selectedEscrow.buyers[0].name[0]}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">{selectedEscrow.buyers[0].name}</p>
+                        <div className="flex gap-3 text-xs text-gray-500">
+                          <span>{selectedEscrow.buyers[0].phone}</span>
+                          <span>{selectedEscrow.buyers[0].email}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <hr className="border-gray-200" />
+                  <div>
+                    <p className="text-xs text-gray-500 mb-2">Seller</p>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                        <span className="text-sm font-bold text-green-600">
+                          {selectedEscrow.sellers[0].name[0]}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium">{selectedEscrow.sellers[0].name}</p>
+                        <div className="flex gap-3 text-xs text-gray-500">
+                          <span>{selectedEscrow.sellers[0].phone}</span>
+                          <span>{selectedEscrow.sellers[0].email}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Property Details */}
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h4 className="font-semibold mb-3">Property Details</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <p className="text-xs text-gray-500">Type</p>
+                    <p className="text-sm font-medium">{selectedEscrow.propertyType}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Year Built</p>
+                    <p className="text-sm font-medium">{selectedEscrow.yearBuilt}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Bedrooms / Bathrooms</p>
+                    <p className="text-sm font-medium">{selectedEscrow.bedrooms} / {selectedEscrow.bathrooms}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Square Feet</p>
+                    <p className="text-sm font-medium">{selectedEscrow.squareFeet.toLocaleString()} sq ft</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer Actions */}
+            <div className="p-4 border-t">
+              <div className="grid grid-cols-2 gap-2">
+                <button className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+                  <Edit className="w-4 h-4" />
+                  Edit
+                </button>
+                <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
+                  <Eye className="w-4 h-4" />
+                  Full View
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+  )
+}

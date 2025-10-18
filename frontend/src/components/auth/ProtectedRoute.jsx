@@ -26,7 +26,7 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
         const response = await apiInstance.get('/auth/verify-role', { requiredRole });
 
         if (response.success && response.data.authorized) {
-          console.log(`✅ Role verified: ${response.data.userRole} === ${requiredRole}`);
+          // console.log(`✅ Role verified: ${response.data.userRole} === ${requiredRole}`);
           setAuthorized(true);
         } else {
           console.warn(`❌ Role verification failed: ${response.data.userRole} !== ${requiredRole}`);

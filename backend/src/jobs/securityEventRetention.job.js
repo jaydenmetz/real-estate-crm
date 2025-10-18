@@ -19,15 +19,15 @@ const RETENTION_DAYS = parseInt(process.env.SECURITY_EVENT_RETENTION_DAYS) || 90
 
 async function deleteOldSecurityEvents() {
   const startTime = Date.now();
-  console.log(`\n=== Security Event Retention Job Started ===`);
-  console.log(`Timestamp: ${new Date().toISOString()}`);
-  console.log(`Retention Period: ${RETENTION_DAYS} days`);
+  // console.log(`\n=== Security Event Retention Job Started ===`);
+  // console.log(`Timestamp: ${new Date().toISOString()}`);
+  // console.log(`Retention Period: ${RETENTION_DAYS} days`);
 
   try {
     // Calculate cutoff date
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - RETENTION_DAYS);
-    console.log(`Deleting events older than: ${cutoffDate.toISOString()}`);
+    // console.log(`Deleting events older than: ${cutoffDate.toISOString()}`);
 
     // Count events to be deleted
     const countResult = await pool.query(
@@ -35,10 +35,10 @@ async function deleteOldSecurityEvents() {
       [cutoffDate]
     );
     const eventsToDelete = parseInt(countResult.rows[0].count);
-    console.log(`Events to delete: ${eventsToDelete}`);
+    // console.log(`Events to delete: ${eventsToDelete}`);
 
     if (eventsToDelete === 0) {
-      console.log('✅ No events to delete. Job complete.');
+      // console.log('✅ No events to delete. Job complete.');
       return {
         success: true,
         eventsDeleted: 0,
@@ -55,9 +55,9 @@ async function deleteOldSecurityEvents() {
     const eventsDeleted = deleteResult.rowCount;
     const duration = Date.now() - startTime;
 
-    console.log(`✅ Successfully deleted ${eventsDeleted} events`);
-    console.log(`Duration: ${duration}ms`);
-    console.log(`=== Security Event Retention Job Complete ===\n`);
+    // console.log(`✅ Successfully deleted ${eventsDeleted} events`);
+    // console.log(`Duration: ${duration}ms`);
+    // console.log(`=== Security Event Retention Job Complete ===\n`);
 
     return {
       success: true,
@@ -84,7 +84,7 @@ async function deleteOldSecurityEvents() {
 if (require.main === module) {
   deleteOldSecurityEvents()
     .then((result) => {
-      console.log('Job Result:', result);
+      // console.log('Job Result:', result);
       process.exit(result.success ? 0 : 1);
     })
     .catch((error) => {

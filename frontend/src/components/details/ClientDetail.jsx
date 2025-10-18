@@ -459,8 +459,8 @@ const ClientDetail = () => {
   }, [debugExpanded]);
 
   // Debug logging
-  console.log('[ClientDetail] Component mounted');
-  console.log('[ClientDetail] ID received:', id);
+  // console.log('[ClientDetail] Component mounted');
+  // console.log('[ClientDetail] ID received:', id);
 
   // Fetch client details
   const { data: client, isLoading, error, isError } = useQuery(
@@ -772,14 +772,14 @@ const ClientDetail = () => {
   };
 
   const handleShare = (platform) => {
-    console.log(`Sharing via ${platform}...`);
+    // console.log(`Sharing via ${platform}...`);
     setShareDialogOpen(false);
   };
 
   const speedDialActions = [
     { icon: <Email />, name: 'Send Email', action: () => setCommunicationDialog(true) },
-    { icon: <Phone />, name: 'Log Call', action: () => console.log('Call logging') },
-    { icon: <Event />, name: 'Schedule Meeting', action: () => console.log('Meeting scheduler') },
+    { icon: <Phone />, name: 'Log Call', action: () => // console.log('Call logging') },
+    { icon: <Event />, name: 'Schedule Meeting', action: () => // console.log('Meeting scheduler') },
     { icon: <Note />, name: 'Add Note', action: () => setNoteDialog(true) },
     { icon: <Assignment />, name: 'Create Task', action: () => setTaskDialog(true) },
   ];
@@ -914,7 +914,7 @@ const ClientDetail = () => {
                         requests: networkMonitor.getRequests(),
                         errors: networkMonitor.getErrors()
                       });
-                      console.log('[ClientDetail] Network data refreshed');
+                      // console.log('[ClientDetail] Network data refreshed');
                     }}
                     sx={(theme) => ({
                       color: theme.palette.primary.main,
@@ -1874,7 +1874,7 @@ const ClientDetail = () => {
                   fullWidth
                   variant="outlined"
                   startIcon={<VideoCall />}
-                  onClick={() => console.log('Video call')}
+                  onClick={() => // console.log('Video call')}
                 >
                   Schedule Video Call
                 </Button>
@@ -1898,16 +1898,16 @@ const ClientDetail = () => {
           <ListItemIcon><Share /></ListItemIcon>
           Share Contact
         </MenuItem>
-        <MenuItem onClick={() => { console.log('Print'); handleMenuClose(); }}>
+        <MenuItem onClick={() => { // console.log('Print'); handleMenuClose(); }}>
           <ListItemIcon><Print /></ListItemIcon>
           Print Details
         </MenuItem>
-        <MenuItem onClick={() => { console.log('Generate QR'); handleMenuClose(); }}>
+        <MenuItem onClick={() => { // console.log('Generate QR'); handleMenuClose(); }}>
           <ListItemIcon><QrCode2 /></ListItemIcon>
           Generate QR
         </MenuItem>
         <Divider />
-        <MenuItem onClick={() => { console.log('Archive'); handleMenuClose(); }}>
+        <MenuItem onClick={() => { // console.log('Archive'); handleMenuClose(); }}>
           <ListItemIcon><Archive /></ListItemIcon>
           Archive Client
         </MenuItem>

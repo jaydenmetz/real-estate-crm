@@ -20,12 +20,12 @@ const { errorLogging, requestLogging } = require('./middleware/errorLogging.midd
 (async () => {
   try {
     await initializeDatabase();
-    console.log('✅ Database ready');
+    // console.log('✅ Database ready');
 
     // Try to initialize Redis but don't fail if it's not available
     try {
       await initializeRedis();
-      console.log('✅ Redis ready');
+      // console.log('✅ Redis ready');
     } catch (redisErr) {
       console.warn('⚠️  Redis not available, continuing without cache', redisErr.message);
     }
@@ -240,6 +240,7 @@ listingsRouter.use('/', require('./routes/listings.routes'));
 listingsRouter.use('/', require('./routes/listings-health.routes'));
 // Health endpoints at /listings/health/*
 apiRouter.use('/listings', listingsRouter);
+apiRouter.use('/contacts', require('./routes/contacts.routes'));
 apiRouter.use('/clients', require('./routes/clients.routes'));
 apiRouter.use('/appointments', require('./routes/appointments.routes'));
 apiRouter.use('/leads', require('./routes/leads.routes'));

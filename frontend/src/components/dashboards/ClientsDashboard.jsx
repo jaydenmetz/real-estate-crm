@@ -463,10 +463,10 @@ const ClientsDashboard = () => {
     const websocketService = require('../../services/websocket.service').default;
 
     const unsubscribe = websocketService.on('data:update', (data) => {
-      console.log('📡 WebSocket data update received:', data);
+      // console.log('📡 WebSocket data update received:', data);
 
       if (data.entityType === 'client') {
-        console.log('🔄 Refetching clients due to real-time update');
+        // console.log('🔄 Refetching clients due to real-time update');
         fetchClients();
       }
     });
@@ -483,7 +483,7 @@ const ClientsDashboard = () => {
       } else {
         setLoadingMore(true);
       }
-      console.log('Fetching clients...');
+      // console.log('Fetching clients...');
 
       // Fetch clients with pagination (50 per page for optimal performance)
       // PHASE 6: Include scope filter (brokerage, team, user)
@@ -493,7 +493,7 @@ const ClientsDashboard = () => {
         limit: 50,
         scope: scope // Pass scope from state
       });
-      console.log('API Response:', response);
+      // console.log('API Response:', response);
 
       if (response.success) {
         const allData = response.data.clients || response.data || [];
@@ -506,7 +506,7 @@ const ClientsDashboard = () => {
         const clientData = allData.filter(client => !client.deleted_at && !client.deletedAt);
         const archivedData = allData.filter(client => client.deleted_at || client.deletedAt);
 
-        console.log(`Page ${pageNum}/${totalPages} - Total: ${totalRecords}, Loaded: ${allData.length}, Active: ${clientData.length}, Archived: ${archivedData.length}`);
+        // console.log(`Page ${pageNum}/${totalPages} - Total: ${totalRecords}, Loaded: ${allData.length}, Active: ${clientData.length}, Archived: ${archivedData.length}`);
 
         // Update state based on whether we're appending or replacing
         if (appendData) {
@@ -540,7 +540,7 @@ const ClientsDashboard = () => {
 
   const loadMoreClients = useCallback(() => {
     if (!loadingMore && hasMorePages) {
-      console.log(`Loading page ${currentPage + 1}...`);
+      // console.log(`Loading page ${currentPage + 1}...`);
       fetchClients(currentPage + 1, true);
     }
   }, [loadingMore, hasMorePages, currentPage]);
@@ -765,7 +765,7 @@ const ClientsDashboard = () => {
   };
 
   const handleClientClick = (clientId) => {
-    console.log('Client clicked - ID:', clientId);
+    // console.log('Client clicked - ID:', clientId);
     navigate(`/clients/${clientId}`);
   };
 

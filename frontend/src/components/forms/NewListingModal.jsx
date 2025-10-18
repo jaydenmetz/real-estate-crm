@@ -80,7 +80,7 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
     if (open && hasValidGoogleKey && !googleMapsLoaded) {
       loadGoogleMapsScript()
         .then(() => {
-          console.log('Google Maps loaded successfully');
+          // console.log('Google Maps loaded successfully');
           setGoogleMapsLoaded(true);
           // Initialize services
           if (window.google?.maps?.places) {
@@ -425,7 +425,7 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
         listingData.squareFootage = parseInt(formData.squareFootage);
       }
 
-      console.log('Creating listing with data:', listingData);
+      // console.log('Creating listing with data:', listingData);
       const response = await listingsAPI.create(listingData);
 
       if (response.success) {

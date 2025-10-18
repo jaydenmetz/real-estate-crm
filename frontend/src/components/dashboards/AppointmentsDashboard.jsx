@@ -449,11 +449,11 @@ const AppointmentsDashboard = () => {
 
     // Subscribe to data updates
     const unsubscribe = websocketService.on('data:update', (data) => {
-      console.log('📡 WebSocket data update received:', data);
+      // console.log('📡 WebSocket data update received:', data);
 
       // Only refetch if it's an appointment update
       if (data.entityType === 'appointment') {
-        console.log('🔄 Refetching appointments due to real-time update');
+        // console.log('🔄 Refetching appointments due to real-time update');
         fetchAppointments();
       }
     });
@@ -473,7 +473,7 @@ const AppointmentsDashboard = () => {
         setCurrentPage(1);
       }
 
-      console.log(`Fetching appointments... (page ${pageNum})`);
+      // console.log(`Fetching appointments... (page ${pageNum})`);
 
       // Fetch appointments with pagination (50 per page for optimal performance)
       // PHASE 6: Include scope filter (brokerage, team, user)
@@ -483,7 +483,7 @@ const AppointmentsDashboard = () => {
         limit: 50,
         scope: scope // Pass scope from state
       });
-      console.log('API Response:', response);
+      // console.log('API Response:', response);
 
       if (response.success) {
         const allData = response.data.appointments || response.data || [];
@@ -496,7 +496,7 @@ const AppointmentsDashboard = () => {
         const appointmentData = allData.filter(appt => !appt.deleted_at && !appt.deletedAt);
         const archivedData = allData.filter(appt => appt.deleted_at || appt.deletedAt);
 
-        console.log(`Page ${pageNum}/${totalPages} - Total: ${totalRecords}, Loaded: ${allData.length}, Active: ${appointmentData.length}, Archived: ${archivedData.length}`);
+        // console.log(`Page ${pageNum}/${totalPages} - Total: ${totalRecords}, Loaded: ${allData.length}, Active: ${appointmentData.length}, Archived: ${archivedData.length}`);
 
         // Update state based on whether we're appending or replacing
         if (appendData) {
@@ -531,7 +531,7 @@ const AppointmentsDashboard = () => {
   // Load more appointments (infinite scroll handler)
   const loadMoreAppointments = useCallback(() => {
     if (!loadingMore && hasMorePages) {
-      console.log(`Loading page ${currentPage + 1}...`);
+      // console.log(`Loading page ${currentPage + 1}...`);
       fetchAppointments(currentPage + 1, true);
     }
   }, [loadingMore, hasMorePages, currentPage]);
@@ -844,7 +844,7 @@ const AppointmentsDashboard = () => {
         const remainingAppointments = appointments.filter(a => a.id !== appointmentId);
         calculateStats(remainingAppointments, selectedStatus);
 
-        console.log('Successfully permanently deleted appointment:', appointmentId);
+        // console.log('Successfully permanently deleted appointment:', appointmentId);
       }
     } catch (error) {
       console.error('Failed to permanently delete appointment:', error);
@@ -874,7 +874,7 @@ const AppointmentsDashboard = () => {
         const remainingAppointments = appointments.filter(a => !deletedIds.has(a.id));
         calculateStats(remainingAppointments, selectedStatus);
 
-        console.log(`Successfully permanently deleted ${response.data.deletedCount || selectedArchivedIds.length} appointments`);
+        // console.log(`Successfully permanently deleted ${response.data.deletedCount || selectedArchivedIds.length} appointments`);
       }
     } catch (error) {
       console.error('Failed to batch delete appointments:', error);

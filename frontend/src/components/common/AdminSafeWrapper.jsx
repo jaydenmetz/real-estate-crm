@@ -12,7 +12,7 @@ const AdminSafeWrapper = ({ children, fallback = null }) => {
 
   // Log for debugging
   if (isAdmin && process.env.NODE_ENV === 'development') {
-    console.log('AdminSafeWrapper rendering for admin user');
+    // console.log('AdminSafeWrapper rendering for admin user');
   }
 
   try {

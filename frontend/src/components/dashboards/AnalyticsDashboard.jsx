@@ -260,11 +260,11 @@ const AnalyticsDashboard = () => {
   const COLORS = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe', '#fa709a'];
 
   const handleExport = () => {
-    console.log('Exporting analytics data...');
+    // console.log('Exporting analytics data...');
   };
 
   const handleRefresh = () => {
-    console.log('Refreshing data...');
+    // console.log('Refreshing data...');
   };
 
   return (

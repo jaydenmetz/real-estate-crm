@@ -14,7 +14,7 @@ const { deleteOldSecurityEvents } = require('./securityEventRetention.job');
 
 // Security Event Retention Job - Daily at 2 AM
 cron.schedule('0 2 * * *', async () => {
-  console.log('🕐 Running scheduled job: Security Event Retention');
+  // console.log('🕐 Running scheduled job: Security Event Retention');
   try {
     const result = await deleteOldSecurityEvents();
     if (!result.success) {
@@ -27,8 +27,8 @@ cron.schedule('0 2 * * *', async () => {
   timezone: 'America/Los_Angeles', // Adjust to your timezone
 });
 
-console.log('✅ Job Scheduler initialized');
-console.log('📅 Scheduled jobs:');
-console.log('  - Security Event Retention: Daily at 2 AM PST');
+// console.log('✅ Job Scheduler initialized');
+// console.log('📅 Scheduled jobs:');
+// console.log('  - Security Event Retention: Daily at 2 AM PST');
 
 module.exports = {};
