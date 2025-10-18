@@ -29,13 +29,13 @@ import HomeDashboard from './components/dashboards/HomeDashboard';
 import EscrowsDashboard from './components/dashboards/escrows';
 import EscrowDetail from './components/details/escrows';
 import ListingsDashboard from './components/dashboards/listings';
-import ListingDetail from './components/details/ListingDetail';
+import ListingDetail from './components/details/listings';
 import ClientsDashboard from './components/dashboards/clients';
-import ClientDetail from './components/details/ClientDetail';
+import ClientDetail from './components/details/clients';
 import AppointmentsDashboard from './components/dashboards/appointments';
-import AppointmentDetail from './components/details/AppointmentDetail';
+import AppointmentDetail from './components/details/appointments';
 import LeadsDashboard from './components/dashboards/leads';
-import LeadDetail from './components/details/LeadDetail';
+import LeadDetail from './components/details/leads';
 
 // Financial Components
 import CommissionDashboard from './components/dashboards/CommissionDashboard';
