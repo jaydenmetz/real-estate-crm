@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import NewEscrowModal from '../forms/NewEscrowModal';
 import EscrowCard from '../common/widgets/EscrowCard';
 import VirtualizedEscrowList from '../common/VirtualizedEscrowList';
-// Shared dashboard components - not needed for visual changes
-// import { DashboardToolbar, DashboardStats } from '../common/dashboard';
+// Import our new extracted components
+import EscrowHeroCard from './escrows/EscrowHeroCard';
 import {
   Container,
   Box,
@@ -106,20 +106,7 @@ import CopyButton from '../common/CopyButton';
 import networkMonitor from '../../services/networkMonitor.service';
 import { useWebSocket } from '../../hooks/useWebSocket';
 
-// Styled Components
-const HeroSection = styled(Box)(({ theme }) => ({
-  position: 'relative',
-  borderRadius: theme.spacing(3),
-  overflow: 'hidden',
-  background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
-  color: 'white',
-  padding: theme.spacing(4),
-  marginBottom: theme.spacing(4),
-  boxShadow: '0 20px 60px rgba(25, 118, 210, 0.3)',
-  [theme.breakpoints.down('md')]: {
-    padding: theme.spacing(3),
-  },
-}));
+// Styled Components - HeroSection moved to EscrowHeroCard.jsx
 
 // Enhanced animated stat card component with new layout structure
 const StatCard = React.memo(({ icon: Icon, title, value, prefix = '', suffix = '', color, delay = 0, trend, showPrivacy = false, goal }) => {
@@ -486,8 +473,6 @@ const EscrowsDashboard = () => {
   const [dateRangeFilter, setDateRangeFilter] = useState('1M'); // '1D', '1M', '1Y', 'YTD', or null for custom
   const [customStartDate, setCustomStartDate] = useState(null);
   const [customEndDate, setCustomEndDate] = useState(null);
-  const [startDatePickerOpen, setStartDatePickerOpen] = useState(false);
-  const [endDatePickerOpen, setEndDatePickerOpen] = useState(false);
   const [stats, setStats] = useState({
     totalEscrows: 0,
     activeEscrows: 0,
@@ -1405,302 +1390,41 @@ const EscrowsDashboard = () => {
     <>
       <Container maxWidth={false} sx={{ mt: 4, mb: 4, maxWidth: '1600px', px: { xs: 2, sm: 3 } }}>
 
-        {/* Hero Section with Stats */}
-        <HeroSection>
-          {/* Wrapper for header and main content */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+        {/* Hero Section with Stats - Using extracted component */}
+        <EscrowHeroCard
+          dateRangeFilter={dateRangeFilter}
+          setDateRangeFilter={setDateRangeFilter}
+          customStartDate={customStartDate}
+          setCustomStartDate={setCustomStartDate}
+          customEndDate={customEndDate}
+          setCustomEndDate={setCustomEndDate}
+          dateRange={dateRange}
+          detectPresetRange={detectPresetRange}
+        >
+          {/* Stats cards and other content that goes inside the hero */}
+          {/* Left container: Stats Grid */}
+          <Box sx={{
+            flex: '1 1 auto',
+            display: 'flex',
+            flexDirection: 'column',
+            minWidth: 0, // Allow shrinking
+          }}>
+            {/* Stats Grid - White Cards - Dynamic based on selected tab */}
+            <Grid container spacing={2}>
+            {(() => {
+              // Calculate cancellation rate from all non-archived escrows
+              const totalAllStatuses = (escrows || []).length;
+              const totalCancelled = (escrows || []).filter(e =>
+                e.escrowStatus?.toLowerCase() === 'cancelled'
+              ).length;
+              const cancellationRate = totalAllStatuses > 0
+                ? ((totalCancelled / totalAllStatuses) * 100).toFixed(1)
+                : 0;
 
-            {/* Header Row - Full width above both containers */}
-            <Box sx={{
-              display: 'flex',
-              gap: 3,
-              alignItems: 'center',
-              flexDirection: 'row',
-              flexWrap: 'wrap',
-              justifyContent: 'space-between',
-              mb: 3,
-              width: '100%',
-            }}>
-              {/* Header */}
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                style={{ flexShrink: 0 }}
-              >
-                <Typography variant="h3" component="h1" sx={{ fontWeight: 700 }}>
-                  Escrows
-                </Typography>
-              </motion.div>
+              // Max archived limit (will be user setting based on subscription)
+              const maxArchivedLimit = 100;
 
-              {/* Date Controls Container - always show in header, right-aligned */}
-              <Box sx={{
-                display: 'flex',
-                gap: 2,
-                alignItems: 'center',
-                flexWrap: 'nowrap',
-                flexShrink: 0,
-                marginLeft: 'auto',
-              }}>
-                  {/* Date Buttons */}
-                  <ToggleButtonGroup
-                    value={dateRangeFilter}
-                    exclusive
-                    onChange={(e, newValue) => {
-                      if (newValue !== null) {
-                        setDateRangeFilter(newValue);
-                        setCustomStartDate(null);
-                        setCustomEndDate(null);
-                      }
-                    }}
-                    size="small"
-                    sx={{
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      borderRadius: 1,
-                      flexShrink: 0, // Don't shrink
-                      flexGrow: 0, // Don't grow
-                      height: 36, // Match date picker height
-                      '& .MuiToggleButton-root': {
-                        color: 'rgba(255, 255, 255, 0.8)',
-                        borderColor: 'transparent',
-                        fontSize: { xs: '0.75rem', md: '0.875rem' },
-                        fontWeight: 600,
-                        px: { xs: 1.5, md: 2 },
-                        py: 0,
-                        height: 36, // Match container height
-                        minWidth: 'auto',
-                        '&.Mui-selected': {
-                          backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                          color: 'white',
-                          borderColor: 'transparent',
-                          '&:hover': {
-                            backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                          },
-                        },
-                        '&:hover': {
-                          backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                          borderColor: 'transparent',
-                        },
-                      },
-                    }}
-                  >
-                    <ToggleButton value="1D">1D</ToggleButton>
-                    <ToggleButton value="1M">1M</ToggleButton>
-                    <ToggleButton value="1Y">1Y</ToggleButton>
-                    <ToggleButton value="YTD">YTD</ToggleButton>
-                  </ToggleButtonGroup>
-
-                  {/* Date Range Pickers - No Labels */}
-                  <LocalizationProvider dateAdapter={AdapterDateFns}>
-                    <Box sx={{
-                      display: 'flex',
-                      gap: 0.5, // Smaller gap
-                      alignItems: 'center',
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      borderRadius: 1,
-                      px: 0.5, // Minimal padding
-                      height: 36, // Match date button height
-                      border: '1px solid transparent',
-                      flexShrink: 0, // Don't shrink
-                      flexGrow: 0, // Don't grow
-                    }}>
-                      <DatePicker
-                        open={startDatePickerOpen}
-                        onOpen={() => setStartDatePickerOpen(true)}
-                        onClose={() => setStartDatePickerOpen(false)}
-                        format="MMM d, yyyy" // Format: Sep 4, 2025 (no leading zeros)
-                        value={(() => {
-                          try {
-                            const date = customStartDate || dateRange?.startDate;
-                            if (!date) return null;
-                            if (typeof date === 'string') {
-                              const parsed = new Date(date);
-                              if (isNaN(parsed.getTime())) return null;
-                              return parsed;
-                            }
-                            if (!(date instanceof Date)) return null;
-                            if (isNaN(date.getTime())) return null;
-                            return date;
-                          } catch (e) {
-                            console.error('DatePicker value error:', e);
-                            return null;
-                          }
-                        })()}
-                        onChange={(newDate) => {
-                          setCustomStartDate(newDate);
-                          if (newDate && customEndDate) {
-                            const matched = detectPresetRange(newDate, customEndDate);
-                            setDateRangeFilter(matched);
-                          } else {
-                            setDateRangeFilter(null);
-                          }
-                        }}
-                        slotProps={{
-                          textField: {
-                            size: 'small',
-                            placeholder: 'Start',
-                            onClick: () => setStartDatePickerOpen(true),
-                            sx: {
-                              width: { xs: 105, md: 115 }, // Narrower width
-                              '& .MuiInputBase-root': {
-                                backgroundColor: 'transparent',
-                                borderColor: 'rgba(255, 255, 255, 0.3)',
-                                height: 36, // Slightly smaller height
-                                paddingRight: '8px !important', // Override default padding
-                              },
-                              '& .MuiOutlinedInput-root': {
-                                '& fieldset': {
-                                  borderColor: 'transparent',
-                                },
-                                '&:hover fieldset': {
-                                  borderColor: 'transparent',
-                                },
-                                '&.Mui-focused fieldset': {
-                                  borderColor: 'transparent',
-                                },
-                              },
-                              '& .MuiInputBase-input': {
-                                fontSize: { xs: '0.75rem', md: '0.875rem' },
-                                fontWeight: 600,
-                                cursor: 'pointer',
-                                textAlign: 'center',
-                                color: 'rgba(255, 255, 255, 0.9)',
-                                padding: '6px 8px', // Reduced padding
-                              },
-                              // Hide the calendar icon
-                              '& .MuiInputAdornment-root': {
-                                display: 'none',
-                              },
-                              '& .MuiInputLabel-root': {
-                                display: 'none', // Hide label
-                              },
-                              '& .MuiOutlinedInput-notchedOutline legend': {
-                                display: 'none', // Hide legend space
-                              },
-                            },
-                          },
-                          openPickerButton: {
-                            sx: { display: 'none' },
-                          },
-                        }}
-                      />
-                      <Typography sx={{ color: 'rgba(255, 255, 255, 0.7)', mx: 0.5, flexShrink: 0 }}>→</Typography>
-                      <DatePicker
-                        open={endDatePickerOpen}
-                        onOpen={() => setEndDatePickerOpen(true)}
-                        onClose={() => setEndDatePickerOpen(false)}
-                        format="MMM d, yyyy" // Format: Sep 4, 2025 (no leading zeros)
-                        value={(() => {
-                          try {
-                            const date = customEndDate || dateRange?.endDate;
-                            if (!date) return null;
-                            if (typeof date === 'string') {
-                              const parsed = new Date(date);
-                              if (isNaN(parsed.getTime())) return null;
-                              return parsed;
-                            }
-                            if (!(date instanceof Date)) return null;
-                            if (isNaN(date.getTime())) return null;
-                            return date;
-                          } catch (e) {
-                            console.error('DatePicker value error:', e);
-                            return null;
-                          }
-                        })()}
-                        onChange={(newDate) => {
-                          setCustomEndDate(newDate);
-                          if (customStartDate && newDate) {
-                            const matched = detectPresetRange(customStartDate, newDate);
-                            setDateRangeFilter(matched);
-                          } else {
-                            setDateRangeFilter(null);
-                          }
-                        }}
-                        slotProps={{
-                          textField: {
-                            size: 'small',
-                            placeholder: 'End',
-                            onClick: () => setEndDatePickerOpen(true),
-                            sx: {
-                              width: { xs: 105, md: 115 }, // Narrower width
-                              '& .MuiInputBase-root': {
-                                backgroundColor: 'transparent',
-                                borderColor: 'rgba(255, 255, 255, 0.3)',
-                                height: 36, // Slightly smaller height
-                                paddingRight: '8px !important', // Override default padding
-                              },
-                              '& .MuiOutlinedInput-root': {
-                                '& fieldset': {
-                                  borderColor: 'transparent',
-                                },
-                                '&:hover fieldset': {
-                                  borderColor: 'transparent',
-                                },
-                                '&.Mui-focused fieldset': {
-                                  borderColor: 'transparent',
-                                },
-                              },
-                              '& .MuiInputBase-input': {
-                                fontSize: { xs: '0.75rem', md: '0.875rem' },
-                                fontWeight: 600,
-                                cursor: 'pointer',
-                                textAlign: 'center',
-                                color: 'rgba(255, 255, 255, 0.9)',
-                                padding: '6px 8px', // Reduced padding
-                              },
-                              // Hide the calendar icon
-                              '& .MuiInputAdornment-root': {
-                                display: 'none',
-                              },
-                              '& .MuiInputLabel-root': {
-                                display: 'none', // Hide label
-                              },
-                              '& .MuiOutlinedInput-notchedOutline legend': {
-                                display: 'none', // Hide legend space
-                              },
-                            },
-                          },
-                          openPickerButton: {
-                            sx: { display: 'none' },
-                          },
-                        }}
-                      />
-                    </Box>
-                  </LocalizationProvider>
-                </Box>
-            </Box>
-
-            {/* Main Content Row - Left and Right Containers */}
-            <Box sx={{
-              display: 'flex',
-              gap: 3,
-              alignItems: 'stretch',
-              flexDirection: { xs: 'column', md: 'row' },
-              height: '100%',
-            }}>
-              {/* Left container: Stats Grid */}
-              <Box sx={{
-                flex: '1 1 auto',
-                display: 'flex',
-                flexDirection: 'column',
-                minWidth: 0, // Allow shrinking
-              }}>
-                {/* Stats Grid - White Cards - Dynamic based on selected tab */}
-                <Grid container spacing={2}>
-                {(() => {
-                  // Calculate cancellation rate from all non-archived escrows
-                  const totalAllStatuses = (escrows || []).length;
-                  const totalCancelled = (escrows || []).filter(e =>
-                    e.escrowStatus?.toLowerCase() === 'cancelled'
-                  ).length;
-                  const cancellationRate = totalAllStatuses > 0
-                    ? ((totalCancelled / totalAllStatuses) * 100).toFixed(1)
-                    : 0;
-
-                  // Max archived limit (will be user setting based on subscription)
-                  const maxArchivedLimit = 100;
-
-                  switch(selectedStatus) {
+              switch(selectedStatus) {
                     case 'active':
                       return (
                         <>
@@ -2150,9 +1874,7 @@ const EscrowsDashboard = () => {
               {/* Spacer */}
               <Box sx={{ flexGrow: 1 }} />
             </Box>
-            </Box>
-          </Box>
-        </HeroSection>
+        </EscrowHeroCard>
 
         {/* Conditional Date Controls - Show between hero and tabs when AI Manager wraps below */}
         <Box
