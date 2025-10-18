@@ -80,10 +80,10 @@ window.Sentry = Sentry;
 // Debug environment variables in development only
 if (process.env.NODE_ENV !== 'production') {
   // console.log('🔧 Environment Debug:', {
-    NODE_ENV: process.env.NODE_ENV,
-    REACT_APP_API_URL: process.env.REACT_APP_API_URL,
-    REACT_APP_WS_URL: process.env.REACT_APP_WS_URL
-  });
+  //   NODE_ENV: process.env.NODE_ENV,
+  //   REACT_APP_API_URL: process.env.REACT_APP_API_URL,
+  //   REACT_APP_WS_URL: process.env.REACT_APP_WS_URL
+  // });
 }
 
 // Global error handler - Sentry will capture these automatically

@@ -104,8 +104,12 @@ class AuthController {
 
       // Generate sample data and initialize onboarding (async, don't block response)
       OnboardingService.generateSampleData(user.id)
-        .then(() => // console.log(`✅ Sample data generated for user ${user.id}`))
-        .catch((err) => console.error(`❌ Failed to generate sample data for user ${user.id}:`, err));
+        .then(() => {
+          // console.log(`✅ Sample data generated for user ${user.id}`)
+        })
+        .catch((err) => {
+          // console.error(`❌ Failed to generate sample data for user ${user.id}:`, err)
+        });
 
       res.status(201).json({
         success: true,
