@@ -1904,16 +1904,25 @@ const ClientDetail = () => {
           <ListItemIcon><Share /></ListItemIcon>
           Share Contact
         </MenuItem>
-        <MenuItem onClick={() => { // console.log('Print'); handleMenuClose(); }}>
+        <MenuItem onClick={() => {
+          // console.log('Print');
+          handleMenuClose();
+        }}>
           <ListItemIcon><Print /></ListItemIcon>
           Print Details
         </MenuItem>
-        <MenuItem onClick={() => { // console.log('Generate QR'); handleMenuClose(); }}>
+        <MenuItem onClick={() => {
+          // console.log('Generate QR');
+          handleMenuClose();
+        }}>
           <ListItemIcon><QrCode2 /></ListItemIcon>
           Generate QR
         </MenuItem>
         <Divider />
-        <MenuItem onClick={() => { // console.log('Archive'); handleMenuClose(); }}>
+        <MenuItem onClick={() => {
+          // console.log('Archive');
+          handleMenuClose();
+        }}>
           <ListItemIcon><Archive /></ListItemIcon>
           Archive Client
         </MenuItem>
