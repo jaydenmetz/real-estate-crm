@@ -1,3 +1,4 @@
+// EscrowsDashboard - Main orchestrator component (reorganized October 17, 2025)
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import NewEscrowModal from '../../forms/NewEscrowModal';
