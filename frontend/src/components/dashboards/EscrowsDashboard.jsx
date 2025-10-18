@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import NewEscrowModal from '../forms/NewEscrowModal';
 import EscrowCard from '../common/widgets/EscrowCard';
 import VirtualizedEscrowList from '../common/VirtualizedEscrowList';
+// Import shared dashboard components
+import { DashboardToolbar } from '../common/dashboard';
 import {
   Container,
   Box,
@@ -462,6 +464,7 @@ const EscrowsDashboard = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [showNewEscrowModal, setShowNewEscrowModal] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState('active');
+  const [searchTerm, setSearchTerm] = useState(''); // Add search state
   // Load saved view mode from localStorage, default to 'small'
   const [viewMode, setViewMode] = useState(() => {
     const saved = localStorage.getItem('escrowsViewMode');
@@ -2393,7 +2396,32 @@ const EscrowsDashboard = () => {
           </Box>
         </Box>
 
-      {/* Navigation Bar with Tabs and Controls */}
+      {/* TEST: New DashboardToolbar Component - CHUNK 1 */}
+      <Box sx={{ mb: 3 }}>
+        <DashboardToolbar
+          viewMode={viewMode === 'small' ? 'grid' : viewMode === 'large' ? 'list' : 'grid'}
+          onViewModeChange={(newMode) => {
+            // Map our component's modes to the existing dashboard modes
+            const mappedMode = newMode === 'grid' ? 'small' : newMode === 'list' ? 'large' : 'small';
+            setViewMode(mappedMode);
+            localStorage.setItem('escrowsViewMode', mappedMode);
+          }}
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          searchPlaceholder="Search escrows..."
+          availableModes={['grid', 'list']}
+          actions={[
+            {
+              label: 'New Escrow',
+              icon: <Add />,
+              onClick: () => setShowNewEscrowModal(true),
+              variant: 'contained'
+            }
+          ]}
+        />
+      </Box>
+
+      {/* Navigation Bar with Tabs and Controls - OLD (will be removed after testing) */}
       <Box sx={{ mb: 4 }}>
         {/* Tab Bar Container */}
         <Box
