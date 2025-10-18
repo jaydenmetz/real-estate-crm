@@ -19,8 +19,8 @@ import {
   alpha,
 } from '@mui/material';
 import { AnimatePresence } from 'framer-motion';
-import EscrowCard from '../../../common/widgets/EscrowCard';
-import VirtualizedEscrowList from '../../../common/VirtualizedEscrowList';
+import EscrowCard from '../../common/widgets/EscrowCard';
+import VirtualizedEscrowList from '../../common/VirtualizedEscrowList';
 import { Home } from '@mui/icons-material';
 
 /**

@@ -23,8 +23,8 @@ import {
   Warning,
   Error as ErrorIcon,
 } from '@mui/icons-material';
-import CopyButton from '../../../common/CopyButton';
-import networkMonitor from '../../../../services/networkMonitor.service';
+import CopyButton from '../../common/CopyButton';
+import networkMonitor from '../../../services/networkMonitor.service';
 
 /**
  * EscrowDebugPanel - Debug information panel for admin users
