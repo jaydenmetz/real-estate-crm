@@ -6,22 +6,21 @@ import ResponsiveGrid from '../../../common/ResponsiveGrid';
 import useResponsiveLayout from '../../../../hooks/useResponsiveLayout';
 
 // Import widgets
-import DetailsWidget from './DetailsWidget';
-import PropertyWidget from './PropertyWidget';
+import TimelineWidgetHorizontal from './TimelineWidgetHorizontal';
 import PeopleWidget from './PeopleWidget';
-import TimelineWidget from './TimelineWidget';
 import FinancialsWidget from './FinancialsWidget';
-import ChecklistWidget from './ChecklistWidget';
+import DocumentsWidget from './DocumentsWidget';
 import ActivityFeed from './ActivityFeed';
 
 /**
- * EscrowMainContent - Main content area with widget grid
+ * EscrowMainContent - Main content area with new layout
  *
- * Displays 4 main widgets in 2×2 grid + Activity Feed below:
- * - Timeline & Deadlines (top-left)
- * - Financials (top-right)
- * - People (bottom-left)
- * - Progress (bottom-right)
+ * NEW LAYOUT:
+ * - Horizontal Timeline (full-width at top)
+ * - 3 widgets below in responsive grid:
+ *   - People (left)
+ *   - Financials (middle)
+ *   - Documents (right)
  * - Activity Feed (full-width below)
  */
 const EscrowMainContent = ({
@@ -34,14 +33,20 @@ const EscrowMainContent = ({
 
   return (
     <Box flex={1} p={spacing.container}>
-      {/* Main 4 Widgets - Smart 2×2 Grid that wraps gracefully */}
+      {/* Horizontal Timeline - Full Width at Top */}
+      <TimelineWidgetHorizontal
+        data={data?.timeline}
+        onUpdate={(changes) => onUpdateSection('timeline', changes)}
+      />
+
+      {/* 3 Main Widgets - Smart Responsive Grid (People, Financials, Documents) */}
       <ResponsiveGrid variant="widgets" minWidth={320} sx={{ pb: spacing.section }}>
-        {/* Timeline Widget */}
-        <TimelineWidget
-          data={data?.timeline}
-          expanded={expandedWidget === 'timeline'}
-          onExpand={() => onWidgetExpand('timeline')}
-          onUpdate={(changes) => onUpdateSection('timeline', changes)}
+        {/* People Widget */}
+        <PeopleWidget
+          data={data?.people}
+          expanded={expandedWidget === 'people'}
+          onExpand={() => onWidgetExpand('people')}
+          onUpdate={(changes) => onUpdateSection('people', changes)}
         />
 
         {/* Financials Widget */}
@@ -52,22 +57,12 @@ const EscrowMainContent = ({
           onUpdate={(changes) => onUpdateSection('financials', changes)}
         />
 
-        {/* People Widget */}
-        <PeopleWidget
-          data={data?.people}
-          expanded={expandedWidget === 'people'}
-          onExpand={() => onWidgetExpand('people')}
-          onUpdate={(changes) => onUpdateSection('people', changes)}
-        />
-
-        {/* Progress Widget (using checklist as progress for now) */}
-        <ChecklistWidget
-          title="Progress"
-          data={data?.['checklist-loan']}
-          type="progress"
-          expanded={expandedWidget === 'progress'}
-          onExpand={() => onWidgetExpand('progress')}
-          onUpdate={(changes) => onUpdateSection('checklist-loan', changes)}
+        {/* Documents Widget - NEW */}
+        <DocumentsWidget
+          data={data?.documents}
+          expanded={expandedWidget === 'documents'}
+          onExpand={() => onWidgetExpand('documents')}
+          onUpdate={(changes) => onUpdateSection('documents', changes)}
         />
       </ResponsiveGrid>
 
