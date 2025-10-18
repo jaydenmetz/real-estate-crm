@@ -1,4 +1,5 @@
 // File: frontend/src/App.jsx
+// Deployment Version: 1.0.4 - October 17, 2025 - Force Railway rebuild
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigationType } from 'react-router-dom';
 import * as Sentry from '@sentry/react';
