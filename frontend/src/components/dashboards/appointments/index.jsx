@@ -65,6 +65,10 @@ import { useAuth } from '../../../contexts/AuthContext';
 import networkMonitor from '../../../services/networkMonitor.service';
 import { useWebSocket } from '../../../hooks/useWebSocket';
 import AppointmentCard from '../../common/widgets/AppointmentCard';
+import AppointmentHeroCard from './components/AppointmentHeroCard';
+import AppointmentNavigation from './components/AppointmentNavigation';
+import AppointmentContent from './components/AppointmentContent';
+import { useAppointmentHandlers } from './hooks/useAppointmentHandlers';
 
 // Styled Components
 const HeroSection = styled(Box)(({ theme }) => ({
@@ -322,17 +326,12 @@ const AppointmentsDashboard = () => {
   const [dateRangeFilter, setDateRangeFilter] = useState('1M');
   const [customStartDate, setCustomStartDate] = useState(null);
   const [customEndDate, setCustomEndDate] = useState(null);
-  const [startDatePickerOpen, setStartDatePickerOpen] = useState(false);
-  const [endDatePickerOpen, setEndDatePickerOpen] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
   const [calendarDialogOpen, setCalendarDialogOpen] = useState(false);
   const [archivedCount, setArchivedCount] = useState(0);
   const [selectedArchivedIds, setSelectedArchivedIds] = useState([]);
   const [batchDeleting, setBatchDeleting] = useState(false);
   const [newAppointmentModalOpen, setNewAppointmentModalOpen] = useState(false);
-  const [animationType, setAnimationType] = useState('spring');
-  const [animationDuration, setAnimationDuration] = useState(1);
-  const [animationIntensity, setAnimationIntensity] = useState(1);
   const [networkData, setNetworkData] = useState({
     stats: networkMonitor.getStats(),
     requests: networkMonitor.getRequests(),
@@ -462,79 +461,6 @@ const AppointmentsDashboard = () => {
       if (unsubscribe) unsubscribe();
     };
   }, [isConnected]);
-
-  const fetchAppointments = async (pageNum = 1, appendData = false) => {
-    try {
-      // Show appropriate loading state
-      if (appendData) {
-        setLoadingMore(true);
-      } else {
-        setLoading(true);
-        setCurrentPage(1);
-      }
-
-      // console.log(`Fetching appointments... (page ${pageNum})`);
-
-      // Fetch appointments with pagination (50 per page for optimal performance)
-      // PHASE 6: Include scope filter (brokerage, team, user)
-      const response = await appointmentsAPI.getAll({
-        includeArchived: true,
-        page: pageNum,
-        limit: 50,
-        scope: scope // Pass scope from state
-      });
-      // console.log('API Response:', response);
-
-      if (response.success) {
-        const allData = response.data.appointments || response.data || [];
-        const pagination = response.data.pagination || {};
-        const totalPages = pagination.totalPages || 1;
-        const totalRecords = pagination.total || allData.length;
-        const hasMore = pageNum < totalPages;
-
-        // Separate active and archived appointments based on deleted_at field
-        const appointmentData = allData.filter(appt => !appt.deleted_at && !appt.deletedAt);
-        const archivedData = allData.filter(appt => appt.deleted_at || appt.deletedAt);
-
-        // console.log(`Page ${pageNum}/${totalPages} - Total: ${totalRecords}, Loaded: ${allData.length}, Active: ${appointmentData.length}, Archived: ${archivedData.length}`);
-
-        // Update state based on whether we're appending or replacing
-        if (appendData) {
-          setAppointments(prev => [...prev, ...appointmentData]);
-          setArchivedAppointments(prev => [...prev, ...archivedData]);
-        } else {
-          setAppointments(appointmentData);
-          setArchivedAppointments(archivedData);
-        }
-
-        // Update pagination state
-        setCurrentPage(pageNum);
-        setHasMorePages(hasMore);
-        setTotalCount(totalRecords);
-        setArchivedCount(archivedData.length);
-
-        // Calculate stats from currently loaded data only
-        const currentAppointments = appendData ? [...appointments, ...appointmentData] : appointmentData;
-        calculateStats(currentAppointments, selectedStatus);
-      } else {
-        console.error('API returned success: false', response);
-      }
-    } catch (error) {
-      console.error('Error fetching appointments:', error.message);
-      console.error('Full error:', error);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  };
-
-  // Load more appointments (infinite scroll handler)
-  const loadMoreAppointments = useCallback(() => {
-    if (!loadingMore && hasMorePages) {
-      // console.log(`Loading page ${currentPage + 1}...`);
-      fetchAppointments(currentPage + 1, true);
-    }
-  }, [loadingMore, hasMorePages, currentPage]);
 
   // Helper to check if two dates are the same day
   const isSameDay = (date1, date2) => {
@@ -755,134 +681,93 @@ const AppointmentsDashboard = () => {
     });
   };
 
-  const handleArchive = async (appointmentId) => {
+  const fetchAppointments = async (pageNum = 1, appendData = false) => {
     try {
-      const response = await appointmentsAPI.archive(appointmentId);
-      if (response && response.success) {
-        // Move appointment from active to archived
-        const archivedAppointment = appointments.find(a => a.id === appointmentId);
-        if (archivedAppointment) {
-          // Mark as archived
-          archivedAppointment.deleted_at = new Date().toISOString();
-
-          setAppointments(prev => prev.filter(a => a.id !== appointmentId));
-          setArchivedAppointments(prev => [...prev, archivedAppointment]);
-          setArchivedCount(prev => prev + 1);
-
-          // Recalculate stats with remaining active appointments
-          const remainingAppointments = appointments.filter(a => a.id !== appointmentId);
-          calculateStats(remainingAppointments, selectedStatus);
-        }
+      // Show appropriate loading state
+      if (appendData) {
+        setLoadingMore(true);
       } else {
-        console.error('Archive failed - no success response');
+        setLoading(true);
+        setCurrentPage(1);
       }
-    } catch (error) {
-      const errorMessage = error?.message || error?.toString() || 'Unknown error';
-      console.error('Failed to archive appointment:', errorMessage);
-    }
-  };
 
-  const handleRestore = async (appointmentId) => {
-    try {
-      const response = await appointmentsAPI.restore(appointmentId);
+      // console.log(`Fetching appointments... (page ${pageNum})`);
+
+      // Fetch appointments with pagination (50 per page for optimal performance)
+      // PHASE 6: Include scope filter (brokerage, team, user)
+      const response = await appointmentsAPI.getAll({
+        includeArchived: true,
+        page: pageNum,
+        limit: 50,
+        scope: scope // Pass scope from state
+      });
+      // console.log('API Response:', response);
+
       if (response.success) {
-        // Move appointment from archived to active
-        const restoredAppointment = archivedAppointments.find(a => a.id === appointmentId);
-        if (restoredAppointment) {
-          // Remove archived marker
-          delete restoredAppointment.deleted_at;
-          delete restoredAppointment.deletedAt;
+        const allData = response.data.appointments || response.data || [];
+        const pagination = response.data.pagination || {};
+        const totalPages = pagination.totalPages || 1;
+        const totalRecords = pagination.total || allData.length;
+        const hasMore = pageNum < totalPages;
 
-          setArchivedAppointments(prev => prev.filter(a => a.id !== appointmentId));
-          setAppointments(prev => [...prev, restoredAppointment]);
-          setArchivedCount(prev => Math.max(0, prev - 1));
+        // Separate active and archived appointments based on deleted_at field
+        const appointmentData = allData.filter(appt => !appt.deleted_at && !appt.deletedAt);
+        const archivedData = allData.filter(appt => appt.deleted_at || appt.deletedAt);
 
-          // Recalculate stats with updated active appointments
-          const updatedAppointments = [...appointments, restoredAppointment];
-          calculateStats(updatedAppointments, selectedStatus);
+        // console.log(`Page ${pageNum}/${totalPages} - Total: ${totalRecords}, Loaded: ${allData.length}, Active: ${appointmentData.length}, Archived: ${archivedData.length}`);
+
+        // Update state based on whether we're appending or replacing
+        if (appendData) {
+          setAppointments(prev => [...prev, ...appointmentData]);
+          setArchivedAppointments(prev => [...prev, ...archivedData]);
+        } else {
+          setAppointments(appointmentData);
+          setArchivedAppointments(archivedData);
         }
+
+        // Update pagination state
+        setCurrentPage(pageNum);
+        setHasMorePages(hasMore);
+        setTotalCount(totalRecords);
+        setArchivedCount(archivedData.length);
+
+        // Calculate stats from currently loaded data only
+        const currentAppointments = appendData ? [...appointments, ...appointmentData] : appointmentData;
+        calculateStats(currentAppointments, selectedStatus);
+      } else {
+        console.error('API returned success: false', response);
       }
     } catch (error) {
-      console.error('Failed to restore appointment:', error);
-    }
-  };
-
-  const handlePermanentDelete = async (appointmentId, skipConfirmation = false) => {
-    // Check if running in test mode
-    const isTestMode = window.location.search.includes('testMode=true') ||
-                       window.__APPOINTMENT_TEST_MODE__ === true ||
-                       skipConfirmation === true;
-
-    // Single confirmation dialog unless in test mode
-    if (!isTestMode && !window.confirm('Are you sure you want to permanently delete this appointment? This action cannot be undone.')) {
-      return;
-    }
-
-    try {
-      // Check if appointment is already archived
-      const appointmentToDelete = archivedAppointments.find(a => a.id === appointmentId) ||
-                                  appointments.find(a => a.id === appointmentId);
-
-      // If not archived, archive first
-      if (appointmentToDelete && !appointmentToDelete.deleted_at && !appointmentToDelete.deletedAt) {
-        const archiveResponse = await appointmentsAPI.archive(appointmentId);
-        if (!archiveResponse.success) {
-          console.error('Failed to archive appointment before deletion');
-          return;
-        }
-      }
-
-      // Now permanently delete the archived appointment
-      const response = await appointmentsAPI.delete(appointmentId);
-      if (response.success) {
-        // Remove from both lists
-        setArchivedAppointments(prev => prev.filter(a => a.id !== appointmentId));
-        setAppointments(prev => prev.filter(a => a.id !== appointmentId));
-        setArchivedCount(prev => Math.max(0, prev - 1));
-
-        // Recalculate stats with remaining active appointments only
-        const remainingAppointments = appointments.filter(a => a.id !== appointmentId);
-        calculateStats(remainingAppointments, selectedStatus);
-
-        // console.log('Successfully permanently deleted appointment:', appointmentId);
-      }
-    } catch (error) {
-      console.error('Failed to permanently delete appointment:', error);
-    }
-  };
-
-  const handleBatchDelete = async () => {
-    if (selectedArchivedIds.length === 0) return;
-
-    const count = selectedArchivedIds.length;
-    if (!window.confirm(`Are you sure you want to permanently delete ${count} appointment${count > 1 ? 's' : ''}? This action cannot be undone.`)) {
-      return;
-    }
-
-    setBatchDeleting(true);
-    try {
-      const response = await appointmentsAPI.batchDelete(selectedArchivedIds);
-      if (response.success) {
-        // Remove deleted appointments from both lists locally
-        const deletedIds = new Set(selectedArchivedIds);
-        setArchivedAppointments(prev => prev.filter(a => !deletedIds.has(a.id)));
-        setAppointments(prev => prev.filter(a => !deletedIds.has(a.id)));
-        setArchivedCount(prev => Math.max(0, prev - selectedArchivedIds.length));
-        setSelectedArchivedIds([]);
-
-        // Recalculate stats with remaining active appointments only
-        const remainingAppointments = appointments.filter(a => !deletedIds.has(a.id));
-        calculateStats(remainingAppointments, selectedStatus);
-
-        // console.log(`Successfully permanently deleted ${response.data.deletedCount || selectedArchivedIds.length} appointments`);
-      }
-    } catch (error) {
-      console.error('Failed to batch delete appointments:', error);
-      alert('Failed to delete appointments. Please try again.');
+      console.error('Error fetching appointments:', error.message);
+      console.error('Full error:', error);
     } finally {
-      setBatchDeleting(false);
+      setLoading(false);
+      setLoadingMore(false);
     }
   };
+
+  // Load more appointments (infinite scroll handler)
+  const loadMoreAppointments = useCallback(() => {
+    if (!loadingMore && hasMorePages) {
+      // console.log(`Loading page ${currentPage + 1}...`);
+      fetchAppointments(currentPage + 1, true);
+    }
+  }, [loadingMore, hasMorePages, currentPage]);
+
+  // Use appointment handlers hook (must be AFTER function definitions)
+  const handlers = useAppointmentHandlers({
+    appointments,
+    setAppointments,
+    archivedAppointments,
+    setArchivedAppointments,
+    setArchivedCount,
+    selectedStatus,
+    calculateStats,
+    fetchAppointments,
+    selectedArchivedIds,
+    setSelectedArchivedIds,
+    setBatchDeleting,
+  });
 
   const handleSelectAll = (checked) => {
     if (checked) {
@@ -892,13 +777,33 @@ const AppointmentsDashboard = () => {
     }
   };
 
-  const handleSelectAppointment = (appointmentId, checked) => {
-    if (checked) {
-      setSelectedArchivedIds(prev => [...prev, appointmentId]);
-    } else {
-      setSelectedArchivedIds(prev => prev.filter(id => id !== appointmentId));
+  // Filter and sort appointments for display
+  const filteredAppointments = appointments.filter(a => {
+    const now = new Date();
+    const apptDate = new Date(a.appointment_date || a.appointment_date);
+    const status = (a.status || a.appointment_status || '').toLowerCase();
+
+    switch (selectedStatus) {
+      case 'upcoming':
+        return apptDate >= now && status !== 'cancelled';
+      case 'completed':
+        return status === 'completed';
+      case 'cancelled':
+        return status === 'cancelled';
+      default:
+        return true;
     }
-  };
+  });
+
+  // Sort appointments based on sortBy state
+  const sortedAppointments = [...filteredAppointments].sort((a, b) => {
+    if (sortBy === 'appointment_date') return new Date(b.appointment_date || b.appointment_date) - new Date(a.appointment_date || a.appointment_date);
+    if (sortBy === 'created_at') return new Date(b.created_at || b.created_at) - new Date(a.created_at || a.created_at);
+    if (sortBy === 'client_name') return (a.client_name || '').localeCompare(b.client_name || '');
+    if (sortBy === 'appointment_type') return (a.appointment_type || '').localeCompare(b.appointment_type || '');
+    if (sortBy === 'status') return (a.status || '').localeCompare(b.status || '');
+    return 0;
+  });
 
   if (loading) {
     return (
@@ -911,1411 +816,461 @@ const AppointmentsDashboard = () => {
   return (
     <>
       <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
-
         {/* Hero Section with Stats */}
-        <HeroSection>
-          {/* Wrapper for header and main content */}
-          <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-
-            {/* Header Row - Full width above both containers */}
-            <Box sx={{
-              display: 'flex',
-              gap: 3,
-              alignItems: 'center',
-              flexDirection: 'row',
-              flexWrap: 'wrap',
-              justifyContent: 'space-between',
-              mb: 3,
-              width: '100%',
-            }}>
-              {/* Header */}
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                style={{ flexShrink: 0 }}
-              >
-                <Typography variant="h3" component="h1" sx={{ fontWeight: 700 }}>
-                  Appointments
-                </Typography>
-              </motion.div>
-
-              {/* Date Controls Container - always show in header, right-aligned */}
-              <Box sx={{
-                display: 'flex',
-                gap: 2,
-                alignItems: 'center',
-                flexWrap: 'nowrap',
-                flexShrink: 0,
-                marginLeft: 'auto',
-              }}>
-                  {/* Date Buttons */}
-                  <ToggleButtonGroup
-                    value={dateRangeFilter}
-                    exclusive
-                    onChange={(e, newValue) => {
-                      if (newValue !== null) {
-                        setDateRangeFilter(newValue);
-                        setCustomStartDate(null);
-                        setCustomEndDate(null);
-                      }
-                    }}
-                    size="small"
-                    sx={{
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      borderRadius: 1,
-                      flexShrink: 0,
-                      flexGrow: 0,
-                      height: 36,
-                      '& .MuiToggleButton-root': {
-                        color: 'rgba(255, 255, 255, 0.8)',
-                        borderColor: 'transparent',
-                        fontSize: { xs: '0.75rem', md: '0.875rem' },
-                        fontWeight: 600,
-                        px: { xs: 1.5, md: 2 },
-                        py: 0,
-                        height: 36,
-                        minWidth: 'auto',
-                        '&.Mui-selected': {
-                          backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                          color: 'white',
-                          borderColor: 'transparent',
-                          '&:hover': {
-                            backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                          },
-                        },
-                        '&:hover': {
-                          backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                          borderColor: 'transparent',
-                        },
-                      },
-                    }}
-                  >
-                    <ToggleButton value="1D">1D</ToggleButton>
-                    <ToggleButton value="1M">1M</ToggleButton>
-                    <ToggleButton value="1Y">1Y</ToggleButton>
-                    <ToggleButton value="YTD">YTD</ToggleButton>
-                  </ToggleButtonGroup>
-
-                  {/* Date Range Pickers - No Labels */}
-                  <LocalizationProvider dateAdapter={AdapterDateFns}>
-                    <Box sx={{
-                      display: 'flex',
-                      gap: 0.5,
-                      alignItems: 'center',
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      borderRadius: 1,
-                      px: 0.5,
-                      height: 36,
-                      border: '1px solid transparent',
-                      flexShrink: 0,
-                      flexGrow: 0,
-                    }}>
-                      <DatePicker
-                        open={startDatePickerOpen}
-                        onOpen={() => setStartDatePickerOpen(true)}
-                        onClose={() => setStartDatePickerOpen(false)}
-                        format="MMM d, yyyy"
-                        value={(() => {
-                          try {
-                            const date = customStartDate || dateRange?.startDate;
-                            if (!date) return null;
-                            if (typeof date === 'string') {
-                              const parsed = new Date(date);
-                              if (isNaN(parsed.getTime())) return null;
-                              return parsed;
-                            }
-                            if (!(date instanceof Date)) return null;
-                            if (isNaN(date.getTime())) return null;
-                            return date;
-                          } catch (e) {
-                            console.error('DatePicker value error:', e);
-                            return null;
-                          }
-                        })()}
-                        onChange={(newDate) => {
-                          setCustomStartDate(newDate);
-                          if (newDate && customEndDate) {
-                            const matched = detectPresetRange(newDate, customEndDate);
-                            setDateRangeFilter(matched);
-                          } else {
-                            setDateRangeFilter(null);
-                          }
-                        }}
-                        slotProps={{
-                          textField: {
-                            size: 'small',
-                            placeholder: 'Start',
-                            onClick: () => setStartDatePickerOpen(true),
-                            sx: {
-                              width: { xs: 105, md: 115 },
-                              '& .MuiInputBase-root': {
-                                backgroundColor: 'transparent',
-                                borderColor: 'rgba(255, 255, 255, 0.3)',
-                                height: 36,
-                                paddingRight: '8px !important',
-                              },
-                              '& .MuiOutlinedInput-root': {
-                                '& fieldset': {
-                                  borderColor: 'transparent',
-                                },
-                                '&:hover fieldset': {
-                                  borderColor: 'transparent',
-                                },
-                                '&.Mui-focused fieldset': {
-                                  borderColor: 'transparent',
-                                },
-                              },
-                              '& .MuiInputBase-input': {
-                                fontSize: { xs: '0.75rem', md: '0.875rem' },
-                                fontWeight: 600,
-                                cursor: 'pointer',
-                                textAlign: 'center',
-                                color: 'rgba(255, 255, 255, 0.9)',
-                                padding: '6px 8px',
-                              },
-                              '& .MuiInputAdornment-root': {
-                                display: 'none',
-                              },
-                              '& .MuiInputLabel-root': {
-                                display: 'none',
-                              },
-                              '& .MuiOutlinedInput-notchedOutline legend': {
-                                display: 'none',
-                              },
-                            },
-                          },
-                          openPickerButton: {
-                            sx: { display: 'none' },
-                          },
-                        }}
-                      />
-                      <Typography sx={{ color: 'rgba(255, 255, 255, 0.7)', mx: 0.5, flexShrink: 0 }}>→</Typography>
-                      <DatePicker
-                        open={endDatePickerOpen}
-                        onOpen={() => setEndDatePickerOpen(true)}
-                        onClose={() => setEndDatePickerOpen(false)}
-                        format="MMM d, yyyy"
-                        value={(() => {
-                          try {
-                            const date = customEndDate || dateRange?.endDate;
-                            if (!date) return null;
-                            if (typeof date === 'string') {
-                              const parsed = new Date(date);
-                              if (isNaN(parsed.getTime())) return null;
-                              return parsed;
-                            }
-                            if (!(date instanceof Date)) return null;
-                            if (isNaN(date.getTime())) return null;
-                            return date;
-                          } catch (e) {
-                            console.error('DatePicker value error:', e);
-                            return null;
-                          }
-                        })()}
-                        onChange={(newDate) => {
-                          setCustomEndDate(newDate);
-                          if (customStartDate && newDate) {
-                            const matched = detectPresetRange(customStartDate, newDate);
-                            setDateRangeFilter(matched);
-                          } else {
-                            setDateRangeFilter(null);
-                          }
-                        }}
-                        slotProps={{
-                          textField: {
-                            size: 'small',
-                            placeholder: 'End',
-                            onClick: () => setEndDatePickerOpen(true),
-                            sx: {
-                              width: { xs: 105, md: 115 },
-                              '& .MuiInputBase-root': {
-                                backgroundColor: 'transparent',
-                                borderColor: 'rgba(255, 255, 255, 0.3)',
-                                height: 36,
-                                paddingRight: '8px !important',
-                              },
-                              '& .MuiOutlinedInput-root': {
-                                '& fieldset': {
-                                  borderColor: 'transparent',
-                                },
-                                '&:hover fieldset': {
-                                  borderColor: 'transparent',
-                                },
-                                '&.Mui-focused fieldset': {
-                                  borderColor: 'transparent',
-                                },
-                              },
-                              '& .MuiInputBase-input': {
-                                fontSize: { xs: '0.75rem', md: '0.875rem' },
-                                fontWeight: 600,
-                                cursor: 'pointer',
-                                textAlign: 'center',
-                                color: 'rgba(255, 255, 255, 0.9)',
-                                padding: '6px 8px',
-                              },
-                              '& .MuiInputAdornment-root': {
-                                display: 'none',
-                              },
-                              '& .MuiInputLabel-root': {
-                                display: 'none',
-                              },
-                              '& .MuiOutlinedInput-notchedOutline legend': {
-                                display: 'none',
-                              },
-                            },
-                          },
-                          openPickerButton: {
-                            sx: { display: 'none' },
-                          },
-                        }}
-                      />
-                    </Box>
-                  </LocalizationProvider>
-                </Box>
-            </Box>
-
-            {/* Main Content Row - Left and Right Containers */}
-            <Box sx={{
-              display: 'flex',
-              gap: 3,
-              alignItems: 'stretch',
-              flexDirection: { xs: 'column', md: 'row' },
-              height: '100%',
-            }}>
-              {/* Left container: Stats Grid */}
-              <Box sx={{
-                flex: '1 1 auto',
-                display: 'flex',
-                flexDirection: 'column',
-                minWidth: 0,
-              }}>
-                {/* Stats Grid - White Cards - Dynamic based on selected tab */}
-                <Grid container spacing={2}>
-                {(() => {
-                  switch(selectedStatus) {
-                    case 'upcoming':
-                      return (
-                        <>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={Event}
-                              title="Total Upcoming"
-                              value={stats.totalUpcoming || 0}
-                              color="#ffffff"
-                              delay={0}
-                              goal={20}
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={CalendarToday}
-                              title="This Week"
-                              value={stats.thisWeek || 0}
-                              color="#ffffff"
-                              delay={1}
-                              goal={5}
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={Schedule}
-                              title="This Month"
-                              value={stats.thisMonth || 0}
-                              color="#ffffff"
-                              delay={2}
-                              goal={15}
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={Assessment}
-                              title="No-Show Rate"
-                              value={stats.noShowRate || 0}
-                              suffix="%"
-                              color="#ffffff"
-                              delay={3}
-                              goal={5}
-                            />
-                          </Grid>
-                        </>
-                      );
-
-                    case 'completed':
-                      return (
-                        <>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={CheckCircle}
-                              title="Total Completed"
-                              value={stats.totalCompleted || 0}
-                              color="#ffffff"
-                              delay={0}
-                              goal={100}
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={CalendarToday}
-                              title="Completed This Month"
-                              value={stats.completedThisMonth || 0}
-                              color="#ffffff"
-                              delay={1}
-                              goal={25}
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={TrendingUp}
-                              title="Success Rate"
-                              value={stats.successRate || 0}
-                              suffix="%"
-                              color="#ffffff"
-                              delay={2}
-                              goal={95}
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={Schedule}
-                              title="Avg Duration"
-                              value={stats.avgDuration || 0}
-                              suffix=" min"
-                              color="#ffffff"
-                              delay={3}
-                              goal={60}
-                            />
-                          </Grid>
-                        </>
-                      );
-
-                    case 'cancelled':
-                      return (
-                        <>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={Cancel}
-                              title="Total Cancelled"
-                              value={stats.totalCancelled || 0}
-                              color="#ffffff"
-                              delay={0}
-                              goal={10}
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={Assessment}
-                              title="Cancellation Rate"
-                              value={stats.cancellationRate || 0}
-                              suffix="%"
-                              color="#ffffff"
-                              delay={1}
-                              goal={15}
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={Schedule}
-                              title="Last-Minute Cancellations"
-                              value={stats.lastMinuteCancellations || 0}
-                              color="#ffffff"
-                              delay={2}
-                              goal={5}
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={Event}
-                              title="Rescheduled"
-                              value={stats.rescheduled || 0}
-                              color="#ffffff"
-                              delay={3}
-                              goal={8}
-                            />
-                          </Grid>
-                        </>
-                      );
-
-                    case 'archived':
-                      return (
-                        <>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={ArchiveIcon}
-                              title="Total Archived Appointments"
-                              value={archivedCount || 0}
-                              color="#ffffff"
-                              delay={0}
-                              goal={maxArchivedLimit}
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={TrendingUp}
-                              title="Max Archived"
-                              value={archivedCount || 0}
-                              suffix={` / ${maxArchivedLimit}`}
-                              color="#ffffff"
-                              delay={1}
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={Cancel}
-                              title="Cancelled Appointments"
-                              value={stats.totalCancelled || 0}
-                              color="#ffffff"
-                              delay={2}
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={Schedule}
-                              title="No-Shows"
-                              value={stats.lastMinuteCancellations || 0}
-                              color="#ffffff"
-                              delay={3}
-                            />
-                          </Grid>
-                        </>
-                      );
-
-                    case 'all':
-                    default:
-                      return (
-                        <>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={Event}
-                              title="Total Appointments"
-                              value={stats.totalAppointments || 0}
-                              color="#ffffff"
-                              delay={0}
-                              goal={150}
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={CalendarToday}
-                              title="Upcoming Appointments"
-                              value={stats.upcomingAppointments || 0}
-                              color="#ffffff"
-                              delay={1}
-                              goal={30}
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={TrendingUp}
-                              title="Completion Rate"
-                              value={stats.completionRate || 0}
-                              suffix="%"
-                              color="#ffffff"
-                              delay={2}
-                              goal={90}
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={Assessment}
-                              title="Avg Per Week"
-                              value={stats.avgPerWeek || 0}
-                              color="#ffffff"
-                              delay={3}
-                              goal={10}
-                            />
-                          </Grid>
-                        </>
-                      );
-                  }
-                })()}
-                </Grid>
-
-              {/* Action Buttons Row - Aligned to bottom */}
-              <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
-                <Button
-                  variant="contained"
-                  size="medium"
-                  startIcon={<Add />}
-                  onClick={() => setNewAppointmentModalOpen(true)}
-                  sx={{
-                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                    color: 'white',
-                    backdropFilter: 'blur(10px)',
-                    fontWeight: 600,
-                    px: 3,
-                    py: 1,
-                    borderRadius: 2,
-                    '&:hover': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                    }
-                  }}
-                >
-                  Schedule Appointment
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="medium"
-                  startIcon={<Assessment />}
-                  sx={{
-                    color: 'white',
-                    borderColor: 'rgba(255, 255, 255, 0.5)',
-                    px: 3,
-                    py: 1,
-                    '&:hover': {
-                      borderColor: 'white',
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                    }
-                  }}
-                >
-                  Appointment Analytics
-                </Button>
-              </Box>
-              </Box>
-
-              {/* Right container: AI Assistant */}
-              <Box sx={{
-                width: { xs: '100%', md: '280px', lg: '320px' },
-                minWidth: { md: '280px' },
-                flexShrink: 0,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-              }}>
-              {/* Spacer */}
-              <Box sx={{ flexGrow: 1 }} />
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.5 }}
-              >
-                <Card
-                  elevation={0}
-                  sx={{
-                    aspectRatio: { xs: 'auto', md: '1 / 1' },
-                    minHeight: { xs: 250, md: 320 },
-                    position: 'relative',
-                    overflow: 'hidden',
-                    background: 'linear-gradient(135deg, rgba(122, 62, 0, 0.12) 0%, rgba(163, 93, 0, 0.08) 100%)',
-                    backdropFilter: 'blur(10px)',
-                    border: '2px dashed rgba(255, 255, 255, 0.3)',
-                    borderRadius: 3,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: 'all 0.3s ease',
-                    '&:hover': {
-                      border: '2px dashed rgba(255, 255, 255, 0.5)',
-                      background: 'linear-gradient(135deg, rgba(122, 62, 0, 0.18) 0%, rgba(163, 93, 0, 0.12) 100%)',
-                    }
-                  }}
-                >
-                  <CardContent sx={{ textAlign: 'center', p: 3 }}>
-                    <Box>
-                      <Box
-                        sx={{
-                          width: 64,
-                          height: 64,
-                          borderRadius: '50%',
-                          background: 'rgba(255, 255, 255, 0.15)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          margin: '0 auto',
-                          mb: 2,
-                        }}
-                      >
-                        <Typography sx={{ fontSize: '2rem' }}>🤖</Typography>
-                      </Box>
-                      <Typography
-                        variant="h6"
-                        sx={{
-                          color: 'rgba(255, 255, 255, 0.95)',
-                          fontWeight: 700,
-                          mb: 1,
-                          letterSpacing: '0.02em',
-                        }}
-                      >
-                        AI Appointment Manager
-                      </Typography>
-                      <Typography
-                        variant="body2"
-                        sx={{
-                          color: 'rgba(255, 255, 255, 0.7)',
-                          mb: 2,
-                          fontSize: '0.875rem',
-                        }}
-                      >
-                        Hire an AI assistant to schedule appointments, send reminders, and manage your calendar.
-                      </Typography>
-                      <Box
-                        sx={{
-                          display: 'inline-block',
-                          px: 2,
-                          py: 0.75,
-                          borderRadius: 2,
-                          background: 'rgba(255, 255, 255, 0.2)',
-                          backdropFilter: 'blur(5px)',
-                        }}
-                      >
-                        <Typography
-                          variant="caption"
-                          sx={{
-                            color: 'white',
-                            fontWeight: 600,
-                            letterSpacing: '0.1em',
-                            textTransform: 'uppercase',
-                            fontSize: '0.75rem',
-                          }}
-                        >
-                          Coming Soon
-                        </Typography>
-                      </Box>
-                    </Box>
-                  </CardContent>
-                </Card>
-              </motion.div>
-              {/* Spacer */}
-              <Box sx={{ flexGrow: 1 }} />
-            </Box>
-            </Box>
-
-          </Box>
-        </HeroSection>
-
-        {/* Conditional Date Controls - Show between hero and tabs when AI Manager wraps below */}
-        <Box
-          sx={{
-            display: { xs: 'flex', sm: 'flex', md: 'none' },
-            justifyContent: 'center',
-            mb: 3,
-            mt: -2,
-          }}
+        <AppointmentHeroCard
+          dateRangeFilter={dateRangeFilter}
+          setDateRangeFilter={setDateRangeFilter}
+          customStartDate={customStartDate}
+          setCustomStartDate={setCustomStartDate}
+          customEndDate={customEndDate}
+          setCustomEndDate={setCustomEndDate}
+          dateRange={dateRange}
+          detectPresetRange={detectPresetRange}
         >
-          {/* Compact rounded rectangle around date controls */}
-          <Box
-            sx={{
+          {/* Stats Grid passed as children */}
+          <Box sx={{
+            display: 'flex',
+            gap: 3,
+            alignItems: 'stretch',
+            flexDirection: { xs: 'column', md: 'row' },
+            height: '100%',
+          }}>
+            {/* Left container: Stats Grid */}
+            <Box sx={{
+              flex: '1 1 auto',
               display: 'flex',
-              alignItems: 'center',
-              gap: 2,
-              background: 'linear-gradient(135deg, #f97316 0%, #fb923c 100%)',
-              borderRadius: 2,
-              px: 2,
-              py: 1.5,
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-            }}
-          >
-            {/* Date Range Toggle Buttons */}
-            <ToggleButtonGroup
-            value={dateRangeFilter}
-            exclusive
-            onChange={(e, newValue) => {
-              if (newValue !== null) {
-                setDateRangeFilter(newValue);
-                setCustomStartDate(null);
-                setCustomEndDate(null);
-              }
-            }}
-            size="small"
-            sx={{
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: 1,
-              flexShrink: 0,
-              height: 36,
-              '& .MuiToggleButton-root': {
-                color: 'rgba(255, 255, 255, 0.8)',
-                borderColor: 'transparent',
-                fontSize: { xs: '0.75rem', md: '0.875rem' },
-                fontWeight: 600,
-                px: { xs: 1.5, md: 2 },
-                py: 0,
-                height: 36,
-                minWidth: 'auto',
-                '&.Mui-selected': {
+              flexDirection: 'column',
+              minWidth: 0,
+            }}>
+              {/* Stats Grid - White Cards - Dynamic based on selected tab */}
+              <Grid container spacing={2}>
+              {(() => {
+                switch(selectedStatus) {
+                  case 'upcoming':
+                    return (
+                      <>
+                        <Grid item xs={12} sm={6} md={6} xl={3}>
+                          <StatCard
+                            icon={Event}
+                            title="Total Upcoming"
+                            value={stats.totalUpcoming || 0}
+                            color="#ffffff"
+                            delay={0}
+                            goal={20}
+                          />
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={6} xl={3}>
+                          <StatCard
+                            icon={CalendarToday}
+                            title="This Week"
+                            value={stats.thisWeek || 0}
+                            color="#ffffff"
+                            delay={1}
+                            goal={5}
+                          />
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={6} xl={3}>
+                          <StatCard
+                            icon={Schedule}
+                            title="This Month"
+                            value={stats.thisMonth || 0}
+                            color="#ffffff"
+                            delay={2}
+                            goal={15}
+                          />
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={6} xl={3}>
+                          <StatCard
+                            icon={Assessment}
+                            title="No-Show Rate"
+                            value={stats.noShowRate || 0}
+                            suffix="%"
+                            color="#ffffff"
+                            delay={3}
+                            goal={5}
+                          />
+                        </Grid>
+                      </>
+                    );
+
+                  case 'completed':
+                    return (
+                      <>
+                        <Grid item xs={12} sm={6} md={6} xl={3}>
+                          <StatCard
+                            icon={CheckCircle}
+                            title="Total Completed"
+                            value={stats.totalCompleted || 0}
+                            color="#ffffff"
+                            delay={0}
+                            goal={100}
+                          />
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={6} xl={3}>
+                          <StatCard
+                            icon={CalendarToday}
+                            title="Completed This Month"
+                            value={stats.completedThisMonth || 0}
+                            color="#ffffff"
+                            delay={1}
+                            goal={25}
+                          />
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={6} xl={3}>
+                          <StatCard
+                            icon={TrendingUp}
+                            title="Success Rate"
+                            value={stats.successRate || 0}
+                            suffix="%"
+                            color="#ffffff"
+                            delay={2}
+                            goal={95}
+                          />
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={6} xl={3}>
+                          <StatCard
+                            icon={Schedule}
+                            title="Avg Duration"
+                            value={stats.avgDuration || 0}
+                            suffix=" min"
+                            color="#ffffff"
+                            delay={3}
+                            goal={60}
+                          />
+                        </Grid>
+                      </>
+                    );
+
+                  case 'cancelled':
+                    return (
+                      <>
+                        <Grid item xs={12} sm={6} md={6} xl={3}>
+                          <StatCard
+                            icon={Cancel}
+                            title="Total Cancelled"
+                            value={stats.totalCancelled || 0}
+                            color="#ffffff"
+                            delay={0}
+                            goal={10}
+                          />
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={6} xl={3}>
+                          <StatCard
+                            icon={Assessment}
+                            title="Cancellation Rate"
+                            value={stats.cancellationRate || 0}
+                            suffix="%"
+                            color="#ffffff"
+                            delay={1}
+                            goal={15}
+                          />
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={6} xl={3}>
+                          <StatCard
+                            icon={Schedule}
+                            title="Last-Minute Cancellations"
+                            value={stats.lastMinuteCancellations || 0}
+                            color="#ffffff"
+                            delay={2}
+                            goal={5}
+                          />
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={6} xl={3}>
+                          <StatCard
+                            icon={Event}
+                            title="Rescheduled"
+                            value={stats.rescheduled || 0}
+                            color="#ffffff"
+                            delay={3}
+                            goal={8}
+                          />
+                        </Grid>
+                      </>
+                    );
+
+                  case 'archived':
+                    return (
+                      <>
+                        <Grid item xs={12} sm={6} md={6} xl={3}>
+                          <StatCard
+                            icon={ArchiveIcon}
+                            title="Total Archived Appointments"
+                            value={archivedCount || 0}
+                            color="#ffffff"
+                            delay={0}
+                            goal={maxArchivedLimit}
+                          />
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={6} xl={3}>
+                          <StatCard
+                            icon={TrendingUp}
+                            title="Max Archived"
+                            value={archivedCount || 0}
+                            suffix={` / ${maxArchivedLimit}`}
+                            color="#ffffff"
+                            delay={1}
+                          />
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={6} xl={3}>
+                          <StatCard
+                            icon={Cancel}
+                            title="Cancelled Appointments"
+                            value={stats.totalCancelled || 0}
+                            color="#ffffff"
+                            delay={2}
+                          />
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={6} xl={3}>
+                          <StatCard
+                            icon={Schedule}
+                            title="No-Shows"
+                            value={stats.lastMinuteCancellations || 0}
+                            color="#ffffff"
+                            delay={3}
+                          />
+                        </Grid>
+                      </>
+                    );
+
+                  case 'all':
+                  default:
+                    return (
+                      <>
+                        <Grid item xs={12} sm={6} md={6} xl={3}>
+                          <StatCard
+                            icon={Event}
+                            title="Total Appointments"
+                            value={stats.totalAppointments || 0}
+                            color="#ffffff"
+                            delay={0}
+                            goal={150}
+                          />
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={6} xl={3}>
+                          <StatCard
+                            icon={CalendarToday}
+                            title="Upcoming Appointments"
+                            value={stats.upcomingAppointments || 0}
+                            color="#ffffff"
+                            delay={1}
+                            goal={30}
+                          />
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={6} xl={3}>
+                          <StatCard
+                            icon={TrendingUp}
+                            title="Completion Rate"
+                            value={stats.completionRate || 0}
+                            suffix="%"
+                            color="#ffffff"
+                            delay={2}
+                            goal={90}
+                          />
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={6} xl={3}>
+                          <StatCard
+                            icon={Assessment}
+                            title="Avg Per Week"
+                            value={stats.avgPerWeek || 0}
+                            color="#ffffff"
+                            delay={3}
+                            goal={10}
+                          />
+                        </Grid>
+                      </>
+                    );
+                }
+              })()}
+              </Grid>
+
+            {/* Action Buttons Row - Aligned to bottom */}
+            <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
+              <Button
+                variant="contained"
+                size="medium"
+                startIcon={<Add />}
+                onClick={() => setNewAppointmentModalOpen(true)}
+                sx={{
                   backgroundColor: 'rgba(255, 255, 255, 0.2)',
                   color: 'white',
-                  borderColor: 'transparent',
+                  backdropFilter: 'blur(10px)',
+                  fontWeight: 600,
+                  px: 3,
+                  py: 1,
+                  borderRadius: 2,
                   '&:hover': {
                     backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                  },
-                },
-                '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                  borderColor: 'transparent',
-                },
-              },
-            }}
-          >
-            <ToggleButton value="1D">1D</ToggleButton>
-            <ToggleButton value="1M">1M</ToggleButton>
-            <ToggleButton value="1Y">1Y</ToggleButton>
-            <ToggleButton value="YTD">YTD</ToggleButton>
-          </ToggleButtonGroup>
-
-          {/* Date Range Pickers */}
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <Box sx={{
-              display: 'flex',
-              gap: 0.5,
-              alignItems: 'center',
-              backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              borderRadius: 1,
-              px: 0.5,
-              height: 36,
-              border: '1px solid transparent',
-            }}>
-              <DatePicker
-                open={startDatePickerOpen}
-                onOpen={() => setStartDatePickerOpen(true)}
-                onClose={() => setStartDatePickerOpen(false)}
-                format="MMM d, yyyy"
-                value={(() => {
-                  try {
-                    const date = customStartDate || dateRange?.startDate;
-                    if (!date) return null;
-                    if (typeof date === 'string') {
-                      const parsed = new Date(date);
-                      if (isNaN(parsed.getTime())) return null;
-                      return parsed;
-                    }
-                    if (!(date instanceof Date)) return null;
-                    if (isNaN(date.getTime())) return null;
-                    return date;
-                  } catch (e) {
-                    console.error('DatePicker value error:', e);
-                    return null;
                   }
-                })()}
-                onChange={(newDate) => {
-                  setCustomStartDate(newDate);
-                  if (newDate && customEndDate) {
-                    const matched = detectPresetRange(newDate, customEndDate);
-                    setDateRangeFilter(matched);
-                  } else {
-                    setDateRangeFilter(null);
-                  }
-                }}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    sx: {
-                      width: { xs: 105, md: 115 },
-                      '& .MuiInputBase-root': {
-                        backgroundColor: 'transparent',
-                        borderColor: 'rgba(255, 255, 255, 0.3)',
-                        height: 36,
-                        paddingRight: '8px !important',
-                      },
-                      '& .MuiOutlinedInput-root': {
-                        '& fieldset': {
-                          borderColor: 'transparent',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: 'transparent',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: 'transparent',
-                        },
-                      },
-                      '& .MuiInputBase-input': {
-                        fontSize: { xs: '0.75rem', md: '0.875rem' },
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        textAlign: 'center',
-                        color: 'rgba(255, 255, 255, 0.9)',
-                        padding: '6px 8px',
-                      },
-                      '& .MuiInputAdornment-root': {
-                        display: 'none',
-                      },
-                      '& .MuiInputLabel-root': {
-                        display: 'none',
-                      },
-                      '& .MuiOutlinedInput-notchedOutline legend': {
-                        display: 'none',
-                      },
-                    },
-                  },
-                  openPickerButton: {
-                    sx: { display: 'none' },
-                  },
-                }}
-              />
-              <Typography sx={{ color: 'rgba(255, 255, 255, 0.7)', mx: 0.5, flexShrink: 0 }}>→</Typography>
-              <DatePicker
-                open={endDatePickerOpen}
-                onOpen={() => setEndDatePickerOpen(true)}
-                onClose={() => setEndDatePickerOpen(false)}
-                format="MMM d, yyyy"
-                value={(() => {
-                  try {
-                    const date = customEndDate || dateRange?.endDate;
-                    if (!date) return null;
-                    if (typeof date === 'string') {
-                      const parsed = new Date(date);
-                      if (isNaN(parsed.getTime())) return null;
-                      return parsed;
-                    }
-                    if (!(date instanceof Date)) return null;
-                    if (isNaN(date.getTime())) return null;
-                    return date;
-                  } catch (e) {
-                    console.error('DatePicker value error:', e);
-                    return null;
-                  }
-                })()}
-                onChange={(newDate) => {
-                  setCustomEndDate(newDate);
-                  if (customStartDate && newDate) {
-                    const matched = detectPresetRange(customStartDate, newDate);
-                    setDateRangeFilter(matched);
-                  } else {
-                    setDateRangeFilter(null);
-                  }
-                }}
-                slotProps={{
-                  textField: {
-                    size: 'small',
-                    sx: {
-                      width: { xs: 105, md: 115 },
-                      '& .MuiInputBase-root': {
-                        backgroundColor: 'transparent',
-                        borderColor: 'rgba(255, 255, 255, 0.3)',
-                        height: 36,
-                        paddingRight: '8px !important',
-                      },
-                      '& .MuiOutlinedInput-root': {
-                        '& fieldset': {
-                          borderColor: 'transparent',
-                        },
-                        '&:hover fieldset': {
-                          borderColor: 'transparent',
-                        },
-                        '&.Mui-focused fieldset': {
-                          borderColor: 'transparent',
-                        },
-                      },
-                      '& .MuiInputBase-input': {
-                        fontSize: { xs: '0.75rem', md: '0.875rem' },
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        textAlign: 'center',
-                        color: 'rgba(255, 255, 255, 0.9)',
-                        padding: '6px 8px',
-                      },
-                      '& .MuiInputAdornment-root': {
-                        display: 'none',
-                      },
-                      '& .MuiInputLabel-root': {
-                        display: 'none',
-                      },
-                      '& .MuiOutlinedInput-notchedOutline legend': {
-                        display: 'none',
-                      },
-                    },
-                  },
-                  openPickerButton: {
-                    sx: { display: 'none' },
-                  },
-                }}
-              />
-            </Box>
-          </LocalizationProvider>
-          </Box>
-        </Box>
-
-        {/* Navigation Bar with Tabs and Controls */}
-        <Box sx={{ mb: 4 }}>
-          {/* Desktop Layout */}
-          <Box
-            sx={{
-              display: { xs: 'none', md: 'flex' },
-              flexWrap: 'wrap',
-              gap: 2,
-              alignItems: 'flex-start',
-            }}
-          >
-            {/* Left: Tabs with gray background */}
-            <Paper
-              elevation={0}
-              sx={{
-                backgroundColor: 'background.paper',
-                borderRadius: '8px',
-                border: '1px solid',
-                borderColor: 'divider',
-                flex: '0 0 auto',
-              }}
-            >
-              <Tabs
-                value={selectedStatus}
-                onChange={(e, newValue) => setSelectedStatus(newValue)}
-                sx={{
-                  minHeight: 48,
-                  '& .MuiTab-root': {
-                    textTransform: 'none',
-                    fontSize: '0.9375rem',
-                    fontWeight: 500,
-                    minHeight: 48,
-                    px: 3,
-                    color: 'text.secondary',
-                    transition: 'all 0.2s ease',
-                    '&:hover': {
-                      color: 'primary.main',
-                      backgroundColor: alpha('#1976d2', 0.04),
-                    },
-                  },
-                  '& .Mui-selected': {
-                    fontWeight: 600,
-                    color: 'primary.main',
-                  },
-                  '& .MuiTabs-indicator': {
-                    height: 3,
-                    borderRadius: '3px 3px 0 0',
-                  },
                 }}
               >
-                <Tab label="Upcoming" value="upcoming" />
-                <Tab label="Completed" value="completed" />
-                <Tab label="Cancelled" value="cancelled" />
-                <Tab label="All Appointments" value="all" />
-              </Tabs>
-            </Paper>
+                Schedule Appointment
+              </Button>
+              <Button
+                variant="outlined"
+                size="medium"
+                startIcon={<Assessment />}
+                sx={{
+                  color: 'white',
+                  borderColor: 'rgba(255, 255, 255, 0.5)',
+                  px: 3,
+                  py: 1,
+                  '&:hover': {
+                    borderColor: 'white',
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  }
+                }}
+              >
+                Appointment Analytics
+              </Button>
+            </Box>
+            </Box>
 
+            {/* Right container: AI Assistant */}
+            <Box sx={{
+              width: { xs: '100%', md: '280px', lg: '320px' },
+              minWidth: { md: '280px' },
+              flexShrink: 0,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+            }}>
             {/* Spacer */}
             <Box sx={{ flexGrow: 1 }} />
-
-            {/* Right: Controls */}
-            <Box sx={{
-              display: 'flex',
-              gap: 1.5,
-              alignItems: 'center',
-              flexWrap: 'wrap',
-            }}>
-              {/* Scope Dropdown */}
-              <FormControl size="small" variant="standard" sx={{ minWidth: 110 }}>
-                <Select
-                  value={scope}
-                  onChange={(e) => setScope(e.target.value)}
-                  disableUnderline
-                  renderValue={(value) => {
-                    const labels = {
-                      brokerage: 'Brokerage',
-                      team: 'Team',
-                      user: 'User',
-                    };
-                    return (
-                      <Typography variant="body2" sx={{
-                        fontSize: '0.875rem',
-                        fontWeight: 500,
-                        color: 'text.primary',
-                      }}>
-                        {labels[value]}
-                      </Typography>
-                    );
-                  }}
-                  sx={{
-                    backgroundColor: 'transparent',
-                    borderRadius: 1,
-                    px: 1.5,
-                    py: 0.5,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    '&:hover': {
-                      backgroundColor: alpha('#000', 0.04),
-                      borderColor: 'primary.main',
-                    },
-                    '& .MuiSelect-select': {
-                      paddingRight: '32px !important',
-                      display: 'flex',
-                      alignItems: 'center',
-                    },
-                  }}
-                >
-                  <MenuItem value="brokerage">Brokerage</MenuItem>
-                  <MenuItem value="team">Team</MenuItem>
-                  <MenuItem value="user">User</MenuItem>
-                </Select>
-              </FormControl>
-
-              {/* Sort Dropdown */}
-              <FormControl size="small" variant="standard" sx={{ minWidth: 140 }}>
-                <Select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  disableUnderline
-                  startAdornment={
-                    <Sort sx={{ mr: 1, fontSize: '1.125rem', color: 'text.secondary' }} />
-                  }
-                  renderValue={(value) => {
-                    const labels = {
-                      appointment_date: 'Appointment Date',
-                      created_at: 'Date Created',
-                      client_name: 'Client Name',
-                      appointment_type: 'Type',
-                      status: 'Status',
-                    };
-                    return (
-                      <Typography variant="body2" sx={{
-                        fontSize: '0.875rem',
-                        fontWeight: 500,
-                        color: 'text.primary',
-                      }}>
-                        {labels[value]}
-                      </Typography>
-                    );
-                  }}
-                  sx={{
-                    backgroundColor: 'transparent',
-                    borderRadius: 1,
-                    px: 1.5,
-                    py: 0.5,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    '&:hover': {
-                      backgroundColor: alpha('#000', 0.04),
-                      borderColor: 'primary.main',
-                    },
-                    '& .MuiSelect-select': {
-                      paddingRight: '32px !important',
-                      display: 'flex',
-                      alignItems: 'center',
-                    },
-                  }}
-                >
-                  <MenuItem value="appointment_date">Appointment Date</MenuItem>
-                  <MenuItem value="created_at">Date Created</MenuItem>
-                  <MenuItem value="client_name">Client Name</MenuItem>
-                  <MenuItem value="appointment_type">Type</MenuItem>
-                  <MenuItem value="status">Status</MenuItem>
-                </Select>
-              </FormControl>
-
-              {/* View Mode & Calendar Selector */}
-              <ToggleButtonGroup
-                value={showCalendar ? 'calendar' : viewMode}
-                exclusive
-                onChange={(e, newValue) => {
-                  if (newValue !== null) {
-                    if (newValue === 'calendar') {
-                      setShowCalendar(true);
-                    } else {
-                      setShowCalendar(false);
-                      setViewMode(newValue);
-                    }
-                  }
-                }}
-                size="small"
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Card
+                elevation={0}
                 sx={{
-                  '& .MuiToggleButton-root': {
-                    px: 1.5,
-                    py: 0.5,
-                    textTransform: 'none',
-                    fontWeight: 500,
-                    height: '32px',
-                  },
-                }}
-              >
-                <ToggleButton value="small" title="Grid view (V)">
-                  <Box sx={{ display: 'flex', gap: 0.4 }}>
-                    <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                    <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                    <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                    <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  </Box>
-                </ToggleButton>
-                <ToggleButton value="large" title="Full width view (V)">
-                  <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                </ToggleButton>
-                <ToggleButton value="calendar" title="Calendar view">
-                  <CalendarToday sx={{ fontSize: 16 }} />
-                </ToggleButton>
-              </ToggleButtonGroup>
-
-              {/* Archive/Trash Icon */}
-              <IconButton
-                size="small"
-                onClick={() => setSelectedStatus('archived')}
-                sx={{
-                  width: 36,
-                  height: 36,
-                  backgroundColor: selectedStatus === 'archived' ? 'warning.main' : alpha('#000', 0.06),
-                  color: selectedStatus === 'archived' ? 'white' : 'text.secondary',
+                  aspectRatio: { xs: 'auto', md: '1 / 1' },
+                  minHeight: { xs: 250, md: 320 },
+                  position: 'relative',
+                  overflow: 'hidden',
+                  background: 'linear-gradient(135deg, rgba(122, 62, 0, 0.12) 0%, rgba(163, 93, 0, 0.08) 100%)',
+                  backdropFilter: 'blur(10px)',
+                  border: '2px dashed rgba(255, 255, 255, 0.3)',
+                  borderRadius: 3,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.3s ease',
                   '&:hover': {
-                    backgroundColor: selectedStatus === 'archived' ? 'warning.dark' : alpha('#000', 0.1),
-                  },
-                  transition: 'all 0.2s',
-                }}
-              >
-                <Badge badgeContent={archivedCount} color="error" max={99}>
-                  <DeleteIcon sx={{ fontSize: 20 }} />
-                </Badge>
-              </IconButton>
-            </Box>
-          </Box>
-
-          {/* Mobile/Tablet Layout */}
-          <Box sx={{ display: { xs: 'block', md: 'none' } }}>
-            {/* Tab Bar - Mobile/Tablet */}
-            <Paper
-              elevation={0}
-              sx={{
-                backgroundColor: 'background.paper',
-                borderRadius: '8px 8px 0 0',
-                borderBottom: '1px solid',
-                borderColor: 'divider',
-                mb: 0,
-              }}
-            >
-              <Tabs
-                value={selectedStatus}
-                onChange={(e, newValue) => setSelectedStatus(newValue)}
-                variant="scrollable"
-                scrollButtons="auto"
-                sx={{
-                  '& .MuiTab-root': {
-                    textTransform: 'none',
-                    fontSize: { xs: '0.875rem', sm: '0.9375rem' },
-                    fontWeight: 500,
-                    minHeight: { xs: 48, sm: 52 },
-                    px: { xs: 2, sm: 2.5 },
-                  },
-                  '& .Mui-selected': {
-                    fontWeight: 600,
-                    color: 'primary.main',
-                  },
-                  '& .MuiTabs-indicator': {
-                    height: 3,
-                    borderRadius: '3px 3px 0 0',
-                  },
-                }}
-              >
-                <Tab label="Upcoming" value="upcoming" />
-                <Tab label="Completed" value="completed" />
-                <Tab label="Cancelled" value="cancelled" />
-                <Tab label="All" value="all" />
-                {/* Archive Badge for Mobile */}
-                <Tab
-                  label={
-                    <Badge badgeContent={archivedCount} color="error" max={99}>
-                      <span>Archived</span>
-                    </Badge>
+                    border: '2px dashed rgba(255, 255, 255, 0.5)',
+                    background: 'linear-gradient(135deg, rgba(122, 62, 0, 0.18) 0%, rgba(163, 93, 0, 0.12) 100%)',
                   }
-                  value="archived"
-                />
-              </Tabs>
-            </Paper>
-
-            {/* Mobile/Tablet Filter Controls */}
-            <Box
-              sx={{
-                backgroundColor: alpha('#f5f5f5', 0.4),
-                borderRadius: '0 0 8px 8px',
-                p: 2,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 2,
-              }}
-            >
-              {/* Sort and View Controls */}
-              <Box sx={{
-                display: 'flex',
-                gap: 1.5,
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}>
-                {/* Scope Dropdown */}
-                <FormControl
-                  size="small"
-                  variant="outlined"
-                  sx={{
-                    flex: '0 1 auto',
-                    minWidth: 100,
-                    '& .MuiOutlinedInput-root': {
-                      backgroundColor: 'white',
-                      borderRadius: 2,
-                    },
-                  }}
-                >
-                  <Select
-                    value={scope}
-                    onChange={(e) => setScope(e.target.value)}
-                    renderValue={(value) => {
-                      const labels = {
-                        brokerage: 'Brokerage',
-                        team: 'Team',
-                        user: 'User',
-                      };
-                      return (
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Typography variant="body2" sx={{ fontSize: '0.875rem', fontWeight: 500 }}>
-                            {labels[value]}
-                          </Typography>
-                        </Box>
-                      );
-                    }}
-                  >
-                    <MenuItem value="brokerage">Brokerage</MenuItem>
-                    <MenuItem value="team">Team</MenuItem>
-                    <MenuItem value="user">User</MenuItem>
-                  </Select>
-                </FormControl>
-
-                {/* Sort Dropdown */}
-                <FormControl
-                  size="small"
-                  variant="outlined"
-                  sx={{
-                    flex: '1 1 auto',
-                    maxWidth: { xs: '60%', sm: '200px' },
-                    '& .MuiOutlinedInput-root': {
-                      backgroundColor: 'white',
-                      borderRadius: 2,
-                    },
-                  }}
-                >
-                  <Select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    startAdornment={<Sort sx={{ mr: 1, fontSize: '1.125rem', color: 'text.secondary' }} />}
-                    renderValue={(value) => {
-                      const labels = {
-                        appointment_date: 'Appointment Date',
-                        created_at: 'Date Created',
-                        client_name: 'Client Name',
-                        appointment_type: 'Type',
-                        status: 'Status',
-                      };
-                      return (
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Typography variant="body2" sx={{ fontSize: '0.875rem', fontWeight: 500 }}>
-                            Sort: {labels[value]}
-                          </Typography>
-                        </Box>
-                      );
-                    }}
-                  >
-                    <MenuItem value="appointment_date">Appointment Date</MenuItem>
-                    <MenuItem value="created_at">Date Created</MenuItem>
-                    <MenuItem value="client_name">Client Name</MenuItem>
-                    <MenuItem value="appointment_type">Type</MenuItem>
-                    <MenuItem value="status">Status</MenuItem>
-                  </Select>
-                </FormControl>
-
-                {/* View Mode & Calendar - Mobile */}
-                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                  <ToggleButtonGroup
-                    value={showCalendar ? 'calendar' : viewMode}
-                    exclusive
-                    onChange={(e, newValue) => {
-                      if (newValue !== null) {
-                        if (newValue === 'calendar') {
-                          setShowCalendar(true);
-                        } else {
-                          setShowCalendar(false);
-                          setViewMode(newValue);
-                        }
-                      }
-                    }}
-                    size="small"
-                    aria-label="View mode and calendar selection"
-                    sx={{
-                      '& .MuiToggleButton-root': {
+                }}
+              >
+                <CardContent sx={{ textAlign: 'center', p: 3 }}>
+                  <Box>
+                    <Box
+                      sx={{
+                        width: 64,
+                        height: 64,
+                        borderRadius: '50%',
+                        background: 'rgba(255, 255, 255, 0.15)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        margin: '0 auto',
+                        mb: 2,
+                      }}
+                    >
+                      <Typography sx={{ fontSize: '2rem' }}>🤖</Typography>
+                    </Box>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        color: 'rgba(255, 255, 255, 0.95)',
+                        fontWeight: 700,
+                        mb: 1,
+                        letterSpacing: '0.02em',
+                      }}
+                    >
+                      AI Appointment Manager
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: 'rgba(255, 255, 255, 0.7)',
+                        mb: 2,
+                        fontSize: '0.875rem',
+                      }}
+                    >
+                      Hire an AI assistant to schedule appointments, send reminders, and manage your calendar.
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: 'inline-block',
                         px: 2,
-                        py: 0.5,
-                        textTransform: 'none',
-                        fontWeight: 500,
-                        height: '32px',
-                      },
-                    }}
-                  >
-                    <ToggleButton
-                      value="small"
-                      aria-label="Grid view"
-                      title="Grid view (V)"
+                        py: 0.75,
+                        borderRadius: 2,
+                        background: 'rgba(255, 255, 255, 0.2)',
+                        backdropFilter: 'blur(5px)',
+                      }}
                     >
-                      <Box sx={{ display: 'flex', gap: 0.4 }}>
-                        <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                        <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                        <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                        <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                      </Box>
-                    </ToggleButton>
-                    <ToggleButton
-                      value="large"
-                      aria-label="Full width view"
-                      title="Full width view (V)"
-                    >
-                      <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                    </ToggleButton>
-                    <ToggleButton
-                      value="calendar"
-                      aria-label="Calendar view"
-                      title="Calendar view"
-                    >
-                      <CalendarToday sx={{ fontSize: 16 }} />
-                    </ToggleButton>
-                  </ToggleButtonGroup>
-                </Box>
-              </Box>
-            </Box>
+                      <Typography
+                        variant="caption"
+                        sx={{
+                          color: 'white',
+                          fontWeight: 600,
+                          letterSpacing: '0.1em',
+                          textTransform: 'uppercase',
+                          fontSize: '0.75rem',
+                        }}
+                      >
+                        Coming Soon
+                      </Typography>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            </motion.div>
+            {/* Spacer */}
+            <Box sx={{ flexGrow: 1 }} />
           </Box>
-        </Box>
+          </Box>
+        </AppointmentHeroCard>
 
-        {/* Appointments Grid */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr', md: viewMode === 'small' ? 'repeat(2, 1fr)' : '1fr', lg: viewMode === 'small' ? 'repeat(4, 1fr)' : '1fr' }, gap: 3, width: '100%' }}>
-          <AnimatePresence>
-            {(() => {
-              const now = new Date();
-              const { startDate, endDate } = dateRange;
+        {/* Navigation Bar */}
+        <AppointmentNavigation
+          selectedStatus={selectedStatus}
+          setSelectedStatus={setSelectedStatus}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+          scope={scope}
+          setScope={setScope}
+          setCalendarDialogOpen={setCalendarDialogOpen}
+          archivedCount={archivedCount}
+          showCalendar={showCalendar}
+          setShowCalendar={setShowCalendar}
+        />
 
-              // Filter by date range first
-              const dateFiltered = appointments.filter(a => {
-                const apptDate = new Date(a.appointment_date || a.appointment_date);
-                return apptDate >= startDate && apptDate <= endDate;
-              });
-
-              // Then filter by status
-              const filtered = dateFiltered.filter(a => {
-                const apptDate = new Date(a.appointment_date || a.appointment_date);
-                const status = (a.status || a.appointment_status || '').toLowerCase();
-
-                if (selectedStatus === 'upcoming') return apptDate >= now && status !== 'cancelled';
-                if (selectedStatus === 'completed') return status === 'completed';
-                if (selectedStatus === 'cancelled') return status === 'cancelled';
-                return true; // 'all'
-              });
-
-              const sorted = [...filtered].sort((a, b) => {
-                if (sortBy === 'appointment_date') return new Date(b.appointment_date || b.appointment_date) - new Date(a.appointment_date || a.appointment_date);
-                if (sortBy === 'created_at') return new Date(b.created_at || b.created_at) - new Date(a.created_at || a.created_at);
-                if (sortBy === 'client_name') return (a.client_name || '').localeCompare(b.client_name || '');
-                if (sortBy === 'appointment_type') return (a.appointment_type || '').localeCompare(b.appointment_type || '');
-                if (sortBy === 'appointment_status') return (a.status || '').localeCompare(b.status || '');
-                return 0;
-              });
-
-              if (sorted.length === 0) return <Paper sx={{ p: 6, height: 240, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', background: t => alpha(t.palette.primary.main, 0.03), border: t => `1px solid ${alpha(t.palette.primary.main, 0.1)}`, gridColumn: '1 / -1' }}><Typography variant="h6" color="textSecondary">No {selectedStatus} appointments found</Typography></Paper>;
-
-              return sorted.map((a, i) => (
-                <motion.div
-                  key={a.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3, delay: i * 0.05 }}
-                >
-                  <AppointmentCard
-                    appointment={a}
-                    viewMode={viewMode}
-                    index={i}
-                  />
-                </motion.div>
-              ));
-            })()}
-          </AnimatePresence>
-        </Box>
+        {/* Main Content */}
+        <AppointmentContent
+          loading={loading}
+          selectedStatus={selectedStatus}
+          viewMode={viewMode}
+          sortedAppointments={sortedAppointments}
+          archivedAppointments={archivedAppointments}
+          handleAppointmentClick={handlers.handleAppointmentClick}
+          handleArchive={handlers.handleArchive}
+          handleRestore={handlers.handleRestore}
+          handleUpdateAppointment={handlers.handleUpdateAppointment}
+          loadingMore={loadingMore}
+          hasMorePages={hasMorePages}
+          handleLoadMore={loadMoreAppointments}
+          selectedArchivedIds={selectedArchivedIds}
+          setSelectedArchivedIds={setSelectedArchivedIds}
+          handleBatchDelete={handlers.handleBatchDelete}
+          batchDeleting={batchDeleting}
+          handleSelectAll={handleSelectAll}
+          totalCount={totalCount}
+        />
 
         {/* New Appointment Modal */}
         <NewAppointmentModal
