@@ -182,6 +182,246 @@ const EscrowsDashboard = () => {
     errors: networkMonitor.getErrors()
   });
 
+  // Define core functions BEFORE useEscrowHandlers to avoid temporal dead zone
+  // These functions are used by the hook and must be defined first
+
+  const calculateStats = (escrowData, statusFilter = 'active') => {
+    // Safety check for escrowData or if it's archived with no data
+    if (!escrowData || !Array.isArray(escrowData) || (statusFilter === 'archived' && escrowData.length === 0)) {
+      setStats({
+        totalEscrows: 0,
+        activeEscrows: 0,
+        totalVolume: 0,
+        projectedCommission: 0,
+        closedThisMonth: 0,
+        avgDaysToClose: 0,
+        grossCommission: 0,
+        myCommission: 0,
+        ytdClosed: 0,
+        ytdVolume: 0,
+        ytdChange: 0,
+        monthClosed: 0,
+        monthVolume: 0,
+        monthChange: 0,
+        weekProjected: 0,
+        weekVolume: 0,
+        weekChange: 0,
+        closingThisWeek: 0,
+        pendingActions: 0,
+      });
+      return;
+    }
+    
+    let filteredEscrows = [];
+    
+    // Filter based on selected status
+    switch (statusFilter) {
+      case 'active':
+        filteredEscrows = escrowData.filter(e => 
+          e.escrowStatus === 'Active Under Contract' || 
+          e.escrowStatus === 'active under contract' ||
+          e.escrowStatus === 'Pending' || 
+          e.escrowStatus === 'pending' ||
+          e.escrowStatus === 'Active' || 
+          e.escrowStatus === 'active'
+        );
+        break;
+      case 'closed':
+        filteredEscrows = escrowData.filter(e => 
+          e.escrowStatus === 'Closed' || 
+          e.escrowStatus === 'closed' ||
+          e.escrowStatus === 'Completed' || 
+          e.escrowStatus === 'completed'
+        );
+        break;
+      case 'cancelled':
+        filteredEscrows = escrowData.filter(e =>
+          e.escrowStatus === 'Cancelled' ||
+          e.escrowStatus === 'cancelled' ||
+          e.escrowStatus === 'Withdrawn' ||
+          e.escrowStatus === 'withdrawn' ||
+          e.escrowStatus === 'Expired' ||
+          e.escrowStatus === 'expired'
+        );
+        break;
+      case 'archived':
+        // For archived, just use all the data since it's already filtered
+        filteredEscrows = escrowData;
+        break;
+      default:
+        filteredEscrows = escrowData;
+    }
+    
+    // Calculate stats for filtered escrows
+    const totalVolume = filteredEscrows.reduce((sum, e) => sum + Number(e.purchasePrice || 0), 0);
+    const myCommission = filteredEscrows.reduce((sum, e) => sum + Number(e.myCommission || 0), 0);
+    
+    // Calculate gross commission (assuming 5% total commission rate if not specified)
+    const grossCommission = filteredEscrows.reduce((sum, e) => {
+      const purchasePrice = Number(e.purchasePrice || 0);
+      const commissionRate = Number(e.totalCommissionRate || 5) / 100;
+      return sum + (purchasePrice * commissionRate);
+    }, 0);
+    
+    // Calculate time-based stats
+    const now = new Date();
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfWeek = new Date(now);
+    startOfWeek.setDate(now.getDate() - now.getDay());
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(startOfWeek.getDate() + 6);
+    
+    // YTD Stats
+    const ytdEscrows = escrowData.filter(e => {
+      const closeDate = e.actualCoeDate || e.closingDate;
+      if (!closeDate) return false;
+      const date = new Date(closeDate);
+      return date >= startOfYear && (e.escrowStatus === 'Closed' || e.escrowStatus === 'closed');
+    });
+    const ytdClosed = ytdEscrows.length;
+    const ytdVolume = ytdEscrows.reduce((sum, e) => sum + Number(e.purchasePrice || 0), 0);
+    
+    // Calculate YTD change (mock data for now, would need last year's data)
+    const ytdChange = 15.2; // Mock: 15.2% increase
+    
+    // Monthly Stats
+    const monthEscrows = escrowData.filter(e => {
+      const closeDate = e.actualCoeDate || e.closingDate;
+      if (!closeDate) return false;
+      const date = new Date(closeDate);
+      return date >= startOfMonth && (e.escrowStatus === 'Closed' || e.escrowStatus === 'closed');
+    });
+    const monthClosed = monthEscrows.length;
+    const monthVolume = monthEscrows.reduce((sum, e) => sum + Number(e.purchasePrice || 0), 0);
+    const monthChange = -8.5; // Mock: 8.5% decrease from last month
+    
+    // Weekly Projected Stats
+    const weekEscrows = escrowData.filter(e => {
+      const closeDate = e.scheduledCoeDate || e.closingDate;
+      if (!closeDate) return false;
+      const date = new Date(closeDate);
+      return date >= startOfWeek && date <= endOfWeek && 
+        (e.escrowStatus === 'Active Under Contract' || e.escrowStatus === 'active under contract' ||
+         e.escrowStatus === 'Pending' || e.escrowStatus === 'pending');
+    });
+    const weekProjected = weekEscrows.length;
+    const weekVolume = weekEscrows.reduce((sum, e) => sum + Number(e.purchasePrice || 0), 0);
+    const weekChange = 23.8; // Mock: 23.8% increase from last week
+    
+    // Closing this week count
+    const closingThisWeek = weekEscrows.length;
+    
+    // Pending actions (mock for now)
+    const pendingActions = 5;
+    
+    setStats({
+      totalEscrows: filteredEscrows.length,
+      activeEscrows: filteredEscrows.length, // For backward compatibility
+      totalVolume,
+      projectedCommission: myCommission, // For backward compatibility
+      closedThisMonth: monthClosed,
+      avgDaysToClose: Math.round(filteredEscrows.reduce((sum, e) => sum + (Number(e.daysToClose) || 0), 0) / (filteredEscrows.length || 1)),
+      grossCommission,
+      myCommission,
+      ytdClosed,
+      ytdVolume,
+      ytdChange,
+      monthClosed,
+      monthVolume,
+      monthChange,
+      weekProjected,
+      weekVolume,
+      weekChange,
+      closingThisWeek,
+      pendingActions,
+    });
+  };
+
+  const generateChartData = (escrowData) => {
+    const months = generateChartDataUtil(escrowData);
+    setChartData(months);
+    return months;
+  };
+
+  const fetchEscrows = async (pageNum = 1, appendData = false) => {
+    try {
+      // Show appropriate loading state
+      if (appendData) {
+        setLoadingMore(true);
+      } else {
+        setLoading(true);
+        setCurrentPage(1);
+      }
+
+      // console.log(`Fetching escrows... (page ${pageNum})`);
+
+      // Fetch escrows with pagination (50 per page for optimal performance)
+      // PHASE 6: Include scope filter (brokerage, team, user)
+      // Only include archived if viewing archived status
+      const response = await escrowsAPI.getAll({
+        includeArchived: selectedStatus === 'archived',
+        archived: selectedStatus === 'archived' ? 'true' : undefined,
+        page: pageNum,
+        limit: 50,
+        scope: scope // Pass scope from state
+      });
+      // console.log('API Response:', response);
+
+      if (response.success) {
+        const allData = response.data.escrows || response.data || [];
+        const pagination = response.data.pagination || {};
+        const totalPages = pagination.totalPages || 1;
+        const totalRecords = pagination.total || allData.length;
+        const hasMore = pageNum < totalPages;
+
+        // Backend now handles filtering by selectedStatus, so we just use the data as-is
+        // If viewing archived, allData will be archived escrows
+        // If viewing active/closed/cancelled/all, allData will be non-archived escrows
+        const isViewingArchived = selectedStatus === 'archived';
+
+        // console.log(`Page ${pageNum}/${totalPages} - Total: ${totalRecords}, Loaded: ${allData.length}, Status: ${selectedStatus}`);
+
+        // Update state based on whether we're appending or replacing
+        if (appendData) {
+          if (isViewingArchived) {
+            setArchivedEscrows(prev => [...prev, ...allData]);
+          } else {
+            setEscrows(prev => [...prev, ...allData]);
+          }
+        } else {
+          if (isViewingArchived) {
+            setArchivedEscrows(allData);
+            setEscrows([]); // Clear active escrows when viewing archived
+          } else {
+            setEscrows(allData);
+            setArchivedEscrows([]); // Clear archived when viewing active
+          }
+        }
+
+        // Update pagination state
+        setCurrentPage(pageNum);
+        setHasMorePages(hasMore);
+        setTotalCount(totalRecords);
+        setArchivedCount(isViewingArchived ? totalRecords : 0);
+
+        // Calculate stats from currently loaded data only
+        // This allows instant display without waiting for all pages
+        const currentEscrows = isViewingArchived ? [] : (appendData ? [...escrows, ...allData] : allData);
+        calculateStats(currentEscrows, selectedStatus);
+        generateChartData(currentEscrows);
+      } else {
+        console.error('API returned success: false', response);
+      }
+    } catch (error) {
+      console.error('Error fetching escrows:', error.message);
+      console.error('Full error:', error);
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
   // Use the custom hook for event handlers
   const {
     handleEscrowClick,
@@ -377,83 +617,7 @@ const EscrowsDashboard = () => {
     };
   }, [isConnected, escrows, selectedStatus]);
 
-  const fetchEscrows = async (pageNum = 1, appendData = false) => {
-    try {
-      // Show appropriate loading state
-      if (appendData) {
-        setLoadingMore(true);
-      } else {
-        setLoading(true);
-        setCurrentPage(1);
-      }
 
-      // console.log(`Fetching escrows... (page ${pageNum})`);
-
-      // Fetch escrows with pagination (50 per page for optimal performance)
-      // PHASE 6: Include scope filter (brokerage, team, user)
-      // Only include archived if viewing archived status
-      const response = await escrowsAPI.getAll({
-        includeArchived: selectedStatus === 'archived',
-        archived: selectedStatus === 'archived' ? 'true' : undefined,
-        page: pageNum,
-        limit: 50,
-        scope: scope // Pass scope from state
-      });
-      // console.log('API Response:', response);
-
-      if (response.success) {
-        const allData = response.data.escrows || response.data || [];
-        const pagination = response.data.pagination || {};
-        const totalPages = pagination.totalPages || 1;
-        const totalRecords = pagination.total || allData.length;
-        const hasMore = pageNum < totalPages;
-
-        // Backend now handles filtering by selectedStatus, so we just use the data as-is
-        // If viewing archived, allData will be archived escrows
-        // If viewing active/closed/cancelled/all, allData will be non-archived escrows
-        const isViewingArchived = selectedStatus === 'archived';
-
-        // console.log(`Page ${pageNum}/${totalPages} - Total: ${totalRecords}, Loaded: ${allData.length}, Status: ${selectedStatus}`);
-
-        // Update state based on whether we're appending or replacing
-        if (appendData) {
-          if (isViewingArchived) {
-            setArchivedEscrows(prev => [...prev, ...allData]);
-          } else {
-            setEscrows(prev => [...prev, ...allData]);
-          }
-        } else {
-          if (isViewingArchived) {
-            setArchivedEscrows(allData);
-            setEscrows([]); // Clear active escrows when viewing archived
-          } else {
-            setEscrows(allData);
-            setArchivedEscrows([]); // Clear archived when viewing active
-          }
-        }
-
-        // Update pagination state
-        setCurrentPage(pageNum);
-        setHasMorePages(hasMore);
-        setTotalCount(totalRecords);
-        setArchivedCount(isViewingArchived ? totalRecords : 0);
-
-        // Calculate stats from currently loaded data only
-        // This allows instant display without waiting for all pages
-        const currentEscrows = isViewingArchived ? [] : (appendData ? [...escrows, ...allData] : allData);
-        calculateStats(currentEscrows, selectedStatus);
-        generateChartData(currentEscrows);
-      } else {
-        console.error('API returned success: false', response);
-      }
-    } catch (error) {
-      console.error('Error fetching escrows:', error.message);
-      console.error('Full error:', error);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  };
 
   // Load more escrows (infinite scroll handler)
   const loadMoreEscrows = useCallback(() => {
@@ -463,165 +627,10 @@ const EscrowsDashboard = () => {
     }
   }, [loadingMore, hasMorePages, currentPage]);
 
-  const calculateStats = (escrowData, statusFilter = 'active') => {
-    // Safety check for escrowData or if it's archived with no data
-    if (!escrowData || !Array.isArray(escrowData) || (statusFilter === 'archived' && escrowData.length === 0)) {
-      setStats({
-        totalEscrows: 0,
-        activeEscrows: 0,
-        totalVolume: 0,
-        projectedCommission: 0,
-        closedThisMonth: 0,
-        avgDaysToClose: 0,
-        grossCommission: 0,
-        myCommission: 0,
-        ytdClosed: 0,
-        ytdVolume: 0,
-        ytdChange: 0,
-        monthClosed: 0,
-        monthVolume: 0,
-        monthChange: 0,
-        weekProjected: 0,
-        weekVolume: 0,
-        weekChange: 0,
-        closingThisWeek: 0,
-        pendingActions: 0,
-      });
-      return;
-    }
-    
-    let filteredEscrows = [];
-    
-    // Filter based on selected status
-    switch (statusFilter) {
-      case 'active':
-        filteredEscrows = escrowData.filter(e => 
-          e.escrowStatus === 'Active Under Contract' || 
-          e.escrowStatus === 'active under contract' ||
-          e.escrowStatus === 'Pending' || 
-          e.escrowStatus === 'pending' ||
-          e.escrowStatus === 'Active' || 
-          e.escrowStatus === 'active'
-        );
-        break;
-      case 'closed':
-        filteredEscrows = escrowData.filter(e => 
-          e.escrowStatus === 'Closed' || 
-          e.escrowStatus === 'closed' ||
-          e.escrowStatus === 'Completed' || 
-          e.escrowStatus === 'completed'
-        );
-        break;
-      case 'cancelled':
-        filteredEscrows = escrowData.filter(e =>
-          e.escrowStatus === 'Cancelled' ||
-          e.escrowStatus === 'cancelled' ||
-          e.escrowStatus === 'Withdrawn' ||
-          e.escrowStatus === 'withdrawn' ||
-          e.escrowStatus === 'Expired' ||
-          e.escrowStatus === 'expired'
-        );
-        break;
-      case 'archived':
-        // For archived, just use all the data since it's already filtered
-        filteredEscrows = escrowData;
-        break;
-      default:
-        filteredEscrows = escrowData;
-    }
-    
-    // Calculate stats for filtered escrows
-    const totalVolume = filteredEscrows.reduce((sum, e) => sum + Number(e.purchasePrice || 0), 0);
-    const myCommission = filteredEscrows.reduce((sum, e) => sum + Number(e.myCommission || 0), 0);
-    
-    // Calculate gross commission (assuming 5% total commission rate if not specified)
-    const grossCommission = filteredEscrows.reduce((sum, e) => {
-      const purchasePrice = Number(e.purchasePrice || 0);
-      const commissionRate = Number(e.totalCommissionRate || 5) / 100;
-      return sum + (purchasePrice * commissionRate);
-    }, 0);
-    
-    // Calculate time-based stats
-    const now = new Date();
-    const startOfYear = new Date(now.getFullYear(), 0, 1);
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - now.getDay());
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
-    
-    // YTD Stats
-    const ytdEscrows = escrowData.filter(e => {
-      const closeDate = e.actualCoeDate || e.closingDate;
-      if (!closeDate) return false;
-      const date = new Date(closeDate);
-      return date >= startOfYear && (e.escrowStatus === 'Closed' || e.escrowStatus === 'closed');
-    });
-    const ytdClosed = ytdEscrows.length;
-    const ytdVolume = ytdEscrows.reduce((sum, e) => sum + Number(e.purchasePrice || 0), 0);
-    
-    // Calculate YTD change (mock data for now, would need last year's data)
-    const ytdChange = 15.2; // Mock: 15.2% increase
-    
-    // Monthly Stats
-    const monthEscrows = escrowData.filter(e => {
-      const closeDate = e.actualCoeDate || e.closingDate;
-      if (!closeDate) return false;
-      const date = new Date(closeDate);
-      return date >= startOfMonth && (e.escrowStatus === 'Closed' || e.escrowStatus === 'closed');
-    });
-    const monthClosed = monthEscrows.length;
-    const monthVolume = monthEscrows.reduce((sum, e) => sum + Number(e.purchasePrice || 0), 0);
-    const monthChange = -8.5; // Mock: 8.5% decrease from last month
-    
-    // Weekly Projected Stats
-    const weekEscrows = escrowData.filter(e => {
-      const closeDate = e.scheduledCoeDate || e.closingDate;
-      if (!closeDate) return false;
-      const date = new Date(closeDate);
-      return date >= startOfWeek && date <= endOfWeek && 
-        (e.escrowStatus === 'Active Under Contract' || e.escrowStatus === 'active under contract' ||
-         e.escrowStatus === 'Pending' || e.escrowStatus === 'pending');
-    });
-    const weekProjected = weekEscrows.length;
-    const weekVolume = weekEscrows.reduce((sum, e) => sum + Number(e.purchasePrice || 0), 0);
-    const weekChange = 23.8; // Mock: 23.8% increase from last week
-    
-    // Closing this week count
-    const closingThisWeek = weekEscrows.length;
-    
-    // Pending actions (mock for now)
-    const pendingActions = 5;
-    
-    setStats({
-      totalEscrows: filteredEscrows.length,
-      activeEscrows: filteredEscrows.length, // For backward compatibility
-      totalVolume,
-      projectedCommission: myCommission, // For backward compatibility
-      closedThisMonth: monthClosed,
-      avgDaysToClose: Math.round(filteredEscrows.reduce((sum, e) => sum + (Number(e.daysToClose) || 0), 0) / (filteredEscrows.length || 1)),
-      grossCommission,
-      myCommission,
-      ytdClosed,
-      ytdVolume,
-      ytdChange,
-      monthClosed,
-      monthVolume,
-      monthChange,
-      weekProjected,
-      weekVolume,
-      weekChange,
-      closingThisWeek,
-      pendingActions,
-    });
-  };
+
 
   // Wrapper function that uses the utility and updates state
-  const generateChartData = (escrowData) => {
-    const months = generateChartDataUtil(escrowData);
-    setChartData(months);
-    return months;
-  };
+
 
   const handleCreateNew = () => {
     setShowNewEscrowModal(true);
