@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import {
   Box,
-  Container,
-  Grid,
   CircularProgress,
   Alert
 } from '@mui/material';
@@ -28,23 +26,51 @@ import PeopleDetailModal from './modals/PeopleDetailModal';
 import DocumentsDetailModal from './modals/DocumentsDetailModal';
 
 // PHASE 5: F-Pattern Layout (Left Sidebar | Hero + Widgets | Right Sidebar)
-const PageContainer = styled(Container)(({ theme }) => ({
-  padding: theme.spacing(3),
-  maxWidth: 1440,
+const PageContainer = styled(Box)(({ theme }) => ({
+  width: '100%',
+  maxWidth: '100vw',
+  padding: theme.spacing(2),
+  height: 'calc(100vh - 64px)', // Account for header
+  overflow: 'hidden',
+  backgroundColor: theme.palette.grey[50],
+}));
+
+const FPatternGrid = styled(Box)(({ theme }) => ({
+  display: 'grid',
+  gridTemplateColumns: '280px 1fr 320px', // Left sidebar | Main | Right sidebar
+  gap: theme.spacing(2),
+  height: '100%',
+  maxWidth: '2400px', // Max width for ultra-wide screens
+  margin: '0 auto',
+  [theme.breakpoints.down('lg')]: {
+    gridTemplateColumns: '240px 1fr 280px', // Smaller sidebars on medium screens
+  },
   [theme.breakpoints.down('md')]: {
-    padding: theme.spacing(2),
+    gridTemplateColumns: '1fr', // Stack on mobile
+    overflowY: 'auto',
   },
 }));
 
-const FPatternGrid = styled(Grid)(({ theme }) => ({
+const MainContent = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  flexDirection: 'column',
   gap: theme.spacing(2),
+  overflowY: 'auto',
+  paddingRight: theme.spacing(1),
 }));
 
-const WidgetsGrid = styled(Grid)(({ theme }) => ({
+const SidebarColumn = styled(Box)(({ theme }) => ({
+  overflowY: 'auto',
+  paddingRight: theme.spacing(1),
+  [theme.breakpoints.down('md')]: {
+    display: 'none', // Hide on mobile
+  },
+}));
+
+const WidgetsGrid = styled(Box)(({ theme }) => ({
   display: 'grid',
   gridTemplateColumns: 'repeat(2, 1fr)',
   gap: theme.spacing(2),
-  marginTop: theme.spacing(2),
   [theme.breakpoints.down('sm')]: {
     gridTemplateColumns: '1fr',
   },
@@ -166,18 +192,18 @@ const EscrowDetailCompact = () => {
   return (
     <PageContainer>
       {/* F-Pattern Layout: Left | Main | Right */}
-      <FPatternGrid container spacing={2}>
-        {/* Left Sidebar (200px) - Quick Actions */}
-        <Grid item xs={12} md={2}>
+      <FPatternGrid>
+        {/* Left Sidebar (280px) - Quick Actions */}
+        <SidebarColumn>
           <LeftSidebar
             escrow={escrow}
             loading={loading}
             onUpdate={handleUpdate}
           />
-        </Grid>
+        </SidebarColumn>
 
         {/* Main Content (flex-grow) - Hero + 4 Widgets */}
-        <Grid item xs={12} md={8}>
+        <MainContent>
           {/* Hero Card (100px height) */}
           <EscrowHeroCard
             escrow={escrow}
@@ -215,16 +241,16 @@ const EscrowDetailCompact = () => {
               }}
             />
           </WidgetsGrid>
-        </Grid>
+        </MainContent>
 
-        {/* Right Sidebar (200px) - Smart Context */}
-        <Grid item xs={12} md={2}>
+        {/* Right Sidebar (320px) - Smart Context */}
+        <SidebarColumn>
           <RightSidebar
             escrow={escrow}
             loading={loading}
             onUpdate={handleUpdate}
           />
-        </Grid>
+        </SidebarColumn>
       </FPatternGrid>
 
       {/* Phase 6: Detail Modals */}
