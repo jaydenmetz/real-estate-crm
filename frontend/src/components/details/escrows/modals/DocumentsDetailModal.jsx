@@ -146,6 +146,7 @@ const DocumentsDetailModal = ({ open, onClose, escrow, category, onUpdate }) => 
   const items = checklistTemplates[category] || [];
 
   const handleCheckboxToggle = (item) => {
+    if (!category) return;
     const categoryKey = category.toLowerCase().replace(/ /g, '_');
     const currentChecklist = checklists[categoryKey] || {};
 
@@ -258,7 +259,7 @@ const DocumentsDetailModal = ({ open, onClose, escrow, category, onUpdate }) => 
     }
   };
 
-  const categoryKey = category.toLowerCase().replace(/ /g, '_');
+  const categoryKey = category ? category.toLowerCase().replace(/ /g, '_') : '';
   const currentChecklist = checklists[categoryKey] || {};
   const completedCount = Object.values(currentChecklist).filter(Boolean).length;
   const totalCount = items.length;

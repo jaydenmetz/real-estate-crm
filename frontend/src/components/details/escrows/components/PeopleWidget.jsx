@@ -105,6 +105,7 @@ const PeopleWidget = ({ escrow, loading, onClick }) => {
   }
 
   const getRoleColor = (role) => {
+    if (!role) return 'default';
     switch (role.toLowerCase()) {
       case 'buyer':
         return 'primary';
