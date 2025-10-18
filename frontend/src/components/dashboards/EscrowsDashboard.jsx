@@ -7,6 +7,15 @@ import EscrowStatsCards from './escrows/EscrowStatsCards';
 import EscrowNavigation from './escrows/EscrowNavigation';
 import EscrowContent from './escrows/EscrowContent';
 import EscrowDebugPanel from './escrows/EscrowDebugPanel';
+import { MiniContactCard, getInitials } from './escrows/EscrowCommonComponents';
+import {
+  detectPresetRange,
+  getDateRangeFromFilter,
+  generateChartData as generateChartDataUtil,
+  filterEscrowsByStatus,
+  sortEscrows
+} from './escrows/escrowUtils';
+import { useEscrowHandlers } from './escrows/useEscrowHandlers';
 import {
   Container,
   Box,
@@ -95,7 +104,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { format as formatDate } from 'date-fns';
-import { safeFormatDate, safeParseDate } from '../../utils/safeDateUtils';
+import { safeFormatDate } from '../../utils/safeDateUtils';
 import { escrowsAPI } from '../../services/api.service';
 import { useAuth } from '../../contexts/AuthContext';
 import CopyButton from '../common/CopyButton';
@@ -104,75 +113,7 @@ import { useWebSocket } from '../../hooks/useWebSocket';
 
 // Styled Components - HeroSection moved to EscrowHeroCard.jsx
 // StatCard component moved to EscrowStatsCards.jsx
-
-// Helper function to get initials from name
-const getInitials = (name) => {
-  if (!name) return '?';
-  const parts = name.trim().split(' ');
-  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
-  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
-};
-
-// Mini contact card component
-const MiniContactCard = ({ title, name, initials, color = '#2196f3' }) => (
-  <Box
-    sx={{
-      display: 'flex',
-      alignItems: 'center',
-      gap: 1,
-      p: 0.75,
-      borderRadius: 1,
-      backgroundColor: alpha(color, 0.05),
-      border: `1px solid ${alpha(color, 0.2)}`,
-      minHeight: 32,
-    }}
-  >
-    <Box
-      sx={{
-        width: 24,
-        height: 24,
-        borderRadius: '50%',
-        backgroundColor: color,
-        color: 'white',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        fontSize: '10px',
-        fontWeight: 700,
-        flexShrink: 0,
-      }}
-    >
-      {initials}
-    </Box>
-    <Box sx={{ minWidth: 0, flex: 1 }}>
-      <Typography 
-        variant="caption" 
-        sx={{ 
-          fontSize: '9px',
-          color: 'text.secondary',
-          display: 'block',
-          lineHeight: 1,
-        }}
-      >
-        {title}
-      </Typography>
-      <Typography 
-        variant="caption" 
-        sx={{ 
-          fontSize: '10px',
-          fontWeight: 600,
-          display: 'block',
-          lineHeight: 1.2,
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-        }}
-      >
-        {name || 'Not Assigned'}
-      </Typography>
-    </Box>
-  </Box>
-);
+// MiniContactCard and getInitials moved to EscrowCommonComponents.jsx
 
 
 const EscrowsDashboard = () => {
@@ -239,6 +180,32 @@ const EscrowsDashboard = () => {
     stats: networkMonitor.getStats(),
     requests: networkMonitor.getRequests(),
     errors: networkMonitor.getErrors()
+  });
+
+  // Use the custom hook for event handlers
+  const {
+    handleEscrowClick,
+    handleNewEscrowSuccess,
+    handleChecklistUpdate,
+    handleArchive,
+    handleRestore,
+    handlePermanentDelete,
+    handleUpdateEscrow,
+    handleBatchDelete,
+  } = useEscrowHandlers({
+    escrows,
+    setEscrows,
+    archivedEscrows,
+    setArchivedEscrows,
+    setArchivedCount,
+    selectedStatus,
+    calculateStats,
+    generateChartData: (escrowData) => {
+      // This wraps the utility function to update local state
+      const chartData = generateChartDataUtil(escrowData);
+      setChartData(chartData);
+    },
+    fetchEscrows,
   });
 
   // Save view mode to localStorage when it changes
@@ -649,408 +616,15 @@ const EscrowsDashboard = () => {
     });
   };
 
+  // Wrapper function that uses the utility and updates state
   const generateChartData = (escrowData) => {
-    // Safety check for escrowData
-    if (!escrowData || !Array.isArray(escrowData)) {
-      setChartData([]);
-      return;
-    }
-    
-    // Generate last 6 months of data
-    const months = [];
-    const now = new Date();
-    
-    for (let i = 5; i >= 0; i--) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthName = date.toLocaleString('default', { month: 'short' });
-      
-      const monthEscrows = []; /* Temporarily disabled date filtering
-      const monthEscrows = escrowData.filter(e => {
-        const escrowDate = safeParseDate(e.acceptanceDate);
-        if (!escrowDate) return false;
-        return escrowDate.getMonth() === date.getMonth() && escrowDate.getFullYear() === date.getFullYear();
-      }); */
-
-      months.push({
-        month: monthName,
-        escrows: monthEscrows.length,
-        volume: monthEscrows.reduce((sum, e) => sum + Number(e.purchasePrice || 0), 0) / 1000000,
-      });
-    }
-    
+    const months = generateChartDataUtil(escrowData);
     setChartData(months);
-  };
-
-  const handleEscrowClick = (escrowId) => {
-    // console.log('Escrow clicked - ID:', escrowId);
-    navigate(`/escrows/${escrowId}`);
+    return months;
   };
 
   const handleCreateNew = () => {
     setShowNewEscrowModal(true);
-  };
-
-  const handleNewEscrowSuccess = (escrowId) => {
-    // Refresh the escrows list
-    fetchEscrows();
-    // Navigate to the new escrow detail page
-    navigate(`/escrows/${escrowId}`);
-  };
-
-  const handleChecklistUpdate = async (escrowId, updatedChecklists) => {
-    try {
-      // Update the checklist via API
-      await escrowsAPI.updateChecklist(escrowId, updatedChecklists);
-
-      // Update local state to reflect the change
-      setEscrows(prevEscrows =>
-        prevEscrows.map(esc =>
-          esc.id === escrowId
-            ? { ...esc, checklists: updatedChecklists }
-            : esc
-        )
-      );
-    } catch (error) {
-      console.error('Failed to update checklist:', error);
-    }
-  };
-
-  const handleArchive = async (escrowId) => {
-    try {
-      // console.log('🗄️ Archiving escrow:', escrowId);
-      const response = await escrowsAPI.archive(escrowId);
-      // console.log('🗄️ Archive API response:', response);
-
-      if (response && response.success) {
-        // Move escrow from active to archived
-        const archivedEscrow = escrows.find(e => e.id === escrowId);
-        // console.log('🗄️ Found escrow to archive:', archivedEscrow);
-
-        if (archivedEscrow) {
-          // Mark as archived
-          archivedEscrow.deleted_at = new Date().toISOString();
-
-          setEscrows(prev => prev.filter(e => e.id !== escrowId));
-          setArchivedEscrows(prev => [...prev, archivedEscrow]);
-          setArchivedCount(prev => prev + 1);
-
-          // Recalculate stats with remaining active escrows
-          const remainingEscrows = escrows.filter(e => e.id !== escrowId);
-          calculateStats(remainingEscrows, selectedStatus);
-          generateChartData(remainingEscrows);
-
-          // console.log('✅ Escrow archived successfully');
-        } else {
-          console.error('❌ Escrow not found in active escrows array');
-        }
-      } else {
-        console.error('❌ Archive failed - API returned success: false', response);
-      }
-    } catch (error) {
-      // Safely log error - make sure we're not rendering an object
-      const errorMessage = error?.message || error?.toString() || 'Unknown error';
-      console.error('❌ Failed to archive escrow:', errorMessage);
-      console.error('Full error object:', error);
-    }
-  };
-
-  const handleRestore = async (escrowId) => {
-    try {
-      const response = await escrowsAPI.restore(escrowId);
-      if (response.success) {
-        // Move escrow from archived to active
-        const restoredEscrow = archivedEscrows.find(e => e.id === escrowId);
-        if (restoredEscrow) {
-          // Remove archived marker
-          delete restoredEscrow.deleted_at;
-          delete restoredEscrow.deletedAt;
-
-          setArchivedEscrows(prev => prev.filter(e => e.id !== escrowId));
-          setEscrows(prev => [...prev, restoredEscrow]);
-          setArchivedCount(prev => Math.max(0, prev - 1));
-
-          // Recalculate stats with updated active escrows
-          const updatedEscrows = [...escrows, restoredEscrow];
-          calculateStats(updatedEscrows, selectedStatus);
-          generateChartData(updatedEscrows);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to restore escrow:', error);
-    }
-  };
-
-  const handleUpdateEscrow = async (escrowId, updateData) => {
-    try {
-      // Normalize field names (convert snake_case to camelCase for consistency)
-      const normalizedData = { ...updateData };
-      if (updateData.escrow_status !== undefined) {
-        normalizedData.escrowStatus = updateData.escrow_status;
-      }
-      if (updateData.purchase_price !== undefined) {
-        normalizedData.purchasePrice = updateData.purchase_price;
-      }
-      if (updateData.my_commission !== undefined) {
-        normalizedData.myCommission = updateData.my_commission;
-      }
-      if (updateData.closing_date !== undefined) {
-        normalizedData.closingDate = updateData.closing_date;
-      }
-      if (updateData.acceptance_date !== undefined) {
-        normalizedData.acceptanceDate = updateData.acceptance_date;
-      }
-
-      // Determine if this update affects stats/charts
-      const affectsStats = Boolean(
-        updateData.purchase_price !== undefined ||
-        updateData.my_commission !== undefined ||
-        updateData.net_commission !== undefined ||
-        updateData.gross_commission !== undefined ||
-        updateData.escrow_status !== undefined ||
-        updateData.closing_date !== undefined
-      );
-
-      // Increment counter to skip next 2 stats recalculations (optimistic + server response)
-      if (!affectsStats) {
-        skipStatsRecalculation.current += 2; // Will skip both optimistic and server response updates
-        // console.log('🚫 Non-stats update detected, skip counter set to:', skipStatsRecalculation.current);
-      }
-
-      // Optimistic update - update UI immediately with normalized data
-      setEscrows((prev) =>
-        prev.map((e) =>
-          e.id === escrowId ? { ...e, ...normalizedData } : e
-        )
-      );
-
-      // Only recalculate stats if the update affects them
-      if (affectsStats) {
-        // console.log('💰 Stats-affecting update detected:', Object.keys(updateData));
-        const optimisticEscrows = escrows.map((e) =>
-          e.id === escrowId ? { ...e, ...normalizedData } : e
-        );
-        calculateStats(optimisticEscrows, selectedStatus);
-        generateChartData(optimisticEscrows);
-        // console.log('✅ Stats recalculated immediately (optimistic)');
-      }
-
-      // Make the API call in the background
-      const response = await escrowsAPI.update(escrowId, updateData);
-
-      if (response.success && response.data) {
-        // Parse JSONB fields from server response (they come as strings from raw DB row)
-        const serverData = { ...response.data };
-        if (typeof serverData.people === 'string') {
-          try {
-            serverData.people = JSON.parse(serverData.people);
-          } catch (e) {
-            console.error('Failed to parse people JSON:', e);
-          }
-        }
-        if (typeof serverData.checklists === 'string') {
-          try {
-            serverData.checklists = JSON.parse(serverData.checklists);
-          } catch (e) {
-            console.error('Failed to parse checklists JSON:', e);
-          }
-        }
-        if (typeof serverData.timeline === 'string') {
-          try {
-            serverData.timeline = JSON.parse(serverData.timeline);
-          } catch (e) {
-            console.error('Failed to parse timeline JSON:', e);
-          }
-        }
-
-        // Update with server response (in case server modified data)
-        setEscrows((prev) =>
-          prev.map((e) =>
-            e.id === escrowId ? { ...e, ...serverData } : e
-          )
-        );
-
-        // Recalculate stats again with server data if needed
-        if (affectsStats) {
-          // console.log('💰 Recalculating stats with server response data');
-          const finalEscrows = escrows.map((e) =>
-            e.id === escrowId ? { ...e, ...response.data } : e
-          );
-          calculateStats(finalEscrows, selectedStatus);
-          generateChartData(finalEscrows);
-          // console.log('✅ Stats recalculated with server data');
-        }
-      } else {
-        console.error('Update failed - no success response');
-        // Rollback optimistic update on failure
-        const response = await escrowsAPI.getAll();
-        if (response.success) {
-          setEscrows(response.data);
-          calculateStats(response.data, selectedStatus);
-          generateChartData(response.data);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to update escrow:', error);
-      // Rollback optimistic update on error
-      try {
-        const response = await escrowsAPI.getAll();
-        if (response.success) {
-          setEscrows(response.data);
-          calculateStats(response.data, selectedStatus);
-          generateChartData(response.data);
-        }
-      } catch (rollbackError) {
-        console.error('Failed to rollback:', rollbackError);
-      }
-    }
-  };
-
-  const handlePermanentDelete = async (escrowId, skipConfirmation = false) => {
-    // Check if running in test mode (can be set via window or query param)
-    const isTestMode = window.location.search.includes('testMode=true') ||
-                       window.__ESCROW_TEST_MODE__ === true ||
-                       skipConfirmation === true;
-
-    // Single confirmation dialog unless in test mode
-    if (!isTestMode && !window.confirm('Are you sure you want to permanently delete this escrow? This action cannot be undone.')) {
-      return;
-    }
-
-    try {
-      // Check if escrow is already archived
-      const escrowToDelete = archivedEscrows.find(e => e.id === escrowId) ||
-                             escrows.find(e => e.id === escrowId);
-
-      // If not archived, archive first
-      if (escrowToDelete && !escrowToDelete.deleted_at && !escrowToDelete.deletedAt) {
-        const archiveResponse = await escrowsAPI.archive(escrowId);
-        if (!archiveResponse.success) {
-          console.error('Failed to archive escrow before deletion');
-          return;
-        }
-      }
-
-      // Now permanently delete the archived escrow
-      const response = await escrowsAPI.delete(escrowId);
-      if (response.success) {
-        // Remove from both lists
-        setArchivedEscrows(prev => prev.filter(e => e.id !== escrowId));
-        setEscrows(prev => prev.filter(e => e.id !== escrowId));
-        setArchivedCount(prev => Math.max(0, prev - 1));
-
-        // Recalculate stats with remaining active escrows only
-        const remainingEscrows = escrows.filter(e => e.id !== escrowId);
-        calculateStats(remainingEscrows, selectedStatus);
-        generateChartData(remainingEscrows);
-
-        // console.log('Successfully permanently deleted escrow:', escrowId);
-      }
-    } catch (error) {
-      console.error('Failed to permanently delete escrow:', error);
-    }
-  };
-
-  const handleBatchDelete = async () => {
-    if (selectedArchivedIds.length === 0) return;
-
-    const count = selectedArchivedIds.length;
-    if (!window.confirm(`Are you sure you want to permanently delete ${count} escrow${count > 1 ? 's' : ''}? This action cannot be undone.`)) {
-      return;
-    }
-
-    setBatchDeleting(true);
-    try {
-      const response = await escrowsAPI.batchDelete(selectedArchivedIds);
-      if (response.success) {
-        // Remove deleted escrows from both lists locally
-        const deletedIds = new Set(selectedArchivedIds);
-        setArchivedEscrows(prev => prev.filter(e => !deletedIds.has(e.id)));
-        setEscrows(prev => prev.filter(e => !deletedIds.has(e.id)));
-        setArchivedCount(prev => Math.max(0, prev - selectedArchivedIds.length));
-        setSelectedArchivedIds([]);
-
-        // Recalculate stats with remaining active escrows only
-        const remainingEscrows = escrows.filter(e => !deletedIds.has(e.id));
-        calculateStats(remainingEscrows, selectedStatus);
-        generateChartData(remainingEscrows);
-
-        // console.log(`Successfully permanently deleted ${response.data.deletedCount || selectedArchivedIds.length} escrows`);
-      }
-    } catch (error) {
-      console.error('Failed to batch delete escrows:', error);
-      alert('Failed to delete escrows. Please try again.');
-    } finally {
-      setBatchDeleting(false);
-    }
-  };
-
-  const handleSelectAll = (checked) => {
-    if (checked) {
-      setSelectedArchivedIds(archivedEscrows.map(e => e.id));
-    } else {
-      setSelectedArchivedIds([]);
-    }
-  };
-
-  const handleSelectEscrow = (escrowId, checked) => {
-    if (checked) {
-      setSelectedArchivedIds(prev => [...prev, escrowId]);
-    } else {
-      setSelectedArchivedIds(prev => prev.filter(id => id !== escrowId));
-    }
-  };
-
-  const handleCalendarOpen = () => {
-    setShowCalendar(!showCalendar);
-  };
-
-  // Helper to check if two dates are the same day
-  const isSameDay = (date1, date2) => {
-    return date1.getFullYear() === date2.getFullYear() &&
-           date1.getMonth() === date2.getMonth() &&
-           date1.getDate() === date2.getDate();
-  };
-
-  // Check if custom dates match a preset range
-  const detectPresetRange = (start, end) => {
-    if (!start || !end) return null;
-
-    const now = new Date();
-    const today = new Date(now);
-    today.setHours(0, 0, 0, 0);
-
-    // Normalize the input dates to compare (ignore time)
-    const startDay = new Date(start);
-    startDay.setHours(0, 0, 0, 0);
-    const endDay = new Date(end);
-    endDay.setHours(0, 0, 0, 0);
-
-    // Check 1D (today)
-    if (isSameDay(startDay, today) && isSameDay(endDay, today)) {
-      return '1D';
-    }
-
-    // Check 1M (last 30 days) - end should be today
-    const oneMonthAgo = new Date(today);
-    oneMonthAgo.setDate(today.getDate() - 30);
-    if (isSameDay(startDay, oneMonthAgo) && isSameDay(endDay, today)) {
-      return '1M';
-    }
-
-    // Check 1Y (last 365 days) - end should be today
-    const oneYearAgo = new Date(today);
-    oneYearAgo.setDate(today.getDate() - 365);
-    if (isSameDay(startDay, oneYearAgo) && isSameDay(endDay, today)) {
-      return '1Y';
-    }
-
-    // Check YTD (year to date) - end should be today
-    const ytdStart = new Date(now.getFullYear(), 0, 1);
-    if (isSameDay(startDay, ytdStart) && isSameDay(endDay, today)) {
-      return 'YTD';
-    }
-
-    return null;
   };
 
   // Calculate date range based on filter or custom dates
