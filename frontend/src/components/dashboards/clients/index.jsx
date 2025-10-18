@@ -8,6 +8,7 @@ import {
   Card,
   CardContent,
   Paper,
+  IconButton,
   Button,
   Chip,
   CircularProgress,
@@ -22,36 +23,31 @@ import {
   FormControl,
   InputLabel,
   useTheme,
-  IconButton,
   Badge,
   Checkbox,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
-  Slider,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
   TrendingUp,
   TrendingDown,
-  Event,
-  CalendarToday,
+  AttachMoney,
+  People,
   CheckCircle,
   Add,
   Assessment,
-  Cancel,
-  Schedule,
+  PersonAdd,
   Visibility,
   VisibilityOff,
+  Schedule,
+  CalendarToday,
   Delete as DeleteIcon,
   Sort,
   Archive as ArchiveIcon,
-  Restore as RestoreIcon,
+  Storage,
   DeleteForever as DeleteForeverIcon,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -59,36 +55,43 @@ import CountUp from 'react-countup';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { appointmentsAPI } from '../../services/api.service';
-import NewAppointmentModal from '../forms/NewAppointmentModal';
-import { useAuth } from '../../contexts/AuthContext';
-import networkMonitor from '../../services/networkMonitor.service';
-import { useWebSocket } from '../../hooks/useWebSocket';
-import AppointmentCard from '../common/widgets/AppointmentCard';
+import { clientsAPI } from '../../../services/api.service';
+import { useAuth } from '../../../contexts/AuthContext';
+import NewClientModal from '../../forms/NewClientModal';
+import networkMonitor from '../../../services/networkMonitor.service';
+import { useWebSocket } from '../../../hooks/useWebSocket';
+import ClientCard from '../../common/widgets/ClientCard';
 
 // Styled Components
 const HeroSection = styled(Box)(({ theme }) => ({
   position: 'relative',
   borderRadius: theme.spacing(3),
   overflow: 'hidden',
-  background: 'linear-gradient(135deg, #F57C00 0%, #FFB74D 100%)',
+  background: 'linear-gradient(135deg, #0891B2 0%, #06B6D4 100%)',
   color: 'white',
   padding: theme.spacing(4),
   marginBottom: theme.spacing(4),
-  boxShadow: '0 20px 60px rgba(245, 124, 0, 0.3)',
+  boxShadow: '0 20px 60px rgba(8, 145, 178, 0.3)',
   [theme.breakpoints.down('md')]: {
     padding: theme.spacing(3),
   },
 }));
 
-// Enhanced animated stat card component with new layout structure
+// Enhanced animated stat card component with goal support and privacy toggle
 const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, delay = 0, trend, showPrivacy = false, goal }) => {
   const theme = useTheme();
   const [showValue, setShowValue] = useState(false);
 
   // Mask value for privacy
   const maskValue = (val) => {
-    return '***';
+    const absValue = Math.abs(val);
+    if (absValue >= 1000000) return '$***,***,***';
+    if (absValue >= 100000) return '$***,***';
+    if (absValue >= 10000) return '$**,***';
+    if (absValue >= 1000) return '$*,***';
+    if (absValue >= 100) return '$***';
+    if (absValue >= 10) return '$**';
+    return '$*';
   };
 
   // Calculate percentage difference from goal
@@ -301,77 +304,83 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
   );
 };
 
-const AppointmentsDashboard = () => {
+const ClientsDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isConnected, connectionStatus } = useWebSocket();
-  const [appointments, setAppointments] = useState([]);
-  const [archivedAppointments, setArchivedAppointments] = useState([]);
+  const [clients, setClients] = useState([]);
+  const [archivedClients, setArchivedClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMorePages, setHasMorePages] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
-  const [selectedStatus, setSelectedStatus] = useState('upcoming');
-  const [viewMode, setViewMode] = useState(() => localStorage.getItem('appointmentsViewMode') || 'large');
-  const [sortBy, setSortBy] = useState('appointment_date');
+  const [selectedStatus, setSelectedStatus] = useState('active');
+  const [viewMode, setViewMode] = useState(() => {
+    const saved = localStorage.getItem('clientsViewMode');
+    return saved || 'large';
+  });
+  const [sortBy, setSortBy] = useState('created_at');
   const [scope, setScope] = useState(() => {
-    const saved = localStorage.getItem('appointmentsScope');
+    const saved = localStorage.getItem('clientsScope');
     return saved || 'team';
   }); // 'brokerage', 'team', 'user'
-  const [dateRangeFilter, setDateRangeFilter] = useState('1M');
-  const [customStartDate, setCustomStartDate] = useState(null);
-  const [customEndDate, setCustomEndDate] = useState(null);
-  const [startDatePickerOpen, setStartDatePickerOpen] = useState(false);
-  const [endDatePickerOpen, setEndDatePickerOpen] = useState(false);
+  const [animationType, setAnimationType] = useState('spring');
+  const [animationDuration, setAnimationDuration] = useState(1);
+  const [animationIntensity, setAnimationIntensity] = useState(1);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(null);
   const [calendarDialogOpen, setCalendarDialogOpen] = useState(false);
   const [archivedCount, setArchivedCount] = useState(0);
   const [selectedArchivedIds, setSelectedArchivedIds] = useState([]);
   const [batchDeleting, setBatchDeleting] = useState(false);
-  const [newAppointmentModalOpen, setNewAppointmentModalOpen] = useState(false);
-  const [animationType, setAnimationType] = useState('spring');
-  const [animationDuration, setAnimationDuration] = useState(1);
-  const [animationIntensity, setAnimationIntensity] = useState(1);
+
+  // Date range filter state
+  const [dateRangeFilter, setDateRangeFilter] = useState('1M'); // '1D', '1M', '1Y', 'YTD', or null for custom
+  const [customStartDate, setCustomStartDate] = useState(null);
+  const [customEndDate, setCustomEndDate] = useState(null);
+  const [startDatePickerOpen, setStartDatePickerOpen] = useState(false);
+  const [endDatePickerOpen, setEndDatePickerOpen] = useState(false);
+  const [newClientModalOpen, setNewClientModalOpen] = useState(false);
+
+  // Network monitoring state
   const [networkData, setNetworkData] = useState({
     stats: networkMonitor.getStats(),
     requests: networkMonitor.getRequests(),
-    errors: networkMonitor.getErrors()
   });
+
   const [stats, setStats] = useState({
-    totalUpcoming: 0,
-    thisWeek: 0,
-    thisMonth: 0,
-    noShowRate: 0,
-    totalCompleted: 0,
-    completedThisMonth: 0,
-    successRate: 0,
-    avgDuration: 0,
-    totalCancelled: 0,
-    cancellationRate: 0,
-    lastMinuteCancellations: 0,
-    rescheduled: 0,
-    totalAppointments: 0,
-    upcomingAppointments: 0,
-    completionRate: 0,
-    avgPerWeek: 0,
+    totalClients: 0,
+    activeClients: 0,
+    newThisMonth: 0,
+    totalClientValue: 0,
+    avgClientLifetime: 0,
+    convertedLeads: 0,
+    conversionRate: 0,
+    potentialValue: 0,
+    avgConversionTime: 0,
+    totalInactive: 0,
+    inactiveRate: 0,
+    lostValue: 0,
+    avgDaysInactive: 0,
+    totalPortfolioValue: 0,
+    avgTransactionsPerClient: 0,
   });
 
-  const maxArchivedLimit = 500;
-
-  useEffect(() => { localStorage.setItem('appointmentsViewMode', viewMode); }, [viewMode]);
+  // Save view mode to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem('clientsViewMode', viewMode);
+  }, [viewMode]);
 
   // Save scope to localStorage when it changes
   useEffect(() => {
-    localStorage.setItem('appointmentsScope', scope);
+    localStorage.setItem('clientsScope', scope);
   }, [scope]);
 
-  // PHASE 6: Refetch appointments when scope changes
+  // PHASE 6: Refetch clients when scope changes
   useEffect(() => {
-    fetchAppointments();
+    fetchClients();
   }, [scope]);
-
-  useEffect(() => { fetchAppointments(); }, []);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -381,61 +390,68 @@ const AppointmentsDashboard = () => {
         return;
       }
 
-      // Check for Cmd/Ctrl key combinations
-      if ((e.metaKey || e.ctrlKey)) {
-        switch(e.key.toLowerCase()) {
-          case 'k':
-            e.preventDefault();
-            setNewAppointmentModalOpen(true);
-            break;
-          case 'f':
-            e.preventDefault();
-            // Focus search (if exists)
-            break;
-          case 'r':
-            e.preventDefault();
-            fetchAppointments();
-            break;
-          case 'a':
-            e.preventDefault();
-            if (selectedStatus === 'archived') {
-              handleSelectAll(selectedArchivedIds.length !== archivedAppointments.length);
-            }
-            break;
-          default:
-            break;
-        }
+      // Cmd/Ctrl + K: Create new client
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setNewClientModalOpen(true);
+        return;
+      }
+
+      // Cmd/Ctrl + F: Focus search (not implemented yet, but reserved)
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        // Future: focus search input
+        return;
+      }
+
+      // Cmd/Ctrl + R: Refresh clients
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'r') {
+        e.preventDefault();
+        fetchClients();
+        return;
+      }
+
+      // Cmd/Ctrl + A: Toggle select all (archived view only)
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'a' && selectedStatus === 'archived') {
+        e.preventDefault();
+        const allSelected = selectedArchivedIds.length === archivedClients.length;
+        handleSelectAll(!allSelected);
+        return;
       }
     };
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [selectedStatus, selectedArchivedIds, archivedAppointments]);
+  }, [newClientModalOpen, selectedStatus, selectedArchivedIds.length, archivedClients.length]);
+
+  useEffect(() => {
+    fetchClients();
+  }, []);
 
   useEffect(() => {
     if (selectedStatus === 'archived') {
-      calculateStats(archivedAppointments, 'archived');
-    } else if (appointments.length > 0) {
-      calculateStats(appointments, selectedStatus);
+      // Calculate stats for archived clients
+      calculateStats(archivedClients, 'archived');
+    } else if (clients.length > 0) {
+      calculateStats(clients, selectedStatus);
     } else {
       calculateStats([], selectedStatus);
     }
-  }, [selectedStatus, appointments, archivedAppointments, customStartDate, customEndDate, dateRangeFilter]);
+  }, [selectedStatus, clients, archivedClients, dateRangeFilter, customStartDate, customEndDate]);
 
-  // Sync archived count with archived appointments array
+  // Sync archived count with archived clients array
   useEffect(() => {
-    setArchivedCount(archivedAppointments.length);
-  }, [archivedAppointments]);
+    setArchivedCount(archivedClients.length);
+  }, [archivedClients]);
 
-  // Auto-refresh network data
+  // Network monitoring polling
   useEffect(() => {
     const interval = setInterval(() => {
       setNetworkData({
         stats: networkMonitor.getStats(),
         requests: networkMonitor.getRequests(),
-        errors: networkMonitor.getErrors()
       });
-    }, 2000); // Update every 2 seconds
+    }, 2000);
 
     return () => clearInterval(interval);
   }, []);
@@ -444,17 +460,14 @@ const AppointmentsDashboard = () => {
   useEffect(() => {
     if (!isConnected) return;
 
-    // Import websocket service
-    const websocketService = require('../../services/websocket.service').default;
+    const websocketService = require('../../../services/websocket.service').default;
 
-    // Subscribe to data updates
     const unsubscribe = websocketService.on('data:update', (data) => {
       // console.log('📡 WebSocket data update received:', data);
 
-      // Only refetch if it's an appointment update
-      if (data.entityType === 'appointment') {
-        // console.log('🔄 Refetching appointments due to real-time update');
-        fetchAppointments();
+      if (data.entityType === 'client') {
+        // console.log('🔄 Refetching clients due to real-time update');
+        fetchClients();
       }
     });
 
@@ -463,21 +476,18 @@ const AppointmentsDashboard = () => {
     };
   }, [isConnected]);
 
-  const fetchAppointments = async (pageNum = 1, appendData = false) => {
+  const fetchClients = async (pageNum = 1, appendData = false) => {
     try {
-      // Show appropriate loading state
-      if (appendData) {
-        setLoadingMore(true);
-      } else {
+      if (pageNum === 1) {
         setLoading(true);
-        setCurrentPage(1);
+      } else {
+        setLoadingMore(true);
       }
+      // console.log('Fetching clients...');
 
-      // console.log(`Fetching appointments... (page ${pageNum})`);
-
-      // Fetch appointments with pagination (50 per page for optimal performance)
+      // Fetch clients with pagination (50 per page for optimal performance)
       // PHASE 6: Include scope filter (brokerage, team, user)
-      const response = await appointmentsAPI.getAll({
+      const response = await clientsAPI.getAll({
         includeArchived: true,
         page: pageNum,
         limit: 50,
@@ -486,25 +496,25 @@ const AppointmentsDashboard = () => {
       // console.log('API Response:', response);
 
       if (response.success) {
-        const allData = response.data.appointments || response.data || [];
+        const allData = response.data.clients || response.data || [];
         const pagination = response.data.pagination || {};
         const totalPages = pagination.totalPages || 1;
         const totalRecords = pagination.total || allData.length;
         const hasMore = pageNum < totalPages;
 
-        // Separate active and archived appointments based on deleted_at field
-        const appointmentData = allData.filter(appt => !appt.deleted_at && !appt.deletedAt);
-        const archivedData = allData.filter(appt => appt.deleted_at || appt.deletedAt);
+        // Separate active and archived clients based on deleted_at field
+        const clientData = allData.filter(client => !client.deleted_at && !client.deletedAt);
+        const archivedData = allData.filter(client => client.deleted_at || client.deletedAt);
 
-        // console.log(`Page ${pageNum}/${totalPages} - Total: ${totalRecords}, Loaded: ${allData.length}, Active: ${appointmentData.length}, Archived: ${archivedData.length}`);
+        // console.log(`Page ${pageNum}/${totalPages} - Total: ${totalRecords}, Loaded: ${allData.length}, Active: ${clientData.length}, Archived: ${archivedData.length}`);
 
         // Update state based on whether we're appending or replacing
         if (appendData) {
-          setAppointments(prev => [...prev, ...appointmentData]);
-          setArchivedAppointments(prev => [...prev, ...archivedData]);
+          setClients(prev => [...prev, ...clientData]);
+          setArchivedClients(prev => [...prev, ...archivedData]);
         } else {
-          setAppointments(appointmentData);
-          setArchivedAppointments(archivedData);
+          setClients(clientData);
+          setArchivedClients(archivedData);
         }
 
         // Update pagination state
@@ -514,13 +524,13 @@ const AppointmentsDashboard = () => {
         setArchivedCount(archivedData.length);
 
         // Calculate stats from currently loaded data only
-        const currentAppointments = appendData ? [...appointments, ...appointmentData] : appointmentData;
-        calculateStats(currentAppointments, selectedStatus);
+        const currentClients = appendData ? [...clients, ...clientData] : clientData;
+        calculateStats(currentClients, selectedStatus);
       } else {
         console.error('API returned success: false', response);
       }
     } catch (error) {
-      console.error('Error fetching appointments:', error.message);
+      console.error('Error fetching clients:', error.message);
       console.error('Full error:', error);
     } finally {
       setLoading(false);
@@ -528,61 +538,47 @@ const AppointmentsDashboard = () => {
     }
   };
 
-  // Load more appointments (infinite scroll handler)
-  const loadMoreAppointments = useCallback(() => {
+  const loadMoreClients = useCallback(() => {
     if (!loadingMore && hasMorePages) {
       // console.log(`Loading page ${currentPage + 1}...`);
-      fetchAppointments(currentPage + 1, true);
+      fetchClients(currentPage + 1, true);
     }
   }, [loadingMore, hasMorePages, currentPage]);
-
-  // Helper to check if two dates are the same day
-  const isSameDay = (date1, date2) => {
-    return date1.getFullYear() === date2.getFullYear() &&
-           date1.getMonth() === date2.getMonth() &&
-           date1.getDate() === date2.getDate();
-  };
 
   // Check if custom dates match a preset range
   const detectPresetRange = (start, end) => {
     if (!start || !end) return null;
 
     const now = new Date();
-    const today = new Date(now);
-    today.setHours(0, 0, 0, 0);
+    const diffTime = Math.abs(end - start);
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    // Normalize the input dates to compare (ignore time)
-    const startDay = new Date(start);
-    startDay.setHours(0, 0, 0, 0);
-    const endDay = new Date(end);
-    endDay.setHours(0, 0, 0, 0);
-
-    // Check 1D (today)
-    if (isSameDay(startDay, today) && isSameDay(endDay, today)) {
+    // Check if it's today (1D)
+    const todayStart = new Date(now);
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(now);
+    todayEnd.setHours(23, 59, 59, 999);
+    if (start.getTime() === todayStart.getTime() && end.getTime() === todayEnd.getTime()) {
       return '1D';
     }
 
-    // Check 1M (last 30 days) - end should be today
-    const oneMonthAgo = new Date(today);
-    oneMonthAgo.setDate(today.getDate() - 30);
-    if (isSameDay(startDay, oneMonthAgo) && isSameDay(endDay, today)) {
+    // Check if it's last 30 days (1M)
+    if (diffDays >= 29 && diffDays <= 31) {
       return '1M';
     }
 
-    // Check 1Y (last 365 days) - end should be today
-    const oneYearAgo = new Date(today);
-    oneYearAgo.setDate(today.getDate() - 365);
-    if (isSameDay(startDay, oneYearAgo) && isSameDay(endDay, today)) {
+    // Check if it's last 365 days (1Y)
+    if (diffDays >= 364 && diffDays <= 366) {
       return '1Y';
     }
 
-    // Check YTD (year to date) - end should be today
+    // Check if it's year to date (YTD)
     const ytdStart = new Date(now.getFullYear(), 0, 1);
-    if (isSameDay(startDay, ytdStart) && isSameDay(endDay, today)) {
+    if (start.getTime() === ytdStart.getTime() && end.getDate() === now.getDate()) {
       return 'YTD';
     }
 
-    return null;
+    return null; // Custom range
   };
 
   // Calculate date range based on filter or custom dates
@@ -603,7 +599,7 @@ const AppointmentsDashboard = () => {
         setDateRangeFilter(null);
       }
     } else {
-      // Use preset ranges
+      // Use preset range
       switch(dateRangeFilter) {
         case '1D':
           // Today from 12:00 AM to 11:59 PM
@@ -649,236 +645,157 @@ const AppointmentsDashboard = () => {
 
   const dateRange = getDateRange();
 
-  const calculateStats = (data, statusFilter) => {
-    if (!data || !Array.isArray(data)) {
+  const calculateStats = (clientData, statusFilter = 'active') => {
+    if (!clientData || !Array.isArray(clientData)) {
       setStats({
-        totalUpcoming: 0, thisWeek: 0, thisMonth: 0, noShowRate: 0,
-        totalCompleted: 0, completedThisMonth: 0, successRate: 0, avgDuration: 0,
-        totalCancelled: 0, cancellationRate: 0, lastMinuteCancellations: 0, rescheduled: 0,
-        totalAppointments: 0, upcomingAppointments: 0, completionRate: 0, avgPerWeek: 0,
+        totalClients: 0,
+        activeClients: 0,
+        newThisMonth: 0,
+        totalClientValue: 0,
+        avgClientLifetime: 0,
+        convertedLeads: 0,
+        conversionRate: 0,
+        potentialValue: 0,
+        avgConversionTime: 0,
+        totalInactive: 0,
+        inactiveRate: 0,
+        lostValue: 0,
+        avgDaysInactive: 0,
+        totalPortfolioValue: 0,
+        avgTransactionsPerClient: 0,
       });
       return;
     }
 
+    // Get date range for filtering
+    const { startDate, endDate } = getDateRange();
+
+    // Filter clients by date range (based on created_at)
+    const dateFilteredClients = clientData.filter(c => {
+      const createdDate = new Date(c.createdAt || c.created_at);
+      return createdDate >= startDate && createdDate <= endDate;
+    });
+
+    let filteredClients = [];
+
+    // Filter based on selected status
+    switch (statusFilter) {
+      case 'active':
+        filteredClients = dateFilteredClients.filter(c =>
+          c.clientStatus === 'Active' || c.client_status === 'Active' ||
+          c.clientStatus === 'active' || c.client_status === 'active'
+        );
+        break;
+      case 'lead':
+        filteredClients = dateFilteredClients.filter(c =>
+          c.clientStatus === 'Lead' || c.client_status === 'Lead' ||
+          c.clientStatus === 'lead' || c.client_status === 'lead'
+        );
+        break;
+      case 'inactive':
+        filteredClients = dateFilteredClients.filter(c =>
+          c.clientStatus === 'Inactive' || c.client_status === 'Inactive' ||
+          c.clientStatus === 'inactive' || c.client_status === 'inactive'
+        );
+        break;
+      default:
+        filteredClients = dateFilteredClients;
+    }
+
+    // Calculate stats based on status
     const now = new Date();
-    const { startDate, endDate } = dateRange;
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
-    // Filter by date range
-    const dateFiltered = data.filter(a => {
-      const apptDate = new Date(a.appointment_date || a.appointment_date);
-      return apptDate >= startDate && apptDate <= endDate;
-    });
-
-    // Filter by status
-    let filtered = dateFiltered.filter(a => {
-      const apptDate = new Date(a.appointment_date || a.appointment_date);
-      const status = (a.status || a.appointment_status || '').toLowerCase();
-
-      if (statusFilter === 'upcoming') return apptDate >= now && status !== 'cancelled';
-      if (statusFilter === 'completed') return status === 'completed';
-      if (statusFilter === 'cancelled') return status === 'cancelled';
-      return true; // 'all'
-    });
-
-    const totalAll = dateFiltered.length;
-    const totalCompleted = dateFiltered.filter(a => (a.status || a.appointment_status || '').toLowerCase() === 'completed').length;
-    const totalCancelled = dateFiltered.filter(a => (a.status || a.appointment_status || '').toLowerCase() === 'cancelled').length;
-    const totalUpcoming = dateFiltered.filter(a => {
-      const apptDate = new Date(a.appointment_date || a.appointment_date);
-      return apptDate >= now && (a.status || a.appointment_status || '').toLowerCase() !== 'cancelled';
+    // Active clients stats
+    const activeClients = clientData.filter(c =>
+      c.clientStatus === 'Active' || c.client_status === 'Active' ||
+      c.clientStatus === 'active' || c.client_status === 'active'
+    );
+    const newThisMonth = activeClients.filter(c => {
+      const createdDate = new Date(c.createdAt || c.created_at);
+      return createdDate >= startOfMonth;
     }).length;
+    const totalClientValue = filteredClients.reduce((sum, c) => sum + Number(c.totalValue || c.total_value || 0), 0);
+    const avgClientLifetime = filteredClients.length > 0 ? totalClientValue / filteredClients.length : 0;
 
-    // Week calculation
-    const oneWeekFromNow = new Date(now);
-    oneWeekFromNow.setDate(now.getDate() + 7);
-    const thisWeek = dateFiltered.filter(a => {
-      const apptDate = new Date(a.appointment_date || a.appointment_date);
-      return apptDate >= now && apptDate <= oneWeekFromNow;
-    }).length;
+    // Lead conversion stats
+    const convertedLeads = clientData.filter(c =>
+      (c.clientStatus === 'Active' || c.client_status === 'Active') &&
+      (c.previousStatus === 'Lead' || c.previous_status === 'Lead')
+    ).length;
+    const totalLeads = clientData.filter(c =>
+      c.clientStatus === 'Lead' || c.client_status === 'Lead'
+    ).length;
+    const conversionRate = (totalLeads + convertedLeads) > 0 ? (convertedLeads / (totalLeads + convertedLeads)) * 100 : 0;
+    const potentialValue = totalLeads * 50000; // Mock: $50k potential per lead
+    const avgConversionTime = 45; // Mock: 45 days average
 
-    // Month calculation
-    const oneMonthFromNow = new Date(now);
-    oneMonthFromNow.setDate(now.getDate() + 30);
-    const thisMonth = dateFiltered.filter(a => {
-      const apptDate = new Date(a.appointment_date || a.appointment_date);
-      return apptDate >= now && apptDate <= oneMonthFromNow;
-    }).length;
+    // Inactive stats
+    const inactiveClients = clientData.filter(c =>
+      c.clientStatus === 'Inactive' || c.client_status === 'Inactive'
+    );
+    const totalInactive = inactiveClients.length;
+    const totalAllClients = clientData.length;
+    const inactiveRate = totalAllClients > 0 ? (totalInactive / totalAllClients) * 100 : 0;
+    const lostValue = inactiveClients.reduce((sum, c) => sum + Number(c.totalValue || c.total_value || 0), 0);
+    const avgDaysInactive = 180; // Mock: 180 days average
 
-    const completedThisMonth = dateFiltered.filter(a => {
-      const apptDate = new Date(a.appointment_date || a.appointment_date);
-      const monthAgo = new Date(now);
-      monthAgo.setDate(now.getDate() - 30);
-      return (a.status || a.appointment_status || '').toLowerCase() === 'completed' && apptDate >= monthAgo && apptDate <= now;
-    }).length;
-
-    // Calculate rates
-    const noShowRate = totalAll > 0 ? ((totalCancelled / totalAll) * 100).toFixed(1) : 0;
-    const successRate = totalAll > 0 ? ((totalCompleted / totalAll) * 100).toFixed(1) : 0;
-    const cancellationRate = totalAll > 0 ? ((totalCancelled / totalAll) * 100).toFixed(1) : 0;
-    const completionRate = totalAll > 0 ? ((totalCompleted / totalAll) * 100).toFixed(1) : 0;
-
-    // Last minute cancellations (within 24 hours)
-    const lastMinuteCancellations = dateFiltered.filter(a => {
-      const apptDate = new Date(a.appointment_date || a.appointment_date);
-      const cancelledWithin24h = now - apptDate < 86400000; // 24 hours in ms
-      return (a.status || a.appointment_status || '').toLowerCase() === 'cancelled' && cancelledWithin24h;
-    }).length;
-
-    // Avg duration (mock calculation)
-    const avgDuration = 45; // minutes
-
-    // Avg per week
-    const daysDiff = (endDate - startDate) / (1000 * 60 * 60 * 24);
-    const avgPerWeek = daysDiff > 0 ? Math.round((totalAll / daysDiff) * 7) : 0;
+    // All clients stats
+    const totalPortfolioValue = clientData.reduce((sum, c) => sum + Number(c.totalValue || c.total_value || 0), 0);
+    const totalTransactions = clientData.reduce((sum, c) => sum + Number(c.totalTransactions || c.total_transactions || 0), 0);
+    const avgTransactionsPerClient = clientData.length > 0 ? totalTransactions / clientData.length : 0;
 
     setStats({
-      // Upcoming stats
-      totalUpcoming: totalUpcoming,
-      thisWeek: thisWeek,
-      thisMonth: thisMonth,
-      noShowRate: noShowRate,
-      // Completed stats
-      totalCompleted: totalCompleted,
-      completedThisMonth: completedThisMonth,
-      successRate: successRate,
-      avgDuration: avgDuration,
-      // Cancelled stats
-      totalCancelled: totalCancelled,
-      cancellationRate: cancellationRate,
-      lastMinuteCancellations: lastMinuteCancellations,
-      rescheduled: Math.floor(totalCancelled * 0.6), // Mock 60% rescheduled
-      // All stats
-      totalAppointments: filtered.length,
-      upcomingAppointments: totalUpcoming,
-      completionRate: completionRate,
-      avgPerWeek: avgPerWeek,
+      totalClients: filteredClients.length,
+      activeClients: activeClients.length,
+      newThisMonth,
+      totalClientValue,
+      avgClientLifetime,
+      convertedLeads,
+      conversionRate,
+      potentialValue,
+      avgConversionTime,
+      totalInactive,
+      inactiveRate,
+      lostValue,
+      avgDaysInactive,
+      totalPortfolioValue,
+      avgTransactionsPerClient,
     });
   };
 
-  const handleArchive = async (appointmentId) => {
-    try {
-      const response = await appointmentsAPI.archive(appointmentId);
-      if (response && response.success) {
-        // Move appointment from active to archived
-        const archivedAppointment = appointments.find(a => a.id === appointmentId);
-        if (archivedAppointment) {
-          // Mark as archived
-          archivedAppointment.deleted_at = new Date().toISOString();
-
-          setAppointments(prev => prev.filter(a => a.id !== appointmentId));
-          setArchivedAppointments(prev => [...prev, archivedAppointment]);
-          setArchivedCount(prev => prev + 1);
-
-          // Recalculate stats with remaining active appointments
-          const remainingAppointments = appointments.filter(a => a.id !== appointmentId);
-          calculateStats(remainingAppointments, selectedStatus);
-        }
-      } else {
-        console.error('Archive failed - no success response');
-      }
-    } catch (error) {
-      const errorMessage = error?.message || error?.toString() || 'Unknown error';
-      console.error('Failed to archive appointment:', errorMessage);
-    }
+  const handleClientClick = (clientId) => {
+    // console.log('Client clicked - ID:', clientId);
+    navigate(`/clients/${clientId}`);
   };
 
-  const handleRestore = async (appointmentId) => {
-    try {
-      const response = await appointmentsAPI.restore(appointmentId);
-      if (response.success) {
-        // Move appointment from archived to active
-        const restoredAppointment = archivedAppointments.find(a => a.id === appointmentId);
-        if (restoredAppointment) {
-          // Remove archived marker
-          delete restoredAppointment.deleted_at;
-          delete restoredAppointment.deletedAt;
-
-          setArchivedAppointments(prev => prev.filter(a => a.id !== appointmentId));
-          setAppointments(prev => [...prev, restoredAppointment]);
-          setArchivedCount(prev => Math.max(0, prev - 1));
-
-          // Recalculate stats with updated active appointments
-          const updatedAppointments = [...appointments, restoredAppointment];
-          calculateStats(updatedAppointments, selectedStatus);
-        }
-      }
-    } catch (error) {
-      console.error('Failed to restore appointment:', error);
-    }
-  };
-
-  const handlePermanentDelete = async (appointmentId, skipConfirmation = false) => {
-    // Check if running in test mode
-    const isTestMode = window.location.search.includes('testMode=true') ||
-                       window.__APPOINTMENT_TEST_MODE__ === true ||
-                       skipConfirmation === true;
-
-    // Single confirmation dialog unless in test mode
-    if (!isTestMode && !window.confirm('Are you sure you want to permanently delete this appointment? This action cannot be undone.')) {
-      return;
-    }
-
-    try {
-      // Check if appointment is already archived
-      const appointmentToDelete = archivedAppointments.find(a => a.id === appointmentId) ||
-                                  appointments.find(a => a.id === appointmentId);
-
-      // If not archived, archive first
-      if (appointmentToDelete && !appointmentToDelete.deleted_at && !appointmentToDelete.deletedAt) {
-        const archiveResponse = await appointmentsAPI.archive(appointmentId);
-        if (!archiveResponse.success) {
-          console.error('Failed to archive appointment before deletion');
-          return;
-        }
-      }
-
-      // Now permanently delete the archived appointment
-      const response = await appointmentsAPI.delete(appointmentId);
-      if (response.success) {
-        // Remove from both lists
-        setArchivedAppointments(prev => prev.filter(a => a.id !== appointmentId));
-        setAppointments(prev => prev.filter(a => a.id !== appointmentId));
-        setArchivedCount(prev => Math.max(0, prev - 1));
-
-        // Recalculate stats with remaining active appointments only
-        const remainingAppointments = appointments.filter(a => a.id !== appointmentId);
-        calculateStats(remainingAppointments, selectedStatus);
-
-        // console.log('Successfully permanently deleted appointment:', appointmentId);
-      }
-    } catch (error) {
-      console.error('Failed to permanently delete appointment:', error);
-    }
-  };
-
+  // Batch delete handler
   const handleBatchDelete = async () => {
     if (selectedArchivedIds.length === 0) return;
 
     const count = selectedArchivedIds.length;
-    if (!window.confirm(`Are you sure you want to permanently delete ${count} appointment${count > 1 ? 's' : ''}? This action cannot be undone.`)) {
+    if (!window.confirm(`Are you sure you want to permanently delete ${count} client${count > 1 ? 's' : ''}? This action cannot be undone.`)) {
       return;
     }
 
     setBatchDeleting(true);
     try {
-      const response = await appointmentsAPI.batchDelete(selectedArchivedIds);
+      const response = await clientsAPI.batchDelete(selectedArchivedIds);
       if (response.success) {
-        // Remove deleted appointments from both lists locally
+        // Remove deleted clients from both lists locally
         const deletedIds = new Set(selectedArchivedIds);
-        setArchivedAppointments(prev => prev.filter(a => !deletedIds.has(a.id)));
-        setAppointments(prev => prev.filter(a => !deletedIds.has(a.id)));
+        setArchivedClients(prev => prev.filter(c => !deletedIds.has(c.id)));
+        setClients(prev => prev.filter(c => !deletedIds.has(c.id)));
         setArchivedCount(prev => Math.max(0, prev - selectedArchivedIds.length));
         setSelectedArchivedIds([]);
 
-        // Recalculate stats with remaining active appointments only
-        const remainingAppointments = appointments.filter(a => !deletedIds.has(a.id));
-        calculateStats(remainingAppointments, selectedStatus);
-
-        // console.log(`Successfully permanently deleted ${response.data.deletedCount || selectedArchivedIds.length} appointments`);
+        // Recalculate stats with remaining active clients only
+        const remainingClients = clients.filter(c => !deletedIds.has(c.id));
+        calculateStats(remainingClients, selectedStatus);
       }
     } catch (error) {
-      console.error('Failed to batch delete appointments:', error);
-      alert('Failed to delete appointments. Please try again.');
+      console.error('Error batch deleting clients:', error);
+      alert('Failed to delete clients. Please try again.');
     } finally {
       setBatchDeleting(false);
     }
@@ -886,17 +803,17 @@ const AppointmentsDashboard = () => {
 
   const handleSelectAll = (checked) => {
     if (checked) {
-      setSelectedArchivedIds(archivedAppointments.map(a => a.id));
+      setSelectedArchivedIds(archivedClients.map(c => c.id));
     } else {
       setSelectedArchivedIds([]);
     }
   };
 
-  const handleSelectAppointment = (appointmentId, checked) => {
+  const handleSelectClient = (clientId, checked) => {
     if (checked) {
-      setSelectedArchivedIds(prev => [...prev, appointmentId]);
+      setSelectedArchivedIds(prev => [...prev, clientId]);
     } else {
-      setSelectedArchivedIds(prev => prev.filter(id => id !== appointmentId));
+      setSelectedArchivedIds(prev => prev.filter(id => id !== clientId));
     }
   };
 
@@ -936,7 +853,7 @@ const AppointmentsDashboard = () => {
                 style={{ flexShrink: 0 }}
               >
                 <Typography variant="h3" component="h1" sx={{ fontWeight: 700 }}>
-                  Appointments
+                  Clients
                 </Typography>
               </motion.div>
 
@@ -1194,61 +1111,14 @@ const AppointmentsDashboard = () => {
                 <Grid container spacing={2}>
                 {(() => {
                   switch(selectedStatus) {
-                    case 'upcoming':
+                    case 'active':
                       return (
                         <>
                           <Grid item xs={12} sm={6} md={6} xl={3}>
                             <StatCard
-                              icon={Event}
-                              title="Total Upcoming"
-                              value={stats.totalUpcoming || 0}
-                              color="#ffffff"
-                              delay={0}
-                              goal={20}
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={CalendarToday}
-                              title="This Week"
-                              value={stats.thisWeek || 0}
-                              color="#ffffff"
-                              delay={1}
-                              goal={5}
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={Schedule}
-                              title="This Month"
-                              value={stats.thisMonth || 0}
-                              color="#ffffff"
-                              delay={2}
-                              goal={15}
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={Assessment}
-                              title="No-Show Rate"
-                              value={stats.noShowRate || 0}
-                              suffix="%"
-                              color="#ffffff"
-                              delay={3}
-                              goal={5}
-                            />
-                          </Grid>
-                        </>
-                      );
-
-                    case 'completed':
-                      return (
-                        <>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={CheckCircle}
-                              title="Total Completed"
-                              value={stats.totalCompleted || 0}
+                              icon={People}
+                              title="Total Active Clients"
+                              value={stats.totalClients || 0}
                               color="#ffffff"
                               delay={0}
                               goal={100}
@@ -1256,81 +1126,132 @@ const AppointmentsDashboard = () => {
                           </Grid>
                           <Grid item xs={12} sm={6} md={6} xl={3}>
                             <StatCard
-                              icon={CalendarToday}
-                              title="Completed This Month"
-                              value={stats.completedThisMonth || 0}
+                              icon={PersonAdd}
+                              title="New This Month"
+                              value={stats.newThisMonth || 0}
                               color="#ffffff"
                               delay={1}
+                              goal={10}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={TrendingUp}
+                              title="Total Client Value"
+                              value={stats.totalClientValue || 0}
+                              prefix="$"
+                              suffix=""
+                              color="#ffffff"
+                              delay={2}
+                              goal={5000000}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={Schedule}
+                              title="Avg Client Lifetime"
+                              value={(stats.avgClientLifetime || 0) / 1000}
+                              prefix="$"
+                              suffix="K"
+                              color="#ffffff"
+                              delay={3}
+                              showPrivacy={true}
+                              goal={50}
+                            />
+                          </Grid>
+                        </>
+                      );
+
+                    case 'lead':
+                      return (
+                        <>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={CheckCircle}
+                              title="Converted Leads"
+                              value={stats.convertedLeads || 0}
+                              color="#ffffff"
+                              delay={0}
                               goal={25}
                             />
                           </Grid>
                           <Grid item xs={12} sm={6} md={6} xl={3}>
                             <StatCard
                               icon={TrendingUp}
-                              title="Success Rate"
-                              value={stats.successRate || 0}
+                              title="Conversion Rate"
+                              value={stats.conversionRate || 0}
                               suffix="%"
                               color="#ffffff"
-                              delay={2}
-                              goal={95}
+                              delay={1}
+                              goal={30}
                             />
                           </Grid>
                           <Grid item xs={12} sm={6} md={6} xl={3}>
                             <StatCard
-                              icon={Schedule}
-                              title="Avg Duration"
-                              value={stats.avgDuration || 0}
-                              suffix=" min"
+                              icon={AttachMoney}
+                              title="Potential Value"
+                              value={stats.potentialValue || 0}
+                              prefix="$"
+                              suffix=""
+                              color="#ffffff"
+                              delay={2}
+                              goal={2000000}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={CalendarToday}
+                              title="Avg Conversion Time"
+                              value={stats.avgConversionTime || 0}
+                              suffix=" days"
                               color="#ffffff"
                               delay={3}
-                              goal={60}
                             />
                           </Grid>
                         </>
                       );
 
-                    case 'cancelled':
+                    case 'inactive':
                       return (
                         <>
                           <Grid item xs={12} sm={6} md={6} xl={3}>
                             <StatCard
-                              icon={Cancel}
-                              title="Total Cancelled"
-                              value={stats.totalCancelled || 0}
+                              icon={People}
+                              title="Total Inactive"
+                              value={stats.totalInactive || 0}
                               color="#ffffff"
                               delay={0}
-                              goal={10}
                             />
                           </Grid>
                           <Grid item xs={12} sm={6} md={6} xl={3}>
                             <StatCard
-                              icon={Assessment}
-                              title="Cancellation Rate"
-                              value={stats.cancellationRate || 0}
+                              icon={TrendingDown}
+                              title="Inactive Rate"
+                              value={stats.inactiveRate || 0}
                               suffix="%"
                               color="#ffffff"
                               delay={1}
-                              goal={15}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={AttachMoney}
+                              title="Lost Value"
+                              value={stats.lostValue || 0}
+                              prefix="$"
+                              suffix=""
+                              color="#ffffff"
+                              delay={2}
                             />
                           </Grid>
                           <Grid item xs={12} sm={6} md={6} xl={3}>
                             <StatCard
                               icon={Schedule}
-                              title="Last-Minute Cancellations"
-                              value={stats.lastMinuteCancellations || 0}
-                              color="#ffffff"
-                              delay={2}
-                              goal={5}
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={Event}
-                              title="Rescheduled"
-                              value={stats.rescheduled || 0}
+                              title="Avg Days Inactive"
+                              value={stats.avgDaysInactive || 0}
+                              suffix=" days"
                               color="#ffffff"
                               delay={3}
-                              goal={8}
                             />
                           </Grid>
                         </>
@@ -1342,37 +1263,39 @@ const AppointmentsDashboard = () => {
                           <Grid item xs={12} sm={6} md={6} xl={3}>
                             <StatCard
                               icon={ArchiveIcon}
-                              title="Total Archived Appointments"
+                              title="Total Archived Clients"
                               value={archivedCount || 0}
                               color="#ffffff"
                               delay={0}
-                              goal={maxArchivedLimit}
                             />
                           </Grid>
                           <Grid item xs={12} sm={6} md={6} xl={3}>
                             <StatCard
-                              icon={TrendingUp}
+                              icon={Storage}
                               title="Max Archived"
-                              value={archivedCount || 0}
-                              suffix={` / ${maxArchivedLimit}`}
+                              value={`${archivedCount || 0}/1000`}
                               color="#ffffff"
                               delay={1}
                             />
                           </Grid>
                           <Grid item xs={12} sm={6} md={6} xl={3}>
                             <StatCard
-                              icon={Cancel}
-                              title="Cancelled Appointments"
-                              value={stats.totalCancelled || 0}
+                              icon={AttachMoney}
+                              title="Total Lifetime Value"
+                              value={stats.totalClientValue || 0}
+                              prefix="$"
+                              suffix=""
                               color="#ffffff"
                               delay={2}
+                              showPrivacy={true}
                             />
                           </Grid>
                           <Grid item xs={12} sm={6} md={6} xl={3}>
                             <StatCard
-                              icon={Schedule}
-                              title="No-Shows"
-                              value={stats.lastMinuteCancellations || 0}
+                              icon={CalendarToday}
+                              title="Avg Client Age"
+                              value={stats.avgClientLifetime ? `${Math.round(stats.avgClientLifetime / 365)}` : '0'}
+                              suffix=" days"
                               color="#ffffff"
                               delay={3}
                             />
@@ -1380,15 +1303,14 @@ const AppointmentsDashboard = () => {
                         </>
                       );
 
-                    case 'all':
-                    default:
+                    default: // 'all' status
                       return (
                         <>
                           <Grid item xs={12} sm={6} md={6} xl={3}>
                             <StatCard
-                              icon={Event}
-                              title="Total Appointments"
-                              value={stats.totalAppointments || 0}
+                              icon={People}
+                              title="Total Clients"
+                              value={stats.totalClients || 0}
                               color="#ffffff"
                               delay={0}
                               goal={150}
@@ -1396,48 +1318,53 @@ const AppointmentsDashboard = () => {
                           </Grid>
                           <Grid item xs={12} sm={6} md={6} xl={3}>
                             <StatCard
-                              icon={CalendarToday}
-                              title="Upcoming Appointments"
-                              value={stats.upcomingAppointments || 0}
+                              icon={CheckCircle}
+                              title="Active Clients"
+                              value={stats.activeClients || 0}
                               color="#ffffff"
                               delay={1}
-                              goal={30}
+                              goal={100}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={AttachMoney}
+                              title="Total Portfolio Value"
+                              value={stats.totalPortfolioValue || 0}
+                              prefix="$"
+                              suffix=""
+                              color="#ffffff"
+                              delay={2}
+                              showPrivacy={true}
+                              goal={10000000}
                             />
                           </Grid>
                           <Grid item xs={12} sm={6} md={6} xl={3}>
                             <StatCard
                               icon={TrendingUp}
-                              title="Completion Rate"
-                              value={stats.completionRate || 0}
-                              suffix="%"
-                              color="#ffffff"
-                              delay={2}
-                              goal={90}
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={Assessment}
-                              title="Avg Per Week"
-                              value={stats.avgPerWeek || 0}
+                              title="Avg Transactions/Client"
+                              value={stats.avgTransactionsPerClient || 0}
                               color="#ffffff"
                               delay={3}
-                              goal={10}
+                              goal={5}
                             />
                           </Grid>
                         </>
                       );
                   }
                 })()}
-                </Grid>
+              </Grid>
+
+              {/* Flexible spacer to push buttons to bottom */}
+              <Box sx={{ flexGrow: 1, minHeight: '20px' }} />
 
               {/* Action Buttons Row - Aligned to bottom */}
-              <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
+              <Box sx={{ display: 'flex', gap: 2 }}>
                 <Button
                   variant="contained"
                   size="medium"
                   startIcon={<Add />}
-                  onClick={() => setNewAppointmentModalOpen(true)}
+                  onClick={() => setNewClientModalOpen(true)}
                   sx={{
                     backgroundColor: 'rgba(255, 255, 255, 0.2)',
                     color: 'white',
@@ -1451,7 +1378,7 @@ const AppointmentsDashboard = () => {
                     }
                   }}
                 >
-                  Schedule Appointment
+                  Add New Client
                 </Button>
                 <Button
                   variant="outlined"
@@ -1468,12 +1395,12 @@ const AppointmentsDashboard = () => {
                     }
                   }}
                 >
-                  Appointment Analytics
+                  Client Analytics
                 </Button>
               </Box>
               </Box>
 
-              {/* Right container: AI Assistant */}
+              {/* Right container: AI Client Manager */}
               <Box sx={{
                 width: { xs: '100%', md: '280px', lg: '320px' },
                 minWidth: { md: '280px' },
@@ -1496,7 +1423,7 @@ const AppointmentsDashboard = () => {
                     minHeight: { xs: 250, md: 320 },
                     position: 'relative',
                     overflow: 'hidden',
-                    background: 'linear-gradient(135deg, rgba(122, 62, 0, 0.12) 0%, rgba(163, 93, 0, 0.08) 100%)',
+                    background: 'linear-gradient(135deg, rgba(8, 145, 178, 0.12) 0%, rgba(6, 182, 212, 0.08) 100%)',
                     backdropFilter: 'blur(10px)',
                     border: '2px dashed rgba(255, 255, 255, 0.3)',
                     borderRadius: 3,
@@ -1507,7 +1434,7 @@ const AppointmentsDashboard = () => {
                     transition: 'all 0.3s ease',
                     '&:hover': {
                       border: '2px dashed rgba(255, 255, 255, 0.5)',
-                      background: 'linear-gradient(135deg, rgba(122, 62, 0, 0.18) 0%, rgba(163, 93, 0, 0.12) 100%)',
+                      background: 'linear-gradient(135deg, rgba(8, 145, 178, 0.18) 0%, rgba(6, 182, 212, 0.12) 100%)',
                     }
                   }}
                 >
@@ -1537,7 +1464,7 @@ const AppointmentsDashboard = () => {
                           letterSpacing: '0.02em',
                         }}
                       >
-                        AI Appointment Manager
+                        AI Client Manager
                       </Typography>
                       <Typography
                         variant="body2"
@@ -1547,7 +1474,7 @@ const AppointmentsDashboard = () => {
                           fontSize: '0.875rem',
                         }}
                       >
-                        Hire an AI assistant to schedule appointments, send reminders, and manage your calendar.
+                        Hire an AI assistant to manage client relationships, send reminders, and track touchpoints.
                       </Typography>
                       <Box
                         sx={{
@@ -1578,9 +1505,8 @@ const AppointmentsDashboard = () => {
               </motion.div>
               {/* Spacer */}
               <Box sx={{ flexGrow: 1 }} />
+              </Box>
             </Box>
-            </Box>
-
           </Box>
         </HeroSection>
 
@@ -1599,7 +1525,7 @@ const AppointmentsDashboard = () => {
               display: 'flex',
               alignItems: 'center',
               gap: 2,
-              background: 'linear-gradient(135deg, #f97316 0%, #fb923c 100%)',
+              background: 'linear-gradient(135deg, #0891b2 0%, #06b6d4 100%)',
               borderRadius: 2,
               px: 2,
               py: 1.5,
@@ -1672,7 +1598,7 @@ const AppointmentsDashboard = () => {
                 format="MMM d, yyyy"
                 value={(() => {
                   try {
-                    const date = customStartDate || dateRange?.startDate;
+                    const date = customStartDate || getDateRange()?.startDate;
                     if (!date) return null;
                     if (typeof date === 'string') {
                       const parsed = new Date(date);
@@ -1750,7 +1676,7 @@ const AppointmentsDashboard = () => {
                 format="MMM d, yyyy"
                 value={(() => {
                   try {
-                    const date = customEndDate || dateRange?.endDate;
+                    const date = customEndDate || getDateRange()?.endDate;
                     if (!date) return null;
                     if (typeof date === 'string') {
                       const parsed = new Date(date);
@@ -1825,79 +1751,321 @@ const AppointmentsDashboard = () => {
           </Box>
         </Box>
 
-        {/* Navigation Bar with Tabs and Controls */}
-        <Box sx={{ mb: 4 }}>
-          {/* Desktop Layout */}
-          <Box
+      {/* Navigation Bar with Tabs and Controls */}
+      <Box sx={{ mb: 4 }}>
+        {/* Desktop Layout */}
+        <Box
+          sx={{
+            display: { xs: 'none', md: 'flex' },
+            flexWrap: 'wrap',
+            gap: 2,
+            alignItems: 'flex-start',
+          }}
+        >
+          {/* Left: Tabs with gray background */}
+          <Paper
+            elevation={0}
             sx={{
-              display: { xs: 'none', md: 'flex' },
-              flexWrap: 'wrap',
-              gap: 2,
-              alignItems: 'flex-start',
+              backgroundColor: 'background.paper',
+              borderRadius: '8px',
+              border: '1px solid',
+              borderColor: 'divider',
+              flex: '0 0 auto',
             }}
           >
-            {/* Left: Tabs with gray background */}
-            <Paper
-              elevation={0}
+            <Tabs
+              value={selectedStatus}
+              onChange={(e, newValue) => setSelectedStatus(newValue)}
               sx={{
-                backgroundColor: 'background.paper',
-                borderRadius: '8px',
-                border: '1px solid',
-                borderColor: 'divider',
-                flex: '0 0 auto',
+                minHeight: 48,
+                '& .MuiTab-root': {
+                  textTransform: 'none',
+                  fontSize: '0.9375rem',
+                  fontWeight: 500,
+                  minHeight: 48,
+                  px: 3,
+                  color: 'text.secondary',
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    color: 'primary.main',
+                    backgroundColor: alpha('#1976d2', 0.04),
+                  },
+                },
+                '& .Mui-selected': {
+                  fontWeight: 600,
+                  color: 'primary.main',
+                },
+                '& .MuiTabs-indicator': {
+                  height: 3,
+                  borderRadius: '3px 3px 0 0',
+                },
               }}
             >
-              <Tabs
-                value={selectedStatus}
-                onChange={(e, newValue) => setSelectedStatus(newValue)}
+              <Tab label="Active Clients" value="active" />
+              <Tab label="Leads" value="lead" />
+              <Tab label="Inactive" value="inactive" />
+              <Tab label="All Clients" value="all" />
+            </Tabs>
+          </Paper>
+
+          {/* Spacer */}
+          <Box sx={{ flexGrow: 1 }} />
+
+          {/* Right: Controls */}
+          <Box sx={{
+            display: 'flex',
+            gap: 1.5,
+            alignItems: 'center',
+            flexWrap: 'wrap',
+          }}>
+            {/* Scope Dropdown */}
+            <FormControl size="small" variant="standard" sx={{ minWidth: 110 }}>
+              <Select
+                value={scope}
+                onChange={(e) => setScope(e.target.value)}
+                disableUnderline
+                renderValue={(value) => {
+                  const labels = {
+                    brokerage: 'Brokerage',
+                    team: 'Team',
+                    user: 'User',
+                  };
+                  return (
+                    <Typography variant="body2" sx={{
+                      fontSize: '0.875rem',
+                      fontWeight: 500,
+                      color: 'text.primary',
+                    }}>
+                      {labels[value]}
+                    </Typography>
+                  );
+                }}
                 sx={{
-                  minHeight: 48,
-                  '& .MuiTab-root': {
-                    textTransform: 'none',
-                    fontSize: '0.9375rem',
-                    fontWeight: 500,
-                    minHeight: 48,
-                    px: 3,
-                    color: 'text.secondary',
-                    transition: 'all 0.2s ease',
-                    '&:hover': {
-                      color: 'primary.main',
-                      backgroundColor: alpha('#1976d2', 0.04),
-                    },
+                  backgroundColor: 'transparent',
+                  borderRadius: 1,
+                  px: 1.5,
+                  py: 0.5,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  '&:hover': {
+                    backgroundColor: alpha('#000', 0.04),
+                    borderColor: 'primary.main',
                   },
-                  '& .Mui-selected': {
-                    fontWeight: 600,
-                    color: 'primary.main',
-                  },
-                  '& .MuiTabs-indicator': {
-                    height: 3,
-                    borderRadius: '3px 3px 0 0',
+                  '& .MuiSelect-select': {
+                    paddingRight: '32px !important',
+                    display: 'flex',
+                    alignItems: 'center',
                   },
                 }}
               >
-                <Tab label="Upcoming" value="upcoming" />
-                <Tab label="Completed" value="completed" />
-                <Tab label="Cancelled" value="cancelled" />
-                <Tab label="All Appointments" value="all" />
-              </Tabs>
-            </Paper>
+                <MenuItem value="brokerage">Brokerage</MenuItem>
+                <MenuItem value="team">Team</MenuItem>
+                <MenuItem value="user">User</MenuItem>
+              </Select>
+            </FormControl>
 
-            {/* Spacer */}
-            <Box sx={{ flexGrow: 1 }} />
+            {/* Sort Dropdown */}
+            <FormControl size="small" variant="standard" sx={{ minWidth: 140 }}>
+              <Select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                disableUnderline
+                startAdornment={
+                  <Sort sx={{ mr: 1, fontSize: '1.125rem', color: 'text.secondary' }} />
+                }
+                renderValue={(value) => {
+                  const labels = {
+                    created_at: 'Date Added',
+                    last_contact: 'Last Contact',
+                    name: 'Name',
+                    total_value: 'Total Value',
+                    status: 'Status',
+                  };
+                  return (
+                    <Typography variant="body2" sx={{
+                      fontSize: '0.875rem',
+                      fontWeight: 500,
+                      color: 'text.primary',
+                    }}>
+                      {labels[value]}
+                    </Typography>
+                  );
+                }}
+                sx={{
+                  backgroundColor: 'transparent',
+                  borderRadius: 1,
+                  px: 1.5,
+                  py: 0.5,
+                  border: '1px solid',
+                  borderColor: 'divider',
+                  '&:hover': {
+                    backgroundColor: alpha('#000', 0.04),
+                    borderColor: 'primary.main',
+                  },
+                  '& .MuiSelect-select': {
+                    paddingRight: '32px !important',
+                    display: 'flex',
+                    alignItems: 'center',
+                  },
+                }}
+              >
+                <MenuItem value="created_at">Date Added</MenuItem>
+                <MenuItem value="last_contact">Last Contact</MenuItem>
+                <MenuItem value="name">Name</MenuItem>
+                <MenuItem value="total_value">Total Value</MenuItem>
+                <MenuItem value="status">Status</MenuItem>
+              </Select>
+            </FormControl>
 
-            {/* Right: Controls */}
+            {/* View Mode & Calendar Selector */}
+            <ToggleButtonGroup
+              value={showCalendar ? 'calendar' : viewMode}
+              exclusive
+              onChange={(e, newValue) => {
+                if (newValue !== null) {
+                  if (newValue === 'calendar') {
+                    setShowCalendar(true);
+                  } else {
+                    setShowCalendar(false);
+                    setViewMode(newValue);
+                  }
+                }
+              }}
+              size="small"
+              sx={{
+                '& .MuiToggleButton-root': {
+                  px: 1.5,
+                  py: 0.5,
+                  textTransform: 'none',
+                  fontWeight: 500,
+                  height: '32px',
+                },
+              }}
+            >
+              <ToggleButton value="small" title="Grid view (V)">
+                <Box sx={{ display: 'flex', gap: 0.4 }}>
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                </Box>
+              </ToggleButton>
+              <ToggleButton value="large" title="Full width view (V)">
+                <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+              </ToggleButton>
+              <ToggleButton value="calendar" title="Calendar view">
+                <CalendarToday sx={{ fontSize: 16 }} />
+              </ToggleButton>
+            </ToggleButtonGroup>
+
+            {/* Archive/Trash Icon */}
+            <IconButton
+              size="small"
+              onClick={() => setSelectedStatus('archived')}
+              sx={{
+                width: 36,
+                height: 36,
+                backgroundColor: selectedStatus === 'archived' ? 'warning.main' : alpha('#000', 0.06),
+                color: selectedStatus === 'archived' ? 'white' : 'text.secondary',
+                '&:hover': {
+                  backgroundColor: selectedStatus === 'archived' ? 'warning.dark' : alpha('#000', 0.1),
+                },
+                transition: 'all 0.2s',
+              }}
+            >
+              <Badge badgeContent={archivedCount} color="error" max={99}>
+                <DeleteIcon sx={{ fontSize: 20 }} />
+              </Badge>
+            </IconButton>
+          </Box>
+        </Box>
+
+        {/* Mobile/Tablet Layout */}
+        <Box sx={{ display: { xs: 'block', md: 'none' } }}>
+          {/* Tab Bar - Mobile/Tablet */}
+          <Paper
+            elevation={0}
+            sx={{
+              backgroundColor: 'background.paper',
+              borderRadius: '8px 8px 0 0',
+              borderBottom: '1px solid',
+              borderColor: 'divider',
+              mb: 0,
+            }}
+          >
+            <Tabs
+              value={selectedStatus}
+              onChange={(e, newValue) => setSelectedStatus(newValue)}
+              variant="scrollable"
+              scrollButtons="auto"
+              sx={{
+                '& .MuiTab-root': {
+                  textTransform: 'none',
+                  fontSize: { xs: '0.875rem', sm: '0.9375rem' },
+                  fontWeight: 500,
+                  minHeight: { xs: 48, sm: 52 },
+                  px: { xs: 2, sm: 2.5 },
+                },
+                '& .Mui-selected': {
+                  fontWeight: 600,
+                  color: 'primary.main',
+                },
+                '& .MuiTabs-indicator': {
+                  height: 3,
+                  borderRadius: '3px 3px 0 0',
+                },
+              }}
+            >
+              <Tab label="Active" value="active" />
+              <Tab label="Leads" value="lead" />
+              <Tab label="Inactive" value="inactive" />
+              <Tab label="All" value="all" />
+              {/* Archive Badge for Mobile */}
+              <Tab
+                label={
+                  <Badge badgeContent={archivedCount} color="error" max={99}>
+                    <span>Archived</span>
+                  </Badge>
+                }
+                value="archived"
+              />
+            </Tabs>
+          </Paper>
+
+          {/* Mobile/Tablet Filter Controls */}
+          <Box
+            sx={{
+              backgroundColor: alpha('#f5f5f5', 0.4),
+              borderRadius: '0 0 8px 8px',
+              p: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
+            }}
+          >
+            {/* Sort and View Controls */}
             <Box sx={{
               display: 'flex',
               gap: 1.5,
               alignItems: 'center',
-              flexWrap: 'wrap',
+              justifyContent: 'space-between',
             }}>
               {/* Scope Dropdown */}
-              <FormControl size="small" variant="standard" sx={{ minWidth: 110 }}>
+              <FormControl
+                size="small"
+                variant="outlined"
+                sx={{
+                  flex: '0 1 auto',
+                  minWidth: 100,
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: 'white',
+                    borderRadius: 2,
+                  },
+                }}
+              >
                 <Select
                   value={scope}
                   onChange={(e) => setScope(e.target.value)}
-                  disableUnderline
                   renderValue={(value) => {
                     const labels = {
                       brokerage: 'Brokerage',
@@ -1905,31 +2073,12 @@ const AppointmentsDashboard = () => {
                       user: 'User',
                     };
                     return (
-                      <Typography variant="body2" sx={{
-                        fontSize: '0.875rem',
-                        fontWeight: 500,
-                        color: 'text.primary',
-                      }}>
-                        {labels[value]}
-                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography variant="body2" sx={{ fontSize: '0.875rem', fontWeight: 500 }}>
+                          {labels[value]}
+                        </Typography>
+                      </Box>
                     );
-                  }}
-                  sx={{
-                    backgroundColor: 'transparent',
-                    borderRadius: 1,
-                    px: 1.5,
-                    py: 0.5,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    '&:hover': {
-                      backgroundColor: alpha('#000', 0.04),
-                      borderColor: 'primary.main',
-                    },
-                    '& .MuiSelect-select': {
-                      paddingRight: '32px !important',
-                      display: 'flex',
-                      alignItems: 'center',
-                    },
                   }}
                 >
                   <MenuItem value="brokerage">Brokerage</MenuItem>
@@ -1939,391 +2088,347 @@ const AppointmentsDashboard = () => {
               </FormControl>
 
               {/* Sort Dropdown */}
-              <FormControl size="small" variant="standard" sx={{ minWidth: 140 }}>
+              <FormControl
+                size="small"
+                variant="outlined"
+                sx={{
+                  flex: '1 1 auto',
+                  maxWidth: { xs: '60%', sm: '200px' },
+                  '& .MuiOutlinedInput-root': {
+                    backgroundColor: 'white',
+                    borderRadius: 2,
+                  },
+                }}
+              >
                 <Select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  disableUnderline
-                  startAdornment={
-                    <Sort sx={{ mr: 1, fontSize: '1.125rem', color: 'text.secondary' }} />
-                  }
+                  startAdornment={<Sort sx={{ mr: 1, fontSize: '1.125rem', color: 'text.secondary' }} />}
                   renderValue={(value) => {
                     const labels = {
-                      appointment_date: 'Appointment Date',
-                      created_at: 'Date Created',
-                      client_name: 'Client Name',
-                      appointment_type: 'Type',
+                      created_at: 'Date Added',
+                      last_contact: 'Last Contact',
+                      name: 'Name',
+                      total_value: 'Total Value',
                       status: 'Status',
                     };
                     return (
-                      <Typography variant="body2" sx={{
-                        fontSize: '0.875rem',
-                        fontWeight: 500,
-                        color: 'text.primary',
-                      }}>
-                        {labels[value]}
-                      </Typography>
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                        <Typography variant="body2" sx={{ fontSize: '0.875rem', fontWeight: 500 }}>
+                          Sort: {labels[value]}
+                        </Typography>
+                      </Box>
                     );
                   }}
-                  sx={{
-                    backgroundColor: 'transparent',
-                    borderRadius: 1,
-                    px: 1.5,
-                    py: 0.5,
-                    border: '1px solid',
-                    borderColor: 'divider',
-                    '&:hover': {
-                      backgroundColor: alpha('#000', 0.04),
-                      borderColor: 'primary.main',
-                    },
-                    '& .MuiSelect-select': {
-                      paddingRight: '32px !important',
-                      display: 'flex',
-                      alignItems: 'center',
-                    },
-                  }}
                 >
-                  <MenuItem value="appointment_date">Appointment Date</MenuItem>
-                  <MenuItem value="created_at">Date Created</MenuItem>
-                  <MenuItem value="client_name">Client Name</MenuItem>
-                  <MenuItem value="appointment_type">Type</MenuItem>
+                  <MenuItem value="created_at">Date Added</MenuItem>
+                  <MenuItem value="last_contact">Last Contact</MenuItem>
+                  <MenuItem value="name">Name</MenuItem>
+                  <MenuItem value="total_value">Total Value</MenuItem>
                   <MenuItem value="status">Status</MenuItem>
                 </Select>
               </FormControl>
 
-              {/* View Mode & Calendar Selector */}
-              <ToggleButtonGroup
-                value={showCalendar ? 'calendar' : viewMode}
-                exclusive
-                onChange={(e, newValue) => {
-                  if (newValue !== null) {
-                    if (newValue === 'calendar') {
-                      setShowCalendar(true);
-                    } else {
-                      setShowCalendar(false);
-                      setViewMode(newValue);
-                    }
-                  }
-                }}
-                size="small"
-                sx={{
-                  '& .MuiToggleButton-root': {
-                    px: 1.5,
-                    py: 0.5,
-                    textTransform: 'none',
-                    fontWeight: 500,
-                    height: '32px',
-                  },
-                }}
-              >
-                <ToggleButton value="small" title="Grid view (V)">
-                  <Box sx={{ display: 'flex', gap: 0.4 }}>
-                    <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                    <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                    <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                    <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  </Box>
-                </ToggleButton>
-                <ToggleButton value="large" title="Full width view (V)">
-                  <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                </ToggleButton>
-                <ToggleButton value="calendar" title="Calendar view">
-                  <CalendarToday sx={{ fontSize: 16 }} />
-                </ToggleButton>
-              </ToggleButtonGroup>
-
-              {/* Archive/Trash Icon */}
-              <IconButton
-                size="small"
-                onClick={() => setSelectedStatus('archived')}
-                sx={{
-                  width: 36,
-                  height: 36,
-                  backgroundColor: selectedStatus === 'archived' ? 'warning.main' : alpha('#000', 0.06),
-                  color: selectedStatus === 'archived' ? 'white' : 'text.secondary',
-                  '&:hover': {
-                    backgroundColor: selectedStatus === 'archived' ? 'warning.dark' : alpha('#000', 0.1),
-                  },
-                  transition: 'all 0.2s',
-                }}
-              >
-                <Badge badgeContent={archivedCount} color="error" max={99}>
-                  <DeleteIcon sx={{ fontSize: 20 }} />
-                </Badge>
-              </IconButton>
-            </Box>
-          </Box>
-
-          {/* Mobile/Tablet Layout */}
-          <Box sx={{ display: { xs: 'block', md: 'none' } }}>
-            {/* Tab Bar - Mobile/Tablet */}
-            <Paper
-              elevation={0}
-              sx={{
-                backgroundColor: 'background.paper',
-                borderRadius: '8px 8px 0 0',
-                borderBottom: '1px solid',
-                borderColor: 'divider',
-                mb: 0,
-              }}
-            >
-              <Tabs
-                value={selectedStatus}
-                onChange={(e, newValue) => setSelectedStatus(newValue)}
-                variant="scrollable"
-                scrollButtons="auto"
-                sx={{
-                  '& .MuiTab-root': {
-                    textTransform: 'none',
-                    fontSize: { xs: '0.875rem', sm: '0.9375rem' },
-                    fontWeight: 500,
-                    minHeight: { xs: 48, sm: 52 },
-                    px: { xs: 2, sm: 2.5 },
-                  },
-                  '& .Mui-selected': {
-                    fontWeight: 600,
-                    color: 'primary.main',
-                  },
-                  '& .MuiTabs-indicator': {
-                    height: 3,
-                    borderRadius: '3px 3px 0 0',
-                  },
-                }}
-              >
-                <Tab label="Upcoming" value="upcoming" />
-                <Tab label="Completed" value="completed" />
-                <Tab label="Cancelled" value="cancelled" />
-                <Tab label="All" value="all" />
-                {/* Archive Badge for Mobile */}
-                <Tab
-                  label={
-                    <Badge badgeContent={archivedCount} color="error" max={99}>
-                      <span>Archived</span>
-                    </Badge>
-                  }
-                  value="archived"
-                />
-              </Tabs>
-            </Paper>
-
-            {/* Mobile/Tablet Filter Controls */}
-            <Box
-              sx={{
-                backgroundColor: alpha('#f5f5f5', 0.4),
-                borderRadius: '0 0 8px 8px',
-                p: 2,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 2,
-              }}
-            >
-              {/* Sort and View Controls */}
-              <Box sx={{
-                display: 'flex',
-                gap: 1.5,
-                alignItems: 'center',
-                justifyContent: 'space-between',
-              }}>
-                {/* Scope Dropdown */}
-                <FormControl
-                  size="small"
-                  variant="outlined"
-                  sx={{
-                    flex: '0 1 auto',
-                    minWidth: 100,
-                    '& .MuiOutlinedInput-root': {
-                      backgroundColor: 'white',
-                      borderRadius: 2,
-                    },
-                  }}
-                >
-                  <Select
-                    value={scope}
-                    onChange={(e) => setScope(e.target.value)}
-                    renderValue={(value) => {
-                      const labels = {
-                        brokerage: 'Brokerage',
-                        team: 'Team',
-                        user: 'User',
-                      };
-                      return (
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Typography variant="body2" sx={{ fontSize: '0.875rem', fontWeight: 500 }}>
-                            {labels[value]}
-                          </Typography>
-                        </Box>
-                      );
-                    }}
-                  >
-                    <MenuItem value="brokerage">Brokerage</MenuItem>
-                    <MenuItem value="team">Team</MenuItem>
-                    <MenuItem value="user">User</MenuItem>
-                  </Select>
-                </FormControl>
-
-                {/* Sort Dropdown */}
-                <FormControl
-                  size="small"
-                  variant="outlined"
-                  sx={{
-                    flex: '1 1 auto',
-                    maxWidth: { xs: '60%', sm: '200px' },
-                    '& .MuiOutlinedInput-root': {
-                      backgroundColor: 'white',
-                      borderRadius: 2,
-                    },
-                  }}
-                >
-                  <Select
-                    value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value)}
-                    startAdornment={<Sort sx={{ mr: 1, fontSize: '1.125rem', color: 'text.secondary' }} />}
-                    renderValue={(value) => {
-                      const labels = {
-                        appointment_date: 'Appointment Date',
-                        created_at: 'Date Created',
-                        client_name: 'Client Name',
-                        appointment_type: 'Type',
-                        status: 'Status',
-                      };
-                      return (
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <Typography variant="body2" sx={{ fontSize: '0.875rem', fontWeight: 500 }}>
-                            Sort: {labels[value]}
-                          </Typography>
-                        </Box>
-                      );
-                    }}
-                  >
-                    <MenuItem value="appointment_date">Appointment Date</MenuItem>
-                    <MenuItem value="created_at">Date Created</MenuItem>
-                    <MenuItem value="client_name">Client Name</MenuItem>
-                    <MenuItem value="appointment_type">Type</MenuItem>
-                    <MenuItem value="status">Status</MenuItem>
-                  </Select>
-                </FormControl>
-
-                {/* View Mode & Calendar - Mobile */}
-                <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
-                  <ToggleButtonGroup
-                    value={showCalendar ? 'calendar' : viewMode}
-                    exclusive
-                    onChange={(e, newValue) => {
-                      if (newValue !== null) {
-                        if (newValue === 'calendar') {
-                          setShowCalendar(true);
-                        } else {
-                          setShowCalendar(false);
-                          setViewMode(newValue);
-                        }
+              {/* View Mode & Calendar - Mobile */}
+              <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                <ToggleButtonGroup
+                  value={showCalendar ? 'calendar' : viewMode}
+                  exclusive
+                  onChange={(e, newValue) => {
+                    if (newValue !== null) {
+                      if (newValue === 'calendar') {
+                        setShowCalendar(true);
+                      } else {
+                        setShowCalendar(false);
+                        setViewMode(newValue);
                       }
-                    }}
-                    size="small"
-                    aria-label="View mode and calendar selection"
-                    sx={{
-                      '& .MuiToggleButton-root': {
-                        px: 2,
-                        py: 0.5,
-                        textTransform: 'none',
-                        fontWeight: 500,
-                        height: '32px',
-                      },
-                    }}
+                    }
+                  }}
+                  size="small"
+                  aria-label="View mode and calendar selection"
+                  sx={{
+                    '& .MuiToggleButton-root': {
+                      px: 2,
+                      py: 0.5,
+                      textTransform: 'none',
+                      fontWeight: 500,
+                      height: '32px',
+                    },
+                  }}
+                >
+                  <ToggleButton
+                    value="small"
+                    aria-label="Grid view"
+                    title="Grid view (V)"
                   >
-                    <ToggleButton
-                      value="small"
-                      aria-label="Grid view"
-                      title="Grid view (V)"
-                    >
-                      <Box sx={{ display: 'flex', gap: 0.4 }}>
-                        <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                        <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                        <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                        <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                      </Box>
-                    </ToggleButton>
-                    <ToggleButton
-                      value="large"
-                      aria-label="Full width view"
-                      title="Full width view (V)"
-                    >
-                      <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                    </ToggleButton>
-                    <ToggleButton
-                      value="calendar"
-                      aria-label="Calendar view"
-                      title="Calendar view"
-                    >
-                      <CalendarToday sx={{ fontSize: 16 }} />
-                    </ToggleButton>
-                  </ToggleButtonGroup>
-                </Box>
+                    <Box sx={{ display: 'flex', gap: 0.4 }}>
+                      <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                      <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                      <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                      <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                    </Box>
+                  </ToggleButton>
+                  <ToggleButton
+                    value="large"
+                    aria-label="Full width view"
+                    title="Full width view (V)"
+                  >
+                    <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  </ToggleButton>
+                  <ToggleButton
+                    value="calendar"
+                    aria-label="Calendar view"
+                    title="Calendar view"
+                  >
+                    <CalendarToday sx={{ fontSize: 16 }} />
+                  </ToggleButton>
+                </ToggleButtonGroup>
               </Box>
             </Box>
           </Box>
         </Box>
+      </Box>
 
-        {/* Appointments Grid */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr', md: viewMode === 'small' ? 'repeat(2, 1fr)' : '1fr', lg: viewMode === 'small' ? 'repeat(4, 1fr)' : '1fr' }, gap: 3, width: '100%' }}>
+        {/* Clients Grid */}
+        <Box sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: '1fr',
+            sm: '1fr',
+            md: viewMode === 'small' ? 'repeat(2, 1fr)' : '1fr',
+            lg: viewMode === 'small' ? 'repeat(4, 1fr)' : '1fr',
+          },
+          gap: 3,
+          width: '100%',
+        }}>
           <AnimatePresence>
             {(() => {
-              const now = new Date();
-              const { startDate, endDate } = dateRange;
+              // Use archived clients for archived view, otherwise use active clients
+              const sourceClients = selectedStatus === 'archived' ? archivedClients : clients;
 
-              // Filter by date range first
-              const dateFiltered = appointments.filter(a => {
-                const apptDate = new Date(a.appointment_date || a.appointment_date);
-                return apptDate >= startDate && apptDate <= endDate;
+              const filteredClients = sourceClients.filter(c => {
+                switch (selectedStatus) {
+                  case 'active':
+                    return c.clientStatus === 'Active' || c.client_status === 'Active' ||
+                           c.clientStatus === 'active' || c.client_status === 'active';
+                  case 'lead':
+                    return c.clientStatus === 'Lead' || c.client_status === 'Lead' ||
+                           c.clientStatus === 'lead' || c.client_status === 'lead';
+                  case 'inactive':
+                    return c.clientStatus === 'Inactive' || c.client_status === 'Inactive' ||
+                           c.clientStatus === 'inactive' || c.client_status === 'inactive';
+                  case 'archived':
+                    return true; // Show all archived clients
+                  case 'all':
+                    return true;
+                  default:
+                    return true;
+                }
               });
 
-              // Then filter by status
-              const filtered = dateFiltered.filter(a => {
-                const apptDate = new Date(a.appointment_date || a.appointment_date);
-                const status = (a.status || a.appointment_status || '').toLowerCase();
+              // Sort clients based on sortBy state
+              const sortedClients = [...filteredClients].sort((a, b) => {
+                let aVal, bVal;
 
-                if (selectedStatus === 'upcoming') return apptDate >= now && status !== 'cancelled';
-                if (selectedStatus === 'completed') return status === 'completed';
-                if (selectedStatus === 'cancelled') return status === 'cancelled';
-                return true; // 'all'
+                switch(sortBy) {
+                  case 'created_at':
+                    aVal = new Date(a.createdAt || a.created_at || 0);
+                    bVal = new Date(b.createdAt || b.created_at || 0);
+                    return bVal - aVal;
+                  case 'last_contact':
+                    aVal = new Date(a.lastContact || a.last_contact || 0);
+                    bVal = new Date(b.lastContact || b.last_contact || 0);
+                    return bVal - aVal;
+                  case 'name':
+                    aVal = `${a.firstName || a.first_name || ''} ${a.lastName || a.last_name || ''}`.toLowerCase();
+                    bVal = `${b.firstName || b.first_name || ''} ${b.lastName || b.last_name || ''}`.toLowerCase();
+                    return aVal.localeCompare(bVal);
+                  case 'total_value':
+                    aVal = Number(a.totalValue || a.total_value || 0);
+                    bVal = Number(b.totalValue || b.total_value || 0);
+                    return bVal - aVal;
+                  case 'client_status':
+                    aVal = (a.clientStatus || a.client_status || '').toLowerCase();
+                    bVal = (b.clientStatus || b.client_status || '').toLowerCase();
+                    return aVal.localeCompare(bVal);
+                  default:
+                    return 0;
+                }
               });
 
-              const sorted = [...filtered].sort((a, b) => {
-                if (sortBy === 'appointment_date') return new Date(b.appointment_date || b.appointment_date) - new Date(a.appointment_date || a.appointment_date);
-                if (sortBy === 'created_at') return new Date(b.created_at || b.created_at) - new Date(a.created_at || a.created_at);
-                if (sortBy === 'client_name') return (a.client_name || '').localeCompare(b.client_name || '');
-                if (sortBy === 'appointment_type') return (a.appointment_type || '').localeCompare(b.appointment_type || '');
-                if (sortBy === 'appointment_status') return (a.status || '').localeCompare(b.status || '');
-                return 0;
-              });
+              if (!sortedClients || sortedClients.length === 0) {
+                return (
+                  <Paper
+                    sx={{
+                      p: 6,
+                      height: 240,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      textAlign: 'center',
+                      background: theme => alpha(theme.palette.primary.main, 0.03),
+                      border: theme => `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+                      gridColumn: '1 / -1',
+                    }}
+                  >
+                    <Typography variant="h6" color="textSecondary" gutterBottom>
+                      No {selectedStatus} clients found
+                    </Typography>
+                    <Typography variant="body2" color="textSecondary">
+                      {selectedStatus === 'active' ? 'Add a new client to get started' : `No ${selectedStatus} clients in the system`}
+                    </Typography>
+                  </Paper>
+                );
+              } else {
+                // Show batch selection controls in archived view
+                const elements = [];
 
-              if (sorted.length === 0) return <Paper sx={{ p: 6, height: 240, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', background: t => alpha(t.palette.primary.main, 0.03), border: t => `1px solid ${alpha(t.palette.primary.main, 0.1)}`, gridColumn: '1 / -1' }}><Typography variant="h6" color="textSecondary">No {selectedStatus} appointments found</Typography></Paper>;
+                if (selectedStatus === 'archived') {
+                  elements.push(
+                    <Box
+                      key="batch-controls"
+                      sx={{
+                        gridColumn: '1 / -1',
+                        mb: 2,
+                        p: 2,
+                        backgroundColor: alpha('#f97316', 0.1),
+                        border: `1px solid ${alpha('#f97316', 0.3)}`,
+                        borderRadius: 2,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 2,
+                      }}
+                    >
+                      <Checkbox
+                        checked={selectedArchivedIds.length === archivedClients.length && archivedClients.length > 0}
+                        indeterminate={selectedArchivedIds.length > 0 && selectedArchivedIds.length < archivedClients.length}
+                        onChange={(e) => handleSelectAll(e.target.checked)}
+                      />
+                      <Typography variant="body2">
+                        {selectedArchivedIds.length > 0
+                          ? `${selectedArchivedIds.length} selected`
+                          : 'Select all'}
+                      </Typography>
+                      {selectedArchivedIds.length > 0 && (
+                        <Button
+                          variant="contained"
+                          color="error"
+                          size="small"
+                          startIcon={batchDeleting ? <CircularProgress size={16} color="inherit" /> : <DeleteForeverIcon />}
+                          onClick={handleBatchDelete}
+                          disabled={batchDeleting}
+                        >
+                          Delete {selectedArchivedIds.length} Client{selectedArchivedIds.length > 1 ? 's' : ''}
+                        </Button>
+                      )}
+                    </Box>
+                  );
+                }
 
-              return sorted.map((a, i) => (
-                <motion.div
-                  key={a.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  transition={{ duration: 0.3, delay: i * 0.05 }}
-                >
-                  <AppointmentCard
-                    appointment={a}
-                    viewMode={viewMode}
-                    index={i}
-                  />
-                </motion.div>
-              ));
+                // Add client cards
+                sortedClients.forEach((client, index) => {
+                  const isSelected = selectedArchivedIds.includes(client.id);
+
+                  elements.push(
+                    <Box key={client.id} sx={{ position: 'relative' }}>
+                      {/* Selection checkbox for archived view */}
+                      {selectedStatus === 'archived' && (
+                        <Checkbox
+                          checked={isSelected}
+                          onChange={(e) => handleSelectClient(client.id, e.target.checked)}
+                          sx={{
+                            position: 'absolute',
+                            top: 8,
+                            left: 8,
+                            zIndex: 10,
+                            backgroundColor: 'white',
+                            borderRadius: '4px',
+                            '&:hover': {
+                              backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            },
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      )}
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3, delay: index * 0.05 }}
+                        style={{ opacity: isSelected ? 0.7 : 1 }}
+                      >
+                        <ClientCard
+                          client={client}
+                          viewMode={viewMode}
+                          index={index}
+                          isArchived={selectedStatus === 'archived'}
+                        />
+                      </motion.div>
+                    </Box>
+                  );
+                });
+
+                return elements;
+              }
             })()}
           </AnimatePresence>
+
+          {/* Load More Button */}
+          {hasMorePages && !loading && selectedStatus !== 'archived' && (
+            <Box sx={{
+              gridColumn: '1 / -1',
+              display: 'flex',
+              justifyContent: 'center',
+              mt: 4,
+              mb: 2
+            }}>
+              <Button
+                variant="outlined"
+                size="large"
+                onClick={loadMoreClients}
+                disabled={loadingMore}
+                startIcon={loadingMore ? <CircularProgress size={20} /> : null}
+                sx={{
+                  px: 6,
+                  py: 1.5,
+                  borderRadius: '12px',
+                  textTransform: 'none',
+                  fontSize: '1rem',
+                  fontWeight: 600
+                }}
+              >
+                {loadingMore ? 'Loading...' : `Load More (${totalCount - clients.length} remaining)`}
+              </Button>
+            </Box>
+          )}
         </Box>
 
-        {/* New Appointment Modal */}
-        <NewAppointmentModal
-          open={newAppointmentModalOpen}
-          onClose={() => setNewAppointmentModalOpen(false)}
-          onSuccess={(newAppointmentId) => {
-            setNewAppointmentModalOpen(false);
-            fetchAppointments();
+        {/* Calendar Dialog (placeholder for future implementation) */}
+        <Dialog
+          open={calendarDialogOpen}
+          onClose={() => setCalendarDialogOpen(false)}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>Calendar View</DialogTitle>
+          <DialogContent>
+            <Typography variant="body1" sx={{ p: 3, textAlign: 'center' }}>
+              Calendar view coming soon...
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setCalendarDialogOpen(false)}>Close</Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* New Client Modal */}
+        <NewClientModal
+          open={newClientModalOpen}
+          onClose={() => setNewClientModalOpen(false)}
+          onSuccess={(newClientId) => {
+            setNewClientModalOpen(false);
+            fetchClients();
           }}
         />
       </Container>
@@ -2331,4 +2436,4 @@ const AppointmentsDashboard = () => {
   );
 };
 
-export default AppointmentsDashboard;
+export default ClientsDashboard;

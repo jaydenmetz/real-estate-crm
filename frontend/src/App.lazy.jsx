@@ -3,10 +3,10 @@ import { lazy } from 'react';
 
 // Dashboard Components
 export const EscrowsDashboard = lazy(() => import('./components/dashboards/escrows'));
-export const ListingsDashboard = lazy(() => import('./components/dashboards/ListingsDashboard'));
-export const ClientsDashboard = lazy(() => import('./components/dashboards/ClientsDashboard'));
-export const AppointmentsDashboard = lazy(() => import('./components/dashboards/AppointmentsDashboard'));
-export const LeadsDashboard = lazy(() => import('./components/dashboards/LeadsDashboard'));
+export const ListingsDashboard = lazy(() => import('./components/dashboards/listings'));
+export const ClientsDashboard = lazy(() => import('./components/dashboards/clients'));
+export const AppointmentsDashboard = lazy(() => import('./components/dashboards/appointments'));
+export const LeadsDashboard = lazy(() => import('./components/dashboards/leads'));
 
 // Detail Components
 export const EscrowDetail = lazy(() => import('./components/details/EscrowDetail'));

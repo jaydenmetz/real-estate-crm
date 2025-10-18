@@ -29,69 +29,67 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Slider,
-  Divider,
   List,
   ListItem,
   ListItemText,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  Tooltip as MuiTooltip,
+  ListItemIcon,
+  Slider,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
   TrendingUp,
   TrendingDown,
-  AttachMoney,
-  PersonAdd,
+  Event,
+  CalendarToday,
   CheckCircle,
   Add,
   Assessment,
-  Phone,
-  Email,
-  Star,
   Cancel,
+  Schedule,
+  Visibility,
+  VisibilityOff,
   Delete as DeleteIcon,
   Sort,
-  CalendarToday,
   Archive as ArchiveIcon,
   Restore as RestoreIcon,
   DeleteForever as DeleteForeverIcon,
-  Storage,
-  Refresh,
-  NetworkCheck,
-  ExpandMore,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
 import CountUp from 'react-countup';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { leadsAPI } from '../../services/api.service';
-import NewLeadModal from '../forms/NewLeadModal';
-import { useAuth } from '../../contexts/AuthContext';
-import networkMonitor from '../../services/networkMonitor.service';
-import { useWebSocket } from '../../hooks/useWebSocket';
-import LeadCard from '../common/widgets/LeadCard';
+import { appointmentsAPI } from '../../../services/api.service';
+import NewAppointmentModal from '../../forms/NewAppointmentModal';
+import { useAuth } from '../../../contexts/AuthContext';
+import networkMonitor from '../../../services/networkMonitor.service';
+import { useWebSocket } from '../../../hooks/useWebSocket';
+import AppointmentCard from '../../common/widgets/AppointmentCard';
 
+// Styled Components
 const HeroSection = styled(Box)(({ theme }) => ({
   position: 'relative',
   borderRadius: theme.spacing(3),
   overflow: 'hidden',
-  background: 'linear-gradient(135deg, #9333EA 0%, #A855F7 100%)',
+  background: 'linear-gradient(135deg, #F57C00 0%, #FFB74D 100%)',
   color: 'white',
   padding: theme.spacing(4),
   marginBottom: theme.spacing(4),
-  boxShadow: '0 20px 60px rgba(147, 51, 234, 0.3)',
+  boxShadow: '0 20px 60px rgba(245, 124, 0, 0.3)',
   [theme.breakpoints.down('md')]: {
     padding: theme.spacing(3),
   },
 }));
 
-// Enhanced animated stat card component with goals and progress
-const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, delay = 0, trend, goal }) => {
+// Enhanced animated stat card component with new layout structure
+const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, delay = 0, trend, showPrivacy = false, goal }) => {
   const theme = useTheme();
+  const [showValue, setShowValue] = useState(false);
+
+  // Mask value for privacy
+  const maskValue = (val) => {
+    return '***';
+  };
 
   // Calculate percentage difference from goal
   const percentageToGoal = goal && typeof value === 'number' && typeof goal === 'number'
@@ -159,6 +157,31 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
           {/* Middle: Count on left, Icon on right */}
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flex: 1, my: 1 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1, minWidth: 0 }}>
+              {showPrivacy && (
+                <IconButton
+                  size="small"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowValue(!showValue);
+                  }}
+                  sx={{
+                    width: 28,
+                    height: 28,
+                    color: 'rgba(255,255,255,0.8)',
+                    flexShrink: 0,
+                    '&:hover': {
+                      backgroundColor: 'rgba(255,255,255,0.1)',
+                      color: 'white',
+                    },
+                  }}
+                >
+                  {showValue ? (
+                    <VisibilityOff sx={{ fontSize: 18 }} />
+                  ) : (
+                    <Visibility sx={{ fontSize: 18 }} />
+                  )}
+                </IconButton>
+              )}
               <Typography
                 variant="h3"
                 component="div"
@@ -175,7 +198,9 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
                   whiteSpace: 'nowrap',
                 }}
               >
-                {typeof value === 'string' ? (
+                {showPrivacy && !showValue ? (
+                  <span>{maskValue(value)}</span>
+                ) : typeof value === 'string' ? (
                   // Custom string value (no CountUp animation)
                   <>
                     {prefix && <span style={{ fontSize: 'clamp(0.9rem, 2.5vw, 1.5rem)' }}>{prefix}</span>}
@@ -276,78 +301,77 @@ const StatCard = ({ icon: Icon, title, value, prefix = '', suffix = '', color, d
   );
 };
 
-const LeadsDashboard = () => {
+const AppointmentsDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isConnected, connectionStatus } = useWebSocket();
-  const [leads, setLeads] = useState([]);
-  const [archivedLeads, setArchivedLeads] = useState([]);
+  const [appointments, setAppointments] = useState([]);
+  const [archivedAppointments, setArchivedAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMorePages, setHasMorePages] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
-  const [selectedStatus, setSelectedStatus] = useState('new');
-  const [viewMode, setViewMode] = useState(() => localStorage.getItem('leadsViewMode') || 'large');
-  const [sortBy, setSortBy] = useState('created_at');
+  const [selectedStatus, setSelectedStatus] = useState('upcoming');
+  const [viewMode, setViewMode] = useState(() => localStorage.getItem('appointmentsViewMode') || 'large');
+  const [sortBy, setSortBy] = useState('appointment_date');
   const [scope, setScope] = useState(() => {
-    const saved = localStorage.getItem('leadsScope');
+    const saved = localStorage.getItem('appointmentsScope');
     return saved || 'team';
   }); // 'brokerage', 'team', 'user'
-  const [animationType, setAnimationType] = useState('spring');
-  const [animationDuration, setAnimationDuration] = useState(1);
-  const [animationIntensity, setAnimationIntensity] = useState(1);
-  const [dateRangeFilter, setDateRangeFilter] = useState('1M'); // '1D', '1M', '1Y', 'YTD', or null for custom
+  const [dateRangeFilter, setDateRangeFilter] = useState('1M');
   const [customStartDate, setCustomStartDate] = useState(null);
   const [customEndDate, setCustomEndDate] = useState(null);
   const [startDatePickerOpen, setStartDatePickerOpen] = useState(false);
   const [endDatePickerOpen, setEndDatePickerOpen] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(null);
   const [calendarDialogOpen, setCalendarDialogOpen] = useState(false);
   const [archivedCount, setArchivedCount] = useState(0);
   const [selectedArchivedIds, setSelectedArchivedIds] = useState([]);
   const [batchDeleting, setBatchDeleting] = useState(false);
-  const [newLeadModalOpen, setNewLeadModalOpen] = useState(false);
-  const [debugExpanded, setDebugExpanded] = useState(false);
+  const [newAppointmentModalOpen, setNewAppointmentModalOpen] = useState(false);
+  const [animationType, setAnimationType] = useState('spring');
+  const [animationDuration, setAnimationDuration] = useState(1);
+  const [animationIntensity, setAnimationIntensity] = useState(1);
   const [networkData, setNetworkData] = useState({
     stats: networkMonitor.getStats(),
     requests: networkMonitor.getRequests(),
     errors: networkMonitor.getErrors()
   });
   const [stats, setStats] = useState({
-    totalLeads: 0,
-    newLeads: 0,
+    totalUpcoming: 0,
     thisWeek: 0,
     thisMonth: 0,
-    responseRate: 0,
-    qualifiedLeads: 0,
-    qualificationRate: 0,
-    avgQualificationTime: 0,
-    hotLeads: 0,
-    convertedLeads: 0,
-    conversionRate: 0,
-    avgConversionTime: 0,
-    totalValue: 0,
-    lostLeads: 0,
-    lostRate: 0,
-    lostValue: 0,
-    topLostReason: '',
-    activeLeads: 0,
-    avgLeadValue: 0,
+    noShowRate: 0,
+    totalCompleted: 0,
+    completedThisMonth: 0,
+    successRate: 0,
+    avgDuration: 0,
+    totalCancelled: 0,
+    cancellationRate: 0,
+    lastMinuteCancellations: 0,
+    rescheduled: 0,
+    totalAppointments: 0,
+    upcomingAppointments: 0,
+    completionRate: 0,
+    avgPerWeek: 0,
   });
 
-  useEffect(() => { localStorage.setItem('leadsViewMode', viewMode); }, [viewMode]);
+  const maxArchivedLimit = 500;
+
+  useEffect(() => { localStorage.setItem('appointmentsViewMode', viewMode); }, [viewMode]);
 
   // Save scope to localStorage when it changes
   useEffect(() => {
-    localStorage.setItem('leadsScope', scope);
+    localStorage.setItem('appointmentsScope', scope);
   }, [scope]);
 
-  // PHASE 6: Refetch leads when scope changes
+  // PHASE 6: Refetch appointments when scope changes
   useEffect(() => {
-    fetchLeads();
+    fetchAppointments();
   }, [scope]);
+
+  useEffect(() => { fetchAppointments(); }, []);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -357,40 +381,25 @@ const LeadsDashboard = () => {
         return;
       }
 
-      // Check for Cmd/Ctrl modifiers
-      const isModKey = e.metaKey || e.ctrlKey;
-
-      if (isModKey) {
+      // Check for Cmd/Ctrl key combinations
+      if ((e.metaKey || e.ctrlKey)) {
         switch(e.key.toLowerCase()) {
           case 'k':
-            // Cmd/Ctrl+K = Create new lead
             e.preventDefault();
-            if (!newLeadModalOpen) {
-              setNewLeadModalOpen(true);
-            }
+            setNewAppointmentModalOpen(true);
             break;
           case 'f':
-            // Cmd/Ctrl+F = Focus search (if search input exists)
             e.preventDefault();
-            const searchInput = document.querySelector('input[type="search"], input[placeholder*="Search"]');
-            if (searchInput) {
-              searchInput.focus();
-            }
+            // Focus search (if exists)
             break;
           case 'r':
-            // Cmd/Ctrl+R = Refresh leads
             e.preventDefault();
-            fetchLeads();
+            fetchAppointments();
             break;
           case 'a':
-            // Cmd/Ctrl+A = Toggle select all (archived view only)
+            e.preventDefault();
             if (selectedStatus === 'archived') {
-              e.preventDefault();
-              if (selectedArchivedIds.length === archivedLeads.length) {
-                setSelectedArchivedIds([]);
-              } else {
-                setSelectedArchivedIds(archivedLeads.map(l => l.id));
-              }
+              handleSelectAll(selectedArchivedIds.length !== archivedAppointments.length);
             }
             break;
           default:
@@ -401,55 +410,51 @@ const LeadsDashboard = () => {
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [newLeadModalOpen, selectedStatus, selectedArchivedIds, archivedLeads]);
-
-  useEffect(() => { fetchLeads(); }, []);
+  }, [selectedStatus, selectedArchivedIds, archivedAppointments]);
 
   useEffect(() => {
     if (selectedStatus === 'archived') {
-      calculateStats(archivedLeads, 'archived');
-    } else if (leads.length > 0) {
-      calculateStats(leads, selectedStatus);
+      calculateStats(archivedAppointments, 'archived');
+    } else if (appointments.length > 0) {
+      calculateStats(appointments, selectedStatus);
     } else {
       calculateStats([], selectedStatus);
     }
-  }, [selectedStatus, leads, archivedLeads, dateRangeFilter, customStartDate, customEndDate]);
+  }, [selectedStatus, appointments, archivedAppointments, customStartDate, customEndDate, dateRangeFilter]);
 
-  // Sync archived count with archived leads array
+  // Sync archived count with archived appointments array
   useEffect(() => {
-    setArchivedCount(archivedLeads.length);
-  }, [archivedLeads]);
+    setArchivedCount(archivedAppointments.length);
+  }, [archivedAppointments]);
 
-  // Auto-refresh network data when debug panel is expanded
+  // Auto-refresh network data
   useEffect(() => {
-    if (debugExpanded) {
-      const interval = setInterval(() => {
-        setNetworkData({
-          stats: networkMonitor.getStats(),
-          requests: networkMonitor.getRequests(),
-          errors: networkMonitor.getErrors()
-        });
-      }, 2000); // Update every 2 seconds
+    const interval = setInterval(() => {
+      setNetworkData({
+        stats: networkMonitor.getStats(),
+        requests: networkMonitor.getRequests(),
+        errors: networkMonitor.getErrors()
+      });
+    }, 2000); // Update every 2 seconds
 
-      return () => clearInterval(interval);
-    }
-  }, [debugExpanded]);
+    return () => clearInterval(interval);
+  }, []);
 
   // WebSocket real-time updates
   useEffect(() => {
     if (!isConnected) return;
 
     // Import websocket service
-    const websocketService = require('../../services/websocket.service').default;
+    const websocketService = require('../../../services/websocket.service').default;
 
     // Subscribe to data updates
     const unsubscribe = websocketService.on('data:update', (data) => {
       // console.log('📡 WebSocket data update received:', data);
 
-      // Only refetch if it's a lead update
-      if (data.entityType === 'lead') {
-        // console.log('🔄 Refetching leads due to real-time update');
-        fetchLeads();
+      // Only refetch if it's an appointment update
+      if (data.entityType === 'appointment') {
+        // console.log('🔄 Refetching appointments due to real-time update');
+        fetchAppointments();
       }
     });
 
@@ -458,46 +463,48 @@ const LeadsDashboard = () => {
     };
   }, [isConnected]);
 
-  const fetchLeads = async (pageNum = 1, appendData = false) => {
+  const fetchAppointments = async (pageNum = 1, appendData = false) => {
     try {
       // Show appropriate loading state
       if (appendData) {
         setLoadingMore(true);
       } else {
         setLoading(true);
+        setCurrentPage(1);
       }
 
-      // Fetch leads with pagination (50 per page for optimal performance)
+      // console.log(`Fetching appointments... (page ${pageNum})`);
+
+      // Fetch appointments with pagination (50 per page for optimal performance)
       // PHASE 6: Include scope filter (brokerage, team, user)
-      const response = await leadsAPI.getAll({
+      const response = await appointmentsAPI.getAll({
         includeArchived: true,
         page: pageNum,
         limit: 50,
         scope: scope // Pass scope from state
       });
-
       // console.log('API Response:', response);
 
       if (response.success) {
-        const allData = response.data.leads || response.data || [];
+        const allData = response.data.appointments || response.data || [];
         const pagination = response.data.pagination || {};
         const totalPages = pagination.totalPages || 1;
         const totalRecords = pagination.total || allData.length;
         const hasMore = pageNum < totalPages;
 
-        // Separate active and archived leads based on deleted_at field
-        const leadData = allData.filter(lead => !lead.deleted_at && !lead.deletedAt);
-        const archivedData = allData.filter(lead => lead.deleted_at || lead.deletedAt);
+        // Separate active and archived appointments based on deleted_at field
+        const appointmentData = allData.filter(appt => !appt.deleted_at && !appt.deletedAt);
+        const archivedData = allData.filter(appt => appt.deleted_at || appt.deletedAt);
 
-        // console.log(`Page ${pageNum}/${totalPages} - Total: ${totalRecords}, Loaded: ${allData.length}, Active: ${leadData.length}, Archived: ${archivedData.length}`);
+        // console.log(`Page ${pageNum}/${totalPages} - Total: ${totalRecords}, Loaded: ${allData.length}, Active: ${appointmentData.length}, Archived: ${archivedData.length}`);
 
         // Update state based on whether we're appending or replacing
         if (appendData) {
-          setLeads(prev => [...prev, ...leadData]);
-          setArchivedLeads(prev => [...prev, ...archivedData]);
+          setAppointments(prev => [...prev, ...appointmentData]);
+          setArchivedAppointments(prev => [...prev, ...archivedData]);
         } else {
-          setLeads(leadData);
-          setArchivedLeads(archivedData);
+          setAppointments(appointmentData);
+          setArchivedAppointments(archivedData);
         }
 
         // Update pagination state
@@ -507,13 +514,13 @@ const LeadsDashboard = () => {
         setArchivedCount(archivedData.length);
 
         // Calculate stats from currently loaded data only
-        const currentLeads = appendData ? [...leads, ...leadData] : leadData;
-        calculateStats(currentLeads, selectedStatus);
+        const currentAppointments = appendData ? [...appointments, ...appointmentData] : appointmentData;
+        calculateStats(currentAppointments, selectedStatus);
       } else {
         console.error('API returned success: false', response);
       }
     } catch (error) {
-      console.error('Error fetching leads:', error.message);
+      console.error('Error fetching appointments:', error.message);
       console.error('Full error:', error);
     } finally {
       setLoading(false);
@@ -521,10 +528,11 @@ const LeadsDashboard = () => {
     }
   };
 
-  const loadMoreLeads = useCallback(() => {
+  // Load more appointments (infinite scroll handler)
+  const loadMoreAppointments = useCallback(() => {
     if (!loadingMore && hasMorePages) {
       // console.log(`Loading page ${currentPage + 1}...`);
-      fetchLeads(currentPage + 1, true);
+      fetchAppointments(currentPage + 1, true);
     }
   }, [loadingMore, hasMorePages, currentPage]);
 
@@ -600,174 +608,277 @@ const LeadsDashboard = () => {
         case '1D':
           // Today from 12:00 AM to 11:59 PM
           startDate = new Date(now);
-          startDate.setHours(0, 0, 0, 0);
+          startDate.setHours(0, 0, 0, 0); // Midnight
           endDate = new Date(now);
-          endDate.setHours(23, 59, 59, 999);
+          endDate.setHours(23, 59, 59, 999); // End of day
           break;
         case '1M':
           // Last 30 days
           startDate = new Date(now);
           startDate.setDate(now.getDate() - 30);
-          startDate.setHours(0, 0, 0, 0);
-          endDate = new Date(now);
-          endDate.setHours(23, 59, 59, 999);
+          endDate = now;
           break;
         case '1Y':
           // Last 365 days
           startDate = new Date(now);
           startDate.setDate(now.getDate() - 365);
-          startDate.setHours(0, 0, 0, 0);
-          endDate = new Date(now);
-          endDate.setHours(23, 59, 59, 999);
+          endDate = now;
           break;
         case 'YTD':
           // Year to date
           startDate = new Date(now.getFullYear(), 0, 1);
-          startDate.setHours(0, 0, 0, 0);
-          endDate = new Date(now);
-          endDate.setHours(23, 59, 59, 999);
+          endDate = now;
           break;
         default:
-          return null;
+          startDate = new Date(now);
+          startDate.setDate(now.getDate() - 30);
+          endDate = now;
       }
     }
 
-    return { startDate, endDate };
+    // Validate dates before formatting
+    const validStart = startDate instanceof Date && !isNaN(startDate.getTime()) ? startDate : new Date();
+    const validEnd = endDate instanceof Date && !isNaN(endDate.getTime()) ? endDate : new Date();
+
+    return {
+      startDate: validStart,
+      endDate: validEnd,
+      label: `${validStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${validEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+    };
   };
+
+  const dateRange = getDateRange();
 
   const calculateStats = (data, statusFilter) => {
     if (!data || !Array.isArray(data)) {
       setStats({
-        totalLeads: 0, newLeads: 0, thisWeek: 0, thisMonth: 0, responseRate: 0,
-        qualifiedLeads: 0, qualificationRate: 0, avgQualificationTime: 0, hotLeads: 0,
-        convertedLeads: 0, conversionRate: 0, avgConversionTime: 0, totalValue: 0,
-        lostLeads: 0, lostRate: 0, lostValue: 0, topLostReason: '',
-        activeLeads: 0, avgLeadValue: 0
+        totalUpcoming: 0, thisWeek: 0, thisMonth: 0, noShowRate: 0,
+        totalCompleted: 0, completedThisMonth: 0, successRate: 0, avgDuration: 0,
+        totalCancelled: 0, cancellationRate: 0, lastMinuteCancellations: 0, rescheduled: 0,
+        totalAppointments: 0, upcomingAppointments: 0, completionRate: 0, avgPerWeek: 0,
       });
       return;
     }
 
-    // Apply date range filtering to all data
-    const dateRange = getDateRange();
-    let dateFilteredData = data;
-    if (dateRange) {
-      dateFilteredData = data.filter(lead => {
-        const createdDate = new Date(lead.createdAt || lead.created_at || 0);
-        return createdDate >= dateRange.startDate && createdDate <= dateRange.endDate;
-      });
-    }
+    const now = new Date();
+    const { startDate, endDate } = dateRange;
 
-    // Filter by status
-    let filtered = dateFilteredData.filter(l => {
-      const status = (l.leadStatus || l.lead_status || '').toLowerCase();
-      if (statusFilter === 'new') return status === 'new';
-      if (statusFilter === 'qualified') return status === 'qualified';
-      if (statusFilter === 'converted') return status === 'converted';
-      if (statusFilter === 'lost') return status === 'lost';
-      return true; // 'all' shows everything
+    // Filter by date range
+    const dateFiltered = data.filter(a => {
+      const apptDate = new Date(a.appointment_date || a.appointment_date);
+      return apptDate >= startDate && apptDate <= endDate;
     });
 
-    // Calculate time-based stats for "new" leads
-    const now = new Date();
-    const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - now.getDay());
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    // Filter by status
+    let filtered = dateFiltered.filter(a => {
+      const apptDate = new Date(a.appointment_date || a.appointment_date);
+      const status = (a.status || a.appointment_status || '').toLowerCase();
 
-    const newLeadsData = dateFilteredData.filter(l => (l.leadStatus || l.lead_status || '').toLowerCase() === 'new');
-    const thisWeek = newLeadsData.filter(l => {
-      const createdDate = new Date(l.createdAt || l.created_at || 0);
-      return createdDate >= startOfWeek;
+      if (statusFilter === 'upcoming') return apptDate >= now && status !== 'cancelled';
+      if (statusFilter === 'completed') return status === 'completed';
+      if (statusFilter === 'cancelled') return status === 'cancelled';
+      return true; // 'all'
+    });
+
+    const totalAll = dateFiltered.length;
+    const totalCompleted = dateFiltered.filter(a => (a.status || a.appointment_status || '').toLowerCase() === 'completed').length;
+    const totalCancelled = dateFiltered.filter(a => (a.status || a.appointment_status || '').toLowerCase() === 'cancelled').length;
+    const totalUpcoming = dateFiltered.filter(a => {
+      const apptDate = new Date(a.appointment_date || a.appointment_date);
+      return apptDate >= now && (a.status || a.appointment_status || '').toLowerCase() !== 'cancelled';
     }).length;
-    const thisMonth = newLeadsData.filter(l => {
-      const createdDate = new Date(l.createdAt || l.created_at || 0);
-      return createdDate >= startOfMonth;
+
+    // Week calculation
+    const oneWeekFromNow = new Date(now);
+    oneWeekFromNow.setDate(now.getDate() + 7);
+    const thisWeek = dateFiltered.filter(a => {
+      const apptDate = new Date(a.appointment_date || a.appointment_date);
+      return apptDate >= now && apptDate <= oneWeekFromNow;
     }).length;
 
-    // Calculate response rate (mock data - would need actual response tracking)
-    const responseRate = newLeadsData.length > 0 ? Math.round((thisWeek / newLeadsData.length) * 100) : 0;
-
-    // Qualified leads stats
-    const qualifiedLeadsData = dateFilteredData.filter(l => (l.leadStatus || l.lead_status || '').toLowerCase() === 'qualified');
-    const qualificationRate = dateFilteredData.length > 0 ? Math.round((qualifiedLeadsData.length / dateFilteredData.length) * 100) : 0;
-    const avgQualificationTime = 3; // Mock: 3 days average
-    const hotLeads = qualifiedLeadsData.filter(l => (l.leadScore || l.lead_score || 0) >= 80).length;
-
-    // Converted leads stats
-    const convertedLeadsData = dateFilteredData.filter(l => (l.leadStatus || l.lead_status || '').toLowerCase() === 'converted');
-    const conversionRate = dateFilteredData.length > 0 ? Math.round((convertedLeadsData.length / dateFilteredData.length) * 100) : 0;
-    const avgConversionTime = 14; // Mock: 14 days average
-    const totalValue = convertedLeadsData.reduce((sum, l) => sum + Number(l.estimatedValue || 0), 0);
-
-    // Lost leads stats
-    const lostLeadsData = dateFilteredData.filter(l => (l.leadStatus || l.lead_status || '').toLowerCase() === 'lost');
-    const lostRate = dateFilteredData.length > 0 ? Math.round((lostLeadsData.length / dateFilteredData.length) * 100) : 0;
-    const lostValue = lostLeadsData.reduce((sum, l) => sum + Number(l.estimatedValue || 0), 0);
-    const topLostReason = 'Price too high'; // Mock data
-
-    // All leads stats
-    const activeLeads = dateFilteredData.filter(l => {
-      const status = (l.leadStatus || l.lead_status || '').toLowerCase();
-      return status !== 'lost' && status !== 'converted';
+    // Month calculation
+    const oneMonthFromNow = new Date(now);
+    oneMonthFromNow.setDate(now.getDate() + 30);
+    const thisMonth = dateFiltered.filter(a => {
+      const apptDate = new Date(a.appointment_date || a.appointment_date);
+      return apptDate >= now && apptDate <= oneMonthFromNow;
     }).length;
-    const avgLeadValue = dateFilteredData.length > 0
-      ? Math.round(dateFilteredData.reduce((sum, l) => sum + Number(l.estimatedValue || 0), 0) / dateFilteredData.length)
-      : 0;
+
+    const completedThisMonth = dateFiltered.filter(a => {
+      const apptDate = new Date(a.appointment_date || a.appointment_date);
+      const monthAgo = new Date(now);
+      monthAgo.setDate(now.getDate() - 30);
+      return (a.status || a.appointment_status || '').toLowerCase() === 'completed' && apptDate >= monthAgo && apptDate <= now;
+    }).length;
+
+    // Calculate rates
+    const noShowRate = totalAll > 0 ? ((totalCancelled / totalAll) * 100).toFixed(1) : 0;
+    const successRate = totalAll > 0 ? ((totalCompleted / totalAll) * 100).toFixed(1) : 0;
+    const cancellationRate = totalAll > 0 ? ((totalCancelled / totalAll) * 100).toFixed(1) : 0;
+    const completionRate = totalAll > 0 ? ((totalCompleted / totalAll) * 100).toFixed(1) : 0;
+
+    // Last minute cancellations (within 24 hours)
+    const lastMinuteCancellations = dateFiltered.filter(a => {
+      const apptDate = new Date(a.appointment_date || a.appointment_date);
+      const cancelledWithin24h = now - apptDate < 86400000; // 24 hours in ms
+      return (a.status || a.appointment_status || '').toLowerCase() === 'cancelled' && cancelledWithin24h;
+    }).length;
+
+    // Avg duration (mock calculation)
+    const avgDuration = 45; // minutes
+
+    // Avg per week
+    const daysDiff = (endDate - startDate) / (1000 * 60 * 60 * 24);
+    const avgPerWeek = daysDiff > 0 ? Math.round((totalAll / daysDiff) * 7) : 0;
 
     setStats({
-      totalLeads: filtered.length,
-      newLeads: newLeadsData.length,
-      thisWeek,
-      thisMonth,
-      responseRate,
-      qualifiedLeads: qualifiedLeadsData.length,
-      qualificationRate,
-      avgQualificationTime,
-      hotLeads,
-      convertedLeads: convertedLeadsData.length,
-      conversionRate,
-      avgConversionTime,
-      totalValue,
-      lostLeads: lostLeadsData.length,
-      lostRate,
-      lostValue,
-      topLostReason,
-      activeLeads,
-      avgLeadValue,
+      // Upcoming stats
+      totalUpcoming: totalUpcoming,
+      thisWeek: thisWeek,
+      thisMonth: thisMonth,
+      noShowRate: noShowRate,
+      // Completed stats
+      totalCompleted: totalCompleted,
+      completedThisMonth: completedThisMonth,
+      successRate: successRate,
+      avgDuration: avgDuration,
+      // Cancelled stats
+      totalCancelled: totalCancelled,
+      cancellationRate: cancellationRate,
+      lastMinuteCancellations: lastMinuteCancellations,
+      rescheduled: Math.floor(totalCancelled * 0.6), // Mock 60% rescheduled
+      // All stats
+      totalAppointments: filtered.length,
+      upcomingAppointments: totalUpcoming,
+      completionRate: completionRate,
+      avgPerWeek: avgPerWeek,
     });
   };
 
-  // Batch delete handler for archived leads
+  const handleArchive = async (appointmentId) => {
+    try {
+      const response = await appointmentsAPI.archive(appointmentId);
+      if (response && response.success) {
+        // Move appointment from active to archived
+        const archivedAppointment = appointments.find(a => a.id === appointmentId);
+        if (archivedAppointment) {
+          // Mark as archived
+          archivedAppointment.deleted_at = new Date().toISOString();
+
+          setAppointments(prev => prev.filter(a => a.id !== appointmentId));
+          setArchivedAppointments(prev => [...prev, archivedAppointment]);
+          setArchivedCount(prev => prev + 1);
+
+          // Recalculate stats with remaining active appointments
+          const remainingAppointments = appointments.filter(a => a.id !== appointmentId);
+          calculateStats(remainingAppointments, selectedStatus);
+        }
+      } else {
+        console.error('Archive failed - no success response');
+      }
+    } catch (error) {
+      const errorMessage = error?.message || error?.toString() || 'Unknown error';
+      console.error('Failed to archive appointment:', errorMessage);
+    }
+  };
+
+  const handleRestore = async (appointmentId) => {
+    try {
+      const response = await appointmentsAPI.restore(appointmentId);
+      if (response.success) {
+        // Move appointment from archived to active
+        const restoredAppointment = archivedAppointments.find(a => a.id === appointmentId);
+        if (restoredAppointment) {
+          // Remove archived marker
+          delete restoredAppointment.deleted_at;
+          delete restoredAppointment.deletedAt;
+
+          setArchivedAppointments(prev => prev.filter(a => a.id !== appointmentId));
+          setAppointments(prev => [...prev, restoredAppointment]);
+          setArchivedCount(prev => Math.max(0, prev - 1));
+
+          // Recalculate stats with updated active appointments
+          const updatedAppointments = [...appointments, restoredAppointment];
+          calculateStats(updatedAppointments, selectedStatus);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to restore appointment:', error);
+    }
+  };
+
+  const handlePermanentDelete = async (appointmentId, skipConfirmation = false) => {
+    // Check if running in test mode
+    const isTestMode = window.location.search.includes('testMode=true') ||
+                       window.__APPOINTMENT_TEST_MODE__ === true ||
+                       skipConfirmation === true;
+
+    // Single confirmation dialog unless in test mode
+    if (!isTestMode && !window.confirm('Are you sure you want to permanently delete this appointment? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      // Check if appointment is already archived
+      const appointmentToDelete = archivedAppointments.find(a => a.id === appointmentId) ||
+                                  appointments.find(a => a.id === appointmentId);
+
+      // If not archived, archive first
+      if (appointmentToDelete && !appointmentToDelete.deleted_at && !appointmentToDelete.deletedAt) {
+        const archiveResponse = await appointmentsAPI.archive(appointmentId);
+        if (!archiveResponse.success) {
+          console.error('Failed to archive appointment before deletion');
+          return;
+        }
+      }
+
+      // Now permanently delete the archived appointment
+      const response = await appointmentsAPI.delete(appointmentId);
+      if (response.success) {
+        // Remove from both lists
+        setArchivedAppointments(prev => prev.filter(a => a.id !== appointmentId));
+        setAppointments(prev => prev.filter(a => a.id !== appointmentId));
+        setArchivedCount(prev => Math.max(0, prev - 1));
+
+        // Recalculate stats with remaining active appointments only
+        const remainingAppointments = appointments.filter(a => a.id !== appointmentId);
+        calculateStats(remainingAppointments, selectedStatus);
+
+        // console.log('Successfully permanently deleted appointment:', appointmentId);
+      }
+    } catch (error) {
+      console.error('Failed to permanently delete appointment:', error);
+    }
+  };
+
   const handleBatchDelete = async () => {
     if (selectedArchivedIds.length === 0) return;
 
     const count = selectedArchivedIds.length;
-    if (!window.confirm(`Are you sure you want to permanently delete ${count} lead${count > 1 ? 's' : ''}? This action cannot be undone.`)) {
+    if (!window.confirm(`Are you sure you want to permanently delete ${count} appointment${count > 1 ? 's' : ''}? This action cannot be undone.`)) {
       return;
     }
 
     setBatchDeleting(true);
     try {
-      const response = await leadsAPI.batchDelete(selectedArchivedIds);
+      const response = await appointmentsAPI.batchDelete(selectedArchivedIds);
       if (response.success) {
-        // Remove deleted leads from both lists locally
+        // Remove deleted appointments from both lists locally
         const deletedIds = new Set(selectedArchivedIds);
-        setArchivedLeads(prev => prev.filter(l => !deletedIds.has(l.id)));
-        setLeads(prev => prev.filter(l => !deletedIds.has(l.id)));
+        setArchivedAppointments(prev => prev.filter(a => !deletedIds.has(a.id)));
+        setAppointments(prev => prev.filter(a => !deletedIds.has(a.id)));
         setArchivedCount(prev => Math.max(0, prev - selectedArchivedIds.length));
         setSelectedArchivedIds([]);
 
-        // Recalculate stats with remaining active leads only
-        const remainingLeads = leads.filter(l => !deletedIds.has(l.id));
-        calculateStats(remainingLeads, selectedStatus);
+        // Recalculate stats with remaining active appointments only
+        const remainingAppointments = appointments.filter(a => !deletedIds.has(a.id));
+        calculateStats(remainingAppointments, selectedStatus);
 
-        // console.log(`✅ Batch deleted ${count} lead${count > 1 ? 's' : ''}`);
-      } else {
-        console.error('Batch delete failed:', response.error);
-        alert('Failed to delete leads. Please try again.');
+        // console.log(`Successfully permanently deleted ${response.data.deletedCount || selectedArchivedIds.length} appointments`);
       }
     } catch (error) {
-      console.error('Error during batch delete:', error);
-      alert('An error occurred while deleting leads. Please try again.');
+      console.error('Failed to batch delete appointments:', error);
+      alert('Failed to delete appointments. Please try again.');
     } finally {
       setBatchDeleting(false);
     }
@@ -775,21 +886,27 @@ const LeadsDashboard = () => {
 
   const handleSelectAll = (checked) => {
     if (checked) {
-      setSelectedArchivedIds(archivedLeads.map(l => l.id));
+      setSelectedArchivedIds(archivedAppointments.map(a => a.id));
     } else {
       setSelectedArchivedIds([]);
     }
   };
 
-  const handleSelectLead = (leadId, checked) => {
+  const handleSelectAppointment = (appointmentId, checked) => {
     if (checked) {
-      setSelectedArchivedIds(prev => [...prev, leadId]);
+      setSelectedArchivedIds(prev => [...prev, appointmentId]);
     } else {
-      setSelectedArchivedIds(prev => prev.filter(id => id !== leadId));
+      setSelectedArchivedIds(prev => prev.filter(id => id !== appointmentId));
     }
   };
 
-  if (loading) return <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh"><CircularProgress size={60} /></Box>;
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
+        <CircularProgress size={60} />
+      </Box>
+    );
+  }
 
   return (
     <>
@@ -819,7 +936,7 @@ const LeadsDashboard = () => {
                 style={{ flexShrink: 0 }}
               >
                 <Typography variant="h3" component="h1" sx={{ fontWeight: 700 }}>
-                  Leads
+                  Appointments
                 </Typography>
               </motion.div>
 
@@ -901,7 +1018,7 @@ const LeadsDashboard = () => {
                         format="MMM d, yyyy"
                         value={(() => {
                           try {
-                            const date = customStartDate || getDateRange()?.startDate;
+                            const date = customStartDate || dateRange?.startDate;
                             if (!date) return null;
                             if (typeof date === 'string') {
                               const parsed = new Date(date);
@@ -973,6 +1090,7 @@ const LeadsDashboard = () => {
                           },
                         }}
                       />
+                      <Typography sx={{ color: 'rgba(255, 255, 255, 0.7)', mx: 0.5, flexShrink: 0 }}>→</Typography>
                       <DatePicker
                         open={endDatePickerOpen}
                         onOpen={() => setEndDatePickerOpen(true)}
@@ -980,7 +1098,7 @@ const LeadsDashboard = () => {
                         format="MMM d, yyyy"
                         value={(() => {
                           try {
-                            const date = customEndDate || getDateRange()?.endDate;
+                            const date = customEndDate || dateRange?.endDate;
                             if (!date) return null;
                             if (typeof date === 'string') {
                               const parsed = new Date(date);
@@ -1076,83 +1194,130 @@ const LeadsDashboard = () => {
                 <Grid container spacing={2}>
                 {(() => {
                   switch(selectedStatus) {
-                    case 'new':
+                    case 'upcoming':
                       return (
                         <>
                           <Grid item xs={12} sm={6} md={6} xl={3}>
                             <StatCard
-                              icon={PersonAdd}
-                              title="Total New Leads"
-                              value={stats.newLeads || 0}
+                              icon={Event}
+                              title="Total Upcoming"
+                              value={stats.totalUpcoming || 0}
                               color="#ffffff"
                               delay={0}
-                              goal={50}
+                              goal={20}
                             />
                           </Grid>
                           <Grid item xs={12} sm={6} md={6} xl={3}>
                             <StatCard
-                              icon={Phone}
+                              icon={CalendarToday}
                               title="This Week"
                               value={stats.thisWeek || 0}
                               color="#ffffff"
                               delay={1}
-                              goal={10}
+                              goal={5}
                             />
                           </Grid>
                           <Grid item xs={12} sm={6} md={6} xl={3}>
                             <StatCard
-                              icon={Email}
+                              icon={Schedule}
                               title="This Month"
                               value={stats.thisMonth || 0}
                               color="#ffffff"
                               delay={2}
-                              goal={30}
+                              goal={15}
                             />
                           </Grid>
                           <Grid item xs={12} sm={6} md={6} xl={3}>
                             <StatCard
-                              icon={TrendingUp}
-                              title="Response Rate"
-                              value={stats.responseRate || 0}
+                              icon={Assessment}
+                              title="No-Show Rate"
+                              value={stats.noShowRate || 0}
                               suffix="%"
                               color="#ffffff"
                               delay={3}
-                              goal={80}
+                              goal={5}
                             />
                           </Grid>
                         </>
                       );
 
-                    case 'qualified':
+                    case 'completed':
                       return (
                         <>
                           <Grid item xs={12} sm={6} md={6} xl={3}>
                             <StatCard
                               icon={CheckCircle}
-                              title="Total Qualified"
-                              value={stats.qualifiedLeads || 0}
+                              title="Total Completed"
+                              value={stats.totalCompleted || 0}
                               color="#ffffff"
                               delay={0}
+                              goal={100}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={CalendarToday}
+                              title="Completed This Month"
+                              value={stats.completedThisMonth || 0}
+                              color="#ffffff"
+                              delay={1}
                               goal={25}
                             />
                           </Grid>
                           <Grid item xs={12} sm={6} md={6} xl={3}>
                             <StatCard
                               icon={TrendingUp}
-                              title="Qualification Rate"
-                              value={stats.qualificationRate || 0}
+                              title="Success Rate"
+                              value={stats.successRate || 0}
                               suffix="%"
                               color="#ffffff"
-                              delay={1}
-                              goal={50}
+                              delay={2}
+                              goal={95}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={Schedule}
+                              title="Avg Duration"
+                              value={stats.avgDuration || 0}
+                              suffix=" min"
+                              color="#ffffff"
+                              delay={3}
+                              goal={60}
+                            />
+                          </Grid>
+                        </>
+                      );
+
+                    case 'cancelled':
+                      return (
+                        <>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={Cancel}
+                              title="Total Cancelled"
+                              value={stats.totalCancelled || 0}
+                              color="#ffffff"
+                              delay={0}
+                              goal={10}
                             />
                           </Grid>
                           <Grid item xs={12} sm={6} md={6} xl={3}>
                             <StatCard
                               icon={Assessment}
-                              title="Avg Qualification Time"
-                              value={stats.avgQualificationTime || 0}
-                              suffix=" days"
+                              title="Cancellation Rate"
+                              value={stats.cancellationRate || 0}
+                              suffix="%"
+                              color="#ffffff"
+                              delay={1}
+                              goal={15}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={Schedule}
+                              title="Last-Minute Cancellations"
+                              value={stats.lastMinuteCancellations || 0}
                               color="#ffffff"
                               delay={2}
                               goal={5}
@@ -1160,108 +1325,12 @@ const LeadsDashboard = () => {
                           </Grid>
                           <Grid item xs={12} sm={6} md={6} xl={3}>
                             <StatCard
-                              icon={Star}
-                              title="Hot Leads"
-                              value={stats.hotLeads || 0}
+                              icon={Event}
+                              title="Rescheduled"
+                              value={stats.rescheduled || 0}
                               color="#ffffff"
                               delay={3}
-                              goal={10}
-                            />
-                          </Grid>
-                        </>
-                      );
-
-                    case 'converted':
-                      return (
-                        <>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={CheckCircle}
-                              title="Total Converted"
-                              value={stats.convertedLeads || 0}
-                              color="#ffffff"
-                              delay={0}
-                              goal={15}
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={TrendingUp}
-                              title="Conversion Rate"
-                              value={stats.conversionRate || 0}
-                              suffix="%"
-                              color="#ffffff"
-                              delay={1}
-                              goal={30}
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={Assessment}
-                              title="Avg Conversion Time"
-                              value={stats.avgConversionTime || 0}
-                              suffix=" days"
-                              color="#ffffff"
-                              delay={2}
-                              goal={21}
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={AttachMoney}
-                              title="Total Value"
-                              value={stats.totalValue || 0}
-                              prefix="$"
-                              color="#ffffff"
-                              delay={3}
-                              goal={500000}
-                            />
-                          </Grid>
-                        </>
-                      );
-
-                    case 'lost':
-                      return (
-                        <>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={Cancel}
-                              title="Total Lost"
-                              value={stats.lostLeads || 0}
-                              color="#ffffff"
-                              delay={0}
-                              goal={10}
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={TrendingDown}
-                              title="Lost Rate"
-                              value={stats.lostRate || 0}
-                              suffix="%"
-                              color="#ffffff"
-                              delay={1}
-                              goal={20}
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={AttachMoney}
-                              title="Lost Value"
-                              value={stats.lostValue || 0}
-                              prefix="$"
-                              color="#ffffff"
-                              delay={2}
-                              goal={100000}
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={Assessment}
-                              title="Top Lost Reason"
-                              value={stats.topLostReason || 'N/A'}
-                              color="#ffffff"
-                              delay={3}
+                              goal={8}
                             />
                           </Grid>
                         </>
@@ -1273,38 +1342,84 @@ const LeadsDashboard = () => {
                           <Grid item xs={12} sm={6} md={6} xl={3}>
                             <StatCard
                               icon={ArchiveIcon}
-                              title="Total Archived Leads"
+                              title="Total Archived Appointments"
                               value={archivedCount || 0}
                               color="#ffffff"
                               delay={0}
-                              goal={100}
+                              goal={maxArchivedLimit}
                             />
                           </Grid>
                           <Grid item xs={12} sm={6} md={6} xl={3}>
                             <StatCard
-                              icon={Storage}
+                              icon={TrendingUp}
                               title="Max Archived"
                               value={archivedCount || 0}
-                              suffix=" / 500"
+                              suffix={` / ${maxArchivedLimit}`}
                               color="#ffffff"
                               delay={1}
                             />
                           </Grid>
                           <Grid item xs={12} sm={6} md={6} xl={3}>
                             <StatCard
-                              icon={CheckCircle}
-                              title="Qualified Leads"
-                              value={stats.qualifiedLeads || 0}
+                              icon={Cancel}
+                              title="Cancelled Appointments"
+                              value={stats.totalCancelled || 0}
                               color="#ffffff"
                               delay={2}
-                              goal={25}
                             />
                           </Grid>
                           <Grid item xs={12} sm={6} md={6} xl={3}>
                             <StatCard
-                              icon={Cancel}
-                              title="Lost Leads"
-                              value={stats.lostLeads || 0}
+                              icon={Schedule}
+                              title="No-Shows"
+                              value={stats.lastMinuteCancellations || 0}
+                              color="#ffffff"
+                              delay={3}
+                            />
+                          </Grid>
+                        </>
+                      );
+
+                    case 'all':
+                    default:
+                      return (
+                        <>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={Event}
+                              title="Total Appointments"
+                              value={stats.totalAppointments || 0}
+                              color="#ffffff"
+                              delay={0}
+                              goal={150}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={CalendarToday}
+                              title="Upcoming Appointments"
+                              value={stats.upcomingAppointments || 0}
+                              color="#ffffff"
+                              delay={1}
+                              goal={30}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={TrendingUp}
+                              title="Completion Rate"
+                              value={stats.completionRate || 0}
+                              suffix="%"
+                              color="#ffffff"
+                              delay={2}
+                              goal={90}
+                            />
+                          </Grid>
+                          <Grid item xs={12} sm={6} md={6} xl={3}>
+                            <StatCard
+                              icon={Assessment}
+                              title="Avg Per Week"
+                              value={stats.avgPerWeek || 0}
                               color="#ffffff"
                               delay={3}
                               goal={10}
@@ -1312,71 +1427,17 @@ const LeadsDashboard = () => {
                           </Grid>
                         </>
                       );
-
-                    case 'all':
-                      return (
-                        <>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={PersonAdd}
-                              title="Total Leads"
-                              value={stats.totalLeads || 0}
-                              color="#ffffff"
-                              delay={0}
-                              goal={100}
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={CheckCircle}
-                              title="Active Leads"
-                              value={stats.activeLeads || 0}
-                              color="#ffffff"
-                              delay={1}
-                              goal={50}
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={TrendingUp}
-                              title="Conversion Rate"
-                              value={stats.conversionRate || 0}
-                              suffix="%"
-                              color="#ffffff"
-                              delay={2}
-                              goal={30}
-                            />
-                          </Grid>
-                          <Grid item xs={12} sm={6} md={6} xl={3}>
-                            <StatCard
-                              icon={AttachMoney}
-                              title="Avg Lead Value"
-                              value={stats.avgLeadValue || 0}
-                              prefix="$"
-                              color="#ffffff"
-                              delay={3}
-                              goal={25000}
-                            />
-                          </Grid>
-                        </>
-                      );
-
-                    default:
-                      return null;
                   }
                 })()}
-              </Grid>
-
-              {/* Flexible spacer to push buttons to bottom */}
-              <Box sx={{ flexGrow: 1, minHeight: '20px' }} />
+                </Grid>
 
               {/* Action Buttons Row - Aligned to bottom */}
-              <Box sx={{ display: 'flex', gap: 2 }}>
+              <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
                 <Button
                   variant="contained"
                   size="medium"
                   startIcon={<Add />}
-                  onClick={() => setNewLeadModalOpen(true)}
+                  onClick={() => setNewAppointmentModalOpen(true)}
                   sx={{
                     backgroundColor: 'rgba(255, 255, 255, 0.2)',
                     color: 'white',
@@ -1390,7 +1451,7 @@ const LeadsDashboard = () => {
                     }
                   }}
                 >
-                  Add New Lead
+                  Schedule Appointment
                 </Button>
                 <Button
                   variant="outlined"
@@ -1407,12 +1468,12 @@ const LeadsDashboard = () => {
                     }
                   }}
                 >
-                  Lead Analytics
+                  Appointment Analytics
                 </Button>
               </Box>
               </Box>
 
-              {/* Right container: AI Lead Manager Card */}
+              {/* Right container: AI Assistant */}
               <Box sx={{
                 width: { xs: '100%', md: '280px', lg: '320px' },
                 minWidth: { md: '280px' },
@@ -1435,7 +1496,7 @@ const LeadsDashboard = () => {
                     minHeight: { xs: 250, md: 320 },
                     position: 'relative',
                     overflow: 'hidden',
-                    background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.12) 0%, rgba(168, 85, 247, 0.08) 100%)',
+                    background: 'linear-gradient(135deg, rgba(122, 62, 0, 0.12) 0%, rgba(163, 93, 0, 0.08) 100%)',
                     backdropFilter: 'blur(10px)',
                     border: '2px dashed rgba(255, 255, 255, 0.3)',
                     borderRadius: 3,
@@ -1446,7 +1507,7 @@ const LeadsDashboard = () => {
                     transition: 'all 0.3s ease',
                     '&:hover': {
                       border: '2px dashed rgba(255, 255, 255, 0.5)',
-                      background: 'linear-gradient(135deg, rgba(147, 51, 234, 0.18) 0%, rgba(168, 85, 247, 0.12) 100%)',
+                      background: 'linear-gradient(135deg, rgba(122, 62, 0, 0.18) 0%, rgba(163, 93, 0, 0.12) 100%)',
                     }
                   }}
                 >
@@ -1470,49 +1531,56 @@ const LeadsDashboard = () => {
                       <Typography
                         variant="h6"
                         sx={{
+                          color: 'rgba(255, 255, 255, 0.95)',
                           fontWeight: 700,
-                          mb: 1.5,
-                          color: 'white',
-                          fontSize: '1.25rem',
+                          mb: 1,
+                          letterSpacing: '0.02em',
                         }}
                       >
-                        AI Lead Manager
+                        AI Appointment Manager
                       </Typography>
                       <Typography
                         variant="body2"
                         sx={{
-                          color: 'rgba(255, 255, 255, 0.85)',
-                          mb: 2.5,
-                          lineHeight: 1.6,
+                          color: 'rgba(255, 255, 255, 0.7)',
+                          mb: 2,
                           fontSize: '0.875rem',
                         }}
                       >
-                        Hire an AI assistant to qualify leads, send follow-ups, and track conversion rates.
+                        Hire an AI assistant to schedule appointments, send reminders, and manage your calendar.
                       </Typography>
-                      <Button
-                        variant="contained"
-                        size="small"
+                      <Box
                         sx={{
-                          backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                          color: 'white',
-                          fontWeight: 600,
-                          px: 3,
-                          py: 1,
+                          display: 'inline-block',
+                          px: 2,
+                          py: 0.75,
                           borderRadius: 2,
-                          backdropFilter: 'blur(10px)',
-                          '&:hover': {
-                            backgroundColor: 'rgba(255, 255, 255, 0.3)',
-                          },
+                          background: 'rgba(255, 255, 255, 0.2)',
+                          backdropFilter: 'blur(5px)',
                         }}
                       >
-                        Coming Soon
-                      </Button>
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: 'white',
+                            fontWeight: 600,
+                            letterSpacing: '0.1em',
+                            textTransform: 'uppercase',
+                            fontSize: '0.75rem',
+                          }}
+                        >
+                          Coming Soon
+                        </Typography>
+                      </Box>
                     </Box>
                   </CardContent>
                 </Card>
               </motion.div>
-              </Box>
+              {/* Spacer */}
+              <Box sx={{ flexGrow: 1 }} />
             </Box>
+            </Box>
+
           </Box>
         </HeroSection>
 
@@ -1531,7 +1599,7 @@ const LeadsDashboard = () => {
               display: 'flex',
               alignItems: 'center',
               gap: 2,
-              background: 'linear-gradient(135deg, #9333EA 0%, #A855F7 100%)',
+              background: 'linear-gradient(135deg, #f97316 0%, #fb923c 100%)',
               borderRadius: 2,
               px: 2,
               py: 1.5,
@@ -1604,7 +1672,7 @@ const LeadsDashboard = () => {
                 format="MMM d, yyyy"
                 value={(() => {
                   try {
-                    const date = customStartDate || getDateRange()?.startDate;
+                    const date = customStartDate || dateRange?.startDate;
                     if (!date) return null;
                     if (typeof date === 'string') {
                       const parsed = new Date(date);
@@ -1682,7 +1750,7 @@ const LeadsDashboard = () => {
                 format="MMM d, yyyy"
                 value={(() => {
                   try {
-                    const date = customEndDate || getDateRange()?.endDate;
+                    const date = customEndDate || dateRange?.endDate;
                     if (!date) return null;
                     if (typeof date === 'string') {
                       const parsed = new Date(date);
@@ -1807,11 +1875,10 @@ const LeadsDashboard = () => {
                   },
                 }}
               >
-                <Tab label="New Leads" value="new" />
-                <Tab label="Qualified" value="qualified" />
-                <Tab label="Converted" value="converted" />
-                <Tab label="Lost" value="lost" />
-                <Tab label="All Leads" value="all" />
+                <Tab label="Upcoming" value="upcoming" />
+                <Tab label="Completed" value="completed" />
+                <Tab label="Cancelled" value="cancelled" />
+                <Tab label="All Appointments" value="all" />
               </Tabs>
             </Paper>
 
@@ -1882,10 +1949,10 @@ const LeadsDashboard = () => {
                   }
                   renderValue={(value) => {
                     const labels = {
+                      appointment_date: 'Appointment Date',
                       created_at: 'Date Created',
-                      last_contact: 'Last Contact',
-                      source: 'Source',
-                      score: 'Score',
+                      client_name: 'Client Name',
+                      appointment_type: 'Type',
                       status: 'Status',
                     };
                     return (
@@ -1916,10 +1983,10 @@ const LeadsDashboard = () => {
                     },
                   }}
                 >
+                  <MenuItem value="appointment_date">Appointment Date</MenuItem>
                   <MenuItem value="created_at">Date Created</MenuItem>
-                  <MenuItem value="last_contact">Last Contact</MenuItem>
-                  <MenuItem value="source">Source</MenuItem>
-                  <MenuItem value="score">Score</MenuItem>
+                  <MenuItem value="client_name">Client Name</MenuItem>
+                  <MenuItem value="appointment_type">Type</MenuItem>
                   <MenuItem value="status">Status</MenuItem>
                 </Select>
               </FormControl>
@@ -2023,10 +2090,9 @@ const LeadsDashboard = () => {
                   },
                 }}
               >
-                <Tab label="New" value="new" />
-                <Tab label="Qualified" value="qualified" />
-                <Tab label="Converted" value="converted" />
-                <Tab label="Lost" value="lost" />
+                <Tab label="Upcoming" value="upcoming" />
+                <Tab label="Completed" value="completed" />
+                <Tab label="Cancelled" value="cancelled" />
                 <Tab label="All" value="all" />
                 {/* Archive Badge for Mobile */}
                 <Tab
@@ -2114,10 +2180,10 @@ const LeadsDashboard = () => {
                     startAdornment={<Sort sx={{ mr: 1, fontSize: '1.125rem', color: 'text.secondary' }} />}
                     renderValue={(value) => {
                       const labels = {
+                        appointment_date: 'Appointment Date',
                         created_at: 'Date Created',
-                        last_contact: 'Last Contact',
-                        source: 'Source',
-                        score: 'Score',
+                        client_name: 'Client Name',
+                        appointment_type: 'Type',
                         status: 'Status',
                       };
                       return (
@@ -2129,10 +2195,10 @@ const LeadsDashboard = () => {
                       );
                     }}
                   >
+                    <MenuItem value="appointment_date">Appointment Date</MenuItem>
                     <MenuItem value="created_at">Date Created</MenuItem>
-                    <MenuItem value="last_contact">Last Contact</MenuItem>
-                    <MenuItem value="source">Source</MenuItem>
-                    <MenuItem value="score">Score</MenuItem>
+                    <MenuItem value="client_name">Client Name</MenuItem>
+                    <MenuItem value="appointment_type">Type</MenuItem>
                     <MenuItem value="status">Status</MenuItem>
                   </Select>
                 </FormControl>
@@ -2197,212 +2263,67 @@ const LeadsDashboard = () => {
           </Box>
         </Box>
 
-        {/* Lead Cards Grid */}
-        {selectedStatus === 'archived' ? (
-          /* Archived View with Batch Delete */
-          <Box>
-            {archivedLeads.length > 0 && (
-              <Box sx={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 2,
-                mb: 2,
-                p: 2,
-                backgroundColor: alpha('#ff9800', 0.1),
-                borderRadius: 2,
-                border: '1px solid',
-                borderColor: alpha('#ff9800', 0.3),
-              }}>
-                <Checkbox
-                  checked={selectedArchivedIds.length === archivedLeads.length}
-                  indeterminate={selectedArchivedIds.length > 0 && selectedArchivedIds.length < archivedLeads.length}
-                  onChange={(e) => handleSelectAll(e.target.checked)}
-                />
-                <Typography variant="body2">
-                  {selectedArchivedIds.length > 0
-                    ? `${selectedArchivedIds.length} selected`
-                    : 'Select all'}
-                </Typography>
-                {selectedArchivedIds.length > 0 && (
-                  <Button
-                    variant="contained"
-                    color="error"
-                    size="small"
-                    startIcon={batchDeleting ? <CircularProgress size={16} color="inherit" /> : <DeleteForeverIcon />}
-                    onClick={handleBatchDelete}
-                    disabled={batchDeleting}
-                  >
-                    Delete {selectedArchivedIds.length} Lead{selectedArchivedIds.length > 1 ? 's' : ''}
-                  </Button>
-                )}
-              </Box>
-            )}
+        {/* Appointments Grid */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr', md: viewMode === 'small' ? 'repeat(2, 1fr)' : '1fr', lg: viewMode === 'small' ? 'repeat(4, 1fr)' : '1fr' }, gap: 3, width: '100%' }}>
+          <AnimatePresence>
+            {(() => {
+              const now = new Date();
+              const { startDate, endDate } = dateRange;
 
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr', md: viewMode === 'small' ? 'repeat(2, 1fr)' : '1fr', lg: viewMode === 'small' ? 'repeat(4, 1fr)' : '1fr' }, gap: 3, width: '100%' }}>
-              <AnimatePresence>
-                {archivedLeads.length === 0 ? (
-                  <Paper sx={{ p: 6, height: 240, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', background: t => alpha(t.palette.warning.main, 0.03), border: t => `1px solid ${alpha(t.palette.warning.main, 0.1)}`, gridColumn: '1 / -1' }}>
-                    <Typography variant="h6" color="textSecondary">No archived leads</Typography>
-                    <Typography variant="body2" color="textSecondary">Archived leads will appear here</Typography>
-                  </Paper>
-                ) : (
-                  archivedLeads.map((lead, index) => {
-                    const isSelected = selectedArchivedIds.includes(lead.id);
-                    return (
-                      <Box key={lead.id} sx={{ position: 'relative' }}>
-                        {/* Selection checkbox */}
-                        <Checkbox
-                          checked={isSelected}
-                          onChange={(e) => handleSelectLead(lead.id, e.target.checked)}
-                          sx={{
-                            position: 'absolute',
-                            top: 8,
-                            left: 8,
-                            zIndex: 2,
-                            backgroundColor: 'white',
-                            borderRadius: 1,
-                            '&:hover': {
-                              backgroundColor: alpha('#fff', 0.9),
-                            },
-                          }}
-                        />
-                        <motion.div
-                          initial={{ opacity: 0, y: 20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -20 }}
-                          transition={{ duration: 0.3, delay: index * 0.05 }}
-                        >
-                          <Card
-                            onClick={(e) => {
-                              if (!e.target.closest('.MuiCheckbox-root')) {
-                                navigate(`/leads/${lead.id}`);
-                              }
-                            }}
-                            sx={{
-                              cursor: 'pointer',
-                              height: '100%',
-                              minHeight: 200,
-                              opacity: 0.7,
-                              border: isSelected ? `2px solid ${alpha('#ff9800', 0.5)}` : '1px solid transparent',
-                              '&:hover': {
-                                opacity: 1,
-                                transform: 'translateY(-4px)',
-                                boxShadow: 6
-                              },
-                              transition: 'all 0.3s'
-                            }}
-                          >
-                            <CardContent sx={{ pt: 5 }}>
-                              <Typography variant="h6" gutterBottom>
-                                {`${lead.firstName || lead.first_name || ''} ${lead.lastName || lead.last_name || ''}`}
-                              </Typography>
-                              <Stack spacing={1}>
-                                <Chip
-                                  label="Archived"
-                                  size="small"
-                                  color="warning"
-                                />
-                                <Chip
-                                  label={lead.leadStatus || lead.lead_status || 'Unknown'}
-                                  size="small"
-                                  variant="outlined"
-                                />
-                                <Typography variant="body2" color="textSecondary">
-                                  Source: {lead.leadSource || lead.lead_source || 'N/A'}
-                                </Typography>
-                                <Typography variant="body2" color="textSecondary">
-                                  Score: {lead.leadScore || lead.lead_score || 0}/100
-                                </Typography>
-                              </Stack>
-                            </CardContent>
-                          </Card>
-                        </motion.div>
-                      </Box>
-                    );
-                  })
-                )}
-              </AnimatePresence>
-            </Box>
-          </Box>
-        ) : (
-          /* Active Leads View */
-          <Box>
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr', md: viewMode === 'small' ? 'repeat(2, 1fr)' : '1fr', lg: viewMode === 'small' ? 'repeat(4, 1fr)' : '1fr' }, gap: 3, width: '100%' }}>
-              <AnimatePresence>
-                {(() => {
-                  const filtered = leads.filter(l => {
-                    const status = (l.leadStatus || l.lead_status || '').toLowerCase();
-                    if (selectedStatus === 'new') return status === 'new';
-                    if (selectedStatus === 'qualified') return status === 'qualified';
-                    if (selectedStatus === 'converted') return status === 'converted';
-                    if (selectedStatus === 'lost') return status === 'lost';
-                    return true; // 'all'
-                  });
-                  const sorted = [...filtered].sort((a, b) => {
-                    if (sortBy === 'created_at') return new Date(b.createdAt || b.created_at || 0) - new Date(a.createdAt || a.created_at || 0);
-                    if (sortBy === 'last_contact') return new Date(b.lastContact || b.last_contact || 0) - new Date(a.lastContact || a.last_contact || 0);
-                    if (sortBy === 'lead_source') return (a.leadSource || a.lead_source || '').localeCompare(b.leadSource || b.lead_source || '');
-                    if (sortBy === 'lead_score') return Number(b.leadScore || b.lead_score || 0) - Number(a.leadScore || a.lead_score || 0);
-                    if (sortBy === 'lead_status') return (a.leadStatus || a.lead_status || '').localeCompare(b.leadStatus || b.lead_status || '');
-                    return 0;
-                  });
-                  if (sorted.length === 0) return (
-                    <Paper sx={{ p: 6, height: 240, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', background: t => alpha(t.palette.primary.main, 0.03), border: t => `1px solid ${alpha(t.palette.primary.main, 0.1)}`, gridColumn: '1 / -1' }}>
-                      <Typography variant="h6" color="textSecondary">No {selectedStatus} leads found</Typography>
-                      <Typography variant="body2" color="textSecondary">{selectedStatus === 'new' ? 'Add a new lead to get started' : `No ${selectedStatus} leads in the system`}</Typography>
-                    </Paper>
-                  );
-                  return sorted.map((l, i) => (
-                    <motion.div
-                      key={l.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -20 }}
-                      transition={{ duration: 0.3, delay: i * 0.05 }}
-                    >
-                      <LeadCard
-                        lead={l}
-                        viewMode={viewMode}
-                        index={i}
-                      />
-                    </motion.div>
-                  ));
-                })()}
-              </AnimatePresence>
-            </Box>
+              // Filter by date range first
+              const dateFiltered = appointments.filter(a => {
+                const apptDate = new Date(a.appointment_date || a.appointment_date);
+                return apptDate >= startDate && apptDate <= endDate;
+              });
 
-            {/* Load More Button */}
-            {hasMorePages && selectedStatus !== 'archived' && (
-              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>
-                <Button
-                  variant="contained"
-                  size="large"
-                  onClick={loadMoreLeads}
-                  disabled={loadingMore}
-                  startIcon={loadingMore ? <CircularProgress size={20} /> : null}
-                  sx={{
-                    px: 6,
-                    py: 1.5,
-                    borderRadius: '12px',
-                    textTransform: 'none',
-                    fontSize: '1rem',
-                    fontWeight: 600
-                  }}
+              // Then filter by status
+              const filtered = dateFiltered.filter(a => {
+                const apptDate = new Date(a.appointment_date || a.appointment_date);
+                const status = (a.status || a.appointment_status || '').toLowerCase();
+
+                if (selectedStatus === 'upcoming') return apptDate >= now && status !== 'cancelled';
+                if (selectedStatus === 'completed') return status === 'completed';
+                if (selectedStatus === 'cancelled') return status === 'cancelled';
+                return true; // 'all'
+              });
+
+              const sorted = [...filtered].sort((a, b) => {
+                if (sortBy === 'appointment_date') return new Date(b.appointment_date || b.appointment_date) - new Date(a.appointment_date || a.appointment_date);
+                if (sortBy === 'created_at') return new Date(b.created_at || b.created_at) - new Date(a.created_at || a.created_at);
+                if (sortBy === 'client_name') return (a.client_name || '').localeCompare(b.client_name || '');
+                if (sortBy === 'appointment_type') return (a.appointment_type || '').localeCompare(b.appointment_type || '');
+                if (sortBy === 'appointment_status') return (a.status || '').localeCompare(b.status || '');
+                return 0;
+              });
+
+              if (sorted.length === 0) return <Paper sx={{ p: 6, height: 240, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', background: t => alpha(t.palette.primary.main, 0.03), border: t => `1px solid ${alpha(t.palette.primary.main, 0.1)}`, gridColumn: '1 / -1' }}><Typography variant="h6" color="textSecondary">No {selectedStatus} appointments found</Typography></Paper>;
+
+              return sorted.map((a, i) => (
+                <motion.div
+                  key={a.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  transition={{ duration: 0.3, delay: i * 0.05 }}
                 >
-                  {loadingMore ? 'Loading...' : `Load More (${totalCount - leads.length} remaining)`}
-                </Button>
-              </Box>
-            )}
-          </Box>
-        )}
+                  <AppointmentCard
+                    appointment={a}
+                    viewMode={viewMode}
+                    index={i}
+                  />
+                </motion.div>
+              ));
+            })()}
+          </AnimatePresence>
+        </Box>
 
-        {/* New Lead Modal */}
-        <NewLeadModal
-          open={newLeadModalOpen}
-          onClose={() => setNewLeadModalOpen(false)}
-          onSuccess={(newLeadId) => {
-            setNewLeadModalOpen(false);
-            fetchLeads();
+        {/* New Appointment Modal */}
+        <NewAppointmentModal
+          open={newAppointmentModalOpen}
+          onClose={() => setNewAppointmentModalOpen(false)}
+          onSuccess={(newAppointmentId) => {
+            setNewAppointmentModalOpen(false);
+            fetchAppointments();
           }}
         />
       </Container>
@@ -2410,4 +2331,4 @@ const LeadsDashboard = () => {
   );
 };
 
-export default LeadsDashboard;
+export default AppointmentsDashboard;

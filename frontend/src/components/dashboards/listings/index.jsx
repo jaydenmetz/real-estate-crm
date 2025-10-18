@@ -59,12 +59,12 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { format as formatDate } from 'date-fns';
-import { listingsAPI } from '../../services/api.service';
-import { useAuth } from '../../contexts/AuthContext';
-import NewListingModal from '../forms/NewListingModal';
-import networkMonitor from '../../services/networkMonitor.service';
-import ListingCard from '../common/widgets/ListingCard';
-import { useWebSocket } from '../../hooks/useWebSocket';
+import { listingsAPI } from '../../../services/api.service';
+import { useAuth } from '../../../contexts/AuthContext';
+import NewListingModal from '../../forms/NewListingModal';
+import networkMonitor from '../../../services/networkMonitor.service';
+import ListingCard from '../../common/widgets/ListingCard';
+import { useWebSocket } from '../../../hooks/useWebSocket';
 
 // Styled Components
 const HeroSection = styled(Box)(({ theme }) => ({
@@ -564,7 +564,7 @@ const ListingsDashboard = () => {
   useEffect(() => {
     if (!isConnected) return;
 
-    const websocketService = require('../../services/websocket.service').default;
+    const websocketService = require('../../../services/websocket.service').default;
 
     const unsubscribe = websocketService.on('data:update', (data) => {
       // console.log('📡 WebSocket data update received:', data);

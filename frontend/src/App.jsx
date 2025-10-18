@@ -28,13 +28,13 @@ import ConnectionStatus from './components/common/ConnectionStatus';
 import HomeDashboard from './components/dashboards/HomeDashboard';
 import EscrowsDashboard from './components/dashboards/escrows';
 import EscrowDetail from './components/details/EscrowDetail';
-import ListingsDashboard from './components/dashboards/ListingsDashboard';
+import ListingsDashboard from './components/dashboards/listings';
 import ListingDetail from './components/details/ListingDetail';
-import ClientsDashboard from './components/dashboards/ClientsDashboard';
+import ClientsDashboard from './components/dashboards/clients';
 import ClientDetail from './components/details/ClientDetail';
-import AppointmentsDashboard from './components/dashboards/AppointmentsDashboard';
+import AppointmentsDashboard from './components/dashboards/appointments';
 import AppointmentDetail from './components/details/AppointmentDetail';
-import LeadsDashboard from './components/dashboards/LeadsDashboard';
+import LeadsDashboard from './components/dashboards/leads';
 import LeadDetail from './components/details/LeadDetail';
 
 // Financial Components
