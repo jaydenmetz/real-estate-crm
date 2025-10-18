@@ -29,7 +29,6 @@ import {
   Tooltip,
   Alert,
 } from '@mui/material';
-import DebugCard from '../../common/DebugCard';
 import DetailPageErrorBoundary from '../../common/DetailPageErrorBoundary';
 import {
   Timeline,
@@ -310,19 +309,6 @@ const LeadDetail = () => {
 
   return (
     <Container maxWidth="xl">
-      <DebugCard 
-        pageName="LeadDetail"
-        id={id}
-        isLoading={isLoading}
-        isError={isError}
-        error={error}
-        data={displayLead}
-        additionalInfo={{
-          activeTab,
-          hasLeadData: !!lead,
-          usingMockData: !lead && !!displayLead
-        }}
-      />
       {/* Breadcrumbs */}
       <Breadcrumbs sx={{ mb: 2 }}>
         <Link

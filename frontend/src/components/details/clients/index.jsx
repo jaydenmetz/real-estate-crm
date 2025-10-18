@@ -70,7 +70,6 @@ import {
   Switch,
 } from '@mui/material';
 import { styled, alpha, keyframes } from '@mui/material/styles';
-import DebugCard from '../../common/DebugCard';
 import DetailPageErrorBoundary from '../../common/DetailPageErrorBoundary';
 import {
   Timeline,
@@ -1189,20 +1188,6 @@ const ClientDetail = () => {
           </Collapse>
         </Box>
       )}
-
-      <DebugCard 
-        pageName="ClientDetail"
-        id={id}
-        isLoading={isLoading}
-        isError={isError}
-        error={error}
-        data={displayClient}
-        additionalInfo={{
-          activeTab,
-          hasClientData: !!client,
-          usingMockData: !client && !!displayClient
-        }}
-      />
 
       {/* Breadcrumbs */}
       <Breadcrumbs sx={{ mb: 3 }}>

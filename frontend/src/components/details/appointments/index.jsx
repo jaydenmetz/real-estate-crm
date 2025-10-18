@@ -37,7 +37,6 @@ import {
   useMediaQuery,
 } from '@mui/material';
 import { styled, alpha } from '@mui/material/styles';
-import DebugCard from '../../common/DebugCard';
 import DetailPageErrorBoundary from '../../common/DetailPageErrorBoundary';
 import {
   Timeline,
@@ -834,21 +833,6 @@ function AppointmentDetail() {
         </Box>
       )}
 
-      <DebugCard 
-        pageName="AppointmentDetail"
-        id={id}
-        isLoading={loading}
-        isError={!!error}
-        error={error}
-        data={appointment}
-        additionalInfo={{
-          activeTab,
-          hasAppointmentData: !!appointment,
-          usingMockData: !!error && !!appointment,
-          attendeeCount: attendees.length,
-          hasRelatedProperty: !!relatedProperty
-        }}
-      />
       {/* Breadcrumbs */}
       <Breadcrumbs sx={{ mb: 2 }}>
         <Link
