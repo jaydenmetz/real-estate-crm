@@ -13,10 +13,10 @@ import useResponsiveLayout from '../../../../hooks/useResponsiveLayout';
 
 // PHASE 1: Clean Blue Hero Card (matches dashboard aesthetic)
 const HeroContainer = styled(Box)(({ theme }) => ({
-  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', // Match dashboard blue gradient
+  background: 'linear-gradient(135deg, #4A90E2 0%, #5B9FED 100%)', // Blue gradient (escrows theme)
   borderRadius: theme.spacing(3),
   overflow: 'hidden',
-  boxShadow: '0 20px 60px rgba(102, 126, 234, 0.3)',
+  boxShadow: '0 20px 60px rgba(74, 144, 226, 0.3)',
   position: 'relative',
   marginBottom: theme.spacing(4),
   // Add subtle pattern overlay
