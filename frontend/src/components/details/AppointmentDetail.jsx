@@ -1485,7 +1485,9 @@ function AppointmentDetail() {
           variant="contained"
           color="primary"
           startIcon={<Send />}
-          onClick={() => // console.log('Send reminder')}
+          onClick={() => {
+            // console.log('Send reminder')
+          }}
         >
           Send Reminder
         </Button>

@@ -850,7 +850,9 @@ function DebugCard({ pageType = 'dashboard', pageData = {} }) {
             <Button
               variant="outlined"
               size="small"
-              onClick={() => // console.log({ stats, pageData, apiTests })}
+              onClick={() => {
+                // console.log({ stats, pageData, apiTests })
+              }}
               sx={{ borderColor: '#764ba2', color: '#764ba2' }}
             >
               Log to Console

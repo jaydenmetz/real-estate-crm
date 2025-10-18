@@ -41,11 +41,11 @@ class ApiService {
     // Log initialization (only in development)
     if (process.env.NODE_ENV === 'development') {
       // console.log('API Service initialized:', {
-        baseURL: this.baseURL,
-        hasToken: !!this.token,
-        hasApiKey: !!this.apiKey,
-        environment: process.env.NODE_ENV
-      });
+      //   baseURL: this.baseURL,
+      //   hasToken: !!this.token,
+      //   hasApiKey: !!this.apiKey,
+      //   environment: process.env.NODE_ENV
+      // });
     }
   }
   

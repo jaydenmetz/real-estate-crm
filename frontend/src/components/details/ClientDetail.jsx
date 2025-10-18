@@ -778,8 +778,12 @@ const ClientDetail = () => {
 
   const speedDialActions = [
     { icon: <Email />, name: 'Send Email', action: () => setCommunicationDialog(true) },
-    { icon: <Phone />, name: 'Log Call', action: () => // console.log('Call logging') },
-    { icon: <Event />, name: 'Schedule Meeting', action: () => // console.log('Meeting scheduler') },
+    { icon: <Phone />, name: 'Log Call', action: () => {
+      // console.log('Call logging')
+    }},
+    { icon: <Event />, name: 'Schedule Meeting', action: () => {
+      // console.log('Meeting scheduler')
+    }},
     { icon: <Note />, name: 'Add Note', action: () => setNoteDialog(true) },
     { icon: <Assignment />, name: 'Create Task', action: () => setTaskDialog(true) },
   ];

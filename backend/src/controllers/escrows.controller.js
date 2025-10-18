@@ -719,10 +719,10 @@ class EscrowController {
       // Log the update for debugging
       const updatedEscrow = result.rows[0];
       // console.log('Updated escrow fields:', {
-        zillow_url: updatedEscrow.zillow_url,
-        property_image_url: updatedEscrow.property_image_url,
-        id: updatedEscrow.id,
-      });
+      //   zillow_url: updatedEscrow.zillow_url,
+      //   property_image_url: updatedEscrow.property_image_url,
+      //   id: updatedEscrow.id,
+      // });
 
       // Emit WebSocket event for real-time updates (3-tier: broker → team → user)
       const teamId = req.user?.teamId || req.user?.team_id;
