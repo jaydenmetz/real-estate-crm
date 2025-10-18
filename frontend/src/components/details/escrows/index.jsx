@@ -234,20 +234,22 @@ function EscrowDetailPage() {
                 onMoreActions={() => console.log('More actions')}
               />
 
-              {/* PHASE 3: Three-column layout with sidebars */}
-              <Box display="flex">
-                {/* Left Sidebar */}
-                <EscrowLeftSidebar
-                  escrowId={id}
-                  notes={notes}
-                  onNotesChange={setNotes}
-                  reminders={reminders}
-                  onReminderToggle={handleReminderToggle}
-                  onAddReminder={handleAddReminder}
-                  onDeleteReminder={handleDeleteReminder}
-                />
+              {/* PHASE 3-4: Three-column layout with sidebars (responsive) */}
+              <Box display="flex" sx={{ backgroundColor: '#f9fafb' }}>
+                {/* Left Sidebar - Hidden on mobile/tablet, visible on large screens */}
+                <Box sx={{ display: { xs: 'none', lg: 'block' } }}>
+                  <EscrowLeftSidebar
+                    escrowId={id}
+                    notes={notes}
+                    onNotesChange={setNotes}
+                    reminders={reminders}
+                    onReminderToggle={handleReminderToggle}
+                    onAddReminder={handleAddReminder}
+                    onDeleteReminder={handleDeleteReminder}
+                  />
+                </Box>
 
-                {/* PHASE 4: Main Content with widget grid */}
+                {/* PHASE 4: Main Content with widget grid - Always visible */}
                 <EscrowMainContent
                   data={data}
                   expandedWidget={expandedWidget}
@@ -255,20 +257,22 @@ function EscrowDetailPage() {
                   onUpdateSection={updateSection}
                 />
 
-                {/* Right Sidebar */}
-                <EscrowRightSidebar
-                  escrowId={id}
-                  automations={automations}
-                  onToggleAutomation={handleToggleAutomation}
-                  dealHealth={{
-                    percentage: 85,
-                    indicators: [
-                      { type: 'success', text: 'All documents received' },
-                      { type: 'warning', text: 'Appraisal pending' },
-                    ],
-                  }}
-                  onQuickAction={handleQuickAction}
-                />
+                {/* Right Sidebar - Hidden on mobile/tablet, visible on large screens */}
+                <Box sx={{ display: { xs: 'none', lg: 'block' } }}>
+                  <EscrowRightSidebar
+                    escrowId={id}
+                    automations={automations}
+                    onToggleAutomation={handleToggleAutomation}
+                    dealHealth={{
+                      percentage: 85,
+                      indicators: [
+                        { type: 'success', text: 'All documents received' },
+                        { type: 'warning', text: 'Appraisal pending' },
+                      ],
+                    }}
+                    onQuickAction={handleQuickAction}
+                  />
+                </Box>
               </Box>
             </motion.div>
           ) : (

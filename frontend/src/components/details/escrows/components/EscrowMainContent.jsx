@@ -40,7 +40,7 @@ const EscrowMainContent = ({
   onUpdateSection,
 }) => {
   return (
-    <Box flex={1} p={3} sx={{ backgroundColor: '#f9fafb' }}>
+    <Box flex={1} p={3}>
       {/* Main 4 Widgets - 2×2 Grid */}
       <WidgetGrid>
         {/* Timeline Widget */}
