@@ -7,29 +7,17 @@ import {
   Tabs,
   Tab,
   Paper,
-  CircularProgress,
-  Alert,
-  IconButton,
-  Tooltip,
   useTheme,
-  useMediaQuery,
-  Fade,
   Backdrop
 } from '@mui/material';
 import {
   Dashboard as DashboardIcon,
-  Edit as EditIcon,
-  Save as SaveIcon,
-  Refresh as RefreshIcon,
-  ArrowBack as ArrowBackIcon,
-  DarkMode as DarkModeIcon,
-  LightMode as LightModeIcon
+  Edit as EditIcon
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 
 // Import custom hooks and utilities
 import { useEscrowData } from './hooks/useEscrowData';
-import { checkIsAdmin } from './utils/eventHandlers';
 // import { useThemeMode } from '../../../hooks/useThemeMode'; // TODO: Create this hook or remove dark mode toggle
 // PHASE 2: Removed emergency auth utility (now handled by AuthContext auto-refresh)
 
@@ -38,13 +26,15 @@ import DataEditorView from './components/DataEditorView';
 
 // Import Debug Panels
 import EscrowDebugPanel from './components/EscrowDebugPanel';
-import EscrowErrorDebugPanel from '../../common/EscrowErrorDebugPanel';
 
-// PHASE 2-4: Import refactored components
+// PHASE 2-6: Import refactored components
 import EscrowHeroCard from './components/EscrowHeroCard';
 import EscrowLeftSidebar from './components/EscrowLeftSidebar';
 import EscrowRightSidebar from './components/EscrowRightSidebar';
 import EscrowMainContent from './components/EscrowMainContent';
+import EscrowDetailHeader from './components/EscrowDetailHeader';
+import EscrowLoadingState from './components/EscrowLoadingState';
+import EscrowErrorState from './components/EscrowErrorState';
 
 // Styled components with glassmorphism
 const StyledContainer = styled(Container)(({ theme }) => ({
@@ -90,22 +80,10 @@ const StyledTab = styled(Tab)(({ theme }) => ({
   },
 }));
 
-const HeaderBar = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  padding: theme.spacing(2, 3),
-  borderBottom: `1px solid ${theme.palette.divider}`,
-  background: theme.palette.mode === 'dark'
-    ? 'rgba(0, 0, 0, 0.3)'
-    : 'rgba(255, 255, 255, 0.5)',
-}));
-
 function EscrowDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const [isDarkMode, setIsDarkMode] = useState(false);
   const toggleDarkMode = () => setIsDarkMode(!isDarkMode);
   
@@ -186,111 +164,39 @@ function EscrowDetailPage() {
     // TODO: Implement actual quick actions
   };
 
+  // PHASE 6: Loading state component
   if (loading && !data) {
-    return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        minHeight="100vh"
-        sx={{
-          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        }}
-      >
-        <CircularProgress size={60} sx={{ color: 'white' }} />
-      </Box>
-    );
+    return <EscrowLoadingState />;
   }
 
+  // PHASE 6: Error state component
   if (error) {
-    // Check if user is admin for debug panel
-    const isAdmin = checkIsAdmin();
-    
     return (
-      <StyledContainer maxWidth={false}>
-        {isAdmin ? (
-          <Box sx={{ maxWidth: 1600, margin: '0 auto', p: 2 }}>
-            <EscrowErrorDebugPanel error={error} escrowId={id} />
-          </Box>
-        ) : (
-          <GlassCard sx={{ p: 4, textAlign: 'center' }}>
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error.message || 'Failed to load escrow details'}
-            </Alert>
-            <Box>
-              <IconButton onClick={() => navigate('/escrows')} sx={{ mr: 2 }}>
-                <ArrowBackIcon />
-              </IconButton>
-              <IconButton onClick={handleRefresh}>
-                <RefreshIcon />
-              </IconButton>
-            </Box>
-          </GlassCard>
-        )}
-      </StyledContainer>
+      <EscrowErrorState
+        error={error}
+        escrowId={id}
+        onBack={() => navigate('/escrows')}
+        onRefresh={handleRefresh}
+      />
     );
   }
 
   return (
     <StyledContainer maxWidth={false}>
       <GlassCard elevation={0}>
-        {/* Header */}
-        <HeaderBar>
-          <Box display="flex" alignItems="center" gap={2}>
-            <Tooltip title="Back to Escrows">
-              <IconButton onClick={() => navigate('/escrows')} size="large">
-                <ArrowBackIcon />
-              </IconButton>
-            </Tooltip>
-            <Box>
-              <motion.h1
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                style={{ margin: 0, fontSize: '1.5rem' }}
-              >
-                {data?.details?.escrowNumber || 'Escrow Details'}
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.1 }}
-                style={{ margin: 0, fontSize: '0.875rem', opacity: 0.7 }}
-              >
-                {data?.details?.propertyAddress}
-              </motion.p>
-            </Box>
-          </Box>
-          
-          <Box display="flex" alignItems="center" gap={1}>
-            {hasUnsavedChanges && activeTab === 1 && (
-              <Tooltip title="Save All Changes">
-                <IconButton onClick={handleSaveAll} color="primary">
-                  <SaveIcon />
-                </IconButton>
-              </Tooltip>
-            )}
-            <Tooltip title={isRefreshing ? "Refreshing..." : "Refresh Data"}>
-              <span>
-                <IconButton 
-                  onClick={handleRefresh} 
-                  disabled={isRefreshing}
-                >
-                  <motion.div
-                    animate={isRefreshing ? { rotate: 360 } : {}}
-                    transition={{ duration: 1, repeat: isRefreshing ? Infinity : 0 }}
-                  >
-                    <RefreshIcon />
-                  </motion.div>
-                </IconButton>
-              </span>
-            </Tooltip>
-            <Tooltip title={isDarkMode ? "Light Mode" : "Dark Mode"}>
-              <IconButton onClick={toggleDarkMode}>
-                {isDarkMode ? <LightModeIcon /> : <DarkModeIcon />}
-              </IconButton>
-            </Tooltip>
-          </Box>
-        </HeaderBar>
+        {/* PHASE 5: Header Component */}
+        <EscrowDetailHeader
+          escrowNumber={data?.details?.escrowNumber}
+          propertyAddress={data?.details?.propertyAddress}
+          hasUnsavedChanges={hasUnsavedChanges}
+          isRefreshing={isRefreshing}
+          isDarkMode={isDarkMode}
+          onBack={() => navigate('/escrows')}
+          onSave={handleSaveAll}
+          onRefresh={handleRefresh}
+          onToggleDarkMode={toggleDarkMode}
+          showSaveButton={activeTab === 1}
+        />
 
         {/* Tabs */}
         <StyledTabs
