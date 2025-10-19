@@ -122,6 +122,8 @@ const theme = createTheme({
   },
 });
 
+// React Query Client Configuration
+// Updated: Oct 18, 2025 - Force clean rebuild
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
