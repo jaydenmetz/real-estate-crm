@@ -11,7 +11,7 @@ const HeroContainer = styled(Box)(({ theme }) => ({
   overflow: 'hidden',
   boxShadow: '0 8px 24px rgba(74, 144, 226, 0.25)',
   position: 'relative',
-  height: 120, // Slightly taller for better proportions
+  height: 240, // Doubled height for better visual presence
   display: 'flex',
   alignItems: 'center',
   gap: theme.spacing(2),
@@ -33,8 +33,8 @@ const HeroContainer = styled(Box)(({ theme }) => ({
 
 const PropertyImageBox = styled(Box)(({ theme }) => ({
   position: 'relative',
-  width: 120,
-  height: 80,
+  width: 240, // Doubled to match hero height
+  height: 200, // Larger for better visual impact
   borderRadius: theme.spacing(1.5),
   overflow: 'hidden',
   flexShrink: 0,
