@@ -57,6 +57,7 @@ const MainContent = styled(Box)(({ theme }) => ({
   gap: theme.spacing(2),
   overflowY: 'auto',
   paddingRight: theme.spacing(1),
+  paddingTop: theme.spacing(0.5), // Small top padding to prevent hero card clipping
 }));
 
 const SidebarColumn = styled(Box)(({ theme }) => ({
