@@ -4,14 +4,14 @@ import { styled } from '@mui/material/styles';
 import { OpenInNew, TrendingUp, CalendarToday, AttachMoney } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 
-// PHASE 3: Compact 100px Hero Card
+// PHASE 3: Compact Hero Card (wider aspect ratio like dashboard cards)
 const HeroContainer = styled(Box)(({ theme }) => ({
   background: 'linear-gradient(135deg, #4A90E2 0%, #5B9FED 100%)',
   borderRadius: theme.spacing(2),
   overflow: 'hidden',
   boxShadow: '0 8px 24px rgba(74, 144, 226, 0.25)',
   position: 'relative',
-  height: 100,
+  height: 120, // Slightly taller for better proportions
   display: 'flex',
   alignItems: 'center',
   gap: theme.spacing(2),

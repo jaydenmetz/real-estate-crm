@@ -3,8 +3,14 @@ import { useParams } from 'react-router-dom';
 import {
   Box,
   CircularProgress,
-  Alert
+  Alert,
+  IconButton,
+  Tooltip
 } from '@mui/material';
+import {
+  ChevronLeft,
+  ChevronRight
+} from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import { escrowsAPI } from '../../../services/api.service';
 import { useEscrowWebSocket } from '../../../hooks/useEscrowWebSocket';
@@ -35,18 +41,20 @@ const PageContainer = styled(Box)(({ theme }) => ({
   backgroundColor: theme.palette.grey[50],
 }));
 
-const FPatternGrid = styled(Box)(({ theme }) => ({
+const FPatternGrid = styled(Box)(({ leftCollapsed, rightCollapsed }) => (theme) => ({
   display: 'grid',
-  gridTemplateColumns: '280px 1fr 320px', // Left sidebar | Main | Right sidebar
+  gridTemplateColumns: `${leftCollapsed ? '0px' : '280px'} 1fr ${rightCollapsed ? '0px' : '320px'}`,
   gap: theme.spacing(2),
   height: '100%',
-  maxWidth: '2400px', // Max width for ultra-wide screens
+  maxWidth: '2400px',
   margin: '0 auto',
+  transition: 'grid-template-columns 0.3s ease-in-out',
+  position: 'relative',
   [theme.breakpoints.down('lg')]: {
-    gridTemplateColumns: '240px 1fr 280px', // Smaller sidebars on medium screens
+    gridTemplateColumns: `${leftCollapsed ? '0px' : '240px'} 1fr ${rightCollapsed ? '0px' : '280px'}`,
   },
   [theme.breakpoints.down('md')]: {
-    gridTemplateColumns: '1fr', // Stack on mobile
+    gridTemplateColumns: '1fr',
     overflowY: 'auto',
   },
 }));
@@ -54,26 +62,54 @@ const FPatternGrid = styled(Box)(({ theme }) => ({
 const MainContent = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
-  gap: theme.spacing(2),
+  gap: theme.spacing(1.5), // Tighter spacing for better fit
   overflowY: 'auto',
   paddingRight: theme.spacing(1),
-  paddingTop: theme.spacing(0.5), // Small top padding to prevent hero card clipping
+  paddingTop: theme.spacing(0.5),
+  paddingBottom: theme.spacing(1),
 }));
 
-const SidebarColumn = styled(Box)(({ theme }) => ({
+const SidebarColumn = styled(Box)(({ collapsed }) => (theme) => ({
   overflowY: 'auto',
   paddingRight: theme.spacing(1),
+  width: collapsed ? 0 : 'auto',
+  opacity: collapsed ? 0 : 1,
+  transition: 'width 0.3s ease-in-out, opacity 0.3s ease-in-out',
+  overflow: collapsed ? 'hidden' : 'auto',
   [theme.breakpoints.down('md')]: {
-    display: 'none', // Hide on mobile
+    display: 'none',
+  },
+}));
+
+const SidebarToggle = styled(IconButton)(({ theme, side }) => ({
+  position: 'absolute',
+  top: '50%',
+  transform: 'translateY(-50%)',
+  [side === 'left' ? 'left' : 'right']: side === 'left' ? -12 : -12,
+  zIndex: 1300,
+  backgroundColor: theme.palette.background.paper,
+  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+  width: 24,
+  height: 40,
+  borderRadius: side === 'left' ? '0 8px 8px 0' : '8px 0 0 8px',
+  '&:hover': {
+    backgroundColor: theme.palette.primary.main,
+    color: 'white',
+  },
+  [theme.breakpoints.down('md')]: {
+    display: 'none',
   },
 }));
 
 const WidgetsGrid = styled(Box)(({ theme }) => ({
   display: 'grid',
-  gridTemplateColumns: 'repeat(2, 1fr)',
-  gap: theme.spacing(2),
+  gridTemplateColumns: 'repeat(4, 1fr)', // 4 columns for better fit
+  gap: theme.spacing(1.5),
+  [theme.breakpoints.down('lg')]: {
+    gridTemplateColumns: 'repeat(2, 1fr)', // 2x2 on medium screens
+  },
   [theme.breakpoints.down('sm')]: {
-    gridTemplateColumns: '1fr',
+    gridTemplateColumns: '1fr', // Stack on mobile
   },
 }));
 
@@ -83,6 +119,14 @@ const EscrowDetailCompact = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Sidebar collapse states (stored in localStorage)
+  const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(() => {
+    return localStorage.getItem('leftSidebarCollapsed') === 'true';
+  });
+  const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(() => {
+    return localStorage.getItem('rightSidebarCollapsed') === 'true';
+  });
+
   // Modal states
   const [financialsModalOpen, setFinancialsModalOpen] = useState(false);
   const [timelineModalOpen, setTimelineModalOpen] = useState(false);
@@ -90,6 +134,15 @@ const EscrowDetailCompact = () => {
   const [documentsModalOpen, setDocumentsModalOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
+
+  // Save sidebar state to localStorage
+  useEffect(() => {
+    localStorage.setItem('leftSidebarCollapsed', leftSidebarCollapsed);
+  }, [leftSidebarCollapsed]);
+
+  useEffect(() => {
+    localStorage.setItem('rightSidebarCollapsed', rightSidebarCollapsed);
+  }, [rightSidebarCollapsed]);
 
   // Fetch escrow data
   useEffect(() => {
@@ -193,9 +246,20 @@ const EscrowDetailCompact = () => {
   return (
     <PageContainer>
       {/* F-Pattern Layout: Left | Main | Right */}
-      <FPatternGrid>
+      <FPatternGrid leftCollapsed={leftSidebarCollapsed} rightCollapsed={rightSidebarCollapsed}>
+        {/* Left Sidebar Toggle */}
+        <Tooltip title={leftSidebarCollapsed ? "Show sidebar" : "Hide sidebar"} placement="right">
+          <SidebarToggle
+            side="left"
+            onClick={() => setLeftSidebarCollapsed(!leftSidebarCollapsed)}
+            sx={{ left: leftSidebarCollapsed ? 0 : 268 }}
+          >
+            {leftSidebarCollapsed ? <ChevronRight fontSize="small" /> : <ChevronLeft fontSize="small" />}
+          </SidebarToggle>
+        </Tooltip>
+
         {/* Left Sidebar (280px) - Quick Actions */}
-        <SidebarColumn>
+        <SidebarColumn collapsed={leftSidebarCollapsed}>
           <LeftSidebar
             escrow={escrow}
             loading={loading}
@@ -205,7 +269,7 @@ const EscrowDetailCompact = () => {
 
         {/* Main Content (flex-grow) - Hero + 4 Widgets */}
         <MainContent>
-          {/* Hero Card (100px height) */}
+          {/* Hero Card (wider aspect ratio like dashboard cards) */}
           <EscrowHero
             escrow={escrow}
             onMetricClick={(metric) => {
@@ -217,7 +281,7 @@ const EscrowDetailCompact = () => {
             }}
           />
 
-          {/* 4 Main Widgets (2x2 Grid) */}
+          {/* 4 Main Widgets (4 columns / 2x2 responsive) */}
           <WidgetsGrid>
             <TimelineWidget
               escrow={escrow}
@@ -249,13 +313,24 @@ const EscrowDetailCompact = () => {
         </MainContent>
 
         {/* Right Sidebar (320px) - Smart Context */}
-        <SidebarColumn>
+        <SidebarColumn collapsed={rightSidebarCollapsed}>
           <RightSidebar
             escrow={escrow}
             loading={loading}
             onUpdate={handleUpdate}
           />
         </SidebarColumn>
+
+        {/* Right Sidebar Toggle */}
+        <Tooltip title={rightSidebarCollapsed ? "Show sidebar" : "Hide sidebar"} placement="left">
+          <SidebarToggle
+            side="right"
+            onClick={() => setRightSidebarCollapsed(!rightSidebarCollapsed)}
+            sx={{ right: rightSidebarCollapsed ? 0 : 308 }}
+          >
+            {rightSidebarCollapsed ? <ChevronLeft fontSize="small" /> : <ChevronRight fontSize="small" />}
+          </SidebarToggle>
+        </Tooltip>
       </FPatternGrid>
 
       {/* Phase 6: Detail Modals */}
