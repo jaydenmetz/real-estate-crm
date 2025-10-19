@@ -52,23 +52,23 @@ const SecurityDashboard = () => {
   const [expandedRow, setExpandedRow] = useState(null);
   const [tabValue, setTabValue] = useState(0);
 
-  // Fetch recent security events
-  const { data: recentEvents, isLoading: loadingRecent } = useQuery(
-    'security-events-recent',
-    async () => {
+  // Fetch recent security events (React Query v5)
+  const { data: recentEvents, isLoading: loadingRecent } = useQuery({
+    queryKey: ['security-events-recent'],
+    queryFn: async () => {
       const response = await api.get('/security-events/recent');
       return response.data.data;
-    }
-  );
+    },
+  });
 
-  // Fetch security stats
-  const { data: statsData, isLoading: loadingStats } = useQuery(
-    'security-events-stats',
-    async () => {
+  // Fetch security stats (React Query v5)
+  const { data: statsData, isLoading: loadingStats } = useQuery({
+    queryKey: ['security-events-stats'],
+    queryFn: async () => {
       const response = await api.get('/security-events/stats?daysBack=30');
       return response.data.data;
-    }
-  );
+    },
+  });
 
   const getSeverityColor = (severity) => {
     switch (severity) {

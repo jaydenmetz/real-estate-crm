@@ -110,27 +110,23 @@ const CommissionDashboard = () => {
   const [filterMenuAnchor, setFilterMenuAnchor] = useState(null);
   const [statusFilter, setStatusFilter] = useState('all');
 
-  // Fetch commissions
-  const { data: commissionsData, isLoading: commissionsLoading } = useQuery(
-    ['commissions', statusFilter],
-    () => api.get(`/commissions${statusFilter !== 'all' ? `?status=${statusFilter}` : ''}`),
-    {
-      onError: (error) => {
-        enqueueSnackbar('Failed to fetch commissions', { variant: 'error' });
-      },
-    }
-  );
+  // Fetch commissions (React Query v5)
+  const { data: commissionsData, isLoading: commissionsLoading } = useQuery({
+    queryKey: ['commissions', statusFilter],
+    queryFn: () => api.get(`/commissions${statusFilter !== 'all' ? `?status=${statusFilter}` : ''}`),
+    onError: (error) => {
+      enqueueSnackbar('Failed to fetch commissions', { variant: 'error' });
+    },
+  });
 
-  // Fetch statistics
-  const { data: statsData, isLoading: statsLoading } = useQuery(
-    'commissionStats',
-    () => api.get('/commissions/stats'),
-    {
-      onError: (error) => {
-        enqueueSnackbar('Failed to fetch commission statistics', { variant: 'error' });
-      },
-    }
-  );
+  // Fetch statistics (React Query v5)
+  const { data: statsData, isLoading: statsLoading } = useQuery({
+    queryKey: ['commissionStats'],
+    queryFn: () => api.get('/commissions/stats'),
+    onError: (error) => {
+      enqueueSnackbar('Failed to fetch commission statistics', { variant: 'error' });
+    },
+  });
 
   const commissions = commissionsData?.data?.commissions || [];
   const stats = statsData?.data || {};

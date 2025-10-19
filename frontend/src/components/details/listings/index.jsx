@@ -546,17 +546,15 @@ const ListingDetail = () => {
   const [appointmentTime, setAppointmentTime] = useState('');
   const [appointmentNotes, setAppointmentNotes] = useState('');
 
-  // Fetch listing data from API
-  const { data: listing, isLoading, error } = useQuery(
-    ['listing', id],
-    () => listingsAPI.getById(id),
-    {
-      enabled: !!id,
-      onError: (err) => {
-        enqueueSnackbar(`Failed to load listing: ${err.message}`, { variant: 'error' });
-      }
-    }
-  );
+  // Fetch listing data from API (React Query v5)
+  const { data: listing, isLoading, error } = useQuery({
+    queryKey: ['listing', id],
+    queryFn: () => listingsAPI.getById(id),
+    enabled: !!id,
+    onError: (err) => {
+      enqueueSnackbar(`Failed to load listing: ${err.message}`, { variant: 'error' });
+    },
+  });
 
   // Loading state
   if (isLoading) {

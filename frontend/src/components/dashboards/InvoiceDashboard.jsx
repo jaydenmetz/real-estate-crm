@@ -127,35 +127,31 @@ const InvoiceDashboard = () => {
     }
   };
 
-  // Fetch invoices
-  const { data: invoicesData, isLoading: invoicesLoading } = useQuery(
-    ['invoices', activeTab, searchTerm],
-    () => {
+  // Fetch invoices (React Query v5)
+  const { data: invoicesData, isLoading: invoicesLoading } = useQuery({
+    queryKey: ['invoices', activeTab, searchTerm],
+    queryFn: () => {
       const params = new URLSearchParams();
       const status = getStatusFilter();
       if (status !== 'all') params.append('status', status);
       if (activeTab === 2) params.append('overdue', 'true');
       if (searchTerm) params.append('search', searchTerm);
-      
+
       return api.get(`/invoices?${params.toString()}`);
     },
-    {
-      onError: (error) => {
-        enqueueSnackbar('Failed to fetch invoices', { variant: 'error' });
-      },
-    }
-  );
+    onError: (error) => {
+      enqueueSnackbar('Failed to fetch invoices', { variant: 'error' });
+    },
+  });
 
-  // Fetch statistics
-  const { data: statsData, isLoading: statsLoading } = useQuery(
-    'invoiceStats',
-    () => api.get('/invoices/stats'),
-    {
-      onError: (error) => {
-        enqueueSnackbar('Failed to fetch invoice statistics', { variant: 'error' });
-      },
-    }
-  );
+  // Fetch statistics (React Query v5)
+  const { data: statsData, isLoading: statsLoading } = useQuery({
+    queryKey: ['invoiceStats'],
+    queryFn: () => api.get('/invoices/stats'),
+    onError: (error) => {
+      enqueueSnackbar('Failed to fetch invoice statistics', { variant: 'error' });
+    },
+  });
 
   const invoices = invoicesData?.data?.invoices || [];
   const stats = statsData?.data || {};

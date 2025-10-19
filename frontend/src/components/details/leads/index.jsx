@@ -113,10 +113,10 @@ const LeadDetail = () => {
   // console.log('[LeadDetail] ID received:', id);
   // console.log('[LeadDetail] Window location:', window.location.href);
 
-  // Fetch lead details
-  const { data: lead, isLoading, error, isError } = useQuery(
-    ['lead', id],
-    async () => {
+  // Fetch lead details (React Query v5)
+  const { data: lead, isLoading, error, isError } = useQuery({
+    queryKey: ['lead', id],
+    queryFn: async () => {
       try {
         const response = await leadsAPI.getOne(id);
         return response;
@@ -126,10 +126,9 @@ const LeadDetail = () => {
         return mockLead;
       }
     },
-    { 
-      refetchInterval: 30000,
-      retry: 1
-    }
+    refetchInterval: 30000,
+    retry: 1,
+  }
   );
 
   // Mock data for demonstration

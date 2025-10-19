@@ -41,36 +41,30 @@ const OnboardingSettings = () => {
   const [deleteDialog, setDeleteDialog] = useState(false);
   const [resetDialog, setResetDialog] = useState(false);
 
-  // Fetch onboarding progress
-  const { data: progress, isLoading: progressLoading } = useQuery(
-    'onboarding-progress',
-    () => OnboardingService.getProgress(),
-    {
-      retry: 2,
-      staleTime: 30000,
-    }
-  );
+  // Fetch onboarding progress (React Query v5)
+  const { data: progress, isLoading: progressLoading } = useQuery({
+    queryKey: ['onboarding-progress'],
+    queryFn: () => OnboardingService.getProgress(),
+    retry: 2,
+    staleTime: 30000,
+  });
 
-  // Fetch sample data
-  const { data: sampleData, isLoading: sampleDataLoading } = useQuery(
-    'onboarding-sample-data',
-    () => OnboardingService.getSampleData(),
-    {
-      retry: 2,
-      staleTime: 30000,
-    }
-  );
+  // Fetch sample data (React Query v5)
+  const { data: sampleData, isLoading: sampleDataLoading } = useQuery({
+    queryKey: ['onboarding-sample-data'],
+    queryFn: () => OnboardingService.getSampleData(),
+    retry: 2,
+    staleTime: 30000,
+  });
 
-  // Fetch analytics
-  const { data: analytics } = useQuery(
-    'onboarding-analytics',
-    () => OnboardingService.getAnalytics(),
-    {
-      retry: 2,
-      staleTime: 60000,
-      enabled: progress?.tutorial_completed,
-    }
-  );
+  // Fetch analytics (React Query v5)
+  const { data: analytics } = useQuery({
+    queryKey: ['onboarding-analytics'],
+    queryFn: () => OnboardingService.getAnalytics(),
+    retry: 2,
+    staleTime: 60000,
+    enabled: progress?.tutorial_completed,
+  });
 
   // Delete sample data mutation
   const deleteSampleDataMutation = useMutation(

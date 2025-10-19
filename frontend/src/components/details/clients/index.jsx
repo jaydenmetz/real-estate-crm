@@ -461,10 +461,10 @@ const ClientDetail = () => {
   // console.log('[ClientDetail] Component mounted');
   // console.log('[ClientDetail] ID received:', id);
 
-  // Fetch client details
-  const { data: client, isLoading, error, isError } = useQuery(
-    ['client', id],
-    async () => {
+  // Fetch client details (React Query v5)
+  const { data: client, isLoading, error, isError } = useQuery({
+    queryKey: ['client', id],
+    queryFn: async () => {
       try {
         const res = await clientsAPI.getById(id);
         return res.data || res;
@@ -473,11 +473,9 @@ const ClientDetail = () => {
         return mockClient;
       }
     },
-    { 
-      refetchInterval: 30000,
-      retry: 1
-    }
-  );
+    refetchInterval: 30000,
+    retry: 1,
+  });
 
   // Mock data for demonstration
   const mockClient = {

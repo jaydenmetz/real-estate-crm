@@ -50,23 +50,23 @@ const AdminSecurityDashboard = () => {
   const [exportDialogOpen, setExportDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
-  // Fetch critical events (admin only)
-  const { data: criticalEvents, isLoading: loadingCritical } = useQuery(
-    'critical-events',
-    async () => {
+  // Fetch critical events (admin only) (React Query v5)
+  const { data: criticalEvents, isLoading: loadingCritical } = useQuery({
+    queryKey: ['critical-events'],
+    queryFn: async () => {
       const response = await api.get('/security-events/critical?daysBack=7');
       return response.data.data;
-    }
-  );
+    },
+  });
 
-  // Fetch all event statistics
-  const { data: allStats, isLoading: loadingStats } = useQuery(
-    'all-security-stats',
-    async () => {
+  // Fetch all event statistics (React Query v5)
+  const { data: allStats, isLoading: loadingStats } = useQuery({
+    queryKey: ['all-security-stats'],
+    queryFn: async () => {
       const response = await api.get('/security-events/stats?daysBack=30');
       return response.data.data;
-    }
-  );
+    },
+  });
 
   // Export user events
   const exportMutation = useMutation(

@@ -116,39 +116,35 @@ const ExpenseDashboard = () => {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [dateRange, setDateRange] = useState('month');
 
-  // Fetch expenses
-  const { data: expensesData, isLoading: expensesLoading } = useQuery(
-    ['expenses', categoryFilter, searchTerm],
-    () => {
+  // Fetch expenses (React Query v5)
+  const { data: expensesData, isLoading: expensesLoading } = useQuery({
+    queryKey: ['expenses', categoryFilter, searchTerm],
+    queryFn: () => {
       const params = new URLSearchParams();
       if (categoryFilter !== 'all') params.append('category', categoryFilter);
       if (searchTerm) params.append('search', searchTerm);
-      
+
       return api.get(`/expenses?${params.toString()}`);
     },
-    {
-      onError: (error) => {
-        enqueueSnackbar('Failed to fetch expenses', { variant: 'error' });
-      },
-    }
-  );
+    onError: (error) => {
+      enqueueSnackbar('Failed to fetch expenses', { variant: 'error' });
+    },
+  });
 
-  // Fetch statistics
-  const { data: statsData, isLoading: statsLoading } = useQuery(
-    ['expenseStats', dateRange],
-    () => api.get(`/expenses/stats?year=${new Date().getFullYear()}`),
-    {
-      onError: (error) => {
-        enqueueSnackbar('Failed to fetch expense statistics', { variant: 'error' });
-      },
-    }
-  );
+  // Fetch statistics (React Query v5)
+  const { data: statsData, isLoading: statsLoading } = useQuery({
+    queryKey: ['expenseStats', dateRange],
+    queryFn: () => api.get(`/expenses/stats?year=${new Date().getFullYear()}`),
+    onError: (error) => {
+      enqueueSnackbar('Failed to fetch expense statistics', { variant: 'error' });
+    },
+  });
 
-  // Fetch categories
-  const { data: categoriesData } = useQuery(
-    'expenseCategories',
-    () => api.get('/expenses/categories'),
-  );
+  // Fetch categories (React Query v5)
+  const { data: categoriesData } = useQuery({
+    queryKey: ['expenseCategories'],
+    queryFn: () => api.get('/expenses/categories'),
+  });
 
   const expenses = expensesData?.data?.expenses || [];
   const stats = statsData?.data || {};
