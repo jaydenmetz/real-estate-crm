@@ -260,24 +260,34 @@ const HomeDashboard = () => {
   const theme = useTheme();
   const { user } = useAuth();
 
-  // Fetch real data from APIs
-  const { data: listingsData } = useQuery('listings', () => api.get('/listings'), {
+  // Fetch real data from APIs (React Query v5 syntax)
+  const { data: listingsData } = useQuery({
+    queryKey: ['listings'],
+    queryFn: () => api.get('/listings'),
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  const { data: escrowsData } = useQuery('escrows', () => api.get('/escrows'), {
+  const { data: escrowsData } = useQuery({
+    queryKey: ['escrows'],
+    queryFn: () => api.get('/escrows'),
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: clientsData } = useQuery('clients', () => api.get('/clients'), {
+  const { data: clientsData } = useQuery({
+    queryKey: ['clients'],
+    queryFn: () => api.get('/clients'),
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: appointmentsData } = useQuery('appointments', () => api.get('/appointments'), {
+  const { data: appointmentsData } = useQuery({
+    queryKey: ['appointments'],
+    queryFn: () => api.get('/appointments'),
     staleTime: 5 * 60 * 1000,
   });
 
-  const { data: leadsData } = useQuery('leads', () => api.get('/leads'), {
+  const { data: leadsData } = useQuery({
+    queryKey: ['leads'],
+    queryFn: () => api.get('/leads'),
     staleTime: 5 * 60 * 1000,
   });
 
