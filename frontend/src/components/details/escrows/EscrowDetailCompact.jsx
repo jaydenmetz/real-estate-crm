@@ -41,7 +41,9 @@ const PageContainer = styled(Box)(({ theme }) => ({
   backgroundColor: theme.palette.grey[50],
 }));
 
-const FPatternGrid = styled(Box)(({ leftCollapsed, rightCollapsed }) => (theme) => ({
+const FPatternGrid = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'leftCollapsed' && prop !== 'rightCollapsed',
+})(({ leftCollapsed, rightCollapsed, theme }) => ({
   display: 'grid',
   gridTemplateColumns: `${leftCollapsed ? '0px' : '280px'} 1fr ${rightCollapsed ? '0px' : '320px'}`,
   gap: theme.spacing(2),
@@ -69,7 +71,9 @@ const MainContent = styled(Box)(({ theme }) => ({
   paddingBottom: theme.spacing(1),
 }));
 
-const SidebarColumn = styled(Box)(({ collapsed }) => (theme) => ({
+const SidebarColumn = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'collapsed',
+})(({ collapsed, theme }) => ({
   overflowY: 'auto',
   paddingRight: theme.spacing(1),
   width: collapsed ? 0 : 'auto',
@@ -81,7 +85,9 @@ const SidebarColumn = styled(Box)(({ collapsed }) => (theme) => ({
   },
 }));
 
-const SidebarToggle = styled(IconButton)(({ theme, side }) => ({
+const SidebarToggle = styled(IconButton, {
+  shouldForwardProp: (prop) => prop !== 'side',
+})(({ theme, side }) => ({
   position: 'absolute',
   top: '50%',
   transform: 'translateY(-50%)',
