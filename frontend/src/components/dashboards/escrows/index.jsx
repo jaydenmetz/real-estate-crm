@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import NewEscrowModal from '../../forms/NewEscrowModal';
 // Import our new extracted components
 import EscrowHeroCard from './components/EscrowHeroCard';
@@ -120,6 +120,7 @@ const EscrowsDashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isConnected, connectionStatus } = useWebSocket();
+  const [searchParams, setSearchParams] = useSearchParams();
   const skipStatsRecalculation = useRef(0); // Counter for pending non-stats updates
   const [escrows, setEscrows] = useState([]);
   const [archivedEscrows, setArchivedEscrows] = useState([]);
@@ -129,20 +130,24 @@ const EscrowsDashboard = () => {
   const [hasMorePages, setHasMorePages] = useState(false);
   const [totalCount, setTotalCount] = useState(0);
   const [showNewEscrowModal, setShowNewEscrowModal] = useState(false);
-  const [selectedStatus, setSelectedStatus] = useState('active');
-  // Load saved view mode from localStorage, default to 'grid'
-  // Migrate old 'small' to 'grid' and 'large' to 'list'
+
+  // Initialize state from URL params or defaults
+  const [selectedStatus, setSelectedStatus] = useState(() => searchParams.get('status') || 'active');
   const [viewMode, setViewMode] = useState(() => {
+    const urlView = searchParams.get('view');
+    if (urlView) return urlView;
     const saved = localStorage.getItem('escrowsViewMode');
-    if (saved === 'small') return 'grid'; // Migrate old 'small' to 'grid'
-    if (saved === 'large') return 'list'; // Migrate old 'large' to 'list'
-    return saved || 'grid'; // Default to 'grid' (was 'small')
+    if (saved === 'small') return 'grid';
+    if (saved === 'large') return 'list';
+    return saved || 'grid';
   });
-  const [sortBy, setSortBy] = useState('closing_date'); // Sort field
+  const [sortBy, setSortBy] = useState(() => searchParams.get('sort') || 'closing_date');
   const [scope, setScope] = useState(() => {
+    const urlScope = searchParams.get('scope');
+    if (urlScope) return urlScope;
     const saved = localStorage.getItem('escrowsScope');
     return saved || 'team';
-  }); // 'brokerage', 'team', 'user'
+  });
   const [animationType, setAnimationType] = useState('spring'); // 'spring', 'stagger', 'parallax', 'blur', 'magnetic'
   const [animationDuration, setAnimationDuration] = useState(1); // 0.5 to 5 seconds
   const [animationIntensity, setAnimationIntensity] = useState(1); // 0.5 to 2 (multiplier for overshoot/bounce)
@@ -156,7 +161,7 @@ const EscrowsDashboard = () => {
   const [dateRangeFilter, setDateRangeFilter] = useState('1M'); // '1D', '1M', '1Y', 'YTD', or null for custom
   const [customStartDate, setCustomStartDate] = useState(null);
   const [customEndDate, setCustomEndDate] = useState(null);
-  const [searchQuery, setSearchQuery] = useState(''); // Search filter state
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get('search') || ''); // Search filter state
   const [stats, setStats] = useState({
     totalEscrows: 0,
     activeEscrows: 0,
@@ -452,6 +457,20 @@ const EscrowsDashboard = () => {
     fetchEscrows,
   });
 
+  // Sync filters to URL query params (enables bookmarking/sharing)
+  useEffect(() => {
+    const params = {};
+
+    // Only add non-default values to keep URL clean
+    if (selectedStatus !== 'active') params.status = selectedStatus;
+    if (viewMode !== 'grid') params.view = viewMode;
+    if (sortBy !== 'closing_date') params.sort = sortBy;
+    if (scope !== 'team') params.scope = scope;
+    if (searchQuery) params.search = searchQuery;
+
+    setSearchParams(params, { replace: true }); // replace: true prevents adding history entries on every filter change
+  }, [selectedStatus, viewMode, sortBy, scope, searchQuery, setSearchParams]);
+
   // Save view mode to localStorage when it changes
   useEffect(() => {
     localStorage.setItem('escrowsViewMode', viewMode);
@@ -490,11 +509,32 @@ const EscrowsDashboard = () => {
             return 'grid';
           });
           break;
+        case 'f':
+          // F = Focus search bar
+          e.preventDefault();
+          document.querySelector('input[aria-label="Search escrows"]')?.focus();
+          break;
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+          // 1-4 = Quick switch status tabs
+          e.preventDefault();
+          const statuses = ['active', 'closed', 'cancelled', 'all'];
+          setSelectedStatus(statuses[parseInt(e.key) - 1]);
+          break;
         case 'escape':
-          // ESC = Close modal
+          // ESC = Close modal or clear search
           if (showNewEscrowModal) {
             setShowNewEscrowModal(false);
+          } else if (searchQuery) {
+            setSearchQuery('');
           }
+          break;
+        case '/':
+          // / = Focus search (like GitHub/Gmail)
+          e.preventDefault();
+          document.querySelector('input[aria-label="Search escrows"]')?.focus();
           break;
         default:
           break;
@@ -503,7 +543,7 @@ const EscrowsDashboard = () => {
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [showNewEscrowModal]);
+  }, [showNewEscrowModal, searchQuery]);
 
   useEffect(() => {
     fetchEscrows();

@@ -152,6 +152,11 @@ const EscrowNavigation = ({
               value={localSearchQuery}
               onChange={(e) => setLocalSearchQuery(e.target.value)}
               variant="outlined"
+              aria-label="Search escrows by address, buyer, seller, or escrow number"
+              inputProps={{
+                'aria-label': 'Search escrows',
+                'role': 'searchbox',
+              }}
               sx={{
                 minWidth: 200,
                 '& .MuiOutlinedInput-root': {
@@ -188,6 +193,11 @@ const EscrowNavigation = ({
                 value={scope}
                 onChange={(e) => setScope(e.target.value)}
                 disableUnderline
+                aria-label="Select scope filter"
+                inputProps={{
+                  'aria-label': 'Scope filter',
+                  'id': 'scope-select',
+                }}
                 renderValue={(value) => {
                   const labels = {
                     brokerage: 'Brokerage',
@@ -234,6 +244,11 @@ const EscrowNavigation = ({
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 disableUnderline
+                aria-label="Sort escrows by"
+                inputProps={{
+                  'aria-label': 'Sort by',
+                  'id': 'sort-select',
+                }}
                 startAdornment={
                   <Sort sx={{ mr: 1, fontSize: '1.125rem', color: 'text.secondary' }} />
                 }
@@ -296,6 +311,7 @@ const EscrowNavigation = ({
                 }
               }}
               size="small"
+              aria-label="View mode selection"
               sx={{
                 '& .MuiToggleButton-root': {
                   px: 1.5,
@@ -306,25 +322,41 @@ const EscrowNavigation = ({
                 },
               }}
             >
-              <ToggleButton value="table" title="Table view (dense, Excel-like)">
+              <ToggleButton
+                value="table"
+                title="Table view (dense, Excel-like)"
+                aria-label="Table view"
+              >
                 {/* Skinny horizontal rectangle (Excel row) - exact match to grid total width (17.2px) */}
-                <Box sx={{ width: 17.2, height: 6, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                <Box sx={{ width: 17.2, height: 6, bgcolor: 'currentColor', borderRadius: 0.5 }} aria-hidden="true" />
               </ToggleButton>
-              <ToggleButton value="list" title="List view (horizontal rows)">
+              <ToggleButton
+                value="list"
+                title="List view (horizontal rows)"
+                aria-label="List view"
+              >
                 {/* Larger rounded rectangle (list row) - exact match to grid total width (17.2px) */}
-                <Box sx={{ width: 17.2, height: 12, bgcolor: 'currentColor', borderRadius: 1 }} />
+                <Box sx={{ width: 17.2, height: 12, bgcolor: 'currentColor', borderRadius: 1 }} aria-hidden="true" />
               </ToggleButton>
-              <ToggleButton value="grid" title="Grid view (cards) - Press V">
+              <ToggleButton
+                value="grid"
+                title="Grid view (cards) - Press V"
+                aria-label="Grid view"
+              >
                 {/* 4 squares grid */}
-                <Box sx={{ display: 'flex', gap: 0.4 }}>
+                <Box sx={{ display: 'flex', gap: 0.4 }} aria-hidden="true">
                   <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                   <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                   <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                   <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                 </Box>
               </ToggleButton>
-              <ToggleButton value="calendar" title="Calendar view">
-                <CalendarToday sx={{ fontSize: 16 }} />
+              <ToggleButton
+                value="calendar"
+                title="Calendar view"
+                aria-label="Calendar view"
+              >
+                <CalendarToday sx={{ fontSize: 16 }} aria-hidden="true" />
               </ToggleButton>
             </ToggleButtonGroup>
 
@@ -332,6 +364,8 @@ const EscrowNavigation = ({
             <IconButton
               size="small"
               onClick={() => setSelectedStatus('archived')}
+              aria-label={`View archived escrows (${archivedCount})`}
+              title="View archived escrows"
               sx={{
                 width: 36,
                 height: 36,
