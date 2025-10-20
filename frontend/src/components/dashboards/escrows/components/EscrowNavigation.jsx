@@ -335,13 +335,8 @@ const EscrowNavigation = ({
                 title="List view (horizontal rows)"
                 aria-label="List view"
               >
-                {/* 4 solid filled bars - EXACT same dimensions as grid (4px + 0.4px gap) but all filled */}
-                <Box sx={{ display: 'flex', gap: 0.4 }} aria-hidden="true">
-                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                </Box>
+                {/* Single solid filled rectangle - same total width as grid */}
+                <Box sx={{ width: 17.2, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} aria-hidden="true" />
               </ToggleButton>
               <ToggleButton
                 value="grid"
@@ -669,13 +664,8 @@ const EscrowNavigation = ({
                 aria-label="List view"
                 title="List view (horizontal rows)"
               >
-                {/* 4 solid filled bars - EXACT same dimensions as grid (4px + 0.4px gap) but all filled */}
-                <Box sx={{ display: 'flex', gap: 0.4 }} aria-hidden="true">
-                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                </Box>
+                {/* Single solid filled rectangle - same total width as grid */}
+                <Box sx={{ width: 17.2, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} aria-hidden="true" />
               </ToggleButton>
               <ToggleButton
                 value="grid"
