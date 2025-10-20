@@ -1,6 +1,6 @@
 import React from 'react';
 import { Container, Box, Typography } from '@mui/material';
-import ProjectManagementPanel from '../common/ProjectManagementPanel';
+import ProjectManagementPanelLive from '../common/ProjectManagementPanelLive';
 
 const HomeDashboard = () => {
   return (
@@ -16,11 +16,11 @@ const HomeDashboard = () => {
             CRM Development Roadmap
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Your complete project management system - all work organized, tracked, and prioritized
+            Live data from production database - real-time project tracking
           </Typography>
         </Box>
 
-        <ProjectManagementPanel />
+        <ProjectManagementPanelLive />
       </Container>
     </Box>
   );
