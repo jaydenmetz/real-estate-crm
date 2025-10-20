@@ -47,6 +47,7 @@ import { ContactSelectionModal } from '../../modals/ContactSelectionModal';
 import { BadgeEditor } from '../BadgeEditor';
 import PersonRoleContainer from '../PersonRoleContainer';
 import PeopleEditor from '../PeopleEditor';
+import { formatCurrency, formatDate as formatDateUtil, getInitials as getInitialsUtil, truncateText } from '../../../utils/formatters';
 
 const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'spring', animationDuration = 1, animationIntensity = 1, index = 0, onArchive, onDelete, onRestore, isArchived = false, onUpdate }) => {
   const navigate = useNavigate();
@@ -409,12 +410,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
     } catch (e) {}
   }
 
-  // Format currency with decimals
-  const formatCurrency = (value) => {
-    return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
-
-  // Mask commission for privacy
+  // Mask commission for privacy (keeping this as it's component-specific)
   const maskCommission = (value) => {
     const absValue = Math.abs(value);
     if (absValue >= 100000) return '$***,***';
@@ -425,27 +421,9 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
     return '$*';
   };
 
-  // Format date
-  const formatDate = (date) => {
-    if (!date) return null;
-    try {
-      const d = new Date(date);
-      if (isValid(d)) {
-        return format(d, 'MMM d, yy');
-      }
-    } catch (e) {}
-    return null;
-  };
-
   // ✅ Removed duplicate getStatusConfig - now using imported constant
   const propertyImage = escrow.property_image || escrow.zillow_url;
   const address = escrow.property_address || 'No Address';
-
-  // Get initials from name
-  const getInitials = (name) => {
-    if (!name) return '?';
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-  };
 
   /**
    * Smart name truncation that prioritizes first and last names
@@ -1084,7 +1062,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                       />
                     ) : (
                       <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, whiteSpace: 'nowrap' }}>
-                        {formatDate(acceptanceDate) || 'TBD'}
+                        {formatDateUtil(acceptanceDate, 'MMM d, yy') || 'TBD'}
                       </Typography>
                     )}
                   </Box>
@@ -1103,7 +1081,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                       />
                     ) : (
                       <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, whiteSpace: 'nowrap' }}>
-                        {formatDate(closingDate) || 'TBD'}
+                        {formatDateUtil(closingDate, 'MMM d, yy') || 'TBD'}
                       </Typography>
                     )}
                   </Box>
@@ -1235,7 +1213,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                             people={buyers}
                             color={people.buyer.color}
                             onContainerClick={() => handleOpenPeopleEditor('buyer')}
-                            getInitials={getInitials}
+                            getInitials={getInitialsUtil}
                             truncateName={truncateName}
                           />
                         </Box>
@@ -1247,7 +1225,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                             people={sellers}
                             color={people.seller.color}
                             onContainerClick={() => handleOpenPeopleEditor('seller')}
-                            getInitials={getInitials}
+                            getInitials={getInitialsUtil}
                             truncateName={truncateName}
                           />
                         </Box>
@@ -1259,7 +1237,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                             people={[people.buyerAgent]}
                             color={people.buyerAgent.color}
                             onContainerClick={() => handleOpenPeopleEditor('buyer_agent')}
-                            getInitials={getInitials}
+                            getInitials={getInitialsUtil}
                             truncateName={truncateName}
                           />
                         </Box>
@@ -1271,7 +1249,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                             people={[people.listingAgent]}
                             color={people.listingAgent.color}
                             onContainerClick={() => handleOpenPeopleEditor('listing_agent')}
-                            getInitials={getInitials}
+                            getInitials={getInitialsUtil}
                             truncateName={truncateName}
                           />
                         </Box>
@@ -1283,7 +1261,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                             people={[people.lender]}
                             color={people.lender.color}
                             onContainerClick={() => handleOpenPeopleEditor('lender')}
-                            getInitials={getInitials}
+                            getInitials={getInitialsUtil}
                             truncateName={truncateName}
                           />
                         </Box>
@@ -1295,7 +1273,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                             people={[people.escrowOfficer]}
                             color={people.escrowOfficer.color}
                             onContainerClick={() => handleOpenPeopleEditor('escrow_officer')}
-                            getInitials={getInitials}
+                            getInitials={getInitialsUtil}
                             truncateName={truncateName}
                           />
                         </Box>
@@ -1354,7 +1332,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                             {milestone.label}
                           </Typography>
                           <Typography variant="caption" sx={{ fontSize: 11, color: theme.palette.text.secondary }}>
-                            {milestone.date ? formatDate(milestone.date) : 'Pending'}
+                            {milestone.date ? formatDateUtil(milestone.date, 'MMM d, yy') : 'Pending'}
                           </Typography>
                         </Box>
                       </Box>
@@ -1485,7 +1463,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
             { primary: '#6366f1', secondary: '#8b5cf6' }
           }
           allContacts={[]} // TODO: Pass actual contacts array
-          getInitials={getInitials}
+          getInitials={getInitialsUtil}
         />
       )}
 

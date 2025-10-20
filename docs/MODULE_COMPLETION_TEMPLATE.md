@@ -10,7 +10,7 @@
 
 ### 1.1 Dashboard UI/UX
 - [ ] Hero cards with key metrics (active count, total value, etc.)
-- [ ] View mode toggles (Grid, List, Table, Calendar)
+- [ ] View mode toggles (Table, List, Grid, Calendar)
 - [ ] Filters working (status, date range, agent, team)
 - [ ] Search working (by property address, client name, MLS number)
 - [ ] Sort working (by date, price, status, name)

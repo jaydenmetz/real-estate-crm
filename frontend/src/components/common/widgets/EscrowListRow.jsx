@@ -24,7 +24,7 @@ import {
   CalendarToday,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { format } from 'date-fns';
+import { formatCurrency, formatDate } from '../../../utils/formatters';
 
 /**
  * EscrowListRow - Horizontal row layout for list view
@@ -55,22 +55,6 @@ const EscrowListRow = ({ escrow, onArchive, onDelete, isArchived = false }) => {
     if (statusLower.includes('closed') || statusLower.includes('completed')) return 'primary';
     if (statusLower.includes('cancelled') || statusLower.includes('withdrawn')) return 'error';
     return 'default';
-  };
-
-  // Format currency
-  const formatCurrency = (value) => {
-    if (!value) return 'N/A';
-    return `$${Number(value).toLocaleString()}`;
-  };
-
-  // Format date
-  const formatDate = (date) => {
-    if (!date) return 'N/A';
-    try {
-      return format(new Date(date), 'MMM d, yyyy');
-    } catch {
-      return 'Invalid';
-    }
   };
 
   // Get property image or fallback to icon
@@ -169,7 +153,7 @@ const EscrowListRow = ({ escrow, onArchive, onDelete, isArchived = false }) => {
                 Price
               </Typography>
               <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '1rem', color: 'primary.main' }}>
-                {formatCurrency(escrow.purchase_price || escrow.purchasePrice)}
+                {formatCurrency(escrow.purchase_price || escrow.purchasePrice) || 'N/A'}
               </Typography>
             </Box>
 
@@ -179,7 +163,7 @@ const EscrowListRow = ({ escrow, onArchive, onDelete, isArchived = false }) => {
                 Commission
               </Typography>
               <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '1rem', color: 'success.main' }}>
-                {formatCurrency(escrow.my_commission || escrow.myCommission)}
+                {formatCurrency(escrow.my_commission || escrow.myCommission) || 'N/A'}
               </Typography>
             </Box>
 
@@ -229,7 +213,7 @@ const EscrowListRow = ({ escrow, onArchive, onDelete, isArchived = false }) => {
                 Closing Date
               </Typography>
               <Typography variant="body2" sx={{ fontSize: '0.875rem', fontWeight: 500 }}>
-                {formatDate(escrow.closing_date || escrow.closingDate)}
+                {formatDate(escrow.closing_date || escrow.closingDate) || 'N/A'}
               </Typography>
             </Box>
           </Box>

@@ -21,7 +21,7 @@ import {
   Home,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { format } from 'date-fns';
+import { formatCurrency, formatDate } from '../../../utils/formatters';
 
 /**
  * EscrowTableRow - Dense table row for Excel-like table view
@@ -51,22 +51,6 @@ const EscrowTableRow = ({ escrow, onArchive, onDelete, isArchived = false }) => 
     if (statusLower.includes('closed') || statusLower.includes('completed')) return 'primary';
     if (statusLower.includes('cancelled') || statusLower.includes('withdrawn')) return 'error';
     return 'default';
-  };
-
-  // Format currency
-  const formatCurrency = (value) => {
-    if (!value) return 'N/A';
-    return `$${Number(value).toLocaleString()}`;
-  };
-
-  // Format date
-  const formatDate = (date) => {
-    if (!date) return 'N/A';
-    try {
-      return format(new Date(date), 'MMM d, yyyy');
-    } catch {
-      return 'Invalid';
-    }
   };
 
   // Get property image or fallback to icon
@@ -163,21 +147,21 @@ const EscrowTableRow = ({ escrow, onArchive, onDelete, isArchived = false }) => 
         {/* Price */}
         <TableCell sx={{ width: 130, textAlign: 'right' }}>
           <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.875rem' }}>
-            {formatCurrency(escrow.purchase_price || escrow.purchasePrice)}
+            {formatCurrency(escrow.purchase_price || escrow.purchasePrice) || 'N/A'}
           </Typography>
         </TableCell>
 
         {/* Commission */}
         <TableCell sx={{ width: 120, textAlign: 'right' }}>
           <Typography variant="body2" sx={{ fontSize: '0.875rem', color: 'success.main' }}>
-            {formatCurrency(escrow.my_commission || escrow.myCommission)}
+            {formatCurrency(escrow.my_commission || escrow.myCommission) || 'N/A'}
           </Typography>
         </TableCell>
 
         {/* Closing Date */}
         <TableCell sx={{ width: 130 }}>
           <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>
-            {formatDate(escrow.closing_date || escrow.closingDate)}
+            {formatDate(escrow.closing_date || escrow.closingDate) || 'N/A'}
           </Typography>
         </TableCell>
 
