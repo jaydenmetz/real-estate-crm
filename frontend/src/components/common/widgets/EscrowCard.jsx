@@ -601,8 +601,8 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
     <Box
       style={{ width: '100%', position: 'relative' }}
     >
-      {/* Navigation Arrows - Only show on mobile/tablet */}
-      {!isDesktop && (
+      {/* Navigation Arrows - Only show on mobile/tablet AND in large view mode */}
+      {!isDesktop && viewMode === 'large' && (
         <>
           {currentPanel > 0 && (
             <IconButton
