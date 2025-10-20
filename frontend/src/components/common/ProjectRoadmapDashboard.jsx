@@ -24,6 +24,7 @@ import {
   Assessment,
   Security,
   SmartToy,
+  PhoneAndroid,
 } from '@mui/icons-material';
 
 // Styled Components
@@ -879,7 +880,7 @@ Use test escrows (not real data):
   {
     id: 'mobile-app',
     name: 'Build Native Mobile App (iOS + Android)',
-    icon: <Smartphone />,
+    icon: <PhoneAndroid />,
     priority: 'medium',
     progress: 0,
     completed: 0,
