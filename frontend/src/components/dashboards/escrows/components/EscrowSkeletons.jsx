@@ -38,6 +38,7 @@ export const EscrowGridSkeleton = () => (
     {/* Image skeleton - 3:2 aspect ratio */}
     <Skeleton
       variant="rectangular"
+      animation="wave"
       sx={{
         aspectRatio: '3 / 2',
         width: '100%',
@@ -47,33 +48,33 @@ export const EscrowGridSkeleton = () => (
     {/* Content skeleton */}
     <CardContent sx={{ p: 1.25 }}>
       {/* Address */}
-      <Skeleton variant="text" width="90%" height={24} sx={{ mb: 1 }} />
+      <Skeleton variant="text" animation="wave" width="90%" height={24} sx={{ mb: 1 }} />
 
       {/* Metrics Grid (Price + Commission) */}
       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1, mb: 1 }}>
         <Box sx={{ p: 0.75, borderRadius: 1.5, bgcolor: alpha('#10b981', 0.08) }}>
-          <Skeleton variant="text" width="50%" height={12} sx={{ mb: 0.5 }} />
-          <Skeleton variant="text" width="70%" height={20} />
+          <Skeleton variant="text" animation="wave" width="50%" height={12} sx={{ mb: 0.5 }} />
+          <Skeleton variant="text" animation="wave" width="70%" height={20} />
         </Box>
         <Box sx={{ p: 0.75, borderRadius: 1.5, bgcolor: alpha('#6366f1', 0.08) }}>
-          <Skeleton variant="text" width="60%" height={12} sx={{ mb: 0.5 }} />
-          <Skeleton variant="text" width="65%" height={20} />
+          <Skeleton variant="text" animation="wave" width="60%" height={12} sx={{ mb: 0.5 }} />
+          <Skeleton variant="text" animation="wave" width="65%" height={20} />
         </Box>
       </Box>
 
       {/* Footer */}
       <Box sx={{ display: 'flex', gap: 1, mt: 1, pt: 1, borderTop: (theme) => `1px solid ${alpha(theme.palette.divider, 0.1)}` }}>
         <Box sx={{ flex: 1 }}>
-          <Skeleton variant="text" width="60%" height={12} sx={{ mb: 0.25 }} />
-          <Skeleton variant="text" width="50%" height={16} />
+          <Skeleton variant="text" animation="wave" width="60%" height={12} sx={{ mb: 0.25 }} />
+          <Skeleton variant="text" animation="wave" width="50%" height={16} />
         </Box>
         <Box sx={{ flex: 1 }}>
-          <Skeleton variant="text" width="50%" height={12} sx={{ mb: 0.25 }} />
-          <Skeleton variant="text" width="55%" height={16} />
+          <Skeleton variant="text" animation="wave" width="50%" height={12} sx={{ mb: 0.25 }} />
+          <Skeleton variant="text" animation="wave" width="55%" height={16} />
         </Box>
         <Box sx={{ flex: 1 }}>
-          <Skeleton variant="text" width="40%" height={12} sx={{ mb: 0.25 }} />
-          <Skeleton variant="text" width="45%" height={16} />
+          <Skeleton variant="text" animation="wave" width="40%" height={12} sx={{ mb: 0.25 }} />
+          <Skeleton variant="text" animation="wave" width="45%" height={16} />
         </Box>
       </Box>
     </CardContent>
@@ -95,6 +96,7 @@ export const EscrowListSkeleton = () => (
     {/* Left: Square Thumbnail 140x140px */}
     <Skeleton
       variant="rectangular"
+      animation="wave"
       sx={{
         width: 140,
         height: 140,
@@ -105,25 +107,25 @@ export const EscrowListSkeleton = () => (
     {/* Right: Content Area */}
     <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', p: 2 }}>
       {/* Address */}
-      <Skeleton variant="text" width="60%" height={28} sx={{ mb: 1 }} />
+      <Skeleton variant="text" animation="wave" width="60%" height={28} sx={{ mb: 1 }} />
 
       {/* Info Grid */}
       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 2 }}>
         <Box>
-          <Skeleton variant="text" width="40%" height={14} sx={{ mb: 0.5 }} />
-          <Skeleton variant="text" width="70%" height={20} />
+          <Skeleton variant="text" animation="wave" width="40%" height={14} sx={{ mb: 0.5 }} />
+          <Skeleton variant="text" animation="wave" width="70%" height={20} />
         </Box>
         <Box>
-          <Skeleton variant="text" width="50%" height={14} sx={{ mb: 0.5 }} />
-          <Skeleton variant="text" width="65%" height={20} />
+          <Skeleton variant="text" animation="wave" width="50%" height={14} sx={{ mb: 0.5 }} />
+          <Skeleton variant="text" animation="wave" width="65%" height={20} />
         </Box>
         <Box>
-          <Skeleton variant="text" width="45%" height={14} sx={{ mb: 0.5 }} />
-          <Skeleton variant="text" width="60%" height={20} />
+          <Skeleton variant="text" animation="wave" width="45%" height={14} sx={{ mb: 0.5 }} />
+          <Skeleton variant="text" animation="wave" width="60%" height={20} />
         </Box>
         <Box>
-          <Skeleton variant="text" width="55%" height={14} sx={{ mb: 0.5 }} />
-          <Skeleton variant="text" width="50%" height={20} />
+          <Skeleton variant="text" animation="wave" width="55%" height={14} sx={{ mb: 0.5 }} />
+          <Skeleton variant="text" animation="wave" width="50%" height={20} />
         </Box>
       </Box>
     </Box>
@@ -150,28 +152,28 @@ export const EscrowTableSkeleton = ({ rows = 10 }) => (
         {Array.from({ length: rows }).map((_, index) => (
           <TableRow key={index} sx={{ height: 60 }}>
             <TableCell sx={{ width: 60, p: 1 }}>
-              <Skeleton variant="rectangular" width={40} height={40} sx={{ borderRadius: 1 }} />
+              <Skeleton variant="rectangular" animation="wave" width={40} height={40} sx={{ borderRadius: 1 }} />
             </TableCell>
             <TableCell>
-              <Skeleton variant="text" width="80%" height={20} />
+              <Skeleton variant="text" animation="wave" width="80%" height={20} />
             </TableCell>
             <TableCell sx={{ width: 140 }}>
-              <Skeleton variant="rectangular" width={100} height={24} sx={{ borderRadius: 2 }} />
+              <Skeleton variant="rectangular" animation="wave" width={100} height={24} sx={{ borderRadius: 2 }} />
             </TableCell>
             <TableCell>
-              <Skeleton variant="text" width="70%" height={20} />
+              <Skeleton variant="text" animation="wave" width="70%" height={20} />
             </TableCell>
             <TableCell sx={{ width: 130, textAlign: 'right' }}>
-              <Skeleton variant="text" width="80%" height={20} sx={{ ml: 'auto' }} />
+              <Skeleton variant="text" animation="wave" width="80%" height={20} sx={{ ml: 'auto' }} />
             </TableCell>
             <TableCell sx={{ width: 120, textAlign: 'right' }}>
-              <Skeleton variant="text" width="75%" height={20} sx={{ ml: 'auto' }} />
+              <Skeleton variant="text" animation="wave" width="75%" height={20} sx={{ ml: 'auto' }} />
             </TableCell>
             <TableCell sx={{ width: 130 }}>
-              <Skeleton variant="text" width="65%" height={20} />
+              <Skeleton variant="text" animation="wave" width="65%" height={20} />
             </TableCell>
             <TableCell sx={{ width: 60 }}>
-              <Skeleton variant="circular" width={32} height={32} />
+              <Skeleton variant="circular" animation="wave" width={32} height={32} />
             </TableCell>
           </TableRow>
         ))}
