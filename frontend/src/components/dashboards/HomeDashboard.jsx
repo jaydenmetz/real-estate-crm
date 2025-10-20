@@ -62,6 +62,7 @@ import { safeFormatDate, getSafeTimestamp } from '../../utils/safeDateUtils';
 import { format, formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api.service';
+import ProjectManagementPanel from '../common/ProjectManagementPanel';
 
 // Animations
 const fadeIn = keyframes`
@@ -1191,6 +1192,11 @@ const HomeDashboard = () => {
             </motion.div>
           </Grid>
         </Grid>
+
+        {/* Project Management Panel */}
+        <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+          <ProjectManagementPanel />
+        </Container>
       </Container>
     </Box>
   );
