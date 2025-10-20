@@ -335,12 +335,12 @@ const EscrowNavigation = ({
                 title="List view (horizontal rows)"
                 aria-label="List view"
               >
-                {/* 4 solid filled bars touching each other - same structure as grid but filled */}
-                <Box sx={{ display: 'flex', gap: 0 }} aria-hidden="true">
-                  <Box sx={{ width: 4.3, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 4.3, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 4.3, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 4.3, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                {/* 4 solid filled bars - EXACT same dimensions as grid (4px + 0.4px gap) but all filled */}
+                <Box sx={{ display: 'flex', gap: 0.4 }} aria-hidden="true">
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                 </Box>
               </ToggleButton>
               <ToggleButton
@@ -669,12 +669,12 @@ const EscrowNavigation = ({
                 aria-label="List view"
                 title="List view (horizontal rows)"
               >
-                {/* 4 solid filled bars touching each other - same structure as grid but filled */}
-                <Box sx={{ display: 'flex', gap: 0 }} aria-hidden="true">
-                  <Box sx={{ width: 4.3, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 4.3, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 4.3, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                  <Box sx={{ width: 4.3, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                {/* 4 solid filled bars - EXACT same dimensions as grid (4px + 0.4px gap) but all filled */}
+                <Box sx={{ display: 'flex', gap: 0.4 }} aria-hidden="true">
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                 </Box>
               </ToggleButton>
               <ToggleButton
