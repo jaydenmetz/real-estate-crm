@@ -79,7 +79,6 @@ import {
   Timer,
   AccountBalance,
   Handshake,
-  Assessment,
   Speed,
   Storage,
   Refresh,
@@ -764,23 +763,6 @@ const EscrowsDashboard = () => {
                   }}
                 >
                   Create New Escrow
-                </Button>
-                <Button
-                  variant="outlined"
-                  size="medium"
-                  startIcon={<Assessment />}
-                  sx={{
-                    color: 'white',
-                    borderColor: 'rgba(255, 255, 255, 0.5)',
-                    px: 3,
-                    py: 1,
-                    '&:hover': {
-                      borderColor: 'white',
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                    }
-                  }}
-                >
-                  Transaction Analytics
                 </Button>
               </Box>
             </Box>
