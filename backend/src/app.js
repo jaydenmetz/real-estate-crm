@@ -247,6 +247,7 @@ apiRouter.use('/leads', require('./routes/leads.routes'));
 apiRouter.use('/analytics', require('./routes/analytics.routes'));
 
 // Tasks and Checklists routes (new project management system)
+apiRouter.use('/projects', require('./routes/projects.routes')); // Dev roadmap (admin-only)
 apiRouter.use('/checklist-templates', require('./routes/checklistTemplates.routes'));
 apiRouter.use('/checklists', require('./routes/checklists.routes'));
 apiRouter.use('/tasks', require('./routes/tasks.routes'));
