@@ -343,12 +343,12 @@ const EscrowNavigation = ({
                 title="Grid view (cards) - Press V"
                 aria-label="Grid view"
               >
-                {/* 4 hollow outlines - represents grid cards */}
+                {/* 4 solid filled bars - represents grid cards */}
                 <Box sx={{ display: 'flex', gap: 0.4 }} aria-hidden="true">
-                  <Box sx={{ width: 4, height: 10, border: '1px solid currentColor', borderRadius: 0.5, boxSizing: 'border-box' }} />
-                  <Box sx={{ width: 4, height: 10, border: '1px solid currentColor', borderRadius: 0.5, boxSizing: 'border-box' }} />
-                  <Box sx={{ width: 4, height: 10, border: '1px solid currentColor', borderRadius: 0.5, boxSizing: 'border-box' }} />
-                  <Box sx={{ width: 4, height: 10, border: '1px solid currentColor', borderRadius: 0.5, boxSizing: 'border-box' }} />
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                 </Box>
               </ToggleButton>
               <ToggleButton
@@ -672,12 +672,12 @@ const EscrowNavigation = ({
                 aria-label="Grid view"
                 title="Grid view (cards) - Press V"
               >
-                {/* 4 hollow outlines - represents grid cards */}
+                {/* 4 solid filled bars - represents grid cards */}
                 <Box sx={{ display: 'flex', gap: 0.4 }} aria-hidden="true">
-                  <Box sx={{ width: 4, height: 10, border: '1px solid currentColor', borderRadius: 0.5, boxSizing: 'border-box' }} />
-                  <Box sx={{ width: 4, height: 10, border: '1px solid currentColor', borderRadius: 0.5, boxSizing: 'border-box' }} />
-                  <Box sx={{ width: 4, height: 10, border: '1px solid currentColor', borderRadius: 0.5, boxSizing: 'border-box' }} />
-                  <Box sx={{ width: 4, height: 10, border: '1px solid currentColor', borderRadius: 0.5, boxSizing: 'border-box' }} />
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                 </Box>
               </ToggleButton>
               <ToggleButton
