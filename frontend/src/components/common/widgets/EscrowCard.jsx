@@ -546,12 +546,13 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
     }
 
     // Desktop: Show panels based on viewMode
-    if (viewMode === 'small') {
-      return [PANEL_WIDTHS.small]; // 320px
-    } else if (viewMode === 'medium') {
-      return [PANEL_WIDTHS.small, PANEL_WIDTHS.people]; // 700px
-    } else {
+    // viewMode can be: 'grid', 'list', 'table' (used by dashboard) or 'large' (used by card)
+    if (viewMode === 'grid' || viewMode === 'list' || viewMode === 'table') {
+      return [PANEL_WIDTHS.small]; // 320px - Only show main card
+    } else if (viewMode === 'large') {
       return [PANEL_WIDTHS.small, PANEL_WIDTHS.people, PANEL_WIDTHS.timeline, PANEL_WIDTHS.checklists]; // 1180px
+    } else {
+      return [PANEL_WIDTHS.small]; // Default: just main card
     }
   };
 
@@ -572,9 +573,9 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
     }
 
     // Desktop: Show based on viewMode
-    if (viewMode === 'small') return panelIndex === 0;
-    if (viewMode === 'medium') return panelIndex <= 1;
-    return true; // large: show all
+    if (viewMode === 'grid' || viewMode === 'list' || viewMode === 'table') return panelIndex === 0;
+    if (viewMode === 'large') return true; // show all panels
+    return panelIndex === 0; // Default: just main card
   };
 
   // Calculate translate offset based on current panel
@@ -1175,8 +1176,8 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
           </Card>
         </Box>
 
-        {/* Card 2: Extension Panels */}
-        {viewMode !== 'small' && (
+        {/* Card 2: Extension Panels (Only in large view) */}
+        {viewMode === 'large' && (
           <Box
             style={{
               width: 'calc(100% - 332px)', // Full width minus Card 1 (320px) and gap (12px)
