@@ -45,7 +45,7 @@ const FPatternGrid = styled(Box, {
   shouldForwardProp: (prop) => prop !== 'leftCollapsed' && prop !== 'rightCollapsed',
 })(({ leftCollapsed, rightCollapsed, theme }) => ({
   display: 'grid',
-  gridTemplateColumns: `${leftCollapsed ? '0px' : '280px'} 1fr ${rightCollapsed ? '0px' : '320px'}`,
+  gridTemplateColumns: `${leftCollapsed ? '0px' : '200px'} 1fr ${rightCollapsed ? '0px' : '200px'}`, // 200px sidebars for compact layout
   gap: theme.spacing(2),
   height: '100%',
   maxWidth: '2400px',
@@ -53,7 +53,7 @@ const FPatternGrid = styled(Box, {
   transition: 'grid-template-columns 0.3s ease-in-out',
   position: 'relative',
   [theme.breakpoints.down('lg')]: {
-    gridTemplateColumns: `${leftCollapsed ? '0px' : '240px'} 1fr ${rightCollapsed ? '0px' : '280px'}`,
+    gridTemplateColumns: `${leftCollapsed ? '0px' : '200px'} 1fr ${rightCollapsed ? '0px' : '200px'}`,
   },
   [theme.breakpoints.down('md')]: {
     gridTemplateColumns: '1fr',
@@ -109,13 +109,14 @@ const SidebarToggle = styled(IconButton, {
 
 const WidgetsGrid = styled(Box)(({ theme }) => ({
   display: 'grid',
-  gridTemplateColumns: 'repeat(4, 1fr)', // 4 columns for better fit
-  gap: theme.spacing(1.5),
-  [theme.breakpoints.down('lg')]: {
-    gridTemplateColumns: 'repeat(2, 1fr)', // 2x2 on medium screens
-  },
-  [theme.breakpoints.down('sm')]: {
+  gridTemplateColumns: 'repeat(2, 1fr)', // 2x2 grid for maximum information density
+  gridTemplateRows: 'repeat(2, 190px)', // Fixed 190px height per widget
+  gap: theme.spacing(2),
+  height: 400, // Total height: 2 rows * 190px + 20px gap
+  [theme.breakpoints.down('md')]: {
     gridTemplateColumns: '1fr', // Stack on mobile
+    gridTemplateRows: 'auto',
+    height: 'auto',
   },
 }));
 
