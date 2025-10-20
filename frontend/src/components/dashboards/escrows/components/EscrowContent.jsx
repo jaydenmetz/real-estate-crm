@@ -271,14 +271,14 @@ const EscrowContent = ({
     <>
       {/* Escrow Cards with proper dividers and edge alignment */}
       <Box sx={{
-        display: 'grid',
+        display: viewMode === 'table' ? 'block' : 'grid', // Table uses block layout, others use grid
         gridTemplateColumns: {
           xs: '1fr', // Mobile: 1 column
-          sm: viewMode === 'small' ? 'repeat(2, 1fr)' : '1fr', // Tablet: 2 columns in small view
-          md: viewMode === 'small' ? 'repeat(2, 1fr)' : '1fr', // Medium: 2 columns in small view
-          lg: viewMode === 'small' ? 'repeat(4, 1fr)' : '1fr', // Desktop: 4 columns in small view
+          sm: viewMode === 'grid' ? 'repeat(2, 1fr)' : '1fr', // Tablet: 2 columns in grid view
+          md: viewMode === 'grid' ? 'repeat(2, 1fr)' : '1fr', // Medium: 2 columns in grid view
+          lg: viewMode === 'grid' ? 'repeat(4, 1fr)' : '1fr', // Desktop: 4 columns in grid view
         },
-        gap: 3, // 24px gap
+        gap: viewMode === 'table' ? 0 : (viewMode === 'list' ? 2 : 3), // No gap for table, small gap for list, normal for grid
         width: '100%',
         minHeight: '600px', // Prevent scroll jump when switching tabs
       }}>

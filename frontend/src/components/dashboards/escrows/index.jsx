@@ -129,10 +129,13 @@ const EscrowsDashboard = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [showNewEscrowModal, setShowNewEscrowModal] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState('active');
-  // Load saved view mode from localStorage, default to 'small'
+  // Load saved view mode from localStorage, default to 'grid'
+  // Migrate old 'small' to 'grid' and 'large' to 'list'
   const [viewMode, setViewMode] = useState(() => {
     const saved = localStorage.getItem('escrowsViewMode');
-    return saved || 'small';
+    if (saved === 'small') return 'grid'; // Migrate old 'small' to 'grid'
+    if (saved === 'large') return 'list'; // Migrate old 'large' to 'list'
+    return saved || 'grid'; // Default to 'grid' (was 'small')
   });
   const [sortBy, setSortBy] = useState('closing_date'); // Sort field
   const [scope, setScope] = useState(() => {
@@ -478,8 +481,12 @@ const EscrowsDashboard = () => {
           }
           break;
         case 'v':
-          // V = Toggle view mode
-          setViewMode(prev => prev === 'small' ? 'large' : 'small');
+          // V = Cycle through view modes (grid → list → table → grid)
+          setViewMode(prev => {
+            if (prev === 'grid') return 'list';
+            if (prev === 'list') return 'table';
+            return 'grid';
+          });
           break;
         case 'escape':
           // ESC = Close modal
