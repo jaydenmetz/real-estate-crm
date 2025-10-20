@@ -245,6 +245,11 @@ apiRouter.use('/clients', require('./routes/clients.routes'));
 apiRouter.use('/appointments', require('./routes/appointments.routes'));
 apiRouter.use('/leads', require('./routes/leads.routes'));
 apiRouter.use('/analytics', require('./routes/analytics.routes'));
+
+// Tasks and Checklists routes (new project management system)
+apiRouter.use('/checklist-templates', require('./routes/checklistTemplates.routes'));
+apiRouter.use('/checklists', require('./routes/checklists.routes'));
+apiRouter.use('/tasks', require('./routes/tasks.routes'));
 apiRouter.use('/communications', require('./routes/communications.routes'));
 apiRouter.use('/documents', require('./routes/documents.routes'));
 apiRouter.use('/webhooks', require('./routes/webhooks.routes')); // Webhooks bypass auth for external services
