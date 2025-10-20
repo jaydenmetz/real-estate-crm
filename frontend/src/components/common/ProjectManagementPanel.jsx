@@ -13,6 +13,7 @@ import {
   Badge,
   Stack,
   Divider,
+  Grid,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import {
@@ -29,6 +30,12 @@ import {
   Storefront,
   Assessment,
   Build,
+  Psychology,
+  Smartphone,
+  TrendingUp,
+  CloudUpload,
+  VpnKey,
+  Celebration,
 } from '@mui/icons-material';
 
 // Styled Components
@@ -36,6 +43,29 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(3),
   borderRadius: theme.spacing(2),
   boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+  maxHeight: '600px', // Fixed height to prevent scrolling
+  display: 'flex',
+  flexDirection: 'column',
+}));
+
+const ScrollableContent = styled(Box)(({ theme }) => ({
+  overflowY: 'auto',
+  flex: 1,
+  paddingRight: theme.spacing(1),
+  '&::-webkit-scrollbar': {
+    width: '8px',
+  },
+  '&::-webkit-scrollbar-track': {
+    background: theme.palette.grey[100],
+    borderRadius: '4px',
+  },
+  '&::-webkit-scrollbar-thumb': {
+    background: theme.palette.grey[400],
+    borderRadius: '4px',
+    '&:hover': {
+      background: theme.palette.grey[600],
+    },
+  },
 }));
 
 const CategoryAccordion = styled(Accordion)(({ theme }) => ({
@@ -45,9 +75,16 @@ const CategoryAccordion = styled(Accordion)(({ theme }) => ({
   boxShadow: 'none',
   border: `1px solid ${theme.palette.divider}`,
   borderRadius: `${theme.spacing(1)}px !important`,
-  marginBottom: theme.spacing(1.5),
+  marginBottom: theme.spacing(0.75), // Tighter spacing
   '&.Mui-expanded': {
-    margin: `0 0 ${theme.spacing(1.5)}px 0`,
+    margin: `0 0 ${theme.spacing(0.75)}px 0`,
+  },
+}));
+
+const CompactCategorySummary = styled(AccordionSummary)(({ theme }) => ({
+  minHeight: '48px !important', // Compact height
+  '& .MuiAccordionSummary-content': {
+    margin: `${theme.spacing(1)} 0`,
   },
 }));
 
@@ -119,6 +156,7 @@ const getCategoryIcon = (category) => {
     'AI Integration': <SmartToy />,
     'Productization & Sales': <Storefront />,
     'Analytics & Reporting': <Assessment />,
+    'Game-Changing Features': <Celebration />,
   };
   return icons[category] || <FiberManualRecord />;
 };
@@ -135,22 +173,13 @@ const calculateCategoryProgress = (projects) => {
 };
 
 const ProjectManagementPanel = () => {
-  const [expandedCategories, setExpandedCategories] = useState(['Core Data & Database']);
-  const [expandedProjects, setExpandedProjects] = useState([]);
+  const [expandedCategories, setExpandedCategories] = useState([]); // Start collapsed
 
   const handleCategoryToggle = (category) => (event, isExpanded) => {
     setExpandedCategories(
       isExpanded
         ? [...expandedCategories, category]
         : expandedCategories.filter(c => c !== category)
-    );
-  };
-
-  const handleProjectToggle = (projectId) => (event, isExpanded) => {
-    setExpandedProjects(
-      isExpanded
-        ? [...expandedProjects, projectId]
-        : expandedProjects.filter(p => p !== projectId)
     );
   };
 
@@ -255,13 +284,14 @@ const ProjectManagementPanel = () => {
         },
         {
           id: 'tasks-projects-db',
-          name: 'Tasks & Projects Module (NEW)',
-          status: 'not-started',
+          name: 'Tasks & Projects Module (✅ NEW - Just Created!)',
+          status: 'in-progress',
           priority: 'medium',
-          progress: 0,
+          progress: 30,
           tasks: [
-            { name: 'Design tasks table schema', status: 'not-started', priority: 'medium' },
-            { name: 'Design projects table schema', status: 'not-started', priority: 'medium' },
+            { name: 'Design tasks table schema', status: 'completed', priority: 'medium' },
+            { name: 'Design projects table schema', status: 'completed', priority: 'medium' },
+            { name: 'Create database migration', status: 'completed', priority: 'medium' },
             { name: 'Build task/project CRUD operations', status: 'not-started', priority: 'medium' },
             { name: 'Add task assignment and tracking', status: 'not-started', priority: 'low' },
           ]
@@ -598,6 +628,146 @@ const ProjectManagementPanel = () => {
         },
       ]
     },
+    {
+      category: 'Game-Changing Features',
+      icon: <Celebration />,
+      description: '🚀 Innovation that sets you apart from EVERYONE',
+      priority: 'high',
+      projects: [
+        {
+          id: 'predictive-closing-dates',
+          name: '🔮 Predictive Closing Date AI',
+          status: 'not-started',
+          priority: 'high',
+          progress: 0,
+          tasks: [
+            { name: 'Analyze historical escrow timeline data', status: 'not-started', priority: 'high' },
+            { name: 'Build ML model to predict actual closing date based on current stage', status: 'not-started', priority: 'high' },
+            { name: 'Show confidence intervals and risk factors', status: 'not-started', priority: 'medium' },
+            { name: 'Alert when escrow is trending toward delay', status: 'not-started', priority: 'high' },
+          ]
+        },
+        {
+          id: 'smart-document-assistant',
+          name: '📄 Smart Document Assistant',
+          status: 'not-started',
+          priority: 'high',
+          progress: 0,
+          tasks: [
+            { name: 'OCR scan uploaded documents and extract key data', status: 'not-started', priority: 'high' },
+            { name: 'Auto-populate CRM fields from scanned contracts', status: 'not-started', priority: 'high' },
+            { name: 'Flag missing required documents by escrow stage', status: 'not-started', priority: 'high' },
+            { name: 'Suggest next document needed based on timeline', status: 'not-started', priority: 'medium' },
+          ]
+        },
+        {
+          id: 'client-portal',
+          name: '🌐 Client Self-Service Portal',
+          status: 'not-started',
+          priority: 'high',
+          progress: 0,
+          tasks: [
+            { name: 'Build branded client login page', status: 'not-started', priority: 'high' },
+            { name: 'Allow clients to view their escrow progress in real-time', status: 'not-started', priority: 'high' },
+            { name: 'Enable clients to upload documents directly', status: 'not-started', priority: 'high' },
+            { name: 'Add e-signature integration (DocuSign/HelloSign)', status: 'not-started', priority: 'medium' },
+            { name: 'Send automated status updates via email/SMS', status: 'not-started', priority: 'medium' },
+          ]
+        },
+        {
+          id: 'competitive-market-analysis',
+          name: '📊 Automated CMA Generator',
+          status: 'not-started',
+          priority: 'medium',
+          progress: 0,
+          tasks: [
+            { name: 'Pull comparable sales data from MLS API', status: 'not-started', priority: 'medium' },
+            { name: 'Auto-generate professional CMA reports with charts', status: 'not-started', priority: 'medium' },
+            { name: 'Suggest optimal listing price based on comps', status: 'not-started', priority: 'medium' },
+            { name: 'Export as branded PDF for client presentation', status: 'not-started', priority: 'low' },
+          ]
+        },
+        {
+          id: 'voice-notes',
+          name: '🎤 Voice-to-CRM Notes',
+          status: 'not-started',
+          priority: 'medium',
+          progress: 0,
+          tasks: [
+            { name: 'Add voice recording button on mobile', status: 'not-started', priority: 'medium' },
+            { name: 'Transcribe voice notes to text using Whisper API', status: 'not-started', priority: 'medium' },
+            { name: 'Auto-categorize notes (client call, showing notes, follow-up)', status: 'not-started', priority: 'low' },
+            { name: 'Extract action items and create tasks automatically', status: 'not-started', priority: 'low' },
+          ]
+        },
+        {
+          id: 'price-drop-alerts',
+          name: '🔔 Smart Price Drop Alerts',
+          status: 'not-started',
+          priority: 'medium',
+          progress: 0,
+          tasks: [
+            { name: 'Monitor MLS for price drops on properties matching client criteria', status: 'not-started', priority: 'medium' },
+            { name: 'Auto-notify clients when dream property drops price', status: 'not-started', priority: 'medium' },
+            { name: 'Track how long properties stay on market', status: 'not-started', priority: 'low' },
+            { name: 'Suggest negotiation strategies based on days on market', status: 'not-started', priority: 'low' },
+          ]
+        },
+        {
+          id: 'referral-tracking',
+          name: '🤝 Referral & Relationship Mapping',
+          status: 'not-started',
+          priority: 'medium',
+          progress: 0,
+          tasks: [
+            { name: 'Build visual network graph of client relationships', status: 'not-started', priority: 'medium' },
+            { name: 'Track who referred who (client genealogy)', status: 'not-started', priority: 'medium' },
+            { name: 'Calculate lifetime referral value per client', status: 'not-started', priority: 'low' },
+            { name: 'Auto-suggest clients who might refer based on satisfaction', status: 'not-started', priority: 'low' },
+          ]
+        },
+        {
+          id: 'marketing-automation',
+          name: '📧 Personalized Drip Campaigns',
+          status: 'not-started',
+          priority: 'medium',
+          progress: 0,
+          tasks: [
+            { name: 'Build email template library (just listed, market update, closing congratulations)', status: 'not-started', priority: 'medium' },
+            { name: 'Trigger campaigns based on lead stage (new lead → nurtured → hot)', status: 'not-started', priority: 'medium' },
+            { name: 'Personalize content using client data (name, property type, location)', status: 'not-started', priority: 'low' },
+            { name: 'Track open rates and engagement scores', status: 'not-started', priority: 'low' },
+          ]
+        },
+        {
+          id: 'mobile-app',
+          name: '📱 Native Mobile App (iOS/Android)',
+          status: 'not-started',
+          priority: 'low',
+          progress: 0,
+          tasks: [
+            { name: 'Design mobile-first UI with React Native', status: 'not-started', priority: 'low' },
+            { name: 'Add offline mode for viewing escrows without internet', status: 'not-started', priority: 'low' },
+            { name: 'Enable push notifications for urgent tasks', status: 'not-started', priority: 'low' },
+            { name: 'Add camera integration for instant document upload', status: 'not-started', priority: 'low' },
+          ]
+        },
+        {
+          id: 'transaction-coordinator',
+          name: '🎯 AI Transaction Coordinator',
+          status: 'not-started',
+          priority: 'high',
+          progress: 0,
+          tasks: [
+            { name: 'Build AI that knows typical escrow timeline milestones', status: 'not-started', priority: 'high' },
+            { name: 'Auto-create tasks for each stage (appraisal ordered, inspection scheduled, etc.)', status: 'not-started', priority: 'high' },
+            { name: 'Remind agent of upcoming deadlines 3 days before', status: 'not-started', priority: 'high' },
+            { name: 'Flag when escrow deviates from standard timeline', status: 'not-started', priority: 'medium' },
+            { name: 'Suggest who to contact when stuck (lender, escrow officer, etc.)', status: 'not-started', priority: 'medium' },
+          ]
+        },
+      ]
+    },
   ];
 
   const totalProjects = projectData.reduce((sum, cat) => sum + cat.projects.length, 0);
@@ -609,18 +779,18 @@ const ProjectManagementPanel = () => {
 
   return (
     <StyledPaper>
-      <Box sx={{ mb: 3 }}>
+      <Box sx={{ mb: 2 }}>
         <Typography variant="h5" gutterBottom fontWeight={700}>
-          🎯 Professional CRM Development Plan
+          🎯 CRM Development Roadmap
         </Typography>
         <Typography variant="body2" color="text.secondary" gutterBottom>
-          Comprehensive project breakdown using software engineering best practices
+          Click categories to expand projects and tasks
         </Typography>
 
         <Box sx={{ mt: 2, mb: 2 }}>
           <Stack direction="row" spacing={2} alignItems="center">
             <Typography variant="body2" color="text.secondary">
-              Overall Progress:
+              Overall:
             </Typography>
             <Box sx={{ flex: 1 }}>
               <LinearProgress
@@ -630,124 +800,99 @@ const ProjectManagementPanel = () => {
               />
             </Box>
             <Typography variant="body2" fontWeight={600}>
-              {completedProjects}/{totalProjects} Projects ({overallProgress}%)
+              {completedProjects}/{totalProjects} ({overallProgress}%)
             </Typography>
           </Stack>
         </Box>
 
-        <Divider sx={{ my: 2 }} />
+        <Divider />
       </Box>
 
-      {projectData.map((category) => {
-        const categoryProgress = calculateCategoryProgress(category.projects);
-        const completedProjectsInCategory = category.projects.filter(p => p.status === 'completed').length;
+      <ScrollableContent>
+        {projectData.map((category) => {
+          const categoryProgress = calculateCategoryProgress(category.projects);
+          const completedProjectsInCategory = category.projects.filter(p => p.status === 'completed').length;
 
-        return (
-          <CategoryAccordion
-            key={category.category}
-            expanded={expandedCategories.includes(category.category)}
-            onChange={handleCategoryToggle(category.category)}
-          >
-            <AccordionSummary expandIcon={<ExpandMore />}>
-              <Stack direction="row" spacing={2} alignItems="center" sx={{ width: '100%', pr: 2 }}>
-                <Box sx={{ color: 'primary.main' }}>
-                  {getCategoryIcon(category.category)}
-                </Box>
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="subtitle1" fontWeight={600}>
-                    {category.category}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {category.description}
-                  </Typography>
-                </Box>
-                <PriorityBadge priority={category.priority} label={category.priority.toUpperCase()} size="small" />
-                <Badge badgeContent={category.projects.length} color="primary">
+          return (
+            <CategoryAccordion
+              key={category.category}
+              expanded={expandedCategories.includes(category.category)}
+              onChange={handleCategoryToggle(category.category)}
+            >
+              <CompactCategorySummary expandIcon={<ExpandMore />}>
+                <Stack direction="row" spacing={1.5} alignItems="center" sx={{ width: '100%', pr: 2 }}>
+                  <Box sx={{ color: 'primary.main', fontSize: '1.2rem' }}>
+                    {getCategoryIcon(category.category)}
+                  </Box>
+                  <Box sx={{ flex: 1 }}>
+                    <Typography variant="subtitle2" fontWeight={600} sx={{ fontSize: '0.9rem' }}>
+                      {category.category}
+                    </Typography>
+                  </Box>
+                  <PriorityBadge priority={category.priority} label={category.priority.toUpperCase()} size="small" />
                   <Chip
                     label={`${completedProjectsInCategory}/${category.projects.length}`}
                     size="small"
                     color={categoryProgress === 100 ? 'success' : 'default'}
+                    sx={{ minWidth: '55px', fontSize: '0.75rem' }}
                   />
-                </Badge>
-              </Stack>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Box sx={{ mt: 1 }}>
-                <LinearProgress
-                  variant="determinate"
-                  value={categoryProgress}
-                  sx={{ mb: 2, height: 6, borderRadius: 1 }}
-                />
+                </Stack>
+              </CompactCategorySummary>
+              <AccordionDetails>
+                <Box sx={{ mt: 1 }}>
+                  <LinearProgress
+                    variant="determinate"
+                    value={categoryProgress}
+                    sx={{ mb: 2, height: 6, borderRadius: 1 }}
+                  />
 
-                {category.projects.map((project) => (
-                  <ProjectAccordion
-                    key={project.id}
-                    expanded={expandedProjects.includes(project.id)}
-                    onChange={handleProjectToggle(project.id)}
-                  >
-                    <AccordionSummary expandIcon={<ExpandMore />}>
-                      <Stack direction="row" spacing={2} alignItems="center" sx={{ width: '100%', pr: 2 }}>
-                        <Box>
-                          {project.status === 'completed' ? (
-                            <CheckCircle color="success" />
-                          ) : (
-                            <RadioButtonUnchecked color="action" />
-                          )}
-                        </Box>
-                        <Box sx={{ flex: 1 }}>
-                          <Typography variant="body2" fontWeight={600}>
-                            {project.name}
-                          </Typography>
-                        </Box>
-                        <PriorityBadge priority={project.priority} label={project.priority} size="small" />
-                        <StatusBadge status={project.status} label={project.status} size="small" />
-                        <Typography variant="caption" color="text.secondary" sx={{ minWidth: '50px', textAlign: 'right' }}>
-                          {project.progress}%
-                        </Typography>
-                      </Stack>
-                    </AccordionSummary>
-                    <AccordionDetails>
-                      <Box sx={{ pl: 4 }}>
-                        <LinearProgress
-                          variant="determinate"
-                          value={project.progress}
-                          sx={{ mb: 2, height: 4, borderRadius: 1 }}
-                        />
+                  <Typography variant="caption" color="text.secondary" sx={{ mb: 2, display: 'block' }}>
+                    {category.description}
+                  </Typography>
 
-                        {project.tasks.map((task, idx) => (
-                          <TaskItem key={idx} completed={task.status === 'completed'}>
-                            <Box sx={{ mr: 2 }}>
-                              {task.status === 'completed' ? (
+                  <Grid container spacing={1}>
+                    {category.projects.map((project) => (
+                      <Grid item xs={12} key={project.id}>
+                        <Box
+                          sx={{
+                            p: 1.5,
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            borderRadius: 1,
+                            backgroundColor: project.status === 'completed' ? 'success.light' : 'background.paper',
+                            opacity: project.status === 'completed' ? 0.7 : 1,
+                          }}
+                        >
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <Box>
+                              {project.status === 'completed' ? (
                                 <CheckCircle fontSize="small" color="success" />
                               ) : (
                                 <RadioButtonUnchecked fontSize="small" color="action" />
                               )}
                             </Box>
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                flex: 1,
-                                textDecoration: task.status === 'completed' ? 'line-through' : 'none',
-                              }}
-                            >
-                              {task.name}
+                            <Typography variant="body2" fontWeight={500} sx={{ flex: 1 }}>
+                              {project.name}
                             </Typography>
-                            <PriorityBadge priority={task.priority} label={task.priority} size="small" />
-                          </TaskItem>
-                        ))}
-                      </Box>
-                    </AccordionDetails>
-                  </ProjectAccordion>
-                ))}
-              </Box>
-            </AccordionDetails>
-          </CategoryAccordion>
-        );
-      })}
+                            <PriorityBadge priority={project.priority} label={project.priority} size="small" />
+                            <Typography variant="caption" color="text.secondary">
+                              {project.progress}%
+                            </Typography>
+                          </Stack>
+                        </Box>
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Box>
+              </AccordionDetails>
+            </CategoryAccordion>
+          );
+        })}
+      </ScrollableContent>
 
-      <Box sx={{ mt: 3, p: 2, bgcolor: 'primary.light', borderRadius: 2 }}>
+      <Box sx={{ mt: 2, p: 1.5, bgcolor: 'primary.light', borderRadius: 1 }}>
         <Typography variant="caption" color="primary.contrastText" fontWeight={600}>
-          💡 STRATEGY: Start with Core Data → Display → Backend → AI → Productize
+          💡 STRATEGY: Data → Display → Backend → AI → Game-Changers → Productize
         </Typography>
       </Box>
     </StyledPaper>
