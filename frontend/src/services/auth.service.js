@@ -337,17 +337,51 @@ class AuthService {
           localStorage.setItem(USER_KEY, JSON.stringify(response.data.user));
         }
       } catch (error) {
-        // If verification fails but we have stored auth, keep user logged in
-        console.warn('Token verification failed, using cached auth:', error.message);
-        // Only logout if it's a clear authentication failure
-        if (error.status === 401 && !this.apiKey) {
-          // No API key fallback, so logout
-          await this.logout();
-          return {
-            success: false,
-            error: 'Authentication expired'
-          };
+        // If verification fails with 401 and we're using JWT (not API key), try to refresh token
+        if (error.status === 401 && this.token && !this.apiKey) {
+          console.log('🔄 Token expired, attempting automatic refresh...');
+
+          try {
+            const refreshResult = await this.refreshAccessToken();
+
+            if (refreshResult.success) {
+              console.log('✅ Token refreshed successfully');
+              // Verify again with new token
+              try {
+                const verifyResponse = await apiInstance.get('/auth/verify');
+                if (verifyResponse.success && verifyResponse.data) {
+                  this.user = verifyResponse.data.user;
+                  localStorage.setItem(USER_KEY, JSON.stringify(verifyResponse.data.user));
+                  return {
+                    success: true,
+                    user: this.user
+                  };
+                }
+              } catch (verifyError) {
+                // Even if re-verification fails, we have a valid refreshed token
+                console.warn('Token refreshed but re-verification failed, continuing with cached auth');
+              }
+            } else {
+              // Refresh failed - logout user
+              console.error('❌ Token refresh failed, logging out');
+              await this.logout();
+              return {
+                success: false,
+                error: 'Session expired - please login again'
+              };
+            }
+          } catch (refreshError) {
+            console.error('❌ Token refresh error:', refreshError);
+            await this.logout();
+            return {
+              success: false,
+              error: 'Authentication expired'
+            };
+          }
         }
+
+        // For other errors or if using API key, just warn and continue with cached auth
+        console.warn('Token verification failed, using cached auth:', error.message);
       }
 
       // Return success if we have user data
