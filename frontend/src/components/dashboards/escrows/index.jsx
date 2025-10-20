@@ -7,6 +7,7 @@ import EscrowStatsCards from './components/EscrowStatsCards';
 import EscrowNavigation from './components/EscrowNavigation';
 import EscrowContent from './components/EscrowContent';
 import EscrowDebugPanel from './components/EscrowDebugPanel';
+import { EscrowSkeletonsContainer } from './components/EscrowSkeletons';
 import { MiniContactCard, getInitials } from './components/EscrowCommon';
 import {
   detectPresetRange,
@@ -709,9 +710,31 @@ const EscrowsDashboard = () => {
 
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
-        <CircularProgress size={60} />
-      </Box>
+      <Container maxWidth={false} sx={{ mt: 4, mb: 4, maxWidth: '1600px', px: { xs: 2, sm: 3 } }}>
+        {/* Show hero card skeleton */}
+        <Box sx={{ mb: 4 }}>
+          <Card
+            sx={{
+              background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
+              borderRadius: 4,
+              overflow: 'hidden',
+              position: 'relative',
+              minHeight: 320,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <CircularProgress size={60} sx={{ color: 'white' }} />
+          </Card>
+        </Box>
+
+        {/* Show navigation skeleton */}
+        <Box sx={{ mb: 4, height: 48 }} />
+
+        {/* Show escrow cards skeleton */}
+        <EscrowSkeletonsContainer viewMode={viewMode} count={8} />
+      </Container>
     );
   }
 
