@@ -17,9 +17,17 @@ import {
   ListItemText,
   Stack,
   alpha,
+  Table,
+  TableHead,
+  TableBody,
+  TableRow,
+  TableCell,
+  TableContainer,
 } from '@mui/material';
 import { AnimatePresence } from 'framer-motion';
 import EscrowCard from '../../../common/widgets/EscrowCard';
+import EscrowTableRow from '../../../common/widgets/EscrowTableRow';
+import EscrowListRow from '../../../common/widgets/EscrowListRow';
 import VirtualizedEscrowList from '../../../common/VirtualizedEscrowList';
 import { Home } from '@mui/icons-material';
 
@@ -312,22 +320,64 @@ const EscrowContent = ({
                 );
               }
 
-              // Use same display pattern as active escrows (no special grid/compact views)
-              return archivedEscrows.map((escrow, index) => (
-                <EscrowCard
-                  key={escrow.id}
-                  escrow={escrow}
-                  viewMode={viewMode}
-                  animationType={animationType}
-                  animationDuration={animationDuration}
-                  animationIntensity={animationIntensity}
-                  index={index}
-                  onRestore={handleRestore}
-                  onDelete={handlePermanentDelete}
-                  isArchived={true}
-                  onUpdate={handleUpdateEscrow}
-                />
-              ));
+              // Render archived escrows based on view mode (same as active escrows)
+              if (viewMode === 'table') {
+                return (
+                  <TableContainer component={Paper} sx={{ gridColumn: '1 / -1', width: '100%' }}>
+                    <Table size="small" sx={{ minWidth: 900 }}>
+                      <TableHead>
+                        <TableRow sx={{ backgroundColor: (theme) => alpha(theme.palette.warning.main, 0.05) }}>
+                          <TableCell sx={{ width: 60, fontWeight: 700 }}>Image</TableCell>
+                          <TableCell sx={{ fontWeight: 700 }}>Address</TableCell>
+                          <TableCell sx={{ width: 140, fontWeight: 700 }}>Status</TableCell>
+                          <TableCell sx={{ fontWeight: 700 }}>Buyer</TableCell>
+                          <TableCell sx={{ width: 130, fontWeight: 700, textAlign: 'right' }}>Price</TableCell>
+                          <TableCell sx={{ width: 120, fontWeight: 700, textAlign: 'right' }}>Commission</TableCell>
+                          <TableCell sx={{ width: 130, fontWeight: 700 }}>Closing Date</TableCell>
+                          <TableCell sx={{ width: 60, fontWeight: 700 }}>Actions</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {archivedEscrows.map((escrow) => (
+                          <EscrowTableRow
+                            key={escrow.id}
+                            escrow={escrow}
+                            onArchive={null}
+                            onDelete={handlePermanentDelete}
+                            isArchived={true}
+                          />
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                );
+              } else if (viewMode === 'list') {
+                return archivedEscrows.map((escrow) => (
+                  <EscrowListRow
+                    key={escrow.id}
+                    escrow={escrow}
+                    onArchive={null}
+                    onDelete={handlePermanentDelete}
+                    isArchived={true}
+                  />
+                ));
+              } else {
+                return archivedEscrows.map((escrow, index) => (
+                  <EscrowCard
+                    key={escrow.id}
+                    escrow={escrow}
+                    viewMode={viewMode}
+                    animationType={animationType}
+                    animationDuration={animationDuration}
+                    animationIntensity={animationIntensity}
+                    index={index}
+                    onRestore={handleRestore}
+                    onDelete={handlePermanentDelete}
+                    isArchived={true}
+                    onUpdate={handleUpdateEscrow}
+                  />
+                ));
+              }
             }
 
             // Otherwise show regular escrows filtered by status (exclude archived)
@@ -418,42 +468,88 @@ const EscrowContent = ({
                 </Paper>
               );
             } else {
-              // Use virtualization for large lists (50+ escrows) to improve performance
-              // For smaller lists, use regular rendering to maintain grid layout
-              const useVirtualization = sortedEscrows.length >= 50;
-
-              if (useVirtualization) {
-                // Calculate dynamic height: viewport height minus header/padding (~400px)
-                const dynamicHeight = Math.max(600, window.innerHeight - 400);
-
+              // Render based on view mode
+              if (viewMode === 'table') {
+                // TABLE VIEW: Dense Excel-like table
                 return (
-                  <Box sx={{ gridColumn: '1 / -1', width: '100%' }}>
-                    <VirtualizedEscrowList
-                      escrows={sortedEscrows}
+                  <TableContainer component={Paper} sx={{ gridColumn: '1 / -1', width: '100%' }}>
+                    <Table size="small" sx={{ minWidth: 900 }}>
+                      <TableHead>
+                        <TableRow sx={{ backgroundColor: (theme) => alpha(theme.palette.primary.main, 0.05) }}>
+                          <TableCell sx={{ width: 60, fontWeight: 700 }}>Image</TableCell>
+                          <TableCell sx={{ fontWeight: 700 }}>Address</TableCell>
+                          <TableCell sx={{ width: 140, fontWeight: 700 }}>Status</TableCell>
+                          <TableCell sx={{ fontWeight: 700 }}>Buyer</TableCell>
+                          <TableCell sx={{ width: 130, fontWeight: 700, textAlign: 'right' }}>Price</TableCell>
+                          <TableCell sx={{ width: 120, fontWeight: 700, textAlign: 'right' }}>Commission</TableCell>
+                          <TableCell sx={{ width: 130, fontWeight: 700 }}>Closing Date</TableCell>
+                          <TableCell sx={{ width: 60, fontWeight: 700 }}>Actions</TableCell>
+                        </TableRow>
+                      </TableHead>
+                      <TableBody>
+                        {sortedEscrows.map((escrow) => (
+                          <EscrowTableRow
+                            key={escrow.id}
+                            escrow={escrow}
+                            onArchive={handleArchive}
+                            onDelete={handlePermanentDelete}
+                            isArchived={false}
+                          />
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </TableContainer>
+                );
+              } else if (viewMode === 'list') {
+                // LIST VIEW: Horizontal rows with key info
+                return sortedEscrows.map((escrow) => (
+                  <EscrowListRow
+                    key={escrow.id}
+                    escrow={escrow}
+                    onArchive={handleArchive}
+                    onDelete={handlePermanentDelete}
+                    isArchived={false}
+                  />
+                ));
+              } else {
+                // GRID VIEW: Your beloved card layout
+                // Use virtualization for large lists (50+ escrows) to improve performance
+                // For smaller lists, use regular rendering to maintain grid layout
+                const useVirtualization = sortedEscrows.length >= 50;
+
+                if (useVirtualization) {
+                  // Calculate dynamic height: viewport height minus header/padding (~400px)
+                  const dynamicHeight = Math.max(600, window.innerHeight - 400);
+
+                  return (
+                    <Box sx={{ gridColumn: '1 / -1', width: '100%' }}>
+                      <VirtualizedEscrowList
+                        escrows={sortedEscrows}
+                        viewMode={viewMode}
+                        animationType={animationType}
+                        animationDuration={animationDuration}
+                        animationIntensity={animationIntensity}
+                        onArchive={handleArchive}
+                        onUpdate={handleUpdateEscrow}
+                        containerHeight={dynamicHeight}
+                      />
+                    </Box>
+                  );
+                } else {
+                  return sortedEscrows.map((escrow, index) => (
+                    <EscrowCard
+                      key={escrow.id}
+                      escrow={escrow}
                       viewMode={viewMode}
                       animationType={animationType}
                       animationDuration={animationDuration}
                       animationIntensity={animationIntensity}
+                      index={index}
                       onArchive={handleArchive}
                       onUpdate={handleUpdateEscrow}
-                      containerHeight={dynamicHeight}
                     />
-                  </Box>
-                );
-              } else {
-                return sortedEscrows.map((escrow, index) => (
-                  <EscrowCard
-                    key={escrow.id}
-                    escrow={escrow}
-                    viewMode={viewMode}
-                    animationType={animationType}
-                    animationDuration={animationDuration}
-                    animationIntensity={animationIntensity}
-                    index={index}
-                    onArchive={handleArchive}
-                    onUpdate={handleUpdateEscrow}
-                  />
-                ));
+                  ));
+                }
               }
             }
           })()}

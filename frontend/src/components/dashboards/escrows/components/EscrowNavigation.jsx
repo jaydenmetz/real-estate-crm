@@ -246,13 +246,21 @@ const EscrowNavigation = ({
               }}
             >
               <ToggleButton value="table" title="Table view (dense, Excel-like)">
-                <TableChart sx={{ fontSize: 16 }} />
+                {/* Skinny horizontal rectangle (Excel row) */}
+                <Box sx={{ width: 24, height: 6, bgcolor: 'currentColor', borderRadius: 0.5 }} />
               </ToggleButton>
               <ToggleButton value="list" title="List view (horizontal rows)">
-                <ViewList sx={{ fontSize: 16 }} />
+                {/* Larger rounded rectangle (list row) */}
+                <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 1 }} />
               </ToggleButton>
               <ToggleButton value="grid" title="Grid view (cards) - Press V">
-                <ViewModule sx={{ fontSize: 16 }} />
+                {/* 4 squares grid */}
+                <Box sx={{ display: 'flex', gap: 0.4 }}>
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                </Box>
               </ToggleButton>
               <ToggleButton value="calendar" title="Calendar view">
                 <CalendarToday sx={{ fontSize: 16 }} />
@@ -516,21 +524,26 @@ const EscrowNavigation = ({
                 aria-label="Table view"
                 title="Table view (dense, Excel-like)"
               >
-                <TableChart sx={{ fontSize: 16 }} />
+                <Box sx={{ width: 24, height: 6, bgcolor: 'currentColor', borderRadius: 0.5 }} />
               </ToggleButton>
               <ToggleButton
                 value="list"
                 aria-label="List view"
                 title="List view (horizontal rows)"
               >
-                <ViewList sx={{ fontSize: 16 }} />
+                <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 1 }} />
               </ToggleButton>
               <ToggleButton
                 value="grid"
                 aria-label="Grid view"
                 title="Grid view (cards) - Press V"
               >
-                <ViewModule sx={{ fontSize: 16 }} />
+                <Box sx={{ display: 'flex', gap: 0.4 }}>
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                </Box>
               </ToggleButton>
               <ToggleButton
                 value="calendar"
