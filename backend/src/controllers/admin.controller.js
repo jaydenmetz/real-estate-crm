@@ -327,8 +327,10 @@ class AdminController {
         });
       }
 
-      // 2. Prevent deleting your current refresh tokens (would cause instant logout)
-      if (tableName === 'refresh_tokens') {
+      // 2. DISABLED FOR TESTING: Allow admins to delete their own refresh tokens
+      // This is useful for debugging token rotation issues
+      // WARNING: Deleting your own tokens will log you out
+      if (false && tableName === 'refresh_tokens') {
         // Get current user's active refresh tokens
         const currentTokens = await pool.query(
           'SELECT id FROM refresh_tokens WHERE user_id = $1 AND revoked_at IS NULL AND expires_at > NOW()',
