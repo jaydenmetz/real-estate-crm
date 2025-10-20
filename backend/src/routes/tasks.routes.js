@@ -5,10 +5,10 @@
 const express = require('express');
 const router = express.Router();
 const tasksController = require('../controllers/tasks.controller');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticate } = require('../middleware/apiKey.middleware');
 
 // All routes require authentication
-router.use(authenticateToken);
+router.use(authenticate);
 
 // GET /v1/tasks - List all tasks with filtering
 router.get('/', tasksController.getAllTasks);

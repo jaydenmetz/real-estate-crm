@@ -5,10 +5,10 @@
 const express = require('express');
 const router = express.Router();
 const checklistTemplatesController = require('../controllers/checklistTemplates.controller');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticate } = require('../middleware/apiKey.middleware');
 
 // All routes require authentication
-router.use(authenticateToken);
+router.use(authenticate);
 
 // GET /v1/checklist-templates - List all templates
 router.get('/', checklistTemplatesController.getAllTemplates);
