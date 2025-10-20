@@ -386,6 +386,9 @@ const EscrowContent = ({
               // Check both top-level and details.deletedAt
               if (e.deleted_at || e.deletedAt || e.details?.deletedAt) return false;
 
+              // Filter out escrows with missing critical data (prevents blank cards)
+              if (!e.id || (!e.property_address && !e.propertyAddress)) return false;
+
               switch (selectedStatus) {
                 case 'active':
                   return e.escrowStatus === 'Active Under Contract' ||
