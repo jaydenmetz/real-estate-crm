@@ -193,6 +193,36 @@ const EscrowListRow = ({ escrow, onArchive, onDelete, isArchived = false }) => {
               </Typography>
             </Box>
 
+            {/* Seller */}
+            <Box>
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                Seller
+              </Typography>
+              <Typography variant="body2" sx={{ fontSize: '0.875rem', fontWeight: 500 }}>
+                {escrow.seller_name || escrow.sellerName || 'TBD'}
+              </Typography>
+            </Box>
+
+            {/* Buyer's Agent */}
+            <Box>
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                Buyer's Agent
+              </Typography>
+              <Typography variant="body2" sx={{ fontSize: '0.875rem', fontWeight: 500 }}>
+                {escrow.buyer_agent_name || escrow.buyerAgentName || 'TBD'}
+              </Typography>
+            </Box>
+
+            {/* Listing Agent */}
+            <Box>
+              <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                Listing Agent
+              </Typography>
+              <Typography variant="body2" sx={{ fontSize: '0.875rem', fontWeight: 500 }}>
+                {escrow.listing_agent_name || escrow.listingAgentName || 'TBD'}
+              </Typography>
+            </Box>
+
             {/* Closing Date */}
             <Box>
               <Typography variant="caption" color="text.secondary" sx={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: 0.5 }}>

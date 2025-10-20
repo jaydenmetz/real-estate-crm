@@ -139,6 +139,27 @@ const EscrowTableRow = ({ escrow, onArchive, onDelete, isArchived = false }) => 
           </Typography>
         </TableCell>
 
+        {/* Seller */}
+        <TableCell sx={{ minWidth: 150 }}>
+          <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>
+            {escrow.seller_name || escrow.sellerName || 'TBD'}
+          </Typography>
+        </TableCell>
+
+        {/* Buyer's Agent */}
+        <TableCell sx={{ minWidth: 150 }}>
+          <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>
+            {escrow.buyer_agent_name || escrow.buyerAgentName || 'TBD'}
+          </Typography>
+        </TableCell>
+
+        {/* Listing Agent */}
+        <TableCell sx={{ minWidth: 150 }}>
+          <Typography variant="body2" sx={{ fontSize: '0.875rem' }}>
+            {escrow.listing_agent_name || escrow.listingAgentName || 'TBD'}
+          </Typography>
+        </TableCell>
+
         {/* Price */}
         <TableCell sx={{ width: 130, textAlign: 'right' }}>
           <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.875rem' }}>
