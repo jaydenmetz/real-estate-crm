@@ -246,12 +246,12 @@ const EscrowNavigation = ({
               }}
             >
               <ToggleButton value="table" title="Table view (dense, Excel-like)">
-                {/* Skinny horizontal rectangle (Excel row) */}
-                <Box sx={{ width: 24, height: 6, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                {/* Skinny horizontal rectangle (Excel row) - matched to grid width */}
+                <Box sx={{ width: 18, height: 6, bgcolor: 'currentColor', borderRadius: 0.5 }} />
               </ToggleButton>
               <ToggleButton value="list" title="List view (horizontal rows)">
-                {/* Larger rounded rectangle (list row) */}
-                <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 1 }} />
+                {/* Larger rounded rectangle (list row) - matched to grid width */}
+                <Box sx={{ width: 18, height: 12, bgcolor: 'currentColor', borderRadius: 1 }} />
               </ToggleButton>
               <ToggleButton value="grid" title="Grid view (cards) - Press V">
                 {/* 4 squares grid */}
@@ -524,14 +524,14 @@ const EscrowNavigation = ({
                 aria-label="Table view"
                 title="Table view (dense, Excel-like)"
               >
-                <Box sx={{ width: 24, height: 6, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                <Box sx={{ width: 18, height: 6, bgcolor: 'currentColor', borderRadius: 0.5 }} />
               </ToggleButton>
               <ToggleButton
                 value="list"
                 aria-label="List view"
                 title="List view (horizontal rows)"
               >
-                <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 1 }} />
+                <Box sx={{ width: 18, height: 12, bgcolor: 'currentColor', borderRadius: 1 }} />
               </ToggleButton>
               <ToggleButton
                 value="grid"
