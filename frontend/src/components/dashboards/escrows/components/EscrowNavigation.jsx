@@ -335,8 +335,8 @@ const EscrowNavigation = ({
                 title="List view (horizontal rows)"
                 aria-label="List view"
               >
-                {/* Single solid filled rectangle - same total width as grid */}
-                <Box sx={{ width: 17.2, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} aria-hidden="true" />
+                {/* Single solid filled rectangle - 25.59px to match grid's rendered width */}
+                <Box sx={{ width: 25.59, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} aria-hidden="true" />
               </ToggleButton>
               <ToggleButton
                 value="grid"
@@ -664,8 +664,8 @@ const EscrowNavigation = ({
                 aria-label="List view"
                 title="List view (horizontal rows)"
               >
-                {/* Single solid filled rectangle - same total width as grid */}
-                <Box sx={{ width: 17.2, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} aria-hidden="true" />
+                {/* Single solid filled rectangle - 25.59px to match grid's rendered width */}
+                <Box sx={{ width: 25.59, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} aria-hidden="true" />
               </ToggleButton>
               <ToggleButton
                 value="grid"
