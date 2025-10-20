@@ -72,6 +72,7 @@ const EscrowContent = ({
   handleEscrowClick,
   loadMoreEscrows,
   safeFormatDate,
+  searchQuery,
 }) => {
   // Calendar view rendering logic
   if (showCalendar) {
@@ -388,6 +389,23 @@ const EscrowContent = ({
 
               // Filter out escrows with missing critical data (prevents blank cards)
               if (!e.id || (!e.property_address && !e.propertyAddress)) return false;
+
+              // Search filter - check property address, buyer name, seller name, escrow number
+              if (searchQuery && searchQuery.trim()) {
+                const query = searchQuery.toLowerCase().trim();
+                const address = (e.property_address || e.propertyAddress || '').toLowerCase();
+                const buyerName = (e.buyer_name || e.buyerName || '').toLowerCase();
+                const sellerName = (e.seller_name || e.sellerName || '').toLowerCase();
+                const escrowNumber = (e.escrow_number || e.escrowNumber || '').toLowerCase();
+
+                const matchesSearch =
+                  address.includes(query) ||
+                  buyerName.includes(query) ||
+                  sellerName.includes(query) ||
+                  escrowNumber.includes(query);
+
+                if (!matchesSearch) return false;
+              }
 
               switch (selectedStatus) {
                 case 'active':

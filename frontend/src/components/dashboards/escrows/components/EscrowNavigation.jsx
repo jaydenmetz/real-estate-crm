@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Paper,
@@ -13,6 +13,8 @@ import {
   IconButton,
   Badge,
   alpha,
+  TextField,
+  InputAdornment,
 } from '@mui/material';
 import {
   Sort,
@@ -21,6 +23,8 @@ import {
   ViewModule,
   ViewList,
   TableChart,
+  Search as SearchIcon,
+  Clear as ClearIcon,
 } from '@mui/icons-material';
 
 /**
@@ -48,7 +52,27 @@ const EscrowNavigation = ({
   showCalendar,
   setShowCalendar,
   archivedCount,
+  searchQuery,
+  setSearchQuery,
 }) => {
+  // Local state for search input (immediate feedback)
+  const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery || '');
+
+  // Debounced search - only update parent state after 300ms of no typing
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setSearchQuery(localSearchQuery);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [localSearchQuery, setSearchQuery]);
+
+  // Clear search
+  const handleClearSearch = useCallback(() => {
+    setLocalSearchQuery('');
+    setSearchQuery('');
+  }, [setSearchQuery]);
+
   return (
     <>
       {/* Navigation Bar with Tabs and Controls */}
@@ -121,6 +145,43 @@ const EscrowNavigation = ({
             flex: '0 0 auto',
             marginLeft: 'auto',
           }}>
+            {/* Search Bar */}
+            <TextField
+              size="small"
+              placeholder="Search escrows..."
+              value={localSearchQuery}
+              onChange={(e) => setLocalSearchQuery(e.target.value)}
+              variant="outlined"
+              sx={{
+                minWidth: 200,
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: 'transparent',
+                  borderRadius: 1,
+                  '&:hover fieldset': {
+                    borderColor: 'primary.main',
+                  },
+                },
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ fontSize: 18, color: 'text.secondary' }} />
+                  </InputAdornment>
+                ),
+                endAdornment: localSearchQuery && (
+                  <InputAdornment position="end">
+                    <IconButton
+                      size="small"
+                      onClick={handleClearSearch}
+                      sx={{ padding: 0.5 }}
+                    >
+                      <ClearIcon sx={{ fontSize: 16 }} />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+
             {/* Scope Dropdown */}
             <FormControl size="small" variant="standard" sx={{ minWidth: 110 }}>
               <Select
@@ -378,6 +439,43 @@ const EscrowNavigation = ({
 
           {/* Right side controls */}
           <Box sx={{ display: 'flex', gap: 1.5, alignItems: 'center', flex: '0 0 auto', marginLeft: 'auto' }}>
+            {/* Search Bar - Mobile/Tablet */}
+            <TextField
+              size="small"
+              placeholder="Search..."
+              value={localSearchQuery}
+              onChange={(e) => setLocalSearchQuery(e.target.value)}
+              variant="outlined"
+              sx={{
+                minWidth: 150,
+                '& .MuiOutlinedInput-root': {
+                  backgroundColor: 'transparent',
+                  borderRadius: 1,
+                  '&:hover fieldset': {
+                    borderColor: 'primary.main',
+                  },
+                },
+              }}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+                  </InputAdornment>
+                ),
+                endAdornment: localSearchQuery && (
+                  <InputAdornment position="end">
+                    <IconButton
+                      size="small"
+                      onClick={handleClearSearch}
+                      sx={{ padding: 0.5 }}
+                    >
+                      <ClearIcon sx={{ fontSize: 14 }} />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+
             {/* Scope Dropdown - Mobile */}
             <FormControl size="small" variant="standard" sx={{ minWidth: 100 }}>
               <Select

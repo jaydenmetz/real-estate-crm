@@ -155,6 +155,7 @@ const EscrowsDashboard = () => {
   const [dateRangeFilter, setDateRangeFilter] = useState('1M'); // '1D', '1M', '1Y', 'YTD', or null for custom
   const [customStartDate, setCustomStartDate] = useState(null);
   const [customEndDate, setCustomEndDate] = useState(null);
+  const [searchQuery, setSearchQuery] = useState(''); // Search filter state
   const [stats, setStats] = useState({
     totalEscrows: 0,
     activeEscrows: 0,
@@ -896,6 +897,8 @@ const EscrowsDashboard = () => {
         showCalendar={showCalendar}
         setShowCalendar={setShowCalendar}
         archivedCount={archivedCount}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
       />
 
         {/* Enhanced Charts - REMOVED PER USER REQUEST */}
@@ -1082,6 +1085,7 @@ const EscrowsDashboard = () => {
             handleEscrowClick={handleEscrowClick}
             loadMoreEscrows={loadMoreEscrows}
             safeFormatDate={safeFormatDate}
+            searchQuery={searchQuery}
           />
         );
       })()}
