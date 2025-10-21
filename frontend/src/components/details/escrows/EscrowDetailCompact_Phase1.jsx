@@ -20,11 +20,12 @@ import { useEscrowWebSocket } from '../../../hooks/useEscrowWebSocket';
 import EscrowDetailHero from './components/EscrowDetailHero';
 import ActivityFeedBottomTab from './components/ActivityFeedBottomTab';
 
-// Keep old widgets temporarily (Phase 2 will replace these)
-import TimelineWidget from './components/TimelineWidget';
-import FinancialsWidget from './components/FinancialsWidget';
-import PeopleWidget from './components/PeopleWidget';
-import DocumentsWidget from './components/DocumentsWidget';
+// Phase 2: New white card widgets
+import TimelineWidget_White from './components/TimelineWidget_White';
+import FinancialsWidget_White from './components/FinancialsWidget_White';
+import PeopleWidget_White from './components/PeopleWidget_White';
+import ChecklistsWidget_White from './components/ChecklistsWidget_White';
+import PlaceholderWidget from './components/PlaceholderWidget';
 
 // Modals (will update in Phase 3)
 import FinancialsModal from './components/FinancialsModal';
@@ -152,7 +153,7 @@ const EscrowDetailCompact = () => {
   const [financialsModalOpen, setFinancialsModalOpen] = useState(false);
   const [timelineModalOpen, setTimelineModalOpen] = useState(false);
   const [peopleModalOpen, setPeopleModalOpen] = useState(false);
-  const [documentsModalOpen, setDocumentsModalOpen] = useState(false);
+  const [checklistsModalOpen, setChecklistsModalOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   // Save sidebar states to localStorage
@@ -244,16 +245,17 @@ const EscrowDetailCompact = () => {
         {/* Left Sidebar - Blank for now */}
         <Sidebar collapsed={leftSidebarCollapsed}>
           <SidebarHeader>
-            <Typography variant="subtitle2" fontWeight="600" color="text.secondary">
-              Quick Actions
-            </Typography>
-            <IconButton
-              size="small"
-              onClick={() => setLeftSidebarCollapsed(true)}
-              sx={{ ml: 1 }}
-            >
-              <CloseIcon size={18} />
-            </IconButton>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+              <Typography variant="subtitle2" fontWeight="600" color="text.secondary">
+                Quick Actions
+              </Typography>
+              <IconButton
+                size="small"
+                onClick={() => setLeftSidebarCollapsed(true)}
+              >
+                <CloseIcon size={18} />
+              </IconButton>
+            </Box>
           </SidebarHeader>
           <SidebarContent>
             <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 4 }}>
@@ -270,50 +272,53 @@ const EscrowDetailCompact = () => {
             onUpdate={handleUpdate}
           />
 
-          {/* Old Widgets (Phase 2 will replace these) */}
+          {/* Phase 2: New White Card Widgets */}
           <WidgetsGrid>
-            <TimelineWidget
+            <TimelineWidget_White
               escrow={escrow}
               loading={false}
               onClick={() => setTimelineModalOpen(true)}
             />
 
-            <FinancialsWidget
+            <FinancialsWidget_White
               escrow={escrow}
               loading={false}
               onClick={() => setFinancialsModalOpen(true)}
             />
 
-            <PeopleWidget
+            <PeopleWidget_White
               escrow={escrow}
               loading={false}
               onClick={() => setPeopleModalOpen(true)}
             />
 
-            <DocumentsWidget
+            <ChecklistsWidget_White
               escrow={escrow}
               loading={false}
-              onClick={() => {
-                setSelectedCategory('Purchase Agreement');
-                setDocumentsModalOpen(true);
-              }}
+              onClick={() => setChecklistsModalOpen(true)}
             />
           </WidgetsGrid>
+
+          {/* 5th Widget - Full Width Placeholder */}
+          <Box sx={{ mt: 2 }}>
+            <PlaceholderWidget />
+          </Box>
         </MainContent>
 
         {/* Right Sidebar - Blank for now */}
         <Sidebar collapsed={rightSidebarCollapsed}>
           <SidebarHeader>
-            <IconButton
-              size="small"
-              onClick={() => setRightSidebarCollapsed(true)}
-              sx={{ mr: 1 }}
-            >
-              <CloseIcon size={18} />
-            </IconButton>
-            <Typography variant="subtitle2" fontWeight="600" color="text.secondary">
-              Smart Context
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+              <IconButton
+                size="small"
+                onClick={() => setRightSidebarCollapsed(true)}
+              >
+                <CloseIcon size={18} />
+              </IconButton>
+              <Typography variant="subtitle2" fontWeight="600" color="text.secondary">
+                Smart Context
+              </Typography>
+            </Box>
           </SidebarHeader>
           <SidebarContent>
             <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 4 }}>
@@ -368,9 +373,9 @@ const EscrowDetailCompact = () => {
       />
 
       <DocumentsDetailModal
-        open={documentsModalOpen}
+        open={checklistsModalOpen}
         onClose={() => {
-          setDocumentsModalOpen(false);
+          setChecklistsModalOpen(false);
           setSelectedCategory(null);
         }}
         escrow={escrow}
