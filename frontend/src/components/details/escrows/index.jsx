@@ -263,15 +263,7 @@ const EscrowDetailCompact = () => {
 
   return (
     <PageContainer>
-      {/* Hero Card - Full Width */}
-      <Box sx={{ maxWidth: '1800px', margin: '0 auto', px: 8, pt: 3 }}>
-        <EscrowDetailHero
-          escrow={escrow}
-          onUpdate={handleUpdate}
-        />
-      </Box>
-
-      {/* Main Layout with Sidebars */}
+      {/* Main Layout with Sidebars - Includes Hero and Widgets */}
       <LayoutContainer>
         {/* Left Sidebar */}
         <Sidebar isOpen={!leftSidebarCollapsed}>
@@ -297,8 +289,14 @@ const EscrowDetailCompact = () => {
           </SidebarInner>
         </Sidebar>
 
-        {/* Main Content - Expands/Collapses with sidebars */}
+        {/* Main Content - Hero + Widgets */}
         <MainContent>
+          {/* Hero Card */}
+          <EscrowDetailHero
+            escrow={escrow}
+            onUpdate={handleUpdate}
+          />
+
           {/* Phase 2: New White Card Widgets */}
           <WidgetsGrid>
             <TimelineWidget_White
