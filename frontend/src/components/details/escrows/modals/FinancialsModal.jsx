@@ -6,16 +6,17 @@ import {
   Typography,
   IconButton,
   Divider,
+  Grid,
 } from '@mui/material';
-import { Close, AttachMoney, TrendingUp } from '@mui/icons-material';
+import { X as CloseIcon } from 'lucide-react';
 import { styled } from '@mui/material/styles';
 import EditableField from '../components/EditableField';
 import { formatCurrency, parseCurrency, parsePercentage } from '../../../../utils/formatters';
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialog-paper': {
-    borderRadius: theme.spacing(2),
-    maxWidth: 700,
+    borderRadius: theme.spacing(3),
+    maxWidth: 1400,
     width: '100%',
   },
 }));
@@ -29,6 +30,28 @@ const HeaderGradient = styled(Box)(({ theme }) => ({
   alignItems: 'center',
 }));
 
+const PropertyHeader = styled(Box)(({ theme }) => ({
+  padding: theme.spacing(2.5, 3),
+  backgroundColor: theme.palette.grey[50],
+  borderBottom: `1px solid ${theme.palette.divider}`,
+}));
+
+const SectionBox = styled(Box)(({ theme }) => ({
+  backgroundColor: 'white',
+  border: `1px solid ${theme.palette.divider}`,
+  borderRadius: theme.spacing(2),
+  padding: theme.spacing(3),
+}));
+
+const SectionTitle = styled(Typography)(({ theme }) => ({
+  fontWeight: 700,
+  fontSize: '1rem',
+  color: theme.palette.text.primary,
+  marginBottom: theme.spacing(2.5),
+  paddingBottom: theme.spacing(1),
+  borderBottom: `2px solid ${theme.palette.divider}`,
+}));
+
 const FinancialRow = styled(Box)(({ theme }) => ({
   display: 'flex',
   justifyContent: 'space-between',
@@ -36,41 +59,57 @@ const FinancialRow = styled(Box)(({ theme }) => ({
   padding: theme.spacing(1.5, 0),
 }));
 
-const HighlightBox = styled(Box)(({ theme }) => ({
-  padding: theme.spacing(2.5),
-  borderRadius: theme.spacing(2),
-  background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
-  color: 'white',
-  marginTop: theme.spacing(2),
-  marginBottom: theme.spacing(2),
+const SubRow = styled(Box)(({ theme}) => ({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  padding: theme.spacing(1, 0, 1, 3),
 }));
 
-const SectionTitle = styled(Typography)(({ theme }) => ({
-  fontWeight: 700,
-  textTransform: 'uppercase',
-  letterSpacing: 1,
-  fontSize: '0.75rem',
-  color: theme.palette.text.secondary,
-  marginBottom: theme.spacing(1.5),
+const TotalRow = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  padding: theme.spacing(2),
+  backgroundColor: '#1e293b',
+  color: 'white',
+  borderRadius: theme.spacing(1),
   marginTop: theme.spacing(2),
 }));
 
 const FinancialsModal = ({ open, onClose, escrow, onUpdate }) => {
   const financials = escrow?.financials || {};
-  const purchasePrice = escrow?.purchase_price || escrow?.purchasePrice || 0;
+  const details = escrow?.details || {};
 
-  // Editable fields
-  const commissionRate = financials.commissionRate || 3.0;
-  const grossCommission = financials.grossCommission || (purchasePrice * (commissionRate / 100));
+  // Property details
+  const propertyAddress = escrow?.property_address || '';
+  const displayId = escrow?.display_id || '';
+
+  // Purchase Price (from escrow table)
+  const purchasePrice = escrow?.purchase_price || 0;
+
+  // Deal Cost Breakdown
+  const commissionPercentage = financials.commissionPercentage || escrow?.commission_percentage || 2.5;
+  const baseCommission = financials.baseCommission || (purchasePrice * commissionPercentage / 100);
+  const grossCommission = financials.grossCommission || baseCommission;
+  const referralFees = financials.referralFees || 0;
+  const grossCommissionFees = referralFees; // Same value, different label
+  const adjustedGross = grossCommission - grossCommissionFees;
+  const netCommission = adjustedGross; // After referral fees
   const franchiseFees = financials.franchiseFees || 0;
-  const splitPercentage = financials.splitPercentage || 80;
+  const dealExpense = franchiseFees;
+  const dealNet = netCommission - dealExpense;
+
+  // Agent Cost Breakdown
+  const agentGCI = dealNet; // Same as Deal Net
+  const splitPercentage = financials.splitPercentage || 75;
+  const agentCommission = agentGCI * (splitPercentage / 100);
   const transactionFee = financials.transactionFee || 285;
   const tcFee = financials.tcFee || 250;
-
-  // Calculated fields
-  const adjustedGross = grossCommission - franchiseFees;
-  const agentSplit = adjustedGross * (splitPercentage / 100);
-  const agentNet = agentSplit - transactionFee - tcFee;
+  const agentSplit = agentCommission - transactionFee - tcFee;
+  const agent1099Income = agentSplit;
+  const excessPayment = agent1099Income; // Same value for now
+  const agentNet = agent1099Income;
 
   // Handle field update
   const handleUpdateField = async (field, value) => {
@@ -85,196 +124,277 @@ const FinancialsModal = ({ open, onClose, escrow, onUpdate }) => {
   };
 
   return (
-    <StyledDialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <StyledDialog open={open} onClose={onClose} maxWidth={false}>
       <HeaderGradient>
         <Box>
           <Typography variant="h5" fontWeight="700">
             Financial Breakdown
           </Typography>
           <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.9)', mt: 0.5 }}>
-            Complete commission calculation
+            Complete commission calculation and expense tracking
           </Typography>
         </Box>
         <IconButton onClick={onClose} sx={{ color: 'white' }}>
-          <Close />
+          <CloseIcon size={24} />
         </IconButton>
       </HeaderGradient>
 
-      <DialogContent sx={{ p: 3 }}>
-        <Typography variant="caption" color="text.secondary" fontWeight="600" sx={{ mb: 2, display: 'block' }}>
-          Click any value to edit • Calculated fields update automatically
-        </Typography>
-
-        {/* Deal Overview */}
-        <SectionTitle>Deal Overview</SectionTitle>
-
-        <FinancialRow>
-          <Typography variant="body1" color="text.primary" fontWeight="600">
-            Purchase Price
-          </Typography>
-          <Typography variant="h6" fontWeight="700" color="primary.main">
-            {formatCurrency(purchasePrice)}
-          </Typography>
-        </FinancialRow>
-
-        <FinancialRow>
-          <Box display="flex" alignItems="center" gap={1}>
-            <Typography variant="body1" color="text.primary">
-              Commission Rate
+      <PropertyHeader>
+        <Box display="flex" justifyContent="space-between" alignItems="center">
+          <Box>
+            <Typography variant="body2" color="text.secondary" fontWeight="600">
+              Property Address:
             </Typography>
-            <TrendingUp sx={{ fontSize: 18, color: 'success.main' }} />
+            <Typography variant="h6" fontWeight="700" color="text.primary">
+              {propertyAddress}
+            </Typography>
           </Box>
-          <EditableField
-            value={commissionRate}
-            onSave={(value) => handleUpdateField('commissionRate', value)}
-            type="number"
-            format={(val) => `${val}%`}
-            parse={parsePercentage}
-            displayClass="MuiTypography-root MuiTypography-h6"
-            placeholder="0.0%"
-            disabled={!onUpdate}
-          />
-        </FinancialRow>
-
-        <Divider sx={{ my: 2 }} />
-
-        {/* Commission Breakdown */}
-        <SectionTitle>Commission Breakdown</SectionTitle>
-
-        <FinancialRow>
-          <Typography variant="body1" color="text.primary">
-            Gross Commission ({commissionRate}%)
-          </Typography>
-          <EditableField
-            value={grossCommission}
-            onSave={(value) => handleUpdateField('grossCommission', value)}
-            type="currency"
-            format={formatCurrency}
-            parse={parseCurrency}
-            displayClass="MuiTypography-root MuiTypography-body1"
-            disabled={!onUpdate}
-          />
-        </FinancialRow>
-
-        <FinancialRow>
-          <Typography variant="body2" color="text.secondary" sx={{ pl: 2 }}>
-            Franchise Fees
-          </Typography>
-          <Box display="flex" alignItems="center" gap={1}>
-            <Typography variant="body2" color="error.main">-</Typography>
-            <EditableField
-              value={franchiseFees}
-              onSave={(value) => handleUpdateField('franchiseFees', value)}
-              type="currency"
-              format={formatCurrency}
-              parse={parseCurrency}
-              displayClass="MuiTypography-root MuiTypography-body2"
-              disabled={!onUpdate}
-            />
+          <Box textAlign="right">
+            <Typography variant="body2" color="text.secondary" fontWeight="600">
+              Deal ID:
+            </Typography>
+            <Typography variant="h6" fontWeight="700" color="primary.main">
+              {displayId}
+            </Typography>
           </Box>
-        </FinancialRow>
+        </Box>
+      </PropertyHeader>
 
-        <Divider sx={{ my: 2 }} />
+      <DialogContent sx={{ p: 4, backgroundColor: 'grey.50' }}>
+        <Grid container spacing={3}>
+          {/* Left Column - Deal Cost Breakdown */}
+          <Grid item xs={12} md={6}>
+            <SectionBox>
+              <SectionTitle>Deal Cost Breakdown</SectionTitle>
 
-        <FinancialRow>
-          <Typography variant="body1" fontWeight="600" color="text.primary">
-            Deal Net (After Franchise Fees)
-          </Typography>
-          <Typography variant="h6" fontWeight="700" color="primary.main">
-            {formatCurrency(adjustedGross)}
-          </Typography>
-        </FinancialRow>
+              <FinancialRow>
+                <Typography variant="body1" fontWeight="600">
+                  Base Commission
+                </Typography>
+                <EditableField
+                  value={baseCommission}
+                  onSave={(value) => handleUpdateField('baseCommission', value)}
+                  type="currency"
+                  format={formatCurrency}
+                  parse={parseCurrency}
+                  displayClass="MuiTypography-root MuiTypography-body1"
+                  disabled={!onUpdate}
+                />
+              </FinancialRow>
 
-        <Divider sx={{ my: 2 }} />
+              <FinancialRow>
+                <Typography variant="body1" fontWeight="600">
+                  Gross Commission
+                </Typography>
+                <EditableField
+                  value={grossCommission}
+                  onSave={(value) => handleUpdateField('grossCommission', value)}
+                  type="currency"
+                  format={formatCurrency}
+                  parse={parseCurrency}
+                  displayClass="MuiTypography-root MuiTypography-body1"
+                  disabled={!onUpdate}
+                />
+              </FinancialRow>
 
-        {/* Agent Split */}
-        <SectionTitle>Your Split</SectionTitle>
+              <FinancialRow>
+                <Typography variant="body1" fontWeight="600">
+                  Gross Commission Fees
+                </Typography>
+                <Typography variant="body1" fontWeight="600" color="error.main">
+                  {formatCurrency(-grossCommissionFees)}
+                </Typography>
+              </FinancialRow>
 
-        <FinancialRow>
-          <Typography variant="body1" color="text.primary">
-            Split Percentage
-          </Typography>
-          <EditableField
-            value={splitPercentage}
-            onSave={(value) => handleUpdateField('splitPercentage', value)}
-            type="number"
-            format={(val) => `${val}%`}
-            parse={parsePercentage}
-            displayClass="MuiTypography-root MuiTypography-body1"
-            placeholder="0%"
-            disabled={!onUpdate}
-          />
-        </FinancialRow>
+              <SubRow>
+                <Typography variant="body2" color="text.secondary">
+                  Referral Fees ({formatCurrency(-referralFees)})
+                </Typography>
+                <EditableField
+                  value={referralFees}
+                  onSave={(value) => handleUpdateField('referralFees', value)}
+                  type="currency"
+                  format={(val) => formatCurrency(-val)}
+                  parse={parseCurrency}
+                  displayClass="MuiTypography-root MuiTypography-body2"
+                  disabled={!onUpdate}
+                />
+              </SubRow>
 
-        <FinancialRow>
-          <Typography variant="body1" color="text.primary">
-            Agent Commission ({splitPercentage}%)
-          </Typography>
-          <Typography variant="body1" fontWeight="600" color="success.main">
-            {formatCurrency(agentSplit)}
-          </Typography>
-        </FinancialRow>
+              <Divider sx={{ my: 1.5 }} />
 
-        <Divider sx={{ my: 1.5 }} />
+              <FinancialRow>
+                <Typography variant="body1" fontWeight="600">
+                  Adjusted Gross
+                </Typography>
+                <Typography variant="body1" fontWeight="700">
+                  {formatCurrency(adjustedGross)}
+                </Typography>
+              </FinancialRow>
 
-        <FinancialRow>
-          <Typography variant="body2" color="text.secondary" sx={{ pl: 2 }}>
-            Transaction Fee
-          </Typography>
-          <Box display="flex" alignItems="center" gap={1}>
-            <Typography variant="body2" color="error.main">-</Typography>
-            <EditableField
-              value={transactionFee}
-              onSave={(value) => handleUpdateField('transactionFee', value)}
-              type="currency"
-              format={formatCurrency}
-              parse={parseCurrency}
-              displayClass="MuiTypography-root MuiTypography-body2"
-              disabled={!onUpdate}
-            />
-          </Box>
-        </FinancialRow>
+              <FinancialRow>
+                <Typography variant="body1" fontWeight="600">
+                  Net Commission
+                </Typography>
+                <Typography variant="body1" fontWeight="700">
+                  {formatCurrency(netCommission)}
+                </Typography>
+              </FinancialRow>
 
-        <FinancialRow>
-          <Typography variant="body2" color="text.secondary" sx={{ pl: 2 }}>
-            TC Fee
-          </Typography>
-          <Box display="flex" alignItems="center" gap={1}>
-            <Typography variant="body2" color="error.main">-</Typography>
-            <EditableField
-              value={tcFee}
-              onSave={(value) => handleUpdateField('tcFee', value)}
-              type="currency"
-              format={formatCurrency}
-              parse={parseCurrency}
-              displayClass="MuiTypography-root MuiTypography-body2"
-              disabled={!onUpdate}
-            />
-          </Box>
-        </FinancialRow>
+              <FinancialRow>
+                <Typography variant="body1" fontWeight="600">
+                  Deal Expense
+                </Typography>
+                <Typography variant="body1" fontWeight="600" color="error.main">
+                  {formatCurrency(-dealExpense)}
+                </Typography>
+              </FinancialRow>
 
-        {/* Agent Net (Highlighted) */}
-        <HighlightBox>
-          <Box display="flex" justifyContent="space-between" alignItems="center">
-            <Box>
-              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.9)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                Your Net Income
-              </Typography>
-              <Typography variant="h4" fontWeight="700" sx={{ color: 'white', mt: 0.5 }}>
-                {formatCurrency(agentNet)}
-              </Typography>
-              <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.8)', mt: 0.5, display: 'block' }}>
-                1099 Income (After All Fees)
-              </Typography>
-            </Box>
-            <AttachMoney sx={{ fontSize: 48, color: 'rgba(255,255,255,0.3)' }} />
-          </Box>
-        </HighlightBox>
+              <SubRow>
+                <Typography variant="body2" color="text.secondary">
+                  Franchise Fees ({formatCurrency(-franchiseFees)})
+                </Typography>
+                <EditableField
+                  value={franchiseFees}
+                  onSave={(value) => handleUpdateField('franchiseFees', value)}
+                  type="currency"
+                  format={(val) => formatCurrency(-val)}
+                  parse={parseCurrency}
+                  displayClass="MuiTypography-root MuiTypography-body2"
+                  disabled={!onUpdate}
+                />
+              </SubRow>
 
-        <Box mt={3} p={2} sx={{ backgroundColor: 'grey.50', borderRadius: 2 }}>
+              <TotalRow>
+                <Typography variant="h6" fontWeight="700">
+                  Deal Net
+                </Typography>
+                <Typography variant="h5" fontWeight="700">
+                  {formatCurrency(dealNet)}
+                </Typography>
+              </TotalRow>
+            </SectionBox>
+          </Grid>
+
+          {/* Right Column - Agent Cost Breakdown */}
+          <Grid item xs={12} md={6}>
+            <SectionBox>
+              <SectionTitle>Agent Cost Breakdown</SectionTitle>
+
+              <FinancialRow>
+                <Typography variant="body1" fontWeight="600">
+                  Deal Net
+                </Typography>
+                <Typography variant="body1" fontWeight="700">
+                  {formatCurrency(dealNet)}
+                </Typography>
+              </FinancialRow>
+
+              <FinancialRow>
+                <Typography variant="body1" fontWeight="600">
+                  Agent GCI
+                </Typography>
+                <Typography variant="body1" fontWeight="700">
+                  {formatCurrency(agentGCI)}
+                </Typography>
+              </FinancialRow>
+
+              <FinancialRow>
+                <Typography variant="body1" fontWeight="600">
+                  Jayden Metz's Split
+                </Typography>
+                <Typography variant="body1" fontWeight="700">
+                  {formatCurrency(agentSplit)}
+                </Typography>
+              </FinancialRow>
+
+              <SubRow>
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Agent Commission -
+                  </Typography>
+                  <EditableField
+                    value={splitPercentage}
+                    onSave={(value) => handleUpdateField('splitPercentage', value)}
+                    type="number"
+                    format={(val) => `${val}%`}
+                    parse={parsePercentage}
+                    displayClass="MuiTypography-root MuiTypography-body2"
+                    placeholder="0%"
+                    disabled={!onUpdate}
+                  />
+                  <Typography variant="body2" color="text.secondary" component="span">
+                    {' '}({formatCurrency(agentCommission)})
+                  </Typography>
+                </Box>
+              </SubRow>
+
+              <SubRow>
+                <Typography variant="body2" color="text.secondary">
+                  Transaction Fee ({formatCurrency(-transactionFee)})
+                </Typography>
+                <EditableField
+                  value={transactionFee}
+                  onSave={(value) => handleUpdateField('transactionFee', value)}
+                  type="currency"
+                  format={(val) => formatCurrency(-val)}
+                  parse={parseCurrency}
+                  displayClass="MuiTypography-root MuiTypography-body2"
+                  disabled={!onUpdate}
+                />
+              </SubRow>
+
+              <SubRow>
+                <Typography variant="body2" color="text.secondary">
+                  TC Fee ({formatCurrency(-tcFee)})
+                </Typography>
+                <EditableField
+                  value={tcFee}
+                  onSave={(value) => handleUpdateField('tcFee', value)}
+                  type="currency"
+                  format={(val) => formatCurrency(-val)}
+                  parse={parseCurrency}
+                  displayClass="MuiTypography-root MuiTypography-body2"
+                  disabled={!onUpdate}
+                />
+              </SubRow>
+
+              <Divider sx={{ my: 1.5 }} />
+
+              <FinancialRow>
+                <Typography variant="body1" fontWeight="600">
+                  Agent 1099 Income
+                </Typography>
+                <Typography variant="body1" fontWeight="700" color="success.main">
+                  {formatCurrency(agent1099Income)}
+                </Typography>
+              </FinancialRow>
+
+              <FinancialRow>
+                <Typography variant="body1" fontWeight="600">
+                  Excess Payment
+                </Typography>
+                <Typography variant="body1" fontWeight="700" color="success.main">
+                  {formatCurrency(excessPayment)}
+                </Typography>
+              </FinancialRow>
+
+              <TotalRow>
+                <Typography variant="h6" fontWeight="700">
+                  Agent Net
+                </Typography>
+                <Typography variant="h5" fontWeight="700">
+                  {formatCurrency(agentNet)}
+                </Typography>
+              </TotalRow>
+            </SectionBox>
+          </Grid>
+        </Grid>
+
+        <Box mt={3} p={2} sx={{ backgroundColor: 'white', borderRadius: 2, border: '1px solid', borderColor: 'divider' }}>
           <Typography variant="caption" color="text.secondary">
-            <strong>Note:</strong> Agent Net is calculated automatically based on your commission split and fees.
-            This is your 1099 income before taxes.
+            <strong>Note:</strong> Click any editable value to update. Calculated fields will automatically update based on your changes.
+            Agent Net represents your 1099 income before taxes.
           </Typography>
         </Box>
       </DialogContent>
