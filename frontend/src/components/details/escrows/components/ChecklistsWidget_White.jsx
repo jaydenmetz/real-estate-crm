@@ -4,7 +4,7 @@ import { styled } from '@mui/material/styles';
 import { FileText } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-// White card with orange icon badge
+// White card with orange icon badge (matched to People widget height)
 const WhiteCard = styled(Box)(({ theme }) => ({
   backgroundColor: 'white',
   borderRadius: theme.spacing(2),
@@ -12,12 +12,11 @@ const WhiteCard = styled(Box)(({ theme }) => ({
   borderColor: theme.palette.grey[200],
   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
   padding: theme.spacing(3),
-  minHeight: 300,
-  maxHeight: 400,
+  minHeight: 380, // Matched to People widget
+  maxHeight: 450,
   display: 'flex',
   flexDirection: 'column',
   cursor: 'pointer',
-  overflow: 'hidden', // Prevent content overflow
   transition: 'all 0.2s',
   '&:hover': {
     boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12)',
