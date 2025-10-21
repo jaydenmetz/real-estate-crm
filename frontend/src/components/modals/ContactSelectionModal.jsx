@@ -54,55 +54,45 @@ export const ContactSelectionModal = ({
   const fetchContacts = async () => {
     setLoading(true);
     try {
-      // TODO: When contacts API is ready, filter by role if provided
-      // const params = roleType ? { role: roleType } : {};
-      // const response = await contactsAPI.getAll(params);
+      // Fetch all contacts from the API
+      const response = await contactsAPI.getAll();
 
-      // For now, return mock data until contacts table is ready
-      const mockContacts = [
-        {
-          id: '1',
-          full_name: 'John Michael Doe',
-          email: 'john.doe@email.com',
-          phone: '(661) 555-0100',
-          company_name: 'ABC Realty',
-          roles: [{ type: 'client' }, { type: 'buyer' }],
-        },
-        {
-          id: '2',
-          full_name: 'Jane Elizabeth Smith',
-          email: 'jane.smith@email.com',
-          phone: '(661) 555-0101',
-          company_name: 'XYZ Lending',
-          roles: [{ type: 'lender' }],
-        },
-        {
-          id: '3',
-          full_name: 'Robert Christopher Johnson',
-          email: 'robert.j@email.com',
-          phone: '(661) 555-0102',
-          company_name: 'First American Title',
-          roles: [{ type: 'escrow_officer' }],
-        },
-        {
-          id: '4',
-          full_name: 'Sarah Williams',
-          email: 'sarah.w@coldwell.com',
-          phone: '(661) 555-0103',
-          company_name: 'Coldwell Banker',
-          roles: [{ type: 'listing_agent' }],
-        },
-        {
-          id: '5',
-          full_name: 'Michael Davis',
-          email: 'michael.d@email.com',
-          phone: '(661) 555-0104',
-          company_name: null,
-          roles: [{ type: 'seller' }],
-        },
-      ];
+      if (response.success && response.data) {
+        let allContacts = response.data;
 
-      setContacts(mockContacts);
+        // Sort by role type - prioritize contacts matching the role first
+        if (roleType) {
+          allContacts = allContacts.sort((a, b) => {
+            // Convert roleType to match database format (e.g., 'buyerAgent' -> 'agent')
+            const targetType = roleType === 'buyerAgent' || roleType === 'sellerAgent' ? 'agent' :
+                               roleType === 'escrowOfficer' ? 'title_officer' :
+                               roleType === 'loanOfficer' ? 'lender' :
+                               roleType;
+
+            const aMatches = a.contact_type === targetType;
+            const bMatches = b.contact_type === targetType;
+
+            if (aMatches && !bMatches) return -1;
+            if (!aMatches && bMatches) return 1;
+            return 0;
+          });
+        }
+
+        // Normalize the data structure
+        const normalizedContacts = allContacts.map(contact => ({
+          id: contact.id,
+          full_name: contact.full_name || `${contact.first_name || ''} ${contact.last_name || ''}`.trim(),
+          email: contact.email,
+          phone: contact.phone,
+          company_name: contact.company,
+          contact_type: contact.contact_type,
+          roles: [{ type: contact.contact_type }], // For backwards compatibility
+        }));
+
+        setContacts(normalizedContacts);
+      } else {
+        setContacts([]);
+      }
     } catch (error) {
       console.error('Failed to fetch contacts:', error);
       setContacts([]);
