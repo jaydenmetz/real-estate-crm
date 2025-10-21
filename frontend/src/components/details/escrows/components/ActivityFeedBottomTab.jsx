@@ -3,19 +3,18 @@ import { Box, Typography, IconButton } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { Activity, ChevronUp } from 'lucide-react';
 
-// Floating tab at bottom of screen (Phase 4 will make it expand upward)
+// Full-width tab at bottom of screen (same width as hero card)
 const FloatingTab = styled(Box)(({ theme }) => ({
   position: 'fixed',
   bottom: 0,
-  left: '50%',
-  transform: 'translateX(-50%)',
+  left: 0,
+  right: 0,
   zIndex: 1000,
   backgroundColor: theme.palette.background.paper,
-  borderTopLeftRadius: theme.spacing(2),
-  borderTopRightRadius: theme.spacing(2),
+  borderTopLeftRadius: theme.spacing(3),
+  borderTopRightRadius: theme.spacing(3),
   boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.15)',
-  padding: theme.spacing(2, 6),
-  minWidth: 280,
+  padding: theme.spacing(2),
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -24,7 +23,7 @@ const FloatingTab = styled(Box)(({ theme }) => ({
   transition: 'all 0.2s ease-in-out',
   '&:hover': {
     boxShadow: '0 -6px 30px rgba(0, 0, 0, 0.2)',
-    transform: 'translateX(-50%) translateY(-2px)',
+    transform: 'translateY(-2px)',
   },
 }));
 

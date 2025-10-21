@@ -36,49 +36,54 @@ import ChecklistsModal from './modals/ChecklistsModal';
 
 const PageContainer = styled(Box)(({ theme }) => ({
   width: '100%',
-  maxWidth: '100vw',
-  padding: theme.spacing(3),
   minHeight: 'calc(100vh - 64px)',
   backgroundColor: theme.palette.grey[50],
   paddingBottom: theme.spacing(10), // Space for activity feed tab
 }));
 
-const ContentWrapper = styled(Box)(({ theme }) => ({
+const LayoutContainer = styled(Box)(({ theme }) => ({
   display: 'flex',
-  justifyContent: 'center',
-  width: '100%',
+  gap: theme.spacing(3),
   maxWidth: '1800px',
   margin: '0 auto',
+  padding: theme.spacing(3),
   position: 'relative',
+  [theme.breakpoints.down('lg')]: {
+    flexDirection: 'column',
+  },
+}));
+
+const Sidebar = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'isOpen',
+})(({ isOpen, theme }) => ({
+  width: isOpen ? 280 : 0,
+  opacity: isOpen ? 1 : 0,
+  overflow: 'hidden',
+  transition: 'all 0.3s ease-in-out',
+  flexShrink: 0,
+  [theme.breakpoints.down('lg')]: {
+    display: 'none',
+  },
+}));
+
+const SidebarInner = styled(Box)(({ theme }) => ({
+  width: 280,
+  backgroundColor: theme.palette.background.paper,
+  borderRadius: theme.spacing(2),
+  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+  display: 'flex',
+  flexDirection: 'column',
+  height: 'fit-content',
+  position: 'sticky',
+  top: theme.spacing(3),
 }));
 
 const MainContent = styled(Box)(({ theme }) => ({
   flex: 1,
-  maxWidth: '1200px',
   display: 'flex',
   flexDirection: 'column',
   gap: theme.spacing(3),
-}));
-
-const Sidebar = styled(Box, {
-  shouldForwardProp: (prop) => prop !== 'collapsed' && prop !== 'side',
-})(({ collapsed, side, theme }) => ({
-  position: 'fixed',
-  top: 88, // Below navbar (64px) + padding
-  [side]: collapsed ? -280 : 24, // Slide in/out from edge
-  width: 280,
-  height: 'calc(100vh - 112px)', // Full height minus navbar and padding
-  display: 'flex',
-  flexDirection: 'column',
-  backgroundColor: theme.palette.background.paper,
-  borderRadius: theme.spacing(2),
-  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-  overflow: 'hidden',
-  transition: `${side} 0.3s ease-in-out`,
-  zIndex: 10,
-  [theme.breakpoints.down('lg')]: {
-    display: 'none',
-  },
+  minWidth: 0, // Allow flex shrinking
 }));
 
 const SidebarHeader = styled(Box)(({ theme }) => ({
@@ -244,59 +249,42 @@ const EscrowDetailCompact = () => {
 
   return (
     <PageContainer>
-      {/* Left Sidebar - Fixed position */}
-      <Sidebar collapsed={leftSidebarCollapsed} side="left">
-        <SidebarHeader>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-            <Typography variant="subtitle2" fontWeight="600" color="text.secondary">
-              Quick Actions
-            </Typography>
-            <IconButton
-              size="small"
-              onClick={() => setLeftSidebarCollapsed(true)}
-            >
-              <CloseIcon size={18} />
-            </IconButton>
-          </Box>
-        </SidebarHeader>
-        <SidebarContent>
-          <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 4 }}>
-            Coming Soon
-          </Typography>
-        </SidebarContent>
-      </Sidebar>
+      {/* Hero Card - Full Width */}
+      <Box sx={{ maxWidth: '1800px', margin: '0 auto', px: 3, pt: 3 }}>
+        <EscrowDetailHero
+          escrow={escrow}
+          onUpdate={handleUpdate}
+        />
+      </Box>
 
-      {/* Right Sidebar - Fixed position */}
-      <Sidebar collapsed={rightSidebarCollapsed} side="right">
-        <SidebarHeader>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-            <IconButton
-              size="small"
-              onClick={() => setRightSidebarCollapsed(true)}
-            >
-              <CloseIcon size={18} />
-            </IconButton>
-            <Typography variant="subtitle2" fontWeight="600" color="text.secondary">
-              Smart Context
-            </Typography>
-          </Box>
-        </SidebarHeader>
-        <SidebarContent>
-          <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 4 }}>
-            Coming Soon
-          </Typography>
-        </SidebarContent>
-      </Sidebar>
+      {/* Main Layout with Sidebars */}
+      <LayoutContainer>
+        {/* Left Sidebar */}
+        <Sidebar isOpen={!leftSidebarCollapsed}>
+          <SidebarInner>
+            <SidebarHeader>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                <Typography variant="subtitle2" fontWeight="600" color="text.secondary">
+                  Quick Actions
+                </Typography>
+                <IconButton
+                  size="small"
+                  onClick={() => setLeftSidebarCollapsed(true)}
+                >
+                  <CloseIcon size={18} />
+                </IconButton>
+              </Box>
+            </SidebarHeader>
+            <SidebarContent>
+              <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 4 }}>
+                Coming Soon
+              </Typography>
+            </SidebarContent>
+          </SidebarInner>
+        </Sidebar>
 
-      {/* Main Content - Centered */}
-      <ContentWrapper>
+        {/* Main Content - Expands/Collapses with sidebars */}
         <MainContent>
-          {/* New Hero */}
-          <EscrowDetailHero
-            escrow={escrow}
-            onUpdate={handleUpdate}
-          />
-
           {/* Phase 2: New White Card Widgets */}
           <WidgetsGrid>
             <TimelineWidget_White
@@ -325,11 +313,33 @@ const EscrowDetailCompact = () => {
           </WidgetsGrid>
 
           {/* 5th Widget - Full Width Placeholder */}
-          <Box sx={{ mt: 2 }}>
-            <PlaceholderWidget />
-          </Box>
+          <PlaceholderWidget />
         </MainContent>
-      </ContentWrapper>
+
+        {/* Right Sidebar */}
+        <Sidebar isOpen={!rightSidebarCollapsed}>
+          <SidebarInner>
+            <SidebarHeader>
+              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+                <Typography variant="subtitle2" fontWeight="600" color="text.secondary">
+                  Smart Context
+                </Typography>
+                <IconButton
+                  size="small"
+                  onClick={() => setRightSidebarCollapsed(true)}
+                >
+                  <CloseIcon size={18} />
+                </IconButton>
+              </Box>
+            </SidebarHeader>
+            <SidebarContent>
+              <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 4 }}>
+                Coming Soon
+              </Typography>
+            </SidebarContent>
+          </SidebarInner>
+        </Sidebar>
+      </LayoutContainer>
 
       {/* Floating toggle buttons */}
       {leftSidebarCollapsed && (
@@ -350,7 +360,7 @@ const EscrowDetailCompact = () => {
         </ToggleButton>
       )}
 
-      {/* Activity Feed Bottom Tab */}
+      {/* Activity Feed Bottom Tab - Full Width */}
       <ActivityFeedBottomTab onClick={handleActivityFeedClick} />
 
       {/* Detail Modals (will update in Phase 3) */}

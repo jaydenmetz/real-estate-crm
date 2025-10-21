@@ -25,14 +25,12 @@ const Overlay = styled(motion.div)(({ theme }) => ({
   backdropFilter: 'blur(2px)',
 }));
 
-// Activity feed sheet that expands upward
+// Activity feed sheet that expands upward (full-width like bottom tab)
 const Sheet = styled(motion.div)(({ theme }) => ({
   position: 'fixed',
   bottom: 0,
-  left: '50%',
-  transform: 'translateX(-50%)',
-  width: '100%',
-  maxWidth: 800,
+  left: 0,
+  right: 0,
   maxHeight: '70vh',
   backgroundColor: theme.palette.background.paper,
   borderTopLeftRadius: theme.spacing(3),
