@@ -1,17 +1,13 @@
 /**
- * PHASE 8: Escrow Detail Page - Compact Redesign
+ * Escrow Detail Page Entry Point
  *
- * This is the main entry point for the escrow detail page.
- * It now uses the new compact redesign with:
- * - F-pattern layout (Left Sidebar | Hero + Widgets | Right Sidebar)
- * - 4 main widgets (Timeline, Financials, People, Documents)
- * - 4 detail modals (full editing functionality)
- * - Draggable activity feed (Apple Maps-style bottom sheet)
- * - WebSocket real-time updates
- *
- * Old layout archived - all functionality migrated to EscrowDetailCompact
+ * Phase 1: New layout with blue hero, blank sidebars, activity feed tab
+ * - Blue gradient hero (dynamic height, 4 stats grid)
+ * - Blank left/right sidebars with X toggles
+ * - Floating activity feed tab at bottom (Phase 4 will expand upward)
+ * - Old widgets (Phase 2 will replace with white cards)
  */
 
-import EscrowDetailCompact from './EscrowDetailCompact';
+import EscrowDetailCompact from './EscrowDetailCompact_Phase1';
 
 export default EscrowDetailCompact;
