@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import NewEscrowModal from '../../forms/NewEscrowModal';
+import NewEscrowModal from './modals/NewEscrowModal';
 // Import our new extracted components
 import EscrowHeroCard from './components/EscrowHeroCard';
 import EscrowStatsCards from './components/EscrowStatsCards';
