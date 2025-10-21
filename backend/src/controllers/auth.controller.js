@@ -716,7 +716,7 @@ class AuthController {
       // Generate new access token
       const accessToken = jwt.sign(
         {
-          id: tokenData.id,
+          id: tokenData.user_id, // CRITICAL FIX: Use user_id, not refresh token id
           email: tokenData.email,
           role: tokenData.role,
         },
@@ -730,7 +730,7 @@ class AuthController {
 
       const newRefreshToken = await RefreshTokenService.rotateRefreshToken(
         refreshToken,
-        tokenData.id,
+        tokenData.user_id, // CRITICAL FIX: Use user_id, not refresh token id
         ipAddress,
         userAgent,
       );
