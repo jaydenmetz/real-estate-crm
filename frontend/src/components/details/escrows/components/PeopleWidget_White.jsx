@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Typography, Avatar, Skeleton, Grid } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { Users, Phone } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ContactSelectionModal } from '../../../modals/ContactSelectionModal';
+import { escrowsAPI } from '../../../../services/api.service';
 
 // White card with purple icon badge
 const WhiteCard = styled(Box)(({ theme }) => ({
@@ -206,8 +207,36 @@ const ContactCellFilled = ({ contact, onClick }) => (
 const PeopleWidget_White = ({ escrow, loading, onClick, onUpdate }) => {
   const [selectedRole, setSelectedRole] = useState(null);
   const [contactModalOpen, setContactModalOpen] = useState(false);
+  const [people, setPeople] = useState({});
+  const [loadingPeople, setLoadingPeople] = useState(true);
 
-  if (loading) {
+  // Fetch people from the API when escrow ID changes
+  useEffect(() => {
+    const fetchPeople = async () => {
+      if (!escrow?.id) {
+        setPeople({});
+        setLoadingPeople(false);
+        return;
+      }
+
+      try {
+        setLoadingPeople(true);
+        const response = await escrowsAPI.getPeople(escrow.id);
+        if (response.success) {
+          setPeople(response.data || {});
+        }
+      } catch (error) {
+        console.error('Failed to fetch escrow people:', error);
+        setPeople({});
+      } finally {
+        setLoadingPeople(false);
+      }
+    };
+
+    fetchPeople();
+  }, [escrow?.id]);
+
+  if (loading || loadingPeople) {
     return (
       <WhiteCard>
         <Skeleton width="60%" height={28} sx={{ mb: 2.5 }} />
@@ -222,15 +251,16 @@ const PeopleWidget_White = ({ escrow, loading, onClick, onUpdate }) => {
     );
   }
 
-  // Get people from JSONB structure
-  const people = escrow?.people || {};
-
   // Helper to get contact or null
   const getContact = (role) => {
-    if (people[role]?.name) {
+    const contact = people[role];
+    if (contact) {
       return {
         role,
-        ...people[role],
+        name: contact.full_name || `${contact.first_name || ''} ${contact.last_name || ''}`.trim(),
+        email: contact.email,
+        phone: contact.phone || contact.phone_secondary || contact.work_phone,
+        company: contact.company,
         color: getColorForRole(role),
         formattedRole: getRoleLabel(role),
       };
@@ -239,7 +269,7 @@ const PeopleWidget_White = ({ escrow, loading, onClick, onUpdate }) => {
   };
 
   // Count total contacts for badge
-  const totalContacts = Object.keys(people).filter(role => people[role]?.name).length;
+  const totalContacts = Object.keys(people).length;
 
   // Handle opening contact selector for a specific role
   const handleAddContact = (role) => {
@@ -249,21 +279,29 @@ const PeopleWidget_White = ({ escrow, loading, onClick, onUpdate }) => {
 
   // Handle contact selection from modal
   const handleContactSelect = async (contact) => {
-    if (!onUpdate || !selectedRole) return;
+    if (!selectedRole || !escrow?.id) return;
 
-    // Build updated people object
-    const updatedPeople = {
-      ...people,
-      [selectedRole]: {
-        name: contact.full_name || contact.name,
-        email: contact.email,
-        phone: contact.phone,
-        company: contact.company_name,
-      },
-    };
+    try {
+      // Update people via API with contact ID
+      const response = await escrowsAPI.updatePeople(escrow.id, {
+        [selectedRole]: contact.id, // Store contact ID, not inline data
+      });
 
-    // Update escrow via parent component
-    await onUpdate({ people: updatedPeople });
+      if (response.success) {
+        // Refresh people from API to get full contact objects
+        const peopleResponse = await escrowsAPI.getPeople(escrow.id);
+        if (peopleResponse.success) {
+          setPeople(peopleResponse.data || {});
+        }
+
+        // Also notify parent if onUpdate exists (for general escrow refresh)
+        if (onUpdate) {
+          await onUpdate({ people: response.data });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to update escrow people:', error);
+    }
 
     // Close modal
     setContactModalOpen(false);

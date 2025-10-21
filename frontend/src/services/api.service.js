@@ -414,6 +414,7 @@ export const escrowsAPI = {
   updatePropertyDetails: (id, details) => apiInstance.put(`/escrows/${id}/property-details`, details),
   updateFinancials: (id, financials) => apiInstance.put(`/escrows/${id}/financials`, financials),
   updateTimeline: (id, timeline) => apiInstance.put(`/escrows/${id}/timeline`, timeline),
+  getPeople: (id) => apiInstance.get(`/escrows/${id}/people`), // Get full contact objects for escrow people
   updatePeople: (id, people) => apiInstance.put(`/escrows/${id}/people`, people),
   getAnalytics: (id) => apiInstance.get(`/analytics/escrow/${id}`),
   addNote: (id, note) => apiInstance.post(`/escrows/${id}/notes`, note)
