@@ -864,17 +864,17 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
                   />
                 )}
                 onChange={(e, value) => setFormData({ ...formData, clientId: value?.id || null })}
-                noOptionsText="No clients found"
+                noOptionsText=""
                 ListboxProps={{
                   sx: { maxHeight: 300 }
                 }}
                 PaperComponent={({ children, ...other }) => (
                   <Paper {...other}>
                     {children}
-                    <Divider />
+                    {children && <Divider />}
                     <ListItemButton
                       onClick={() => setNewClientModalOpen(true)}
-                      sx={{ py: 1.5, borderTop: '1px solid', borderColor: 'divider' }}
+                      sx={{ py: 1.5 }}
                     >
                       <ListItemIcon>
                         <PersonAdd color="primary" />

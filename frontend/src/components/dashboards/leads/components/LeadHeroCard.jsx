@@ -123,9 +123,9 @@ const LeadHeroCard = ({
                   },
                 }}
               >
-                <ToggleButton value="1D">1D</ToggleButton>
-                <ToggleButton value="1M">1M</ToggleButton>
-                <ToggleButton value="1Y">1Y</ToggleButton>
+                <ToggleButton value="1D">1 Day</ToggleButton>
+                <ToggleButton value="1M">1 Month</ToggleButton>
+                <ToggleButton value="1Y">1 Year</ToggleButton>
                 <ToggleButton value="YTD">YTD</ToggleButton>
               </ToggleButtonGroup>
 
@@ -375,9 +375,9 @@ const LeadHeroCard = ({
               },
             }}
           >
-            <ToggleButton value="1D">1D</ToggleButton>
-            <ToggleButton value="1M">1M</ToggleButton>
-            <ToggleButton value="1Y">1Y</ToggleButton>
+            <ToggleButton value="1D">1 Day</ToggleButton>
+            <ToggleButton value="1M">1 Month</ToggleButton>
+            <ToggleButton value="1Y">1 Year</ToggleButton>
             <ToggleButton value="YTD">YTD</ToggleButton>
           </ToggleButtonGroup>
 
