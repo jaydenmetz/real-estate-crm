@@ -19,6 +19,7 @@ import { useEscrowWebSocket } from '../../../hooks/useEscrowWebSocket';
 // Components
 import EscrowDetailHero from './components/EscrowDetailHero';
 import ActivityFeedBottomTab from './components/ActivityFeedBottomTab';
+import ActivityFeedSheet from './components/ActivityFeedSheet';
 
 // Phase 2: New white card widgets
 import TimelineWidget_White from './components/TimelineWidget_White';
@@ -158,6 +159,9 @@ const EscrowDetailCompact = () => {
   const [peopleModalOpen, setPeopleModalOpen] = useState(false);
   const [checklistsModalOpen, setChecklistsModalOpen] = useState(false);
 
+  // Activity feed state (Phase 4)
+  const [activityFeedOpen, setActivityFeedOpen] = useState(false);
+
   // Save sidebar states to localStorage
   useEffect(() => {
     localStorage.setItem('escrowDetail_leftSidebarCollapsed', leftSidebarCollapsed);
@@ -209,7 +213,7 @@ const EscrowDetailCompact = () => {
   };
 
   const handleActivityFeedClick = () => {
-    console.log('Activity feed clicked - will implement in Phase 4');
+    setActivityFeedOpen(true);
   };
 
   if (loading) {
@@ -376,6 +380,13 @@ const EscrowDetailCompact = () => {
         onClose={() => setChecklistsModalOpen(false)}
         escrow={escrow}
         onUpdate={handleUpdate}
+      />
+
+      {/* Phase 4: Activity Feed Sheet */}
+      <ActivityFeedSheet
+        open={activityFeedOpen}
+        onClose={() => setActivityFeedOpen(false)}
+        escrow={escrow}
       />
     </PageContainer>
   );
