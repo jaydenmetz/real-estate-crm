@@ -134,79 +134,118 @@ function buildRestructuredEscrowResponse(escrow) {
         ? Math.round(parseFloat(escrow.purchase_price) / escrow.square_feet) : null,
     },
 
-    // People - simplified to contact references with roles
+    // People - full contact objects with all details (Notion/FollowUpBoss style)
     people: {
-      buyer: people.buyer && (people.buyer.id || people.buyer.name) ? {
-        contactId: people.buyer.id || null,
-        role: 'buyer',
-        name: people.buyer.name || null,
+      buyer: people.buyer?.name ? {
+        name: people.buyer.name,
+        phone: people.buyer.phone || null,
+        email: people.buyer.email || null,
+        company: people.buyer.company || null,
       } : null,
-      buyerAgent: people.buyerAgent && (people.buyerAgent.id || people.buyerAgent.name) ? {
-        contactId: people.buyerAgent.id || null,
-        role: 'buyerAgent',
-        name: people.buyerAgent.name || null,
+      seller: people.seller?.name ? {
+        name: people.seller.name,
+        phone: people.seller.phone || null,
+        email: people.seller.email || null,
+        company: people.seller.company || null,
       } : null,
-      seller: people.seller && (people.seller.id || people.seller.name) ? {
-        contactId: people.seller.id || null,
-        role: 'seller',
-        name: people.seller.name || null,
+      buyerAgent: people.buyerAgent?.name ? {
+        name: people.buyerAgent.name,
+        phone: people.buyerAgent.phone || null,
+        email: people.buyerAgent.email || null,
+        company: people.buyerAgent.company || null,
       } : null,
-      sellerAgent: people.sellerAgent && (people.sellerAgent.id || people.sellerAgent.name) ? {
-        contactId: people.sellerAgent.id || null,
-        role: 'sellerAgent',
-        name: people.sellerAgent.name || null,
+      sellerAgent: people.sellerAgent?.name ? {
+        name: people.sellerAgent.name,
+        phone: people.sellerAgent.phone || null,
+        email: people.sellerAgent.email || null,
+        company: people.sellerAgent.company || null,
       } : null,
-      escrowOfficer: (people.escrowOfficer && (people.escrowOfficer.id || people.escrowOfficer.name)) || escrow.escrow_officer_name ? {
-        contactId: people.escrowOfficer?.id || null,
-        role: 'escrowOfficer',
-        name: people.escrowOfficer?.name || escrow.escrow_officer_name || null,
+      loanOfficer: people.loanOfficer?.name ? {
+        name: people.loanOfficer.name,
+        phone: people.loanOfficer.phone || null,
+        email: people.loanOfficer.email || null,
+        company: people.loanOfficer.company || null,
       } : null,
-      titleOfficer: people.titleOfficer && (people.titleOfficer.id || people.titleOfficer.name) ? {
-        contactId: people.titleOfficer.id || null,
-        role: 'titleOfficer',
-        name: people.titleOfficer.name || null,
+      escrowOfficer: people.escrowOfficer?.name ? {
+        name: people.escrowOfficer.name,
+        phone: people.escrowOfficer.phone || null,
+        email: people.escrowOfficer.email || null,
+        company: people.escrowOfficer.company || null,
       } : null,
-      loanOfficer: (people.loanOfficer && (people.loanOfficer.id || people.loanOfficer.name)) || escrow.loan_officer_name ? {
-        contactId: people.loanOfficer?.id || null,
-        role: 'loanOfficer',
-        name: people.loanOfficer?.name || escrow.loan_officer_name || null,
+      titleOfficer: people.titleOfficer?.name ? {
+        name: people.titleOfficer.name,
+        phone: people.titleOfficer.phone || null,
+        email: people.titleOfficer.email || null,
+        company: people.titleOfficer.company || null,
       } : null,
-      homeInspector: people.homeInspector && (people.homeInspector.id || people.homeInspector.name) ? {
-        contactId: people.homeInspector.id || null,
-        role: 'homeInspector',
-        name: people.homeInspector.name || null,
+      homeInspector: people.homeInspector?.name ? {
+        name: people.homeInspector.name,
+        phone: people.homeInspector.phone || null,
+        email: people.homeInspector.email || null,
+        company: people.homeInspector.company || null,
       } : null,
-      appraiser: people.appraiser && (people.appraiser.id || people.appraiser.name) ? {
-        contactId: people.appraiser.id || null,
-        role: 'appraiser',
-        name: people.appraiser.name || null,
+      appraiser: people.appraiser?.name ? {
+        name: people.appraiser.name,
+        phone: people.appraiser.phone || null,
+        email: people.appraiser.email || null,
+        company: people.appraiser.company || null,
       } : null,
-      transactionCoordinator: (people.transactionCoordinator && (people.transactionCoordinator.id || people.transactionCoordinator.name)) || escrow.transaction_coordinator ? {
-        contactId: people.transactionCoordinator?.id || null,
-        role: 'transactionCoordinator',
-        name: people.transactionCoordinator?.name || escrow.transaction_coordinator || null,
-      } : null,
-      referralAgent: (people.referralAgent && (people.referralAgent.id || people.referralAgent.name)) || escrow.referral_agent || financials.referralAgent ? {
-        contactId: people.referralAgent?.id || null,
-        role: 'referralAgent',
-        name: people.referralAgent?.name || escrow.referral_agent || financials.referralAgent || null,
+      transactionCoordinator: people.transactionCoordinator?.name || escrow.transaction_coordinator ? {
+        name: people.transactionCoordinator?.name || escrow.transaction_coordinator,
+        phone: people.transactionCoordinator?.phone || null,
+        email: people.transactionCoordinator?.email || null,
+        company: people.transactionCoordinator?.company || null,
       } : null,
     },
 
-    // Simplified timeline with key dates only
-    timeline: {
-      acceptanceDate: escrow.acceptance_date || timeline.acceptanceDate || null,
-      emdDate: escrow.emd_date || timeline.emdDate || null,
-      sellerDisclosuresDueDate: escrow.seller_disclosures_due_date || timeline.sellerDisclosuresDueDate || null,
-      homeInspectionDate: escrow.physical_inspection_date || timeline.physicalInspectionDate || timeline.homeInspectionDate || null,
-      termiteInspectionDate: escrow.termite_inspection_date || timeline.termiteInspectionDate || null,
-      appraisalDate: escrow.appraisal_completed_date || escrow.appraisal_ordered_date || timeline.appraisalDate || null,
-      inspectionContingencyDate: escrow.inspection_contingency_removal_date || timeline.inspectionContingencyDate || null,
-      appraisalContingencyDate: escrow.appraisal_contingency_removal_date || timeline.appraisalContingencyDate || null,
-      loanContingencyDate: escrow.loan_contingency_removal_date || timeline.loanContingencyDate || null,
-      allContingenciesRemovalDate: escrow.all_contingencies_removal_date || timeline.allContingenciesRemovalDate || null,
-      coeDate: escrow.closing_date || escrow.actual_coe_date || timeline.coeDate || null,
-    },
+    // Timeline as array with completed status (Notion/FollowUpBoss style)
+    timeline: Array.isArray(timeline) && timeline.length > 0 ? timeline : [
+      {
+        label: 'Acceptance',
+        date: escrow.acceptance_date || null,
+        completed: escrow.acceptance_date ? new Date(escrow.acceptance_date) < new Date() : false,
+      },
+      {
+        label: 'EMD Deposited',
+        date: escrow.emd_date || null,
+        completed: escrow.emd_date ? new Date(escrow.emd_date) < new Date() : false,
+      },
+      {
+        label: 'Home Inspection',
+        date: escrow.physical_inspection_date || null,
+        completed: escrow.physical_inspection_date ? new Date(escrow.physical_inspection_date) < new Date() : false,
+      },
+      {
+        label: 'Appraisal',
+        date: escrow.appraisal_completed_date || escrow.appraisal_ordered_date || null,
+        completed: escrow.appraisal_completed_date ? new Date(escrow.appraisal_completed_date) < new Date() : false,
+      },
+      {
+        label: 'Inspection Contingency',
+        date: escrow.inspection_contingency_removal_date || null,
+        completed: escrow.inspection_contingency_removal_date ? new Date(escrow.inspection_contingency_removal_date) < new Date() : false,
+      },
+      {
+        label: 'Appraisal Contingency',
+        date: escrow.appraisal_contingency_removal_date || null,
+        completed: escrow.appraisal_contingency_removal_date ? new Date(escrow.appraisal_contingency_removal_date) < new Date() : false,
+      },
+      {
+        label: 'Loan Contingency',
+        date: escrow.loan_contingency_removal_date || null,
+        completed: escrow.loan_contingency_removal_date ? new Date(escrow.loan_contingency_removal_date) < new Date() : false,
+      },
+      {
+        label: 'All Contingencies Removed',
+        date: escrow.all_contingencies_removal_date || null,
+        completed: escrow.all_contingencies_removal_date ? new Date(escrow.all_contingencies_removal_date) < new Date() : false,
+      },
+      {
+        label: 'Close of Escrow',
+        date: escrow.closing_date || escrow.actual_coe_date || null,
+        completed: escrow.actual_coe_date ? new Date(escrow.actual_coe_date) < new Date() : false,
+      },
+    ].filter(item => item.date), // Only include items with dates
 
     // Financials - comprehensive commission breakdown
     financials: {
@@ -237,37 +276,37 @@ function buildRestructuredEscrowResponse(escrow) {
       expenseAdjustments: parseFloat(escrow.expense_adjustments) || financials.expenseAdjustments || 0,
     },
 
-    // Flattened checklists - maintaining specific order
-    'checklist-loan': {
-      le: checklists.loan?.le || false,
-      lockedRate: checklists.loan?.lockedRate || false,
-      appraisalOrdered: checklists.loan?.appraisalOrdered || false,
-      appraisalReceived: checklists.loan?.appraisalReceived || false,
-      clearToClose: checklists.loan?.clearToClose || false,
-      cd: checklists.loan?.cd || false,
-      loanDocsSigned: checklists.loan?.loanDocsSigned || false,
-      cashToClosePaid: checklists.loan?.cashToClosePaid || false,
-      loanFunded: checklists.loan?.loanFunded || false,
-    },
-
-    'checklist-house': {
-      homeInspectionOrdered: checklists.house?.homeInspectionOrdered || false,
-      emd: checklists.house?.emd || false,
-      solarTransferInitiated: checklists.house?.solarTransferInitiated || false,
-      avid: checklists.house?.avid || false,
-      homeInspectionReceived: checklists.house?.homeInspectionReceived || false,
-      sellerDisclosures: checklists.house?.sellerDisclosures || false,
-      rr: checklists.house?.rr || false,
-      cr: checklists.house?.cr || false, // Added CR field
-      recorded: checklists.house?.recorded || false,
-    },
-
-    'checklist-admin': {
-      mlsStatusUpdate: checklists.admin?.mlsStatusUpdate || false,
-      tcEmail: checklists.admin?.tcEmail || false,
-      tcGlideInvite: checklists.admin?.tcGlideInvite || false,
-      addContactsToPhone: checklists.admin?.addContactsToPhone || false,
-      addContactsToNotion: checklists.admin?.addContactsToNotion || false,
+    // Nested checklists object (Notion/FollowUpBoss style)
+    checklists: {
+      loan: {
+        le: checklists.loan?.le || false,
+        lockedRate: checklists.loan?.lockedRate || false,
+        appraisalOrdered: checklists.loan?.appraisalOrdered || false,
+        appraisalReceived: checklists.loan?.appraisalReceived || false,
+        clearToClose: checklists.loan?.clearToClose || false,
+        cd: checklists.loan?.cd || false,
+        loanDocsSigned: checklists.loan?.loanDocsSigned || false,
+        cashToClosePaid: checklists.loan?.cashToClosePaid || false,
+        loanFunded: checklists.loan?.loanFunded || false,
+      },
+      house: {
+        homeInspectionOrdered: checklists.house?.homeInspectionOrdered || false,
+        emd: checklists.house?.emd || false,
+        solarTransferInitiated: checklists.house?.solarTransferInitiated || false,
+        avid: checklists.house?.avid || false,
+        homeInspectionReceived: checklists.house?.homeInspectionReceived || false,
+        sellerDisclosures: checklists.house?.sellerDisclosures || false,
+        rr: checklists.house?.rr || false,
+        cr: checklists.house?.cr || false,
+        recorded: checklists.house?.recorded || false,
+      },
+      admin: {
+        mlsStatusUpdate: checklists.admin?.mlsStatusUpdate || false,
+        tcEmail: checklists.admin?.tcEmail || false,
+        tcGlideInvite: checklists.admin?.tcGlideInvite || false,
+        addContactsToPhone: checklists.admin?.addContactsToPhone || false,
+        addContactsToNotion: checklists.admin?.addContactsToNotion || false,
+      },
     },
 
     // Documents array
