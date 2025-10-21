@@ -299,28 +299,30 @@ const EscrowDetailCompact = () => {
 
           {/* Phase 2: New White Card Widgets */}
           <WidgetsGrid>
+            {/* Top Row: Timeline (left) | Checklists (right) */}
             <TimelineWidget_White
               escrow={escrow}
               loading={false}
               onClick={() => setTimelineModalOpen(true)}
             />
 
-            <FinancialsWidget_White
+            <ChecklistsWidget_White
               escrow={escrow}
               loading={false}
-              onClick={() => setFinancialsModalOpen(true)}
+              onClick={() => setChecklistsModalOpen(true)}
             />
 
+            {/* Bottom Row: People (left) | Financials (right) */}
             <PeopleWidget_White
               escrow={escrow}
               loading={false}
               onClick={() => setPeopleModalOpen(true)}
             />
 
-            <ChecklistsWidget_White
+            <FinancialsWidget_White
               escrow={escrow}
               loading={false}
-              onClick={() => setChecklistsModalOpen(true)}
+              onClick={() => setFinancialsModalOpen(true)}
             />
           </WidgetsGrid>
 
