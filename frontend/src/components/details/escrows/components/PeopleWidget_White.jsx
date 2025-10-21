@@ -213,7 +213,9 @@ const PeopleWidget_White = ({ escrow, loading, onClick, onUpdate }) => {
   // Fetch people from the API when escrow ID changes
   useEffect(() => {
     const fetchPeople = async () => {
-      if (!escrow?.id) {
+      const escrowId = escrow?.details?.id || escrow?.id;
+
+      if (!escrowId) {
         setPeople({});
         setLoadingPeople(false);
         return;
@@ -221,7 +223,7 @@ const PeopleWidget_White = ({ escrow, loading, onClick, onUpdate }) => {
 
       try {
         setLoadingPeople(true);
-        const response = await escrowsAPI.getPeople(escrow.id);
+        const response = await escrowsAPI.getPeople(escrowId);
         if (response.success) {
           setPeople(response.data || {});
         }
@@ -234,7 +236,7 @@ const PeopleWidget_White = ({ escrow, loading, onClick, onUpdate }) => {
     };
 
     fetchPeople();
-  }, [escrow?.id]);
+  }, [escrow?.details?.id, escrow?.id]);
 
   if (loading || loadingPeople) {
     return (
@@ -283,18 +285,20 @@ const PeopleWidget_White = ({ escrow, loading, onClick, onUpdate }) => {
 
   // Handle contact selection from modal
   const handleContactSelect = async (contact) => {
-    console.log('📞 Contact selected:', { contact, selectedRole, escrowId: escrow?.id });
+    const escrowId = escrow?.details?.id || escrow?.id;
 
-    if (!selectedRole || !escrow?.id) {
-      console.error('❌ Cannot assign contact: missing role or escrow ID', { selectedRole, escrowId: escrow?.id });
+    console.log('📞 Contact selected:', { contact, selectedRole, escrowId });
+
+    if (!selectedRole || !escrowId) {
+      console.error('❌ Cannot assign contact: missing role or escrow ID', { selectedRole, escrowId });
       return;
     }
 
     try {
-      console.log('💾 Updating escrow people:', { escrowId: escrow.id, role: selectedRole, contactId: contact.id });
+      console.log('💾 Updating escrow people:', { escrowId, role: selectedRole, contactId: contact.id });
 
       // Update people via API with contact ID
-      const response = await escrowsAPI.updatePeople(escrow.id, {
+      const response = await escrowsAPI.updatePeople(escrowId, {
         [selectedRole]: contact.id, // Store contact ID, not inline data
       });
 
@@ -302,7 +306,7 @@ const PeopleWidget_White = ({ escrow, loading, onClick, onUpdate }) => {
 
       if (response.success) {
         // Refresh people from API to get full contact objects
-        const peopleResponse = await escrowsAPI.getPeople(escrow.id);
+        const peopleResponse = await escrowsAPI.getPeople(escrowId);
         console.log('👥 Fetched people:', peopleResponse);
 
         if (peopleResponse.success) {
