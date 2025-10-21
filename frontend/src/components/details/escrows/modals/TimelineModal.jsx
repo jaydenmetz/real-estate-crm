@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import { Close, CheckCircle, Schedule, RadioButtonUnchecked } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
-import EditableField from './EditableField';
+import EditableField from '../components/EditableField';
 import { formatDate } from '../../../../utils/formatters';
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({

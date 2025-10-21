@@ -10,7 +10,7 @@ import {
 } from '@mui/material';
 import { Close, Person, Phone, Email as EmailIcon } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
-import EditableField from './EditableField';
+import EditableField from '../components/EditableField';
 import { getInitials as getInitialsUtil, formatPhone, parsePhone } from '../../../../utils/formatters';
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({

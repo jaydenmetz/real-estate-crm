@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import { Close, AttachMoney, TrendingUp } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
-import EditableField from './EditableField';
+import EditableField from '../components/EditableField';
 import { formatCurrency, parseCurrency, parsePercentage } from '../../../../utils/formatters';
 
 const StyledDialog = styled(Dialog)(({ theme }) => ({

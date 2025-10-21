@@ -27,10 +27,10 @@ import PeopleWidget_White from './components/PeopleWidget_White';
 import ChecklistsWidget_White from './components/ChecklistsWidget_White';
 import PlaceholderWidget from './components/PlaceholderWidget';
 
-// Modals (will update in Phase 3)
-import FinancialsModal from './components/FinancialsModal';
-import TimelineModal from './components/TimelineModal';
-import PeopleModal from './components/PeopleModal';
+// Modals
+import FinancialsModal from './modals/FinancialsModal';
+import TimelineModal from './modals/TimelineModal';
+import PeopleModal from './modals/PeopleModal';
 import DocumentsDetailModal from './modals/DocumentsDetailModal';
 
 const PageContainer = styled(Box)(({ theme }) => ({
