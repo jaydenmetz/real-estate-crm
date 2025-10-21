@@ -47,9 +47,13 @@ const LayoutContainer = styled(Box)(({ theme }) => ({
   maxWidth: '1800px',
   margin: '0 auto',
   padding: theme.spacing(3),
+  paddingLeft: theme.spacing(8), // Extra padding for left toggle button space
+  paddingRight: theme.spacing(8), // Extra padding for right toggle button space
   position: 'relative',
   [theme.breakpoints.down('lg')]: {
     flexDirection: 'column',
+    paddingLeft: theme.spacing(3),
+    paddingRight: theme.spacing(3),
   },
 }));
 
@@ -120,18 +124,25 @@ const WidgetsGrid = styled(Box)(({ theme }) => ({
   },
 }));
 
-// Floating toggle buttons with square/rounded rectangle shape (visible when sidebars collapsed)
+// Toggle buttons centered in margin space (visible when sidebars collapsed)
 const ToggleButton = styled(IconButton)(({ theme, side }) => ({
   position: 'fixed',
   top: '50%',
   transform: 'translateY(-50%)',
-  [side]: 32, // More padding from edge to prevent overlap
+  // Calculate position: viewport edge + half of margin space - half of button width
+  // Margin space is 64px (theme.spacing(8)), button is 36px wide
+  // So center point is at: edge + 32px (half margin) - 18px (half button) = edge + 14px
+  [side]: 'calc((100vw - 1800px) / 2 + 32px - 18px)', // Centered in margin for max-width screens
+  '@media (max-width: 1864px)': {
+    // For screens smaller than maxWidth + margins
+    [side]: 14, // edge + (64/2) - (36/2) = 14px from edge
+  },
   zIndex: 100,
   backgroundColor: theme.palette.background.paper,
   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
   width: 36,
   height: 44,
-  borderRadius: theme.spacing(1), // More square, less circular
+  borderRadius: theme.spacing(1),
   '&:hover': {
     backgroundColor: theme.palette.primary.main,
     boxShadow: '0 6px 16px rgba(0, 0, 0, 0.25)',
@@ -141,6 +152,9 @@ const ToggleButton = styled(IconButton)(({ theme, side }) => ({
   },
   '& svg': {
     color: theme.palette.text.secondary,
+  },
+  [theme.breakpoints.down('lg')]: {
+    display: 'none',
   },
 }));
 
@@ -250,7 +264,7 @@ const EscrowDetailCompact = () => {
   return (
     <PageContainer>
       {/* Hero Card - Full Width */}
-      <Box sx={{ maxWidth: '1800px', margin: '0 auto', px: 3, pt: 3 }}>
+      <Box sx={{ maxWidth: '1800px', margin: '0 auto', px: 8, pt: 3 }}>
         <EscrowDetailHero
           escrow={escrow}
           onUpdate={handleUpdate}
