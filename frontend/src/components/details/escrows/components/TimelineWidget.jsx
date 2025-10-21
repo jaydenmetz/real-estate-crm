@@ -71,7 +71,7 @@ const TimelineWidget = ({ escrow, loading, onClick }) => {
     );
   }
 
-  const timeline = escrow?.timeline || {};
+  // FIXED: Use flat database fields instead of nested timeline object
   const today = new Date();
 
   // Calculate days until/since
@@ -86,12 +86,13 @@ const TimelineWidget = ({ escrow, loading, onClick }) => {
     return { text: `${diffDays}d away`, isFuture: true };
   };
 
-  // Get most important upcoming milestones (only show 2-3)
+  // FIXED: Map database columns to milestones
   const allMilestones = [
-    { label: 'Home Inspection', date: timeline.homeInspectionDate, priority: 1 },
-    { label: 'Appraisal', date: timeline.appraisalDate, priority: 2 },
-    { label: 'Contingency Removal', date: timeline.allContingenciesRemovalDate || timeline.inspectionContingencyDate, priority: 3 },
-    { label: 'Close of Escrow', date: timeline.coeDate || escrow.closing_date, priority: 4 },
+    { label: 'Acceptance', date: escrow.acceptanceDate || escrow.opened_date, priority: 0 },
+    { label: 'Home Inspection', date: escrow.homeInspectionDate || escrow.inspection_date, priority: 1 },
+    { label: 'Appraisal', date: escrow.appraisalDate, priority: 2 },
+    { label: 'Contingency Removal', date: escrow.contingency_removal_date, priority: 3 },
+    { label: 'Close of Escrow', date: escrow.close_of_escrow_date || escrow.closingDate || escrow.closing_date, priority: 4 },
   ].filter(m => m.date);
 
   // Sort by date and take next 2 upcoming + 1 past if available

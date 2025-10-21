@@ -61,56 +61,81 @@ const PeopleWidget = ({ escrow, loading, onClick }) => {
     );
   }
 
-  const people = escrow?.people || {};
+  // FIXED: Use flat database fields instead of nested people object
+  // Build contacts from flat database columns
+  const allContacts = [];
 
-  // Define priority order for contacts
-  const priorityOrder = ['buyer', 'seller', 'buyerAgent', 'sellerAgent', 'loanOfficer', 'escrowOfficer'];
+  if (escrow?.buyer_name) {
+    allContacts.push({
+      role: 'buyer',
+      name: escrow.buyer_name,
+      phone: escrow.buyer_phone || '',
+      email: escrow.buyer_email || '',
+      color: '#4A90E2',
+      formattedRole: 'Buyer',
+      priority: 1,
+    });
+  }
 
-  // Format role names
-  const formatRole = (roleKey) => {
-    const roleMap = {
-      buyer: 'Buyer',
-      seller: 'Seller',
-      buyerAgent: 'Buyer Agent',
-      sellerAgent: 'Seller Agent',
-      loanOfficer: 'Lender',
-      escrowOfficer: 'Escrow Officer',
-      titleOfficer: 'Title Officer',
-      homeInspector: 'Inspector',
-      appraiser: 'Appraiser',
-    };
-    return roleMap[roleKey] || roleKey;
-  };
+  if (escrow?.seller_name) {
+    allContacts.push({
+      role: 'seller',
+      name: escrow.seller_name,
+      phone: escrow.seller_phone || '',
+      email: escrow.seller_email || '',
+      color: '#E24A90',
+      formattedRole: 'Seller',
+      priority: 2,
+    });
+  }
 
-  // Get role color
-  const getRoleColor = (role) => {
-    const colorMap = {
-      buyer: '#4A90E2',
-      seller: '#E24A90',
-      buyerAgent: '#1ABC9C',
-      sellerAgent: '#E74C3C',
-      loanOfficer: '#90E24A',
-      escrowOfficer: '#E2904A',
-      titleOfficer: '#9B59B6',
-      homeInspector: '#3498DB',
-      appraiser: '#F39C12',
-    };
-    return colorMap[role] || '#95A5A6';
-  };
+  if (escrow?.lender_name) {
+    allContacts.push({
+      role: 'lender',
+      name: escrow.lender_name,
+      phone: escrow.lender_phone || '',
+      email: escrow.lender_email || '',
+      color: '#90E24A',
+      formattedRole: 'Lender',
+      priority: 3,
+    });
+  }
 
-  // Map people object to contacts array with priority sorting
-  const allContacts = Object.entries(people)
-    .filter(([role, person]) => person && (person.name || person.contactId))
-    .map(([role, person]) => ({
-      role,
-      name: person.name || 'Unknown',
-      phone: person.phone || '',
-      email: person.email || '',
-      color: getRoleColor(role),
-      formattedRole: formatRole(role),
-      priority: priorityOrder.indexOf(role) !== -1 ? priorityOrder.indexOf(role) : 999,
-    }))
-    .sort((a, b) => a.priority - b.priority);
+  if (escrow?.escrow_company) {
+    allContacts.push({
+      role: 'escrowOfficer',
+      name: escrow.escrow_company,
+      phone: escrow.escrow_phone || '',
+      email: escrow.escrow_email || '',
+      color: '#E2904A',
+      formattedRole: 'Escrow Officer',
+      priority: 4,
+    });
+  }
+
+  if (escrow?.title_company) {
+    allContacts.push({
+      role: 'titleOfficer',
+      name: escrow.title_company,
+      phone: escrow.title_phone || '',
+      email: escrow.title_email || '',
+      color: '#4AE290',
+      formattedRole: 'Title Officer',
+      priority: 5,
+    });
+  }
+
+  if (escrow?.agent_name) {
+    allContacts.push({
+      role: 'agent',
+      name: escrow.agent_name,
+      phone: escrow.agent_phone || '',
+      email: escrow.agent_email || '',
+      color: '#904AE2',
+      formattedRole: 'Agent',
+      priority: 6,
+    });
+  }
 
   // Show only top 4 contacts
   const topContacts = allContacts.slice(0, 4);

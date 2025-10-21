@@ -72,12 +72,13 @@ const FinancialsWidget = ({ escrow, loading, onClick }) => {
     );
   }
 
-  const financials = escrow?.financials || {};
-
-  // Calculate key numbers
+  // FIXED: Use flat database fields instead of nested financials object
   const purchasePrice = escrow?.purchase_price || escrow?.purchasePrice || 0;
-  const commissionPercent = financials.commissionRate || 3.0;
-  const agentNet = financials.agent1099Income || financials.agentNet || 0;
+  const commissionPercent = escrow?.commission_percent || escrow?.commissionRate || 0;
+  const commissionTotal = escrow?.commission_total || escrow?.myCommission || 0;
+
+  // Calculate agent net (simplified - should match real commission structure)
+  const agentNet = commissionTotal > 0 ? commissionTotal * 0.80 - 285 - 250 : 0; // 80% split - fees
 
   return (
     <CompactCard
