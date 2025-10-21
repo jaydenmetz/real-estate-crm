@@ -56,15 +56,14 @@ const LayoutGrid = styled(Box, {
   },
 }));
 
-const Sidebar = styled(Box, {
-  shouldForwardProp: (prop) => prop !== 'collapsed',
-})(({ collapsed, theme }) => ({
-  display: collapsed ? 'none' : 'flex',
+const Sidebar = styled(Box)(({ theme }) => ({
+  display: 'flex',
   flexDirection: 'column',
   backgroundColor: theme.palette.background.paper,
   borderRadius: theme.spacing(2),
   boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
   overflow: 'hidden',
+  minWidth: 0, // Allow sidebar to collapse below content size
   transition: 'all 0.3s ease-in-out',
   [theme.breakpoints.down('lg')]: {
     display: 'none',
@@ -243,7 +242,7 @@ const EscrowDetailCompact = () => {
         rightCollapsed={rightSidebarCollapsed}
       >
         {/* Left Sidebar - Blank for now */}
-        <Sidebar collapsed={leftSidebarCollapsed}>
+        <Sidebar>
           <SidebarHeader>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
               <Typography variant="subtitle2" fontWeight="600" color="text.secondary">
@@ -306,7 +305,7 @@ const EscrowDetailCompact = () => {
         </MainContent>
 
         {/* Right Sidebar - Blank for now */}
-        <Sidebar collapsed={rightSidebarCollapsed}>
+        <Sidebar>
           <SidebarHeader>
             <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
               <IconButton
