@@ -312,6 +312,46 @@ export function sortByKey(array, key, order = 'asc') {
   });
 }
 
+/**
+ * Parse currency string to number
+ * @param {string|number} value - Currency value to parse
+ * @returns {number} Parsed number
+ */
+export function parseCurrency(value) {
+  if (!value) return 0;
+  if (typeof value === 'number') return value;
+
+  // Remove currency symbols and commas
+  const cleaned = String(value).replace(/[$,]/g, '');
+  return parseFloat(cleaned) || 0;
+}
+
+/**
+ * Parse percentage string to number
+ * @param {string|number} value - Percentage value to parse
+ * @returns {number} Parsed number
+ */
+export function parsePercentage(value) {
+  if (!value) return 0;
+  if (typeof value === 'number') return value;
+
+  // Remove % symbol
+  const cleaned = String(value).replace('%', '');
+  return parseFloat(cleaned) || 0;
+}
+
+/**
+ * Parse phone number to clean digits
+ * @param {string} value - Phone number to parse
+ * @returns {string} Clean phone number string
+ */
+export function parsePhone(value) {
+  if (!value) return '';
+
+  // Remove all non-numeric characters
+  return String(value).replace(/\D/g, '');
+}
+
 export default {
   formatCurrency,
   formatPriceShort,
@@ -329,5 +369,8 @@ export default {
   formatStatus,
   formatRelativeTime,
   parseJSON,
-  sortByKey
+  sortByKey,
+  parseCurrency,
+  parsePercentage,
+  parsePhone
 };
