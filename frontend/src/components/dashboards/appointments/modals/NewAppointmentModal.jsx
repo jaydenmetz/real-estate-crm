@@ -20,8 +20,8 @@ import {
   LocationOn,
 } from '@mui/icons-material';
 import { appointmentsAPI, leadsAPI } from '../../../../services/api.service';
-import { useAuth } from '../../contexts/AuthContext';
-import { loadGoogleMapsScript } from '../../utils/googleMapsLoader';
+import { useAuth } from '../../../../contexts/AuthContext';
+import { loadGoogleMapsScript } from '../../../../utils/googleMapsLoader';
 
 const NewAppointmentModal = ({ open, onClose, onSuccess }) => {
   const { user } = useAuth();
