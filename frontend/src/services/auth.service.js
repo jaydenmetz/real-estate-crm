@@ -196,9 +196,9 @@ class AuthService {
 
           // PHASE 2: Log new expiry for debugging
           const newExpirySeconds = Math.round((expiryTime - Date.now()) / 1000);
-          // console.log(`✅ Token refreshed - new expiry in ${newExpirySeconds}s (~${Math.round(newExpirySeconds / 60)} minutes)`);
+          console.log(`✅ Token refreshed - new expiry in ${newExpirySeconds}s (~${Math.round(newExpirySeconds / 60)} minutes)`);
         } else {
-          // console.log('✅ Token refreshed - JWT stored in localStorage');
+          console.log('✅ Token refreshed - JWT stored in localStorage');
         }
 
         return {
