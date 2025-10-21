@@ -27,7 +27,7 @@ import {
   Search,
   Home,
 } from '@mui/icons-material';
-import { listingsAPI, clientsAPI } from '../../services/api.service';
+import { listingsAPI, clientsAPI } from '../../../../services/api.service';
 import { useAuth } from '../../contexts/AuthContext';
 import { loadGoogleMapsScript } from '../../utils/googleMapsLoader';
 import NewClientModal from './NewClientModal';

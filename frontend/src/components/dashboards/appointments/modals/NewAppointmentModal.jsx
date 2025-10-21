@@ -19,7 +19,7 @@ import {
   Event,
   LocationOn,
 } from '@mui/icons-material';
-import { appointmentsAPI, leadsAPI } from '../../services/api.service';
+import { appointmentsAPI, leadsAPI } from '../../../../services/api.service';
 import { useAuth } from '../../contexts/AuthContext';
 import { loadGoogleMapsScript } from '../../utils/googleMapsLoader';
 

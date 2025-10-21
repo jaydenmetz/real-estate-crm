@@ -16,7 +16,7 @@ import {
   Close,
   PersonAdd,
 } from '@mui/icons-material';
-import { leadsAPI } from '../../services/api.service';
+import { leadsAPI } from '../../../../services/api.service';
 
 const NewLeadModal = ({ open, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);

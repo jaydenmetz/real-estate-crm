@@ -17,7 +17,7 @@ import {
   Close,
   PersonAdd,
 } from '@mui/icons-material';
-import { clientsAPI, leadsAPI } from '../../services/api.service';
+import { clientsAPI, leadsAPI } from '../../../../services/api.service';
 
 const NewClientModal = ({ open, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);

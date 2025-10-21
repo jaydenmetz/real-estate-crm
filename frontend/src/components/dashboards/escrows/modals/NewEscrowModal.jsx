@@ -27,7 +27,7 @@ import {
   LocationOn,
   Search,
 } from '@mui/icons-material';
-import { escrowsAPI, clientsAPI } from '../../services/api.service';
+import { escrowsAPI, clientsAPI } from '../../../../services/api.service';
 import { useAuth } from '../../contexts/AuthContext';
 import { loadGoogleMapsScript } from '../../utils/googleMapsLoader';
 
