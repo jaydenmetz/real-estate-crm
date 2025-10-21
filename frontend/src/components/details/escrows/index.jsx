@@ -46,7 +46,8 @@ const LayoutContainer = styled(Box)(({ theme }) => ({
   gap: theme.spacing(3),
   maxWidth: '1800px',
   margin: '0 auto',
-  padding: theme.spacing(3),
+  paddingTop: theme.spacing(3), // Top padding to match hero
+  paddingBottom: theme.spacing(3), // Bottom padding
   paddingLeft: theme.spacing(8), // Extra padding for left toggle button space
   paddingRight: theme.spacing(8), // Extra padding for right toggle button space
   position: 'relative',
