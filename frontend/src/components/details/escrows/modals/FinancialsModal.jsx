@@ -142,17 +142,11 @@ const FinancialsModal = ({ open, onClose, escrow, onUpdate }) => {
       <PropertyHeader>
         <Box display="flex" justifyContent="space-between" alignItems="center">
           <Box>
-            <Typography variant="body2" color="text.secondary" fontWeight="600">
-              Property Address:
-            </Typography>
             <Typography variant="h6" fontWeight="700" color="text.primary">
               {propertyAddress}
             </Typography>
           </Box>
           <Box textAlign="right">
-            <Typography variant="body2" color="text.secondary" fontWeight="600">
-              Deal ID:
-            </Typography>
             <Typography variant="h6" fontWeight="700" color="primary.main">
               {displayId}
             </Typography>

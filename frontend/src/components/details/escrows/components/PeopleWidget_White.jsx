@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Avatar, Skeleton, Grid } from '@mui/material';
+import { Box, Typography, Avatar, Skeleton, Grid, IconButton } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { Users, Phone } from 'lucide-react';
+import { Users, Phone, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ContactSelectionModal } from '../../../modals/ContactSelectionModal';
 import { PeopleModal } from '../../../modals/PeopleModal';
@@ -142,12 +142,13 @@ const EmptyContactCell = ({ label, onClick }) => (
   </ContactCell>
 );
 
-const ContactCellFilled = ({ contact, onClick }) => (
+const ContactCellFilled = ({ contact, onClick, onRemove }) => (
   <ContactCell
     onClick={(e) => {
       e.stopPropagation(); // Prevent widget modal from opening
       if (onClick) onClick();
     }}
+    sx={{ position: 'relative' }}
   >
     <Avatar
       sx={{
@@ -182,6 +183,31 @@ const ContactCellFilled = ({ contact, onClick }) => (
         {contact.name}
       </Typography>
     </Box>
+
+    {/* Remove Button */}
+    <IconButton
+      size="small"
+      onClick={(e) => {
+        e.stopPropagation();
+        if (onRemove) onRemove();
+      }}
+      sx={{
+        width: 24,
+        height: 24,
+        position: 'absolute',
+        top: 4,
+        right: 4,
+        opacity: 0.6,
+        transition: 'all 0.2s',
+        '&:hover': {
+          opacity: 1,
+          backgroundColor: 'error.light',
+          color: 'white',
+        },
+      }}
+    >
+      <X size={14} />
+    </IconButton>
 
     {contact.phone && (
       <Box
@@ -332,6 +358,39 @@ const PeopleWidget_White = ({ escrow, loading, onClick, onUpdate }) => {
     setSelectedRole(null);
   };
 
+  // Handle removing contact from role
+  const handleRemoveContact = async (role) => {
+    const escrowId = escrow?.details?.id || escrow?.id;
+
+    if (!role || !escrowId) {
+      console.error('Cannot remove contact: missing role or escrow ID', { role, escrowId });
+      return;
+    }
+
+    try {
+      // Update people via API - set role to null to remove
+      const response = await escrowsAPI.updatePeople(escrowId, {
+        [role]: null, // Remove contact from this role
+      });
+
+      if (response.success) {
+        // Refresh people from API to get updated objects
+        const peopleResponse = await escrowsAPI.getPeople(escrowId);
+
+        if (peopleResponse.success) {
+          setPeople(peopleResponse.data || {});
+        }
+
+        // Also notify parent if onUpdate exists (for general escrow refresh)
+        if (onUpdate) {
+          await onUpdate({ people: response.data });
+        }
+      }
+    } catch (error) {
+      console.error('Failed to remove contact from escrow:', error);
+    }
+  };
+
   // Get role config for modal styling
   const getRoleConfig = (role) => {
     const color = getColorForRole(role);
@@ -382,6 +441,7 @@ const PeopleWidget_White = ({ escrow, loading, onClick, onUpdate }) => {
               <ContactCellFilled
                 contact={getContact('buyer')}
                 onClick={() => handleAddContact('buyer')}
+                onRemove={() => handleRemoveContact('buyer')}
               />
             ) : (
               <EmptyContactCell
@@ -395,6 +455,7 @@ const PeopleWidget_White = ({ escrow, loading, onClick, onUpdate }) => {
               <ContactCellFilled
                 contact={getContact('seller')}
                 onClick={() => handleAddContact('seller')}
+                onRemove={() => handleRemoveContact('seller')}
               />
             ) : (
               <EmptyContactCell
@@ -410,6 +471,7 @@ const PeopleWidget_White = ({ escrow, loading, onClick, onUpdate }) => {
               <ContactCellFilled
                 contact={getContact('buyerAgent')}
                 onClick={() => handleAddContact('buyerAgent')}
+                onRemove={() => handleRemoveContact('buyerAgent')}
               />
             ) : (
               <EmptyContactCell
@@ -423,6 +485,7 @@ const PeopleWidget_White = ({ escrow, loading, onClick, onUpdate }) => {
               <ContactCellFilled
                 contact={getContact('sellerAgent')}
                 onClick={() => handleAddContact('sellerAgent')}
+                onRemove={() => handleRemoveContact('sellerAgent')}
               />
             ) : (
               <EmptyContactCell
@@ -438,6 +501,7 @@ const PeopleWidget_White = ({ escrow, loading, onClick, onUpdate }) => {
               <ContactCellFilled
                 contact={getContact('loanOfficer')}
                 onClick={() => handleAddContact('loanOfficer')}
+                onRemove={() => handleRemoveContact('loanOfficer')}
               />
             ) : (
               <EmptyContactCell
@@ -451,6 +515,7 @@ const PeopleWidget_White = ({ escrow, loading, onClick, onUpdate }) => {
               <ContactCellFilled
                 contact={getContact('escrowOfficer')}
                 onClick={() => handleAddContact('escrowOfficer')}
+                onRemove={() => handleRemoveContact('escrowOfficer')}
               />
             ) : (
               <EmptyContactCell
