@@ -5,11 +5,12 @@ import {
   CircularProgress,
   Alert,
   IconButton,
-  Tooltip
+  Typography
 } from '@mui/material';
 import {
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Menu as MenuIcon
 } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import { escrowsAPI } from '../../../services/api.service';
@@ -31,29 +32,31 @@ import TimelineModal from './components/TimelineModal';
 import PeopleModal from './components/PeopleModal';
 import DocumentsDetailModal from './modals/DocumentsDetailModal';
 
-// PHASE 5: F-Pattern Layout (Left Sidebar | Hero + Widgets | Right Sidebar)
+// BEST PRACTICE: F-Pattern Layout with integrated sidebar controls
 const PageContainer = styled(Box)(({ theme }) => ({
   width: '100%',
   maxWidth: '100vw',
   padding: theme.spacing(2),
-  height: 'calc(100vh - 64px)', // Account for header
+  height: 'calc(100vh - 64px)',
   overflow: 'hidden',
   backgroundColor: theme.palette.grey[50],
 }));
 
 const FPatternGrid = styled(Box, {
-  shouldForwardProp: (prop) => prop !== 'leftCollapsed' && prop !== 'rightCollapsed',
-})(({ leftCollapsed, rightCollapsed, theme }) => ({
+  shouldForwardProp: (prop) => prop !== 'leftCollapsed' && prop !== 'rightCollapsed' && prop !== 'activityCollapsed',
+})(({ leftCollapsed, rightCollapsed, activityCollapsed, theme }) => ({
   display: 'grid',
-  gridTemplateColumns: `${leftCollapsed ? '0px' : '200px'} 1fr ${rightCollapsed ? '0px' : '200px'}`, // 200px sidebars for compact layout
+  gridTemplateColumns: `${leftCollapsed ? '0px' : '240px'} 1fr ${rightCollapsed ? '0px' : '240px'} ${activityCollapsed ? '0px' : '320px'}`,
   gap: theme.spacing(2),
   height: '100%',
   maxWidth: '2400px',
   margin: '0 auto',
   transition: 'grid-template-columns 0.3s ease-in-out',
-  position: 'relative',
+  [theme.breakpoints.down('xl')]: {
+    gridTemplateColumns: `${leftCollapsed ? '0px' : '220px'} 1fr ${rightCollapsed ? '0px' : '220px'} ${activityCollapsed ? '0px' : '280px'}`,
+  },
   [theme.breakpoints.down('lg')]: {
-    gridTemplateColumns: `${leftCollapsed ? '0px' : '200px'} 1fr ${rightCollapsed ? '0px' : '200px'}`,
+    gridTemplateColumns: `${leftCollapsed ? '0px' : '200px'} 1fr ${activityCollapsed ? '0px' : '280px'}`,
   },
   [theme.breakpoints.down('md')]: {
     gridTemplateColumns: '1fr',
@@ -64,57 +67,62 @@ const FPatternGrid = styled(Box, {
 const MainContent = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
-  gap: theme.spacing(1.5), // Tighter spacing for better fit
+  gap: theme.spacing(1.5),
   overflowY: 'auto',
   paddingRight: theme.spacing(1),
   paddingTop: theme.spacing(0.5),
   paddingBottom: theme.spacing(1),
 }));
 
+// BEST PRACTICE: Sidebar with integrated header and collapse button
 const SidebarColumn = styled(Box, {
   shouldForwardProp: (prop) => prop !== 'collapsed',
 })(({ collapsed, theme }) => ({
-  overflowY: 'auto',
-  paddingRight: theme.spacing(1),
+  display: 'flex',
+  flexDirection: 'column',
   width: collapsed ? 0 : 'auto',
   opacity: collapsed ? 0 : 1,
   transition: 'width 0.3s ease-in-out, opacity 0.3s ease-in-out',
-  overflow: collapsed ? 'hidden' : 'auto',
+  overflow: 'hidden',
+  backgroundColor: theme.palette.background.paper,
+  borderRadius: theme.spacing(1),
+  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
   [theme.breakpoints.down('md')]: {
     display: 'none',
   },
 }));
 
-const SidebarToggle = styled(IconButton, {
-  shouldForwardProp: (prop) => prop !== 'side',
-})(({ theme, side }) => ({
-  position: 'absolute',
-  top: '50%',
-  transform: 'translateY(-50%)',
-  [side === 'left' ? 'left' : 'right']: side === 'left' ? -12 : -12,
-  zIndex: 1300,
+// BEST PRACTICE: Sidebar header with title and integrated collapse button
+const SidebarHeader = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: theme.spacing(1.5, 2),
+  borderBottom: `1px solid ${theme.palette.divider}`,
   backgroundColor: theme.palette.background.paper,
-  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-  width: 24,
-  height: 40,
-  borderRadius: side === 'left' ? '0 8px 8px 0' : '8px 0 0 8px',
-  '&:hover': {
-    backgroundColor: theme.palette.primary.main,
-    color: 'white',
+  flexShrink: 0,
+}));
+
+const SidebarContent = styled(Box)(({ theme }) => ({
+  flex: 1,
+  overflowY: 'auto',
+  '&::-webkit-scrollbar': {
+    width: 6,
   },
-  [theme.breakpoints.down('md')]: {
-    display: 'none',
+  '&::-webkit-scrollbar-thumb': {
+    backgroundColor: theme.palette.grey[300],
+    borderRadius: 3,
   },
 }));
 
 const WidgetsGrid = styled(Box)(({ theme }) => ({
   display: 'grid',
-  gridTemplateColumns: 'repeat(2, 1fr)', // 2x2 grid for maximum information density
-  gridTemplateRows: 'repeat(2, 190px)', // Fixed 190px height per widget
+  gridTemplateColumns: 'repeat(2, 1fr)',
+  gridTemplateRows: 'repeat(2, 190px)',
   gap: theme.spacing(2),
-  height: 400, // Total height: 2 rows * 190px + 20px gap
+  height: 400,
   [theme.breakpoints.down('md')]: {
-    gridTemplateColumns: '1fr', // Stack on mobile
+    gridTemplateColumns: '1fr',
     gridTemplateRows: 'auto',
     height: 'auto',
   },
@@ -126,12 +134,15 @@ const EscrowDetailCompact = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Sidebar collapse states (stored in localStorage)
+  // Sidebar collapse states (localStorage persistence)
   const [leftSidebarCollapsed, setLeftSidebarCollapsed] = useState(() => {
     return localStorage.getItem('leftSidebarCollapsed') === 'true';
   });
   const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(() => {
     return localStorage.getItem('rightSidebarCollapsed') === 'true';
+  });
+  const [activityCollapsed, setActivityCollapsed] = useState(() => {
+    return localStorage.getItem('activityCollapsed') === 'true';
   });
 
   // Modal states
@@ -142,7 +153,7 @@ const EscrowDetailCompact = () => {
   const [selectedRole, setSelectedRole] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
 
-  // Save sidebar state to localStorage
+  // Save sidebar states to localStorage
   useEffect(() => {
     localStorage.setItem('leftSidebarCollapsed', leftSidebarCollapsed);
   }, [leftSidebarCollapsed]);
@@ -150,6 +161,10 @@ const EscrowDetailCompact = () => {
   useEffect(() => {
     localStorage.setItem('rightSidebarCollapsed', rightSidebarCollapsed);
   }, [rightSidebarCollapsed]);
+
+  useEffect(() => {
+    localStorage.setItem('activityCollapsed', activityCollapsed);
+  }, [activityCollapsed]);
 
   // Fetch escrow data
   useEffect(() => {
@@ -179,7 +194,6 @@ const EscrowDetailCompact = () => {
   const { connected } = useEscrowWebSocket(id, {
     onEscrowUpdate: (data) => {
       console.log('WebSocket escrow update:', data);
-      // Refetch escrow data when update received
       if (escrow) {
         escrowsAPI.getById(id).then(response => {
           if (response.success) setEscrow(response.data);
@@ -205,25 +219,6 @@ const EscrowDetailCompact = () => {
 
   const handleUpdate = (updates) => {
     setEscrow(prev => ({ ...prev, ...updates }));
-  };
-
-  const handleEmailParties = () => {
-    const people = escrow?.people || {};
-    const emails = Object.values(people)
-      .filter(person => person?.email)
-      .map(person => person.email)
-      .join(',');
-
-    const subject = `Escrow Update - ${escrow?.details?.propertyAddress || escrow?.property_address}`;
-    window.location.href = `mailto:${emails}?subject=${encodeURIComponent(subject)}`;
-  };
-
-  const handleGenerateStatement = () => {
-    alert('Statement generation coming in Phase 6');
-  };
-
-  const handleMoreActions = () => {
-    alert('More actions coming in Phase 6');
   };
 
   if (loading) {
@@ -252,37 +247,63 @@ const EscrowDetailCompact = () => {
 
   return (
     <PageContainer>
-      {/* F-Pattern Layout: Left | Main | Right */}
-      <FPatternGrid leftCollapsed={leftSidebarCollapsed} rightCollapsed={rightSidebarCollapsed}>
-        {/* Left Sidebar Toggle */}
-        <Tooltip title={leftSidebarCollapsed ? "Show sidebar" : "Hide sidebar"} placement="right">
-          <SidebarToggle
-            side="left"
-            onClick={() => setLeftSidebarCollapsed(!leftSidebarCollapsed)}
-            sx={{ left: leftSidebarCollapsed ? 0 : 268 }}
-          >
-            {leftSidebarCollapsed ? <ChevronRight fontSize="small" /> : <ChevronLeft fontSize="small" />}
-          </SidebarToggle>
-        </Tooltip>
-
-        {/* Left Sidebar (280px) - Quick Actions */}
+      <FPatternGrid
+        leftCollapsed={leftSidebarCollapsed}
+        rightCollapsed={rightSidebarCollapsed}
+        activityCollapsed={activityCollapsed}
+      >
+        {/* BEST PRACTICE: Left Sidebar with Header */}
         <SidebarColumn collapsed={leftSidebarCollapsed}>
-          <LeftSidebar
-            escrow={escrow}
-            loading={loading}
-            onUpdate={handleUpdate}
-          />
+          <SidebarHeader>
+            <Typography variant="subtitle2" fontWeight="600" color="text.secondary">
+              Quick Actions
+            </Typography>
+            <IconButton
+              size="small"
+              onClick={() => setLeftSidebarCollapsed(true)}
+              sx={{ ml: 1 }}
+            >
+              <ChevronLeft fontSize="small" />
+            </IconButton>
+          </SidebarHeader>
+          <SidebarContent>
+            <LeftSidebar
+              escrow={escrow}
+              loading={loading}
+              onUpdate={handleUpdate}
+            />
+          </SidebarContent>
         </SidebarColumn>
 
-        {/* Main Content (flex-grow) - Hero + 4 Widgets */}
+        {/* Main Content */}
         <MainContent>
-          {/* Hero Card (wider aspect ratio like dashboard cards) */}
+          {/* Collapsed Left Sidebar Expand Button */}
+          {leftSidebarCollapsed && (
+            <IconButton
+              size="small"
+              onClick={() => setLeftSidebarCollapsed(false)}
+              sx={{
+                position: 'absolute',
+                left: 8,
+                top: 8,
+                zIndex: 10,
+                backgroundColor: 'background.paper',
+                boxShadow: 1,
+                '&:hover': {
+                  backgroundColor: 'primary.main',
+                  color: 'white',
+                },
+              }}
+            >
+              <MenuIcon fontSize="small" />
+            </IconButton>
+          )}
+
           <EscrowHero
             escrow={escrow}
             onUpdate={handleUpdate}
           />
 
-          {/* 4 Main Widgets (4 columns / 2x2 responsive) */}
           <WidgetsGrid>
             <TimelineWidget
               escrow={escrow}
@@ -313,28 +334,99 @@ const EscrowDetailCompact = () => {
           </WidgetsGrid>
         </MainContent>
 
-        {/* Right Sidebar (320px) - Smart Context */}
+        {/* BEST PRACTICE: Right Sidebar with Header */}
         <SidebarColumn collapsed={rightSidebarCollapsed}>
-          <RightSidebar
-            escrow={escrow}
-            loading={loading}
-            onUpdate={handleUpdate}
-          />
+          <SidebarHeader>
+            <Typography variant="subtitle2" fontWeight="600" color="text.secondary">
+              Smart Context
+            </Typography>
+            <IconButton
+              size="small"
+              onClick={() => setRightSidebarCollapsed(true)}
+              sx={{ ml: 1 }}
+            >
+              <ChevronRight fontSize="small" />
+            </IconButton>
+          </SidebarHeader>
+          <SidebarContent>
+            <RightSidebar
+              escrow={escrow}
+              loading={loading}
+              onUpdate={handleUpdate}
+            />
+          </SidebarContent>
         </SidebarColumn>
 
-        {/* Right Sidebar Toggle */}
-        <Tooltip title={rightSidebarCollapsed ? "Show sidebar" : "Hide sidebar"} placement="left">
-          <SidebarToggle
-            side="right"
-            onClick={() => setRightSidebarCollapsed(!rightSidebarCollapsed)}
-            sx={{ right: rightSidebarCollapsed ? 0 : 308 }}
+        {/* BEST PRACTICE: Activity Feed as Right Panel (Desktop) */}
+        <SidebarColumn collapsed={activityCollapsed}>
+          <SidebarHeader>
+            <Typography variant="subtitle2" fontWeight="600" color="text.secondary">
+              Activity Feed
+            </Typography>
+            <IconButton
+              size="small"
+              onClick={() => setActivityCollapsed(true)}
+              sx={{ ml: 1 }}
+            >
+              <ChevronRight fontSize="small" />
+            </IconButton>
+          </SidebarHeader>
+          <SidebarContent>
+            <ActivityFeed escrow={escrow} isPanel={true} />
+          </SidebarContent>
+        </SidebarColumn>
+
+        {/* Collapsed Right/Activity Expand Buttons */}
+        {(rightSidebarCollapsed || activityCollapsed) && (
+          <Box
+            sx={{
+              position: 'fixed',
+              right: 8,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 1,
+              zIndex: 10,
+            }}
           >
-            {rightSidebarCollapsed ? <ChevronLeft fontSize="small" /> : <ChevronRight fontSize="small" />}
-          </SidebarToggle>
-        </Tooltip>
+            {rightSidebarCollapsed && (
+              <IconButton
+                size="small"
+                onClick={() => setRightSidebarCollapsed(false)}
+                sx={{
+                  backgroundColor: 'background.paper',
+                  boxShadow: 1,
+                  '&:hover': {
+                    backgroundColor: 'primary.main',
+                    color: 'white',
+                  },
+                }}
+              >
+                <ChevronLeft fontSize="small" />
+              </IconButton>
+            )}
+            {activityCollapsed && (
+              <IconButton
+                size="small"
+                onClick={() => setActivityCollapsed(false)}
+                sx={{
+                  backgroundColor: 'background.paper',
+                  boxShadow: 1,
+                  '&:hover': {
+                    backgroundColor: 'primary.main',
+                    color: 'white',
+                  },
+                }}
+              >
+                <ChevronLeft fontSize="small" />
+              </IconButton>
+            )}
+          </Box>
+        )}
       </FPatternGrid>
 
-      {/* Detail Modals with Inline Editing */}
+      {/* Detail Modals */}
       <FinancialsModal
         open={financialsModalOpen}
         onClose={() => setFinancialsModalOpen(false)}
@@ -369,9 +461,6 @@ const EscrowDetailCompact = () => {
         category={selectedCategory}
         onUpdate={handleUpdate}
       />
-
-      {/* Phase 7: Draggable Activity Feed (Apple Maps-style Bottom Sheet) */}
-      <ActivityFeed escrow={escrow} />
     </PageContainer>
   );
 };

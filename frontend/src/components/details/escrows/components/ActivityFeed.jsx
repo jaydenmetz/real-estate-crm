@@ -92,8 +92,9 @@ const TimeAgo = styled(Typography)(({ theme}) => ({
   whiteSpace: 'nowrap',
 }));
 
-const ActivityFeed = ({ escrow }) => {
+const ActivityFeed = ({ escrow, isPanel = false }) => {
   const [height, setHeight] = useState(() => {
+    if (isPanel) return null; // Panel mode doesn't need height
     const saved = localStorage.getItem('activityFeedHeight');
     return saved ? parseInt(saved) : PEEK_HEIGHT;
   });
@@ -272,6 +273,65 @@ const ActivityFeed = ({ escrow }) => {
   const visibleActivities =
     height === PEEK_HEIGHT ? filteredActivities.slice(0, 2) : filteredActivities;
 
+  // BEST PRACTICE: Panel mode for desktop sidebars (no dragging)
+  if (isPanel) {
+    return (
+      <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
+          <TextField
+            fullWidth
+            size="small"
+            placeholder="Search activity..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search fontSize="small" />
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Box>
+
+        <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
+          {loading ? (
+            <>
+              {[1, 2, 3, 4, 5].map((i) => (
+                <Box key={i} mb={2}>
+                  <Skeleton variant="circular" width={40} height={40} sx={{ mb: 1 }} />
+                  <Skeleton width="80%" height={20} />
+                  <Skeleton width="60%" height={16} />
+                </Box>
+              ))}
+            </>
+          ) : (
+            <List dense sx={{ py: 0 }}>
+              {filteredActivities.map((activity) => (
+                <ActivityItem key={activity.id}>
+                  <ListItemAvatar>
+                    <Avatar sx={{ bgcolor: getActivityColor(activity.type), width: 36, height: 36 }}>
+                      {getActivityIcon(activity.type)}
+                    </Avatar>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={
+                      <Typography variant="body2" fontWeight="600">
+                        {activity.user} <span style={{ fontWeight: 400 }}>{activity.message}</span>
+                      </Typography>
+                    }
+                    secondary={<TimeAgo>{activity.timeAgo}</TimeAgo>}
+                  />
+                </ActivityItem>
+              ))}
+            </List>
+          )}
+        </Box>
+      </Box>
+    );
+  }
+
+  // Mobile bottom sheet mode (with dragging)
   return (
     <BottomSheetContainer
       ref={containerRef}
