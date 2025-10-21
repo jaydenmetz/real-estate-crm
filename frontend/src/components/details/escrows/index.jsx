@@ -27,11 +27,11 @@ import PeopleWidget_White from './components/PeopleWidget_White';
 import ChecklistsWidget_White from './components/ChecklistsWidget_White';
 import PlaceholderWidget from './components/PlaceholderWidget';
 
-// Modals
+// Modals (Phase 3: All modals have gradient headers)
 import FinancialsModal from './modals/FinancialsModal';
 import TimelineModal from './modals/TimelineModal';
 import PeopleModal from './modals/PeopleModal';
-import DocumentsDetailModal from './modals/DocumentsDetailModal';
+import ChecklistsModal from './modals/ChecklistsModal';
 
 const PageContainer = styled(Box)(({ theme }) => ({
   width: '100%',
@@ -153,7 +153,6 @@ const EscrowDetailCompact = () => {
   const [timelineModalOpen, setTimelineModalOpen] = useState(false);
   const [peopleModalOpen, setPeopleModalOpen] = useState(false);
   const [checklistsModalOpen, setChecklistsModalOpen] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState(null);
 
   // Save sidebar states to localStorage
   useEffect(() => {
@@ -371,14 +370,10 @@ const EscrowDetailCompact = () => {
         onUpdate={handleUpdate}
       />
 
-      <DocumentsDetailModal
+      <ChecklistsModal
         open={checklistsModalOpen}
-        onClose={() => {
-          setChecklistsModalOpen(false);
-          setSelectedCategory(null);
-        }}
+        onClose={() => setChecklistsModalOpen(false)}
         escrow={escrow}
-        category={selectedCategory}
         onUpdate={handleUpdate}
       />
     </PageContainer>
