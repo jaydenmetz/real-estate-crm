@@ -73,7 +73,7 @@ const SidebarInner = styled(Box)(({ theme }) => ({
   boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
   display: 'flex',
   flexDirection: 'column',
-  height: 'fit-content',
+  minHeight: 'calc(100vh - 160px)', // Extend from top of hero to bottom
   position: 'sticky',
   top: theme.spacing(3),
 }));
@@ -121,17 +121,18 @@ const WidgetsGrid = styled(Box)(({ theme }) => ({
   },
 }));
 
-// Floating toggle buttons with shadow (visible when sidebars collapsed)
+// Floating toggle buttons with square/rounded rectangle shape (visible when sidebars collapsed)
 const ToggleButton = styled(IconButton)(({ theme, side }) => ({
   position: 'fixed',
   top: '50%',
   transform: 'translateY(-50%)',
-  [side]: 16,
+  [side]: 32, // More padding from edge to prevent overlap
   zIndex: 100,
   backgroundColor: theme.palette.background.paper,
   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-  width: 40,
-  height: 40,
+  width: 36,
+  height: 44,
+  borderRadius: theme.spacing(1), // More square, less circular
   '&:hover': {
     backgroundColor: theme.palette.primary.main,
     boxShadow: '0 6px 16px rgba(0, 0, 0, 0.25)',
