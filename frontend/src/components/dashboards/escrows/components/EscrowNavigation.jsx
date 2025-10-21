@@ -43,8 +43,6 @@ import {
 const EscrowNavigation = ({
   selectedStatus,
   setSelectedStatus,
-  scope,
-  setScope,
   sortBy,
   setSortBy,
   viewMode,
@@ -186,57 +184,6 @@ const EscrowNavigation = ({
                 ),
               }}
             />
-
-            {/* Scope Dropdown */}
-            <FormControl size="small" variant="standard" sx={{ minWidth: 110 }}>
-              <Select
-                value={scope}
-                onChange={(e) => setScope(e.target.value)}
-                disableUnderline
-                aria-label="Select scope filter"
-                inputProps={{
-                  'aria-label': 'Scope filter',
-                  'id': 'scope-select',
-                }}
-                renderValue={(value) => {
-                  const labels = {
-                    brokerage: 'Brokerage',
-                    team: 'Team',
-                    user: 'User',
-                  };
-                  return (
-                    <Typography variant="body2" sx={{
-                      fontSize: '0.875rem',
-                      fontWeight: 500,
-                      color: 'text.primary',
-                    }}>
-                      {labels[value]}
-                    </Typography>
-                  );
-                }}
-                sx={{
-                  backgroundColor: 'transparent',
-                  borderRadius: 1,
-                  px: 1.5,
-                  py: 0.5,
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  '&:hover': {
-                    backgroundColor: alpha('#000', 0.04),
-                    borderColor: 'primary.main',
-                  },
-                  '& .MuiSelect-select': {
-                    paddingRight: '32px !important',
-                    display: 'flex',
-                    alignItems: 'center',
-                  },
-                }}
-              >
-                <MenuItem value="brokerage">Brokerage</MenuItem>
-                <MenuItem value="team">Team</MenuItem>
-                <MenuItem value="user">User</MenuItem>
-              </Select>
-            </FormControl>
 
             {/* Sort Dropdown */}
             <FormControl size="small" variant="standard" sx={{ minWidth: 140 }}>
@@ -509,52 +456,6 @@ const EscrowNavigation = ({
                 ),
               }}
             />
-
-            {/* Scope Dropdown - Mobile */}
-            <FormControl size="small" variant="standard" sx={{ minWidth: 100 }}>
-              <Select
-                value={scope}
-                onChange={(e) => setScope(e.target.value)}
-                disableUnderline
-                renderValue={(value) => {
-                  const labels = {
-                    brokerage: 'Brokerage',
-                    team: 'Team',
-                    user: 'User',
-                  };
-                  return (
-                    <Typography variant="body2" sx={{
-                      fontSize: '0.875rem',
-                      fontWeight: 500,
-                      color: 'text.primary',
-                    }}>
-                      {labels[value]}
-                    </Typography>
-                  );
-                }}
-                sx={{
-                  backgroundColor: 'transparent',
-                  borderRadius: 1,
-                  px: 1.5,
-                  py: 0.5,
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  '&:hover': {
-                    backgroundColor: alpha('#000', 0.04),
-                    borderColor: 'primary.main',
-                  },
-                  '& .MuiSelect-select': {
-                    paddingRight: '32px !important',
-                    display: 'flex',
-                    alignItems: 'center',
-                  },
-                }}
-              >
-                <MenuItem value="brokerage">Brokerage</MenuItem>
-                <MenuItem value="team">Team</MenuItem>
-                <MenuItem value="user">User</MenuItem>
-              </Select>
-            </FormControl>
 
             {/* Sort Dropdown */}
             <FormControl size="small" variant="standard" sx={{ minWidth: 120 }}>

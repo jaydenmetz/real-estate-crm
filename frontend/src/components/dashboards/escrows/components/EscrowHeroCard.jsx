@@ -3,13 +3,17 @@ import {
   Box,
   Typography,
   ToggleButton,
-  ToggleButtonGroup
+  ToggleButtonGroup,
+  Select,
+  MenuItem,
+  FormControl
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { motion } from 'framer-motion';
+import { useAuth } from '../../../../contexts/AuthContext';
 
 // Styled Components - Keep exact same styling
 const HeroSection = styled(Box)(({ theme }) => ({
@@ -35,11 +39,30 @@ const EscrowHeroCard = ({
   setCustomEndDate,
   dateRange,
   detectPresetRange,
+  scope,
+  setScope,
   children // For the stats cards that go inside
 }) => {
+  const { user } = useAuth();
+
   // Local state for date pickers - must be defined here, not in parent
   const [startDatePickerOpen, setStartDatePickerOpen] = useState(false);
   const [endDatePickerOpen, setEndDatePickerOpen] = useState(false);
+
+  // Generate title based on scope
+  const getTitle = () => {
+    switch (scope) {
+      case 'user':
+        const firstName = user?.firstName || user?.username?.split(' ')[0] || 'User';
+        return `${firstName}'s Escrows`;
+      case 'team':
+        return 'Team Escrows';
+      case 'brokerage':
+        return 'Brokerage Escrows';
+      default:
+        return 'Escrows';
+    }
+  };
 
   return (
     <HeroSection>
@@ -57,16 +80,69 @@ const EscrowHeroCard = ({
           mb: 3,
           width: '100%',
         }}>
-          {/* Header */}
+          {/* Header with Scope Dropdown */}
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             style={{ flexShrink: 0 }}
           >
-            <Typography variant="h3" component="h1" sx={{ fontWeight: 700 }}>
-              Escrows
-            </Typography>
+            <FormControl variant="standard" sx={{ minWidth: 200 }}>
+              <Select
+                value={scope}
+                onChange={(e) => setScope(e.target.value)}
+                disableUnderline
+                renderValue={(value) => (
+                  <Typography variant="h3" component="h1" sx={{ fontWeight: 700 }}>
+                    {getTitle()}
+                  </Typography>
+                )}
+                sx={{
+                  '& .MuiSelect-select': {
+                    padding: 0,
+                    paddingRight: '32px !important',
+                    '&:focus': {
+                      backgroundColor: 'transparent',
+                    },
+                  },
+                  '& .MuiSvgIcon-root': {
+                    color: 'white',
+                    right: 0,
+                  },
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    borderRadius: 1,
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12)',
+                  },
+                  transition: 'all 0.2s ease',
+                }}
+                MenuProps={{
+                  PaperProps: {
+                    sx: {
+                      mt: 1,
+                      borderRadius: 2,
+                      boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+                    },
+                  },
+                }}
+              >
+                <MenuItem value="user">
+                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                    {user?.firstName || user?.username?.split(' ')[0] || 'User'}'s Escrows
+                  </Typography>
+                </MenuItem>
+                <MenuItem value="team">
+                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                    Team Escrows
+                  </Typography>
+                </MenuItem>
+                <MenuItem value="brokerage">
+                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                    Brokerage Escrows
+                  </Typography>
+                </MenuItem>
+              </Select>
+            </FormControl>
           </motion.div>
 
           {/* Date Controls Container - always show in header, right-aligned */}

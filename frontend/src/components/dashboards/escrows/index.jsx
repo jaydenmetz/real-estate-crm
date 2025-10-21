@@ -792,6 +792,8 @@ const EscrowsDashboard = () => {
           setCustomEndDate={setCustomEndDate}
           dateRange={dateRange}
           detectPresetRange={detectPresetRange}
+          scope={scope}
+          setScope={setScope}
         >
           {/* Stats cards and other content that goes inside the hero */}
           {/* Left container: Stats Grid */}
@@ -951,8 +953,6 @@ const EscrowsDashboard = () => {
       <EscrowNavigation
         selectedStatus={selectedStatus}
         setSelectedStatus={setSelectedStatus}
-        scope={scope}
-        setScope={setScope}
         sortBy={sortBy}
         setSortBy={setSortBy}
         viewMode={viewMode}
