@@ -109,7 +109,9 @@ const ActivityFeed = ({ escrow, isPanel = false }) => {
   }, [escrow?.id]);
 
   useEffect(() => {
-    localStorage.setItem('activityFeedHeight', height.toString());
+    if (height !== null) {
+      localStorage.setItem('activityFeedHeight', height.toString());
+    }
   }, [height]);
 
   const fetchActivities = async () => {
