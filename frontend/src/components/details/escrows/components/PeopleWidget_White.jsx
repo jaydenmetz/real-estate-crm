@@ -279,17 +279,28 @@ const PeopleWidget_White = ({ escrow, loading, onClick, onUpdate }) => {
 
   // Handle contact selection from modal
   const handleContactSelect = async (contact) => {
-    if (!selectedRole || !escrow?.id) return;
+    console.log('📞 Contact selected:', { contact, selectedRole, escrowId: escrow?.id });
+
+    if (!selectedRole || !escrow?.id) {
+      console.error('❌ Cannot assign contact: missing role or escrow ID', { selectedRole, escrowId: escrow?.id });
+      return;
+    }
 
     try {
+      console.log('💾 Updating escrow people:', { escrowId: escrow.id, role: selectedRole, contactId: contact.id });
+
       // Update people via API with contact ID
       const response = await escrowsAPI.updatePeople(escrow.id, {
         [selectedRole]: contact.id, // Store contact ID, not inline data
       });
 
+      console.log('✅ Update response:', response);
+
       if (response.success) {
         // Refresh people from API to get full contact objects
         const peopleResponse = await escrowsAPI.getPeople(escrow.id);
+        console.log('👥 Fetched people:', peopleResponse);
+
         if (peopleResponse.success) {
           setPeople(peopleResponse.data || {});
         }
@@ -300,7 +311,7 @@ const PeopleWidget_White = ({ escrow, loading, onClick, onUpdate }) => {
         }
       }
     } catch (error) {
-      console.error('Failed to update escrow people:', error);
+      console.error('❌ Failed to update escrow people:', error);
     }
 
     // Close modal
