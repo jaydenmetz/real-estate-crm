@@ -60,7 +60,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { appointmentsAPI } from '../../../services/api.service';
-import NewAppointmentModal from '../../forms/NewAppointmentModal';
+import NewAppointmentModal from './modals/NewAppointmentModal';
 import { useAuth } from '../../../contexts/AuthContext';
 import networkMonitor from '../../../services/networkMonitor.service';
 import { useWebSocket } from '../../../hooks/useWebSocket';

@@ -61,7 +61,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { format as formatDate } from 'date-fns';
 import { listingsAPI } from '../../../services/api.service';
 import { useAuth } from '../../../contexts/AuthContext';
-import NewListingModal from '../../forms/NewListingModal';
+import NewListingModal from './modals/NewListingModal';
 import networkMonitor from '../../../services/networkMonitor.service';
 import ListingCard from '../../common/widgets/ListingCard';
 import { useWebSocket } from '../../../hooks/useWebSocket';

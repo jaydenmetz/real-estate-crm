@@ -172,7 +172,7 @@ import { useSnackbar } from 'notistack';
 import { format, differenceInDays, parseISO, isValid } from 'date-fns';
 import { listingsAPI, appointmentsAPI } from '../../../services/api.service';
 import websocketService from '../../../services/websocket.service';
-import ListingForm from '../../forms/ListingForm';
+import EditListingModal from './modals/EditListingModal';
 import {
   LineChart,
   Line,
@@ -2434,7 +2434,7 @@ const ListingDetail = () => {
       </Dialog>
 
       {/* Edit Form */}
-      <ListingForm
+      <EditListingModal
         open={editFormOpen}
         onClose={() => setEditFormOpen(false)}
         listing={listing}

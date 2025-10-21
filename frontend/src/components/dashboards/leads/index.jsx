@@ -12,7 +12,7 @@ import {
   IconButton,
 } from '@mui/material';
 import { leadsAPI } from '../../../services/api.service';
-import NewLeadModal from '../../forms/NewLeadModal';
+import NewLeadModal from './modals/NewLeadModal';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useWebSocket } from '../../../hooks/useWebSocket';
 import LeadHeroCard from './components/LeadHeroCard';

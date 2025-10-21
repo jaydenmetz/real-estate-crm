@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import { clientsAPI } from '../../../services/api.service';
 import { useAuth } from '../../../contexts/AuthContext';
-import NewClientModal from '../../forms/NewClientModal';
+import NewClientModal from './modals/NewClientModal';
 import networkMonitor from '../../../services/networkMonitor.service';
 import { useWebSocket } from '../../../hooks/useWebSocket';
 import ClientHeroCard from './components/ClientHeroCard';
