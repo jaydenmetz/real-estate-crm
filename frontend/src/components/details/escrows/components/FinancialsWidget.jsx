@@ -1,94 +1,83 @@
 import React from 'react';
-import {
-  Box,
-  Card,
-  Typography,
-  Divider,
-  Chip,
-  Skeleton
-} from '@mui/material';
-import {
-  AttachMoney,
-  TrendingUp,
-  ExpandMore
-} from '@mui/icons-material';
+import { Box, Card, Typography, Skeleton } from '@mui/material';
+import { AttachMoney, TrendingUp, AccountBalance } from '@mui/icons-material';
 import { styled } from '@mui/material/styles';
 import { motion } from 'framer-motion';
+import { formatCurrency } from '../../../../utils/formatters';
 
+// Ultra-clean card showing only 3 key financial numbers
 const CompactCard = styled(Card)(({ theme }) => ({
   borderRadius: theme.spacing(2),
-  padding: theme.spacing(2),
-  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-  background: 'white',
+  padding: theme.spacing(2.5),
   height: '100%',
-  maxHeight: 400,
   display: 'flex',
   flexDirection: 'column',
-  transition: 'all 0.3s ease',
   cursor: 'pointer',
+  transition: 'all 0.2s',
+  background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)',
+  color: 'white',
+  position: 'relative',
+  overflow: 'hidden',
   '&:hover': {
-    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12)',
-    transform: 'translateY(-2px)'
-  }
+    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
+    transform: 'translateY(-4px)',
+  },
+  '&::before': {
+    content: '""',
+    position: 'absolute',
+    top: -50,
+    left: -50,
+    width: 150,
+    height: 150,
+    borderRadius: '50%',
+    background: 'rgba(255, 255, 255, 0.1)',
+    pointerEvents: 'none',
+  },
 }));
 
-const FinancialRow = styled(Box)(({ theme }) => ({
+const MetricBox = styled(Box)(({ theme }) => ({
   display: 'flex',
-  justifyContent: 'space-between',
   alignItems: 'center',
-  padding: theme.spacing(1, 0)
+  justifyContent: 'space-between',
+  padding: theme.spacing(2),
+  borderRadius: theme.spacing(1.5),
+  backgroundColor: 'rgba(255, 255, 255, 0.15)',
+  backdropFilter: 'blur(10px)',
+  marginBottom: theme.spacing(1.5),
+  '&:last-of-type': {
+    marginBottom: 0,
+  },
 }));
 
-const HighlightRow = styled(Box)(({ theme }) => ({
+const IconBox = styled(Box)(({ theme }) => ({
+  width: 48,
+  height: 48,
+  borderRadius: theme.spacing(1.5),
   display: 'flex',
-  justifyContent: 'space-between',
   alignItems: 'center',
-  padding: theme.spacing(1.5),
-  backgroundColor: theme.palette.primary.main,
-  borderRadius: theme.spacing(1),
-  marginTop: theme.spacing(1)
+  justifyContent: 'center',
+  backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  flexShrink: 0,
 }));
 
 const FinancialsWidget = ({ escrow, loading, onClick }) => {
-  const formatCurrency = (value) => {
-    if (!value) return '$0.00';
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2
-    }).format(value);
-  };
-
   if (loading) {
     return (
       <CompactCard>
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5}>
-          <Skeleton width="40%" height={24} />
-          <Skeleton width="20%" height={22} />
-        </Box>
-        <Skeleton width="30%" height={16} sx={{ mb: 1 }} />
-        {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-          <Box key={i} display="flex" justifyContent="space-between" mb={1}>
-            <Skeleton width="45%" height={18} />
-            <Skeleton width="25%" height={18} />
-          </Box>
-        ))}
-        <Skeleton width="100%" height={50} sx={{ mt: 1, borderRadius: 1 }} />
+        <Skeleton width="60%" height={28} sx={{ mb: 2.5, bgcolor: 'rgba(255,255,255,0.2)' }} />
+        <Skeleton width="100%" height={70} sx={{ mb: 1.5, bgcolor: 'rgba(255,255,255,0.15)' }} />
+        <Skeleton width="100%" height={70} sx={{ mb: 1.5, bgcolor: 'rgba(255,255,255,0.15)' }} />
+        <Skeleton width="100%" height={70} sx={{ bgcolor: 'rgba(255,255,255,0.15)' }} />
       </CompactCard>
     );
   }
 
-  // Extract financial data (supports both formats)
   const financials = escrow?.financials || {};
 
-  const baseCommission = financials.grossCommission || 0;
-  const franchiseFee = financials.franchiseFees || 0;
-  const dealNet = financials.adjustedGross || (baseCommission - franchiseFee);
-  const agentCommissionPercent = financials.splitPercentage || 80;
-  const agentCommission = financials.agentSplit || (dealNet * (agentCommissionPercent / 100));
-  const transactionFee = financials.transactionFee || 285;
-  const tcFee = financials.tcFee || 250;
-  const agent1099Income = financials.agent1099Income || financials.agentNet || (agentCommission - transactionFee - tcFee);
+  // Calculate key numbers
+  const purchasePrice = escrow?.purchase_price || escrow?.purchasePrice || 0;
+  const commissionPercent = financials.commissionRate || 3.0;
+  const agentNet = financials.agent1099Income || financials.agentNet || 0;
 
   return (
     <CompactCard
@@ -99,123 +88,68 @@ const FinancialsWidget = ({ escrow, loading, onClick }) => {
       onClick={onClick}
     >
       {/* Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={1.5}>
-        <Box display="flex" alignItems="center" gap={1}>
-          <Box
-            sx={{
-              width: 32,
-              height: 32,
-              borderRadius: 1.5,
-              background: 'linear-gradient(135deg, #4A90E2 0%, #5B9FED 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center'
-            }}
-          >
-            <AttachMoney sx={{ color: 'white', fontSize: 18 }} />
+      <Typography variant="h6" fontWeight="700" sx={{ color: 'white', mb: 2.5 }}>
+        Financials
+      </Typography>
+
+      {/* Key Metrics - Only 3 shown */}
+      <Box flex={1}>
+        {/* Purchase Price */}
+        <MetricBox>
+          <Box>
+            <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.8)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              Purchase Price
+            </Typography>
+            <Typography variant="h5" fontWeight="700" sx={{ color: 'white', mt: 0.5 }}>
+              {formatCurrency(purchasePrice)}
+            </Typography>
           </Box>
-          <Typography variant="subtitle1" fontWeight="600" color="text.primary">
-            Commission
-          </Typography>
-        </Box>
-        <Chip
-          icon={<TrendingUp sx={{ fontSize: 16 }} />}
-          label="Agent GCI"
-          size="small"
-          color="success"
-          sx={{ height: 22, fontSize: '0.75rem', fontWeight: 600 }}
-        />
+          <IconBox>
+            <AccountBalance sx={{ fontSize: 28, color: 'white' }} />
+          </IconBox>
+        </MetricBox>
+
+        {/* Commission Rate */}
+        <MetricBox>
+          <Box>
+            <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.8)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              Commission Rate
+            </Typography>
+            <Typography variant="h5" fontWeight="700" sx={{ color: 'white', mt: 0.5 }}>
+              {commissionPercent}%
+            </Typography>
+          </Box>
+          <IconBox>
+            <TrendingUp sx={{ fontSize: 28, color: 'white' }} />
+          </IconBox>
+        </MetricBox>
+
+        {/* Agent Net Income */}
+        <MetricBox sx={{ backgroundColor: 'rgba(255, 255, 255, 0.25)' }}>
+          <Box>
+            <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.9)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              Your Net (1099)
+            </Typography>
+            <Typography variant="h4" fontWeight="700" sx={{ color: 'white', mt: 0.5 }}>
+              {formatCurrency(agentNet)}
+            </Typography>
+          </Box>
+          <IconBox sx={{ backgroundColor: 'rgba(255, 255, 255, 0.3)' }}>
+            <AttachMoney sx={{ fontSize: 32, color: 'white' }} />
+          </IconBox>
+        </MetricBox>
       </Box>
-
-      {/* Deal Cost Breakdown */}
-      <Box flex={1} overflow="auto">
-        <Typography variant="caption" color="text.secondary" fontWeight="600" mb={1} display="block">
-          DEAL BREAKDOWN
-        </Typography>
-
-        <FinancialRow>
-          <Typography variant="body2" color="text.primary">Base Commission</Typography>
-          <Typography variant="body2" fontWeight="600">{formatCurrency(baseCommission)}</Typography>
-        </FinancialRow>
-
-        <FinancialRow>
-          <Typography variant="body2" color="text.secondary" sx={{ pl: 2 }}>
-            Franchise Fees
-          </Typography>
-          <Typography variant="body2" color="error.main">
-            -{formatCurrency(franchiseFee)}
-          </Typography>
-        </FinancialRow>
-
-        <Divider sx={{ my: 1 }} />
-
-        <FinancialRow>
-          <Typography variant="body2" fontWeight="600" color="text.primary">
-            Deal Net
-          </Typography>
-          <Typography variant="body2" fontWeight="700" color="primary.main">
-            {formatCurrency(dealNet)}
-          </Typography>
-        </FinancialRow>
-
-        <Divider sx={{ my: 1.5 }} />
-
-        {/* Agent Split Breakdown */}
-        <Typography variant="caption" color="text.secondary" fontWeight="600" mb={1} display="block">
-          YOUR SPLIT ({agentCommissionPercent}%)
-        </Typography>
-
-        <FinancialRow>
-          <Typography variant="body2" color="text.primary">Agent Commission</Typography>
-          <Typography variant="body2" fontWeight="600" color="success.main">
-            {formatCurrency(agentCommission)}
-          </Typography>
-        </FinancialRow>
-
-        <FinancialRow>
-          <Typography variant="body2" color="text.secondary" sx={{ pl: 2 }}>
-            Transaction Fee
-          </Typography>
-          <Typography variant="body2" color="error.main">
-            -{formatCurrency(transactionFee)}
-          </Typography>
-        </FinancialRow>
-
-        <FinancialRow>
-          <Typography variant="body2" color="text.secondary" sx={{ pl: 2 }}>
-            TC Fee
-          </Typography>
-          <Typography variant="body2" color="error.main">
-            -{formatCurrency(tcFee)}
-          </Typography>
-        </FinancialRow>
-      </Box>
-
-      {/* Agent Net (Highlighted) */}
-      <HighlightRow>
-        <Typography variant="body1" fontWeight="700" color="white">
-          Agent Net (1099)
-        </Typography>
-        <Typography variant="h6" fontWeight="700" color="white">
-          {formatCurrency(agent1099Income)}
-        </Typography>
-      </HighlightRow>
 
       {/* Footer */}
       <Box
-        mt={1}
-        pt={1}
-        borderTop={1}
-        borderColor="divider"
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        gap={0.5}
+        mt={2}
+        pt={2}
+        borderTop="1px solid rgba(255, 255, 255, 0.2)"
+        textAlign="center"
       >
-        <Typography variant="caption" color="text.secondary">
-          View Full Breakdown
+        <Typography variant="caption" fontWeight="600" sx={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+          Click to view full breakdown
         </Typography>
-        <ExpandMore sx={{ fontSize: 16, color: 'text.secondary' }} />
       </Box>
     </CompactCard>
   );

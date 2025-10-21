@@ -26,9 +26,9 @@ import DocumentsWidget from './components/DocumentsWidget';
 import ActivityFeed from './components/ActivityFeed';
 
 // Modals
-import FinancialsDetailModal from './modals/FinancialsDetailModal';
-import TimelineDetailModal from './modals/TimelineDetailModal';
-import PeopleDetailModal from './modals/PeopleDetailModal';
+import FinancialsModal from './components/FinancialsModal';
+import TimelineModal from './components/TimelineModal';
+import PeopleModal from './components/PeopleModal';
 import DocumentsDetailModal from './modals/DocumentsDetailModal';
 
 // PHASE 5: F-Pattern Layout (Left Sidebar | Hero + Widgets | Right Sidebar)
@@ -334,29 +334,28 @@ const EscrowDetailCompact = () => {
         </Tooltip>
       </FPatternGrid>
 
-      {/* Phase 6: Detail Modals */}
-      <FinancialsDetailModal
+      {/* Detail Modals with Inline Editing */}
+      <FinancialsModal
         open={financialsModalOpen}
         onClose={() => setFinancialsModalOpen(false)}
         escrow={escrow}
         onUpdate={handleUpdate}
       />
 
-      <TimelineDetailModal
+      <TimelineModal
         open={timelineModalOpen}
         onClose={() => setTimelineModalOpen(false)}
         escrow={escrow}
         onUpdate={handleUpdate}
       />
 
-      <PeopleDetailModal
+      <PeopleModal
         open={peopleModalOpen}
         onClose={() => {
           setPeopleModalOpen(false);
           setSelectedRole(null);
         }}
         escrow={escrow}
-        selectedRole={selectedRole}
         onUpdate={handleUpdate}
       />
 

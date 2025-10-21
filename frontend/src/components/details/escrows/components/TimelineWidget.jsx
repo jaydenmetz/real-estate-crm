@@ -1,199 +1,109 @@
 import React from 'react';
 import { Box, Typography, Card, Skeleton } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { CheckCircle, RadioButtonUnchecked, Schedule, ExpandMore } from '@mui/icons-material';
+import { CheckCircle, Schedule, TrendingUp } from '@mui/icons-material';
 import { motion } from 'framer-motion';
+import { formatDate } from '../../../../utils/formatters';
 
-// PHASE 4: Compact Timeline Widget (Vertical)
+// Ultra-simple card with no scrolling - shows only next 2-3 milestones
 const CompactCard = styled(Card)(({ theme }) => ({
   borderRadius: theme.spacing(2),
-  padding: theme.spacing(2),
-  maxHeight: 400,
+  padding: theme.spacing(2.5),
+  height: '100%',
   display: 'flex',
   flexDirection: 'column',
   cursor: 'pointer',
   transition: 'all 0.2s',
-  '&:hover': {
-    boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12)',
-    transform: 'translateY(-2px)',
-  },
-}));
-
-const TimelineTrack = styled(Box)(({ theme}) => ({
-  flex: 1,
-  overflow: 'auto',
-  paddingRight: theme.spacing(1),
-  '&::-webkit-scrollbar': {
-    width: 4,
-  },
-  '&::-webkit-scrollbar-thumb': {
-    background: theme.palette.grey[300],
-    borderRadius: 4,
-  },
-}));
-
-const MilestoneRow = styled(Box)(({ theme, status }) => ({
-  display: 'flex',
-  alignItems: 'flex-start',
-  gap: theme.spacing(1.5),
-  marginBottom: theme.spacing(2),
+  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+  color: 'white',
   position: 'relative',
-  '&:not(:last-child)::after': {
+  overflow: 'hidden',
+  '&:hover': {
+    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
+    transform: 'translateY(-4px)',
+  },
+  '&::before': {
     content: '""',
     position: 'absolute',
-    left: 9,
-    top: 24,
-    bottom: -16,
-    width: 2,
-    backgroundColor: status === 'complete' ? theme.palette.success.light : theme.palette.grey[200],
+    top: -50,
+    right: -50,
+    width: 150,
+    height: 150,
+    borderRadius: '50%',
+    background: 'rgba(255, 255, 255, 0.1)',
+    pointerEvents: 'none',
   },
 }));
 
-const StatusIcon = styled(Box)(({ theme, status }) => {
-  const getColor = () => {
-    switch (status) {
-      case 'complete':
-        return theme.palette.success.main;
-      case 'active':
-        return theme.palette.primary.main;
-      default:
-        return theme.palette.grey[400];
-    }
-  };
+const MilestoneBox = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(1.5),
+  padding: theme.spacing(1.5),
+  borderRadius: theme.spacing(1.5),
+  backgroundColor: 'rgba(255, 255, 255, 0.15)',
+  backdropFilter: 'blur(10px)',
+  marginBottom: theme.spacing(1.5),
+  '&:last-of-type': {
+    marginBottom: 0,
+  },
+}));
 
-  return {
-    color: getColor(),
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 20,
-    height: 20,
-    flexShrink: 0,
-    zIndex: 1,
-    backgroundColor: theme.palette.background.paper,
-  };
-});
-
-const Footer = styled(Box)(({ theme }) => ({
+const IconBox = styled(Box)(({ theme }) => ({
+  width: 40,
+  height: 40,
+  borderRadius: theme.spacing(1),
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  gap: theme.spacing(0.5),
-  paddingTop: theme.spacing(1.5),
-  borderTop: `1px solid ${theme.palette.divider}`,
-  color: theme.palette.text.secondary,
-  fontSize: '0.75rem',
-  fontWeight: 600,
+  backgroundColor: 'rgba(255, 255, 255, 0.2)',
+  flexShrink: 0,
 }));
-
-// Helper to format dates
-const formatDate = (dateString) => {
-  if (!dateString) return 'TBD';
-  const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-};
-
-// Helper to calculate days until/since
-const getDaysUntil = (dateString) => {
-  if (!dateString) return null;
-  const date = new Date(dateString);
-  const today = new Date();
-  const diffTime = date - today;
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-  if (diffDays < 0) return `${Math.abs(diffDays)}d ago`;
-  if (diffDays === 0) return 'Today';
-  return `${diffDays}d`;
-};
 
 const TimelineWidget = ({ escrow, loading, onClick }) => {
   if (loading) {
     return (
       <CompactCard>
-        <Skeleton width="50%" height={24} sx={{ mb: 2 }} />
-        {[1, 2, 3, 4, 5].map((i) => (
-          <Box key={i} display="flex" gap={1.5} mb={2}>
-            <Skeleton variant="circular" width={20} height={20} />
-            <Box flex={1}>
-              <Skeleton width="60%" height={16} />
-              <Skeleton width="40%" height={14} sx={{ mt: 0.5 }} />
-            </Box>
-          </Box>
-        ))}
+        <Skeleton width="60%" height={28} sx={{ mb: 2, bgcolor: 'rgba(255,255,255,0.2)' }} />
+        <Skeleton width="100%" height={60} sx={{ mb: 1.5, bgcolor: 'rgba(255,255,255,0.15)' }} />
+        <Skeleton width="100%" height={60} sx={{ bgcolor: 'rgba(255,255,255,0.15)' }} />
       </CompactCard>
     );
   }
 
-  // Extract timeline data (supports both formats)
   const timeline = escrow?.timeline || {};
-
-  // Define 7 key milestones
-  const milestones = [
-    {
-      id: 'acceptance',
-      label: 'Offer Accepted',
-      date: timeline.acceptanceDate,
-      required: true,
-    },
-    {
-      id: 'emd',
-      label: 'EMD Deposited',
-      date: timeline.emdDate,
-      required: true,
-    },
-    {
-      id: 'inspection',
-      label: 'Home Inspection',
-      date: timeline.homeInspectionDate,
-      required: true,
-    },
-    {
-      id: 'appraisal',
-      label: 'Appraisal',
-      date: timeline.appraisalDate,
-      required: true,
-    },
-    {
-      id: 'contingencies',
-      label: 'Contingency Removal',
-      date: timeline.allContingenciesRemovalDate || timeline.inspectionContingencyDate,
-      required: true,
-    },
-    {
-      id: 'finalWalkthrough',
-      label: 'Final Walkthrough',
-      date: null, // Not in typical timeline data
-      required: false,
-    },
-    {
-      id: 'coe',
-      label: 'Close of Escrow',
-      date: timeline.coeDate,
-      required: true,
-    },
-  ];
-
-  // Determine status for each milestone
   const today = new Date();
-  const milestonesWithStatus = milestones.map((milestone) => {
-    if (!milestone.date) {
-      return { ...milestone, status: 'pending' };
-    }
 
-    const milestoneDate = new Date(milestone.date);
-    if (milestoneDate < today) {
-      return { ...milestone, status: 'complete' };
-    } else {
-      // Find if this is the next upcoming milestone
-      const upcomingMilestones = milestones.filter(m => m.date && new Date(m.date) >= today);
-      const nextMilestone = upcomingMilestones.sort((a, b) => new Date(a.date) - new Date(b.date))[0];
+  // Calculate days until/since
+  const getDaysUntil = (dateString) => {
+    if (!dateString) return null;
+    const date = new Date(dateString);
+    const diffTime = date - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-      return {
-        ...milestone,
-        status: milestone.id === nextMilestone?.id ? 'active' : 'pending',
-      };
-    }
-  });
+    if (diffDays < 0) return { text: `${Math.abs(diffDays)}d ago`, isPast: true };
+    if (diffDays === 0) return { text: 'Today', isToday: true };
+    return { text: `${diffDays}d away`, isFuture: true };
+  };
+
+  // Get most important upcoming milestones (only show 2-3)
+  const allMilestones = [
+    { label: 'Home Inspection', date: timeline.homeInspectionDate, priority: 1 },
+    { label: 'Appraisal', date: timeline.appraisalDate, priority: 2 },
+    { label: 'Contingency Removal', date: timeline.allContingenciesRemovalDate || timeline.inspectionContingencyDate, priority: 3 },
+    { label: 'Close of Escrow', date: timeline.coeDate || escrow.closing_date, priority: 4 },
+  ].filter(m => m.date);
+
+  // Sort by date and take next 2 upcoming + 1 past if available
+  const sortedByDate = allMilestones.sort((a, b) => new Date(a.date) - new Date(b.date));
+  const upcoming = sortedByDate.filter(m => new Date(m.date) >= today).slice(0, 2);
+  const recent = sortedByDate.filter(m => new Date(m.date) < today).slice(-1);
+
+  const displayMilestones = [...recent, ...upcoming].slice(0, 3);
+
+  // Count total milestones for summary
+  const totalMilestones = allMilestones.length;
+  const completedMilestones = allMilestones.filter(m => new Date(m.date) < today).length;
 
   return (
     <CompactCard
@@ -203,63 +113,95 @@ const TimelineWidget = ({ escrow, loading, onClick }) => {
       transition={{ duration: 0.3, delay: 0.1 }}
       onClick={onClick}
     >
-      <Typography variant="h6" fontWeight="700" sx={{ mb: 2 }}>
-        Timeline & Deadlines
-      </Typography>
-
-      <TimelineTrack>
-        {milestonesWithStatus.map((milestone) => (
-          <MilestoneRow key={milestone.id} status={milestone.status}>
-            <StatusIcon status={milestone.status}>
-              {milestone.status === 'complete' && <CheckCircle fontSize="small" />}
-              {milestone.status === 'active' && <Schedule fontSize="small" />}
-              {milestone.status === 'pending' && <RadioButtonUnchecked fontSize="small" />}
-            </StatusIcon>
-
-            <Box flex={1}>
-              <Typography
-                variant="body2"
-                fontWeight={milestone.status === 'active' ? 700 : 600}
-                sx={{
-                  color: milestone.status === 'complete'
-                    ? 'success.main'
-                    : milestone.status === 'active'
-                    ? 'primary.main'
-                    : 'text.primary',
-                }}
-              >
-                {milestone.label}
-              </Typography>
-              <Box display="flex" alignItems="center" gap={1}>
-                <Typography variant="caption" color="text.secondary">
-                  {formatDate(milestone.date)}
-                </Typography>
-                {milestone.date && getDaysUntil(milestone.date) && (
-                  <>
-                    <Typography variant="caption" color="text.secondary">•</Typography>
-                    <Typography
-                      variant="caption"
-                      sx={{
-                        color: milestone.status === 'active' ? 'primary.main' : 'text.secondary',
-                        fontWeight: milestone.status === 'active' ? 700 : 400,
-                      }}
-                    >
-                      {getDaysUntil(milestone.date)}
-                    </Typography>
-                  </>
-                )}
-              </Box>
-            </Box>
-          </MilestoneRow>
-        ))}
-      </TimelineTrack>
-
-      <Footer>
-        <Typography variant="caption" fontWeight="600">
-          View All Dates
+      {/* Header */}
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={2.5}>
+        <Typography variant="h6" fontWeight="700" sx={{ color: 'white' }}>
+          Timeline
         </Typography>
-        <ExpandMore sx={{ fontSize: '1rem' }} />
-      </Footer>
+        <Box display="flex" alignItems="center" gap={0.5} sx={{
+          backgroundColor: 'rgba(255, 255, 255, 0.2)',
+          padding: '4px 12px',
+          borderRadius: 2
+        }}>
+          <CheckCircle sx={{ fontSize: 16 }} />
+          <Typography variant="caption" fontWeight="700">
+            {completedMilestones}/{totalMilestones}
+          </Typography>
+        </Box>
+      </Box>
+
+      {/* Key Milestones - Only 2-3 shown */}
+      <Box flex={1}>
+        {displayMilestones.map((milestone, index) => {
+          const daysInfo = getDaysUntil(milestone.date);
+          const isPast = daysInfo?.isPast;
+          const isToday = daysInfo?.isToday;
+
+          return (
+            <MilestoneBox key={index}>
+              <IconBox>
+                {isPast ? (
+                  <CheckCircle sx={{ fontSize: 24, color: 'white' }} />
+                ) : (
+                  <Schedule sx={{ fontSize: 24, color: 'white' }} />
+                )}
+              </IconBox>
+
+              <Box flex={1}>
+                <Typography
+                  variant="body2"
+                  fontWeight="600"
+                  sx={{
+                    color: 'white',
+                    opacity: isPast ? 0.7 : 1,
+                  }}
+                >
+                  {milestone.label}
+                </Typography>
+                <Box display="flex" alignItems="center" gap={1} mt={0.5}>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: 'rgba(255, 255, 255, 0.9)',
+                      fontWeight: 600,
+                    }}
+                  >
+                    {formatDate(milestone.date, 'MMM d, yyyy')}
+                  </Typography>
+                  {daysInfo && (
+                    <>
+                      <Typography variant="caption" sx={{ color: 'rgba(255, 255, 255, 0.5)' }}>
+                        •
+                      </Typography>
+                      <Typography
+                        variant="caption"
+                        fontWeight="700"
+                        sx={{
+                          color: isToday ? '#FCD34D' : 'rgba(255, 255, 255, 0.9)',
+                        }}
+                      >
+                        {daysInfo.text}
+                      </Typography>
+                    </>
+                  )}
+                </Box>
+              </Box>
+            </MilestoneBox>
+          );
+        })}
+      </Box>
+
+      {/* Footer - Click to expand */}
+      <Box
+        mt={2}
+        pt={2}
+        borderTop="1px solid rgba(255, 255, 255, 0.2)"
+        textAlign="center"
+      >
+        <Typography variant="caption" fontWeight="600" sx={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+          Click to view all {totalMilestones} milestones
+        </Typography>
+      </Box>
     </CompactCard>
   );
 };
