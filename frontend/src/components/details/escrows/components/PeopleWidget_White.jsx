@@ -372,8 +372,17 @@ const PeopleWidget_White = ({ escrow, loading, onClick, onUpdate }) => {
 
           {/* Row 3 */}
           <Grid item xs={6}>
-            {/* Empty slot in left column */}
-            <Box sx={{ minHeight: 72 }} />
+            {getContact('loanOfficer') ? (
+              <ContactCellFilled
+                contact={getContact('loanOfficer')}
+                onClick={() => handleAddContact('loanOfficer')}
+              />
+            ) : (
+              <EmptyContactCell
+                label="Lender"
+                onClick={() => handleAddContact('loanOfficer')}
+              />
+            )}
           </Grid>
           <Grid item xs={6}>
             {getContact('escrowOfficer') ? (
