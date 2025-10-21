@@ -124,17 +124,48 @@ export const ContactSelectionModal = ({
 
   const getRoleLabel = (roleType) => {
     const labels = {
+      // Buyer's Team
       buyer: 'Buyer',
-      seller: 'Seller',
+      buyer2: 'Buyer 2',
+      buyer3: 'Buyer 3',
       buyerAgent: 'Buyer Agent',
+      buyerAgent2: 'Buyer Agent 2',
+      associateBuyerAgent: 'Associate Buyer Agent',
+      buyerBroker: 'Buyer Broker',
+      buyerTeamTC: 'Buyer Team / TC',
+      loanOfficer: 'Loan Officer',
+      loanProcessor: 'Loan Processor',
+
+      // Listing Team
+      seller: 'Seller',
+      listing: 'Listing',
+      listingAgent: 'Listing Agent',
+      listingAgent2: 'Listing Agent 2',
       sellerAgent: 'Listing Agent',
-      loanOfficer: 'Lender',
+      associateListingAgent: 'Associate Listing Agent',
+      listingBroker: 'Listing Broker',
+      listingTeamTC: 'Listing Team / TC',
+
+      // Vendors
       escrowOfficer: 'Escrow Officer',
+      escrowAgent: 'Escrow Agent',
+      titleOfficer: 'Title Officer',
+      titleAgent: 'Title Agent',
+      homeInspector: 'Home Inspector',
+      appraiser: 'Appraiser',
+      photographerVideographer: 'Photographer/Videographer',
+      photographer: 'Photographer',
+      videographer: 'Videographer',
+      stager: 'Stager',
+      contractor: 'Contractor',
+      handyman: 'Handyman',
+      other: 'Other',
+
       // Legacy underscore versions
       buyer_agent: 'Buyer Agent',
       listing_agent: 'Listing Agent',
       seller_agent: 'Listing Agent',
-      lender: 'Lender',
+      lender: 'Loan Officer',
       escrow_officer: 'Escrow Officer',
     };
     return labels[roleType] || roleType?.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').trim();
@@ -142,8 +173,44 @@ export const ContactSelectionModal = ({
 
   const getRoleColor = (roleType) => {
     const colors = {
+      // Buyer's Team
       buyer: { primary: '#10b981', secondary: '#059669' },
+      buyer2: { primary: '#10b981', secondary: '#059669' },
+      buyer3: { primary: '#10b981', secondary: '#059669' },
+      buyerAgent: { primary: '#3b82f6', secondary: '#2563eb' },
+      buyerAgent2: { primary: '#3b82f6', secondary: '#2563eb' },
+      associateBuyerAgent: { primary: '#3b82f6', secondary: '#2563eb' },
+      buyerBroker: { primary: '#1e40af', secondary: '#1e3a8a' },
+      buyerTeamTC: { primary: '#059669', secondary: '#047857' },
+      loanOfficer: { primary: '#ec4899', secondary: '#db2777' },
+      loanProcessor: { primary: '#db2777', secondary: '#be185d' },
+
+      // Listing Team
       seller: { primary: '#f59e0b', secondary: '#d97706' },
+      listing: { primary: '#8b5cf6', secondary: '#7c3aed' },
+      listingAgent: { primary: '#8b5cf6', secondary: '#7c3aed' },
+      listingAgent2: { primary: '#8b5cf6', secondary: '#7c3aed' },
+      sellerAgent: { primary: '#8b5cf6', secondary: '#7c3aed' },
+      associateListingAgent: { primary: '#7c3aed', secondary: '#6d28d9' },
+      listingBroker: { primary: '#6b21a8', secondary: '#581c87' },
+      listingTeamTC: { primary: '#d97706', secondary: '#b45309' },
+
+      // Vendors
+      escrowOfficer: { primary: '#6366f1', secondary: '#4f46e5' },
+      escrowAgent: { primary: '#6366f1', secondary: '#4f46e5' },
+      titleOfficer: { primary: '#06b6d4', secondary: '#0891b2' },
+      titleAgent: { primary: '#06b6d4', secondary: '#0891b2' },
+      homeInspector: { primary: '#8b5cf6', secondary: '#7c3aed' },
+      appraiser: { primary: '#f97316', secondary: '#ea580c' },
+      photographerVideographer: { primary: '#14b8a6', secondary: '#0d9488' },
+      photographer: { primary: '#14b8a6', secondary: '#0d9488' },
+      videographer: { primary: '#14b8a6', secondary: '#0d9488' },
+      stager: { primary: '#a855f7', secondary: '#9333ea' },
+      contractor: { primary: '#ef4444', secondary: '#dc2626' },
+      handyman: { primary: '#dc2626', secondary: '#b91c1c' },
+      other: { primary: '#6b7280', secondary: '#4b5563' },
+
+      // Legacy underscore versions
       buyer_agent: { primary: '#3b82f6', secondary: '#2563eb' },
       listing_agent: { primary: '#8b5cf6', secondary: '#7c3aed' },
       seller_agent: { primary: '#8b5cf6', secondary: '#7c3aed' },
