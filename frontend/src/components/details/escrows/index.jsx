@@ -65,6 +65,7 @@ const Sidebar = styled(Box, {
   overflow: 'hidden',
   transition: 'all 0.3s ease-in-out',
   flexShrink: 0,
+  alignSelf: 'stretch', // Stretch to match container height
   [theme.breakpoints.down('lg')]: {
     display: 'none',
   },
@@ -77,9 +78,7 @@ const SidebarInner = styled(Box)(({ theme }) => ({
   boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
   display: 'flex',
   flexDirection: 'column',
-  minHeight: 'calc(100vh - 160px)', // Extend from top of hero to bottom
-  position: 'sticky',
-  top: theme.spacing(3),
+  height: '100%', // Match parent height (full content area)
 }));
 
 const MainContent = styled(Box)(({ theme }) => ({
