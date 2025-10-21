@@ -16,6 +16,7 @@ const WhiteCard = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   cursor: 'pointer',
+  overflow: 'hidden', // Prevent content overflow
   transition: 'all 0.2s',
   '&:hover': {
     boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12)',
@@ -170,8 +171,19 @@ const ChecklistsWidget_White = ({ escrow, loading, onClick }) => {
 
           return (
             <CategoryRow key={idx}>
-              <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-                <Typography variant="body2" fontWeight="600" color="text.primary">
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={1} gap={2}>
+                <Typography
+                  variant="body2"
+                  fontWeight="600"
+                  color="text.primary"
+                  sx={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    flex: 1,
+                    minWidth: 0,
+                  }}
+                >
                   {cat.name}
                 </Typography>
                 <Box display="flex" alignItems="center" gap={1}>

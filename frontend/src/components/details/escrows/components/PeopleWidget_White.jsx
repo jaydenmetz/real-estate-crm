@@ -16,6 +16,7 @@ const WhiteCard = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   cursor: 'pointer',
+  overflow: 'hidden', // Prevent content overflow
   transition: 'all 0.2s',
   '&:hover': {
     boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12)',

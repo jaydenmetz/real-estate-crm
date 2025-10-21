@@ -17,6 +17,7 @@ const WhiteCard = styled(Box)(({ theme }) => ({
   display: 'flex',
   flexDirection: 'column',
   cursor: 'pointer',
+  overflow: 'hidden', // Prevent content overflow
   transition: 'all 0.2s',
   '&:hover': {
     boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12)',
@@ -39,8 +40,10 @@ const MetricRow = styled(Box)(({ theme }) => ({
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
+  gap: theme.spacing(2),
   padding: theme.spacing(1.5),
   borderRadius: theme.spacing(1),
+  minWidth: 0, // Allow flex items to shrink
   transition: 'background-color 0.2s',
   '&:hover': {
     backgroundColor: theme.palette.grey[50],
