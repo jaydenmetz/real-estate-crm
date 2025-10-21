@@ -127,24 +127,22 @@ class ApiService {
           // Try to refresh token if we have JWT (not API key) and not already refreshing
           if (!isAuthEndpoint && !isApiKeysEndpoint && this.token && !this.apiKey && !options._isRetry) {
             try {
-              console.log('🔄 Token expired, attempting automatic refresh...');
               // Import authService dynamically to avoid circular dependency
               const authService = (await import('./auth.service')).default;
               const refreshResult = await authService.refreshAccessToken();
 
               if (refreshResult.success) {
-                console.log('✅ Token refreshed successfully, retrying original request');
                 // Update our local token reference
                 this.token = refreshResult.token;
                 // Retry the original request with new token
                 options._isRetry = true;
                 return this.request(endpoint, options);
               } else {
-                console.warn('❌ Token refresh failed:', refreshResult.error);
+                console.warn('Token refresh failed:', refreshResult.error);
                 // Fall through to logout below
               }
             } catch (refreshError) {
-              console.error('❌ Token refresh error:', refreshError);
+              console.error('Token refresh error:', refreshError);
               // Fall through to logout below
             }
           }

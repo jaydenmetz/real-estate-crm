@@ -202,10 +202,7 @@ export const ContactSelectionModal = ({
             {filteredContacts.map((contact) => (
               <ListItemButton
                 key={contact.id}
-                onClick={() => {
-                  console.log('🔘 Contact clicked in modal:', contact.full_name);
-                  onSelect(contact);
-                }}
+                onClick={() => onSelect(contact)}
                 selected={contact.id === currentContactId}
                 sx={{
                   borderRadius: 2,

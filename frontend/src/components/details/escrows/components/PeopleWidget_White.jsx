@@ -275,10 +275,6 @@ const PeopleWidget_White = ({ escrow, loading, onClick, onUpdate }) => {
 
   // Handle opening contact selector for a specific role
   const handleAddContact = (role) => {
-    console.log('🎯 Opening contact selector for role:', role);
-    console.log('📋 Current escrow object:', escrow);
-    console.log('🆔 Escrow ID:', escrow?.id);
-    console.log('🔑 Escrow keys:', escrow ? Object.keys(escrow) : 'escrow is null/undefined');
     setSelectedRole(role);
     setContactModalOpen(true);
   };
@@ -287,27 +283,20 @@ const PeopleWidget_White = ({ escrow, loading, onClick, onUpdate }) => {
   const handleContactSelect = async (contact) => {
     const escrowId = escrow?.details?.id || escrow?.id;
 
-    console.log('📞 Contact selected:', { contact, selectedRole, escrowId });
-
     if (!selectedRole || !escrowId) {
-      console.error('❌ Cannot assign contact: missing role or escrow ID', { selectedRole, escrowId });
+      console.error('Cannot assign contact: missing role or escrow ID', { selectedRole, escrowId });
       return;
     }
 
     try {
-      console.log('💾 Updating escrow people:', { escrowId, role: selectedRole, contactId: contact.id });
-
       // Update people via API with contact ID
       const response = await escrowsAPI.updatePeople(escrowId, {
         [selectedRole]: contact.id, // Store contact ID, not inline data
       });
 
-      console.log('✅ Update response:', response);
-
       if (response.success) {
         // Refresh people from API to get full contact objects
         const peopleResponse = await escrowsAPI.getPeople(escrowId);
-        console.log('👥 Fetched people:', peopleResponse);
 
         if (peopleResponse.success) {
           setPeople(peopleResponse.data || {});
@@ -319,7 +308,7 @@ const PeopleWidget_White = ({ escrow, loading, onClick, onUpdate }) => {
         }
       }
     } catch (error) {
-      console.error('❌ Failed to update escrow people:', error);
+      console.error('Failed to update escrow people:', error);
     }
 
     // Close modal
