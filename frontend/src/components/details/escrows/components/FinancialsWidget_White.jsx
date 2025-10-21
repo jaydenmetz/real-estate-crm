@@ -54,7 +54,7 @@ const FinancialsWidget_White = ({ escrow, loading, onClick }) => {
         <Skeleton width="60%" height={28} sx={{ mb: 2.5 }} />
         <Skeleton width="100%" height={50} sx={{ mb: 1.5 }} />
         <Skeleton width="100%" height={50} sx={{ mb: 1.5 }} />
-        <Skeleton width="100%" height={50 }} />
+        <Skeleton width="100%" height={50} />
       </WhiteCard>
     );
   }
