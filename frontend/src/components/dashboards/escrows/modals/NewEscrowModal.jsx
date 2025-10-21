@@ -20,16 +20,22 @@ import {
   MenuItem,
   Grid,
   FormHelperText,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Divider,
 } from '@mui/material';
 import debounce from 'lodash/debounce';
 import {
   Close,
   LocationOn,
   Search,
+  PersonAdd,
 } from '@mui/icons-material';
 import { escrowsAPI, clientsAPI } from '../../../../services/api.service';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { loadGoogleMapsScript } from '../../../../utils/googleMapsLoader';
+import NewClientModal from '../../clients/modals/NewClientModal';
 
 const NewEscrowModal = ({ open, onClose, onSuccess }) => {
   const { user } = useAuth();
@@ -37,6 +43,8 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
   const [error, setError] = useState('');
   const [clients, setClients] = useState([]);
   const [loadingClients, setLoadingClients] = useState(false);
+  const [newClientModalOpen, setNewClientModalOpen] = useState(false);
+  const [clientSearchText, setClientSearchText] = useState('');
   const [addressSuggestions, setAddressSuggestions] = useState([]);
   const [loadingAddress, setLoadingAddress] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState(null);
@@ -187,6 +195,18 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
     } finally {
       setLoadingClients(false);
     }
+  };
+
+  const handleNewClientSave = async (newClient) => {
+    // Close new client modal
+    setNewClientModalOpen(false);
+
+    // Refresh clients list
+    await fetchClients();
+
+    // Auto-select the new client
+    setFormData({ ...formData, clientId: newClient.id });
+    setClientSearchText(`${newClient.firstName} ${newClient.lastName} - ${newClient.email}`);
   };
 
   // Reset session token after a place is selected
@@ -786,17 +806,94 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
               <Autocomplete
                 options={clients}
                 loading={loadingClients}
-                getOptionLabel={(option) => `${option.firstName} ${option.lastName} - ${option.email}`}
+                inputValue={clientSearchText}
+                onInputChange={(e, value) => setClientSearchText(value)}
+                getOptionLabel={(option) =>
+                  option.firstName && option.lastName
+                    ? `${option.firstName} ${option.lastName}${option.email ? ' - ' + option.email : ''}`
+                    : ''
+                }
+                filterOptions={(options, { inputValue }) => {
+                  // Filter clients based on search text
+                  const filtered = options.filter(option => {
+                    const searchText = inputValue.toLowerCase();
+                    const fullName = `${option.firstName} ${option.lastName}`.toLowerCase();
+                    const email = option.email?.toLowerCase() || '';
+                    return fullName.includes(searchText) || email.includes(searchText);
+                  });
+                  // Limit to 5 results
+                  return filtered.slice(0, 5);
+                }}
+                renderOption={(props, option) => (
+                  <Box component="li" {...props}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                      <Typography variant="body2" fontWeight={600}>
+                        {option.firstName} {option.lastName}
+                      </Typography>
+                      {option.email && (
+                        <Typography variant="caption" color="text.secondary">
+                          {option.email}
+                        </Typography>
+                      )}
+                      {option.phone && (
+                        <Typography variant="caption" color="text.secondary">
+                          {option.phone}
+                        </Typography>
+                      )}
+                    </Box>
+                  </Box>
+                )}
                 renderInput={(params) => (
                   <TextField
                     {...params}
                     label="Client"
-                    placeholder="Select a client"
+                    placeholder="Search by name or email..."
                     helperText="Select the client for this escrow"
                     required
                   />
                 )}
                 onChange={(e, value) => setFormData({ ...formData, clientId: value?.id || null })}
+                noOptionsText={
+                  <Box>
+                    <Typography variant="body2" color="text.secondary" sx={{ px: 2, py: 1 }}>
+                      No clients found
+                    </Typography>
+                    <Divider />
+                    <ListItemButton
+                      onClick={() => setNewClientModalOpen(true)}
+                      sx={{ py: 1.5 }}
+                    >
+                      <ListItemIcon>
+                        <PersonAdd color="primary" />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary="Create New Client"
+                        primaryTypographyProps={{ fontWeight: 600, color: 'primary.main' }}
+                      />
+                    </ListItemButton>
+                  </Box>
+                }
+                ListboxProps={{
+                  sx: { maxHeight: 300 }
+                }}
+                PaperComponent={({ children, ...other }) => (
+                  <Paper {...other}>
+                    {children}
+                    <Divider />
+                    <ListItemButton
+                      onClick={() => setNewClientModalOpen(true)}
+                      sx={{ py: 1.5, borderTop: '1px solid', borderColor: 'divider' }}
+                    >
+                      <ListItemIcon>
+                        <PersonAdd color="primary" />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary="Create New Client"
+                        primaryTypographyProps={{ fontWeight: 600, color: 'primary.main' }}
+                      />
+                    </ListItemButton>
+                  </Paper>
+                )}
               />
 
               {/* Representation Type */}
@@ -835,6 +932,13 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
           </Button>
         </DialogActions>
       </form>
+
+      {/* New Client Modal */}
+      <NewClientModal
+        open={newClientModalOpen}
+        onClose={() => setNewClientModalOpen(false)}
+        onSuccess={handleNewClientSave}
+      />
     </Dialog>
   );
 };
