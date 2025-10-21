@@ -317,6 +317,7 @@ const EscrowDetailCompact = () => {
               escrow={escrow}
               loading={false}
               onClick={() => setPeopleModalOpen(true)}
+              onUpdate={handleUpdate}
             />
 
             <FinancialsWidget_White

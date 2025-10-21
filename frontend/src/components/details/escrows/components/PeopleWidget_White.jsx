@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, Typography, Avatar, Skeleton, Grid } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { Users, Phone } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { ContactSelectionModal } from '../../../modals/ContactSelectionModal';
 
 // White card with purple icon badge
 const WhiteCard = styled(Box)(({ theme }) => ({
@@ -87,8 +88,24 @@ const getInitials = (name) => {
     .slice(0, 2);
 };
 
-const EmptyContactCell = ({ label }) => (
-  <ContactCell sx={{ opacity: 0.5 }}>
+const EmptyContactCell = ({ label, onClick }) => (
+  <ContactCell
+    onClick={(e) => {
+      e.stopPropagation(); // Prevent widget modal from opening
+      onClick();
+    }}
+    sx={{
+      opacity: 0.6,
+      border: '2px dashed',
+      borderColor: 'grey.300',
+      cursor: 'pointer',
+      '&:hover': {
+        opacity: 1,
+        borderColor: 'primary.main',
+        backgroundColor: 'primary.50',
+      },
+    }}
+  >
     <Avatar
       sx={{
         width: 40,
@@ -117,14 +134,19 @@ const EmptyContactCell = ({ label }) => (
         sx={{ lineHeight: 1.3, mt: 0.25, fontStyle: 'italic' }}
         noWrap
       >
-        Not set
+        Click to add
       </Typography>
     </Box>
   </ContactCell>
 );
 
-const ContactCellFilled = ({ contact }) => (
-  <ContactCell>
+const ContactCellFilled = ({ contact, onClick }) => (
+  <ContactCell
+    onClick={(e) => {
+      e.stopPropagation(); // Prevent widget modal from opening
+      if (onClick) onClick();
+    }}
+  >
     <Avatar
       sx={{
         width: 40,
@@ -181,7 +203,10 @@ const ContactCellFilled = ({ contact }) => (
   </ContactCell>
 );
 
-const PeopleWidget_White = ({ escrow, loading, onClick }) => {
+const PeopleWidget_White = ({ escrow, loading, onClick, onUpdate }) => {
+  const [selectedRole, setSelectedRole] = useState(null);
+  const [contactModalOpen, setContactModalOpen] = useState(false);
+
   if (loading) {
     return (
       <WhiteCard>
@@ -213,104 +238,174 @@ const PeopleWidget_White = ({ escrow, loading, onClick }) => {
     return null;
   };
 
-  // Define fixed layout structure
-  // Left column: Buyer, Buyer Agent, (empty row)
-  // Right column: Seller, Listing Agent, Escrow Officer
-  const leftColumn = [
-    { role: 'buyer', label: 'Buyer' },
-    { role: 'buyerAgent', label: 'Buyer Agent' },
-    { role: null, label: '' }, // Empty row for symmetry
-  ];
-
-  const rightColumn = [
-    { role: 'seller', label: 'Seller' },
-    { role: 'sellerAgent', label: 'Listing Agent' },
-    { role: 'escrowOfficer', label: 'Escrow Officer' },
-  ];
-
   // Count total contacts for badge
   const totalContacts = Object.keys(people).filter(role => people[role]?.name).length;
 
+  // Handle opening contact selector for a specific role
+  const handleAddContact = (role) => {
+    setSelectedRole(role);
+    setContactModalOpen(true);
+  };
+
+  // Handle contact selection from modal
+  const handleContactSelect = async (contact) => {
+    if (!onUpdate || !selectedRole) return;
+
+    // Build updated people object
+    const updatedPeople = {
+      ...people,
+      [selectedRole]: {
+        name: contact.full_name || contact.name,
+        email: contact.email,
+        phone: contact.phone,
+        company: contact.company_name,
+      },
+    };
+
+    // Update escrow via parent component
+    await onUpdate({ people: updatedPeople });
+
+    // Close modal
+    setContactModalOpen(false);
+    setSelectedRole(null);
+  };
+
+  // Get role config for modal styling
+  const getRoleConfig = (role) => {
+    const color = getColorForRole(role);
+    return {
+      primary: color,
+      secondary: color,
+    };
+  };
+
   return (
-    <WhiteCard
-      component={motion.div}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: 0.2 }}
-      onClick={onClick}
-    >
-      {/* Header */}
-      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-        <Box display="flex" alignItems="center" gap={1.5}>
-          <IconBadge>
-            <Users size={18} style={{ color: 'white' }} />
-          </IconBadge>
-          <Typography variant="subtitle1" fontWeight="700" color="text.primary">
-            People
-          </Typography>
+    <>
+      <WhiteCard
+        component={motion.div}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: 0.2 }}
+        onClick={onClick}
+      >
+        {/* Header */}
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+          <Box display="flex" alignItems="center" gap={1.5}>
+            <IconBadge>
+              <Users size={18} style={{ color: 'white' }} />
+            </IconBadge>
+            <Typography variant="subtitle1" fontWeight="700" color="text.primary">
+              People
+            </Typography>
+          </Box>
+          <Box
+            sx={{
+              backgroundColor: '#F3E8FF',
+              color: '#9333ea',
+              padding: '4px 12px',
+              borderRadius: 2,
+              fontSize: '0.75rem',
+              fontWeight: 700,
+            }}
+          >
+            {totalContacts} contacts
+          </Box>
         </Box>
-        <Box
-          sx={{
-            backgroundColor: '#F3E8FF',
-            color: '#9333ea',
-            padding: '4px 12px',
-            borderRadius: 2,
-            fontSize: '0.75rem',
-            fontWeight: 700,
+
+        {/* Fixed 3x2 Grid */}
+        <Grid container spacing={2}>
+          {/* Row 1 */}
+          <Grid item xs={6}>
+            {getContact('buyer') ? (
+              <ContactCellFilled
+                contact={getContact('buyer')}
+                onClick={() => handleAddContact('buyer')}
+              />
+            ) : (
+              <EmptyContactCell
+                label="Buyer"
+                onClick={() => handleAddContact('buyer')}
+              />
+            )}
+          </Grid>
+          <Grid item xs={6}>
+            {getContact('seller') ? (
+              <ContactCellFilled
+                contact={getContact('seller')}
+                onClick={() => handleAddContact('seller')}
+              />
+            ) : (
+              <EmptyContactCell
+                label="Seller"
+                onClick={() => handleAddContact('seller')}
+              />
+            )}
+          </Grid>
+
+          {/* Row 2 */}
+          <Grid item xs={6}>
+            {getContact('buyerAgent') ? (
+              <ContactCellFilled
+                contact={getContact('buyerAgent')}
+                onClick={() => handleAddContact('buyerAgent')}
+              />
+            ) : (
+              <EmptyContactCell
+                label="Buyer Agent"
+                onClick={() => handleAddContact('buyerAgent')}
+              />
+            )}
+          </Grid>
+          <Grid item xs={6}>
+            {getContact('sellerAgent') ? (
+              <ContactCellFilled
+                contact={getContact('sellerAgent')}
+                onClick={() => handleAddContact('sellerAgent')}
+              />
+            ) : (
+              <EmptyContactCell
+                label="Listing Agent"
+                onClick={() => handleAddContact('sellerAgent')}
+              />
+            )}
+          </Grid>
+
+          {/* Row 3 */}
+          <Grid item xs={6}>
+            {/* Empty slot in left column */}
+            <Box sx={{ minHeight: 72 }} />
+          </Grid>
+          <Grid item xs={6}>
+            {getContact('escrowOfficer') ? (
+              <ContactCellFilled
+                contact={getContact('escrowOfficer')}
+                onClick={() => handleAddContact('escrowOfficer')}
+              />
+            ) : (
+              <EmptyContactCell
+                label="Escrow Officer"
+                onClick={() => handleAddContact('escrowOfficer')}
+              />
+            )}
+          </Grid>
+        </Grid>
+      </WhiteCard>
+
+      {/* Contact Selection Modal */}
+      {selectedRole && (
+        <ContactSelectionModal
+          open={contactModalOpen}
+          onClose={() => {
+            setContactModalOpen(false);
+            setSelectedRole(null);
           }}
-        >
-          {totalContacts} contacts
-        </Box>
-      </Box>
-
-      {/* Fixed 3x2 Grid */}
-      <Grid container spacing={2}>
-        {/* Row 1 */}
-        <Grid item xs={6}>
-          {getContact('buyer') ? (
-            <ContactCellFilled contact={getContact('buyer')} />
-          ) : (
-            <EmptyContactCell label="Buyer" />
-          )}
-        </Grid>
-        <Grid item xs={6}>
-          {getContact('seller') ? (
-            <ContactCellFilled contact={getContact('seller')} />
-          ) : (
-            <EmptyContactCell label="Seller" />
-          )}
-        </Grid>
-
-        {/* Row 2 */}
-        <Grid item xs={6}>
-          {getContact('buyerAgent') ? (
-            <ContactCellFilled contact={getContact('buyerAgent')} />
-          ) : (
-            <EmptyContactCell label="Buyer Agent" />
-          )}
-        </Grid>
-        <Grid item xs={6}>
-          {getContact('sellerAgent') ? (
-            <ContactCellFilled contact={getContact('sellerAgent')} />
-          ) : (
-            <EmptyContactCell label="Listing Agent" />
-          )}
-        </Grid>
-
-        {/* Row 3 */}
-        <Grid item xs={6}>
-          {/* Empty slot in left column */}
-          <Box sx={{ minHeight: 72 }} />
-        </Grid>
-        <Grid item xs={6}>
-          {getContact('escrowOfficer') ? (
-            <ContactCellFilled contact={getContact('escrowOfficer')} />
-          ) : (
-            <EmptyContactCell label="Escrow Officer" />
-          )}
-        </Grid>
-      </Grid>
-    </WhiteCard>
+          onSelect={handleContactSelect}
+          roleType={selectedRole}
+          currentContactId={people[selectedRole]?.id}
+          roleConfig={getRoleConfig(selectedRole)}
+        />
+      )}
+    </>
   );
 };
 
