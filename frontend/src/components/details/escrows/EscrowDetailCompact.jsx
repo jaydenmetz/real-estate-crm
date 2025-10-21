@@ -279,13 +279,7 @@ const EscrowDetailCompact = () => {
           {/* Hero Card (wider aspect ratio like dashboard cards) */}
           <EscrowHero
             escrow={escrow}
-            onMetricClick={(metric) => {
-              if (metric === 'commission' || metric === 'price') {
-                setFinancialsModalOpen(true);
-              } else if (metric === 'closeDate') {
-                setTimelineModalOpen(true);
-              }
-            }}
+            onUpdate={handleUpdate}
           />
 
           {/* 4 Main Widgets (4 columns / 2x2 responsive) */}

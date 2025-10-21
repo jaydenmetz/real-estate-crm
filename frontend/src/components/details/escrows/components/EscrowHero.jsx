@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Box, Typography, Chip } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { formatCurrency, formatDate } from '../../../../utils/formatters';
+import { formatCurrency, formatDate, parseCurrency } from '../../../../utils/formatters';
 import { getStatusConfig } from '../../../../constants/escrowConfig';
+import EditableField from './EditableField';
 
 // Ultra-compact Hero (100px height) for maximum information density
 const HeroContainer = styled(Box)(({ theme }) => ({
@@ -72,7 +73,7 @@ const MetricBox = styled(Box)({
   textAlign: 'center',
 });
 
-const EscrowHero = ({ escrow }) => {
+const EscrowHero = ({ escrow, onUpdate }) => {
   const [imageError, setImageError] = useState(false);
 
   if (!escrow) {
@@ -95,6 +96,13 @@ const EscrowHero = ({ escrow }) => {
 
   // Status config
   const statusConfig = getStatusConfig(status);
+
+  // Update handlers
+  const handleUpdateField = async (field, value) => {
+    if (onUpdate) {
+      await onUpdate({ [field]: value });
+    }
+  };
 
   return (
     <HeroContainer>
@@ -141,17 +149,23 @@ const EscrowHero = ({ escrow }) => {
 
         {/* Right: Metrics - inline, no cards */}
         <MetricsRow>
-          {/* Price */}
+          {/* Price - Editable */}
           <MetricBox>
             <Typography variant="caption" sx={{ fontSize: '0.625rem', color: 'text.secondary', textTransform: 'uppercase' }}>
               Price
             </Typography>
-            <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1.125rem' }}>
-              {formatCurrency(purchasePrice)}
-            </Typography>
+            <EditableField
+              value={purchasePrice}
+              onSave={(value) => handleUpdateField('purchase_price', value)}
+              type="currency"
+              format={formatCurrency}
+              parse={parseCurrency}
+              displayClass="MuiTypography-root MuiTypography-h6"
+              disabled={!onUpdate}
+            />
           </MetricBox>
 
-          {/* Commission */}
+          {/* Commission - Calculated (not editable) */}
           <MetricBox>
             <Typography variant="caption" sx={{ fontSize: '0.625rem', color: 'text.secondary', textTransform: 'uppercase' }}>
               Commission
@@ -161,14 +175,20 @@ const EscrowHero = ({ escrow }) => {
             </Typography>
           </MetricBox>
 
-          {/* Closing */}
+          {/* Closing - Editable */}
           <MetricBox>
             <Typography variant="caption" sx={{ fontSize: '0.625rem', color: 'text.secondary', textTransform: 'uppercase' }}>
               Closing
             </Typography>
-            <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1.125rem' }}>
-              {formatDate(closingDate, 'MMM d, yyyy') || 'TBD'}
-            </Typography>
+            <EditableField
+              value={closingDate}
+              onSave={(value) => handleUpdateField('closing_date', value)}
+              type="date"
+              format={(date) => formatDate(date, 'MMM d, yyyy')}
+              displayClass="MuiTypography-root MuiTypography-h6"
+              placeholder="Set date"
+              disabled={!onUpdate}
+            />
           </MetricBox>
 
           {/* Status Badge with Completion % */}
