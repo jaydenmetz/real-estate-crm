@@ -126,13 +126,18 @@ export const ContactSelectionModal = ({
     const labels = {
       buyer: 'Buyer',
       seller: 'Seller',
+      buyerAgent: 'Buyer Agent',
+      sellerAgent: 'Listing Agent',
+      loanOfficer: 'Lender',
+      escrowOfficer: 'Escrow Officer',
+      // Legacy underscore versions
       buyer_agent: 'Buyer Agent',
       listing_agent: 'Listing Agent',
       seller_agent: 'Listing Agent',
       lender: 'Lender',
       escrow_officer: 'Escrow Officer',
     };
-    return labels[roleType] || roleType?.replace(/_/g, ' ');
+    return labels[roleType] || roleType?.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').trim();
   };
 
   const getRoleColor = (roleType) => {
