@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, Avatar, Skeleton } from '@mui/material';
+import { Box, Typography, Avatar, Skeleton, Grid } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { Users, Phone } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -12,8 +12,7 @@ const WhiteCard = styled(Box)(({ theme }) => ({
   borderColor: theme.palette.grey[200],
   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
   padding: theme.spacing(3),
-  minHeight: 380, // Increased to show footer
-  maxHeight: 450,
+  height: 380, // Fixed height for 3 rows
   display: 'flex',
   flexDirection: 'column',
   cursor: 'pointer',
@@ -35,7 +34,7 @@ const IconBadge = styled(Box)(({ theme }) => ({
   flexShrink: 0,
 }));
 
-const ContactRow = styled(Box)(({ theme }) => ({
+const ContactCell = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   gap: theme.spacing(1.5),
@@ -43,6 +42,7 @@ const ContactRow = styled(Box)(({ theme }) => ({
   borderRadius: theme.spacing(1.5),
   transition: 'all 0.2s',
   border: '1px solid transparent',
+  minHeight: 72, // Fixed height for each cell
   '&:hover': {
     backgroundColor: theme.palette.grey[50],
     borderColor: theme.palette.grey[200],
@@ -68,7 +68,7 @@ const getRoleLabel = (role) => {
     buyer: 'Buyer',
     seller: 'Seller',
     buyerAgent: 'Buyer Agent',
-    sellerAgent: 'Seller Agent',
+    sellerAgent: 'Listing Agent',
     loanOfficer: 'Lender',
     escrowOfficer: 'Escrow Officer',
     titleOfficer: 'Title Officer',
@@ -87,14 +87,112 @@ const getInitials = (name) => {
     .slice(0, 2);
 };
 
+const EmptyContactCell = ({ label }) => (
+  <ContactCell sx={{ opacity: 0.5 }}>
+    <Avatar
+      sx={{
+        width: 40,
+        height: 40,
+        bgcolor: 'grey.300',
+        fontSize: '0.875rem',
+        fontWeight: 700,
+      }}
+    >
+      ?
+    </Avatar>
+    <Box flex={1} minWidth={0}>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        fontWeight="600"
+        textTransform="uppercase"
+        sx={{ fontSize: '0.65rem', letterSpacing: 0.5 }}
+      >
+        {label}
+      </Typography>
+      <Typography
+        variant="body2"
+        fontWeight="500"
+        color="text.secondary"
+        sx={{ lineHeight: 1.3, mt: 0.25, fontStyle: 'italic' }}
+        noWrap
+      >
+        Not set
+      </Typography>
+    </Box>
+  </ContactCell>
+);
+
+const ContactCellFilled = ({ contact }) => (
+  <ContactCell>
+    <Avatar
+      sx={{
+        width: 40,
+        height: 40,
+        bgcolor: contact.color,
+        fontSize: '0.875rem',
+        fontWeight: 700,
+        boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+      }}
+    >
+      {getInitials(contact.name)}
+    </Avatar>
+
+    <Box flex={1} minWidth={0}>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        fontWeight="600"
+        textTransform="uppercase"
+        sx={{ fontSize: '0.65rem', letterSpacing: 0.5 }}
+      >
+        {contact.formattedRole}
+      </Typography>
+      <Typography
+        variant="body2"
+        fontWeight="700"
+        color="text.primary"
+        sx={{ lineHeight: 1.3, mt: 0.25 }}
+        noWrap
+      >
+        {contact.name}
+      </Typography>
+    </Box>
+
+    {contact.phone && (
+      <Box
+        sx={{
+          width: 32,
+          height: 32,
+          borderRadius: '50%',
+          backgroundColor: 'grey.100',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          transition: 'all 0.2s',
+          '&:hover': {
+            backgroundColor: 'grey.200',
+          },
+        }}
+      >
+        <Phone size={14} style={{ color: '#666' }} />
+      </Box>
+    )}
+  </ContactCell>
+);
+
 const PeopleWidget_White = ({ escrow, loading, onClick }) => {
   if (loading) {
     return (
       <WhiteCard>
         <Skeleton width="60%" height={28} sx={{ mb: 2.5 }} />
-        {[1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} width="100%" height={60} sx={{ mb: 1.5 }} />
-        ))}
+        <Grid container spacing={2}>
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <Grid item xs={6} key={i}>
+              <Skeleton width="100%" height={72} />
+            </Grid>
+          ))}
+        </Grid>
       </WhiteCard>
     );
   }
@@ -102,22 +200,36 @@ const PeopleWidget_White = ({ escrow, loading, onClick }) => {
   // Get people from JSONB structure
   const people = escrow?.people || {};
 
-  // Build contacts array
-  const allContacts = [];
-
-  Object.keys(people).forEach(role => {
+  // Helper to get contact or null
+  const getContact = (role) => {
     if (people[role]?.name) {
-      allContacts.push({
+      return {
         role,
         ...people[role],
         color: getColorForRole(role),
         formattedRole: getRoleLabel(role),
-      });
+      };
     }
-  });
+    return null;
+  };
 
-  // Show only top 4 contacts
-  const topContacts = allContacts.slice(0, 4);
+  // Define fixed layout structure
+  // Left column: Buyer, Buyer Agent, (empty row)
+  // Right column: Seller, Listing Agent, Escrow Officer
+  const leftColumn = [
+    { role: 'buyer', label: 'Buyer' },
+    { role: 'buyerAgent', label: 'Buyer Agent' },
+    { role: null, label: '' }, // Empty row for symmetry
+  ];
+
+  const rightColumn = [
+    { role: 'seller', label: 'Seller' },
+    { role: 'sellerAgent', label: 'Listing Agent' },
+    { role: 'escrowOfficer', label: 'Escrow Officer' },
+  ];
+
+  // Count total contacts for badge
+  const totalContacts = Object.keys(people).filter(role => people[role]?.name).length;
 
   return (
     <WhiteCard
@@ -147,92 +259,57 @@ const PeopleWidget_White = ({ escrow, loading, onClick }) => {
             fontWeight: 700,
           }}
         >
-          {allContacts.length} contacts
+          {totalContacts} contacts
         </Box>
       </Box>
 
-      {/* Contacts */}
-      <Box flex={1}>
-        {topContacts.length > 0 ? (
-          topContacts.map((contact, idx) => (
-            <ContactRow key={idx}>
-              <Avatar
-                sx={{
-                  width: 40,
-                  height: 40,
-                  bgcolor: contact.color,
-                  fontSize: '0.875rem',
-                  fontWeight: 700,
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                }}
-              >
-                {getInitials(contact.name)}
-              </Avatar>
+      {/* Fixed 3x2 Grid */}
+      <Grid container spacing={2}>
+        {/* Row 1 */}
+        <Grid item xs={6}>
+          {getContact('buyer') ? (
+            <ContactCellFilled contact={getContact('buyer')} />
+          ) : (
+            <EmptyContactCell label="Buyer" />
+          )}
+        </Grid>
+        <Grid item xs={6}>
+          {getContact('seller') ? (
+            <ContactCellFilled contact={getContact('seller')} />
+          ) : (
+            <EmptyContactCell label="Seller" />
+          )}
+        </Grid>
 
-              <Box flex={1} minWidth={0}>
-                <Typography
-                  variant="caption"
-                  color="text.secondary"
-                  fontWeight="600"
-                  textTransform="uppercase"
-                  sx={{ fontSize: '0.65rem', letterSpacing: 0.5 }}
-                >
-                  {contact.formattedRole}
-                </Typography>
-                <Typography
-                  variant="body2"
-                  fontWeight="700"
-                  color="text.primary"
-                  sx={{ lineHeight: 1.3, mt: 0.25 }}
-                  noWrap
-                >
-                  {contact.name}
-                </Typography>
-              </Box>
+        {/* Row 2 */}
+        <Grid item xs={6}>
+          {getContact('buyerAgent') ? (
+            <ContactCellFilled contact={getContact('buyerAgent')} />
+          ) : (
+            <EmptyContactCell label="Buyer Agent" />
+          )}
+        </Grid>
+        <Grid item xs={6}>
+          {getContact('sellerAgent') ? (
+            <ContactCellFilled contact={getContact('sellerAgent')} />
+          ) : (
+            <EmptyContactCell label="Listing Agent" />
+          )}
+        </Grid>
 
-              {contact.phone && (
-                <Box
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    borderRadius: '50%',
-                    backgroundColor: 'grey.100',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: 'all 0.2s',
-                    '&:hover': {
-                      backgroundColor: 'grey.200',
-                    },
-                  }}
-                >
-                  <Phone size={14} style={{ color: '#666' }} />
-                </Box>
-              )}
-            </ContactRow>
-          ))
-        ) : (
-          <Box textAlign="center" py={4}>
-            <Users size={32} style={{ color: '#ccc', marginBottom: 8 }} />
-            <Typography variant="body2" color="text.secondary">
-              No contacts added yet
-            </Typography>
-          </Box>
-        )}
-      </Box>
-
-      {/* Footer */}
-      <Box
-        mt={2}
-        pt={2}
-        borderTop={1}
-        borderColor="divider"
-        textAlign="center"
-      >
-        <Typography variant="caption" color="text.secondary" sx={{ '&:hover': { color: 'secondary.main' } }}>
-          Click to view all {allContacts.length} contacts →
-        </Typography>
-      </Box>
+        {/* Row 3 */}
+        <Grid item xs={6}>
+          {/* Empty slot in left column */}
+          <Box sx={{ minHeight: 72 }} />
+        </Grid>
+        <Grid item xs={6}>
+          {getContact('escrowOfficer') ? (
+            <ContactCellFilled contact={getContact('escrowOfficer')} />
+          ) : (
+            <EmptyContactCell label="Escrow Officer" />
+          )}
+        </Grid>
+      </Grid>
     </WhiteCard>
   );
 };
