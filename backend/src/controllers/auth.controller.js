@@ -299,6 +299,10 @@ class AuthController {
           ip: ipAddress,
         };
 
+        // CRITICAL: Revoke old tokens from this device to prevent accumulation
+        // This prevents 21+ tokens per user when they log in after token expiry
+        await RefreshTokenService.revokeOldTokensFromDevice(user.id, userAgent);
+
         refreshTokenData = await RefreshTokenService.createRefreshToken(
           user.id,
           ipAddress,

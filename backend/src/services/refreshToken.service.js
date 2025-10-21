@@ -320,6 +320,40 @@ class RefreshTokenService {
       client.release();
     }
   }
+
+  /**
+   * Revoke all existing refresh tokens for a user from the same device/browser
+   * This prevents token accumulation when users log in multiple times without logging out
+   * @param {string} userId - User UUID
+   * @param {string} userAgent - Client user agent to match
+   * @returns {Promise<number>} Number of tokens revoked
+   */
+  static async revokeOldTokensFromDevice(userId, userAgent) {
+    try {
+      const query = `
+        DELETE FROM refresh_tokens
+        WHERE user_id = $1
+          AND user_agent = $2
+          AND expires_at > NOW()
+      `;
+
+      const result = await pool.query(query, [userId, userAgent]);
+
+      if (result.rowCount > 0) {
+        logger.info('Revoked old refresh tokens from device', {
+          userId,
+          tokensRevoked: result.rowCount,
+          userAgent: userAgent?.substring(0, 50), // Log truncated UA
+        });
+      }
+
+      return result.rowCount;
+    } catch (error) {
+      logger.error('Error revoking old tokens from device:', error);
+      // Non-fatal - continue with login even if cleanup fails
+      return 0;
+    }
+  }
 }
 
 module.exports = RefreshTokenService;
