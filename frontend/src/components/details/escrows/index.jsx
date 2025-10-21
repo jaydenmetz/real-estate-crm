@@ -42,29 +42,39 @@ const PageContainer = styled(Box)(({ theme }) => ({
   paddingBottom: theme.spacing(10), // Space for activity feed tab
 }));
 
-const LayoutGrid = styled(Box, {
-  shouldForwardProp: (prop) => prop !== 'leftCollapsed' && prop !== 'rightCollapsed',
-})(({ leftCollapsed, rightCollapsed, theme }) => ({
-  display: 'grid',
-  gridTemplateColumns: `${leftCollapsed ? '0px' : '280px'} 1fr ${rightCollapsed ? '0px' : '280px'}`,
-  gap: theme.spacing(3),
+const ContentWrapper = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  justifyContent: 'center',
+  width: '100%',
   maxWidth: '1800px',
   margin: '0 auto',
-  transition: 'grid-template-columns 0.3s ease-in-out',
-  [theme.breakpoints.down('lg')]: {
-    gridTemplateColumns: '1fr',
-  },
+  position: 'relative',
 }));
 
-const Sidebar = styled(Box)(({ theme }) => ({
+const MainContent = styled(Box)(({ theme }) => ({
+  flex: 1,
+  maxWidth: '1200px',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.spacing(3),
+}));
+
+const Sidebar = styled(Box, {
+  shouldForwardProp: (prop) => prop !== 'collapsed' && prop !== 'side',
+})(({ collapsed, side, theme }) => ({
+  position: 'fixed',
+  top: 88, // Below navbar (64px) + padding
+  [side]: collapsed ? -280 : 24, // Slide in/out from edge
+  width: 280,
+  height: 'calc(100vh - 112px)', // Full height minus navbar and padding
   display: 'flex',
   flexDirection: 'column',
   backgroundColor: theme.palette.background.paper,
   borderRadius: theme.spacing(2),
   boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
   overflow: 'hidden',
-  minWidth: 0, // Allow sidebar to collapse below content size
-  transition: 'all 0.3s ease-in-out',
+  transition: `${side} 0.3s ease-in-out`,
+  zIndex: 10,
   [theme.breakpoints.down('lg')]: {
     display: 'none',
   },
@@ -90,12 +100,6 @@ const SidebarContent = styled(Box)(({ theme }) => ({
     backgroundColor: theme.palette.grey[300],
     borderRadius: 3,
   },
-}));
-
-const MainContent = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: theme.spacing(2),
 }));
 
 const WidgetsGrid = styled(Box)(({ theme }) => ({
@@ -236,33 +240,52 @@ const EscrowDetailCompact = () => {
 
   return (
     <PageContainer>
-      <LayoutGrid
-        leftCollapsed={leftSidebarCollapsed}
-        rightCollapsed={rightSidebarCollapsed}
-      >
-        {/* Left Sidebar - Blank for now */}
-        <Sidebar>
-          <SidebarHeader>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-              <Typography variant="subtitle2" fontWeight="600" color="text.secondary">
-                Quick Actions
-              </Typography>
-              <IconButton
-                size="small"
-                onClick={() => setLeftSidebarCollapsed(true)}
-              >
-                <CloseIcon size={18} />
-              </IconButton>
-            </Box>
-          </SidebarHeader>
-          <SidebarContent>
-            <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 4 }}>
-              Coming Soon
+      {/* Left Sidebar - Fixed position */}
+      <Sidebar collapsed={leftSidebarCollapsed} side="left">
+        <SidebarHeader>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+            <Typography variant="subtitle2" fontWeight="600" color="text.secondary">
+              Quick Actions
             </Typography>
-          </SidebarContent>
-        </Sidebar>
+            <IconButton
+              size="small"
+              onClick={() => setLeftSidebarCollapsed(true)}
+            >
+              <CloseIcon size={18} />
+            </IconButton>
+          </Box>
+        </SidebarHeader>
+        <SidebarContent>
+          <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 4 }}>
+            Coming Soon
+          </Typography>
+        </SidebarContent>
+      </Sidebar>
 
-        {/* Main Content */}
+      {/* Right Sidebar - Fixed position */}
+      <Sidebar collapsed={rightSidebarCollapsed} side="right">
+        <SidebarHeader>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+            <IconButton
+              size="small"
+              onClick={() => setRightSidebarCollapsed(true)}
+            >
+              <CloseIcon size={18} />
+            </IconButton>
+            <Typography variant="subtitle2" fontWeight="600" color="text.secondary">
+              Smart Context
+            </Typography>
+          </Box>
+        </SidebarHeader>
+        <SidebarContent>
+          <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 4 }}>
+            Coming Soon
+          </Typography>
+        </SidebarContent>
+      </Sidebar>
+
+      {/* Main Content - Centered */}
+      <ContentWrapper>
         <MainContent>
           {/* New Hero */}
           <EscrowDetailHero
@@ -302,29 +325,7 @@ const EscrowDetailCompact = () => {
             <PlaceholderWidget />
           </Box>
         </MainContent>
-
-        {/* Right Sidebar - Blank for now */}
-        <Sidebar>
-          <SidebarHeader>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-              <IconButton
-                size="small"
-                onClick={() => setRightSidebarCollapsed(true)}
-              >
-                <CloseIcon size={18} />
-              </IconButton>
-              <Typography variant="subtitle2" fontWeight="600" color="text.secondary">
-                Smart Context
-              </Typography>
-            </Box>
-          </SidebarHeader>
-          <SidebarContent>
-            <Typography variant="body2" color="text.secondary" align="center" sx={{ mt: 4 }}>
-              Coming Soon
-            </Typography>
-          </SidebarContent>
-        </Sidebar>
-      </LayoutGrid>
+      </ContentWrapper>
 
       {/* Floating toggle buttons */}
       {leftSidebarCollapsed && (
