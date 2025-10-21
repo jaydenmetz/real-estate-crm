@@ -387,9 +387,30 @@ class AdminController {
       });
     } catch (error) {
       console.error('Delete rows error:', error);
+
+      // Check for foreign key constraint violation
+      if (error.code === '23503') {
+        const constraintMatch = error.detail?.match(/Key \(.*?\)=\(.*?\) is still referenced from table "(\w+)"/);
+        const referencingTable = constraintMatch ? constraintMatch[1] : 'another table';
+
+        return res.status(400).json({
+          success: false,
+          error: {
+            code: 'FOREIGN_KEY_VIOLATION',
+            message: `Cannot delete: record is referenced by ${referencingTable}. Delete related records first or use CASCADE delete.`,
+            details: error.detail
+          }
+        });
+      }
+
+      // Generic error
       res.status(500).json({
         success: false,
-        error: { code: 'DELETE_ROWS_ERROR', message: 'Failed to delete rows' }
+        error: {
+          code: 'DELETE_ROWS_ERROR',
+          message: error.message || 'Failed to delete rows',
+          details: process.env.NODE_ENV === 'development' ? error.detail : undefined
+        }
       });
     }
   }
