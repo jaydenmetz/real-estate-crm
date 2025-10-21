@@ -67,12 +67,10 @@ const FinancialsWidget_White = ({ escrow, loading, onClick }) => {
   const details = escrow?.details || {};
 
   const purchasePrice = financials.purchasePrice || details.purchasePrice || escrow?.purchase_price || 0;
-  const downPayment = financials.downPayment || details.downPayment || escrow?.down_payment || 0;
-  const loanAmount = financials.loanAmount || details.loanAmount || escrow?.loan_amount || 0;
+  const commissionPercentage = financials.commissionPercentage || 2.5;
+  const grossCommission = financials.grossCommission || (purchasePrice * commissionPercentage / 100) || 0;
   const agentNet = financials.agentNet || financials.agent1099Income || details.myCommission || escrow?.my_commission || 0;
   const splitPercentage = financials.splitPercentage || 70;
-
-  const downPaymentPercent = purchasePrice > 0 ? Math.round((downPayment / purchasePrice) * 100) : 0;
 
   return (
     <WhiteCard
@@ -107,19 +105,19 @@ const FinancialsWidget_White = ({ escrow, loading, onClick }) => {
 
         <MetricRow>
           <Typography variant="body2" color="text.secondary" fontWeight="500">
-            Down Payment ({downPaymentPercent}%)
+            Commission %
           </Typography>
           <Typography variant="body2" fontWeight="600" color="text.primary">
-            {formatCurrency(downPayment)}
+            {commissionPercentage}%
           </Typography>
         </MetricRow>
 
         <MetricRow>
           <Typography variant="body2" color="text.secondary" fontWeight="500">
-            Loan Amount
+            GCI
           </Typography>
           <Typography variant="body2" fontWeight="600" color="text.primary">
-            {formatCurrency(loanAmount)}
+            {formatCurrency(grossCommission)}
           </Typography>
         </MetricRow>
       </Box>
