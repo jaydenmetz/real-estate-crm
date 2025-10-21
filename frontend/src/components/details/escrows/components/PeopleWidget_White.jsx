@@ -4,6 +4,7 @@ import { styled } from '@mui/material/styles';
 import { Users, Phone } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ContactSelectionModal } from '../../../modals/ContactSelectionModal';
+import { PeopleModal } from '../../../modals/PeopleModal';
 import { escrowsAPI } from '../../../../services/api.service';
 
 // White card with purple icon badge
@@ -207,6 +208,7 @@ const ContactCellFilled = ({ contact, onClick }) => (
 const PeopleWidget_White = ({ escrow, loading, onClick, onUpdate }) => {
   const [selectedRole, setSelectedRole] = useState(null);
   const [contactModalOpen, setContactModalOpen] = useState(false);
+  const [peopleModalOpen, setPeopleModalOpen] = useState(false);
   const [people, setPeople] = useState({});
   const [loadingPeople, setLoadingPeople] = useState(true);
 
@@ -279,6 +281,20 @@ const PeopleWidget_White = ({ escrow, loading, onClick, onUpdate }) => {
     setContactModalOpen(true);
   };
 
+  // Handle opening comprehensive people modal
+  const handleOpenPeopleModal = () => {
+    setPeopleModalOpen(true);
+  };
+
+  // Handle adding contact from comprehensive modal
+  const handleAddContactFromModal = (role) => {
+    // Close people modal
+    setPeopleModalOpen(false);
+    // Open contact selection for this role
+    setSelectedRole(role);
+    setContactModalOpen(true);
+  };
+
   // Handle contact selection from modal
   const handleContactSelect = async (contact) => {
     const escrowId = escrow?.details?.id || escrow?.id;
@@ -332,7 +348,7 @@ const PeopleWidget_White = ({ escrow, loading, onClick, onUpdate }) => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.2 }}
-        onClick={onClick}
+        onClick={handleOpenPeopleModal}
       >
         {/* Header */}
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
@@ -445,6 +461,14 @@ const PeopleWidget_White = ({ escrow, loading, onClick, onUpdate }) => {
           </Grid>
         </Grid>
       </WhiteCard>
+
+      {/* Comprehensive People Modal */}
+      <PeopleModal
+        open={peopleModalOpen}
+        onClose={() => setPeopleModalOpen(false)}
+        people={people}
+        onAddContact={handleAddContactFromModal}
+      />
 
       {/* Contact Selection Modal */}
       {selectedRole && (
