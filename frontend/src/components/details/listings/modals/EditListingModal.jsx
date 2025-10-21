@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 import { useForm, Controller } from 'react-hook-form';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { listingsAPI } from '../../services/api.service';
+import { listingsAPI } from '../../../../services/api.service';
 import { useSnackbar } from 'notistack';
 
 const ListingForm = ({ open, onClose, listing, onSuccess }) => {
