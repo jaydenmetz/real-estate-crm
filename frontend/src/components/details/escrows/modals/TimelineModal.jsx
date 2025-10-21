@@ -193,6 +193,24 @@ const TimelineModal = ({ open, onClose, escrow, onUpdate }) => {
     }
   };
 
+  // Handle checkbox click - auto-complete with today's date
+  const handleCheckboxClick = async (milestone) => {
+    if (!onUpdate) return;
+
+    // If already has a date, don't change it (let them use the date picker)
+    if (milestone.date) return;
+
+    // Set to today's date
+    const todayString = new Date().toISOString().split('T')[0];
+    const [category, key] = milestone.field.split('.');
+    await onUpdate({
+      [category]: {
+        ...timeline,
+        [key]: todayString,
+      },
+    });
+  };
+
   // Calculate completion
   const totalMilestones = milestones.length;
   const completedMilestones = milestonesWithStatus.filter(m => m.status === 'complete').length;
@@ -226,7 +244,11 @@ const TimelineModal = ({ open, onClose, escrow, onUpdate }) => {
 
           return (
             <MilestoneRow key={milestone.id} status={milestone.status}>
-              <StatusIcon status={milestone.status}>
+              <StatusIcon
+                status={milestone.status}
+                onClick={() => handleCheckboxClick(milestone)}
+                sx={{ cursor: 'pointer' }}
+              >
                 {milestone.status === 'complete' && <CheckCircle fontSize="large" />}
                 {milestone.status === 'active' && <Schedule fontSize="large" />}
                 {milestone.status === 'pending' && <RadioButtonUnchecked fontSize="large" />}

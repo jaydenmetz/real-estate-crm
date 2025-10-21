@@ -7,6 +7,7 @@ import {
   IconButton,
   LinearProgress,
   Checkbox,
+  Grid,
 } from '@mui/material';
 import { X as CloseIcon, FileText } from 'lucide-react';
 import { styled } from '@mui/material/styles';
@@ -14,7 +15,7 @@ import { styled } from '@mui/material/styles';
 const StyledDialog = styled(Dialog)(({ theme }) => ({
   '& .MuiDialog-paper': {
     borderRadius: theme.spacing(2),
-    maxWidth: 800,
+    maxWidth: 1400,
     width: '100%',
     overflow: 'hidden',
   },
@@ -30,11 +31,13 @@ const HeaderGradient = styled(Box)(({ theme }) => ({
 }));
 
 const CategorySection = styled(Box)(({ theme }) => ({
-  marginBottom: theme.spacing(3),
-  padding: theme.spacing(2),
+  padding: theme.spacing(2.5),
   borderRadius: theme.spacing(2),
   border: `1px solid ${theme.palette.grey[200]}`,
   backgroundColor: theme.palette.background.paper,
+  display: 'flex',
+  flexDirection: 'column',
+  height: '100%',
 }));
 
 const ChecklistItem = styled(Box)(({ theme }) => ({
@@ -69,7 +72,8 @@ const ChecklistsModal = ({ open, onClose, escrow, onUpdate }) => {
   // Define checklist categories with all items
   const categories = [
     {
-      name: 'Loan Progress',
+      name: 'Loan',
+      key: 'loan',
       color: '#3b82f6',
       items: [
         { key: 'le', label: 'Lender Engaged', completed: checklists.loan?.le || false },
@@ -84,7 +88,8 @@ const ChecklistsModal = ({ open, onClose, escrow, onUpdate }) => {
       ],
     },
     {
-      name: 'Property Tasks',
+      name: 'House',
+      key: 'house',
       color: '#10b981',
       items: [
         { key: 'emd', label: 'EMD Deposited', completed: checklists.house?.emd || false },
@@ -99,7 +104,8 @@ const ChecklistsModal = ({ open, onClose, escrow, onUpdate }) => {
       ],
     },
     {
-      name: 'Administrative',
+      name: 'Admin',
+      key: 'admin',
       color: '#f59e0b',
       items: [
         { key: 'mlsStatusUpdate', label: 'MLS Status Updated', completed: checklists.admin?.mlsStatusUpdate || false },
@@ -183,68 +189,74 @@ const ChecklistsModal = ({ open, onClose, escrow, onUpdate }) => {
           <ProgressBar variant="determinate" value={overallProgress} />
         </Box>
 
-        {/* Categories */}
-        {categories.map((category, catIdx) => {
-          const categoryKey = category.name === 'Loan Progress' ? 'loan' : category.name === 'Property Tasks' ? 'house' : 'admin';
-          const completed = category.items.filter(item => item.completed).length;
-          const total = category.items.length;
-          const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+        {/* 3 Column Grid Layout */}
+        <Grid container spacing={3}>
+          {categories.map((category) => {
+            const completed = category.items.filter(item => item.completed).length;
+            const total = category.items.length;
+            const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-          return (
-            <CategorySection key={catIdx}>
-              <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
-                <Box>
-                  <Typography variant="h6" fontWeight="700" sx={{ color: category.color }}>
-                    {category.name}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
+            return (
+              <Grid item xs={12} md={4} key={category.key}>
+                <CategorySection>
+                  {/* Header */}
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+                    <Typography variant="h6" fontWeight="700" sx={{ color: category.color }}>
+                      {category.name}
+                    </Typography>
+                    <Box
+                      sx={{
+                        backgroundColor: `${category.color}15`,
+                        color: category.color,
+                        px: 2,
+                        py: 0.5,
+                        borderRadius: 2,
+                        fontWeight: 700,
+                        fontSize: '0.875rem',
+                      }}
+                    >
+                      {percentage}%
+                    </Box>
+                  </Box>
+
+                  <Typography variant="caption" color="text.secondary" mb={1.5} display="block">
                     {completed} of {total} complete
                   </Typography>
-                </Box>
-                <Box
-                  sx={{
-                    backgroundColor: `${category.color}15`,
-                    color: category.color,
-                    px: 2,
-                    py: 0.5,
-                    borderRadius: 2,
-                    fontWeight: 700,
-                    fontSize: '0.875rem',
-                  }}
-                >
-                  {percentage}%
-                </Box>
-              </Box>
 
-              <ProgressBar variant="determinate" value={percentage} sx={{ mb: 2 }} />
+                  <ProgressBar variant="determinate" value={percentage} sx={{ mb: 2 }} />
 
-              {category.items.map((item, itemIdx) => (
-                <ChecklistItem key={itemIdx}>
-                  <Checkbox
-                    checked={item.completed}
-                    onChange={() => handleCheckboxChange(categoryKey, item.key, item.completed)}
-                    sx={{
-                      color: category.color,
-                      '&.Mui-checked': {
-                        color: category.color,
-                      },
-                    }}
-                  />
-                  <Typography
-                    variant="body2"
-                    sx={{
-                      textDecoration: item.completed ? 'line-through' : 'none',
-                      opacity: item.completed ? 0.6 : 1,
-                      fontWeight: item.completed ? 400 : 500,
-                    }}
-                  >
-                    {item.label}
-                  </Typography>
-                </ChecklistItem>
-              ))}
-            </CategorySection>
-          );
-        })}
+                  {/* Checklist Items */}
+                  <Box sx={{ flex: 1, overflowY: 'auto' }}>
+                    {category.items.map((item, itemIdx) => (
+                      <ChecklistItem key={itemIdx}>
+                        <Checkbox
+                          checked={item.completed}
+                          onChange={() => handleCheckboxChange(category.key, item.key, item.completed)}
+                          sx={{
+                            color: category.color,
+                            '&.Mui-checked': {
+                              color: category.color,
+                            },
+                          }}
+                        />
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            textDecoration: item.completed ? 'line-through' : 'none',
+                            opacity: item.completed ? 0.6 : 1,
+                            fontWeight: item.completed ? 400 : 500,
+                          }}
+                        >
+                          {item.label}
+                        </Typography>
+                      </ChecklistItem>
+                    ))}
+                  </Box>
+                </CategorySection>
+              </Grid>
+            );
+          })}
+        </Grid>
       </DialogContent>
     </StyledDialog>
   );
