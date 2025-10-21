@@ -814,13 +814,24 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
                     : ''
                 }
                 filterOptions={(options, { inputValue }) => {
+                  // Ensure options is an array
+                  if (!Array.isArray(options)) {
+                    return [];
+                  }
+
+                  // If no search text, show top 5 clients
+                  if (!inputValue || inputValue.trim() === '') {
+                    return options.slice(0, 5);
+                  }
+
                   // Filter clients based on search text
                   const filtered = options.filter(option => {
                     const searchText = inputValue.toLowerCase();
-                    const fullName = `${option.firstName} ${option.lastName}`.toLowerCase();
+                    const fullName = `${option.firstName || ''} ${option.lastName || ''}`.toLowerCase();
                     const email = option.email?.toLowerCase() || '';
                     return fullName.includes(searchText) || email.includes(searchText);
                   });
+
                   // Limit to 5 results
                   return filtered.slice(0, 5);
                 }}
@@ -853,26 +864,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
                   />
                 )}
                 onChange={(e, value) => setFormData({ ...formData, clientId: value?.id || null })}
-                noOptionsText={
-                  <Box>
-                    <Typography variant="body2" color="text.secondary" sx={{ px: 2, py: 1 }}>
-                      No clients found
-                    </Typography>
-                    <Divider />
-                    <ListItemButton
-                      onClick={() => setNewClientModalOpen(true)}
-                      sx={{ py: 1.5 }}
-                    >
-                      <ListItemIcon>
-                        <PersonAdd color="primary" />
-                      </ListItemIcon>
-                      <ListItemText
-                        primary="Create New Client"
-                        primaryTypographyProps={{ fontWeight: 600, color: 'primary.main' }}
-                      />
-                    </ListItemButton>
-                  </Box>
-                }
+                noOptionsText="No clients found"
                 ListboxProps={{
                   sx: { maxHeight: 300 }
                 }}
