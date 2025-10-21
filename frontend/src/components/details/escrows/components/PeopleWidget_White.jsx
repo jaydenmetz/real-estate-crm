@@ -273,6 +273,10 @@ const PeopleWidget_White = ({ escrow, loading, onClick, onUpdate }) => {
 
   // Handle opening contact selector for a specific role
   const handleAddContact = (role) => {
+    console.log('🎯 Opening contact selector for role:', role);
+    console.log('📋 Current escrow object:', escrow);
+    console.log('🆔 Escrow ID:', escrow?.id);
+    console.log('🔑 Escrow keys:', escrow ? Object.keys(escrow) : 'escrow is null/undefined');
     setSelectedRole(role);
     setContactModalOpen(true);
   };
