@@ -5,7 +5,7 @@ import { DollarSign, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { formatCurrency } from '../../../../utils/formatters';
 
-// White card with green icon badge
+// White card with green icon badge (auto-height)
 const WhiteCard = styled(Box)(({ theme }) => ({
   backgroundColor: 'white',
   borderRadius: theme.spacing(2),
@@ -13,11 +13,11 @@ const WhiteCard = styled(Box)(({ theme }) => ({
   borderColor: theme.palette.grey[200],
   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
   padding: theme.spacing(3),
-  height: '100%',
+  minHeight: 300,
+  maxHeight: 400,
   display: 'flex',
   flexDirection: 'column',
   cursor: 'pointer',
-  overflow: 'hidden', // Prevent content overflow
   transition: 'all 0.2s',
   '&:hover': {
     boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12)',

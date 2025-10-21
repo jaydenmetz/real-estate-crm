@@ -111,13 +111,12 @@ const SidebarContent = styled(Box)(({ theme }) => ({
 const WidgetsGrid = styled(Box)(({ theme }) => ({
   display: 'grid',
   gridTemplateColumns: 'repeat(2, 1fr)',
-  gridTemplateRows: 'repeat(2, 190px)',
+  gridTemplateRows: 'auto auto', // Auto height rows to fit content
   gap: theme.spacing(2),
-  height: 400,
+  alignItems: 'start', // Align widgets to top of their grid cell
   [theme.breakpoints.down('md')]: {
     gridTemplateColumns: '1fr',
     gridTemplateRows: 'auto',
-    height: 'auto',
   },
 }));
 

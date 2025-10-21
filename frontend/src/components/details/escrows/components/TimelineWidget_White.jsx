@@ -4,7 +4,7 @@ import { styled } from '@mui/material/styles';
 import { Activity, CheckCircle, Clock, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-// White card with colored icon badge (your new design)
+// White card with colored icon badge (auto-height to fit content)
 const WhiteCard = styled(Box)(({ theme }) => ({
   backgroundColor: 'white',
   borderRadius: theme.spacing(2),
@@ -12,11 +12,11 @@ const WhiteCard = styled(Box)(({ theme }) => ({
   borderColor: theme.palette.grey[200],
   boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
   padding: theme.spacing(3),
-  height: '100%',
+  minHeight: 300, // Minimum height for visual balance
+  maxHeight: 400, // Maximum height to keep widgets balanced
   display: 'flex',
   flexDirection: 'column',
   cursor: 'pointer',
-  overflow: 'hidden', // Prevent content overflow
   transition: 'all 0.2s',
   '&:hover': {
     boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12)',
@@ -112,11 +112,11 @@ const TimelineWidget_White = ({ escrow, loading, onClick }) => {
     return { text: `${diffDays} days`, status: 'upcoming' };
   };
 
-  // Get upcoming events (next 3)
+  // Get upcoming events (show more to fill space)
   const upcomingEvents = timeline
     .filter(event => event.date)
     .sort((a, b) => new Date(a.date) - new Date(b.date))
-    .slice(0, 3);
+    .slice(0, 5); // Show 5 events instead of 3
 
   const completedCount = timeline.filter(event => event.completed).length;
   const totalCount = timeline.length;
@@ -155,8 +155,21 @@ const TimelineWidget_White = ({ escrow, loading, onClick }) => {
         </Box>
       </Box>
 
-      {/* Events */}
-      <Box flex={1}>
+      {/* Events - Scrollable Content */}
+      <Box
+        flex={1}
+        sx={{
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          '&::-webkit-scrollbar': {
+            width: 6,
+          },
+          '&::-webkit-scrollbar-thumb': {
+            backgroundColor: 'grey.300',
+            borderRadius: 3,
+          },
+        }}
+      >
         {upcomingEvents.length > 0 ? (
           upcomingEvents.map((event, idx) => {
             const daysInfo = getDaysUntil(event.date);
