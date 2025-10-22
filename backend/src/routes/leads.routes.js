@@ -6,6 +6,12 @@ const leadsController = require('../controllers/leads.controller');
 const { authenticate } = require('../middleware/apiKey.middleware');
 const { validate } = require('../middleware/validation.middleware');
 const { validateLeadRules } = require('../middleware/businessRules.middleware');
+const {
+  canAccessScope,
+  requireOwnership,
+  requireModifyPermission,
+  requireDeletePermission
+} = require('../middleware/authorization.middleware');
 
 // All routes require authentication
 router.use(authenticate);
@@ -27,19 +33,17 @@ const updateValidation = [
   body('status').optional().isString(),
 ];
 
-// Routes
-router.get('/', leadsController.getLeads);
-router.get('/:id', leadsController.getLead);
+// Routes with Phase 2 authorization + PRIVACY FILTERING
+router.get('/', canAccessScope, leadsController.getLeads); // Filters out private leads for brokers
+router.get('/:id', requireOwnership('lead'), leadsController.getLead); // Checks privacy
 router.post('/', createValidation, validate, validateLeadRules, leadsController.createLead);
-router.put('/:id', updateValidation, validate, validateLeadRules, leadsController.updateLead);
-router.post('/:id/convert', leadsController.convertToClient);
-router.post('/:id/activities', leadsController.recordActivity);
+router.put('/:id', updateValidation, validate, requireModifyPermission('lead'), validateLeadRules, leadsController.updateLead);
+router.post('/:id/convert', requireModifyPermission('lead'), leadsController.convertToClient);
+router.post('/:id/activities', requireModifyPermission('lead'), leadsController.recordActivity);
 
-// Archive and Delete endpoints - Added for health dashboard testing
-// Archive endpoint: Soft deletes by setting status to 'archived'
-router.put('/:id/archive', leadsController.archiveLead);
-// Delete endpoint: Hard delete
-router.delete('/:id', leadsController.deleteLead);
+// Archive and Delete endpoints
+router.put('/:id/archive', requireModifyPermission('lead'), leadsController.archiveLead);
+router.delete('/:id', requireDeletePermission('lead'), leadsController.deleteLead);
 // Batch delete endpoint: Delete multiple archived leads
 router.post(
   '/batch-delete',
