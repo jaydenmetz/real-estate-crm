@@ -26,6 +26,7 @@ import ConnectionStatus from './components/common/ConnectionStatus';
 
 // Dashboard Components
 import HomeDashboard from './components/dashboards/HomeDashboard';
+import ProjectRoadmapDashboard from './components/common/ProjectRoadmapDashboard';
 import EscrowsDashboard from './components/dashboards/escrows';
 import EscrowDetail from './components/details/escrows';
 import ListingsDashboard from './components/dashboards/listings';
@@ -315,6 +316,17 @@ function App() {
                                   <UserAwareErrorBoundary pageName="Home Dashboard">
                                     <HomeDashboard />
                                   </UserAwareErrorBoundary>
+                                } />
+
+                                {/* Complete Roadmap - Admin Only */}
+                                <Route path="/roadmap" element={
+                                  <ProtectedRoute requiredRole="system_admin">
+                                    <ErrorBoundary>
+                                      <Box sx={{ width: '100%', minHeight: 'calc(100vh - 64px)', backgroundColor: '#f8f9fa', py: 3 }}>
+                                        <ProjectRoadmapDashboard />
+                                      </Box>
+                                    </ErrorBoundary>
+                                  </ProtectedRoute>
                                 } />
 
                                 {/* Health Check - Admin Only */}

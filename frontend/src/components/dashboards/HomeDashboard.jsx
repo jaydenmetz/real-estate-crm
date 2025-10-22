@@ -6,7 +6,6 @@ import BrokerHeroCard from './home/BrokerHeroCard';
 import TeamSelector from './home/TeamSelector';
 import TeamHeroCard from './home/TeamHeroCard';
 import UserHeroCard from './home/UserHeroCard';
-import ProjectRoadmapDashboard from '../common/ProjectRoadmapDashboard';
 
 /**
  * HomeDashboard Component
@@ -92,9 +91,6 @@ const HomeDashboard = () => {
         {stats?.user && (
           <UserHeroCard stats={stats.user} loading={loading} />
         )}
-
-        {/* Project Roadmap (system_admin only) */}
-        {user?.role === 'system_admin' && <ProjectRoadmapDashboard />}
       </Container>
     </Box>
   );

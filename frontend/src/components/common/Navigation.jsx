@@ -551,6 +551,15 @@ const EnhancedNavigation = () => {
         </MenuItem>
         <MenuItem
           onClick={() => {
+            navigate('/roadmap');
+            setBrandMenuAnchor(null);
+          }}
+        >
+          <ListItemIcon><Timeline /></ListItemIcon>
+          <ListItemText primary="Complete Roadmap" />
+        </MenuItem>
+        <MenuItem
+          onClick={() => {
             navigate('/health');
             setBrandMenuAnchor(null);
           }}
