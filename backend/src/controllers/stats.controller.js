@@ -89,7 +89,7 @@ const getHomeStats = async (req, res) => {
            )) ${brokerFilter ? 'AND ' + brokerFilter.replace('WHERE ', '') : ''}) as total_appointments,
           (SELECT COUNT(*) FROM appointments a
            JOIN users u ON a.owner_id = u.id
-           WHERE a.appointment_status IN ('scheduled', 'confirmed')
+           WHERE a.status IN ('scheduled', 'confirmed')
            AND (a.lead_id IS NULL OR a.lead_id NOT IN (
              SELECT id FROM leads WHERE is_private = TRUE
            )) ${brokerFilter ? 'AND ' + brokerFilter.replace('WHERE ', '') : ''}) as upcoming_appointments
@@ -200,7 +200,7 @@ const getHomeStats = async (req, res) => {
             (SELECT COUNT(*) FROM appointments a
              JOIN users u ON a.owner_id = u.id
              WHERE u.team_id = $1
-             AND a.appointment_status IN ('scheduled', 'confirmed')
+             AND a.status IN ('scheduled', 'confirmed')
              AND (a.lead_id IS NULL OR a.lead_id NOT IN (
                SELECT id FROM leads WHERE is_private = TRUE
              ))) as upcoming_appointments,
@@ -280,7 +280,7 @@ const getHomeStats = async (req, res) => {
         (SELECT COUNT(*) FROM appointments WHERE owner_id = $1) as total_appointments,
         (SELECT COUNT(*) FROM appointments
          WHERE owner_id = $1
-         AND appointment_status IN ('scheduled', 'confirmed')) as upcoming_appointments,
+         AND status IN ('scheduled', 'confirmed')) as upcoming_appointments,
 
         -- User metadata
         (SELECT CONCAT(first_name, ' ', last_name) FROM users WHERE id = $1) as user_name,
