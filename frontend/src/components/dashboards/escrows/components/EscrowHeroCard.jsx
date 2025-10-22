@@ -87,19 +87,32 @@ const EscrowHeroCard = ({
             transition={{ duration: 0.5 }}
             style={{ flexShrink: 0 }}
           >
-            <FormControl variant="standard" sx={{ minWidth: 200 }}>
+            <FormControl variant="standard">
               <Select
                 value={scope}
                 onChange={(e) => setScope(e.target.value)}
                 disableUnderline
                 renderValue={(value) => (
-                  <Typography variant="h3" component="h1" sx={{ fontWeight: 700 }}>
+                  <Typography
+                    variant="h3"
+                    component="h1"
+                    sx={{
+                      fontWeight: 700,
+                      color: 'white',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                    }}
+                  >
                     {getTitle()}
                   </Typography>
                 )}
                 sx={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                  borderRadius: '12px',
+                  padding: '12px 20px',
+                  border: '2px solid rgba(255, 255, 255, 0.3)',
                   '& .MuiSelect-select': {
-                    padding: 0,
+                    padding: '0 !important',
                     paddingRight: '32px !important',
                     '&:focus': {
                       backgroundColor: 'transparent',
@@ -107,11 +120,11 @@ const EscrowHeroCard = ({
                   },
                   '& .MuiSvgIcon-root': {
                     color: 'white',
-                    right: 0,
+                    right: '12px',
                   },
                   '&:hover': {
-                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                    borderRadius: 1,
+                    backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                    borderColor: 'rgba(255, 255, 255, 0.4)',
                     boxShadow: '0 2px 8px rgba(0, 0, 0, 0.12)',
                   },
                   transition: 'all 0.2s ease',
@@ -122,22 +135,66 @@ const EscrowHeroCard = ({
                       mt: 1,
                       borderRadius: 2,
                       boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+                      bgcolor: 'rgba(30, 60, 114, 0.95)',
+                      backdropFilter: 'blur(10px)',
                     },
                   },
                 }}
               >
-                <MenuItem value="user">
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                <MenuItem
+                  value="user"
+                  sx={{
+                    color: 'white',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    },
+                    '&.Mui-selected': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                      },
+                    },
+                  }}
+                >
+                  <Typography variant="body1" sx={{ fontWeight: 700, color: 'white', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     {user?.firstName || user?.username?.split(' ')[0] || 'User'}'s Escrows
                   </Typography>
                 </MenuItem>
-                <MenuItem value="team">
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                <MenuItem
+                  value="team"
+                  sx={{
+                    color: 'white',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    },
+                    '&.Mui-selected': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                      },
+                    },
+                  }}
+                >
+                  <Typography variant="body1" sx={{ fontWeight: 700, color: 'white', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     Team Escrows
                   </Typography>
                 </MenuItem>
-                <MenuItem value="brokerage">
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                <MenuItem
+                  value="brokerage"
+                  sx={{
+                    color: 'white',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    },
+                    '&.Mui-selected': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255, 255, 255, 0.25)',
+                      },
+                    },
+                  }}
+                >
+                  <Typography variant="body1" sx={{ fontWeight: 700, color: 'white', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     Brokerage Escrows
                   </Typography>
                 </MenuItem>
