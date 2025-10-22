@@ -98,9 +98,26 @@ const getHomeStats = async (req, res) => {
       const brokerResult = await pool.query(brokerStatsQuery, brokerParams);
       const brokerStats = brokerResult.rows[0];
 
+      // Calculate KPIs
+      const totalLeads = parseInt(brokerStats.total_leads) || 0;
+      const totalEscrows = parseInt(brokerStats.total_escrows) || 0;
+      const totalAppointments = parseInt(brokerStats.total_appointments) || 0;
+      const upcomingAppointments = parseInt(brokerStats.upcoming_appointments) || 0;
+
+      // Conversion rate: (escrows / leads) * 100
+      const conversionRate = totalLeads > 0
+        ? ((totalEscrows / totalLeads) * 100).toFixed(1)
+        : 0;
+
+      // Show rate: (upcoming appointments / total appointments) * 100
+      // Note: In a complete system, this would be (attended / scheduled)
+      const showRate = totalAppointments > 0
+        ? ((upcomingAppointments / totalAppointments) * 100).toFixed(1)
+        : 0;
+
       response.data.broker = {
         escrows: {
-          total: parseInt(brokerStats.total_escrows),
+          total: totalEscrows,
           active: parseInt(brokerStats.active_escrows),
           volume: parseFloat(brokerStats.escrow_volume),
         },
@@ -114,12 +131,16 @@ const getHomeStats = async (req, res) => {
           inventoryValue: parseFloat(brokerStats.listing_inventory_value),
         },
         leads: {
-          total: parseInt(brokerStats.total_leads),
+          total: totalLeads,
           active: parseInt(brokerStats.active_leads),
         },
         appointments: {
-          total: parseInt(brokerStats.total_appointments),
-          upcoming: parseInt(brokerStats.upcoming_appointments),
+          total: totalAppointments,
+          upcoming: upcomingAppointments,
+        },
+        kpis: {
+          conversionRate: parseFloat(conversionRate),
+          showRate: parseFloat(showRate),
         },
       };
     }
@@ -213,12 +234,26 @@ const getHomeStats = async (req, res) => {
         const teamResult = await pool.query(teamStatsQuery, [targetTeamId]);
         const teamStats = teamResult.rows[0];
 
+        // Calculate team KPIs
+        const teamTotalLeads = parseInt(teamStats.total_leads) || 0;
+        const teamTotalEscrows = parseInt(teamStats.total_escrows) || 0;
+        const teamTotalAppointments = parseInt(teamStats.total_appointments) || 0;
+        const teamUpcomingAppointments = parseInt(teamStats.upcoming_appointments) || 0;
+
+        const teamConversionRate = teamTotalLeads > 0
+          ? ((teamTotalEscrows / teamTotalLeads) * 100).toFixed(1)
+          : 0;
+
+        const teamShowRate = teamTotalAppointments > 0
+          ? ((teamUpcomingAppointments / teamTotalAppointments) * 100).toFixed(1)
+          : 0;
+
         response.data.team = {
           teamId: targetTeamId,
           teamName: teamStats.team_name,
           teamMemberCount: parseInt(teamStats.team_member_count),
           escrows: {
-            total: parseInt(teamStats.total_escrows),
+            total: teamTotalEscrows,
             active: parseInt(teamStats.active_escrows),
             volume: parseFloat(teamStats.escrow_volume),
           },
@@ -232,12 +267,16 @@ const getHomeStats = async (req, res) => {
             inventoryValue: parseFloat(teamStats.listing_inventory_value),
           },
           leads: {
-            total: parseInt(teamStats.total_leads),
+            total: teamTotalLeads,
             active: parseInt(teamStats.active_leads),
           },
           appointments: {
-            total: parseInt(teamStats.total_appointments),
-            upcoming: parseInt(teamStats.upcoming_appointments),
+            total: teamTotalAppointments,
+            upcoming: teamUpcomingAppointments,
+          },
+          kpis: {
+            conversionRate: parseFloat(teamConversionRate),
+            showRate: parseFloat(teamShowRate),
           },
         };
       }
@@ -290,12 +329,26 @@ const getHomeStats = async (req, res) => {
     const userResult = await pool.query(userStatsQuery, [userId]);
     const userStats = userResult.rows[0];
 
+    // Calculate user KPIs
+    const userTotalLeads = parseInt(userStats.total_leads) || 0;
+    const userTotalEscrows = parseInt(userStats.total_escrows) || 0;
+    const userTotalAppointments = parseInt(userStats.total_appointments) || 0;
+    const userUpcomingAppointments = parseInt(userStats.upcoming_appointments) || 0;
+
+    const userConversionRate = userTotalLeads > 0
+      ? ((userTotalEscrows / userTotalLeads) * 100).toFixed(1)
+      : 0;
+
+    const userShowRate = userTotalAppointments > 0
+      ? ((userUpcomingAppointments / userTotalAppointments) * 100).toFixed(1)
+      : 0;
+
     response.data.user = {
       userId,
       userName: userStats.user_name,
       userRole: userStats.user_role,
       escrows: {
-        total: parseInt(userStats.total_escrows),
+        total: userTotalEscrows,
         active: parseInt(userStats.active_escrows),
         volume: parseFloat(userStats.escrow_volume),
       },
@@ -309,12 +362,16 @@ const getHomeStats = async (req, res) => {
         inventoryValue: parseFloat(userStats.listing_inventory_value),
       },
       leads: {
-        total: parseInt(userStats.total_leads),
+        total: userTotalLeads,
         active: parseInt(userStats.active_leads),
       },
       appointments: {
-        total: parseInt(userStats.total_appointments),
-        upcoming: parseInt(userStats.upcoming_appointments),
+        total: userTotalAppointments,
+        upcoming: userUpcomingAppointments,
+      },
+      kpis: {
+        conversionRate: parseFloat(userConversionRate),
+        showRate: parseFloat(userShowRate),
       },
     };
 
