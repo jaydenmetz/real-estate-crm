@@ -304,6 +304,9 @@ apiRouter.use('/uploads', require('./routes/upload.routes'));
 apiRouter.use('/profiles', require('./routes/profiles.routes'));
 apiRouter.use('/settings', require('./routes/settings.routes'));
 
+// Stats routes (hierarchical dashboard statistics)
+apiRouter.use('/stats', require('./routes/stats.routes'));
+
 // Onboarding routes
 apiRouter.use('/onboarding', require('./routes/onboarding.routes'));
 
