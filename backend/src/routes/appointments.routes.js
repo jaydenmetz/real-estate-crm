@@ -8,6 +8,12 @@ const appointmentsController = require('../controllers/appointments.controller')
 const { authenticate } = require('../middleware/apiKey.middleware');
 const { validate } = require('../middleware/validation.middleware');
 const { validateAppointmentRules } = require('../middleware/businessRules.middleware');
+const {
+  canAccessScope,
+  requireOwnership,
+  requireModifyPermission,
+  requireDeletePermission
+} = require('../middleware/authorization.middleware');
 
 // All routes require authentication
 router.use(authenticate);
@@ -28,19 +34,17 @@ const updateValidation = [
   body('status').optional().isString(),
 ];
 
-// Routes
-router.get('/', appointmentsController.getAppointments);
-router.get('/:id', appointmentsController.getAppointment);
+// Routes with Phase 2 authorization + INHERITED PRIVACY
+router.get('/', canAccessScope, appointmentsController.getAppointments); // Filters out appointments linked to private leads
+router.get('/:id', requireOwnership('appointment'), appointmentsController.getAppointment); // Checks inherited privacy
 router.post('/', createValidation, validate, validateAppointmentRules, appointmentsController.createAppointment);
-router.put('/:id', updateValidation, validate, validateAppointmentRules, appointmentsController.updateAppointment);
-router.post('/:id/cancel', appointmentsController.cancelAppointment);
-router.post('/:id/complete', appointmentsController.markComplete);
+router.put('/:id', updateValidation, validate, requireModifyPermission('appointment'), validateAppointmentRules, appointmentsController.updateAppointment);
+router.post('/:id/cancel', requireModifyPermission('appointment'), appointmentsController.cancelAppointment);
+router.post('/:id/complete', requireModifyPermission('appointment'), appointmentsController.markComplete);
 
-// Archive and Delete endpoints - Added for health dashboard testing
-// Archive endpoint: Soft deletes by setting status to 'cancelled'
-router.put('/:id/archive', appointmentsController.archiveAppointment);
-// Delete endpoint: Hard delete
-router.delete('/:id', appointmentsController.deleteAppointment);
+// Archive and Delete endpoints
+router.put('/:id/archive', requireModifyPermission('appointment'), appointmentsController.archiveAppointment);
+router.delete('/:id', requireDeletePermission('appointment'), appointmentsController.deleteAppointment);
 // Batch delete endpoint: Delete multiple archived appointments
 router.post(
   '/batch-delete',
