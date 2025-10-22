@@ -213,6 +213,44 @@ const BrokerHeroCard = ({ stats, loading }) => {
             </StatCard>
           </motion.div>
         </Grid>
+
+        {/* KPIs */}
+        <Grid item xs={12} sm={6} md={4}>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.6 }}
+          >
+            <StatCard>
+              <CardContent>
+                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
+                  <TrendingUpIcon sx={{ mr: 1 }} />
+                  <Typography variant="subtitle2" sx={{ opacity: 0.9 }}>
+                    Key Metrics
+                  </Typography>
+                </Box>
+                <Box sx={{ mt: 2 }}>
+                  <Box sx={{ mb: 2 }}>
+                    <Typography variant="caption" sx={{ opacity: 0.8, display: 'block' }}>
+                      Conversion Rate
+                    </Typography>
+                    <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                      {stats.kpis?.conversionRate || 0}%
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" sx={{ opacity: 0.8, display: 'block' }}>
+                      Show Rate
+                    </Typography>
+                    <Typography variant="h5" sx={{ fontWeight: 700 }}>
+                      {stats.kpis?.showRate || 0}%
+                    </Typography>
+                  </Box>
+                </Box>
+              </CardContent>
+            </StatCard>
+          </motion.div>
+        </Grid>
       </Grid>
     </HeroSection>
   );
