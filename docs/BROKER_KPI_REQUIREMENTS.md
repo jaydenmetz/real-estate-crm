@@ -9,10 +9,45 @@
 > **"Broker is an agent first, manager second"**
 >
 > Josh Riley needs:
+> - **Brokerage-Wide KPIs** (total production across all agents)
+> - **Team-Level KPIs** (production by team within brokerage)
+> - **Individual Agent KPIs** (performance metrics per agent)
 > - His own PRIVATE lead pipeline (no clutter from 40 agents)
-> - KPI visibility into agent performance (not raw data)
 > - Notifications when agents produce (escrows, clients, listings)
 > - Clean separation between "My Business" and "Team Business"
+
+---
+
+## 📊 BROKER VISIBILITY HIERARCHY
+
+### **Three Levels of KPIs:**
+
+```
+🏢 Brokerage-Wide KPIs (All Agents Combined)
+├─ Total Production: 127 escrows ($48.5M volume)
+├─ Total Leads: 47,823 across all agents
+├─ Total Appointments: 2,134 scheduled
+├─ Average Conversion: 2.4%
+├─ Average Show Rate: 74.3%
+└─ Month-over-Month Growth: +12.5%
+
+👥 Team-Level KPIs (By Team)
+├─ Riley Real Estate Team (Josh's team)
+│   ├─ Production: 45 escrows ($17.2M)
+│   ├─ Agents: 12
+│   └─ Avg per Agent: 3.75 escrows
+├─ Jayden Metz Realty Group (Jayden's team)
+│   ├─ Production: 8 escrows ($3.2M)
+│   ├─ Agents: 1
+│   └─ Avg per Agent: 8.0 escrows
+└─ Rangel Realty Group (Lee's team)
+    ├─ Production: 74 escrows ($28.1M)
+    ├─ Agents: 15
+    └─ Avg per Agent: 4.93 escrows
+
+👤 Individual Agent KPIs (Per Agent)
+└─ Jayden Metz: 8 escrows, 1,247 leads (2.3% conversion)
+```
 
 ---
 
@@ -104,7 +139,169 @@ My Pipeline (Josh Riley)
 
 ## 📈 KEY PERFORMANCE INDICATORS (KPIs)
 
-### **Agent-Level KPIs (Broker View)**
+### **1. Brokerage-Wide KPIs (Overview Dashboard)**
+
+#### Total Production Metrics
+```sql
+-- Brokerage-wide production summary
+SELECT
+  COUNT(DISTINCT e.id) AS total_escrows,
+  COUNT(DISTINCT CASE WHEN e.escrow_status IN ('Active', 'Pending') THEN e.id END) AS active_escrows,
+  COUNT(DISTINCT CASE WHEN e.escrow_status = 'Closed' THEN e.id END) AS closed_escrows,
+  COALESCE(SUM(e.purchase_price), 0) AS total_volume,
+  COALESCE(SUM(e.my_commission), 0) AS total_commission,
+
+  COUNT(DISTINCT c.id) AS total_clients,
+  COUNT(DISTINCT l.id) AS total_listings,
+
+  -- Lead metrics (aggregated across all agents)
+  COUNT(DISTINCT leads.id) AS total_leads,
+  COUNT(DISTINCT CASE WHEN leads.status = 'converted' THEN leads.id END) AS converted_leads,
+  ROUND(
+    COUNT(DISTINCT CASE WHEN leads.status = 'converted' THEN leads.id END)::numeric /
+    NULLIF(COUNT(DISTINCT leads.id), 0) * 100,
+    2
+  ) AS avg_conversion_rate,
+
+  -- Appointment metrics (aggregated)
+  COUNT(DISTINCT appts.id) AS total_appointments,
+  COUNT(DISTINCT CASE WHEN appts.status = 'completed' THEN appts.id END) AS completed_appointments,
+  ROUND(
+    COUNT(DISTINCT CASE WHEN appts.status = 'completed' THEN appts.id END)::numeric /
+    NULLIF(COUNT(DISTINCT appts.id), 0) * 100,
+    1
+  ) AS avg_show_rate,
+
+  COUNT(DISTINCT u.id) AS total_agents
+
+FROM users u
+LEFT JOIN escrows e ON e.user_id = u.id AND e.created_at >= DATE_TRUNC('year', NOW())
+LEFT JOIN clients c ON c.user_id = u.id AND c.status = 'active'
+LEFT JOIN listings l ON l.user_id = u.id AND l.status = 'active'
+LEFT JOIN leads ON leads.user_id = u.id
+LEFT JOIN appointments appts ON appts.agent_id = u.id AND appts.start_time >= NOW() - INTERVAL '30 days'
+
+WHERE u.broker_id = 'josh-broker-id'
+  AND u.role IN ('agent', 'team_owner', 'broker');
+```
+
+**Example Output (Brokerage Overview Card):**
+```
+Associated Real Estate (Josh Riley's Brokerage)
+─────────────────────────────────────────────────
+📊 YTD Production
+  • 127 escrows ($48.5M volume)
+  • $727,500 total commission
+  • 45 active escrows in pipeline
+
+👥 Database
+  • 342 active clients
+  • 67 active listings
+  • 47,823 total leads (2.4% conversion)
+
+📅 Activity (30 days)
+  • 2,134 appointments scheduled
+  • 1,587 completed (74.3% show rate)
+
+👨‍💼 Team Size
+  • 28 active agents across 3 teams
+```
+
+---
+
+#### Month-over-Month Growth
+```sql
+-- Compare this month to last month
+WITH this_month AS (
+  SELECT
+    COUNT(e.id) AS escrows_count,
+    COALESCE(SUM(e.purchase_price), 0) AS volume
+  FROM escrows e
+  JOIN users u ON e.user_id = u.id
+  WHERE u.broker_id = 'josh-broker-id'
+    AND e.created_at >= DATE_TRUNC('month', NOW())
+),
+last_month AS (
+  SELECT
+    COUNT(e.id) AS escrows_count,
+    COALESCE(SUM(e.purchase_price), 0) AS volume
+  FROM escrows e
+  JOIN users u ON e.user_id = u.id
+  WHERE u.broker_id = 'josh-broker-id'
+    AND e.created_at >= DATE_TRUNC('month', NOW() - INTERVAL '1 month')
+    AND e.created_at < DATE_TRUNC('month', NOW())
+)
+SELECT
+  tm.escrows_count AS this_month_escrows,
+  lm.escrows_count AS last_month_escrows,
+  ROUND((tm.escrows_count - lm.escrows_count)::numeric / NULLIF(lm.escrows_count, 0) * 100, 1) AS escrow_growth_pct,
+
+  tm.volume AS this_month_volume,
+  lm.volume AS last_month_volume,
+  ROUND((tm.volume - lm.volume) / NULLIF(lm.volume, 0) * 100, 1) AS volume_growth_pct
+FROM this_month tm, last_month lm;
+```
+
+**Example Output (Growth Metrics):**
+```
+Month-over-Month Growth
+─────────────────────────
+This Month: 14 escrows ($5.2M)
+Last Month: 12 escrows ($4.6M)
+Growth: +16.7% escrows, +13.0% volume
+```
+
+---
+
+### **2. Team-Level KPIs (By Team Comparison)**
+
+```sql
+-- Production by team (for broker with multiple teams)
+SELECT
+  t.name AS team_name,
+  COUNT(DISTINCT u.id) AS agent_count,
+  COUNT(DISTINCT e.id) AS total_escrows,
+  COALESCE(SUM(e.purchase_price), 0) AS total_volume,
+  COALESCE(SUM(e.my_commission), 0) AS total_commission,
+
+  -- Calculate per-agent averages
+  ROUND(COUNT(DISTINCT e.id)::numeric / NULLIF(COUNT(DISTINCT u.id), 0), 2) AS escrows_per_agent,
+  ROUND(COALESCE(SUM(e.purchase_price), 0) / NULLIF(COUNT(DISTINCT u.id), 0), 0) AS volume_per_agent,
+
+  -- Lead/appointment metrics
+  COUNT(DISTINCT leads.id) AS total_leads,
+  ROUND(
+    COUNT(DISTINCT CASE WHEN leads.status = 'converted' THEN leads.id END)::numeric /
+    NULLIF(COUNT(DISTINCT leads.id), 0) * 100,
+    2
+  ) AS conversion_rate
+
+FROM teams t
+LEFT JOIN users u ON u.team_id = t.team_id AND u.role IN ('agent', 'team_owner')
+LEFT JOIN escrows e ON e.user_id = u.id AND e.created_at >= DATE_TRUNC('year', NOW())
+LEFT JOIN leads ON leads.user_id = u.id
+
+WHERE t.primary_broker_id = 'josh-broker-id'
+
+GROUP BY t.team_id, t.name
+ORDER BY total_volume DESC;
+```
+
+**Example Output (Team Comparison Table):**
+| Team Name | Agents | Escrows | Volume | Avg/Agent | Conversion |
+|-----------|--------|---------|---------|-----------|------------|
+| Rangel Realty Group | 15 | 74 | $28.1M | $1.87M | 2.8% |
+| Riley Real Estate Team | 12 | 45 | $17.2M | $1.43M | 2.1% |
+| Jayden Metz Realty Group | 1 | 8 | $3.2M | $3.20M | 2.3% |
+
+**Insights:**
+- Jayden's team has highest per-agent production ($3.2M vs $1.87M)
+- Rangel Realty has highest total volume ($28.1M)
+- Rangel Realty has best conversion rate (2.8%)
+
+---
+
+### **3. Agent-Level KPIs (Individual Performance)**
 
 #### 1. **Lead Metrics**
 ```sql
