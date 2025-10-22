@@ -11,6 +11,12 @@ const {
   validate, escrowValidationRules, paginationValidationRules, idValidationRules,
 } = require('../middleware/validation.middleware');
 const { validateEscrowRules } = require('../middleware/businessRules.middleware');
+const {
+  canAccessScope,
+  requireOwnership,
+  requireModifyPermission,
+  requireDeletePermission
+} = require('../middleware/authorization.middleware');
 
 // All routes require authentication
 router.use(authenticate);
@@ -114,8 +120,10 @@ router.get(
       .toInt(),
     query('limit').optional().isInt({ min: 1 }).withMessage('Limit must be an integer')
       .toInt(),
+    query('scope').optional().isString().withMessage('Scope must be a string'),
   ],
   validate,
+  canAccessScope, // Phase 2: Check if user can access requested scope
   escrowsController.getEscrows,
 );
 
@@ -162,6 +170,7 @@ router.get(
     param('id').notEmpty().withMessage('Escrow ID is required'),
   ],
   validate,
+  requireOwnership('escrow'), // Phase 2: Check ownership access
   escrowsController.getEscrow,
 );
 
@@ -414,6 +423,7 @@ router.put(
     body('escrowStatus').optional().isString().withMessage('Escrow status must be a string'),
   ],
   validate,
+  requireModifyPermission('escrow'), // Phase 2: Check modify permission
   validateEscrowRules,
   escrowsController.updateEscrow,
 );
@@ -492,6 +502,7 @@ router.delete(
     param('id').notEmpty().withMessage('Escrow ID is required'),
   ],
   validate,
+  requireDeletePermission('escrow'), // Phase 2: Check delete permission
   escrowsController.deleteEscrow,
 );
 

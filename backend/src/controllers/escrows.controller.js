@@ -1,6 +1,7 @@
 const { pool } = require('../config/database');
 const { asyncHandler } = require('../middleware/errorLogging.middleware');
 const { buildRestructuredEscrowResponse } = require('../helpers/escrows.helper');
+const { buildOwnershipWhereClauseWithAlias, validateScope, getDefaultScope } = require('../helpers/ownership.helper');
 const websocketService = require('../services/websocket.service');
 
 // Cache for schema detection (persists across requests for performance)
@@ -154,49 +155,23 @@ class EscrowController {
         paramIndex++;
       }
 
-      // PHASE 6: Handle scope filtering (brokerage, team, user)
-      const scope = req.query.scope || 'team'; // Default to team scope
+      // PHASE 2: Handle ownership-based scope filtering (multi-tenant)
+      const requestedScope = req.query.scope || getDefaultScope(userRole);
+      const scope = validateScope(requestedScope, userRole);
 
-      if (scope === 'user') {
-        // User scope: Show only records created by this user
-        whereConditions.push(`e.created_by = $${paramIndex}`);
-        queryParams.push(userId);
-        paramIndex++;
-      } else if (scope === 'team') {
-        // Team scope: Show all records for this team (default behavior)
-        whereConditions.push(`e.team_id = $${paramIndex}`);
-        queryParams.push(teamId);
-        paramIndex++;
-      } else if (scope === 'brokerage') {
-        // Brokerage scope: Show all records across all teams under the same broker
-        // First, get the broker_id from the user's team
-        const brokerQuery = await pool.query(
-          'SELECT broker_id FROM teams WHERE team_id = $1',
-          [teamId]
-        );
+      // Build ownership filter using new helper
+      const ownershipFilter = buildOwnershipWhereClauseWithAlias(
+        req.user,
+        scope,
+        'escrow',
+        'e',
+        paramIndex
+      );
 
-        if (brokerQuery.rows.length > 0 && brokerQuery.rows[0].broker_id) {
-          const brokerId = brokerQuery.rows[0].broker_id;
-
-          // Get all teams under this broker
-          const teamsQuery = await pool.query(
-            'SELECT team_id FROM teams WHERE broker_id = $1',
-            [brokerId]
-          );
-
-          const teamIds = teamsQuery.rows.map(row => row.team_id);
-
-          if (teamIds.length > 0) {
-            whereConditions.push(`e.team_id = ANY($${paramIndex})`);
-            queryParams.push(teamIds);
-            paramIndex++;
-          }
-        } else {
-          // If no broker_id found, fall back to team scope
-          whereConditions.push(`e.team_id = $${paramIndex}`);
-          queryParams.push(teamId);
-          paramIndex++;
-        }
+      if (ownershipFilter.whereClause && ownershipFilter.whereClause !== '1=1') {
+        whereConditions.push(ownershipFilter.whereClause);
+        queryParams.push(...ownershipFilter.params);
+        paramIndex = ownershipFilter.nextParamIndex;
       }
 
       const whereClause = whereConditions.length > 0 ? whereConditions.join(' AND ') : '1=1';
