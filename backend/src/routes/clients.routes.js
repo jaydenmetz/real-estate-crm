@@ -5,6 +5,12 @@ const { body } = require('express-validator');
 const clientsController = require('../controllers/clients.controller');
 const { authenticate } = require('../middleware/apiKey.middleware');
 const { validate } = require('../middleware/validation.middleware');
+const {
+  canAccessScope,
+  requireOwnership,
+  requireModifyPermission,
+  requireDeletePermission
+} = require('../middleware/authorization.middleware');
 
 // All routes require authentication
 router.use(authenticate);
@@ -26,17 +32,15 @@ const updateValidation = [
   body('status').optional().isIn(['active', 'inactive', 'archived']),
 ];
 
-// Routes (removed requirePermission middleware that doesn't exist)
-router.get('/', clientsController.getAllClients);
-router.get('/:id', clientsController.getClientById);
+// Routes with Phase 2 authorization
+router.get('/', canAccessScope, clientsController.getAllClients);
+router.get('/:id', requireOwnership('client'), clientsController.getClientById);
 router.post('/', createValidation, validate, clientsController.createClient);
-router.put('/:id', updateValidation, validate, clientsController.updateClient);
+router.put('/:id', updateValidation, validate, requireModifyPermission('client'), clientsController.updateClient);
 
-// Archive and Delete endpoints - Added for health dashboard testing
-// Archive endpoint: Soft deletes by setting status to 'archived'
-router.put('/:id/archive', clientsController.archiveClient);
-// Delete endpoint: Hard delete - only works if client is already archived
-router.delete('/:id', clientsController.deleteClient);
+// Archive and Delete endpoints
+router.put('/:id/archive', requireModifyPermission('client'), clientsController.archiveClient);
+router.delete('/:id', requireDeletePermission('client'), clientsController.deleteClient);
 // Batch delete endpoint: Delete multiple archived clients
 router.post(
   '/batch-delete',

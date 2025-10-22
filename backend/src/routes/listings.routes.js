@@ -6,6 +6,12 @@ const listingsController = require('../controllers/listings.controller');
 const { authenticate } = require('../middleware/apiKey.middleware');
 const { validate } = require('../middleware/validation.middleware');
 const { validateListingRules } = require('../middleware/businessRules.middleware');
+const {
+  canAccessScope,
+  requireOwnership,
+  requireModifyPermission,
+  requireDeletePermission
+} = require('../middleware/authorization.middleware');
 
 // All routes require authentication
 router.use(authenticate);
@@ -24,17 +30,15 @@ const updateValidation = [
   body('listingStatus').optional().isIn(['Coming Soon', 'Active', 'Pending', 'Sold', 'Expired', 'Withdrawn', 'Cancelled']),
 ];
 
-// Routes
-router.get('/', listingsController.getListings);
-router.get('/:id', listingsController.getListing);
+// Routes with Phase 2 authorization
+router.get('/', canAccessScope, listingsController.getListings);
+router.get('/:id', requireOwnership('listing'), listingsController.getListing);
 router.post('/', createValidation, validate, validateListingRules, listingsController.createListing);
-router.put('/:id', updateValidation, validate, validateListingRules, listingsController.updateListing);
+router.put('/:id', updateValidation, validate, requireModifyPermission('listing'), validateListingRules, listingsController.updateListing);
 
-// Archive and Delete endpoints - Added for health dashboard testing
-// Archive endpoint: Soft deletes by setting deleted_at timestamp
-router.put('/:id/archive', listingsController.archiveListing);
-// Delete endpoint: Hard delete - only works if listing is already archived
-router.delete('/:id', listingsController.deleteListing);
+// Archive and Delete endpoints
+router.put('/:id/archive', requireModifyPermission('listing'), listingsController.archiveListing);
+router.delete('/:id', requireDeletePermission('listing'), listingsController.deleteListing);
 // Batch delete endpoint: Delete multiple archived listings
 router.post(
   '/batch-delete',
