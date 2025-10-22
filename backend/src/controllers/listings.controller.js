@@ -3,6 +3,7 @@ const { pool, query, transaction } = require('../config/database');
 const logger = require('../utils/logger');
 const { buildOwnershipWhereClauseWithAlias, validateScope, getDefaultScope } = require('../helpers/ownership.helper');
 const websocketService = require('../services/websocket.service');
+const NotificationService = require('../services/notification.service');
 
 // Helper to generate MLS number
 function generateMLSNumber() {
@@ -308,10 +309,24 @@ exports.createListing = async (req, res) => {
       listPrice: result.list_price,
     });
 
-    // Emit WebSocket event for real-time updates (3-tier: broker → team → user)
+    // Get user/team/broker details for notifications
     const teamId = req.user?.teamId || req.user?.team_id;
     const userId = req.user?.id;
-    const brokerId = result.broker_id;
+    const brokerId = req.user?.broker_id || req.user?.brokerId; // Get broker from user
+
+    // Notify broker about new listing (fire-and-forget)
+    if (brokerId && userId) {
+      const agent = {
+        id: userId,
+        first_name: req.user?.first_name || req.user?.firstName || 'Unknown',
+        last_name: req.user?.last_name || req.user?.lastName || 'Agent',
+      };
+      NotificationService.notifyListingCreated(result, agent).catch(err =>
+        console.error('Broker notification error:', err)
+      );
+    }
+
+    // Emit WebSocket event for real-time updates (3-tier: broker → team → user)
     const eventData = {
       entityType: 'listing',
       entityId: result.id,

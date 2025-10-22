@@ -3,6 +3,7 @@ const { asyncHandler } = require('../middleware/errorLogging.middleware');
 const { buildRestructuredEscrowResponse } = require('../helpers/escrows.helper');
 const { buildOwnershipWhereClauseWithAlias, validateScope, getDefaultScope } = require('../helpers/ownership.helper');
 const websocketService = require('../services/websocket.service');
+const NotificationService = require('../services/notification.service');
 
 // Cache for schema detection (persists across requests for performance)
 let schemaInfo = null;
@@ -699,10 +700,24 @@ class EscrowController {
       //   id: updatedEscrow.id,
       // });
 
-      // Emit WebSocket event for real-time updates (3-tier: broker → team → user)
+      // Get user/team/broker details for notifications
       const teamId = req.user?.teamId || req.user?.team_id;
       const userId = req.user?.id;
       const brokerId = updatedEscrow.broker_id;
+
+      // Notify broker if escrow was just closed (fire-and-forget)
+      if (brokerId && userId && updates.escrowStatus === 'closed' && updatedEscrow.escrow_status === 'closed') {
+        const agent = {
+          id: userId,
+          first_name: req.user?.first_name || req.user?.firstName || 'Unknown',
+          last_name: req.user?.last_name || req.user?.lastName || 'Agent',
+        };
+        NotificationService.notifyEscrowClosed(updatedEscrow, agent).catch(err =>
+          console.error('Broker notification error:', err)
+        );
+      }
+
+      // Emit WebSocket event for real-time updates (3-tier: broker → team → user)
       const eventData = {
         entityType: 'escrow',
         entityId: updatedEscrow.id || updatedEscrow.display_id,
@@ -1152,10 +1167,24 @@ class EscrowController {
 
       await client.query('COMMIT');
 
-      // Emit WebSocket event for real-time updates (3-tier: broker → team → user)
-      const teamId = req.user?.teamId || req.user?.team_id;
+      // Get user details for notification
       const userId = req.user?.id;
+      const teamId = req.user?.teamId || req.user?.team_id;
       const brokerId = newEscrow.broker_id;
+
+      // Notify broker about new escrow (fire-and-forget)
+      if (brokerId && userId) {
+        const agent = {
+          id: userId,
+          first_name: req.user?.first_name || req.user?.firstName || 'Unknown',
+          last_name: req.user?.last_name || req.user?.lastName || 'Agent',
+        };
+        NotificationService.notifyEscrowCreated(newEscrow, agent).catch(err =>
+          console.error('Broker notification error:', err)
+        );
+      }
+
+      // Emit WebSocket event for real-time updates (3-tier: broker → team → user)
       const eventData = {
         entityType: 'escrow',
         entityId: newEscrow.id || newEscrow.display_id,

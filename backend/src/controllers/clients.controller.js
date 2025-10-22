@@ -1,6 +1,7 @@
 const { pool } = require('../config/database');
 const logger = require('../utils/logger');
 const websocketService = require('../services/websocket.service');
+const NotificationService = require('../services/notification.service');
 const { buildOwnershipWhereClauseWithAlias, validateScope, getDefaultScope } = require('../helpers/ownership.helper');
 
 // GET /api/v1/clients
@@ -252,7 +253,7 @@ exports.createClient = async (req, res) => {
 
     await client.query('COMMIT');
 
-    // Emit WebSocket event for real-time updates (3-tier: broker → team → user)
+    // Prepare client and user data for notifications and WebSocket
     const newClient = {
       id: clientResult.rows[0].id,
       contact_id: contactId,
@@ -265,7 +266,21 @@ exports.createClient = async (req, res) => {
     };
     const teamId = req.user?.teamId || req.user?.team_id;
     const userId = req.user?.id;
-    const brokerId = null; // clients don't have broker_id, so send to team/user only
+    const brokerId = req.user?.broker_id || req.user?.brokerId; // Get broker from user
+
+    // Notify broker about new client (fire-and-forget)
+    if (brokerId && userId) {
+      const agent = {
+        id: userId,
+        first_name: req.user?.first_name || req.user?.firstName || 'Unknown',
+        last_name: req.user?.last_name || req.user?.lastName || 'Agent',
+      };
+      NotificationService.notifyClientCreated(newClient, agent).catch(err =>
+        console.error('Broker notification error:', err)
+      );
+    }
+
+    // Emit WebSocket event for real-time updates (3-tier: broker → team → user)
     const eventData = {
       entityType: 'client',
       entityId: newClient.id,
