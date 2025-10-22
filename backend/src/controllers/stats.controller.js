@@ -61,7 +61,7 @@ const getHomeStats = async (req, res) => {
            JOIN users u ON c.owner_id = u.id ${brokerFilter}) as total_clients,
           (SELECT COUNT(*) FROM clients c
            JOIN users u ON c.owner_id = u.id
-           WHERE c.client_status = 'active' ${brokerFilter ? 'AND ' + brokerFilter.replace('WHERE ', '') : ''}) as active_clients,
+           WHERE c.status = 'active' ${brokerFilter ? 'AND ' + brokerFilter.replace('WHERE ', '') : ''}) as active_clients,
 
           -- Listings (always visible to broker)
           (SELECT COUNT(*) FROM listings l
@@ -163,7 +163,7 @@ const getHomeStats = async (req, res) => {
              WHERE u.team_id = $1) as total_clients,
             (SELECT COUNT(*) FROM clients c
              JOIN users u ON c.owner_id = u.id
-             WHERE c.client_status = 'active'
+             WHERE c.status = 'active'
              AND u.team_id = $1) as active_clients,
 
             -- Listings (always visible to team)
@@ -259,7 +259,7 @@ const getHomeStats = async (req, res) => {
         (SELECT COUNT(*) FROM clients WHERE owner_id = $1) as total_clients,
         (SELECT COUNT(*) FROM clients
          WHERE owner_id = $1
-         AND client_status = 'active') as active_clients,
+         AND status = 'active') as active_clients,
 
         -- Listings
         (SELECT COUNT(*) FROM listings WHERE owner_id = $1) as total_listings,
