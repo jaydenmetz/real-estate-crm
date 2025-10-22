@@ -245,6 +245,7 @@ apiRouter.use('/clients', require('./routes/clients.routes'));
 apiRouter.use('/appointments', require('./routes/appointments.routes'));
 apiRouter.use('/leads', require('./routes/leads.routes'));
 apiRouter.use('/analytics', require('./routes/analytics.routes'));
+apiRouter.use('/teams', require('./routes/teams.routes'));
 
 // Tasks and Checklists routes (new project management system)
 apiRouter.use('/projects', require('./routes/projects.routes')); // Dev roadmap (admin-only)
