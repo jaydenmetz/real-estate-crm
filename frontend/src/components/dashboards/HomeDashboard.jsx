@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Box } from '@mui/material';
+import { Container, Box, Typography } from '@mui/material';
 import { useAuth } from '../../contexts/AuthContext';
 import apiInstance from '../../services/api.service';
 import BrokerHeroCard from './home/BrokerHeroCard';
@@ -59,6 +59,52 @@ const HomeDashboard = () => {
 
     fetchHomeStats();
   }, [selectedTeamId]);
+
+  // Show loading state
+  if (loading) {
+    return (
+      <Box sx={{
+        width: '100%',
+        minHeight: 'calc(100vh - 64px)',
+        backgroundColor: '#f8f9fa',
+        py: 3,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        <Container maxWidth="xl">
+          <Box sx={{ textAlign: 'center' }}>
+            <Typography variant="h5" color="text.secondary">
+              Loading your dashboard...
+            </Typography>
+          </Box>
+        </Container>
+      </Box>
+    );
+  }
+
+  // Show error state if no stats loaded
+  if (!stats) {
+    return (
+      <Box sx={{
+        width: '100%',
+        minHeight: 'calc(100vh - 64px)',
+        backgroundColor: '#f8f9fa',
+        py: 3
+      }}>
+        <Container maxWidth="xl">
+          <Box sx={{ textAlign: 'center', py: 8 }}>
+            <Typography variant="h5" color="error" gutterBottom>
+              Unable to load dashboard
+            </Typography>
+            <Typography variant="body1" color="text.secondary">
+              Check the browser console for errors
+            </Typography>
+          </Box>
+        </Container>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{
