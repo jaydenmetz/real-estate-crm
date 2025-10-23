@@ -1,9 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import {
   Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   TextField,
   Button,
   Box,
@@ -13,19 +10,31 @@ import {
   Typography,
   Autocomplete,
   Paper,
+  InputAdornment,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  InputAdornment,
+  FormHelperText,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
   Divider,
+  Chip,
+  Fade,
 } from '@mui/material';
 import debounce from 'lodash/debounce';
 import {
   Close,
   LocationOn,
-  Search,
+  PersonAdd,
   Home,
+  CheckCircle,
+  NavigateNext,
+  NavigateBefore,
+  Bed,
+  AttachMoney,
+  Lock,
 } from '@mui/icons-material';
 import { listingsAPI, clientsAPI } from '../../../../services/api.service';
 import { useAuth } from '../../../../contexts/AuthContext';
@@ -37,9 +46,11 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [currentStep, setCurrentStep] = useState(0);
   const [clients, setClients] = useState([]);
   const [loadingClients, setLoadingClients] = useState(false);
   const [newClientModalOpen, setNewClientModalOpen] = useState(false);
+  const [clientSearchText, setClientSearchText] = useState('');
   const [addressSuggestions, setAddressSuggestions] = useState([]);
   const [loadingAddress, setLoadingAddress] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState(null);
@@ -58,9 +69,9 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
 
   const [formData, setFormData] = useState({
     propertyAddress: '',
-    city: 'Bakersfield',  // Default to Bakersfield
-    state: 'CA',           // Default to CA
-    zipCode: '',           // Start empty, will populate on selection
+    city: 'Bakersfield',
+    state: 'CA',
+    zipCode: '',
     county: '',
     listPrice: '',
     propertyType: 'Single Family',
@@ -73,6 +84,13 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
     accessLevel: 'team',
   });
 
+  const steps = [
+    { label: 'Property Address', icon: Home, color: '#1976d2' },
+    { label: 'Property Details', icon: Bed, color: '#9c27b0' },
+    { label: 'Client & Privacy', icon: PersonAdd, color: '#f57c00' },
+    { label: 'Review', icon: CheckCircle, color: '#388e3c' }
+  ];
+
   // Check for Google API key
   const GOOGLE_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY;
   const hasValidGoogleKey = GOOGLE_API_KEY && GOOGLE_API_KEY !== 'YOUR_GOOGLE_API_KEY_HERE';
@@ -83,21 +101,17 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
     if (open && hasValidGoogleKey && !googleMapsLoaded) {
       loadGoogleMapsScript()
         .then(() => {
-          // console.log('Google Maps loaded successfully');
           setGoogleMapsLoaded(true);
-          // Initialize services
           if (window.google?.maps?.places) {
             autocompleteServiceRef.current = new window.google.maps.places.AutocompleteService();
             placesServiceRef.current = new window.google.maps.places.PlacesService(
               document.createElement('div')
             );
-            // Create a new session token for billing optimization
             sessionTokenRef.current = new window.google.maps.places.AutocompleteSessionToken();
           }
         })
         .catch((error) => {
           console.warn('Failed to load Google Maps:', error.message);
-          // Fallback to Nominatim will be used
         });
     }
   }, [open, hasValidGoogleKey, googleMapsLoaded]);
@@ -114,44 +128,30 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
     try {
       const response = await clientsAPI.getAll();
       if (response.success) {
-        // Ensure we have an array
-        const clientsData = Array.isArray(response.data) ? response.data : [];
-
-        // Sort by created date descending (most recent first) and take top 5
-        const sortedClients = clientsData
-          .sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
-          .slice(0, 5);
-
-        // Add "Add New Client" option at the end
-        const clientsWithAddNew = [
-          ...sortedClients,
-          { id: 'add_new', firstName: '+ Add', lastName: 'New Client', email: '', isAddNew: true }
-        ];
-
-        setClients(clientsWithAddNew);
+        setClients(response.data || []);
       }
     } catch (err) {
       console.error('Error fetching clients:', err);
-      // Set empty array with just "Add New Client" option on error
-      setClients([
-        { id: 'add_new', firstName: '+ Add', lastName: 'New Client', email: '', isAddNew: true }
-      ]);
     } finally {
       setLoadingClients(false);
     }
   };
 
-  // Reset session token after a place is selected
+  const handleNewClientSave = async (newClient) => {
+    setNewClientModalOpen(false);
+    await fetchClients();
+    setFormData({ ...formData, clientId: newClient.id });
+    setClientSearchText(`${newClient.firstName} ${newClient.lastName} - ${newClient.email}`);
+  };
+
   const resetSessionToken = () => {
     if (window.google?.maps?.places) {
       sessionTokenRef.current = new window.google.maps.places.AutocompleteSessionToken();
     }
   };
 
-  // Cleanup on unmount or modal close
   useEffect(() => {
     return () => {
-      // Cancel any pending requests when component unmounts
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
         abortControllerRef.current = null;
@@ -174,7 +174,7 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
         types: ['address'],
         locationBias: new window.google.maps.Circle({
           center: { lat: userLat, lng: userLng },
-          radius: searchRadius * 1609.34 // Convert miles to meters
+          radius: searchRadius * 1609.34
         })
       };
 
@@ -190,7 +190,7 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
           callback([]);
         }
       });
-    }, 300), // 300ms debounce
+    }, 300),
     [userLat, userLng, searchRadius]
   );
 
@@ -202,7 +202,6 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
         return;
       }
 
-      // Cancel previous request
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
@@ -274,11 +273,10 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
           callback([]);
         }
       }
-    }, 500), // 500ms debounce for API calls
+    }, 500),
     [userCity, userState, userLat, userLng, searchRadius]
   );
 
-  // Handle input change with proper debouncing
   const handleInputChange = useCallback((event, value, reason) => {
     if (reason === 'input') {
       setAddressSearchText(value);
@@ -302,7 +300,6 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
     }
   }, [googleMapsLoaded, searchGooglePlaces, searchNominatim]);
 
-  // Handle address selection
   const handleAddressSelect = async (event, value) => {
     if (!value || typeof value === 'string') {
       setSelectedAddress(null);
@@ -311,7 +308,7 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
 
     setSelectedAddress(value);
 
-    // If it's a Google Places result, get full details
+    // Google Places result
     if (value.placeId && placesServiceRef.current) {
       setLoadingAddress(true);
 
@@ -334,24 +331,12 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
 
           place.address_components?.forEach(component => {
             const types = component.types;
-            if (types.includes('street_number')) {
-              streetNumber = component.long_name;
-            }
-            if (types.includes('route')) {
-              streetName = component.long_name;
-            }
-            if (types.includes('locality')) {
-              city = component.long_name;
-            }
-            if (types.includes('administrative_area_level_1')) {
-              state = component.short_name;
-            }
-            if (types.includes('postal_code')) {
-              zipCode = component.long_name;
-            }
-            if (types.includes('administrative_area_level_2')) {
-              county = component.long_name;
-            }
+            if (types.includes('street_number')) streetNumber = component.long_name;
+            if (types.includes('route')) streetName = component.long_name;
+            if (types.includes('locality')) city = component.long_name;
+            if (types.includes('administrative_area_level_1')) state = component.short_name;
+            if (types.includes('postal_code')) zipCode = component.long_name;
+            if (types.includes('administrative_area_level_2')) county = component.long_name;
           });
 
           const fullAddress = `${streetNumber} ${streetName}`.trim();
@@ -366,12 +351,11 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
           }));
 
           setAddressSearchText(fullAddress);
-          // Reset session token after successful selection
           resetSessionToken();
         }
       });
     }
-    // If it's a Nominatim result
+    // Nominatim result
     else if (value.value) {
       setFormData(prev => ({
         ...prev,
@@ -388,9 +372,8 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Validate required fields
-    if (!formData.propertyAddress) {
-      setError('Please enter a property address');
+    if (!formData.propertyAddress || !formData.city || !formData.state || !formData.zipCode) {
+      setError('Please fill in all address fields');
       return;
     }
 
@@ -403,10 +386,8 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
     setError('');
 
     try {
-      // Format the full address for the backend
       const fullAddress = `${formData.propertyAddress}, ${formData.city}, ${formData.state} ${formData.zipCode}`.trim();
 
-      // Create listing with provided data - only include non-empty fields
       const listingData = {
         propertyAddress: fullAddress,
         propertyType: formData.propertyType,
@@ -416,9 +397,8 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
         accessLevel: formData.accessLevel,
       };
 
-      // Only add optional fields if they have values
       if (formData.listPrice) {
-        listingData.listPrice = parseFloat(formData.listPrice);
+        listingData.listPrice = parseFloat(formData.listPrice.replace(/,/g, ''));
       }
       if (formData.bedrooms) {
         listingData.bedrooms = parseInt(formData.bedrooms);
@@ -427,33 +407,22 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
         listingData.bathrooms = parseFloat(formData.bathrooms);
       }
       if (formData.squareFootage) {
-        listingData.squareFootage = parseInt(formData.squareFootage);
+        listingData.squareFootage = parseInt(formData.squareFootage.replace(/,/g, ''));
       }
 
-      // console.log('Creating listing with data:', listingData);
       const response = await listingsAPI.create(listingData);
 
       if (response.success) {
         if (onSuccess) {
-          onSuccess(response.data);
+          onSuccess(response.data.id);
         }
         handleClose();
       } else {
-        console.error('API Error:', response.error);
-        // Show more detailed error message
-        const errorMessage = response.error?.details
-          ? response.error.details.map(d => d.msg || d.message).join(', ')
-          : response.error?.message || 'Failed to create listing';
-        setError(errorMessage);
+        setError(response.error?.message || 'Failed to create listing');
       }
     } catch (err) {
       console.error('Error creating listing:', err);
-      console.error('Error details:', err.response?.data);
-      // Show more specific error if available
-      const errorMessage = err.response?.data?.error?.message ||
-                          err.message ||
-                          'An error occurred while creating the listing';
-      setError(errorMessage);
+      setError('An error occurred while creating the listing');
     } finally {
       setLoading(false);
     }
@@ -461,7 +430,6 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
 
   const handleClose = () => {
     if (!loading) {
-      // Reset form
       setFormData({
         propertyAddress: '',
         city: 'Bakersfield',
@@ -475,312 +443,650 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
         squareFootage: '',
         listingStatus: 'Coming Soon',
         clientId: null,
+        isPrivate: false,
+        accessLevel: 'team',
       });
       setSelectedAddress(null);
       setAddressSuggestions([]);
       setAddressSearchText('');
       setError('');
-      // Reset session token when closing
+      setCurrentStep(0);
       resetSessionToken();
       onClose();
     }
   };
 
+  const handleNext = () => {
+    // Validation for each step
+    if (currentStep === 0) {
+      if (!formData.propertyAddress || !formData.city || !formData.state || !formData.zipCode) {
+        setError('Please complete all address fields');
+        return;
+      }
+    } else if (currentStep === 2) {
+      if (!formData.clientId) {
+        setError('Please select a client');
+        return;
+      }
+    }
+
+    setError('');
+    if (currentStep < steps.length - 1) {
+      setCurrentStep(currentStep + 1);
+    }
+  };
+
+  const handleBack = () => {
+    if (currentStep > 0) {
+      setCurrentStep(currentStep - 1);
+      setError('');
+    }
+  };
+
+  const formatPrice = (price) => {
+    if (!price) return '0';
+    return parseFloat(price.replace(/,/g, '')).toLocaleString('en-US');
+  };
+
+  const StepIcon = steps[currentStep].icon;
+
   return (
-    <Dialog
-      open={open}
-      onClose={handleClose}
-      maxWidth="md"
-      fullWidth
-      PaperProps={{
-        sx: {
-          borderRadius: 2,
-        },
-      }}
-    >
-      <DialogTitle sx={{ m: 0, p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Home color="primary" />
-          <Typography variant="h6" fontWeight="600">
-            New Listing
-          </Typography>
-        </Box>
-        <IconButton
-          aria-label="close"
-          onClick={handleClose}
-          disabled={loading}
+    <>
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            overflow: 'hidden',
+          },
+        }}
+      >
+        {/* Gradient Header */}
+        <Box
           sx={{
-            color: (theme) => theme.palette.grey[500],
+            background: `linear-gradient(135deg, ${steps[currentStep].color}ee, ${steps[currentStep].color}99)`,
+            px: 3,
+            py: 2,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            position: 'relative',
+            overflow: 'hidden',
+            '&::before': {
+              content: '""',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              background: 'radial-gradient(circle at 20% 50%, rgba(255,255,255,0.1) 0%, transparent 50%)',
+              pointerEvents: 'none',
+            }
           }}
         >
-          <Close />
-        </IconButton>
-      </DialogTitle>
-
-      <form onSubmit={handleSubmit}>
-        <DialogContent dividers sx={{ p: 3 }}>
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
-              {error}
-            </Alert>
-          )}
-
-          <Box>
-            <Typography variant="h6" gutterBottom sx={{ mb: 2, fontWeight: 500 }}>
-              Property Address
-            </Typography>
-
-            {/* Unified Autocomplete for both Google and Nominatim */}
-            <Autocomplete
-              freeSolo
-              options={addressSuggestions}
-              loading={loadingAddress}
-              inputValue={addressSearchText}
-              onInputChange={handleInputChange}
-              onChange={handleAddressSelect}
-              getOptionLabel={(option) => {
-                if (typeof option === 'string') return option;
-                return option.label || '';
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, position: 'relative', zIndex: 1 }}>
+            <Box
+              sx={{
+                width: 48,
+                height: 48,
+                borderRadius: 2,
+                bgcolor: 'rgba(255,255,255,0.95)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
               }}
-              filterOptions={(x) => x} // Disable built-in filtering
-              renderOption={(props, option) => (
-                <Box component="li" {...props} sx={{ py: 1.5 }}>
-                  <LocationOn sx={{ mr: 2, flexShrink: 0, color: 'action.active' }} />
-                  <Box>
-                    <Typography variant="body2">
-                      {option.label}
-                    </Typography>
-                    {googleMapsLoaded && (
-                      <Typography variant="caption" color="text.secondary">
-                        Powered by Google
-                      </Typography>
-                    )}
-                  </Box>
-                </Box>
-              )}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Street Address"
-                  fullWidth
-                  placeholder="Start typing an address..."
-                  variant="outlined"
-                  autoFocus
-                  required
-                  InputProps={{
-                    ...params.InputProps,
-                    startAdornment: <LocationOn sx={{ mr: 1, color: 'action.active' }} />,
-                    endAdornment: (
-                      <>
-                        {loadingAddress ? <CircularProgress color="inherit" size={20} /> : null}
-                        {params.InputProps.endAdornment}
-                      </>
-                    ),
-                  }}
-                  helperText={
-                    googleMapsLoaded
-                      ? "Powered by Google Places"
-                      : "Type at least 2 characters to search"
-                  }
-                />
-              )}
-              noOptionsText={
-                addressSearchText.length < (googleMapsLoaded ? 3 : 2)
-                  ? `Type at least ${googleMapsLoaded ? 3 : 2} characters to search`
-                  : "No addresses found"
-              }
-              sx={{ mb: 2 }}
-            />
-
-            {/* Additional address fields */}
-            <Box sx={{ display: 'flex', gap: 2, mb: 3 }}>
-              <TextField
-                label="City"
-                placeholder="Bakersfield"
-                value={formData.city}
-                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                sx={{ flex: 2 }}
-              />
-              <TextField
-                label="State"
-                value={formData.state}
-                onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                sx={{ flex: 1 }}
-              />
-              <TextField
-                label="ZIP Code"
-                placeholder="93301"
-                value={formData.zipCode}
-                onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
-                sx={{ flex: 1 }}
-              />
+            >
+              <StepIcon sx={{ fontSize: 28, color: steps[currentStep].color }} />
             </Box>
-
-            <Divider sx={{ my: 3 }} />
-
-            <Typography variant="h6" gutterBottom sx={{ mb: 2, fontWeight: 500 }}>
-              Listing Details
-            </Typography>
-
-            {/* Property details */}
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Box sx={{ display: 'flex', gap: 2 }}>
-                <TextField
-                  label="List Price"
-                  placeholder="450000"
-                  value={formData.listPrice}
-                  onChange={(e) => setFormData({ ...formData, listPrice: e.target.value })}
-                  InputProps={{
-                    startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                  }}
-                  sx={{ flex: 1 }}
-                />
-                <FormControl sx={{ flex: 1 }}>
-                  <InputLabel>Property Type</InputLabel>
-                  <Select
-                    value={formData.propertyType}
-                    onChange={(e) => setFormData({ ...formData, propertyType: e.target.value })}
-                    label="Property Type"
-                  >
-                    <MenuItem value="Single Family">Single Family</MenuItem>
-                    <MenuItem value="Condo">Condo</MenuItem>
-                    <MenuItem value="Townhouse">Townhouse</MenuItem>
-                    <MenuItem value="Multi-Family">Multi-Family</MenuItem>
-                    <MenuItem value="Land">Land</MenuItem>
-                    <MenuItem value="Commercial">Commercial</MenuItem>
-                  </Select>
-                </FormControl>
-                <FormControl sx={{ flex: 1 }}>
-                  <InputLabel>Status</InputLabel>
-                  <Select
-                    value={formData.listingStatus}
-                    onChange={(e) => setFormData({ ...formData, listingStatus: e.target.value })}
-                    label="Status"
-                  >
-                    <MenuItem value="Coming Soon">Coming Soon</MenuItem>
-                    <MenuItem value="Active">Active</MenuItem>
-                    <MenuItem value="Pending">Pending</MenuItem>
-                  </Select>
-                </FormControl>
-              </Box>
-
-              <Box sx={{ display: 'flex', gap: 2 }}>
-                <TextField
-                  label="Bedrooms"
-                  type="number"
-                  placeholder="3"
-                  value={formData.bedrooms}
-                  onChange={(e) => setFormData({ ...formData, bedrooms: e.target.value })}
-                  sx={{ flex: 1 }}
-                />
-                <TextField
-                  label="Bathrooms"
-                  type="number"
-                  placeholder="2.5"
-                  value={formData.bathrooms}
-                  onChange={(e) => setFormData({ ...formData, bathrooms: e.target.value })}
-                  sx={{ flex: 1 }}
-                />
-                <TextField
-                  label="Square Footage"
-                  type="number"
-                  placeholder="2000"
-                  value={formData.squareFootage}
-                  onChange={(e) => setFormData({ ...formData, squareFootage: e.target.value })}
-                  InputProps={{
-                    endAdornment: <InputAdornment position="end">sq ft</InputAdornment>,
-                  }}
-                  sx={{ flex: 1 }}
-                />
-              </Box>
-
-              <Autocomplete
-                options={clients}
-                loading={loadingClients}
-                getOptionLabel={(option) => {
-                  if (option.isAddNew) {
-                    return '+ Add New Client';
-                  }
-                  return option.email
-                    ? `${option.firstName} ${option.lastName} - ${option.email}`
-                    : `${option.firstName} ${option.lastName}`;
-                }}
-                renderOption={(props, option) => (
-                  <li {...props} style={{
-                    fontWeight: option.isAddNew ? 600 : 400,
-                    color: option.isAddNew ? '#2E7D32' : 'inherit',
-                    borderTop: option.isAddNew ? '1px solid #e0e0e0' : 'none',
-                    paddingTop: option.isAddNew ? '12px' : '8px',
-                    marginTop: option.isAddNew ? '4px' : '0'
-                  }}>
-                    {option.isAddNew ? '+ Add New Client' : (
-                      option.email
-                        ? `${option.firstName} ${option.lastName} - ${option.email}`
-                        : `${option.firstName} ${option.lastName}`
-                    )}
-                  </li>
-                )}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label="Client"
-                    placeholder="Select a client"
-                    helperText="Select the client for this listing (showing 5 most recent)"
-                    required
-                  />
-                )}
-                onChange={(e, value) => {
-                  if (value?.isAddNew) {
-                    // Open new client modal
-                    setNewClientModalOpen(true);
-                  } else {
-                    setFormData({ ...formData, clientId: value?.id || null });
-                  }
-                }}
-              />
+            <Box>
+              <Typography variant="h5" fontWeight="700" color="white" sx={{ textShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
+                Create New Listing
+              </Typography>
+              <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.95)', fontWeight: 500 }}>
+                Step {currentStep + 1} of {steps.length}: {steps[currentStep].label}
+              </Typography>
             </Box>
-
-            <PrivacyControl
-              isPrivate={formData.isPrivate}
-              accessLevel={formData.accessLevel}
-              onPrivateChange={(value) => setFormData({ ...formData, isPrivate: value })}
-              onAccessLevelChange={(value) => setFormData({ ...formData, accessLevel: value })}
-            />
           </Box>
-        </DialogContent>
-
-        <DialogActions sx={{ p: 2.5, gap: 1 }}>
-          <Button
-            variant="outlined"
+          <IconButton
             onClick={handleClose}
             disabled={loading}
+            sx={{
+              color: 'white',
+              bgcolor: 'rgba(255,255,255,0.15)',
+              backdropFilter: 'blur(10px)',
+              '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' },
+              position: 'relative',
+              zIndex: 1,
+            }}
           >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            variant="contained"
-            disabled={loading || !formData.propertyAddress || !formData.clientId}
-            startIcon={loading ? <CircularProgress size={20} /> : <Home />}
-          >
-            {loading ? 'Creating...' : 'Create Listing'}
-          </Button>
-        </DialogActions>
-      </form>
+            <Close />
+          </IconButton>
+        </Box>
 
-      {/* New Client Modal */}
+        {/* Compact Progress Stepper */}
+        <Box sx={{ px: 3, pt: 2, pb: 1, bgcolor: '#fafafa' }}>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            {steps.map((step, index) => {
+              const isActive = currentStep === index;
+              const isCompleted = currentStep > index;
+
+              return (
+                <Box
+                  key={step.label}
+                  sx={{
+                    flex: 1,
+                    height: 6,
+                    borderRadius: 3,
+                    bgcolor: isCompleted || isActive ? step.color : '#e0e0e0',
+                    opacity: isCompleted || isActive ? 1 : 0.5,
+                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                    transform: isActive ? 'scaleY(1.3)' : 'scaleY(1)',
+                  }}
+                />
+              );
+            })}
+          </Box>
+        </Box>
+
+        <form onSubmit={handleSubmit}>
+          {/* Form Content */}
+          <Box sx={{ px: 3, py: 3, minHeight: 400, maxHeight: '60vh', overflowY: 'auto' }}>
+            {error && (
+              <Alert severity="error" sx={{ mb: 2 }} onClose={() => setError('')}>
+                {error}
+              </Alert>
+            )}
+
+            {/* Step 0: Property Address */}
+            {currentStep === 0 && (
+              <Fade in timeout={400}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                  <Autocomplete
+                    freeSolo
+                    options={addressSuggestions}
+                    loading={loadingAddress}
+                    inputValue={addressSearchText}
+                    onInputChange={handleInputChange}
+                    onChange={handleAddressSelect}
+                    getOptionLabel={(option) => {
+                      if (typeof option === 'string') return option;
+                      return option.label || '';
+                    }}
+                    filterOptions={(x) => x}
+                    renderOption={(props, option) => (
+                      <Box component="li" {...props} sx={{ py: 1.5 }}>
+                        <LocationOn sx={{ mr: 2, flexShrink: 0, color: 'action.active' }} />
+                        <Box>
+                          <Typography variant="body2">{option.label}</Typography>
+                          {googleMapsLoaded && (
+                            <Typography variant="caption" color="text.secondary">
+                              Powered by Google
+                            </Typography>
+                          )}
+                        </Box>
+                      </Box>
+                    )}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Street Address"
+                        fullWidth
+                        placeholder="Start typing an address..."
+                        variant="outlined"
+                        autoFocus
+                        InputProps={{
+                          ...params.InputProps,
+                          startAdornment: <LocationOn sx={{ mr: 1, color: 'action.active' }} />,
+                          endAdornment: (
+                            <>
+                              {loadingAddress ? <CircularProgress color="inherit" size={20} /> : null}
+                              {params.InputProps.endAdornment}
+                            </>
+                          ),
+                        }}
+                        helperText={
+                          googleMapsLoaded
+                            ? "Powered by Google Places"
+                            : "Type at least 2 characters to search"
+                        }
+                      />
+                    )}
+                    noOptionsText={
+                      addressSearchText.length < (googleMapsLoaded ? 3 : 2)
+                        ? `Type at least ${googleMapsLoaded ? 3 : 2} characters to search`
+                        : "No addresses found"
+                    }
+                  />
+
+                  <Box sx={{ display: 'flex', gap: 2 }}>
+                    <TextField
+                      label="City"
+                      placeholder="Bakersfield"
+                      value={formData.city}
+                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                      required
+                      fullWidth
+                      sx={{ flex: 2 }}
+                    />
+                    <TextField
+                      label="State"
+                      value={formData.state}
+                      onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                      required
+                      sx={{ flex: 1 }}
+                    />
+                    <TextField
+                      label="ZIP Code"
+                      placeholder="93301"
+                      value={formData.zipCode}
+                      onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
+                      required
+                      sx={{ flex: 1 }}
+                    />
+                  </Box>
+
+                  <TextField
+                    fullWidth
+                    label="County (optional)"
+                    placeholder="Kern"
+                    value={formData.county}
+                    onChange={(e) => setFormData({ ...formData, county: e.target.value })}
+                  />
+                </Box>
+              </Fade>
+            )}
+
+            {/* Step 1: Property Details */}
+            {currentStep === 1 && (
+              <Fade in timeout={400}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                  <TextField
+                    fullWidth
+                    label="List Price"
+                    placeholder="450,000"
+                    value={formData.listPrice}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9]/g, '');
+                      const formatted = value ? parseInt(value).toLocaleString() : '';
+                      setFormData({ ...formData, listPrice: formatted });
+                    }}
+                    InputProps={{
+                      startAdornment: <InputAdornment position="start">$</InputAdornment>,
+                    }}
+                    helperText="Enter the listing price"
+                  />
+
+                  <Box sx={{ display: 'flex', gap: 2 }}>
+                    <FormControl fullWidth required>
+                      <InputLabel>Property Type</InputLabel>
+                      <Select
+                        value={formData.propertyType}
+                        onChange={(e) => setFormData({ ...formData, propertyType: e.target.value })}
+                        label="Property Type"
+                      >
+                        <MenuItem value="Single Family">Single Family</MenuItem>
+                        <MenuItem value="Condo">Condo</MenuItem>
+                        <MenuItem value="Townhouse">Townhouse</MenuItem>
+                        <MenuItem value="Multi-Family">Multi-Family</MenuItem>
+                        <MenuItem value="Land">Land</MenuItem>
+                        <MenuItem value="Commercial">Commercial</MenuItem>
+                      </Select>
+                      <FormHelperText>Type of property</FormHelperText>
+                    </FormControl>
+
+                    <FormControl fullWidth required>
+                      <InputLabel>Listing Status</InputLabel>
+                      <Select
+                        value={formData.listingStatus}
+                        onChange={(e) => setFormData({ ...formData, listingStatus: e.target.value })}
+                        label="Listing Status"
+                      >
+                        <MenuItem value="Coming Soon">Coming Soon</MenuItem>
+                        <MenuItem value="Active">Active</MenuItem>
+                        <MenuItem value="Pending">Pending</MenuItem>
+                      </Select>
+                      <FormHelperText>Current status</FormHelperText>
+                    </FormControl>
+                  </Box>
+
+                  <Box sx={{ display: 'flex', gap: 2 }}>
+                    <TextField
+                      fullWidth
+                      label="Bedrooms"
+                      type="number"
+                      placeholder="3"
+                      value={formData.bedrooms}
+                      onChange={(e) => setFormData({ ...formData, bedrooms: e.target.value })}
+                      helperText="Number of bedrooms"
+                    />
+                    <TextField
+                      fullWidth
+                      label="Bathrooms"
+                      type="number"
+                      placeholder="2.5"
+                      step="0.5"
+                      value={formData.bathrooms}
+                      onChange={(e) => setFormData({ ...formData, bathrooms: e.target.value })}
+                      helperText="Number of bathrooms"
+                    />
+                  </Box>
+
+                  <TextField
+                    fullWidth
+                    label="Square Footage"
+                    placeholder="2,000"
+                    value={formData.squareFootage}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^0-9]/g, '');
+                      const formatted = value ? parseInt(value).toLocaleString() : '';
+                      setFormData({ ...formData, squareFootage: formatted });
+                    }}
+                    InputProps={{
+                      endAdornment: <InputAdornment position="end">sq ft</InputAdornment>,
+                    }}
+                    helperText="Total living area"
+                  />
+                </Box>
+              </Fade>
+            )}
+
+            {/* Step 2: Client & Privacy */}
+            {currentStep === 2 && (
+              <Fade in timeout={400}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                  <Autocomplete
+                    options={clients}
+                    loading={loadingClients}
+                    inputValue={clientSearchText}
+                    onInputChange={(e, value) => setClientSearchText(value)}
+                    getOptionLabel={(option) =>
+                      option.firstName && option.lastName
+                        ? `${option.firstName} ${option.lastName}${option.email ? ' - ' + option.email : ''}`
+                        : ''
+                    }
+                    filterOptions={(options, { inputValue }) => {
+                      if (!Array.isArray(options)) return [];
+                      if (!inputValue || inputValue.trim() === '') return options.slice(0, 5);
+
+                      const filtered = options.filter(option => {
+                        const searchText = inputValue.toLowerCase();
+                        const fullName = `${option.firstName || ''} ${option.lastName || ''}`.toLowerCase();
+                        const email = option.email?.toLowerCase() || '';
+                        return fullName.includes(searchText) || email.includes(searchText);
+                      });
+
+                      return filtered.slice(0, 5);
+                    }}
+                    renderOption={(props, option) => (
+                      <Box component="li" {...props}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+                          <Typography variant="body2" fontWeight={600}>
+                            {option.firstName} {option.lastName}
+                          </Typography>
+                          {option.email && (
+                            <Typography variant="caption" color="text.secondary">
+                              {option.email}
+                            </Typography>
+                          )}
+                        </Box>
+                      </Box>
+                    )}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label="Client"
+                        placeholder="Search by name or email..."
+                        helperText="Select the client for this listing"
+                        required
+                      />
+                    )}
+                    onChange={(e, value) => setFormData({ ...formData, clientId: value?.id || null })}
+                    noOptionsText=""
+                    ListboxProps={{ sx: { maxHeight: 300 } }}
+                    PaperComponent={({ children, ...other }) => (
+                      <Paper {...other}>
+                        {children}
+                        {children && <Divider />}
+                        <ListItemButton
+                          onClick={() => setNewClientModalOpen(true)}
+                          sx={{ py: 1.5 }}
+                        >
+                          <ListItemIcon>
+                            <PersonAdd color="primary" />
+                          </ListItemIcon>
+                          <ListItemText
+                            primary="Create New Client"
+                            primaryTypographyProps={{ fontWeight: 600, color: 'primary.main' }}
+                          />
+                        </ListItemButton>
+                      </Paper>
+                    )}
+                  />
+
+                  <PrivacyControl
+                    isPrivate={formData.isPrivate}
+                    accessLevel={formData.accessLevel}
+                    onPrivateChange={(value) => setFormData({ ...formData, isPrivate: value })}
+                    onAccessLevelChange={(value) => setFormData({ ...formData, accessLevel: value })}
+                  />
+                </Box>
+              </Fade>
+            )}
+
+            {/* Step 3: Review */}
+            {currentStep === 3 && (
+              <Fade in timeout={400}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <Box
+                    sx={{
+                      p: 2.5,
+                      borderRadius: 2,
+                      background: 'linear-gradient(135deg, #1976d220, #2196f320)',
+                      border: '2px solid #1976d2',
+                    }}
+                  >
+                    <Box sx={{ display: 'flex', alignItems: 'start', gap: 2 }}>
+                      <LocationOn sx={{ color: '#1976d2', fontSize: 28 }} />
+                      <Box sx={{ flex: 1 }}>
+                        <Typography variant="body2" color="text.secondary" gutterBottom>
+                          Property Address
+                        </Typography>
+                        <Typography variant="h6" fontWeight="600">
+                          {formData.propertyAddress || 'Not provided'}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          {formData.city}, {formData.state} {formData.zipCode}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  </Box>
+
+                  <Box sx={{ display: 'flex', gap: 2 }}>
+                    <Box
+                      sx={{
+                        flex: 1,
+                        p: 2.5,
+                        borderRadius: 2,
+                        background: 'linear-gradient(135deg, #9c27b020, #e91e6320)',
+                        border: '2px solid #9c27b0',
+                      }}
+                    >
+                      <Typography variant="body2" color="text.secondary" gutterBottom>
+                        List Price
+                      </Typography>
+                      <Typography variant="h5" fontWeight="700">
+                        ${formatPrice(formData.listPrice)}
+                      </Typography>
+                    </Box>
+
+                    <Box
+                      sx={{
+                        flex: 1,
+                        p: 2.5,
+                        borderRadius: 2,
+                        background: 'linear-gradient(135deg, #9c27b020, #e91e6320)',
+                        border: '2px solid #9c27b0',
+                      }}
+                    >
+                      <Typography variant="body2" color="text.secondary" gutterBottom>
+                        Property Type
+                      </Typography>
+                      <Typography variant="h6" fontWeight="600">
+                        {formData.propertyType}
+                      </Typography>
+                    </Box>
+                  </Box>
+
+                  <Box sx={{ display: 'flex', gap: 2 }}>
+                    <Box
+                      sx={{
+                        flex: 1,
+                        p: 2.5,
+                        borderRadius: 2,
+                        background: 'linear-gradient(135deg, #f57c0020, #ff980020)',
+                        border: '2px solid #f57c00',
+                      }}
+                    >
+                      <Typography variant="body2" color="text.secondary" gutterBottom>
+                        Bedrooms
+                      </Typography>
+                      <Typography variant="h6" fontWeight="600">
+                        {formData.bedrooms || 'Not specified'}
+                      </Typography>
+                    </Box>
+
+                    <Box
+                      sx={{
+                        flex: 1,
+                        p: 2.5,
+                        borderRadius: 2,
+                        background: 'linear-gradient(135deg, #f57c0020, #ff980020)',
+                        border: '2px solid #f57c00',
+                      }}
+                    >
+                      <Typography variant="body2" color="text.secondary" gutterBottom>
+                        Bathrooms
+                      </Typography>
+                      <Typography variant="h6" fontWeight="600">
+                        {formData.bathrooms || 'Not specified'}
+                      </Typography>
+                    </Box>
+
+                    <Box
+                      sx={{
+                        flex: 1,
+                        p: 2.5,
+                        borderRadius: 2,
+                        background: 'linear-gradient(135deg, #f57c0020, #ff980020)',
+                        border: '2px solid #f57c00',
+                      }}
+                    >
+                      <Typography variant="body2" color="text.secondary" gutterBottom>
+                        Square Feet
+                      </Typography>
+                      <Typography variant="h6" fontWeight="600">
+                        {formData.squareFootage ? `${formatPrice(formData.squareFootage)} sq ft` : 'Not specified'}
+                      </Typography>
+                    </Box>
+                  </Box>
+
+                  <Box
+                    sx={{
+                      p: 2.5,
+                      borderRadius: 2,
+                      background: 'linear-gradient(135deg, #388e3c20, #66bb6a20)',
+                      border: '2px solid #388e3c',
+                    }}
+                  >
+                    <Typography variant="body2" color="text.secondary" gutterBottom>
+                      Listing Status
+                    </Typography>
+                    <Typography variant="body1" fontWeight="600">
+                      {formData.listingStatus}
+                    </Typography>
+                  </Box>
+
+                  {formData.isPrivate && (
+                    <Chip
+                      label="Private Listing"
+                      color="error"
+                      icon={<Lock />}
+                      sx={{ alignSelf: 'flex-start' }}
+                    />
+                  )}
+                </Box>
+              </Fade>
+            )}
+          </Box>
+
+          {/* Navigation Buttons */}
+          <Box
+            sx={{
+              px: 3,
+              py: 2.5,
+              bgcolor: '#fafafa',
+              borderTop: '1px solid #e0e0e0',
+              display: 'flex',
+              justifyContent: 'space-between',
+            }}
+          >
+            <Button
+              onClick={handleBack}
+              disabled={currentStep === 0 || loading}
+              startIcon={<NavigateBefore />}
+              sx={{ textTransform: 'none', fontWeight: 600 }}
+            >
+              Back
+            </Button>
+
+            {currentStep < steps.length - 1 ? (
+              <Button
+                onClick={handleNext}
+                variant="contained"
+                endIcon={<NavigateNext />}
+                sx={{
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  background: `linear-gradient(135deg, ${steps[currentStep].color}ee, ${steps[currentStep].color}99)`,
+                  '&:hover': {
+                    background: `linear-gradient(135deg, ${steps[currentStep].color}, ${steps[currentStep].color}dd)`,
+                  }
+                }}
+              >
+                Next
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                variant="contained"
+                disabled={loading}
+                startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <CheckCircle />}
+                sx={{
+                  textTransform: 'none',
+                  fontWeight: 600,
+                  background: `linear-gradient(135deg, ${steps[currentStep].color}ee, ${steps[currentStep].color}99)`,
+                  '&:hover': {
+                    background: `linear-gradient(135deg, ${steps[currentStep].color}, ${steps[currentStep].color}dd)`,
+                  }
+                }}
+              >
+                {loading ? 'Creating...' : 'Create Listing'}
+              </Button>
+            )}
+          </Box>
+        </form>
+      </Dialog>
+
       <NewClientModal
         open={newClientModalOpen}
         onClose={() => setNewClientModalOpen(false)}
-        onSuccess={(newClientId) => {
-          // Refresh clients list and select the new client
-          fetchClients().then(() => {
-            setFormData({ ...formData, clientId: newClientId });
-          });
-          setNewClientModalOpen(false);
-        }}
+        onSuccess={handleNewClientSave}
       />
-    </Dialog>
+    </>
   );
 };
 
