@@ -47,8 +47,8 @@ const HomeDashboard = () => {
 
         const response = await apiInstance.get(url);
 
-        if (response.data.success) {
-          setStats(response.data.data);
+        if (response.success) {
+          setStats(response.data);
         }
       } catch (error) {
         console.error('Error fetching home stats:', error);
