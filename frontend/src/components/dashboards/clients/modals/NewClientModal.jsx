@@ -18,6 +18,7 @@ import {
   PersonAdd,
 } from '@mui/icons-material';
 import { clientsAPI, leadsAPI } from '../../../../services/api.service';
+import PrivacyControl from '../../../common/PrivacyControl';
 
 const NewClientModal = ({ open, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
@@ -30,6 +31,8 @@ const NewClientModal = ({ open, onClose, onSuccess }) => {
     phone: '',
     email: '',
     linkedLeadId: null,
+    isPrivate: false, // Phase 6: Privacy control
+    accessLevel: 'team', // Phase 6: Default to team sharing
   });
 
   // Fetch leads when modal opens
@@ -121,6 +124,8 @@ const NewClientModal = ({ open, onClose, onSuccess }) => {
         phone: formData.phone,
         email: formData.email.trim().toLowerCase(),
         status: 'active', // Default status
+        isPrivate: formData.isPrivate, // Phase 6: Privacy control
+        accessLevel: formData.accessLevel, // Phase 6: Sharing level
       };
 
       // Add linked lead if selected
@@ -258,6 +263,14 @@ const NewClientModal = ({ open, onClose, onSuccess }) => {
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               required
               helperText="Valid email address"
+            />
+
+            {/* Phase 6: Privacy and Sharing Controls */}
+            <PrivacyControl
+              isPrivate={formData.isPrivate}
+              accessLevel={formData.accessLevel}
+              onPrivateChange={(value) => setFormData({ ...formData, isPrivate: value })}
+              onAccessLevelChange={(value) => setFormData({ ...formData, accessLevel: value })}
             />
           </Box>
         </DialogContent>
