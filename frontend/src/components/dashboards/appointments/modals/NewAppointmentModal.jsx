@@ -373,7 +373,7 @@ const NewAppointmentModal = ({ open, onClose, onSuccess }) => {
   };
 
   const getSelectedLead = () => {
-    if (!formData.linkedLeadId) return null;
+    if (!Array.isArray(leads) || !formData.linkedLeadId) return null;
     return leads.find(lead => lead.id === formData.linkedLeadId);
   };
 

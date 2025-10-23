@@ -207,6 +207,7 @@ const NewClientModal = ({ open, onClose, onSuccess }) => {
   };
 
   const getSelectedLead = () => {
+    if (!Array.isArray(leads) || !formData.linkedLeadId) return null;
     return leads.find(lead => lead.id === formData.linkedLeadId);
   };
 
