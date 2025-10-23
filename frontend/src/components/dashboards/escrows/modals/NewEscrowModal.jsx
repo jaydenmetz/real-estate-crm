@@ -672,7 +672,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
                 sx={{
                   display: 'flex',
                   flexDirection: 'column',
-                  justifyContent: formData.propertyAddress ? 'flex-start' : 'center',
+                  justifyContent: 'center',
                   minHeight: 400,
                   transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
                 }}
@@ -682,14 +682,14 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
                     display: 'flex',
                     flexDirection: 'column',
                     gap: 2.5,
-                    maxWidth: formData.propertyAddress ? '100%' : '90%',
+                    maxWidth: '100%',
                     mx: 'auto',
+                    width: '100%',
                     transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
                   }}>
-                    {/* Street Address - Always Visible */}
+                    {/* Street Address - Always Visible, Fixed Width */}
                     <Box sx={{
-                      transform: formData.propertyAddress ? 'scale(1)' : 'scale(1.05)',
-                      transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                      transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
                     }}>
                       <Autocomplete
                         freeSolo
