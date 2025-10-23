@@ -24,6 +24,9 @@ import {
   ListItemIcon,
   ListItemText,
   Divider,
+  FormControlLabel,
+  Switch,
+  Chip,
 } from '@mui/material';
 import debounce from 'lodash/debounce';
 import {
@@ -31,11 +34,14 @@ import {
   LocationOn,
   Search,
   PersonAdd,
+  Lock,
+  LockOpen,
 } from '@mui/icons-material';
 import { escrowsAPI, clientsAPI } from '../../../../services/api.service';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { loadGoogleMapsScript } from '../../../../utils/googleMapsLoader';
 import NewClientModal from '../../clients/modals/NewClientModal';
+import PrivacyControl from '../../../common/PrivacyControl';
 
 const NewEscrowModal = ({ open, onClose, onSuccess }) => {
   const { user } = useAuth();
@@ -145,6 +151,8 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
     commissionFlat: '',
     clientId: null,
     representationType: 'buyer', // Default to buyer
+    isPrivate: false, // Phase 6: Privacy control
+    accessLevel: 'team', // Phase 6: Default to team sharing
   });
 
   // Check for Google API key
@@ -500,6 +508,8 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         status: 'active',
         clientId: formData.clientId,
         representationType: formData.representationType,
+        isPrivate: formData.isPrivate, // Phase 6: Privacy control
+        accessLevel: formData.accessLevel, // Phase 6: Sharing level
       };
 
       const response = await escrowsAPI.create(escrowData);
@@ -903,6 +913,14 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
                 <FormHelperText>Are you representing the buyer, seller, or both?</FormHelperText>
               </FormControl>
             </Box>
+
+            {/* Phase 6: Privacy and Sharing Controls */}
+            <PrivacyControl
+              isPrivate={formData.isPrivate}
+              accessLevel={formData.accessLevel}
+              onPrivateChange={(value) => setFormData({ ...formData, isPrivate: value })}
+              onAccessLevelChange={(value) => setFormData({ ...formData, accessLevel: value })}
+            />
           </Box>
         </DialogContent>
 
