@@ -22,6 +22,7 @@ import {
 import { appointmentsAPI, leadsAPI } from '../../../../services/api.service';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { loadGoogleMapsScript } from '../../../../utils/googleMapsLoader';
+import PrivacyControl from '../../../common/PrivacyControl';
 
 const NewAppointmentModal = ({ open, onClose, onSuccess }) => {
   const { user } = useAuth();
@@ -49,6 +50,8 @@ const NewAppointmentModal = ({ open, onClose, onSuccess }) => {
     time: '09:00', // Default to 9 AM
     location: '',
     linkedLeadId: null,
+    isPrivate: false,
+    accessLevel: 'team',
   });
 
   // Check for Google API key
@@ -269,6 +272,8 @@ const NewAppointmentModal = ({ open, onClose, onSuccess }) => {
         location: formData.location,
         status: 'scheduled',
         type: 'showing', // Default type
+        isPrivate: formData.isPrivate,
+        accessLevel: formData.accessLevel,
       };
 
       // Add linked lead if selected
@@ -443,6 +448,13 @@ const NewAppointmentModal = ({ open, onClose, onSuccess }) => {
                 />
               )}
               onChange={(e, value) => setFormData({ ...formData, linkedLeadId: value?.id || null })}
+            />
+
+            <PrivacyControl
+              isPrivate={formData.isPrivate}
+              accessLevel={formData.accessLevel}
+              onPrivateChange={(value) => setFormData({ ...formData, isPrivate: value })}
+              onAccessLevelChange={(value) => setFormData({ ...formData, accessLevel: value })}
             />
           </Box>
         </DialogContent>

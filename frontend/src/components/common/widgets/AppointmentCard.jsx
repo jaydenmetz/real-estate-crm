@@ -28,6 +28,9 @@ import {
   EventAvailable,
   EventBusy,
   Pending,
+  Lock,
+  Group,
+  Business,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { format, formatDistance, isPast, isFuture, isToday, isTomorrow } from 'date-fns';
@@ -473,22 +476,42 @@ const AppointmentCard = React.memo(({ appointment, viewMode = 'small', index = 0
               {/* Card Content */}
               <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                 {/* Appointment Title/Purpose */}
-                <Typography
-                  variant="h6"
-                  sx={{
-                    fontWeight: 700,
-                    fontSize: 16,
-                    lineHeight: 1.3,
-                    mb: 1,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                  }}
-                >
-                  {details.purpose}
-                </Typography>
+                <Box sx={{ mb: 1 }}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: 16,
+                      lineHeight: 1.3,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                    }}
+                  >
+                    {details.purpose}
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+                    {appointment.is_private ? (
+                      <Chip
+                        icon={<Lock />}
+                        label="Private"
+                        size="small"
+                        color="error"
+                        sx={{ height: 18, fontSize: '0.65rem' }}
+                      />
+                    ) : appointment.access_level ? (
+                      <Chip
+                        icon={appointment.access_level === 'team' ? <Group /> : <Business />}
+                        label={appointment.access_level === 'team' ? 'Team' : 'Broker'}
+                        size="small"
+                        color={appointment.access_level === 'team' ? 'primary' : 'secondary'}
+                        sx={{ height: 18, fontSize: '0.65rem' }}
+                      />
+                    ) : null}
+                  </Box>
+                </Box>
 
                 {/* Date and Time */}
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5, mb: 1.5 }}>

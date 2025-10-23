@@ -31,6 +31,7 @@ import { listingsAPI, clientsAPI } from '../../../../services/api.service';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { loadGoogleMapsScript } from '../../../../utils/googleMapsLoader';
 import NewClientModal from '../../clients/modals/NewClientModal';
+import PrivacyControl from '../../../common/PrivacyControl';
 
 const NewListingModal = ({ open, onClose, onSuccess }) => {
   const { user } = useAuth();
@@ -68,6 +69,8 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
     squareFootage: '',
     listingStatus: 'Coming Soon',
     clientId: null,
+    isPrivate: false,
+    accessLevel: 'team',
   });
 
   // Check for Google API key
@@ -409,6 +412,8 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
         propertyType: formData.propertyType,
         listingStatus: formData.listingStatus,
         clientId: formData.clientId,
+        isPrivate: formData.isPrivate,
+        accessLevel: formData.accessLevel,
       };
 
       // Only add optional fields if they have values
@@ -734,6 +739,13 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
                 }}
               />
             </Box>
+
+            <PrivacyControl
+              isPrivate={formData.isPrivate}
+              accessLevel={formData.accessLevel}
+              onPrivateChange={(value) => setFormData({ ...formData, isPrivate: value })}
+              onAccessLevelChange={(value) => setFormData({ ...formData, accessLevel: value })}
+            />
           </Box>
         </DialogContent>
 

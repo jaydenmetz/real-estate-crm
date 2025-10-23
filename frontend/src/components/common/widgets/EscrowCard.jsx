@@ -34,6 +34,9 @@ import {
   TrendingUp,
   Schedule,
   RestoreFromTrash as RestoreFromTrashIcon,
+  Lock,
+  Group,
+  Business,
 } from '@mui/icons-material';
 import { useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
@@ -924,18 +927,36 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                     }}
                   />
                 ) : (
-                  <Typography
-                    variant="h6"
-                    sx={{
-                      fontWeight: 800,
-                      fontSize: '0.9rem',
-                      mb: 1,
-                      color: theme.palette.text.primary,
-                      lineHeight: 1.2,
-                    }}
-                  >
-                    {address}
-                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+                    <Typography
+                      variant="h6"
+                      sx={{
+                        fontWeight: 800,
+                        fontSize: '0.9rem',
+                        color: theme.palette.text.primary,
+                        lineHeight: 1.2,
+                      }}
+                    >
+                      {address}
+                    </Typography>
+                    {escrow.is_private ? (
+                      <Chip
+                        icon={<Lock />}
+                        label="Private"
+                        size="small"
+                        color="error"
+                        sx={{ height: 18, fontSize: '0.65rem' }}
+                      />
+                    ) : escrow.access_level ? (
+                      <Chip
+                        icon={escrow.access_level === 'team' ? <Group /> : <Business />}
+                        label={escrow.access_level === 'team' ? 'Team' : 'Broker'}
+                        size="small"
+                        color={escrow.access_level === 'team' ? 'primary' : 'secondary'}
+                        sx={{ height: 18, fontSize: '0.65rem' }}
+                      />
+                    ) : null}
+                  </Box>
                 )}
 
                 {/* Metrics Grid */}

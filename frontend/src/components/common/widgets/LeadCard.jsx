@@ -26,6 +26,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Close,
+  Lock,
+  Group,
+  Business,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { format, formatDistanceToNow } from 'date-fns';
@@ -505,18 +508,36 @@ const LeadCard = React.memo(({ lead, viewMode = 'small', animationType = 'spring
                 overflow: 'hidden'
               }}>
                 {/* Name */}
-                <Typography
-                  variant="h6"
-                  sx={{
-                    fontWeight: 800,
-                    fontSize: '0.9rem',
-                    mb: 0.5,
-                    color: theme.palette.text.primary,
-                    lineHeight: 1.2,
-                  }}
-                >
-                  {fullName}
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 800,
+                      fontSize: '0.9rem',
+                      color: theme.palette.text.primary,
+                      lineHeight: 1.2,
+                    }}
+                  >
+                    {fullName}
+                  </Typography>
+                  {lead.is_private ? (
+                    <Chip
+                      icon={<Lock />}
+                      label="Private"
+                      size="small"
+                      color="error"
+                      sx={{ height: 18, fontSize: '0.65rem' }}
+                    />
+                  ) : lead.access_level ? (
+                    <Chip
+                      icon={lead.access_level === 'team' ? <Group /> : <Business />}
+                      label={lead.access_level === 'team' ? 'Team' : 'Broker'}
+                      size="small"
+                      color={lead.access_level === 'team' ? 'primary' : 'secondary'}
+                      sx={{ height: 18, fontSize: '0.65rem' }}
+                    />
+                  ) : null}
+                </Box>
 
                 {/* Time Since Created */}
                 {timeSinceCreated && (

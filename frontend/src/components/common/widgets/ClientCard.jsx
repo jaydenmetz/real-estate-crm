@@ -26,6 +26,9 @@ import {
   Close,
   AttachMoney,
   LocationOn,
+  Lock,
+  Group,
+  Business,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -365,18 +368,36 @@ const ClientCard = React.memo(({ client, viewMode = 'small', index = 0, onArchiv
               overflow: 'hidden'
             }}>
               {/* Client Name */}
-              <Typography
-                variant="h6"
-                sx={{
-                  fontWeight: 800,
-                  fontSize: '0.9rem',
-                  mb: 0.5,
-                  color: theme.palette.text.primary,
-                  lineHeight: 1.2,
-                }}
-              >
-                {fullName}
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+                <Typography
+                  variant="h6"
+                  sx={{
+                    fontWeight: 800,
+                    fontSize: '0.9rem',
+                    color: theme.palette.text.primary,
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {fullName}
+                </Typography>
+                {client.is_private ? (
+                  <Chip
+                    icon={<Lock />}
+                    label="Private"
+                    size="small"
+                    color="error"
+                    sx={{ height: 18, fontSize: '0.65rem' }}
+                  />
+                ) : client.access_level ? (
+                  <Chip
+                    icon={client.access_level === 'team' ? <Group /> : <Business />}
+                    label={client.access_level === 'team' ? 'Team' : 'Broker'}
+                    size="small"
+                    color={client.access_level === 'team' ? 'primary' : 'secondary'}
+                    sx={{ height: 18, fontSize: '0.65rem' }}
+                  />
+                ) : null}
+              </Box>
 
               {/* Client Type Chip */}
               <Chip

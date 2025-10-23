@@ -30,6 +30,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Close,
+  Lock,
+  Group,
+  Business,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -468,22 +471,42 @@ const ListingCard = React.memo(({ listing, viewMode = 'small', index = 0, onArch
               {/* Card Content */}
               <CardContent sx={{ p: 2, '&:last-child': { pb: 2 } }}>
                 {/* Address */}
-                <Typography
-                  variant="h6"
-                  sx={{
-                    fontWeight: 700,
-                    fontSize: 16,
-                    lineHeight: 1.3,
-                    mb: 1,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    display: '-webkit-box',
-                    WebkitLineClamp: 2,
-                    WebkitBoxOrient: 'vertical',
-                  }}
-                >
-                  {address}
-                </Typography>
+                <Box sx={{ mb: 1 }}>
+                  <Typography
+                    variant="h6"
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: 16,
+                      lineHeight: 1.3,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                    }}
+                  >
+                    {address}
+                  </Typography>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+                    {listing.is_private ? (
+                      <Chip
+                        icon={<Lock />}
+                        label="Private"
+                        size="small"
+                        color="error"
+                        sx={{ height: 18, fontSize: '0.65rem' }}
+                      />
+                    ) : listing.access_level ? (
+                      <Chip
+                        icon={listing.access_level === 'team' ? <Group /> : <Business />}
+                        label={listing.access_level === 'team' ? 'Team' : 'Broker'}
+                        size="small"
+                        color={listing.access_level === 'team' ? 'primary' : 'secondary'}
+                        sx={{ height: 18, fontSize: '0.65rem' }}
+                      />
+                    ) : null}
+                  </Box>
+                </Box>
 
                 {/* Price Row */}
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
