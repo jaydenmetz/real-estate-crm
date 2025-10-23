@@ -167,40 +167,92 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
     }
   }, [open, hasValidGoogleKey, googleMapsLoaded]);
 
-  // Fetch clients when modal opens
-  useEffect(() => {
-    if (open) {
-      fetchClients();
-    }
-  }, [open]);
+  // Debounced live search for contacts (like Google autocomplete)
+  const searchContactsDebounced = useCallback(
+    debounce(async (searchText) => {
+      if (!searchText || searchText.length < 2) {
+        setClients([]);
+        setLoadingClients(false);
+        return;
+      }
 
-  const fetchClients = async () => {
-    setLoadingClients(true);
-    try {
-      const response = await clientsAPI.getAll();
-      if (response.success) {
-        // Backend returns clients array nested in data.clients
-        const clientsList = response.data?.clients || response.data || [];
+      setLoadingClients(true);
+      try {
+        // Step 1: Search for 'client' role first (primary role for escrows)
+        const clientResponse = await contactsAPI.getAll({
+          role: 'client',
+          search: searchText,
+          limit: 5
+        });
+
+        let clientRoleResults = [];
+        if (clientResponse.success && clientResponse.data) {
+          clientRoleResults = Array.isArray(clientResponse.data)
+            ? clientResponse.data
+            : (clientResponse.data.clients || []);
+        }
+
+        // Step 2: If less than 5 results, fill with other roles
+        let otherRoleResults = [];
+        if (clientRoleResults.length < 5) {
+          const remainingSlots = 5 - clientRoleResults.length;
+          const allContactsResponse = await contactsAPI.getAll({
+            search: searchText,
+            limit: remainingSlots
+          });
+
+          if (allContactsResponse.success && allContactsResponse.data) {
+            const allResults = Array.isArray(allContactsResponse.data)
+              ? allContactsResponse.data
+              : (allContactsResponse.data.clients || allContactsResponse.data.contacts || []);
+
+            // Filter out clients already in clientRoleResults
+            const clientIds = new Set(clientRoleResults.map(c => c.id));
+            otherRoleResults = allResults.filter(c => !clientIds.has(c.id));
+          }
+        }
+
+        // Combine results: client role first, then others
+        const combinedResults = [...clientRoleResults, ...otherRoleResults].slice(0, 5);
 
         // Transform snake_case to camelCase for frontend compatibility
-        const transformedClients = clientsList.map(client => ({
+        const transformedClients = combinedResults.map(client => ({
           ...client,
           firstName: client.first_name || client.firstName,
           lastName: client.last_name || client.lastName,
+          isClientRole: clientRoleResults.some(c => c.id === client.id), // Mark primary role results
         }));
 
         setClients(transformedClients);
+      } catch (err) {
+        console.error('Error searching contacts:', err);
+        setClients([]);
+      } finally {
+        setLoadingClients(false);
       }
-    } catch (err) {
-      console.error('Error fetching clients:', err);
-    } finally {
-      setLoadingClients(false);
+    }, 300), // 300ms debounce
+    []
+  );
+
+  // Trigger search when user types
+  useEffect(() => {
+    if (clientSearchText && clientSearchText.length >= 2) {
+      searchContactsDebounced(clientSearchText);
+    } else {
+      setClients([]);
     }
-  };
+  }, [clientSearchText, searchContactsDebounced]);
 
   const handleNewClientSave = async (newContact) => {
     setNewClientModalOpen(false);
-    await fetchClients();
+    // Add the new contact to the list immediately
+    const transformedContact = {
+      ...newContact,
+      firstName: newContact.first_name || newContact.firstName,
+      lastName: newContact.last_name || newContact.lastName,
+      isClientRole: true,
+    };
+    setClients([transformedContact]);
     setFormData({ ...formData, clientId: newContact.id });
     const fullName = `${newContact.first_name || ''} ${newContact.last_name || ''}`.trim();
     setClientSearchText(`${fullName}${newContact.email ? ' - ' + newContact.email : ''}`);
@@ -879,24 +931,25 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
                         ? `${option.firstName} ${option.lastName}${option.email ? ' - ' + option.email : ''}`
                         : ''
                     }
-                    filterOptions={(options, { inputValue }) => {
-                      if (!Array.isArray(options)) return [];
-                      if (!inputValue || inputValue.trim() === '') return options.slice(0, 5);
-
-                      const filtered = options.filter(option => {
-                        const searchText = inputValue.toLowerCase();
-                        const fullName = `${option.firstName || ''} ${option.lastName || ''}`.toLowerCase();
-                        const email = option.email?.toLowerCase() || '';
-                        return fullName.includes(searchText) || email.includes(searchText);
-                      });
-
-                      return filtered.slice(0, 5);
-                    }}
+                    filterOptions={(x) => x} // No local filtering - backend handles it
                     renderOption={(props, option) => (
                       <Box component="li" {...props}>
                         <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
                           <Typography variant="body2" fontWeight={600}>
                             {option.firstName} {option.lastName}
+                            {option.isClientRole && (
+                              <Chip
+                                label="Client"
+                                size="small"
+                                sx={{
+                                  ml: 1,
+                                  height: 18,
+                                  fontSize: '0.7rem',
+                                  backgroundColor: '#4caf50',
+                                  color: 'white',
+                                }}
+                              />
+                            )}
                           </Typography>
                           {option.email && (
                             <Typography variant="caption" color="text.secondary">
@@ -910,13 +963,13 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
                       <TextField
                         {...params}
                         label="Client"
-                        placeholder="Search by name or email..."
-                        helperText="Select the client for this escrow"
+                        placeholder="Type to search contacts..."
+                        helperText="Start typing name or email (2+ characters)"
                         required
                       />
                     )}
                     onChange={(e, value) => setFormData({ ...formData, clientId: value?.id || null })}
-                    noOptionsText=""
+                    noOptionsText={clientSearchText.length < 2 ? "Type at least 2 characters" : "No contacts found"}
                     ListboxProps={{ sx: { maxHeight: 300 } }}
                     PaperComponent={({ children, ...other }) => (
                       <Paper {...other}>
@@ -930,7 +983,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
                             <PersonAdd color="primary" />
                           </ListItemIcon>
                           <ListItemText
-                            primary="Create New Client"
+                            primary={clientSearchText ? `Add "${clientSearchText}" as Client` : "Create New Client"}
                             primaryTypographyProps={{ fontWeight: 600, color: 'primary.main' }}
                           />
                         </ListItemButton>
