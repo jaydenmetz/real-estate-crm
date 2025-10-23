@@ -2,16 +2,20 @@
  * Ownership Service
  * Handles multi-tenant data access control, ownership checks, and privacy filtering
  *
- * Privacy Model:
- * - Escrows/Clients/Listings: Always visible to broker (no privacy)
- * - Leads: Can be marked private (is_private flag)
- * - Appointments: Inherit privacy from linked lead
+ * Privacy Model (Phase 6 - October 2025):
+ * - is_private=TRUE: Only owner can access (overrides access_level)
+ * - is_private=FALSE: Sharing controlled by access_level
+ *
+ * Access Levels (when is_private=FALSE):
+ * - 'personal': Owner only (deprecated - use is_private instead)
+ * - 'team': Owner + team members
+ * - 'broker': Owner + all users in brokerage
  *
  * Role Hierarchy:
- * - system_admin: Sees ALL data including private
+ * - system_admin: Sees ALL data including private (no filtering)
  * - broker: Sees all non-private data in their brokerage
  * - team_owner: Sees all non-private data in their team
- * - agent: Sees own data + team non-private data
+ * - agent: Sees own data + team/broker shared data
  */
 
 const pool = require('../config/database');

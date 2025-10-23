@@ -2,6 +2,11 @@
  * Ownership Query Helper
  * Builds SQL WHERE clauses for multi-tenant data filtering
  *
+ * Phase 6 Updates (October 2025):
+ * - Now uses access_level column (personal, team, broker)
+ * - is_private overrides access_level (private = owner only)
+ * - Applies to all 5 core tables: escrows, clients, listings, leads, appointments
+ *
  * Usage in controllers:
  * const { whereClause, params } = buildOwnershipWhereClause(req.user, req.query.scope, resourceType);
  * const query = `SELECT * FROM ${resourceType}s WHERE ${whereClause} AND other_conditions`;
@@ -258,9 +263,81 @@ function getDefaultScope(userRole) {
   return 'team'; // team_owner, agent
 }
 
+/**
+ * Build access_level filter conditions (Phase 6 addition)
+ * This adds additional filtering based on access_level column
+ * @param {string} prefix - Table prefix (e.g., 'e.')
+ * @param {Object} user - req.user object
+ * @param {string} resourceType - Resource type
+ * @param {number} paramIndex - Current parameter index
+ * @returns {Object} - { conditions: array, params: array, nextParamIndex: number }
+ */
+function buildAccessLevelFilter(prefix, user, resourceType, paramIndex) {
+  const conditions = [];
+  const params = [];
+  let currentIndex = paramIndex;
+
+  // Owner always has access
+  conditions.push(`${prefix}owner_id = $${currentIndex}`);
+  params.push(user.id);
+  currentIndex++;
+
+  // If record is not private, check access_level
+  const accessConditions = [];
+
+  // Team-level access (user must be in same team)
+  if (user.team_id) {
+    accessConditions.push(`(
+      ${prefix}is_private = FALSE
+      AND ${prefix}access_level = 'team'
+      AND EXISTS (
+        SELECT 1 FROM users u2
+        WHERE u2.id = ${prefix}owner_id
+        AND u2.team_id = $${currentIndex}
+      )
+    )`);
+    params.push(user.team_id);
+    currentIndex++;
+  }
+
+  // Broker-level access (user must be under same broker)
+  if (user.broker_id || user.brokerId) {
+    const brokerId = user.broker_id || user.brokerId;
+    accessConditions.push(`(
+      ${prefix}is_private = FALSE
+      AND ${prefix}access_level = 'broker'
+      AND EXISTS (
+        SELECT 1 FROM users u3
+        WHERE u3.id = ${prefix}owner_id
+        AND u3.broker_id = $${currentIndex}
+      )
+    )`);
+    params.push(brokerId);
+    currentIndex++;
+  }
+
+  // Combine: owner OR (not private AND access granted)
+  if (accessConditions.length > 0) {
+    const combinedCondition = `(${conditions[0]} OR ${accessConditions.join(' OR ')})`;
+    return {
+      conditions: [combinedCondition],
+      params,
+      nextParamIndex: currentIndex
+    };
+  }
+
+  // If no team/broker access, only owner can access
+  return {
+    conditions,
+    params,
+    nextParamIndex: currentIndex
+  };
+}
+
 module.exports = {
   buildOwnershipWhereClause,
   buildOwnershipWhereClauseWithAlias,
   validateScope,
-  getDefaultScope
+  getDefaultScope,
+  buildAccessLevelFilter
 };
