@@ -66,7 +66,8 @@ import {
   ContentCopy,
   Visibility,
   VisibilityOff,
-  Shield
+  Shield,
+  BusinessCenter
 } from '@mui/icons-material';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -138,7 +139,29 @@ const Settings = () => {
             // Settings
             theme: data.data.theme || 'light',
             emailNotifications: data.data.email_notifications || {},
-            smsNotifications: data.data.sms_notifications || {}
+            smsNotifications: data.data.sms_notifications || {},
+            // Transaction Defaults
+            transactionDefaults: data.data.transaction_defaults || {
+              brokerName: 'Josh Riley',
+              brokerLicense: '01365477',
+              brokerPhone: '',
+              brokerEmail: 'josh@bhhsassociated.com',
+              brokerageName: 'Associated Real Estate (Berkshire Hathaway HomeServices)',
+              brokerageLicense: '01910265',
+              brokerageAddress: '122 S Green St Ste 5, Tehachapi, CA 93561',
+              brokeragePhone: '',
+              transactionCoordinator: '',
+              tcPhone: '',
+              tcEmail: '',
+              assistant: '',
+              assistantPhone: '',
+              assistantEmail: '',
+              preferredEscrowCompany: '',
+              preferredTitleCompany: '',
+              preferredInspector: '',
+              preferredAppraiser: '',
+              preferredLender: ''
+            }
           });
         }
       }
@@ -172,7 +195,29 @@ const Settings = () => {
     showOffice: true,
     theme: 'light',
     emailNotifications: {},
-    smsNotifications: {}
+    smsNotifications: {},
+    // Transaction Defaults
+    transactionDefaults: {
+      brokerName: 'Josh Riley',
+      brokerLicense: '01365477',
+      brokerPhone: '',
+      brokerEmail: 'josh@bhhsassociated.com',
+      brokerageName: 'Associated Real Estate (Berkshire Hathaway HomeServices)',
+      brokerageLicense: '01910265',
+      brokerageAddress: '122 S Green St Ste 5, Tehachapi, CA 93561',
+      brokeragePhone: '',
+      transactionCoordinator: '',
+      tcPhone: '',
+      tcEmail: '',
+      assistant: '',
+      assistantPhone: '',
+      assistantEmail: '',
+      preferredEscrowCompany: '',
+      preferredTitleCompany: '',
+      preferredInspector: '',
+      preferredAppraiser: '',
+      preferredLender: ''
+    }
   });
 
   // Custom statistics state
@@ -204,16 +249,16 @@ const Settings = () => {
       // Handle specific error cases
       if (error.status === 404) {
         console.error('API Keys endpoint not found');
-        if (activeTab === 7) {
+        if (activeTab === 8) {
           setSnackbar({ open: true, message: 'API Keys feature not available', severity: 'warning' });
         }
       } else if (error.status === 401) {
         console.error('Authentication required for API keys');
         // Don't show error if user is not on API keys tab
-        if (activeTab === 7) {
+        if (activeTab === 8) {
           setSnackbar({ open: true, message: 'Please log in to manage API keys', severity: 'info' });
         }
-      } else if (activeTab === 7) {
+      } else if (activeTab === 8) {
         // Only show generic error if user is on API keys tab
         setSnackbar({ open: true, message: 'Failed to load API keys', severity: 'error' });
       }
@@ -237,7 +282,7 @@ const Settings = () => {
         setApiKeys([]);
       },
       retry: false,
-      enabled: activeTab === 7,
+      enabled: activeTab === 8,
       staleTime: 60000,
       cacheTime: 300000
     }
@@ -461,6 +506,7 @@ const Settings = () => {
                 <Tab icon={<Notifications />} label="Notifications" />
                 <Tab icon={<Palette />} label="Appearance" />
                 <Tab icon={<Security />} label="Privacy" />
+                <Tab icon={<BusinessCenter />} label="Transaction Defaults" />
                 <Tab icon={<Shield />} label="Security" />
                 <Tab icon={<Key />} label="API Keys" />
                 <Tab icon={<School />} label="Onboarding" />
@@ -982,13 +1028,353 @@ const Settings = () => {
                 </Button>
               </TabPanel>
 
-              {/* Security Tab */}
+              {/* Transaction Defaults Tab */}
               <TabPanel value={activeTab} index={6}>
+                <Typography variant="h5" gutterBottom>
+                  Transaction Defaults
+                </Typography>
+                <Divider sx={{ mb: 3 }} />
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                  Set your default contacts and vendors that will auto-fill when creating new escrows. These can be edited for each individual transaction.
+                </Typography>
+
+                {/* Broker Information */}
+                <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+                  Broker Information
+                </Typography>
+                <Grid container spacing={2} sx={{ mb: 3 }}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Broker Name"
+                      value={formData.transactionDefaults.brokerName}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        transactionDefaults: {
+                          ...formData.transactionDefaults,
+                          brokerName: e.target.value
+                        }
+                      })}
+                      placeholder="e.g., Josh Riley"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Broker License Number"
+                      value={formData.transactionDefaults.brokerLicense}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        transactionDefaults: {
+                          ...formData.transactionDefaults,
+                          brokerLicense: e.target.value
+                        }
+                      })}
+                      placeholder="e.g., 01365477"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Broker Phone"
+                      value={formData.transactionDefaults.brokerPhone}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        transactionDefaults: {
+                          ...formData.transactionDefaults,
+                          brokerPhone: e.target.value
+                        }
+                      })}
+                      placeholder="e.g., (555) 123-4567"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Broker Email"
+                      value={formData.transactionDefaults.brokerEmail}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        transactionDefaults: {
+                          ...formData.transactionDefaults,
+                          brokerEmail: e.target.value
+                        }
+                      })}
+                      placeholder="e.g., broker@example.com"
+                    />
+                  </Grid>
+                </Grid>
+
+                {/* Brokerage Information */}
+                <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+                  Brokerage Information
+                </Typography>
+                <Grid container spacing={2} sx={{ mb: 3 }}>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Brokerage Name"
+                      value={formData.transactionDefaults.brokerageName}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        transactionDefaults: {
+                          ...formData.transactionDefaults,
+                          brokerageName: e.target.value
+                        }
+                      })}
+                      placeholder="e.g., Associated Real Estate (Berkshire Hathaway HomeServices)"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Brokerage License"
+                      value={formData.transactionDefaults.brokerageLicense}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        transactionDefaults: {
+                          ...formData.transactionDefaults,
+                          brokerageLicense: e.target.value
+                        }
+                      })}
+                      placeholder="e.g., 01910265"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Brokerage Phone"
+                      value={formData.transactionDefaults.brokeragePhone}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        transactionDefaults: {
+                          ...formData.transactionDefaults,
+                          brokeragePhone: e.target.value
+                        }
+                      })}
+                      placeholder="e.g., (555) 123-4567"
+                    />
+                  </Grid>
+                  <Grid item xs={12}>
+                    <TextField
+                      fullWidth
+                      label="Brokerage Address"
+                      value={formData.transactionDefaults.brokerageAddress}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        transactionDefaults: {
+                          ...formData.transactionDefaults,
+                          brokerageAddress: e.target.value
+                        }
+                      })}
+                      placeholder="e.g., 122 S Green St Ste 5, Tehachapi, CA 93561"
+                    />
+                  </Grid>
+                </Grid>
+
+                {/* Transaction Coordinator */}
+                <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+                  Transaction Coordinator
+                </Typography>
+                <Grid container spacing={2} sx={{ mb: 3 }}>
+                  <Grid item xs={12} sm={4}>
+                    <TextField
+                      fullWidth
+                      label="TC Name"
+                      value={formData.transactionDefaults.transactionCoordinator}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        transactionDefaults: {
+                          ...formData.transactionDefaults,
+                          transactionCoordinator: e.target.value
+                        }
+                      })}
+                      placeholder="e.g., Jane Smith"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                    <TextField
+                      fullWidth
+                      label="TC Phone"
+                      value={formData.transactionDefaults.tcPhone}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        transactionDefaults: {
+                          ...formData.transactionDefaults,
+                          tcPhone: e.target.value
+                        }
+                      })}
+                      placeholder="e.g., (555) 123-4567"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                    <TextField
+                      fullWidth
+                      label="TC Email"
+                      value={formData.transactionDefaults.tcEmail}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        transactionDefaults: {
+                          ...formData.transactionDefaults,
+                          tcEmail: e.target.value
+                        }
+                      })}
+                      placeholder="e.g., tc@example.com"
+                    />
+                  </Grid>
+                </Grid>
+
+                {/* Assistant */}
+                <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+                  Assistant
+                </Typography>
+                <Grid container spacing={2} sx={{ mb: 3 }}>
+                  <Grid item xs={12} sm={4}>
+                    <TextField
+                      fullWidth
+                      label="Assistant Name"
+                      value={formData.transactionDefaults.assistant}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        transactionDefaults: {
+                          ...formData.transactionDefaults,
+                          assistant: e.target.value
+                        }
+                      })}
+                      placeholder="e.g., John Doe"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                    <TextField
+                      fullWidth
+                      label="Assistant Phone"
+                      value={formData.transactionDefaults.assistantPhone}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        transactionDefaults: {
+                          ...formData.transactionDefaults,
+                          assistantPhone: e.target.value
+                        }
+                      })}
+                      placeholder="e.g., (555) 123-4567"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                    <TextField
+                      fullWidth
+                      label="Assistant Email"
+                      value={formData.transactionDefaults.assistantEmail}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        transactionDefaults: {
+                          ...formData.transactionDefaults,
+                          assistantEmail: e.target.value
+                        }
+                      })}
+                      placeholder="e.g., assistant@example.com"
+                    />
+                  </Grid>
+                </Grid>
+
+                {/* Preferred Vendors */}
+                <Typography variant="h6" gutterBottom sx={{ mt: 3 }}>
+                  Preferred Vendors
+                </Typography>
+                <Grid container spacing={2} sx={{ mb: 3 }}>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Preferred Escrow Company"
+                      value={formData.transactionDefaults.preferredEscrowCompany}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        transactionDefaults: {
+                          ...formData.transactionDefaults,
+                          preferredEscrowCompany: e.target.value
+                        }
+                      })}
+                      placeholder="e.g., First American Title"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6}>
+                    <TextField
+                      fullWidth
+                      label="Preferred Title Company"
+                      value={formData.transactionDefaults.preferredTitleCompany}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        transactionDefaults: {
+                          ...formData.transactionDefaults,
+                          preferredTitleCompany: e.target.value
+                        }
+                      })}
+                      placeholder="e.g., Chicago Title"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                    <TextField
+                      fullWidth
+                      label="Preferred Inspector"
+                      value={formData.transactionDefaults.preferredInspector}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        transactionDefaults: {
+                          ...formData.transactionDefaults,
+                          preferredInspector: e.target.value
+                        }
+                      })}
+                      placeholder="e.g., ABC Inspections"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                    <TextField
+                      fullWidth
+                      label="Preferred Appraiser"
+                      value={formData.transactionDefaults.preferredAppraiser}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        transactionDefaults: {
+                          ...formData.transactionDefaults,
+                          preferredAppraiser: e.target.value
+                        }
+                      })}
+                      placeholder="e.g., XYZ Appraisal"
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={4}>
+                    <TextField
+                      fullWidth
+                      label="Preferred Lender"
+                      value={formData.transactionDefaults.preferredLender}
+                      onChange={(e) => setFormData({
+                        ...formData,
+                        transactionDefaults: {
+                          ...formData.transactionDefaults,
+                          preferredLender: e.target.value
+                        }
+                      })}
+                      placeholder="e.g., ABC Mortgage"
+                    />
+                  </Grid>
+                </Grid>
+
+                <Button
+                  variant="contained"
+                  startIcon={<Save />}
+                  onClick={handleSaveProfile}
+                  sx={{ mt: 2 }}
+                >
+                  Save Transaction Defaults
+                </Button>
+              </TabPanel>
+
+              {/* Security Tab */}
+              <TabPanel value={activeTab} index={7}>
                 <SecurityDashboard />
               </TabPanel>
 
               {/* API Keys Tab */}
-              <TabPanel value={activeTab} index={7}>
+              <TabPanel value={activeTab} index={8}>
                 <Typography variant="h5" gutterBottom>
                   API Key Management
                 </Typography>
@@ -1229,12 +1615,12 @@ const Settings = () => {
               </TabPanel>
 
               {/* Onboarding Tab */}
-              <TabPanel value={activeTab} index={8}>
+              <TabPanel value={activeTab} index={9}>
                 <OnboardingSettings />
               </TabPanel>
 
               {/* Developer Tab */}
-              <TabPanel value={activeTab} index={9}>
+              <TabPanel value={activeTab} index={10}>
                 <Typography variant="h5" gutterBottom>
                   Developer Tools
                 </Typography>
