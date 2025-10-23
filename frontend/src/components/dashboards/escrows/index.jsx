@@ -143,8 +143,7 @@ const EscrowsDashboard = () => {
   });
   const [sortBy, setSortBy] = useState(() => searchParams.get('sort') || 'closing_date');
   const [scope, setScope] = useState(() => {
-    const urlScope = searchParams.get('scope');
-    if (urlScope) return urlScope;
+    // Scope is saved in localStorage only (not URL for cleaner URLs)
     const saved = localStorage.getItem('escrowsScope');
     return saved || 'team';
   });
@@ -465,7 +464,7 @@ const EscrowsDashboard = () => {
     if (selectedStatus !== 'active') params.status = selectedStatus;
     if (viewMode !== 'grid') params.view = viewMode;
     if (sortBy !== 'closing_date') params.sort = sortBy;
-    if (scope !== 'team') params.scope = scope;
+    // Note: scope removed from URL - saved in localStorage only (cleaner URLs)
     if (searchQuery) params.search = searchQuery;
 
     setSearchParams(params, { replace: true }); // replace: true prevents adding history entries on every filter change
