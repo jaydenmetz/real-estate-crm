@@ -11,134 +11,239 @@ import {
   MenuItem,
   Chip,
   alpha,
+  CircularProgress,
+  Alert,
+  Autocomplete,
 } from '@mui/material';
 import { PersonAdd, Save, Close } from '@mui/icons-material';
-import { contactsAPI } from '../../services/api.service';
+import { contactsAPI, contactRolesAPI } from '../../services/api.service';
 
 /**
- * New Contact Modal
- * Create a new contact with pre-selected role type
+ * New Contact Modal - Multi-Role Support
+ * Dynamic field validation based on selected role's requirements
  */
 export const NewContactModal = ({
   open,
   onClose,
   onSave,
-  roleType,
+  roleType = null, // Pre-selected role (optional)
   roleConfig = { primary: '#6366f1', secondary: '#8b5cf6' },
 }) => {
   const [formData, setFormData] = useState({
-    full_name: '',
+    first_name: '',
+    last_name: '',
     email: '',
     phone: '',
-    company_name: '',
-    role: roleType || '',
+    company: '',
+    license_number: '',
+    // Lead-specific fields
+    source: '',
+    lead_type: '',
+    budget: '',
+    property_type: '',
+    timeline: '',
+    pre_approved: '',
+    notes: '',
   });
+  const [selectedRole, setSelectedRole] = useState(null);
+  const [availableRoles, setAvailableRoles] = useState([]);
+  const [loadingRoles, setLoadingRoles] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
-  // Reset form when modal opens or roleType changes
+  // Fetch available roles on mount
+  useEffect(() => {
+    const fetchRoles = async () => {
+      setLoadingRoles(true);
+      try {
+        const response = await contactRolesAPI.getAll({ active_only: 'true' });
+        if (response.success && response.data) {
+          setAvailableRoles(response.data);
+
+          // Auto-select role if roleType provided
+          if (roleType) {
+            const matchingRole = response.data.find(r => r.role_name === roleType);
+            if (matchingRole) {
+              setSelectedRole(matchingRole);
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch roles:', err);
+        setError('Failed to load contact roles');
+      } finally {
+        setLoadingRoles(false);
+      }
+    };
+
+    if (open) {
+      fetchRoles();
+    }
+  }, [open, roleType]);
+
+  // Reset form when modal opens
   useEffect(() => {
     if (open) {
       setFormData({
-        full_name: '',
+        first_name: '',
+        last_name: '',
         email: '',
         phone: '',
-        company_name: '',
-        role: roleType || '',
+        company: '',
+        license_number: '',
+        source: '',
+        lead_type: '',
+        budget: '',
+        property_type: '',
+        timeline: '',
+        pre_approved: '',
+        notes: '',
       });
+      setError('');
     }
-  }, [open, roleType]);
+  }, [open]);
 
   const handleChange = (field) => (event) => {
     setFormData({ ...formData, [field]: event.target.value });
   };
 
-  const handleSubmit = async () => {
-    if (!formData.full_name) {
-      return; // Validation
+  const handleRoleChange = (event, newValue) => {
+    setSelectedRole(newValue);
+  };
+
+  // Check if a field is required based on selected role
+  const isFieldRequired = (fieldName) => {
+    if (!selectedRole) return false;
+    return selectedRole.required_fields?.includes(fieldName) || false;
+  };
+
+  // Check if a field should be hidden based on selected role
+  const isFieldHidden = (fieldName) => {
+    if (!selectedRole) return false;
+    return selectedRole.hidden_fields?.includes(fieldName) || false;
+  };
+
+  // Check if a field is optional (shown but not required)
+  const isFieldOptional = (fieldName) => {
+    if (!selectedRole) return true;
+    return selectedRole.optional_fields?.includes(fieldName) || false;
+  };
+
+  // Validate form
+  const validateForm = () => {
+    if (!selectedRole) {
+      setError('Please select a contact role');
+      return false;
     }
 
+    if (!formData.first_name && !formData.last_name) {
+      setError('Please enter at least a first or last name');
+      return false;
+    }
+
+    // Check all required fields
+    const requiredFields = selectedRole.required_fields || [];
+    for (const field of requiredFields) {
+      if (!formData[field]) {
+        const fieldLabels = {
+          source: 'Lead Source',
+          lead_type: 'Lead Type',
+          company: 'Company',
+          license_number: 'License Number',
+        };
+        setError(`${fieldLabels[field] || field} is required for ${selectedRole.display_name}`);
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) return;
+
     setSaving(true);
+    setError('');
+
     try {
-      // Map role to contact_type for database
-      const roleToContactType = {
-        buyer: 'buyer',
-        seller: 'seller',
-        buyer_agent: 'agent',
-        listing_agent: 'agent',
-        lender: 'vendor',
-        escrow_officer: 'vendor',
-      };
-
-      // Parse full name into first and last name
-      const nameParts = formData.full_name.trim().split(' ');
-      const firstName = nameParts[0] || '';
-      const lastName = nameParts.slice(1).join(' ') || '';
-
-      // Create contact in database
+      // Step 1: Create contact
       const contactData = {
-        contact_type: roleToContactType[formData.role] || 'other',
-        first_name: firstName,
-        last_name: lastName,
+        first_name: formData.first_name || null,
+        last_name: formData.last_name || null,
         email: formData.email || null,
         phone: formData.phone || null,
-        company_name: formData.company_name || null,
+        company: formData.company || null,
+        license_number: formData.license_number || null,
+        notes: formData.notes || null,
       };
 
-      // console.log('Creating contact:', contactData);
-      const response = await contactsAPI.create(contactData);
+      const contactResponse = await contactsAPI.create(contactData);
 
-      if (response.success && response.data) {
-        // Create contact object with role info for escrow assignment
-        const newContact = {
-          id: response.data.id,
-          full_name: response.data.full_name || formData.full_name,
-          email: response.data.email,
-          phone: response.data.phone,
-          company_name: response.data.company_name,
-          roles: [{ type: formData.role }],
-        };
-
-        await onSave(newContact);
-
-        // Reset form
-        setFormData({
-          full_name: '',
-          email: '',
-          phone: '',
-          company_name: '',
-          role: roleType || '',
-        });
-      } else {
+      if (!contactResponse.success || !contactResponse.data) {
         throw new Error('Failed to create contact');
       }
-    } catch (error) {
-      console.error('Failed to create contact:', error);
-      alert('Failed to create contact. Please try again.');
+
+      const newContact = contactResponse.data;
+
+      // Step 2: Add role to contact
+      const roleData = {
+        role_id: selectedRole.id,
+        is_primary: true, // First role is always primary
+        role_metadata: {
+          // Lead-specific metadata
+          ...(formData.source && { source: formData.source }),
+          ...(formData.lead_type && { lead_type: formData.lead_type }),
+          ...(formData.budget && { budget: formData.budget }),
+          ...(formData.property_type && { property_type: formData.property_type }),
+          ...(formData.timeline && { timeline: formData.timeline }),
+          ...(formData.pre_approved && { pre_approved: formData.pre_approved }),
+        },
+      };
+
+      await contactsAPI.addRole(newContact.id, roleData);
+
+      // Step 3: Return contact with role info for parent component
+      const contactWithRole = {
+        ...newContact,
+        roles: [{
+          id: selectedRole.id,
+          role_name: selectedRole.role_name,
+          display_name: selectedRole.display_name,
+          icon: selectedRole.icon,
+          color: selectedRole.color,
+          is_primary: true,
+        }],
+      };
+
+      await onSave(contactWithRole);
+      onClose();
+
+    } catch (err) {
+      console.error('Failed to create contact:', err);
+      setError(err.response?.data?.error?.message || 'Failed to create contact. Please try again.');
     } finally {
       setSaving(false);
     }
   };
 
-  const getRoleLabel = (roleType) => {
-    const labels = {
-      buyer: 'Buyer',
-      seller: 'Seller',
-      buyer_agent: 'Buyer Agent',
-      listing_agent: 'Listing Agent',
-      seller_agent: 'Listing Agent',
-      lender: 'Lender',
-      escrow_officer: 'Escrow Officer',
-    };
-    return labels[roleType] || roleType?.replace(/_/g, ' ');
-  };
+  const leadSourceOptions = [
+    'Referral - Past Client',
+    'Referral - Agent',
+    'Referral - Friend/Family',
+    'Online Lead (Zillow, Realtor.com, etc.)',
+    'Social Media',
+    'Open House',
+    'Direct Mail',
+    'Website',
+    'Walk-In',
+    'Cold Call',
+    'Networking Event',
+    'Other',
+  ];
 
-  const roleOptions = [
+  const leadTypeOptions = [
     { value: 'buyer', label: 'Buyer' },
     { value: 'seller', label: 'Seller' },
-    { value: 'buyer_agent', label: 'Buyer Agent' },
-    { value: 'listing_agent', label: 'Listing Agent' },
-    { value: 'lender', label: 'Lender' },
-    { value: 'escrow_officer', label: 'Escrow Officer' },
   ];
 
   return (
@@ -153,47 +258,69 @@ export const NewContactModal = ({
       </DialogTitle>
       <DialogContent>
         <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {/* Role Type - Pre-selected */}
-          <Box>
-            <TextField
-              select
-              fullWidth
-              label="Role"
-              value={formData.role}
-              onChange={handleChange('role')}
-              required
-              InputProps={{
-                startAdornment: formData.role && (
-                  <Chip
-                    label={getRoleLabel(formData.role)}
-                    size="small"
-                    sx={{
-                      mr: 1,
-                      background: `linear-gradient(135deg, ${roleConfig.primary} 0%, ${roleConfig.secondary} 100%)`,
-                      color: 'white',
-                      fontWeight: 600,
-                    }}
-                  />
-                ),
-              }}
-            >
-              {roleOptions.map((option) => (
-                <MenuItem key={option.value} value={option.value}>
-                  {option.label}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Box>
+          {error && (
+            <Alert severity="error" onClose={() => setError('')}>
+              {error}
+            </Alert>
+          )}
 
-          {/* Full Name */}
-          <TextField
-            fullWidth
-            label="Full Name"
-            value={formData.full_name}
-            onChange={handleChange('full_name')}
-            required
-            placeholder="John Doe"
-          />
+          {/* Role Selection */}
+          {loadingRoles ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 2 }}>
+              <CircularProgress size={24} />
+            </Box>
+          ) : (
+            <Autocomplete
+              value={selectedRole}
+              onChange={handleRoleChange}
+              options={availableRoles}
+              getOptionLabel={(option) => option.display_name}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Role *"
+                  placeholder="Select contact role"
+                  required
+                />
+              )}
+              renderOption={(props, option) => (
+                <li {...props}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, width: '100%' }}>
+                    <Chip
+                      label={option.display_name}
+                      size="small"
+                      sx={{
+                        backgroundColor: option.color || '#6366f1',
+                        color: 'white',
+                        fontWeight: 600,
+                      }}
+                    />
+                    <Typography variant="body2" color="text.secondary">
+                      {option.description}
+                    </Typography>
+                  </Box>
+                </li>
+              )}
+            />
+          )}
+
+          {/* Name Fields */}
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            <TextField
+              fullWidth
+              label="First Name"
+              value={formData.first_name}
+              onChange={handleChange('first_name')}
+              placeholder="John"
+            />
+            <TextField
+              fullWidth
+              label="Last Name"
+              value={formData.last_name}
+              onChange={handleChange('last_name')}
+              placeholder="Doe"
+            />
+          </Box>
 
           {/* Email */}
           <TextField
@@ -214,24 +341,137 @@ export const NewContactModal = ({
             placeholder="(555) 123-4567"
           />
 
-          {/* Company */}
+          {/* Company - Show if required or optional, hide if hidden */}
+          {!isFieldHidden('company') && (
+            <TextField
+              fullWidth
+              label="Company"
+              value={formData.company}
+              onChange={handleChange('company')}
+              placeholder="ABC Realty"
+              required={isFieldRequired('company')}
+            />
+          )}
+
+          {/* License Number - Show if required or optional */}
+          {!isFieldHidden('license_number') && (isFieldRequired('license_number') || isFieldOptional('license_number')) && (
+            <TextField
+              fullWidth
+              label="License Number"
+              value={formData.license_number}
+              onChange={handleChange('license_number')}
+              placeholder="01234567"
+              required={isFieldRequired('license_number')}
+            />
+          )}
+
+          {/* Lead Source - Required for leads */}
+          {!isFieldHidden('source') && (isFieldRequired('source') || isFieldOptional('source')) && (
+            <Autocomplete
+              value={formData.source}
+              onChange={(event, newValue) => {
+                setFormData({ ...formData, source: newValue });
+              }}
+              options={leadSourceOptions}
+              freeSolo
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  label="Lead Source"
+                  placeholder="How did you find this lead?"
+                  required={isFieldRequired('source')}
+                />
+              )}
+            />
+          )}
+
+          {/* Lead Type - Required for leads */}
+          {!isFieldHidden('lead_type') && (isFieldRequired('lead_type') || isFieldOptional('lead_type')) && (
+            <TextField
+              select
+              fullWidth
+              label="Lead Type"
+              value={formData.lead_type}
+              onChange={handleChange('lead_type')}
+              required={isFieldRequired('lead_type')}
+            >
+              {leadTypeOptions.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
+          )}
+
+          {/* Budget - Optional for buyer leads */}
+          {!isFieldHidden('budget') && isFieldOptional('budget') && (
+            <TextField
+              fullWidth
+              label="Budget"
+              value={formData.budget}
+              onChange={handleChange('budget')}
+              placeholder="$250,000 - $350,000"
+            />
+          )}
+
+          {/* Property Type - Optional for leads */}
+          {!isFieldHidden('property_type') && isFieldOptional('property_type') && (
+            <TextField
+              fullWidth
+              label="Property Type"
+              value={formData.property_type}
+              onChange={handleChange('property_type')}
+              placeholder="Single Family, Condo, etc."
+            />
+          )}
+
+          {/* Timeline - Optional for leads */}
+          {!isFieldHidden('timeline') && isFieldOptional('timeline') && (
+            <TextField
+              fullWidth
+              label="Timeline"
+              value={formData.timeline}
+              onChange={handleChange('timeline')}
+              placeholder="1-3 months, 3-6 months, etc."
+            />
+          )}
+
+          {/* Pre-Approved - Optional for buyer leads */}
+          {!isFieldHidden('pre_approved') && isFieldOptional('pre_approved') && (
+            <TextField
+              select
+              fullWidth
+              label="Pre-Approved"
+              value={formData.pre_approved}
+              onChange={handleChange('pre_approved')}
+            >
+              <MenuItem value="">Not Sure</MenuItem>
+              <MenuItem value="yes">Yes</MenuItem>
+              <MenuItem value="no">No</MenuItem>
+              <MenuItem value="in_progress">In Progress</MenuItem>
+            </TextField>
+          )}
+
+          {/* Notes */}
           <TextField
             fullWidth
-            label="Company"
-            value={formData.company_name}
-            onChange={handleChange('company_name')}
-            placeholder="ABC Realty"
+            label="Notes"
+            value={formData.notes}
+            onChange={handleChange('notes')}
+            placeholder="Additional information..."
+            multiline
+            rows={3}
           />
         </Box>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={onClose} startIcon={<Close />}>
+        <Button onClick={onClose} startIcon={<Close />} disabled={saving}>
           Cancel
         </Button>
         <Button
           onClick={handleSubmit}
           variant="contained"
-          disabled={!formData.full_name || saving}
+          disabled={!selectedRole || saving}
           startIcon={<Save />}
           sx={{
             background: `linear-gradient(135deg, ${roleConfig.primary} 0%, ${roleConfig.secondary} 100%)`,

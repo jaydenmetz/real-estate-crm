@@ -538,6 +538,19 @@ export const contactsAPI = {
   update: (id, data) => apiInstance.put(`/contacts/${id}`, data),
   delete: (id) => apiInstance.delete(`/contacts/${id}`),
   search: (query) => apiInstance.get('/contacts/search', { params: { q: query } }),
+  // Multi-role contact methods
+  getRoles: (contactId) => apiInstance.get(`/contacts/${contactId}/roles`),
+  addRole: (contactId, roleData) => apiInstance.post(`/contacts/${contactId}/roles`, roleData),
+  removeRole: (contactId, roleId) => apiInstance.delete(`/contacts/${contactId}/roles/${roleId}`),
+  setPrimaryRole: (contactId, roleId) => apiInstance.put(`/contacts/${contactId}/roles/primary`, { role_id: roleId }),
+};
+
+// Contact Roles API
+export const contactRolesAPI = {
+  getAll: (params) => apiInstance.get('/contact-roles', { params }),
+  getById: (id) => apiInstance.get(`/contact-roles/${id}`),
+  create: (data) => apiInstance.post('/contact-roles', data), // Admin only
+  update: (id, data) => apiInstance.put(`/contact-roles/${id}`, data), // Admin only
 };
 
 // API Keys API
@@ -582,6 +595,7 @@ export const api = {
   profilesAPI,
   settingsAPI,
   contactsAPI,
+  contactRolesAPI,
   apiKeysAPI,
   // Include the raw instance methods for flexibility
   get: (...args) => apiInstance.get(...args),
