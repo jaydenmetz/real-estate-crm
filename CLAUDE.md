@@ -494,6 +494,44 @@ Use clear, descriptive names based on functionality:
 - **Authentication**: Dual system - JWT tokens and API keys
 - **Monitoring**: Sentry for error tracking (when configured)
 
+### Multi-Tenant Architecture (Future Scaling)
+
+**Current State:** Single-tenant (Jayden Metz Realty Group only)
+**Future Goal:** Support multiple real estate teams/brokerages on same platform
+
+**Key Concepts for Scaling:**
+
+1. **Database Architecture Options:**
+   - **Phase 1 (1-50 teams):** Shared Railway database with `team_id` filtering (current approach)
+   - **Phase 2 (50-500 teams):** Migrate to Supabase/Neon with database sharding
+   - **Phase 3 (500+ teams):** AWS RDS with read replicas, Kubernetes scaling
+
+2. **Three-Tier ID System for Escrows:**
+   - **UUID:** Global unique identifier for system routing (never changes)
+   - **Sequential ID:** Team-specific (1, 2, 3...) for internal reference
+   - **Display ID:** Human-readable (ESC-2025-001) for documents/client communication
+
+3. **Subdomain Routing:**
+   - `app.jaydenmetz.com` → System admin login
+   - `jaydenmetz.jaydenmetz.com` → Your personal CRM instance
+   - `teamname.jaydenmetz.com` → Other team CRM instances
+   - Requires wildcard DNS (*.jaydenmetz.com) and subdomain detection middleware
+
+4. **Cost Analysis:**
+   - Railway: $20-50/month (1-50 teams) ← **Current**
+   - Supabase/Neon: $25-250/month (50-500 teams)
+   - AWS RDS: $100-1000+/month (500+ teams, enterprise features)
+
+5. **Implementation Checklist (when ready to scale):**
+   - [ ] Add `team_id` column to all tables
+   - [ ] Update all queries to filter by `team_id`
+   - [ ] Add three-tier ID system to escrows table
+   - [ ] Implement JWT claims with `team_id`
+   - [ ] Build subdomain detection middleware
+   - [ ] Create team management admin panel
+
+**Note:** Not needed until you have your first external customer. Current single-tenant setup is production-ready for your personal use.
+
 ## Database Credentials (Railway Production)
 
 **IMPORTANT:** Database credentials are stored in environment variables and should NEVER be committed to version control.
