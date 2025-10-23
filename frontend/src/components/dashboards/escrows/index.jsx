@@ -755,7 +755,7 @@ const EscrowsDashboard = () => {
         <Box sx={{ mb: 4 }}>
           <Card
             sx={{
-              background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
+              background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
               borderRadius: 4,
               overflow: 'hidden',
               position: 'relative',
