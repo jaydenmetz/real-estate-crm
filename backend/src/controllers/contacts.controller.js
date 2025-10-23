@@ -468,6 +468,39 @@ exports.addRole = async (req, res) => {
     try {
       await client.query('BEGIN');
 
+      // Auto-fill logic: If adding "client" role, inherit source from lead role
+      let finalMetadata = { ...role_metadata };
+
+      // Check if we're adding a client role
+      const roleCheck = await client.query(
+        'SELECT role_name FROM contact_roles WHERE id = $1',
+        [role_id]
+      );
+
+      if (roleCheck.rows.length > 0 && roleCheck.rows[0].role_name === 'client') {
+        // Look for existing lead roles (lead_buyer or lead_seller)
+        const leadQuery = `
+          SELECT cra.role_metadata
+          FROM contact_role_assignments cra
+          JOIN contact_roles cr ON cra.role_id = cr.id
+          WHERE cra.contact_id = $1
+            AND cr.role_name IN ('lead_buyer', 'lead_seller')
+            AND cra.is_active = true
+          ORDER BY cra.assigned_at DESC
+          LIMIT 1
+        `;
+
+        const leadResult = await client.query(leadQuery, [id]);
+
+        // If lead exists and has source, inherit it
+        if (leadResult.rows.length > 0) {
+          const leadMetadata = leadResult.rows[0].role_metadata || {};
+          if (leadMetadata.source && !finalMetadata.source) {
+            finalMetadata.source = leadMetadata.source;
+          }
+        }
+      }
+
       // If setting as primary, unset all other primary roles
       if (is_primary) {
         await client.query(
@@ -476,7 +509,7 @@ exports.addRole = async (req, res) => {
         );
       }
 
-      // Insert new role assignment
+      // Insert new role assignment with auto-filled metadata
       const insertQuery = `
         INSERT INTO contact_role_assignments (
           contact_id,
@@ -491,7 +524,7 @@ exports.addRole = async (req, res) => {
       const result = await client.query(insertQuery, [
         id,
         role_id,
-        JSON.stringify(role_metadata),
+        JSON.stringify(finalMetadata),
         is_primary,
         req.user.id
       ]);
