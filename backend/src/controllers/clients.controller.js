@@ -79,10 +79,10 @@ exports.getAllClients = async (req, res) => {
         co.last_name,
         co.email,
         co.phone,
-        co.address_street,
-        co.address_city,
-        co.address_state,
-        co.address_zip,
+        co.street_address,
+        co.city,
+        co.state,
+        co.zip_code,
         co.notes,
         co.tags
       FROM clients cl
@@ -135,10 +135,10 @@ exports.getClientById = async (req, res) => {
         co.last_name,
         co.email,
         co.phone,
-        co.address_street,
-        co.address_city,
-        co.address_state,
-        co.address_zip,
+        co.street_address,
+        co.city,
+        co.state,
+        co.zip_code,
         co.notes,
         co.tags
       FROM clients cl
@@ -217,7 +217,7 @@ exports.createClient = async (req, res) => {
     const contactQuery = `
       INSERT INTO contacts (
         contact_type, first_name, last_name, email, phone,
-        address_street, address_city, address_state, address_zip,
+        street_address, city, state, zip_code,
         notes, tags, team_id, created_at, updated_at
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW(), NOW()
