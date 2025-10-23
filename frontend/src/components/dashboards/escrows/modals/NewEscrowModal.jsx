@@ -179,7 +179,17 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
     try {
       const response = await clientsAPI.getAll();
       if (response.success) {
-        setClients(response.data || []);
+        // Backend returns clients array nested in data.clients
+        const clientsList = response.data?.clients || response.data || [];
+
+        // Transform snake_case to camelCase for frontend compatibility
+        const transformedClients = clientsList.map(client => ({
+          ...client,
+          firstName: client.first_name || client.firstName,
+          lastName: client.last_name || client.lastName,
+        }));
+
+        setClients(transformedClients);
       }
     } catch (err) {
       console.error('Error fetching clients:', err);
