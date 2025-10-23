@@ -49,9 +49,13 @@ const HomeDashboard = () => {
 
         if (response.success) {
           setStats(response.data);
+        } else {
+          console.error('API returned error:', response.error);
+          setStats(null); // Explicitly set to null to show error page
         }
       } catch (error) {
         console.error('Error fetching home stats:', error);
+        setStats(null); // Explicitly set to null to show error page
       } finally {
         setLoading(false);
       }
@@ -84,7 +88,7 @@ const HomeDashboard = () => {
   }
 
   // Show error state if no stats loaded
-  if (!stats) {
+  if (!loading && !stats) {
     return (
       <Box sx={{
         width: '100%',
@@ -97,8 +101,11 @@ const HomeDashboard = () => {
             <Typography variant="h5" color="error" gutterBottom>
               Unable to load dashboard
             </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Check the browser console for errors
+            <Typography variant="body1" color="text.secondary" gutterBottom>
+              The API call to /stats/home failed or returned an error.
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Check the browser console for detailed error messages.
             </Typography>
           </Box>
         </Container>
