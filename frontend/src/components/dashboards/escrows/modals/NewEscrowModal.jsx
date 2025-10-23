@@ -667,101 +667,146 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
 
             {/* Step 0: Property Address */}
             {currentStep === 0 && (
-              <Fade in timeout={400}>
-                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-                  <Autocomplete
-                    freeSolo
-                    options={addressSuggestions}
-                    loading={loadingAddress}
-                    inputValue={addressSearchText}
-                    onInputChange={handleInputChange}
-                    onChange={handleAddressSelect}
-                    getOptionLabel={(option) => {
-                      if (typeof option === 'string') return option;
-                      return option.label || '';
-                    }}
-                    filterOptions={(x) => x}
-                    renderOption={(props, option) => (
-                      <Box component="li" {...props} sx={{ py: 1.5 }}>
-                        <LocationOn sx={{ mr: 2, flexShrink: 0, color: 'action.active' }} />
-                        <Box>
-                          <Typography variant="body2">{option.label}</Typography>
-                          {googleMapsLoaded && (
-                            <Typography variant="caption" color="text.secondary">
-                              Powered by Google
-                            </Typography>
-                          )}
-                        </Box>
-                      </Box>
-                    )}
-                    renderInput={(params) => (
-                      <TextField
-                        {...params}
-                        label="Street Address"
-                        fullWidth
-                        placeholder="Start typing an address..."
-                        variant="outlined"
-                        autoFocus
-                        InputProps={{
-                          ...params.InputProps,
-                          startAdornment: <LocationOn sx={{ mr: 1, color: 'action.active' }} />,
-                          endAdornment: (
-                            <>
-                              {loadingAddress ? <CircularProgress color="inherit" size={20} /> : null}
-                              {params.InputProps.endAdornment}
-                            </>
-                          ),
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: formData.propertyAddress ? 'flex-start' : 'center',
+                  minHeight: 400,
+                  transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                }}
+              >
+                <Fade in timeout={400}>
+                  <Box sx={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 2.5,
+                    maxWidth: formData.propertyAddress ? '100%' : '90%',
+                    mx: 'auto',
+                    transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                  }}>
+                    {/* Street Address - Always Visible */}
+                    <Box sx={{
+                      transform: formData.propertyAddress ? 'scale(1)' : 'scale(1.05)',
+                      transition: 'transform 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                    }}>
+                      <Autocomplete
+                        freeSolo
+                        options={addressSuggestions}
+                        loading={loadingAddress}
+                        inputValue={addressSearchText}
+                        onInputChange={handleInputChange}
+                        onChange={handleAddressSelect}
+                        getOptionLabel={(option) => {
+                          if (typeof option === 'string') return option;
+                          return option.label || '';
                         }}
-                        helperText={
-                          googleMapsLoaded
-                            ? "Powered by Google Places"
-                            : "Type at least 2 characters to search"
+                        filterOptions={(x) => x}
+                        renderOption={(props, option) => (
+                          <Box component="li" {...props} sx={{ py: 1.5 }}>
+                            <LocationOn sx={{ mr: 2, flexShrink: 0, color: 'action.active' }} />
+                            <Box>
+                              <Typography variant="body2">{option.label}</Typography>
+                              {googleMapsLoaded && (
+                                <Typography variant="caption" color="text.secondary">
+                                  Powered by Google
+                                </Typography>
+                              )}
+                            </Box>
+                          </Box>
+                        )}
+                        renderInput={(params) => (
+                          <TextField
+                            {...params}
+                            label="Street Address"
+                            fullWidth
+                            placeholder="Start typing an address..."
+                            variant="outlined"
+                            autoFocus
+                            InputProps={{
+                              ...params.InputProps,
+                              startAdornment: <LocationOn sx={{ mr: 1, color: 'action.active' }} />,
+                              endAdornment: (
+                                <>
+                                  {loadingAddress ? <CircularProgress color="inherit" size={20} /> : null}
+                                  {params.InputProps.endAdornment}
+                                </>
+                              ),
+                            }}
+                            helperText={
+                              googleMapsLoaded
+                                ? "Powered by Google Places"
+                                : "Type at least 2 characters to search"
+                            }
+                          />
+                        )}
+                        noOptionsText={
+                          addressSearchText.length < (googleMapsLoaded ? 3 : 2)
+                            ? `Type at least ${googleMapsLoaded ? 3 : 2} characters to search`
+                            : "No addresses found"
                         }
                       />
+                    </Box>
+
+                    {/* Additional Fields - Slide In After Address Selected */}
+                    {formData.propertyAddress && (
+                      <Fade in timeout={600}>
+                        <Box sx={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 2.5,
+                          animation: 'slideInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
+                          '@keyframes slideInUp': {
+                            from: {
+                              opacity: 0,
+                              transform: 'translateY(30px)',
+                            },
+                            to: {
+                              opacity: 1,
+                              transform: 'translateY(0)',
+                            },
+                          },
+                        }}>
+                          <Box sx={{ display: 'flex', gap: 2 }}>
+                            <TextField
+                              label="City"
+                              placeholder="Bakersfield"
+                              value={formData.city}
+                              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                              required
+                              fullWidth
+                              sx={{ flex: 2 }}
+                            />
+                            <TextField
+                              label="State"
+                              value={formData.state}
+                              onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                              required
+                              sx={{ flex: 1 }}
+                            />
+                            <TextField
+                              label="ZIP Code"
+                              placeholder="93301"
+                              value={formData.zipCode}
+                              onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
+                              required
+                              sx={{ flex: 1 }}
+                            />
+                          </Box>
+
+                          <TextField
+                            fullWidth
+                            label="County (optional)"
+                            placeholder="Kern"
+                            value={formData.county}
+                            onChange={(e) => setFormData({ ...formData, county: e.target.value })}
+                          />
+                        </Box>
+                      </Fade>
                     )}
-                    noOptionsText={
-                      addressSearchText.length < (googleMapsLoaded ? 3 : 2)
-                        ? `Type at least ${googleMapsLoaded ? 3 : 2} characters to search`
-                        : "No addresses found"
-                    }
-                  />
-
-                  <Box sx={{ display: 'flex', gap: 2 }}>
-                    <TextField
-                      label="City"
-                      placeholder="Bakersfield"
-                      value={formData.city}
-                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                      required
-                      fullWidth
-                      sx={{ flex: 2 }}
-                    />
-                    <TextField
-                      label="State"
-                      value={formData.state}
-                      onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                      required
-                      sx={{ flex: 1 }}
-                    />
-                    <TextField
-                      label="ZIP Code"
-                      placeholder="93301"
-                      value={formData.zipCode}
-                      onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
-                      required
-                      sx={{ flex: 1 }}
-                    />
                   </Box>
-
-                  <TextField
-                    fullWidth
-                    label="County (optional)"
-                    placeholder="Kern"
-                    value={formData.county}
-                    onChange={(e) => setFormData({ ...formData, county: e.target.value })}
-                  />
-                </Box>
-              </Fade>
+                </Fade>
+              </Box>
             )}
 
             {/* Step 1: Transaction Details */}
