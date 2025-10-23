@@ -685,6 +685,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
                     maxWidth: '100%',
                     mx: 'auto',
                     width: '100%',
+                    px: 4, // Add left and right padding
                     transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
                   }}>
                     {/* Street Address - Always Visible, Fixed Width */}
