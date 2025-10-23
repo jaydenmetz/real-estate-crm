@@ -179,9 +179,9 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
       setLoadingClients(true);
       try {
         // Step 1: Search for 'client' role first (primary role for escrows)
-        const clientResponse = await contactsAPI.getAll({
+        const clientResponse = await contactsAPI.search({
           role: 'client',
-          search: searchText,
+          name: searchText,
           limit: 5
         });
 
@@ -189,22 +189,22 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         if (clientResponse.success && clientResponse.data) {
           clientRoleResults = Array.isArray(clientResponse.data)
             ? clientResponse.data
-            : (clientResponse.data.clients || []);
+            : (clientResponse.data.contacts || []);
         }
 
         // Step 2: If less than 5 results, fill with other roles
         let otherRoleResults = [];
         if (clientRoleResults.length < 5) {
           const remainingSlots = 5 - clientRoleResults.length;
-          const allContactsResponse = await contactsAPI.getAll({
-            search: searchText,
+          const allContactsResponse = await contactsAPI.search({
+            name: searchText,
             limit: remainingSlots
           });
 
           if (allContactsResponse.success && allContactsResponse.data) {
             const allResults = Array.isArray(allContactsResponse.data)
               ? allContactsResponse.data
-              : (allContactsResponse.data.clients || allContactsResponse.data.contacts || []);
+              : (allContactsResponse.data.contacts || []);
 
             // Filter out clients already in clientRoleResults
             const clientIds = new Set(clientRoleResults.map(c => c.id));

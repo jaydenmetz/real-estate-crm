@@ -537,7 +537,7 @@ export const contactsAPI = {
   create: (data) => apiInstance.post('/contacts', data),
   update: (id, data) => apiInstance.put(`/contacts/${id}`, data),
   delete: (id) => apiInstance.delete(`/contacts/${id}`),
-  search: (query) => apiInstance.get('/contacts/search', { params: { q: query } }),
+  search: (params) => apiInstance.get('/contacts/search', { params }), // Updated to accept params object (role, name, email, limit)
   // Multi-role contact methods
   getRoles: (contactId) => apiInstance.get(`/contacts/${contactId}/roles`),
   addRole: (contactId, roleData) => apiInstance.post(`/contacts/${contactId}/roles`, roleData),
