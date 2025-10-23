@@ -10,7 +10,14 @@
 
 **Issue:** Production site (https://crm.jaydenmetz.com) is showing "Unable to load dashboard" on the home page.
 
-**Root Cause:** Railway has NOT deployed the latest code from GitHub. The fix was committed 6 commits ago but production is running stale code.
+**Root Cause:** API call to `/v1/stats/home` is either:
+1. Returning `{success: false, error: {...}}` (API error)
+2. OR throwing an exception that's being caught
+
+**Latest Update (commit 6c1cc16):**
+- Added explicit error logging to show API errors in console
+- Improved error message with specific troubleshooting info
+- Added diagnostic logging to help identify root cause
 
 **Impact:**
 - ❌ Cannot perform manual testing
@@ -27,14 +34,15 @@
 **Unknown** - Railway deployment status cannot be checked without login credentials
 
 ### Latest GitHub Code:
-**Commit:** `60eb190` (October 22, 2025)
+**Commit:** `6c1cc16` (October 23, 2025)
 ```
+6c1cc16 - Improve HomeDashboard error handling and diagnostics ⭐
 60eb190 - Create comprehensive manual testing script
 f2fd58f - Phase 5 COMPLETE: Comprehensive Testing Framework
 1f55d60 - Phase 4 COMPLETE: Admin UI Components
 456d455 - Phase 2 COMPLETE: Permissions System Tables
 79650cc - Phase 1 COMPLETE: Frontend Data Ownership Layer
-f868db4 - Fix HomeDashboard data parsing bug - CRITICAL FIX ⭐
+f868db4 - Fix HomeDashboard data parsing bug
 ```
 
 ### The Critical Fix:
@@ -152,6 +160,34 @@ git push origin main
 3. Check if home dashboard shows stats cards
 4. **Expected:** Numbers displayed (escrows, clients, listings, etc.)
 5. **If still broken:** Check browser console for new errors
+
+---
+
+## 🔬 New Diagnostic Information (Commit 6c1cc16)
+
+**What Changed:**
+We added explicit error logging to the HomeDashboard component so you can see the EXACT error that's preventing the dashboard from loading.
+
+**How to Use:**
+1. Open https://crm.jaydenmetz.com in browser
+2. Log in with admin@jaydenmetz.com
+3. Open browser DevTools (F12 or right-click → Inspect)
+4. Go to Console tab
+5. Look for one of these messages:
+   - `API returned error:` - Shows the actual error from `/v1/stats/home`
+   - `Error fetching home stats:` - Shows if the request threw an exception
+
+**What to Report:**
+Copy the FULL error message and send it. This will tell us exactly why the dashboard isn't loading.
+
+**Example Error Messages:**
+```javascript
+// If API returns an error:
+API returned error: {code: "UNAUTHORIZED", message: "Invalid token"}
+
+// If request throws exception:
+Error fetching home stats: TypeError: Cannot read property 'data' of undefined
+```
 
 ---
 
