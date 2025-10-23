@@ -17,6 +17,7 @@ import {
   PersonAdd,
 } from '@mui/icons-material';
 import { leadsAPI } from '../../../../services/api.service';
+import PrivacyControl from '../../../common/PrivacyControl';
 
 const NewLeadModal = ({ open, onClose, onSuccess }) => {
   const [loading, setLoading] = useState(false);
@@ -26,6 +27,8 @@ const NewLeadModal = ({ open, onClose, onSuccess }) => {
     lastName: '',
     phone: '',
     email: '',
+    isPrivate: false, // Phase 6: Privacy control
+    accessLevel: 'team', // Phase 6: Default to team sharing
   });
 
   // Phone formatting: (XXX) XXX-XXXX
@@ -76,6 +79,8 @@ const NewLeadModal = ({ open, onClose, onSuccess }) => {
         email: formData.email.trim().toLowerCase(),
         status: 'new', // Default status
         source: 'manual', // Manual entry
+        isPrivate: formData.isPrivate, // Phase 6: Privacy control
+        accessLevel: formData.accessLevel, // Phase 6: Sharing level
       };
 
       const response = await leadsAPI.create(leadData);
@@ -192,6 +197,14 @@ const NewLeadModal = ({ open, onClose, onSuccess }) => {
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               required
               helperText="Valid email address"
+            />
+
+            {/* Phase 6: Privacy and Sharing Controls */}
+            <PrivacyControl
+              isPrivate={formData.isPrivate}
+              accessLevel={formData.accessLevel}
+              onPrivateChange={(value) => setFormData({ ...formData, isPrivate: value })}
+              onAccessLevelChange={(value) => setFormData({ ...formData, accessLevel: value })}
             />
           </Box>
         </DialogContent>
