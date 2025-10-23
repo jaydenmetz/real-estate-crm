@@ -407,6 +407,7 @@ export const escrowsAPI = {
   archive: (id) => apiInstance.put(`/escrows/${id}/archive`),
   restore: (id) => apiInstance.put(`/escrows/${id}/restore`),
   delete: (id) => apiInstance.delete(`/escrows/${id}`), // Permanent delete (only for archived)
+  permanentDelete: (id) => apiInstance.delete(`/escrows/${id}`), // Alias for delete
   batchDelete: (ids) => apiInstance.post('/escrows/batch-delete', { ids }), // Batch delete multiple archived escrows
   updateChecklists: (id, checklists) => apiInstance.put(`/escrows/${id}/checklists`, checklists),
   updatePropertyDetails: (id, details) => apiInstance.put(`/escrows/${id}/property-details`, details),
