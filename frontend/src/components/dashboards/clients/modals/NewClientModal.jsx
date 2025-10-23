@@ -382,7 +382,7 @@ const NewClientModal = ({ open, onClose, onSuccess }) => {
             <Fade in timeout={400}>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
                 <Autocomplete
-                  options={leads}
+                  options={Array.isArray(leads) ? leads : []}
                   loading={loadingLeads}
                   value={getSelectedLead() || null}
                   getOptionLabel={(option) => `${option.firstName} ${option.lastName} - ${option.email}`}

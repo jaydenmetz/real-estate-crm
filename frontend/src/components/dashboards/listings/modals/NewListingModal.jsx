@@ -799,7 +799,7 @@ const NewListingModal = ({ open, onClose, onSuccess }) => {
               <Fade in timeout={400}>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
                   <Autocomplete
-                    options={clients}
+                    options={Array.isArray(clients) ? clients : []}
                     loading={loadingClients}
                     inputValue={clientSearchText}
                     onInputChange={(e, value) => setClientSearchText(value)}

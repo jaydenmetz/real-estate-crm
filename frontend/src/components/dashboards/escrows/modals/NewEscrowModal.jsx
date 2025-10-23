@@ -813,7 +813,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
                   </Box>
 
                   <Autocomplete
-                    options={clients}
+                    options={Array.isArray(clients) ? clients : []}
                     loading={loadingClients}
                     inputValue={clientSearchText}
                     onInputChange={(e, value) => setClientSearchText(value)}
