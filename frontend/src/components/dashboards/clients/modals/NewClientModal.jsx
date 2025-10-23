@@ -42,8 +42,8 @@ const NewClientModal = ({ open, onClose, onSuccess }) => {
   });
 
   const steps = [
-    { label: 'Contact Info', icon: PersonAdd, color: '#1976d2' },
-    { label: 'Lead Link & Privacy', icon: LinkIcon, color: '#9c27b0' },
+    { label: 'Select Lead', icon: LinkIcon, color: '#1976d2' },
+    { label: 'Contact Info', icon: PersonAdd, color: '#9c27b0' },
     { label: 'Review', icon: CheckCircle, color: '#388e3c' }
   ];
 
@@ -175,8 +175,9 @@ const NewClientModal = ({ open, onClose, onSuccess }) => {
   };
 
   const handleNext = () => {
-    // Step 0 validation
-    if (currentStep === 0) {
+    // Step 0: Lead selection - no validation needed, can proceed with or without lead
+    // Step 1: Contact info validation
+    if (currentStep === 1) {
       if (!formData.firstName || !formData.lastName || !formData.phone || !formData.email) {
         setError('Please complete all contact information fields');
         return;
@@ -323,10 +324,57 @@ const NewClientModal = ({ open, onClose, onSuccess }) => {
             </Alert>
           )}
 
-          {/* Step 0: Contact Info */}
+          {/* Step 0: Select Lead */}
           {currentStep === 0 && (
             <Fade in timeout={400}>
               <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                <Typography variant="body1" color="text.secondary" sx={{ mb: 1 }}>
+                  Search for an existing lead to convert into a client. Their information will be auto-filled.
+                </Typography>
+
+                <Autocomplete
+                  options={Array.isArray(leads) ? leads : []}
+                  loading={loadingLeads}
+                  value={getSelectedLead() || null}
+                  getOptionLabel={(option) => `${option.firstName} ${option.lastName} - ${option.email}`}
+                  renderInput={(params) => (
+                    <TextField
+                      {...params}
+                      label="Select Lead to Convert"
+                      placeholder="Search by name or email..."
+                      helperText="Start typing to search for a lead"
+                      autoFocus
+                    />
+                  )}
+                  onChange={handleLeadSelect}
+                  noOptionsText={loadingLeads ? "Loading leads..." : "No leads found"}
+                />
+
+                {formData.linkedLeadId && (
+                  <Alert severity="success">
+                    Lead selected! Contact information has been auto-filled. Click Next to review and edit if needed.
+                  </Alert>
+                )}
+
+                {!loadingLeads && Array.isArray(leads) && leads.length === 0 && (
+                  <Alert severity="info">
+                    No leads available. You'll need to create a lead first, or manually enter client information in the next step.
+                  </Alert>
+                )}
+              </Box>
+            </Fade>
+          )}
+
+          {/* Step 1: Contact Info (Review/Edit) */}
+          {currentStep === 1 && (
+            <Fade in timeout={400}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
+                {formData.linkedLeadId && (
+                  <Alert severity="info" sx={{ mb: 1 }}>
+                    Information auto-filled from lead. You can edit any field below.
+                  </Alert>
+                )}
+
                 <Box sx={{ display: 'flex', gap: 2 }}>
                   <TextField
                     fullWidth
@@ -335,7 +383,7 @@ const NewClientModal = ({ open, onClose, onSuccess }) => {
                     value={formData.firstName}
                     onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
                     required
-                    autoFocus
+                    autoFocus={!formData.linkedLeadId}
                   />
                   <TextField
                     fullWidth
@@ -372,30 +420,6 @@ const NewClientModal = ({ open, onClose, onSuccess }) => {
                   InputProps={{
                     startAdornment: <Email sx={{ mr: 1, color: 'action.active' }} />,
                   }}
-                />
-              </Box>
-            </Fade>
-          )}
-
-          {/* Step 1: Lead Link & Privacy */}
-          {currentStep === 1 && (
-            <Fade in timeout={400}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5 }}>
-                <Autocomplete
-                  options={Array.isArray(leads) ? leads : []}
-                  loading={loadingLeads}
-                  value={getSelectedLead() || null}
-                  getOptionLabel={(option) => `${option.firstName} ${option.lastName} - ${option.email}`}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Convert from Lead (optional)"
-                      placeholder="Select a lead to link"
-                      helperText="Link this client to an existing lead"
-                      autoFocus
-                    />
-                  )}
-                  onChange={handleLeadSelect}
                 />
 
                 <PrivacyControl
