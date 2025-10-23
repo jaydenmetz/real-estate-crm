@@ -43,7 +43,7 @@ import {
 import { escrowsAPI, clientsAPI } from '../../../../services/api.service';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { loadGoogleMapsScript } from '../../../../utils/googleMapsLoader';
-import NewClientModal from '../../clients/modals/NewClientModal';
+import { NewContactModal } from '../../../modals/NewContactModal';
 import PrivacyControl from '../../../common/PrivacyControl';
 
 const NewEscrowModal = ({ open, onClose, onSuccess }) => {
@@ -188,11 +188,12 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
     }
   };
 
-  const handleNewClientSave = async (newClient) => {
+  const handleNewClientSave = async (newContact) => {
     setNewClientModalOpen(false);
     await fetchClients();
-    setFormData({ ...formData, clientId: newClient.id });
-    setClientSearchText(`${newClient.firstName} ${newClient.lastName} - ${newClient.email}`);
+    setFormData({ ...formData, clientId: newContact.id });
+    const fullName = `${newContact.first_name || ''} ${newContact.last_name || ''}`.trim();
+    setClientSearchText(`${fullName}${newContact.email ? ' - ' + newContact.email : ''}`);
   };
 
   const resetSessionToken = () => {
@@ -1219,10 +1220,12 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         </form>
       </Dialog>
 
-      <NewClientModal
+      <NewContactModal
         open={newClientModalOpen}
         onClose={() => setNewClientModalOpen(false)}
-        onSuccess={handleNewClientSave}
+        onSave={handleNewClientSave}
+        roleType="client"
+        roleConfig={{ primary: '#4caf50', secondary: '#66bb6a' }}
       />
     </>
   );
