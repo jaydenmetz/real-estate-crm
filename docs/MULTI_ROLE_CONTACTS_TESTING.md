@@ -9,9 +9,10 @@
 ### Test 1: Create Lead with Source (Required Field)
 **Goal:** Verify lead creation requires source field
 
-1. Go to https://crm.jaydenmetz.com/escrows/new
-2. Click "Create New Client" button in client dropdown
-3. Select role: "Lead (Buyer)"
+1. Go to https://crm.jaydenmetz.com/escrows
+2. Click "+ New Escrow" button to open the NewEscrowModal
+3. In the modal, click "Create New Client" button in the client dropdown
+4. Select role: "Lead (Buyer)"
 4. **Expected:** Source field appears with red asterisk (required)
 5. Try to submit without source → Should show error
 6. Fill in: First Name, Last Name, Source="Referral - Past Client", Lead Type="Buyer"
@@ -295,10 +296,11 @@ SELECT * FROM contact_validation_preferences;
 
 **Test in Production:**
 1. Login at https://crm.jaydenmetz.com
-2. Go to Escrows → New Escrow
-3. Test "Create New Client" button
-4. Verify role selection works
-5. Create lead with source, then client (verify source hidden)
+2. Go to Escrows dashboard (https://crm.jaydenmetz.com/escrows)
+3. Click "+ New Escrow" button to open modal
+4. In the modal, test "Create New Client" button in the dropdown
+5. Verify role selection works (should show all 14 roles)
+6. Create lead with source, then client (verify source hidden)
 
 **Database Already Updated:**
 - Migration `007_multi_role_contacts.sql` ran successfully
