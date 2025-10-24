@@ -1,7 +1,7 @@
-const { pool } = require('../config/database');
-const logger = require('../utils/logger');
-const websocketService = require('../services/websocket.service');
-const { buildOwnershipWhereClauseWithAlias, validateScope, getDefaultScope } = require('../helpers/ownership.helper');
+const { pool } = require('../../../config/database');
+const logger = require('../../../utils/logger');
+const websocketService = require('../../../services/websocket.service');
+const { buildOwnershipWhereClauseWithAlias, validateScope, getDefaultScope } = require('../../../helpers/ownership.helper');
 
 // GET /api/v1/appointments
 exports.getAppointments = async (req, res) => {
