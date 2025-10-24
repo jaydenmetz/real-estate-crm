@@ -240,8 +240,8 @@ listingsRouter.use('/', require('./modules/listings/routes'));
 listingsRouter.use('/', require('./modules/listings/routes/health.routes'));
 // Health endpoints at /listings/health/*
 apiRouter.use('/listings', listingsRouter);
-apiRouter.use('/contacts', require('./routes/contacts.routes'));
-apiRouter.use('/contact-roles', require('./routes/contact-roles.routes'));
+apiRouter.use('/contacts', require('./modules/contacts/routes'));
+apiRouter.use('/contact-roles', require('./modules/contacts/routes/contact-roles.routes'));
 apiRouter.use('/clients', require('./modules/clients/routes'));
 apiRouter.use('/appointments', require('./modules/appointments/routes'));
 apiRouter.use('/leads', require('./modules/leads/routes'));

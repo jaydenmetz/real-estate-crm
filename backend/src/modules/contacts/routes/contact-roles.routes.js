@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const contactRolesController = require('../controllers/contact-roles.controller');
-const { authenticate } = require('../middleware/auth.middleware');
+const { authenticate } = require('../../../middleware/auth.middleware');
 
 // All routes require authentication
 router.use(authenticate);
