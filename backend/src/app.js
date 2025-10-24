@@ -236,8 +236,8 @@ apiRouter.use('/escrows', escrowsRouter);
 
 // Listings routes - including health checks
 const listingsRouter = express.Router();
-listingsRouter.use('/', require('./routes/listings.routes'));
-listingsRouter.use('/', require('./routes/listings-health.routes'));
+listingsRouter.use('/', require('./modules/listings/routes'));
+listingsRouter.use('/', require('./modules/listings/routes/health.routes'));
 // Health endpoints at /listings/health/*
 apiRouter.use('/listings', listingsRouter);
 apiRouter.use('/contacts', require('./routes/contacts.routes'));
