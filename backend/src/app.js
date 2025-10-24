@@ -244,7 +244,7 @@ apiRouter.use('/contacts', require('./routes/contacts.routes'));
 apiRouter.use('/contact-roles', require('./routes/contact-roles.routes'));
 apiRouter.use('/clients', require('./modules/clients/routes'));
 apiRouter.use('/appointments', require('./modules/appointments/routes'));
-apiRouter.use('/leads', require('./routes/leads.routes'));
+apiRouter.use('/leads', require('./modules/leads/routes'));
 apiRouter.use('/analytics', require('./routes/analytics.routes'));
 apiRouter.use('/teams', require('./routes/teams.routes'));
 
