@@ -1,10 +1,10 @@
-// backend/src/models/Escrow.js
+// backend/src/modules/escrows/models/Escrow.model.js
 
-const { query } = require('../config/database');
-const redis = require('../config/redis');
-const logger = require('../utils/logger');
-const { generateEscrowIds } = require('../utils/idGenerator');
-const { emitWebhook } = require('../services/webhook.service');
+const { query } = require('../../../config/database');
+const redis = require('../../../config/redis');
+const logger = require('../../../utils/logger');
+const { generateEscrowIds } = require('../../../utils/idGenerator');
+const { emitWebhook } = require('../../../services/webhook.service');
 
 class Escrow {
   /**

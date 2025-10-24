@@ -5,18 +5,18 @@ const { body, param, query } = require('express-validator');
 
 const router = express.Router();
 // Use modular controller structure (Backend Refactoring Complete)
-const escrowsController = require('../modules/escrows/controllers');
-const { authenticate } = require('../middleware/apiKey.middleware');
+const escrowsController = require('../controllers');
+const { authenticate } = require('../../../middleware/apiKey.middleware');
 const {
   validate, escrowValidationRules, paginationValidationRules, idValidationRules,
-} = require('../middleware/validation.middleware');
-const { validateEscrowRules } = require('../middleware/businessRules.middleware');
+} = require('../../../middleware/validation.middleware');
+const { validateEscrowRules } = require('../../../middleware/businessRules.middleware');
 const {
   canAccessScope,
   requireOwnership,
   requireModifyPermission,
   requireDeletePermission
-} = require('../middleware/authorization.middleware');
+} = require('../../../middleware/authorization.middleware');
 
 // All routes require authentication
 router.use(authenticate);

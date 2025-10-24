@@ -9,7 +9,7 @@
  */
 
 const { pool } = require('../../../config/database');
-const { buildRestructuredEscrowResponse } = require('../../../helpers/escrows.helper');
+const { buildRestructuredEscrowResponse } = require('../utils/escrows.helper');
 
 /**
  * Get escrow timeline

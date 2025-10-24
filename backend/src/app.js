@@ -230,8 +230,8 @@ apiRouter.use('/gdpr', require('./routes/gdpr.routes'));
 // Each route file handles its own authentication and validation
 // Escrows routes - including health checks
 const escrowsRouter = express.Router();
-escrowsRouter.use('/', require('./routes/escrows.routes'));
-escrowsRouter.use('/', require('./routes/escrows-health.routes')); // Health endpoints at /escrows/health/*
+escrowsRouter.use('/', require('./modules/escrows/routes'));
+escrowsRouter.use('/', require('./modules/escrows/routes/health.routes')); // Health endpoints at /escrows/health/*
 apiRouter.use('/escrows', escrowsRouter);
 
 // Listings routes - including health checks
