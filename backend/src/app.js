@@ -242,7 +242,7 @@ listingsRouter.use('/', require('./modules/listings/routes/health.routes'));
 apiRouter.use('/listings', listingsRouter);
 apiRouter.use('/contacts', require('./routes/contacts.routes'));
 apiRouter.use('/contact-roles', require('./routes/contact-roles.routes'));
-apiRouter.use('/clients', require('./routes/clients.routes'));
+apiRouter.use('/clients', require('./modules/clients/routes'));
 apiRouter.use('/appointments', require('./routes/appointments.routes'));
 apiRouter.use('/leads', require('./routes/leads.routes'));
 apiRouter.use('/analytics', require('./routes/analytics.routes'));
