@@ -68,7 +68,7 @@ export const useListingHandlers = ({
         const remainingListings = listings.filter(l => !deletedIds.has(l.id));
         calculateStats(remainingListings, selectedStatus);
 
-        // console.log(`Successfully permanently deleted ${response.data.deletedCount || selectedArchivedIds.length} listings`);
+        // // console.log(`Successfully permanently deleted ${response.data.deletedCount || selectedArchivedIds.length} listings`);
       }
     } catch (error) {
       console.error('Failed to batch delete listings:', error);

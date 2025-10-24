@@ -9,15 +9,15 @@ export const useWebSocket = () => {
 
   useEffect(() => {
     // Initialize WebSocket connection
-    // console.log('🔌 Initializing WebSocket connection...');
+    // // console.log('🔌 Initializing WebSocket connection...');
     websocketService.connect().then(() => {
-      // console.log('✅ WebSocket connected successfully');
+      // // console.log('✅ WebSocket connected successfully');
     }).catch((error) => {
       console.error('❌ WebSocket connection failed:', error);
     });
 
     const unsubscribeConnection = websocketService.on('connection', (data) => {
-      // console.log('WebSocket connection status changed:', data.status);
+      // // console.log('WebSocket connection status changed:', data.status);
       setConnectionStatus(data.status);
     });
 
@@ -56,7 +56,7 @@ export const useWebSocket = () => {
     });
 
     return () => {
-      // console.log('🔌 Cleaning up WebSocket connection...');
+      // // console.log('🔌 Cleaning up WebSocket connection...');
       unsubscribeConnection();
       unsubscribeDataUpdate();
       unsubscribeNotification();

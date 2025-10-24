@@ -51,7 +51,7 @@ export const handleToggleAutomation = (key, automations, setAutomations) => {
  * @param {string} action - Action type
  */
 export const handleQuickAction = (action) => {
-  console.log('Quick action:', action);
+  // console.log('Quick action:', action);
   // TODO: Implement actual quick actions
 };
 

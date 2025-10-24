@@ -468,7 +468,7 @@ const ProjectManagementPanel = () => {
           priority: 'high',
           progress: 0,
           tasks: [
-            { name: 'Remove 243 console.log statements', status: 'not-started', priority: 'high' },
+            { name: 'Remove 243 // console.log statements', status: 'not-started', priority: 'high' },
             { name: 'Replace with proper logging service', status: 'not-started', priority: 'medium' },
           ]
         },

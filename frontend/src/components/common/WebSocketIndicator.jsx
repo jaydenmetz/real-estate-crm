@@ -84,16 +84,16 @@ const WebSocketIndicator = () => {
     });
 
     newSocket.on('connect', () => {
-      console.log('✅ WebSocket connected');
+      // console.log('✅ WebSocket connected');
       setConnected(true);
     });
 
     newSocket.on('connection', (data) => {
-      console.log('WebSocket connection data:', data);
+      // console.log('WebSocket connection data:', data);
     });
 
     newSocket.on('disconnect', () => {
-      console.log('❌ WebSocket disconnected');
+      // console.log('❌ WebSocket disconnected');
       setConnected(false);
     });
 
@@ -104,7 +104,7 @@ const WebSocketIndicator = () => {
 
     // Listen for escrow updates (will be used by useEscrowWebSocket hook)
     newSocket.on('escrow:updated', (data) => {
-      console.log('📡 Escrow update received:', data);
+      // console.log('📡 Escrow update received:', data);
       // This event will be handled by the useEscrowWebSocket hook in detail pages
     });
 

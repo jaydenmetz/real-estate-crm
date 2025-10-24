@@ -16,7 +16,7 @@ const { storeMonthlyKPISnapshots } = require('./kpiSnapshot.job');
 
 // Security Event Retention Job - Daily at 2 AM
 cron.schedule('0 2 * * *', async () => {
-  // console.log('🕐 Running scheduled job: Security Event Retention');
+  // // console.log('🕐 Running scheduled job: Security Event Retention');
   try {
     const result = await deleteOldSecurityEvents();
     if (!result.success) {
@@ -31,7 +31,7 @@ cron.schedule('0 2 * * *', async () => {
 
 // KPI Monthly Snapshots Job - 1st of each month at 3 AM
 cron.schedule('0 3 1 * *', async () => {
-  // console.log('🕐 Running scheduled job: Monthly KPI Snapshots');
+  // // console.log('🕐 Running scheduled job: Monthly KPI Snapshots');
   try {
     const result = await storeMonthlyKPISnapshots();
     if (!result.success) {
@@ -44,9 +44,9 @@ cron.schedule('0 3 1 * *', async () => {
   timezone: 'America/Los_Angeles', // Adjust to your timezone
 });
 
-// console.log('✅ Job Scheduler initialized');
-// console.log('📅 Scheduled jobs:');
-// console.log('  - Security Event Retention: Daily at 2 AM PST');
-// console.log('  - Monthly KPI Snapshots: 1st of each month at 3 AM PST');
+// // console.log('✅ Job Scheduler initialized');
+// // console.log('📅 Scheduled jobs:');
+// // console.log('  - Security Event Retention: Daily at 2 AM PST');
+// // console.log('  - Monthly KPI Snapshots: 1st of each month at 3 AM PST');
 
 module.exports = {};

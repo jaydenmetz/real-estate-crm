@@ -362,7 +362,7 @@ const EscrowsDashboard = () => {
         setCurrentPage(1);
       }
 
-      // console.log(`Fetching escrows... (page ${pageNum})`);
+      // // console.log(`Fetching escrows... (page ${pageNum})`);
 
       // Fetch escrows with pagination (50 per page for optimal performance)
       // PHASE 6: Include scope filter (brokerage, team, user)
@@ -374,7 +374,7 @@ const EscrowsDashboard = () => {
         limit: 50,
         scope: scope // Pass scope from state
       });
-      // console.log('API Response:', response);
+      // // console.log('API Response:', response);
 
       if (response.success) {
         const allData = response.data.escrows || response.data || [];
@@ -388,7 +388,7 @@ const EscrowsDashboard = () => {
         // If viewing active/closed/cancelled/all, allData will be non-archived escrows
         const isViewingArchived = selectedStatus === 'archived';
 
-        // console.log(`Page ${pageNum}/${totalPages} - Total: ${totalRecords}, Loaded: ${allData.length}, Status: ${selectedStatus}`);
+        // // console.log(`Page ${pageNum}/${totalPages} - Total: ${totalRecords}, Loaded: ${allData.length}, Status: ${selectedStatus}`);
 
         // Update state based on whether we're appending or replacing
         if (appendData) {
@@ -559,14 +559,14 @@ const EscrowsDashboard = () => {
     // Skip counter only applies to same-tab updates
     if (!statusChanged && skipStatsRecalculation.current > 0) {
       skipStatsRecalculation.current -= 1; // Decrement counter
-      // console.log('🛑 Skipping stats recalculation, remaining:', skipStatsRecalculation.current);
+      // // console.log('🛑 Skipping stats recalculation, remaining:', skipStatsRecalculation.current);
       return;
     }
 
     if (statusChanged) {
-      // console.log('🔄 Tab changed to:', selectedStatus, '- recalculating stats');
+      // // console.log('🔄 Tab changed to:', selectedStatus, '- recalculating stats');
     } else {
-      // console.log('✅ Recalculating stats');
+      // // console.log('✅ Recalculating stats');
     }
 
     if (selectedStatus === 'archived') {
@@ -609,12 +609,12 @@ const EscrowsDashboard = () => {
 
     // Subscribe to data updates
     const unsubscribe = websocketService.on('data:update', (data) => {
-      // console.log('📡 WebSocket data update received:', data);
+      // // console.log('📡 WebSocket data update received:', data);
 
       if (data.entityType === 'escrow' && data.action === 'updated') {
         // Surgical update: Only update the specific escrow that changed
         const escrowId = data.entityId;
-        // console.log('🔧 Applying surgical update to escrow:', escrowId);
+        // // console.log('🔧 Applying surgical update to escrow:', escrowId);
 
         // Fetch ONLY the updated escrow (not all escrows)
         escrowsAPI.getById(escrowId).then((response) => {
@@ -635,7 +635,7 @@ const EscrowsDashboard = () => {
             // Set skip flag if update doesn't affect stats
             if (!affectsStats) {
               skipStatsRecalculation.current += 1;
-              // console.log('📡 WebSocket: Non-stats update, skip counter set to:', skipStatsRecalculation.current);
+              // // console.log('📡 WebSocket: Non-stats update, skip counter set to:', skipStatsRecalculation.current);
             }
 
             // Update only the specific escrow in the array
@@ -645,7 +645,7 @@ const EscrowsDashboard = () => {
 
             // If it affects stats, recalculate manually
             if (affectsStats) {
-              // console.log('📡 WebSocket: Stats-affecting update, recalculating');
+              // // console.log('📡 WebSocket: Stats-affecting update, recalculating');
               const updatedEscrows = escrows.map((e) =>
                 e.id === escrowId ? { ...e, ...updatedEscrow } : e
               );
@@ -669,7 +669,7 @@ const EscrowsDashboard = () => {
   // Load more escrows (infinite scroll handler)
   const loadMoreEscrows = useCallback(() => {
     if (!loadingMore && hasMorePages) {
-      // console.log(`Loading page ${currentPage + 1}...`);
+      // // console.log(`Loading page ${currentPage + 1}...`);
       fetchEscrows(currentPage + 1, true);
     }
   }, [loadingMore, hasMorePages, currentPage]);

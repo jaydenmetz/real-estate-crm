@@ -20,12 +20,12 @@ const { errorLogging, requestLogging } = require('./middleware/errorLogging.midd
 (async () => {
   try {
     await initializeDatabase();
-    // console.log('✅ Database ready');
+    // // console.log('✅ Database ready');
 
     // Try to initialize Redis but don't fail if it's not available
     try {
       await initializeRedis();
-      // console.log('✅ Redis ready');
+      // // console.log('✅ Redis ready');
     } catch (redisErr) {
       console.warn('⚠️  Redis not available, continuing without cache', redisErr.message);
     }

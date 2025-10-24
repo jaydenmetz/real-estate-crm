@@ -458,8 +458,8 @@ const ClientDetail = () => {
   }, [debugExpanded]);
 
   // Debug logging
-  // console.log('[ClientDetail] Component mounted');
-  // console.log('[ClientDetail] ID received:', id);
+  // // console.log('[ClientDetail] Component mounted');
+  // // console.log('[ClientDetail] ID received:', id);
 
   // Fetch client details (React Query v5)
   const { data: client, isLoading, error, isError } = useQuery({
@@ -769,17 +769,17 @@ const ClientDetail = () => {
   };
 
   const handleShare = (platform) => {
-    // console.log(`Sharing via ${platform}...`);
+    // // console.log(`Sharing via ${platform}...`);
     setShareDialogOpen(false);
   };
 
   const speedDialActions = [
     { icon: <Email />, name: 'Send Email', action: () => setCommunicationDialog(true) },
     { icon: <Phone />, name: 'Log Call', action: () => {
-      // console.log('Call logging')
+      // // console.log('Call logging')
     }},
     { icon: <Event />, name: 'Schedule Meeting', action: () => {
-      // console.log('Meeting scheduler')
+      // // console.log('Meeting scheduler')
     }},
     { icon: <Note />, name: 'Add Note', action: () => setNoteDialog(true) },
     { icon: <Assignment />, name: 'Create Task', action: () => setTaskDialog(true) },
@@ -915,7 +915,7 @@ const ClientDetail = () => {
                         requests: networkMonitor.getRequests(),
                         errors: networkMonitor.getErrors()
                       });
-                      // console.log('[ClientDetail] Network data refreshed');
+                      // // console.log('[ClientDetail] Network data refreshed');
                     }}
                     sx={(theme) => ({
                       color: theme.palette.primary.main,
@@ -1862,7 +1862,7 @@ const ClientDetail = () => {
                   variant="outlined"
                   startIcon={<VideoCall />}
                   onClick={() => {
-                    // console.log('Video call')
+                    // // console.log('Video call')
                   }}
                 >
                   Schedule Video Call
@@ -1888,14 +1888,14 @@ const ClientDetail = () => {
           Share Contact
         </MenuItem>
         <MenuItem onClick={() => {
-          // console.log('Print');
+          // // console.log('Print');
           handleMenuClose();
         }}>
           <ListItemIcon><Print /></ListItemIcon>
           Print Details
         </MenuItem>
         <MenuItem onClick={() => {
-          // console.log('Generate QR');
+          // // console.log('Generate QR');
           handleMenuClose();
         }}>
           <ListItemIcon><QrCode2 /></ListItemIcon>
@@ -1903,7 +1903,7 @@ const ClientDetail = () => {
         </MenuItem>
         <Divider />
         <MenuItem onClick={() => {
-          // console.log('Archive');
+          // // console.log('Archive');
           handleMenuClose();
         }}>
           <ListItemIcon><Archive /></ListItemIcon>

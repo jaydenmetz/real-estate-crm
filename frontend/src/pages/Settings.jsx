@@ -241,7 +241,7 @@ const Settings = () => {
     try {
       // Use the API service which has correct URL and auth handling
       const response = await apiKeysAPI.getAll();
-      // console.log('API Keys fetched successfully:', response);
+      // // console.log('API Keys fetched successfully:', response);
       return response;
     } catch (error) {
       console.error('Failed to fetch API keys:', error);

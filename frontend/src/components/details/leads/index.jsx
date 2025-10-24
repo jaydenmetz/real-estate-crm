@@ -109,9 +109,9 @@ const LeadDetail = () => {
   const [newNote, setNewNote] = useState('');
 
   // Debug logging
-  // console.log('[LeadDetail] Component mounted');
-  // console.log('[LeadDetail] ID received:', id);
-  // console.log('[LeadDetail] Window location:', window.location.href);
+  // // console.log('[LeadDetail] Component mounted');
+  // // console.log('[LeadDetail] ID received:', id);
+  // // console.log('[LeadDetail] Window location:', window.location.href);
 
   // Fetch lead details (React Query v5)
   const { data: lead, isLoading, error, isError } = useQuery({

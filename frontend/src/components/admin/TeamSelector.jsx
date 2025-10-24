@@ -275,7 +275,7 @@ const TeamSelector = ({ open, onClose, onSelectTeam }) => {
             startIcon={<Business />}
             onClick={() => {
               // TODO: Implement add team functionality
-              // console.log('Add new team');
+              // // console.log('Add new team');
             }}
           >
             Add New Team

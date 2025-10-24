@@ -74,7 +74,7 @@ class AuthService {
           apiInstance.setApiKey(user.apiKey);
         }
 
-        // console.log('✅ Registration successful - JWT stored in localStorage (Phase 1)');
+        // // console.log('✅ Registration successful - JWT stored in localStorage (Phase 1)');
 
         return {
           success: true,
@@ -133,7 +133,7 @@ class AuthService {
           apiInstance.setApiKey(user.apiKey);
         }
 
-        // console.log('✅ Login successful - JWT stored in localStorage (Phase 1)');
+        // // console.log('✅ Login successful - JWT stored in localStorage (Phase 1)');
 
         return {
           success: true,
@@ -177,7 +177,7 @@ class AuthService {
       // PHASE 2: Log refresh attempt for debugging
       const oldExpiry = localStorage.getItem('tokenExpiry');
       const timeUntilExpiry = oldExpiry ? Math.round((parseInt(oldExpiry) - Date.now()) / 1000) : 0;
-      // console.log(`🔄 Refreshing token (expires in ${timeUntilExpiry}s)...`);
+      // // console.log(`🔄 Refreshing token (expires in ${timeUntilExpiry}s)...`);
 
       const response = await apiInstance.post('/auth/refresh', {});
 
@@ -196,9 +196,9 @@ class AuthService {
 
           // PHASE 2: Log new expiry for debugging
           const newExpirySeconds = Math.round((expiryTime - Date.now()) / 1000);
-          console.log(`✅ Token refreshed - new expiry in ${newExpirySeconds}s (~${Math.round(newExpirySeconds / 60)} minutes)`);
+          // console.log(`✅ Token refreshed - new expiry in ${newExpirySeconds}s (~${Math.round(newExpirySeconds / 60)} minutes)`);
         } else {
-          console.log('✅ Token refreshed - JWT stored in localStorage');
+          // console.log('✅ Token refreshed - JWT stored in localStorage');
         }
 
         return {
@@ -235,7 +235,7 @@ class AuthService {
 
     // PHASE 2: Only log when check matters (either expiring soon or at key intervals)
     if (isExpiringSoon) {
-      // console.log(`⏰ Token expiring soon: ${Math.round(timeUntilExpiry / 1000)}s remaining`);
+      // // console.log(`⏰ Token expiring soon: ${Math.round(timeUntilExpiry / 1000)}s remaining`);
     }
 
     return isExpiringSoon;
@@ -291,11 +291,11 @@ class AuthService {
 
     // If user has no token in localStorage but has user data, try to refresh using httpOnly cookie
     if (this.user && !this.token && !this.apiKey) {
-      // console.log('🔄 No token found, attempting to refresh from httpOnly cookie...');
+      // // console.log('🔄 No token found, attempting to refresh from httpOnly cookie...');
       try {
         const refreshResult = await this.refreshAccessToken();
         if (refreshResult.success) {
-          // console.log('✅ Token refreshed successfully from httpOnly cookie');
+          // // console.log('✅ Token refreshed successfully from httpOnly cookie');
           // Token is now set in localStorage and memory
           if (!this.token) {
             console.error('❌ Token refresh succeeded but token is still null');
@@ -339,13 +339,13 @@ class AuthService {
       } catch (error) {
         // If verification fails with 401 and we're using JWT (not API key), try to refresh token
         if (error.status === 401 && this.token && !this.apiKey) {
-          console.log('🔄 Token expired, attempting automatic refresh...');
+          // console.log('🔄 Token expired, attempting automatic refresh...');
 
           try {
             const refreshResult = await this.refreshAccessToken();
 
             if (refreshResult.success) {
-              console.log('✅ Token refreshed successfully');
+              // console.log('✅ Token refreshed successfully');
               // Verify again with new token
               try {
                 const verifyResponse = await apiInstance.get('/auth/verify');

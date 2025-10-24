@@ -106,13 +106,13 @@ export const AuthProvider = ({ children }) => {
     const refreshInterval = setInterval(async () => {
       if (authService.isTokenExpiringSoon()) {
         try {
-          // console.log('🔄 Token expiring soon, refreshing...');
+          // // console.log('🔄 Token expiring soon, refreshing...');
           const result = await authService.refreshAccessToken();
           if (!result.success) {
             console.warn('⚠️ Token refresh failed:', result.error);
             // If refresh fails, user will be logged out on next API call
           } else {
-            // console.log('✅ Token refreshed successfully (auto-refresh)');
+            // // console.log('✅ Token refreshed successfully (auto-refresh)');
           }
         } catch (error) {
           console.error('❌ Auto-refresh error:', error);
@@ -124,10 +124,10 @@ export const AuthProvider = ({ children }) => {
     const checkTokenNow = async () => {
       if (authService.isTokenExpiringSoon()) {
         try {
-          // console.log('🔄 Token expiring soon (initial check), refreshing...');
+          // // console.log('🔄 Token expiring soon (initial check), refreshing...');
           const result = await authService.refreshAccessToken();
           if (result.success) {
-            // console.log('✅ Token refreshed successfully (initial check)');
+            // // console.log('✅ Token refreshed successfully (initial check)');
           }
         } catch (error) {
           console.error('❌ Initial token refresh error:', error);

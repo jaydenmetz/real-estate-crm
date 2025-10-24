@@ -68,7 +68,7 @@ export const useClientHandlers = ({
         const remainingClients = clients.filter(c => !deletedIds.has(c.id));
         calculateStats(remainingClients, selectedStatus);
 
-        // console.log(`Successfully permanently deleted ${response.data.deletedCount || selectedArchivedIds.length} clients`);
+        // // console.log(`Successfully permanently deleted ${response.data.deletedCount || selectedArchivedIds.length} clients`);
       }
     } catch (error) {
       console.error('Failed to batch delete clients:', error);

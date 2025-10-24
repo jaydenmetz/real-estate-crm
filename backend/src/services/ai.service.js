@@ -162,7 +162,7 @@ async function executeNaturalLanguageQuery(userQuery, userId) {
     // Convert natural language to SQL
     const sqlQuery = await naturalLanguageToSQL(userQuery, userId);
 
-    // console.log('Generated SQL:', sqlQuery);
+    // // console.log('Generated SQL:', sqlQuery);
 
     // Execute query with user_id as first parameter
     const result = await pool.query(sqlQuery, [userId]);

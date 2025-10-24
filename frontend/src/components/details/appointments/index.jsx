@@ -158,9 +158,9 @@ function AppointmentDetail() {
   });
 
   // Debug logging
-  // console.log('[AppointmentDetail] Component mounted');
-  // console.log('[AppointmentDetail] ID received:', id);
-  // console.log('[AppointmentDetail] Window location:', window.location.href);
+  // // console.log('[AppointmentDetail] Component mounted');
+  // // console.log('[AppointmentDetail] ID received:', id);
+  // // console.log('[AppointmentDetail] Window location:', window.location.href);
 
   // Auto-refresh network data when debug panel is expanded
   useEffect(() => {
@@ -432,7 +432,7 @@ function AppointmentDetail() {
     if (!newNote.trim()) return;
     
     // Add note logic here
-    // console.log('Adding note:', newNote);
+    // // console.log('Adding note:', newNote);
     setNewNote('');
   };
 
@@ -559,7 +559,7 @@ function AppointmentDetail() {
                         requests: networkMonitor.getRequests(),
                         errors: networkMonitor.getErrors()
                       });
-                      // console.log('[AppointmentDetail] Network data refreshed');
+                      // // console.log('[AppointmentDetail] Network data refreshed');
                     }}
                     sx={(theme) => ({
                       color: theme.palette.primary.main,
@@ -1470,7 +1470,7 @@ function AppointmentDetail() {
           color="primary"
           startIcon={<Send />}
           onClick={() => {
-            // console.log('Send reminder')
+            // // console.log('Send reminder')
           }}
         >
           Send Reminder

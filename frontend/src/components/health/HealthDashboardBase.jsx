@@ -599,7 +599,7 @@ const HealthDashboardBase = ({
           try {
             await apiKeysAPI.delete(testApiKeyId);
           } catch (err) {
-            // console.log('Could not delete previous test key:', err);
+            // // console.log('Could not delete previous test key:', err);
           }
           setTestApiKey(null);
           setTestApiKeyId(null);

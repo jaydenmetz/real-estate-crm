@@ -68,7 +68,7 @@ export const useAppointmentHandlers = ({
         const remainingAppointments = appointments.filter(l => !deletedIds.has(l.id));
         calculateStats(remainingAppointments, selectedStatus);
 
-        // console.log(`Successfully permanently deleted ${response.data.deletedCount || selectedArchivedIds.length} appointments`);
+        // // console.log(`Successfully permanently deleted ${response.data.deletedCount || selectedArchivedIds.length} appointments`);
       }
     } catch (error) {
       console.error('Failed to batch delete appointments:', error);

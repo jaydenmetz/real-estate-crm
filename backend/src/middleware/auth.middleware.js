@@ -8,7 +8,7 @@ if (!process.env.JWT_SECRET) {
 }
 
 const jwtSecret = process.env.JWT_SECRET;
-// console.log('✅ Using JWT_SECRET from environment variable');
+// // console.log('✅ Using JWT_SECRET from environment variable');
 
 /**
  * Authenticate user via JWT token

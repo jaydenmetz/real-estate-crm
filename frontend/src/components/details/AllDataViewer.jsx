@@ -94,10 +94,10 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
       
       let response;
       
-      // console.log(`Toggling ${path} from ${currentValue} to ${newValue}`);
-      // console.log('Path starts with propertyDetails:', path.startsWith('propertyDetails.'));
-      // console.log('Path starts with checklists:', path.startsWith('checklists.'));
-      // console.log('Path starts with transactionDetails:', path.startsWith('transactionDetails.'));
+      // // console.log(`Toggling ${path} from ${currentValue} to ${newValue}`);
+      // // console.log('Path starts with propertyDetails:', path.startsWith('propertyDetails.'));
+      // // console.log('Path starts with checklists:', path.startsWith('checklists.'));
+      // // console.log('Path starts with transactionDetails:', path.startsWith('transactionDetails.'));
       
       // Determine which endpoint to use based on the path
       // Handle new flattened checklist structure
@@ -106,7 +106,7 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
         const [checklistKey, checklistItem] = path.split('.');
         const checklistType = checklistKey.replace('checklist-', ''); // Remove prefix to get loan/house/admin
         
-        // console.log('Updating checklist:', checklistType, checklistItem, newValue);
+        // // console.log('Updating checklist:', checklistType, checklistItem, newValue);
       } else if (path.startsWith('checklists.')) {
         // For backward compatibility with old structure
         const checklistParts = path.split('.');
@@ -121,7 +121,7 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
           admin: escrowData['checklist-admin'] || {}
         } || escrowData.checklist || escrowData.checklists || {};
         
-        // console.log('Current checklists before update:', JSON.parse(JSON.stringify(currentChecklists)));
+        // // console.log('Current checklists before update:', JSON.parse(JSON.stringify(currentChecklists)));
         
         // Create a deep copy of ALL existing checklist data using JSON to ensure all nested properties are copied
         const updatedChecklists = JSON.parse(JSON.stringify(currentChecklists));
@@ -134,8 +134,8 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
         // Update only the specific item that was clicked
         updatedChecklists[checklistType][checklistItem] = newValue;
         
-        // console.log('Updated checklists to send:', updatedChecklists);
-        // console.log(`Specifically updating ${checklistType}.${checklistItem} to ${newValue}`);
+        // // console.log('Updated checklists to send:', updatedChecklists);
+        // // console.log(`Specifically updating ${checklistType}.${checklistItem} to ${newValue}`);
         
         // Use the dedicated checklists endpoint
         response = await escrowsAPI.updateChecklists(cleanId, updatedChecklists);
@@ -159,7 +159,7 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
         const backendField = propertyFieldMapping[fieldName] || fieldName;
         const updateData = { [backendField]: newValue };
         
-        // console.log('Updating property-details:', updateData);
+        // // console.log('Updating property-details:', updateData);
         response = await escrowsAPI.updatePropertyDetails(cleanId, updateData);
       } else if (path.startsWith('propertyDetails.')) {
         // Handle old property details structure for backward compatibility
@@ -176,7 +176,7 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
         const backendField = propertyFieldMapping[fieldName] || fieldName;
         const updateData = { [backendField]: newValue };
         
-        // console.log('Updating property details:', updateData);
+        // // console.log('Updating property details:', updateData);
         response = await escrowsAPI.updatePropertyDetails(cleanId, updateData);
       } else if (path.startsWith('details.')) {
         // Handle core details fields from new structure
@@ -215,7 +215,7 @@ const AllDataViewer = ({ escrowData, onUpdate }) => {
         
         const updateData = { [backendField]: newValue };
         
-        // console.log('Using main update endpoint for:', updateData);
+        // // console.log('Using main update endpoint for:', updateData);
         response = await escrowsAPI.update(cleanId, updateData);
       }
       

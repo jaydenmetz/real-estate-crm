@@ -185,12 +185,12 @@ function App() {
     const initializeWebSocket = async () => {
       try {
         if (!websocketService.isConnected) {
-          // console.log('🔌 Initializing WebSocket connection...');
+          // // console.log('🔌 Initializing WebSocket connection...');
           
           // Set up connection listener before connecting
           unsubscribe = websocketService.on('connection', (data) => {
             if (data.status === 'connected') {
-              // console.log('✅ WebSocket connected successfully');
+              // // console.log('✅ WebSocket connected successfully');
             } else if (data.status === 'failed') {
               console.error('❌ WebSocket connection failed:', data.error);
             }
@@ -207,7 +207,7 @@ function App() {
       } catch (error) {
         console.error('WebSocket initialization error:', error.message);
         // Don't let WebSocket errors crash the app
-        // console.log('App will continue without WebSocket connection');
+        // // console.log('App will continue without WebSocket connection');
       }
     };
 

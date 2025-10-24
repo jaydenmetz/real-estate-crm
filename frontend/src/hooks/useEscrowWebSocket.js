@@ -34,7 +34,7 @@ export const useEscrowWebSocket = (escrowId, callbacks = {}, pollingInterval = 3
       return;
     }
 
-    console.log('📡 Escrow update received:', data);
+    // console.log('📡 Escrow update received:', data);
 
     // Call the generic update callback
     if (callbacks.onEscrowUpdate) {
@@ -81,7 +81,7 @@ export const useEscrowWebSocket = (escrowId, callbacks = {}, pollingInterval = 3
     }
 
     pollingRef.current = setInterval(() => {
-      console.log('🔄 Polling escrow data (WebSocket disabled or disconnected)');
+      // console.log('🔄 Polling escrow data (WebSocket disabled or disconnected)');
       if (callbacks.onEscrowUpdate) {
         // Trigger a generic update to refetch data
         callbacks.onEscrowUpdate({ type: 'polling', escrowId });
@@ -106,7 +106,7 @@ export const useEscrowWebSocket = (escrowId, callbacks = {}, pollingInterval = 3
     enabledRef.current = isWebSocketEnabled();
 
     if (!enabledRef.current) {
-      console.log('WebSocket disabled, using REST polling');
+      // console.log('WebSocket disabled, using REST polling');
       startPolling();
       return () => stopPolling();
     }
@@ -134,12 +134,12 @@ export const useEscrowWebSocket = (escrowId, callbacks = {}, pollingInterval = 3
     socketRef.current = socket;
 
     socket.on('connect', () => {
-      console.log(`✅ WebSocket connected for escrow ${escrowId}`);
+      // console.log(`✅ WebSocket connected for escrow ${escrowId}`);
       stopPolling(); // Stop polling when WebSocket connects
     });
 
     socket.on('disconnect', () => {
-      console.log('❌ WebSocket disconnected, falling back to REST polling');
+      // console.log('❌ WebSocket disconnected, falling back to REST polling');
       startPolling(); // Start polling when WebSocket disconnects
     });
 
@@ -168,11 +168,11 @@ export const useEscrowWebSocket = (escrowId, callbacks = {}, pollingInterval = 3
         enabledRef.current = newEnabled;
 
         if (!newEnabled && socketRef.current) {
-          console.log('WebSocket disabled by user, disconnecting...');
+          // console.log('WebSocket disabled by user, disconnecting...');
           socketRef.current.disconnect();
           startPolling();
         } else if (newEnabled && !socketRef.current?.connected) {
-          console.log('WebSocket enabled by user, reconnecting...');
+          // console.log('WebSocket enabled by user, reconnecting...');
           // Will reconnect on next effect run
         }
       }

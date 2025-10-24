@@ -197,7 +197,7 @@ const EscrowDetailCompact = () => {
         setLoading(true);
         const response = await escrowsAPI.getById(id);
         if (response.success) {
-          console.log('Escrow data received:', response.data);
+          // console.log('Escrow data received:', response.data);
           setEscrow(response.data);
         } else {
           setError('Failed to load escrow details');
@@ -218,7 +218,7 @@ const EscrowDetailCompact = () => {
   // WebSocket real-time updates
   const { connected } = useEscrowWebSocket(id, {
     onEscrowUpdate: (data) => {
-      console.log('WebSocket escrow update:', data);
+      // console.log('WebSocket escrow update:', data);
       if (escrow) {
         escrowsAPI.getById(id).then(response => {
           if (response.success) setEscrow(response.data);

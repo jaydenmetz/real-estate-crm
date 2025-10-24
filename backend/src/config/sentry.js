@@ -9,7 +9,7 @@ const initializeSentry = (app) => {
   const { SENTRY_DSN } = process.env;
 
   if (!SENTRY_DSN) {
-    // console.log('📊 Sentry not configured (no DSN provided)');
+    // // console.log('📊 Sentry not configured (no DSN provided)');
     return;
   }
 
@@ -98,7 +98,7 @@ const initializeSentry = (app) => {
     next();
   });
 
-  // console.log('✅ Sentry error tracking initialized');
+  // // console.log('✅ Sentry error tracking initialized');
 };
 
 /**

@@ -75,7 +75,7 @@ const NetworkMonitorComponent = () => {
     // This helps catch cases where user auth completed after initial page load
     if (isSystemAdmin || process.env.NODE_ENV === 'development') {
       networkMonitor.enable();
-      // console.log('🔍 NetworkMonitor component ensuring monitor is enabled');
+      // // console.log('🔍 NetworkMonitor component ensuring monitor is enabled');
     }
 
     // Subscribe to network monitor updates

@@ -77,7 +77,7 @@ const EscrowErrorDebugPanel = ({ error, escrowId }) => {
 
   const attemptAuthRefresh = async () => {
     try {
-      // console.log('Attempting automatic authentication refresh...');
+      // // console.log('Attempting automatic authentication refresh...');
       setAuthRefreshAttempted(true);
       
       // Try emergency login
@@ -101,7 +101,7 @@ const EscrowErrorDebugPanel = ({ error, escrowId }) => {
             localStorage.setItem('user', JSON.stringify(data.data.user));
           }
 
-          // console.log('Authentication refreshed successfully, reloading page...');
+          // // console.log('Authentication refreshed successfully, reloading page...');
           setTimeout(() => window.location.reload(), 1000);
         }
       }

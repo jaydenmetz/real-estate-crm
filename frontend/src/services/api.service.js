@@ -24,9 +24,9 @@ const API_BASE_URL = getApiUrl();
 
 // Log the API URL for debugging (only in development)
 if (process.env.NODE_ENV === 'development') {
-  // console.log('API Base URL:', API_BASE_URL);
-  // console.log('Environment:', process.env.NODE_ENV);
-  // console.log('REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
+  // // console.log('API Base URL:', API_BASE_URL);
+  // // console.log('Environment:', process.env.NODE_ENV);
+  // // console.log('REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
 }
 
 class ApiService {
@@ -40,7 +40,7 @@ class ApiService {
 
     // Log initialization (only in development)
     if (process.env.NODE_ENV === 'development') {
-      // console.log('API Service initialized:', {
+      // // console.log('API Service initialized:', {
       //   baseURL: this.baseURL,
       //   hasToken: !!this.token,
       //   hasApiKey: !!this.apiKey,
@@ -96,14 +96,14 @@ class ApiService {
 
     try {
       if (process.env.NODE_ENV === 'development') {
-        // console.log(`API Request: ${config.method || 'GET'} ${url}`);
+        // // console.log(`API Request: ${config.method || 'GET'} ${url}`);
       }
       
       const response = await fetch(url, config);
 
       // Log response details for debugging (only in development)
       if (process.env.NODE_ENV === 'development') {
-        // console.log(`API Response: ${response.status} ${response.statusText}`);
+        // // console.log(`API Response: ${response.status} ${response.statusText}`);
       }
 
       if (!response.ok) {
@@ -150,7 +150,7 @@ class ApiService {
           // Only redirect to login if refresh failed or wasn't attempted
           // PHASE 4: Health pages now require authentication, removed exclusion
           if (!isAuthEndpoint && !isApiKeysEndpoint && !isLoginPage && !isSettingsPage) {
-            // console.log('⚠️ Authentication failed, redirecting to login...');
+            // // console.log('⚠️ Authentication failed, redirecting to login...');
             // Clear invalid authentication (Phase 4: only clear user data, NOT tokens from localStorage)
             localStorage.removeItem('apiKey');
             localStorage.removeItem('user');
