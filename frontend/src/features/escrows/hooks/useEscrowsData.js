@@ -1,5 +1,7 @@
+import React from 'react';
 import { useDashboardData } from '../../../shared/hooks';
 import { escrowsService } from '../services/escrows.service';
+import { Home, TrendingUp, AttachMoney, CheckCircle } from '@mui/icons-material';
 
 /**
  * useEscrowsData - Specialized hook for escrows dashboard
@@ -94,6 +96,12 @@ export const useEscrowsData = (options = {}) => {
   // Transform backend stats into stat card format
   const transformedStats = dashboardData.stats ? transformStats(dashboardData.stats) : [];
 
+  // Debug: Log the stats to see what we're getting
+  if (dashboardData.stats) {
+    console.log('Raw backend stats:', dashboardData.stats);
+    console.log('Transformed stats:', transformedStats);
+  }
+
   return {
     ...dashboardData,
     stats: transformedStats,
@@ -127,33 +135,34 @@ function transformStats(backendStats) {
       id: 'total',
       label: 'Total Escrows',
       value: backendStats.total || 0,
-      change: null,
-      trend: 'up',
-      icon: 'Home'
+      format: 'number',
+      icon: <Home />,
+      color: 'primary.main'
     },
     {
       id: 'active',
       label: 'Active Escrows',
       value: backendStats.active || 0,
-      change: backendStats.activePercentage ? `${backendStats.activePercentage}%` : null,
-      trend: 'up',
-      icon: 'TrendingUp'
+      format: 'number',
+      change: backendStats.activePercentage || null,
+      icon: <TrendingUp />,
+      color: 'success.main'
     },
     {
       id: 'activeVolume',
       label: 'Active Volume',
-      value: `$${((backendStats.activeVolume || 0) / 1000000).toFixed(2)}M`,
-      change: null,
-      trend: 'up',
-      icon: 'AttachMoney'
+      value: backendStats.activeVolume || 0,
+      format: 'currency',
+      icon: <AttachMoney />,
+      color: 'info.main'
     },
     {
       id: 'closedVolume',
       label: 'Closed Volume',
-      value: `$${((backendStats.closedVolume || 0) / 1000000).toFixed(2)}M`,
-      change: null,
-      trend: 'up',
-      icon: 'CheckCircle'
+      value: backendStats.closedVolume || 0,
+      format: 'currency',
+      icon: <CheckCircle />,
+      color: 'warning.main'
     }
   ];
 }
