@@ -91,8 +91,12 @@ export const useEscrowsData = (options = {}) => {
     }
   };
 
+  // Transform backend stats into stat card format
+  const transformedStats = dashboardData.stats ? transformStats(dashboardData.stats) : [];
+
   return {
     ...dashboardData,
+    stats: transformedStats,
 
     // Escrow-specific actions
     actions: {
@@ -108,5 +112,50 @@ export const useEscrowsData = (options = {}) => {
     scope
   };
 };
+
+/**
+ * Transform backend stats into stat card format for DashboardLayout
+ */
+function transformStats(backendStats) {
+  if (Array.isArray(backendStats)) {
+    return backendStats; // Already in stat card format
+  }
+
+  // Transform backend stats object into stat cards
+  return [
+    {
+      id: 'total',
+      label: 'Total Escrows',
+      value: backendStats.total || 0,
+      change: null,
+      trend: 'up',
+      icon: 'Home'
+    },
+    {
+      id: 'active',
+      label: 'Active Escrows',
+      value: backendStats.active || 0,
+      change: backendStats.activePercentage ? `${backendStats.activePercentage}%` : null,
+      trend: 'up',
+      icon: 'TrendingUp'
+    },
+    {
+      id: 'activeVolume',
+      label: 'Active Volume',
+      value: `$${((backendStats.activeVolume || 0) / 1000000).toFixed(2)}M`,
+      change: null,
+      trend: 'up',
+      icon: 'AttachMoney'
+    },
+    {
+      id: 'closedVolume',
+      label: 'Closed Volume',
+      value: `$${((backendStats.closedVolume || 0) / 1000000).toFixed(2)}M`,
+      change: null,
+      trend: 'up',
+      icon: 'CheckCircle'
+    }
+  ];
+}
 
 export default useEscrowsData;
