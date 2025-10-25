@@ -1,6 +1,6 @@
 const commissionsController = require('./commissions.controller');
 const Commission = require('../models/Commission.mock');
-const logger = require('../utils/logger');
+const logger = require('../../../utils/logger');
 
 // Mock dependencies
 jest.mock('../models/Commission.mock');

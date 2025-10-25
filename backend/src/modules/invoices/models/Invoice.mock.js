@@ -1,5 +1,5 @@
 // Mock Invoice model for development and testing
-const logger = require('../utils/logger');
+const logger = require('../../../utils/logger');
 
 // Mock invoice data
 const mockInvoices = [

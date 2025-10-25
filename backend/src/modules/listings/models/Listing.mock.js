@@ -1,5 +1,5 @@
 // Mock Listing model for development and testing
-const logger = require('../utils/logger');
+const logger = require('../../../utils/logger');
 
 // Comprehensive mock listings data
 const mockListings = [
