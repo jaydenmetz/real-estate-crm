@@ -51,8 +51,8 @@ describe('Escrows Validators', () => {
         .send(invalidData);
 
       expect(response.status).toBe(400);
-      expect(response.body.errors).toBeDefined();
-      expect(response.body.errors.some(e => e.path === 'propertyAddress')).toBe(true);
+      expect(response.body.error.details).toBeDefined();
+      expect(response.body.error.details.some(e => e.field === 'propertyAddress')).toBe(true);
     });
 
     test('should fail when propertyAddress is empty string', async () => {
@@ -92,7 +92,7 @@ describe('Escrows Validators', () => {
         .send(invalidData);
 
       expect(response.status).toBe(400);
-      expect(response.body.errors.some(e => e.path === 'purchasePrice')).toBe(true);
+      expect(response.body.error.details.some(e => e.field === 'purchasePrice')).toBe(true);
     });
 
     test('should fail when escrowStatus is invalid', async () => {
@@ -106,7 +106,7 @@ describe('Escrows Validators', () => {
         .send(invalidData);
 
       expect(response.status).toBe(400);
-      expect(response.body.errors.some(e => e.path === 'escrowStatus')).toBe(true);
+      expect(response.body.error.details.some(e => e.field === 'escrowStatus')).toBe(true);
     });
 
     test('should accept all valid escrowStatus values', async () => {
@@ -255,7 +255,7 @@ describe('Escrows Validators', () => {
         .send(invalidData);
 
       expect(response.status).toBe(400);
-      expect(response.body.errors.some(e => e.path === 'ids')).toBe(true);
+      expect(response.body.error.details.some(e => e.field === 'ids')).toBe(true);
     });
 
     test('should fail when ids is not an array', async () => {

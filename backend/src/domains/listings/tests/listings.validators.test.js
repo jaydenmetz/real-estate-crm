@@ -43,7 +43,7 @@ describe('Listings Validators', () => {
 
       const response = await request(app).post('/test').send(invalidData);
       expect(response.status).toBe(400);
-      expect(response.body.errors.some(e => e.path === 'propertyAddress')).toBe(true);
+      expect(response.body.error.details.some(e => e.field === 'propertyAddress')).toBe(true);
     });
 
     test('should fail when listPrice is missing', async () => {
@@ -53,7 +53,7 @@ describe('Listings Validators', () => {
 
       const response = await request(app).post('/test').send(invalidData);
       expect(response.status).toBe(400);
-      expect(response.body.errors.some(e => e.path === 'listPrice')).toBe(true);
+      expect(response.body.error.details.some(e => e.field === 'listPrice')).toBe(true);
     });
 
     test('should fail when listPrice is not numeric', async () => {

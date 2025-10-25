@@ -43,7 +43,7 @@ describe('Appointments Validators', () => {
 
       const response = await request(app).post('/test').send(invalidData);
       expect(response.status).toBe(400);
-      expect(response.body.errors.some(e => e.path === 'title')).toBe(true);
+      expect(response.body.error.details.some(e => e.field === 'title')).toBe(true);
     });
 
     test('should fail when appointmentDate is missing', async () => {
@@ -54,7 +54,7 @@ describe('Appointments Validators', () => {
 
       const response = await request(app).post('/test').send(invalidData);
       expect(response.status).toBe(400);
-      expect(response.body.errors.some(e => e.path === 'appointmentDate')).toBe(true);
+      expect(response.body.error.details.some(e => e.field === 'appointmentDate')).toBe(true);
     });
 
     test('should fail when startTime is missing', async () => {
@@ -65,7 +65,7 @@ describe('Appointments Validators', () => {
 
       const response = await request(app).post('/test').send(invalidData);
       expect(response.status).toBe(400);
-      expect(response.body.errors.some(e => e.path === 'startTime')).toBe(true);
+      expect(response.body.error.details.some(e => e.field === 'startTime')).toBe(true);
     });
 
     test('should fail with invalid time format', async () => {

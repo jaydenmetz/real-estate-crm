@@ -44,7 +44,7 @@ describe('Leads Validators', () => {
 
       const response = await request(app).post('/test').send(invalidData);
       expect(response.status).toBe(400);
-      expect(response.body.errors.some(e => e.path === 'firstName')).toBe(true);
+      expect(response.body.error.details.some(e => e.field === 'firstName')).toBe(true);
     });
 
     test('should fail when lastName is missing', async () => {
@@ -55,7 +55,7 @@ describe('Leads Validators', () => {
 
       const response = await request(app).post('/test').send(invalidData);
       expect(response.status).toBe(400);
-      expect(response.body.errors.some(e => e.path === 'lastName')).toBe(true);
+      expect(response.body.error.details.some(e => e.field === 'lastName')).toBe(true);
     });
 
     test('should fail with invalid email format', async () => {
@@ -67,7 +67,7 @@ describe('Leads Validators', () => {
 
       const response = await request(app).post('/test').send(invalidData);
       expect(response.status).toBe(400);
-      expect(response.body.errors.some(e => e.path === 'email')).toBe(true);
+      expect(response.body.error.details.some(e => e.field === 'email')).toBe(true);
     });
 
     test('should normalize email', async () => {
