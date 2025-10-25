@@ -6,7 +6,9 @@ export {
   DashboardHeader,
   DashboardStats,
   DashboardContent,
-  DashboardError
+  DashboardError,
+  DashboardToolbar,
+  DashboardPagination
 } from './components/dashboard';
 
 // Hooks

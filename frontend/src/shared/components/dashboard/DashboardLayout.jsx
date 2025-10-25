@@ -91,7 +91,14 @@ const DashboardLayout = ({
             actions={toolbar.actions}
             availableModes={toolbar.availableModes}
             searchPlaceholder={toolbar.searchPlaceholder}
+            loading={loading}
           />
+          {/* Custom filters section */}
+          {toolbar.customFilters && (
+            <Box sx={{ mt: 2 }}>
+              {toolbar.customFilters}
+            </Box>
+          )}
         </Box>
       )}
 
