@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useDebounce } from './useDebounce';
 import { useLocalStorage } from './useLocalStorage';
 
