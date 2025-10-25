@@ -11,20 +11,14 @@ OUTPUT="all-code.txt"
 echo "PROJECT FILE STRUCTURE"               >> "$OUTPUT"
 echo "======================"               >> "$OUTPUT"
 # Use ASCII-only characters for compatibility
-find . \
-  \( -path './.git' -o -path './node_modules' \) -prune \
-  -o -print \
-  | sed 's|^\./||' \
-  | sort \
-  | awk '{
-      depth = gsub(/\//, "/");
-      indent = "";
-      for (i = 0; i < depth; i++) indent = indent "  ";
-      name = $0;
-      sub(/.*\//, "", name);
-      print indent "- " name;
-    }' \
-  >> "$OUTPUT"
+if command -v tree >/dev/null 2>&1; then
+  tree -a -I '.git|node_modules' --charset ascii .  >> "$OUTPUT"
+else
+  find . \
+    \( -path './.git' -o -path './node_modules' \) -prune \
+    -o -print \
+    | sort >> "$OUTPUT"
+fi
 
 echo -e "\n\nCONCATENATED SOURCE FILES"       >> "$OUTPUT"
 echo "=========================="             >> "$OUTPUT"
