@@ -8,7 +8,8 @@ export {
   DashboardContent,
   DashboardError,
   DashboardToolbar,
-  DashboardPagination
+  DashboardPagination,
+  DashboardEmptyState
 } from './components/dashboard';
 
 // Hooks

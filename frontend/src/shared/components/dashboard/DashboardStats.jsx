@@ -13,7 +13,7 @@ import {
   TrendingDown,
   Info
 } from '@mui/icons-material';
-import { formatNumber, formatCurrency, formatPercentage } from '../../../utils/formatters';
+import { formatNumber, formatCurrency, formatPercentage } from '../../utils/formatters';
 
 const StatsCard = ({ stat, color = 'primary.main', loading = false, onClick }) => {
   if (loading) {

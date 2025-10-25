@@ -1,6 +1,6 @@
 import React from 'react';
 import { Box, CircularProgress, Skeleton, Grid } from '@mui/material';
-import DashboardEmptyState from '../../../components/common/dashboard/DashboardEmptyState';
+import DashboardEmptyState from './DashboardEmptyState';
 
 const DashboardContent = ({
   children,

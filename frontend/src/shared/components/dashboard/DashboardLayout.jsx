@@ -3,9 +3,9 @@ import { Container, Box, Alert, Button } from '@mui/material';
 import { Refresh } from '@mui/icons-material';
 import DashboardHeader from './DashboardHeader';
 import DashboardStats from './DashboardStats';
-import DashboardToolbar from '../../../components/common/dashboard/DashboardToolbar';
+import DashboardToolbar from './DashboardToolbar';
 import DashboardContent from './DashboardContent';
-import DashboardPagination from '../../../components/common/dashboard/DashboardPagination';
+import DashboardPagination from './DashboardPagination';
 import DashboardError from './DashboardError';
 import { useTheme } from '@mui/material/styles';
 
