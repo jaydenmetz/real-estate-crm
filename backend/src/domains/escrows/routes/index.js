@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const escrowsController = require('../controllers/escrows.controller');
-const { authenticateToken } = require('../../../middleware/auth.middleware');
+const { authenticate } = require('../../../middleware/auth.middleware');
 const { validate } = require('../../../middleware/validation.middleware');
 const {
   createEscrowRules,
@@ -17,7 +17,7 @@ const {
  */
 
 // Apply authentication middleware to all routes
-router.use(authenticateToken);
+router.use(authenticate);
 
 /**
  * Statistics endpoint (must be before /:id to avoid route collision)

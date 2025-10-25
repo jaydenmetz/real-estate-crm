@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const leadsController = require('../controllers/leads.controller');
-const { authenticateToken } = require('../../../middleware/auth.middleware');
+const { authenticate } = require('../../../middleware/auth.middleware');
 const { validate } = require('../../../middleware/validation.middleware');
 const {
   createLeadRules,
@@ -18,7 +18,7 @@ const {
  */
 
 // Apply authentication middleware to all routes
-router.use(authenticateToken);
+router.use(authenticate);
 
 /**
  * Statistics endpoint (must be before /:id to avoid route collision)
