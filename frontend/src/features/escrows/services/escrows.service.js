@@ -14,13 +14,18 @@ class EscrowsService {
     try {
       const response = await escrowsAPI.getAll(params);
 
+      // Backend returns: { data: { escrows, stats, pagination } }
+      const escrows = response.data?.escrows || response.escrows || [];
+      const backendStats = response.data?.stats || response.stats;
+      const pagination = response.data?.pagination || response.pagination || {};
+
       // Transform API response to match dashboard data structure
       return {
-        items: response.data || response.escrows || [],
-        stats: this.calculateStats(response.data || response.escrows || []),
-        totalPages: response.pagination?.totalPages || 1,
-        totalItems: response.pagination?.total || response.total || 0,
-        currentPage: response.pagination?.currentPage || response.page || 1
+        items: escrows,
+        stats: backendStats || this.calculateStats(escrows),
+        totalPages: pagination.totalPages || 1,
+        totalItems: pagination.totalItems || pagination.total || 0,
+        currentPage: pagination.currentPage || pagination.page || 1
       };
     } catch (error) {
       console.error('Error fetching escrows:', error);
@@ -36,9 +41,12 @@ class EscrowsService {
   async getArchived(params = {}) {
     try {
       const response = await escrowsAPI.getArchived(params);
+      const escrows = response.data?.escrows || response.escrows || [];
+      const pagination = response.data?.pagination || response.pagination || {};
+
       return {
-        items: response.data || response.escrows || [],
-        totalItems: response.total || 0
+        items: escrows,
+        totalItems: pagination.totalItems || pagination.total || response.total || 0
       };
     } catch (error) {
       console.error('Error fetching archived escrows:', error);
