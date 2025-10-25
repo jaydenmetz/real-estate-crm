@@ -186,6 +186,7 @@ class LeadsService extends BaseDomainService {
         is_private: data.isPrivate !== undefined ? data.isPrivate : data.is_private,
         agent_id: user.id,
         team_id: user.team_id,
+        broker_id: user.broker_id,
         created_by: user.id
       };
 

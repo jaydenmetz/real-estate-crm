@@ -276,6 +276,7 @@ class ListingsService extends BaseDomainService {
         total_commission: data.totalCommission || data.total_commission,
         listing_agent_id: data.listingAgentId || data.listing_agent_id || user.id,
         team_id: user.team_id,
+        broker_id: user.broker_id,
         created_by: user.id
       };
 

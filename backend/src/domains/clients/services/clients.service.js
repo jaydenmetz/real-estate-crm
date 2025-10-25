@@ -105,8 +105,9 @@ class ClientsService extends BaseDomainService {
           cl.status,
           cl.created_at,
           cl.updated_at,
-          cl.user_id,
           cl.team_id,
+          cl.broker_id,
+          cl.created_by,
           co.first_name,
           co.last_name,
           co.email,
@@ -163,8 +164,9 @@ class ClientsService extends BaseDomainService {
           cl.status,
           cl.created_at,
           cl.updated_at,
-          cl.user_id,
           cl.team_id,
+          cl.broker_id,
+          cl.created_by,
           co.first_name,
           co.last_name,
           co.email,
@@ -317,8 +319,8 @@ class ClientsService extends BaseDomainService {
           contact_id,
           client_type,
           status,
-          user_id,
           team_id,
+          broker_id,
           created_by
         )
         VALUES ($1, $2, $3, $4, $5, $6)
@@ -329,8 +331,8 @@ class ClientsService extends BaseDomainService {
         contactId,
         data.clientType || data.client_type || 'Buyer',
         data.status || 'active',
-        user.id,
         user.team_id,
+        user.broker_id,
         user.id
       ]);
 

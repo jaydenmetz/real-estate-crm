@@ -280,10 +280,12 @@ class AppointmentsService extends BaseDomainService {
           listing_id,
           agent_id,
           team_id,
+          broker_id,
+          created_by,
           created_at,
           updated_at
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
         RETURNING *
       `;
 
@@ -300,6 +302,8 @@ class AppointmentsService extends BaseDomainService {
         data.listingId || data.listing_id || null,
         user.id,
         user.team_id,
+        user.broker_id,
+        user.id,
       ];
 
       const result = await this.db.query(insertQuery, values);
