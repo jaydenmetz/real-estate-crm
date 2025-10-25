@@ -352,6 +352,26 @@ export function parsePhone(value) {
   return String(value).replace(/\D/g, '');
 }
 
+/**
+ * Format duration in seconds to human readable format
+ * @param {number} seconds - Duration in seconds
+ * @returns {string} Formatted duration (e.g., "2h 30m", "45s")
+ */
+export function formatDuration(seconds) {
+  if (!seconds || seconds === 0) return '0s';
+
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = seconds % 60;
+
+  const parts = [];
+  if (hours > 0) parts.push(`${hours}h`);
+  if (minutes > 0) parts.push(`${minutes}m`);
+  if (secs > 0) parts.push(`${secs}s`);
+
+  return parts.join(' ') || '0s';
+}
+
 export default {
   formatCurrency,
   formatPriceShort,
@@ -364,6 +384,7 @@ export default {
   formatFullName,
   daysSince,
   formatFileSize,
+  formatDuration,
   truncateText,
   getInitials,
   formatStatus,
