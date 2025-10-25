@@ -4,17 +4,14 @@ import {
   Container,
   Box,
   CircularProgress,
-  ToggleButtonGroup,
-  ToggleButton,
-  Paper,
   Typography,
 } from '@mui/material';
-import { ViewModule, ViewList, Archive, Unarchive } from '@mui/icons-material';
 import { useEscrowsData } from '../../../features/escrows/hooks/useEscrowsData';
 import { EscrowGrid } from '../../../features/escrows/components/EscrowGrid';
 import { EscrowList } from '../../../features/escrows/components/EscrowList';
 import { NewEscrowModal } from '../../../features/escrows/components/NewEscrowModal';
 import EscrowHeroCard from './components/EscrowHeroCard';
+import EscrowNavigation from './components/EscrowNavigation';
 import { detectPresetRange, filterEscrows, sortEscrows } from './utils/escrowUtils';
 
 const EscrowsDashboard = () => {
@@ -145,82 +142,17 @@ const EscrowsDashboard = () => {
         />
 
         {/* Navigation Bar */}
-        <Paper
-          elevation={0}
-          sx={{
-            mb: 3,
-            p: 2,
-            borderRadius: 2,
-            border: '1px solid',
-            borderColor: 'divider',
-            display: 'flex',
-            gap: 2,
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            justifyContent: 'space-between'
-          }}
-        >
-          {/* Status Tabs */}
-          <ToggleButtonGroup
-            value={selectedStatus}
-            exclusive
-            onChange={(e, value) => value && setSelectedStatus(value)}
-            size="small"
-          >
-            <ToggleButton value="active">
-              Active
-            </ToggleButton>
-            <ToggleButton value="pending">
-              Pending
-            </ToggleButton>
-            <ToggleButton value="closed">
-              Closed
-            </ToggleButton>
-            <ToggleButton value="archived">
-              <Archive sx={{ mr: 0.5, fontSize: 16 }} />
-              Archived
-            </ToggleButton>
-          </ToggleButtonGroup>
-
-          {/* Scope Filter */}
-          <ToggleButtonGroup
-            value={scope}
-            exclusive
-            onChange={(e, value) => value && setScope(value)}
-            size="small"
-          >
-            <ToggleButton value="team">Team</ToggleButton>
-            <ToggleButton value="my">My Escrows</ToggleButton>
-          </ToggleButtonGroup>
-
-          {/* View Mode */}
-          <ToggleButtonGroup
-            value={viewMode}
-            exclusive
-            onChange={(e, value) => value && setViewMode(value)}
-            size="small"
-            sx={{ ml: 'auto' }}
-          >
-            <ToggleButton value="grid">
-              <ViewModule />
-            </ToggleButton>
-            <ToggleButton value="list">
-              <ViewList />
-            </ToggleButton>
-          </ToggleButtonGroup>
-
-          {/* Sort By */}
-          <ToggleButtonGroup
-            value={sortBy}
-            exclusive
-            onChange={(e, value) => value && setSortBy(value)}
-            size="small"
-          >
-            <ToggleButton value="created_at">Created</ToggleButton>
-            <ToggleButton value="closing_date">Closing Date</ToggleButton>
-            <ToggleButton value="purchase_price">Price</ToggleButton>
-          </ToggleButtonGroup>
-        </Paper>
+        <EscrowNavigation
+          selectedStatus={selectedStatus}
+          setSelectedStatus={setSelectedStatus}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+          scope={scope}
+          setScope={setScope}
+          archivedCount={escrows?.filter(e => e.deleted_at || e.deletedAt).length || 0}
+        />
 
         {/* Main Content */}
         <Box>
