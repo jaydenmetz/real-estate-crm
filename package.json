@@ -1,0 +1,16 @@
+{
+  "name": "real-estate-crm",
+  "version": "1.0.0",
+  "description": "Real Estate CRM System",
+  "private": true,
+  "scripts": {
+    "generate:module": "node scripts/generate-module.js",
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && npm install"
+  },
+  "dependencies": {
+    "fs-extra": "^11.3.2",
+    "inquirer": "^8.2.7"
+  },
+  "author": "Jayden Metz",
+  "license": "UNLICENSED"
+}
