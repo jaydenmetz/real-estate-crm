@@ -2,7 +2,7 @@ const express = require('express');
 
 const router = express.Router();
 const skyslopeService = require('../services/skyslope');
-const commissionService = require('../services/commission');
+const commissionService = require('../modules/escrows/services/commission');
 const { pool } = require('../config/database');
 
 /**

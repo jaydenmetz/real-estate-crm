@@ -1,6 +1,6 @@
 const { validationResult } = require('express-validator');
 const Invoice = require('../models/Invoice.mock');
-const logger = require('../utils/logger');
+const logger = require('../../../utils/logger');
 
 // GET /invoices
 exports.getInvoices = async (req, res) => {

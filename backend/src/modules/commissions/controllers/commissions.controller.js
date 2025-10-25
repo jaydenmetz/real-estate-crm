@@ -1,6 +1,6 @@
 const { validationResult } = require('express-validator');
 const Commission = require('../models/Commission.mock');
-const logger = require('../utils/logger');
+const logger = require('../../../utils/logger');
 
 // GET /commissions
 exports.getCommissions = async (req, res) => {

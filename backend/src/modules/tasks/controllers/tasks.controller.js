@@ -7,7 +7,7 @@
  * - Entity-related tasks (escrows, listings, clients)
  */
 
-const { pool } = require('../config/database');
+const { pool } = require('../../../config/database');
 const { v4: uuidv4 } = require('uuid');
 
 /**

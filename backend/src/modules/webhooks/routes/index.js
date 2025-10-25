@@ -3,8 +3,8 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const webhooksController = require('../controllers/webhooks.controller');
-const { authenticate, requireRole } = require('../middleware/auth.middleware');
-const { validate } = require('../middleware/validation.middleware');
+const { authenticate, requireRole } = require('../../../middleware/auth.middleware');
+const { validate } = require('../../../middleware/validation.middleware');
 
 // All routes require authentication
 router.use(authenticate);

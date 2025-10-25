@@ -249,13 +249,13 @@ apiRouter.use('/analytics', require('./routes/analytics.routes'));
 apiRouter.use('/teams', require('./routes/teams.routes'));
 
 // Tasks and Checklists routes (new project management system)
-apiRouter.use('/projects', require('./routes/projects.routes')); // Dev roadmap (admin-only)
-apiRouter.use('/checklist-templates', require('./routes/checklistTemplates.routes'));
-apiRouter.use('/checklists', require('./routes/checklists.routes'));
-apiRouter.use('/tasks', require('./routes/tasks.routes'));
-apiRouter.use('/communications', require('./routes/communications.routes'));
+apiRouter.use('/projects', require('./modules/projects/routes')); // Dev roadmap (admin-only)
+apiRouter.use('/checklist-templates', require('./modules/tasks/routes/checklistTemplates.routes'));
+apiRouter.use('/checklists', require('./modules/tasks/routes/checklists.routes'));
+apiRouter.use('/tasks', require('./modules/tasks/routes'));
+apiRouter.use('/communications', require('./modules/communications/routes'));
 apiRouter.use('/documents', require('./routes/documents.routes'));
-apiRouter.use('/webhooks', require('./routes/webhooks.routes')); // Webhooks bypass auth for external services
+apiRouter.use('/webhooks', require('./modules/webhooks/routes')); // Webhooks bypass auth for external services
 
 // Admin routes (requires system_admin role)
 apiRouter.use('/admin', require('./routes/admin.routes'));
@@ -294,9 +294,9 @@ apiRouter.get('/debug-sentry', (req, res) => {
 apiRouter.use('/link-preview', authenticate, require('./routes/linkPreview.routes'));
 
 // Financial routes
-apiRouter.use('/commissions', require('./routes/commissions.routes'));
-apiRouter.use('/invoices', require('./routes/invoices.routes'));
-apiRouter.use('/expenses', require('./routes/expenses.routes'));
+apiRouter.use('/commissions', require('./modules/commissions/routes'));
+apiRouter.use('/invoices', require('./modules/invoices/routes'));
+apiRouter.use('/expenses', require('./modules/expenses/routes'));
 
 // Upload routes
 apiRouter.use('/upload', require('./routes/upload.routes'));
