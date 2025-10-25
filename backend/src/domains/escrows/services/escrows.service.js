@@ -215,7 +215,6 @@ class EscrowsService extends BaseDomainService {
         loan_officer_phone: data.loan_officer_phone,
         title_company: data.title_company,
         lead_source: data.lead_source,
-        user_id: user.id,
         team_id: user.team_id,
         created_by: user.id
       };
