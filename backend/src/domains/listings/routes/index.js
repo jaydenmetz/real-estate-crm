@@ -2,6 +2,14 @@ const express = require('express');
 const router = express.Router();
 const listingsController = require('../controllers/listings.controller');
 const { authenticateToken } = require('../../../middleware/auth');
+const { validate } = require('../../../middleware/validation.middleware');
+const {
+  createListingRules,
+  updateListingRules,
+  updateStatusRules,
+  listingIdRules,
+  batchDeleteRules,
+} = require('../validators/listings.validators');
 
 /**
  * Listings Domain Routes
@@ -22,27 +30,27 @@ router.get('/stats', listingsController.getStats);
  * Batch operations (must be before /:id)
  * DELETE /v1/listings/batch
  */
-router.delete('/batch', listingsController.batchDeleteListings);
+router.delete('/batch', batchDeleteRules(), validate, listingsController.batchDeleteListings);
 
 /**
  * Main CRUD operations
  */
 router.get('/', listingsController.getListings);
-router.get('/:id', listingsController.getListing);
-router.post('/', listingsController.createListing);
-router.put('/:id', listingsController.updateListing);
-router.delete('/:id', listingsController.deleteListing);
+router.get('/:id', listingIdRules(), validate, listingsController.getListing);
+router.post('/', createListingRules(), validate, listingsController.createListing);
+router.put('/:id', [...listingIdRules(), ...updateListingRules()], validate, listingsController.updateListing);
+router.delete('/:id', listingIdRules(), validate, listingsController.deleteListing);
 
 /**
  * Status update endpoint (must be before archive/restore to avoid collision)
  * PATCH /v1/listings/:id/status
  */
-router.patch('/:id/status', listingsController.updateStatus);
+router.patch('/:id/status', [...listingIdRules(), ...updateStatusRules()], validate, listingsController.updateStatus);
 
 /**
  * Archive operations
  */
-router.patch('/:id/archive', listingsController.archiveListing);
-router.patch('/:id/restore', listingsController.restoreListing);
+router.patch('/:id/archive', listingIdRules(), validate, listingsController.archiveListing);
+router.patch('/:id/restore', listingIdRules(), validate, listingsController.restoreListing);
 
 module.exports = router;

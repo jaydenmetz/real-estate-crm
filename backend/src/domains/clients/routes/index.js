@@ -2,6 +2,13 @@ const express = require('express');
 const router = express.Router();
 const clientsController = require('../controllers/clients.controller');
 const { authenticateToken } = require('../../../middleware/auth');
+const { validate } = require('../../../middleware/validation.middleware');
+const {
+  createClientRules,
+  updateClientRules,
+  clientIdRules,
+  batchDeleteRules,
+} = require('../validators/clients.validators');
 
 /**
  * Clients Domain Routes
@@ -22,15 +29,15 @@ router.get('/stats', clientsController.getStats);
  * Batch operations (must be before /:id)
  * DELETE /v1/clients/batch
  */
-router.delete('/batch', clientsController.batchDeleteClients);
+router.delete('/batch', batchDeleteRules(), validate, clientsController.batchDeleteClients);
 
 /**
  * Main CRUD operations
  */
 router.get('/', clientsController.getAllClients);
-router.get('/:id', clientsController.getClientById);
-router.post('/', clientsController.createClient);
-router.put('/:id', clientsController.updateClient);
-router.delete('/:id', clientsController.deleteClient);
+router.get('/:id', clientIdRules(), validate, clientsController.getClientById);
+router.post('/', createClientRules(), validate, clientsController.createClient);
+router.put('/:id', [...clientIdRules(), ...updateClientRules()], validate, clientsController.updateClient);
+router.delete('/:id', clientIdRules(), validate, clientsController.deleteClient);
 
 module.exports = router;

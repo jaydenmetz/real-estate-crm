@@ -2,6 +2,14 @@ const express = require('express');
 const router = express.Router();
 const appointmentsController = require('../controllers/appointments.controller');
 const { authenticateToken } = require('../../../middleware/auth');
+const { validate } = require('../../../middleware/validation.middleware');
+const {
+  createAppointmentRules,
+  updateAppointmentRules,
+  updateStatusRules,
+  appointmentIdRules,
+  batchDeleteRules,
+} = require('../validators/appointments.validators');
 
 /**
  * Appointments Domain Routes
@@ -22,27 +30,27 @@ router.get('/stats', appointmentsController.getStats);
  * Batch operations (must be before /:id)
  * DELETE /v1/appointments/batch
  */
-router.delete('/batch', appointmentsController.batchDeleteAppointments);
+router.delete('/batch', batchDeleteRules(), validate, appointmentsController.batchDeleteAppointments);
 
 /**
  * Main CRUD operations
  */
 router.get('/', appointmentsController.getAppointments);
-router.get('/:id', appointmentsController.getAppointment);
-router.post('/', appointmentsController.createAppointment);
-router.put('/:id', appointmentsController.updateAppointment);
-router.delete('/:id', appointmentsController.deleteAppointment);
+router.get('/:id', appointmentIdRules(), validate, appointmentsController.getAppointment);
+router.post('/', createAppointmentRules(), validate, appointmentsController.createAppointment);
+router.put('/:id', [...appointmentIdRules(), ...updateAppointmentRules()], validate, appointmentsController.updateAppointment);
+router.delete('/:id', appointmentIdRules(), validate, appointmentsController.deleteAppointment);
 
 /**
  * Status update endpoint (must be before archive/restore to avoid collision)
  * PATCH /v1/appointments/:id/status
  */
-router.patch('/:id/status', appointmentsController.updateStatus);
+router.patch('/:id/status', [...appointmentIdRules(), ...updateStatusRules()], validate, appointmentsController.updateStatus);
 
 /**
  * Archive operations
  */
-router.patch('/:id/archive', appointmentsController.archiveAppointment);
-router.patch('/:id/restore', appointmentsController.restoreAppointment);
+router.patch('/:id/archive', appointmentIdRules(), validate, appointmentsController.archiveAppointment);
+router.patch('/:id/restore', appointmentIdRules(), validate, appointmentsController.restoreAppointment);
 
 module.exports = router;
