@@ -25,6 +25,7 @@ class EscrowsService extends BaseDomainService {
     // Add escrow-specific filters
     if (filters.status) {
       query.escrow_status = filters.status;
+      delete query.status; // Remove base class status, use escrow_status instead
     }
 
     if (filters.propertyType) {

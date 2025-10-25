@@ -69,6 +69,7 @@ class ListingsService extends BaseDomainService {
     // Add listing-specific filters
     if (filters.status) {
       query.listing_status = filters.status;
+      delete query.status; // Remove base class status, use listing_status instead
     }
 
     if (filters.propertyType) {

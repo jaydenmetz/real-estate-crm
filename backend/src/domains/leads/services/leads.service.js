@@ -24,6 +24,12 @@ class LeadsService extends BaseDomainService {
       query.lead_status = filters.leadStatus;
     }
 
+    // Also handle if status is passed instead of leadStatus
+    if (filters.status && !filters.leadStatus) {
+      query.lead_status = filters.status;
+      delete query.status; // Remove base class status, use lead_status instead
+    }
+
     if (filters.leadSource) {
       query.lead_source = filters.leadSource;
     }
