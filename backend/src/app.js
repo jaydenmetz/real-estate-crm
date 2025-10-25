@@ -255,7 +255,12 @@ listingsDomainRouter.use('/', require('./modules/listings/routes/health.routes')
 apiRouter.use('/listings', listingsDomainRouter);
 apiRouter.use('/contacts', require('./modules/contacts/routes'));
 apiRouter.use('/contact-roles', require('./modules/contacts/routes/contact-roles.routes'));
-apiRouter.use('/clients', require('./modules/clients/routes'));
+
+// Clients domain - Enhanced with domain architecture (Phase 4)
+const clientsDomainRouter = express.Router();
+clientsDomainRouter.use('/', require('./domains/clients/routes')); // New domain routes
+// Mount domain routes (new architecture) on /clients
+apiRouter.use('/clients', clientsDomainRouter);
 apiRouter.use('/appointments', require('./modules/appointments/routes'));
 apiRouter.use('/leads', require('./modules/leads/routes'));
 apiRouter.use('/analytics', require('./routes/analytics.routes'));
