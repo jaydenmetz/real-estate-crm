@@ -247,12 +247,12 @@ escrowsLegacyRouter.use('/', require('./modules/escrows/routes')); // Original m
 // Mount domain routes (new architecture) on /escrows
 apiRouter.use('/escrows', escrowsDomainRouter);
 
-// Listings routes - including health checks
-const listingsRouter = express.Router();
-listingsRouter.use('/', require('./modules/listings/routes'));
-listingsRouter.use('/', require('./modules/listings/routes/health.routes'));
-// Health endpoints at /listings/health/*
-apiRouter.use('/listings', listingsRouter);
+// Listings domain - Enhanced with domain architecture (Phase 4)
+const listingsDomainRouter = express.Router();
+listingsDomainRouter.use('/', require('./domains/listings/routes')); // New domain routes
+listingsDomainRouter.use('/', require('./modules/listings/routes/health.routes')); // Health endpoints preserved
+// Mount domain routes (new architecture) on /listings
+apiRouter.use('/listings', listingsDomainRouter);
 apiRouter.use('/contacts', require('./modules/contacts/routes'));
 apiRouter.use('/contact-roles', require('./modules/contacts/routes/contact-roles.routes'));
 apiRouter.use('/clients', require('./modules/clients/routes'));
