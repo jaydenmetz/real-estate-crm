@@ -101,8 +101,8 @@ const AdminSecurityDashboard = () => {
     },
     {
       onSuccess: () => {
-        queryClient.invalidateQueries('critical-events');
-        queryClient.invalidateQueries('all-security-stats');
+        queryClient.invalidateQueries({ queryKey: ['critical-events'] });
+        queryClient.invalidateQueries({ queryKey: ['all-security-stats'] });
         setDeleteDialogOpen(false);
         setSelectedUser(null);
       }

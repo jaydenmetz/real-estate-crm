@@ -71,8 +71,8 @@ const OnboardingSettings = () => {
     () => OnboardingService.deleteSampleData(),
     {
       onSuccess: () => {
-        queryClient.invalidateQueries('onboarding-sample-data');
-        queryClient.invalidateQueries('onboarding-progress');
+        queryClient.invalidateQueries({ queryKey: ['onboarding-sample-data'] });
+        queryClient.invalidateQueries({ queryKey: ['onboarding-progress'] });
         setDeleteDialog(false);
       },
     }
@@ -83,8 +83,8 @@ const OnboardingSettings = () => {
     () => OnboardingService.resetProgress(),
     {
       onSuccess: () => {
-        queryClient.invalidateQueries('onboarding-progress');
-        queryClient.invalidateQueries('onboarding-analytics');
+        queryClient.invalidateQueries({ queryKey: ['onboarding-progress'] });
+        queryClient.invalidateQueries({ queryKey: ['onboarding-analytics'] });
         setResetDialog(false);
       },
     }

@@ -284,34 +284,30 @@ const Settings = () => {
       retry: false,
       enabled: activeTab === 8,
       staleTime: 60000,
-      cacheTime: 300000
+      gcTime: 300000 // Renamed from cacheTime in v5
     }
   );
 
-  // Update profile mutation
-  const updateProfileMutation = useMutation(
-    (data) => api.profilesAPI.updateMe({ profile: data }),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries('myProfile');
-        setSnackbar({ open: true, message: 'Profile updated successfully!', severity: 'success' });
-      },
-      onError: () => {
-        setSnackbar({ open: true, message: 'Failed to update profile', severity: 'error' });
-      }
+  // Update profile mutation (v5 object syntax)
+  const updateProfileMutation = useMutation({
+    mutationFn: (data) => api.profilesAPI.updateMe({ profile: data }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['myProfile'] });
+      setSnackbar({ open: true, message: 'Profile updated successfully!', severity: 'success' });
+    },
+    onError: () => {
+      setSnackbar({ open: true, message: 'Failed to update profile', severity: 'error' });
     }
-  );
+  });
 
-  // Update settings mutation
-  const updateSettingsMutation = useMutation(
-    (data) => api.settingsAPI.update(data),
-    {
-      onSuccess: () => {
-        queryClient.invalidateQueries('mySettings');
-        setSnackbar({ open: true, message: 'Settings updated successfully!', severity: 'success' });
-      }
+  // Update settings mutation (v5 object syntax)
+  const updateSettingsMutation = useMutation({
+    mutationFn: (data) => api.settingsAPI.update(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['mySettings'] });
+      setSnackbar({ open: true, message: 'Settings updated successfully!', severity: 'success' });
     }
-  );
+  });
 
   const handleChange = (field) => (event) => {
     setFormData({ ...formData, [field]: event.target.value });

@@ -15,7 +15,7 @@ export const useDashboardData = (fetchFunction, options = {}) => {
     defaultRowsPerPage = 20,
     persistFilters = true,
     staleTime = 30000,
-    cacheTime = 600000,
+    gcTime = 600000, // Renamed from cacheTime in v5
     refetchOnWindowFocus = false,
     onSuccess,
     onError
@@ -53,23 +53,21 @@ export const useDashboardData = (fetchFunction, options = {}) => {
     error,
     refetch,
     isRefetching
-  } = useQuery(
-    [queryKey, queryParams],
-    () => fetchFunction(queryParams),
-    {
-      keepPreviousData: true,
-      staleTime,
-      cacheTime,
-      refetchOnWindowFocus,
-      onSuccess: (data) => {
-        if (onSuccess) onSuccess(data);
-      },
-      onError: (error) => {
-        console.error(`Dashboard data error for ${queryKey}:`, error);
-        if (onError) onError(error);
-      }
+  } = useQuery({
+    queryKey: [queryKey, queryParams],
+    queryFn: () => fetchFunction(queryParams),
+    placeholderData: (previousData) => previousData, // Renamed from keepPreviousData in v5
+    staleTime,
+    gcTime,
+    refetchOnWindowFocus,
+    onSuccess: (data) => {
+      if (onSuccess) onSuccess(data);
+    },
+    onError: (error) => {
+      console.error(`Dashboard data error for ${queryKey}:`, error);
+      if (onError) onError(error);
     }
-  );
+  });
 
   // Reset page when filters change
   useEffect(() => {

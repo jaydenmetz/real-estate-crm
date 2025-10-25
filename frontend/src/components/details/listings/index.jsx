@@ -622,7 +622,7 @@ const ListingDetail = () => {
     try {
       await listingsAPI.update(listing.id, { [field]: value });
       enqueueSnackbar(`${field} updated successfully`, { variant: 'success' });
-      queryClient.invalidateQueries(['listing', id]); // Refresh listing data
+      queryClient.invalidateQueries({ queryKey: ['listing', id] }); // Refresh listing data
     } catch (error) {
       enqueueSnackbar(`Failed to save ${field}: ${error.message}`, { variant: 'error' });
     } finally {
@@ -656,7 +656,7 @@ const ListingDetail = () => {
       ) {
         if (event.action === 'update') {
           // Another user edited this listing
-          queryClient.invalidateQueries(['listing', id]); // Refresh data
+          queryClient.invalidateQueries({ queryKey: ['listing', id] }); // Refresh data
 
           // Show notification if not current user's edit
           if (event.userId !== user?.id) {
@@ -2440,7 +2440,7 @@ const ListingDetail = () => {
         listing={listing}
         onSuccess={() => {
           setEditFormOpen(false);
-          queryClient.invalidateQueries(['listing', id]);
+          queryClient.invalidateQueries({ queryKey: ['listing', id] });
           enqueueSnackbar('Listing updated successfully', { variant: 'success' });
         }}
       />

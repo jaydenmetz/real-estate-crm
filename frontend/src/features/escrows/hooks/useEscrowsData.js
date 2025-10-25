@@ -35,7 +35,7 @@ export const useEscrowsData = (options = {}) => {
       defaultRowsPerPage: 20,
       persistFilters: true,
       staleTime: 30000, // 30 seconds
-      cacheTime: 600000, // 10 minutes
+      gcTime: 600000, // 10 minutes (renamed from cacheTime in v5)
       ...otherOptions
     }
   );

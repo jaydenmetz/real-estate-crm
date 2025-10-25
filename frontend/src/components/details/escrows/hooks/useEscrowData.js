@@ -22,7 +22,7 @@ export function useEscrowData(escrowId) {
     },
     enabled: !!escrowId,
     staleTime: 30000, // Consider data stale after 30 seconds
-    cacheTime: 300000, // Keep in cache for 5 minutes
+    gcTime: 300000, // Keep in cache for 5 minutes (renamed from cacheTime in v5)
   });
 
   // Update mutation for each section

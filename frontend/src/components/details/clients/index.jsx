@@ -760,7 +760,7 @@ const ClientDetail = () => {
     
     try {
       await clientsAPI.addNote(id, { content: newNote });
-      queryClient.invalidateQueries(['client', id]);
+      queryClient.invalidateQueries({ queryKey: ['client', id] });
       setNewNote('');
       setNoteDialog(false);
     } catch (error) {

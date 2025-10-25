@@ -275,7 +275,7 @@ const LeadDetail = () => {
   const handleStatusChange = async (newStatus) => {
     try {
       await leadsAPI.updateStatus(id, newStatus);
-      queryClient.invalidateQueries(['lead', id]);
+      queryClient.invalidateQueries({ queryKey: ['lead', id] });
     } catch (error) {
       console.error('Error updating status:', error);
     }
@@ -287,7 +287,7 @@ const LeadDetail = () => {
     try {
       await leadsAPI.addNote(id, { content: newNote });
       setNewNote('');
-      queryClient.invalidateQueries(['lead', id]);
+      queryClient.invalidateQueries({ queryKey: ['lead', id] });
     } catch (error) {
       console.error('Error adding note:', error);
     }

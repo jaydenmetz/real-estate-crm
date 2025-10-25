@@ -986,19 +986,19 @@ const EscrowsDashboard = () => {
     // Listen for events
     websocketService.on('escrow.created', (escrow) => {
       // Invalidate cache to refetch
-      queryClient.invalidateQueries(['escrows']);
+      queryClient.invalidateQueries({ queryKey: ['escrows'] });
       // Show toast
       toast.success(\`New escrow created: \${escrow.property_address}\`);
     });
 
     websocketService.on('escrow.updated', (escrow) => {
-      queryClient.invalidateQueries(['escrows']);
-      queryClient.invalidateQueries(['escrow', escrow.id]);
+      queryClient.invalidateQueries({ queryKey: ['escrows'] });
+      queryClient.invalidateQueries({ queryKey: ['escrow', escrow.id] });
       toast.info(\`Escrow updated: \${escrow.property_address}\`);
     });
 
     websocketService.on('escrow.deleted', ({ id }) => {
-      queryClient.invalidateQueries(['escrows']);
+      queryClient.invalidateQueries({ queryKey: ['escrows'] });
       toast.warning('Escrow deleted');
     });
 
