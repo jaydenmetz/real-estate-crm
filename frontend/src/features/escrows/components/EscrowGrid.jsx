@@ -1,82 +1,57 @@
 import React from 'react';
-import { Grid, Card, CardContent, Typography, Box, Checkbox } from '@mui/material';
-import { LocationOn, CalendarToday, AttachMoney } from '@mui/icons-material';
-import { formatCurrency, formatDate } from '../../../utils/formatters';
+import { Grid } from '@mui/material';
+import EscrowCard from '../../../components/common/widgets/EscrowCard';
 
 /**
- * EscrowGrid - Grid view for escrows
- * Displays escrows in a responsive card grid
+ * EscrowGrid - Grid view for escrows using beautiful EscrowCard with photo-on-top
+ * Displays escrows in a responsive card grid with inline editing
  */
-export const EscrowGrid = ({ escrows = [], onEscrowClick, onArchive, selection }) => {
+export const EscrowGrid = ({
+  escrows = [],
+  onEscrowClick,
+  onArchive,
+  onRestore,
+  onDelete,
+  onUpdate,
+  selection,
+  isArchived = false,
+  viewMode = 'small' // 'small' or 'large'
+}) => {
+  // If no escrows, show empty state
+  if (!escrows || escrows.length === 0) {
+    return (
+      <Grid container spacing={3} sx={{ py: 4, textAlign: 'center' }}>
+        <Grid item xs={12}>
+          <p>No escrows found</p>
+        </Grid>
+      </Grid>
+    );
+  }
+
   return (
     <Grid container spacing={3}>
-      {escrows.map((escrow) => (
-        <Grid item xs={12} sm={6} md={4} key={escrow.escrow_id}>
-          <Card
-            sx={{
-              cursor: 'pointer',
-              transition: 'all 0.3s',
-              '&:hover': {
-                transform: 'translateY(-4px)',
-                boxShadow: 6
-              }
-            }}
-            onClick={() => onEscrowClick(escrow)}
-          >
-            <CardContent>
-              {/* Selection checkbox */}
-              {selection && (
-                <Checkbox
-                  checked={selection.selected.includes(escrow.escrow_id)}
-                  onChange={(e) => {
-                    e.stopPropagation();
-                    selection.onSelectItem(escrow.escrow_id, e.target.checked);
-                  }}
-                  onClick={(e) => e.stopPropagation()}
-                />
-              )}
-
-              {/* Property address */}
-              <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 2 }}>
-                <LocationOn color="primary" />
-                <Typography variant="h6" component="div">
-                  {escrow.property_address || 'No Address'}
-                </Typography>
-              </Box>
-
-              {/* Price */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                <AttachMoney fontSize="small" />
-                <Typography variant="body1">
-                  {formatCurrency(escrow.purchase_price)}
-                </Typography>
-              </Box>
-
-              {/* Closing date */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                <CalendarToday fontSize="small" />
-                <Typography variant="body2" color="text.secondary">
-                  Closes: {formatDate(escrow.closing_date)}
-                </Typography>
-              </Box>
-
-              {/* Status */}
-              <Box sx={{ mt: 2 }}>
-                <Typography
-                  variant="caption"
-                  sx={{
-                    px: 1,
-                    py: 0.5,
-                    borderRadius: 1,
-                    bgcolor: escrow.escrow_status === 'Active' ? 'success.lighter' : 'grey.200',
-                    color: escrow.escrow_status === 'Active' ? 'success.dark' : 'text.secondary'
-                  }}
-                >
-                  {escrow.escrow_status}
-                </Typography>
-              </Box>
-            </CardContent>
-          </Card>
+      {escrows.map((escrow, index) => (
+        <Grid
+          item
+          xs={12}
+          sm={viewMode === 'small' ? 6 : 12}
+          md={viewMode === 'small' ? 4 : 6}
+          lg={viewMode === 'small' ? 3 : 4}
+          key={escrow.escrow_id}
+        >
+          <EscrowCard
+            escrow={escrow}
+            viewMode={viewMode}
+            index={index}
+            onArchive={onArchive}
+            onDelete={onDelete}
+            onRestore={onRestore}
+            onUpdate={onUpdate}
+            isArchived={isArchived}
+            animationType="spring"
+            animationDuration={1}
+            animationIntensity={1}
+          />
         </Grid>
       ))}
     </Grid>

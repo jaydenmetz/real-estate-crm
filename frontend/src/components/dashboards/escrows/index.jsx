@@ -178,11 +178,26 @@ const EscrowsDashboard = () => {
             <EscrowGrid
               escrows={sortedEscrows}
               onEscrowClick={(escrow) => navigate(`/escrows/${escrow.escrow_id}`)}
-              onArchive={(escrow) => {
-                // Handle archive
+              onArchive={async (id) => {
+                await escrowsData.actions.archive(id);
+                refetch();
+              }}
+              onRestore={async (id) => {
+                await escrowsData.actions.restore(id);
+                refetch();
+              }}
+              onDelete={async (id) => {
+                await escrowsData.actions.delete(id);
+                refetch();
+              }}
+              onUpdate={async (id, updates) => {
+                // TODO: Add update action to escrowsData
+                console.log('Updating escrow:', id, updates);
                 refetch();
               }}
               selection={escrowsData.selection}
+              isArchived={selectedStatus === 'archived'}
+              viewMode={viewMode}
             />
           )}
         </Box>
