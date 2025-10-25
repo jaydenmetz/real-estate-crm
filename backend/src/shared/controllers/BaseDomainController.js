@@ -1,6 +1,6 @@
 const { validationResult } = require('express-validator');
 const logger = require('../../utils/logger');
-const { AppError } = require('../../utils/errors');
+const { AppError } = require('../utils/errors');
 
 /**
  * BaseDomainController

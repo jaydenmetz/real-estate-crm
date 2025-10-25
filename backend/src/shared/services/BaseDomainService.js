@@ -1,4 +1,4 @@
-const { AppError } = require('../../utils/errors');
+const { AppError } = require('../utils/errors');
 const logger = require('../../utils/logger');
 const db = require('../../config/database');
 
