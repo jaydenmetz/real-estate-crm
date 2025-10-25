@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const escrowsController = require('../controllers/escrows.controller');
-const { authenticateToken } = require('../../../middleware/auth');
+const { authenticateToken } = require('../../../middleware/auth.middleware');
 const { validate } = require('../../../middleware/validation.middleware');
 const {
   createEscrowRules,
