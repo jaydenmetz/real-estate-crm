@@ -228,11 +228,24 @@ apiRouter.use('/gdpr', require('./routes/gdpr.routes'));
 
 // API Routes - Using professional .routes.js files with built-in auth
 // Each route file handles its own authentication and validation
-// Escrows routes - including health checks
-const escrowsRouter = express.Router();
-escrowsRouter.use('/', require('./modules/escrows/routes'));
-escrowsRouter.use('/', require('./modules/escrows/routes/health.routes')); // Health endpoints at /escrows/health/*
-apiRouter.use('/escrows', escrowsRouter);
+
+// ============================================
+// PHASE 4: Domain-Driven Design Architecture
+// ============================================
+// New domain-based routes (incrementally replacing module routes)
+// These routes use BaseDomainController/BaseDomainService pattern
+// Escrows domain - Enhanced with domain architecture (Phase 4)
+const escrowsDomainRouter = express.Router();
+escrowsDomainRouter.use('/', require('./domains/escrows/routes')); // New domain routes
+escrowsDomainRouter.use('/', require('./modules/escrows/routes/health.routes')); // Health endpoints preserved
+// NOTE: Domain routes take precedence, falling back to legacy module routes if needed
+
+// Legacy module routes (Phase 4 migration in progress)
+// These will be deprecated once all functionality is moved to domain routes
+const escrowsLegacyRouter = express.Router();
+escrowsLegacyRouter.use('/', require('./modules/escrows/routes')); // Original module routes
+// Mount domain routes (new architecture) on /escrows
+apiRouter.use('/escrows', escrowsDomainRouter);
 
 // Listings routes - including health checks
 const listingsRouter = express.Router();
