@@ -570,8 +570,9 @@ class ClientsService extends BaseDomainService {
       tags: client.tags,
       createdAt: client.created_at,
       updatedAt: client.updated_at,
-      userId: client.user_id,
-      teamId: client.team_id
+      teamId: client.team_id,
+      brokerId: client.broker_id,
+      createdBy: client.created_by
     };
   }
 }

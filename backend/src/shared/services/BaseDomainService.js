@@ -98,8 +98,8 @@ class BaseDomainService {
       // Prepare data
       const itemData = {
         ...data,
-        user_id: user.id,
         team_id: user.team_id,
+        broker_id: user.broker_id,
         created_by: user.id,
         updated_by: user.id,
         created_at: new Date(),
@@ -214,8 +214,8 @@ class BaseDomainService {
     const query = {};
 
     // User context
-    if (filters.userId) {
-      query.user_id = filters.userId;
+    if (filters.brokerId) {
+      query.broker_id = filters.brokerId;
     }
 
     if (filters.teamId) {
@@ -348,7 +348,9 @@ class BaseDomainService {
    * Check ownership
    */
   async checkOwnership(item, user) {
-    if (item.user_id && item.user_id.toString() !== user.id.toString()) {
+    // Check if user is the creator
+    if (item.created_by && item.created_by.toString() !== user.id.toString()) {
+      // If not creator, check team membership
       if (!item.team_id || item.team_id.toString() !== user.team_id.toString()) {
         throw new AppError('Access denied', 403);
       }

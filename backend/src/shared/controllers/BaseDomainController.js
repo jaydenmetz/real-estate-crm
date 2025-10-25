@@ -131,8 +131,8 @@ class BaseDomainController {
       throw new AppError('Resource not found', 404);
     }
 
-    // Check user ownership
-    if (resource.user_id && resource.user_id.toString() !== userId.toString()) {
+    // Check user ownership (check if user created the resource)
+    if (resource.created_by && resource.created_by.toString() !== userId.toString()) {
       // Check team ownership as fallback
       if (!resource.team_id || resource.team_id.toString() !== teamId.toString()) {
         throw new AppError('Access denied', 403);
