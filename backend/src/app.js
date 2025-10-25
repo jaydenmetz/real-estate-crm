@@ -261,8 +261,18 @@ const clientsDomainRouter = express.Router();
 clientsDomainRouter.use('/', require('./domains/clients/routes')); // New domain routes
 // Mount domain routes (new architecture) on /clients
 apiRouter.use('/clients', clientsDomainRouter);
-apiRouter.use('/appointments', require('./modules/appointments/routes'));
-apiRouter.use('/leads', require('./modules/leads/routes'));
+
+// Appointments domain - Enhanced with domain architecture (Phase 4)
+const appointmentsDomainRouter = express.Router();
+appointmentsDomainRouter.use('/', require('./domains/appointments/routes')); // New domain routes
+// Mount domain routes (new architecture) on /appointments
+apiRouter.use('/appointments', appointmentsDomainRouter);
+
+// Leads domain - Enhanced with domain architecture (Phase 4)
+const leadsDomainRouter = express.Router();
+leadsDomainRouter.use('/', require('./domains/leads/routes')); // New domain routes
+// Mount domain routes (new architecture) on /leads
+apiRouter.use('/leads', leadsDomainRouter);
 apiRouter.use('/analytics', require('./routes/analytics.routes'));
 apiRouter.use('/teams', require('./routes/teams.routes'));
 
