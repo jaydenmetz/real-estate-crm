@@ -1,6 +1,6 @@
 import React from 'react';
 import { Grid } from '@mui/material';
-import EscrowCard from '../../../components/common/widgets/EscrowCard';
+import EscrowCard from '../../../common/widgets/EscrowCard';
 
 /**
  * EscrowGrid - Grid view for escrows using beautiful EscrowCard with photo-on-top

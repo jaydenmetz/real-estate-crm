@@ -6,10 +6,10 @@ import {
   CircularProgress,
   Typography,
 } from '@mui/material';
-import { useEscrowsData } from '../../../features/escrows/hooks/useEscrowsData';
-import { EscrowGrid } from '../../../features/escrows/components/EscrowGrid';
-import { EscrowList } from '../../../features/escrows/components/EscrowList';
-import { NewEscrowModal } from '../../../features/escrows/components/NewEscrowModal';
+import { useEscrowsData } from './hooks/useEscrowsData';
+import { EscrowGrid } from './components/EscrowGrid';
+import { EscrowList } from './components/EscrowList';
+import { NewEscrowModal } from './modals/NewEscrowModal';
 import EscrowHeroCard from './components/EscrowHeroCard';
 import EscrowNavigation from './components/EscrowNavigation';
 import { detectPresetRange, filterEscrows, sortEscrows } from './utils/escrowUtils';

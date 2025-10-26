@@ -1,7 +1,9 @@
 import React from 'react';
-import { useDashboardData } from '../../../shared/hooks';
-import { escrowsService } from '../services/escrows.service';
+import { useDashboardData } from '../../../../shared/hooks';
+import { api } from '../../../../services/api.service';
 import { Home, TrendingUp, AttachMoney, CheckCircle } from '@mui/icons-material';
+
+const escrowsService = api.escrowsAPI;
 
 /**
  * useEscrowsData - Specialized hook for escrows dashboard

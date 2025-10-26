@@ -11,7 +11,7 @@ import {
   Chip
 } from '@mui/material';
 import { Home, CalendarToday, AttachMoney } from '@mui/icons-material';
-import { formatCurrency, formatDate } from '../../../utils/formatters';
+import { formatCurrency, formatDate } from '../../../../utils/formatters';
 
 /**
  * EscrowList - List view for escrows
