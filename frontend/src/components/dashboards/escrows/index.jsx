@@ -7,11 +7,10 @@ import {
   Typography,
 } from '@mui/material';
 import { useEscrowsData } from './hooks/useEscrowsData';
-import { EscrowGrid } from './components/EscrowGrid';
-import { EscrowList } from './components/EscrowList';
 import { NewEscrowModal } from './modals/NewEscrowModal';
 import EscrowHeroCard from './components/EscrowHeroCard';
 import EscrowNavigation from './components/EscrowNavigation';
+import EscrowContent from './components/EscrowContent';
 import { detectPresetRange, filterEscrows, sortEscrows } from './utils/escrowUtils';
 
 const EscrowsDashboard = () => {
@@ -155,52 +154,38 @@ const EscrowsDashboard = () => {
         />
 
         {/* Main Content */}
-        <Box>
-          {isLoading ? (
-            <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
-              <CircularProgress />
-            </Box>
-          ) : error ? (
-            <Box p={4} textAlign="center">
-              <Typography color="error">{error}</Typography>
-            </Box>
-          ) : viewMode === 'list' ? (
-            <EscrowList
-              escrows={sortedEscrows}
-              onEscrowClick={(escrow) => navigate(`/escrows/${escrow.escrow_id}`)}
-              onArchive={(escrow) => {
-                // Handle archive
-                refetch();
-              }}
-              selection={escrowsData.selection}
-            />
-          ) : (
-            <EscrowGrid
-              escrows={sortedEscrows}
-              onEscrowClick={(escrow) => navigate(`/escrows/${escrow.escrow_id}`)}
-              onArchive={async (id) => {
-                await escrowsData.actions.archive(id);
-                refetch();
-              }}
-              onRestore={async (id) => {
-                await escrowsData.actions.restore(id);
-                refetch();
-              }}
-              onDelete={async (id) => {
-                await escrowsData.actions.delete(id);
-                refetch();
-              }}
-              onUpdate={async (id, updates) => {
-                // TODO: Add update action to escrowsData
-                console.log('Updating escrow:', id, updates);
-                refetch();
-              }}
-              selection={escrowsData.selection}
-              isArchived={selectedStatus === 'archived'}
-              viewMode={viewMode}
-            />
-          )}
-        </Box>
+        <EscrowContent
+          loading={isLoading}
+          selectedStatus={selectedStatus}
+          viewMode={viewMode}
+          sortedEscrows={sortedEscrows}
+          archivedEscrows={escrows?.filter(e => e.deleted_at || e.deletedAt) || []}
+          loadingMore={false}
+          hasMorePages={false}
+          handleLoadMore={() => {}}
+          selectedArchivedIds={[]}
+          setSelectedArchivedIds={() => {}}
+          handleBatchDelete={() => {}}
+          batchDeleting={false}
+          handleSelectAll={() => {}}
+          totalCount={escrows?.length || 0}
+          onArchive={async (id) => {
+            await escrowsData.actions.archive(id);
+            refetch();
+          }}
+          onRestore={async (id) => {
+            await escrowsData.actions.restore(id);
+            refetch();
+          }}
+          onDelete={async (id) => {
+            await escrowsData.actions.delete(id);
+            refetch();
+          }}
+          onUpdate={async (id, updates) => {
+            console.log('Updating escrow:', id, updates);
+            refetch();
+          }}
+        />
 
         {/* New Escrow Modal */}
         <NewEscrowModal
