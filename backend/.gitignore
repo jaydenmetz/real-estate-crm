@@ -6,3 +6,4 @@
 !.env.example.env.production
 railway-env-vars.txt
 server.log
+coverage/
