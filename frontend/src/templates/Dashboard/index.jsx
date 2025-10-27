@@ -4,6 +4,7 @@ import { DashboardHero } from './components/DashboardHero';
 import { DashboardStats } from './components/DashboardStats';
 import { DashboardNavigation } from './components/DashboardNavigation';
 import { DashboardContent } from './components/DashboardContent';
+import DashboardStatCard from './components/DashboardStatCard';
 import { useDashboardData } from './hooks/useDashboardData';
 
 /**
@@ -141,7 +142,7 @@ export const DashboardTemplate = ({
           customEndDate={customEndDate}
           setCustomEndDate={setCustomEndDate}
           detectPresetRange={detectPresetRange}
-          StatCardComponent={null} // TODO: Pass the actual StatCard component
+          StatCardComponent={DashboardStatCard}
         />
 
         {/* Stats are now embedded in Hero, so no separate stats section needed */}

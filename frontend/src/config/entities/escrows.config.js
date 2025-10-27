@@ -78,12 +78,13 @@ export const escrowsConfig = createEntityConfig({
     hero: {
       dateRangeFilters: ['1D', '1M', '1Y', 'YTD', 'Custom'],
       defaultDateRange: '1M',
-      showAIManager: true,
-      aiManagerLabel: 'AI Escrow Manager',
-      aiManagerDescription: 'Hire an AI assistant to manage escrows, track deadlines, and automate document workflows.',
+      showAIAssistant: true,
+      aiAssistantLabel: 'AI Escrow Manager',
+      aiAssistantDescription: 'Hire an AI assistant to manage escrows, track deadlines, and automate document workflows.',
       showAnalyticsButton: true,
+      analyticsButtonLabel: 'ESCROW ANALYTICS',
       showAddButton: true,
-      addButtonLabel: 'Add New Escrow'
+      addButtonLabel: 'NEW ESCROW'
     },
 
     // Stats Configuration (dynamic based on selectedStatus)
