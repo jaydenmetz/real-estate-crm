@@ -5,7 +5,9 @@ import {
   Button,
   ToggleButton,
   ToggleButtonGroup,
-  Grid
+  Grid,
+  Card,
+  CardContent
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -41,6 +43,7 @@ export const DashboardHero = ({
   setCustomStartDate,
   customEndDate,
   setCustomEndDate,
+  dateRange,
   detectPresetRange,
   StatCardComponent
 }) => {
@@ -154,7 +157,23 @@ export const DashboardHero = ({
                   onOpen={() => setStartDatePickerOpen(true)}
                   onClose={() => setStartDatePickerOpen(false)}
                   format="MMM d, yyyy"
-                  value={customStartDate}
+                  value={(() => {
+                    try {
+                      const date = customStartDate || dateRange?.startDate;
+                      if (!date) return null;
+                      if (typeof date === 'string') {
+                        const parsed = new Date(date);
+                        if (isNaN(parsed.getTime())) return null;
+                        return parsed;
+                      }
+                      if (!(date instanceof Date)) return null;
+                      if (isNaN(date.getTime())) return null;
+                      return date;
+                    } catch (e) {
+                      console.error('DatePicker value error:', e);
+                      return null;
+                    }
+                  })()}
                   onChange={(newDate) => {
                     setCustomStartDate(newDate);
                     if (newDate && customEndDate && detectPresetRange) {
@@ -206,7 +225,23 @@ export const DashboardHero = ({
                   onOpen={() => setEndDatePickerOpen(true)}
                   onClose={() => setEndDatePickerOpen(false)}
                   format="MMM d, yyyy"
-                  value={customEndDate}
+                  value={(() => {
+                    try {
+                      const date = customEndDate || dateRange?.endDate;
+                      if (!date) return null;
+                      if (typeof date === 'string') {
+                        const parsed = new Date(date);
+                        if (isNaN(parsed.getTime())) return null;
+                        return parsed;
+                      }
+                      if (!(date instanceof Date)) return null;
+                      if (isNaN(date.getTime())) return null;
+                      return date;
+                    } catch (e) {
+                      console.error('DatePicker value error:', e);
+                      return null;
+                    }
+                  })()}
                   onChange={(newDate) => {
                     setCustomEndDate(newDate);
                     if (customStartDate && newDate && detectPresetRange) {
@@ -274,8 +309,8 @@ export const DashboardHero = ({
                         icon={statCfg.icon}
                         title={statCfg.label}
                         value={stats?.[statCfg.id]?.value || 0}
-                        prefix={statCfg.format === 'currency' ? '$' : ''}
-                        suffix={statCfg.format === 'percentage' ? '%' : ''}
+                        prefix={statCfg.format === 'currency' ? '$' : (statCfg.prefix || '')}
+                        suffix={statCfg.format === 'percentage' ? '%' : (statCfg.suffix || '')}
                         color="#ffffff"
                         delay={index}
                         goal={statCfg.goal}
@@ -324,7 +359,99 @@ export const DashboardHero = ({
           {/* AI Assistant Card (if enabled) */}
           {config.showAIAssistant && (
             <Grid item xs={12} lg={3}>
-              {/* Render AI Assistant card here if needed */}
+              <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Card
+                    elevation={0}
+                    sx={{
+                      minHeight: { xs: 250, md: 320 },
+                      position: 'relative',
+                      overflow: 'hidden',
+                      background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.08) 100%)',
+                      backdropFilter: 'blur(10px)',
+                      border: '2px dashed rgba(255, 255, 255, 0.3)',
+                      borderRadius: 3,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.3s ease',
+                      '&:hover': {
+                        border: '2px dashed rgba(255, 255, 255, 0.5)',
+                        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.12) 100%)',
+                      }
+                    }}
+                  >
+                    <CardContent sx={{ textAlign: 'center', p: 3 }}>
+                      <Box>
+                        <Box
+                          sx={{
+                            width: 64,
+                            height: 64,
+                            borderRadius: '50%',
+                            background: 'rgba(255, 255, 255, 0.15)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            margin: '0 auto',
+                            mb: 2,
+                          }}
+                        >
+                          <Typography sx={{ fontSize: '2rem' }}>🤖</Typography>
+                        </Box>
+                        <Typography
+                          variant="h6"
+                          sx={{
+                            color: 'rgba(255, 255, 255, 0.95)',
+                            fontWeight: 700,
+                            mb: 1,
+                            letterSpacing: '0.02em',
+                          }}
+                        >
+                          {config.aiAssistantLabel || 'AI Assistant'}
+                        </Typography>
+                        <Typography
+                          variant="body2"
+                          sx={{
+                            color: 'rgba(255, 255, 255, 0.7)',
+                            mb: 2,
+                            fontSize: '0.875rem',
+                          }}
+                        >
+                          {config.aiAssistantDescription || 'Hire an AI assistant to automate workflows.'}
+                        </Typography>
+                        <Box
+                          sx={{
+                            display: 'inline-block',
+                            px: 2,
+                            py: 0.75,
+                            borderRadius: 2,
+                            background: 'rgba(255, 255, 255, 0.2)',
+                            backdropFilter: 'blur(5px)',
+                          }}
+                        >
+                          <Typography
+                            variant="caption"
+                            sx={{
+                              color: 'white',
+                              fontWeight: 600,
+                              letterSpacing: '0.1em',
+                              textTransform: 'uppercase',
+                              fontSize: '0.75rem',
+                            }}
+                          >
+                            Coming Soon
+                          </Typography>
+                        </Box>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </Box>
             </Grid>
           )}
         </Grid>

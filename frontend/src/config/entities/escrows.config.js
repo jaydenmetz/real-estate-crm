@@ -92,7 +92,7 @@ export const escrowsConfig = createEntityConfig({
       // When selectedStatus === 'active'
       {
         id: 'total',
-        label: 'Total Escrows',
+        label: 'TOTAL ESCROWS',
         field: 'total',
         format: 'number',
         icon: 'Home',
@@ -104,7 +104,7 @@ export const escrowsConfig = createEntityConfig({
       },
       {
         id: 'active',
-        label: 'Active Escrows',
+        label: 'ACTIVE ESCROWS',
         field: 'active',
         format: 'number',
         icon: 'CheckCircle',
@@ -116,12 +116,25 @@ export const escrowsConfig = createEntityConfig({
       },
       {
         id: 'active_volume',
-        label: 'Active Volume',
+        label: 'ACTIVE VOLUME',
         field: 'activeVolume',
         format: 'currency',
         icon: 'AttachMoney',
         color: 'success.main',
         goal: 10000000,
+        showGoal: true,
+        showTrend: true,
+        visibleWhen: ['active']
+      },
+      {
+        id: 'avg_days_to_close',
+        label: 'AVG DAYS TO CLOSE',
+        field: 'avgDaysToClose',
+        format: 'number',
+        icon: 'Schedule',
+        suffix: ' days',
+        color: 'info.main',
+        goal: 30,
         showGoal: true,
         showTrend: true,
         visibleWhen: ['active']

@@ -130,6 +130,8 @@ export const DashboardTemplate = ({
             analyticsButtonLabel: config.dashboard.hero.analyticsButtonLabel,
             addButtonLabel: config.dashboard.hero.addButtonLabel,
             showAIAssistant: config.dashboard.hero.showAIAssistant,
+            aiAssistantLabel: config.dashboard.hero.aiAssistantLabel,
+            aiAssistantDescription: config.dashboard.hero.aiAssistantDescription,
           }}
           stats={stats}
           statsConfig={config.dashboard.stats}
@@ -141,6 +143,7 @@ export const DashboardTemplate = ({
           setCustomStartDate={setCustomStartDate}
           customEndDate={customEndDate}
           setCustomEndDate={setCustomEndDate}
+          dateRange={dateRange}
           detectPresetRange={detectPresetRange}
           StatCardComponent={DashboardStatCard}
         />
