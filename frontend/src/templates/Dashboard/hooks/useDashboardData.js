@@ -29,37 +29,44 @@ export const useDashboardData = (config) => {
   } = useQuery({
     queryKey: [config.entity.namePlural, selectedStatus, selectedScope, dateRange],
     queryFn: async () => {
-      // Use config's API endpoint
-      const endpoint = config.api.endpoints.list;
-      const params = new URLSearchParams();
+      // Build query params
+      const params = {};
 
       // Add filters based on config
       if (selectedStatus !== 'all') {
-        params.append('status', selectedStatus);
+        params.status = selectedStatus;
       }
       if (selectedScope !== 'all') {
-        params.append('scope', selectedScope);
+        params.scope = selectedScope;
       }
       if (dateRange?.value !== 'all') {
-        params.append('dateRange', dateRange.value);
+        params.dateRange = dateRange.value;
       }
 
-      const url = `${endpoint}${params.toString() ? `?${params.toString()}` : ''}`;
+      // Use config's API method if available, otherwise fallback to fetch
+      if (config.api.getAll) {
+        const result = await config.api.getAll(params);
+        return result.data || result;
+      } else {
+        // Fallback to fetch
+        const endpoint = config.api.endpoints.list;
+        const queryString = new URLSearchParams(params).toString();
+        const url = `${endpoint}${queryString ? `?${queryString}` : ''}`;
 
-      // Call the API using config's fetch method
-      const response = await fetch(url, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-          'Content-Type': 'application/json',
-        },
-      });
+        const response = await fetch(url, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
+            'Content-Type': 'application/json',
+          },
+        });
 
-      if (!response.ok) {
-        throw new Error(`Failed to fetch ${config.entity.namePlural}`);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch ${config.entity.namePlural}`);
+        }
+
+        const result = await response.json();
+        return result.data || result;
       }
-
-      const result = await response.json();
-      return result.data || result;
     },
     staleTime: 30000, // 30 seconds
     refetchOnWindowFocus: false,

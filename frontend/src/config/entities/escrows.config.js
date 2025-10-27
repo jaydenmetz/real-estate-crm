@@ -10,6 +10,7 @@
  */
 
 import { createEntityConfig } from './base.config';
+import { api } from '../../services/api.service';
 
 export const escrowsConfig = createEntityConfig({
   // ========================================
@@ -33,6 +34,14 @@ export const escrowsConfig = createEntityConfig({
   // ========================================
   api: {
     baseEndpoint: '/escrows',
+    // Use api.service methods directly
+    getAll: (params) => api.escrowsAPI.getAll(params),
+    getById: (id) => api.escrowsAPI.getById(id),
+    create: (data) => api.escrowsAPI.create(data),
+    update: (id, data) => api.escrowsAPI.update(id, data),
+    delete: (id) => api.escrowsAPI.delete(id),
+    archive: (id) => api.escrowsAPI.archive(id),
+    restore: (id) => api.escrowsAPI.restore(id),
     endpoints: {
       list: '/escrows',
       get: '/escrows/:id',
