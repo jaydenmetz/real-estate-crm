@@ -76,6 +76,13 @@ export const useDashboardData = (config) => {
   const stats = useMemo(() => {
     if (!rawData) return {};
 
+    // Ensure rawData is an array
+    const dataArray = Array.isArray(rawData) ? rawData : [];
+
+    if (!Array.isArray(rawData)) {
+      console.warn('[useDashboardData] rawData is not an array:', rawData);
+    }
+
     const statsData = {};
 
     // Safety check - ensure stats config exists and is an array
@@ -94,19 +101,19 @@ export const useDashboardData = (config) => {
       let value = 0;
 
       if (statConfig.field === 'total') {
-        value = rawData.length || 0;
+        value = dataArray.length || 0;
       } else if (statConfig.field === 'activeVolume' || statConfig.field === 'closedVolume') {
         // Sum up numeric fields (e.g., purchase prices)
         const statusFilter = statConfig.field === 'activeVolume' ? 'active' : 'closed';
-        value = rawData
+        value = dataArray
           .filter(item => item.escrow_status === statusFilter || item.status === statusFilter)
           .reduce((sum, item) => sum + (parseFloat(item.purchase_price || item.value || 0)), 0);
       } else if (statConfig.calculation) {
         // Custom calculation function
-        value = statConfig.calculation(rawData);
+        value = statConfig.calculation(dataArray);
       } else {
         // Direct field access
-        value = rawData[statConfig.field] || 0;
+        value = dataArray[statConfig.field] || 0;
       }
 
       // Calculate trend (simple: compare to previous period - would need historical data in real implementation)
@@ -132,7 +139,9 @@ export const useDashboardData = (config) => {
   const filteredData = useMemo(() => {
     if (!rawData) return [];
 
-    let filtered = [...rawData];
+    // Ensure rawData is an array before spreading
+    const dataArray = Array.isArray(rawData) ? rawData : [];
+    let filtered = [...dataArray];
 
     // Apply status filter
     if (selectedStatus !== 'all') {
