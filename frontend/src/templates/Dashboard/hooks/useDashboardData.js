@@ -9,15 +9,15 @@ import { useQuery } from '@tanstack/react-query';
  */
 export const useDashboardData = (config) => {
   // State management
-  const [selectedStatus, setSelectedStatus] = useState(config.dashboard.statusTabs?.[0]?.value || 'all');
-  const [selectedScope, setSelectedScope] = useState(config.dashboard.scopeOptions?.[0]?.value || 'all');
-  const [viewMode, setViewMode] = useState(config.dashboard.viewModes?.[0]?.value || 'grid');
+  const [selectedStatus, setSelectedStatus] = useState(config.dashboard?.statusTabs?.[0]?.value || 'all');
+  const [selectedScope, setSelectedScope] = useState(config.dashboard?.scopeOptions?.[0]?.value || 'all');
+  const [viewMode, setViewMode] = useState(config.dashboard?.viewModes?.[0]?.value || 'grid');
   const [dateRange, setDateRange] = useState(
-    config.dashboard.hero.defaultDateRange
+    config.dashboard?.hero?.defaultDateRange
       ? { value: config.dashboard.hero.defaultDateRange, label: config.dashboard.hero.defaultDateRange }
       : { value: '1M', label: '1 Month' }
   );
-  const [sortBy, setSortBy] = useState(config.dashboard.sortOptions?.[0]?.value || 'created_at');
+  const [sortBy, setSortBy] = useState(config.dashboard?.sortOptions?.[0]?.value || 'created_at');
   const [sortOrder, setSortOrder] = useState('desc');
 
   // Fetch data using React Query
@@ -77,6 +77,12 @@ export const useDashboardData = (config) => {
     if (!rawData) return {};
 
     const statsData = {};
+
+    // Safety check - ensure stats config exists and is an array
+    if (!config.dashboard?.stats || !Array.isArray(config.dashboard.stats)) {
+      console.warn('[useDashboardData] config.dashboard.stats is not an array:', config.dashboard?.stats);
+      return {};
+    }
 
     config.dashboard.stats.forEach(statConfig => {
       // Check if stat should be visible for current status
@@ -146,7 +152,7 @@ export const useDashboardData = (config) => {
     }
 
     // Apply sorting
-    if (sortBy && config.utils.sortBy) {
+    if (sortBy && config.utils?.sortBy) {
       filtered = config.utils.sortBy(filtered, sortBy, sortOrder);
     } else {
       // Default sorting
