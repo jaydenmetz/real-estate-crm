@@ -57,6 +57,17 @@ export const DashboardTemplate = ({
   // Modal state
   const [newItemModalOpen, setNewItemModalOpen] = useState(false);
 
+  // Date range states for the hero
+  const [dateRangeFilter, setDateRangeFilter] = useState('1M');
+  const [customStartDate, setCustomStartDate] = useState(null);
+  const [customEndDate, setCustomEndDate] = useState(null);
+
+  // Helper to detect preset ranges
+  const detectPresetRange = (startDate, endDate) => {
+    // Simple implementation - would need to match actual date logic
+    return null;
+  };
+
   // CRUD handlers
   const handleCreate = async (itemData) => {
     try {
@@ -107,29 +118,33 @@ export const DashboardTemplate = ({
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
       <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {/* Hero Card */}
+        {/* Hero Card with embedded stats - ClientHeroCard style */}
         <DashboardHero
           config={{
             title: config.entity.labelPlural,
             subtitle: `Manage your ${config.entity.namePlural}`,
             gradient: `linear-gradient(135deg, ${config.entity.colorGradient.start} 0%, ${config.entity.colorGradient.end} 100%)`,
             entitySingular: config.entity.label,
-            showDateRange: config.dashboard.hero.dateRangeFilters?.length > 0,
-            showScope: config.dashboard.scopeOptions?.length > 0,
+            showAnalyticsButton: config.dashboard.hero.showAnalyticsButton,
+            analyticsButtonLabel: config.dashboard.hero.analyticsButtonLabel,
+            addButtonLabel: config.dashboard.hero.addButtonLabel,
+            showAIAssistant: config.dashboard.hero.showAIAssistant,
           }}
+          stats={stats}
+          statsConfig={config.dashboard.stats}
+          selectedStatus={selectedStatus}
           onNewItem={config.dashboard.hero.showAddButton ? () => setNewItemModalOpen(true) : null}
-          dateRange={dateRange}
-          scope={selectedScope}
+          dateRangeFilter={dateRangeFilter}
+          setDateRangeFilter={setDateRangeFilter}
+          customStartDate={customStartDate}
+          setCustomStartDate={setCustomStartDate}
+          customEndDate={customEndDate}
+          setCustomEndDate={setCustomEndDate}
+          detectPresetRange={detectPresetRange}
+          StatCardComponent={null} // TODO: Pass the actual StatCard component
         />
 
-        {/* Stats Cards */}
-        {config.dashboard?.stats && Array.isArray(config.dashboard.stats) && config.dashboard.stats.length > 0 && (
-          <DashboardStats
-            stats={stats}
-            config={config.dashboard.stats}
-            selectedStatus={selectedStatus}
-          />
-        )}
+        {/* Stats are now embedded in Hero, so no separate stats section needed */}
 
         {/* Navigation & Filters */}
         <DashboardNavigation

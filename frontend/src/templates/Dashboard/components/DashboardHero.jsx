@@ -1,51 +1,334 @@
-import React from 'react';
-import { Box, Typography, Button, Stack, Chip } from '@mui/material';
-import { Add as AddIcon } from '@mui/icons-material';
+import React, { useState } from 'react';
+import {
+  Box,
+  Typography,
+  Button,
+  ToggleButton,
+  ToggleButtonGroup,
+  Grid
+} from '@mui/material';
+import { styled } from '@mui/material/styles';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { motion } from 'framer-motion';
+import { Add as AddIcon, Assessment as AssessmentIcon } from '@mui/icons-material';
 
-export const DashboardHero = ({ config, onNewItem, dateRange, scope }) => {
+// Styled Components matching ClientHeroCard
+const HeroSection = styled(Box)(({ theme }) => ({
+  position: 'relative',
+  borderRadius: theme.spacing(3),
+  overflow: 'hidden',
+  background: 'linear-gradient(135deg, #0891B2 0%, #06B6D4 100%)', // Default cyan, will be overridden
+  color: 'white',
+  padding: theme.spacing(4),
+  marginBottom: theme.spacing(4),
+  boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
+  [theme.breakpoints.down('md')]: {
+    padding: theme.spacing(3),
+  },
+}));
+
+export const DashboardHero = ({
+  config,
+  stats,
+  statsConfig,
+  selectedStatus,
+  onNewItem,
+  dateRangeFilter,
+  setDateRangeFilter,
+  customStartDate,
+  setCustomStartDate,
+  customEndDate,
+  setCustomEndDate,
+  detectPresetRange,
+  StatCardComponent
+}) => {
+  // Local state for date pickers
+  const [startDatePickerOpen, setStartDatePickerOpen] = useState(false);
+  const [endDatePickerOpen, setEndDatePickerOpen] = useState(false);
+
   return (
-    <Box
-      sx={{
-        background: config.gradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        borderRadius: 2,
-        p: 4,
-        color: 'white',
-        position: 'relative',
-        overflow: 'hidden',
-      }}
-    >
-      <Stack direction="row" justifyContent="space-between" alignItems="center">
-        <Box>
-          <Typography variant="h4" fontWeight="bold">{config.title}</Typography>
-          <Typography variant="body1" sx={{ opacity: 0.9, mt: 1 }}>
-            {config.subtitle}
-          </Typography>
-          {(config.showDateRange || config.showScope) && (
-            <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
-              {config.showDateRange && dateRange && (
-                <Chip label={dateRange.label} size="small" sx={{ backgroundColor: 'rgba(255,255,255,0.2)' }} />
-              )}
-              {config.showScope && scope && (
-                <Chip label={scope.toUpperCase()} size="small" sx={{ backgroundColor: 'rgba(255,255,255,0.2)' }} />
-              )}
-            </Stack>
-          )}
-        </Box>
-        {onNewItem && (
-          <Button
-            variant="contained"
-            startIcon={<AddIcon />}
-            onClick={onNewItem}
-            sx={{
-              backgroundColor: 'rgba(255, 255, 255, 0.2)',
-              backdropFilter: 'blur(10px)',
-              '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.3)' },
-            }}
+    <HeroSection sx={{
+      background: config.gradient || 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+    }}>
+      {/* Wrapper for header and main content */}
+      <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+
+        {/* Header Row - Full width */}
+        <Box sx={{
+          display: 'flex',
+          gap: 3,
+          alignItems: 'center',
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          justifyContent: 'space-between',
+          mb: 3,
+          width: '100%',
+        }}>
+          {/* Title */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            style={{ flexShrink: 0 }}
           >
-            New {config.entitySingular}
-          </Button>
-        )}
-      </Stack>
-    </Box>
+            <Typography variant="h3" component="h1" sx={{ fontWeight: 700 }}>
+              {config.title}
+            </Typography>
+          </motion.div>
+
+          {/* Date Controls Container */}
+          <Box sx={{
+            display: 'flex',
+            gap: 2,
+            alignItems: 'center',
+            flexWrap: 'nowrap',
+            flexShrink: 0,
+            marginLeft: 'auto',
+          }}>
+            {/* Date Range Buttons */}
+            <ToggleButtonGroup
+              value={dateRangeFilter}
+              exclusive
+              onChange={(e, newValue) => {
+                if (newValue !== null) {
+                  setDateRangeFilter(newValue);
+                  setCustomStartDate(null);
+                  setCustomEndDate(null);
+                }
+              }}
+              size="small"
+              sx={{
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: 1,
+                flexShrink: 0,
+                flexGrow: 0,
+                height: 36,
+                '& .MuiToggleButton-root': {
+                  color: 'rgba(255, 255, 255, 0.8)',
+                  borderColor: 'transparent',
+                  fontSize: { xs: '0.75rem', md: '0.875rem' },
+                  fontWeight: 600,
+                  px: { xs: 1.5, md: 2 },
+                  py: 0,
+                  height: 36,
+                  minWidth: 'auto',
+                  '&.Mui-selected': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    color: 'white',
+                    borderColor: 'transparent',
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                    },
+                  },
+                  '&:hover': {
+                    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    borderColor: 'transparent',
+                  },
+                },
+              }}
+            >
+              <ToggleButton value="1D">1 DAY</ToggleButton>
+              <ToggleButton value="1M">1 MONTH</ToggleButton>
+              <ToggleButton value="1Y">1 YEAR</ToggleButton>
+              <ToggleButton value="YTD">YTD</ToggleButton>
+            </ToggleButtonGroup>
+
+            {/* Date Range Pickers */}
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <Box sx={{
+                display: 'flex',
+                gap: 0.5,
+                alignItems: 'center',
+                backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                borderRadius: 1,
+                px: 0.5,
+                height: 36,
+                border: '1px solid transparent',
+                flexShrink: 0,
+                flexGrow: 0,
+              }}>
+                <DatePicker
+                  open={startDatePickerOpen}
+                  onOpen={() => setStartDatePickerOpen(true)}
+                  onClose={() => setStartDatePickerOpen(false)}
+                  format="MMM d, yyyy"
+                  value={customStartDate}
+                  onChange={(newDate) => {
+                    setCustomStartDate(newDate);
+                    if (newDate && customEndDate && detectPresetRange) {
+                      const matched = detectPresetRange(newDate, customEndDate);
+                      setDateRangeFilter(matched);
+                    } else {
+                      setDateRangeFilter(null);
+                    }
+                  }}
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      placeholder: 'Start',
+                      onClick: () => setStartDatePickerOpen(true),
+                      sx: {
+                        width: { xs: 105, md: 115 },
+                        '& .MuiInputBase-root': {
+                          backgroundColor: 'transparent',
+                          borderColor: 'rgba(255, 255, 255, 0.3)',
+                          height: 36,
+                          paddingRight: '8px !important',
+                        },
+                        '& .MuiOutlinedInput-root': {
+                          '& fieldset': { borderColor: 'transparent' },
+                          '&:hover fieldset': { borderColor: 'transparent' },
+                          '&.Mui-focused fieldset': { borderColor: 'transparent' },
+                        },
+                        '& .MuiInputBase-input': {
+                          fontSize: { xs: '0.75rem', md: '0.875rem' },
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          textAlign: 'center',
+                          color: 'rgba(255, 255, 255, 0.9)',
+                          padding: '6px 8px',
+                        },
+                        '& .MuiInputAdornment-root': { display: 'none' },
+                        '& .MuiInputLabel-root': { display: 'none' },
+                        '& .MuiOutlinedInput-notchedOutline legend': { display: 'none' },
+                      },
+                    },
+                    openPickerButton: {
+                      sx: { display: 'none' },
+                    },
+                  }}
+                />
+                <Typography sx={{ color: 'rgba(255, 255, 255, 0.7)', mx: 0.5, flexShrink: 0 }}>→</Typography>
+                <DatePicker
+                  open={endDatePickerOpen}
+                  onOpen={() => setEndDatePickerOpen(true)}
+                  onClose={() => setEndDatePickerOpen(false)}
+                  format="MMM d, yyyy"
+                  value={customEndDate}
+                  onChange={(newDate) => {
+                    setCustomEndDate(newDate);
+                    if (customStartDate && newDate && detectPresetRange) {
+                      const matched = detectPresetRange(customStartDate, newDate);
+                      setDateRangeFilter(matched);
+                    } else {
+                      setDateRangeFilter(null);
+                    }
+                  }}
+                  slotProps={{
+                    textField: {
+                      size: 'small',
+                      placeholder: 'End',
+                      onClick: () => setEndDatePickerOpen(true),
+                      sx: {
+                        width: { xs: 105, md: 115 },
+                        '& .MuiInputBase-root': {
+                          backgroundColor: 'transparent',
+                          borderColor: 'rgba(255, 255, 255, 0.3)',
+                          height: 36,
+                          paddingRight: '8px !important',
+                        },
+                        '& .MuiOutlinedInput-root': {
+                          '& fieldset': { borderColor: 'transparent' },
+                          '&:hover fieldset': { borderColor: 'transparent' },
+                          '&.Mui-focused fieldset': { borderColor: 'transparent' },
+                        },
+                        '& .MuiInputBase-input': {
+                          fontSize: { xs: '0.75rem', md: '0.875rem' },
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          textAlign: 'center',
+                          color: 'rgba(255, 255, 255, 0.9)',
+                          padding: '6px 8px',
+                        },
+                        '& .MuiInputAdornment-root': { display: 'none' },
+                        '& .MuiInputLabel-root': { display: 'none' },
+                        '& .MuiOutlinedInput-notchedOutline legend': { display: 'none' },
+                      },
+                    },
+                    openPickerButton: {
+                      sx: { display: 'none' },
+                    },
+                  }}
+                />
+              </Box>
+            </LocalizationProvider>
+          </Box>
+        </Box>
+
+        {/* Main Content Row - Stats Grid + Action Buttons */}
+        <Grid container spacing={3} sx={{ flexGrow: 1 }}>
+
+          {/* Stats Cards Grid */}
+          <Grid item xs={12} lg={config.showAIAssistant ? 9 : 12}>
+            <Grid container spacing={3}>
+              {/* Render stat cards based on selected status */}
+              {statsConfig && statsConfig
+                .filter(statCfg => !statCfg.visibleWhen || statCfg.visibleWhen.includes(selectedStatus))
+                .slice(0, 4) // Max 4 stat cards
+                .map((statCfg, index) => (
+                  <Grid item xs={12} sm={6} md={6} xl={3} key={statCfg.id}>
+                    {StatCardComponent && (
+                      <StatCardComponent
+                        icon={statCfg.icon}
+                        title={statCfg.label}
+                        value={stats?.[statCfg.id]?.value || 0}
+                        prefix={statCfg.format === 'currency' ? '$' : ''}
+                        suffix={statCfg.format === 'percentage' ? '%' : ''}
+                        color="#ffffff"
+                        delay={index}
+                        goal={statCfg.goal}
+                        trend={stats?.[statCfg.id]?.trend}
+                      />
+                    )}
+                  </Grid>
+                ))}
+            </Grid>
+
+            {/* Action Buttons Row */}
+            <Box sx={{ mt: 3, display: 'flex', gap: 2 }}>
+              {onNewItem && (
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={onNewItem}
+                  sx={{
+                    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                    backdropFilter: 'blur(10px)',
+                    '&:hover': { backgroundColor: 'rgba(255, 255, 255, 0.3)' },
+                  }}
+                >
+                  {config.addButtonLabel || `NEW ${config.entitySingular?.toUpperCase()}`}
+                </Button>
+              )}
+              {config.showAnalyticsButton && (
+                <Button
+                  variant="outlined"
+                  startIcon={<AssessmentIcon />}
+                  sx={{
+                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                    color: 'white',
+                    '&:hover': {
+                      borderColor: 'rgba(255, 255, 255, 0.5)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                    },
+                  }}
+                >
+                  {config.analyticsButtonLabel || `${config.entitySingular?.toUpperCase()} ANALYTICS`}
+                </Button>
+              )}
+            </Box>
+          </Grid>
+
+          {/* AI Assistant Card (if enabled) */}
+          {config.showAIAssistant && (
+            <Grid item xs={12} lg={3}>
+              {/* Render AI Assistant card here if needed */}
+            </Grid>
+          )}
+        </Grid>
+      </Box>
+    </HeroSection>
   );
 };
