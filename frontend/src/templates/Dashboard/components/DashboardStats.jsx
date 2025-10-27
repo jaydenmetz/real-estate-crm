@@ -7,6 +7,12 @@ import CountUp from 'react-countup';
  * DashboardStats - Config-driven stats cards
  */
 export const DashboardStats = ({ stats, config, selectedStatus }) => {
+  // Safety check - ensure config is an array
+  if (!config || !Array.isArray(config)) {
+    console.error('DashboardStats: config must be an array', config);
+    return null;
+  }
+
   // Filter stats based on visibility rules
   const visibleStats = config.filter(statConfig => {
     if (!statConfig.visibleWhen) return true;

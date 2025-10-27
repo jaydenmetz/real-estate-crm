@@ -28,6 +28,10 @@ export const DashboardTemplate = ({
   customFilters = null,
   customActions = null
 }) => {
+  // Debug logging
+  console.log('[DashboardTemplate] Config received:', config);
+  console.log('[DashboardTemplate] Stats config:', config?.dashboard?.stats);
+
   // Dashboard state from config
   const {
     data,
@@ -119,7 +123,7 @@ export const DashboardTemplate = ({
         />
 
         {/* Stats Cards */}
-        {config.dashboard.stats.length > 0 && (
+        {config.dashboard?.stats && Array.isArray(config.dashboard.stats) && config.dashboard.stats.length > 0 && (
           <DashboardStats
             stats={stats}
             config={config.dashboard.stats}
