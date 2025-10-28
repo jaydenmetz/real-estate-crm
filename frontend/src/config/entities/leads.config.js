@@ -49,7 +49,7 @@ export const leadsConfig = createEntityConfig({
       activities: '/leads/:id/activities',
       communications: '/leads/:id/communications'
     },
-    idField: 'lead_id',
+    idField: 'id',
     queryParams: {
       status: 'status',
       scope: 'scope',

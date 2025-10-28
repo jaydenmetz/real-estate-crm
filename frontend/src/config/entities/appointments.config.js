@@ -47,7 +47,7 @@ export const appointmentsConfig = createEntityConfig({
       delete: '/appointments/:id',
       stats: '/appointments/stats'
     },
-    idField: 'appointment_id',
+    idField: 'id',
     queryParams: {
       status: 'status',
       scope: 'scope',

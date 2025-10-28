@@ -41,7 +41,7 @@ export const clientsConfig = createEntityConfig({
       restore: '/clients/:id/restore',
       stats: '/clients/stats',
     },
-    idField: 'client_id',
+    idField: 'id',
   },
 
   // ========================================
