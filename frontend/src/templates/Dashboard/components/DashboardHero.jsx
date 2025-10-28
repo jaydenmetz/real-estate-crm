@@ -58,48 +58,58 @@ export const DashboardHero = ({
 
   // Calculate available years from data
   const getAvailableYears = () => {
-    if (!allData || allData.length === 0) {
-      // If no data, return current year and previous 2 years
-      const currentYear = new Date().getFullYear();
-      return [currentYear, currentYear - 1, currentYear - 2];
-    }
-
-    // Find earliest year from created_at or closing_date
-    const years = allData
-      .map(item => {
-        const dates = [
-          item.created_at,
-          item.createdAt,
-          item.closing_date,
-          item.closingDate
-        ].filter(Boolean);
-
-        if (dates.length === 0) return null;
-
-        const earliestDate = dates
-          .map(d => new Date(d))
-          .filter(d => !isNaN(d.getTime()))
-          .sort((a, b) => a - b)[0];
-
-        return earliestDate ? earliestDate.getFullYear() : null;
-      })
-      .filter(year => year !== null);
-
-    if (years.length === 0) {
-      const currentYear = new Date().getFullYear();
-      return [currentYear, currentYear - 1, currentYear - 2];
-    }
-
-    const earliestYear = Math.min(...years);
     const currentYear = new Date().getFullYear();
+    const defaultYears = [currentYear, currentYear - 1, currentYear - 2];
 
-    // Generate array of years from earliest to current
-    const yearRange = [];
-    for (let year = currentYear; year >= earliestYear; year--) {
-      yearRange.push(year);
+    // Defensive check - ensure allData is an array
+    if (!allData || !Array.isArray(allData) || allData.length === 0) {
+      return defaultYears;
     }
 
-    return yearRange;
+    try {
+      // Find earliest year from created_at or closing_date
+      const years = allData
+        .map(item => {
+          if (!item) return null;
+
+          const dates = [
+            item.created_at,
+            item.createdAt,
+            item.closing_date,
+            item.closingDate
+          ].filter(Boolean);
+
+          if (dates.length === 0) return null;
+
+          const earliestDate = dates
+            .map(d => new Date(d))
+            .filter(d => !isNaN(d.getTime()))
+            .sort((a, b) => a - b)[0];
+
+          return earliestDate ? earliestDate.getFullYear() : null;
+        })
+        .filter(year => year !== null && typeof year === 'number');
+
+      if (years.length === 0) {
+        return defaultYears;
+      }
+
+      const earliestYear = Math.min(...years);
+
+      // Sanity check - don't go back more than 50 years
+      const validEarliestYear = Math.max(earliestYear, currentYear - 50);
+
+      // Generate array of years from current to earliest
+      const yearRange = [];
+      for (let year = currentYear; year >= validEarliestYear; year--) {
+        yearRange.push(year);
+      }
+
+      return yearRange.length > 0 ? yearRange : defaultYears;
+    } catch (error) {
+      console.error('Error calculating available years:', error);
+      return defaultYears;
+    }
   };
 
   const availableYears = getAvailableYears();
@@ -242,7 +252,7 @@ export const DashboardHero = ({
                   },
                 }}
               >
-                {availableYears.map(year => (
+                {availableYears && Array.isArray(availableYears) && availableYears.map(year => (
                   <MenuItem key={year} value={year}>
                     {year}
                   </MenuItem>
