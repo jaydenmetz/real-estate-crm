@@ -35,10 +35,16 @@ export const useDashboardData = (config, externalDateRange = null) => {
         limit: 100 // Request up to 100 items per page (backend max)
       };
 
-      // Add filters based on config
-      if (selectedStatus !== 'all') {
-        params.status = selectedStatus;
+      // Handle archived status specially
+      if (selectedStatus === 'archived') {
+        params.onlyArchived = true;
+      } else {
+        // Add status filter for non-archived views
+        if (selectedStatus !== 'all') {
+          params.status = selectedStatus;
+        }
       }
+
       if (selectedScope !== 'all') {
         params.scope = selectedScope;
       }

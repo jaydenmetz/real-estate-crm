@@ -36,7 +36,9 @@ class EscrowsController extends BaseDomainController {
       'propertyType',
       'closingDateStart',
       'closingDateEnd',
-      'search'
+      'search',
+      'includeArchived',
+      'onlyArchived'
     ]);
 
     // Add scope filtering

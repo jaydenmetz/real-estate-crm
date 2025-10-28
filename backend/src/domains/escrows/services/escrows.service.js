@@ -50,11 +50,23 @@ class EscrowsService extends BaseDomainService {
     const values = [];
     let paramIndex = 1;
 
-    // Soft delete filter
-    conditions.push('deleted_at IS NULL');
+    // Soft delete filter (conditional based on includeArchived/onlyArchived)
+    if (query.onlyArchived === 'true' || query.onlyArchived === true) {
+      // Show ONLY archived items (deleted_at IS NOT NULL)
+      conditions.push('deleted_at IS NOT NULL');
+    } else if (query.includeArchived === 'true' || query.includeArchived === true) {
+      // Show ALL items (both active and archived) - no filter
+    } else {
+      // Default: Show only active items (deleted_at IS NULL)
+      conditions.push('deleted_at IS NULL');
+    }
 
     // Process each query parameter
     Object.keys(query).forEach(key => {
+      // Skip archive control parameters
+      if (key === 'includeArchived' || key === 'onlyArchived') {
+        return;
+      }
       if (key === 'dateRange' && query[key]) {
         if (query[key].start) {
           conditions.push(`created_at >= $${paramIndex++}`);
