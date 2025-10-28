@@ -21,6 +21,15 @@ import {
   PersonAdd,
   Cancel,
   Pending,
+  Paid,
+  EventAvailable,
+  MonetizationOn,
+  EventBusy,
+  MoneyOff,
+  Dashboard,
+  CalendarMonth,
+  AccountBalance,
+  AccountBalanceWallet,
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import CountUp from 'react-countup';
@@ -37,6 +46,15 @@ const iconMap = {
   'TrendingDown': TrendingDown,
   'Cancel': Cancel,
   'Pending': Pending,
+  'Paid': Paid,
+  'EventAvailable': EventAvailable,
+  'MonetizationOn': MonetizationOn,
+  'EventBusy': EventBusy,
+  'MoneyOff': MoneyOff,
+  'Dashboard': Dashboard,
+  'CalendarMonth': CalendarMonth,
+  'AccountBalance': AccountBalance,
+  'AccountBalanceWallet': AccountBalanceWallet,
 };
 
 /**
