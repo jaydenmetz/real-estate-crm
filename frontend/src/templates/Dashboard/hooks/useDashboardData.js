@@ -31,7 +31,9 @@ export const useDashboardData = (config, externalDateRange = null) => {
     queryKey: [config.entity.namePlural, selectedStatus, selectedScope, dateRange],
     queryFn: async () => {
       // Build query params
-      const params = {};
+      const params = {
+        limit: 100 // Request up to 100 items per page (backend max)
+      };
 
       // Add filters based on config
       if (selectedStatus !== 'all') {
