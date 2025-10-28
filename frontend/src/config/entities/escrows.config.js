@@ -159,7 +159,8 @@ export const escrowsConfig = createEntityConfig({
       { value: 'active', label: 'Active' },
       { value: 'pending', label: 'Pending' },
       { value: 'closed', label: 'Closed' },
-      { value: 'all', label: 'All Escrows' }
+      { value: 'all', label: 'All Escrows' },
+      { value: 'archived', label: 'Archived' } // For mobile tab display
     ],
     defaultStatus: 'active',
 

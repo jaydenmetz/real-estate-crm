@@ -58,25 +58,19 @@ export const DashboardContent = ({
     );
   }
 
-  // Determine grid layout based on view mode
-  const gridColumns = {
-    xs: 1,
-    sm: viewMode === 'list' ? 1 : 2,
-    md: viewMode === 'list' ? 1 : viewMode === 'small' ? 2 : 1,
-    lg: viewMode === 'list' ? 1 : viewMode === 'small' ? 4 : 1,
-  };
-
+  // Grid layout matching ClientContent exactly
   return (
     <Box
       sx={{
         display: 'grid',
         gridTemplateColumns: {
           xs: '1fr',
-          sm: gridColumns.sm === 1 ? '1fr' : 'repeat(2, 1fr)',
-          md: gridColumns.md === 1 ? '1fr' : gridColumns.md === 2 ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',
-          lg: gridColumns.lg === 1 ? '1fr' : 'repeat(4, 1fr)',
+          sm: '1fr',
+          md: viewMode === 'small' ? 'repeat(2, 1fr)' : '1fr',
+          lg: viewMode === 'small' ? 'repeat(4, 1fr)' : '1fr',
         },
         gap: 3,
+        width: '100%',
       }}
     >
       <AnimatePresence>

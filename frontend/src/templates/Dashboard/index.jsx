@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Container } from '@mui/material';
 import { DashboardHero } from './components/DashboardHero';
 import { DashboardStats } from './components/DashboardStats';
@@ -62,6 +62,31 @@ export const DashboardTemplate = ({
   const [dateRangeFilter, setDateRangeFilter] = useState('1M');
   const [customStartDate, setCustomStartDate] = useState(null);
   const [customEndDate, setCustomEndDate] = useState(null);
+
+  // Calendar and archive state (matching Clients)
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [archivedCount, setArchivedCount] = useState(0);
+
+  // LocalStorage persistence for viewMode and scope
+  const [persistedViewMode, setPersistedViewMode] = useState(() => {
+    const saved = localStorage.getItem(`${config.entity.namePlural}ViewMode`);
+    return saved || 'large';
+  });
+
+  const [persistedScope, setPersistedScope] = useState(() => {
+    const saved = localStorage.getItem(`${config.entity.namePlural}Scope`);
+    return saved || 'team';
+  });
+
+  // Save viewMode to localStorage
+  useEffect(() => {
+    localStorage.setItem(`${config.entity.namePlural}ViewMode`, viewMode);
+  }, [viewMode, config.entity.namePlural]);
+
+  // Save scope to localStorage
+  useEffect(() => {
+    localStorage.setItem(`${config.entity.namePlural}Scope`, selectedScope);
+  }, [selectedScope, config.entity.namePlural]);
 
   // Helper to detect preset ranges
   const detectPresetRange = (startDate, endDate) => {
@@ -161,9 +186,9 @@ export const DashboardTemplate = ({
           onViewModeChange={setViewMode}
           sortBy={sortBy}
           onSortByChange={setSortBy}
-          sortOrder={sortOrder}
-          onSortOrderChange={setSortOrder}
-          customFilters={customFilters}
+          showCalendar={showCalendar}
+          onShowCalendarChange={setShowCalendar}
+          archivedCount={archivedCount}
         />
 
         {/* Main Content Grid/List */}
