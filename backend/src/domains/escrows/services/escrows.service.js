@@ -82,6 +82,10 @@ class EscrowsService extends BaseDomainService {
         )`);
         values.push(`%${query[key]}%`);
         paramIndex++;
+      } else if (key === 'escrow_status' && query[key]) {
+        // Case-insensitive status comparison
+        conditions.push(`LOWER(escrow_status) = LOWER($${paramIndex++})`);
+        values.push(query[key]);
       } else if (query[key] !== undefined) {
         conditions.push(`${key} = $${paramIndex++}`);
         values.push(query[key]);
