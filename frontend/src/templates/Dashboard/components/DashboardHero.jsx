@@ -347,25 +347,31 @@ export const DashboardHero = ({
               {statsConfig && statsConfig
                 .filter(statCfg => !statCfg.visibleWhen || statCfg.visibleWhen.includes(selectedStatus))
                 .slice(0, 4) // Max 4 stat cards
-                .map((statCfg, index) => (
-                  <Grid item xs={12} sm={6} md={6} xl={3} key={statCfg.id}>
-                    {StatCardComponent && (
-                      <StatCardComponent
-                        icon={statCfg.icon}
-                        title={statCfg.label}
-                        value={stats?.[statCfg.id]?.value || 0}
-                        prefix={statCfg.format === 'currency' ? '$' : (statCfg.prefix || '')}
-                        suffix={statCfg.format === 'percentage' ? '%' : (statCfg.suffix || '')}
-                        color={statCfg.color || "#ffffff"}
-                        backgroundColor={statCfg.color || null}
-                        textColor={statCfg.textColor || null}
-                        delay={index}
-                        goal={statCfg.goal}
-                        trend={stats?.[statCfg.id]?.trend}
-                      />
-                    )}
-                  </Grid>
-                ))}
+                .map((statCfg, index) => {
+                  // Compute prefix/suffix outside JSX to avoid hoisting issues
+                  const prefixValue = statCfg.format === 'currency' ? '$' : (statCfg.prefix || '');
+                  const suffixValue = statCfg.format === 'percentage' ? '%' : (statCfg.suffix || '');
+
+                  return (
+                    <Grid item xs={12} sm={6} md={6} xl={3} key={statCfg.id}>
+                      {StatCardComponent && (
+                        <StatCardComponent
+                          icon={statCfg.icon}
+                          title={statCfg.label}
+                          value={stats?.[statCfg.id]?.value || 0}
+                          prefix={prefixValue}
+                          suffix={suffixValue}
+                          color={statCfg.color || "#ffffff"}
+                          backgroundColor={statCfg.color || null}
+                          textColor={statCfg.textColor || null}
+                          delay={index}
+                          goal={statCfg.goal}
+                          trend={stats?.[statCfg.id]?.trend}
+                        />
+                      )}
+                    </Grid>
+                  );
+                })}
             </Grid>
 
             {/* Action Buttons Row */}
