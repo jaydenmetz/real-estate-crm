@@ -303,6 +303,7 @@ export const DashboardTemplate = ({
         selectedYear={selectedYear}
         setSelectedYear={setSelectedYear}
         StatCardComponent={DashboardStatCard}
+        allData={data}
       />
 
         {/* Stats are now embedded in Hero, so no separate stats section needed */}

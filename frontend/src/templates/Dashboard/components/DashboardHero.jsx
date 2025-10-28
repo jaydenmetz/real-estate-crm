@@ -7,7 +7,9 @@ import {
   ToggleButtonGroup,
   Grid,
   Card,
-  CardContent
+  CardContent,
+  Select,
+  MenuItem
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
@@ -47,11 +49,60 @@ export const DashboardHero = ({
   detectPresetRange,
   selectedYear,
   setSelectedYear,
-  StatCardComponent
+  StatCardComponent,
+  allData = [] // Pass all data to calculate available years
 }) => {
   // Local state for date pickers
   const [startDatePickerOpen, setStartDatePickerOpen] = useState(false);
   const [endDatePickerOpen, setEndDatePickerOpen] = useState(false);
+
+  // Calculate available years from data
+  const getAvailableYears = () => {
+    if (!allData || allData.length === 0) {
+      // If no data, return current year and previous 2 years
+      const currentYear = new Date().getFullYear();
+      return [currentYear, currentYear - 1, currentYear - 2];
+    }
+
+    // Find earliest year from created_at or closing_date
+    const years = allData
+      .map(item => {
+        const dates = [
+          item.created_at,
+          item.createdAt,
+          item.closing_date,
+          item.closingDate
+        ].filter(Boolean);
+
+        if (dates.length === 0) return null;
+
+        const earliestDate = dates
+          .map(d => new Date(d))
+          .filter(d => !isNaN(d.getTime()))
+          .sort((a, b) => a - b)[0];
+
+        return earliestDate ? earliestDate.getFullYear() : null;
+      })
+      .filter(year => year !== null);
+
+    if (years.length === 0) {
+      const currentYear = new Date().getFullYear();
+      return [currentYear, currentYear - 1, currentYear - 2];
+    }
+
+    const earliestYear = Math.min(...years);
+    const currentYear = new Date().getFullYear();
+
+    // Generate array of years from earliest to current
+    const yearRange = [];
+    for (let year = currentYear; year >= earliestYear; year--) {
+      yearRange.push(year);
+    }
+
+    return yearRange;
+  };
+
+  const availableYears = getAvailableYears();
 
   return (
     <HeroSection sx={{
@@ -140,47 +191,63 @@ export const DashboardHero = ({
               <ToggleButton value="YTD">YTD</ToggleButton>
             </ToggleButtonGroup>
 
-            {/* Year Selector (only show when YTD is selected) */}
+            {/* Year Selector Dropdown (only show when YTD is selected) */}
             {dateRangeFilter === 'YTD' && setSelectedYear && (
-              <ToggleButtonGroup
+              <Select
                 value={selectedYear}
-                exclusive
-                onChange={(e, newValue) => {
-                  if (newValue !== null) {
-                    setSelectedYear(newValue);
-                  }
-                }}
+                onChange={(e) => setSelectedYear(e.target.value)}
+                size="small"
                 sx={{
                   height: 36,
-                  '& .MuiToggleButton-root': {
-                    color: 'white',
+                  minWidth: 100,
+                  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                  color: 'white',
+                  borderRadius: 1,
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'transparent',
+                  },
+                  '&:hover .MuiOutlinedInput-notchedOutline': {
                     borderColor: 'rgba(255, 255, 255, 0.3)',
-                    px: 2,
-                    '&.Mui-selected': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                      color: 'white',
-                      '&:hover': {
-                        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                  },
+                  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(255, 255, 255, 0.5)',
+                  },
+                  '& .MuiSelect-icon': {
+                    color: 'white',
+                  },
+                  '& .MuiSelect-select': {
+                    fontSize: { xs: '0.75rem', md: '0.875rem' },
+                    fontWeight: 600,
+                    py: 0.75,
+                  },
+                }}
+                MenuProps={{
+                  PaperProps: {
+                    sx: {
+                      bgcolor: 'background.paper',
+                      maxHeight: 300,
+                      '& .MuiMenuItem-root': {
+                        fontSize: '0.875rem',
+                        '&:hover': {
+                          backgroundColor: 'rgba(0, 0, 0, 0.08)',
+                        },
+                        '&.Mui-selected': {
+                          backgroundColor: 'rgba(0, 0, 0, 0.12)',
+                          '&:hover': {
+                            backgroundColor: 'rgba(0, 0, 0, 0.16)',
+                          },
+                        },
                       },
-                    },
-                    '&:hover': {
-                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                      borderColor: 'transparent',
                     },
                   },
                 }}
               >
-                {/* Generate year options: current year and 2 previous years */}
-                {(() => {
-                  const currentYear = new Date().getFullYear();
-                  const years = [currentYear, currentYear - 1, currentYear - 2];
-                  return years.map(year => (
-                    <ToggleButton key={year} value={year}>
-                      {year}
-                    </ToggleButton>
-                  ));
-                })()}
-              </ToggleButtonGroup>
+                {availableYears.map(year => (
+                  <MenuItem key={year} value={year}>
+                    {year}
+                  </MenuItem>
+                ))}
+              </Select>
             )}
 
             {/* Date Range Pickers */}
