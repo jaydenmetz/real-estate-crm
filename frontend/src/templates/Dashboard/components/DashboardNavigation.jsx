@@ -128,47 +128,43 @@ export const DashboardNavigation = ({
           alignItems: 'center',
           flexWrap: 'wrap',
         }}>
-          {/* Scope Dropdown */}
+          {/* Scope Dropdown - Styled like Year Dropdown */}
           {scopeOptions.length > 0 && (
-            <FormControl size="small" variant="standard" sx={{ minWidth: 110 }}>
-              <Select
-                value={selectedScope}
-                onChange={(e) => onScopeChange(e.target.value)}
-                disableUnderline
-                renderValue={(value) => (
-                  <Typography variant="body2" sx={{
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                    color: 'text.primary',
-                  }}>
-                    {scopeLabels[value] || value}
-                  </Typography>
-                )}
-                sx={{
-                  backgroundColor: 'transparent',
-                  borderRadius: 1,
-                  px: 1.5,
+            <Select
+              value={selectedScope}
+              onChange={(e) => onScopeChange(e.target.value)}
+              size="small"
+              sx={{
+                minWidth: 160,
+                height: 32,
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(10px)',
+                borderRadius: 2,
+                fontWeight: 600,
+                fontSize: '0.875rem',
+                border: '1px solid',
+                borderColor: 'divider',
+                transition: 'all 0.2s',
+                '&:hover': {
+                  borderColor: 'primary.main',
+                  backgroundColor: 'rgba(255, 255, 255, 1)',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                },
+                '& .MuiSelect-select': {
                   py: 0.5,
-                  border: '1px solid',
-                  borderColor: 'divider',
-                  '&:hover': {
-                    backgroundColor: alpha('#000', 0.04),
-                    borderColor: 'primary.main',
-                  },
-                  '& .MuiSelect-select': {
-                    paddingRight: '32px !important',
-                    display: 'flex',
-                    alignItems: 'center',
-                  },
-                }}
-              >
-                {scopeOptions.map(option => (
-                  <MenuItem key={option.value} value={option.value}>
-                    {option.label}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+                  px: 1.5,
+                },
+                '& .MuiOutlinedInput-notchedOutline': {
+                  border: 'none',
+                },
+              }}
+            >
+              {scopeOptions.map(option => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.fullLabel || option.label}
+                </MenuItem>
+              ))}
+            </Select>
           )}
 
           {/* Sort Dropdown */}
@@ -349,38 +345,30 @@ export const DashboardNavigation = ({
             alignItems: 'center',
             justifyContent: 'space-between',
           }}>
-            {/* Scope Dropdown */}
+            {/* Scope Dropdown - Mobile */}
             {scopeOptions.length > 0 && (
-              <FormControl
+              <Select
+                value={selectedScope}
+                onChange={(e) => onScopeChange(e.target.value)}
                 size="small"
-                variant="outlined"
                 sx={{
-                  flex: '0 1 auto',
-                  minWidth: 100,
-                  '& .MuiOutlinedInput-root': {
-                    backgroundColor: 'white',
-                    borderRadius: 2,
+                  minWidth: 140,
+                  backgroundColor: 'white',
+                  borderRadius: 2,
+                  fontWeight: 600,
+                  fontSize: '0.875rem',
+                  '& .MuiSelect-select': {
+                    py: 1,
+                    px: 1.5,
                   },
                 }}
               >
-                <Select
-                  value={selectedScope}
-                  onChange={(e) => onScopeChange(e.target.value)}
-                  renderValue={(value) => (
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                      <Typography variant="body2" sx={{ fontSize: '0.875rem', fontWeight: 500 }}>
-                        {scopeLabels[value] || value}
-                      </Typography>
-                    </Box>
-                  )}
-                >
-                  {scopeOptions.map(option => (
-                    <MenuItem key={option.value} value={option.value}>
-                      {option.label}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
+                {scopeOptions.map(option => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.fullLabel || option.label}
+                  </MenuItem>
+                ))}
+              </Select>
             )}
 
             {/* Sort Dropdown */}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Box, Container } from '@mui/material';
 import { DashboardHero } from './components/DashboardHero';
 import { DashboardStats } from './components/DashboardStats';
@@ -6,6 +6,7 @@ import { DashboardNavigation } from './components/DashboardNavigation';
 import { DashboardContent } from './components/DashboardContent';
 import DashboardStatCard from './components/DashboardStatCard';
 import { useDashboardData } from './hooks/useDashboardData';
+import { useAuth } from '../../contexts/AuthContext';
 
 /**
  * DashboardTemplate - Config-driven dashboard component
@@ -29,9 +30,20 @@ export const DashboardTemplate = ({
   customFilters = null,
   customActions = null
 }) => {
+  // Auth context for personalized scope options
+  const { user } = useAuth();
+
   // Debug logging
   console.log('[DashboardTemplate] Config received:', config);
   console.log('[DashboardTemplate] Stats config:', config?.dashboard?.stats);
+
+  // Generate scope options from config (can be function or array)
+  const scopeOptions = useMemo(() => {
+    if (typeof config.dashboard?.getScopeOptions === 'function') {
+      return config.dashboard.getScopeOptions(user);
+    }
+    return config.dashboard?.scopeOptions || [];
+  }, [config.dashboard, user]);
 
   // Modal state
   const [newItemModalOpen, setNewItemModalOpen] = useState(false);
@@ -310,7 +322,10 @@ export const DashboardTemplate = ({
 
         {/* Navigation & Filters */}
         <DashboardNavigation
-          config={config.dashboard}
+          config={{
+            ...config.dashboard,
+            scopeOptions: scopeOptions // Override with generated scope options
+          }}
           selectedStatus={selectedStatus}
           onStatusChange={setSelectedStatus}
           selectedScope={selectedScope}

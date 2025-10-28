@@ -407,11 +407,42 @@ export const escrowsConfig = createEntityConfig({
     defaultStatus: 'active',
 
     // Scope Filter Configuration
-    scopeOptions: [
-      { value: 'team', label: 'Team' },
-      { value: 'my', label: 'My Escrows' }
-    ],
-    defaultScope: 'team',
+    // Scope options can be a function that receives user object
+    getScopeOptions: (user) => {
+      if (!user) {
+        return [
+          { value: 'my', label: 'My Escrows' },
+          { value: 'team', label: 'Team Escrows' },
+          { value: 'broker', label: 'Broker Escrows' }
+        ];
+      }
+
+      // Handle both camelCase and snake_case from backend
+      const firstName = user.firstName || user.first_name || 'My';
+      const lastName = user.lastName || user.last_name || '';
+      const fullName = lastName ? `${firstName} ${lastName}` : (user.username || firstName);
+      const teamName = user.teamName || user.team_name || 'Team';
+      const brokerName = user.brokerName || user.broker_name || 'Broker';
+
+      return [
+        {
+          value: 'my',
+          label: `${firstName}'s Escrows`, // Hero card: "Jayden's Escrows"
+          fullLabel: fullName // Filter dropdown: "Jayden Metz"
+        },
+        {
+          value: 'team',
+          label: `${teamName}'s Escrows`, // Hero card: "Jayden Metz Realty Group's Escrows"
+          fullLabel: teamName // Filter dropdown: "Jayden Metz Realty Group"
+        },
+        {
+          value: 'broker',
+          label: `${brokerName}'s Escrows`, // Hero card: "Josh Riley's Escrows"
+          fullLabel: brokerName // Filter dropdown: "Josh Riley"
+        }
+      ];
+    },
+    defaultScope: 'my',
 
     // Sort Options Configuration
     sortOptions: [
