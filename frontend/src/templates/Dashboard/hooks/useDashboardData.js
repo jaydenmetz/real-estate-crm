@@ -5,9 +5,10 @@ import { useQuery } from '@tanstack/react-query';
  * useDashboardData - Config-driven data fetching and state management
  *
  * @param {Object} config - Entity configuration from config/entities
+ * @param {Object} externalDateRange - Optional date range from parent { startDate, endDate, label }
  * @returns {Object} Dashboard state and handlers
  */
-export const useDashboardData = (config) => {
+export const useDashboardData = (config, externalDateRange = null) => {
   // State management
   const [selectedStatus, setSelectedStatus] = useState(config.dashboard?.statusTabs?.[0]?.value || 'all');
   const [selectedScope, setSelectedScope] = useState(config.dashboard?.scopeOptions?.[0]?.value || 'all');
@@ -72,15 +73,29 @@ export const useDashboardData = (config) => {
     refetchOnWindowFocus: false,
   });
 
-  // Calculate stats from data
+  // Calculate stats from data (FILTERED BY DATE RANGE)
   const stats = useMemo(() => {
     if (!rawData) return {};
 
     // Ensure rawData is an array
-    const dataArray = Array.isArray(rawData) ? rawData : [];
+    let dataArray = Array.isArray(rawData) ? rawData : [];
 
     if (!Array.isArray(rawData)) {
       console.warn('[useDashboardData] rawData is not an array:', rawData);
+    }
+
+    // CRITICAL: Filter data by date range BEFORE calculating stats
+    // Use externalDateRange from parent (which has startDate, endDate, label)
+    const activeDateRange = externalDateRange || dateRange;
+    if (activeDateRange && activeDateRange.startDate && activeDateRange.endDate) {
+      const startDate = new Date(activeDateRange.startDate);
+      const endDate = new Date(activeDateRange.endDate);
+
+      dataArray = dataArray.filter(item => {
+        // Filter by created_at date (when the escrow was created)
+        const createdDate = new Date(item.created_at || item.createdAt);
+        return createdDate >= startDate && createdDate <= endDate;
+      });
     }
 
     const statsData = {};
@@ -193,7 +208,7 @@ export const useDashboardData = (config) => {
     });
 
     return statsData;
-  }, [rawData, selectedStatus, config.dashboard.stats]);
+  }, [rawData, selectedStatus, dateRange, externalDateRange, config.dashboard.stats]);
 
   // Filter and sort data
   const filteredData = useMemo(() => {

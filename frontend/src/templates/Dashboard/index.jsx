@@ -33,28 +33,6 @@ export const DashboardTemplate = ({
   console.log('[DashboardTemplate] Config received:', config);
   console.log('[DashboardTemplate] Stats config:', config?.dashboard?.stats);
 
-  // Dashboard state from config
-  const {
-    data,
-    loading,
-    error,
-    stats,
-    selectedStatus,
-    setSelectedStatus,
-    selectedScope,
-    setSelectedScope,
-    viewMode,
-    setViewMode,
-    dateRange,
-    setDateRange,
-    sortBy,
-    setSortBy,
-    sortOrder,
-    setSortOrder,
-    filteredData,
-    refetch,
-  } = useDashboardData(config);
-
   // Modal state
   const [newItemModalOpen, setNewItemModalOpen] = useState(false);
 
@@ -62,6 +40,7 @@ export const DashboardTemplate = ({
   const [dateRangeFilter, setDateRangeFilter] = useState('1M');
   const [customStartDate, setCustomStartDate] = useState(null);
   const [customEndDate, setCustomEndDate] = useState(null);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear()); // For YTD year selector
 
   // Calendar and archive state (matching Clients)
   const [showCalendar, setShowCalendar] = useState(false);
@@ -122,9 +101,15 @@ export const DashboardTemplate = ({
           endDate = now;
           break;
         case 'YTD':
-          // Year to date
-          startDate = new Date(now.getFullYear(), 0, 1);
-          endDate = now;
+          // Year to date - using selected year
+          startDate = new Date(selectedYear, 0, 1);
+          // If selected year is current year, end date is today
+          // If selected year is past year, end date is Dec 31 of that year
+          if (selectedYear === now.getFullYear()) {
+            endDate = now;
+          } else {
+            endDate = new Date(selectedYear, 11, 31, 23, 59, 59, 999);
+          }
           break;
         default:
           startDate = new Date(now);
@@ -137,14 +122,44 @@ export const DashboardTemplate = ({
     const validStart = startDate instanceof Date && !isNaN(startDate.getTime()) ? startDate : new Date();
     const validEnd = endDate instanceof Date && !isNaN(endDate.getTime()) ? endDate : new Date();
 
+    // Format label - special case for YTD to show year
+    let label;
+    if (dateRangeFilter === 'YTD') {
+      label = `${selectedYear} YTD`;
+    } else {
+      label = `${validStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${validEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+    }
+
     return {
       startDate: validStart,
       endDate: validEnd,
-      label: `${validStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${validEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+      label: label
     };
   };
 
   const calculatedDateRange = getCalculatedDateRange();
+
+  // Dashboard state from config (with calculated date range)
+  const {
+    data,
+    loading,
+    error,
+    stats,
+    selectedStatus,
+    setSelectedStatus,
+    selectedScope,
+    setSelectedScope,
+    viewMode,
+    setViewMode,
+    dateRange,
+    setDateRange,
+    sortBy,
+    setSortBy,
+    sortOrder,
+    setSortOrder,
+    filteredData,
+    refetch,
+  } = useDashboardData(config, calculatedDateRange);
 
   // Helper to detect preset ranges (matching Clients)
   const detectPresetRange = (startDate, endDate) => {
@@ -285,6 +300,8 @@ export const DashboardTemplate = ({
         setCustomEndDate={setCustomEndDate}
         dateRange={calculatedDateRange}
         detectPresetRange={detectPresetRange}
+        selectedYear={selectedYear}
+        setSelectedYear={setSelectedYear}
         StatCardComponent={DashboardStatCard}
       />
 

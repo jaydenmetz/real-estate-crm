@@ -87,71 +87,284 @@ export const escrowsConfig = createEntityConfig({
       addButtonLabel: 'NEW ESCROW'
     },
 
-    // Stats Configuration (dynamic based on selectedStatus)
+    // Stats Configuration (dynamic based on selectedStatus and date range)
     stats: [
-      // When selectedStatus === 'active'
+      // ========================================
+      // ACTIVE STATS (white background)
+      // ========================================
       {
-        id: 'total',
-        label: 'TOTAL ESCROWS',
-        field: 'total',
+        id: 'total_active_escrows',
+        label: 'TOTAL ACTIVE ESCROWS',
+        calculation: (_data, helpers) => helpers.countByStatus('active'),
         format: 'number',
         icon: 'Home',
-        color: 'primary.main',
-        goal: 50,
-        showGoal: true,
-        showTrend: true,
-        visibleWhen: ['active', 'all']
-      },
-      {
-        id: 'active',
-        label: 'ACTIVE ESCROWS',
-        field: 'active',
-        format: 'number',
-        icon: 'CheckCircle',
-        color: 'success.main',
-        goal: 30,
-        showGoal: true,
-        showTrend: true,
-        visibleWhen: ['active', 'all']
-      },
-      {
-        id: 'active_volume',
-        label: 'ACTIVE VOLUME',
-        field: 'activeVolume',
-        format: 'currency',
-        icon: 'AttachMoney',
-        color: 'success.main',
-        goal: 10000000,
-        showGoal: true,
-        showTrend: true,
+        color: '#fff',
+        textColor: '#000',
         visibleWhen: ['active']
       },
       {
-        id: 'avg_days_to_close',
-        label: 'AVG DAYS TO CLOSE',
-        field: 'avgDaysToClose',
+        id: 'on_pace_to_close_this_month',
+        label: 'ON PACE TO CLOSE THIS MONTH',
+        calculation: (data) => {
+          const now = new Date();
+          const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+          const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+          return data.filter(item => {
+            const status = item.escrow_status || item.status;
+            const closingDate = new Date(item.closing_date);
+            return status?.toLowerCase() === 'active' &&
+                   closingDate >= monthStart &&
+                   closingDate <= monthEnd;
+          }).length;
+        },
         format: 'number',
         icon: 'Schedule',
-        suffix: ' days',
-        color: 'info.main',
-        goal: 30,
-        showGoal: true,
-        showTrend: true,
+        color: '#fff',
+        textColor: '#000',
         visibleWhen: ['active']
       },
       {
-        id: 'closed_volume',
-        label: 'Closed Volume',
-        field: 'closedVolume',
+        id: 'total_active_volume',
+        label: 'TOTAL ACTIVE VOLUME',
+        calculation: (_data, helpers) => helpers.sumByStatus('active', 'purchase_price'),
         format: 'currency',
-        icon: 'TrendingUp',
-        color: 'primary.main',
-        goal: 20000000,
-        showGoal: true,
-        showTrend: true,
+        icon: 'AttachMoney',
+        color: '#fff',
+        textColor: '#000',
+        visibleWhen: ['active']
+      },
+      {
+        id: 'total_active_commission',
+        label: 'TOTAL ACTIVE COMMISSION',
+        calculation: (data) => {
+          return data
+            .filter(item => {
+              const status = item.escrow_status || item.status;
+              return status?.toLowerCase() === 'active';
+            })
+            .reduce((sum, item) => {
+              const price = parseFloat(item.purchase_price || 0);
+              const commissionPct = parseFloat(item.commission_percentage || 3);
+              return sum + (price * (commissionPct / 100));
+            }, 0);
+        },
+        format: 'currency',
+        icon: 'Paid',
+        color: '#fff',
+        textColor: '#000',
+        visibleWhen: ['active']
+      },
+
+      // ========================================
+      // CLOSED STATS (green background)
+      // ========================================
+      {
+        id: 'total_closed_escrows',
+        label: 'TOTAL CLOSED ESCROWS',
+        calculation: (_data, helpers) => helpers.countByStatus('closed'),
+        format: 'number',
+        icon: 'CheckCircle',
+        color: '#4caf50',
+        textColor: '#fff',
         visibleWhen: ['closed']
       },
-      // Add more stats as needed for different statuses
+      {
+        id: 'total_escrows_set_to_close_this_month',
+        label: 'TOTAL ESCROWS SET TO CLOSE THIS MONTH',
+        calculation: (data) => {
+          const now = new Date();
+          const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+          const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+          return data.filter(item => {
+            const closingDate = new Date(item.closing_date);
+            return closingDate >= monthStart && closingDate <= monthEnd;
+          }).length;
+        },
+        format: 'number',
+        icon: 'EventAvailable',
+        color: '#4caf50',
+        textColor: '#fff',
+        visibleWhen: ['closed']
+      },
+      {
+        id: 'total_closed_volume',
+        label: 'TOTAL CLOSED VOLUME',
+        calculation: (_data, helpers) => helpers.sumByStatus('closed', 'purchase_price'),
+        format: 'currency',
+        icon: 'TrendingUp',
+        color: '#4caf50',
+        textColor: '#fff',
+        visibleWhen: ['closed']
+      },
+      {
+        id: 'total_closed_commission',
+        label: 'TOTAL CLOSED COMMISSION',
+        calculation: (data) => {
+          return data
+            .filter(item => {
+              const status = item.escrow_status || item.status;
+              return status?.toLowerCase() === 'closed';
+            })
+            .reduce((sum, item) => {
+              const price = parseFloat(item.purchase_price || 0);
+              const commissionPct = parseFloat(item.commission_percentage || 3);
+              return sum + (price * (commissionPct / 100));
+            }, 0);
+        },
+        format: 'currency',
+        icon: 'MonetizationOn',
+        color: '#4caf50',
+        textColor: '#fff',
+        visibleWhen: ['closed']
+      },
+
+      // ========================================
+      // CANCELLED STATS (red background)
+      // ========================================
+      {
+        id: 'total_cancelled_escrows',
+        label: 'TOTAL CANCELLED ESCROWS',
+        calculation: (_data, helpers) => helpers.countByStatus('cancelled'),
+        format: 'number',
+        icon: 'Cancel',
+        color: '#f44336',
+        textColor: '#fff',
+        visibleWhen: ['pending']
+      },
+      {
+        id: 'total_cancelled_this_month',
+        label: 'TOTAL CANCELLED THIS MONTH',
+        calculation: (data) => {
+          const now = new Date();
+          const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+          const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+
+          return data.filter(item => {
+            const status = item.escrow_status || item.status;
+            const updatedDate = new Date(item.updated_at || item.updatedAt);
+            return status?.toLowerCase() === 'cancelled' &&
+                   updatedDate >= monthStart &&
+                   updatedDate <= monthEnd;
+          }).length;
+        },
+        format: 'number',
+        icon: 'EventBusy',
+        color: '#f44336',
+        textColor: '#fff',
+        visibleWhen: ['pending']
+      },
+      {
+        id: 'lost_total_volume',
+        label: 'LOST TOTAL VOLUME',
+        calculation: (_data, helpers) => helpers.sumByStatus('cancelled', 'purchase_price'),
+        format: 'currency',
+        icon: 'TrendingDown',
+        color: '#f44336',
+        textColor: '#fff',
+        visibleWhen: ['pending']
+      },
+      {
+        id: 'lost_total_commission',
+        label: 'LOST TOTAL COMMISSION',
+        calculation: (data) => {
+          return data
+            .filter(item => {
+              const status = item.escrow_status || item.status;
+              return status?.toLowerCase() === 'cancelled';
+            })
+            .reduce((sum, item) => {
+              const price = parseFloat(item.purchase_price || 0);
+              const commissionPct = parseFloat(item.commission_percentage || 3);
+              return sum + (price * (commissionPct / 100));
+            }, 0);
+        },
+        format: 'currency',
+        icon: 'MoneyOff',
+        color: '#f44336',
+        textColor: '#fff',
+        visibleWhen: ['pending']
+      },
+
+      // ========================================
+      // ALL ESCROWS STATS (white background)
+      // ========================================
+      {
+        id: 'total_escrows',
+        label: 'TOTAL ESCROWS',
+        calculation: (data) => data.length,
+        format: 'number',
+        icon: 'Dashboard',
+        color: '#fff',
+        textColor: '#000',
+        visibleWhen: ['all']
+      },
+      {
+        id: 'total_escrows_this_month',
+        label: 'TOTAL ESCROWS THIS MONTH',
+        calculation: (data) => {
+          const now = new Date();
+          const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+          return data.filter(item => {
+            const createdDate = new Date(item.created_at || item.createdAt);
+            return createdDate >= monthStart;
+          }).length;
+        },
+        format: 'number',
+        icon: 'CalendarMonth',
+        color: '#fff',
+        textColor: '#000',
+        visibleWhen: ['all']
+      },
+      {
+        id: 'total_volume',
+        label: 'TOTAL VOLUME',
+        calculation: (data) => {
+          return data.reduce((sum, item) => sum + parseFloat(item.purchase_price || 0), 0);
+        },
+        format: 'currency',
+        icon: 'AccountBalance',
+        color: '#fff',
+        textColor: '#000',
+        visibleWhen: ['all']
+      },
+      {
+        id: 'total_commission',
+        label: 'TOTAL COMMISSION',
+        calculation: (data) => {
+          // Total Closed Commission - Lost Commission
+          const closedCommission = data
+            .filter(item => {
+              const status = item.escrow_status || item.status;
+              return status?.toLowerCase() === 'closed';
+            })
+            .reduce((sum, item) => {
+              const price = parseFloat(item.purchase_price || 0);
+              const commissionPct = parseFloat(item.commission_percentage || 3);
+              return sum + (price * (commissionPct / 100));
+            }, 0);
+
+          const lostCommission = data
+            .filter(item => {
+              const status = item.escrow_status || item.status;
+              return status?.toLowerCase() === 'cancelled';
+            })
+            .reduce((sum, item) => {
+              const price = parseFloat(item.purchase_price || 0);
+              const commissionPct = parseFloat(item.commission_percentage || 3);
+              return sum + (price * (commissionPct / 100));
+            }, 0);
+
+          return closedCommission - lostCommission;
+        },
+        format: 'currency',
+        icon: 'AccountBalanceWallet',
+        color: '#fff',
+        textColor: '#000',
+        visibleWhen: ['all']
+      },
     ],
 
     // Status Tabs Configuration
