@@ -29,6 +29,8 @@ import {
   Lock,
   Group,
   Business,
+  RestoreFromTrash,
+  DeleteForever,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
@@ -267,8 +269,8 @@ const ClientCard = React.memo(({ client, viewMode = 'small', index = 0, onArchiv
                 }}
               />
 
-              {/* Delete Button - TOP RIGHT */}
-              {(onArchive || onDelete || onRestore) && (
+              {/* Archive/Restore/Delete Buttons - TOP RIGHT */}
+              {!isArchived && onArchive && (
                 <Box
                   sx={{
                     position: 'absolute',
@@ -277,22 +279,16 @@ const ClientCard = React.memo(({ client, viewMode = 'small', index = 0, onArchiv
                     width: 80,
                     height: 80,
                     zIndex: 3,
-                    '&:hover .delete-button': {
+                    '&:hover .archive-button': {
                       opacity: 1,
                     },
                   }}
                 >
                   <IconButton
-                    className="delete-button"
+                    className="archive-button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      if (isArchived && onDelete) {
-                        onDelete(client.id);
-                      } else if (isArchived && onRestore) {
-                        onRestore(client.id);
-                      } else if (onArchive) {
-                        onArchive(client.id);
-                      }
+                      onArchive(client.id);
                     }}
                     sx={{
                       position: 'absolute',
@@ -313,6 +309,65 @@ const ClientCard = React.memo(({ client, viewMode = 'small', index = 0, onArchiv
                   >
                     <Close sx={{ fontSize: 16 }} />
                   </IconButton>
+                </Box>
+              )}
+
+              {/* Restore and Delete buttons for archived items */}
+              {isArchived && (onRestore || onDelete) && (
+                <Box
+                  sx={{
+                    position: 'absolute',
+                    top: 10,
+                    right: 10,
+                    zIndex: 3,
+                    display: 'flex',
+                    gap: 1,
+                  }}
+                >
+                  {onRestore && (
+                    <IconButton
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onRestore(client.id);
+                      }}
+                      sx={{
+                        backgroundColor: 'rgba(16, 185, 129, 0.9)',
+                        color: 'white',
+                        width: 32,
+                        height: 32,
+                        backdropFilter: 'blur(8px)',
+                        '&:hover': {
+                          backgroundColor: 'rgba(16, 185, 129, 1)',
+                        },
+                        transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                      }}
+                      title="Restore"
+                    >
+                      <RestoreFromTrash sx={{ fontSize: 18 }} />
+                    </IconButton>
+                  )}
+                  {onDelete && (
+                    <IconButton
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(client.id);
+                      }}
+                      sx={{
+                        backgroundColor: 'rgba(239, 68, 68, 0.9)',
+                        color: 'white',
+                        width: 32,
+                        height: 32,
+                        backdropFilter: 'blur(8px)',
+                        '&:hover': {
+                          backgroundColor: 'rgba(239, 68, 68, 1)',
+                        },
+                        transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                      }}
+                      title="Delete Permanently"
+                    >
+                      <DeleteForever sx={{ fontSize: 18 }} />
+                    </IconButton>
+                  )}
                 </Box>
               )}
 
