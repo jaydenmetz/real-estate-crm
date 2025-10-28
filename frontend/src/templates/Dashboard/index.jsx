@@ -66,6 +66,8 @@ export const DashboardTemplate = ({
   // Calendar and archive state (matching Clients)
   const [showCalendar, setShowCalendar] = useState(false);
   const [archivedCount, setArchivedCount] = useState(0);
+  const [selectedArchivedIds, setSelectedArchivedIds] = useState([]);
+  const [batchDeleting, setBatchDeleting] = useState(false);
 
   // LocalStorage persistence for viewMode and scope
   const [persistedViewMode, setPersistedViewMode] = useState(() => {
@@ -217,6 +219,44 @@ export const DashboardTemplate = ({
     }
   };
 
+  // Batch delete handler for archived items
+  const handleBatchDelete = async () => {
+    if (!selectedArchivedIds || selectedArchivedIds.length === 0) return;
+
+    setBatchDeleting(true);
+    try {
+      // Delete all selected items
+      await Promise.all(
+        selectedArchivedIds.map(id => config.api.delete(id))
+      );
+      await refetch();
+      setSelectedArchivedIds([]);
+    } catch (err) {
+      console.error(`Failed to batch delete ${config.entity.namePlural}:`, err);
+    } finally {
+      setBatchDeleting(false);
+    }
+  };
+
+  // Select all handler
+  const handleSelectAll = (checked) => {
+    if (checked) {
+      const archivedItems = filteredData.filter(item => item.deleted_at || item.deletedAt);
+      const allIds = archivedItems.map(item => item[config.api.idField]);
+      setSelectedArchivedIds(allIds);
+    } else {
+      setSelectedArchivedIds([]);
+    }
+  };
+
+  // Get archived data
+  const archivedData = filteredData.filter(item => item.deleted_at || item.deletedAt);
+
+  // Update archived count whenever data changes
+  useEffect(() => {
+    setArchivedCount(archivedData.length);
+  }, [archivedData.length]);
+
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       {/* Hero Card with embedded stats - ClientHeroCard style */}
@@ -279,6 +319,13 @@ export const DashboardTemplate = ({
           onArchive={handleArchive}
           onRestore={handleRestore}
           customActions={customActions}
+          selectedStatus={selectedStatus}
+          archivedData={archivedData}
+          selectedArchivedIds={selectedArchivedIds}
+          setSelectedArchivedIds={setSelectedArchivedIds}
+          handleBatchDelete={handleBatchDelete}
+          batchDeleting={batchDeleting}
+          handleSelectAll={handleSelectAll}
         />
       </Box>
 
