@@ -1,5 +1,5 @@
 import { createEntityConfig } from './base.config';
-import { api } from '../../services/api.service';
+import { clientsAPI } from '../../services/api.service';
 
 export const clientsConfig = createEntityConfig({
   // ========================================
@@ -24,13 +24,13 @@ export const clientsConfig = createEntityConfig({
   api: {
     baseEndpoint: '/clients',
     // Use api.service methods directly
-    getAll: (params) => api.clientsAPI.getAll(params),
-    getById: (id) => api.clientsAPI.getById(id),
-    create: (data) => api.clientsAPI.create(data),
-    update: (id, data) => api.clientsAPI.update(id, data),
-    delete: (id) => api.clientsAPI.delete(id),
-    archive: (id) => api.clientsAPI.archive(id),
-    restore: (id) => api.clientsAPI.restore(id),
+    getAll: (params) => clientsAPI.getAll(params),
+    getById: (id) => clientsAPI.getById(id),
+    create: (data) => clientsAPI.create(data),
+    update: (id, data) => clientsAPI.update(id, data),
+    delete: (id) => clientsAPI.delete(id),
+    archive: (id) => clientsAPI.archive(id),
+    restore: (id) => clientsAPI.restore(id),
     endpoints: {
       list: '/clients',
       get: '/clients/:id',
