@@ -173,34 +173,45 @@ const DashboardStatCard = ({
             </Box>
           </Box>
 
-          {/* Middle: Count on left, Icon on right */}
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flex: 1, my: 1 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1, minWidth: 0 }}>
-              {showPrivacy && (
-                <IconButton
-                  size="small"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowValue(!showValue);
-                  }}
-                  sx={{
-                    width: 28,
-                    height: 28,
-                    color: 'rgba(255,255,255,0.8)',
-                    flexShrink: 0,
-                    '&:hover': {
-                      backgroundColor: 'rgba(255,255,255,0.1)',
-                      color: 'white',
-                    },
-                  }}
-                >
-                  {showValue ? (
-                    <VisibilityOff sx={{ fontSize: 18 }} />
-                  ) : (
-                    <Visibility sx={{ fontSize: 18 }} />
-                  )}
-                </IconButton>
-              )}
+          {/* Middle: Value centered between left edge and icon */}
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, my: 1, position: 'relative' }}>
+            {/* Privacy toggle - positioned on left */}
+            {showPrivacy && (
+              <IconButton
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowValue(!showValue);
+                }}
+                sx={{
+                  position: 'absolute',
+                  left: 0,
+                  width: 28,
+                  height: 28,
+                  color: 'rgba(255,255,255,0.8)',
+                  flexShrink: 0,
+                  '&:hover': {
+                    backgroundColor: 'rgba(255,255,255,0.1)',
+                    color: 'white',
+                  },
+                }}
+              >
+                {showValue ? (
+                  <VisibilityOff sx={{ fontSize: 18 }} />
+                ) : (
+                  <Visibility sx={{ fontSize: 18 }} />
+                )}
+              </IconButton>
+            )}
+
+            {/* Value - centered */}
+            <Box sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flex: 1,
+              px: showPrivacy ? 4 : 0, // Add padding if privacy toggle exists
+            }}>
               <Typography
                 variant="h3"
                 component="div"
@@ -249,13 +260,13 @@ const DashboardStatCard = ({
               </Typography>
             </Box>
 
-            {/* Icon Circle */}
+            {/* Icon Circle - positioned absolutely on right */}
             <Box
               sx={{
-                position: 'relative',
+                position: 'absolute',
+                right: 0,
                 width: 48,  // Reduced from 56
                 height: 48, // Reduced from 56
-                flexShrink: 0,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
