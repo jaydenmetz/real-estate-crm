@@ -63,12 +63,12 @@ export const DashboardTemplate = ({
   // LocalStorage persistence for viewMode and scope
   const [persistedViewMode, setPersistedViewMode] = useState(() => {
     const saved = localStorage.getItem(`${config.entity.namePlural}ViewMode`);
-    return saved || 'large';
+    return saved || config.dashboard.defaultViewMode || 'grid';
   });
 
   const [persistedScope, setPersistedScope] = useState(() => {
     const saved = localStorage.getItem(`${config.entity.namePlural}Scope`);
-    return saved || 'team';
+    return saved || config.dashboard.defaultScope || 'team';
   });
 
   // Calculate date range based on filter or custom dates (matching Clients)
