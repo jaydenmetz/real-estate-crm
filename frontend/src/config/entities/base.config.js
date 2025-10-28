@@ -55,8 +55,8 @@ export const baseEntityConfig = {
       create: 'POST',
       update: 'PUT',
       delete: 'DELETE',
-      archive: 'POST',
-      restore: 'POST',
+      archive: 'PATCH',
+      restore: 'PATCH',
       stats: 'GET'
     },
     idField: 'id',               // Primary key field name
