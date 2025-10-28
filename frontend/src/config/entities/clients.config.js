@@ -183,12 +183,41 @@ export const clientsConfig = createEntityConfig({
     defaultStatus: 'active',
 
     // Scope Filter Configuration
-    scopeOptions: [
-      { value: 'user', label: 'User' },
-      { value: 'team', label: 'Team' },
-      { value: 'brokerage', label: 'Brokerage' }
-    ],
-    defaultScope: 'team',
+    getScopeOptions: (user) => {
+      if (!user) {
+        return [
+          { value: 'my', label: 'My Clients' },
+          { value: 'team', label: 'Team Clients' },
+          { value: 'broker', label: 'Broker Clients' }
+        ];
+      }
+
+      // Handle both camelCase and snake_case from backend
+      const firstName = user.firstName || user.first_name || 'My';
+      const lastName = user.lastName || user.last_name || '';
+      const fullName = lastName ? `${firstName} ${lastName}` : (user.username || firstName);
+      const teamName = user.teamName || user.team_name || 'Team';
+      const brokerName = user.brokerName || user.broker_name || 'Broker';
+
+      return [
+        {
+          value: 'my',
+          label: `${firstName}'s Clients`,
+          fullLabel: fullName
+        },
+        {
+          value: 'team',
+          label: `${teamName}'s Clients`,
+          fullLabel: teamName
+        },
+        {
+          value: 'broker',
+          label: `${brokerName}'s Clients`,
+          fullLabel: brokerName
+        }
+      ];
+    },
+    defaultScope: 'my',
 
     // Sort Options Configuration
     sortOptions: [

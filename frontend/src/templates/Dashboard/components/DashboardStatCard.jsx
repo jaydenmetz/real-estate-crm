@@ -210,7 +210,14 @@ const DashboardStatCard = ({
                   display: 'flex',
                   alignItems: 'baseline',
                   gap: 0.5,
-                  fontSize: 'clamp(1.5rem, 4vw, 2.25rem)',
+                  // Responsive font sizing based on value length
+                  fontSize: (() => {
+                    const valueStr = String(value || '').replace(/,/g, '');
+                    const totalLength = prefix.length + valueStr.length + suffix.length;
+                    if (totalLength >= 10) return 'clamp(1.25rem, 3vw, 1.75rem)'; // 10+ digits: smaller
+                    if (totalLength >= 9) return 'clamp(1.4rem, 3.5vw, 2rem)';    // 9 digits
+                    return 'clamp(1.5rem, 4vw, 2.25rem)';                          // ≤8 digits: normal
+                  })(),
                   textShadow: (valueColor || textColor) === '#000' ? 'none' : '0 2px 4px rgba(0,0,0,0.1)',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
@@ -246,8 +253,8 @@ const DashboardStatCard = ({
             <Box
               sx={{
                 position: 'relative',
-                width: 56,
-                height: 56,
+                width: 48,  // Reduced from 56
+                height: 48, // Reduced from 56
                 flexShrink: 0,
                 display: 'flex',
                 alignItems: 'center',
@@ -264,7 +271,7 @@ const DashboardStatCard = ({
                   border: textColor === '#000' ? '2px solid rgba(0,0,0,0.1)' : '2px solid rgba(255,255,255,0.2)',
                 }}
               />
-              {IconComponent && <IconComponent sx={{ fontSize: 32, color: textColor === '#000' ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.9)', zIndex: 1 }} />}
+              {IconComponent && <IconComponent sx={{ fontSize: 28, color: textColor === '#000' ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.9)', zIndex: 1 }} />} {/* Reduced from 32 */}
             </Box>
           </Box>
 
