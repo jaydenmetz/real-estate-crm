@@ -119,6 +119,14 @@ function buildOwnershipWhereClause(user, scope = 'user', resourceType, startPara
 }
 
 /**
+ * Get the correct owner column name for a resource type
+ * Most tables use 'owner_id', but clients uses 'user_id'
+ */
+function getOwnerColumnName(resourceType) {
+  return resourceType === 'client' ? 'user_id' : 'owner_id';
+}
+
+/**
  * Build ownership filter for JOIN queries (when table alias is needed)
  * @param {Object} user - req.user object
  * @param {string} scope - Scope filter
@@ -134,11 +142,12 @@ function buildOwnershipWhereClauseWithAlias(user, scope, resourceType, tableAlia
   let paramIndex = startParamIndex;
 
   const prefix = tableAlias ? `${tableAlias}.` : '';
+  const ownerColumn = getOwnerColumnName(resourceType);
 
   // system_admin sees everything
   if (role === 'system_admin') {
     if (scope === 'user') {
-      conditions.push(`${prefix}owner_id = $${paramIndex}`);
+      conditions.push(`${prefix}${ownerColumn} = $${paramIndex}`);
       params.push(userId);
       paramIndex++;
     }
@@ -147,7 +156,7 @@ function buildOwnershipWhereClauseWithAlias(user, scope, resourceType, tableAlia
 
   // Handle scope-based filtering
   if (scope === 'user') {
-    conditions.push(`${prefix}owner_id = $${paramIndex}`);
+    conditions.push(`${prefix}${ownerColumn} = $${paramIndex}`);
     params.push(userId);
     paramIndex++;
 
@@ -157,17 +166,18 @@ function buildOwnershipWhereClauseWithAlias(user, scope, resourceType, tableAlia
     paramIndex++;
 
     if (resourceType === 'lead') {
-      conditions.push(`(${prefix}is_private = FALSE OR ${prefix}owner_id = $${paramIndex})`);
+      conditions.push(`(${prefix}is_private = FALSE OR ${prefix}${ownerColumn} = $${paramIndex})`);
       params.push(userId);
       paramIndex++;
     }
 
     if (resourceType === 'appointment') {
+      const leadOwnerColumn = getOwnerColumnName('lead');
       conditions.push(`(
         ${prefix}lead_id IS NULL OR
         ${prefix}lead_id NOT IN (
           SELECT id FROM leads
-          WHERE is_private = TRUE AND owner_id != $${paramIndex}
+          WHERE is_private = TRUE AND ${leadOwnerColumn} != $${paramIndex}
         )
       )`);
       params.push(userId);
