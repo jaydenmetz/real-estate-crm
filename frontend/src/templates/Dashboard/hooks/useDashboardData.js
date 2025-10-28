@@ -91,6 +91,50 @@ export const useDashboardData = (config) => {
       return {};
     }
 
+    // Helper functions for common calculations
+    const helpers = {
+      // Count items by status
+      countByStatus: (status) => {
+        return dataArray.filter(item => {
+          const itemStatus = item.escrow_status || item.status || item.lead_status || item.appointment_status || item.client_status;
+          return itemStatus?.toLowerCase() === status.toLowerCase();
+        }).length;
+      },
+
+      // Sum numeric field by status
+      sumByStatus: (status, field) => {
+        return dataArray
+          .filter(item => {
+            const itemStatus = item.escrow_status || item.status || item.lead_status || item.appointment_status || item.client_status;
+            return itemStatus?.toLowerCase() === status.toLowerCase();
+          })
+          .reduce((sum, item) => sum + (parseFloat(item[field] || 0)), 0);
+      },
+
+      // Calculate average of a numeric field
+      average: (field, filterFn) => {
+        const filtered = filterFn ? dataArray.filter(filterFn) : dataArray;
+        if (filtered.length === 0) return 0;
+        const sum = filtered.reduce((acc, item) => acc + (parseFloat(item[field] || 0)), 0);
+        return sum / filtered.length;
+      },
+
+      // Calculate average days between two date fields
+      averageDaysBetween: (startField, endField) => {
+        const items = dataArray.filter(item => item[startField] && item[endField]);
+        if (items.length === 0) return 0;
+
+        const totalDays = items.reduce((acc, item) => {
+          const start = new Date(item[startField]);
+          const end = new Date(item[endField]);
+          const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+          return acc + days;
+        }, 0);
+
+        return Math.round(totalDays / items.length);
+      },
+    };
+
     config.dashboard.stats.forEach(statConfig => {
       // Check if stat should be visible for current status
       if (statConfig.visibleWhen && !statConfig.visibleWhen.includes(selectedStatus)) {
@@ -100,25 +144,41 @@ export const useDashboardData = (config) => {
       // Calculate stat value based on field
       let value = 0;
 
-      if (statConfig.field === 'total') {
+      if (statConfig.calculation) {
+        // Custom calculation function (receives dataArray and helpers)
+        value = statConfig.calculation(dataArray, helpers);
+      } else if (statConfig.field === 'total') {
+        // Total count
         value = dataArray.length || 0;
-      } else if (statConfig.field === 'activeVolume' || statConfig.field === 'closedVolume') {
-        // Sum up numeric fields (e.g., purchase prices)
-        const statusFilter = statConfig.field === 'activeVolume' ? 'active' : 'closed';
-        value = dataArray
-          .filter(item => item.escrow_status === statusFilter || item.status === statusFilter)
-          .reduce((sum, item) => sum + (parseFloat(item.purchase_price || item.value || 0)), 0);
-      } else if (statConfig.calculation) {
-        // Custom calculation function
-        value = statConfig.calculation(dataArray);
+      } else if (statConfig.field === 'active') {
+        // Active count
+        value = helpers.countByStatus('active');
+      } else if (statConfig.field === 'activeVolume') {
+        // Active volume sum
+        value = helpers.sumByStatus('active', 'purchase_price');
+      } else if (statConfig.field === 'closedVolume') {
+        // Closed volume sum
+        value = helpers.sumByStatus('closed', 'purchase_price');
+      } else if (statConfig.field === 'avgDaysToClose') {
+        // Average days to close
+        value = helpers.averageDaysBetween('offer_date', 'closing_date');
+      } else if (statConfig.aggregation === 'sum') {
+        // Sum of field
+        value = dataArray.reduce((sum, item) => sum + (parseFloat(item[statConfig.field] || 0)), 0);
+      } else if (statConfig.aggregation === 'avg') {
+        // Average of field
+        value = helpers.average(statConfig.field);
+      } else if (statConfig.aggregation === 'count') {
+        // Count items with non-null field
+        value = dataArray.filter(item => item[statConfig.field]).length;
       } else {
         // Direct field access
         value = dataArray[statConfig.field] || 0;
       }
 
-      // Calculate trend (simple: compare to previous period - would need historical data in real implementation)
-      const trend = Math.random() > 0.5 ? 'up' : 'down'; // Mock trend
-      const trendValue = (Math.random() * 20).toFixed(1); // Mock trend percentage
+      // Calculate trend (would need historical data in real implementation)
+      const trend = Math.random() > 0.5 ? 'up' : 'down';
+      const trendValue = (Math.random() * 20).toFixed(1);
 
       statsData[statConfig.id] = {
         label: statConfig.label,
