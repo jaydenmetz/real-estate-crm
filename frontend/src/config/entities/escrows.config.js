@@ -90,59 +90,57 @@ export const escrowsConfig = createEntityConfig({
     // Stats Configuration (dynamic based on selectedStatus and date range)
     stats: [
       // ========================================
-      // ACTIVE STATS (gradient background matching hero)
+      // ACTIVE TAB STATS (based on creation date)
       // ========================================
       {
         id: 'total_active_escrows',
-        label: 'TOTAL ACTIVE ESCROWS',
+        label: 'TOTAL ESCROWS',
         calculation: (_data, helpers) => helpers.countByStatus('active'),
         format: 'number',
         icon: 'Home',
-        color: '#42a5f5', // Blue gradient (matches hero)
-        backgroundColor: null, // Use gradient
+        color: '#42a5f5',
+        backgroundColor: null,
         textColor: '#fff',
         valueColor: null,
         visibleWhen: ['active']
       },
       {
-        id: 'on_pace_to_close_this_month',
-        label: 'ON PACE TO CLOSE THIS MONTH',
+        id: 'total_active_this_month',
+        label: 'TOTAL THIS MONTH\'S',
         calculation: (data) => {
           const now = new Date();
           const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-          const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
           return data.filter(item => {
             const status = item.escrow_status || item.status;
-            const closingDate = new Date(item.closing_date);
+            const createdDate = new Date(item.created_at || item.createdAt);
             return status?.toLowerCase() === 'active' &&
-                   closingDate >= monthStart &&
-                   closingDate <= monthEnd;
+                   createdDate >= monthStart;
           }).length;
         },
         format: 'number',
         icon: 'Schedule',
-        color: '#42a5f5', // Blue gradient (matches hero)
-        backgroundColor: null, // Use gradient
+        color: '#42a5f5',
+        backgroundColor: null,
         textColor: '#fff',
         valueColor: null,
         visibleWhen: ['active']
       },
       {
         id: 'total_active_volume',
-        label: 'TOTAL ACTIVE VOLUME',
+        label: 'TOTAL VOLUME',
         calculation: (_data, helpers) => helpers.sumByStatus('active', 'purchase_price'),
         format: 'currency',
         icon: 'AttachMoney',
-        color: '#42a5f5', // Blue gradient (matches hero)
-        backgroundColor: null, // Use gradient
+        color: '#42a5f5',
+        backgroundColor: null,
         textColor: '#fff',
         valueColor: null,
         visibleWhen: ['active']
       },
       {
         id: 'total_active_commission',
-        label: 'TOTAL ACTIVE COMMISSION',
+        label: 'TOTAL COMMISSION',
         calculation: (data) => {
           return data
             .filter(item => {
@@ -157,64 +155,65 @@ export const escrowsConfig = createEntityConfig({
         },
         format: 'currency',
         icon: 'Paid',
-        color: '#42a5f5', // Blue gradient (matches hero)
-        backgroundColor: null, // Use gradient
+        color: '#42a5f5',
+        backgroundColor: null,
         textColor: '#fff',
         valueColor: null,
         visibleWhen: ['active']
       },
 
       // ========================================
-      // CLOSED STATS (gradient background, GREEN value text for earnings)
+      // CLOSED TAB STATS (based on closing date)
       // ========================================
       {
         id: 'total_closed_escrows',
-        label: 'TOTAL CLOSED ESCROWS',
+        label: 'TOTAL ESCROWS',
         calculation: (_data, helpers) => helpers.countByStatus('closed'),
         format: 'number',
         icon: 'CheckCircle',
-        color: '#42a5f5', // Blue gradient (matches hero)
-        backgroundColor: null, // Use gradient
+        color: '#42a5f5',
+        backgroundColor: null,
         textColor: '#fff',
         valueColor: null,
         visibleWhen: ['closed']
       },
       {
-        id: 'total_escrows_set_to_close_this_month',
-        label: 'TOTAL ESCROWS SET TO CLOSE THIS MONTH',
+        id: 'total_closed_this_month',
+        label: 'TOTAL THIS MONTH\'S',
         calculation: (data) => {
           const now = new Date();
           const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-          const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
           return data.filter(item => {
+            const status = item.escrow_status || item.status;
             const closingDate = new Date(item.closing_date);
-            return closingDate >= monthStart && closingDate <= monthEnd;
+            return status?.toLowerCase() === 'closed' &&
+                   closingDate >= monthStart;
           }).length;
         },
         format: 'number',
         icon: 'EventAvailable',
-        color: '#42a5f5', // Blue gradient (matches hero)
-        backgroundColor: null, // Use gradient
+        color: '#42a5f5',
+        backgroundColor: null,
         textColor: '#fff',
         valueColor: null,
         visibleWhen: ['closed']
       },
       {
         id: 'total_closed_volume',
-        label: 'TOTAL CLOSED VOLUME',
+        label: 'TOTAL VOLUME',
         calculation: (_data, helpers) => helpers.sumByStatus('closed', 'purchase_price'),
         format: 'currency',
         icon: 'TrendingUp',
-        color: '#42a5f5', // Blue gradient (matches hero)
-        backgroundColor: null, // Use gradient
+        color: '#42a5f5',
+        backgroundColor: null,
         textColor: '#fff',
         valueColor: null,
         visibleWhen: ['closed']
       },
       {
         id: 'total_closed_commission',
-        label: 'TOTAL CLOSED COMMISSION',
+        label: 'TOTAL COMMISSION',
         calculation: (data) => {
           return data
             .filter(item => {
@@ -229,67 +228,65 @@ export const escrowsConfig = createEntityConfig({
         },
         format: 'currency',
         icon: 'MonetizationOn',
-        color: '#42a5f5', // Blue gradient (matches hero)
-        backgroundColor: null, // Use gradient
+        color: '#42a5f5',
+        backgroundColor: null,
         textColor: '#fff',
         valueColor: null,
         visibleWhen: ['closed']
       },
 
       // ========================================
-      // CANCELLED STATS (gradient background, RED value text for losses)
+      // CANCELLED TAB STATS (based on cancellation date)
       // ========================================
       {
         id: 'total_cancelled_escrows',
-        label: 'TOTAL CANCELLED ESCROWS',
+        label: 'TOTAL ESCROWS',
         calculation: (_data, helpers) => helpers.countByStatus('cancelled'),
         format: 'number',
         icon: 'Cancel',
-        color: '#42a5f5', // Blue gradient (matches hero)
-        backgroundColor: null, // Use gradient
+        color: '#42a5f5',
+        backgroundColor: null,
         textColor: '#fff',
         valueColor: null,
         visibleWhen: ['cancelled']
       },
       {
         id: 'total_cancelled_this_month',
-        label: 'TOTAL CANCELLED THIS MONTH',
+        label: 'TOTAL THIS MONTH\'S',
         calculation: (data) => {
           const now = new Date();
           const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-          const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
 
           return data.filter(item => {
             const status = item.escrow_status || item.status;
             const updatedDate = new Date(item.updated_at || item.updatedAt);
             return status?.toLowerCase() === 'cancelled' &&
-                   updatedDate >= monthStart &&
-                   updatedDate <= monthEnd;
+                   updatedDate >= monthStart;
           }).length;
         },
         format: 'number',
         icon: 'EventBusy',
-        color: '#42a5f5', // Blue gradient (matches hero)
-        backgroundColor: null, // Use gradient
+        color: '#42a5f5',
+        backgroundColor: null,
         textColor: '#fff',
         valueColor: null,
         visibleWhen: ['cancelled']
       },
       {
-        id: 'lost_total_volume',
-        label: 'LOST TOTAL VOLUME',
+        id: 'total_cancelled_volume',
+        label: 'TOTAL VOLUME',
         calculation: (_data, helpers) => helpers.sumByStatus('cancelled', 'purchase_price'),
         format: 'currency',
         icon: 'TrendingDown',
-        color: '#42a5f5', // Blue gradient (matches hero)
-        backgroundColor: null, // Use gradient
+        color: '#42a5f5',
+        backgroundColor: null,
         textColor: '#fff',
         valueColor: null,
         visibleWhen: ['cancelled']
       },
       {
-        id: 'lost_total_commission',
-        label: 'LOST TOTAL COMMISSION',
+        id: 'total_cancelled_commission',
+        label: 'TOTAL COMMISSION',
         calculation: (data) => {
           return data
             .filter(item => {
@@ -304,15 +301,15 @@ export const escrowsConfig = createEntityConfig({
         },
         format: 'currency',
         icon: 'MoneyOff',
-        color: '#42a5f5', // Blue gradient (matches hero)
-        backgroundColor: null, // Use gradient
+        color: '#42a5f5',
+        backgroundColor: null,
         textColor: '#fff',
         valueColor: null,
         visibleWhen: ['cancelled']
       },
 
       // ========================================
-      // ALL ESCROWS STATS (gradient background, dynamic value colors)
+      // ALL ESCROWS TAB STATS (based on creation date)
       // ========================================
       {
         id: 'total_escrows',
@@ -320,15 +317,15 @@ export const escrowsConfig = createEntityConfig({
         calculation: (data) => data.length,
         format: 'number',
         icon: 'Dashboard',
-        color: '#42a5f5', // Blue gradient (matches hero)
-        backgroundColor: null, // Use gradient
+        color: '#42a5f5',
+        backgroundColor: null,
         textColor: '#fff',
         valueColor: null,
         visibleWhen: ['all']
       },
       {
         id: 'total_escrows_this_month',
-        label: 'TOTAL ESCROWS THIS MONTH',
+        label: 'TOTAL THIS MONTH\'S',
         calculation: (data) => {
           const now = new Date();
           const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -340,8 +337,8 @@ export const escrowsConfig = createEntityConfig({
         },
         format: 'number',
         icon: 'CalendarMonth',
-        color: '#42a5f5', // Blue gradient (matches hero)
-        backgroundColor: null, // Use gradient
+        color: '#42a5f5',
+        backgroundColor: null,
         textColor: '#fff',
         valueColor: null,
         visibleWhen: ['all']
@@ -354,8 +351,8 @@ export const escrowsConfig = createEntityConfig({
         },
         format: 'currency',
         icon: 'AccountBalance',
-        color: '#42a5f5', // Blue gradient (matches hero)
-        backgroundColor: null, // Use gradient
+        color: '#42a5f5',
+        backgroundColor: null,
         textColor: '#fff',
         valueColor: null,
         visibleWhen: ['all']
@@ -391,8 +388,8 @@ export const escrowsConfig = createEntityConfig({
         },
         format: 'currency',
         icon: 'AccountBalanceWallet',
-        color: '#42a5f5', // Blue gradient (matches hero)
-        backgroundColor: null, // Use gradient
+        color: '#42a5f5',
+        backgroundColor: null,
         textColor: '#fff',
         valueColor: null,
         visibleWhen: ['all']

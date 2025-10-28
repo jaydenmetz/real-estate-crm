@@ -219,10 +219,11 @@ export const useDashboardData = (config, externalDateRange = null) => {
     let filtered = [...dataArray];
 
     // Apply status filter
-    if (selectedStatus !== 'all') {
+    if (selectedStatus !== 'all' && selectedStatus !== 'archived') {
       filtered = filtered.filter(item => {
         const statusField = item.escrow_status || item.status || item.lead_status || item.appointment_status;
-        return statusField === selectedStatus;
+        // Case-insensitive comparison to match backend
+        return statusField?.toLowerCase() === selectedStatus.toLowerCase();
       });
     }
 
