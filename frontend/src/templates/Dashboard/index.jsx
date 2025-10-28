@@ -327,7 +327,6 @@ export const DashboardTemplate = ({
           batchDeleting={batchDeleting}
           handleSelectAll={handleSelectAll}
         />
-      </Box>
 
       {/* New Item Modal */}
       {NewItemModal && (
