@@ -90,7 +90,7 @@ export const escrowsConfig = createEntityConfig({
     // Stats Configuration (dynamic based on selectedStatus and date range)
     stats: [
       // ========================================
-      // ACTIVE STATS (white background)
+      // ACTIVE STATS (gradient background matching hero)
       // ========================================
       {
         id: 'total_active_escrows',
@@ -98,9 +98,9 @@ export const escrowsConfig = createEntityConfig({
         calculation: (_data, helpers) => helpers.countByStatus('active'),
         format: 'number',
         icon: 'Home',
-        color: '#fff',
-        backgroundColor: '#fff',
-        textColor: '#000',
+        color: '#42a5f5', // Blue gradient (matches hero)
+        backgroundColor: null, // Use gradient
+        textColor: '#fff',
         valueColor: null,
         visibleWhen: ['active']
       },
@@ -122,9 +122,9 @@ export const escrowsConfig = createEntityConfig({
         },
         format: 'number',
         icon: 'Schedule',
-        color: '#fff',
-        backgroundColor: '#fff',
-        textColor: '#000',
+        color: '#42a5f5', // Blue gradient (matches hero)
+        backgroundColor: null, // Use gradient
+        textColor: '#fff',
         valueColor: null,
         visibleWhen: ['active']
       },
@@ -134,9 +134,9 @@ export const escrowsConfig = createEntityConfig({
         calculation: (_data, helpers) => helpers.sumByStatus('active', 'purchase_price'),
         format: 'currency',
         icon: 'AttachMoney',
-        color: '#fff',
-        backgroundColor: '#fff',
-        textColor: '#000',
+        color: '#42a5f5', // Blue gradient (matches hero)
+        backgroundColor: null, // Use gradient
+        textColor: '#fff',
         valueColor: null,
         visibleWhen: ['active']
       },
@@ -157,9 +157,9 @@ export const escrowsConfig = createEntityConfig({
         },
         format: 'currency',
         icon: 'Paid',
-        color: '#fff',
-        backgroundColor: '#fff',
-        textColor: '#000',
+        color: '#42a5f5', // Blue gradient (matches hero)
+        backgroundColor: null, // Use gradient
+        textColor: '#fff',
         valueColor: null,
         visibleWhen: ['active']
       },
@@ -173,9 +173,9 @@ export const escrowsConfig = createEntityConfig({
         calculation: (_data, helpers) => helpers.countByStatus('closed'),
         format: 'number',
         icon: 'CheckCircle',
-        color: '#fff',
-        backgroundColor: '#fff',
-        textColor: '#000',
+        color: '#42a5f5', // Blue gradient (matches hero)
+        backgroundColor: null, // Use gradient
+        textColor: '#fff',
         valueColor: null,
         visibleWhen: ['closed']
       },
@@ -194,9 +194,9 @@ export const escrowsConfig = createEntityConfig({
         },
         format: 'number',
         icon: 'EventAvailable',
-        color: '#fff',
-        backgroundColor: '#fff',
-        textColor: '#000',
+        color: '#42a5f5', // Blue gradient (matches hero)
+        backgroundColor: null, // Use gradient
+        textColor: '#fff',
         valueColor: null,
         visibleWhen: ['closed']
       },
@@ -206,9 +206,9 @@ export const escrowsConfig = createEntityConfig({
         calculation: (_data, helpers) => helpers.sumByStatus('closed', 'purchase_price'),
         format: 'currency',
         icon: 'TrendingUp',
-        color: '#fff',
-        backgroundColor: '#fff',
-        textColor: '#000',
+        color: '#42a5f5', // Blue gradient (matches hero)
+        backgroundColor: null, // Use gradient
+        textColor: '#fff',
         valueColor: null,
         visibleWhen: ['closed']
       },
@@ -229,9 +229,9 @@ export const escrowsConfig = createEntityConfig({
         },
         format: 'currency',
         icon: 'MonetizationOn',
-        color: '#fff',
-        backgroundColor: '#fff',
-        textColor: '#000',
+        color: '#42a5f5', // Blue gradient (matches hero)
+        backgroundColor: null, // Use gradient
+        textColor: '#fff',
         valueColor: null,
         visibleWhen: ['closed']
       },
@@ -245,9 +245,9 @@ export const escrowsConfig = createEntityConfig({
         calculation: (_data, helpers) => helpers.countByStatus('cancelled'),
         format: 'number',
         icon: 'Cancel',
-        color: '#fff',
-        backgroundColor: '#fff',
-        textColor: '#000',
+        color: '#42a5f5', // Blue gradient (matches hero)
+        backgroundColor: null, // Use gradient
+        textColor: '#fff',
         valueColor: null,
         visibleWhen: ['cancelled']
       },
@@ -269,9 +269,9 @@ export const escrowsConfig = createEntityConfig({
         },
         format: 'number',
         icon: 'EventBusy',
-        color: '#fff',
-        backgroundColor: '#fff',
-        textColor: '#000',
+        color: '#42a5f5', // Blue gradient (matches hero)
+        backgroundColor: null, // Use gradient
+        textColor: '#fff',
         valueColor: null,
         visibleWhen: ['cancelled']
       },
@@ -281,9 +281,9 @@ export const escrowsConfig = createEntityConfig({
         calculation: (_data, helpers) => helpers.sumByStatus('cancelled', 'purchase_price'),
         format: 'currency',
         icon: 'TrendingDown',
-        color: '#fff',
-        backgroundColor: '#fff',
-        textColor: '#000',
+        color: '#42a5f5', // Blue gradient (matches hero)
+        backgroundColor: null, // Use gradient
+        textColor: '#fff',
         valueColor: null,
         visibleWhen: ['cancelled']
       },
@@ -304,9 +304,9 @@ export const escrowsConfig = createEntityConfig({
         },
         format: 'currency',
         icon: 'MoneyOff',
-        color: '#fff',
-        backgroundColor: '#fff',
-        textColor: '#000',
+        color: '#42a5f5', // Blue gradient (matches hero)
+        backgroundColor: null, // Use gradient
+        textColor: '#fff',
         valueColor: null,
         visibleWhen: ['cancelled']
       },
@@ -320,9 +320,9 @@ export const escrowsConfig = createEntityConfig({
         calculation: (data) => data.length,
         format: 'number',
         icon: 'Dashboard',
-        color: '#fff',
-        backgroundColor: '#fff',
-        textColor: '#000',
+        color: '#42a5f5', // Blue gradient (matches hero)
+        backgroundColor: null, // Use gradient
+        textColor: '#fff',
         valueColor: null,
         visibleWhen: ['all']
       },
@@ -340,9 +340,9 @@ export const escrowsConfig = createEntityConfig({
         },
         format: 'number',
         icon: 'CalendarMonth',
-        color: '#fff',
-        backgroundColor: '#fff',
-        textColor: '#000',
+        color: '#42a5f5', // Blue gradient (matches hero)
+        backgroundColor: null, // Use gradient
+        textColor: '#fff',
         valueColor: null,
         visibleWhen: ['all']
       },
@@ -354,9 +354,9 @@ export const escrowsConfig = createEntityConfig({
         },
         format: 'currency',
         icon: 'AccountBalance',
-        color: '#fff',
-        backgroundColor: '#fff',
-        textColor: '#000',
+        color: '#42a5f5', // Blue gradient (matches hero)
+        backgroundColor: null, // Use gradient
+        textColor: '#fff',
         valueColor: null,
         visibleWhen: ['all']
       },
@@ -391,9 +391,9 @@ export const escrowsConfig = createEntityConfig({
         },
         format: 'currency',
         icon: 'AccountBalanceWallet',
-        color: '#fff',
-        backgroundColor: '#fff',
-        textColor: '#000',
+        color: '#42a5f5', // Blue gradient (matches hero)
+        backgroundColor: null, // Use gradient
+        textColor: '#fff',
         valueColor: null,
         visibleWhen: ['all']
       },
