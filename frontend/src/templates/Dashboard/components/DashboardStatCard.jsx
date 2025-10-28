@@ -77,6 +77,7 @@ const DashboardStatCard = ({
   color = '#ffffff',
   backgroundColor = null, // Solid background color (overrides gradient if provided)
   textColor = null, // Text color (white or black)
+  valueColor = null, // Color for the value text (green/red for semantic meaning)
   delay = 0,
   trend,
   showPrivacy = false,
@@ -205,12 +206,12 @@ const DashboardStatCard = ({
                 component="div"
                 sx={{
                   fontWeight: 700,
-                  color: textColor || 'white',
+                  color: valueColor || textColor || 'white',
                   display: 'flex',
                   alignItems: 'baseline',
                   gap: 0.5,
                   fontSize: 'clamp(1.5rem, 4vw, 2.25rem)',
-                  textShadow: textColor === '#000' ? 'none' : '0 2px 4px rgba(0,0,0,0.1)',
+                  textShadow: (valueColor || textColor) === '#000' ? 'none' : '0 2px 4px rgba(0,0,0,0.1)',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',

@@ -352,18 +352,28 @@ export const DashboardHero = ({
                   const prefixValue = statCfg.format === 'currency' ? '$' : (statCfg.prefix || '');
                   const suffixValue = statCfg.format === 'percentage' ? '%' : (statCfg.suffix || '');
 
+                  // Get the stat value
+                  const statValue = stats?.[statCfg.id]?.value || 0;
+
+                  // Determine valueColor - support 'dynamic' for positive/negative
+                  let valueColor = statCfg.valueColor;
+                  if (valueColor === 'dynamic') {
+                    valueColor = statValue >= 0 ? '#4caf50' : '#f44336';
+                  }
+
                   return (
                     <Grid item xs={12} sm={6} md={6} xl={3} key={statCfg.id}>
                       {StatCardComponent && (
                         <StatCardComponent
                           icon={statCfg.icon}
                           title={statCfg.label}
-                          value={stats?.[statCfg.id]?.value || 0}
+                          value={statValue}
                           prefix={prefixValue}
                           suffix={suffixValue}
                           color={statCfg.color || "#ffffff"}
-                          backgroundColor={statCfg.color || null}
+                          backgroundColor={statCfg.backgroundColor}
                           textColor={statCfg.textColor || null}
+                          valueColor={valueColor}
                           delay={index}
                           goal={statCfg.goal}
                           trend={stats?.[statCfg.id]?.trend}

@@ -90,7 +90,7 @@ export const escrowsConfig = createEntityConfig({
     // Stats Configuration (dynamic based on selectedStatus and date range)
     stats: [
       // ========================================
-      // ACTIVE STATS (white background)
+      // ACTIVE STATS (gradient background, neutral text)
       // ========================================
       {
         id: 'total_active_escrows',
@@ -98,8 +98,10 @@ export const escrowsConfig = createEntityConfig({
         calculation: (_data, helpers) => helpers.countByStatus('active'),
         format: 'number',
         icon: 'Home',
-        color: '#fff',
-        textColor: '#000',
+        color: '#42a5f5', // Blue gradient color (matches hero)
+        backgroundColor: null, // Use gradient
+        textColor: '#fff',
+        valueColor: null, // White (neutral)
         visibleWhen: ['active']
       },
       {
@@ -120,8 +122,10 @@ export const escrowsConfig = createEntityConfig({
         },
         format: 'number',
         icon: 'Schedule',
-        color: '#fff',
-        textColor: '#000',
+        color: '#42a5f5',
+        backgroundColor: null,
+        textColor: '#fff',
+        valueColor: null,
         visibleWhen: ['active']
       },
       {
@@ -130,8 +134,10 @@ export const escrowsConfig = createEntityConfig({
         calculation: (_data, helpers) => helpers.sumByStatus('active', 'purchase_price'),
         format: 'currency',
         icon: 'AttachMoney',
-        color: '#fff',
-        textColor: '#000',
+        color: '#42a5f5',
+        backgroundColor: null,
+        textColor: '#fff',
+        valueColor: null,
         visibleWhen: ['active']
       },
       {
@@ -151,13 +157,15 @@ export const escrowsConfig = createEntityConfig({
         },
         format: 'currency',
         icon: 'Paid',
-        color: '#fff',
-        textColor: '#000',
+        color: '#42a5f5',
+        backgroundColor: null,
+        textColor: '#fff',
+        valueColor: null,
         visibleWhen: ['active']
       },
 
       // ========================================
-      // CLOSED STATS (green background)
+      // CLOSED STATS (gradient background, GREEN value text for earnings)
       // ========================================
       {
         id: 'total_closed_escrows',
@@ -165,8 +173,10 @@ export const escrowsConfig = createEntityConfig({
         calculation: (_data, helpers) => helpers.countByStatus('closed'),
         format: 'number',
         icon: 'CheckCircle',
-        color: '#4caf50',
+        color: '#42a5f5',
+        backgroundColor: null,
         textColor: '#fff',
+        valueColor: '#4caf50', // Green for positive/closed
         visibleWhen: ['closed']
       },
       {
@@ -184,8 +194,10 @@ export const escrowsConfig = createEntityConfig({
         },
         format: 'number',
         icon: 'EventAvailable',
-        color: '#4caf50',
+        color: '#42a5f5',
+        backgroundColor: null,
         textColor: '#fff',
+        valueColor: '#4caf50',
         visibleWhen: ['closed']
       },
       {
@@ -194,8 +206,10 @@ export const escrowsConfig = createEntityConfig({
         calculation: (_data, helpers) => helpers.sumByStatus('closed', 'purchase_price'),
         format: 'currency',
         icon: 'TrendingUp',
-        color: '#4caf50',
+        color: '#42a5f5',
+        backgroundColor: null,
         textColor: '#fff',
+        valueColor: '#4caf50', // Green for earnings
         visibleWhen: ['closed']
       },
       {
@@ -215,13 +229,15 @@ export const escrowsConfig = createEntityConfig({
         },
         format: 'currency',
         icon: 'MonetizationOn',
-        color: '#4caf50',
+        color: '#42a5f5',
+        backgroundColor: null,
         textColor: '#fff',
+        valueColor: '#4caf50', // Green for positive commission
         visibleWhen: ['closed']
       },
 
       // ========================================
-      // CANCELLED STATS (red background)
+      // CANCELLED STATS (gradient background, RED value text for losses)
       // ========================================
       {
         id: 'total_cancelled_escrows',
@@ -229,8 +245,10 @@ export const escrowsConfig = createEntityConfig({
         calculation: (_data, helpers) => helpers.countByStatus('cancelled'),
         format: 'number',
         icon: 'Cancel',
-        color: '#f44336',
+        color: '#42a5f5',
+        backgroundColor: null,
         textColor: '#fff',
+        valueColor: '#f44336', // Red for cancelled/losses
         visibleWhen: ['pending']
       },
       {
@@ -251,8 +269,10 @@ export const escrowsConfig = createEntityConfig({
         },
         format: 'number',
         icon: 'EventBusy',
-        color: '#f44336',
+        color: '#42a5f5',
+        backgroundColor: null,
         textColor: '#fff',
+        valueColor: '#f44336',
         visibleWhen: ['pending']
       },
       {
@@ -261,8 +281,10 @@ export const escrowsConfig = createEntityConfig({
         calculation: (_data, helpers) => helpers.sumByStatus('cancelled', 'purchase_price'),
         format: 'currency',
         icon: 'TrendingDown',
-        color: '#f44336',
+        color: '#42a5f5',
+        backgroundColor: null,
         textColor: '#fff',
+        valueColor: '#f44336', // Red for lost value
         visibleWhen: ['pending']
       },
       {
@@ -282,13 +304,15 @@ export const escrowsConfig = createEntityConfig({
         },
         format: 'currency',
         icon: 'MoneyOff',
-        color: '#f44336',
+        color: '#42a5f5',
+        backgroundColor: null,
         textColor: '#fff',
+        valueColor: '#f44336', // Red for lost commission
         visibleWhen: ['pending']
       },
 
       // ========================================
-      // ALL ESCROWS STATS (white background)
+      // ALL ESCROWS STATS (gradient background, dynamic value colors)
       // ========================================
       {
         id: 'total_escrows',
@@ -296,8 +320,10 @@ export const escrowsConfig = createEntityConfig({
         calculation: (data) => data.length,
         format: 'number',
         icon: 'Dashboard',
-        color: '#fff',
-        textColor: '#000',
+        color: '#42a5f5',
+        backgroundColor: null,
+        textColor: '#fff',
+        valueColor: null,
         visibleWhen: ['all']
       },
       {
@@ -314,8 +340,10 @@ export const escrowsConfig = createEntityConfig({
         },
         format: 'number',
         icon: 'CalendarMonth',
-        color: '#fff',
-        textColor: '#000',
+        color: '#42a5f5',
+        backgroundColor: null,
+        textColor: '#fff',
+        valueColor: null,
         visibleWhen: ['all']
       },
       {
@@ -326,8 +354,10 @@ export const escrowsConfig = createEntityConfig({
         },
         format: 'currency',
         icon: 'AccountBalance',
-        color: '#fff',
-        textColor: '#000',
+        color: '#42a5f5',
+        backgroundColor: null,
+        textColor: '#fff',
+        valueColor: null,
         visibleWhen: ['all']
       },
       {
@@ -361,8 +391,10 @@ export const escrowsConfig = createEntityConfig({
         },
         format: 'currency',
         icon: 'AccountBalanceWallet',
-        color: '#fff',
-        textColor: '#000',
+        color: '#42a5f5',
+        backgroundColor: null,
+        textColor: '#fff',
+        valueColor: 'dynamic', // Will be green if positive, red if negative
         visibleWhen: ['all']
       },
     ],
