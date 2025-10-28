@@ -86,6 +86,18 @@ class EscrowsService extends BaseDomainService {
         // Case-insensitive status comparison
         conditions.push(`LOWER(escrow_status) = LOWER($${paramIndex++})`);
         values.push(query[key]);
+      } else if (key === 'owner_id' && query[key]) {
+        // Scope: my escrows
+        conditions.push(`owner_id = $${paramIndex++}`);
+        values.push(query[key]);
+      } else if (key === 'team_id' && query[key]) {
+        // Scope: team escrows
+        conditions.push(`team_id = $${paramIndex++}`);
+        values.push(query[key]);
+      } else if (key === 'broker_id' && query[key]) {
+        // Scope: broker escrows
+        conditions.push(`broker_id = $${paramIndex++}`);
+        values.push(query[key]);
       } else if (query[key] !== undefined) {
         conditions.push(`${key} = $${paramIndex++}`);
         values.push(query[key]);

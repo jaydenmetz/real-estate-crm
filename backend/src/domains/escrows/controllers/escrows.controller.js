@@ -14,7 +14,7 @@ class EscrowsController extends BaseDomainController {
 
   /**
    * Get all escrows with pagination, filtering, and sorting
-   * GET /v1/escrows
+   * GET /v1/escrows?scope=my|team|broker
    */
   getAllEscrows = this.asyncHandler(async (req, res) => {
     // Get pagination
@@ -38,6 +38,24 @@ class EscrowsController extends BaseDomainController {
       'closingDateEnd',
       'search'
     ]);
+
+    // Add scope filtering
+    const scope = req.query.scope || 'my';
+    const user = req.user;
+
+    // For system_admin role, "my" scope means ALL escrows
+    if (user.role === 'system_admin' && scope === 'my') {
+      // No additional filters - show all escrows
+    } else if (scope === 'my') {
+      // Show only user's own escrows
+      filters.owner_id = user.id;
+    } else if (scope === 'team') {
+      // Show team's escrows
+      filters.team_id = user.team_id;
+    } else if (scope === 'broker') {
+      // Show broker's escrows
+      filters.broker_id = user.broker_id;
+    }
 
     // Fetch data
     const result = await escrowsService.findAll(filters, {
