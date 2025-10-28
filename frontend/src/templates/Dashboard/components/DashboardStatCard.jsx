@@ -57,6 +57,8 @@ const DashboardStatCard = ({
   prefix = '',
   suffix = '',
   color = '#ffffff',
+  backgroundColor = null, // Solid background color (overrides gradient if provided)
+  textColor = null, // Text color (white or black)
   delay = 0,
   trend,
   showPrivacy = false,
@@ -102,15 +104,15 @@ const DashboardStatCard = ({
           height: 200, // Fixed height for consistency
           position: 'relative',
           overflow: 'hidden',
-          background: `linear-gradient(135deg, ${alpha(color, 0.15)} 0%, ${alpha(color, 0.08)} 100%)`,
-          backdropFilter: 'blur(10px)',
-          border: `1px solid ${alpha(color, 0.3)}`,
+          background: backgroundColor || `linear-gradient(135deg, ${alpha(color, 0.15)} 0%, ${alpha(color, 0.08)} 100%)`,
+          backdropFilter: backgroundColor ? 'none' : 'blur(10px)',
+          border: backgroundColor ? `1px solid ${alpha(backgroundColor, 0.5)}` : `1px solid ${alpha(color, 0.3)}`,
           boxShadow: '0 4px 20px rgba(0, 0, 0, 0.08)',
           transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           '&:hover': {
             transform: 'translateY(-8px) scale(1.02)',
-            boxShadow: `0 20px 40px ${alpha(color, 0.25)}`,
-            border: `1px solid ${alpha(color, 0.5)}`,
+            boxShadow: backgroundColor ? `0 20px 40px ${alpha(backgroundColor, 0.4)}` : `0 20px 40px ${alpha(color, 0.25)}`,
+            border: backgroundColor ? `1px solid ${alpha(backgroundColor, 0.7)}` : `1px solid ${alpha(color, 0.5)}`,
           },
         }}
       >
@@ -134,15 +136,15 @@ const DashboardStatCard = ({
                   letterSpacing: 0.3,
                   textTransform: 'uppercase',
                   fontSize: '0.8125rem',
-                  color: 'rgba(255, 255, 255, 0.95)',
-                  background: 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 100%)',
+                  color: textColor || 'rgba(255, 255, 255, 0.95)',
+                  background: textColor === '#000' ? 'linear-gradient(135deg, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.04) 100%)' : 'linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.08) 100%)',
                   px: 2,
                   py: 0.75,
                   borderRadius: '8px',
                   display: 'inline-flex',
                   alignItems: 'center',
                   boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                  border: '1px solid rgba(255,255,255,0.2)',
+                  border: textColor === '#000' ? '1px solid rgba(0,0,0,0.1)' : '1px solid rgba(255,255,255,0.2)',
                   whiteSpace: 'nowrap',
                   backdropFilter: 'blur(10px)',
                 }}
@@ -185,12 +187,12 @@ const DashboardStatCard = ({
                 component="div"
                 sx={{
                   fontWeight: 700,
-                  color: 'white',
+                  color: textColor || 'white',
                   display: 'flex',
                   alignItems: 'baseline',
                   gap: 0.5,
                   fontSize: 'clamp(1.5rem, 4vw, 2.25rem)',
-                  textShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                  textShadow: textColor === '#000' ? 'none' : '0 2px 4px rgba(0,0,0,0.1)',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
@@ -239,11 +241,11 @@ const DashboardStatCard = ({
                   width: '100%',
                   height: '100%',
                   borderRadius: '50%',
-                  background: 'rgba(255,255,255,0.15)',
-                  border: '2px solid rgba(255,255,255,0.2)',
+                  background: textColor === '#000' ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.15)',
+                  border: textColor === '#000' ? '2px solid rgba(0,0,0,0.1)' : '2px solid rgba(255,255,255,0.2)',
                 }}
               />
-              {IconComponent && <IconComponent sx={{ fontSize: 32, color: 'rgba(255,255,255,0.9)', zIndex: 1 }} />}
+              {IconComponent && <IconComponent sx={{ fontSize: 32, color: textColor === '#000' ? 'rgba(0,0,0,0.7)' : 'rgba(255,255,255,0.9)', zIndex: 1 }} />}
             </Box>
           </Box>
 

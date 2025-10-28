@@ -45,6 +45,8 @@ export const DashboardHero = ({
   setCustomEndDate,
   dateRange,
   detectPresetRange,
+  selectedYear,
+  setSelectedYear,
   StatCardComponent
 }) => {
   // Local state for date pickers
@@ -137,6 +139,49 @@ export const DashboardHero = ({
               <ToggleButton value="1Y">1 YEAR</ToggleButton>
               <ToggleButton value="YTD">YTD</ToggleButton>
             </ToggleButtonGroup>
+
+            {/* Year Selector (only show when YTD is selected) */}
+            {dateRangeFilter === 'YTD' && setSelectedYear && (
+              <ToggleButtonGroup
+                value={selectedYear}
+                exclusive
+                onChange={(e, newValue) => {
+                  if (newValue !== null) {
+                    setSelectedYear(newValue);
+                  }
+                }}
+                sx={{
+                  height: 36,
+                  '& .MuiToggleButton-root': {
+                    color: 'white',
+                    borderColor: 'rgba(255, 255, 255, 0.3)',
+                    px: 2,
+                    '&.Mui-selected': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                      color: 'white',
+                      '&:hover': {
+                        backgroundColor: 'rgba(255, 255, 255, 0.3)',
+                      },
+                    },
+                    '&:hover': {
+                      backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                      borderColor: 'transparent',
+                    },
+                  },
+                }}
+              >
+                {/* Generate year options: current year and 2 previous years */}
+                {(() => {
+                  const currentYear = new Date().getFullYear();
+                  const years = [currentYear, currentYear - 1, currentYear - 2];
+                  return years.map(year => (
+                    <ToggleButton key={year} value={year}>
+                      {year}
+                    </ToggleButton>
+                  ));
+                })()}
+              </ToggleButtonGroup>
+            )}
 
             {/* Date Range Pickers */}
             <LocalizationProvider dateAdapter={AdapterDateFns}>
@@ -311,7 +356,9 @@ export const DashboardHero = ({
                         value={stats?.[statCfg.id]?.value || 0}
                         prefix={statCfg.format === 'currency' ? '$' : (statCfg.prefix || '')}
                         suffix={statCfg.format === 'percentage' ? '%' : (statCfg.suffix || '')}
-                        color="#ffffff"
+                        color={statCfg.color || "#ffffff"}
+                        backgroundColor={statCfg.color || null}
+                        textColor={statCfg.textColor || null}
                         delay={index}
                         goal={statCfg.goal}
                         trend={stats?.[statCfg.id]?.trend}
