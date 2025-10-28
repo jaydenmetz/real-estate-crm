@@ -47,7 +47,17 @@ export const useDashboardData = (config, externalDateRange = null) => {
       // Use config's API method if available, otherwise fallback to fetch
       if (config.api.getAll) {
         const result = await config.api.getAll(params);
-        return result.data || result;
+        // Extract the entity array from response
+        // API returns: { success: true, data: { escrows: [...], stats: {...}, pagination: {...} } }
+        const responseData = result.data || result;
+
+        // If responseData has a key matching the entity plural name, use that
+        if (responseData[config.entity.namePlural]) {
+          return responseData[config.entity.namePlural];
+        }
+
+        // Otherwise return as-is (might be array already)
+        return responseData;
       } else {
         // Fallback to fetch
         const endpoint = config.api.endpoints.list;
