@@ -88,9 +88,85 @@ export const DashboardTemplate = ({
     localStorage.setItem(`${config.entity.namePlural}Scope`, selectedScope);
   }, [selectedScope, config.entity.namePlural]);
 
-  // Helper to detect preset ranges
+  // Calculate date range based on filter or custom dates (matching Clients)
+  const getCalculatedDateRange = () => {
+    const now = new Date();
+    let startDate, endDate;
+
+    // Use custom dates if both are set
+    if (customStartDate && customEndDate) {
+      startDate = customStartDate;
+      endDate = customEndDate;
+    } else {
+      // Use preset range
+      switch(dateRangeFilter) {
+        case '1D':
+          // Today from 12:00 AM to 11:59 PM
+          startDate = new Date(now);
+          startDate.setHours(0, 0, 0, 0);
+          endDate = new Date(now);
+          endDate.setHours(23, 59, 59, 999);
+          break;
+        case '1M':
+          // Last 30 days
+          startDate = new Date(now);
+          startDate.setDate(now.getDate() - 30);
+          endDate = now;
+          break;
+        case '1Y':
+          // Last 365 days
+          startDate = new Date(now);
+          startDate.setDate(now.getDate() - 365);
+          endDate = now;
+          break;
+        case 'YTD':
+          // Year to date
+          startDate = new Date(now.getFullYear(), 0, 1);
+          endDate = now;
+          break;
+        default:
+          startDate = new Date(now);
+          startDate.setDate(now.getDate() - 30);
+          endDate = now;
+      }
+    }
+
+    // Validate dates
+    const validStart = startDate instanceof Date && !isNaN(startDate.getTime()) ? startDate : new Date();
+    const validEnd = endDate instanceof Date && !isNaN(endDate.getTime()) ? endDate : new Date();
+
+    return {
+      startDate: validStart,
+      endDate: validEnd,
+      label: `${validStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${validEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`
+    };
+  };
+
+  const calculatedDateRange = getCalculatedDateRange();
+
+  // Helper to detect preset ranges (matching Clients)
   const detectPresetRange = (startDate, endDate) => {
-    // Simple implementation - would need to match actual date logic
+    if (!startDate || !endDate) return null;
+
+    const now = new Date();
+    const diffDays = Math.round((endDate - startDate) / (1000 * 60 * 60 * 24));
+
+    // Check if it's today
+    const isToday = startDate.toDateString() === now.toDateString() &&
+                    endDate.toDateString() === now.toDateString();
+    if (isToday) return '1D';
+
+    // Check if it's last 30 days
+    if (diffDays >= 29 && diffDays <= 31) return '1M';
+
+    // Check if it's last 365 days
+    if (diffDays >= 364 && diffDays <= 366) return '1Y';
+
+    // Check if it's YTD
+    const ytdStart = new Date(now.getFullYear(), 0, 1);
+    const isYTD = Math.abs(startDate - ytdStart) < 86400000; // Within 1 day
+    if (isYTD && Math.abs(endDate - now) < 86400000) return 'YTD';
+
     return null;
   };
 
@@ -142,36 +218,35 @@ export const DashboardTemplate = ({
   };
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
-      <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-        {/* Hero Card with embedded stats - ClientHeroCard style */}
-        <DashboardHero
-          config={{
-            title: config.entity.labelPlural,
-            subtitle: `Manage your ${config.entity.namePlural}`,
-            gradient: `linear-gradient(135deg, ${config.entity.colorGradient.start} 0%, ${config.entity.colorGradient.end} 100%)`,
-            entitySingular: config.entity.label,
-            showAnalyticsButton: config.dashboard.hero.showAnalyticsButton,
-            analyticsButtonLabel: config.dashboard.hero.analyticsButtonLabel,
-            addButtonLabel: config.dashboard.hero.addButtonLabel,
-            showAIAssistant: config.dashboard.hero.showAIAssistant,
-            aiAssistantLabel: config.dashboard.hero.aiAssistantLabel,
-            aiAssistantDescription: config.dashboard.hero.aiAssistantDescription,
-          }}
-          stats={stats}
-          statsConfig={config.dashboard.stats}
-          selectedStatus={selectedStatus}
-          onNewItem={config.dashboard.hero.showAddButton ? () => setNewItemModalOpen(true) : null}
-          dateRangeFilter={dateRangeFilter}
-          setDateRangeFilter={setDateRangeFilter}
-          customStartDate={customStartDate}
-          setCustomStartDate={setCustomStartDate}
-          customEndDate={customEndDate}
-          setCustomEndDate={setCustomEndDate}
-          dateRange={dateRange}
-          detectPresetRange={detectPresetRange}
-          StatCardComponent={DashboardStatCard}
-        />
+    <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
+      {/* Hero Card with embedded stats - ClientHeroCard style */}
+      <DashboardHero
+        config={{
+          title: config.entity.labelPlural,
+          subtitle: `Manage your ${config.entity.namePlural}`,
+          gradient: `linear-gradient(135deg, ${config.entity.colorGradient.start} 0%, ${config.entity.colorGradient.end} 100%)`,
+          entitySingular: config.entity.label,
+          showAnalyticsButton: config.dashboard.hero.showAnalyticsButton,
+          analyticsButtonLabel: config.dashboard.hero.analyticsButtonLabel,
+          addButtonLabel: config.dashboard.hero.addButtonLabel,
+          showAIAssistant: config.dashboard.hero.showAIAssistant,
+          aiAssistantLabel: config.dashboard.hero.aiAssistantLabel,
+          aiAssistantDescription: config.dashboard.hero.aiAssistantDescription,
+        }}
+        stats={stats}
+        statsConfig={config.dashboard.stats}
+        selectedStatus={selectedStatus}
+        onNewItem={config.dashboard.hero.showAddButton ? () => setNewItemModalOpen(true) : null}
+        dateRangeFilter={dateRangeFilter}
+        setDateRangeFilter={setDateRangeFilter}
+        customStartDate={customStartDate}
+        setCustomStartDate={setCustomStartDate}
+        customEndDate={customEndDate}
+        setCustomEndDate={setCustomEndDate}
+        dateRange={calculatedDateRange}
+        detectPresetRange={detectPresetRange}
+        StatCardComponent={DashboardStatCard}
+      />
 
         {/* Stats are now embedded in Hero, so no separate stats section needed */}
 
