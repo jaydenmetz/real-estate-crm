@@ -1295,4 +1295,5 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
   );
 };
 
+export { NewEscrowModal };
 export default NewEscrowModal;
