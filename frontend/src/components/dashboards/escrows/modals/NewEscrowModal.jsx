@@ -734,8 +734,8 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
                 sx={{
                   display: 'flex',
                   flexDirection: 'column',
-                  justifyContent: 'center',
                   minHeight: 400,
+                  pt: 8, // Fixed top padding to anchor street address position
                   transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
                 }}
               >
@@ -750,7 +750,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
                     px: 4, // Add left and right padding
                     transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
                   }}>
-                    {/* Street Address - Always Visible, Fixed Width */}
+                    {/* Street Address - Always Visible, Fixed Position */}
                     <Box sx={{
                       transition: 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)',
                     }}>
