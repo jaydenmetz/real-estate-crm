@@ -11,8 +11,18 @@ import { useQuery } from '@tanstack/react-query';
 export const useDashboardData = (config, externalDateRange = null) => {
   // State management
   const [selectedStatus, setSelectedStatus] = useState(config.dashboard?.statusTabs?.[0]?.value || 'all');
-  const [selectedScope, setSelectedScope] = useState(config.dashboard?.scopeOptions?.[0]?.value || 'all');
-  const [viewMode, setViewMode] = useState(config.dashboard?.viewModes?.[0]?.value || 'grid');
+
+  // Scope with localStorage persistence
+  const [selectedScope, setSelectedScope] = useState(() => {
+    const saved = localStorage.getItem(`${config.entity.namePlural}Scope`);
+    return saved || config.dashboard?.defaultScope || 'team';
+  });
+
+  // ViewMode with localStorage persistence
+  const [viewMode, setViewMode] = useState(() => {
+    const saved = localStorage.getItem(`${config.entity.namePlural}ViewMode`);
+    return saved || config.dashboard?.defaultViewMode || 'small';
+  });
   const [dateRange, setDateRange] = useState(
     config.dashboard?.hero?.defaultDateRange
       ? { value: config.dashboard.hero.defaultDateRange, label: config.dashboard.hero.defaultDateRange }
@@ -273,6 +283,16 @@ export const useDashboardData = (config, externalDateRange = null) => {
 
     return filtered;
   }, [rawData, selectedStatus, selectedScope, sortBy, sortOrder, config.utils]);
+
+  // Persist viewMode to localStorage
+  useEffect(() => {
+    localStorage.setItem(`${config.entity.namePlural}ViewMode`, viewMode);
+  }, [viewMode, config.entity.namePlural]);
+
+  // Persist selectedScope to localStorage
+  useEffect(() => {
+    localStorage.setItem(`${config.entity.namePlural}Scope`, selectedScope);
+  }, [selectedScope, config.entity.namePlural]);
 
   return {
     data: rawData,

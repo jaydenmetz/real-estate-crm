@@ -231,10 +231,9 @@ export const clientsConfig = createEntityConfig({
 
     // View Modes Configuration
     viewModes: [
-      { value: 'large', label: 'Large Cards', icon: 'ViewModule' },
-      { value: 'medium', label: 'Medium Cards', icon: 'GridView' },
-      { value: 'small', label: 'Small Cards', icon: 'ViewList' },
-      { value: 'list', label: 'List', icon: 'ViewList' }
+      { value: 'small', label: 'Grid', icon: 'GridView' },
+      { value: 'large', label: 'Full Width', icon: 'ViewList' },
+      { value: 'calendar', label: 'Calendar', icon: 'CalendarToday' }
     ],
     defaultViewMode: 'small', // 4 cards per row
 

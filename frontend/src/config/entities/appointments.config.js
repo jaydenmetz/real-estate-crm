@@ -419,9 +419,9 @@ export const appointmentsConfig = createEntityConfig({
 
     // View Modes Configuration
     viewModes: [
-      { value: 'grid', label: 'Grid', icon: 'GridView' },
-      { value: 'list', label: 'List', icon: 'ViewList' },
-      { value: 'calendar', label: 'Calendar', icon: 'CalendarMonth' }
+      { value: 'small', label: 'Grid', icon: 'GridView' },
+      { value: 'large', label: 'Full Width', icon: 'ViewList' },
+      { value: 'calendar', label: 'Calendar', icon: 'CalendarToday' }
     ],
     defaultViewMode: 'small', // 4 cards per row
 

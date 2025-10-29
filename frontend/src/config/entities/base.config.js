@@ -123,10 +123,11 @@ export const baseEntityConfig = {
 
     // View Modes Configuration
     viewModes: [
-      { value: 'grid', label: 'Grid', icon: 'GridView' },
-      { value: 'list', label: 'List', icon: 'ViewList' }
+      { value: 'small', label: 'Grid', icon: 'GridView' },
+      { value: 'large', label: 'Full Width', icon: 'ViewList' },
+      { value: 'calendar', label: 'Calendar', icon: 'CalendarToday' }
     ],
-    defaultViewMode: 'grid',
+    defaultViewMode: 'small',
 
     // Archive Configuration
     showArchive: true,

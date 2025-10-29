@@ -60,17 +60,6 @@ export const DashboardTemplate = ({
   const [selectedArchivedIds, setSelectedArchivedIds] = useState([]);
   const [batchDeleting, setBatchDeleting] = useState(false);
 
-  // LocalStorage persistence for viewMode and scope
-  const [persistedViewMode, setPersistedViewMode] = useState(() => {
-    const saved = localStorage.getItem(`${config.entity.namePlural}ViewMode`);
-    return saved || config.dashboard.defaultViewMode || 'grid';
-  });
-
-  const [persistedScope, setPersistedScope] = useState(() => {
-    const saved = localStorage.getItem(`${config.entity.namePlural}Scope`);
-    return saved || config.dashboard.defaultScope || 'team';
-  });
-
   // Calculate date range based on filter or custom dates (matching Clients)
   const getCalculatedDateRange = () => {
     const now = new Date();
@@ -162,16 +151,6 @@ export const DashboardTemplate = ({
     filteredData,
     refetch,
   } = useDashboardData(config, calculatedDateRange);
-
-  // Save viewMode to localStorage (after hook declaration)
-  useEffect(() => {
-    localStorage.setItem(`${config.entity.namePlural}ViewMode`, viewMode);
-  }, [viewMode, config.entity.namePlural]);
-
-  // Save scope to localStorage (after hook declaration)
-  useEffect(() => {
-    localStorage.setItem(`${config.entity.namePlural}Scope`, selectedScope);
-  }, [selectedScope, config.entity.namePlural]);
 
   // Helper to detect preset ranges (matching Clients)
   const detectPresetRange = (startDate, endDate) => {
