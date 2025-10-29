@@ -458,7 +458,7 @@ export const escrowsConfig = createEntityConfig({
       { value: 'grid', label: 'Grid', icon: 'GridView' },
       { value: 'list', label: 'List', icon: 'ViewList' }
     ],
-    defaultViewMode: 'grid',
+    defaultViewMode: 'large', // Full width cards for Active tab
 
     // Archive Configuration
     showArchive: true,

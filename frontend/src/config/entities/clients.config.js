@@ -236,7 +236,7 @@ export const clientsConfig = createEntityConfig({
       { value: 'small', label: 'Small Cards', icon: 'ViewList' },
       { value: 'list', label: 'List', icon: 'ViewList' }
     ],
-    defaultViewMode: 'large',
+    defaultViewMode: 'small', // 4 cards per row
 
     // Archive Configuration
     showArchive: true,

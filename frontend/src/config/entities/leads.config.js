@@ -495,7 +495,7 @@ export const leadsConfig = createEntityConfig({
       { value: 'grid', label: 'Grid', icon: 'GridView' },
       { value: 'list', label: 'List', icon: 'ViewList' }
     ],
-    defaultViewMode: 'grid',
+    defaultViewMode: 'small', // 4 cards per row
 
     // Archive Configuration
     showArchive: true,
