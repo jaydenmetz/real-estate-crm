@@ -175,6 +175,7 @@ export const NewContactModal = ({
         company: formData.company || null,
         license_number: formData.license_number || null,
         notes: formData.notes || null,
+        contact_type: selectedRole.role_name, // REQUIRED: Backend validation needs this
       };
 
       const contactResponse = await contactsAPI.create(contactData);
