@@ -50,7 +50,10 @@ const MetricRow = styled(Box)(({ theme }) => ({
   },
 }));
 
-const FinancialsWidget_White = ({ escrow, loading, onClick }) => {
+const FinancialsWidget_White = ({ entity, escrow, data, computed, loading, onClick }) => {
+  // Support both 'entity' (from template) and 'escrow' (direct usage)
+  const record = entity || escrow;
+
   if (loading) {
     return (
       <WhiteCard>
@@ -62,15 +65,43 @@ const FinancialsWidget_White = ({ escrow, loading, onClick }) => {
     );
   }
 
-  // Get financials from JSONB structure
-  const financials = escrow?.financials || {};
-  const details = escrow?.details || {};
+  // PRIORITY 1: Use backend-provided widget data if available
+  if (data?.transaction_summary) {
+    const purchasePrice = data.transaction_summary.purchase_price || 0;
+    const commissionPercentage = data.commission?.commission_percentage || 2.5;
+    const grossCommission = data.commission?.total_commission || 0;
+    const agentNet = data.commission?.net_commission || 0;
+    const splitPercentage = data.commission?.brokerage_split || 70;
 
-  const purchasePrice = financials.purchasePrice || details.purchasePrice || escrow?.purchase_price || 0;
+    return renderWidget(purchasePrice, commissionPercentage, grossCommission, agentNet, splitPercentage, onClick);
+  }
+
+  // PRIORITY 2: Use computed fields if available
+  if (computed?.total_commission) {
+    const purchasePrice = record?.purchase_price || 0;
+    const commissionPercentage = record?.commission_percent || 2.5;
+    const grossCommission = computed.total_commission || 0;
+    const agentNet = computed.net_commission || 0;
+    const splitPercentage = record?.brokerage_split || 70;
+
+    return renderWidget(purchasePrice, commissionPercentage, grossCommission, agentNet, splitPercentage, onClick);
+  }
+
+  // FALLBACK: Calculate from entity data
+  const financials = record?.financials || {};
+  const details = record?.details || {};
+
+  const purchasePrice = financials.purchasePrice || details.purchasePrice || record?.purchase_price || 0;
   const commissionPercentage = financials.commissionPercentage || 2.5;
   const grossCommission = financials.grossCommission || (purchasePrice * commissionPercentage / 100) || 0;
-  const agentNet = financials.agentNet || financials.agent1099Income || details.myCommission || escrow?.my_commission || 0;
+  const agentNet = financials.agentNet || financials.agent1099Income || details.myCommission || record?.my_commission || 0;
   const splitPercentage = financials.splitPercentage || 70;
+
+  return renderWidget(purchasePrice, commissionPercentage, grossCommission, agentNet, splitPercentage, onClick);
+};
+
+// Extracted render function to avoid duplication
+const renderWidget = (purchasePrice, commissionPercentage, grossCommission, agentNet, splitPercentage, onClick) => {
 
   return (
     <WhiteCard

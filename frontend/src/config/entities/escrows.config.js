@@ -12,6 +12,12 @@
 import { createEntityConfig } from './base.config';
 import { escrowsAPI } from '../../services/api.service';
 
+// Import widgets
+import TimelineWidget_White from '../../components/details/escrows/components/TimelineWidget_White';
+import FinancialsWidget_White from '../../components/details/escrows/components/FinancialsWidget_White';
+import PeopleWidget_White from '../../components/details/escrows/components/PeopleWidget_White';
+import ChecklistsWidget_White from '../../components/details/escrows/components/ChecklistsWidget_White';
+
 export const escrowsConfig = createEntityConfig({
   // ========================================
   // ENTITY METADATA
@@ -488,87 +494,84 @@ export const escrowsConfig = createEntityConfig({
   detail: {
     // Hero Configuration
     hero: {
+      titleField: 'property_address',
+      subtitleField: 'city',
+      statusField: 'escrow_status',
       showImage: true,
       imageField: 'property_image_url',
       showStatus: true,
-      showActions: true,
+      showActions: false,
       showBreadcrumbs: true,
-      actions: [
-        { id: 'edit', label: 'Edit', icon: 'Edit', color: 'primary' },
-        { id: 'archive', label: 'Archive', icon: 'Archive', color: 'warning' },
-        { id: 'delete', label: 'Delete', icon: 'Delete', color: 'error' }
-      ],
-      fields: [
-        { field: 'property_address', label: 'Property Address', type: 'text', editable: true },
-        { field: 'closing_date', label: 'Closing Date', type: 'date', editable: true },
-        { field: 'purchase_price', label: 'Purchase Price', type: 'currency', editable: true },
-        { field: 'escrow_status', label: 'Status', type: 'select', editable: true }
+      statCards: [
+        {
+          label: 'Purchase Price',
+          field: 'purchase_price',
+          format: 'currency'
+        },
+        {
+          label: 'Closing Date',
+          field: 'closing_date',
+          format: 'date'
+        },
+        {
+          label: 'Days Until Close',
+          computedField: 'days_until_closing',
+          format: 'number',
+          suffix: ' days'
+        },
+        {
+          label: 'Your Commission',
+          computedField: 'net_commission',
+          format: 'currency'
+        }
       ]
     },
 
     // Widgets Configuration (displayed in grid)
     widgets: [
       {
-        id: 'financials',
-        label: 'Financials',
-        icon: 'AttachMoney',
-        component: 'FinancialsWidget_White',
-        size: { xs: 12, md: 6 },
-        order: 1,
-        modal: 'FinancialsModal',
-        fields: [
-          'purchase_price',
-          'down_payment',
-          'loan_amount',
-          'seller_concessions',
-          'commission_percentage',
-          'commission_amount'
-        ]
-      },
-      {
-        id: 'people',
-        label: 'People',
-        icon: 'People',
-        component: 'PeopleWidget_White',
-        size: { xs: 12, md: 6 },
-        order: 2,
-        modal: 'PeopleModal',
-        fields: [
-          'buyers',
-          'sellers',
-          'buyer_agent',
-          'listing_agent',
-          'lender',
-          'escrow_officer'
-        ]
-      },
-      {
         id: 'timeline',
-        label: 'Timeline',
-        icon: 'Timeline',
-        component: 'TimelineWidget_White',
-        size: { xs: 12, md: 6 },
-        order: 3,
-        modal: 'TimelineModal',
-        fields: [
-          'offer_date',
-          'acceptance_date',
-          'inspection_date',
-          'appraisal_date',
-          'closing_date'
-        ]
+        title: 'Timeline',
+        component: TimelineWidget_White,
+        props: {}
       },
       {
         id: 'checklists',
-        label: 'Checklists',
-        icon: 'CheckBox',
-        component: 'ChecklistsWidget_White',
-        size: { xs: 12, md: 6 },
-        order: 4,
-        modal: 'ChecklistsModal',
-        showProgress: true
+        title: 'Checklists',
+        component: ChecklistsWidget_White,
+        props: {}
+      },
+      {
+        id: 'people',
+        title: 'People',
+        component: PeopleWidget_White,
+        props: {}
+      },
+      {
+        id: 'financials',
+        title: 'Financials',
+        component: FinancialsWidget_White,
+        props: {}
       }
-    ]
+    ],
+
+    // Left Sidebar Configuration
+    leftSidebar: {
+      title: 'Quick Actions',
+      sections: []
+    },
+
+    // Right Sidebar Configuration
+    rightSidebar: {
+      title: 'Smart Context',
+      sections: []
+    },
+
+    // Activity Feed Configuration
+    activityFeed: {
+      enabled: true,
+      title: 'Live Activity'
+    }
   },
 
   // ========================================
