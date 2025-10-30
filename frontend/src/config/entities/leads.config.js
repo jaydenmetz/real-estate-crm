@@ -12,6 +12,11 @@
 import { createEntityConfig } from './base.config';
 import { api } from '../../services/api.service';
 
+// Import widget components
+import ContactWidget from '../../components/details/leads/components/ContactWidget';
+import QualificationWidget from '../../components/details/leads/components/QualificationWidget';
+import EngagementWidget from '../../components/details/leads/components/EngagementWidget';
+
 export const leadsConfig = createEntityConfig({
   // ========================================
   // ENTITY METADATA
@@ -584,6 +589,68 @@ export const leadsConfig = createEntityConfig({
         const score = parseInt(value) || 0;
         return `${score}/100`;
       }
+    }
+  },
+
+  // ========================================
+  // DETAIL PAGE CONFIGURATION
+  // ========================================
+  detail: {
+    hero: {
+      titleField: 'name',
+      subtitleField: 'lead_source',
+      statusField: 'status',
+      displayIdField: 'lead_id',
+      placeholderIcon: '🎯',
+      statusColors: {
+        new: '#2196f3',
+        contacted: '#ff9800',
+        qualified: '#4caf50',
+        converted: '#9c27b0',
+        lost: '#f44336'
+      },
+      stats: [
+        { label: 'Qualification', field: 'qualification_score', format: 'number', suffix: '%' },
+        { label: 'Lead Source', field: 'lead_source', format: 'text' },
+        { label: 'Budget', field: 'budget', format: 'currency' },
+        { label: 'Timeline', field: 'timeline', format: 'text' }
+      ]
+    },
+
+    widgets: [
+      {
+        id: 'contact',
+        title: 'Contact',
+        component: ContactWidget,
+        props: {}
+      },
+      {
+        id: 'qualification',
+        title: 'Qualification',
+        component: QualificationWidget,
+        props: {}
+      },
+      {
+        id: 'engagement',
+        title: 'Engagement',
+        component: EngagementWidget,
+        props: {}
+      }
+    ],
+
+    leftSidebar: {
+      title: 'Quick Actions',
+      sections: []
+    },
+
+    rightSidebar: {
+      title: 'Smart Context',
+      sections: []
+    },
+
+    activityFeed: {
+      enabled: true,
+      title: 'Live Activity'
     }
   }
 });

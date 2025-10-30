@@ -12,6 +12,11 @@
 import { createEntityConfig } from './base.config';
 import { api } from '../../services/api.service';
 
+// Import widget components
+import LocationWidget from '../../components/details/appointments/components/LocationWidget';
+import ParticipantsWidget from '../../components/details/appointments/components/ParticipantsWidget';
+import NotesWidget from '../../components/details/appointments/components/NotesWidget';
+
 export const appointmentsConfig = createEntityConfig({
   // ========================================
   // ENTITY METADATA
@@ -500,6 +505,67 @@ export const appointmentsConfig = createEntityConfig({
         };
         return statusMap[value?.toLowerCase()] || value;
       }
+    }
+  },
+
+  // ========================================
+  // DETAIL PAGE CONFIGURATION
+  // ========================================
+  detail: {
+    hero: {
+      titleField: 'title',
+      subtitleField: 'appointment_type',
+      statusField: 'status',
+      displayIdField: 'appointment_id',
+      placeholderIcon: '📅',
+      statusColors: {
+        scheduled: '#2196f3',
+        completed: '#4caf50',
+        cancelled: '#f44336',
+        rescheduled: '#ff9800'
+      },
+      stats: [
+        { label: 'Date', field: 'appointment_date', format: 'date' },
+        { label: 'Time', field: 'appointment_time', format: 'time' },
+        { label: 'Duration', field: 'duration', format: 'number', suffix: ' min' },
+        { label: 'Type', field: 'appointment_type', format: 'text' }
+      ]
+    },
+
+    widgets: [
+      {
+        id: 'location',
+        title: 'Location',
+        component: LocationWidget,
+        props: {}
+      },
+      {
+        id: 'participants',
+        title: 'Participants',
+        component: ParticipantsWidget,
+        props: {}
+      },
+      {
+        id: 'notes',
+        title: 'Notes & Agenda',
+        component: NotesWidget,
+        props: {}
+      }
+    ],
+
+    leftSidebar: {
+      title: 'Quick Actions',
+      sections: []
+    },
+
+    rightSidebar: {
+      title: 'Smart Context',
+      sections: []
+    },
+
+    activityFeed: {
+      enabled: true,
+      title: 'Live Activity'
     }
   }
 });
