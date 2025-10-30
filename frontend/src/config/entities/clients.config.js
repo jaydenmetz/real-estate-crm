@@ -261,112 +261,99 @@ export const clientsConfig = createEntityConfig({
   // DETAIL PAGE CONFIGURATION
   // ========================================
   detail: {
-    // Refetch interval (ms)
-    refetchInterval: 30000,
-
-    // Show breadcrumbs navigation
-    showBreadcrumbs: true,
-
-    // Hero Section Configuration
+    // Hero Section Configuration (matching escrows design)
     hero: {
-      gradient: 'linear-gradient(135deg, #1565C0 0%, #42A5F5 100%)',
-      showAvatar: true,
-      avatarField: 'avatar',
-      nameField: 'name',
+      showImage: true,
+      imageField: 'avatar',
+      placeholderIcon: '👤',
+      titleField: 'name',
       statusField: 'status',
-      showStatusBadge: true,
+      displayIdField: null, // No ID for clients
 
       // Status color mapping
       statusColors: {
-        active: '#10b981',
-        inactive: '#9ca3af',
-        pending: '#f59e0b',
-        archived: '#6b7280',
+        active: '#4caf50',
+        inactive: '#9e9e9e',
+        pending: '#ff9800',
+        archived: '#757575',
       },
 
-      // Subtitle badges (shown below name)
+      // Subtitle info (shown below title)
       subtitleFields: [
-        { field: 'type', icon: 'Person' },
-        { field: 'status', icon: 'CheckCircle' },
-        { field: (entity) => entity.createdAt ? `Client since ${new Date(entity.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}` : '', icon: 'CalendarToday' },
+        { field: (entity) => `${entity.city || ''}, ${entity.state || 'CA'}`.trim(), icon: 'MapPin' },
+        { field: (entity) => entity.email || '', icon: 'User' },
       ],
 
-      // Action buttons
-      actions: [
-        {
-          label: 'Send Email',
-          icon: 'Email',
-          variant: 'contained',
-          onClick: (entity) => window.location.href = `mailto:${entity.email}`,
-        },
-        {
-          label: 'Call Client',
-          icon: 'Phone',
-          variant: 'outlined',
-          onClick: (entity) => window.location.href = `tel:${entity.phone}`,
-        },
-      ],
-
-      // Hero stats (top right cards)
+      // Hero stats (stat cards)
       stats: [
         {
-          label: 'Lifetime Value',
+          label: 'PURCHASE PRICE',
           field: 'lifetimeValue',
           format: 'currency',
-          icon: 'AttachMoney',
-          color: '#10b981',
-          useCountUp: true,
+          defaultValue: 0,
         },
         {
-          label: 'Transactions',
-          field: 'totalTransactions',
-          format: 'number',
-          icon: 'Assignment',
-          color: '#3b82f6',
-          useCountUp: true,
+          label: 'YOUR COMMISSION',
+          field: 'totalVolume',
+          format: 'currency',
+          color: '#4caf50',
+          defaultValue: 0,
         },
         {
-          label: 'Referrals',
-          field: 'referrals',
-          format: 'number',
-          icon: 'Groups',
-          color: '#8b5cf6',
-          useCountUp: true,
+          label: 'PROGRESS',
+          field: (entity) => 0, // TODO: Calculate progress
+          format: 'percent',
+          defaultValue: 0,
         },
         {
-          label: 'Days Since Contact',
+          label: 'DAYS SINCE CONTACT',
           field: (entity) => entity.lastContact ? Math.floor((new Date() - new Date(entity.lastContact)) / (1000 * 60 * 60 * 24)) : 0,
           format: 'number',
-          icon: 'Schedule',
-          color: '#f59e0b',
-          useCountUp: true,
+          defaultValue: 0,
         },
       ],
     },
 
-    // Tab Configuration
-    tabs: [
+    // Left Sidebar (Quick Actions)
+    leftSidebar: {
+      title: 'Quick Actions',
+      component: null, // TODO: Create QuickActionsComponent
+    },
+
+    // Right Sidebar (Smart Context)
+    rightSidebar: {
+      title: 'Smart Context',
+      component: null, // TODO: Create SmartContextComponent
+    },
+
+    // Widgets (2x2 grid)
+    widgets: [
       {
-        label: 'Overview',
-        icon: 'Dashboard',
-        component: null, // Will render default overview content
+        id: 'timeline',
+        title: 'Timeline',
+        component: null, // TODO: Create TimelineWidget
       },
       {
-        label: 'Properties',
-        icon: 'Home',
-        component: null,
+        id: 'properties',
+        title: 'Properties',
+        component: null, // TODO: Create PropertiesWidget
       },
       {
-        label: 'Communications',
-        icon: 'Message',
-        component: null,
+        id: 'checklists',
+        title: 'Checklists',
+        component: null, // TODO: Create ChecklistsWidget
       },
       {
-        label: 'Documents',
-        icon: 'Folder',
-        component: null,
+        id: 'documents',
+        title: 'Documents',
+        component: null, // TODO: Create DocumentsWidget
       },
     ],
+
+    // Activity Feed (bottom expandable tab)
+    activityFeed: {
+      component: null, // TODO: Create ActivityFeedComponent
+    },
 
     // Legacy sections config (kept for compatibility)
     sections: [

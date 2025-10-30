@@ -1,146 +1,106 @@
-import React from 'react';
-import {
-  Box,
-  Typography,
-  Avatar,
-  Chip,
-  Button,
-  Stack,
-  Grid,
-  Paper,
-  alpha,
-  useTheme,
-} from '@mui/material';
-import { styled, keyframes } from '@mui/material/styles';
-import * as MuiIcons from '@mui/icons-material';
-import { format } from 'date-fns';
-import CountUp from 'react-countup';
+import React, { useState } from 'react';
+import { Box, Typography, Chip } from '@mui/material';
+import { styled } from '@mui/material/styles';
+import { MapPin, Calendar, User } from 'lucide-react';
+import { motion } from 'framer-motion';
 
-const pulseAnimation = keyframes`
-  0% {
-    box-shadow: 0 0 0 0 rgba(21, 101, 192, 0.4);
-  }
-  70% {
-    box-shadow: 0 0 0 10px rgba(21, 101, 192, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(21, 101, 192, 0);
-  }
-`;
-
-const HeroSection = styled(Box)(({ theme, gradient }) => ({
-  background: gradient || `linear-gradient(135deg, ${theme.palette.primary.main} 0%, ${theme.palette.primary.light} 100%)`,
-  color: 'white',
-  padding: theme.spacing(6),
-  borderRadius: theme.spacing(3),
+// Blue gradient hero similar to escrows (dynamic height based on content)
+const HeroContainer = styled(Box)(({ theme }) => ({
   position: 'relative',
+  borderRadius: theme.spacing(3),
   overflow: 'hidden',
-  marginBottom: theme.spacing(4),
-  boxShadow: '0 20px 60px rgba(21, 101, 192, 0.3)',
-  '&::before': {
-    content: '""',
-    position: 'absolute',
-    top: -50,
-    right: -50,
-    width: 200,
-    height: 200,
-    background: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: '50%',
-  },
-  '&::after': {
-    content: '""',
-    position: 'absolute',
-    bottom: -30,
-    left: -30,
-    width: 150,
-    height: 150,
-    background: 'rgba(255, 255, 255, 0.05)',
-    borderRadius: '50%',
+  background: 'linear-gradient(135deg, #1976d2 0%, #42a5f5 100%)',
+  color: 'white',
+  padding: theme.spacing(4),
+  marginBottom: theme.spacing(3),
+  boxShadow: '0 20px 60px rgba(25, 118, 210, 0.3)',
+  [theme.breakpoints.down('md')]: {
+    padding: theme.spacing(3),
   },
 }));
 
-const StatusBadge = styled(Box)(({ theme, status }) => ({
-  position: 'absolute',
-  bottom: 0,
-  right: 0,
-  width: 24,
-  height: 24,
-  borderRadius: '50%',
-  backgroundColor: status === 'active' ? theme.palette.success.main : theme.palette.grey[400],
-  border: `3px solid ${theme.palette.background.paper}`,
-  animation: status === 'active' ? `${pulseAnimation} 1.4s infinite` : 'none',
+const ImageBox = styled(Box)(({ theme }) => ({
+  width: 192,
+  height: 192,
+  borderRadius: theme.spacing(2),
+  overflow: 'hidden',
+  flexShrink: 0,
+  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.3)',
+  backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  border: '4px solid rgba(255, 255, 255, 0.2)',
+  [theme.breakpoints.down('md')]: {
+    width: 120,
+    height: 120,
+  },
 }));
 
-const MetricCard = styled(Paper)(({ theme }) => ({
-  padding: theme.spacing(3),
-  textAlign: 'center',
-  background: alpha(theme.palette.background.paper, 0.8),
+const EntityImage = styled('img')({
+  width: '100%',
+  height: '100%',
+  objectFit: 'cover',
+});
+
+const ImagePlaceholder = styled(Box)(({ theme }) => ({
+  width: '100%',
+  height: '100%',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  background: 'rgba(255, 255, 255, 0.1)',
+  color: 'rgba(255, 255, 255, 0.6)',
+  fontSize: '3rem',
+}));
+
+const StatCard = styled(Box)(({ theme }) => ({
+  backgroundColor: 'rgba(255, 255, 255, 0.1)',
   backdropFilter: 'blur(10px)',
   borderRadius: theme.spacing(2),
-  transition: 'all 0.3s ease',
-  cursor: 'pointer',
-  position: 'relative',
-  overflow: 'hidden',
-  '&:hover': {
-    transform: 'translateY(-5px)',
-    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.15)',
-    '& .metric-icon': {
-      transform: 'scale(1.2) rotate(5deg)',
-    },
-  },
-  '& .metric-icon': {
-    transition: 'transform 0.3s ease',
-  },
+  padding: theme.spacing(2),
+  border: '1px solid rgba(255, 255, 255, 0.2)',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: theme.spacing(0.5),
 }));
 
 /**
  * DetailHero Component
  *
- * Renders hero section for detail pages based on config
- * Supports: avatar, title, subtitle, badges, actions, stats
+ * Hero card matching escrows design
+ * Features: Image, title, status chips, stat cards
  */
 export const DetailHero = ({ entity, config }) => {
-  const theme = useTheme();
-  const heroConfig = config.detail?.hero || {};
+  const [imageError, setImageError] = useState(false);
 
   if (!entity) return null;
 
+  const heroConfig = config.detail?.hero || {};
+
   // Get field values from entity
-  const getValue = (field) => {
+  const getValue = (field, defaultValue = '') => {
     if (typeof field === 'function') {
       return field(entity);
     }
-    return entity[field] || null;
-  };
-
-  // Get icon component
-  const getIcon = (iconName) => {
-    if (!iconName) return null;
-    const Icon = MuiIcons[iconName];
-    return Icon ? <Icon /> : null;
+    return entity[field] || defaultValue;
   };
 
   // Format value based on format type
   const formatValue = (value, format) => {
-    if (!value) return 'N/A';
+    if (!value && value !== 0) return 'N/A';
 
     switch (format) {
       case 'currency':
-        return `$${typeof value === 'number' ? value.toLocaleString() : value}`;
+        const num = typeof value === 'number' ? value : parseFloat(value) || 0;
+        return `$${(num / 1000).toFixed(1)}K`;
       case 'number':
         return typeof value === 'number' ? value.toLocaleString() : value;
       case 'date':
         try {
-          return format(new Date(value), 'MMM d, yyyy');
+          return new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         } catch {
           return value;
         }
-      case 'datetime':
-        try {
-          return format(new Date(value), 'MMM d, yyyy h:mm a');
-        } catch {
-          return value;
-        }
+      case 'percent':
+        return `${value}%`;
       default:
         return value;
     }
@@ -149,139 +109,158 @@ export const DetailHero = ({ entity, config }) => {
   // Get status color
   const getStatusColor = (status) => {
     const statusMap = heroConfig.statusColors || {
-      active: theme.palette.success.main,
-      inactive: theme.palette.grey[400],
-      pending: theme.palette.warning.main,
-      completed: theme.palette.success.main,
+      active: '#4caf50',
+      pending: '#ff9800',
+      closed: '#2196f3',
+      cancelled: '#f44336',
     };
-    return statusMap[status?.toLowerCase()] || theme.palette.grey[400];
+    return statusMap[status?.toLowerCase()] || '#9e9e9e';
   };
 
+  const titleField = heroConfig.titleField || 'name';
+  const title = getValue(titleField);
+  const imageField = heroConfig.imageField || 'image_url';
+  const imageUrl = getValue(imageField);
+  const status = getValue(heroConfig.statusField || 'status');
+  const statusColor = getStatusColor(status);
+  const stats = heroConfig.stats || [];
+
   return (
-    <HeroSection gradient={heroConfig.gradient}>
-      <Grid container spacing={4} alignItems="center" sx={{ position: 'relative', zIndex: 1 }}>
-        <Grid item xs={12} md={8}>
-          <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-            {/* Avatar */}
-            {heroConfig.showAvatar !== false && (
-              <Box sx={{ position: 'relative', mr: 3 }}>
-                <Avatar
-                  src={getValue(heroConfig.avatarField || 'avatar')}
-                  sx={{
-                    width: 100,
-                    height: 100,
-                    border: '4px solid white',
-                    boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2)',
-                    fontSize: '2rem',
-                    fontWeight: 700,
-                  }}
-                >
-                  {getValue(heroConfig.nameField || 'name')?.[0]}
-                </Avatar>
-                {heroConfig.showStatusBadge && (
-                  <StatusBadge
-                    status={getValue(heroConfig.statusField || 'status')?.toLowerCase()}
-                  />
-                )}
-              </Box>
+    <HeroContainer
+      component={motion.div}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      {/* Main Content Row */}
+      <Box sx={{ display: 'flex', gap: 3, mb: 3 }}>
+        {/* Image */}
+        {heroConfig.showImage !== false && (
+          <ImageBox>
+            {imageUrl && !imageError ? (
+              <EntityImage
+                src={imageUrl}
+                alt={title}
+                onError={() => setImageError(true)}
+              />
+            ) : (
+              <ImagePlaceholder>
+                {heroConfig.placeholderIcon || '🏠'}
+              </ImagePlaceholder>
+            )}
+          </ImageBox>
+        )}
+
+        {/* Title and Metadata */}
+        <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          {/* Status and ID Chips */}
+          <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+            {status && (
+              <Chip
+                label={status}
+                sx={{
+                  backgroundColor: statusColor,
+                  color: 'white',
+                  fontWeight: 700,
+                  fontSize: '0.75rem',
+                  height: 28,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}
+              />
             )}
 
-            {/* Title and Subtitle */}
-            <Box sx={{ flex: 1 }}>
-              <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-                {getValue(heroConfig.nameField || 'name')}
-              </Typography>
-
-              <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap">
-                {/* Subtitle Chips */}
-                {heroConfig.subtitleFields?.map((field, index) => {
-                  const value = getValue(field.field || field);
-                  const icon = getIcon(field.icon);
-
-                  return value ? (
-                    <Chip
-                      key={index}
-                      label={value}
-                      icon={icon}
-                      sx={{
-                        backgroundColor: field.color || 'rgba(255, 255, 255, 0.2)',
-                        color: 'white',
-                        fontWeight: 600,
-                        '& .MuiChip-icon': { color: 'white' },
-                      }}
-                    />
-                  ) : null;
-                })}
-              </Stack>
-            </Box>
+            {heroConfig.displayIdField && (
+              <Chip
+                label={getValue(heroConfig.displayIdField)}
+                sx={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                  color: 'white',
+                  fontWeight: 700,
+                  fontSize: '0.75rem',
+                  height: 28,
+                }}
+              />
+            )}
           </Box>
 
-          {/* Action Buttons */}
-          <Stack direction="row" spacing={2} flexWrap="wrap">
-            {heroConfig.actions?.map((action, index) => {
-              const icon = getIcon(action.icon);
+          {/* Title */}
+          <Typography
+            variant="h4"
+            sx={{
+              fontWeight: 800,
+              fontSize: { xs: '1.5rem', sm: '2rem', md: '2.25rem' },
+              lineHeight: 1.2,
+              wordBreak: 'break-word',
+            }}
+          >
+            {title}
+          </Typography>
 
-              return (
-                <Button
-                  key={index}
-                  variant={action.variant || 'contained'}
-                  startIcon={icon}
-                  onClick={() => action.onClick?.(entity)}
-                  sx={{
-                    backgroundColor: action.variant === 'contained' ? 'white' : 'transparent',
-                    color: action.variant === 'contained' ? theme.palette.primary.main : 'white',
-                    borderColor: 'white',
-                    '&:hover': {
-                      backgroundColor: action.variant === 'contained' ? 'grey.100' : 'rgba(255, 255, 255, 0.1)',
-                      borderColor: 'white',
-                    },
-                  }}
-                >
-                  {action.label}
-                </Button>
-              );
+          {/* Subtitle Info */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexWrap: 'wrap' }}>
+            {heroConfig.subtitleFields?.map((field, index) => {
+              const value = getValue(field.field || field);
+              const Icon = field.icon === 'MapPin' ? MapPin : field.icon === 'Calendar' ? Calendar : User;
+
+              return value ? (
+                <Box key={index} sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                  <Icon size={16} style={{ opacity: 0.8 }} />
+                  <Typography variant="body2" sx={{ fontSize: '0.875rem', opacity: 0.9 }}>
+                    {value}
+                  </Typography>
+                </Box>
+              ) : null;
             })}
-          </Stack>
-        </Grid>
+          </Box>
+        </Box>
+      </Box>
 
-        {/* Stats Grid */}
-        <Grid item xs={12} md={4}>
-          <Grid container spacing={2}>
-            {heroConfig.stats?.map((stat, index) => {
-              const value = getValue(stat.field);
-              const icon = getIcon(stat.icon);
-              const numericValue = typeof value === 'number' ? value : parseFloat(value) || 0;
+      {/* Stats Grid */}
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: 'repeat(2, 1fr)',
+            sm: 'repeat(2, 1fr)',
+            md: `repeat(${Math.min(stats.length, 4)}, 1fr)`,
+          },
+          gap: 2,
+        }}
+      >
+        {stats.map((stat, index) => {
+          const value = getValue(stat.field, stat.defaultValue);
+          const formattedValue = formatValue(value, stat.format);
 
-              return (
-                <Grid item xs={6} key={index}>
-                  <MetricCard elevation={0}>
-                    {icon && React.cloneElement(icon, {
-                      className: 'metric-icon',
-                      sx: { fontSize: 40, color: stat.color || theme.palette.primary.main, mb: 1 }
-                    })}
-                    <Typography variant="h5" sx={{ fontWeight: 700 }}>
-                      {stat.format === 'currency' && '$'}
-                      {stat.useCountUp !== false ? (
-                        <CountUp
-                          end={stat.format === 'currency' ? numericValue / 1000 : numericValue}
-                          duration={2}
-                          decimals={stat.format === 'currency' ? 0 : 0}
-                        />
-                      ) : (
-                        formatValue(value, stat.format)
-                      )}
-                      {stat.format === 'currency' && 'K'}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                      {stat.label}
-                    </Typography>
-                  </MetricCard>
-                </Grid>
-              );
-            })}
-          </Grid>
-        </Grid>
-      </Grid>
-    </HeroSection>
+          return (
+            <StatCard key={index}>
+              <Typography
+                variant="caption"
+                sx={{
+                  fontSize: '0.6875rem',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  opacity: 0.8,
+                  fontWeight: 600,
+                }}
+              >
+                {stat.label}
+              </Typography>
+              <Typography
+                variant="h5"
+                sx={{
+                  fontWeight: 800,
+                  fontSize: { xs: '1.25rem', sm: '1.5rem' },
+                  color: stat.color || 'white',
+                  lineHeight: 1,
+                }}
+              >
+                {formattedValue}
+              </Typography>
+            </StatCard>
+          );
+        })}
+      </Box>
+    </HeroContainer>
   );
 };
