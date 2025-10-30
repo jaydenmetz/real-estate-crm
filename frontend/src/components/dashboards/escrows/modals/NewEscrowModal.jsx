@@ -178,49 +178,24 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
 
       setLoadingClients(true);
       try {
-        // Step 1: Search for 'client' role first (primary role for escrows)
-        const clientResponse = await contactsAPI.getAll({
-          role: 'client',
+        // Search for contacts with type='client' using full-text search
+        const response = await contactsAPI.getAll({
+          type: 'client',
           search: searchText,
-          limit: 5
+          limit: 10
         });
 
-        let clientRoleResults = [];
-        if (clientResponse.success && clientResponse.data) {
-          clientRoleResults = Array.isArray(clientResponse.data)
-            ? clientResponse.data
-            : (clientResponse.data.clients || []);
+        let results = [];
+        if (response.success && response.data) {
+          results = Array.isArray(response.data) ? response.data : [];
         }
-
-        // Step 2: If less than 5 results, fill with other roles
-        let otherRoleResults = [];
-        if (clientRoleResults.length < 5) {
-          const remainingSlots = 5 - clientRoleResults.length;
-          const allContactsResponse = await contactsAPI.getAll({
-            search: searchText,
-            limit: remainingSlots
-          });
-
-          if (allContactsResponse.success && allContactsResponse.data) {
-            const allResults = Array.isArray(allContactsResponse.data)
-              ? allContactsResponse.data
-              : (allContactsResponse.data.clients || allContactsResponse.data.contacts || []);
-
-            // Filter out clients already in clientRoleResults
-            const clientIds = new Set(clientRoleResults.map(c => c.id));
-            otherRoleResults = allResults.filter(c => !clientIds.has(c.id));
-          }
-        }
-
-        // Combine results: client role first, then others
-        const combinedResults = [...clientRoleResults, ...otherRoleResults].slice(0, 5);
 
         // Transform snake_case to camelCase for frontend compatibility
-        const transformedClients = combinedResults.map(client => ({
+        const transformedClients = results.map(client => ({
           ...client,
           firstName: client.first_name || client.firstName,
           lastName: client.last_name || client.lastName,
-          isClientRole: clientRoleResults.some(c => c.id === client.id), // Mark primary role results
+          isClientRole: true, // All results are clients
         }));
 
         setClients(transformedClients);
