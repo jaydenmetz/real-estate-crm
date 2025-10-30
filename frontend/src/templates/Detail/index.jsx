@@ -198,6 +198,14 @@ export const DetailTemplate = ({ config, widgets = [] }) => {
     }
   }, [id, config.api, entityName]);
 
+  // Extract Detail API sections from entity (if backend provides them)
+  const computed = entity?.computed || {};
+  const sidebarLeftData = entity?.sidebar_left || null;
+  const sidebarRightData = entity?.sidebar_right || null;
+  const widgetsData = entity?.widgets || {};
+  const activityFeedData = entity?.activity_feed || null;
+  const metadata = entity?.metadata || {};
+
   // Loading state
   if (loading) {
     return (
@@ -263,7 +271,13 @@ export const DetailTemplate = ({ config, widgets = [] }) => {
                 </IconButton>
               </SidebarHeader>
               <SidebarContent>
-                <DetailSidebar config={leftSidebarConfig} entity={entity} />
+                <DetailSidebar
+                  config={leftSidebarConfig}
+                  entity={entity}
+                  data={sidebarLeftData}
+                  computed={computed}
+                  metadata={metadata}
+                />
               </SidebarContent>
             </SidebarInner>
           </Sidebar>
@@ -272,17 +286,28 @@ export const DetailTemplate = ({ config, widgets = [] }) => {
         {/* Main Content */}
         <MainContent>
           {/* Hero Card */}
-          <DetailHero entity={entity} config={config} />
+          <DetailHero
+            entity={entity}
+            config={config}
+            computed={computed}
+            metadata={metadata}
+          />
 
           {/* Widgets Grid */}
           <WidgetsGrid>
             {widgetsConfig.map((widget, index) => {
               const WidgetComponent = widget.component;
+              // Get widget data from backend (if available)
+              const widgetData = widgetsData[widget.id] || null;
+
               return WidgetComponent ? (
                 <WidgetComponent
                   key={widget.id || index}
                   entity={entity}
                   config={config}
+                  data={widgetData}
+                  computed={computed}
+                  metadata={metadata}
                   {...widget.props}
                 />
               ) : (
@@ -321,7 +346,13 @@ export const DetailTemplate = ({ config, widgets = [] }) => {
                 </IconButton>
               </SidebarHeader>
               <SidebarContent>
-                <DetailSidebar config={rightSidebarConfig} entity={entity} />
+                <DetailSidebar
+                  config={rightSidebarConfig}
+                  entity={entity}
+                  data={sidebarRightData}
+                  computed={computed}
+                  metadata={metadata}
+                />
               </SidebarContent>
             </SidebarInner>
           </Sidebar>
@@ -333,6 +364,7 @@ export const DetailTemplate = ({ config, widgets = [] }) => {
         <DetailActivityFeed
           entity={entity}
           config={config}
+          data={activityFeedData}
           isOpen={activityFeedOpen}
           onToggle={() => setActivityFeedOpen(!activityFeedOpen)}
         />
