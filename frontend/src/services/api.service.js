@@ -421,10 +421,13 @@ export const escrowsAPI = {
 
 export const listingsAPI = {
   getAll: (params) => apiInstance.get('/listings', { params }),
-  getOne: (id) => apiInstance.get(`/listings/${id}`),
+  getById: (id) => apiInstance.get(`/listings/${id}`),
+  getOne: (id) => apiInstance.get(`/listings/${id}`), // Alias for consistency
   create: (data) => apiInstance.post('/listings', data),
   update: (id, data) => apiInstance.put(`/listings/${id}`, data),
   delete: (id) => apiInstance.delete(`/listings/${id}`),
+  archive: (id) => apiInstance.patch(`/listings/${id}/archive`),
+  restore: (id) => apiInstance.patch(`/listings/${id}/restore`),
   updateStatus: (id, status) => apiInstance.patch(`/listings/${id}/status`, { status }),
   updateChecklist: (id, checklist) => apiInstance.put(`/listings/${id}/checklist`, { checklist }),
   getPriceHistory: (id) => apiInstance.get(`/listings/${id}/price-history`),
