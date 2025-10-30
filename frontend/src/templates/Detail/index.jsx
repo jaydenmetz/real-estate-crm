@@ -144,7 +144,7 @@ const ToggleButton = styled(IconButton)(({ theme, side }) => ({
  * Universal detail page layout matching escrows design
  * Features: Hero card, collapsible sidebars, 2x2 widget grid, activity feed
  */
-export const DetailTemplate = ({ config, widgets = [] }) => {
+export const DetailTemplate = ({ config, widgets = [], onEntityLoad }) => {
   const { id } = useParams();
   const [entity, setEntity] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -183,6 +183,10 @@ export const DetailTemplate = ({ config, widgets = [] }) => {
         if (response.success) {
           setEntity(response.data);
           setError(null);
+          // Notify parent component of entity load
+          if (onEntityLoad) {
+            onEntityLoad(response.data);
+          }
         } else {
           setError(response.error?.message || `Failed to load ${entityName}`);
         }
@@ -196,7 +200,7 @@ export const DetailTemplate = ({ config, widgets = [] }) => {
     if (id) {
       fetchEntity();
     }
-  }, [id, config.api, entityName]);
+  }, [id, config.api, entityName, onEntityLoad]);
 
   // Extract Detail API sections from entity (if backend provides them)
   const computed = entity?.computed || {};
