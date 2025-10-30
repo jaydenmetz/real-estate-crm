@@ -499,6 +499,401 @@ class EscrowsService extends BaseDomainService {
       throw error;
     }
   }
+
+  /**
+   * Get complete detail page data for escrow
+   * Fetches all data needed for detail page in parallel for performance
+   * @param {string} escrowId - Escrow ID
+   * @param {object} user - Current user
+   * @returns {object} Complete detail data (computed, sidebars, widgets, activity)
+   */
+  async getDetailData(escrowId, user) {
+    try {
+      // Fetch all data in parallel for performance
+      const [
+        computed,
+        sidebarLeft,
+        sidebarRight,
+        widgets,
+        activityFeed,
+        metadata
+      ] = await Promise.all([
+        this.computeStats(escrowId),
+        this.getSidebarLeft(escrowId, user),
+        this.getSidebarRight(escrowId, user),
+        this.getWidgets(escrowId, user),
+        this.getActivityFeed(escrowId, user),
+        this.getMetadata(escrowId, user)
+      ]);
+
+      return {
+        computed,
+        sidebar_left: sidebarLeft,
+        sidebar_right: sidebarRight,
+        widgets,
+        activity_feed: activityFeed,
+        metadata
+      };
+    } catch (error) {
+      this.logger.error('Error getting detail data:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Compute derived statistics for escrow
+   * @param {string} escrowId - Escrow ID
+   * @returns {object} Computed fields
+   */
+  async computeStats(escrowId) {
+    try {
+      const escrow = await this.findById(escrowId);
+
+      const now = new Date();
+      const closingDate = new Date(escrow.closing_date);
+      const openingDate = new Date(escrow.opening_date);
+
+      // Calculate days
+      const daysUntilClosing = Math.ceil((closingDate - now) / (1000 * 60 * 60 * 24));
+      const daysInEscrow = Math.ceil((now - openingDate) / (1000 * 60 * 60 * 24));
+
+      // Calculate financial figures
+      const purchasePrice = parseFloat(escrow.purchase_price) || 0;
+      const downPaymentPercent = parseFloat(escrow.down_payment_percent) || 20;
+      const downPayment = purchasePrice * (downPaymentPercent / 100);
+      const loanAmount = purchasePrice - downPayment;
+      const ltvRatio = purchasePrice > 0 ? (loanAmount / purchasePrice) * 100 : 0;
+
+      // Commission calculations
+      const commissionPercent = parseFloat(escrow.commission_percent) || 3;
+      const totalCommission = purchasePrice * (commissionPercent / 100);
+      const brokerageSplit = parseFloat(escrow.brokerage_split) || 80;
+      const myCommission = totalCommission / 2; // Assuming buyer/seller split
+      const netCommission = myCommission * (brokerageSplit / 100);
+
+      // Estimated closing costs (typically 2-3% of purchase price)
+      const estimatedClosingCosts = purchasePrice * 0.025;
+      const totalCashNeeded = downPayment + estimatedClosingCosts;
+
+      // Progress calculation (placeholder - would be based on checklist completion)
+      const progressPercentage = 65; // TODO: Calculate from actual checklist data
+
+      return {
+        days_until_closing: daysUntilClosing,
+        days_in_escrow: daysInEscrow,
+        contingency_days_remaining: 7, // TODO: Calculate from actual contingency dates
+        loan_amount: Math.round(loanAmount),
+        down_payment: Math.round(downPayment),
+        ltv_ratio: Math.round(ltvRatio * 10) / 10,
+        total_commission: Math.round(totalCommission),
+        my_commission: Math.round(myCommission),
+        net_commission: Math.round(netCommission),
+        progress_percentage: progressPercentage,
+        checklist_completion: 85, // TODO: Calculate from actual checklist data
+        document_completion: 70, // TODO: Calculate from actual document data
+        estimated_closing_costs: Math.round(estimatedClosingCosts),
+        total_cash_needed: Math.round(totalCashNeeded)
+      };
+    } catch (error) {
+      this.logger.error('Error computing stats:', error);
+      return {};
+    }
+  }
+
+  /**
+   * Get left sidebar data (quick actions and key contacts)
+   * @param {string} escrowId - Escrow ID
+   * @param {object} user - Current user
+   * @returns {object} Left sidebar data
+   */
+  async getSidebarLeft(escrowId, user) {
+    try {
+      // Quick actions (static for now, could be dynamic based on escrow status)
+      const quickActions = [
+        { id: 1, label: 'Edit Escrow', icon: 'Edit', action: 'edit', color: '#1976d2' },
+        { id: 2, label: 'Send Documents', icon: 'Send', action: 'send_docs', color: '#43a047' },
+        { id: 3, label: 'Add Note', icon: 'FileText', action: 'add_note', color: '#fb8c00' },
+        { id: 4, label: 'Schedule Call', icon: 'Phone', action: 'schedule_call', color: '#8e24aa' },
+        { id: 5, label: 'Request Signature', icon: 'Edit3', action: 'request_signature', color: '#e53935' }
+      ];
+
+      // Key contacts (placeholder - would query actual contacts table)
+      const keyContacts = [
+        // TODO: Query actual contacts from database
+        // For now, returning empty array
+      ];
+
+      // Transaction parties (from escrow fields)
+      const escrow = await this.findById(escrowId);
+      const transactionParties = {
+        buyers: [
+          // TODO: Parse from escrow.buyer_name or query contacts
+        ],
+        sellers: [
+          // TODO: Parse from escrow.seller_name or query contacts
+        ],
+        agents: {
+          listing_agent: escrow.listing_agent || 'N/A',
+          buyer_agent: `${user.first_name} ${user.last_name}` || 'N/A'
+        }
+      };
+
+      return {
+        quick_actions: quickActions,
+        key_contacts: keyContacts,
+        transaction_parties: transactionParties
+      };
+    } catch (error) {
+      this.logger.error('Error getting sidebar left:', error);
+      return { quick_actions: [], key_contacts: [], transaction_parties: {} };
+    }
+  }
+
+  /**
+   * Get right sidebar data (important dates and AI insights)
+   * @param {string} escrowId - Escrow ID
+   * @param {object} user - Current user
+   * @returns {object} Right sidebar data
+   */
+  async getSidebarRight(escrowId, user) {
+    try {
+      const escrow = await this.findById(escrowId);
+      const now = new Date();
+
+      // Important dates (placeholder - would query actual dates from database)
+      const importantDates = [
+        // TODO: Query actual important dates from database
+        // For now, using closing date as example
+        {
+          id: 1,
+          date: escrow.closing_date,
+          label: 'Closing',
+          type: 'closing',
+          days_away: Math.ceil((new Date(escrow.closing_date) - now) / (1000 * 60 * 60 * 24)),
+          status: 'scheduled',
+          critical: true
+        }
+      ];
+
+      // AI insights (placeholder - would be generated by AI service)
+      const aiInsights = [
+        {
+          type: 'success',
+          priority: 'low',
+          message: `${importantDates[0].days_away} days until closing - on track`,
+          action_required: false
+        }
+      ];
+
+      // Risk indicators (placeholder - would be calculated from escrow data)
+      const riskIndicators = {
+        overall_risk: 'low',
+        financing_risk: 'low',
+        timeline_risk: importantDates[0].days_away < 14 ? 'medium' : 'low',
+        inspection_risk: 'low'
+      };
+
+      // Smart suggestions (placeholder - would be AI-generated)
+      const smartSuggestions = [
+        'Schedule final walkthrough 48 hours before closing',
+        'Request earnest money receipt from title company'
+      ];
+
+      return {
+        important_dates: importantDates,
+        ai_insights: aiInsights,
+        risk_indicators: riskIndicators,
+        smart_suggestions: smartSuggestions
+      };
+    } catch (error) {
+      this.logger.error('Error getting sidebar right:', error);
+      return { important_dates: [], ai_insights: [], risk_indicators: {}, smart_suggestions: [] };
+    }
+  }
+
+  /**
+   * Get widgets data (timeline, checklists, documents, financials)
+   * @param {string} escrowId - Escrow ID
+   * @param {object} user - Current user
+   * @returns {object} Widgets data
+   */
+  async getWidgets(escrowId, user) {
+    try {
+      const [timeline, financials] = await Promise.all([
+        this.getTimelineWidget(escrowId),
+        this.getFinancialsWidget(escrowId)
+      ]);
+
+      return {
+        timeline,
+        checklists: { items: [], completion_stats: { total_items: 0, completed_items: 0, percentage: 0 } }, // TODO: Implement
+        documents: { files: [], stats: { total_files: 0 } }, // TODO: Implement
+        financials
+      };
+    } catch (error) {
+      this.logger.error('Error getting widgets:', error);
+      return { timeline: {}, checklists: {}, documents: {}, financials: {} };
+    }
+  }
+
+  /**
+   * Get timeline widget data
+   * @param {string} escrowId - Escrow ID
+   * @returns {object} Timeline data
+   */
+  async getTimelineWidget(escrowId) {
+    try {
+      // TODO: Query actual timeline events from database
+      // For now, returning placeholder structure
+      return {
+        events: [],
+        total_events: 0,
+        unread_count: 0,
+        filters: ['all', 'documents', 'status_changes', 'notes', 'communications']
+      };
+    } catch (error) {
+      this.logger.error('Error getting timeline widget:', error);
+      return { events: [], total_events: 0, unread_count: 0, filters: [] };
+    }
+  }
+
+  /**
+   * Get financials widget data
+   * @param {string} escrowId - Escrow ID
+   * @returns {object} Financials data
+   */
+  async getFinancialsWidget(escrowId) {
+    try {
+      const escrow = await this.findById(escrowId);
+      const purchasePrice = parseFloat(escrow.purchase_price) || 0;
+      const downPaymentPercent = parseFloat(escrow.down_payment_percent) || 20;
+      const downPayment = purchasePrice * (downPaymentPercent / 100);
+      const loanAmount = purchasePrice - downPayment;
+      const earnestMoney = parseFloat(escrow.earnest_money_amount) || 0;
+      const ltvRatio = purchasePrice > 0 ? (loanAmount / purchasePrice) * 100 : 0;
+
+      // Commission calculations
+      const commissionPercent = parseFloat(escrow.commission_percent) || 3;
+      const totalCommission = purchasePrice * (commissionPercent / 100);
+      const myCommission = totalCommission / 2; // Assuming buyer/seller split
+      const brokerageSplit = parseFloat(escrow.brokerage_split) || 80;
+      const netCommission = myCommission * (brokerageSplit / 100);
+
+      // Estimated closing costs breakdown
+      const lenderFees = purchasePrice * 0.01; // 1%
+      const titleEscrow = purchasePrice * 0.005; // 0.5%
+      const appraisal = 500;
+      const inspection = 450;
+      const recordingFees = 150;
+      const miscellaneous = 1400;
+      const estimatedTotal = lenderFees + titleEscrow + appraisal + inspection + recordingFees + miscellaneous;
+      const totalCashNeeded = downPayment + estimatedTotal;
+
+      return {
+        transaction_summary: {
+          purchase_price: Math.round(purchasePrice),
+          down_payment: Math.round(downPayment),
+          down_payment_percentage: downPaymentPercent,
+          loan_amount: Math.round(loanAmount),
+          earnest_money: Math.round(earnestMoney),
+          ltv_ratio: Math.round(ltvRatio * 10) / 10
+        },
+        closing_costs: {
+          estimated_total: Math.round(estimatedTotal),
+          buyer_costs: Math.round(estimatedTotal * 0.7),
+          seller_costs: Math.round(estimatedTotal * 0.3),
+          breakdown: [
+            { category: 'Lender Fees', amount: Math.round(lenderFees) },
+            { category: 'Title & Escrow', amount: Math.round(titleEscrow) },
+            { category: 'Appraisal', amount: appraisal },
+            { category: 'Inspection', amount: inspection },
+            { category: 'Recording Fees', amount: recordingFees },
+            { category: 'Miscellaneous', amount: miscellaneous }
+          ]
+        },
+        commission: {
+          total_commission: Math.round(totalCommission),
+          commission_percentage: commissionPercent,
+          my_commission: Math.round(myCommission),
+          buyer_agent_commission: Math.round(myCommission),
+          net_commission: Math.round(netCommission),
+          brokerage_split: brokerageSplit
+        },
+        cash_needed: {
+          total_cash_needed: Math.round(totalCashNeeded),
+          breakdown: [
+            { item: 'Down Payment', amount: Math.round(downPayment) },
+            { item: 'Closing Costs', amount: Math.round(estimatedTotal) }
+          ]
+        }
+      };
+    } catch (error) {
+      this.logger.error('Error getting financials widget:', error);
+      return {};
+    }
+  }
+
+  /**
+   * Get activity feed data
+   * @param {string} escrowId - Escrow ID
+   * @param {object} user - Current user
+   * @returns {object} Activity feed data
+   */
+  async getActivityFeed(escrowId, user) {
+    try {
+      // TODO: Query actual activity from database
+      // For now, returning placeholder structure
+      return {
+        recent_activity: [],
+        total_activity_count: 0,
+        unread_count: 0,
+        filters: ['all', 'updates', 'documents', 'communications', 'tasks']
+      };
+    } catch (error) {
+      this.logger.error('Error getting activity feed:', error);
+      return { recent_activity: [], total_activity_count: 0, unread_count: 0, filters: [] };
+    }
+  }
+
+  /**
+   * Get metadata (permissions and related entities)
+   * @param {string} escrowId - Escrow ID
+   * @param {object} user - Current user
+   * @returns {object} Metadata
+   */
+  async getMetadata(escrowId, user) {
+    try {
+      const escrow = await this.findById(escrowId);
+
+      return {
+        permissions: {
+          can_edit: true, // TODO: Check actual permissions
+          can_delete: true,
+          can_archive: true,
+          can_view_financials: true,
+          can_manage_documents: true,
+          can_manage_checklists: true
+        },
+        related_entities: {
+          client_id: escrow.client_id || null,
+          listing_id: escrow.listing_id || null,
+          appointment_ids: [], // TODO: Query related appointments
+          lead_id: null
+        },
+        sync_status: {
+          last_synced: new Date().toISOString(),
+          sync_source: 'manual',
+          external_ids: {
+            mls_id: null,
+            title_company_ref: escrow.escrow_number
+          }
+        }
+      };
+    } catch (error) {
+      this.logger.error('Error getting metadata:', error);
+      return { permissions: {}, related_entities: {}, sync_status: {} };
+    }
+  }
 }
 
 module.exports = new EscrowsService();
