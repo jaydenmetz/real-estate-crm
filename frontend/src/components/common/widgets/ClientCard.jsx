@@ -98,9 +98,9 @@ const ClientCard = React.memo(({ client, viewMode = 'small', index = 0, onArchiv
     return (first + last).toUpperCase() || '?';
   };
 
-  // Client details
-  const fullName = `${client.first_name || ''} ${client.last_name || ''}`.trim();
-  const initials = getInitials(client.first_name, client.last_name);
+  // Client details (support both snake_case and camelCase)
+  const fullName = `${client.firstName || client.first_name || ''} ${client.lastName || client.last_name || ''}`.trim();
+  const initials = getInitials(client.firstName || client.first_name, client.lastName || client.last_name);
 
   // Mock activity timeline
   const timeline = [
