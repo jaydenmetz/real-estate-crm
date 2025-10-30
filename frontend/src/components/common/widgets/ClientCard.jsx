@@ -46,6 +46,45 @@ const getStatusConfig = (stage) => {
   return configs[stage] || configs['New'];
 };
 
+// Budget category configuration
+const getBudgetConfig = (priceMin, priceMax) => {
+  const midPrice = priceMax || priceMin || 0;
+
+  if (midPrice < 300000) {
+    return {
+      label: 'Budget-Friendly Finds',
+      range: '<$300k',
+      color: '#10b981',
+      bg: 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(5,150,105,0.12) 100%)',
+      border: '#10b981'
+    };
+  } else if (midPrice < 550000) {
+    return {
+      label: 'Classic Homes',
+      range: '$300k-$550k',
+      color: '#3b82f6',
+      bg: 'linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(37,99,235,0.12) 100%)',
+      border: '#3b82f6'
+    };
+  } else if (midPrice < 1000000) {
+    return {
+      label: 'Premium Residences',
+      range: '$550k-$1M',
+      color: '#8b5cf6',
+      bg: 'linear-gradient(135deg, rgba(139,92,246,0.08) 0%, rgba(124,58,237,0.12) 100%)',
+      border: '#8b5cf6'
+    };
+  } else {
+    return {
+      label: 'Luxury Estates',
+      range: '$1M+',
+      color: '#f59e0b',
+      bg: 'linear-gradient(135deg, rgba(245,158,11,0.08) 0%, rgba(217,119,6,0.12) 100%)',
+      border: '#f59e0b'
+    };
+  }
+};
+
 const ClientCard = React.memo(({ client, viewMode = 'small', index = 0, onArchive, onDelete, onRestore, isArchived = false }) => {
   const navigate = useNavigate();
   const theme = useTheme();
@@ -442,8 +481,8 @@ const ClientCard = React.memo(({ client, viewMode = 'small', index = 0, onArchiv
               flexDirection: 'column',
               overflow: 'hidden'
             }}>
-              {/* Client Name */}
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 0.5 }}>
+              {/* Client Name + Client Type Badge */}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75, mb: 1, flexWrap: 'wrap' }}>
                 <Typography
                   variant="h6"
                   sx={{
@@ -455,6 +494,21 @@ const ClientCard = React.memo(({ client, viewMode = 'small', index = 0, onArchiv
                 >
                   {fullName}
                 </Typography>
+
+                {/* Client Type Chip next to name */}
+                <Chip
+                  label={client.clientType || 'Buyer'}
+                  size="small"
+                  sx={{
+                    fontSize: 10,
+                    fontWeight: 600,
+                    height: 20,
+                    background: alpha(statusConfig.color, 0.1),
+                    color: statusConfig.color,
+                  }}
+                />
+
+                {/* Access level chips */}
                 {client.is_private ? (
                   <Chip
                     icon={<Lock />}
@@ -474,63 +528,31 @@ const ClientCard = React.memo(({ client, viewMode = 'small', index = 0, onArchiv
                 ) : null}
               </Box>
 
-              {/* Client Type Chip */}
-              <Chip
-                label={client.clientType || 'Client'}
-                size="small"
-                sx={{
-                  mb: 1,
-                  width: 'fit-content',
-                  fontSize: 10,
-                  fontWeight: 600,
-                  background: alpha(statusConfig.color, 0.1),
-                  color: statusConfig.color,
-                }}
-              />
-
-              {/* Client Agreement Dates */}
-              <Box sx={{ display: 'flex', gap: 1.5, mb: 1 }}>
-                {/* Beginning Date */}
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', mb: 0.25 }}>
-                    Beginning
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.75rem', color: theme.palette.text.primary }}>
-                    {client.agreementStartDate ? format(new Date(client.agreementStartDate), 'MMM d, yyyy') : 'TBD'}
-                  </Typography>
-                </Box>
-
-                {/* Expiration Date */}
-                <Box sx={{ flex: 1 }}>
-                  <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', mb: 0.25 }}>
-                    Expiration
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.75rem', color: theme.palette.text.primary }}>
-                    {client.agreementEndDate ? format(new Date(client.agreementEndDate), 'MMM d, yyyy') : 'TBD'}
-                  </Typography>
-                </Box>
-              </Box>
-
               {/* Metrics Grid */}
               <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1, mb: 1 }}>
-                {/* Budget Range */}
-                <Box
-                  sx={{
-                    p: 0.75,
-                    borderRadius: 1.5,
-                    background: 'linear-gradient(135deg, rgba(16,185,129,0.08) 0%, rgba(5,150,105,0.12) 100%)',
-                    border: `1px solid ${alpha('#10b981', 0.15)}`,
-                  }}
-                >
-                  <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: '#059669', mb: 0.25, display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                    Budget
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontWeight: 800, fontSize: '0.75rem', color: '#10b981', letterSpacing: '-0.5px' }}>
-                    {formatCurrency(client.priceRangeMin)}-{formatCurrency(client.priceRangeMax)}
-                  </Typography>
-                </Box>
+                {/* Budget Category */}
+                {(() => {
+                  const budgetConfig = getBudgetConfig(client.priceRangeMin, client.priceRangeMax);
+                  return (
+                    <Box
+                      sx={{
+                        p: 0.75,
+                        borderRadius: 1.5,
+                        background: budgetConfig.bg,
+                        border: `1px solid ${alpha(budgetConfig.border, 0.15)}`,
+                      }}
+                    >
+                      <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: budgetConfig.color, mb: 0.25, display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                        Budget
+                      </Typography>
+                      <Typography variant="body2" sx={{ fontWeight: 800, fontSize: '0.75rem', color: budgetConfig.color, letterSpacing: '-0.5px' }}>
+                        {budgetConfig.label}
+                      </Typography>
+                    </Box>
+                  );
+                })()}
 
-                {/* Transaction Volume */}
+                {/* Representation Doc Type */}
                 <Box
                   sx={{
                     p: 0.75,
@@ -540,15 +562,15 @@ const ClientCard = React.memo(({ client, viewMode = 'small', index = 0, onArchiv
                   }}
                 >
                   <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: '#4f46e5', mb: 0.25, display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                    Volume
+                    Doc Type
                   </Typography>
                   <Typography variant="body2" sx={{ fontWeight: 800, fontSize: '0.75rem', color: '#6366f1', letterSpacing: '-0.5px' }}>
-                    {formatCurrency(client.totalVolume || 0)}
+                    {client.representationDocType || 'TBD'}
                   </Typography>
                 </Box>
               </Box>
 
-              {/* Footer - Last Contact & Next Follow-up */}
+              {/* Footer - Agreement Dates & Countdown */}
               <Box
                 sx={{
                   display: 'flex',
@@ -561,20 +583,23 @@ const ClientCard = React.memo(({ client, viewMode = 'small', index = 0, onArchiv
                 }}
               >
                 <Box sx={{ display: 'flex', gap: 2, pl: 0.5 }}>
+                  {/* Beginning Date */}
                   <Box>
                     <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', mb: 0.25 }}>
-                      Last
+                      Beginning
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.75rem', color: theme.palette.text.primary }}>
-                      {formatDate(client.last_contactDate) || 'Never'}
+                      {client.agreementStartDate ? format(new Date(client.agreementStartDate), 'MMM d, yyyy') : 'TBD'}
                     </Typography>
                   </Box>
+
+                  {/* Expiration Date */}
                   <Box>
                     <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', mb: 0.25 }}>
-                      Next
+                      Expiration
                     </Typography>
                     <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.75rem', color: theme.palette.text.primary }}>
-                      {formatDate(client.next_follow_upDate) || 'TBD'}
+                      {client.agreementEndDate ? format(new Date(client.agreementEndDate), 'MMM d, yyyy') : 'TBD'}
                     </Typography>
                   </Box>
                 </Box>
