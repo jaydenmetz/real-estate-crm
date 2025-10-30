@@ -261,14 +261,114 @@ export const clientsConfig = createEntityConfig({
   // DETAIL PAGE CONFIGURATION
   // ========================================
   detail: {
+    // Refetch interval (ms)
+    refetchInterval: 30000,
+
+    // Show breadcrumbs navigation
+    showBreadcrumbs: true,
+
+    // Hero Section Configuration
     hero: {
-      showImage: true,
-      imageField: 'profile_image_url',
-      showStatus: true,
-      showActions: true,
-      showContact: true
+      gradient: 'linear-gradient(135deg, #1565C0 0%, #42A5F5 100%)',
+      showAvatar: true,
+      avatarField: 'avatar',
+      nameField: 'name',
+      statusField: 'status',
+      showStatusBadge: true,
+
+      // Status color mapping
+      statusColors: {
+        active: '#10b981',
+        inactive: '#9ca3af',
+        pending: '#f59e0b',
+        archived: '#6b7280',
+      },
+
+      // Subtitle badges (shown below name)
+      subtitleFields: [
+        { field: 'type', icon: 'Person' },
+        { field: 'status', icon: 'CheckCircle' },
+        { field: (entity) => entity.createdAt ? `Client since ${new Date(entity.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}` : '', icon: 'CalendarToday' },
+      ],
+
+      // Action buttons
+      actions: [
+        {
+          label: 'Send Email',
+          icon: 'Email',
+          variant: 'contained',
+          onClick: (entity) => window.location.href = `mailto:${entity.email}`,
+        },
+        {
+          label: 'Call Client',
+          icon: 'Phone',
+          variant: 'outlined',
+          onClick: (entity) => window.location.href = `tel:${entity.phone}`,
+        },
+      ],
+
+      // Hero stats (top right cards)
+      stats: [
+        {
+          label: 'Lifetime Value',
+          field: 'lifetimeValue',
+          format: 'currency',
+          icon: 'AttachMoney',
+          color: '#10b981',
+          useCountUp: true,
+        },
+        {
+          label: 'Transactions',
+          field: 'totalTransactions',
+          format: 'number',
+          icon: 'Assignment',
+          color: '#3b82f6',
+          useCountUp: true,
+        },
+        {
+          label: 'Referrals',
+          field: 'referrals',
+          format: 'number',
+          icon: 'Groups',
+          color: '#8b5cf6',
+          useCountUp: true,
+        },
+        {
+          label: 'Days Since Contact',
+          field: (entity) => entity.lastContact ? Math.floor((new Date() - new Date(entity.lastContact)) / (1000 * 60 * 60 * 24)) : 0,
+          format: 'number',
+          icon: 'Schedule',
+          color: '#f59e0b',
+          useCountUp: true,
+        },
+      ],
     },
 
+    // Tab Configuration
+    tabs: [
+      {
+        label: 'Overview',
+        icon: 'Dashboard',
+        component: null, // Will render default overview content
+      },
+      {
+        label: 'Properties',
+        icon: 'Home',
+        component: null,
+      },
+      {
+        label: 'Communications',
+        icon: 'Message',
+        component: null,
+      },
+      {
+        label: 'Documents',
+        icon: 'Folder',
+        component: null,
+      },
+    ],
+
+    // Legacy sections config (kept for compatibility)
     sections: [
       {
         id: 'contact',
