@@ -107,7 +107,6 @@ class ClientsService extends BaseDomainService {
           cl.updated_at,
           cl.team_id,
           cl.broker_id,
-          cl.created_by,
           co.first_name,
           co.last_name,
           co.email,
@@ -166,7 +165,6 @@ class ClientsService extends BaseDomainService {
           cl.updated_at,
           cl.team_id,
           cl.broker_id,
-          cl.created_by,
           co.first_name,
           co.last_name,
           co.email,
@@ -571,8 +569,7 @@ class ClientsService extends BaseDomainService {
       createdAt: client.created_at,
       updatedAt: client.updated_at,
       teamId: client.team_id,
-      brokerId: client.broker_id,
-      createdBy: client.created_by
+      brokerId: client.broker_id
     };
   }
 }
