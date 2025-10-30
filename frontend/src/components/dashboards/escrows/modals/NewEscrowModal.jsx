@@ -951,7 +951,15 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
                         {children}
                         {children && <Divider />}
                         <ListItemButton
-                          onClick={() => setNewClientModalOpen(true)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            setNewClientModalOpen(true);
+                          }}
+                          onMouseDown={(e) => {
+                            e.stopPropagation();
+                            e.preventDefault();
+                          }}
                           sx={{ py: 1.5 }}
                         >
                           <ListItemIcon>
