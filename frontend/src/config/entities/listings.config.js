@@ -1,6 +1,11 @@
 import { createEntityConfig } from './base.config';
 import { api } from '../../services/api.service';
 
+// Import widget components
+import PriceHistoryWidget from '../../components/details/listings/components/PriceHistoryWidget';
+import ActivityWidget from '../../components/details/listings/components/ActivityWidget';
+import ComparablesWidget from '../../components/details/listings/components/ComparablesWidget';
+
 export const listingsConfig = createEntityConfig({
   // ========================================
   // ENTITY METADATA
@@ -220,69 +225,63 @@ export const listingsConfig = createEntityConfig({
   // ========================================
   detail: {
     hero: {
-      showImage: true,
+      titleField: 'property_address',
       imageField: 'property_image_url',
-      showStatus: true,
-      showActions: true,
-      showMLS: true,
-      showPrice: true
+      placeholderIcon: '🏠',
+      statusField: 'listing_status',
+      displayIdField: 'mls_number',
+      subtitleFields: [
+        { field: 'city', icon: 'MapPin' }
+      ],
+      statusColors: {
+        active: '#4caf50',
+        pending: '#ff9800',
+        sold: '#2196f3',
+        expired: '#f44336'
+      },
+      stats: [
+        { label: 'List Price', field: 'listing_price', format: 'currency' },
+        { label: 'Bedrooms', field: 'bedrooms', format: 'number' },
+        { label: 'Bathrooms', field: 'bathrooms', format: 'number' },
+        { label: 'Sq Ft', field: 'square_feet', format: 'number' }
+      ]
     },
-
-    sections: [
-      {
-        id: 'details',
-        label: 'Property Details',
-        icon: 'Home',
-        fields: [
-          { key: 'bedrooms', label: 'Bedrooms', type: 'number' },
-          { key: 'bathrooms', label: 'Bathrooms', type: 'number' },
-          { key: 'square_feet', label: 'Square Feet', type: 'number' },
-          { key: 'lot_size', label: 'Lot Size', type: 'text' },
-          { key: 'year_built', label: 'Year Built', type: 'number' }
-        ]
-      },
-      {
-        id: 'marketing',
-        label: 'Marketing',
-        icon: 'Campaign',
-        fields: [
-          { key: 'mls_number', label: 'MLS #', type: 'text' },
-          { key: 'description', label: 'Description', type: 'textarea' },
-          { key: 'features', label: 'Features', type: 'tags' }
-        ]
-      },
-      {
-        id: 'showing',
-        label: 'Showing History',
-        icon: 'Event',
-        type: 'timeline',
-        dataSource: 'showings'
-      }
-    ],
 
     widgets: [
       {
         id: 'price',
-        label: 'Price History',
-        icon: 'TrendingUp',
-        component: 'PriceHistoryWidget',
-        order: 1
+        title: 'Price History',
+        component: PriceHistoryWidget,
+        props: {}
       },
       {
         id: 'activity',
-        label: 'Activity',
-        icon: 'Visibility',
-        component: 'ActivityWidget',
-        order: 2
+        title: 'Activity',
+        component: ActivityWidget,
+        props: {}
       },
       {
-        id: 'comparable',
-        label: 'Comparables',
-        icon: 'CompareArrows',
-        component: 'ComparablesWidget',
-        order: 3
+        id: 'comparables',
+        title: 'Comparables',
+        component: ComparablesWidget,
+        props: {}
       }
-    ]
+    ],
+
+    leftSidebar: {
+      title: 'Quick Actions',
+      sections: []
+    },
+
+    rightSidebar: {
+      title: 'Smart Context',
+      sections: []
+    },
+
+    activityFeed: {
+      enabled: true,
+      title: 'Live Activity'
+    }
   },
 
   // ========================================
