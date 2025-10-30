@@ -368,11 +368,11 @@ export const appointmentsConfig = createEntityConfig({
 
     // Status Tabs Configuration
     statusTabs: [
-      { value: 'scheduled', label: 'Scheduled' },
-      { value: 'completed', label: 'Completed' },
-      { value: 'cancelled', label: 'Cancelled' },
-      { value: 'all', label: 'All Appointments' },
-      { value: 'archived', label: 'Archived' }
+      { value: 'scheduled', label: 'Scheduled', preferredViewMode: 'large' },
+      { value: 'completed', label: 'Completed', preferredViewMode: 'medium' },
+      { value: 'cancelled', label: 'Cancelled', preferredViewMode: 'small' },
+      { value: 'all', label: 'All Appointments', preferredViewMode: 'small' },
+      { value: 'archived', label: 'Archived', preferredViewMode: 'small' }
     ],
     defaultStatus: 'scheduled',
 

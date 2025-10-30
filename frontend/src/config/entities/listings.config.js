@@ -165,10 +165,10 @@ export const listingsConfig = createEntityConfig({
 
     // Status Tabs Configuration
     statusTabs: [
-      { value: 'active', label: 'Active' },
-      { value: 'pending', label: 'Pending' },
-      { value: 'sold', label: 'Sold' },
-      { value: 'all', label: 'All Listings' }
+      { value: 'active', label: 'Active', preferredViewMode: 'large' },
+      { value: 'pending', label: 'Pending', preferredViewMode: 'large' },
+      { value: 'sold', label: 'Sold', preferredViewMode: 'medium' },
+      { value: 'all', label: 'All Listings', preferredViewMode: 'small' }
     ],
     defaultStatus: 'active',
 

@@ -137,7 +137,7 @@ export const DashboardTemplate = ({
     error,
     stats,
     selectedStatus,
-    setSelectedStatus,
+    setSelectedStatus: setSelectedStatusOriginal,
     selectedScope,
     setSelectedScope,
     viewMode,
@@ -151,6 +151,20 @@ export const DashboardTemplate = ({
     filteredData,
     refetch,
   } = useDashboardData(config, calculatedDateRange);
+
+  // Wrapper for setSelectedStatus that also changes viewMode based on tab's preferredViewMode
+  const setSelectedStatus = (newStatus) => {
+    // Find the tab config for this status
+    const statusTab = config.dashboard?.statusTabs?.find(tab => tab.value === newStatus);
+
+    // If tab has a preferredViewMode, switch to it
+    if (statusTab?.preferredViewMode) {
+      setViewMode(statusTab.preferredViewMode);
+    }
+
+    // Update the status
+    setSelectedStatusOriginal(newStatus);
+  };
 
   // Helper to detect preset ranges (matching Clients)
   const detectPresetRange = (startDate, endDate) => {

@@ -438,12 +438,12 @@ export const leadsConfig = createEntityConfig({
 
     // Status Tabs Configuration
     statusTabs: [
-      { value: 'new', label: 'New' },
-      { value: 'contacted', label: 'Contacted' },
-      { value: 'qualified', label: 'Qualified' },
-      { value: 'converted', label: 'Converted' },
-      { value: 'all', label: 'All Leads' },
-      { value: 'archived', label: 'Archived' }
+      { value: 'new', label: 'New', preferredViewMode: 'large' },
+      { value: 'contacted', label: 'Contacted', preferredViewMode: 'large' },
+      { value: 'qualified', label: 'Qualified', preferredViewMode: 'medium' },
+      { value: 'converted', label: 'Converted', preferredViewMode: 'medium' },
+      { value: 'all', label: 'All Leads', preferredViewMode: 'small' },
+      { value: 'archived', label: 'Archived', preferredViewMode: 'small' }
     ],
     defaultStatus: 'new',
 

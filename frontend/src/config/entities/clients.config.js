@@ -175,10 +175,10 @@ export const clientsConfig = createEntityConfig({
 
     // Status Tabs Configuration
     statusTabs: [
-      { value: 'active', label: 'Active' },
-      { value: 'past', label: 'Past' },
-      { value: 'expired', label: 'Expired' },
-      { value: 'all', label: 'All Clients' }
+      { value: 'active', label: 'Active', preferredViewMode: 'large' },
+      { value: 'past', label: 'Past', preferredViewMode: 'medium' },
+      { value: 'expired', label: 'Expired', preferredViewMode: 'small' },
+      { value: 'all', label: 'All Clients', preferredViewMode: 'small' }
     ],
     defaultStatus: 'active',
 
