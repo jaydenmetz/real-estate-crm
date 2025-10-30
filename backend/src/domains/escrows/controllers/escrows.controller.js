@@ -74,13 +74,12 @@ class EscrowsController extends BaseDomainController {
   });
 
   /**
-   * Get single escrow by ID
+   * Get single escrow by ID with complete detail page data
    * GET /v1/escrows/:id
-   * GET /v1/escrows/:id?include=full (complete detail page payload)
+   * Returns: Complete escrow with computed fields, sidebars, widgets, activity feed
    */
   getEscrowById = this.asyncHandler(async (req, res) => {
     let { id } = req.params;
-    const { include } = req.query;
 
     // Strip "escrow-" prefix if present
     if (id.startsWith('escrow-')) {
@@ -92,25 +91,20 @@ class EscrowsController extends BaseDomainController {
     // Check ownership
     await this.checkOwnership(escrow, req.user.id, req.user.team_id);
 
-    // If include=full, fetch complete detail page data
-    if (include?.includes('full')) {
-      const detailData = await escrowsService.getDetailData(id, req.user);
+    // Fetch complete detail page data
+    const detailData = await escrowsService.getDetailData(id, req.user);
 
-      const response = {
-        ...escrow,
-        computed: detailData.computed,
-        sidebar_left: detailData.sidebar_left,
-        sidebar_right: detailData.sidebar_right,
-        widgets: detailData.widgets,
-        activity_feed: detailData.activity_feed,
-        metadata: detailData.metadata
-      };
+    const response = {
+      ...escrow,
+      computed: detailData.computed,
+      sidebar_left: detailData.sidebar_left,
+      sidebar_right: detailData.sidebar_right,
+      widgets: detailData.widgets,
+      activity_feed: detailData.activity_feed,
+      metadata: detailData.metadata
+    };
 
-      return this.success(res, response);
-    }
-
-    // Default: return just the entity (unchanged behavior)
-    this.success(res, escrow);
+    this.success(res, response);
   });
 
   /**
