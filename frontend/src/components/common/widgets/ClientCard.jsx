@@ -14,8 +14,6 @@ import {
 } from '@mui/material';
 import {
   PersonOutline,
-  Email,
-  Phone,
   Home,
   CalendarToday,
   TrendingUp,
@@ -101,6 +99,28 @@ const ClientCard = React.memo(({ client, viewMode = 'small', index = 0, onArchiv
   // Client details (support both snake_case and camelCase)
   const fullName = `${client.firstName || client.first_name || ''} ${client.lastName || client.last_name || ''}`.trim();
   const initials = getInitials(client.firstName || client.first_name, client.lastName || client.last_name);
+
+  // Calculate days until agreement expiration
+  let daysToExpiration = null;
+  let isExpiring = false;
+  let isExpired = false;
+
+  if (client.agreementEndDate) {
+    try {
+      const endDate = new Date(client.agreementEndDate);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      endDate.setHours(0, 0, 0, 0);
+
+      const diffTime = endDate - today;
+      daysToExpiration = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+      isExpiring = daysToExpiration <= 30 && daysToExpiration > 0;
+      isExpired = daysToExpiration < 0;
+    } catch (e) {
+      console.error('Error calculating days to expiration:', e);
+    }
+  }
 
   // Mock activity timeline
   const timeline = [
@@ -468,24 +488,27 @@ const ClientCard = React.memo(({ client, viewMode = 'small', index = 0, onArchiv
                 }}
               />
 
-              {/* Contact Info Grid */}
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75, mb: 1 }}>
-                {client.email && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Email sx={{ fontSize: 14, color: theme.palette.text.secondary }} />
-                    <Typography variant="caption" sx={{ fontSize: 11, color: theme.palette.text.secondary }}>
-                      {client.email}
-                    </Typography>
-                  </Box>
-                )}
-                {client.phone && (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <Phone sx={{ fontSize: 14, color: theme.palette.text.secondary }} />
-                    <Typography variant="caption" sx={{ fontSize: 11, color: theme.palette.text.secondary }}>
-                      {client.phone}
-                    </Typography>
-                  </Box>
-                )}
+              {/* Client Agreement Dates */}
+              <Box sx={{ display: 'flex', gap: 1.5, mb: 1 }}>
+                {/* Beginning Date */}
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', mb: 0.25 }}>
+                    Beginning
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.75rem', color: theme.palette.text.primary }}>
+                    {client.agreementStartDate ? format(new Date(client.agreementStartDate), 'MMM d, yyyy') : 'TBD'}
+                  </Typography>
+                </Box>
+
+                {/* Expiration Date */}
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', display: 'block', mb: 0.25 }}>
+                    Expiration
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.75rem', color: theme.palette.text.primary }}>
+                    {client.agreementEndDate ? format(new Date(client.agreementEndDate), 'MMM d, yyyy') : 'TBD'}
+                  </Typography>
+                </Box>
               </Box>
 
               {/* Metrics Grid */}
@@ -556,19 +579,38 @@ const ClientCard = React.memo(({ client, viewMode = 'small', index = 0, onArchiv
                   </Box>
                 </Box>
 
-                {/* Active Escrows Badge */}
-                {client.activeEscrows > 0 && (
+                {/* Agreement Countdown Badge */}
+                {daysToExpiration !== null ? (
                   <Box sx={{
-                    display: 'flex', alignItems: 'center', gap: 0.5,
-                    px: 1.5, py: 0.75, borderRadius: 2,
-                    background: 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(5,150,105,0.15) 100%)',
-                    border: `1px solid ${alpha('#10b981', 0.2)}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    px: 1.5,
+                    py: 0.5,
+                    borderRadius: 2,
+                    background: isExpired
+                      ? 'linear-gradient(135deg, rgba(239,68,68,0.1) 0%, rgba(220,38,38,0.15) 100%)'
+                      : isExpiring
+                      ? 'linear-gradient(135deg, rgba(245,158,11,0.1) 0%, rgba(217,119,6,0.15) 100%)'
+                      : 'linear-gradient(135deg, rgba(59,130,246,0.1) 0%, rgba(37,99,235,0.15) 100%)',
+                    border: `1px solid ${alpha(isExpired ? '#ef4444' : isExpiring ? '#f59e0b' : '#3b82f6', 0.2)}`,
                   }}>
-                    <Home sx={{ fontSize: 14, color: '#10b981' }} />
-                    <Typography variant="caption" sx={{ fontWeight: 700, fontSize: '0.7rem', color: '#10b981' }}>
-                      {client.activeEscrows}
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        fontWeight: 700,
+                        fontSize: '0.75rem',
+                        color: isExpired ? '#ef4444' : isExpiring ? '#f59e0b' : '#3b82f6',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {isExpired ? `${Math.abs(daysToExpiration)}d expired` : `${daysToExpiration}d left`}
                     </Typography>
                   </Box>
+                ) : (
+                  <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.75rem', color: theme.palette.text.secondary }}>
+                    No Agreement
+                  </Typography>
                 )}
               </Box>
             </CardContent>
