@@ -118,7 +118,15 @@ export const DetailHero = ({ entity, config }) => {
   };
 
   const titleField = heroConfig.titleField || 'name';
-  const title = getValue(titleField);
+  // Handle both 'name' field and separate 'first_name'/'last_name' fields
+  let title = getValue(titleField);
+  if (!title && entity.first_name && entity.last_name) {
+    title = `${entity.first_name} ${entity.last_name}`;
+  } else if (!title && entity.first_name) {
+    title = entity.first_name;
+  } else if (!title && entity.last_name) {
+    title = entity.last_name;
+  }
   const imageField = heroConfig.imageField || 'image_url';
   const imageUrl = getValue(imageField);
   const status = getValue(heroConfig.statusField || 'status');
