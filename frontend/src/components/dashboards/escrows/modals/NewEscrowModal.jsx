@@ -167,20 +167,88 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
     }
   }, [open, hasValidGoogleKey, googleMapsLoaded]);
 
-  // Debounced live search for contacts (like Google autocomplete)
+  // Load 5 most recent clients when modal opens
+  useEffect(() => {
+    const loadRecentClients = async () => {
+      if (!open) return;
+
+      setLoadingClients(true);
+      try {
+        const response = await clientsAPI.getAll({
+          limit: 5,
+          sortBy: 'created_at',
+          sortOrder: 'desc'
+        });
+
+        let results = [];
+        if (response.success && response.data) {
+          results = Array.isArray(response.data) ? response.data : [];
+        }
+
+        // Transform to match expected format
+        const transformedClients = results.map(client => ({
+          ...client,
+          id: client.client_id || client.id,
+          firstName: client.first_name || client.firstName,
+          lastName: client.last_name || client.lastName,
+          isClientRole: true,
+        }));
+
+        setClients(transformedClients);
+      } catch (err) {
+        console.error('Error loading recent clients:', err);
+        setClients([]);
+      } finally {
+        setLoadingClients(false);
+      }
+    };
+
+    loadRecentClients();
+  }, [open]);
+
+  // Debounced live search for clients
   const searchContactsDebounced = useCallback(
     debounce(async (searchText) => {
       if (!searchText || searchText.length < 2) {
-        setClients([]);
-        setLoadingClients(false);
+        // When search is cleared, reload recent clients
+        const loadRecentClients = async () => {
+          setLoadingClients(true);
+          try {
+            const response = await clientsAPI.getAll({
+              limit: 5,
+              sortBy: 'created_at',
+              sortOrder: 'desc'
+            });
+
+            let results = [];
+            if (response.success && response.data) {
+              results = Array.isArray(response.data) ? response.data : [];
+            }
+
+            const transformedClients = results.map(client => ({
+              ...client,
+              id: client.client_id || client.id,
+              firstName: client.first_name || client.firstName,
+              lastName: client.last_name || client.lastName,
+              isClientRole: true,
+            }));
+
+            setClients(transformedClients);
+          } catch (err) {
+            console.error('Error loading recent clients:', err);
+            setClients([]);
+          } finally {
+            setLoadingClients(false);
+          }
+        };
+        loadRecentClients();
         return;
       }
 
       setLoadingClients(true);
       try {
-        // Search for contacts with type='client' using full-text search
-        const response = await contactsAPI.getAll({
-          type: 'client',
+        // Search clients by name or email
+        const response = await clientsAPI.getAll({
           search: searchText,
           limit: 10
         });
@@ -190,17 +258,18 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
           results = Array.isArray(response.data) ? response.data : [];
         }
 
-        // Transform snake_case to camelCase for frontend compatibility
+        // Transform to match expected format
         const transformedClients = results.map(client => ({
           ...client,
+          id: client.client_id || client.id,
           firstName: client.first_name || client.firstName,
           lastName: client.last_name || client.lastName,
-          isClientRole: true, // All results are clients
+          isClientRole: true,
         }));
 
         setClients(transformedClients);
       } catch (err) {
-        console.error('Error searching contacts:', err);
+        console.error('Error searching clients:', err);
         setClients([]);
       } finally {
         setLoadingClients(false);
@@ -211,11 +280,7 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
 
   // Trigger search when user types
   useEffect(() => {
-    if (clientSearchText && clientSearchText.length >= 2) {
-      searchContactsDebounced(clientSearchText);
-    } else {
-      setClients([]);
-    }
+    searchContactsDebounced(clientSearchText);
   }, [clientSearchText, searchContactsDebounced]);
 
   const handleNewClientSave = async (newContact) => {
@@ -938,13 +1003,13 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
                       <TextField
                         {...params}
                         label="Client"
-                        placeholder="Type to search contacts..."
-                        helperText="Start typing name or email (2+ characters)"
+                        placeholder="Search or create new client..."
+                        helperText={clients.length === 0 && !clientSearchText ? "Showing 5 most recent clients" : "Type to search by name or email"}
                         required
                       />
                     )}
                     onChange={(e, value) => setFormData({ ...formData, clientId: value?.id || null })}
-                    noOptionsText={clientSearchText.length < 2 ? "Type at least 2 characters" : "No contacts found"}
+                    noOptionsText={loadingClients ? "Loading..." : "No clients found - click 'Add New Client' below"}
                     ListboxProps={{ sx: { maxHeight: 300 } }}
                     PaperComponent={({ children, ...other }) => (
                       <Paper {...other}>
