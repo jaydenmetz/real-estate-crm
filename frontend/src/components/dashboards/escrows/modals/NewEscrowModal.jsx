@@ -43,7 +43,6 @@ import {
 import { escrowsAPI, clientsAPI } from '../../../../services/api.service';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { loadGoogleMapsScript } from '../../../../utils/googleMapsLoader';
-import { NewContactModal } from '../../../modals/NewContactModal';
 import PrivacyControl from '../../../common/PrivacyControl';
 
 const NewEscrowModal = ({ open, onClose, onSuccess }) => {
@@ -55,6 +54,13 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
   const [loadingClients, setLoadingClients] = useState(false);
   const [newClientModalOpen, setNewClientModalOpen] = useState(false);
   const [clientSearchText, setClientSearchText] = useState('');
+  const [newClientData, setNewClientData] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone: '',
+  });
+  const [savingClient, setSavingClient] = useState(false);
   const [addressSuggestions, setAddressSuggestions] = useState([]);
   const [loadingAddress, setLoadingAddress] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState(null);
@@ -283,19 +289,51 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
     searchContactsDebounced(clientSearchText);
   }, [clientSearchText, searchContactsDebounced]);
 
-  const handleNewClientSave = async (newContact) => {
-    setNewClientModalOpen(false);
-    // Add the new contact to the list immediately
-    const transformedContact = {
-      ...newContact,
-      firstName: newContact.first_name || newContact.firstName,
-      lastName: newContact.last_name || newContact.lastName,
-      isClientRole: true,
-    };
-    setClients([transformedContact]);
-    setFormData({ ...formData, clientId: newContact.id });
-    const fullName = `${newContact.first_name || ''} ${newContact.last_name || ''}`.trim();
-    setClientSearchText(`${fullName}${newContact.email ? ' - ' + newContact.email : ''}`);
+  const handleNewClientSave = async () => {
+    if (!newClientData.first_name || !newClientData.last_name) {
+      setError('First name and last name are required');
+      return;
+    }
+
+    setSavingClient(true);
+    setError('');
+
+    try {
+      const response = await clientsAPI.create({
+        first_name: newClientData.first_name,
+        last_name: newClientData.last_name,
+        email: newClientData.email || null,
+        phone: newClientData.phone || null,
+        status: 'active',
+      });
+
+      if (response.success && response.data) {
+        const newClient = response.data;
+
+        // Transform and add to list
+        const transformedClient = {
+          ...newClient,
+          id: newClient.client_id || newClient.id,
+          firstName: newClient.first_name,
+          lastName: newClient.last_name,
+          isClientRole: true,
+        };
+
+        setClients([transformedClient]);
+        setFormData({ ...formData, clientId: transformedClient.id });
+        const fullName = `${newClient.first_name} ${newClient.last_name}`;
+        setClientSearchText(`${fullName}${newClient.email ? ' - ' + newClient.email : ''}`);
+
+        // Close modal and reset form
+        setNewClientModalOpen(false);
+        setNewClientData({ first_name: '', last_name: '', email: '', phone: '' });
+      }
+    } catch (err) {
+      console.error('Error creating client:', err);
+      setError('Failed to create client. Please try again.');
+    } finally {
+      setSavingClient(false);
+    }
   };
 
   const resetSessionToken = () => {
@@ -1332,13 +1370,111 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
         </form>
       </Dialog>
 
-      <NewContactModal
+      {/* Simple New Client Dialog */}
+      <Dialog
         open={newClientModalOpen}
-        onClose={() => setNewClientModalOpen(false)}
-        onSave={handleNewClientSave}
-        roleType="client"
-        roleConfig={{ primary: '#4caf50', secondary: '#66bb6a' }}
-      />
+        onClose={() => {
+          setNewClientModalOpen(false);
+          setNewClientData({ first_name: '', last_name: '', email: '', phone: '' });
+        }}
+        maxWidth="sm"
+        fullWidth
+      >
+        <Box sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 3 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+              <Box sx={{
+                width: 40,
+                height: 40,
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                background: 'linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)',
+              }}>
+                <PersonAdd sx={{ color: 'white', fontSize: 22 }} />
+              </Box>
+              <Typography variant="h6" fontWeight={700}>
+                Create New Client
+              </Typography>
+            </Box>
+            <IconButton onClick={() => setNewClientModalOpen(false)} size="small">
+              <Close />
+            </IconButton>
+          </Box>
+
+          {error && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {error}
+            </Alert>
+          )}
+
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              <TextField
+                fullWidth
+                label="First Name"
+                value={newClientData.first_name}
+                onChange={(e) => setNewClientData({ ...newClientData, first_name: e.target.value })}
+                required
+                autoFocus
+              />
+              <TextField
+                fullWidth
+                label="Last Name"
+                value={newClientData.last_name}
+                onChange={(e) => setNewClientData({ ...newClientData, last_name: e.target.value })}
+                required
+              />
+            </Box>
+
+            <TextField
+              fullWidth
+              label="Email"
+              type="email"
+              value={newClientData.email}
+              onChange={(e) => setNewClientData({ ...newClientData, email: e.target.value })}
+              helperText="Optional"
+            />
+
+            <TextField
+              fullWidth
+              label="Phone"
+              value={newClientData.phone}
+              onChange={(e) => setNewClientData({ ...newClientData, phone: e.target.value })}
+              helperText="Optional"
+            />
+          </Box>
+
+          <Box sx={{ display: 'flex', gap: 2, mt: 3 }}>
+            <Button
+              fullWidth
+              variant="outlined"
+              onClick={() => {
+                setNewClientModalOpen(false);
+                setNewClientData({ first_name: '', last_name: '', email: '', phone: '' });
+              }}
+              disabled={savingClient}
+            >
+              Cancel
+            </Button>
+            <Button
+              fullWidth
+              variant="contained"
+              onClick={handleNewClientSave}
+              disabled={savingClient || !newClientData.first_name || !newClientData.last_name}
+              sx={{
+                background: 'linear-gradient(135deg, #4caf50 0%, #66bb6a 100%)',
+                '&:hover': {
+                  background: 'linear-gradient(135deg, #43a047 0%, #5cb85c 100%)',
+                },
+              }}
+            >
+              {savingClient ? <CircularProgress size={24} color="inherit" /> : 'Create Client'}
+            </Button>
+          </Box>
+        </Box>
+      </Dialog>
     </>
   );
 };
