@@ -1,815 +1,1146 @@
-.
-├── backend
-│   ├── migrations
-│   │   ├── 000_initial_crm_setup.sql
-│   │   ├── 007_multi_role_contacts.sql
-│   │   ├── 011_add_appointments_owner_id.sql
-│   │   ├── 012_add_broker_id_to_users.sql
-│   │   ├── 013_add_ownership_to_escrows.sql
-│   │   ├── 014_add_ownership_to_remaining_tables.sql
-│   │   ├── 015_create_user_permissions.sql
-│   │   ├── 016_create_data_access_control.sql
-│   │   ├── 017_create_missing_users.sql
-│   │   ├── 020_create_tasks_projects_tables.sql
-│   │   ├── 021_create_contacts_table.sql
-│   │   ├── 021_seed_projects_tasks.sql
-│   │   ├── 022_add_zillow_listing_fields.sql
-│   │   ├── 022_create_checklists_system.sql
-│   │   ├── 022_update_contacts_table.sql
-│   │   ├── 023_appointments_listing_id_set_null.sql
-│   │   ├── 024_create_goals_table.sql
-│   │   ├── 025_add_broker_id_to_users.sql
-│   │   ├── 026_add_ownership_to_leads.sql
-│   │   ├── 027_add_ownership_to_escrows.sql
-│   │   ├── 028_add_ownership_to_clients.sql
-│   │   ├── 029_add_ownership_to_listings.sql
-│   │   ├── 030_add_lead_id_to_appointments.sql
-│   │   ├── 031_create_user_permissions_table.sql
-│   │   ├── 032_create_data_access_control_table.sql
-│   │   ├── 033_add_fulltext_search_indexes.sql
-│   │   ├── 034_create_test_users.sql
-│   │   ├── 035_create_agent_kpis_table.sql
-│   │   ├── 036_create_broker_notification_settings.sql
-│   │   ├── 20251006_add_performance_indexes.sql
-│   │   ├── 20251007_setup_broker_hierarchy.sql
-│   │   └── 20251028_add_deleted_by_columns.sql
-│   ├── scripts
-│   │   ├── auth
-│   │   │   ├── create-admin-user.js
-│   │   │   ├── debug-login-query.js
-│   │   │   ├── fix-admin-login.js
-│   │   │   ├── generate-secure-keys.js
-│   │   │   ├── reset-admin-password-production.js
-│   │   │   ├── verify-admin-user.js
-│   │   │   └── verify-password.js
-│   │   ├── data
-│   │   │   ├── add-basic-escrows.js
-│   │   │   ├── add-escrow-company-fields.js
-│   │   │   ├── add-escrow-example.js
-│   │   │   ├── add-escrow-to-production.js
-│   │   │   ├── add-new-escrow.js
-│   │   │   ├── add-new-escrows.js
-│   │   │   ├── addFillerData.js
-│   │   │   ├── apply-entity-prefixes.js
-│   │   │   ├── create-comprehensive-escrow.js
-│   │   │   ├── fetch_property_data.py
-│   │   │   ├── fetch-og-preview.js
-│   │   │   ├── fetch-property-data.js
-│   │   │   ├── fetch-zillow-og-images.js
-│   │   │   ├── fix-sunglow-address.js
-│   │   │   ├── get-zillow-images-manual.js
-│   │   │   ├── import-escrows.js
-│   │   │   ├── import-real-escrows-production.js
-│   │   │   ├── import-real-escrows-v3.js
-│   │   │   ├── import-real-escrows.js
-│   │   │   ├── populate-checklists.js
-│   │   │   ├── populate-clients.js
-│   │   │   ├── populate-complete-escrow-data.js
-│   │   │   ├── populate-escrow-helpers.js
-│   │   │   ├── quick-image-update.sh
-│   │   │   ├── run-entity-prefix-migration.js
-│   │   │   ├── seed-escrows.js
-│   │   │   ├── seed-identical-data.js
-│   │   │   ├── update-all-zillow-images.js
-│   │   │   ├── update-correct-zillow-images.js
-│   │   │   ├── update-escrow-addresses.js
-│   │   │   ├── update-escrow-financial-data.js
-│   │   │   ├── update-escrow-location-details.js
-│   │   │   ├── update-placeholder-images.js
-│   │   │   ├── update-property-images.js
-│   │   │   ├── update-zillow-images-correct.js
-│   │   │   ├── update-zillow-images-final.js
-│   │   │   ├── update-zillow-property-images.js
-│   │   │   └── verify-zillow-images.js
-│   │   ├── database
-│   │   │   ├── add-production-escrow.sql
-│   │   │   ├── add-property-fields.sql
-│   │   │   ├── add-unique-constraints.sql
-│   │   │   ├── check-clients-table.js
-│   │   │   ├── check-contacts-table.js
-│   │   │   ├── check-data.js
-│   │   │   ├── check-env-production.js
-│   │   │   ├── check-production-db.js
-│   │   │   ├── check-production-schema.js
-│   │   │   ├── check-table-structures.js
-│   │   │   ├── check-users-table.js
-│   │   │   ├── create-migration.js
-│   │   │   ├── create-profile-settings-tables.js
-│   │   │   ├── create-teams-table.js
-│   │   │   ├── create-uuid-views.sql
-│   │   │   ├── ensure-timestamp-fields.sql
-│   │   │   ├── fix-escrow-ids.sql
-│   │   │   ├── fix-null-dates.sql
-│   │   │   ├── insert-comprehensive-escrows.sql
-│   │   │   ├── insert-comprehensive-listings.sql
-│   │   │   ├── insert-escrows-correct.sql
-│   │   │   ├── insert-mock-escrows.sql
-│   │   │   ├── insert-test-escrows.sql
-│   │   │   ├── migrate-production.js
-│   │   │   ├── migrate-to-real-estate-crm.sql
-│   │   │   ├── migrate.js
-│   │   │   ├── populate-real-estate-crm.sql
-│   │   │   ├── production-migration.sql
-│   │   │   ├── production-zillow-setup.sql
-│   │   │   ├── reset-databases.js
-│   │   │   ├── setup-broker-example.sql
-│   │   │   ├── setup-multi-tenant-users.js
-│   │   │   ├── setup-teams-and-escrow-ids.js
-│   │   │   ├── simplify-escrows-schema.sql
-│   │   │   ├── standardize-escrow-ids.sql
-│   │   │   ├── sync-database-structure.js
-│   │   │   ├── sync-local-with-production.js
-│   │   │   ├── sync-railway-to-local.js
-│   │   │   └── update-real-zillow-images.sql
-│   │   ├── docs
-│   │   ├── production
-│   │   │   ├── add-to-railway.sh
-│   │   │   ├── restore-database.sh
-│   │   │   ├── run-production-migrations.js
-│   │   │   ├── setup-env.sh
-│   │   │   ├── switch-env.sh
-│   │   │   ├── update-escrow-commissions.js
-│   │   │   ├── update-production-commissions.js
-│   │   │   └── update-zillow-images.js
-│   │   ├── testing
-│   │   │   ├── add-test-checklist.js
-│   │   │   ├── check-entity-prefixes.js
-│   │   │   ├── check-escrow-data.js
-│   │   │   ├── check-production-db.js
-│   │   │   ├── create-test-escrow.js
-│   │   │   ├── list-all-data.js
-│   │   │   ├── quick-add-railway-escrow.js
-│   │   │   ├── test-appointments-api.sh
-│   │   │   ├── test-clients-api.sh
-│   │   │   ├── test-escrow-delete.sh
-│   │   │   ├── test-leads-api.sh
-│   │   │   ├── test-listings-api.sh
-│   │   │   ├── test-stats-query.js
-│   │   │   └── test-upload-api.sh
-│   │   ├── add_websocket_events.sh
-│   │   └── README.md
-│   ├── src
-│   │   ├── api
-│   │   │   ├── v1
-│   │   │   └── v2
-│   │   ├── config
-│   │   │   ├── aws.js
-│   │   │   ├── database.js
-│   │   │   ├── openapi.config.js
-│   │   │   ├── redis.js
-│   │   │   ├── secure.config.js
-│   │   │   ├── sentry.js
-│   │   │   └── twilio.js
-│   │   ├── controllers
-│   │   │   ├── admin.controller.js
-│   │   │   ├── admin.controller.test.js
-│   │   │   ├── auth.controller.js
-│   │   │   ├── auth.controller.test.js
-│   │   │   ├── linkPreview.controller.js
-│   │   │   ├── linkPreview.controller.test.js
-│   │   │   ├── stats.controller.js
-│   │   │   └── teams.controller.js
-│   │   ├── domains
-│   │   │   ├── appointments
-│   │   │   │   ├── controllers
-│   │   │   │   ├── events
-│   │   │   │   ├── middleware
-│   │   │   │   ├── models
-│   │   │   │   ├── routes
-│   │   │   │   ├── services
-│   │   │   │   ├── tests
-│   │   │   │   └── validators
-│   │   │   ├── clients
-│   │   │   │   ├── controllers
-│   │   │   │   ├── events
-│   │   │   │   ├── middleware
-│   │   │   │   ├── models
-│   │   │   │   ├── routes
-│   │   │   │   ├── services
-│   │   │   │   ├── tests
-│   │   │   │   └── validators
-│   │   │   ├── escrows
-│   │   │   │   ├── controllers
-│   │   │   │   ├── events
-│   │   │   │   ├── middleware
-│   │   │   │   ├── models
-│   │   │   │   ├── routes
-│   │   │   │   ├── services
-│   │   │   │   ├── tests
-│   │   │   │   └── validators
-│   │   │   ├── leads
-│   │   │   │   ├── controllers
-│   │   │   │   ├── events
-│   │   │   │   ├── middleware
-│   │   │   │   ├── models
-│   │   │   │   ├── routes
-│   │   │   │   ├── services
-│   │   │   │   ├── tests
-│   │   │   │   └── validators
-│   │   │   └── listings
-│   │   │       ├── controllers
-│   │   │       ├── events
-│   │   │       ├── middleware
-│   │   │       ├── models
-│   │   │       ├── routes
-│   │   │       ├── services
-│   │   │       ├── tests
-│   │   │       └── validators
-│   │   ├── helpers
-│   │   │   └── ownership.helper.js
-│   │   ├── infrastructure
-│   │   │   ├── cache
-│   │   │   ├── database
-│   │   │   ├── queue
-│   │   │   └── storage
-│   │   ├── jobs
-│   │   │   ├── kpiSnapshot.job.js
-│   │   │   ├── scheduler.js
-│   │   │   └── securityEventRetention.job.js
-│   │   ├── middleware
-│   │   │   ├── adminOnly.middleware.js
-│   │   │   ├── apiKey.middleware.js
-│   │   │   ├── auditLog.middleware.js
-│   │   │   ├── auth.middleware.js
-│   │   │   ├── authorization.middleware.js
-│   │   │   ├── businessRules.middleware.js
-│   │   │   ├── combinedAuth.middleware.js
-│   │   │   ├── dataAccessLogging.middleware.js
-│   │   │   ├── errorHandler.middleware.js
-│   │   │   ├── errorLogging.middleware.js
-│   │   │   ├── rateLimit.middleware.js
-│   │   │   ├── security.middleware.js
-│   │   │   ├── sqlInjectionPrevention.middleware.js
-│   │   │   ├── team.middleware.js
-│   │   │   └── validation.middleware.js
-│   │   ├── models
-│   │   │   ├── AIAgent.js
-│   │   │   ├── DeletionRequest.js
-│   │   │   ├── Document.js
-│   │   │   └── MockQueryBuilder.js
-│   │   ├── modules
-│   │   │   ├── appointments
-│   │   │   │   ├── controllers
-│   │   │   │   ├── models
-│   │   │   │   ├── routes
-│   │   │   │   ├── tests
-│   │   │   │   ├── utils
-│   │   │   │   └── README.md
-│   │   │   ├── clients
-│   │   │   │   ├── controllers
-│   │   │   │   ├── models
-│   │   │   │   ├── routes
-│   │   │   │   ├── tests
-│   │   │   │   ├── utils
-│   │   │   │   └── README.md
-│   │   │   ├── commissions
-│   │   │   │   ├── controllers
-│   │   │   │   ├── models
-│   │   │   │   ├── routes
-│   │   │   │   └── tests
-│   │   │   ├── communications
-│   │   │   │   ├── controllers
-│   │   │   │   ├── routes
-│   │   │   │   └── tests
-│   │   │   ├── contacts
-│   │   │   │   ├── controllers
-│   │   │   │   ├── models
-│   │   │   │   ├── routes
-│   │   │   │   ├── tests
-│   │   │   │   ├── utils
-│   │   │   │   └── README.md
-│   │   │   ├── escrows
-│   │   │   │   ├── controllers
-│   │   │   │   ├── models
-│   │   │   │   ├── routes
-│   │   │   │   ├── services
-│   │   │   │   ├── tests
-│   │   │   │   ├── utils
-│   │   │   │   └── README.md
-│   │   │   ├── expenses
-│   │   │   │   ├── controllers
-│   │   │   │   ├── models
-│   │   │   │   ├── routes
-│   │   │   │   └── tests
-│   │   │   ├── invoices
-│   │   │   │   ├── controllers
-│   │   │   │   ├── models
-│   │   │   │   ├── routes
-│   │   │   │   └── tests
-│   │   │   ├── leads
-│   │   │   │   ├── controllers
-│   │   │   │   ├── models
-│   │   │   │   ├── routes
-│   │   │   │   ├── tests
-│   │   │   │   ├── utils
-│   │   │   │   └── README.md
-│   │   │   ├── listings
-│   │   │   │   ├── controllers
-│   │   │   │   ├── models
-│   │   │   │   ├── routes
-│   │   │   │   ├── services
-│   │   │   │   ├── tests
-│   │   │   │   ├── utils
-│   │   │   │   └── README.md
-│   │   │   ├── projects
-│   │   │   │   ├── controllers
-│   │   │   │   └── routes
-│   │   │   ├── tasks
-│   │   │   │   ├── controllers
-│   │   │   │   └── routes
-│   │   │   └── webhooks
-│   │   │       ├── controllers
-│   │   │       ├── routes
-│   │   │       └── tests
-│   │   ├── routes
-│   │   │   ├── admin.routes.js
-│   │   │   ├── ai.routes.js
-│   │   │   ├── analytics.routes.js
-│   │   │   ├── apiKeys.routes.js
-│   │   │   ├── auth.routes.js
-│   │   │   ├── debug.routes.js
-│   │   │   ├── documents.routes.js
-│   │   │   ├── gdpr.routes.js
-│   │   │   ├── health.routes.js
-│   │   │   ├── linkPreview.routes.js
-│   │   │   ├── onboarding.routes.js
-│   │   │   ├── profiles.routes.js
-│   │   │   ├── public-status.routes.js
-│   │   │   ├── securityEvents-health.routes.js
-│   │   │   ├── securityEvents.routes.js
-│   │   │   ├── settings.routes.js
-│   │   │   ├── skyslope.routes.js
-│   │   │   ├── stats.routes.js
-│   │   │   ├── system-health.routes.js
-│   │   │   ├── teams.routes.js
-│   │   │   └── upload.routes.js
-│   │   ├── schemas
-│   │   │   ├── business-rules.js
-│   │   │   ├── openapi.schemas.js
-│   │   │   └── routes.annotations.js
-│   │   ├── services
-│   │   │   ├── __tests__
-│   │   │   │   └── securityEvent.service.test.js
-│   │   │   ├── skyslope
-│   │   │   │   └── index.js
-│   │   │   ├── ai.service.js
-│   │   │   ├── alerting.service.js
-│   │   │   ├── apiKey.service.js
-│   │   │   ├── broker.service.js
-│   │   │   ├── brokerProfile.service.js
-│   │   │   ├── calendar.service.js
-│   │   │   ├── cron.service.js
-│   │   │   ├── database.service.js
-│   │   │   ├── email.service.js
-│   │   │   ├── geoAnomaly.service.js
-│   │   │   ├── googleOAuth.service.js
-│   │   │   ├── ipGeolocation.service.js
-│   │   │   ├── kpi.service.js
-│   │   │   ├── leadRouting.service.js
-│   │   │   ├── leadScoring.service.js
-│   │   │   ├── notification.service.js
-│   │   │   ├── onboarding.service.js
-│   │   │   ├── ownership.service.js
-│   │   │   ├── refreshToken.service.js
-│   │   │   ├── securityEvent.service.js
-│   │   │   ├── upload.service.js
-│   │   │   ├── userProfile.service.js
-│   │   │   ├── weather.service.js
-│   │   │   ├── webhook.service.js
-│   │   │   └── websocket.service.js
-│   │   ├── shared
-│   │   │   ├── config
-│   │   │   ├── controllers
-│   │   │   │   └── BaseDomainController.js
-│   │   │   ├── middleware
-│   │   │   ├── services
-│   │   │   │   └── BaseDomainService.js
-│   │   │   └── utils
-│   │   │       └── errors.js
-│   │   ├── test
-│   │   │   └── setup.js
-│   │   ├── tests
-│   │   │   ├── edge-cases
-│   │   │   │   ├── authorization.edge-case.test.js
-│   │   │   │   ├── concurrency.edge-case.test.js
-│   │   │   │   ├── database-errors.edge-case.test.js
-│   │   │   │   ├── large-payloads.edge-case.test.js
-│   │   │   │   ├── rate-limiting.edge-case.test.js
-│   │   │   │   ├── security.edge-case.test.js
-│   │   │   │   └── validation.edge-case.test.js
-│   │   │   ├── integration
-│   │   │   │   ├── api-keys.integration.test.js
-│   │   │   │   ├── auth.integration.test.js
-│   │   │   │   ├── securityEventAPI.test.js
-│   │   │   │   └── securityEventLogging.test.js
-│   │   │   ├── unit
-│   │   │   │   ├── controllers
-│   │   │   │   └── services
-│   │   │   ├── ai-integration.test.js
-│   │   │   ├── concurrency.test.js
-│   │   │   ├── refreshToken.test.js
-│   │   │   ├── securityEvents.test.js
-│   │   │   ├── test-auth.js
-│   │   │   └── test-connection.js
-│   │   ├── utils
-│   │   │   ├── constants.js
-│   │   │   ├── formatters.js
-│   │   │   ├── idGenerator.js
-│   │   │   ├── logger.js
-│   │   │   └── validators.js
-│   │   ├── app.js
-│   │   └── mcp-server.js
-│   ├── instrument.js
-│   ├── jest.config.js
-│   ├── nixpacks.toml
-│   ├── package-lock.json
-│   ├── package.json
-│   ├── railway-env-vars.txt
-│   ├── railway.json
-│   └── server.js
-├── docs
-│   ├── archive
-│   │   ├── 2025-audits
-│   │   │   ├── BACKEND_STRUCTURE_AUDIT.md
-│   │   │   ├── CODEBASE_STRUCTURE_ANALYSIS.md
-│   │   │   └── PRODUCTION_CRASH_FIXES.md
-│   │   ├── 2025-plans
-│   │   │   └── PHASE_1_IMPLEMENTATION_GUIDE.md
-│   │   ├── design-specs
-│   │   │   ├── CONTACTS_ROLE_SYSTEM.md
-│   │   │   ├── DASHBOARD_ARCHITECTURE.md
-│   │   │   └── NEO_CARD_UI_DESIGNS.md
-│   │   ├── future-features
-│   │   │   ├── WEBSOCKET_ARCHITECTURE_DIAGRAM.md
-│   │   │   ├── WEBSOCKET_IMPLEMENTATION_ANALYSIS.md
-│   │   │   ├── WEBSOCKET_IMPLEMENTATION_CHECKLIST.md
-│   │   │   └── ZILLOW_INTEGRATION_PHASE_2_DESIGN.md
-│   │   ├── AI_INTEGRATION_GUIDE.md
-│   │   └── AI_READINESS_ASSESSMENT.md
-│   ├── API_REFERENCE.md
-│   ├── ARCHITECTURE.md
-│   ├── BACKEND_COMPLETE_REORGANIZATION_PLAN.md
-│   ├── BACKEND_REFACTORING_REALISTIC_PLAN.md
-│   ├── BACKEND_REFACTORING_STEP_BY_STEP.md
-│   ├── BACKEND_REORGANIZATION_PLAN.md
-│   ├── CODE_AUDIT_2025-10-28.md
-│   ├── COMPREHENSIVE_AUDIT_REPORT.md
-│   ├── DATABASE_RELATIONSHIPS.md
-│   ├── DATABASE_STRUCTURE.md
-│   ├── ENVIRONMENTS.md
-│   ├── GOOGLE_OAUTH_SETUP.md
-│   ├── KEYBOARD_SHORTCUTS.md
-│   ├── MANUAL_TESTING_SCRIPT.md
-│   ├── MULTI_ROLE_CONTACTS_REMAINING_WORK.md
-│   ├── MULTI_ROLE_CONTACTS_TESTING.md
-│   ├── PHASE_1_COMPLETE_WITH_ESCROWS_REFACTOR.md
-│   ├── PHASE_1_COMPLETION_SUMMARY.md
-│   ├── PHASE_1_PERFORMANCE_BASELINE.md
-│   ├── PHASE_1_PROPERLY_COMPLETE.md
-│   ├── PHASE_1_SHARED_COMPONENTS_COMPLETE.md
-│   ├── PHASE_1_VERIFICATION_PROOF.md
-│   ├── PHASE_2_COMPLETION_SUMMARY.md
-│   ├── PHASE_2_POST_CLEANUP_STATUS.md
-│   ├── PHASE_3_BLUEPRINT_FOUNDATION.md
-│   ├── PHASE_3_COMPLETION_SUMMARY.md
-│   ├── PHASE_3_GENERATOR_VALIDATION.md
-│   ├── PHASE_4_COMPLETE.md
-│   ├── PHASE_4_COMPLETION_PLAN.md
-│   ├── PHASE_4_COMPLETION_REPORT.md
-│   ├── PHASE_4_DAY_1_PROGRESS.md
-│   ├── PHASE_4_ESCROWS_DOMAIN_MIGRATION.md
-│   ├── PHASE_4_IMPLEMENTATION_PLAN.md
-│   ├── PHASE_4_PROGRESS_SUMMARY.md
-│   ├── PHASE_4_STATUS_AND_NEXT_STEPS.md
-│   ├── QUICK_START_NEW_DASHBOARD.md
-│   ├── RAILWAY_ENVIRONMENT_SETUP.md
-│   ├── README.md
-│   ├── SCALING_GUIDE.md
-│   ├── SECURITY_OPERATIONS.md
-│   ├── SECURITY_REFERENCE.md
-│   ├── SENTRY_SETUP.md
-│   ├── SHARED_COMPONENT_PROP_CONVENTIONS.md
-│   ├── SHARED_COMPONENTS_API.md
-│   ├── SYSTEM_ARCHITECTURE.md
-│   ├── SYSTEM_AUDIT_2025.md
-│   └── TESTING_COMPLETE_SUMMARY.md
-├── frontend
-│   ├── public
-│   │   ├── health.html
-│   │   └── index.html
-│   ├── src
-│   │   ├── components
-│   │   │   ├── __tests__
-│   │   │   │   ├── ContactSearch.test.jsx
-│   │   │   │   ├── EscrowDashboard.test.jsx
-│   │   │   │   └── NewEscrowModal.test.jsx
-│   │   │   ├── admin
-│   │   │   │   ├── AdminEntitySelector.jsx
-│   │   │   │   ├── AdminSecurityDashboard.jsx
-│   │   │   │   ├── ApiKeysTable.jsx
-│   │   │   │   ├── AuditLogsTable.jsx
-│   │   │   │   ├── DatabaseOverview.jsx
-│   │   │   │   ├── RefreshTokensTable.jsx
-│   │   │   │   ├── SecurityEventsTable.jsx
-│   │   │   │   ├── TableDataViewer.jsx
-│   │   │   │   ├── TeamPermissionsManager.jsx
-│   │   │   │   ├── TeamSelector.jsx
-│   │   │   │   └── UsersTable.jsx
-│   │   │   ├── auth
-│   │   │   │   ├── LoginPage.jsx
-│   │   │   │   ├── ProtectedRoute.jsx
-│   │   │   │   └── RegisterPage.jsx
-│   │   │   ├── common
-│   │   │   │   ├── dashboard
-│   │   │   │   ├── widgets
-│   │   │   │   ├── AdminErrorDisplay.jsx
-│   │   │   │   ├── AdminSafeWrapper.jsx
-│   │   │   │   ├── BadgeEditor.jsx
-│   │   │   │   ├── ChartErrorBoundary.jsx
-│   │   │   │   ├── ConnectionStatus.jsx
-│   │   │   │   ├── CopyButton.jsx
-│   │   │   │   ├── DataTable.jsx
-│   │   │   │   ├── DebugError.jsx
-│   │   │   │   ├── DetailPageErrorBoundary.jsx
-│   │   │   │   ├── DetailPageHero.jsx
-│   │   │   │   ├── EditableDateField.jsx
-│   │   │   │   ├── EditableField.jsx
-│   │   │   │   ├── EditableNumberField.jsx
-│   │   │   │   ├── EditableTextField.jsx
-│   │   │   │   ├── ErrorBoundary.jsx
-│   │   │   │   ├── EscrowCardGrid.jsx
-│   │   │   │   ├── EscrowCreated.jsx
-│   │   │   │   ├── EscrowErrorDebugPanel.jsx
-│   │   │   │   ├── GlobalErrorBoundary.jsx
-│   │   │   │   ├── LoadingSpinner.jsx
-│   │   │   │   ├── Navigation.jsx
-│   │   │   │   ├── NetworkMonitor.jsx
-│   │   │   │   ├── NetworkMonitorSimple.jsx
-│   │   │   │   ├── OpenGraphTags.jsx
-│   │   │   │   ├── PeopleEditor.jsx
-│   │   │   │   ├── PersonRoleContainer.jsx
-│   │   │   │   ├── PrivacyControl.jsx
-│   │   │   │   ├── ProjectManagementPanel.jsx
-│   │   │   │   ├── ProjectManagementPanelLive.jsx
-│   │   │   │   ├── ProjectRoadmapDashboard.jsx
-│   │   │   │   ├── QuickActions.jsx
-│   │   │   │   ├── ResponsiveGrid.jsx
-│   │   │   │   ├── SafeRenderWrapper.jsx
-│   │   │   │   ├── StatsCard.jsx
-│   │   │   │   ├── StatsFullView.jsx
-│   │   │   │   ├── UserAwareErrorBoundary.jsx
-│   │   │   │   ├── UserMenu.jsx
-│   │   │   │   ├── VirtualizedEscrowList.jsx
-│   │   │   │   ├── WebSocketIndicator.jsx
-│   │   │   │   └── ZillowPreview.jsx
-│   │   │   ├── contacts
-│   │   │   │   ├── NeighborhoodData.jsx
-│   │   │   │   ├── ReferralSources.jsx
-│   │   │   │   └── VendorsPartners.jsx
-│   │   │   ├── dashboards
-│   │   │   │   ├── _archived
-│   │   │   │   ├── appointments
-│   │   │   │   ├── clients
-│   │   │   │   ├── clients.reference
-│   │   │   │   ├── escrows
-│   │   │   │   ├── home
-│   │   │   │   ├── leads
-│   │   │   │   ├── listings
-│   │   │   │   ├── AnalyticsDashboard.jsx
-│   │   │   │   ├── CommissionDashboard.jsx
-│   │   │   │   ├── ExpenseDashboard.jsx
-│   │   │   │   ├── HomeDashboard.jsx
-│   │   │   │   ├── InvoiceDashboard.jsx
-│   │   │   │   └── OtherDataDashboard.jsx
-│   │   │   ├── details
-│   │   │   │   ├── appointments
-│   │   │   │   ├── clients
-│   │   │   │   ├── escrows
-│   │   │   │   ├── leads
-│   │   │   │   ├── listings
-│   │   │   │   ├── AllDataViewer.jsx
-│   │   │   │   ├── ComprehensiveDataEditor.jsx
-│   │   │   │   ├── EscrowDetail.jsx
-│   │   │   │   └── StunningPropertyDisplay.jsx
-│   │   │   ├── financial
-│   │   │   │   ├── CommissionTracking.jsx
-│   │   │   │   ├── ExpenseManagement.jsx
-│   │   │   │   └── Invoices.jsx
-│   │   │   ├── health
-│   │   │   │   ├── AppointmentsHealthDashboard.jsx
-│   │   │   │   ├── ClientsHealthDashboard.jsx
-│   │   │   │   ├── EscrowsHealthDashboard.jsx
-│   │   │   │   ├── HealthDashboardBase.jsx
-│   │   │   │   ├── HealthOverviewDashboard.jsx
-│   │   │   │   ├── LeadsHealthDashboard.jsx
-│   │   │   │   └── ListingsHealthDashboard.jsx
-│   │   │   ├── marketing
-│   │   │   │   ├── EmailTemplates.jsx
-│   │   │   │   ├── MarketingCampaigns.jsx
-│   │   │   │   └── SocialMediaPosts.jsx
-│   │   │   ├── modals
-│   │   │   │   ├── ContactSelectionModal.jsx
-│   │   │   │   ├── NewContactModal.jsx
-│   │   │   │   └── PeopleModal.jsx
-│   │   │   ├── onboarding
-│   │   │   │   ├── animations
-│   │   │   │   ├── shared
-│   │   │   │   ├── steps
-│   │   │   │   ├── FeedbackDialog.jsx
-│   │   │   │   ├── OnboardingErrorBoundary.jsx
-│   │   │   │   └── OnboardingLayout.jsx
-│   │   │   ├── settings
-│   │   │   │   ├── OnboardingSettings.jsx
-│   │   │   │   └── SecurityDashboard.jsx
-│   │   │   └── system
-│   │   │       ├── ActivityLog.jsx
-│   │   │       ├── AllNotes.jsx
-│   │   │       ├── ComplianceReports.jsx
-│   │   │       ├── ContractTemplates.jsx
-│   │   │       ├── DeletionRequests.jsx
-│   │   │       ├── DocumentLibrary.jsx
-│   │   │       ├── SecurityEventsPage.jsx
-│   │   │       └── Webhooks.jsx
-│   │   ├── config
-│   │   │   ├── entities
-│   │   │   │   ├── appointments.config.js
-│   │   │   │   ├── base.config.js
-│   │   │   │   ├── clients.config.js
-│   │   │   │   ├── escrows.config.js
-│   │   │   │   ├── leads.config.js
-│   │   │   │   └── listings.config.js
-│   │   │   ├── api.js
-│   │   │   └── sentry.js
-│   │   ├── constants
-│   │   │   └── escrowConfig.js
-│   │   ├── contexts
-│   │   │   ├── hooks
-│   │   │   │   ├── useAuth.js
-│   │   │   │   ├── useNotifications.js
-│   │   │   │   ├── useRealTimeData.js
-│   │   │   │   └── useWebSocket.js
-│   │   │   └── AuthContext.jsx
-│   │   ├── features
-│   │   │   └── _blueprint
-│   │   │       ├── __tests__
-│   │   │       ├── components
-│   │   │       ├── config
-│   │   │       ├── constants
-│   │   │       ├── hooks
-│   │   │       ├── services
-│   │   │       ├── state
-│   │   │       ├── types
-│   │   │       ├── utils
-│   │   │       └── README.md
-│   │   ├── hooks
-│   │   │   ├── RESPONSIVE_DESIGN_GUIDE.md
-│   │   │   ├── useAuth.js
-│   │   │   ├── useEscrowAnalytics.js
-│   │   │   ├── useEscrowCalculations.js
-│   │   │   ├── useEscrowFilters.js
-│   │   │   ├── useEscrows.js
-│   │   │   ├── useEscrowWebSocket.js
-│   │   │   ├── useNotifications.js
-│   │   │   ├── useRealTimeData.js
-│   │   │   ├── useResponsiveLayout.js
-│   │   │   └── useWebSocket.js
-│   │   ├── pages
-│   │   │   ├── AdminPanel.jsx
-│   │   │   ├── EscrowsDashboard.jsx
-│   │   │   ├── PublicProfileStunning.jsx
-│   │   │   ├── Settings.jsx
-│   │   │   └── Unauthorized.jsx
-│   │   ├── services
-│   │   │   ├── __tests__
-│   │   │   │   └── api.service.test.js
-│   │   │   ├── api.service.js
-│   │   │   ├── auth.service.js
-│   │   │   ├── checklists.service.js
-│   │   │   ├── checklistTemplates.service.js
-│   │   │   ├── healthCheck.service.js
-│   │   │   ├── networkMonitor.service.js
-│   │   │   ├── onboarding.service.js
-│   │   │   ├── projects.service.js
-│   │   │   ├── tasks.service.js
-│   │   │   └── websocket.service.js
-│   │   ├── shared
-│   │   │   ├── components
-│   │   │   │   ├── dashboard
-│   │   │   │   ├── details
-│   │   │   │   ├── layout
-│   │   │   │   └── ui
-│   │   │   ├── hooks
-│   │   │   │   ├── __tests__
-│   │   │   │   ├── index.js
-│   │   │   │   ├── useDashboardData.js
-│   │   │   │   ├── useDebounce.js
-│   │   │   │   └── useLocalStorage.js
-│   │   │   ├── utils
-│   │   │   │   ├── formatters.js
-│   │   │   │   └── index.js
-│   │   │   └── index.js
-│   │   ├── styles
-│   │   │   ├── components.css
-│   │   │   └── globals.css
-│   │   ├── templates
-│   │   │   ├── Dashboard
-│   │   │   │   ├── components
-│   │   │   │   ├── hooks
-│   │   │   │   ├── COMPONENT_ANALYSIS.md
-│   │   │   │   └── index.jsx
-│   │   │   └── Detail
-│   │   │       ├── components
-│   │   │       └── hooks
-│   │   ├── utils
-│   │   │   ├── auth.js
-│   │   │   ├── dateGuard.js
-│   │   │   ├── entityIdUtils.js
-│   │   │   ├── escrowTransform.js
-│   │   │   ├── formatCurl.js
-│   │   │   ├── formatters.js
-│   │   │   ├── globalErrorHandler.js
-│   │   │   ├── googleMapsLoader.js
-│   │   │   ├── safeDateUtils.js
-│   │   │   ├── sanitize.js
-│   │   │   ├── setupApiKey.js
-│   │   │   └── testApi.js
-│   │   ├── widgets
-│   │   │   └── shared
-│   │   ├── App.jsx
-│   │   ├── App.lazy.jsx
-│   │   └── index.js
-│   ├── nixpacks.toml
-│   ├── package-lock.json
-│   ├── package.json
-│   └── railway.json
-├── media
-│   └── Real Estate CRM Folder Code Breakdown.md
-├── scripts
-│   ├── backend
-│   │   ├── create-api-key.sh
-│   │   ├── railway-deploy-commands.sh
-│   │   ├── reset-database.sh
-│   │   └── update-railway-security-env.sh
-│   ├── testing
-│   │   ├── benchmark-ai-endpoints.sh
-│   │   ├── create-comprehensive-escrow.sh
-│   │   ├── create-full-escrow.sh
-│   │   ├── test-all-endpoints.sh
-│   │   ├── test-api-auth-secure.sh
-│   │   ├── test-api-auth.sh
-│   │   ├── test-auth-local.js
-│   │   ├── test-checklist-format.sh
-│   │   ├── test-checklist-preservation.sh
-│   │   ├── test-checklist-update.js
-│   │   ├── test-direct-og.js
-│   │   ├── test-escrow-api.js
-│   │   ├── test-escrow-crud.sh
-│   │   ├── test-escrow-delete-workflow.sh
-│   │   ├── test-escrow-health-with-testmode.sh
-│   │   ├── test-escrow-system.js
-│   │   ├── test-escrows-api.sh
-│   │   ├── test-frontend-auth.sh
-│   │   ├── test-frontend-checklist.html
-│   │   ├── test-gpt4-function-calling.js
-│   │   ├── test-health-endpoint.js
-│   │   ├── test-image-endpoint.sh
-│   │   ├── test-login-directly.js
-│   │   ├── test-login.js
-│   │   ├── test-login.sh
-│   │   ├── test-monitor-st-image.sh
-│   │   ├── test-new-endpoint.js
-│   │   ├── test-production-checklist.sh
-│   │   ├── test-production-login.js
-│   │   ├── test-property-endpoint.sh
-│   │   ├── test-railway-auth.js
-│   │   ├── test-railway-connection.js
-│   │   └── test-zillow-og.sh
-│   ├── all-code.txt
-│   ├── cleanup-duplicates.sh
-│   ├── cleanup-refresh-tokens.sh
-│   ├── combine.sh
-│   ├── cookies.txt
-│   ├── fix-dashboard-imports.sh
-│   ├── fix-escrows-initialization.py
-│   ├── generate-codebase-doc.sh
-│   ├── generate-module.js
-│   ├── migrate-to-best-practices.sh
-│   ├── remove-console-logs.sh
-│   ├── seed-roadmap-data.js
-│   └── test-generator.js
-├── all-code.txt
-├── CLAUDE.md
-├── CODEBASE_DOCUMENTATION.txt
-├── COMPLETE_FILE_TREE.txt
-├── docker-compose.yml
-├── ESCROW_STATS_IMPLEMENTATION.md
-├── nixpacks.toml
-├── package-lock.json
-├── package.json
-├── railway.json
-├── README.md
-├── TEMPLATE_ARCHITECTURE_COMPLETE.md
-├── TEMPLATE_IMPLEMENTATION_COMPLETE.md
-└── VISUAL_PARITY_GRADING_REPORT.md
+./
+|-- .claude/
+|   `-- settings.local.json
+|-- .github/
+|   |-- workflows/
+|   `-- dependabot.yml
+|-- .husky/
+|   `-- pre-commit*
+|-- backend/
+|   |-- migrations/
+|   |   |-- 000_initial_crm_setup.sql
+|   |   |-- 007_multi_role_contacts.sql
+|   |   |-- 011_add_appointments_owner_id.sql
+|   |   |-- 012_add_broker_id_to_users.sql
+|   |   |-- 013_add_ownership_to_escrows.sql
+|   |   |-- 014_add_ownership_to_remaining_tables.sql
+|   |   |-- 015_create_user_permissions.sql
+|   |   |-- 016_create_data_access_control.sql
+|   |   |-- 017_create_missing_users.sql
+|   |   |-- 020_create_tasks_projects_tables.sql
+|   |   |-- 021_create_contacts_table.sql
+|   |   |-- 021_seed_projects_tasks.sql
+|   |   |-- 022_add_zillow_listing_fields.sql
+|   |   |-- 022_create_checklists_system.sql
+|   |   |-- 022_update_contacts_table.sql
+|   |   |-- 023_appointments_listing_id_set_null.sql
+|   |   |-- 024_create_goals_table.sql
+|   |   |-- 025_add_broker_id_to_users.sql
+|   |   |-- 026_add_ownership_to_leads.sql
+|   |   |-- 027_add_ownership_to_escrows.sql
+|   |   |-- 028_add_ownership_to_clients.sql
+|   |   |-- 029_add_ownership_to_listings.sql
+|   |   |-- 030_add_lead_id_to_appointments.sql
+|   |   |-- 031_create_user_permissions_table.sql
+|   |   |-- 032_create_data_access_control_table.sql
+|   |   |-- 033_add_fulltext_search_indexes.sql
+|   |   |-- 034_create_test_users.sql
+|   |   |-- 035_create_agent_kpis_table.sql
+|   |   |-- 036_create_broker_notification_settings.sql
+|   |   |-- 20251006_add_performance_indexes.sql
+|   |   |-- 20251007_setup_broker_hierarchy.sql
+|   |   `-- 20251028_add_deleted_by_columns.sql
+|   |-- scripts/
+|   |   |-- auth/
+|   |   |   |-- create-admin-user.js
+|   |   |   |-- debug-login-query.js
+|   |   |   |-- fix-admin-login.js
+|   |   |   |-- generate-secure-keys.js
+|   |   |   |-- reset-admin-password-production.js
+|   |   |   |-- verify-admin-user.js
+|   |   |   `-- verify-password.js
+|   |   |-- data/
+|   |   |   |-- add-basic-escrows.js
+|   |   |   |-- add-escrow-company-fields.js
+|   |   |   |-- add-escrow-example.js
+|   |   |   |-- add-escrow-to-production.js
+|   |   |   |-- add-new-escrow.js
+|   |   |   |-- add-new-escrows.js
+|   |   |   |-- addFillerData.js
+|   |   |   |-- apply-entity-prefixes.js
+|   |   |   |-- create-comprehensive-escrow.js
+|   |   |   |-- fetch_property_data.py
+|   |   |   |-- fetch-og-preview.js
+|   |   |   |-- fetch-property-data.js
+|   |   |   |-- fetch-zillow-og-images.js
+|   |   |   |-- fix-sunglow-address.js
+|   |   |   |-- get-zillow-images-manual.js
+|   |   |   |-- import-escrows.js
+|   |   |   |-- import-real-escrows-production.js
+|   |   |   |-- import-real-escrows-v3.js
+|   |   |   |-- import-real-escrows.js*
+|   |   |   |-- populate-checklists.js
+|   |   |   |-- populate-clients.js
+|   |   |   |-- populate-complete-escrow-data.js
+|   |   |   |-- populate-escrow-helpers.js
+|   |   |   |-- quick-image-update.sh*
+|   |   |   |-- run-entity-prefix-migration.js*
+|   |   |   |-- seed-escrows.js
+|   |   |   |-- seed-identical-data.js
+|   |   |   |-- update-all-zillow-images.js
+|   |   |   |-- update-correct-zillow-images.js
+|   |   |   |-- update-escrow-addresses.js
+|   |   |   |-- update-escrow-financial-data.js
+|   |   |   |-- update-escrow-location-details.js
+|   |   |   |-- update-placeholder-images.js
+|   |   |   |-- update-property-images.js
+|   |   |   |-- update-zillow-images-correct.js
+|   |   |   |-- update-zillow-images-final.js
+|   |   |   |-- update-zillow-property-images.js
+|   |   |   `-- verify-zillow-images.js
+|   |   |-- database/
+|   |   |   |-- add-production-escrow.sql
+|   |   |   |-- add-property-fields.sql
+|   |   |   |-- add-unique-constraints.sql
+|   |   |   |-- check-clients-table.js
+|   |   |   |-- check-contacts-table.js
+|   |   |   |-- check-data.js
+|   |   |   |-- check-env-production.js
+|   |   |   |-- check-production-db.js
+|   |   |   |-- check-production-schema.js
+|   |   |   |-- check-table-structures.js
+|   |   |   |-- check-users-table.js
+|   |   |   |-- create-migration.js
+|   |   |   |-- create-profile-settings-tables.js*
+|   |   |   |-- create-teams-table.js
+|   |   |   |-- create-uuid-views.sql
+|   |   |   |-- ensure-timestamp-fields.sql
+|   |   |   |-- fix-escrow-ids.sql
+|   |   |   |-- fix-null-dates.sql
+|   |   |   |-- insert-comprehensive-escrows.sql
+|   |   |   |-- insert-comprehensive-listings.sql
+|   |   |   |-- insert-escrows-correct.sql
+|   |   |   |-- insert-mock-escrows.sql
+|   |   |   |-- insert-test-escrows.sql
+|   |   |   |-- migrate-production.js
+|   |   |   |-- migrate-to-real-estate-crm.sql
+|   |   |   |-- migrate.js
+|   |   |   |-- populate-real-estate-crm.sql
+|   |   |   |-- production-migration.sql
+|   |   |   |-- production-zillow-setup.sql
+|   |   |   |-- reset-databases.js
+|   |   |   |-- setup-broker-example.sql
+|   |   |   |-- setup-multi-tenant-users.js
+|   |   |   |-- setup-teams-and-escrow-ids.js
+|   |   |   |-- simplify-escrows-schema.sql
+|   |   |   |-- standardize-escrow-ids.sql
+|   |   |   |-- sync-database-structure.js
+|   |   |   |-- sync-local-with-production.js*
+|   |   |   |-- sync-railway-to-local.js*
+|   |   |   `-- update-real-zillow-images.sql
+|   |   |-- docs/ - EMPTY
+|   |   |-- production/
+|   |   |   |-- add-to-railway.sh
+|   |   |   |-- restore-database.sh*
+|   |   |   |-- run-production-migrations.js
+|   |   |   |-- setup-env.sh*
+|   |   |   |-- switch-env.sh*
+|   |   |   |-- update-escrow-commissions.js*
+|   |   |   |-- update-production-commissions.js
+|   |   |   `-- update-zillow-images.js*
+|   |   |-- testing/
+|   |   |   |-- add-test-checklist.js
+|   |   |   |-- check-entity-prefixes.js
+|   |   |   |-- check-escrow-data.js
+|   |   |   |-- check-production-db.js
+|   |   |   |-- create-test-escrow.js
+|   |   |   |-- list-all-data.js
+|   |   |   |-- quick-add-railway-escrow.js
+|   |   |   |-- test-appointments-api.sh*
+|   |   |   |-- test-clients-api.sh*
+|   |   |   |-- test-escrow-delete.sh*
+|   |   |   |-- test-leads-api.sh*
+|   |   |   |-- test-listings-api.sh*
+|   |   |   |-- test-stats-query.js
+|   |   |   `-- test-upload-api.sh*
+|   |   |-- .env.example
+|   |   |-- add_websocket_events.sh
+|   |   `-- README.md
+|   |-- src/
+|   |   |-- api/
+|   |   |   |-- v1/ - EMPTY
+|   |   |   `-- v2/ - EMPTY
+|   |   |-- config/
+|   |   |   |-- aws.js
+|   |   |   |-- database.js
+|   |   |   |-- openapi.config.js
+|   |   |   |-- redis.js
+|   |   |   |-- secure.config.js
+|   |   |   |-- sentry.js
+|   |   |   `-- twilio.js
+|   |   |-- controllers/
+|   |   |   |-- admin.controller.js
+|   |   |   |-- admin.controller.test.js
+|   |   |   |-- auth.controller.js
+|   |   |   |-- auth.controller.test.js
+|   |   |   |-- linkPreview.controller.js
+|   |   |   |-- linkPreview.controller.test.js
+|   |   |   |-- stats.controller.js
+|   |   |   `-- teams.controller.js
+|   |   |-- domains/
+|   |   |   |-- appointments/
+|   |   |   |   |-- controllers/
+|   |   |   |   |   `-- appointments.controller.js
+|   |   |   |   |-- events/ - EMPTY
+|   |   |   |   |-- middleware/ - EMPTY
+|   |   |   |   |-- models/ - EMPTY
+|   |   |   |   |-- routes/
+|   |   |   |   |   `-- index.js
+|   |   |   |   |-- services/
+|   |   |   |   |   `-- appointments.service.js
+|   |   |   |   |-- tests/
+|   |   |   |   |   `-- appointments.validators.test.js
+|   |   |   |   `-- validators/
+|   |   |   |       `-- appointments.validators.js
+|   |   |   |-- clients/
+|   |   |   |   |-- controllers/
+|   |   |   |   |   `-- clients.controller.js
+|   |   |   |   |-- events/ - EMPTY
+|   |   |   |   |-- middleware/ - EMPTY
+|   |   |   |   |-- models/ - EMPTY
+|   |   |   |   |-- routes/
+|   |   |   |   |   `-- index.js
+|   |   |   |   |-- services/
+|   |   |   |   |   `-- clients.service.js
+|   |   |   |   |-- tests/
+|   |   |   |   |   `-- clients.validators.test.js
+|   |   |   |   `-- validators/
+|   |   |   |       `-- clients.validators.js
+|   |   |   |-- escrows/
+|   |   |   |   |-- controllers/
+|   |   |   |   |   `-- escrows.controller.js
+|   |   |   |   |-- events/ - EMPTY
+|   |   |   |   |-- middleware/ - EMPTY
+|   |   |   |   |-- models/ - EMPTY
+|   |   |   |   |-- routes/
+|   |   |   |   |   `-- index.js
+|   |   |   |   |-- services/
+|   |   |   |   |   `-- escrows.service.js
+|   |   |   |   |-- tests/
+|   |   |   |   |   `-- escrows.validators.test.js
+|   |   |   |   `-- validators/
+|   |   |   |       `-- escrows.validators.js
+|   |   |   |-- leads/
+|   |   |   |   |-- controllers/
+|   |   |   |   |   `-- leads.controller.js
+|   |   |   |   |-- events/ - EMPTY
+|   |   |   |   |-- middleware/ - EMPTY
+|   |   |   |   |-- models/ - EMPTY
+|   |   |   |   |-- routes/
+|   |   |   |   |   `-- index.js
+|   |   |   |   |-- services/
+|   |   |   |   |   `-- leads.service.js
+|   |   |   |   |-- tests/
+|   |   |   |   |   `-- leads.validators.test.js
+|   |   |   |   `-- validators/
+|   |   |   |       `-- leads.validators.js
+|   |   |   `-- listings/
+|   |   |       |-- controllers/
+|   |   |       |   `-- listings.controller.js
+|   |   |       |-- events/ - EMPTY
+|   |   |       |-- middleware/ - EMPTY
+|   |   |       |-- models/ - EMPTY
+|   |   |       |-- routes/
+|   |   |       |   `-- index.js
+|   |   |       |-- services/
+|   |   |       |   `-- listings.service.js
+|   |   |       |-- tests/
+|   |   |       |   `-- listings.validators.test.js
+|   |   |       `-- validators/
+|   |   |           `-- listings.validators.js
+|   |   |-- helpers/
+|   |   |   `-- ownership.helper.js
+|   |   |-- infrastructure/
+|   |   |   |-- cache/ - EMPTY
+|   |   |   |-- database/ - EMPTY
+|   |   |   |-- queue/ - EMPTY
+|   |   |   `-- storage/ - EMPTY
+|   |   |-- jobs/
+|   |   |   |-- kpiSnapshot.job.js
+|   |   |   |-- scheduler.js
+|   |   |   `-- securityEventRetention.job.js
+|   |   |-- middleware/
+|   |   |   |-- adminOnly.middleware.js
+|   |   |   |-- apiKey.middleware.js
+|   |   |   |-- auditLog.middleware.js
+|   |   |   |-- auth.middleware.js
+|   |   |   |-- authorization.middleware.js
+|   |   |   |-- businessRules.middleware.js
+|   |   |   |-- combinedAuth.middleware.js
+|   |   |   |-- dataAccessLogging.middleware.js
+|   |   |   |-- errorHandler.middleware.js
+|   |   |   |-- errorLogging.middleware.js
+|   |   |   |-- rateLimit.middleware.js
+|   |   |   |-- security.middleware.js
+|   |   |   |-- sqlInjectionPrevention.middleware.js
+|   |   |   |-- team.middleware.js
+|   |   |   `-- validation.middleware.js
+|   |   |-- models/
+|   |   |   |-- AIAgent.js
+|   |   |   |-- DeletionRequest.js
+|   |   |   |-- Document.js
+|   |   |   `-- MockQueryBuilder.js
+|   |   |-- modules/
+|   |   |   |-- appointments/
+|   |   |   |   |-- controllers/
+|   |   |   |   |   `-- appointments.controller.js
+|   |   |   |   |-- models/
+|   |   |   |   |   |-- Appointment.mock.js
+|   |   |   |   |   `-- Appointment.model.js
+|   |   |   |   |-- routes/
+|   |   |   |   |   `-- index.js
+|   |   |   |   |-- tests/
+|   |   |   |   |   |-- integration/
+|   |   |   |   |   |   `-- appointments.integration.test.js
+|   |   |   |   |   `-- appointments.controller.test.js
+|   |   |   |   |-- utils/ - EMPTY
+|   |   |   |   `-- README.md
+|   |   |   |-- clients/
+|   |   |   |   |-- controllers/
+|   |   |   |   |   `-- clients.controller.js
+|   |   |   |   |-- models/
+|   |   |   |   |   |-- Client.mock.js
+|   |   |   |   |   `-- Client.model.js
+|   |   |   |   |-- routes/
+|   |   |   |   |   `-- index.js
+|   |   |   |   |-- tests/
+|   |   |   |   |   |-- integration/
+|   |   |   |   |   |   `-- clients.integration.test.js
+|   |   |   |   |   `-- clients.controller.test.js
+|   |   |   |   |-- utils/ - EMPTY
+|   |   |   |   `-- README.md
+|   |   |   |-- commissions/
+|   |   |   |   |-- controllers/
+|   |   |   |   |   `-- commissions.controller.js
+|   |   |   |   |-- models/
+|   |   |   |   |   `-- Commission.mock.js
+|   |   |   |   |-- routes/
+|   |   |   |   |   `-- index.js
+|   |   |   |   `-- tests/
+|   |   |   |       `-- commissions.controller.test.js
+|   |   |   |-- communications/
+|   |   |   |   |-- controllers/
+|   |   |   |   |   `-- communications.controller.js
+|   |   |   |   |-- routes/
+|   |   |   |   |   `-- index.js
+|   |   |   |   `-- tests/
+|   |   |   |       `-- communications.controller.test.js
+|   |   |   |-- contacts/
+|   |   |   |   |-- controllers/
+|   |   |   |   |   |-- contact-roles.controller.js
+|   |   |   |   |   `-- contacts.controller.js
+|   |   |   |   |-- models/ - EMPTY
+|   |   |   |   |-- routes/
+|   |   |   |   |   |-- contact-roles.routes.js
+|   |   |   |   |   `-- index.js
+|   |   |   |   |-- tests/
+|   |   |   |   |   `-- integration/
+|   |   |   |   |       |-- contact-search.test.js
+|   |   |   |   |       `-- contacts-multi-role.test.js
+|   |   |   |   |-- utils/ - EMPTY
+|   |   |   |   `-- README.md
+|   |   |   |-- escrows/
+|   |   |   |   |-- controllers/
+|   |   |   |   |   |-- checklists.controller.js
+|   |   |   |   |   |-- crud.controller.js
+|   |   |   |   |   |-- details.controller.js
+|   |   |   |   |   |-- financials.controller.js
+|   |   |   |   |   |-- index.js
+|   |   |   |   |   |-- people.controller.js
+|   |   |   |   |   `-- timeline.controller.js
+|   |   |   |   |-- models/
+|   |   |   |   |   |-- Escrow.mock.js
+|   |   |   |   |   `-- Escrow.model.js
+|   |   |   |   |-- routes/
+|   |   |   |   |   |-- health.routes.js
+|   |   |   |   |   `-- index.js
+|   |   |   |   |-- services/
+|   |   |   |   |   |-- commission/
+|   |   |   |   |   |   `-- index.js
+|   |   |   |   |   |-- commission.service.js
+|   |   |   |   |   `-- schema.service.js
+|   |   |   |   |-- tests/
+|   |   |   |   |   |-- integration/
+|   |   |   |   |   |   |-- commission-calculations.test.js
+|   |   |   |   |   |   |-- escrow-creation-flow.test.js
+|   |   |   |   |   |   `-- escrows.integration.test.js
+|   |   |   |   |   `-- escrows.controller.test.js
+|   |   |   |   |-- utils/
+|   |   |   |   |   `-- escrows.helper.js
+|   |   |   |   `-- README.md
+|   |   |   |-- expenses/
+|   |   |   |   |-- controllers/
+|   |   |   |   |   `-- expenses.controller.js
+|   |   |   |   |-- models/
+|   |   |   |   |   `-- Expense.mock.js
+|   |   |   |   |-- routes/
+|   |   |   |   |   `-- index.js
+|   |   |   |   `-- tests/
+|   |   |   |       `-- expenses.controller.test.js
+|   |   |   |-- invoices/
+|   |   |   |   |-- controllers/
+|   |   |   |   |   `-- invoices.controller.js
+|   |   |   |   |-- models/
+|   |   |   |   |   `-- Invoice.mock.js
+|   |   |   |   |-- routes/
+|   |   |   |   |   `-- index.js
+|   |   |   |   `-- tests/
+|   |   |   |       `-- invoices.controller.test.js
+|   |   |   |-- leads/
+|   |   |   |   |-- controllers/
+|   |   |   |   |   `-- leads.controller.js
+|   |   |   |   |-- models/
+|   |   |   |   |   |-- Lead.mock.js
+|   |   |   |   |   `-- Lead.model.js
+|   |   |   |   |-- routes/
+|   |   |   |   |   `-- index.js
+|   |   |   |   |-- tests/
+|   |   |   |   |   |-- integration/
+|   |   |   |   |   |   `-- leads.integration.test.js
+|   |   |   |   |   `-- leads.controller.test.js
+|   |   |   |   |-- utils/ - EMPTY
+|   |   |   |   `-- README.md
+|   |   |   |-- listings/
+|   |   |   |   |-- controllers/
+|   |   |   |   |   `-- listings.controller.js
+|   |   |   |   |-- models/
+|   |   |   |   |   |-- Listing.mock.js
+|   |   |   |   |   `-- Listing.model.js
+|   |   |   |   |-- routes/
+|   |   |   |   |   |-- health.routes.js
+|   |   |   |   |   `-- index.js
+|   |   |   |   |-- services/
+|   |   |   |   |   `-- listing.service.js
+|   |   |   |   |-- tests/
+|   |   |   |   |   |-- integration/
+|   |   |   |   |   |   `-- listings.integration.test.js
+|   |   |   |   |   `-- listings.controller.test.js
+|   |   |   |   |-- utils/ - EMPTY
+|   |   |   |   `-- README.md
+|   |   |   |-- projects/
+|   |   |   |   |-- controllers/
+|   |   |   |   |   `-- projects.controller.js
+|   |   |   |   `-- routes/
+|   |   |   |       `-- index.js
+|   |   |   |-- tasks/
+|   |   |   |   |-- controllers/
+|   |   |   |   |   |-- checklists.controller.js
+|   |   |   |   |   |-- checklistTemplates.controller.js
+|   |   |   |   |   `-- tasks.controller.js
+|   |   |   |   `-- routes/
+|   |   |   |       |-- checklists.routes.js
+|   |   |   |       |-- checklistTemplates.routes.js
+|   |   |   |       `-- index.js
+|   |   |   `-- webhooks/
+|   |   |       |-- controllers/
+|   |   |       |   `-- webhooks.controller.js
+|   |   |       |-- routes/
+|   |   |       |   `-- index.js
+|   |   |       `-- tests/
+|   |   |           `-- webhooks.controller.test.js
+|   |   |-- routes/
+|   |   |   |-- admin.routes.js
+|   |   |   |-- ai.routes.js
+|   |   |   |-- analytics.routes.js
+|   |   |   |-- apiKeys.routes.js
+|   |   |   |-- auth.routes.js
+|   |   |   |-- debug.routes.js
+|   |   |   |-- documents.routes.js
+|   |   |   |-- gdpr.routes.js
+|   |   |   |-- health.routes.js
+|   |   |   |-- linkPreview.routes.js
+|   |   |   |-- onboarding.routes.js
+|   |   |   |-- profiles.routes.js
+|   |   |   |-- public-status.routes.js
+|   |   |   |-- securityEvents-health.routes.js
+|   |   |   |-- securityEvents.routes.js
+|   |   |   |-- settings.routes.js
+|   |   |   |-- skyslope.routes.js
+|   |   |   |-- stats.routes.js
+|   |   |   |-- system-health.routes.js
+|   |   |   |-- teams.routes.js
+|   |   |   `-- upload.routes.js
+|   |   |-- schemas/
+|   |   |   |-- business-rules.js
+|   |   |   |-- openapi.schemas.js
+|   |   |   `-- routes.annotations.js
+|   |   |-- services/
+|   |   |   |-- __tests__/
+|   |   |   |   `-- securityEvent.service.test.js
+|   |   |   |-- skyslope/
+|   |   |   |   `-- index.js
+|   |   |   |-- ai.service.js
+|   |   |   |-- alerting.service.js
+|   |   |   |-- apiKey.service.js
+|   |   |   |-- broker.service.js
+|   |   |   |-- brokerProfile.service.js
+|   |   |   |-- calendar.service.js
+|   |   |   |-- cron.service.js
+|   |   |   |-- database.service.js
+|   |   |   |-- email.service.js
+|   |   |   |-- geoAnomaly.service.js
+|   |   |   |-- googleOAuth.service.js
+|   |   |   |-- ipGeolocation.service.js
+|   |   |   |-- kpi.service.js
+|   |   |   |-- leadRouting.service.js
+|   |   |   |-- leadScoring.service.js
+|   |   |   |-- notification.service.js
+|   |   |   |-- onboarding.service.js
+|   |   |   |-- ownership.service.js
+|   |   |   |-- refreshToken.service.js
+|   |   |   |-- securityEvent.service.js
+|   |   |   |-- upload.service.js
+|   |   |   |-- userProfile.service.js
+|   |   |   |-- weather.service.js
+|   |   |   |-- webhook.service.js
+|   |   |   `-- websocket.service.js
+|   |   |-- shared/
+|   |   |   |-- config/ - EMPTY
+|   |   |   |-- controllers/
+|   |   |   |   `-- BaseDomainController.js
+|   |   |   |-- middleware/ - EMPTY
+|   |   |   |-- services/
+|   |   |   |   `-- BaseDomainService.js
+|   |   |   `-- utils/
+|   |   |       `-- errors.js
+|   |   |-- test/
+|   |   |   `-- setup.js
+|   |   |-- tests/
+|   |   |   |-- edge-cases/
+|   |   |   |   |-- authorization.edge-case.test.js
+|   |   |   |   |-- concurrency.edge-case.test.js
+|   |   |   |   |-- database-errors.edge-case.test.js
+|   |   |   |   |-- large-payloads.edge-case.test.js
+|   |   |   |   |-- rate-limiting.edge-case.test.js
+|   |   |   |   |-- security.edge-case.test.js
+|   |   |   |   `-- validation.edge-case.test.js
+|   |   |   |-- integration/
+|   |   |   |   |-- api-keys.integration.test.js
+|   |   |   |   |-- auth.integration.test.js
+|   |   |   |   |-- securityEventAPI.test.js
+|   |   |   |   `-- securityEventLogging.test.js
+|   |   |   |-- unit/
+|   |   |   |   |-- controllers/ - EMPTY
+|   |   |   |   `-- services/
+|   |   |   |       |-- alerting.service.test.js
+|   |   |   |       |-- apiKey.service.test.js
+|   |   |   |       |-- calendar.service.test.js
+|   |   |   |       |-- cron.service.test.js
+|   |   |   |       |-- email.service.test.js
+|   |   |   |       |-- geoAnomaly.service.test.js
+|   |   |   |       |-- refreshToken.service.test.js
+|   |   |   |       |-- securityEvent.service.test.js
+|   |   |   |       |-- weather.service.test.js
+|   |   |   |       `-- websocket.service.test.js
+|   |   |   |-- ai-integration.test.js
+|   |   |   |-- concurrency.test.js
+|   |   |   |-- refreshToken.test.js
+|   |   |   |-- securityEvents.test.js
+|   |   |   |-- test-auth.js
+|   |   |   `-- test-connection.js
+|   |   |-- utils/
+|   |   |   |-- constants.js
+|   |   |   |-- formatters.js
+|   |   |   |-- idGenerator.js
+|   |   |   |-- logger.js
+|   |   |   `-- validators.js
+|   |   |-- app.js
+|   |   `-- mcp-server.js*
+|   |-- uploads/
+|   |   |-- documents/ - EMPTY
+|   |   `-- images/
+|   |       |-- large/ - EMPTY
+|   |       |-- medium/ - EMPTY
+|   |       |-- small/ - EMPTY
+|   |       `-- thumbnail/ - EMPTY
+|   |-- .deploy-trigger
+|   |-- .env
+|   |-- .env.example
+|   |-- .env.production
+|   |-- .env.vault
+|   |-- .eslintignore
+|   |-- .eslintrc.json
+|   |-- .gitignore
+|   |-- instrument.js
+|   |-- jest.config.js
+|   |-- nixpacks.toml
+|   |-- package-lock.json
+|   |-- package.json
+|   |-- railway-env-vars.txt
+|   |-- railway.json
+|   `-- server.js
+|-- docs/
+|   |-- archive/
+|   |   |-- 2025-audits/
+|   |   |   |-- BACKEND_STRUCTURE_AUDIT.md
+|   |   |   |-- CODEBASE_STRUCTURE_ANALYSIS.md
+|   |   |   `-- PRODUCTION_CRASH_FIXES.md
+|   |   |-- 2025-plans/
+|   |   |   `-- PHASE_1_IMPLEMENTATION_GUIDE.md
+|   |   |-- design-specs/
+|   |   |   |-- CONTACTS_ROLE_SYSTEM.md
+|   |   |   |-- DASHBOARD_ARCHITECTURE.md
+|   |   |   `-- NEO_CARD_UI_DESIGNS.md
+|   |   |-- future-features/
+|   |   |   |-- WEBSOCKET_ARCHITECTURE_DIAGRAM.md
+|   |   |   |-- WEBSOCKET_IMPLEMENTATION_ANALYSIS.md
+|   |   |   |-- WEBSOCKET_IMPLEMENTATION_CHECKLIST.md
+|   |   |   `-- ZILLOW_INTEGRATION_PHASE_2_DESIGN.md
+|   |   |-- AI_INTEGRATION_GUIDE.md
+|   |   `-- AI_READINESS_ASSESSMENT.md
+|   |-- API_REFERENCE.md
+|   |-- ARCHITECTURE.md
+|   |-- AUTH_BROKEN_DIAGNOSIS.md
+|   |-- BACKEND_COMPLETE_REORGANIZATION_PLAN.md
+|   |-- BACKEND_REFACTORING_REALISTIC_PLAN.md
+|   |-- BACKEND_REFACTORING_STEP_BY_STEP.md
+|   |-- BACKEND_REORGANIZATION_PLAN.md
+|   |-- CLIENT_DETAIL_API_DESIGN.md
+|   |-- CODE_AUDIT_2025-10-28.md
+|   |-- COMPLETE_FILE_STRUCTURE_AUDIT.md
+|   |-- COMPREHENSIVE_AUDIT_REPORT.md
+|   |-- DATABASE_RELATIONSHIPS.md
+|   |-- DATABASE_STRUCTURE.md
+|   |-- DETAIL_API_ARCHITECTURE.md
+|   |-- DETAIL_API_GAP_ANALYSIS.md
+|   |-- DETAIL_API_SIMPLIFIED.md
+|   |-- ENVIRONMENTS.md
+|   |-- ESCROWS_DETAIL_API_COMPLETE.md
+|   |-- GOOGLE_OAUTH_SETUP.md
+|   |-- KEYBOARD_SHORTCUTS.md
+|   |-- MANUAL_TESTING_SCRIPT.md
+|   |-- MULTI_ROLE_CONTACTS_REMAINING_WORK.md
+|   |-- MULTI_ROLE_CONTACTS_TESTING.md
+|   |-- PHASE_1_COMPLETE_WITH_ESCROWS_REFACTOR.md
+|   |-- PHASE_1_COMPLETION_SUMMARY.md
+|   |-- PHASE_1_PERFORMANCE_BASELINE.md
+|   |-- PHASE_1_PROPERLY_COMPLETE.md
+|   |-- PHASE_1_SHARED_COMPONENTS_COMPLETE.md
+|   |-- PHASE_1_VERIFICATION_PROOF.md
+|   |-- PHASE_2_COMPLETION_SUMMARY.md
+|   |-- PHASE_2_POST_CLEANUP_STATUS.md
+|   |-- PHASE_3_BLUEPRINT_FOUNDATION.md
+|   |-- PHASE_3_COMPLETION_SUMMARY.md
+|   |-- PHASE_3_GENERATOR_VALIDATION.md
+|   |-- PHASE_4_COMPLETE.md
+|   |-- PHASE_4_COMPLETION_PLAN.md
+|   |-- PHASE_4_COMPLETION_REPORT.md
+|   |-- PHASE_4_DAY_1_PROGRESS.md
+|   |-- PHASE_4_ESCROWS_DOMAIN_MIGRATION.md
+|   |-- PHASE_4_IMPLEMENTATION_PLAN.md
+|   |-- PHASE_4_PROGRESS_SUMMARY.md
+|   |-- PHASE_4_STATUS_AND_NEXT_STEPS.md
+|   |-- PHASE1_COMPLETE.md
+|   |-- PHASE1_TEST_RESULTS.md
+|   |-- PHASES_1-3_COMPLETE.md
+|   |-- QUICK_START_NEW_DASHBOARD.md
+|   |-- RAILWAY_ENVIRONMENT_SETUP.md
+|   |-- README.md
+|   |-- REPLICATION_READINESS_ASSESSMENT.md
+|   |-- SCALING_GUIDE.md
+|   |-- SECURITY_OPERATIONS.md
+|   |-- SECURITY_REFERENCE.md
+|   |-- SENTRY_SETUP.md
+|   |-- SHARED_COMPONENT_PROP_CONVENTIONS.md
+|   |-- SHARED_COMPONENTS_API.md
+|   |-- SYSTEM_ARCHITECTURE.md
+|   |-- SYSTEM_AUDIT_2025.md
+|   |-- TESTING_COMPLETE_SUMMARY.md
+|   `-- TESTING_DETAIL_API.md
+|-- frontend/
+|   |-- public/
+|   |   |-- health.html
+|   |   `-- index.html
+|   |-- src/
+|   |   |-- components/
+|   |   |   |-- __tests__/
+|   |   |   |   |-- ContactSearch.test.jsx
+|   |   |   |   |-- EscrowDashboard.test.jsx
+|   |   |   |   `-- NewEscrowModal.test.jsx
+|   |   |   |-- admin/
+|   |   |   |   |-- AdminEntitySelector.jsx
+|   |   |   |   |-- AdminSecurityDashboard.jsx
+|   |   |   |   |-- ApiKeysTable.jsx
+|   |   |   |   |-- AuditLogsTable.jsx
+|   |   |   |   |-- DatabaseOverview.jsx
+|   |   |   |   |-- RefreshTokensTable.jsx
+|   |   |   |   |-- SecurityEventsTable.jsx
+|   |   |   |   |-- TableDataViewer.jsx
+|   |   |   |   |-- TeamPermissionsManager.jsx
+|   |   |   |   |-- TeamSelector.jsx
+|   |   |   |   `-- UsersTable.jsx
+|   |   |   |-- auth/
+|   |   |   |   |-- LoginPage.jsx
+|   |   |   |   |-- ProtectedRoute.jsx
+|   |   |   |   `-- RegisterPage.jsx
+|   |   |   |-- common/
+|   |   |   |   |-- dashboard/
+|   |   |   |   |   |-- DashboardEmptyState.jsx
+|   |   |   |   |   |-- DashboardFilters.jsx
+|   |   |   |   |   |-- DashboardGrid.jsx
+|   |   |   |   |   |-- DashboardPagination.jsx
+|   |   |   |   |   |-- DashboardStats.jsx
+|   |   |   |   |   |-- DashboardToolbar.jsx
+|   |   |   |   |   `-- index.js
+|   |   |   |   |-- widgets/
+|   |   |   |   |   |-- AppointmentCard.jsx
+|   |   |   |   |   |-- ClientCard.jsx
+|   |   |   |   |   |-- EscrowCard.jsx
+|   |   |   |   |   |-- EscrowListRow.jsx
+|   |   |   |   |   |-- EscrowTableRow.jsx
+|   |   |   |   |   |-- LeadCard.jsx
+|   |   |   |   |   `-- ListingCard.jsx
+|   |   |   |   |-- AdminErrorDisplay.jsx
+|   |   |   |   |-- AdminSafeWrapper.jsx
+|   |   |   |   |-- BadgeEditor.jsx
+|   |   |   |   |-- ChartErrorBoundary.jsx
+|   |   |   |   |-- ConnectionStatus.jsx
+|   |   |   |   |-- CopyButton.jsx
+|   |   |   |   |-- DataTable.jsx
+|   |   |   |   |-- DebugError.jsx
+|   |   |   |   |-- DetailPageErrorBoundary.jsx
+|   |   |   |   |-- DetailPageHero.jsx
+|   |   |   |   |-- EditableDateField.jsx
+|   |   |   |   |-- EditableField.jsx
+|   |   |   |   |-- EditableNumberField.jsx
+|   |   |   |   |-- EditableTextField.jsx
+|   |   |   |   |-- ErrorBoundary.jsx
+|   |   |   |   |-- EscrowCardGrid.jsx
+|   |   |   |   |-- EscrowCreated.jsx
+|   |   |   |   |-- EscrowErrorDebugPanel.jsx
+|   |   |   |   |-- GlobalErrorBoundary.jsx
+|   |   |   |   |-- LoadingSpinner.jsx
+|   |   |   |   |-- Navigation.jsx
+|   |   |   |   |-- NetworkMonitor.jsx
+|   |   |   |   |-- NetworkMonitorSimple.jsx
+|   |   |   |   |-- OpenGraphTags.jsx
+|   |   |   |   |-- PeopleEditor.jsx
+|   |   |   |   |-- PersonRoleContainer.jsx
+|   |   |   |   |-- PrivacyControl.jsx
+|   |   |   |   |-- ProjectManagementPanel.jsx
+|   |   |   |   |-- ProjectManagementPanelLive.jsx
+|   |   |   |   |-- ProjectRoadmapDashboard.jsx
+|   |   |   |   |-- QuickActions.jsx
+|   |   |   |   |-- ResponsiveGrid.jsx
+|   |   |   |   |-- SafeRenderWrapper.jsx
+|   |   |   |   |-- StatsCard.jsx
+|   |   |   |   |-- StatsFullView.jsx
+|   |   |   |   |-- UserAwareErrorBoundary.jsx
+|   |   |   |   |-- UserMenu.jsx
+|   |   |   |   |-- VirtualizedEscrowList.jsx
+|   |   |   |   |-- WebSocketIndicator.jsx
+|   |   |   |   `-- ZillowPreview.jsx
+|   |   |   |-- contacts/
+|   |   |   |   |-- NeighborhoodData.jsx
+|   |   |   |   |-- ReferralSources.jsx
+|   |   |   |   `-- VendorsPartners.jsx
+|   |   |   |-- dashboards/
+|   |   |   |   |-- _archived/ - EMPTY
+|   |   |   |   |-- appointments/
+|   |   |   |   |   |-- components/ - EMPTY
+|   |   |   |   |   |-- hooks/ - EMPTY
+|   |   |   |   |   |-- modals/
+|   |   |   |   |   |   `-- NewAppointmentModal.jsx
+|   |   |   |   |   |-- utils/ - EMPTY
+|   |   |   |   |   `-- index.jsx
+|   |   |   |   |-- clients/
+|   |   |   |   |   |-- modals/
+|   |   |   |   |   |   `-- NewClientModal.jsx
+|   |   |   |   |   `-- index.jsx
+|   |   |   |   |-- clients.reference/
+|   |   |   |   |   |-- components/
+|   |   |   |   |   |   |-- ClientContent.jsx
+|   |   |   |   |   |   |-- ClientHeroCard.jsx
+|   |   |   |   |   |   |-- ClientNavigation.jsx
+|   |   |   |   |   |   `-- ClientStatCard.jsx
+|   |   |   |   |   |-- hooks/
+|   |   |   |   |   |   `-- useClientHandlers.js
+|   |   |   |   |   |-- modals/
+|   |   |   |   |   |   `-- NewClientModal.jsx
+|   |   |   |   |   |-- utils/
+|   |   |   |   |   |   `-- clientUtils.js
+|   |   |   |   |   `-- index.jsx
+|   |   |   |   |-- escrows/
+|   |   |   |   |   |-- constants/
+|   |   |   |   |   |   `-- escrowConstants.js
+|   |   |   |   |   |-- modals/
+|   |   |   |   |   |   `-- NewEscrowModal.jsx
+|   |   |   |   |   `-- index.jsx
+|   |   |   |   |-- home/
+|   |   |   |   |   |-- BrokerHeroCard.jsx
+|   |   |   |   |   |-- TeamHeroCard.jsx
+|   |   |   |   |   |-- TeamSelector.jsx
+|   |   |   |   |   `-- UserHeroCard.jsx
+|   |   |   |   |-- leads/
+|   |   |   |   |   |-- components/ - EMPTY
+|   |   |   |   |   |-- hooks/ - EMPTY
+|   |   |   |   |   |-- modals/
+|   |   |   |   |   |   `-- NewLeadModal.jsx
+|   |   |   |   |   |-- utils/ - EMPTY
+|   |   |   |   |   `-- index.jsx
+|   |   |   |   |-- listings/
+|   |   |   |   |   |-- components/
+|   |   |   |   |   |   |-- ListingContent.jsx
+|   |   |   |   |   |   |-- ListingHeroCard.jsx
+|   |   |   |   |   |   |-- ListingNavigation.jsx
+|   |   |   |   |   |   |-- ListingStatCard.jsx
+|   |   |   |   |   |   `-- ListingStatsGrid.jsx
+|   |   |   |   |   |-- hooks/
+|   |   |   |   |   |   `-- useListingHandlers.js
+|   |   |   |   |   |-- modals/
+|   |   |   |   |   |   `-- NewListingModal.jsx
+|   |   |   |   |   |-- utils/
+|   |   |   |   |   |   `-- listingUtils.js
+|   |   |   |   |   `-- index.jsx
+|   |   |   |   |-- AnalyticsDashboard.jsx
+|   |   |   |   |-- CommissionDashboard.jsx
+|   |   |   |   |-- ExpenseDashboard.jsx
+|   |   |   |   |-- HomeDashboard.jsx
+|   |   |   |   |-- InvoiceDashboard.jsx
+|   |   |   |   `-- OtherDataDashboard.jsx
+|   |   |   |-- details/
+|   |   |   |   |-- appointments/
+|   |   |   |   |   |-- components/
+|   |   |   |   |   |   |-- LocationWidget.jsx
+|   |   |   |   |   |   |-- NotesWidget.jsx
+|   |   |   |   |   |   `-- ParticipantsWidget.jsx
+|   |   |   |   |   |-- hooks/ - EMPTY
+|   |   |   |   |   |-- utils/ - EMPTY
+|   |   |   |   |   |-- index.jsx
+|   |   |   |   |   `-- index.jsx.backup
+|   |   |   |   |-- clients/
+|   |   |   |   |   |-- components/ - EMPTY
+|   |   |   |   |   |-- hooks/ - EMPTY
+|   |   |   |   |   |-- utils/ - EMPTY
+|   |   |   |   |   |-- index.jsx
+|   |   |   |   |   `-- index.jsx.backup
+|   |   |   |   |-- escrows/
+|   |   |   |   |   |-- components/
+|   |   |   |   |   |   |-- ActivityFeedBottomTab.jsx
+|   |   |   |   |   |   |-- ActivityFeedSheet.jsx
+|   |   |   |   |   |   |-- ChecklistsWidget_White.jsx
+|   |   |   |   |   |   |-- EditableField.jsx
+|   |   |   |   |   |   |-- EscrowDetailHero.jsx
+|   |   |   |   |   |   |-- FinancialsWidget_White.jsx
+|   |   |   |   |   |   |-- PeopleWidget_White.jsx
+|   |   |   |   |   |   |-- PlaceholderWidget.jsx
+|   |   |   |   |   |   `-- TimelineWidget_White.jsx
+|   |   |   |   |   |-- hooks/
+|   |   |   |   |   |   `-- useEscrowData.js
+|   |   |   |   |   |-- modals/
+|   |   |   |   |   |   |-- ChecklistsModal.jsx
+|   |   |   |   |   |   |-- FinancialsModal.jsx
+|   |   |   |   |   |   |-- PeopleModal.jsx
+|   |   |   |   |   |   `-- TimelineModal.jsx
+|   |   |   |   |   |-- utils/
+|   |   |   |   |   |   `-- eventHandlers.js
+|   |   |   |   |   |-- index.jsx
+|   |   |   |   |   `-- index.jsx.backup
+|   |   |   |   |-- leads/
+|   |   |   |   |   |-- components/
+|   |   |   |   |   |   |-- ContactWidget.jsx
+|   |   |   |   |   |   |-- EngagementWidget.jsx
+|   |   |   |   |   |   `-- QualificationWidget.jsx
+|   |   |   |   |   |-- hooks/ - EMPTY
+|   |   |   |   |   |-- utils/ - EMPTY
+|   |   |   |   |   |-- index.jsx
+|   |   |   |   |   `-- index.jsx.backup
+|   |   |   |   |-- listings/
+|   |   |   |   |   |-- components/
+|   |   |   |   |   |   |-- ActivityWidget.jsx
+|   |   |   |   |   |   |-- ComparablesWidget.jsx
+|   |   |   |   |   |   `-- PriceHistoryWidget.jsx
+|   |   |   |   |   |-- hooks/ - EMPTY
+|   |   |   |   |   |-- modals/
+|   |   |   |   |   |   `-- EditListingModal.jsx
+|   |   |   |   |   |-- utils/ - EMPTY
+|   |   |   |   |   |-- index.jsx
+|   |   |   |   |   `-- index.jsx.backup
+|   |   |   |   |-- AllDataViewer.jsx
+|   |   |   |   |-- ComprehensiveDataEditor.jsx
+|   |   |   |   |-- EscrowDetail.jsx
+|   |   |   |   `-- StunningPropertyDisplay.jsx
+|   |   |   |-- financial/
+|   |   |   |   |-- CommissionTracking.jsx
+|   |   |   |   |-- ExpenseManagement.jsx
+|   |   |   |   `-- Invoices.jsx
+|   |   |   |-- health/
+|   |   |   |   |-- AppointmentsHealthDashboard.jsx
+|   |   |   |   |-- ClientsHealthDashboard.jsx
+|   |   |   |   |-- EscrowsHealthDashboard.jsx
+|   |   |   |   |-- HealthDashboardBase.jsx
+|   |   |   |   |-- HealthOverviewDashboard.jsx
+|   |   |   |   |-- LeadsHealthDashboard.jsx
+|   |   |   |   `-- ListingsHealthDashboard.jsx
+|   |   |   |-- marketing/
+|   |   |   |   |-- EmailTemplates.jsx
+|   |   |   |   |-- MarketingCampaigns.jsx
+|   |   |   |   `-- SocialMediaPosts.jsx
+|   |   |   |-- modals/
+|   |   |   |   |-- ContactSelectionModal.jsx
+|   |   |   |   |-- NewContactModal.jsx
+|   |   |   |   `-- PeopleModal.jsx
+|   |   |   |-- onboarding/
+|   |   |   |   |-- animations/
+|   |   |   |   |-- shared/
+|   |   |   |   |   `-- TutorialNavigation.jsx
+|   |   |   |   |-- steps/
+|   |   |   |   |   |-- AppointmentsStep.jsx
+|   |   |   |   |   |-- ClientsStep.jsx
+|   |   |   |   |   |-- EscrowStep.jsx
+|   |   |   |   |   |-- FeaturesStep.jsx
+|   |   |   |   |   |-- LeadsStep.jsx
+|   |   |   |   |   |-- ListingsStep.jsx
+|   |   |   |   |   |-- MarketplaceStep.jsx
+|   |   |   |   |   `-- WelcomeStep.jsx
+|   |   |   |   |-- FeedbackDialog.jsx
+|   |   |   |   |-- OnboardingErrorBoundary.jsx
+|   |   |   |   `-- OnboardingLayout.jsx
+|   |   |   |-- settings/
+|   |   |   |   |-- OnboardingSettings.jsx
+|   |   |   |   `-- SecurityDashboard.jsx
+|   |   |   `-- system/
+|   |   |       |-- ActivityLog.jsx
+|   |   |       |-- AllNotes.jsx
+|   |   |       |-- ComplianceReports.jsx
+|   |   |       |-- ContractTemplates.jsx
+|   |   |       |-- DeletionRequests.jsx
+|   |   |       |-- DocumentLibrary.jsx
+|   |   |       |-- SecurityEventsPage.jsx
+|   |   |       `-- Webhooks.jsx
+|   |   |-- config/
+|   |   |   |-- entities/
+|   |   |   |   |-- appointments.config.js
+|   |   |   |   |-- base.config.js
+|   |   |   |   |-- clients.config.js
+|   |   |   |   |-- escrows.config.js
+|   |   |   |   |-- leads.config.js
+|   |   |   |   `-- listings.config.js
+|   |   |   |-- api.js
+|   |   |   `-- sentry.js
+|   |   |-- constants/
+|   |   |   `-- escrowConfig.js
+|   |   |-- contexts/
+|   |   |   |-- hooks/
+|   |   |   |   |-- useAuth.js
+|   |   |   |   |-- useNotifications.js
+|   |   |   |   |-- useRealTimeData.js
+|   |   |   |   `-- useWebSocket.js
+|   |   |   `-- AuthContext.jsx
+|   |   |-- features/
+|   |   |   `-- _blueprint/
+|   |   |       |-- __tests__/
+|   |   |       |   |-- integration/ - EMPTY
+|   |   |       |   `-- unit/ - EMPTY
+|   |   |       |-- components/
+|   |   |       |   |-- dashboard/
+|   |   |       |   |   |-- MODULE_NAMECalendar.jsx
+|   |   |       |   |   |-- MODULE_NAMEDashboard.jsx
+|   |   |       |   |   |-- MODULE_NAMEGrid.jsx
+|   |   |       |   |   |-- MODULE_NAMEList.jsx
+|   |   |       |   |   `-- MODULE_NAMETable.jsx
+|   |   |       |   |-- details/ - EMPTY
+|   |   |       |   |-- modals/
+|   |   |       |   |   |-- EditMODULE_NAMEModal.jsx
+|   |   |       |   |   |-- MODULE_NAMEFiltersModal.jsx
+|   |   |       |   |   `-- NewMODULE_NAMEModal.jsx
+|   |   |       |   |-- shared/ - EMPTY
+|   |   |       |   `-- widgets/ - EMPTY
+|   |   |       |-- config/
+|   |   |       |   `-- module.config.js
+|   |   |       |-- constants/ - EMPTY
+|   |   |       |-- hooks/
+|   |   |       |   `-- useMODULE_NAMEDashboard.js
+|   |   |       |-- services/
+|   |   |       |   `-- MODULE_SINGULARService.js
+|   |   |       |-- state/ - EMPTY
+|   |   |       |-- types/ - EMPTY
+|   |   |       |-- utils/ - EMPTY
+|   |   |       `-- README.md
+|   |   |-- hooks/
+|   |   |   |-- RESPONSIVE_DESIGN_GUIDE.md
+|   |   |   |-- useAuth.js
+|   |   |   |-- useEscrowAnalytics.js
+|   |   |   |-- useEscrowCalculations.js
+|   |   |   |-- useEscrowFilters.js
+|   |   |   |-- useEscrows.js
+|   |   |   |-- useEscrowWebSocket.js
+|   |   |   |-- useNotifications.js
+|   |   |   |-- useRealTimeData.js
+|   |   |   |-- useResponsiveLayout.js
+|   |   |   `-- useWebSocket.js
+|   |   |-- pages/
+|   |   |   |-- AdminPanel.jsx
+|   |   |   |-- EscrowsDashboard.jsx
+|   |   |   |-- PublicProfileStunning.jsx
+|   |   |   |-- Settings.jsx
+|   |   |   `-- Unauthorized.jsx
+|   |   |-- services/
+|   |   |   |-- __tests__/
+|   |   |   |   `-- api.service.test.js
+|   |   |   |-- api.service.js
+|   |   |   |-- auth.service.js
+|   |   |   |-- checklists.service.js
+|   |   |   |-- checklistTemplates.service.js
+|   |   |   |-- healthCheck.service.js
+|   |   |   |-- networkMonitor.service.js
+|   |   |   |-- onboarding.service.js
+|   |   |   |-- projects.service.js
+|   |   |   |-- tasks.service.js
+|   |   |   `-- websocket.service.js
+|   |   |-- shared/
+|   |   |   |-- components/
+|   |   |   |   |-- dashboard/
+|   |   |   |   |   |-- __tests__/
+|   |   |   |   |   |   `-- DashboardLayout.test.jsx
+|   |   |   |   |   |-- DashboardContent.jsx
+|   |   |   |   |   |-- DashboardEmptyState.jsx
+|   |   |   |   |   |-- DashboardError.jsx
+|   |   |   |   |   |-- DashboardHeader.jsx
+|   |   |   |   |   |-- DashboardLayout.jsx
+|   |   |   |   |   |-- DashboardPagination.jsx
+|   |   |   |   |   |-- DashboardStats.jsx
+|   |   |   |   |   |-- DashboardToolbar.jsx
+|   |   |   |   |   `-- index.js
+|   |   |   |   |-- details/ - EMPTY
+|   |   |   |   |-- layout/ - EMPTY
+|   |   |   |   `-- ui/ - EMPTY
+|   |   |   |-- hooks/
+|   |   |   |   |-- __tests__/
+|   |   |   |   |   `-- useDashboardData.test.js
+|   |   |   |   |-- index.js
+|   |   |   |   |-- useDashboardData.js
+|   |   |   |   |-- useDebounce.js
+|   |   |   |   `-- useLocalStorage.js
+|   |   |   |-- utils/
+|   |   |   |   |-- formatters.js
+|   |   |   |   `-- index.js
+|   |   |   `-- index.js
+|   |   |-- styles/
+|   |   |   |-- components.css
+|   |   |   `-- globals.css
+|   |   |-- templates/
+|   |   |   |-- Dashboard/
+|   |   |   |   |-- components/
+|   |   |   |   |   |-- DashboardContent.jsx
+|   |   |   |   |   |-- DashboardHero.jsx
+|   |   |   |   |   |-- DashboardNavigation.jsx
+|   |   |   |   |   |-- DashboardStatCard.jsx
+|   |   |   |   |   |-- DashboardStats.jsx
+|   |   |   |   |   `-- index.js
+|   |   |   |   |-- hooks/
+|   |   |   |   |   `-- useDashboardData.js
+|   |   |   |   |-- COMPONENT_ANALYSIS.md
+|   |   |   |   `-- index.jsx
+|   |   |   `-- Detail/
+|   |   |       |-- components/
+|   |   |       |   |-- DetailActivityFeed.jsx
+|   |   |       |   |-- DetailHero.jsx
+|   |   |       |   |-- DetailHero.jsx.old
+|   |   |       |   |-- DetailSidebar.jsx
+|   |   |       |   `-- DetailTabs.jsx
+|   |   |       |-- hooks/
+|   |   |       |   `-- useDetailData.js
+|   |   |       |-- index.jsx
+|   |   |       `-- index.jsx.old
+|   |   |-- utils/
+|   |   |   |-- auth.js
+|   |   |   |-- dateGuard.js
+|   |   |   |-- entityIdUtils.js
+|   |   |   |-- escrowTransform.js
+|   |   |   |-- formatCurl.js
+|   |   |   |-- formatters.js
+|   |   |   |-- globalErrorHandler.js
+|   |   |   |-- googleMapsLoader.js
+|   |   |   |-- safeDateUtils.js
+|   |   |   |-- sanitize.js
+|   |   |   |-- setupApiKey.js
+|   |   |   `-- testApi.js
+|   |   |-- widgets/
+|   |   |   `-- shared/ - EMPTY
+|   |   |-- App.jsx
+|   |   |-- App.lazy.jsx
+|   |   `-- index.js
+|   |-- .dockerignore
+|   |-- .env
+|   |-- .env.development
+|   |-- .env.local
+|   |-- .env.production
+|   |-- .gitignore
+|   |-- nixpacks.toml
+|   |-- package-lock.json
+|   |-- package.json
+|   `-- railway.json
+|-- media/
+|   `-- Real Estate CRM Folder Code Breakdown.md
+|-- scripts/
+|   |-- backend/
+|   |   |-- create-api-key.sh*
+|   |   |-- railway-deploy-commands.sh*
+|   |   |-- reset-database.sh*
+|   |   `-- update-railway-security-env.sh*
+|   |-- testing/
+|   |   |-- benchmark-ai-endpoints.sh*
+|   |   |-- create-comprehensive-escrow.sh*
+|   |   |-- create-full-escrow.sh*
+|   |   |-- test-all-endpoints.sh*
+|   |   |-- test-api-auth-secure.sh*
+|   |   |-- test-api-auth.sh*
+|   |   |-- test-auth-local.js
+|   |   |-- test-checklist-format.sh*
+|   |   |-- test-checklist-preservation.sh*
+|   |   |-- test-checklist-update.js
+|   |   |-- test-direct-og.js
+|   |   |-- test-escrow-api.js
+|   |   |-- test-escrow-crud.sh*
+|   |   |-- test-escrow-delete-workflow.sh*
+|   |   |-- test-escrow-health-with-testmode.sh*
+|   |   |-- test-escrow-system.js
+|   |   |-- test-escrows-api.sh*
+|   |   |-- test-frontend-auth.sh*
+|   |   |-- test-frontend-checklist.html
+|   |   |-- test-gpt4-function-calling.js*
+|   |   |-- test-health-endpoint.js
+|   |   |-- test-image-endpoint.sh*
+|   |   |-- test-login-directly.js
+|   |   |-- test-login.js
+|   |   |-- test-login.sh*
+|   |   |-- test-monitor-st-image.sh*
+|   |   |-- test-new-endpoint.js
+|   |   |-- test-production-checklist.sh*
+|   |   |-- test-production-login.js
+|   |   |-- test-property-endpoint.sh*
+|   |   |-- test-railway-auth.js
+|   |   |-- test-railway-connection.js
+|   |   `-- test-zillow-og.sh*
+|   |-- all-code.txt
+|   |-- cleanup-duplicates.sh*
+|   |-- cleanup-refresh-tokens.sh*
+|   |-- combine.sh*
+|   |-- cookies.txt
+|   |-- fix-dashboard-imports.sh*
+|   |-- fix-escrows-initialization.py*
+|   |-- generate-codebase-doc.sh*
+|   |-- generate-module.js*
+|   |-- migrate-to-best-practices.sh*
+|   |-- remove-console-logs.sh*
+|   |-- seed-roadmap-data.js*
+|   `-- test-generator.js*
+|-- .gitignore
+|-- .railway-deploy
+|-- all-code.txt
+|-- CLAUDE.md
+|-- CODEBASE_DOCUMENTATION.txt
+|-- COMPLETE_FILE_TREE.txt
+|-- docker-compose.yml
+|-- ESCROW_STATS_IMPLEMENTATION.md
+|-- nixpacks.toml
+|-- package-lock.json
+|-- package.json
+|-- railway.json
+|-- README.md
+|-- TEMPLATE_ARCHITECTURE_COMPLETE.md
+|-- TEMPLATE_IMPLEMENTATION_COMPLETE.md
+`-- VISUAL_PARITY_GRADING_REPORT.md
 
-244 directories, 569 files
+306 directories, 838 files
