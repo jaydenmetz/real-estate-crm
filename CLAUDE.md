@@ -47,6 +47,190 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ---
 
+## 🚀 PROJECT DEVELOPMENT WORKFLOW
+
+### Systematic Project Implementation (82% → 100%)
+
+**Location:** `/docs/projects/`
+
+**The Real Estate CRM is 82% complete. We implement the remaining 18% through 105 small, systematic projects.**
+
+### How It Works:
+
+#### 1. **One Project at a Time**
+- Only ONE active project in `/docs/projects/current/` at any time
+- Focus prevents context switching and ensures quality
+- Each project is small (4-16 hours) and achievable
+
+#### 2. **Project Workflow**
+```
+┌─────────────────────────────────────────────────────────────┐
+│ 1. SELECT: Choose next project from PROJECT_OVERVIEW.txt   │
+│ 2. PLAN: Copy template to current/, fill out all sections  │
+│ 3. IMPLEMENT: Work through tasks, commit frequently        │
+│ 4. TEST: User runs simple verification tests               │
+│ 5. VERIFY: User confirms all tests pass, no issues         │
+│ 6. ARCHIVE: Move to archive/, update progress, repeat!     │
+└─────────────────────────────────────────────────────────────┘
+```
+
+#### 3. **Claude's Responsibilities**
+
+**When User Says "Start Next Project":**
+1. ✅ Read `/docs/projects/PROJECT_OVERVIEW.txt` to see all 105 projects
+2. ✅ Check `/docs/projects/archive/` to see what's complete
+3. ✅ Identify next project based on phase dependencies
+4. ✅ Copy `PROJECT_TEMPLATE.md` to `current/Project-XX-Name.md`
+5. ✅ Fill out template with:
+   - Full task breakdown (small, achievable tasks)
+   - Simple verification tests user can run
+   - Clear success criteria
+   - Implementation notes section
+6. ✅ Begin implementation incrementally
+7. ✅ Update project file as work progresses
+8. ✅ Commit and push after each task
+
+**When User Says "Project Complete" or "Move to Archive":**
+1. ✅ Read current project file
+2. ✅ Verify all success criteria met
+3. ✅ Confirm all verification tests passed
+4. ✅ Write completion summary in project file
+5. ✅ Move file from `current/` to `archive/`
+6. ✅ Update `/docs/projects/README.md` progress bars
+7. ✅ Ask user if ready to start next project
+
+**During Implementation:**
+1. ✅ Work in small increments (< 30 min per task)
+2. ✅ Check off tasks as completed
+3. ✅ Test locally before committing
+4. ✅ Commit and push for Railway auto-deploy
+5. ✅ Update implementation notes in project file
+6. ✅ Ask user to verify after significant changes
+
+#### 4. **Simple Verification Tests**
+
+Every project MUST include tests user can run to verify:
+- ✅ **No Crashes**: Page loads, actions work, no console errors
+- ✅ **Display Correctly**: UI renders properly, responsive on mobile
+- ✅ **API Works**: Data loads, CRUD works, proper errors
+- ✅ **Buttons Work**: Clicks work, navigation works, forms submit
+- ✅ **Edge Cases**: Empty states, error handling, large data
+
+**Example Test:**
+```markdown
+### Test 1: Dashboard Loads Without Errors
+**Steps:**
+1. Navigate to /escrows
+2. Open browser console (F12)
+3. Check for any red errors
+
+**Expected Result:** Dashboard loads, no console errors
+
+**Pass/Fail:** [ ]
+```
+
+#### 5. **Project Phases (Complete in Order)**
+
+**Phase A: Foundation (Projects 1-15)** - MUST complete first
+- Backend/frontend cleanup
+- Remove duplicates
+- Standardize naming
+- Verify build process
+
+**Phase B: Core Functionality (Projects 16-30)** - Second priority
+- Verify auth works perfectly
+- Check all 5 core modules
+- Ensure detail pages consistent
+- Fix error handling
+
+**Phase C-H: Features, UI, Data, Security, Testing, Ops** - Can parallelize after Phase B
+
+#### 6. **Project Selection Rules**
+
+**MUST complete Phase A (Projects 1-15) before other phases**
+
+**Critical Path:**
+1. Project-01: Backend Directory Consolidation (start here!)
+2. Project-02: Frontend Component Organization
+3. Project-08: Remove Duplicate Code Files
+4. Project-16: Authentication Flow Verification
+5. Projects 18-22: Verify all core modules work
+
+**Quick Wins (Can do anytime):**
+- Project-08, 12, 13: Cleanup tasks
+- Project-29, 30: Error handling, loading states
+- Project-46, 54: Mobile responsiveness, UI polish
+
+#### 7. **What NOT to Do**
+
+❌ **Never work on multiple projects simultaneously**
+❌ **Never move to archive without user verification**
+❌ **Never skip verification tests**
+❌ **Never start Phase B before Phase A complete**
+❌ **Never create project files automatically** - wait for user to select
+
+#### 8. **Progress Tracking**
+
+**Current Status (As of Nov 1, 2025):**
+- **Completed Projects:** 0/105
+- **Phase A Progress:** 0/15 ⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜⬜
+- **Overall Progress:** 0% ▱▱▱▱▱▱▱▱▱▱
+
+**Updated automatically in:** `/docs/projects/README.md`
+
+#### 9. **Key Files**
+
+- 📋 **PROJECT_OVERVIEW.txt** - All 105 projects with full details
+- 📝 **PROJECT_TEMPLATE.md** - Template for new projects
+- 📖 **README.md** - Project system documentation
+- 📁 **current/** - Active project (only 1 file)
+- 📦 **archive/** - Completed projects
+
+#### 10. **Example Project Session**
+
+```
+User: "Let's start Project-01: Backend Directory Consolidation"
+
+Claude:
+1. Reads PROJECT_OVERVIEW.txt
+2. Copies template to current/Project-01-Backend-Directory-Consolidation.md
+3. Fills out:
+   - Goal: Merge domains/ and modules/ into single structure
+   - Tasks: Audit files, create unified structure, migrate code, update imports
+   - Tests: Verify no import errors, all modules load, no duplicate files
+   - Success criteria: Single backend structure, all tests pass
+4. Starts implementing first task
+5. Updates project file with progress
+6. Commits and pushes
+
+User: "Looks good, keep going"
+
+Claude: Continues through tasks, updating file, committing frequently
+
+User: "I tested it, everything works!"
+
+Claude:
+1. Marks all success criteria complete
+2. Writes completion summary
+3. Moves to archive/Project-01-Backend-Directory-Consolidation.md
+4. Updates README.md progress: 1/105 complete (0.95%)
+5. Asks: "Ready to start Project-02: Frontend Component Organization?"
+```
+
+### Benefits of This System:
+
+✅ **Clear Progress**: Always know exactly what's done and what's next
+✅ **Quality Assurance**: User verifies each project before moving on
+✅ **No Regressions**: Small changes, frequent testing
+✅ **Accountability**: Every project tracked and documented
+✅ **Flexibility**: Can adjust priorities, skip or combine projects
+✅ **Momentum**: Small wins build confidence and progress
+✅ **Railway Auto-Deploy**: Every commit deploys, user tests in production
+
+**To Start:** User says "Start Project-01" and we begin!
+
+---
+
 ## 📂 DOCUMENTATION MANAGEMENT
 
 ### Documentation Philosophy (Updated Oct 14, 2025)
