@@ -3,9 +3,11 @@
 **Phase**: A
 **Priority**: MEDIUM
 **Status**: Not Started
-**Estimated Time**: 6 hours
-**Started**: [Date]
-**Completed**: [Date]
+**Estimated Time**: 6 hours (base) + 1.2 hours (buffer 20%) = 7.2 hours total
+**Actual Time Started**: [HH:MM on Date]
+**Actual Time Completed**: [HH:MM on Date]
+**Actual Duration**: [Calculate: XX hours YY minutes]
+**Variance**: [Actual - Estimated = +/- X hours]
 
 ---
 
@@ -50,6 +52,37 @@ frontend/src/__tests__/
 ├── utils/              # Utility tests
 └── integration/        # E2E tests
 ```
+
+---
+
+## 🔄 Rollback Plan
+
+### Before Starting:
+- [ ] Create git tag: `git tag pre-project-13-$(date +%Y%m%d)`
+- [ ] Verify Railway auto-deploy is working
+- [ ] Confirm latest commit deployed successfully
+- [ ] Run all 228 health tests to establish baseline
+
+### Backup Methods:
+**Files:**
+```bash
+# Git tracks all changes - rollback with:
+git reset --hard pre-project-13-$(date +%Y%m%d)
+git push --force origin main  # Only if no one else working
+```
+
+### If Things Break:
+1. **Immediate:** Revert last commit: `git revert HEAD && git push`
+2. **Full Rollback:** Reset to tag: `git reset --hard pre-project-13-$(date +%Y%m%d)`
+3. **Production Issue:** Check Railway logs: `railway logs`
+4. **Test Failures:** Run `npm test` locally to identify broken tests
+
+### Recovery Checklist:
+- [ ] Verify application loads: https://crm.jaydenmetz.com
+- [ ] Run health tests: https://crm.jaydenmetz.com/health
+- [ ] Check Railway deployment succeeded
+- [ ] Verify no console errors in browser
+- [ ] Test critical user flows (login, dashboard, create escrow)
 
 ## ✅ Tasks
 

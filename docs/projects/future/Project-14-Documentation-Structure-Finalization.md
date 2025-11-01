@@ -3,9 +3,11 @@
 **Phase**: A
 **Priority**: MEDIUM
 **Status**: Not Started
-**Estimated Time**: 6 hours
-**Started**: [Date]
-**Completed**: [Date]
+**Estimated Time**: 6 hours (base) + 1.2 hours (buffer 20%) = 7.2 hours total
+**Actual Time Started**: [HH:MM on Date]
+**Actual Time Completed**: [HH:MM on Date]
+**Actual Duration**: [Calculate: XX hours YY minutes]
+**Variance**: [Actual - Estimated = +/- X hours]
 
 ---
 
@@ -25,6 +27,37 @@ After the major documentation cleanup on October 14, 2025, this project ensures 
 - Ensure all docs are current and accurate
 - No obsolete information
 - Clear archive structure
+
+---
+
+## 🔄 Rollback Plan
+
+### Before Starting:
+- [ ] Create git tag: `git tag pre-project-14-$(date +%Y%m%d)`
+- [ ] Verify Railway auto-deploy is working
+- [ ] Confirm latest commit deployed successfully
+- [ ] List all docs before changes: `ls docs/*.md > docs-before.txt`
+
+### Backup Methods:
+**Files:**
+```bash
+# Git tracks all changes - rollback with:
+git reset --hard pre-project-14-$(date +%Y%m%d)
+git push --force origin main  # Only if no one else working
+```
+
+### If Things Break:
+1. **Immediate:** Revert last commit: `git revert HEAD && git push`
+2. **Full Rollback:** Reset to tag: `git reset --hard pre-project-14-$(date +%Y%m%d)`
+3. **Production Issue:** Check Railway logs: `railway logs`
+4. **Missing Docs:** Check git history for accidentally deleted files
+
+### Recovery Checklist:
+- [ ] Verify application loads: https://crm.jaydenmetz.com
+- [ ] Run health tests: https://crm.jaydenmetz.com/health
+- [ ] Check Railway deployment succeeded
+- [ ] Verify no console errors in browser
+- [ ] Test critical user flows (login, dashboard, create escrow)
 
 ## ✅ Tasks
 

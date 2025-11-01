@@ -3,9 +3,11 @@
 **Phase**: A
 **Priority**: MEDIUM
 **Status**: Not Started
-**Estimated Time**: 4 hours
-**Started**: [Date]
-**Completed**: [Date]
+**Estimated Time**: 4 hours (base) + 0.8 hours (buffer 20%) = 4.8 hours total
+**Actual Time Started**: [HH:MM on Date]
+**Actual Time Completed**: [HH:MM on Date]
+**Actual Duration**: [Calculate: XX hours YY minutes]
+**Variance**: [Actual - Estimated = +/- X hours]
 
 ---
 
@@ -39,6 +41,37 @@ scripts/
     ├── cleanup-logs.sh
     └── optimize-db.sh
 ```
+
+---
+
+## 🔄 Rollback Plan
+
+### Before Starting:
+- [ ] Create git tag: `git tag pre-project-07-$(date +%Y%m%d)`
+- [ ] Verify Railway auto-deploy is working
+- [ ] Confirm latest commit deployed successfully
+- [ ] List all scripts before moving: `find . -name "*.sh" > scripts-before.txt`
+
+### Backup Methods:
+**Files:**
+```bash
+# Git tracks all changes - rollback with:
+git reset --hard pre-project-07-$(date +%Y%m%d)
+git push --force origin main  # Only if no one else working
+```
+
+### If Things Break:
+1. **Immediate:** Revert last commit: `git revert HEAD && git push`
+2. **Full Rollback:** Reset to tag: `git reset --hard pre-project-07-$(date +%Y%m%d)`
+3. **Production Issue:** Check Railway logs: `railway logs`
+4. **Script Errors:** Verify script paths in documentation match actual locations
+
+### Recovery Checklist:
+- [ ] Verify application loads: https://crm.jaydenmetz.com
+- [ ] Run health tests: https://crm.jaydenmetz.com/health
+- [ ] Check Railway deployment succeeded
+- [ ] Verify no console errors in browser
+- [ ] Test critical user flows (login, dashboard, create escrow)
 
 ## ✅ Tasks
 

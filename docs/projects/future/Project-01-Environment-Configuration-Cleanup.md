@@ -3,9 +3,11 @@
 **Phase**: A
 **Priority**: CRITICAL
 **Status**: Not Started
-**Estimated Time**: 6 hours
-**Started**: [Date]
-**Completed**: [Date]
+**Estimated Time**: 6 hours (base) + 2 hours (buffer 30%) = 8 hours total
+**Actual Time Started**: [HH:MM on Date]
+**Actual Time Completed**: [HH:MM on Date]
+**Actual Duration**: [Calculate: XX hours YY minutes]
+**Variance**: [Actual - Estimated = +/- X hours]
 
 ---
 
@@ -39,6 +41,44 @@ Production env vars    # Set in Railway dashboard, not in files
 Documentation:
 ENVIRONMENTS.md        # Complete guide to all env vars
 ```
+
+---
+
+## 🔄 Rollback Plan
+
+### Before Starting:
+- [ ] Create git tag: `git tag pre-project-01-$(date +%Y%m%d)`
+- [ ] Verify Railway auto-deploy is working
+- [ ] Confirm latest commit deployed successfully
+- [ ] Screenshot Railway environment variables (if making changes)
+
+### Backup Methods:
+**Environment Variables:**
+```bash
+# Export current Railway env vars before making changes
+# Log into Railway dashboard and copy all env vars to a text file
+# Save as: env-backup-project-01-$(date +%Y%m%d).txt
+```
+
+**Files:**
+```bash
+# Git tracks all changes - rollback with:
+git reset --hard pre-project-01-$(date +%Y%m%d)
+git push --force origin main  # Only if no one else working
+```
+
+### If Things Break:
+1. **Immediate:** Revert last commit: `git revert HEAD && git push`
+2. **Full Rollback:** Reset to tag: `git reset --hard pre-project-01-$(date +%Y%m%d)`
+3. **Production Issue:** Check Railway logs: `railway logs`
+4. **Database Issue:** Verify DATABASE_URL still correct in Railway dashboard
+
+### Recovery Checklist:
+- [ ] Verify application loads: https://crm.jaydenmetz.com
+- [ ] Run health tests: https://crm.jaydenmetz.com/health
+- [ ] Check Railway deployment succeeded
+- [ ] Verify no console errors in browser
+- [ ] Test critical user flows (login, dashboard, create escrow)
 
 ## ✅ Tasks
 
