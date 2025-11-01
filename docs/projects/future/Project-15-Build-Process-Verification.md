@@ -157,6 +157,61 @@ git push --force origin main  # Only if no one else working
 
 ---
 
+## 📐 CLAUDE.md Compliance
+
+### Required Patterns:
+- [ ] **NO duplicate files** - Edit existing files in place, never create Enhanced/Optimized/V2 versions
+- [ ] **Component naming**: PascalCase for components (EscrowCard.jsx not escrowCard.jsx)
+- [ ] **API calls**: Use apiInstance from api.service.js (NEVER raw fetch except Login/Register)
+- [ ] **Responsive grids**: Max 2 columns inside cards/widgets (prevents text overlap)
+- [ ] **Archive old code**: Move to `archive/ComponentName_YYYY-MM-DD.jsx` if preserving
+- [ ] **Git commits**: Include `Co-Authored-By: Claude <noreply@anthropic.com>`
+
+### Project-Specific Rules:
+- [ ] Build verification: Frontend builds with 0 warnings, 0 errors
+- [ ] Backend starts cleanly: No import errors, no deprecation warnings
+- [ ] Railway deployment: Auto-deploy from GitHub works correctly
+- [ ] Production bundle: Optimized and minified correctly
+- [ ] No deprecated dependencies: Run `npm outdated` and update if needed
+
+---
+
+## 🧹 Known Technical Debt Checks (from CLAUDE.md)
+
+### Console.log Pollution (HIGH PRIORITY):
+- [ ] **Current baseline**: 243 debug console.log statements in production code
+  ```bash
+  # Count console.log statements
+  grep -r "console.log" frontend/src --include="*.jsx" --include="*.js" | wc -l
+
+  # Target: Close to 0 (allow console.error for logging only)
+  ```
+- [ ] Remove or replace debug statements with proper logging: `logger.debug()` or remove entirely
+- [ ] Check production bundle doesn't include console.logs
+- [ ] Set up proper logger (e.g., winston, pino) if needed
+
+### WebSocket Coverage (MEDIUM PRIORITY):
+- [ ] **Currently complete**: Escrows module only
+- [ ] **Missing**: Listings, Clients, Appointments, Leads (4 modules)
+- [ ] Document in Phase C roadmap (Project-25: WebSocket Real-Time Updates)
+- [ ] Note: Not critical for Phase A completion, but should be tracked
+
+### .backup Files (CRITICAL for Phase A):
+- [ ] **Current**: 6 .backup files violating project rules
+  ```bash
+  find . -name "*.backup" -o -name "*.old" -o -name "*.reference"
+  ```
+- [ ] Delete or move to archive/ with date stamps
+- [ ] Zero .backup files after Project-15 completion
+
+### Build Process Checks:
+- [ ] Webpack builds without "multiple modules with same name" warnings
+- [ ] No circular dependencies detected
+- [ ] Bundle size reasonable (<5MB for frontend)
+- [ ] Source maps generated correctly for debugging
+
+---
+
 ## 🔗 Dependencies
 
 **Depends On:**

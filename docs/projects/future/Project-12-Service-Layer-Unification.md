@@ -143,6 +143,52 @@ git push --force origin main  # Only if no one else working
 
 ---
 
+## 📐 CLAUDE.md Compliance
+
+### Required Patterns:
+- [ ] **NO duplicate files** - Edit existing files in place, never create Enhanced/Optimized/V2 versions
+- [ ] **Component naming**: PascalCase for components (EscrowCard.jsx not escrowCard.jsx)
+- [ ] **API calls**: Use apiInstance from api.service.js (NEVER raw fetch except Login/Register)
+- [ ] **Responsive grids**: Max 2 columns inside cards/widgets (prevents text overlap)
+- [ ] **Archive old code**: Move to `archive/ComponentName_YYYY-MM-DD.jsx` if preserving
+- [ ] **Git commits**: Include `Co-Authored-By: Claude <noreply@anthropic.com>`
+
+### Project-Specific Rules:
+- [ ] Controllers: ONLY request/response handling (no business logic, no DB queries)
+- [ ] Services: ALL business logic, calculations, validations, DB operations
+- [ ] Service naming: `EntityService.methodName()` pattern (e.g., `EscrowService.create()`)
+- [ ] Reusability: Services should be callable from multiple controllers
+- [ ] Error handling: Services throw errors, controllers catch and format responses
+
+---
+
+## 🧪 Test Coverage Impact
+
+### Current Baseline:
+- **Total Tests**: 228/228 passing (100%)
+- **Health Dashboard**: https://crm.jaydenmetz.com/health
+- **Coverage**: Dual authentication (JWT + API Key) across 5 modules
+
+### Tests Modified by This Project:
+- Service layer tests should verify business logic moved correctly
+- Controller tests should verify thin request/response handling
+- Integration tests should ensure end-to-end flow still works
+
+### Coverage Verification:
+- [ ] Run backend tests: `cd backend && npm test`
+- [ ] Run health dashboard: https://crm.jaydenmetz.com/health
+- [ ] Verify: 228/228 tests still passing ✅
+- [ ] Services contain all business logic
+- [ ] Controllers delegate to services properly
+
+### Post-Project Validation:
+- [ ] All tests green in health dashboard
+- [ ] Clean separation between controllers and services
+- [ ] Coverage maintained or improved
+- [ ] Service methods are reusable
+
+---
+
 ## 🔗 Dependencies
 
 **Depends On:**

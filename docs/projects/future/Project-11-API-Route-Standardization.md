@@ -137,6 +137,51 @@ git push --force origin main  # Only if no one else working
 
 ---
 
+## 📐 CLAUDE.md Compliance
+
+### Required Patterns:
+- [ ] **NO duplicate files** - Edit existing files in place, never create Enhanced/Optimized/V2 versions
+- [ ] **Component naming**: PascalCase for components (EscrowCard.jsx not escrowCard.jsx)
+- [ ] **API calls**: Use apiInstance from api.service.js (NEVER raw fetch except Login/Register)
+- [ ] **Responsive grids**: Max 2 columns inside cards/widgets (prevents text overlap)
+- [ ] **Archive old code**: Move to `archive/ComponentName_YYYY-MM-DD.jsx` if preserving
+- [ ] **Git commits**: Include `Co-Authored-By: Claude <noreply@anthropic.com>`
+
+### Project-Specific Rules:
+- [ ] RESTful patterns: GET (list/get), POST (create), PUT (update), DELETE (delete)
+- [ ] Route naming: `/v1/resource` and `/v1/resource/:id` patterns
+- [ ] Consistent middleware: Auth, rate-limiting, validation on all routes
+- [ ] Response format: Standardized `{ success, data, error, timestamp }` pattern
+- [ ] HTTP status codes: 200 (success), 201 (created), 400 (bad request), 401 (unauthorized), 404 (not found), 500 (server error)
+
+---
+
+## 🧪 Test Coverage Impact
+
+### Current Baseline:
+- **Total Tests**: 228/228 passing (100%)
+- **Health Dashboard**: https://crm.jaydenmetz.com/health
+- **Coverage**: Dual authentication (JWT + API Key) across 5 modules
+
+### Tests Modified by This Project:
+- API endpoint tests may need route path updates after standardization
+- Authentication tests should verify middleware applied consistently
+- Response format tests should check standardized structure
+
+### Coverage Verification:
+- [ ] Run backend tests: `cd backend && npm test`
+- [ ] Run health dashboard: https://crm.jaydenmetz.com/health
+- [ ] Verify: 228/228 tests still passing ✅
+- [ ] All routes return consistent response format
+- [ ] Auth middleware protecting all protected routes
+
+### Post-Project Validation:
+- [ ] All tests green in health dashboard
+- [ ] RESTful patterns enforced across all endpoints
+- [ ] Coverage maintained or improved
+
+---
+
 ## 🔗 Dependencies
 
 **Depends On:**

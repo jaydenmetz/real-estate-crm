@@ -160,6 +160,59 @@ git push --force origin main  # Only if no one else working
 
 ---
 
+## 📐 CLAUDE.md Compliance
+
+### Required Patterns:
+- [ ] **NO duplicate files** - Edit existing files in place, never create Enhanced/Optimized/V2 versions
+- [ ] **Component naming**: PascalCase for components (EscrowCard.jsx not escrowCard.jsx)
+- [ ] **API calls**: Use apiInstance from api.service.js (NEVER raw fetch except Login/Register)
+- [ ] **Responsive grids**: Max 2 columns inside cards/widgets (prevents text overlap)
+- [ ] **Archive old code**: Move to `archive/ComponentName_YYYY-MM-DD.jsx` if preserving
+- [ ] **Git commits**: Include `Co-Authored-By: Claude <noreply@anthropic.com>`
+
+### Project-Specific Rules: Import Path Patterns
+
+**Standardize These Patterns:**
+- [ ] **Template imports**: `import { DetailTemplate } from '../../../templates/Detail'`
+- [ ] **Config imports**: `import { escrowsConfig } from '../../../config/entities/escrows.config'`
+- [ ] **API imports**: `import { escrowsAPI } from '../../../services/api.service'`
+- [ ] **NEVER use apiInstance alias** - always import from api.service.js
+- [ ] **Consistent depth**: 3 levels up from components to root imports
+
+**API Service Pattern (CRITICAL):**
+```javascript
+// ✅ CORRECT - Named entity APIs
+import { escrowsAPI, clientsAPI, listingsAPI } from 'services/api.service';
+const escrows = await escrowsAPI.getAll();
+const client = await clientsAPI.create(data);
+
+// ❌ WRONG - Generic apiInstance
+import apiInstance from 'services/api.service';
+const escrows = await apiInstance.get('/escrows');
+
+// ❌ WRONG - NO contactsAPI
+import { contactsAPI } from 'services/api.service'; // Doesn't exist!
+// Use clientsAPI and leadsAPI separately
+```
+
+**Path Alias Configuration:**
+- [ ] Absolute imports configured in jsconfig.json or tsconfig.json
+- [ ] Aliases for common directories (components, services, config)
+- [ ] No deep relative imports (more than 2 levels: `../../..`)
+- [ ] Import grouping: React, external libs, internal modules, relative
+
+**Verification Commands:**
+```bash
+# Find deep relative imports
+grep -r "\.\./\.\./\.\." frontend/src --include="*.js" --include="*.jsx" | wc -l
+
+# Check for wrong API patterns
+grep -r "apiInstance.get\|apiInstance.post" frontend/src --include="*.jsx"
+grep -r "contactsAPI" frontend/src --include="*.jsx"  # Should be 0
+```
+
+---
+
 ## 🔗 Dependencies
 
 **Depends On:**

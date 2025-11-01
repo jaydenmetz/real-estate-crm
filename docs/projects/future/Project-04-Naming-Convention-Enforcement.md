@@ -156,6 +156,46 @@ git push --force origin main  # Only if no one else working
 
 ---
 
+## 📐 CLAUDE.md Compliance
+
+### Required Patterns:
+- [ ] **NO duplicate files** - Edit existing files in place, never create Enhanced/Optimized/V2 versions
+- [ ] **Component naming**: PascalCase for components (EscrowCard.jsx not escrowCard.jsx)
+- [ ] **API calls**: Use apiInstance from api.service.js (NEVER raw fetch except Login/Register)
+- [ ] **Responsive grids**: Max 2 columns inside cards/widgets (prevents text overlap)
+- [ ] **Archive old code**: Move to `archive/ComponentName_YYYY-MM-DD.jsx` if preserving
+- [ ] **Git commits**: Include `Co-Authored-By: Claude <noreply@anthropic.com>`
+
+### Project-Specific Rules: Naming Standards
+
+**Enforce These Patterns:**
+- [ ] **Components**: PascalCase (EscrowCard.jsx, DetailTemplate.jsx)
+- [ ] **Utils/helpers**: camelCase (formatCurrency.js, dateGuard.js)
+- [ ] **Config files**: camelCase or kebab-case (escrows.config.js, api.service.js)
+- [ ] **NO version suffixes**: Never Component2.jsx, ComponentNew.jsx, ComponentV2.jsx
+- [ ] **Size variants**: ComponentSmall.jsx, ComponentMedium.jsx, ComponentLarge.jsx (NOT ComponentSimplified.jsx)
+- [ ] **Purpose variants**: ComponentCard.jsx, ComponentModal.jsx, ComponentForm.jsx (NOT ComponentEnhanced.jsx)
+
+**Enforcement Commands:**
+```bash
+# Find components with wrong casing
+find frontend/src/components -name "*.jsx" | grep -v "^[A-Z]"
+
+# Find forbidden patterns
+find . -name "*Enhanced*" -o -name "*Optimized*" -o -name "*V2*" -o -name "*2.jsx"
+
+# Verify naming consistency
+ls frontend/src/components/**/*.jsx | xargs basename -s .jsx | sort
+```
+
+**Post-Rename Checklist:**
+- [ ] Configure ESLint rule for PascalCase components (if not already)
+- [ ] Update ALL imports after renaming (grep for old names)
+- [ ] Verify no broken references: `npm run build`
+- [ ] Test all pages load correctly after renames
+
+---
+
 ## 🔗 Dependencies
 
 **Depends On:**

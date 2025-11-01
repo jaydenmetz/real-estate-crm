@@ -130,6 +130,48 @@ git push --force origin main  # Only if no one else working
 
 ---
 
+## 📐 CLAUDE.md Compliance (Optional - Add if Relevant)
+
+> **Delete this section if project doesn't involve code changes**
+
+### Required Patterns:
+- [ ] **NO duplicate files** - Edit existing files in place, never create Enhanced/Optimized/V2 versions
+- [ ] **Component naming**: PascalCase for components (EscrowCard.jsx not escrowCard.jsx)
+- [ ] **API calls**: Use apiInstance from api.service.js (NEVER raw fetch except Login/Register)
+- [ ] **Responsive grids**: Max 2 columns inside cards/widgets (prevents text overlap)
+- [ ] **Archive old code**: Move to `archive/ComponentName_YYYY-MM-DD.jsx` if preserving
+- [ ] **Git commits**: Include `Co-Authored-By: Claude <noreply@anthropic.com>`
+
+### Project-Specific Rules:
+[Add based on project type - see CLAUDE.md for patterns]
+
+---
+
+## 🧪 Test Coverage Impact (Optional - Add if Relevant)
+
+> **Delete this section if project doesn't touch tests**
+
+### Current Baseline:
+- **Total Tests**: 228/228 passing (100%)
+- **Health Dashboard**: https://crm.jaydenmetz.com/health
+- **Coverage**: Dual authentication (JWT + API Key) across 5 modules
+
+### Tests Modified by This Project:
+- [ ] List test files changed
+- [ ] Document why tests are changing
+
+### Coverage Verification:
+- [ ] Run backend tests: `cd backend && npm test`
+- [ ] Run health dashboard: https://crm.jaydenmetz.com/health
+- [ ] Verify: 228/228 tests still passing ✅
+
+### Post-Project Validation:
+- [ ] All tests green in health dashboard
+- [ ] Test organization clearer/more maintainable
+- [ ] Coverage maintained or improved
+
+---
+
 ## 🔗 Dependencies
 
 **Depends On:**

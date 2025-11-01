@@ -174,6 +174,26 @@ git push --force origin main  # Only if no one else working
 
 ---
 
+## 📐 CLAUDE.md Compliance
+
+### Required Patterns:
+- [ ] **NO duplicate files** - Edit existing files in place, never create Enhanced/Optimized/V2 versions
+- [ ] **Component naming**: PascalCase for components (EscrowCard.jsx not escrowCard.jsx)
+- [ ] **API calls**: Use apiInstance from api.service.js (NEVER raw fetch except Login/Register)
+- [ ] **Responsive grids**: Max 2 columns inside cards/widgets (prevents text overlap)
+- [ ] **Archive old code**: Move to `archive/ComponentName_YYYY-MM-DD.jsx` if preserving
+- [ ] **Git commits**: Include `Co-Authored-By: Claude <noreply@anthropic.com>`
+
+### Project-Specific Rules:
+- [ ] Script organization: testing/, backend/, deployment/, maintenance/ folders
+- [ ] No scripts in root directory (violates project structure rules)
+- [ ] Environment variables: Use $DATABASE_HOST, $PGPASSWORD (never hardcode)
+- [ ] Error handling: All scripts check exit codes and display errors
+- [ ] Make executable: chmod +x on all .sh files
+- [ ] Header comments: Usage documentation at top of each script
+
+---
+
 ## 🔗 Dependencies
 
 **Depends On:**

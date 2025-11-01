@@ -178,6 +178,50 @@ git push --force origin main  # Only if no one else working
 
 ---
 
+## 📐 CLAUDE.md Compliance
+
+### Required Patterns:
+- [ ] **NO duplicate files** - Edit existing files in place, never create Enhanced/Optimized/V2 versions
+- [ ] **Component naming**: PascalCase for components (EscrowCard.jsx not escrowCard.jsx)
+- [ ] **API calls**: Use apiInstance from api.service.js (NEVER raw fetch except Login/Register)
+- [ ] **Responsive grids**: Max 2 columns inside cards/widgets (prevents text overlap)
+- [ ] **Archive old code**: Move to `archive/ComponentName_YYYY-MM-DD.jsx` if preserving
+- [ ] **Git commits**: Include `Co-Authored-By: Claude <noreply@anthropic.com>`
+
+### Project-Specific Rules:
+- [ ] Backend structure: Controllers handle request/response only, business logic in services
+- [ ] Consistent error handling: Use centralized error response patterns
+- [ ] Import paths: Update all imports after moving files
+- [ ] No orphaned files: Remove unused controllers/services
+- [ ] Middleware organization: Group by purpose (auth, validation, rate-limiting)
+
+---
+
+## 🧪 Test Coverage Impact
+
+### Current Baseline:
+- **Total Tests**: 228/228 passing (100%)
+- **Health Dashboard**: https://crm.jaydenmetz.com/health
+- **Coverage**: Dual authentication (JWT + API Key) across 5 modules
+
+### Tests Modified by This Project:
+- Backend test imports may need updating after directory consolidation
+- Service layer tests should verify business logic moved correctly
+- Controller tests should verify thin request/response handling
+
+### Coverage Verification:
+- [ ] Run backend tests: `cd backend && npm test`
+- [ ] Run health dashboard: https://crm.jaydenmetz.com/health
+- [ ] Verify: 228/228 tests still passing ✅
+- [ ] No test files lost during reorganization
+
+### Post-Project Validation:
+- [ ] All tests green in health dashboard
+- [ ] Test organization clearer/more maintainable
+- [ ] Coverage maintained or improved
+
+---
+
 ## 🔗 Dependencies
 
 **Depends On:**

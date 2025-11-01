@@ -187,6 +187,66 @@ git push --force origin main  # Only if no one else working
 
 ---
 
+## 📐 CLAUDE.md Compliance
+
+### Required Patterns:
+- [ ] **NO duplicate files** - Edit existing files in place, never create Enhanced/Optimized/V2 versions
+- [ ] **Component naming**: PascalCase for components (EscrowCard.jsx not escrowCard.jsx)
+- [ ] **API calls**: Use apiInstance from api.service.js (NEVER raw fetch except Login/Register)
+- [ ] **Responsive grids**: Max 2 columns inside cards/widgets (prevents text overlap)
+- [ ] **Archive old code**: Move to `archive/ComponentName_YYYY-MM-DD.jsx` if preserving
+- [ ] **Git commits**: Include `Co-Authored-By: Claude <noreply@anthropic.com>`
+
+### Project-Specific Rules:
+- [ ] Test organization: unit/, integration/, fixtures/, helpers/ folders
+- [ ] Test naming: `[feature].test.js` (e.g., escrows.test.js)
+- [ ] Test location: `backend/src/tests/` or `frontend/src/__tests__/`
+- [ ] NO duplicate test files in different locations
+- [ ] Shared test utilities in helpers/ folder
+- [ ] Test fixtures in fixtures/ folder
+
+---
+
+## 🧪 Test Coverage Impact (CRITICAL - Maintain 100%)
+
+### Current Baseline (MUST PRESERVE):
+- **Total Tests**: 228/228 passing (100%)
+- **Health Dashboard**: https://crm.jaydenmetz.com/health
+- **Coverage**: Dual authentication (JWT + API Key) across 5 modules
+- **Breakdown**:
+  - Escrows: 48 tests (24 JWT + 24 API Key)
+  - Listings: 48 tests (24 JWT + 24 API Key)
+  - Clients: 44 tests (22 JWT + 22 API Key)
+  - Appointments: 44 tests (22 JWT + 22 API Key)
+  - Leads: 44 tests (22 JWT + 22 API Key)
+
+### Tests Modified by This Project:
+- Moving test files to new locations (unit/, integration/)
+- Consolidating duplicate test utilities into helpers/
+- Standardizing test naming conventions
+- **WARNING**: Must not lose any tests during reorganization
+
+### Critical Success Criteria:
+- [ ] **BEFORE**: Document exact test count: 228 total
+- [ ] **DURING**: Track each test file as it moves
+- [ ] **AFTER**: Verify exact same 228 tests passing ✅
+- [ ] **Health Dashboard**: All modules show green (escrows, listings, clients, appointments, leads)
+
+### Coverage Verification:
+- [ ] Run backend tests: `cd backend && npm test`
+- [ ] Run health dashboard: https://crm.jaydenmetz.com/health
+- [ ] Verify: 228/228 tests still passing ✅
+- [ ] No test files lost during reorganization
+- [ ] All health dashboard tests green
+
+### Post-Project Validation:
+- [ ] All tests green in health dashboard
+- [ ] Test organization clearer/more maintainable
+- [ ] **Coverage maintained at 100% (228/228)**
+- [ ] Easier to add new tests in organized structure
+
+---
+
 ## 🔗 Dependencies
 
 **Depends On:**

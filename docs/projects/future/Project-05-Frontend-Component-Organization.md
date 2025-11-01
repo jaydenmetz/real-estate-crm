@@ -186,6 +186,69 @@ git push --force origin main  # Only if no one else working
 
 ---
 
+## 📐 CLAUDE.md Compliance
+
+### Required Patterns:
+- [ ] **NO duplicate files** - Edit existing files in place, never create Enhanced/Optimized/V2 versions
+- [ ] **Component naming**: PascalCase for components (EscrowCard.jsx not escrowCard.jsx)
+- [ ] **API calls**: Use apiInstance from api.service.js (NEVER raw fetch except Login/Register)
+- [ ] **Responsive grids**: Max 2 columns inside cards/widgets (prevents text overlap)
+- [ ] **Archive old code**: Move to `archive/ComponentName_YYYY-MM-DD.jsx` if preserving
+- [ ] **Git commits**: Include `Co-Authored-By: Claude <noreply@anthropic.com>`
+
+### Project-Specific Rules: Component Organization
+
+**CLAUDE.md Folder Structure:**
+- [ ] Details pages: `components/details/[entity]/` with hero, widgets, sidebar
+- [ ] Dashboards: `components/dashboards/[entity]/` with modals, constants
+- [ ] Common components: `components/common/` for shared UI
+- [ ] NO _archived folders in active paths (move to docs/archive/)
+- [ ] Grid layouts inside cards: MAX 2 columns (statsGrid2x2)
+
+**Component Organization:**
+- [ ] Detail template used: `templates/Detail/index.jsx`
+- [ ] Dashboard template used: `templates/Dashboard/index.jsx`
+- [ ] Entity configs in: `config/entities/[entity].config.js`
+- [ ] Widgets separated by entity: `components/details/[entity]/components/`
+
+**Responsive Design (CRITICAL - Prevent Text Overlap):**
+- [ ] **Full-width sections**: Can use 3-4 columns (statsRow)
+- [ ] **Inside cards/widgets**: MUST use 2 columns max (statsGrid2x2)
+- [ ] **Typography scaled**: `fontSize: { xs: '1.25rem', sm: '1.5rem' }`
+- [ ] **Tested on mobile**: No text overlap in Financial Summary widget
+- [ ] **Red flags to avoid**: `md={3}` or `md={4}` inside Card components
+
+**October 18, 2025 Lesson:** Financial Summary widget had 4-column grid inside a card. Text overlapped and was unreadable. Always use 2 columns max inside constrained widths.
+
+---
+
+## 🧪 Test Coverage Impact
+
+### Current Baseline:
+- **Total Tests**: 228/228 passing (100%)
+- **Health Dashboard**: https://crm.jaydenmetz.com/health
+- **Coverage**: Dual authentication (JWT + API Key) across 5 modules
+
+### Tests Modified by This Project:
+- Component import paths in tests will need updating after reorganization
+- Widget tests should verify responsive layouts work correctly
+- Dashboard tests should ensure modals/forms still function
+
+### Coverage Verification:
+- [ ] Run frontend tests: `cd frontend && npm test`
+- [ ] Run health dashboard: https://crm.jaydenmetz.com/health
+- [ ] Verify: 228/228 tests still passing ✅
+- [ ] No component files lost during reorganization
+- [ ] All pages render without "Cannot find module" errors
+
+### Post-Project Validation:
+- [ ] All tests green in health dashboard
+- [ ] Component organization clearer/more maintainable
+- [ ] Coverage maintained or improved
+- [ ] Responsive layouts work on mobile (375px width)
+
+---
+
 ## 🔗 Dependencies
 
 **Depends On:**

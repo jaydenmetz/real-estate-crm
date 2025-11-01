@@ -159,6 +159,46 @@ git push --force origin main  # Only if no one else working
 
 ---
 
+## 📐 CLAUDE.md Compliance
+
+### Required Patterns:
+- [ ] **NO duplicate files** - Edit existing files in place, never create Enhanced/Optimized/V2 versions
+- [ ] **Component naming**: PascalCase for components (EscrowCard.jsx not escrowCard.jsx)
+- [ ] **API calls**: Use apiInstance from api.service.js (NEVER raw fetch except Login/Register)
+- [ ] **Responsive grids**: Max 2 columns inside cards/widgets (prevents text overlap)
+- [ ] **Archive old code**: Move to `archive/ComponentName_YYYY-MM-DD.jsx` if preserving
+- [ ] **Git commits**: Include `Co-Authored-By: Claude <noreply@anthropic.com>`
+
+### Project-Specific Rules: Duplicate Prevention (CRITICAL)
+
+**Pre-Flight Duplicate Checks:**
+```bash
+# Find duplicate filenames
+find frontend/src -name "*.jsx" | xargs -I {} basename {} | sort | uniq -d
+
+# Find problematic patterns
+find . -name "*Enhanced*.jsx" -o -name "*Optimized*.jsx" -o -name "*V2.jsx" -o -name "*2.jsx"
+
+# Find backup files
+find . -name "*.backup" -o -name "*.old" -o -name "*.reference"
+```
+
+- [ ] **Zero results** from all duplicate checks above
+- [ ] **Document October 17, 2025 incident**: EscrowHeroCard duplicate caused "startDatePickerOpen undefined" error
+- [ ] All old versions archived with date stamps: `archive/Navigation_2025-10-17.jsx`
+- [ ] Verify webpack bundler works: `npm run build` completes without warnings
+
+**Why This Matters:**
+Even with identical imports, webpack can bundle wrong file if duplicates exist. ALWAYS check for duplicates BEFORE refactoring.
+
+**Correct Debugging Sequence for "undefined" Errors:**
+1. Check for duplicate files: `find frontend/src -name "*ComponentName*" 2>/dev/null`
+2. If more than 1 result, you found the problem
+3. Check what's being imported: `grep -r "ComponentName" frontend/src --include="*.jsx"`
+4. Only after all checks, then review actual code
+
+---
+
 ## 🔗 Dependencies
 
 **Depends On:**
