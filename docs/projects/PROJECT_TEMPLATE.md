@@ -19,6 +19,20 @@
 
 ---
 
+## ⚠️ Risk Assessment
+
+### Technical Risks:
+- [ ] **Breaking Changes**: [List potential breaking changes]
+- [ ] **Performance Impact**: [Expected impact on load times]
+- [ ] **Dependencies**: [External services that could fail]
+
+### Business Risks:
+- [ ] **User Impact**: [How many users affected if this fails]
+- [ ] **Downtime Risk**: [None/Low/Medium/High]
+- [ ] **Data Risk**: [Could this cause data loss]
+
+---
+
 ## 🔄 Rollback Plan
 
 ### Before Starting:
@@ -182,6 +196,29 @@ git push --force origin main  # Only if no one else working
 
 ---
 
+## 🎲 Project Selection Criteria
+
+### ✅ Can Start This Project If:
+- [ ] All dependencies completed (see above)
+- [ ] Current build is stable (228/228 tests passing)
+- [ ] Have [X] hours available this sprint
+- [ ] Not blocking other developers
+- [ ] Railway deployment healthy
+
+### 🚫 Should Skip/Defer If:
+- [ ] Active production issue or P0 bug
+- [ ] Waiting on user feedback for this area
+- [ ] Higher priority project available
+- [ ] End of sprint (less than estimated time remaining)
+- [ ] Major dependency update pending
+
+### ⏰ Optimal Timing:
+- **Best Day**: [Monday-Thursday for complex work, any day for simple cleanup]
+- **Avoid**: [Friday deployments for critical path projects]
+- **Sprint Position**: [Early/Mid/Late sprint]
+
+---
+
 ## ✅ Success Criteria
 - [ ] All tasks completed
 - [ ] All verification tests pass
@@ -210,9 +247,9 @@ git push --force origin main  # Only if no one else working
 
 ### Deploy and Verify:
 1. **Push to GitHub:**
-   ```bash
+```bash
    git push origin main
-   ```
+```
 
 2. **Monitor Railway Deployment:**
    - Watch deployment at: https://railway.app
