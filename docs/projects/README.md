@@ -13,6 +13,10 @@ docs/projects/
 ├── PROJECT_TEMPLATE.md          # Template for creating new projects
 ├── current/                     # Active project (only 1 at a time)
 │   └── Project-XX-Name.md      # Current project being worked on
+├── future/                      # Pre-created project files ready to use
+│   ├── Project-01-Backend-Directory-Consolidation.md
+│   ├── Project-02-Frontend-Component-Organization.md
+│   └── ... (all 15 Phase A projects)
 └── archive/                     # Completed projects
     ├── Project-01-Name.md      # Archived completed projects
     ├── Project-02-Name.md
@@ -29,7 +33,8 @@ docs/projects/
    - Phase dependencies (complete Phase A before B, etc.)
    - Project dependencies (some projects require others)
    - Current priorities
-3. Copy [PROJECT_TEMPLATE.md](PROJECT_TEMPLATE.md) to `current/Project-XX-Name.md`
+3. **For Phase A projects:** Move from `future/` to `current/` (already filled out!)
+4. **For other projects:** Copy [PROJECT_TEMPLATE.md](PROJECT_TEMPLATE.md) to `current/Project-XX-Name.md` and fill out
 
 ### Step 2: Plan Project
 1. Fill out all sections of project file
