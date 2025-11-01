@@ -44,6 +44,20 @@ ENVIRONMENTS.md        # Complete guide to all env vars
 
 ---
 
+## ⚠️ Risk Assessment
+
+### Technical Risks:
+- [ ] **Breaking Changes**: Incorrect env var names could break database connections or API integrations
+- [ ] **Performance Impact**: None expected - configuration only
+- [ ] **Dependencies**: Railway deployment relies on correct environment variables
+
+### Business Risks:
+- [ ] **User Impact**: High - If DATABASE_URL wrong, entire app goes down
+- [ ] **Downtime Risk**: Medium - Could cause 2-5 minute outage if env vars misconfigured
+- [ ] **Data Risk**: Low - No data changes, only configuration
+
+---
+
 ## 🔄 Rollback Plan
 
 ### Before Starting:
@@ -214,6 +228,29 @@ git push --force origin main  # Only if no one else working
 - Project-09: Config File Consolidation
 - Project-15: Build Process Verification
 - Phase H: Deployment & Operations projects
+
+---
+
+## 🎲 Project Selection Criteria
+
+### ✅ Can Start This Project If:
+- [ ] All dependencies completed (none - this is first project)
+- [ ] Current build is stable (228/228 tests passing)
+- [ ] Have 8 hours available this sprint
+- [ ] Not blocking other developers
+- [ ] Railway deployment healthy
+
+### 🚫 Should Skip/Defer If:
+- [ ] Active production issue or P0 bug
+- [ ] Waiting on user feedback for environment changes
+- [ ] Railway having infrastructure issues
+- [ ] End of sprint (less than 8 hours remaining)
+- [ ] Major database migration pending
+
+### ⏰ Optimal Timing:
+- **Best Day**: Monday or Tuesday (allows time to catch issues before weekend)
+- **Avoid**: Friday deployments (gives weekend buffer for issues)
+- **Sprint Position**: Early sprint (foundational work)
 
 ---
 
