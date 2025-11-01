@@ -28,6 +28,20 @@ DELETE /v1/escrows/:id      # Delete
 
 ---
 
+## ⚠️ Risk Assessment
+
+### Technical Risks:
+- [ ] **Breaking Changes**: Changing route paths breaks frontend API calls. Risk of 404 errors if frontend not updated.
+- [ ] **Performance Impact**: None expected
+- [ ] **Dependencies**: Frontend API calls, health check tests, external API consumers
+
+### Business Risks:
+- [ ] **User Impact**: Medium - API errors break all features
+- [ ] **Downtime Risk**: Medium - Frontend can't communicate with backend if routes wrong
+- [ ] **Data Risk**: None - Route reorganization only
+
+---
+
 ## 🔄 Rollback Plan
 
 ### Before Starting:
@@ -190,6 +204,29 @@ git push --force origin main  # Only if no one else working
 **Blocks:**
 - Project-12: Service Layer Unification
 - Phase B: Core Functionality projects
+
+---
+
+## 🎲 Project Selection Criteria
+
+### ✅ Can Start This Project If:
+- [ ] All dependencies completed (Project-03 complete)
+- [ ] Current build is stable (228/228 tests passing)
+- [ ] Have 8.4 hours available this sprint
+- [ ] Not blocking other developers
+- [ ] Railway deployment healthy
+
+### 🚫 Should Skip/Defer If:
+- [ ] Active production issue or P0 bug
+- [ ] Waiting on user feedback for this area
+- [ ] Higher priority project available
+- [ ] End of sprint (less than 8.4 hours remaining)
+- [ ] Active frontend API integration work
+
+### ⏰ Optimal Timing:
+- **Best Day**: Monday-Wednesday (need time to update frontend)
+- **Avoid**: Friday (API changes risky for weekends)
+- **Sprint Position**: Mid sprint (after backend consolidation)
 
 ---
 

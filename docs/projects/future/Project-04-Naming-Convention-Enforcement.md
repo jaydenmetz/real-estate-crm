@@ -39,6 +39,20 @@ Consistent naming makes code easier to understand and maintain. This project enf
 
 ---
 
+## ⚠️ Risk Assessment
+
+### Technical Risks:
+- [ ] **Breaking Changes**: Renaming files breaks all imports referencing old names. Risk of "Cannot find module" errors throughout codebase.
+- [ ] **Performance Impact**: None expected
+- [ ] **Dependencies**: All file imports across frontend/backend, webpack bundler, Railway deployment
+
+### Business Risks:
+- [ ] **User Impact**: Medium - Application won't load if imports broken
+- [ ] **Downtime Risk**: Medium - Risk of deployment failures from broken imports
+- [ ] **Data Risk**: None - No database changes
+
+---
+
 ## 🔄 Rollback Plan
 
 ### Before Starting:
@@ -206,6 +220,29 @@ ls frontend/src/components/**/*.jsx | xargs basename -s .jsx | sort
 - Project-05: Frontend Component Organization
 - Project-06: Import Path Standardization
 - Project-15: Build Process Verification
+
+---
+
+## 🎲 Project Selection Criteria
+
+### ✅ Can Start This Project If:
+- [ ] All dependencies completed (Projects 02-03 complete)
+- [ ] Current build is stable (228/228 tests passing)
+- [ ] Have 8 hours available this sprint
+- [ ] Not blocking other developers
+- [ ] Railway deployment healthy
+
+### 🚫 Should Skip/Defer If:
+- [ ] Active production issue or P0 bug
+- [ ] Waiting on user feedback for this area
+- [ ] Higher priority project available
+- [ ] End of sprint (less than 8 hours remaining)
+- [ ] Active refactoring in progress
+
+### ⏰ Optimal Timing:
+- **Best Day**: Monday-Wednesday
+- **Avoid**: Friday (import errors need full week to resolve)
+- **Sprint Position**: Early-mid sprint (after duplicate removal)
 
 ---
 

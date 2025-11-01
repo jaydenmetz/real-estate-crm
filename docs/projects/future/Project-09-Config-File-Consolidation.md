@@ -33,6 +33,20 @@ frontend/src/config/
 
 ---
 
+## ⚠️ Risk Assessment
+
+### Technical Risks:
+- [ ] **Breaking Changes**: Moving config files breaks import paths. Risk of missing configuration causing startup failures.
+- [ ] **Performance Impact**: None expected
+- [ ] **Dependencies**: All config imports across frontend/backend, environment variables
+
+### Business Risks:
+- [ ] **User Impact**: Low - Config changes tested before deployment
+- [ ] **Downtime Risk**: Low - Application may not start if config imports broken
+- [ ] **Data Risk**: None - Config organization only
+
+---
+
 ## 🔄 Rollback Plan
 
 ### Before Starting:
@@ -166,6 +180,29 @@ git push --force origin main  # Only if no one else working
 
 **Blocks:**
 - Project-15: Build Process Verification
+
+---
+
+## 🎲 Project Selection Criteria
+
+### ✅ Can Start This Project If:
+- [ ] All dependencies completed (Projects 01, 07 complete)
+- [ ] Current build is stable (228/228 tests passing)
+- [ ] Have 4.8 hours available this sprint
+- [ ] Not blocking other developers
+- [ ] Railway deployment healthy
+
+### 🚫 Should Skip/Defer If:
+- [ ] Active production issue or P0 bug
+- [ ] Waiting on user feedback for this area
+- [ ] Higher priority project available
+- [ ] End of sprint (less than 4.8 hours remaining)
+- [ ] Environment variable changes in progress
+
+### ⏰ Optimal Timing:
+- **Best Day**: Any day (low-risk organization work)
+- **Avoid**: None (safe cleanup task)
+- **Sprint Position**: Mid-late sprint (cleanup work)
 
 ---
 

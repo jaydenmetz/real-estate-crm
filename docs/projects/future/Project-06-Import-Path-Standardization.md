@@ -45,6 +45,20 @@ import { api } from '../../../../config/api';
 
 ---
 
+## ⚠️ Risk Assessment
+
+### Technical Risks:
+- [ ] **Breaking Changes**: Changing import paths could break module resolution if path aliases not configured correctly. Risk of "Cannot resolve module" errors.
+- [ ] **Performance Impact**: None expected (path aliases may slightly improve build time)
+- [ ] **Dependencies**: Webpack/React path resolver, jsconfig.json, all import statements
+
+### Business Risks:
+- [ ] **User Impact**: Medium - Application won't load if imports broken
+- [ ] **Downtime Risk**: Medium - Risk of build failures
+- [ ] **Data Risk**: None - Frontend changes only
+
+---
+
 ## 🔄 Rollback Plan
 
 ### Before Starting:
@@ -222,6 +236,29 @@ grep -r "contactsAPI" frontend/src --include="*.jsx"  # Should be 0
 **Blocks:**
 - Project-15: Build Process Verification
 - Phase B: Core Functionality projects
+
+---
+
+## 🎲 Project Selection Criteria
+
+### ✅ Can Start This Project If:
+- [ ] All dependencies completed (Projects 04-05 complete)
+- [ ] Current build is stable (228/228 tests passing)
+- [ ] Have 6.5 hours available this sprint
+- [ ] Not blocking other developers
+- [ ] Railway deployment healthy
+
+### 🚫 Should Skip/Defer If:
+- [ ] Active production issue or P0 bug
+- [ ] Waiting on user feedback for this area
+- [ ] Higher priority project available
+- [ ] End of sprint (less than 6.5 hours remaining)
+- [ ] Component organization project incomplete
+
+### ⏰ Optimal Timing:
+- **Best Day**: Monday-Thursday
+- **Avoid**: Friday (import errors hard to debug on weekends)
+- **Sprint Position**: Mid sprint (after component organization complete)
 
 ---
 

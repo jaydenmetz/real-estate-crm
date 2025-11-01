@@ -51,6 +51,20 @@ frontend/src/components/
 
 ---
 
+## ⚠️ Risk Assessment
+
+### Technical Risks:
+- [ ] **Breaking Changes**: Moving components to new folders breaks all import paths. Risk of "Cannot find module" errors, webpack confusion with duplicate files.
+- [ ] **Performance Impact**: Minimal - ~5ms webpack rebuild overhead
+- [ ] **Dependencies**: Webpack bundler, all component imports, Railway deployment
+
+### Business Risks:
+- [ ] **User Impact**: Medium - UI won't load if component imports fail
+- [ ] **Downtime Risk**: Medium - Risk of blank pages or missing widgets
+- [ ] **Data Risk**: None - Frontend changes only
+
+---
+
 ## 🔄 Rollback Plan
 
 ### Before Starting:
@@ -261,6 +275,29 @@ git push --force origin main  # Only if no one else working
 - Project-10: Archive Legacy Code
 - Project-15: Build Process Verification
 - Phase B: Core Functionality projects
+
+---
+
+## 🎲 Project Selection Criteria
+
+### ✅ Can Start This Project If:
+- [ ] All dependencies completed (Projects 02-04 complete)
+- [ ] Current build is stable (228/228 tests passing)
+- [ ] Have 13 hours available this sprint
+- [ ] Not blocking other developers
+- [ ] Railway deployment healthy
+
+### 🚫 Should Skip/Defer If:
+- [ ] Active production issue or P0 bug
+- [ ] Waiting on user feedback for this area
+- [ ] Higher priority project available
+- [ ] End of sprint (less than 13 hours remaining)
+- [ ] Active UI redesign in progress
+
+### ⏰ Optimal Timing:
+- **Best Day**: Monday-Tuesday (largest refactor, needs full week)
+- **Avoid**: Friday (component errors need time to debug)
+- **Sprint Position**: Early sprint (critical structural work)
 
 ---
 

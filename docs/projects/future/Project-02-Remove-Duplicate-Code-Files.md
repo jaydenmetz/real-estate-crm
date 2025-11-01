@@ -33,6 +33,20 @@ NEVER have two files with the same name in different folders. This confuses webp
 
 ---
 
+## ⚠️ Risk Assessment
+
+### Technical Risks:
+- [ ] **Breaking Changes**: File deletions could break imports if webpack cached wrong file. Removing duplicates could cause "Cannot find module" errors if imports were pointing to removed files.
+- [ ] **Performance Impact**: None expected (removing files improves webpack performance)
+- [ ] **Dependencies**: Webpack bundler (can cache wrong file), Git version control, Railway deployment
+
+### Business Risks:
+- [ ] **User Impact**: High - All users affected if webpack bundles wrong component version
+- [ ] **Downtime Risk**: Medium - Risk of production errors during deployment if duplicates cause confusion
+- [ ] **Data Risk**: None - No database changes, file operations only
+
+---
+
 ## 🔄 Rollback Plan
 
 ### Before Starting:
@@ -210,6 +224,29 @@ Even with identical imports, webpack can bundle wrong file if duplicates exist. 
 - Project-05: Frontend Component Organization
 - Project-10: Archive Legacy Code
 - Project-15: Build Process Verification
+
+---
+
+## 🎲 Project Selection Criteria
+
+### ✅ Can Start This Project If:
+- [ ] All dependencies completed (Project-01 complete)
+- [ ] Current build is stable (228/228 tests passing)
+- [ ] Have 10.5 hours available this sprint
+- [ ] Not blocking other developers
+- [ ] Railway deployment healthy
+
+### 🚫 Should Skip/Defer If:
+- [ ] Active production issue or P0 bug
+- [ ] Waiting on user feedback for this area
+- [ ] Higher priority project available
+- [ ] End of sprint (less than 10.5 hours remaining)
+- [ ] Webpack bundler having active issues
+
+### ⏰ Optimal Timing:
+- **Best Day**: Monday-Tuesday (need time for full testing cycle)
+- **Avoid**: Friday (risk of weekend production issues)
+- **Sprint Position**: Early sprint (foundation work must be done first)
 
 ---
 

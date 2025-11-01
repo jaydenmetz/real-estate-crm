@@ -43,6 +43,20 @@ backend/src/
 
 ---
 
+## ⚠️ Risk Assessment
+
+### Technical Risks:
+- [ ] **Breaking Changes**: Moving files changes import paths. Risk of "Cannot find module" errors if imports not updated correctly across all files.
+- [ ] **Performance Impact**: None expected (reorganization doesn't affect runtime)
+- [ ] **Dependencies**: Node.js module resolution, Railway deployment, all backend imports
+
+### Business Risks:
+- [ ] **User Impact**: Medium - API endpoints could break if imports fail
+- [ ] **Downtime Risk**: Medium - Backend may not start if imports broken
+- [ ] **Data Risk**: Low - No database changes, but API errors could prevent data access
+
+---
+
 ## 🔄 Rollback Plan
 
 ### Before Starting:
@@ -235,6 +249,29 @@ git push --force origin main  # Only if no one else working
 - Project-12: Service Layer Unification
 - Project-13: Test Suite Reorganization
 - Project-15: Build Process Verification
+
+---
+
+## 🎲 Project Selection Criteria
+
+### ✅ Can Start This Project If:
+- [ ] All dependencies completed (Projects 01-02 complete)
+- [ ] Current build is stable (228/228 tests passing)
+- [ ] Have 10.5 hours available this sprint
+- [ ] Not blocking other developers
+- [ ] Railway deployment healthy
+
+### 🚫 Should Skip/Defer If:
+- [ ] Active production issue or P0 bug
+- [ ] Waiting on user feedback for this area
+- [ ] Higher priority project available
+- [ ] End of sprint (less than 10.5 hours remaining)
+- [ ] Backend API errors in production
+
+### ⏰ Optimal Timing:
+- **Best Day**: Monday-Wednesday (need time for testing)
+- **Avoid**: Friday (risk of weekend API issues)
+- **Sprint Position**: Early sprint (structural foundation work)
 
 ---
 

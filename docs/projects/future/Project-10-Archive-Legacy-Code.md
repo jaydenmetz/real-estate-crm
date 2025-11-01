@@ -39,6 +39,20 @@ archive/
 
 ---
 
+## ⚠️ Risk Assessment
+
+### Technical Risks:
+- [ ] **Breaking Changes**: Deleting code could break features if dependency analysis incomplete. Risk of removing still-used components.
+- [ ] **Performance Impact**: None expected (removing code improves build time)
+- [ ] **Dependencies**: Git version control (archive needs to be in git history)
+
+### Business Risks:
+- [ ] **User Impact**: Low - Only removing unused code
+- [ ] **Downtime Risk**: Low - Thorough testing before removal
+- [ ] **Data Risk**: None - Code cleanup only
+
+---
+
 ## 🔄 Rollback Plan
 
 ### Before Starting:
@@ -172,6 +186,29 @@ git push --force origin main  # Only if no one else working
 
 **Blocks:**
 - None (cleanup project)
+
+---
+
+## 🎲 Project Selection Criteria
+
+### ✅ Can Start This Project If:
+- [ ] All dependencies completed (Projects 02, 05 complete)
+- [ ] Current build is stable (228/228 tests passing)
+- [ ] Have 6 hours available this sprint
+- [ ] Not blocking other developers
+- [ ] Railway deployment healthy
+
+### 🚫 Should Skip/Defer If:
+- [ ] Active production issue or P0 bug
+- [ ] Waiting on user feedback for this area
+- [ ] Higher priority project available
+- [ ] End of sprint (less than 6 hours remaining)
+- [ ] Component reorganization incomplete
+
+### ⏰ Optimal Timing:
+- **Best Day**: Any day (safe cleanup work)
+- **Avoid**: None (low-risk archival)
+- **Sprint Position**: Mid-late sprint (cleanup work)
 
 ---
 

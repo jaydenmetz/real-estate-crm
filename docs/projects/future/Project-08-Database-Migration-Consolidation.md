@@ -39,6 +39,20 @@ backend/migrations/
 
 ---
 
+## ⚠️ Risk Assessment
+
+### Technical Risks:
+- [ ] **Breaking Changes**: Reorganizing migrations could cause confusion about which have run. Risk of database migration failures.
+- [ ] **Performance Impact**: None expected (organization only, no schema changes)
+- [ ] **Dependencies**: PostgreSQL database, Railway database connection, migration scripts
+
+### Business Risks:
+- [ ] **User Impact**: Low - Migration organization doesn't affect running application
+- [ ] **Downtime Risk**: Low - No actual migrations run during this project
+- [ ] **Data Risk**: None - Organization only, no schema changes or data modifications
+
+---
+
 ## 🔄 Rollback Plan
 
 ### Before Starting:
@@ -180,6 +194,29 @@ git push --force origin main  # Only if no one else working
 
 **Blocks:**
 - Phase E: Data & Analytics projects
+
+---
+
+## 🎲 Project Selection Criteria
+
+### ✅ Can Start This Project If:
+- [ ] All dependencies completed (Projects 01, 03 complete)
+- [ ] Current build is stable (228/228 tests passing)
+- [ ] Have 6 hours available this sprint
+- [ ] Not blocking other developers
+- [ ] Railway deployment healthy
+
+### 🚫 Should Skip/Defer If:
+- [ ] Active production issue or P0 bug
+- [ ] Waiting on user feedback for this area
+- [ ] Higher priority project available
+- [ ] End of sprint (less than 6 hours remaining)
+- [ ] Database migration pending or in progress
+
+### ⏰ Optimal Timing:
+- **Best Day**: Any day (organization work, no schema changes)
+- **Avoid**: During active database migrations
+- **Sprint Position**: Mid-late sprint (lower priority cleanup)
 
 ---
 

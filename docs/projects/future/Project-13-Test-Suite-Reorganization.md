@@ -55,6 +55,20 @@ frontend/src/__tests__/
 
 ---
 
+## ⚠️ Risk Assessment
+
+### Technical Risks:
+- [ ] **Breaking Changes**: Moving test files could break test imports and CI/CD pipelines. Risk of losing test coverage if files moved incorrectly.
+- [ ] **Performance Impact**: None expected
+- [ ] **Dependencies**: Test runners (Jest/Mocha), CI/CD configuration, test imports
+
+### Business Risks:
+- [ ] **User Impact**: None - Internal test organization
+- [ ] **Downtime Risk**: None - Tests don't affect production
+- [ ] **Data Risk**: None - Test reorganization only
+
+---
+
 ## 🔄 Rollback Plan
 
 ### Before Starting:
@@ -255,6 +269,29 @@ git push --force origin main  # Only if no one else working
 **Blocks:**
 - Project-15: Build Process Verification
 - Phase G: Testing & Quality projects
+
+---
+
+## 🎲 Project Selection Criteria
+
+### ✅ Can Start This Project If:
+- [ ] All dependencies completed (Project-03 complete)
+- [ ] Current build is stable (228/228 tests passing)
+- [ ] Have 7.2 hours available this sprint
+- [ ] Not blocking other developers
+- [ ] Railway deployment healthy
+
+### 🚫 Should Skip/Defer If:
+- [ ] Active production issue or P0 bug
+- [ ] Waiting on user feedback for this area
+- [ ] Higher priority project available
+- [ ] End of sprint (less than 7.2 hours remaining)
+- [ ] Test file imports breaking
+
+### ⏰ Optimal Timing:
+- **Best Day**: Any day (internal test organization)
+- **Avoid**: None (safe refactor)
+- **Sprint Position**: Mid-late sprint (cleanup work)
 
 ---
 

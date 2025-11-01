@@ -35,6 +35,20 @@ exports.createEscrow = async (req, res) => {
 
 ---
 
+## ⚠️ Risk Assessment
+
+### Technical Risks:
+- [ ] **Breaking Changes**: Moving logic between layers could introduce bugs. Risk of business logic errors if refactored incorrectly.
+- [ ] **Performance Impact**: None expected (reorganization only)
+- [ ] **Dependencies**: All controllers and services, database queries
+
+### Business Risks:
+- [ ] **User Impact**: Low - Internal refactoring, functionality unchanged
+- [ ] **Downtime Risk**: Low - Logic errors caught by tests
+- [ ] **Data Risk**: Low - No schema changes, but logic errors could affect data operations
+
+---
+
 ## 🔄 Rollback Plan
 
 ### Before Starting:
@@ -197,6 +211,29 @@ git push --force origin main  # Only if no one else working
 
 **Blocks:**
 - Phase B: Core Functionality Verification
+
+---
+
+## 🎲 Project Selection Criteria
+
+### ✅ Can Start This Project If:
+- [ ] All dependencies completed (Projects 03, 11 complete)
+- [ ] Current build is stable (228/228 tests passing)
+- [ ] Have 9.6 hours available this sprint
+- [ ] Not blocking other developers
+- [ ] Railway deployment healthy
+
+### 🚫 Should Skip/Defer If:
+- [ ] Active production issue or P0 bug
+- [ ] Waiting on user feedback for this area
+- [ ] Higher priority project available
+- [ ] End of sprint (less than 9.6 hours remaining)
+- [ ] API route changes incomplete
+
+### ⏰ Optimal Timing:
+- **Best Day**: Monday-Tuesday (complex refactor needs full week)
+- **Avoid**: Friday (logic errors need time to debug)
+- **Sprint Position**: Mid sprint (after route standardization)
 
 ---
 

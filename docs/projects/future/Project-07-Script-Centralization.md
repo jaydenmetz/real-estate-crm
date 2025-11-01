@@ -44,6 +44,20 @@ scripts/
 
 ---
 
+## ⚠️ Risk Assessment
+
+### Technical Risks:
+- [ ] **Breaking Changes**: Moving scripts breaks references in documentation and CI/CD. Risk of broken automation.
+- [ ] **Performance Impact**: None expected
+- [ ] **Dependencies**: Documentation references, CI/CD pipelines, Railway deployment scripts
+
+### Business Risks:
+- [ ] **User Impact**: Low - Scripts are internal tools, not user-facing
+- [ ] **Downtime Risk**: Low - Deployment scripts could fail if paths wrong
+- [ ] **Data Risk**: Low - Backup scripts could fail if misconfigured
+
+---
+
 ## 🔄 Rollback Plan
 
 ### Before Starting:
@@ -203,6 +217,29 @@ git push --force origin main  # Only if no one else working
 **Blocks:**
 - Project-09: Config File Consolidation
 - Project-15: Build Process Verification
+
+---
+
+## 🎲 Project Selection Criteria
+
+### ✅ Can Start This Project If:
+- [ ] All dependencies completed (Projects 01-02 complete)
+- [ ] Current build is stable (228/228 tests passing)
+- [ ] Have 4.8 hours available this sprint
+- [ ] Not blocking other developers
+- [ ] Railway deployment healthy
+
+### 🚫 Should Skip/Defer If:
+- [ ] Active production issue or P0 bug
+- [ ] Waiting on user feedback for this area
+- [ ] Higher priority project available
+- [ ] End of sprint (less than 4.8 hours remaining)
+- [ ] Active database migration in progress
+
+### ⏰ Optimal Timing:
+- **Best Day**: Any day (low-risk cleanup work)
+- **Avoid**: None (safe to do anytime)
+- **Sprint Position**: Mid-late sprint (cleanup work)
 
 ---
 
