@@ -1,7 +1,7 @@
 # Project-15: Build Process Verification
 
 **Phase**: A
-**Priority**: Medium
+**Priority**: HIGH
 **Status**: Not Started
 **Estimated Time**: 4 hours
 **Started**: [Date]
@@ -127,7 +127,15 @@ After all Phase A organizational work, this project verifies that the build proc
 ## 🔗 Dependencies
 
 **Depends On:**
-- All Phase A projects (1-14)
+- Project-01: Environment Configuration Cleanup
+- Project-02: Remove Duplicate Code Files
+- Project-03: Backend Directory Consolidation
+- Project-04: Naming Convention Enforcement
+- Project-05: Frontend Component Organization
+- Project-06: Import Path Standardization
+- Project-07: Script Centralization
+- Project-09: Config File Consolidation
+- Project-13: Test Suite Reorganization
 
 **Blocks:**
 - Phase B projects (need clean build foundation)
