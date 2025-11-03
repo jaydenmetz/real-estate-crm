@@ -43,10 +43,10 @@ import CommissionDashboard from './components/dashboards/CommissionDashboard';
 import InvoiceDashboard from './components/dashboards/InvoiceDashboard';
 import ExpenseDashboard from './components/dashboards/ExpenseDashboard';
 
-// System Components
-import ActivityLog from './components/system/ActivityLog';
-import AllNotes from './components/system/AllNotes';
-import SecurityEventsPage from './components/system/SecurityEventsPage';
+// System Components (moved to admin/system/)
+import ActivityLog from './components/admin/system/ActivityLog';
+import AllNotes from './components/admin/system/AllNotes';
+import SecurityEventsPage from './components/admin/system/SecurityEventsPage';
 import HealthOverviewDashboard from './components/health/HealthOverviewDashboard';
 import EscrowsHealthDashboard from './components/health/EscrowsHealthDashboard';
 import ListingsHealthDashboard from './components/health/ListingsHealthDashboard';

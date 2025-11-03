@@ -46,7 +46,7 @@ import {
 } from '@mui/icons-material';
 import { format, formatDistanceToNow } from 'date-fns';
 import { useSnackbar } from 'notistack';
-import { api } from '../../services/api.service';
+import { api } from '../../../services/api.service';
 
 const SecurityEventsPage = () => {
   const { enqueueSnackbar } = useSnackbar();
