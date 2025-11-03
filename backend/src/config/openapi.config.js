@@ -251,7 +251,7 @@ All endpoints require authentication via:
   },
   apis: [
     './src/routes/*.js',
-    './src/schemas/*.js',
+    './src/config/schemas/*.js',
   ],
 };
 

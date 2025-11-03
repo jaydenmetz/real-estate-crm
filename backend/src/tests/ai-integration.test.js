@@ -177,7 +177,7 @@ describe('AI Integration Tests', () => {
 
   describe('Phase 4: Enhanced Metadata', () => {
     test('Business rules file should exist and be valid', () => {
-      const businessRules = require('../schemas/business-rules');
+      const businessRules = require('../config/schemas/business-rules');
       expect(businessRules).toBeDefined();
     });
 

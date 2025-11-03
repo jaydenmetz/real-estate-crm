@@ -1,7 +1,7 @@
 const { pool } = require('../../../config/database');
 const logger = require('../../../utils/logger');
 const websocketService = require('../../../services/websocket.service');
-const { buildOwnershipWhereClause, validateScope, getDefaultScope } = require('../../../helpers/ownership.helper');
+const { buildOwnershipWhereClause, validateScope, getDefaultScope } = require('../../../utils/ownership.helper');
 
 // GET /api/v1/leads
 exports.getLeads = async (req, res) => {
