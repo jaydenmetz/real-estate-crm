@@ -2,19 +2,23 @@
 - .claude/
   - settings.local.json
 - .github/
-  - workflows/
+  - workflows/ - EMPTY
   - dependabot.yml
 - .husky/
   - pre-commit
-- api-docs/
+- api-docs/ - EMPTY
 - archive/
   - components_2025-11-03/
     - AllDataViewer_UNUSED_881lines.jsx
     - ComprehensiveDataEditor_UNUSED.jsx
     - EscrowDetail_OLD_513lines.jsx
     - StunningPropertyDisplay_UNUSED.jsx
+  - components_marketing_2025-11-03/
+    - EmailTemplates.jsx
+    - MarketingCampaigns.jsx
+    - SocialMediaPosts.jsx
 - backend/
-  - backups/
+  - backups/ - EMPTY
   - migrations/
     - 000_initial_crm_setup.sql
     - 007_multi_role_contacts.sql
@@ -136,7 +140,7 @@
       - sync-local-with-production.js
       - sync-railway-to-local.js
       - update-real-zillow-images.sql
-    - docs/
+    - docs/ - EMPTY
     - production/
       - add-to-railway.sh
       - restore-database.sh
@@ -185,7 +189,7 @@
       - linkPreview.controller.test.js
       - stats.controller.js
       - teams.controller.js
-    - helpers/
+    - helpers/ - EMPTY
     - jobs/
       - kpiSnapshot.job.js
       - scheduler.js
@@ -224,7 +228,7 @@
           - integration/
             - appointments.integration.test.js
           - appointments.controller.test.js
-        - utils/
+        - utils/ - EMPTY
         - README.md
       - clients/
         - controllers/
@@ -238,7 +242,7 @@
           - integration/
             - clients.integration.test.js
           - clients.controller.test.js
-        - utils/
+        - utils/ - EMPTY
         - README.md
       - commissions/
         - controllers/
@@ -260,7 +264,7 @@
         - controllers/
           - contact-roles.controller.js
           - contacts.controller.js
-        - models/
+        - models/ - EMPTY
         - routes/
           - contact-roles.routes.js
           - index.js
@@ -268,7 +272,7 @@
           - integration/
             - contact-search.test.js
             - contacts-multi-role.test.js
-        - utils/
+        - utils/ - EMPTY
         - README.md
       - escrows/
         - controllers/
@@ -329,7 +333,7 @@
           - integration/
             - leads.integration.test.js
           - leads.controller.test.js
-        - utils/
+        - utils/ - EMPTY
         - README.md
       - listings/
         - controllers/
@@ -346,7 +350,7 @@
           - integration/
             - listings.integration.test.js
           - listings.controller.test.js
-        - utils/
+        - utils/ - EMPTY
         - README.md
       - projects/
         - controllers/
@@ -370,8 +374,8 @@
         - tests/
           - webhooks.controller.test.js
     - routes/
-      - __tests__/
-      - _archived_20250809/
+      - __tests__/ - EMPTY
+      - _archived_20250809/ - EMPTY
       - admin.routes.js
       - ai.routes.js
       - analytics.routes.js
@@ -393,11 +397,11 @@
       - system-health.routes.js
       - teams.routes.js
       - upload.routes.js
-    - scripts/
+    - scripts/ - EMPTY
     - services/
       - __tests__/
         - securityEvent.service.test.js
-      - commission/
+      - commission/ - EMPTY
       - skyslope/
         - index.js
       - ai.service.js
@@ -440,7 +444,7 @@
         - securityEventAPI.test.js
         - securityEventLogging.test.js
       - unit/
-        - controllers/
+        - controllers/ - EMPTY
         - services/
           - alerting.service.test.js
           - apiKey.service.test.js
@@ -469,14 +473,14 @@
       - validators.js
     - app.js
     - mcp-server.js
-  - tests/
+  - tests/ - EMPTY
   - uploads/
-    - documents/
+    - documents/ - EMPTY
     - images/
-      - large/
-      - medium/
-      - small/
-      - thumbnail/
+      - large/ - EMPTY
+      - medium/ - EMPTY
+      - small/ - EMPTY
+      - thumbnail/ - EMPTY
   - .deploy-trigger
   - .env
   - .env.example
@@ -564,7 +568,8 @@
     - AI_INTEGRATION_GUIDE.md
     - AI_READINESS_ASSESSMENT.md
   - projects/
-    - archive/
+    - archive/ - EMPTY
+    - completed/ - EMPTY
     - current/
       - completed/
         - Project-01-Environment-Configuration-Cleanup.md
@@ -574,8 +579,6 @@
         - Project-05-Documentation-Structure-Finalization.md
         - Project-06-Backend-Directory-Consolidation.md
         - Project-07-Frontend-Component-Organization.md
-      - Phase A/
-        - Phase-A-Summary.md
         - Project-08-Config-File-Consolidation.md
         - Project-09-API-Route-Standardization.md
         - Project-10-Service-Layer-Unification.md
@@ -584,6 +587,8 @@
         - Project-13-Test-Suite-Reorganization.md
         - Project-14-Archive-Legacy-Code.md
         - Project-15-Build-Process-Verification.md
+      - Phase A/
+        - Phase-A-Summary.md
     - future/
       - Phase B/
         - Phase-B-Summary.md
@@ -718,6 +723,15 @@
         - EscrowDashboard.test.jsx
         - NewEscrowModal.test.jsx
       - admin/
+        - system/
+          - ActivityLog.jsx
+          - AllNotes.jsx
+          - ComplianceReports.jsx
+          - ContractTemplates.jsx
+          - DeletionRequests.jsx
+          - DocumentLibrary.jsx
+          - SecurityEventsPage.jsx
+          - Webhooks.jsx
         - AdminEntitySelector.jsx
         - AdminSecurityDashboard.jsx
         - ApiKeysTable.jsx
@@ -734,7 +748,7 @@
         - ProtectedRoute.jsx
         - RegisterPage.jsx
       - common/
-        - _archived/
+        - _archived/ - EMPTY
         - dashboard/
           - DashboardEmptyState.jsx
           - DashboardFilters.jsx
@@ -790,17 +804,14 @@
         - VirtualizedEscrowList.jsx
         - WebSocketIndicator.jsx
         - ZillowPreview.jsx
-      - contacts/
-        - NeighborhoodData.jsx
-        - ReferralSources.jsx
-        - VendorsPartners.jsx
+      - contacts/ - EMPTY
       - dashboards/
         - appointments/
-          - components/
-          - hooks/
+          - components/ - EMPTY
+          - hooks/ - EMPTY
           - modals/
             - NewAppointmentModal.jsx
-          - utils/
+          - utils/ - EMPTY
           - index.jsx
         - clients/
           - modals/
@@ -817,11 +828,11 @@
           - TeamHeroCard.jsx
           - UserHeroCard.jsx
         - leads/
-          - components/
-          - hooks/
+          - components/ - EMPTY
+          - hooks/ - EMPTY
           - modals/
             - NewLeadModal.jsx
-          - utils/
+          - utils/ - EMPTY
           - index.jsx
         - listings/
           - components/
@@ -849,13 +860,13 @@
             - LocationWidget.jsx
             - NotesWidget.jsx
             - ParticipantsWidget.jsx
-          - hooks/
-          - utils/
+          - hooks/ - EMPTY
+          - utils/ - EMPTY
           - index.jsx
         - clients/
-          - components/
-          - hooks/
-          - utils/
+          - components/ - EMPTY
+          - hooks/ - EMPTY
+          - utils/ - EMPTY
           - index.jsx
         - escrows/
           - components/
@@ -883,25 +894,22 @@
             - ContactWidget.jsx
             - EngagementWidget.jsx
             - QualificationWidget.jsx
-          - hooks/
-          - utils/
+          - hooks/ - EMPTY
+          - utils/ - EMPTY
           - index.jsx
         - listings/
           - components/
             - ActivityWidget.jsx
             - ComparablesWidget.jsx
             - PriceHistoryWidget.jsx
-          - hooks/
+          - hooks/ - EMPTY
           - modals/
             - EditListingModal.jsx
-          - utils/
+          - utils/ - EMPTY
           - index.jsx
-      - escrow-detail/
-      - financial/
-        - CommissionTracking.jsx
-        - ExpenseManagement.jsx
-        - Invoices.jsx
-      - forms/
+      - escrow-detail/ - EMPTY
+      - financial/ - EMPTY
+      - forms/ - EMPTY
       - health/
         - AppointmentsHealthDashboard.jsx
         - ClientsHealthDashboard.jsx
@@ -910,10 +918,7 @@
         - HealthOverviewDashboard.jsx
         - LeadsHealthDashboard.jsx
         - ListingsHealthDashboard.jsx
-      - marketing/
-        - EmailTemplates.jsx
-        - MarketingCampaigns.jsx
-        - SocialMediaPosts.jsx
+      - marketing/ - EMPTY
       - modals/
         - ContactSelectionModal.jsx
         - NewContactModal.jsx
@@ -935,15 +940,15 @@
       - settings/
         - OnboardingSettings.jsx
         - SecurityDashboard.jsx
-      - system/
-        - ActivityLog.jsx
-        - AllNotes.jsx
-        - ComplianceReports.jsx
-        - ContractTemplates.jsx
-        - DeletionRequests.jsx
-        - DocumentLibrary.jsx
-        - SecurityEventsPage.jsx
-        - Webhooks.jsx
+      - widgets/
+        - financial/
+          - CommissionTracking.jsx
+          - ExpenseManagement.jsx
+          - Invoices.jsx
+        - shared/ - EMPTY
+        - NeighborhoodData.jsx
+        - ReferralSources.jsx
+        - VendorsPartners.jsx
       - .DS_Store
     - config/
       - entities/
@@ -967,8 +972,8 @@
     - features/
       - _blueprint/
         - __tests__/
-          - integration/
-          - unit/
+          - integration/ - EMPTY
+          - unit/ - EMPTY
         - components/
           - dashboard/
             - MODULE_NAMECalendar.jsx
@@ -976,23 +981,23 @@
             - MODULE_NAMEGrid.jsx
             - MODULE_NAMEList.jsx
             - MODULE_NAMETable.jsx
-          - details/
+          - details/ - EMPTY
           - modals/
             - EditMODULE_NAMEModal.jsx
             - MODULE_NAMEFiltersModal.jsx
             - NewMODULE_NAMEModal.jsx
-          - shared/
-          - widgets/
+          - shared/ - EMPTY
+          - widgets/ - EMPTY
         - config/
           - module.config.js
-        - constants/
+        - constants/ - EMPTY
         - hooks/
           - useMODULE_NAMEDashboard.js
         - services/
           - MODULE_SINGULARService.js
-        - state/
-        - types/
-        - utils/
+        - state/ - EMPTY
+        - types/ - EMPTY
+        - utils/ - EMPTY
         - README.md
     - hooks/
       - RESPONSIVE_DESIGN_GUIDE.md
@@ -1039,9 +1044,9 @@
           - DashboardStats.jsx
           - DashboardToolbar.jsx
           - index.js
-        - details/
-        - layout/
-        - ui/
+        - details/ - EMPTY
+        - layout/ - EMPTY
+        - ui/ - EMPTY
       - hooks/
         - __tests__/
           - useDashboardData.test.js
@@ -1094,7 +1099,7 @@
       - setupApiKey.js
       - testApi.js
     - widgets/
-      - shared/
+      - shared/ - EMPTY
     - App.jsx
     - App.lazy.jsx
     - index.js
