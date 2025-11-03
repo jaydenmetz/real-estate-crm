@@ -187,6 +187,46 @@ done
 3. Fix locally, commit, push again
 4. DO NOT mark project complete until deployment succeeds
 
+### PROJECT COMPLETION CHECKLIST (MANDATORY - READ BEFORE MOVING TO completed/)
+
+**Before moving ANY project file to `docs/projects/current/completed/`, verify ALL of these:**
+
+✅ **Metadata Section (lines 1-10):**
+  - [ ] Status changed to "Complete"
+  - [ ] Actual Time Completed filled in (not [HH:MM on Date])
+  - [ ] Actual Duration calculated (not [Calculate:...])
+  - [ ] Variance calculated (not [Actual - Estimated...])
+  - [ ] NO duplicate lines (check for repeated completion times)
+
+✅ **Tasks Section:**
+  - [ ] ALL checkboxes marked [x] for completed tasks
+  - [ ] If no changes: marked [x] with note like "NO CHANGES NEEDED"
+
+✅ **Verification Tests Section:**
+  - [ ] ALL tests marked: **Pass/Fail:** [x] PASS (or FAIL with reason)
+  - [ ] Never leave as: **Pass/Fail:** [ ]
+
+✅ **Implementation Notes Section (REQUIRED):**
+  - [ ] **Changes Made**: Detailed list of every file/folder changed (or "NO CHANGES")
+  - [ ] **Issues Encountered**: Problems faced (or "None")
+  - [ ] **Decisions Made**: Why certain choices were made (with rationale)
+
+✅ **Archive Information Section (REQUIRED):**
+  - [ ] **Completion Date**: Actual date (not [Date])
+  - [ ] **Final Status**: Success/Partial/Blocked (not [Success/Partial/Blocked])
+  - [ ] **Lessons Learned**: Real lessons (not [Brief notes])
+  - [ ] **Follow-up Items**: Actual items or "None" (not [Any items...])
+
+❌ **STOP if you find ANY of these placeholders:**
+  - [HH:MM on Date]
+  - [Date]
+  - [Calculate: XX hours YY minutes]
+  - [Brief notes]
+  - [Any items for future projects]
+  - [ ] (empty checkboxes in completed sections)
+
+**If ANY placeholder remains: DO NOT move to completed/, fix it first!**
+
 ### When to Say "Phase Complete"
 
 Only when:
