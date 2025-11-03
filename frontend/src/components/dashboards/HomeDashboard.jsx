@@ -3,7 +3,7 @@ import { Container, Box, Typography } from '@mui/material';
 import { useAuth } from '../../contexts/AuthContext';
 import apiInstance from '../../services/api.service';
 import BrokerHeroCard from './home/BrokerHeroCard';
-import TeamSelector from './home/TeamSelector';
+import TeamSelector from '../admin/TeamSelector';
 import TeamHeroCard from './home/TeamHeroCard';
 import UserHeroCard from './home/UserHeroCard';
 
