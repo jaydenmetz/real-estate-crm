@@ -1,41 +1,21 @@
 .
-.DS_Store
-.claude
+- .claude/
   - settings.local.json
-.git
-.github
+- .github/
+  - workflows/
   - dependabot.yml
-  - workflows
-.gitignore
-.husky
+- .husky/
   - pre-commit
-.railway-deploy
-CLAUDE.md
-COMPLETE_FILE_TREE.txt
-ESCROW_STATS_IMPLEMENTATION.md
-README.md
-TEMPLATE_ARCHITECTURE_COMPLETE.md
-TEMPLATE_IMPLEMENTATION_COMPLETE.md
-VISUAL_PARITY_GRADING_REPORT.md
-all-code.txt
-api-docs
-archive
-  - components_2025-11-03
+- api-docs/
+- archive/
+  - components_2025-11-03/
     - AllDataViewer_UNUSED_881lines.jsx
     - ComprehensiveDataEditor_UNUSED.jsx
     - EscrowDetail_OLD_513lines.jsx
     - StunningPropertyDisplay_UNUSED.jsx
-backend
-  - .deploy-trigger
-  - .env
-  - .env.example
-  - .eslintignore
-  - .eslintrc.json
-  - .gitignore
-  - backups
-  - instrument.js
-  - jest.config.js
-  - migrations
+- backend/
+  - backups/
+  - migrations/
     - 000_initial_crm_setup.sql
     - 007_multi_role_contacts.sql
     - 011_add_appointments_owner_id.sql
@@ -68,16 +48,8 @@ backend
     - 20251006_add_performance_indexes.sql
     - 20251007_setup_broker_hierarchy.sql
     - 20251028_add_deleted_by_columns.sql
-  - nixpacks.toml
-  - node_modules
-  - package-lock.json
-  - package.json
-  - railway-env-vars.txt
-  - railway.json
-  - scripts
-    - README.md
-    - add_websocket_events.sh
-    - auth
+  - scripts/
+    - auth/
       - create-admin-user.js
       - debug-login-query.js
       - fix-admin-login.js
@@ -85,7 +57,7 @@ backend
       - reset-admin-password-production.js
       - verify-admin-user.js
       - verify-password.js
-    - data
+    - data/
       - add-basic-escrows.js
       - add-escrow-company-fields.js
       - add-escrow-example.js
@@ -124,7 +96,7 @@ backend
       - update-zillow-images-final.js
       - update-zillow-property-images.js
       - verify-zillow-images.js
-    - database
+    - database/
       - add-production-escrow.sql
       - add-property-fields.sql
       - add-unique-constraints.sql
@@ -164,8 +136,8 @@ backend
       - sync-local-with-production.js
       - sync-railway-to-local.js
       - update-real-zillow-images.sql
-    - docs
-    - production
+    - docs/
+    - production/
       - add-to-railway.sh
       - restore-database.sh
       - run-production-migrations.js
@@ -174,7 +146,7 @@ backend
       - update-escrow-commissions.js
       - update-production-commissions.js
       - update-zillow-images.js
-    - testing
+    - testing/
       - add-test-checklist.js
       - check-entity-prefixes.js
       - check-escrow-data.js
@@ -189,22 +161,22 @@ backend
       - test-listings-api.sh
       - test-stats-query.js
       - test-upload-api.sh
-  - server.js
-  - src
-    - app.js
-    - config
+    - add_websocket_events.sh
+    - README.md
+  - src/
+    - config/
+      - schemas/
+        - business-rules.js
+        - openapi.schemas.js
+        - routes.annotations.js
       - aws.js
       - database.js
       - openapi.config.js
       - redis.js
-      - schemas
-        - business-rules.js
-        - openapi.schemas.js
-        - routes.annotations.js
       - secure.config.js
       - sentry.js
       - twilio.js
-    - controllers
+    - controllers/
       - admin.controller.js
       - admin.controller.test.js
       - auth.controller.js
@@ -213,13 +185,12 @@ backend
       - linkPreview.controller.test.js
       - stats.controller.js
       - teams.controller.js
-    - helpers
-    - jobs
+    - helpers/
+    - jobs/
       - kpiSnapshot.job.js
       - scheduler.js
       - securityEventRetention.job.js
-    - mcp-server.js
-    - middleware
+    - middleware/
       - adminOnly.middleware.js
       - apiKey.middleware.js
       - auditLog.middleware.js
@@ -235,73 +206,72 @@ backend
       - sqlInjectionPrevention.middleware.js
       - team.middleware.js
       - validation.middleware.js
-    - models
+    - models/
       - AIAgent.js
       - DeletionRequest.js
       - Document.js
       - MockQueryBuilder.js
-    - modules
-      - appointments
-        - README.md
-        - controllers
+    - modules/
+      - appointments/
+        - controllers/
           - appointments.controller.js
-        - models
+        - models/
           - Appointment.mock.js
           - Appointment.model.js
-        - routes
+        - routes/
           - index.js
-        - tests
-          - appointments.controller.test.js
-          - integration
+        - tests/
+          - integration/
             - appointments.integration.test.js
-        - utils
-      - clients
+          - appointments.controller.test.js
+        - utils/
         - README.md
-        - controllers
+      - clients/
+        - controllers/
           - clients.controller.js
-        - models
+        - models/
           - Client.mock.js
           - Client.model.js
-        - routes
+        - routes/
           - index.js
-        - tests
-          - clients.controller.test.js
-          - integration
+        - tests/
+          - integration/
             - clients.integration.test.js
-        - utils
-      - commissions
-        - controllers
-          - commissions.controller.js
-        - models
-          - Commission.mock.js
-        - routes
-          - index.js
-        - tests
-          - commissions.controller.test.js
-      - communications
-        - controllers
-          - communications.controller.js
-        - routes
-          - index.js
-        - tests
-          - communications.controller.test.js
-      - contacts
+          - clients.controller.test.js
+        - utils/
         - README.md
-        - controllers
+      - commissions/
+        - controllers/
+          - commissions.controller.js
+        - models/
+          - Commission.mock.js
+        - routes/
+          - index.js
+        - tests/
+          - commissions.controller.test.js
+      - communications/
+        - controllers/
+          - communications.controller.js
+        - routes/
+          - index.js
+        - tests/
+          - communications.controller.test.js
+      - contacts/
+        - controllers/
           - contact-roles.controller.js
           - contacts.controller.js
-        - models
-        - routes
+        - models/
+        - routes/
           - contact-roles.routes.js
           - index.js
-        - tests
-          - integration
+        - tests/
+          - integration/
             - contact-search.test.js
             - contacts-multi-role.test.js
-        - utils
-      - escrows
+        - utils/
         - README.md
-        - controllers
+      - escrows/
+        - controllers/
           - checklists.controller.js
           - crud.controller.js
           - details.controller.js
@@ -309,98 +279,99 @@ backend
           - index.js
           - people.controller.js
           - timeline.controller.js
-        - models
+        - models/
           - Escrow.mock.js
           - Escrow.model.js
-        - routes
+        - routes/
           - health.routes.js
           - index.js
-        - services
-          - commission
-          - commission.service.js
+        - services/
+          - commission/
             - index.js
+          - commission.service.js
           - schema.service.js
-        - tests
-          - escrows.controller.test.js
-          - integration
+        - tests/
+          - integration/
             - commission-calculations.test.js
             - escrow-creation-flow.test.js
             - escrows.integration.test.js
-        - utils
+          - escrows.controller.test.js
+        - utils/
           - escrows.helper.js
-      - expenses
-        - controllers
-          - expenses.controller.js
-        - models
-          - Expense.mock.js
-        - routes
-          - index.js
-        - tests
-          - expenses.controller.test.js
-      - invoices
-        - controllers
-          - invoices.controller.js
-        - models
-          - Invoice.mock.js
-        - routes
-          - index.js
-        - tests
-          - invoices.controller.test.js
-      - leads
         - README.md
-        - controllers
+      - expenses/
+        - controllers/
+          - expenses.controller.js
+        - models/
+          - Expense.mock.js
+        - routes/
+          - index.js
+        - tests/
+          - expenses.controller.test.js
+      - invoices/
+        - controllers/
+          - invoices.controller.js
+        - models/
+          - Invoice.mock.js
+        - routes/
+          - index.js
+        - tests/
+          - invoices.controller.test.js
+      - leads/
+        - controllers/
           - leads.controller.js
-        - models
+        - models/
           - Lead.mock.js
           - Lead.model.js
-        - routes
+        - routes/
           - index.js
-        - tests
-          - integration
+        - tests/
+          - integration/
             - leads.integration.test.js
           - leads.controller.test.js
-        - utils
-      - listings
+        - utils/
         - README.md
-        - controllers
+      - listings/
+        - controllers/
           - listings.controller.js
-        - models
+        - models/
           - Listing.mock.js
           - Listing.model.js
-        - routes
+        - routes/
           - health.routes.js
           - index.js
-        - services
+        - services/
           - listing.service.js
-        - tests
-          - integration
+        - tests/
+          - integration/
             - listings.integration.test.js
           - listings.controller.test.js
-        - utils
-      - projects
-        - controllers
+        - utils/
+        - README.md
+      - projects/
+        - controllers/
           - projects.controller.js
-        - routes
+        - routes/
           - index.js
-      - tasks
-        - controllers
-          - checklistTemplates.controller.js
+      - tasks/
+        - controllers/
           - checklists.controller.js
+          - checklistTemplates.controller.js
           - tasks.controller.js
-        - routes
-          - checklistTemplates.routes.js
+        - routes/
           - checklists.routes.js
+          - checklistTemplates.routes.js
           - index.js
-      - webhooks
-        - controllers
+      - webhooks/
+        - controllers/
           - webhooks.controller.js
-        - routes
+        - routes/
           - index.js
-        - tests
+        - tests/
           - webhooks.controller.test.js
-    - routes
-      - __tests__
-      - _archived_20250809
+    - routes/
+      - __tests__/
+      - _archived_20250809/
       - admin.routes.js
       - ai.routes.js
       - analytics.routes.js
@@ -422,17 +393,19 @@ backend
       - system-health.routes.js
       - teams.routes.js
       - upload.routes.js
-    - scripts
-    - services
-      - __tests__
+    - scripts/
+    - services/
+      - __tests__/
         - securityEvent.service.test.js
+      - commission/
+      - skyslope/
+        - index.js
       - ai.service.js
       - alerting.service.js
       - apiKey.service.js
       - broker.service.js
       - brokerProfile.service.js
       - calendar.service.js
-      - commission
       - cron.service.js
       - database.service.js
       - email.service.js
@@ -447,17 +420,13 @@ backend
       - ownership.service.js
       - refreshToken.service.js
       - securityEvent.service.js
-      - skyslope
-        - index.js
       - upload.service.js
       - userProfile.service.js
       - weather.service.js
       - webhook.service.js
       - websocket.service.js
-    - tests
-      - ai-integration.test.js
-      - concurrency.test.js
-      - edge-cases
+    - tests/
+      - edge-cases/
         - authorization.edge-case.test.js
         - concurrency.edge-case.test.js
         - database-errors.edge-case.test.js
@@ -465,19 +434,14 @@ backend
         - rate-limiting.edge-case.test.js
         - security.edge-case.test.js
         - validation.edge-case.test.js
-      - integration
+      - integration/
         - api-keys.integration.test.js
         - auth.integration.test.js
         - securityEventAPI.test.js
         - securityEventLogging.test.js
-      - refreshToken.test.js
-      - securityEvents.test.js
-      - setup.js
-      - test-auth.js
-      - test-connection.js
-      - unit
-        - controllers
-        - services
+      - unit/
+        - controllers/
+        - services/
           - alerting.service.test.js
           - apiKey.service.test.js
           - calendar.service.test.js
@@ -488,7 +452,14 @@ backend
           - securityEvent.service.test.js
           - weather.service.test.js
           - websocket.service.test.js
-    - utils
+      - ai-integration.test.js
+      - concurrency.test.js
+      - refreshToken.test.js
+      - securityEvents.test.js
+      - setup.js
+      - test-auth.js
+      - test-connection.js
+    - utils/
       - constants.js
       - errors.js
       - formatters.js
@@ -496,33 +467,36 @@ backend
       - logger.js
       - ownership.helper.js
       - validators.js
-  - tests
-  - uploads
-    - documents
-    - images
-      - large
-      - medium
-      - small
-      - thumbnail
-docker-compose.yml
-docs
-  - .DS_Store
-  - API_REFERENCE.md
-  - ARCHITECTURE.md
-  - COMPLETE_ROADMAP.md
-  - DATABASE_RELATIONSHIPS.md
-  - DATABASE_STRUCTURE.md
-  - ENVIRONMENTS.md
-  - ENVIRONMENT_VARIABLES.md
-  - PROGRESS_TRACKER.md
-  - README.md
-  - SECURITY_REFERENCE.md
-  - SYSTEM_ARCHITECTURE.md
-  - archive
-    - 2025-audits
+    - app.js
+    - mcp-server.js
+  - tests/
+  - uploads/
+    - documents/
+    - images/
+      - large/
+      - medium/
+      - small/
+      - thumbnail/
+  - .deploy-trigger
+  - .env
+  - .env.example
+  - .eslintignore
+  - .eslintrc.json
+  - .gitignore
+  - instrument.js
+  - jest.config.js
+  - nixpacks.toml
+  - package-lock.json
+  - package.json
+  - railway-env-vars.txt
+  - railway.json
+  - server.js
+- docs/
+  - archive/
+    - 2025-audits/
       - BACKEND_STRUCTURE_AUDIT.md
-      - CODEBASE_STRUCTURE_ANALYSIS.md
       - CODE_AUDIT_2025-10-28.md
+      - CODEBASE_STRUCTURE_ANALYSIS.md
       - COMPLETE_FILE_STRUCTURE_AUDIT.md
       - COMPREHENSIVE_AUDIT_REPORT.md
       - MANUAL_TESTING_SCRIPT.md
@@ -530,7 +504,7 @@ docs
       - REPLICATION_READINESS_ASSESSMENT.md
       - SYSTEM_AUDIT_2025.md
       - TESTING_COMPLETE_SUMMARY.md
-    - 2025-plans
+    - 2025-plans/
       - AUTH_BROKEN_DIAGNOSIS.md
       - BACKEND_COMPLETE_REORGANIZATION_PLAN.md
       - BACKEND_REFACTORING_REALISTIC_PLAN.md
@@ -545,7 +519,6 @@ docs
       - MULTI_ROLE_CONTACTS_TESTING.md
       - PHASE1_COMPLETE.md
       - PHASE1_TEST_RESULTS.md
-      - PHASES_1-3_COMPLETE.md
       - PHASE_1_COMPLETE_WITH_ESCROWS_REFACTOR.md
       - PHASE_1_COMPLETION_SUMMARY.md
       - PHASE_1_IMPLEMENTATION_GUIDE.md
@@ -566,38 +539,42 @@ docs
       - PHASE_4_IMPLEMENTATION_PLAN.md
       - PHASE_4_PROGRESS_SUMMARY.md
       - PHASE_4_STATUS_AND_NEXT_STEPS.md
-      - SHARED_COMPONENTS_API.md
+      - PHASES_1-3_COMPLETE.md
       - SHARED_COMPONENT_PROP_CONVENTIONS.md
+      - SHARED_COMPONENTS_API.md
       - TESTING_DETAIL_API.md
-    - AI_INTEGRATION_GUIDE.md
-    - AI_READINESS_ASSESSMENT.md
-    - design-specs
+    - design-specs/
       - CONTACTS_ROLE_SYSTEM.md
       - DASHBOARD_ARCHITECTURE.md
       - NEO_CARD_UI_DESIGNS.md
-    - future-features
+    - future-features/
       - WEBSOCKET_ARCHITECTURE_DIAGRAM.md
       - WEBSOCKET_IMPLEMENTATION_ANALYSIS.md
       - WEBSOCKET_IMPLEMENTATION_CHECKLIST.md
       - ZILLOW_INTEGRATION_PHASE_2_DESIGN.md
-    - setup-guides
+    - setup-guides/
       - GOOGLE_OAUTH_SETUP.md
       - RAILWAY_ENVIRONMENT_SETUP.md
       - SCALING_GUIDE.md
       - SECURITY_OPERATIONS.md
       - SENTRY_SETUP.md
-    - user-guides
+    - user-guides/
       - KEYBOARD_SHORTCUTS.md
       - QUICK_START_NEW_DASHBOARD.md
-  - projects
-    - .DS_Store
-    - PHASE_SUMMARY_TEMPLATE.md
-    - PROJECT_OVERVIEW.txt
-    - PROJECT_TEMPLATE.md
-    - README.md
-    - archive
-    - current
-      - Phase A
+    - AI_INTEGRATION_GUIDE.md
+    - AI_READINESS_ASSESSMENT.md
+  - projects/
+    - archive/
+    - current/
+      - completed/
+        - Project-01-Environment-Configuration-Cleanup.md
+        - Project-02-Remove-Duplicate-Code-Files.md
+        - Project-03-Naming-Convention-Enforcement.md
+        - Project-04-Script-Centralization.md
+        - Project-05-Documentation-Structure-Finalization.md
+        - Project-06-Backend-Directory-Consolidation.md
+        - Project-07-Frontend-Component-Organization.md
+      - Phase A/
         - Phase-A-Summary.md
         - Project-08-Config-File-Consolidation.md
         - Project-09-API-Route-Standardization.md
@@ -607,17 +584,8 @@ docs
         - Project-13-Test-Suite-Reorganization.md
         - Project-14-Archive-Legacy-Code.md
         - Project-15-Build-Process-Verification.md
-      - completed
-        - Project-01-Environment-Configuration-Cleanup.md
-        - Project-02-Remove-Duplicate-Code-Files.md
-        - Project-03-Naming-Convention-Enforcement.md
-        - Project-04-Script-Centralization.md
-        - Project-05-Documentation-Structure-Finalization.md
-        - Project-06-Backend-Directory-Consolidation.md
-        - Project-07-Frontend-Component-Organization.md
-    - future
-      - .DS_Store
-      - Phase B
+    - future/
+      - Phase B/
         - Phase-B-Summary.md
         - Project-16-Authentication-Flow-Verification.md
         - Project-17-User-Role-System-Validation.md
@@ -634,7 +602,7 @@ docs
         - Project-28-Modal-Components-Standardization.md
         - Project-29-Error-Handling-Verification.md
         - Project-30-Loading-States-Implementation.md
-      - Phase C
+      - Phase C/
         - Phase-C-Summary.md
         - Project-31-Stripe-Payment-Integration.md
         - Project-32-Email-Template-System.md
@@ -651,7 +619,7 @@ docs
         - Project-43-Broker-Hierarchy-Management.md
         - Project-44-Team-Collaboration-Features.md
         - Project-45-Activity-Feed-System.md
-      - Phase D
+      - Phase D/
         - Phase-D-Summary.md
         - Project-46-Mobile-Responsiveness-Audit.md
         - Project-47-Dark-Mode-Implementation.md
@@ -668,7 +636,7 @@ docs
         - Project-58-Help-System-Implementation.md
         - Project-59-Onboarding-Flow-Polish.md
         - Project-60-Quick-Actions-Implementation.md
-      - Phase E
+      - Phase E/
         - PHASE_E_SUMMARY.md
         - Project-61-Analytics-Dashboard-Setup.md
         - Project-62-Report-Generation-System.md
@@ -685,7 +653,7 @@ docs
         - Project-73-Archive-System-Setup.md
         - Project-74-Compliance-Reporting.md
         - Project-75-Performance-Metrics-Tracking.md
-      - Phase F
+      - Phase F/
         - Phase-F-Summary.md
         - Project-76-Security-Audit-Complete.md
         - Project-77-GDPR-Compliance-Check.md
@@ -697,7 +665,7 @@ docs
         - Project-83-Session-Management-Review.md
         - Project-84-Encryption-Implementation.md
         - Project-85-Compliance-Documentation.md
-      - Phase G
+      - Phase G/
         - Phase-G-Summary.md
         - Project-86-Unit-Test-Coverage-Gap-Analysis.md
         - Project-87-Integration-Test-Suite-Completion.md
@@ -709,7 +677,7 @@ docs
         - Project-93-Cross-Browser-Testing.md
         - Project-94-API-Testing-Automation.md
         - Project-95-Regression-Test-Suite.md
-      - Phase H
+      - Phase H/
         - Phase-H-Summary.md
         - Project-100-Error-Tracking-Integration.md
         - Project-101-Backup-Automation.md
@@ -721,30 +689,35 @@ docs
         - Project-97-Environment-Management.md
         - Project-98-Monitoring-Setup.md
         - Project-99-Logging-Enhancement.md
-frontend
-  - .dockerignore
-  - .env
-  - .env.example
-  - .gitignore
-  - build
-  - nixpacks.toml
-  - node_modules
-  - package-lock.json
-  - package.json
-  - public
+      - .DS_Store
+    - .DS_Store
+    - PHASE_SUMMARY_TEMPLATE.md
+    - PROJECT_OVERVIEW.txt
+    - PROJECT_TEMPLATE.md
+    - README.md
+  - .DS_Store
+  - API_REFERENCE.md
+  - ARCHITECTURE.md
+  - COMPLETE_ROADMAP.md
+  - DATABASE_RELATIONSHIPS.md
+  - DATABASE_STRUCTURE.md
+  - ENVIRONMENT_VARIABLES.md
+  - ENVIRONMENTS.md
+  - PROGRESS_TRACKER.md
+  - README.md
+  - SECURITY_REFERENCE.md
+  - SYSTEM_ARCHITECTURE.md
+- frontend/
+  - public/
     - health.html
     - index.html
-  - railway.json
-  - src
-    - App.jsx
-    - App.lazy.jsx
-    - components
-      - .DS_Store
-      - __tests__
+  - src/
+    - components/
+      - __tests__/
         - ContactSearch.test.jsx
         - EscrowDashboard.test.jsx
         - NewEscrowModal.test.jsx
-      - admin
+      - admin/
         - AdminEntitySelector.jsx
         - AdminSecurityDashboard.jsx
         - ApiKeysTable.jsx
@@ -756,11 +729,28 @@ frontend
         - TeamPermissionsManager.jsx
         - TeamSelector.jsx
         - UsersTable.jsx
-      - auth
+      - auth/
         - LoginPage.jsx
         - ProtectedRoute.jsx
         - RegisterPage.jsx
-      - common
+      - common/
+        - _archived/
+        - dashboard/
+          - DashboardEmptyState.jsx
+          - DashboardFilters.jsx
+          - DashboardGrid.jsx
+          - DashboardPagination.jsx
+          - DashboardStats.jsx
+          - DashboardToolbar.jsx
+          - index.js
+        - widgets/
+          - AppointmentCard.jsx
+          - ClientCard.jsx
+          - EscrowCard.jsx
+          - EscrowListRow.jsx
+          - EscrowTableRow.jsx
+          - LeadCard.jsx
+          - ListingCard.jsx
         - AdminErrorDisplay.jsx
         - AdminSafeWrapper.jsx
         - BadgeEditor.jsx
@@ -800,92 +790,75 @@ frontend
         - VirtualizedEscrowList.jsx
         - WebSocketIndicator.jsx
         - ZillowPreview.jsx
-        - _archived
-        - dashboard
-          - DashboardEmptyState.jsx
-          - DashboardFilters.jsx
-          - DashboardGrid.jsx
-          - DashboardPagination.jsx
-          - DashboardStats.jsx
-          - DashboardToolbar.jsx
-          - index.js
-        - widgets
-          - AppointmentCard.jsx
-          - ClientCard.jsx
-          - EscrowCard.jsx
-          - EscrowListRow.jsx
-          - EscrowTableRow.jsx
-          - LeadCard.jsx
-          - ListingCard.jsx
-      - contacts
+      - contacts/
         - NeighborhoodData.jsx
         - ReferralSources.jsx
         - VendorsPartners.jsx
-      - dashboards
+      - dashboards/
+        - appointments/
+          - components/
+          - hooks/
+          - modals/
+            - NewAppointmentModal.jsx
+          - utils/
+          - index.jsx
+        - clients/
+          - modals/
+            - NewClientModal.jsx
+          - index.jsx
+        - escrows/
+          - constants/
+            - escrowConstants.js
+          - modals/
+            - NewEscrowModal.jsx
+          - index.jsx
+        - home/
+          - BrokerHeroCard.jsx
+          - TeamHeroCard.jsx
+          - UserHeroCard.jsx
+        - leads/
+          - components/
+          - hooks/
+          - modals/
+            - NewLeadModal.jsx
+          - utils/
+          - index.jsx
+        - listings/
+          - components/
+            - ListingContent.jsx
+            - ListingHeroCard.jsx
+            - ListingNavigation.jsx
+            - ListingStatCard.jsx
+            - ListingStatsGrid.jsx
+          - hooks/
+            - useListingHandlers.js
+          - modals/
+            - NewListingModal.jsx
+          - utils/
+            - listingUtils.js
+          - index.jsx
         - AnalyticsDashboard.jsx
         - CommissionDashboard.jsx
         - ExpenseDashboard.jsx
         - HomeDashboard.jsx
         - InvoiceDashboard.jsx
         - OtherDataDashboard.jsx
-        - appointments
-          - components
-          - hooks
-          - index.jsx
-          - modals
-            - NewAppointmentModal.jsx
-          - utils
-        - clients
-          - index.jsx
-          - modals
-            - NewClientModal.jsx
-        - escrows
-          - constants
-            - escrowConstants.js
-          - index.jsx
-          - modals
-            - NewEscrowModal.jsx
-        - home
-          - BrokerHeroCard.jsx
-          - TeamHeroCard.jsx
-          - UserHeroCard.jsx
-        - leads
-          - components
-          - hooks
-          - index.jsx
-          - modals
-            - NewLeadModal.jsx
-          - utils
-        - listings
-          - components
-            - ListingContent.jsx
-            - ListingHeroCard.jsx
-            - ListingNavigation.jsx
-            - ListingStatCard.jsx
-            - ListingStatsGrid.jsx
-          - hooks
-            - useListingHandlers.js
-          - index.jsx
-          - modals
-            - NewListingModal.jsx
-          - utils
-            - listingUtils.js
-      - details
-        - appointments
-          - components
+      - details/
+        - appointments/
+          - components/
             - LocationWidget.jsx
             - NotesWidget.jsx
             - ParticipantsWidget.jsx
-          - hooks
+          - hooks/
+          - utils/
           - index.jsx
-          - utils
-        - clients
-          - components
-          - hooks
+        - clients/
+          - components/
+          - hooks/
+          - utils/
           - index.jsx
-          - utils
-        - escrows
-          - components
+        - escrows/
+          - components/
             - ActivityFeedBottomTab.jsx
             - ActivityFeedSheet.jsx
             - ChecklistsWidget_White.jsx
@@ -895,41 +868,41 @@ frontend
             - PeopleWidget_White.jsx
             - PlaceholderWidget.jsx
             - TimelineWidget_White.jsx
-          - hooks
+          - hooks/
             - useEscrowData.js
-          - index.jsx
-          - modals
+          - modals/
             - ChecklistsModal.jsx
             - FinancialsModal.jsx
             - PeopleModal.jsx
             - TimelineModal.jsx
-          - utils
+          - utils/
             - eventHandlers.js
-        - leads
-          - components
+          - index.jsx
+        - leads/
+          - components/
             - ContactWidget.jsx
             - EngagementWidget.jsx
             - QualificationWidget.jsx
-          - hooks
+          - hooks/
+          - utils/
           - index.jsx
-          - utils
-        - listings
-          - components
+        - listings/
+          - components/
             - ActivityWidget.jsx
             - ComparablesWidget.jsx
             - PriceHistoryWidget.jsx
-          - hooks
-          - index.jsx
-          - modals
+          - hooks/
+          - modals/
             - EditListingModal.jsx
-          - utils
-      - escrow-detail
-      - financial
+          - utils/
+          - index.jsx
+      - escrow-detail/
+      - financial/
         - CommissionTracking.jsx
         - ExpenseManagement.jsx
         - Invoices.jsx
-      - forms
-      - health
+      - forms/
+      - health/
         - AppointmentsHealthDashboard.jsx
         - ClientsHealthDashboard.jsx
         - EscrowsHealthDashboard.jsx
@@ -937,20 +910,17 @@ frontend
         - HealthOverviewDashboard.jsx
         - LeadsHealthDashboard.jsx
         - ListingsHealthDashboard.jsx
-      - marketing
+      - marketing/
         - EmailTemplates.jsx
         - MarketingCampaigns.jsx
         - SocialMediaPosts.jsx
-      - modals
+      - modals/
         - ContactSelectionModal.jsx
         - NewContactModal.jsx
-      - onboarding
-        - FeedbackDialog.jsx
-        - OnboardingErrorBoundary.jsx
-        - OnboardingLayout.jsx
-        - shared
+      - onboarding/
+        - shared/
           - TutorialNavigation.jsx
-        - steps
+        - steps/
           - AppointmentsStep.jsx
           - ClientsStep.jsx
           - EscrowStep.jsx
@@ -959,10 +929,13 @@ frontend
           - ListingsStep.jsx
           - MarketplaceStep.jsx
           - WelcomeStep.jsx
-      - settings
+        - FeedbackDialog.jsx
+        - OnboardingErrorBoundary.jsx
+        - OnboardingLayout.jsx
+      - settings/
         - OnboardingSettings.jsx
         - SecurityDashboard.jsx
-      - system
+      - system/
         - ActivityLog.jsx
         - AllNotes.jsx
         - ComplianceReports.jsx
@@ -971,90 +944,92 @@ frontend
         - DocumentLibrary.jsx
         - SecurityEventsPage.jsx
         - Webhooks.jsx
-    - config
-      - api.js
-      - entities
+      - .DS_Store
+    - config/
+      - entities/
         - appointments.config.js
         - base.config.js
         - clients.config.js
         - escrows.config.js
         - leads.config.js
         - listings.config.js
+      - api.js
       - sentry.js
-    - constants
+    - constants/
       - escrowConfig.js
-    - contexts
-      - AuthContext.jsx
-      - hooks
+    - contexts/
+      - hooks/
         - useAuth.js
         - useNotifications.js
         - useRealTimeData.js
         - useWebSocket.js
-    - features
-      - _blueprint
-        - README.md
-        - __tests__
-          - integration
-          - unit
-        - components
-          - dashboard
+      - AuthContext.jsx
+    - features/
+      - _blueprint/
+        - __tests__/
+          - integration/
+          - unit/
+        - components/
+          - dashboard/
             - MODULE_NAMECalendar.jsx
             - MODULE_NAMEDashboard.jsx
             - MODULE_NAMEGrid.jsx
             - MODULE_NAMEList.jsx
             - MODULE_NAMETable.jsx
-          - details
-          - modals
+          - details/
+          - modals/
             - EditMODULE_NAMEModal.jsx
             - MODULE_NAMEFiltersModal.jsx
             - NewMODULE_NAMEModal.jsx
-          - shared
-          - widgets
-        - config
+          - shared/
+          - widgets/
+        - config/
           - module.config.js
-        - constants
-        - hooks
+        - constants/
+        - hooks/
           - useMODULE_NAMEDashboard.js
-        - services
+        - services/
           - MODULE_SINGULARService.js
-        - state
-        - types
-        - utils
-    - hooks
+        - state/
+        - types/
+        - utils/
+        - README.md
+    - hooks/
       - RESPONSIVE_DESIGN_GUIDE.md
       - useAuth.js
       - useEscrowAnalytics.js
       - useEscrowCalculations.js
       - useEscrowFilters.js
-      - useEscrowWebSocket.js
       - useEscrows.js
+      - useEscrowWebSocket.js
       - useNotifications.js
       - useRealTimeData.js
       - useResponsiveLayout.js
       - useWebSocket.js
-    - index.js
-    - pages
+    - pages/
       - AdminPanel.jsx
       - EscrowsDashboard.jsx
       - PublicProfileStunning.jsx
       - Settings.jsx
       - Unauthorized.jsx
-    - services
-      - __tests__
+    - services/
+      - __tests__/
         - api.service.test.js
       - api.service.js
       - auth.service.js
-      - checklistTemplates.service.js
       - checklists.service.js
+      - checklistTemplates.service.js
       - healthCheck.service.js
       - networkMonitor.service.js
       - onboarding.service.js
       - projects.service.js
       - tasks.service.js
       - websocket.service.js
-    - shared
-      - components
-        - dashboard
+    - shared/
+      - components/
+        - dashboard/
+          - __tests__/
+            - DashboardLayout.test.jsx
           - DashboardContent.jsx
           - DashboardEmptyState.jsx
           - DashboardError.jsx
@@ -1063,51 +1038,49 @@ frontend
           - DashboardPagination.jsx
           - DashboardStats.jsx
           - DashboardToolbar.jsx
-          - __tests__
-            - DashboardLayout.test.jsx
           - index.js
-        - details
-        - layout
-        - ui
-      - hooks
-        - __tests__
+        - details/
+        - layout/
+        - ui/
+      - hooks/
+        - __tests__/
           - useDashboardData.test.js
         - index.js
         - useDashboardData.js
         - useDebounce.js
         - useLocalStorage.js
-      - index.js
-      - utils
+      - utils/
         - formatters.js
         - index.js
-    - styles
+      - index.js
+    - styles/
       - components.css
       - globals.css
-    - templates
-      - Dashboard
-        - COMPONENT_ANALYSIS.md
-        - components
+    - templates/
+      - Dashboard/
+        - components/
           - DashboardContent.jsx
           - DashboardHero.jsx
           - DashboardNavigation.jsx
           - DashboardStatCard.jsx
           - DashboardStats.jsx
           - index.js
-        - hooks
+        - hooks/
           - useDashboardData.js
+        - COMPONENT_ANALYSIS.md
         - index.jsx
-      - Detail
-        - components
+      - Detail/
+        - components/
           - DetailActivityFeed.jsx
           - DetailHero.jsx
           - DetailHero.jsx.old
           - DetailSidebar.jsx
           - DetailTabs.jsx
-        - hooks
+        - hooks/
           - useDetailData.js
         - index.jsx
         - index.jsx.old
-    - utils
+    - utils/
       - auth.js
       - dateGuard.js
       - entityIdUtils.js
@@ -1120,35 +1093,28 @@ frontend
       - sanitize.js
       - setupApiKey.js
       - testApi.js
-    - widgets
-      - shared
-media
+    - widgets/
+      - shared/
+    - App.jsx
+    - App.lazy.jsx
+    - index.js
+  - .dockerignore
+  - .env
+  - .env.example
+  - .gitignore
+  - nixpacks.toml
+  - package-lock.json
+  - package.json
+  - railway.json
+- media/
   - Real Estate CRM Folder Code Breakdown.md
-nixpacks.toml
-node_modules
-package-lock.json
-package.json
-railway.json
-scripts
-  - all-code.txt
-  - backend
+- scripts/
+  - backend/
     - create-api-key.sh
     - railway-deploy-commands.sh
     - reset-database.sh
     - update-railway-security-env.sh
-  - cleanup-duplicates.sh
-  - cleanup-refresh-tokens.sh
-  - combine.sh
-  - cookies.txt
-  - fix-dashboard-imports.sh
-  - fix-escrows-initialization.py
-  - generate-codebase-doc.sh
-  - generate-module.js
-  - migrate-to-best-practices.sh
-  - remove-console-logs.sh
-  - seed-roadmap-data.js
-  - test-generator.js
-  - testing
+  - testing/
     - benchmark-ai-endpoints.sh
     - create-comprehensive-escrow.sh
     - create-full-escrow.sh
@@ -1182,3 +1148,32 @@ scripts
     - test-railway-auth.js
     - test-railway-connection.js
     - test-zillow-og.sh
+  - all-code.txt
+  - cleanup-duplicates.sh
+  - cleanup-refresh-tokens.sh
+  - combine.sh
+  - cookies.txt
+  - fix-dashboard-imports.sh
+  - fix-escrows-initialization.py
+  - generate-codebase-doc.sh
+  - generate-module.js
+  - migrate-to-best-practices.sh
+  - remove-console-logs.sh
+  - seed-roadmap-data.js
+  - test-generator.js
+- .DS_Store
+- .gitignore
+- .railway-deploy
+- all-code.txt
+- CLAUDE.md
+- COMPLETE_FILE_TREE.txt
+- docker-compose.yml
+- ESCROW_STATS_IMPLEMENTATION.md
+- nixpacks.toml
+- package-lock.json
+- package.json
+- railway.json
+- README.md
+- TEMPLATE_ARCHITECTURE_COMPLETE.md
+- TEMPLATE_IMPLEMENTATION_COMPLETE.md
+- VISUAL_PARITY_GRADING_REPORT.md
