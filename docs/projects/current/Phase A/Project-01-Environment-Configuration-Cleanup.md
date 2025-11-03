@@ -2,9 +2,9 @@
 
 **Phase**: A
 **Priority**: CRITICAL
-**Status**: Not Started
+**Status**: In Progress
 **Estimated Time**: 6 hours (base) + 2 hours (buffer 30%) = 8 hours total
-**Actual Time Started**: [HH:MM on Date]
+**Actual Time Started**: 20:42 on November 2, 2025
 **Actual Time Completed**: [HH:MM on Date]
 **Actual Duration**: [Calculate: XX hours YY minutes]
 **Variance**: [Actual - Estimated = +/- X hours]
@@ -145,13 +145,40 @@ git push --force origin main  # Only if no one else working
 ## 📝 Implementation Notes
 
 ### Changes Made:
-- [File/component changed and why]
+- **backend/.env.example**: Completely rewritten with comprehensive documentation
+  - Added all 26 environment variables discovered in code
+  - Organized into 8 logical sections (Database, JWT, Server, Security, etc.)
+  - Added descriptions and example values for each variable
+  - Added generation instructions for JWT_SECRET
+
+- **frontend/.env.example**: Created from scratch (didn't exist)
+  - Added all 9 React environment variables
+  - Documented Google Maps API setup requirements
+  - Included Sentry configuration for error tracking
+  - Clear development vs production examples
+
+- **Removed redundant files**:
+  - backend/.env.production (use Railway variables instead)
+  - backend/.env.vault (unused)
+  - backend/scripts/.env.example (duplicate)
+  - frontend/.env.development (redundant with .env)
+  - frontend/.env.local (redundant)
+  - frontend/.env.production (use Railway variables instead)
+
+- **docs/ENVIRONMENT_VARIABLES.md**: Created comprehensive reference guide
+  - Quick reference table for all variables
+  - Setup instructions for local and Railway
+  - Security best practices (rotation schedule)
+  - Troubleshooting guide for common issues
 
 ### Issues Encountered:
-- [Issue and resolution]
+- None - straightforward consolidation
 
 ### Decisions Made:
-- [Decision and rationale]
+- **Keep .env files in backend/ and frontend/ directories** (not root) - maintains separation of concerns
+- **Single .env.example per directory** - clear template for each environment
+- **Use DATABASE_URL over individual DB_* variables** - Railway standard, simpler
+- **Document all variables even if optional** - helps future developers understand full system
 
 ---
 
