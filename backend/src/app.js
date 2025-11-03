@@ -232,47 +232,15 @@ apiRouter.use('/gdpr', require('./routes/gdpr.routes'));
 // ============================================
 // PHASE 4: Domain-Driven Design Architecture
 // ============================================
-// New domain-based routes (incrementally replacing module routes)
-// These routes use BaseDomainController/BaseDomainService pattern
-// Escrows domain - Enhanced with domain architecture (Phase 4)
-const escrowsDomainRouter = express.Router();
-escrowsDomainRouter.use('/', require('./domains/escrows/routes')); // New domain routes
-escrowsDomainRouter.use('/', require('./modules/escrows/routes/health.routes')); // Health endpoints preserved
-// NOTE: Domain routes take precedence, falling back to legacy module routes if needed
-
-// Legacy module routes (Phase 4 migration in progress)
-// These will be deprecated once all functionality is moved to domain routes
-const escrowsLegacyRouter = express.Router();
-escrowsLegacyRouter.use('/', require('./modules/escrows/routes')); // Original module routes
-// Mount domain routes (new architecture) on /escrows
-apiRouter.use('/escrows', escrowsDomainRouter);
-
-// Listings domain - Enhanced with domain architecture (Phase 4)
-const listingsDomainRouter = express.Router();
-listingsDomainRouter.use('/', require('./domains/listings/routes')); // New domain routes
-listingsDomainRouter.use('/', require('./modules/listings/routes/health.routes')); // Health endpoints preserved
-// Mount domain routes (new architecture) on /listings
-apiRouter.use('/listings', listingsDomainRouter);
+// Core module routes - Consolidated structure (Project-06)
+// All modules use consistent pattern: controllers/, services/, routes/, tests/
+apiRouter.use('/escrows', require('./modules/escrows/routes'));
+apiRouter.use('/listings', require('./modules/listings/routes'));
+apiRouter.use('/clients', require('./modules/clients/routes'));
+apiRouter.use('/appointments', require('./modules/appointments/routes'));
+apiRouter.use('/leads', require('./modules/leads/routes'));
 apiRouter.use('/contacts', require('./modules/contacts/routes'));
 apiRouter.use('/contact-roles', require('./modules/contacts/routes/contact-roles.routes'));
-
-// Clients domain - Enhanced with domain architecture (Phase 4)
-const clientsDomainRouter = express.Router();
-clientsDomainRouter.use('/', require('./domains/clients/routes')); // New domain routes
-// Mount domain routes (new architecture) on /clients
-apiRouter.use('/clients', clientsDomainRouter);
-
-// Appointments domain - Enhanced with domain architecture (Phase 4)
-const appointmentsDomainRouter = express.Router();
-appointmentsDomainRouter.use('/', require('./domains/appointments/routes')); // New domain routes
-// Mount domain routes (new architecture) on /appointments
-apiRouter.use('/appointments', appointmentsDomainRouter);
-
-// Leads domain - Enhanced with domain architecture (Phase 4)
-const leadsDomainRouter = express.Router();
-leadsDomainRouter.use('/', require('./domains/leads/routes')); // New domain routes
-// Mount domain routes (new architecture) on /leads
-apiRouter.use('/leads', leadsDomainRouter);
 apiRouter.use('/analytics', require('./routes/analytics.routes'));
 apiRouter.use('/teams', require('./routes/teams.routes'));
 
