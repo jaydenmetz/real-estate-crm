@@ -4,7 +4,7 @@ import { styled } from '@mui/material/styles';
 import { Users, Phone, X } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { ContactSelectionModal } from '../../../modals/ContactSelectionModal';
-import { PeopleModal } from '../modals/PeopleModal';
+import PeopleModal from '../modals/PeopleModal';
 import { escrowsAPI } from '../../../../services/api.service';
 
 // White card with purple icon badge
