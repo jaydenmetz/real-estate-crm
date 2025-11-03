@@ -1,8 +1,24 @@
 # CLAUDE.md - Real Estate CRM Development Guide
 
-**Last Updated:** November 2, 2025  
-**Project Status:** 82% Complete (525/627 files) - Ready to systematize with roadmap  
+**Last Updated:** November 3, 2025
+**Project Status:** Phase A Complete (15/105 projects) - Phase B Active
 **Roadmap Reference:** `/docs/COMPLETE_ROADMAP.md` (105 projects across 8 phases)
+
+---
+
+## ⚡ CRITICAL: NEVER STOP FOR TOKEN LIMITS
+
+**IMPORTANT**: User has plenty of AI tokens available.
+
+❌ **DO NOT** stop projects due to "context approaching limits"
+❌ **DO NOT** suggest ending session early
+❌ **DO NOT** pause work to "prepare for next session"
+
+✅ **CONTINUE working** until user explicitly says to stop
+✅ **CONTINUE implementing** projects one after another
+✅ **ONLY STOP** if you literally run out of tokens (system error)
+
+**Keep going! Complete as many projects as possible in each session.** 🚀
 
 ---
 
