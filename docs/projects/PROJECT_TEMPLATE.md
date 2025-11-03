@@ -1,6 +1,6 @@
 # Project-XX: [Name from Overview]
 
-**Phase**: A | **Priority**: HIGH/MEDIUM/LOW | **Status**: Not Started
+**Phase**: A-H | **Priority**: HIGH/MEDIUM/LOW | **Status**: Not Started
 **Est**: X hrs + 30% = Y hrs | **Deps**: [Project-##] or None
 
 ## 🎯 Goal
