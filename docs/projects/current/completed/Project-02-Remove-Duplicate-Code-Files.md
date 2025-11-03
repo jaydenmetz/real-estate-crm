@@ -5,9 +5,9 @@
 **Status**: Complete
 **Estimated Time**: 8 hours (base) + 2.5 hours (buffer 30%) = 10.5 hours total
 **Actual Time Started**: 21:10 on November 2, 2025
-**Actual Time Completed**: 21:18 on November 2, 2025
-**Actual Duration**: 8 minutes
-**Variance**: Actual - Estimated = -10.37 hours (99% faster than estimated!)
+**Actual Time Completed**: 21:33 on November 2, 2025
+**Actual Duration**: 23 minutes (8 min finding/removing + 15 min fixing imports and deploying)
+**Variance**: Actual - Estimated = -10.12 hours (96% faster than estimated!)
 
 ---
 
@@ -162,17 +162,37 @@ git push --force origin main  # Only if no one else working
   - frontend/src/components/dashboards/clients.reference/ (entire folder - duplicate)
   - frontend/src/components/dashboards/home/TeamSelector.jsx (kept admin version)
 
-- **Total removed**: 5 backup files + 4 duplicate components + 1 duplicate folder
+- **Total removed**: 5 backup files + 4 duplicate components + 1 duplicate folder = **10 files deleted**
+- **Lines of code removed**: 4,425 lines (mostly from clients.reference folder)
+
+- **Fixed imports** (required after deletion):
+  - HomeDashboard.jsx: Updated TeamSelector import path
+  - PeopleWidget_White.jsx: Updated PeopleModal import path and changed to default import
 
 ### Issues Encountered:
-- None - all duplicates were clearly unused
+- **Broken imports after deletion** (3 Railway deployment failures):
+  1. HomeDashboard.jsx importing deleted home/TeamSelector
+     - Fixed: Changed import to '../admin/TeamSelector'
+  2. PeopleWidget_White.jsx importing from wrong path (../../../modals/PeopleModal)
+     - Fixed: Changed to '../modals/PeopleModal'
+  3. PeopleWidget_White.jsx using named import instead of default
+     - Fixed: Changed from `import { PeopleModal }` to `import PeopleModal`
+
+- **Total**: 3 deployments required to fix all import issues
+- **Lesson**: Should have run `grep -r "import.*[DeletedComponent]" frontend/src` BEFORE deleting files
 
 ### Decisions Made:
-- **Kept escrows-specific EditableField**: Imports verified this version is used
-- **Kept escrows/modals PeopleModal**: Used in escrows detail page
-- **Removed clients.reference folder**: Entire duplicate dashboard implementation
+- **Kept escrows-specific EditableField**: Imports verified this version is used in 3 modal files
+- **Kept escrows/modals PeopleModal**: Used in escrows detail page and PeopleWidget_White
+- **Removed clients.reference folder**: Entire duplicate dashboard (5 files, never imported)
 - **Kept admin TeamSelector**: More feature-complete than home version
 - **index.jsx duplicates acceptable**: Different directories (dashboards/ vs details/) is standard React pattern
+
+### Import Fix Commits:
+1. Commit `4bbaccc`: Fix TeamSelector import in HomeDashboard
+2. Commit `04fe649`: Fix PeopleModal path in PeopleWidget_White
+3. Commit `bf702fc`: Fix PeopleModal from named to default import
+4. Final deployment: Commit `be07b89` (all fixes working)
 
 ---
 
@@ -308,10 +328,16 @@ git push origin main
 **Completion Date:** November 2, 2025
 **Final Status:** Success
 **Lessons Learned:**
-- Duplicate detection is fast when using proper find commands
-- Most duplicates were .backup files and entire folder duplicates (clients.reference/)
-- Verifying imports before deletion prevents breaking changes
-- Project completed in 8 minutes vs 10.5 hour estimate (99% faster!)
+- **CRITICAL**: Always check imports BEFORE deleting files: `grep -r "import.*ComponentName" frontend/src`
+- **CRITICAL**: Test locally with `npm run build` before pushing to Railway
+- **CRITICAL**: Wait for Railway deployment verification (3-5 minutes) before marking complete
+- Duplicate detection is fast with proper find commands
+- Most duplicates were .backup files and unused folders (clients.reference/)
+- Required 3 deployment attempts to fix all broken imports
+- Named vs default imports must match component export type
+- Project took 23 minutes vs 10.5 hour estimate (96% faster, but with deployment iterations)
+
 **Follow-up Items:**
-- Monitor webpack build size on next deployment (should be smaller)
-- Watch for any import errors in production (none expected)
+- Add "Check imports before deleting" step to future duplicate removal projects
+- Consider creating pre-deletion import verification script
+- Updated CLAUDE.md with deployment verification loop for all future projects
