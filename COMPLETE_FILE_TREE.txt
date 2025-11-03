@@ -7,6 +7,12 @@
 ├── .husky
 │   └── pre-commit
 ├── api-docs - EMPTY
+├── archive - EMPTY
+│   └── components_2025-11-03
+│       ├── AllDataViewer_UNUSED_881lines.jsx
+│       ├── ComprehensiveDataEditor_UNUSED.jsx
+│       ├── EscrowDetail_OLD_513lines.jsx
+│       └── StunningPropertyDisplay_UNUSED.jsx
 ├── backend
 │   ├── backups - EMPTY
 │   ├── migrations
@@ -90,7 +96,7 @@
 │   │   │   ├── update-zillow-images-final.js
 │   │   │   ├── update-zillow-property-images.js
 │   │   │   └── verify-zillow-images.js
-│   │   ├── database - EMPTY
+│   │   ├── database
 │   │   │   ├── add-production-escrow.sql
 │   │   │   ├── add-property-fields.sql
 │   │   │   ├── add-unique-constraints.sql
@@ -155,14 +161,14 @@
 │   │   │   ├── test-listings-api.sh
 │   │   │   ├── test-stats-query.js
 │   │   │   └── test-upload-api.sh
-│   │   ├── .env.example
 │   │   ├── README.md
 │   │   └── add_websocket_events.sh
 │   ├── src
-│   │   ├── api
-│   │   │   ├── v1 - EMPTY
-│   │   │   └── v2 - EMPTY
-│   │   ├── config - EMPTY
+│   │   ├── config
+│   │   │   ├── schemas
+│   │   │   │   ├── business-rules.js
+│   │   │   │   ├── openapi.schemas.js
+│   │   │   │   └── routes.annotations.js
 │   │   │   ├── aws.js
 │   │   │   ├── database.js
 │   │   │   ├── openapi.config.js
@@ -179,89 +185,12 @@
 │   │   │   ├── linkPreview.controller.test.js
 │   │   │   ├── stats.controller.js
 │   │   │   └── teams.controller.js
-│   │   ├── domains
-│   │   │   ├── appointments - EMPTY
-│   │   │   │   ├── controllers - EMPTY
-│   │   │   │   │   └── appointments.controller.js
-│   │   │   │   ├── events - EMPTY
-│   │   │   │   ├── middleware - EMPTY
-│   │   │   │   ├── models - EMPTY
-│   │   │   │   ├── routes
-│   │   │   │   │   └── index.js
-│   │   │   │   ├── services
-│   │   │   │   │   └── appointments.service.js
-│   │   │   │   ├── tests - EMPTY
-│   │   │   │   │   └── appointments.validators.test.js
-│   │   │   │   └── validators
-│   │   │   │       └── appointments.validators.js
-│   │   │   ├── clients - EMPTY
-│   │   │   │   ├── controllers - EMPTY
-│   │   │   │   │   └── clients.controller.js
-│   │   │   │   ├── events - EMPTY
-│   │   │   │   ├── middleware - EMPTY
-│   │   │   │   ├── models - EMPTY
-│   │   │   │   ├── routes
-│   │   │   │   │   └── index.js
-│   │   │   │   ├── services
-│   │   │   │   │   └── clients.service.js
-│   │   │   │   ├── tests - EMPTY
-│   │   │   │   │   └── clients.validators.test.js
-│   │   │   │   └── validators
-│   │   │   │       └── clients.validators.js
-│   │   │   ├── escrows - EMPTY
-│   │   │   │   ├── controllers - EMPTY
-│   │   │   │   │   └── escrows.controller.js
-│   │   │   │   ├── events - EMPTY
-│   │   │   │   ├── middleware - EMPTY
-│   │   │   │   ├── models - EMPTY
-│   │   │   │   ├── routes
-│   │   │   │   │   └── index.js
-│   │   │   │   ├── services
-│   │   │   │   │   └── escrows.service.js
-│   │   │   │   ├── tests - EMPTY
-│   │   │   │   │   └── escrows.validators.test.js
-│   │   │   │   └── validators
-│   │   │   │       └── escrows.validators.js
-│   │   │   ├── leads - EMPTY
-│   │   │   │   ├── controllers - EMPTY
-│   │   │   │   │   └── leads.controller.js
-│   │   │   │   ├── events - EMPTY
-│   │   │   │   ├── middleware - EMPTY
-│   │   │   │   ├── models - EMPTY
-│   │   │   │   ├── routes
-│   │   │   │   │   └── index.js
-│   │   │   │   ├── services
-│   │   │   │   │   └── leads.service.js
-│   │   │   │   ├── tests - EMPTY
-│   │   │   │   │   └── leads.validators.test.js
-│   │   │   │   └── validators
-│   │   │   │       └── leads.validators.js
-│   │   │   └── listings - EMPTY
-│   │   │       ├── controllers - EMPTY
-│   │   │       │   └── listings.controller.js
-│   │   │       ├── events - EMPTY
-│   │   │       ├── middleware - EMPTY
-│   │   │       ├── models - EMPTY
-│   │   │       ├── routes
-│   │   │       │   └── index.js
-│   │   │       ├── services
-│   │   │       │   └── listings.service.js
-│   │   │       ├── tests - EMPTY
-│   │   │       │   └── listings.validators.test.js
-│   │   │       └── validators
-│   │   │           └── listings.validators.js
-│   │   ├── helpers
-│   │   │   └── ownership.helper.js
-│   │   ├── infrastructure
-│   │   │   ├── cache - EMPTY
-│   │   │   ├── database - EMPTY
-│   │   │   ├── queue - EMPTY
-│   │   │   └── storage - EMPTY
+│   │   ├── helpers - EMPTY
 │   │   ├── jobs
 │   │   │   ├── kpiSnapshot.job.js
 │   │   │   ├── scheduler.js
 │   │   │   └── securityEventRetention.job.js
-│   │   ├── middleware - EMPTY
+│   │   ├── middleware
 │   │   │   ├── adminOnly.middleware.js
 │   │   │   ├── apiKey.middleware.js
 │   │   │   ├── auditLog.middleware.js
@@ -283,7 +212,7 @@
 │   │   │   ├── Document.js
 │   │   │   └── MockQueryBuilder.js
 │   │   ├── modules
-│   │   │   ├── appointments - EMPTY
+│   │   │   ├── appointments
 │   │   │   │   ├── controllers - EMPTY
 │   │   │   │   │   └── appointments.controller.js
 │   │   │   │   ├── models - EMPTY
@@ -297,7 +226,7 @@
 │   │   │   │   │   └── appointments.controller.test.js
 │   │   │   │   ├── utils - EMPTY
 │   │   │   │   └── README.md
-│   │   │   ├── clients - EMPTY
+│   │   │   ├── clients
 │   │   │   │   ├── controllers - EMPTY
 │   │   │   │   │   └── clients.controller.js
 │   │   │   │   ├── models - EMPTY
@@ -341,7 +270,7 @@
 │   │   │   │   │       └── contacts-multi-role.test.js
 │   │   │   │   ├── utils - EMPTY
 │   │   │   │   └── README.md
-│   │   │   ├── escrows - EMPTY
+│   │   │   ├── escrows
 │   │   │   │   ├── controllers - EMPTY
 │   │   │   │   │   ├── checklists.controller.js
 │   │   │   │   │   ├── crud.controller.js
@@ -388,7 +317,7 @@
 │   │   │   │   │   └── index.js
 │   │   │   │   └── tests - EMPTY
 │   │   │   │       └── invoices.controller.test.js
-│   │   │   ├── leads - EMPTY
+│   │   │   ├── leads
 │   │   │   │   ├── controllers - EMPTY
 │   │   │   │   │   └── leads.controller.js
 │   │   │   │   ├── models - EMPTY
@@ -402,7 +331,7 @@
 │   │   │   │   │   └── leads.controller.test.js
 │   │   │   │   ├── utils - EMPTY
 │   │   │   │   └── README.md
-│   │   │   ├── listings - EMPTY
+│   │   │   ├── listings
 │   │   │   │   ├── controllers - EMPTY
 │   │   │   │   │   └── listings.controller.js
 │   │   │   │   ├── models - EMPTY
@@ -464,20 +393,11 @@
 │   │   │   ├── system-health.routes.js
 │   │   │   ├── teams.routes.js
 │   │   │   └── upload.routes.js
-│   │   ├── schemas
-│   │   │   ├── business-rules.js
-│   │   │   ├── openapi.schemas.js
-│   │   │   └── routes.annotations.js
 │   │   ├── scripts - EMPTY
 │   │   ├── services
 │   │   │   ├── __tests__ - EMPTY
 │   │   │   │   └── securityEvent.service.test.js
-│   │   │   ├── appointments - EMPTY
-│   │   │   ├── clients - EMPTY
 │   │   │   ├── commission - EMPTY
-│   │   │   ├── escrows - EMPTY
-│   │   │   ├── leads - EMPTY
-│   │   │   ├── listings - EMPTY
 │   │   │   ├── skyslope
 │   │   │   │   └── index.js
 │   │   │   ├── ai.service.js
@@ -505,17 +425,6 @@
 │   │   │   ├── weather.service.js
 │   │   │   ├── webhook.service.js
 │   │   │   └── websocket.service.js
-│   │   ├── shared - EMPTY
-│   │   │   ├── config - EMPTY
-│   │   │   ├── controllers - EMPTY
-│   │   │   │   └── BaseDomainController.js
-│   │   │   ├── middleware - EMPTY
-│   │   │   ├── services
-│   │   │   │   └── BaseDomainService.js
-│   │   │   └── utils - EMPTY
-│   │   │       └── errors.js
-│   │   ├── test
-│   │   │   └── setup.js
 │   │   ├── tests - EMPTY
 │   │   │   ├── edge-cases
 │   │   │   │   ├── authorization.edge-case.test.js
@@ -547,13 +456,16 @@
 │   │   │   ├── concurrency.test.js
 │   │   │   ├── refreshToken.test.js
 │   │   │   ├── securityEvents.test.js
+│   │   │   ├── setup.js
 │   │   │   ├── test-auth.js
 │   │   │   └── test-connection.js
 │   │   ├── utils - EMPTY
 │   │   │   ├── constants.js
+│   │   │   ├── errors.js
 │   │   │   ├── formatters.js
 │   │   │   ├── idGenerator.js
 │   │   │   ├── logger.js
+│   │   │   ├── ownership.helper.js
 │   │   │   └── validators.js
 │   │   ├── app.js
 │   │   └── mcp-server.js
@@ -568,8 +480,6 @@
 │   ├── .deploy-trigger
 │   ├── .env
 │   ├── .env.example
-│   ├── .env.production
-│   ├── .env.vault
 │   ├── .eslintignore
 │   ├── .eslintrc.json
 │   ├── .gitignore
@@ -586,9 +496,53 @@
 │   │   ├── 2025-audits
 │   │   │   ├── BACKEND_STRUCTURE_AUDIT.md
 │   │   │   ├── CODEBASE_STRUCTURE_ANALYSIS.md
-│   │   │   └── PRODUCTION_CRASH_FIXES.md
+│   │   │   ├── CODE_AUDIT_2025-10-28.md
+│   │   │   ├── COMPLETE_FILE_STRUCTURE_AUDIT.md
+│   │   │   ├── COMPREHENSIVE_AUDIT_REPORT.md
+│   │   │   ├── MANUAL_TESTING_SCRIPT.md
+│   │   │   ├── PRODUCTION_CRASH_FIXES.md
+│   │   │   ├── REPLICATION_READINESS_ASSESSMENT.md
+│   │   │   ├── SYSTEM_AUDIT_2025.md
+│   │   │   └── TESTING_COMPLETE_SUMMARY.md
 │   │   ├── 2025-plans
-│   │   │   └── PHASE_1_IMPLEMENTATION_GUIDE.md
+│   │   │   ├── AUTH_BROKEN_DIAGNOSIS.md
+│   │   │   ├── BACKEND_COMPLETE_REORGANIZATION_PLAN.md
+│   │   │   ├── BACKEND_REFACTORING_REALISTIC_PLAN.md
+│   │   │   ├── BACKEND_REFACTORING_STEP_BY_STEP.md
+│   │   │   ├── BACKEND_REORGANIZATION_PLAN.md
+│   │   │   ├── CLIENT_DETAIL_API_DESIGN.md
+│   │   │   ├── DETAIL_API_ARCHITECTURE.md
+│   │   │   ├── DETAIL_API_GAP_ANALYSIS.md
+│   │   │   ├── DETAIL_API_SIMPLIFIED.md
+│   │   │   ├── ESCROWS_DETAIL_API_COMPLETE.md
+│   │   │   ├── MULTI_ROLE_CONTACTS_REMAINING_WORK.md
+│   │   │   ├── MULTI_ROLE_CONTACTS_TESTING.md
+│   │   │   ├── PHASE1_COMPLETE.md
+│   │   │   ├── PHASE1_TEST_RESULTS.md
+│   │   │   ├── PHASES_1-3_COMPLETE.md
+│   │   │   ├── PHASE_1_COMPLETE_WITH_ESCROWS_REFACTOR.md
+│   │   │   ├── PHASE_1_COMPLETION_SUMMARY.md
+│   │   │   ├── PHASE_1_IMPLEMENTATION_GUIDE.md
+│   │   │   ├── PHASE_1_PERFORMANCE_BASELINE.md
+│   │   │   ├── PHASE_1_PROPERLY_COMPLETE.md
+│   │   │   ├── PHASE_1_SHARED_COMPONENTS_COMPLETE.md
+│   │   │   ├── PHASE_1_VERIFICATION_PROOF.md
+│   │   │   ├── PHASE_2_COMPLETION_SUMMARY.md
+│   │   │   ├── PHASE_2_POST_CLEANUP_STATUS.md
+│   │   │   ├── PHASE_3_BLUEPRINT_FOUNDATION.md
+│   │   │   ├── PHASE_3_COMPLETION_SUMMARY.md
+│   │   │   ├── PHASE_3_GENERATOR_VALIDATION.md
+│   │   │   ├── PHASE_4_COMPLETE.md
+│   │   │   ├── PHASE_4_COMPLETION_PLAN.md
+│   │   │   ├── PHASE_4_COMPLETION_REPORT.md
+│   │   │   ├── PHASE_4_DAY_1_PROGRESS.md
+│   │   │   ├── PHASE_4_ESCROWS_DOMAIN_MIGRATION.md
+│   │   │   ├── PHASE_4_IMPLEMENTATION_PLAN.md
+│   │   │   ├── PHASE_4_PROGRESS_SUMMARY.md
+│   │   │   ├── PHASE_4_STATUS_AND_NEXT_STEPS.md
+│   │   │   ├── SHARED_COMPONENTS_API.md
+│   │   │   ├── SHARED_COMPONENT_PROP_CONVENTIONS.md
+│   │   │   └── TESTING_DETAIL_API.md
 │   │   ├── design-specs
 │   │   │   ├── CONTACTS_ROLE_SYSTEM.md
 │   │   │   ├── DASHBOARD_ARCHITECTURE.md
@@ -598,21 +552,22 @@
 │   │   │   ├── WEBSOCKET_IMPLEMENTATION_ANALYSIS.md
 │   │   │   ├── WEBSOCKET_IMPLEMENTATION_CHECKLIST.md
 │   │   │   └── ZILLOW_INTEGRATION_PHASE_2_DESIGN.md
+│   │   ├── setup-guides
+│   │   │   ├── GOOGLE_OAUTH_SETUP.md
+│   │   │   ├── RAILWAY_ENVIRONMENT_SETUP.md
+│   │   │   ├── SCALING_GUIDE.md
+│   │   │   ├── SECURITY_OPERATIONS.md
+│   │   │   └── SENTRY_SETUP.md
+│   │   ├── user-guides
+│   │   │   ├── KEYBOARD_SHORTCUTS.md
+│   │   │   └── QUICK_START_NEW_DASHBOARD.md
 │   │   ├── AI_INTEGRATION_GUIDE.md
 │   │   └── AI_READINESS_ASSESSMENT.md
 │   ├── projects
 │   │   ├── archive - EMPTY
-│   │   ├── current - EMPTY
-│   │   ├── future
+│   │   ├── current
 │   │   │   ├── Phase A
 │   │   │   │   ├── Phase-A-Summary.md
-│   │   │   │   ├── Project-01-Environment-Configuration-Cleanup.md
-│   │   │   │   ├── Project-02-Remove-Duplicate-Code-Files.md
-│   │   │   │   ├── Project-03-Naming-Convention-Enforcement.md
-│   │   │   │   ├── Project-04-Script-Centralization.md
-│   │   │   │   ├── Project-05-Documentation-Structure-Finalization.md
-│   │   │   │   ├── Project-06-Backend-Directory-Consolidation.md
-│   │   │   │   ├── Project-07-Frontend-Component-Organization.md
 │   │   │   │   ├── Project-08-Config-File-Consolidation.md
 │   │   │   │   ├── Project-09-API-Route-Standardization.md
 │   │   │   │   ├── Project-10-Service-Layer-Unification.md
@@ -621,6 +576,15 @@
 │   │   │   │   ├── Project-13-Test-Suite-Reorganization.md
 │   │   │   │   ├── Project-14-Archive-Legacy-Code.md
 │   │   │   │   └── Project-15-Build-Process-Verification.md
+│   │   │   └── completed
+│   │   │       ├── Project-01-Environment-Configuration-Cleanup.md
+│   │   │       ├── Project-02-Remove-Duplicate-Code-Files.md
+│   │   │       ├── Project-03-Naming-Convention-Enforcement.md
+│   │   │       ├── Project-04-Script-Centralization.md
+│   │   │       ├── Project-05-Documentation-Structure-Finalization.md
+│   │   │       ├── Project-06-Backend-Directory-Consolidation.md
+│   │   │       └── Project-07-Frontend-Component-Organization.md
+│   │   ├── future
 │   │   │   ├── Phase B
 │   │   │   │   ├── Phase-B-Summary.md
 │   │   │   │   ├── Project-16-Authentication-Flow-Verification.md
@@ -734,63 +698,15 @@
 │   ├── .DS_Store
 │   ├── API_REFERENCE.md
 │   ├── ARCHITECTURE.md
-│   ├── AUTH_BROKEN_DIAGNOSIS.md
-│   ├── BACKEND_COMPLETE_REORGANIZATION_PLAN.md
-│   ├── BACKEND_REFACTORING_REALISTIC_PLAN.md
-│   ├── BACKEND_REFACTORING_STEP_BY_STEP.md
-│   ├── BACKEND_REORGANIZATION_PLAN.md
-│   ├── CLIENT_DETAIL_API_DESIGN.md
-│   ├── CODE_AUDIT_2025-10-28.md
-│   ├── COMPLETE_FILE_STRUCTURE_AUDIT.md
-│   ├── COMPREHENSIVE_AUDIT_REPORT.md
+│   ├── COMPLETE_ROADMAP.md
 │   ├── DATABASE_RELATIONSHIPS.md
 │   ├── DATABASE_STRUCTURE.md
-│   ├── DETAIL_API_ARCHITECTURE.md
-│   ├── DETAIL_API_GAP_ANALYSIS.md
-│   ├── DETAIL_API_SIMPLIFIED.md
 │   ├── ENVIRONMENTS.md
-│   ├── ESCROWS_DETAIL_API_COMPLETE.md
-│   ├── GOOGLE_OAUTH_SETUP.md
-│   ├── KEYBOARD_SHORTCUTS.md
-│   ├── MANUAL_TESTING_SCRIPT.md
-│   ├── MULTI_ROLE_CONTACTS_REMAINING_WORK.md
-│   ├── MULTI_ROLE_CONTACTS_TESTING.md
-│   ├── PHASE1_COMPLETE.md
-│   ├── PHASE1_TEST_RESULTS.md
-│   ├── PHASES_1-3_COMPLETE.md
-│   ├── PHASE_1_COMPLETE_WITH_ESCROWS_REFACTOR.md
-│   ├── PHASE_1_COMPLETION_SUMMARY.md
-│   ├── PHASE_1_PERFORMANCE_BASELINE.md
-│   ├── PHASE_1_PROPERLY_COMPLETE.md
-│   ├── PHASE_1_SHARED_COMPONENTS_COMPLETE.md
-│   ├── PHASE_1_VERIFICATION_PROOF.md
-│   ├── PHASE_2_COMPLETION_SUMMARY.md
-│   ├── PHASE_2_POST_CLEANUP_STATUS.md
-│   ├── PHASE_3_BLUEPRINT_FOUNDATION.md
-│   ├── PHASE_3_COMPLETION_SUMMARY.md
-│   ├── PHASE_3_GENERATOR_VALIDATION.md
-│   ├── PHASE_4_COMPLETE.md
-│   ├── PHASE_4_COMPLETION_PLAN.md
-│   ├── PHASE_4_COMPLETION_REPORT.md
-│   ├── PHASE_4_DAY_1_PROGRESS.md
-│   ├── PHASE_4_ESCROWS_DOMAIN_MIGRATION.md
-│   ├── PHASE_4_IMPLEMENTATION_PLAN.md
-│   ├── PHASE_4_PROGRESS_SUMMARY.md
-│   ├── PHASE_4_STATUS_AND_NEXT_STEPS.md
-│   ├── QUICK_START_NEW_DASHBOARD.md
-│   ├── RAILWAY_ENVIRONMENT_SETUP.md
+│   ├── ENVIRONMENT_VARIABLES.md
+│   ├── PROGRESS_TRACKER.md
 │   ├── README.md
-│   ├── REPLICATION_READINESS_ASSESSMENT.md
-│   ├── SCALING_GUIDE.md
-│   ├── SECURITY_OPERATIONS.md
 │   ├── SECURITY_REFERENCE.md
-│   ├── SENTRY_SETUP.md
-│   ├── SHARED_COMPONENTS_API.md
-│   ├── SHARED_COMPONENT_PROP_CONVENTIONS.md
-│   ├── SYSTEM_ARCHITECTURE.md
-│   ├── SYSTEM_AUDIT_2025.md
-│   ├── TESTING_COMPLETE_SUMMARY.md
-│   └── TESTING_DETAIL_API.md
+│   └── SYSTEM_ARCHITECTURE.md
 ├── frontend
 │   ├── public
 │   │   ├── health.html
@@ -846,7 +762,6 @@
 │   │   │   │   ├── DetailPageErrorBoundary.jsx
 │   │   │   │   ├── DetailPageHero.jsx
 │   │   │   │   ├── EditableDateField.jsx
-│   │   │   │   ├── EditableField.jsx
 │   │   │   │   ├── EditableNumberField.jsx
 │   │   │   │   ├── EditableTextField.jsx
 │   │   │   │   ├── ErrorBoundary.jsx
@@ -880,32 +795,18 @@
 │   │   │   │   ├── ReferralSources.jsx
 │   │   │   │   └── VendorsPartners.jsx
 │   │   │   ├── dashboards
-│   │   │   │   ├── _archived - EMPTY
-│   │   │   │   ├── appointments - EMPTY
+│   │   │   │   ├── appointments
 │   │   │   │   │   ├── components - EMPTY
 │   │   │   │   │   ├── hooks - EMPTY
 │   │   │   │   │   ├── modals
 │   │   │   │   │   │   └── NewAppointmentModal.jsx
 │   │   │   │   │   ├── utils - EMPTY
 │   │   │   │   │   └── index.jsx
-│   │   │   │   ├── clients - EMPTY
+│   │   │   │   ├── clients
 │   │   │   │   │   ├── modals
 │   │   │   │   │   │   └── NewClientModal.jsx
 │   │   │   │   │   └── index.jsx
-│   │   │   │   ├── clients.reference
-│   │   │   │   │   ├── components - EMPTY
-│   │   │   │   │   │   ├── ClientContent.jsx
-│   │   │   │   │   │   ├── ClientHeroCard.jsx
-│   │   │   │   │   │   ├── ClientNavigation.jsx
-│   │   │   │   │   │   └── ClientStatCard.jsx
-│   │   │   │   │   ├── hooks - EMPTY
-│   │   │   │   │   │   └── useClientHandlers.js
-│   │   │   │   │   ├── modals
-│   │   │   │   │   │   └── NewClientModal.jsx
-│   │   │   │   │   ├── utils - EMPTY
-│   │   │   │   │   │   └── clientUtils.js
-│   │   │   │   │   └── index.jsx
-│   │   │   │   ├── escrows - EMPTY
+│   │   │   │   ├── escrows
 │   │   │   │   │   ├── constants - EMPTY
 │   │   │   │   │   │   └── escrowConstants.js
 │   │   │   │   │   ├── modals
@@ -914,16 +815,15 @@
 │   │   │   │   ├── home
 │   │   │   │   │   ├── BrokerHeroCard.jsx
 │   │   │   │   │   ├── TeamHeroCard.jsx
-│   │   │   │   │   ├── TeamSelector.jsx
 │   │   │   │   │   └── UserHeroCard.jsx
-│   │   │   │   ├── leads - EMPTY
+│   │   │   │   ├── leads
 │   │   │   │   │   ├── components - EMPTY
 │   │   │   │   │   ├── hooks - EMPTY
 │   │   │   │   │   ├── modals
 │   │   │   │   │   │   └── NewLeadModal.jsx
 │   │   │   │   │   ├── utils - EMPTY
 │   │   │   │   │   └── index.jsx
-│   │   │   │   ├── listings - EMPTY
+│   │   │   │   ├── listings
 │   │   │   │   │   ├── components - EMPTY
 │   │   │   │   │   │   ├── ListingContent.jsx
 │   │   │   │   │   │   ├── ListingHeroCard.jsx
@@ -944,22 +844,20 @@
 │   │   │   │   ├── InvoiceDashboard.jsx
 │   │   │   │   └── OtherDataDashboard.jsx
 │   │   │   ├── details - EMPTY
-│   │   │   │   ├── appointments - EMPTY
+│   │   │   │   ├── appointments
 │   │   │   │   │   ├── components - EMPTY
 │   │   │   │   │   │   ├── LocationWidget.jsx
 │   │   │   │   │   │   ├── NotesWidget.jsx
 │   │   │   │   │   │   └── ParticipantsWidget.jsx
 │   │   │   │   │   ├── hooks - EMPTY
 │   │   │   │   │   ├── utils - EMPTY
-│   │   │   │   │   ├── index.jsx
-│   │   │   │   │   └── index.jsx.backup
-│   │   │   │   ├── clients - EMPTY
+│   │   │   │   │   └── index.jsx
+│   │   │   │   ├── clients
 │   │   │   │   │   ├── components - EMPTY
 │   │   │   │   │   ├── hooks - EMPTY
 │   │   │   │   │   ├── utils - EMPTY
-│   │   │   │   │   ├── index.jsx
-│   │   │   │   │   └── index.jsx.backup
-│   │   │   │   ├── escrows - EMPTY
+│   │   │   │   │   └── index.jsx
+│   │   │   │   ├── escrows
 │   │   │   │   │   ├── components - EMPTY
 │   │   │   │   │   │   ├── ActivityFeedBottomTab.jsx
 │   │   │   │   │   │   ├── ActivityFeedSheet.jsx
@@ -979,32 +877,25 @@
 │   │   │   │   │   │   └── TimelineModal.jsx
 │   │   │   │   │   ├── utils - EMPTY
 │   │   │   │   │   │   └── eventHandlers.js
-│   │   │   │   │   ├── index.jsx
-│   │   │   │   │   └── index.jsx.backup
-│   │   │   │   ├── leads - EMPTY
+│   │   │   │   │   └── index.jsx
+│   │   │   │   ├── leads
 │   │   │   │   │   ├── components - EMPTY
 │   │   │   │   │   │   ├── ContactWidget.jsx
 │   │   │   │   │   │   ├── EngagementWidget.jsx
 │   │   │   │   │   │   └── QualificationWidget.jsx
 │   │   │   │   │   ├── hooks - EMPTY
 │   │   │   │   │   ├── utils - EMPTY
-│   │   │   │   │   ├── index.jsx
-│   │   │   │   │   └── index.jsx.backup
-│   │   │   │   ├── listings - EMPTY
-│   │   │   │   │   ├── components - EMPTY
-│   │   │   │   │   │   ├── ActivityWidget.jsx
-│   │   │   │   │   │   ├── ComparablesWidget.jsx
-│   │   │   │   │   │   └── PriceHistoryWidget.jsx
-│   │   │   │   │   ├── hooks - EMPTY
-│   │   │   │   │   ├── modals
-│   │   │   │   │   │   └── EditListingModal.jsx
-│   │   │   │   │   ├── utils - EMPTY
-│   │   │   │   │   ├── index.jsx
-│   │   │   │   │   └── index.jsx.backup
-│   │   │   │   ├── AllDataViewer.jsx
-│   │   │   │   ├── ComprehensiveDataEditor.jsx
-│   │   │   │   ├── EscrowDetail.jsx
-│   │   │   │   └── StunningPropertyDisplay.jsx
+│   │   │   │   │   └── index.jsx
+│   │   │   │   └── listings
+│   │   │   │       ├── components - EMPTY
+│   │   │   │       │   ├── ActivityWidget.jsx
+│   │   │   │       │   ├── ComparablesWidget.jsx
+│   │   │   │       │   └── PriceHistoryWidget.jsx
+│   │   │   │       ├── hooks - EMPTY
+│   │   │   │       ├── modals
+│   │   │   │       │   └── EditListingModal.jsx
+│   │   │   │       ├── utils - EMPTY
+│   │   │   │       └── index.jsx
 │   │   │   ├── escrow-detail - EMPTY
 │   │   │   ├── financial
 │   │   │   │   ├── CommissionTracking.jsx
@@ -1025,10 +916,8 @@
 │   │   │   │   └── SocialMediaPosts.jsx
 │   │   │   ├── modals
 │   │   │   │   ├── ContactSelectionModal.jsx
-│   │   │   │   ├── NewContactModal.jsx
-│   │   │   │   └── PeopleModal.jsx
+│   │   │   │   └── NewContactModal.jsx
 │   │   │   ├── onboarding
-│   │   │   │   ├── animations - EMPTY
 │   │   │   │   ├── shared - EMPTY
 │   │   │   │   │   └── TutorialNavigation.jsx
 │   │   │   │   ├── steps
@@ -1056,7 +945,7 @@
 │   │   │   │   ├── SecurityEventsPage.jsx
 │   │   │   │   └── Webhooks.jsx
 │   │   │   └── .DS_Store
-│   │   ├── config - EMPTY
+│   │   ├── config
 │   │   │   ├── entities
 │   │   │   │   ├── appointments.config.js
 │   │   │   │   ├── base.config.js
@@ -1094,7 +983,7 @@
 │   │   │       │   │   └── NewMODULE_NAMEModal.jsx
 │   │   │       │   ├── shared - EMPTY
 │   │   │       │   └── widgets - EMPTY
-│   │   │       ├── config - EMPTY
+│   │   │       ├── config
 │   │   │       │   └── module.config.js
 │   │   │       ├── constants - EMPTY
 │   │   │       ├── hooks - EMPTY
@@ -1211,9 +1100,7 @@
 │   │   └── index.js
 │   ├── .dockerignore
 │   ├── .env
-│   ├── .env.development
-│   ├── .env.local
-│   ├── .env.production
+│   ├── .env.example
 │   ├── .gitignore
 │   ├── nixpacks.toml
 │   ├── package-lock.json
@@ -1278,7 +1165,6 @@
 ├── .gitignore
 ├── .railway-deploy
 ├── CLAUDE.md
-├── CODEBASE_DOCUMENTATION.txt
 ├── COMPLETE_FILE_TREE.txt
 ├── ESCROW_STATS_IMPLEMENTATION.md
 ├── README.md
@@ -1292,4 +1178,4 @@
 ├── package.json
 └── railway.json
 
-333 directories, 960 files
+265 directories, 914 files
