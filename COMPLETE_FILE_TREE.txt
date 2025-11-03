@@ -2,19 +2,19 @@
 ├── .claude
 │   └── settings.local.json
 ├── .github
-│   ├── workflows - EMPTY
+│   ├── workflows
 │   └── dependabot.yml
 ├── .husky
 │   └── pre-commit
-├── api-docs - EMPTY
-├── archive - EMPTY
+├── api-docs
+├── archive
 │   └── components_2025-11-03
 │       ├── AllDataViewer_UNUSED_881lines.jsx
 │       ├── ComprehensiveDataEditor_UNUSED.jsx
 │       ├── EscrowDetail_OLD_513lines.jsx
 │       └── StunningPropertyDisplay_UNUSED.jsx
 ├── backend
-│   ├── backups - EMPTY
+│   ├── backups
 │   ├── migrations
 │   │   ├── 000_initial_crm_setup.sql
 │   │   ├── 007_multi_role_contacts.sql
@@ -48,7 +48,7 @@
 │   │   ├── 20251006_add_performance_indexes.sql
 │   │   ├── 20251007_setup_broker_hierarchy.sql
 │   │   └── 20251028_add_deleted_by_columns.sql
-│   ├── scripts - EMPTY
+│   ├── scripts
 │   │   ├── auth
 │   │   │   ├── create-admin-user.js
 │   │   │   ├── debug-login-query.js
@@ -136,7 +136,7 @@
 │   │   │   ├── sync-local-with-production.js
 │   │   │   ├── sync-railway-to-local.js
 │   │   │   └── update-real-zillow-images.sql
-│   │   ├── docs - EMPTY
+│   │   ├── docs
 │   │   ├── production
 │   │   │   ├── add-to-railway.sh
 │   │   │   ├── restore-database.sh
@@ -176,7 +176,7 @@
 │   │   │   ├── secure.config.js
 │   │   │   ├── sentry.js
 │   │   │   └── twilio.js
-│   │   ├── controllers - EMPTY
+│   │   ├── controllers
 │   │   │   ├── admin.controller.js
 │   │   │   ├── admin.controller.test.js
 │   │   │   ├── auth.controller.js
@@ -185,7 +185,7 @@
 │   │   │   ├── linkPreview.controller.test.js
 │   │   │   ├── stats.controller.js
 │   │   │   └── teams.controller.js
-│   │   ├── helpers - EMPTY
+│   │   ├── helpers
 │   │   ├── jobs
 │   │   │   ├── kpiSnapshot.job.js
 │   │   │   ├── scheduler.js
@@ -206,72 +206,72 @@
 │   │   │   ├── sqlInjectionPrevention.middleware.js
 │   │   │   ├── team.middleware.js
 │   │   │   └── validation.middleware.js
-│   │   ├── models - EMPTY
+│   │   ├── models
 │   │   │   ├── AIAgent.js
 │   │   │   ├── DeletionRequest.js
 │   │   │   ├── Document.js
 │   │   │   └── MockQueryBuilder.js
 │   │   ├── modules
 │   │   │   ├── appointments
-│   │   │   │   ├── controllers - EMPTY
+│   │   │   │   ├── controllers
 │   │   │   │   │   └── appointments.controller.js
-│   │   │   │   ├── models - EMPTY
+│   │   │   │   ├── models
 │   │   │   │   │   ├── Appointment.mock.js
 │   │   │   │   │   └── Appointment.model.js
 │   │   │   │   ├── routes
 │   │   │   │   │   └── index.js
-│   │   │   │   ├── tests - EMPTY
-│   │   │   │   │   ├── integration - EMPTY
+│   │   │   │   ├── tests
+│   │   │   │   │   ├── integration
 │   │   │   │   │   │   └── appointments.integration.test.js
 │   │   │   │   │   └── appointments.controller.test.js
-│   │   │   │   ├── utils - EMPTY
+│   │   │   │   ├── utils
 │   │   │   │   └── README.md
 │   │   │   ├── clients
-│   │   │   │   ├── controllers - EMPTY
+│   │   │   │   ├── controllers
 │   │   │   │   │   └── clients.controller.js
-│   │   │   │   ├── models - EMPTY
+│   │   │   │   ├── models
 │   │   │   │   │   ├── Client.mock.js
 │   │   │   │   │   └── Client.model.js
 │   │   │   │   ├── routes
 │   │   │   │   │   └── index.js
-│   │   │   │   ├── tests - EMPTY
-│   │   │   │   │   ├── integration - EMPTY
+│   │   │   │   ├── tests
+│   │   │   │   │   ├── integration
 │   │   │   │   │   │   └── clients.integration.test.js
 │   │   │   │   │   └── clients.controller.test.js
-│   │   │   │   ├── utils - EMPTY
+│   │   │   │   ├── utils
 │   │   │   │   └── README.md
 │   │   │   ├── commissions
-│   │   │   │   ├── controllers - EMPTY
+│   │   │   │   ├── controllers
 │   │   │   │   │   └── commissions.controller.js
-│   │   │   │   ├── models - EMPTY
+│   │   │   │   ├── models
 │   │   │   │   │   └── Commission.mock.js
 │   │   │   │   ├── routes
 │   │   │   │   │   └── index.js
-│   │   │   │   └── tests - EMPTY
+│   │   │   │   └── tests
 │   │   │   │       └── commissions.controller.test.js
 │   │   │   ├── communications
-│   │   │   │   ├── controllers - EMPTY
+│   │   │   │   ├── controllers
 │   │   │   │   │   └── communications.controller.js
 │   │   │   │   ├── routes
 │   │   │   │   │   └── index.js
-│   │   │   │   └── tests - EMPTY
+│   │   │   │   └── tests
 │   │   │   │       └── communications.controller.test.js
 │   │   │   ├── contacts
-│   │   │   │   ├── controllers - EMPTY
+│   │   │   │   ├── controllers
 │   │   │   │   │   ├── contact-roles.controller.js
 │   │   │   │   │   └── contacts.controller.js
-│   │   │   │   ├── models - EMPTY
+│   │   │   │   ├── models
 │   │   │   │   ├── routes
 │   │   │   │   │   ├── contact-roles.routes.js
 │   │   │   │   │   └── index.js
-│   │   │   │   ├── tests - EMPTY
-│   │   │   │   │   └── integration - EMPTY
+│   │   │   │   ├── tests
+│   │   │   │   │   └── integration
 │   │   │   │   │       ├── contact-search.test.js
 │   │   │   │   │       └── contacts-multi-role.test.js
-│   │   │   │   ├── utils - EMPTY
+│   │   │   │   ├── utils
 │   │   │   │   └── README.md
 │   │   │   ├── escrows
-│   │   │   │   ├── controllers - EMPTY
+│   │   │   │   ├── controllers
 │   │   │   │   │   ├── checklists.controller.js
 │   │   │   │   │   ├── crud.controller.js
 │   │   │   │   │   ├── details.controller.js
@@ -279,62 +279,62 @@
 │   │   │   │   │   ├── index.js
 │   │   │   │   │   ├── people.controller.js
 │   │   │   │   │   └── timeline.controller.js
-│   │   │   │   ├── models - EMPTY
+│   │   │   │   ├── models
 │   │   │   │   │   ├── Escrow.mock.js
 │   │   │   │   │   └── Escrow.model.js
 │   │   │   │   ├── routes
 │   │   │   │   │   ├── health.routes.js
 │   │   │   │   │   └── index.js
 │   │   │   │   ├── services
-│   │   │   │   │   ├── commission - EMPTY
+│   │   │   │   │   ├── commission
 │   │   │   │   │   │   └── index.js
 │   │   │   │   │   ├── commission.service.js
 │   │   │   │   │   └── schema.service.js
-│   │   │   │   ├── tests - EMPTY
-│   │   │   │   │   ├── integration - EMPTY
+│   │   │   │   ├── tests
+│   │   │   │   │   ├── integration
 │   │   │   │   │   │   ├── commission-calculations.test.js
 │   │   │   │   │   │   ├── escrow-creation-flow.test.js
 │   │   │   │   │   │   └── escrows.integration.test.js
 │   │   │   │   │   └── escrows.controller.test.js
-│   │   │   │   ├── utils - EMPTY
+│   │   │   │   ├── utils
 │   │   │   │   │   └── escrows.helper.js
 │   │   │   │   └── README.md
 │   │   │   ├── expenses
-│   │   │   │   ├── controllers - EMPTY
+│   │   │   │   ├── controllers
 │   │   │   │   │   └── expenses.controller.js
-│   │   │   │   ├── models - EMPTY
+│   │   │   │   ├── models
 │   │   │   │   │   └── Expense.mock.js
 │   │   │   │   ├── routes
 │   │   │   │   │   └── index.js
-│   │   │   │   └── tests - EMPTY
+│   │   │   │   └── tests
 │   │   │   │       └── expenses.controller.test.js
 │   │   │   ├── invoices
-│   │   │   │   ├── controllers - EMPTY
+│   │   │   │   ├── controllers
 │   │   │   │   │   └── invoices.controller.js
-│   │   │   │   ├── models - EMPTY
+│   │   │   │   ├── models
 │   │   │   │   │   └── Invoice.mock.js
 │   │   │   │   ├── routes
 │   │   │   │   │   └── index.js
-│   │   │   │   └── tests - EMPTY
+│   │   │   │   └── tests
 │   │   │   │       └── invoices.controller.test.js
 │   │   │   ├── leads
-│   │   │   │   ├── controllers - EMPTY
+│   │   │   │   ├── controllers
 │   │   │   │   │   └── leads.controller.js
-│   │   │   │   ├── models - EMPTY
+│   │   │   │   ├── models
 │   │   │   │   │   ├── Lead.mock.js
 │   │   │   │   │   └── Lead.model.js
 │   │   │   │   ├── routes
 │   │   │   │   │   └── index.js
-│   │   │   │   ├── tests - EMPTY
-│   │   │   │   │   ├── integration - EMPTY
+│   │   │   │   ├── tests
+│   │   │   │   │   ├── integration
 │   │   │   │   │   │   └── leads.integration.test.js
 │   │   │   │   │   └── leads.controller.test.js
-│   │   │   │   ├── utils - EMPTY
+│   │   │   │   ├── utils
 │   │   │   │   └── README.md
 │   │   │   ├── listings
-│   │   │   │   ├── controllers - EMPTY
+│   │   │   │   ├── controllers
 │   │   │   │   │   └── listings.controller.js
-│   │   │   │   ├── models - EMPTY
+│   │   │   │   ├── models
 │   │   │   │   │   ├── Listing.mock.js
 │   │   │   │   │   └── Listing.model.js
 │   │   │   │   ├── routes
@@ -342,19 +342,19 @@
 │   │   │   │   │   └── index.js
 │   │   │   │   ├── services
 │   │   │   │   │   └── listing.service.js
-│   │   │   │   ├── tests - EMPTY
-│   │   │   │   │   ├── integration - EMPTY
+│   │   │   │   ├── tests
+│   │   │   │   │   ├── integration
 │   │   │   │   │   │   └── listings.integration.test.js
 │   │   │   │   │   └── listings.controller.test.js
-│   │   │   │   ├── utils - EMPTY
+│   │   │   │   ├── utils
 │   │   │   │   └── README.md
 │   │   │   ├── projects
-│   │   │   │   ├── controllers - EMPTY
+│   │   │   │   ├── controllers
 │   │   │   │   │   └── projects.controller.js
 │   │   │   │   └── routes
 │   │   │   │       └── index.js
 │   │   │   ├── tasks
-│   │   │   │   ├── controllers - EMPTY
+│   │   │   │   ├── controllers
 │   │   │   │   │   ├── checklistTemplates.controller.js
 │   │   │   │   │   ├── checklists.controller.js
 │   │   │   │   │   └── tasks.controller.js
@@ -362,16 +362,16 @@
 │   │   │   │       ├── checklistTemplates.routes.js
 │   │   │   │       ├── checklists.routes.js
 │   │   │   │       └── index.js
-│   │   │   └── webhooks - EMPTY
-│   │   │       ├── controllers - EMPTY
+│   │   │   └── webhooks
+│   │   │       ├── controllers
 │   │   │       │   └── webhooks.controller.js
 │   │   │       ├── routes
 │   │   │       │   └── index.js
-│   │   │       └── tests - EMPTY
+│   │   │       └── tests
 │   │   │           └── webhooks.controller.test.js
 │   │   ├── routes
-│   │   │   ├── __tests__ - EMPTY
-│   │   │   ├── _archived_20250809 - EMPTY
+│   │   │   ├── __tests__
+│   │   │   ├── _archived_20250809
 │   │   │   ├── admin.routes.js
 │   │   │   ├── ai.routes.js
 │   │   │   ├── analytics.routes.js
@@ -393,11 +393,11 @@
 │   │   │   ├── system-health.routes.js
 │   │   │   ├── teams.routes.js
 │   │   │   └── upload.routes.js
-│   │   ├── scripts - EMPTY
+│   │   ├── scripts
 │   │   ├── services
-│   │   │   ├── __tests__ - EMPTY
+│   │   │   ├── __tests__
 │   │   │   │   └── securityEvent.service.test.js
-│   │   │   ├── commission - EMPTY
+│   │   │   ├── commission
 │   │   │   ├── skyslope
 │   │   │   │   └── index.js
 │   │   │   ├── ai.service.js
@@ -425,7 +425,7 @@
 │   │   │   ├── weather.service.js
 │   │   │   ├── webhook.service.js
 │   │   │   └── websocket.service.js
-│   │   ├── tests - EMPTY
+│   │   ├── tests
 │   │   │   ├── edge-cases
 │   │   │   │   ├── authorization.edge-case.test.js
 │   │   │   │   ├── concurrency.edge-case.test.js
@@ -434,13 +434,13 @@
 │   │   │   │   ├── rate-limiting.edge-case.test.js
 │   │   │   │   ├── security.edge-case.test.js
 │   │   │   │   └── validation.edge-case.test.js
-│   │   │   ├── integration - EMPTY
+│   │   │   ├── integration
 │   │   │   │   ├── api-keys.integration.test.js
 │   │   │   │   ├── auth.integration.test.js
 │   │   │   │   ├── securityEventAPI.test.js
 │   │   │   │   └── securityEventLogging.test.js
-│   │   │   ├── unit - EMPTY
-│   │   │   │   ├── controllers - EMPTY
+│   │   │   ├── unit
+│   │   │   │   ├── controllers
 │   │   │   │   └── services
 │   │   │   │       ├── alerting.service.test.js
 │   │   │   │       ├── apiKey.service.test.js
@@ -459,7 +459,7 @@
 │   │   │   ├── setup.js
 │   │   │   ├── test-auth.js
 │   │   │   └── test-connection.js
-│   │   ├── utils - EMPTY
+│   │   ├── utils
 │   │   │   ├── constants.js
 │   │   │   ├── errors.js
 │   │   │   ├── formatters.js
@@ -469,14 +469,14 @@
 │   │   │   └── validators.js
 │   │   ├── app.js
 │   │   └── mcp-server.js
-│   ├── tests - EMPTY
+│   ├── tests
 │   ├── uploads
-│   │   ├── documents - EMPTY
+│   │   ├── documents
 │   │   └── images
-│   │       ├── large - EMPTY
-│   │       ├── medium - EMPTY
-│   │       ├── small - EMPTY
-│   │       └── thumbnail - EMPTY
+│   │       ├── large
+│   │       ├── medium
+│   │       ├── small
+│   │       └── thumbnail
 │   ├── .deploy-trigger
 │   ├── .env
 │   ├── .env.example
@@ -491,8 +491,8 @@
 │   ├── railway-env-vars.txt
 │   ├── railway.json
 │   └── server.js
-├── docs - EMPTY
-│   ├── archive - EMPTY
+├── docs
+│   ├── archive
 │   │   ├── 2025-audits
 │   │   │   ├── BACKEND_STRUCTURE_AUDIT.md
 │   │   │   ├── CODEBASE_STRUCTURE_ANALYSIS.md
@@ -564,7 +564,7 @@
 │   │   ├── AI_INTEGRATION_GUIDE.md
 │   │   └── AI_READINESS_ASSESSMENT.md
 │   ├── projects
-│   │   ├── archive - EMPTY
+│   │   ├── archive
 │   │   ├── current
 │   │   │   ├── Phase A
 │   │   │   │   ├── Phase-A-Summary.md
@@ -712,8 +712,8 @@
 │   │   ├── health.html
 │   │   └── index.html
 │   ├── src
-│   │   ├── components - EMPTY
-│   │   │   ├── __tests__ - EMPTY
+│   │   ├── components
+│   │   │   ├── __tests__
 │   │   │   │   ├── ContactSearch.test.jsx
 │   │   │   │   ├── EscrowDashboard.test.jsx
 │   │   │   │   └── NewEscrowModal.test.jsx
@@ -734,7 +734,7 @@
 │   │   │   │   ├── ProtectedRoute.jsx
 │   │   │   │   └── RegisterPage.jsx
 │   │   │   ├── common
-│   │   │   │   ├── _archived - EMPTY
+│   │   │   │   ├── _archived
 │   │   │   │   ├── dashboard
 │   │   │   │   │   ├── DashboardEmptyState.jsx
 │   │   │   │   │   ├── DashboardFilters.jsx
@@ -743,7 +743,7 @@
 │   │   │   │   │   ├── DashboardStats.jsx
 │   │   │   │   │   ├── DashboardToolbar.jsx
 │   │   │   │   │   └── index.js
-│   │   │   │   ├── widgets - EMPTY
+│   │   │   │   ├── widgets
 │   │   │   │   │   ├── AppointmentCard.jsx
 │   │   │   │   │   ├── ClientCard.jsx
 │   │   │   │   │   ├── EscrowCard.jsx
@@ -796,18 +796,18 @@
 │   │   │   │   └── VendorsPartners.jsx
 │   │   │   ├── dashboards
 │   │   │   │   ├── appointments
-│   │   │   │   │   ├── components - EMPTY
-│   │   │   │   │   ├── hooks - EMPTY
+│   │   │   │   │   ├── components
+│   │   │   │   │   ├── hooks
 │   │   │   │   │   ├── modals
 │   │   │   │   │   │   └── NewAppointmentModal.jsx
-│   │   │   │   │   ├── utils - EMPTY
+│   │   │   │   │   ├── utils
 │   │   │   │   │   └── index.jsx
 │   │   │   │   ├── clients
 │   │   │   │   │   ├── modals
 │   │   │   │   │   │   └── NewClientModal.jsx
 │   │   │   │   │   └── index.jsx
 │   │   │   │   ├── escrows
-│   │   │   │   │   ├── constants - EMPTY
+│   │   │   │   │   ├── constants
 │   │   │   │   │   │   └── escrowConstants.js
 │   │   │   │   │   ├── modals
 │   │   │   │   │   │   └── NewEscrowModal.jsx
@@ -817,24 +817,24 @@
 │   │   │   │   │   ├── TeamHeroCard.jsx
 │   │   │   │   │   └── UserHeroCard.jsx
 │   │   │   │   ├── leads
-│   │   │   │   │   ├── components - EMPTY
-│   │   │   │   │   ├── hooks - EMPTY
+│   │   │   │   │   ├── components
+│   │   │   │   │   ├── hooks
 │   │   │   │   │   ├── modals
 │   │   │   │   │   │   └── NewLeadModal.jsx
-│   │   │   │   │   ├── utils - EMPTY
+│   │   │   │   │   ├── utils
 │   │   │   │   │   └── index.jsx
 │   │   │   │   ├── listings
-│   │   │   │   │   ├── components - EMPTY
+│   │   │   │   │   ├── components
 │   │   │   │   │   │   ├── ListingContent.jsx
 │   │   │   │   │   │   ├── ListingHeroCard.jsx
 │   │   │   │   │   │   ├── ListingNavigation.jsx
 │   │   │   │   │   │   ├── ListingStatCard.jsx
 │   │   │   │   │   │   └── ListingStatsGrid.jsx
-│   │   │   │   │   ├── hooks - EMPTY
+│   │   │   │   │   ├── hooks
 │   │   │   │   │   │   └── useListingHandlers.js
 │   │   │   │   │   ├── modals
 │   │   │   │   │   │   └── NewListingModal.jsx
-│   │   │   │   │   ├── utils - EMPTY
+│   │   │   │   │   ├── utils
 │   │   │   │   │   │   └── listingUtils.js
 │   │   │   │   │   └── index.jsx
 │   │   │   │   ├── AnalyticsDashboard.jsx
@@ -843,22 +843,22 @@
 │   │   │   │   ├── HomeDashboard.jsx
 │   │   │   │   ├── InvoiceDashboard.jsx
 │   │   │   │   └── OtherDataDashboard.jsx
-│   │   │   ├── details - EMPTY
+│   │   │   ├── details
 │   │   │   │   ├── appointments
-│   │   │   │   │   ├── components - EMPTY
+│   │   │   │   │   ├── components
 │   │   │   │   │   │   ├── LocationWidget.jsx
 │   │   │   │   │   │   ├── NotesWidget.jsx
 │   │   │   │   │   │   └── ParticipantsWidget.jsx
-│   │   │   │   │   ├── hooks - EMPTY
-│   │   │   │   │   ├── utils - EMPTY
+│   │   │   │   │   ├── hooks
+│   │   │   │   │   ├── utils
 │   │   │   │   │   └── index.jsx
 │   │   │   │   ├── clients
-│   │   │   │   │   ├── components - EMPTY
-│   │   │   │   │   ├── hooks - EMPTY
-│   │   │   │   │   ├── utils - EMPTY
+│   │   │   │   │   ├── components
+│   │   │   │   │   ├── hooks
+│   │   │   │   │   ├── utils
 │   │   │   │   │   └── index.jsx
 │   │   │   │   ├── escrows
-│   │   │   │   │   ├── components - EMPTY
+│   │   │   │   │   ├── components
 │   │   │   │   │   │   ├── ActivityFeedBottomTab.jsx
 │   │   │   │   │   │   ├── ActivityFeedSheet.jsx
 │   │   │   │   │   │   ├── ChecklistsWidget_White.jsx
@@ -868,40 +868,40 @@
 │   │   │   │   │   │   ├── PeopleWidget_White.jsx
 │   │   │   │   │   │   ├── PlaceholderWidget.jsx
 │   │   │   │   │   │   └── TimelineWidget_White.jsx
-│   │   │   │   │   ├── hooks - EMPTY
+│   │   │   │   │   ├── hooks
 │   │   │   │   │   │   └── useEscrowData.js
 │   │   │   │   │   ├── modals
 │   │   │   │   │   │   ├── ChecklistsModal.jsx
 │   │   │   │   │   │   ├── FinancialsModal.jsx
 │   │   │   │   │   │   ├── PeopleModal.jsx
 │   │   │   │   │   │   └── TimelineModal.jsx
-│   │   │   │   │   ├── utils - EMPTY
+│   │   │   │   │   ├── utils
 │   │   │   │   │   │   └── eventHandlers.js
 │   │   │   │   │   └── index.jsx
 │   │   │   │   ├── leads
-│   │   │   │   │   ├── components - EMPTY
+│   │   │   │   │   ├── components
 │   │   │   │   │   │   ├── ContactWidget.jsx
 │   │   │   │   │   │   ├── EngagementWidget.jsx
 │   │   │   │   │   │   └── QualificationWidget.jsx
-│   │   │   │   │   ├── hooks - EMPTY
-│   │   │   │   │   ├── utils - EMPTY
+│   │   │   │   │   ├── hooks
+│   │   │   │   │   ├── utils
 │   │   │   │   │   └── index.jsx
 │   │   │   │   └── listings
-│   │   │   │       ├── components - EMPTY
+│   │   │   │       ├── components
 │   │   │   │       │   ├── ActivityWidget.jsx
 │   │   │   │       │   ├── ComparablesWidget.jsx
 │   │   │   │       │   └── PriceHistoryWidget.jsx
-│   │   │   │       ├── hooks - EMPTY
+│   │   │   │       ├── hooks
 │   │   │   │       ├── modals
 │   │   │   │       │   └── EditListingModal.jsx
-│   │   │   │       ├── utils - EMPTY
+│   │   │   │       ├── utils
 │   │   │   │       └── index.jsx
-│   │   │   ├── escrow-detail - EMPTY
+│   │   │   ├── escrow-detail
 │   │   │   ├── financial
 │   │   │   │   ├── CommissionTracking.jsx
 │   │   │   │   ├── ExpenseManagement.jsx
 │   │   │   │   └── Invoices.jsx
-│   │   │   ├── forms - EMPTY
+│   │   │   ├── forms
 │   │   │   ├── health
 │   │   │   │   ├── AppointmentsHealthDashboard.jsx
 │   │   │   │   ├── ClientsHealthDashboard.jsx
@@ -918,7 +918,7 @@
 │   │   │   │   ├── ContactSelectionModal.jsx
 │   │   │   │   └── NewContactModal.jsx
 │   │   │   ├── onboarding
-│   │   │   │   ├── shared - EMPTY
+│   │   │   │   ├── shared
 │   │   │   │   │   └── TutorialNavigation.jsx
 │   │   │   │   ├── steps
 │   │   │   │   │   ├── AppointmentsStep.jsx
@@ -955,10 +955,10 @@
 │   │   │   │   └── listings.config.js
 │   │   │   ├── api.js
 │   │   │   └── sentry.js
-│   │   ├── constants - EMPTY
+│   │   ├── constants
 │   │   │   └── escrowConfig.js
 │   │   ├── contexts
-│   │   │   ├── hooks - EMPTY
+│   │   │   ├── hooks
 │   │   │   │   ├── useAuth.js
 │   │   │   │   ├── useNotifications.js
 │   │   │   │   ├── useRealTimeData.js
@@ -966,35 +966,35 @@
 │   │   │   └── AuthContext.jsx
 │   │   ├── features
 │   │   │   └── _blueprint
-│   │   │       ├── __tests__ - EMPTY
-│   │   │       │   ├── integration - EMPTY
-│   │   │       │   └── unit - EMPTY
-│   │   │       ├── components - EMPTY
+│   │   │       ├── __tests__
+│   │   │       │   ├── integration
+│   │   │       │   └── unit
+│   │   │       ├── components
 │   │   │       │   ├── dashboard
 │   │   │       │   │   ├── MODULE_NAMECalendar.jsx
 │   │   │       │   │   ├── MODULE_NAMEDashboard.jsx
 │   │   │       │   │   ├── MODULE_NAMEGrid.jsx
 │   │   │       │   │   ├── MODULE_NAMEList.jsx
 │   │   │       │   │   └── MODULE_NAMETable.jsx
-│   │   │       │   ├── details - EMPTY
+│   │   │       │   ├── details
 │   │   │       │   ├── modals
 │   │   │       │   │   ├── EditMODULE_NAMEModal.jsx
 │   │   │       │   │   ├── MODULE_NAMEFiltersModal.jsx
 │   │   │       │   │   └── NewMODULE_NAMEModal.jsx
-│   │   │       │   ├── shared - EMPTY
-│   │   │       │   └── widgets - EMPTY
+│   │   │       │   ├── shared
+│   │   │       │   └── widgets
 │   │   │       ├── config
 │   │   │       │   └── module.config.js
-│   │   │       ├── constants - EMPTY
-│   │   │       ├── hooks - EMPTY
+│   │   │       ├── constants
+│   │   │       ├── hooks
 │   │   │       │   └── useMODULE_NAMEDashboard.js
 │   │   │       ├── services
 │   │   │       │   └── MODULE_SINGULARService.js
-│   │   │       ├── state - EMPTY
-│   │   │       ├── types - EMPTY
-│   │   │       ├── utils - EMPTY
+│   │   │       ├── state
+│   │   │       ├── types
+│   │   │       ├── utils
 │   │   │       └── README.md
-│   │   ├── hooks - EMPTY
+│   │   ├── hooks
 │   │   │   ├── RESPONSIVE_DESIGN_GUIDE.md
 │   │   │   ├── useAuth.js
 │   │   │   ├── useEscrowAnalytics.js
@@ -1013,7 +1013,7 @@
 │   │   │   ├── Settings.jsx
 │   │   │   └── Unauthorized.jsx
 │   │   ├── services
-│   │   │   ├── __tests__ - EMPTY
+│   │   │   ├── __tests__
 │   │   │   │   └── api.service.test.js
 │   │   │   ├── api.service.js
 │   │   │   ├── auth.service.js
@@ -1025,10 +1025,10 @@
 │   │   │   ├── projects.service.js
 │   │   │   ├── tasks.service.js
 │   │   │   └── websocket.service.js
-│   │   ├── shared - EMPTY
-│   │   │   ├── components - EMPTY
+│   │   ├── shared
+│   │   │   ├── components
 │   │   │   │   ├── dashboard
-│   │   │   │   │   ├── __tests__ - EMPTY
+│   │   │   │   │   ├── __tests__
 │   │   │   │   │   │   └── DashboardLayout.test.jsx
 │   │   │   │   │   ├── DashboardContent.jsx
 │   │   │   │   │   ├── DashboardEmptyState.jsx
@@ -1039,17 +1039,17 @@
 │   │   │   │   │   ├── DashboardStats.jsx
 │   │   │   │   │   ├── DashboardToolbar.jsx
 │   │   │   │   │   └── index.js
-│   │   │   │   ├── details - EMPTY
-│   │   │   │   ├── layout - EMPTY
-│   │   │   │   └── ui - EMPTY
-│   │   │   ├── hooks - EMPTY
-│   │   │   │   ├── __tests__ - EMPTY
+│   │   │   │   ├── details
+│   │   │   │   ├── layout
+│   │   │   │   └── ui
+│   │   │   ├── hooks
+│   │   │   │   ├── __tests__
 │   │   │   │   │   └── useDashboardData.test.js
 │   │   │   │   ├── index.js
 │   │   │   │   ├── useDashboardData.js
 │   │   │   │   ├── useDebounce.js
 │   │   │   │   └── useLocalStorage.js
-│   │   │   ├── utils - EMPTY
+│   │   │   ├── utils
 │   │   │   │   ├── formatters.js
 │   │   │   │   └── index.js
 │   │   │   └── index.js
@@ -1058,29 +1058,29 @@
 │   │   │   └── globals.css
 │   │   ├── templates
 │   │   │   ├── Dashboard
-│   │   │   │   ├── components - EMPTY
+│   │   │   │   ├── components
 │   │   │   │   │   ├── DashboardContent.jsx
 │   │   │   │   │   ├── DashboardHero.jsx
 │   │   │   │   │   ├── DashboardNavigation.jsx
 │   │   │   │   │   ├── DashboardStatCard.jsx
 │   │   │   │   │   ├── DashboardStats.jsx
 │   │   │   │   │   └── index.js
-│   │   │   │   ├── hooks - EMPTY
+│   │   │   │   ├── hooks
 │   │   │   │   │   └── useDashboardData.js
 │   │   │   │   ├── COMPONENT_ANALYSIS.md
 │   │   │   │   └── index.jsx
 │   │   │   └── Detail
-│   │   │       ├── components - EMPTY
+│   │   │       ├── components
 │   │   │       │   ├── DetailActivityFeed.jsx
 │   │   │       │   ├── DetailHero.jsx
 │   │   │       │   ├── DetailHero.jsx.old
 │   │   │       │   ├── DetailSidebar.jsx
 │   │   │       │   └── DetailTabs.jsx
-│   │   │       ├── hooks - EMPTY
+│   │   │       ├── hooks
 │   │   │       │   └── useDetailData.js
 │   │   │       ├── index.jsx
 │   │   │       └── index.jsx.old
-│   │   ├── utils - EMPTY
+│   │   ├── utils
 │   │   │   ├── auth.js
 │   │   │   ├── dateGuard.js
 │   │   │   ├── entityIdUtils.js
@@ -1093,8 +1093,8 @@
 │   │   │   ├── sanitize.js
 │   │   │   ├── setupApiKey.js
 │   │   │   └── testApi.js
-│   │   ├── widgets - EMPTY
-│   │   │   └── shared - EMPTY
+│   │   ├── widgets
+│   │   │   └── shared
 │   │   ├── App.jsx
 │   │   ├── App.lazy.jsx
 │   │   └── index.js
@@ -1108,7 +1108,7 @@
 │   └── railway.json
 ├── media
 │   └── Real Estate CRM Folder Code Breakdown.md
-├── scripts - EMPTY
+├── scripts
 │   ├── backend
 │   │   ├── create-api-key.sh
 │   │   ├── railway-deploy-commands.sh
