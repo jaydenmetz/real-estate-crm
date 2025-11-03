@@ -61,7 +61,8 @@
    - **FIRST create Pre-Phase Readiness Report:**
      - Use template: `docs/projects/Pre-Phase Readiness Report.md`
      - Audit: Authentication, Module Completeness, Performance, Technical Debt, Test Coverage
-     - Save as: `docs/projects/Pre-Phase-[X]-Readiness-Report-[Date].md`
+     - Save as: `docs/projects/current/Phase X/_Pre-Phase-[X]-Readiness-Report-[Date].md`
+     - **NOTE**: Use underscore prefix (_) so file sorts to top of folder
      - Review findings before starting first project
    - **THEN proceed with project implementation**
 
