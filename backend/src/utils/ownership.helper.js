@@ -123,7 +123,8 @@ function buildOwnershipWhereClause(user, scope = 'user', resourceType, startPara
  * Most tables use 'owner_id', but clients uses 'user_id'
  */
 function getOwnerColumnName(resourceType) {
-  return resourceType === 'client' ? 'user_id' : 'owner_id';
+  // All tables use owner_id consistently
+  return 'owner_id';
 }
 
 /**

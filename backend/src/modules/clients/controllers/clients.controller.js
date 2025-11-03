@@ -73,7 +73,7 @@ exports.getAllClients = async (req, res) => {
         cl.id,
         cl.client_type,
         cl.status,
-        cl.user_id,
+        cl.owner_id,
         cl.created_at,
         cl.updated_at,
         co.first_name,
