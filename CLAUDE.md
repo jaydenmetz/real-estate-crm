@@ -28,6 +28,135 @@
 
 ---
 
+## 🚀 PROJECT WORKFLOW (CRITICAL - READ THIS!)
+
+### When User Says "Start Next Project"
+
+**DO THIS (in exact order):**
+
+1. **Check `docs/projects/current/Phase X/` folder:**
+   ```bash
+   ls -1 docs/projects/current/Phase\ */Project-*.md | sort | head -1
+   ```
+   - Find the **LOWEST numbered** project file
+   - This is the next project to implement
+
+2. **If project files exist in current phase:**
+   - Open the lowest-numbered project file
+   - Update status to "In Progress"
+   - Update "Actual Time Started" with current time
+   - Create git tag: `git tag pre-project-XX-$(date +%Y%m%d)`
+   - Implement ALL tasks in the project file
+   - Run ALL verification tests
+   - Deploy to production (git push triggers Railway)
+   - Update project file with:
+     - "Actual Time Completed"
+     - "Actual Duration"
+     - "Variance"
+     - Implementation notes
+     - Completion checklist
+   - Change status to "Complete"
+   - **Move completed project to `docs/projects/current/completed/`**
+   - Commit and push
+
+3. **If ONLY Phase Summary remains (all projects moved to completed/):**
+   - **Phase is complete!**
+   - Run comprehensive phase verification tests from Phase Summary
+   - If all tests pass:
+     - Create final phase completion report
+     - **Move ALL files from `docs/projects/current/completed/` BACK into `docs/projects/current/Phase X/`**
+     - **Move entire `docs/projects/current/Phase X/` folder to `docs/projects/archive/`**
+     - Print: "✅ Phase X Successfully Implemented - All projects complete!"
+     - **Move NEXT phase from `docs/projects/future/` to `docs/projects/current/`**
+     - Example: `mv docs/projects/future/Phase\ B docs/projects/current/`
+   - If tests fail:
+     - Identify failing project
+     - Move it back to current/Phase X/ for rework
+
+4. **If `docs/projects/current/` is empty AND `docs/projects/future/` is empty:**
+   - **ALL 105 PROJECTS COMPLETE!** 🎉
+   - Print: "✅ CONGRATULATIONS! All 105 projects complete - CRM is 100% market-ready!"
+   - Create final completion report
+   - Update CLAUDE.md status to "100% Complete"
+
+### Folder Structure During Execution
+
+```
+docs/projects/
+├── current/                    # ACTIVE WORK AREA
+│   ├── Phase A/               # Current phase being worked on
+│   │   ├── Phase-A-Summary.md
+│   │   ├── Project-02-*.md    # Next project (lowest number)
+│   │   ├── Project-03-*.md
+│   │   └── ... (remaining projects)
+│   └── completed/             # Completed projects from current phase
+│       └── Project-01-*.md    # Recently completed
+├── archive/                   # COMPLETED PHASES
+│   ├── Phase A/              # (after all 15 projects done)
+│   │   ├── Phase-A-Summary.md
+│   │   ├── Project-01-*.md
+│   │   └── ... (all 15 projects)
+│   └── Phase B/              # (future)
+└── future/                    # UPCOMING PHASES
+    ├── Phase B/              # Next phase to start
+    ├── Phase C/
+    └── ... (Phases D-H)
+```
+
+### Critical Rules
+
+**DO:**
+✅ Always find LOWEST numbered project in current/Phase X/
+✅ Implement projects in sequential order (01 → 02 → 03...)
+✅ Move each completed project to current/completed/
+✅ Run phase verification when only summary remains
+✅ Move entire phase to archive/ when verified
+✅ Move next phase from future/ to current/
+
+**DO NOT:**
+❌ NEVER create new project files (all 105 already exist)
+❌ NEVER edit files in future/ or archive/ folders
+❌ NEVER skip projects or change order
+❌ NEVER start Phase B before Phase A complete
+❌ NEVER leave completed projects in current/Phase X/
+
+### Example Flow
+
+**Starting state:**
+```
+current/Phase A/ (15 projects)
+completed/ (empty)
+```
+
+**After Project-01:**
+```
+current/Phase A/ (14 projects: 02-15)
+completed/Project-01-*.md
+```
+
+**After Project-15:**
+```
+current/Phase A/ (only Phase-A-Summary.md)
+completed/ (15 projects: 01-15)
+```
+
+**After Phase A verification passes:**
+```
+archive/Phase A/ (16 files: summary + all 15 projects)
+current/Phase B/ (moved from future/)
+completed/ (empty again)
+```
+
+### When to Say "Phase Complete"
+
+Only when:
+1. All individual projects moved to completed/
+2. Only Phase-X-Summary.md remains in current/Phase X/
+3. Phase verification tests all pass
+4. User confirms phase is complete
+
+---
+
 ## 📊 ROADMAP OVERVIEW (105 Projects)
 
 ### Current Position
