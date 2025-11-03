@@ -3,7 +3,7 @@ module.exports = {
   coverageDirectory: 'coverage',
   collectCoverageFrom: [
     'src/**/*.js',
-    '!src/test/**',
+    '!src/tests/**',
     '!src/**/*.test.js',
     '!src/**/*.spec.js',
     '!src/server.js', // Exclude server entry point
@@ -21,11 +21,11 @@ module.exports = {
     '**/src/**/*.test.js',
     '**/src/**/*.spec.js'
   ],
-  setupFilesAfterEnv: ['<rootDir>/src/test/setup.js'],
+  setupFilesAfterEnv: ['<rootDir>/src/tests/setup.js'],
   testTimeout: 10000, // 10 seconds for most tests
   verbose: true,
   collectCoverage: false, // Only collect when explicitly requested
   coverageReporters: ['text', 'lcov', 'html', 'json-summary'],
   modulePathIgnorePatterns: ['<rootDir>/dist/', '<rootDir>/build/'],
-  coveragePathIgnorePatterns: ['/node_modules/', '/src/test/']
+  coveragePathIgnorePatterns: ['/node_modules/', '/src/tests/']
 };
