@@ -110,7 +110,7 @@ export const baseEntityConfig = {
     // Scope Filter Configuration
     scopeOptions: [
       { value: 'team', label: 'Team' },
-      { value: 'my', label: 'My Entities' }
+      { value: 'user', label: 'My Entities' }
     ],
     defaultScope: 'team',
 
