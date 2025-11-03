@@ -47,8 +47,10 @@
    - Update "Actual Time Started" with current time
    - Create git tag: `git tag pre-project-XX-$(date +%Y%m%d)`
    - Implement ALL tasks in the project file
-   - Run ALL verification tests
-   - Deploy to production (git push triggers Railway)
+   - Run ALL verification tests locally
+   - Test locally if possible: `cd frontend && npm run build` (catch build errors before deploying)
+   - Commit and push to deploy: `git add -A && git commit -m "..." && git push origin main`
+   - **WAIT for Railway deployment to complete** (use verification loop below)
    - Update project file with:
      - "Actual Time Completed"
      - "Actual Duration"
@@ -146,6 +148,44 @@ archive/Phase A/ (16 files: summary + all 15 projects)
 current/Phase B/ (moved from future/)
 completed/ (empty again)
 ```
+
+### Railway Deployment Verification (CRITICAL)
+
+**After `git push origin main`, ALWAYS verify deployment before marking complete:**
+
+```bash
+# Wait and verify both frontend and backend deploy successfully
+# Check every 30 seconds for up to 5 minutes
+
+for i in {1..10}; do
+  echo "Deployment check $i/10..."
+
+  # Check frontend
+  FRONTEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://crm.jaydenmetz.com)
+
+  # Check backend
+  BACKEND_STATUS=$(curl -s -o /dev/null -w "%{http_code}" https://api.jaydenmetz.com/v1/health)
+
+  echo "Frontend: $FRONTEND_STATUS | Backend: $BACKEND_STATUS"
+
+  # Both should return 200 (frontend) and 200 or 401 (backend needs auth)
+  if [ "$FRONTEND_STATUS" = "200" ] && [ "$BACKEND_STATUS" = "200" -o "$BACKEND_STATUS" = "401" ]; then
+    echo "✅ Both services deployed successfully!"
+    break
+  fi
+
+  if [ $i -lt 10 ]; then
+    echo "Waiting 30 seconds..."
+    sleep 30
+  fi
+done
+```
+
+**If deployment fails:**
+1. Check Railway dashboard for build errors
+2. Look for import errors, missing modules, webpack issues
+3. Fix locally, commit, push again
+4. DO NOT mark project complete until deployment succeeds
 
 ### When to Say "Phase Complete"
 
