@@ -41,7 +41,15 @@
    - Find the **LOWEST numbered** project file
    - This is the next project to implement
 
-2. **If project files exist in current phase:**
+2. **SPECIAL: If this is Project-X1 (first project of new phase - e.g., 16, 31, 46):**
+   - **FIRST create Pre-Phase Readiness Report:**
+     - Use template: `docs/projects/Pre-Phase Readiness Report.md`
+     - Audit: Authentication, Module Completeness, Performance, Technical Debt, Test Coverage
+     - Save as: `docs/projects/Pre-Phase-[X]-Readiness-Report-[Date].md`
+     - Review findings before starting first project
+   - **THEN proceed with project implementation**
+
+3. **If project files exist in current phase:**
    - Open the lowest-numbered project file
    - Update status to "In Progress"
    - Update "Actual Time Started" with current time
