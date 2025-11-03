@@ -19,17 +19,30 @@ const canAccessScope = async (req, res, next) => {
     const { scope = 'user' } = req.query;
     const { role, broker_id, team_id } = req.user;
 
-    // Validate scope parameter
+    // Validate scope parameter (accept 'my' as alias for 'user')
+    const scopeMap = {
+      'my': 'user',
+      'user': 'user',
+      'team': 'team',
+      'brokerage': 'brokerage',
+      'all': 'all'
+    };
+
+    const normalizedScope = scopeMap[scope];
     const validScopes = ['user', 'team', 'brokerage', 'all'];
-    if (!validScopes.includes(scope)) {
+
+    if (!normalizedScope) {
       return res.status(400).json({
         success: false,
         error: {
           code: 'INVALID_SCOPE',
-          message: `Invalid scope. Must be one of: ${validScopes.join(', ')}`
+          message: `Invalid scope. Must be one of: my, user, team, brokerage, all`
         }
       });
     }
+
+    // Use normalized scope for the rest of the logic
+    const effectiveScope = normalizedScope;
 
     // system_admin can access any scope
     if (role === 'system_admin') {
@@ -38,7 +51,7 @@ const canAccessScope = async (req, res, next) => {
 
     // broker can access: user, team, brokerage
     if (role === 'broker') {
-      if (scope === 'all') {
+      if (effectiveScope === 'all') {
         return res.status(403).json({
           success: false,
           error: {
@@ -48,7 +61,7 @@ const canAccessScope = async (req, res, next) => {
         });
       }
 
-      if (scope === 'brokerage' && !broker_id) {
+      if (effectiveScope === 'brokerage' && !broker_id) {
         return res.status(403).json({
           success: false,
           error: {
@@ -63,7 +76,7 @@ const canAccessScope = async (req, res, next) => {
 
     // team_owner can access: user, team
     if (role === 'team_owner') {
-      if (scope === 'brokerage' || scope === 'all') {
+      if (effectiveScope === 'brokerage' || scope === 'all') {
         return res.status(403).json({
           success: false,
           error: {
@@ -73,7 +86,7 @@ const canAccessScope = async (req, res, next) => {
         });
       }
 
-      if (scope === 'team' && !team_id) {
+      if (effectiveScope === 'team' && !team_id) {
         return res.status(403).json({
           success: false,
           error: {
@@ -88,7 +101,7 @@ const canAccessScope = async (req, res, next) => {
 
     // agent can access: user, team
     if (role === 'agent') {
-      if (scope === 'brokerage' || scope === 'all') {
+      if (effectiveScope === 'brokerage' || scope === 'all') {
         // Check if agent has broker_admin permission
         const permissions = await OwnershipService.getUserPermissions(req.user.id, team_id);
 
@@ -103,12 +116,12 @@ const canAccessScope = async (req, res, next) => {
         }
 
         // Agent with broker_admin can access brokerage scope
-        if (scope === 'brokerage') {
+        if (effectiveScope === 'brokerage') {
           return next();
         }
       }
 
-      if (scope === 'team' && !team_id) {
+      if (effectiveScope === 'team' && !team_id) {
         return res.status(403).json({
           success: false,
           error: {
