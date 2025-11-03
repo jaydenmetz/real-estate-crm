@@ -186,7 +186,7 @@ export const clientsConfig = createEntityConfig({
     getScopeOptions: (user) => {
       if (!user) {
         return [
-          { value: 'my', label: 'My Clients' },
+          { value: 'user', label: 'My Clients' },
           { value: 'team', label: 'Team Clients' },
           { value: 'broker', label: 'Broker Clients' }
         ];
@@ -201,7 +201,7 @@ export const clientsConfig = createEntityConfig({
 
       return [
         {
-          value: 'my',
+          value: 'user',
           label: `${firstName}'s Clients`,
           fullLabel: fullName
         },
@@ -217,7 +217,7 @@ export const clientsConfig = createEntityConfig({
         }
       ];
     },
-    defaultScope: 'my',
+    defaultScope: 'user',
 
     // Sort Options Configuration
     sortOptions: [

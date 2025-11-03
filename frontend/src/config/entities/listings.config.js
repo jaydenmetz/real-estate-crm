@@ -174,7 +174,7 @@ export const listingsConfig = createEntityConfig({
 
     // Scope Filter Configuration
     scopeOptions: [
-      { value: 'my', label: 'My Listings' },
+      { value: 'user', label: 'My Listings' },
       { value: 'team', label: 'Team' },
       { value: 'office', label: 'Office' }
     ],

@@ -417,7 +417,7 @@ export const escrowsConfig = createEntityConfig({
     getScopeOptions: (user) => {
       if (!user) {
         return [
-          { value: 'my', label: 'My Escrows' },
+          { value: 'user', label: 'My Escrows' },
           { value: 'team', label: 'Team Escrows' },
           { value: 'broker', label: 'Broker Escrows' }
         ];
@@ -432,7 +432,7 @@ export const escrowsConfig = createEntityConfig({
 
       return [
         {
-          value: 'my',
+          value: 'user',
           label: `${firstName}'s Escrows`, // Hero card: "Jayden's Escrows"
           fullLabel: fullName // Filter dropdown: "Jayden Metz"
         },
@@ -448,7 +448,7 @@ export const escrowsConfig = createEntityConfig({
         }
       ];
     },
-    defaultScope: 'my',
+    defaultScope: 'user',
 
     // Sort Options Configuration
     sortOptions: [
