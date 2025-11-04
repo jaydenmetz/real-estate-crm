@@ -109,11 +109,10 @@ const Settings = () => {
   }, []);
 
   // Fetch profile data
-  const { data: profileData, isLoading } = useQuery(
-    'myProfile',
-    () => api.profilesAPI.getMe(),
-    {
-      onSuccess: (data) => {
+  const { data: profileData, isLoading } = useQuery({
+    queryKey: ['myProfile'],
+    queryFn: () => api.profilesAPI.getMe(),
+    onSuccess: (data) => {
         if (data?.data) {
           setFormData({
             // Profile fields
@@ -166,13 +165,13 @@ const Settings = () => {
         }
       }
     }
-  );
+  });
 
   // Fetch statistics
-  const { data: statsData } = useQuery(
-    'myStatistics',
-    () => api.profilesAPI.getStatistics(user?.username, 'all')
-  );
+  const { data: statsData } = useQuery({
+    queryKey: ['myStatistics'],
+    queryFn: () => api.profilesAPI.getStatistics(user?.username, 'all')
+  });
 
   // Form state
   const [formData, setFormData] = useState({
@@ -268,23 +267,22 @@ const Settings = () => {
     }
   };
 
-  const { data: apiKeysData, refetch: refetchApiKeys, isLoading: apiKeysLoading } = useQuery(
-    'myApiKeys',
-    fetchApiKeys,
-    {
-      onSuccess: (response) => {
+  const { data: apiKeysData, refetch: refetchApiKeys, isLoading: apiKeysLoading } = useQuery({
+    queryKey: ['myApiKeys'],
+    queryFn: fetchApiKeys,
+    onSuccess: (response) => {
         if (response?.data) {
           setApiKeys(response.data);
         }
       },
-      onError: (error) => {
-        // Silent fail - don't log out
-        setApiKeys([]);
-      },
-      retry: false,
-      enabled: activeTab === 8,
-      staleTime: 60000,
-      gcTime: 300000 // Renamed from cacheTime in v5
+    onError: (error) => {
+      // Silent fail - don't log out
+      setApiKeys([]);
+    },
+    retry: false,
+    enabled: activeTab === 8,
+    staleTime: 60000,
+    gcTime: 300000 // Renamed from cacheTime in v5
     }
   );
 
