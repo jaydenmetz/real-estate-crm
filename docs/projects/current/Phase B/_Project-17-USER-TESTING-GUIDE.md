@@ -5,37 +5,39 @@ Verify that role-based permissions (system_admin, broker, agent) work correctly 
 
 ---
 
-## 🧪 TEST 1: System Admin Can See Everything (5 minutes)
+## 🧪 TEST 1: System Admin Scope Filter (5 minutes)
 
 ### Prerequisites:
 - Login as: `admin@jaydenmetz.com` (system_admin role)
 
 ### Steps:
-1. **Go to** Home Dashboard
-2. **Expected**: See "Broker Dashboard" section at top (admin can see all data)
-3. **Go to** Escrows dashboard
-4. **Check filter dropdown**: Should have options:
-   - ✅ "My Escrows" (user scope)
-   - ✅ "Team" (team scope)
-   - ✅ "Brokerage" (brokerage scope)
-   - ✅ "All" (all scope - system_admin only)
+1. **Go to** Escrows dashboard
+2. **Check scope filter dropdown**:
+   - **Expected for system_admin**: Single option "System Admin"
+   - **Reason**: System admin is not part of a team or brokerage
+   - **Behavior**: Shows ALL data (equivalent to scope=all)
 
-### Test Each Scope:
-5. **Select "My Escrows"**: Should show escrows owned by admin
-6. **Select "Team"**: Should show team's escrows
-7. **Select "All"**: Should show ALL escrows in system (36 total)
-8. **Check**: No "Forbidden" or "Unauthorized" errors
+3. **Select "System Admin"**: Should show ALL escrows (36 total)
+4. **Check**: No team or brokerage filters (admin has no team_id or broker_id)
+
+### Correct Scope Filter Design:
+**Scope dropdown should show:**
+- **Always**: User's first name + last name (shows user's own data)
+- **If team_id NOT NULL**: Team name (shows team's data)
+- **If broker_id NOT NULL**: Brokerage name (shows brokerage's data)
+- **If system_admin**: Single "System Admin" option (shows ALL data)
 
 ### ✅ PASS Criteria:
-- System admin can select ANY scope filter
-- "All" scope works (shows all 36 escrows)
+- System admin sees single "System Admin" filter option
+- Selecting it shows ALL escrows (36 total)
+- No team/brokerage options (admin has no team_id/broker_id)
 - No permission errors
-- Can see broker/team hierarchy
 
 ### ❌ FAIL if:
-- Can't select "All" scope
-- Forbidden error on any scope
-- Missing data across scopes
+- Shows "My Escrows", "Team", "Brokerage", "All" labels (WRONG - old design)
+- System admin has team/brokerage filters
+- Can't see all data
+- Filter shows generic labels instead of actual names
 
 ---
 
@@ -72,35 +74,37 @@ Verify that role-based permissions (system_admin, broker, agent) work correctly 
 ## 🧪 TEST 3: Broker Role Permissions (10 minutes - NEEDS BROKER ACCOUNT)
 
 ### Prerequisites:
-- Need a broker account (not admin)
+- Need a broker account with team_id and broker_id set
 - If you don't have one, skip this test OR create one
 
 ### Steps (as broker):
 1. **Login** as broker account
 2. **Go to** Escrows dashboard
-3. **Check filter dropdown**: Should have:
-   - ✅ "My Escrows"
-   - ✅ "Team"
-   - ✅ "Brokerage"
-   - ❌ "All" (should NOT appear - brokers can't see all)
+3. **Check scope filter dropdown** should show:
+   - ✅ "John Smith" (broker's first + last name) - shows user's own escrows
+   - ✅ "Sales Team A" (broker's team name) - shows team's escrows
+   - ✅ "ABC Realty" (broker's brokerage name) - shows brokerage's escrows
+   - ❌ NOT "System Admin" or "All" (brokers can't see all data)
 
-### Test Scope Limits:
-4. **Select "My Escrows"**: Shows broker's own escrows
-5. **Select "Team"**: Shows team escrows
-6. **Select "Brokerage"**: Shows all brokerage escrows
-7. **Try accessing /admin panel**: Should get "Forbidden" or not visible
+### Test Each Filter:
+4. **Select "John Smith"**: Shows only broker's own escrows
+5. **Select "Sales Team A"**: Shows all escrows for that team
+6. **Select "ABC Realty"**: Shows all escrows for the brokerage
+7. **Try to access**: Admin panel → Should be forbidden/not visible
 
 ### ✅ PASS Criteria:
-- Broker CANNOT select "All" scope
+- Dropdown shows actual names (not generic "My", "Team", "Brokerage")
+- Broker can see: user → team → brokerage hierarchy
+- Broker CANNOT see other brokerages' data
 - Broker CANNOT access admin panel
-- Can see team and brokerage data
-- Proper permission boundaries
+- Three filter options based on broker's memberships
 
 ### ❌ FAIL if:
-- Broker can select "All" scope
+- Shows generic labels ("My Escrows" instead of "John Smith")
+- Broker can access System Admin scope
+- Broker can see data from other brokerages
 - Broker can access admin panel
-- See data from other brokerages
-- No permission enforcement
+- Filter doesn't use actual user/team/broker names
 
 ---
 
@@ -108,35 +112,49 @@ Verify that role-based permissions (system_admin, broker, agent) work correctly 
 
 ### Prerequisites:
 - Need an agent account (not admin/broker)
+- Agent may or may not have team_id/broker_id
 - If you don't have one, skip this test OR create one
 
 ### Steps (as agent):
-1. **Login** as agent account
+1. **Login** as agent account (e.g., jane.agent@example.com)
 2. **Go to** Escrows dashboard
-3. **Check filter dropdown**: Should have:
-   - ✅ "My Escrows" (default and only option)
-   - ❌ "Team" (should NOT appear)
-   - ❌ "Brokerage" (should NOT appear)
-   - ❌ "All" (should NOT appear)
+3. **Check scope filter dropdown** - should show based on agent's memberships:
 
-### Test Data Visibility:
-4. **View escrows**: Should ONLY see own escrows (not team/broker escrows)
-5. **Try to access**: `/escrows?scope=team` manually in URL
-6. **Expected**: Forbidden error or filtered to user scope
-7. **Try to access**: Admin panel
-8. **Expected**: Not visible or Forbidden error
+**If agent has NO team_id and NO broker_id:**
+   - ✅ "Jane Agent" (first + last name) - ONLY option
+   - Shows only agent's own escrows
+
+**If agent HAS team_id:**
+   - ✅ "Jane Agent" (user's escrows)
+   - ✅ "Sales Team B" (team's escrows)
+
+**If agent HAS broker_id:**
+   - ✅ "Jane Agent" (user's escrows)
+   - ✅ "XYZ Brokerage" (brokerage's escrows)
+
+**If agent HAS both team_id AND broker_id:**
+   - ✅ "Jane Agent" (user's escrows)
+   - ✅ "Sales Team B" (team's escrows)
+   - ✅ "XYZ Brokerage" (brokerage's escrows)
+
+### Test Restrictions:
+4. **Should NOT see**: "System Admin" or "All" options
+5. **Try to access**: Admin panel → Should be forbidden/not visible
+6. **Try URL hack**: `/escrows?scope=all` → Should get Forbidden error
 
 ### ✅ PASS Criteria:
-- Agent can ONLY see own data
-- Agent cannot change scope filter
-- Agent cannot access admin features
-- Agent cannot see team/brokerage data
+- Dropdown shows actual names (user/team/broker names, not generic labels)
+- Agent cannot access system_admin scope
+- Agent cannot access admin panel
+- Dropdown dynamically shows only agent's memberships
+- Filter labels are personalized (names, not "My"/"Team"/"Brokerage")
 
 ### ❌ FAIL if:
-- Agent can select Team/Brokerage scope
-- Agent sees other people's data
+- Shows generic labels ("My Escrows" instead of agent's name)
+- Agent can select "All" or "System Admin"
 - Agent can access admin panel
-- No role enforcement
+- Sees data from other teams/brokerages they're not part of
+- Filter doesn't reflect actual team/broker assignments
 
 ---
 
