@@ -164,7 +164,6 @@ const Settings = () => {
           });
         }
       }
-    }
   });
 
   // Fetch statistics
