@@ -283,8 +283,7 @@ const Settings = () => {
     enabled: activeTab === 8,
     staleTime: 60000,
     gcTime: 300000 // Renamed from cacheTime in v5
-    }
-  );
+  });
 
   // Update profile mutation (v5 object syntax)
   const updateProfileMutation = useMutation({
