@@ -181,7 +181,7 @@ class UserProfileService {
         bp.main_office_phone as broker_office_phone
       FROM user_profiles up
       JOIN users u ON up.user_id = u.id
-      LEFT JOIN brokers b ON up.supervising_broker_id = b.id
+      LEFT JOIN brokerages b ON up.supervising_broker_id = b.id
       LEFT JOIN broker_profiles bp ON b.id = bp.broker_id
       WHERE up.user_id = $1
     `, [userId]);

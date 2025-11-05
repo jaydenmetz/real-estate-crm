@@ -142,7 +142,7 @@ class BrokerService {
         b.*,
         COUNT(DISTINCT bt.team_id) as team_count,
         COUNT(DISTINCT u.id) as user_count
-      FROM brokers b
+      FROM brokerages b
       LEFT JOIN broker_teams bt ON b.id = bt.broker_id AND bt.status = 'active'
       LEFT JOIN teams t ON bt.team_id = t.team_id
       LEFT JOIN users u ON u.team_id = t.team_id
@@ -166,7 +166,7 @@ class BrokerService {
         b.*,
         COUNT(DISTINCT bt.team_id) as team_count,
         COUNT(DISTINCT u.id) as user_count
-      FROM brokers b
+      FROM brokerages b
       LEFT JOIN broker_teams bt ON b.id = bt.broker_id AND bt.status = 'active'
       LEFT JOIN teams t ON bt.team_id = t.team_id
       LEFT JOIN users u ON u.team_id = t.team_id

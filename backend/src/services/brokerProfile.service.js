@@ -176,7 +176,7 @@ class BrokerProfileService {
         b.website as broker_website,
         b.logo_url as broker_logo_url
       FROM broker_profiles bp
-      JOIN brokers b ON bp.broker_id = b.id
+      JOIN brokerages b ON bp.broker_id = b.id
       WHERE bp.broker_id = $1
     `, [brokerId]);
 
@@ -197,7 +197,7 @@ class BrokerProfileService {
         b.name as broker_name,
         b.company_name as broker_company_name
       FROM user_profiles up
-      JOIN brokers b ON up.supervising_broker_id = b.id
+      JOIN brokerages b ON up.supervising_broker_id = b.id
       JOIN broker_profiles bp ON b.id = bp.broker_id
       WHERE up.user_id = $1
     `, [userId]);
