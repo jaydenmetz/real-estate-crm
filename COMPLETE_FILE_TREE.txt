@@ -54,6 +54,8 @@
     - 039_implement_contextual_roles.sql
     - 040_comprehensive_role_system.sql
     - 041_simplify_to_role_arrays.sql
+    - 042_link_users_to_contacts.sql
+    - 043_create_escrow_people.sql
     - 20251006_add_performance_indexes.sql
     - 20251007_setup_broker_hierarchy.sql
     - 20251028_add_deleted_by_columns.sql
