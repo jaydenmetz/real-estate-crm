@@ -1,283 +1,304 @@
-# Project-17: User Role System Validation - USER TESTING GUIDE
+# Project-17: User Role System Implementation & Validation - USER TESTING GUIDE
 
 ## 🎯 Goal
-Verify that role-based permissions (system_admin, broker, agent) work correctly and users can only access data they're authorized to see.
+Implement contextual role system (roles, user_roles, role_history) and verify role-based permissions work correctly.
 
 ---
 
-## 🧪 TEST 1: System Admin Scope Filter (5 minutes)
+## 📋 DATABASE SCHEMA CHANGES (Verify First)
 
-### Prerequisites:
-- Login as: `admin@jaydenmetz.com` (system_admin role)
+### New Tables Created:
+1. **roles** - 11 roles across 3 contexts (platform, brokerage, transaction)
+2. **user_roles** - Role assignments per user per context
+3. **role_history** - Audit trail of role changes
+4. **brokerages** - Renamed from brokers (brokerage companies)
+5. **broker_history** - Track agent brokerage affiliations
+6. **users** - Added DRE license fields (10 new columns)
 
-### Steps:
-1. **Go to** Escrows dashboard
-2. **Check scope filter dropdown**:
-   - **Expected for system_admin**: Single option "System Admin"
-   - **Reason**: System admin is not part of a team or brokerage
-   - **Behavior**: Shows ALL data (equivalent to scope=all)
+### Verify Tables Exist:
+```sql
+-- Run in database
+SELECT tablename FROM pg_tables 
+WHERE schemaname = 'public' 
+AND tablename IN ('roles', 'user_roles', 'role_history', 'brokerages', 'broker_history')
+ORDER BY tablename;
 
-3. **Select "System Admin"**: Should show ALL escrows (36 total)
-4. **Check**: No team or brokerage filters (admin has no team_id or broker_id)
-
-### Correct Scope Filter Design:
-**Scope dropdown should show:**
-- **Always**: User's first name + last name (shows user's own data)
-- **If team_id NOT NULL**: Team name (shows team's data)
-- **If broker_id NOT NULL**: Brokerage name (shows brokerage's data)
-- **If system_admin**: Single "System Admin" option (shows ALL data)
-
-### ✅ PASS Criteria:
-- System admin sees single "System Admin" filter option
-- Selecting it shows ALL escrows (36 total)
-- No team/brokerage options (admin has no team_id/broker_id)
-- No permission errors
-
-### ❌ FAIL if:
-- Shows "My Escrows", "Team", "Brokerage", "All" labels (WRONG - old design)
-- System admin has team/brokerage filters
-- Can't see all data
-- Filter shows generic labels instead of actual names
-
----
-
-## 🧪 TEST 2: Admin Panel Access (3 minutes)
-
-### Steps (as system_admin):
-1. **Go to** Admin panel (should be in sidebar or settings)
-2. **Expected**: Can access admin features:
-   - ✅ User management
-   - ✅ API Keys management
-   - ✅ Security Events
-   - ✅ Audit Logs
-
-3. **Check each admin section loads**:
-   - Users Table
-   - API Keys Table
-   - Security Events
-   - Refresh Tokens
-
-### ✅ PASS Criteria:
-- Admin panel is accessible
-- All admin tables load
-- Can view security events
-- Can manage API keys
-
-### ❌ FAIL if:
-- Admin panel not visible
-- Forbidden errors
-- Tables don't load
-- Missing admin features
-
----
-
-## 🧪 TEST 3: Broker Role Permissions (10 minutes - NEEDS BROKER ACCOUNT)
-
-### Prerequisites:
-- Need a broker account with team_id and broker_id set
-- If you don't have one, skip this test OR create one
-
-### Steps (as broker):
-1. **Login** as broker account
-2. **Go to** Escrows dashboard
-3. **Check scope filter dropdown** should show:
-   - ✅ "John Smith" (broker's first + last name) - shows user's own escrows
-   - ✅ "Sales Team A" (broker's team name) - shows team's escrows
-   - ✅ "ABC Realty" (broker's brokerage name) - shows brokerage's escrows
-   - ❌ NOT "System Admin" or "All" (brokers can't see all data)
-
-### Test Each Filter:
-4. **Select "John Smith"**: Shows only broker's own escrows
-5. **Select "Sales Team A"**: Shows all escrows for that team
-6. **Select "ABC Realty"**: Shows all escrows for the brokerage
-7. **Try to access**: Admin panel → Should be forbidden/not visible
-
-### ✅ PASS Criteria:
-- Dropdown shows actual names (not generic "My", "Team", "Brokerage")
-- Broker can see: user → team → brokerage hierarchy
-- Broker CANNOT see other brokerages' data
-- Broker CANNOT access admin panel
-- Three filter options based on broker's memberships
-
-### ❌ FAIL if:
-- Shows generic labels ("My Escrows" instead of "John Smith")
-- Broker can access System Admin scope
-- Broker can see data from other brokerages
-- Broker can access admin panel
-- Filter doesn't use actual user/team/broker names
-
----
-
-## 🧪 TEST 4: Agent Role Restrictions (10 minutes - NEEDS AGENT ACCOUNT)
-
-### Prerequisites:
-- Need an agent account (not admin/broker)
-- Agent may or may not have team_id/broker_id
-- If you don't have one, skip this test OR create one
-
-### Steps (as agent):
-1. **Login** as agent account (e.g., jane.agent@example.com)
-2. **Go to** Escrows dashboard
-3. **Check scope filter dropdown** - should show based on agent's memberships:
-
-**If agent has NO team_id and NO broker_id:**
-   - ✅ "Jane Agent" (first + last name) - ONLY option
-   - Shows only agent's own escrows
-
-**If agent HAS team_id:**
-   - ✅ "Jane Agent" (user's escrows)
-   - ✅ "Sales Team B" (team's escrows)
-
-**If agent HAS broker_id:**
-   - ✅ "Jane Agent" (user's escrows)
-   - ✅ "XYZ Brokerage" (brokerage's escrows)
-
-**If agent HAS both team_id AND broker_id:**
-   - ✅ "Jane Agent" (user's escrows)
-   - ✅ "Sales Team B" (team's escrows)
-   - ✅ "XYZ Brokerage" (brokerage's escrows)
-
-### Test Restrictions:
-4. **Should NOT see**: "System Admin" or "All" options
-5. **Try to access**: Admin panel → Should be forbidden/not visible
-6. **Try URL hack**: `/escrows?scope=all` → Should get Forbidden error
-
-### ✅ PASS Criteria:
-- Dropdown shows actual names (user/team/broker names, not generic labels)
-- Agent cannot access system_admin scope
-- Agent cannot access admin panel
-- Dropdown dynamically shows only agent's memberships
-- Filter labels are personalized (names, not "My"/"Team"/"Brokerage")
-
-### ❌ FAIL if:
-- Shows generic labels ("My Escrows" instead of agent's name)
-- Agent can select "All" or "System Admin"
-- Agent can access admin panel
-- Sees data from other teams/brokerages they're not part of
-- Filter doesn't reflect actual team/broker assignments
-
----
-
-## 🧪 TEST 5: Permission Boundaries via API (5 minutes - CURL)
-
-### Test Admin Can Access All Scopes:
-```bash
-# Get your admin JWT token from browser (F12 → Application → Local Storage → authToken)
-TOKEN="your-admin-token-here"
-
-# Test each scope
-curl -s "https://api.jaydenmetz.com/v1/escrows?scope=user" -H "Authorization: Bearer $TOKEN" | grep -o "success.*true"
-curl -s "https://api.jaydenmetz.com/v1/escrows?scope=team" -H "Authorization: Bearer $TOKEN" | grep -o "success.*true"
-curl -s "https://api.jaydenmetz.com/v1/escrows?scope=all" -H "Authorization: Bearer $TOKEN" | grep -o "success.*true"
+-- Expected: All 5 tables listed
 ```
 
-### Expected:
-- All three return `"success":true`
-- Admin can access any scope
+### Verify Roles Populated:
+```sql
+SELECT name, display_name, context_type FROM roles ORDER BY context_type, name;
 
-### Test Invalid Scope Rejected:
-```bash
-curl -s "https://api.jaydenmetz.com/v1/escrows?scope=invalid" -H "Authorization: Bearer $TOKEN"
+-- Expected: 11 roles
+-- Platform: platform_admin
+-- Brokerage: brokerage_agent, brokerage_broker
+-- Transaction: transaction_* (8 roles)
 ```
 
-### Expected:
-```json
-{
-  "success": false,
-  "error": {
-    "code": "INVALID_SCOPE",
-    "message": "Invalid scope. Must be one of: my, user, team, brokerage, all"
-  }
+### Verify User Migration:
+```sql
+SELECT u.email, u.role as old_role, r.name as new_role, ur.context_type
+FROM users u
+LEFT JOIN user_roles ur ON u.id = ur.user_id
+LEFT JOIN roles r ON ur.role_id = r.id
+WHERE u.email IN ('admin@jaydenmetz.com', 'josh@bhhsassociated.com', 'ryan@ryandobbsteam.com');
+
+-- Expected: 
+-- admin@jaydenmetz.com: system_admin → platform_admin
+-- josh@bhhsassociated.com: broker → brokerage_broker
+-- ryan@ryandobbsteam.com: broker → brokerage_broker
+```
+
+---
+
+## 🧪 BACKEND API TESTS (Before Frontend)
+
+### TEST 1: Verify Role Endpoint Exists
+```bash
+# Check if backend can query user roles
+TOKEN="your-admin-token"
+curl -s "https://api.jaydenmetz.com/v1/users/me" \
+  -H "Authorization: Bearer $TOKEN" | grep -o "role"
+```
+**Expected**: Response includes role information
+
+### TEST 2: Verify Backward Compatibility
+```bash
+# Old role column should still work
+curl -s "https://api.jaydenmetz.com/v1/escrows?scope=user" \
+  -H "Authorization: Bearer $TOKEN" | grep "success.*true"
+```
+**Expected**: API still works with existing auth
+
+### TEST 3: Test Permission Middleware
+```bash
+# Admin can access admin endpoint
+curl -s "https://api.jaydenmetz.com/v1/admin/users" \
+  -H "Authorization: Bearer $TOKEN" -w "\n%{http_code}\n"
+```
+**Expected**: HTTP 200 (admin has access)
+
+---
+
+## 🧪 FRONTEND SCOPE FILTER TESTS
+
+### TEST 4: System Admin Scope (Currently Broken - Needs Fix)
+
+**Login as**: `admin@jaydenmetz.com`
+
+**Go to**: Escrows dashboard
+
+**Current Bug**: Shows "My Escrows", "Team" (generic labels)
+
+**Should Show**: 
+- **For system_admin**: Single option "System Admin"
+- **No team/brokerage** (admin has no team_id/broker_id)
+
+**Fix Needed**: Update scopeOptions to be dynamic based on:
+```javascript
+if (user.role === 'system_admin') {
+  scopeOptions = [{ value: 'all', label: 'System Admin' }];
+} else {
+  scopeOptions = [
+    { value: 'user', label: `${user.first_name} ${user.last_name}` },
+    ...(user.team_id ? [{ value: 'team', label: teamName }] : []),
+    ...(user.broker_id ? [{ value: 'brokerage', label: brokerageName }] : [])
+  ];
 }
 ```
 
-### ✅ PASS Criteria:
-- Admin can use all valid scopes
-- Invalid scopes rejected with clear error
-- HTTP 400 for invalid scope
+---
 
-### ❌ FAIL if:
-- Admin forbidden from valid scope
-- Invalid scope accepted
-- Unclear error messages
+### TEST 5: Broker Scope (Needs Implementation)
+
+**Login as**: `josh@bhhsassociated.com` (password: BrokerTest123!)
+
+**Expected Dropdown**:
+1. "Josh Riley" (user's escrows)
+2. "Riley Real Estate Team" (team's escrows)
+3. "Associated Real Estate" (brokerage's escrows)
+
+**Currently Shows**: Generic labels (WRONG)
+
+**Implementation Needed**:
+- Fetch team name from teams table (team_id → name)
+- Fetch brokerage name from brokerages table (broker_id → company_name)
+- Build dynamic dropdown with real names
 
 ---
 
-## 🧪 TEST 6: Cross-Module Permission Consistency (5 minutes)
+### TEST 6: Multi-Broker Isolation
 
-### Test All Modules Respect Roles:
-1. **As system_admin**, test each module:
-   - Escrows: `?scope=all` → works
-   - Clients: `?scope=all` → works
-   - Listings: `?scope=all` → works
-   - Leads: `?scope=all` → works
-   - Appointments: `?scope=all` → works
+**Setup**:
+1. Login as Josh (Associated Real Estate)
+2. Login as Ryan (Ryan Dobbs Realty) in different browser
 
-2. **Check**: All modules use same permission system
+**Test**:
+- Josh should NOT see Ryan's escrows
+- Ryan should NOT see Josh's escrows
+- Each sees only their brokerage data
 
-### ✅ PASS Criteria:
-- All 5 modules respect scope filters
-- Consistent behavior across modules
-- No module bypasses permissions
+**Database Verification**:
+```sql
+-- Josh's brokerage
+SELECT COUNT(*) FROM escrows WHERE broker_id = 'f47ac10b-58cc-4372-a567-0e02b2c3d479';
 
-### ❌ FAIL if:
-- Some modules ignore scope
-- Inconsistent permission behavior
-- Any module shows unauthorized data
+-- Ryan's brokerage  
+SELECT COUNT(*) FROM escrows WHERE broker_id = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
 
----
-
-## 📊 SUMMARY CHECKLIST
-
-After completing tests (or marking N/A if no broker/agent accounts):
-
-- [ ] ✅ TEST 1: System admin can see everything (all scopes work)
-- [ ] ✅ TEST 2: Admin panel accessible to system_admin only
-- [ ] ✅/N/A TEST 3: Broker permissions properly limited
-- [ ] ✅/N/A TEST 4: Agent permissions properly restricted
-- [ ] ✅ TEST 5: API permission boundaries enforced
-- [ ] ✅ TEST 6: All modules use consistent permissions
-
----
-
-## 🐛 BUGS TO REPORT
-
-**Format:**
+-- Should be different counts
 ```
-Test: [Test number]
-Role: [system_admin/broker/agent]
-Issue: [What's wrong]
+
+---
+
+## 🧪 ROLE ASSIGNMENT TESTS
+
+### TEST 7: Assign Transaction Role
+```sql
+-- Make Jayden the buyer_agent on an escrow
+INSERT INTO user_roles (user_id, role_id, context_type, context_id)
+SELECT 
+  '65483115-0e3e-43f3-8a4a-488a6f0df017', -- Jayden
+  r.id,
+  'transaction',
+  '3d5e6284-fb0d-40ba-9d2e-0a3592fc87d7' -- An escrow
+FROM roles r WHERE r.name = 'transaction_buyer_agent';
+
+-- Verify assignment
+SELECT 
+  u.first_name, u.last_name, 
+  r.display_name, 
+  ur.context_type, 
+  e.property_address
+FROM user_roles ur
+JOIN users u ON ur.user_id = u.id
+JOIN roles r ON ur.role_id = r.id
+LEFT JOIN escrows e ON ur.context_id = e.id
+WHERE ur.user_id = '65483115-0e3e-43f3-8a4a-488a6f0df017'
+AND ur.context_type = 'transaction';
+```
+
+**Expected**: Jayden now has transaction_buyer_agent role on that specific escrow
+
+---
+
+## 🧪 CRITICAL TESTS BEFORE PROJECT-18
+
+### TEST 8: Database Referential Integrity
+```sql
+-- Verify all foreign keys work
+SELECT 
+  tc.table_name, 
+  kcu.column_name, 
+  ccu.table_name AS foreign_table
+FROM information_schema.table_constraints AS tc
+JOIN information_schema.key_column_usage AS kcu ON tc.constraint_name = kcu.constraint_name
+JOIN information_schema.constraint_column_usage AS ccu ON ccu.constraint_name = tc.constraint_name
+WHERE tc.constraint_type = 'FOREIGN KEY'
+AND tc.table_name IN ('user_roles', 'role_history', 'broker_history', 'brokerages');
+```
+
+**Expected**: All FK constraints intact
+
+### TEST 9: Authentication Still Works After Schema Changes
+```bash
+# Test login still works
+curl -s -X POST "https://api.jaydenmetz.com/v1/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@jaydenmetz.com","password":"[your-password]"}'
+
+# Expected: success=true, token returned
+```
+
+### TEST 10: All Module Endpoints Still Work
+```bash
+TOKEN="your-token"
+
+# Test each module
+for module in escrows clients listings leads appointments; do
+  echo "Testing $module..."
+  curl -s "https://api.jaydenmetz.com/v1/$module" \
+    -H "Authorization: Bearer $TOKEN" | grep -o "success.*true"
+done
+
+# Expected: All return success:true
+```
+
+---
+
+## ⚠️ KNOWN ISSUES TO FIX
+
+### Issue #1: Scope Filter Labels (MUST FIX)
+**Current**: Generic "My Escrows", "Team"  
+**Needed**: Dynamic "Jayden Metz", "Riley Real Estate Team"
+
+**Where to fix**: 
+- `frontend/src/config/entities/*.config.js`
+- Change from static `scopeOptions` to dynamic function
+- Fetch team/brokerage names on mount
+
+### Issue #2: Brokerage References (MUST UPDATE)
+**Changed**: `brokers` table → `brokerages` table
+**Impact**: Any code referencing `brokers` needs update
+
+**Check these files**:
+```bash
+grep -r "brokers\." backend/src --include="*.js" | grep -v node_modules
+grep -r "brokers" frontend/src --include="*.js" --include="*.jsx"
+```
+
+### Issue #3: User Role Column (DUAL SYSTEM)
+**Current**: Both `users.role` AND `user_roles` table exist
+**Status**: Backward compatible but needs migration plan
+
+**Eventually**: Remove `users.role` column, use only `user_roles`
+
+---
+
+## ✅ SUCCESS CRITERIA FOR PROJECT-17
+
+**Database:**
+- [x] roles table created (11 roles)
+- [x] user_roles table created
+- [x] role_history table created
+- [x] brokerages renamed from brokers
+- [x] broker_history table created
+- [x] DRE fields added to users
+- [x] All users migrated to user_roles
+
+**Backend:**
+- [ ] All references to 'brokers' table updated to 'brokerages'
+- [x] Auth endpoints still work
+- [x] Permission middleware still works
+- [ ] Role helper functions created (hasRole, getRoles)
+
+**Frontend:**
+- [ ] Scope filter shows dynamic names (not generic labels)
+- [ ] Fetches team/brokerage names from database
+- [ ] System admin sees "System Admin" only
+- [ ] Brokers see: Name, Team, Brokerage
+- [ ] Agents see: Name (+ Team/Brokerage if applicable)
+
+**Testing:**
+- [ ] Multi-broker isolation works (Josh can't see Ryan's data)
+- [ ] Transaction roles can be assigned
+- [ ] Role history tracks changes
+- [ ] No broken endpoints after schema changes
+
+---
+
+## 🐛 BUG REPORTING
+
+**If you find issues:**
+```
+Component: [Database/Backend/Frontend]
+Issue: [What's broken]
 Expected: [What should happen]
-Actual: [What actually happened]
+Actual: [What's happening]
+Query/URL: [Reproduction]
 ```
 
----
+**Current Status**: Schema implemented, frontend needs updates for dynamic labels.
 
-## ✅ SUCCESS CRITERIA
-
-**Project-17 is COMPLETE when:**
-- System admin can access all scopes
-- Brokers cannot access "all" scope
-- Agents can only see own data
-- Admin panel restricted to system_admin
-- All modules enforce roles consistently
-- No permission bypass bugs found
-
-**Current Status**: TESTING IN PROGRESS
-**Your Role**: Run tests and report any permission bypass bugs
-**My Role**: Fix any role enforcement issues found
-
----
-
-## 📝 NOTES
-
-**Account Requirements:**
-- You have: system_admin (admin@jaydenmetz.com) ✅
-- May need: broker account (for TEST 3)
-- May need: agent account (for TEST 4)
-
-**If no broker/agent accounts exist:**
-- Mark those tests as N/A
-- Focus on system_admin testing
-- Role system can be validated with admin alone
-- Future phases will add more test accounts
+**Next**: Fix scope filter labels, then verify all module endpoints work.
