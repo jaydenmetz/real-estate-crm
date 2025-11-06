@@ -44,13 +44,17 @@ const canAccessScope = async (req, res, next) => {
     // Use normalized scope for the rest of the logic
     const effectiveScope = normalizedScope;
 
+    // Handle role as array (e.g., ['system_admin', 'agent'])
+    const roles = Array.isArray(role) ? role : [role];
+    const hasRole = (roleName) => roles.includes(roleName);
+
     // system_admin can access any scope
-    if (role === 'system_admin') {
+    if (hasRole('system_admin')) {
       return next();
     }
 
     // broker can access: user, team, brokerage
-    if (role === 'broker') {
+    if (hasRole('broker')) {
       if (effectiveScope === 'all') {
         return res.status(403).json({
           success: false,
@@ -75,7 +79,7 @@ const canAccessScope = async (req, res, next) => {
     }
 
     // team_owner can access: user, team
-    if (role === 'team_owner') {
+    if (hasRole('team_owner')) {
       if (effectiveScope === 'brokerage' || scope === 'all') {
         return res.status(403).json({
           success: false,
@@ -100,7 +104,7 @@ const canAccessScope = async (req, res, next) => {
     }
 
     // agent can access: user, team
-    if (role === 'agent') {
+    if (hasRole('agent')) {
       if (effectiveScope === 'brokerage' || scope === 'all') {
         // Check if agent has broker_admin permission
         const permissions = await OwnershipService.getUserPermissions(req.user.id, team_id);
