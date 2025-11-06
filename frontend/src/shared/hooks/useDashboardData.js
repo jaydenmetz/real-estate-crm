@@ -135,9 +135,9 @@ export const useDashboardData = (fetchFunction, options = {}) => {
   }, [data?.items, queryKey]);
 
   return {
-    // Data
-    data: data?.items || [],
-    stats: data?.stats || [],
+    // Data (handle both 'items' and entity-specific key like 'escrows')
+    data: data?.items || data?.escrows || data?.clients || data?.listings || data?.leads || data?.appointments || [],
+    stats: data?.stats || {},
 
     // Pagination
     pagination: {
