@@ -104,17 +104,17 @@ async function getAllEscrows(req, res) {
     let query = `
       SELECT DISTINCT
         e.${idField} as id,
-        e.${displayIdField} as "displayId",
-        e.property_address as "propertyAddress",
+        e.${displayIdField} as display_id,
+        e.property_address as property_address,
         e.city,
         e.state,
-        e.closing_date as "closingDate",
+        e.closing_date as closing_date,
         e.escrow_status as status,
-        e.purchase_price as "purchasePrice",
-        ${commissionField} as "myCommission",
-        e.gross_commission as "grossCommission",
-        ${acceptanceDateField} as "acceptanceDate",
-        e.created_at as "createdAt"
+        e.purchase_price as purchase_price,
+        ${commissionField} as my_commission,
+        e.gross_commission as gross_commission,
+        ${acceptanceDateField} as acceptance_date,
+        e.created_at as created_at
       FROM escrows e
     `;
 
