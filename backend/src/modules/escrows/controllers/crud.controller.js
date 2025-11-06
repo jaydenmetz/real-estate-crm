@@ -100,28 +100,21 @@ async function getAllEscrows(req, res) {
     const idField = 'id::text';
     const displayIdField = 'display_id';
 
-    // Base query with correct field mapping
+    // Base query - clean fields for dashboard (no duplicates)
     let query = `
       SELECT DISTINCT
         e.${idField} as id,
         e.${displayIdField} as "displayId",
         e.property_address as "propertyAddress",
-        e.city as city,
-        e.state as state,
+        e.city,
+        e.state,
         e.closing_date as "closingDate",
-        e.escrow_status as escrow_status,
-        e.purchase_price as "purchasePrice",
-        e.purchase_price as purchase_price,
-        ${commissionField} as "myCommission",
-        ${commissionField} as my_commission,
-        e.gross_commission as gross_commission,
-        '[]'::jsonb as clients,
-        ${acceptanceDateField} as "acceptanceDate",
-        e.acceptance_date as acceptance_date,
         e.escrow_status as status,
-        e.created_at as "createdAt",
-        e.updated_at as "updatedAt",
-        e.deleted_at as "deletedAt"
+        e.purchase_price as "purchasePrice",
+        ${commissionField} as "myCommission",
+        e.gross_commission as "grossCommission",
+        ${acceptanceDateField} as "acceptanceDate",
+        e.created_at as "createdAt"
       FROM escrows e
     `;
 
