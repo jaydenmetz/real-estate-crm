@@ -605,3 +605,33 @@ class AdminController {
 }
 
 module.exports = AdminController;
+
+// Get list of all database tables with counts
+exports.getTableList = async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        relname as name,
+        n_tup_ins - n_tup_del as row_count,
+        pg_size_pretty(pg_total_relation_size(relid)) as size
+      FROM pg_stat_user_tables
+      WHERE schemaname = 'public'
+      AND relname NOT LIKE 'pg_%'
+      ORDER BY relname
+    `);
+
+    res.json({
+      success: true,
+      data: result.rows
+    });
+  } catch (error) {
+    console.error('Get table list error:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'FETCH_ERROR',
+        message: 'Failed to fetch table list'
+      }
+    });
+  }
+};

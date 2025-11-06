@@ -35,4 +35,6 @@ router.post('/table/:tableName', AdminController.createRow);
 router.delete('/table/:tableName/rows', AdminController.deleteRows);
 router.delete('/table/:tableName/all', AdminController.deleteAllRows);
 
+router.get('/database/tables', AdminController.getTableList);
+
 module.exports = router;
