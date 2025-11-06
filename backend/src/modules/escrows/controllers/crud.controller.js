@@ -166,19 +166,29 @@ async function getAllEscrows(req, res) {
     // Execute query
     const result = await pool.query(query, values);
 
-    // Get total count for pagination
-    let countQuery = `
-      SELECT COUNT(DISTINCT e.id) as total
+    // Get total count and stats for pagination and hero
+    let statsQuery = `
+      SELECT
+        COUNT(DISTINCT e.id) as total,
+        COALESCE(SUM(e.purchase_price::numeric), 0) as total_volume,
+        COALESCE(SUM((${commissionField})::numeric), 0) as total_commission
       FROM escrows e
       WHERE ${conditions.join(' AND ')}
     `;
-    const countResult = await pool.query(countQuery, values.slice(0, -2));
-    const total = parseInt(countResult.rows[0]?.total || 0);
+    const statsResult = await pool.query(statsQuery, values.slice(0, -2));
+    const total = parseInt(statsResult.rows[0]?.total || 0);
+    const totalVolume = parseFloat(statsResult.rows[0]?.total_volume || 0);
+    const totalCommission = parseFloat(statsResult.rows[0]?.total_commission || 0);
 
     res.json({
       success: true,
       data: {
         escrows: result.rows,
+        stats: {
+          total,
+          totalVolume,
+          totalCommission
+        },
         pagination: {
           total,
           page: parseInt(page),
