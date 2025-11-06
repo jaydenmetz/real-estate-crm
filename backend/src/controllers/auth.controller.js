@@ -447,8 +447,9 @@ class AuthController {
       // This is SERVER data, not client localStorage
       const userRole = req.user.role;
 
-      // Check if user has the required role
-      const authorized = userRole === requiredRole;
+      // Handle role as array (e.g., ['system_admin', 'agent'])
+      const roles = Array.isArray(userRole) ? userRole : [userRole];
+      const authorized = roles.includes(requiredRole);
 
       // Log for security audit
       // // console.log(`[Role Verification] User ${req.user.email} (${userRole}) attempting to access role: ${requiredRole} → ${authorized ? 'GRANTED' : 'DENIED'}`);
