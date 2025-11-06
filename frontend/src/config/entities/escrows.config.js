@@ -404,13 +404,13 @@ export const escrowsConfig = createEntityConfig({
 
     // Status Tabs Configuration
     statusTabs: [
-      { value: 'active', label: 'Active', preferredViewMode: 'large' },
-      { value: 'closed', label: 'Closed', preferredViewMode: 'medium' },
-      { value: 'cancelled', label: 'Cancelled', preferredViewMode: 'small' },
+      { value: 'Active', label: 'Active', preferredViewMode: 'large' },
+      { value: 'Closed', label: 'Closed', preferredViewMode: 'medium' },
+      { value: 'Cancelled', label: 'Cancelled', preferredViewMode: 'small' },
       { value: 'all', label: 'All Escrows', preferredViewMode: 'small' },
       { value: 'archived', label: 'Archived', preferredViewMode: 'small' }
     ],
-    defaultStatus: 'active',
+    defaultStatus: 'Active',
 
     // Scope Filter Configuration
     // Scope options can be a function that receives user object
