@@ -405,9 +405,9 @@ export const escrowsConfig = createEntityConfig({
     // Status Tabs Configuration
     statusTabs: [
       { value: 'Active', label: 'Active', preferredViewMode: 'large' },
-      { value: 'Closed', label: 'Closed', preferredViewMode: 'medium' },
-      { value: 'Cancelled', label: 'Cancelled', preferredViewMode: 'small' },
-      { value: 'all', label: 'All Escrows', preferredViewMode: 'small' },
+      { value: 'Closed', label: 'Closed', preferredViewMode: 'large' },
+      { value: 'Cancelled', label: 'Cancelled', preferredViewMode: 'large' },
+      { value: 'all', label: 'All Escrows', preferredViewMode: 'large' },
       { value: 'archived', label: 'Archived', preferredViewMode: 'small' }
     ],
     defaultStatus: 'Active',
