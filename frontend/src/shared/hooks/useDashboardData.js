@@ -134,10 +134,18 @@ export const useDashboardData = (fetchFunction, options = {}) => {
     downloadCSV(csv, `${queryKey}-export.csv`);
   }, [data?.items, queryKey]);
 
+  // Calculate stats from data (client-side)
+  const items = data?.items || data?.escrows || data?.clients || data?.listings || data?.leads || data?.appointments || [];
+  const calculatedStats = {
+    total: { value: items.length },
+    totalVolume: { value: items.reduce((sum, item) => sum + (parseFloat(item.purchase_price) || 0), 0) },
+    totalCommission: { value: items.reduce((sum, item) => sum + (parseFloat(item.my_commission) || parseFloat(item.gross_commission) || 0), 0) }
+  };
+
   return {
-    // Data (handle both 'items' and entity-specific key like 'escrows')
-    data: data?.items || data?.escrows || data?.clients || data?.listings || data?.leads || data?.appointments || [],
-    stats: data?.stats || {},
+    // Data
+    data: items,
+    stats: data?.stats || calculatedStats,  // Use API stats if available, else calculate
 
     // Pagination
     pagination: {
