@@ -10,9 +10,10 @@ Verify ALL escrow functionality works perfectly: CRUD, detail pages, financial c
 ### Steps:
 1. **Login** as admin@jaydenmetz.com
 2. **Go to** Escrows dashboard
-3. **Should see**: List of escrows (you have 51 total)
-4. **Check**: Scope filter shows "System Admin" or your name
-5. **Select different scopes**: user, team (if available)
+3. **Should see**: List of escrows (you have 28 total: 0 Active, 21 Closed, 7 Cancelled)
+4. **Click** "All Escrows" or "Closed" tab to see data (Active is empty)
+5. **Check**: Scope filter shows "System Admin"
+6. **Check**: Stats show: 28 total, $6.6M volume, $89K commission
 
 ### ✅ PASS Criteria:
 - Dashboard loads without errors
@@ -23,9 +24,11 @@ Verify ALL escrow functionality works perfectly: CRUD, detail pages, financial c
 
 ### ❌ FAIL if:
 - Dashboard crashes
-- No escrows show (should have 51)
+- No escrows show on "All Escrows" tab
 - 500 errors on load
+- Stats show 0 (should show 28 total)
 - Scope filter broken
+- Property addresses show "No Address"
 
 ---
 
