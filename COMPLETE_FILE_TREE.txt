@@ -56,10 +56,12 @@
     - 041_simplify_to_role_arrays.sql
     - 042_link_users_to_contacts.sql
     - 043_create_escrow_people.sql
+    - 044_update_jayden_email.sql
     - 20251006_add_performance_indexes.sql
     - 20251007_setup_broker_hierarchy.sql
     - 20251028_add_deleted_by_columns.sql
   - scripts/
+    - archive/ - EMPTY
     - auth/
       - create-admin-user.js
       - debug-login-query.js
@@ -68,6 +70,7 @@
       - reset-admin-password-production.js
       - verify-admin-user.js
       - verify-password.js
+    - backups/ - EMPTY
     - data/
       - add-basic-escrows.js
       - add-escrow-company-fields.js
@@ -594,10 +597,14 @@
         - Project-14-Archive-Legacy-Code.md
         - Project-15-Build-Process-Verification.md
     - current/
-      - completed/ - EMPTY
+      - completed/
+        - Project-15-Build-Process-Verification.md
+        - Project-16-Authentication-Flow-Verification.md
+        - Project-17-User-Role-System-Validation.md
       - Phase B/
         - _Pre-Phase-B-Readiness-Report-2025-11-03.md
         - _Project-17-USER-TESTING-GUIDE.md
+        - _Project-18-USER-TESTING-GUIDE.md
         - Phase-B-Summary.md
         - Project-16-Authentication-Flow-Verification.md
         - Project-17-User-Role-System-Validation.md
@@ -920,6 +927,7 @@
       - financial/ - EMPTY
       - forms/ - EMPTY
       - health/
+        - archive/ - EMPTY
         - AppointmentsHealthDashboard.jsx
         - ClientsHealthDashboard.jsx
         - EscrowsHealthDashboard.jsx
@@ -960,6 +968,7 @@
         - VendorsPartners.jsx
       - .DS_Store
     - config/
+      - _archived/ - EMPTY
       - entities/
         - appointments.config.js
         - base.config.js
