@@ -108,7 +108,7 @@ export const escrowsConfig = createEntityConfig({
         backgroundColor: null,
         textColor: '#fff',
         valueColor: null,
-        visibleWhen: ['active']
+        visibleWhen: ['Active']
       },
       {
         id: 'total_active_this_month',
@@ -130,7 +130,7 @@ export const escrowsConfig = createEntityConfig({
         backgroundColor: null,
         textColor: '#fff',
         valueColor: null,
-        visibleWhen: ['active']
+        visibleWhen: ['Active']
       },
       {
         id: 'total_active_volume',
@@ -142,7 +142,7 @@ export const escrowsConfig = createEntityConfig({
         backgroundColor: null,
         textColor: '#fff',
         valueColor: null,
-        visibleWhen: ['active']
+        visibleWhen: ['Active']
       },
       {
         id: 'total_active_commission',
@@ -165,7 +165,7 @@ export const escrowsConfig = createEntityConfig({
         backgroundColor: null,
         textColor: '#fff',
         valueColor: null,
-        visibleWhen: ['active']
+        visibleWhen: ['Active']
       },
 
       // ========================================
@@ -181,7 +181,7 @@ export const escrowsConfig = createEntityConfig({
         backgroundColor: null,
         textColor: '#fff',
         valueColor: null,
-        visibleWhen: ['closed']
+        visibleWhen: ['Closed']
       },
       {
         id: 'total_closed_this_month',
@@ -203,7 +203,7 @@ export const escrowsConfig = createEntityConfig({
         backgroundColor: null,
         textColor: '#fff',
         valueColor: null,
-        visibleWhen: ['closed']
+        visibleWhen: ['Closed']
       },
       {
         id: 'total_closed_volume',
@@ -215,7 +215,7 @@ export const escrowsConfig = createEntityConfig({
         backgroundColor: null,
         textColor: '#fff',
         valueColor: null,
-        visibleWhen: ['closed']
+        visibleWhen: ['Closed']
       },
       {
         id: 'total_closed_commission',
@@ -238,7 +238,7 @@ export const escrowsConfig = createEntityConfig({
         backgroundColor: null,
         textColor: '#fff',
         valueColor: null,
-        visibleWhen: ['closed']
+        visibleWhen: ['Closed']
       },
 
       // ========================================
@@ -254,7 +254,7 @@ export const escrowsConfig = createEntityConfig({
         backgroundColor: null,
         textColor: '#fff',
         valueColor: null,
-        visibleWhen: ['cancelled']
+        visibleWhen: ['Cancelled']
       },
       {
         id: 'total_cancelled_this_month',
@@ -276,7 +276,7 @@ export const escrowsConfig = createEntityConfig({
         backgroundColor: null,
         textColor: '#fff',
         valueColor: null,
-        visibleWhen: ['cancelled']
+        visibleWhen: ['Cancelled']
       },
       {
         id: 'total_cancelled_volume',
@@ -288,7 +288,7 @@ export const escrowsConfig = createEntityConfig({
         backgroundColor: null,
         textColor: '#fff',
         valueColor: null,
-        visibleWhen: ['cancelled']
+        visibleWhen: ['Cancelled']
       },
       {
         id: 'total_cancelled_commission',
@@ -311,7 +311,7 @@ export const escrowsConfig = createEntityConfig({
         backgroundColor: null,
         textColor: '#fff',
         valueColor: null,
-        visibleWhen: ['cancelled']
+        visibleWhen: ['Cancelled']
       },
 
       // ========================================
