@@ -745,4 +745,7 @@ router.put(
   escrowsController.updateEscrowDocuments,
 );
 
+// Get stats endpoint
+router.get('/stats', authenticate, canAccessScope, escrowsController.getStats);
+
 module.exports = router;
