@@ -56,7 +56,7 @@ export const escrowsConfig = createEntityConfig({
       delete: '/escrows/:id',
       archive: '/escrows/:id/archive',
       restore: '/escrows/:id/restore',
-      stats: '/escrows/stats',
+      // stats: '/escrows/stats',  // DISABLED - calculated client-side from data
       // Escrow-specific endpoints
       people: '/escrows/:id/people',
       financials: '/escrows/:id/financials',
