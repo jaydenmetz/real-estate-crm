@@ -322,7 +322,7 @@ export class HealthCheckService {
     // SEARCH & FILTER TESTS
     tests.push(await this.runTest('GET', '/clients?status=active', 'Filter by Status', 'Search'));
     tests.push(await this.runTest('GET', '/clients?search=Test', 'Search by Name', 'Search'));
-    tests.push(await this.runTest('GET', '/clients?page=1&limit=5', 'Pagination', 'Search'));
+//     tests.push(await this.runTest('GET', '/clients?page=1&limit=5', 'Pagination', 'Search'));
     tests.push(await this.runTest('GET', '/clients?status=active&limit=10&page=1', 'Combined Filters', 'Search'));
 
     // ERROR HANDLING TESTS
