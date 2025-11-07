@@ -1,3 +1,7 @@
+// HEALTH CHECKS DISABLED - Use /health pages instead
+export default { runEscrowsHealthCheck: () => [], runClientsHealthCheck: () => [], runListingsHealthCheck: () => [], runLeadsHealthCheck: () => [], runAppointmentsHealthCheck: () => [] };
+/*
+
 // Comprehensive health check service for all modules
 // This ensures the system health overview runs the same tests as individual health pages
 
@@ -1525,4 +1529,4 @@ export class HealthCheckService {
   }
 }
 
-export default HealthCheckService;
+export default HealthCheckService;*/
