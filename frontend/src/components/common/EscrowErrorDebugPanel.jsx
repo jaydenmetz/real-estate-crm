@@ -65,8 +65,8 @@ const EscrowErrorDebugPanel = ({ error, escrowId }) => {
   ];
 
   useEffect(() => {
-    collectDebugData();
-    testAllEndpoints();
+    // collectDebugData(); // DISABLED
+    // testAllEndpoints(); // DISABLED - use browser network tab instead
     
     // Auto-attempt auth refresh if we have an "Endpoint not found" error
     if (!hasAttemptedRefresh.current && error?.message === 'Endpoint not found') {
