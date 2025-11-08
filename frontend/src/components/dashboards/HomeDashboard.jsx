@@ -9,26 +9,38 @@ import AgentHomeDashboard from './home/AgentHomeDashboard';
  * HomeDashboard Component - Role-Based Router
  *
  * Routes users to appropriate home dashboard based on their role:
- * - system_admin → SystemAdminHomeDashboard (platform-wide stats)
+ * - system_admin → SystemAdminHomeDashboard (Admin Panel with database management)
  * - broker → BrokerHomeDashboard (brokerage-wide stats)
  * - team_owner → TeamHomeDashboard (team-wide stats)
  * - agent/user → AgentHomeDashboard (personal stats)
  *
- * All dashboards include date range filtering (1 day, 1 month, 1 year, YTD with year selector)
+ * NOTE: user.role can be either a string or an array of roles
+ * We check for highest priority role first (system_admin > broker > team_owner > agent)
  */
 const HomeDashboard = () => {
   const { user } = useAuth();
 
+  // Helper function to check if user has a specific role
+  const hasRole = (roleName) => {
+    if (!user?.role) return false;
+    // Handle both string and array formats
+    if (Array.isArray(user.role)) {
+      return user.role.includes(roleName);
+    }
+    return user.role === roleName;
+  };
+
   // Route based on user role (highest priority first)
-  if (user?.role === 'system_admin') {
+  // System admin gets admin panel regardless of other roles
+  if (hasRole('system_admin')) {
     return <SystemAdminHomeDashboard />;
   }
 
-  if (user?.role === 'broker') {
+  if (hasRole('broker')) {
     return <BrokerHomeDashboard />;
   }
 
-  if (user?.role === 'team_owner') {
+  if (hasRole('team_owner')) {
     return <TeamHomeDashboard />;
   }
 
