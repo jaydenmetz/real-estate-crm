@@ -110,7 +110,10 @@ export const useDashboardData = (config, externalDateRange = null) => {
 
   // Calculate stats from data (FILTERED BY DATE RANGE)
   const stats = useMemo(() => {
-    if (!rawData) return {};
+    if (!rawData) {
+      console.log('[useDashboardData] No rawData - stats will be empty');
+      return {};
+    }
 
     // Ensure rawData is an array
     let dataArray = Array.isArray(rawData) ? rawData : [];
@@ -118,6 +121,14 @@ export const useDashboardData = (config, externalDateRange = null) => {
     if (!Array.isArray(rawData)) {
       console.warn('[useDashboardData] rawData is not an array:', rawData);
     }
+
+    console.log('[useDashboardData] Stats calculation:', {
+      rawDataLength: dataArray.length,
+      selectedStatus,
+      dateRangeActive: !!(externalDateRange || dateRange),
+      dateRange: externalDateRange || dateRange,
+      sampleItem: dataArray[0]
+    });
 
     // CRITICAL: Filter data by date range BEFORE calculating stats
     // Use externalDateRange from parent (which has startDate, endDate, label)
