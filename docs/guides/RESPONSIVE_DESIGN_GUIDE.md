@@ -1,99 +1,151 @@
-# 📐 Ultimate Responsive Design Guide
+# 📐 Responsive Design Guide
 
-## 🚨 CRITICAL RULE: Grids Inside Cards
+**Last Updated:** November 8, 2025
+**Project:** Real Estate CRM Template System
+**Status:** Current (Updated for Template Architecture)
+
+---
+
+## 🚨 CRITICAL RULES
+
+### Rule #1: Max 2 Columns Inside Cards
 
 **⚠️ NEVER use more than 2 columns inside a card/widget!**
 
-When creating metric grids inside cards (like Financial Summary, Stats Box, etc.):
-- ✅ **USE**: `statsGrid2x2` (always 2×2 grid)
-- ❌ **NEVER**: `statsRow` (can go to 4 columns)
-- ❌ **NEVER**: `md={3}` or `md={4}` (causes text overlap)
+When creating metric grids inside cards (Financial Summary, Stats Box, etc.):
+- ✅ **USE**: `display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)'`
+- ❌ **NEVER**: `md={3}` or `md={4}` inside cards
+- ❌ **NEVER**: More than 2 columns in width-constrained containers
 
-**Why:** Cards are width-constrained. 3-4 columns cause text to overlap and become unreadable.
+**Why:** Cards are 320px-600px wide. 3-4 columns cause text overlap and unreadable content.
 
-## 🎯 Quick Start - The ONE Prompt
-
-**Copy-paste this into any component request:**
-
+**Example from EscrowCard.jsx:**
+```jsx
+{/* ✅ CORRECT - 2×2 grid inside card */}
+<Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1, mb: 1 }}>
+  <Box>{/* Price */}</Box>
+  <Box>{/* Commission */}</Box>
+  <Box>{/* Acceptance Date */}</Box>
+  <Box>{/* Close Date */}</Box>
+</Box>
 ```
-Make this fully responsive using our useResponsiveLayout() hook:
-- Mobile (0-600px): Single column, large touch targets
-- Tablet (600-1200px): Auto-wrap when widgets get below 300px
-- Desktop (1200px+): Full multi-column layout
-- Sidebars hide below 1536px (xl breakpoint)
-- No content squishing - wrap to next row instead
 
-CRITICAL: For metric grids INSIDE cards, use max 2 columns (statsGrid2x2)
+### Rule #2: Grid View Uses `auto-fit` for Responsive Columns
+
+Dashboard grid automatically adjusts 1-2-3-4 columns based on viewport:
+
+```jsx
+// DashboardContent.jsx
+gridTemplateColumns: viewMode === 'grid'
+  ? 'repeat(auto-fit, minmax(320px, 1fr))'  // ✅ Auto-adjusts columns
+  : '1fr'  // List/table = full width
 ```
+
+**Result:**
+- 320px cards
+- 5px gap between cards
+- Automatically fits: 4 cols (wide) → 3 cols (medium) → 2 cols (tablet) → 1 col (mobile)
+
+---
+
+## 🎯 Current Template System Patterns
+
+### Dashboard Template (Config-Driven)
+
+Your dashboards now use the template system - no manual responsive code needed!
 
 ---
 
 ## 🔧 Usage Examples
 
-### Example 1: Basic Responsive Grid
+### Example 1: Dashboard Template (Current System)
 
 ```jsx
-import ResponsiveGrid from '../components/common/ResponsiveGrid';
+// 1. Create entity config (config/entities/escrows.config.js)
+export const escrowsConfig = createEntityConfig({
+  entity: { name: 'escrow', namePlural: 'escrows' },
+  dashboard: { /* stats, filters */ }
+});
 
-// Widgets that auto-wrap when too narrow
-<ResponsiveGrid variant="widgets" minWidth={320}>
-  <Widget1 />
-  <Widget2 />
-  <Widget3 />
-  <Widget4 />
-</ResponsiveGrid>
+// 2. Create dashboard (3 lines!)
+import { DashboardTemplate } from '@/templates/Dashboard';
+
+const EscrowsDashboard = () => (
+  <DashboardTemplate
+    config={escrowsConfig}
+    CardComponent={EscrowCard}  // 320px wide cards
+  />
+);
 ```
 
-**Result:**
-- Mobile: 1 column
-- Tablet (600-900px): Auto-fits (wraps at 320px min)
-- Desktop (900px+): Locked 2×2 grid
+**Template automatically handles:**
+- ✅ Grid view: `auto-fit` with 320px cards (1-4 columns responsive)
+- ✅ List view: Full-width rows with images
+- ✅ Table view: Compact table rows
+- ✅ Stats calculation from filtered data
+- ✅ Status tabs, scope filters, date ranges
+- ✅ No manual breakpoint code needed!
 
-### Example 2: Using the Hook Directly
+### Example 2: Entity Card Component (Manual Responsive)
 
 ```jsx
-import useResponsiveLayout from '../hooks/useResponsiveLayout';
+import { useMediaQuery, useTheme } from '@mui/material';
 
-function MyComponent() {
-  const { spacing, sizing, isMobile, hide } = useResponsiveLayout();
+function EscrowCard({ escrow, viewMode }) {
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+  const isTablet = useMediaQuery(theme.breakpoints.between('sm', 'md'));
+  const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
 
   return (
-    <Box
-      sx={{
-        padding: spacing.container,  // Auto-adapts: 16px → 48px
-        gap: spacing.gap,             // Auto-adapts: 16px → 40px
-      }}
-    >
-      {/* Hide sidebar on mobile */}
-      <Box sx={hide.onMobileAndTablet}>
-        <Sidebar />
+    <Card sx={{ width: 320 }}>  {/* Fixed 320px for grid view */}
+      {/* 2×2 metrics grid (NEVER more than 2 cols in cards!) */}
+      <Box sx={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(2, 1fr)',  // Always 2 columns
+        gap: 1
+      }}>
+        <Box>{/* Price */}</Box>
+        <Box>{/* Commission */}</Box>
+        <Box>{/* Acceptance */}</Box>
+        <Box>{/* Close Date */}</Box>
       </Box>
-
-      {/* Touch-friendly button size */}
-      <Button sx={{ minWidth: sizing.touchTarget }}>
-        Click Me
-      </Button>
-    </Box>
+    </Card>
   );
 }
 ```
 
-### Example 3: Stats Row (1-2-3-4 Columns)
+**Key Points:**
+- Cards are 320px wide (fits 4 across on large screens)
+- Internal grid is ALWAYS 2×2 (prevents text overlap)
+- Use Material-UI breakpoints instead of custom hook
+
+### Example 3: Stat Cards in Hero (Full Width - OK for 4 Columns)
 
 ```jsx
-<ResponsiveGrid variant="stats">
-  <StatCard title="Revenue" value="$120K" />
-  <StatCard title="Deals" value="42" />
-  <StatCard title="Leads" value="156" />
-  <StatCard title="Conversion" value="32%" />
-</ResponsiveGrid>
+// DashboardStats.jsx - Stats in hero card (full page width)
+<Box sx={{
+  display: 'grid',
+  gridTemplateColumns: {
+    xs: '1fr',               // Mobile: 1 column
+    sm: 'repeat(2, 1fr)',    // Tablet: 2 columns
+    md: 'repeat(3, 1fr)',    // Medium: 3 columns
+    lg: 'repeat(4, 1fr)',    // Desktop: 4 columns
+  },
+  gap: 3,
+  width: '100%',  // ← Full page width, not inside card
+}}>
+  <DashboardStatCard stat={stat1} />
+  <DashboardStatCard stat={stat2} />
+  <DashboardStatCard stat={stat3} />
+  <DashboardStatCard stat={stat4} />
+</Box>
 ```
 
-**Result:**
-- Mobile (xs): 1 column
-- Tablet (sm): 2 columns
-- Tablet (md): 3 columns
-- Desktop (lg+): 4 columns
+**When 4 columns is OK:**
+- ✅ Hero card (full page width)
+- ✅ Page-level stats row
+- ❌ Inside a widget card (causes overlap!)
 
 ### Example 4: Metrics Inside a Card (⚠️ CRITICAL)
 
@@ -491,6 +543,29 @@ import ResponsiveGrid from '../components/common/ResponsiveGrid';
 
 ---
 
-Created: October 18, 2025
-Author: Claude + useResponsiveLayout()
-Version: 1.0
+## 📝 Summary: Template System = Automatic Responsiveness
+
+**Your current architecture:**
+- Dashboard templates handle responsive layout automatically
+- Cards are fixed 320px width
+- Grid uses `auto-fit` to adjust columns (1-4)
+- List/table views are full-width
+- No manual breakpoint code in most components
+
+**When you DO need manual responsive code:**
+- Custom card components (EscrowCard, ClientCard, etc.)
+- Detail page layouts
+- Modals and dialogs
+- Complex custom widgets
+
+**When you DON'T need it:**
+- Dashboard grids (template handles it)
+- Stats display (template handles it)
+- Navigation/filters (template handles it)
+
+---
+
+**Created:** October 18, 2025
+**Updated:** November 8, 2025 (for template system)
+**Author:** Real Estate CRM Team
+**Version:** 2.0
