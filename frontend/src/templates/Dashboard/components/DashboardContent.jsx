@@ -106,8 +106,8 @@ export const DashboardContent = ({
           gridTemplateColumns: {
             xs: '1fr',
             sm: '1fr',
-            md: viewMode === 'small' ? 'repeat(2, 1fr)' : '1fr',
-            lg: viewMode === 'small' ? 'repeat(4, 1fr)' : '1fr',
+            md: viewMode === 'grid' ? 'repeat(2, 1fr)' : '1fr',
+            lg: viewMode === 'grid' ? 'repeat(4, 1fr)' : '1fr',
           },
           gap: 3,
           width: '100%',
