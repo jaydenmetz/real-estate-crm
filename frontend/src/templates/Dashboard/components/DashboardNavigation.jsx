@@ -238,7 +238,7 @@ export const DashboardNavigation = ({
               },
             }}
           >
-            <ToggleButton value="small" title="Grid view">
+            <ToggleButton value="grid" title="Grid view">
               <Box sx={{ display: 'flex', gap: 0.4 }}>
                 <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                 <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
@@ -246,7 +246,7 @@ export const DashboardNavigation = ({
                 <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
               </Box>
             </ToggleButton>
-            <ToggleButton value="large" title="Full width view">
+            <ToggleButton value="list" title="Full width view">
               <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
             </ToggleButton>
             <ToggleButton value="calendar" title="Calendar view">
@@ -432,7 +432,7 @@ export const DashboardNavigation = ({
                   },
                 }}
               >
-                <ToggleButton value="small" title="Grid view">
+                <ToggleButton value="grid" title="Grid view">
                   <Box sx={{ display: 'flex', gap: 0.4 }}>
                     <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                     <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
@@ -440,7 +440,7 @@ export const DashboardNavigation = ({
                     <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                   </Box>
                 </ToggleButton>
-                <ToggleButton value="large" title="Full width view">
+                <ToggleButton value="list" title="Full width view">
                   <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                 </ToggleButton>
                 <ToggleButton value="calendar" title="Calendar view">
