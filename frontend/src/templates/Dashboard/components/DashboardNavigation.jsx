@@ -249,10 +249,10 @@ export const DashboardNavigation = ({
               <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
             </ToggleButton>
             <ToggleButton value="table" title="Table view">
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.3 }}>
-                <Box sx={{ width: 16, height: 2, bgcolor: 'currentColor', borderRadius: 0.3 }} />
-                <Box sx={{ width: 16, height: 2, bgcolor: 'currentColor', borderRadius: 0.3 }} />
-                <Box sx={{ width: 16, height: 2, bgcolor: 'currentColor', borderRadius: 0.3 }} />
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, height: 12 }}>
+                <Box sx={{ width: 24, height: 2.5, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                <Box sx={{ width: 24, height: 2.5, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                <Box sx={{ width: 24, height: 2.5, bgcolor: 'currentColor', borderRadius: 0.5 }} />
               </Box>
             </ToggleButton>
           </ToggleButtonGroup>
@@ -447,10 +447,10 @@ export const DashboardNavigation = ({
                   <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                 </ToggleButton>
                 <ToggleButton value="table" title="Table view">
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.3 }}>
-                    <Box sx={{ width: 16, height: 2, bgcolor: 'currentColor', borderRadius: 0.3 }} />
-                    <Box sx={{ width: 16, height: 2, bgcolor: 'currentColor', borderRadius: 0.3 }} />
-                    <Box sx={{ width: 16, height: 2, bgcolor: 'currentColor', borderRadius: 0.3 }} />
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, height: 12 }}>
+                    <Box sx={{ width: 24, height: 2.5, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                    <Box sx={{ width: 24, height: 2.5, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                    <Box sx={{ width: 24, height: 2.5, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                   </Box>
                 </ToggleButton>
               </ToggleButtonGroup>
