@@ -372,14 +372,14 @@ function App() {
                                   </React.Suspense>
                                 } />
 
-                                {/* Admin Dashboard (Admin Only) */}
-                                <Route path="/admin" element={
+                                {/* Admin Dashboard removed - system admins use home dashboard instead */}
+                                {/* <Route path="/admin" element={
                                   <ProtectedRoute requiredRole="system_admin">
                                     <React.Suspense fallback={<Box sx={{ p: 4, textAlign: 'center' }}>Loading admin dashboard...</Box>}>
                                       <AdminDashboard />
                                     </React.Suspense>
                                   </ProtectedRoute>
-                                } />
+                                } /> */}
 
                                 {/* <Route path="/reports" element={<Reports />} />
                                 <Route path="/calendar" element={<Calendar />} /> */}
