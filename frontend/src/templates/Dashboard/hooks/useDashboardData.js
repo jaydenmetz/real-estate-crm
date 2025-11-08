@@ -33,7 +33,7 @@ export const useDashboardData = (config, externalDateRange = null) => {
   const [dateRange, setDateRange] = useState(
     config.dashboard?.hero?.defaultDateRange
       ? { value: config.dashboard.hero.defaultDateRange, label: config.dashboard.hero.defaultDateRange }
-      : { value: '1M', label: '1 Month' }
+      : null // Default to null (no date filtering)
   );
   const [sortBy, setSortBy] = useState(config.dashboard?.sortOptions?.[0]?.value || 'created_at');
   const [sortOrder, setSortOrder] = useState('desc');
@@ -110,24 +110,16 @@ export const useDashboardData = (config, externalDateRange = null) => {
 
   // Calculate stats from data (FILTERED BY DATE RANGE)
   const stats = useMemo(() => {
-    if (!rawData) {
-      console.log('[useDashboardData] No rawData - stats will be empty');
-      return {};
-    }
-
-    // Ensure rawData is an array
+    // Ensure rawData is an array (handle undefined/null as empty array)
     let dataArray = Array.isArray(rawData) ? rawData : [];
-
-    if (!Array.isArray(rawData)) {
-      console.warn('[useDashboardData] rawData is not an array:', rawData);
-    }
 
     console.log('[useDashboardData] Stats calculation:', {
       rawDataLength: dataArray.length,
       selectedStatus,
       dateRangeActive: !!(externalDateRange || dateRange),
       dateRange: externalDateRange || dateRange,
-      sampleItem: dataArray[0]
+      sampleItem: dataArray[0],
+      isLoading
     });
 
     // CRITICAL: Filter data by date range BEFORE calculating stats
