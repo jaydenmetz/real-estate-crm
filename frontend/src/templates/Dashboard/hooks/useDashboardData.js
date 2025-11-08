@@ -113,15 +113,6 @@ export const useDashboardData = (config, externalDateRange = null) => {
     // Ensure rawData is an array (handle undefined/null as empty array)
     let dataArray = Array.isArray(rawData) ? rawData : [];
 
-    console.log('[useDashboardData] Stats calculation:', {
-      rawDataLength: dataArray.length,
-      selectedStatus,
-      dateRangeActive: !!(externalDateRange || dateRange),
-      dateRange: externalDateRange || dateRange,
-      sampleItem: dataArray[0],
-      isLoading
-    });
-
     // CRITICAL: Filter data by date range BEFORE calculating stats
     // Use externalDateRange from parent (which has startDate, endDate, label)
     const activeDateRange = externalDateRange || dateRange;
@@ -131,13 +122,11 @@ export const useDashboardData = (config, externalDateRange = null) => {
       const startDate = new Date(activeDateRange.startDate);
       const endDate = new Date(activeDateRange.endDate);
 
-      const beforeFilter = dataArray.length;
       dataArray = dataArray.filter(item => {
         // Filter by created_at date (when the escrow was created)
         const createdDate = new Date(item.created_at || item.createdAt);
         return createdDate >= startDate && createdDate <= endDate;
       });
-      console.log(`[useDashboardData] Date filter: ${beforeFilter} → ${dataArray.length} items`);
     }
 
     const statsData = {};
