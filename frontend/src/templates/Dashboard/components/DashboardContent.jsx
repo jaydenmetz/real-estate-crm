@@ -161,13 +161,10 @@ export const DashboardContent = ({
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: {
-            xs: '1fr',
-            sm: '1fr',
-            md: viewMode === 'grid' ? 'repeat(2, 1fr)' : '1fr',
-            lg: viewMode === 'grid' ? 'repeat(4, 1fr)' : '1fr',
-          },
-          gap: viewMode === 'table' ? 1 : 3,
+          gridTemplateColumns: viewMode === 'grid'
+            ? 'repeat(auto-fit, minmax(320px, 1fr))'
+            : '1fr',
+          gap: viewMode === 'table' ? 1 : '5px',
           width: '100%',
         }}
       >
