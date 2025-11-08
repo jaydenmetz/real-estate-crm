@@ -253,11 +253,11 @@ export const DashboardNavigation = ({
             </ToggleButton>
             <ToggleButton value="table" title="Table view">
               <Box sx={{ display: 'flex', flexDirection: 'column', width: 24, height: 12 }}>
-                <Box sx={{ height: '0.5px' }} />
-                <Box sx={{ width: 24, height: 5, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                <Box sx={{ height: '1px' }} />
-                <Box sx={{ width: 24, height: 5, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                <Box sx={{ height: '0.5px' }} />
+                <Box sx={{ height: '0.33px' }} />
+                <Box sx={{ width: 24, height: 5.5, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                <Box sx={{ height: '1.34px' }} />
+                <Box sx={{ width: 24, height: 5.5, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                <Box sx={{ height: '0.33px' }} />
               </Box>
             </ToggleButton>
           </ToggleButtonGroup>
@@ -456,11 +456,11 @@ export const DashboardNavigation = ({
                 </ToggleButton>
                 <ToggleButton value="table" title="Table view">
                   <Box sx={{ display: 'flex', flexDirection: 'column', width: 24, height: 12 }}>
-                    <Box sx={{ height: '0.5px' }} />
-                    <Box sx={{ width: 24, height: 5, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                    <Box sx={{ height: '1px' }} />
-                    <Box sx={{ width: 24, height: 5, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                    <Box sx={{ height: '0.5px' }} />
+                    <Box sx={{ height: '0.33px' }} />
+                    <Box sx={{ width: 24, height: 5.5, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                    <Box sx={{ height: '1.34px' }} />
+                    <Box sx={{ width: 24, height: 5.5, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                    <Box sx={{ height: '0.33px' }} />
                   </Box>
                 </ToggleButton>
               </ToggleButtonGroup>
