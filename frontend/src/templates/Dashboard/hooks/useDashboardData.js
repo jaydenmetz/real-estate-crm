@@ -18,10 +18,17 @@ export const useDashboardData = (config, externalDateRange = null) => {
     return saved || config.dashboard?.defaultScope || 'team';
   });
 
-  // ViewMode with localStorage persistence
+  // ViewMode with localStorage persistence (with migration for old values)
   const [viewMode, setViewMode] = useState(() => {
     const saved = localStorage.getItem(`${config.entity.namePlural}ViewMode`);
-    return saved || config.dashboard?.defaultViewMode || 'small';
+    // Migrate old viewMode values to new ones
+    const migrationMap = {
+      'small': 'grid',
+      'large': 'list',
+      'calendar': 'table'
+    };
+    const migratedValue = saved && migrationMap[saved] ? migrationMap[saved] : saved;
+    return migratedValue || config.dashboard?.defaultViewMode || 'list';
   });
   const [dateRange, setDateRange] = useState(
     config.dashboard?.hero?.defaultDateRange
