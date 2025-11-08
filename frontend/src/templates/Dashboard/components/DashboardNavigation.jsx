@@ -238,11 +238,14 @@ export const DashboardNavigation = ({
             }}
           >
             <ToggleButton value="grid" title="Grid view">
-              <Box sx={{ display: 'flex', gap: 0.4 }}>
-                <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+              <Box sx={{ display: 'flex', width: 24, height: 12, alignItems: 'center' }}>
+                <Box sx={{ width: 5, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                <Box sx={{ width: '1.33px' }} />
+                <Box sx={{ width: 5, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                <Box sx={{ width: '1.34px' }} />
+                <Box sx={{ width: 5, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                <Box sx={{ width: '1.33px' }} />
+                <Box sx={{ width: 5, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
               </Box>
             </ToggleButton>
             <ToggleButton value="list" title="Full width view">
@@ -435,11 +438,14 @@ export const DashboardNavigation = ({
                 }}
               >
                 <ToggleButton value="grid" title="Grid view">
-                  <Box sx={{ display: 'flex', gap: 0.4 }}>
-                    <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                    <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                    <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
-                    <Box sx={{ width: 4, height: 10, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                  <Box sx={{ display: 'flex', width: 24, height: 12, alignItems: 'center' }}>
+                    <Box sx={{ width: 5, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                    <Box sx={{ width: '1.33px' }} />
+                    <Box sx={{ width: 5, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                    <Box sx={{ width: '1.34px' }} />
+                    <Box sx={{ width: 5, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                    <Box sx={{ width: '1.33px' }} />
+                    <Box sx={{ width: 5, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                   </Box>
                 </ToggleButton>
                 <ToggleButton value="list" title="Full width view">
