@@ -252,9 +252,12 @@ export const DashboardNavigation = ({
               <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
             </ToggleButton>
             <ToggleButton value="table" title="Table view">
-              <Box sx={{ display: 'flex', flexDirection: 'column', gap: '2px', height: 12, justifyContent: 'center' }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', width: 24, height: 12 }}>
+                <Box sx={{ height: '0.5px' }} />
                 <Box sx={{ width: 24, height: 5, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                <Box sx={{ height: '1px' }} />
                 <Box sx={{ width: 24, height: 5, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                <Box sx={{ height: '0.5px' }} />
               </Box>
             </ToggleButton>
           </ToggleButtonGroup>
@@ -452,9 +455,12 @@ export const DashboardNavigation = ({
                   <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                 </ToggleButton>
                 <ToggleButton value="table" title="Table view">
-                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: '2px', height: 12, justifyContent: 'center' }}>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', width: 24, height: 12 }}>
+                    <Box sx={{ height: '0.5px' }} />
                     <Box sx={{ width: 24, height: 5, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                    <Box sx={{ height: '1px' }} />
                     <Box sx={{ width: 24, height: 5, bgcolor: 'currentColor', borderRadius: 0.5 }} />
+                    <Box sx={{ height: '0.5px' }} />
                   </Box>
                 </ToggleButton>
               </ToggleButtonGroup>
