@@ -528,18 +528,12 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
 
     // Desktop: Show panels based on viewMode
     // grid: Just main card (320px) - for grid view with multiple cards
-    // list: Main card + people/timeline/checklists (all panels) - for list view
-    // table: Just main card (will be styled as table row in future)
-    if (viewMode === 'grid') {
-      return [PANEL_WIDTHS.small]; // 320px - Only show main card
-    } else if (viewMode === 'list') {
+    // list/table: Not used anymore (EscrowListItem and EscrowTableRow used instead)
+    // large: All panels (legacy support for detail view)
+    if (viewMode === 'large') {
       return [PANEL_WIDTHS.small, PANEL_WIDTHS.people, PANEL_WIDTHS.timeline, PANEL_WIDTHS.checklists]; // 1180px - All panels
-    } else if (viewMode === 'table') {
-      return [PANEL_WIDTHS.small]; // 320px - Only show main card (table mode not fully implemented yet)
-    } else if (viewMode === 'large') {
-      return [PANEL_WIDTHS.small, PANEL_WIDTHS.people, PANEL_WIDTHS.timeline, PANEL_WIDTHS.checklists]; // 1180px - Legacy support
     } else {
-      return [PANEL_WIDTHS.small]; // Default: just main card
+      return [PANEL_WIDTHS.small]; // Default: just main card (grid view)
     }
   };
 
@@ -560,11 +554,8 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
     }
 
     // Desktop: Show based on viewMode
-    if (viewMode === 'grid') return panelIndex === 0; // Grid: Only main card
-    if (viewMode === 'list') return true; // List: All panels
-    if (viewMode === 'table') return panelIndex === 0; // Table: Only main card (table mode not fully implemented)
-    if (viewMode === 'large') return true; // Legacy: show all panels
-    return panelIndex === 0; // Default: just main card
+    if (viewMode === 'large') return true; // Large: show all panels
+    return panelIndex === 0; // Default: just main card (grid/list/table)
   };
 
   // Calculate translate offset based on current panel
@@ -590,8 +581,8 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
     <Box
       style={{ width: '100%', position: 'relative' }}
     >
-      {/* Navigation Arrows - Only show on mobile/tablet AND in list/large view mode */}
-      {!isDesktop && (viewMode === 'list' || viewMode === 'large') && (
+      {/* Navigation Arrows - Only show on mobile/tablet AND in large view mode */}
+      {!isDesktop && viewMode === 'large' && (
         <>
           {currentPanel > 0 && (
             <IconButton
@@ -1183,8 +1174,8 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
           </Card>
         </Box>
 
-        {/* Card 2: Extension Panels (Only in list or large view) */}
-        {(viewMode === 'list' || viewMode === 'large') && (
+        {/* Card 2: Extension Panels (Only in large view) */}
+        {viewMode === 'large' && (
           <Box
             style={{
               width: 'calc(100% - 332px)', // Full width minus Card 1 (320px) and gap (12px)
@@ -1205,8 +1196,8 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                   flexDirection: 'row', // Horizontal layout for large view
                 }}
               >
-                {/* PANEL 1: People (list/large view only) */}
-                {(viewMode === 'list' || viewMode === 'large') && (
+                {/* PANEL 1: People (large view only) */}
+                {viewMode === 'large' && (
                   <Box
                     sx={{
                       width: '50%',
@@ -1311,8 +1302,8 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                   </Box>
                 )}
 
-                {/* PANEL 2: Timeline (Only in list/large view) */}
-                {(viewMode === 'list' || viewMode === 'large') && (
+                {/* PANEL 2: Timeline (Only in large view) */}
+                {viewMode === 'large' && (
                   <Box
                     sx={{
                       width: '25%',
@@ -1369,8 +1360,8 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                   </Box>
                 )}
 
-                {/* PANEL 3: Checklists (Only in list/large view) */}
-                {(viewMode === 'list' || viewMode === 'large') && (
+                {/* PANEL 3: Checklists (Only in large view) */}
+                {viewMode === 'large' && (
                   <Box
                     sx={{
                       width: '25%',

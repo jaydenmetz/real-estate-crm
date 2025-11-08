@@ -1,0 +1,340 @@
+import React, { useState, useCallback } from 'react';
+import {
+  Box,
+  Typography,
+  Chip,
+  Avatar,
+  useTheme,
+  alpha,
+  IconButton,
+  LinearProgress,
+} from '@mui/material';
+import {
+  Home,
+  CheckCircle,
+  Cancel,
+  Visibility,
+  VisibilityOff,
+  Close,
+  RestoreFromTrash as RestoreFromTrashIcon,
+} from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import { useEscrowCalculations } from '../../../hooks/useEscrowCalculations';
+import { getStatusConfig } from '../../../constants/escrowConfig';
+import { formatCurrency, formatDate as formatDateUtil } from '../../../utils/formatters';
+
+/**
+ * EscrowListItem - Full-width horizontal list view with image on left
+ * Similar to your first screenshot with property image + compact info
+ */
+const EscrowListItem = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isArchived = false }) => {
+  const navigate = useNavigate();
+  const theme = useTheme();
+  const [showCommission, setShowCommission] = useState(false);
+
+  // Memoized calculations
+  const calculations = useEscrowCalculations(escrow);
+  const {
+    purchasePrice,
+    commission,
+    checklistProgress,
+    daysToClose,
+    isUrgent,
+    isPastDue,
+    closingDate,
+    acceptanceDate
+  } = calculations;
+
+  const statusConfig = getStatusConfig(escrow.escrow_status);
+  const propertyImage = escrow.property_image || escrow.zillow_url;
+  const address = escrow.property_address || 'No Address';
+
+  const handleClick = useCallback(() => {
+    navigate(`/escrows/${escrow.id}`);
+  }, [escrow.id, navigate]);
+
+  const toggleCommission = useCallback((e) => {
+    e.stopPropagation();
+    setShowCommission(prev => !prev);
+  }, []);
+
+  const maskCommission = (value) => {
+    const absValue = Math.abs(value);
+    if (absValue >= 100000) return '$***,***';
+    if (absValue >= 10000) return '$**,***';
+    if (absValue >= 1000) return '$*,***';
+    return '$***';
+  };
+
+  return (
+    <Box
+      onClick={handleClick}
+      sx={{
+        display: 'flex',
+        width: '100%',
+        minHeight: 120,
+        borderRadius: 3,
+        overflow: 'hidden',
+        cursor: 'pointer',
+        position: 'relative',
+        bgcolor: 'background.paper',
+        border: `1px solid ${alpha(statusConfig.color, 0.15)}`,
+        boxShadow: `0 4px 16px ${alpha(statusConfig.color, 0.08)}`,
+        transition: 'all 0.2s',
+        '&:hover': {
+          boxShadow: `0 6px 24px ${alpha(statusConfig.color, 0.15)}`,
+          transform: 'translateY(-2px)',
+        },
+      }}
+    >
+      {/* Property Image - 200px fixed width */}
+      <Box
+        sx={{
+          width: 200,
+          minWidth: 200,
+          position: 'relative',
+          background: propertyImage
+            ? `url(${propertyImage})`
+            : 'linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 100%)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        {!propertyImage && (
+          <Home sx={{ fontSize: 60, color: alpha('#757575', 0.5) }} />
+        )}
+
+        {/* Progress Overlay */}
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 6,
+            backgroundColor: 'rgba(0,0,0,0.3)',
+          }}
+        >
+          <Box
+            sx={{
+              height: '100%',
+              width: `${checklistProgress}%`,
+              background: statusConfig.bg,
+              transition: 'width 0.5s ease-in-out',
+            }}
+          />
+        </Box>
+
+        {/* Delete/Restore Button */}
+        {(onArchive || onDelete || onRestore) && (
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              display: 'flex',
+              gap: 0.5,
+            }}
+          >
+            {isArchived && onRestore && (
+              <IconButton
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRestore(escrow.id);
+                }}
+                sx={{
+                  backgroundColor: 'rgba(34, 197, 94, 0.3)',
+                  color: 'white',
+                  width: 32,
+                  height: 32,
+                  backdropFilter: 'blur(8px)',
+                  '&:hover': {
+                    backgroundColor: 'rgba(34, 197, 94, 0.5)',
+                  },
+                }}
+              >
+                <RestoreFromTrashIcon sx={{ fontSize: 18 }} />
+              </IconButton>
+            )}
+            <IconButton
+              onClick={(e) => {
+                e.stopPropagation();
+                if (isArchived && onDelete) {
+                  onDelete(escrow.id);
+                } else if (onArchive) {
+                  onArchive(escrow.id);
+                }
+              }}
+              sx={{
+                backgroundColor: 'rgba(0, 0, 0, 0.3)',
+                color: 'white',
+                width: 32,
+                height: 32,
+                backdropFilter: 'blur(8px)',
+                '&:hover': {
+                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                },
+              }}
+            >
+              <Close sx={{ fontSize: 18 }} />
+            </IconButton>
+          </Box>
+        )}
+      </Box>
+
+      {/* Content Area */}
+      <Box
+        sx={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          p: 2,
+          minWidth: 0,
+        }}
+      >
+        {/* Header Row: Address + Status */}
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 700,
+              fontSize: '1rem',
+              color: theme.palette.text.primary,
+              flex: 1,
+              minWidth: 0,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {address}
+          </Typography>
+          <Chip
+            label={statusConfig.label}
+            size="small"
+            sx={{
+              fontWeight: 700,
+              fontSize: 11,
+              ml: 2,
+              background: statusConfig.bg,
+              color: 'white',
+            }}
+          />
+        </Box>
+
+        {/* Location */}
+        <Typography
+          variant="body2"
+          sx={{
+            color: theme.palette.text.secondary,
+            mb: 2,
+            fontSize: '0.875rem',
+          }}
+        >
+          {escrow.city && escrow.state ? `${escrow.city}, ${escrow.state}` : 'Location TBD'}
+        </Typography>
+
+        {/* Metrics Row */}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mt: 'auto' }}>
+          {/* Price */}
+          <Box>
+            <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Price
+            </Typography>
+            <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', color: '#10b981' }}>
+              {formatCurrency(purchasePrice)}
+            </Typography>
+          </Box>
+
+          {/* Commission */}
+          <Box>
+            <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Commission
+            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+              <IconButton
+                onClick={toggleCommission}
+                sx={{
+                  width: 20,
+                  height: 20,
+                  p: 0,
+                }}
+              >
+                {showCommission ? (
+                  <VisibilityOff sx={{ fontSize: 14, color: '#6366f1' }} />
+                ) : (
+                  <Visibility sx={{ fontSize: 14, color: '#6366f1' }} />
+                )}
+              </IconButton>
+              <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', color: '#6366f1' }}>
+                {showCommission ? formatCurrency(commission) : maskCommission(commission)}
+              </Typography>
+            </Box>
+          </Box>
+
+          {/* Closing Date */}
+          <Box>
+            <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Closes
+            </Typography>
+            <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', color: theme.palette.text.primary }}>
+              {formatDateUtil(closingDate, 'MMM d, yyyy') || 'TBD'}
+            </Typography>
+          </Box>
+
+          {/* Days/Status */}
+          <Box>
+            <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              {escrow.escrow_status === 'Closed' || escrow.escrow_status === 'Cancelled' ? 'Status' : 'Days'}
+            </Typography>
+            {escrow.escrow_status === 'Closed' ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <CheckCircle sx={{ fontSize: 16, color: '#10b981' }} />
+                <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.85rem', color: '#10b981' }}>
+                  Closed
+                </Typography>
+              </Box>
+            ) : escrow.escrow_status === 'Cancelled' ? (
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <Cancel sx={{ fontSize: 16, color: '#ef4444' }} />
+                <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.85rem', color: '#ef4444' }}>
+                  Cancelled
+                </Typography>
+              </Box>
+            ) : daysToClose !== null ? (
+              <Typography
+                variant="body1"
+                sx={{
+                  fontWeight: 700,
+                  fontSize: '0.95rem',
+                  color: isPastDue ? '#ef4444' : isUrgent ? '#f59e0b' : '#3b82f6',
+                }}
+              >
+                {isPastDue ? `${Math.abs(daysToClose)}d late` : `${daysToClose}d`}
+              </Typography>
+            ) : (
+              <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', color: theme.palette.text.secondary }}>
+                TBD
+              </Typography>
+            )}
+          </Box>
+
+          {/* Progress */}
+          <Box sx={{ ml: 'auto' }}>
+            <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Progress
+            </Typography>
+            <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1.25rem', color: statusConfig.color }}>
+              {checklistProgress}%
+            </Typography>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
+  );
+};
+
+export default EscrowListItem;

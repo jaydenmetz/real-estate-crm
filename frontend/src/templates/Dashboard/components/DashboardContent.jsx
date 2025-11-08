@@ -13,6 +13,8 @@ import {
   DeleteForever as DeleteForeverIcon,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
+import EscrowListItem from '../../../components/common/widgets/EscrowListItem';
+import EscrowTableRow from '../../../components/common/widgets/EscrowTableRow';
 
 /**
  * DashboardContent - Config-driven content grid/list with animations
@@ -97,9 +99,65 @@ export const DashboardContent = ({
     );
   }
 
+  // Determine which component to use based on viewMode
+  const getComponent = () => {
+    // For escrows entity, use different components per viewMode
+    if (config.entity.name === 'escrow') {
+      if (viewMode === 'list') return EscrowListItem;
+      if (viewMode === 'table') return EscrowTableRow;
+    }
+    // Default: use CardComponent (grid view or other entities)
+    return CardComponent;
+  };
+
+  const Component = getComponent();
+
+  // Table view needs headers
+  const renderTableHeaders = () => {
+    if (viewMode !== 'table' || config.entity.name !== 'escrow') return null;
+
+    return (
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: '2fr 1fr 1fr 1.2fr 1fr 0.8fr 80px',
+          gap: 2,
+          px: 2,
+          py: 1,
+          mb: 1,
+          borderBottom: `2px solid ${alpha('#000', 0.1)}`,
+        }}
+      >
+        <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase' }}>
+          Property
+        </Typography>
+        <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase' }}>
+          Status
+        </Typography>
+        <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase' }}>
+          Price
+        </Typography>
+        <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase' }}>
+          Commission
+        </Typography>
+        <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase' }}>
+          Closing
+        </Typography>
+        <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase', textAlign: 'center' }}>
+          Progress
+        </Typography>
+        <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase' }}>
+          Actions
+        </Typography>
+      </Box>
+    );
+  };
+
   // Grid layout matching ClientContent exactly
   return (
     <>
+      {renderTableHeaders()}
+
       <Box
         sx={{
           display: 'grid',
@@ -109,7 +167,7 @@ export const DashboardContent = ({
             md: viewMode === 'grid' ? 'repeat(2, 1fr)' : '1fr',
             lg: viewMode === 'grid' ? 'repeat(4, 1fr)' : '1fr',
           },
-          gap: 3,
+          gap: viewMode === 'table' ? 1 : 3,
           width: '100%',
         }}
       >
@@ -191,7 +249,7 @@ export const DashboardContent = ({
                           transition={{ duration: 0.3, delay: index * 0.05 }}
                           style={{ opacity: isSelected ? 0.7 : 1 }}
                         >
-                          <CardComponent
+                          <Component
                             {...{ [config.entity.name]: item }}
                             viewMode={viewMode}
                             index={index}
@@ -225,7 +283,7 @@ export const DashboardContent = ({
                     delay: index * 0.05,
                   }}
                 >
-                  <CardComponent
+                  <Component
                     {...{ [config.entity.name]: item }}
                     viewMode={viewMode}
                     index={index}
