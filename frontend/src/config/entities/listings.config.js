@@ -1,4 +1,4 @@
-import { createEntityConfig } from './base.config';
+import { createEntityConfig } from '../../utils/config/createEntityConfig';
 import { api } from '../../services/api.service';
 
 // Import widget components

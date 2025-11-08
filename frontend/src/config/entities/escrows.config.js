@@ -9,7 +9,7 @@
  * - Permissions
  */
 
-import { createEntityConfig } from './base.config';
+import { createEntityConfig } from '../../utils/config/createEntityConfig';
 import { escrowsAPI } from '../../services/api.service';
 
 // Import widgets

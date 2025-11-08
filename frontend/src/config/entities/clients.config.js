@@ -1,4 +1,4 @@
-import { createEntityConfig } from './base.config';
+import { createEntityConfig } from '../../utils/config/createEntityConfig';
 import { clientsAPI } from '../../services/api.service';
 
 export const clientsConfig = createEntityConfig({
