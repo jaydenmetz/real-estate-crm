@@ -49,7 +49,7 @@ export const DashboardTemplate = ({
   const [newItemModalOpen, setNewItemModalOpen] = useState(false);
 
   // Date range states for the hero
-  const [dateRangeFilter, setDateRangeFilter] = useState('1M');
+  const [dateRangeFilter, setDateRangeFilter] = useState(null); // Default to null (no date filtering)
   const [customStartDate, setCustomStartDate] = useState(null);
   const [customEndDate, setCustomEndDate] = useState(null);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear()); // For YTD year selector
@@ -129,7 +129,7 @@ export const DashboardTemplate = ({
   };
 
   // Only calculate date range if user has explicitly selected one (not by default)
-  const calculatedDateRange = (customStartDate && customEndDate) || dateRangeFilter !== '1M'
+  const calculatedDateRange = dateRangeFilter || (customStartDate && customEndDate)
     ? getCalculatedDateRange()
     : null;
 
