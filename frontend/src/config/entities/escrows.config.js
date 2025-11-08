@@ -404,11 +404,11 @@ export const escrowsConfig = createEntityConfig({
 
     // Status Tabs Configuration
     statusTabs: [
-      { value: 'Active', label: 'Active', preferredViewMode: 'large' },
-      { value: 'Closed', label: 'Closed', preferredViewMode: 'large' },
-      { value: 'Cancelled', label: 'Cancelled', preferredViewMode: 'large' },
-      { value: 'all', label: 'All Escrows', preferredViewMode: 'large' },
-      { value: 'archived', label: 'Archived', preferredViewMode: 'small' }
+      { value: 'Active', label: 'Active', preferredViewMode: 'list' },
+      { value: 'Closed', label: 'Closed', preferredViewMode: 'list' },
+      { value: 'Cancelled', label: 'Cancelled', preferredViewMode: 'list' },
+      { value: 'all', label: 'All Escrows', preferredViewMode: 'list' },
+      { value: 'archived', label: 'Archived', preferredViewMode: 'grid' }
     ],
     defaultStatus: 'Active',
 
@@ -461,11 +461,11 @@ export const escrowsConfig = createEntityConfig({
 
     // View Modes Configuration
     viewModes: [
-      { value: 'small', label: 'Grid', icon: 'GridView' },
-      { value: 'large', label: 'Full Width', icon: 'ViewList' },
-      { value: 'calendar', label: 'Calendar', icon: 'CalendarToday' }
+      { value: 'grid', label: 'Grid', icon: 'GridView' },
+      { value: 'list', label: 'List', icon: 'ViewList' },
+      { value: 'table', label: 'Table', icon: 'TableChart' }
     ],
-    defaultViewMode: 'large', // Full width cards for Active tab
+    defaultViewMode: 'list', // Full width cards for Active tab
 
     // Archive Configuration
     showArchive: true,
