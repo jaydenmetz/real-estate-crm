@@ -1,261 +1,136 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
-  Container,
   Box,
+  Container,
   Typography,
   Grid,
   Card,
   CardContent,
-  FormControl,
-  Select,
-  MenuItem,
-  ButtonGroup,
-  Button,
-  Divider,
-  Stack,
+  CardActionArea,
+  Tabs,
+  Tab,
+  Paper,
   Chip
 } from '@mui/material';
 import {
-  TrendingUp,
-  People,
-  Business,
-  Gavel,
-  Domain,
-  EventNote,
-  Analytics
+  People as PeopleIcon,
+  VpnKey as ApiKeyIcon,
+  Security as SecurityIcon,
+  Refresh as RefreshIcon,
+  Storage as DatabaseIcon,
+  Description as AuditIcon,
+  Business as BrokerIcon,
+  Assignment as OnboardingIcon,
+  Contacts as ContactsIcon,
+  Domain as ListingsIcon,
+  EventNote as AppointmentsIcon,
+  TrendingUp as LeadsIcon,
+  Gavel as EscrowsIcon,
+  Description as DocumentsIcon,
+  Folder as TemplatesIcon,
+  Assessment as ReportsIcon
 } from '@mui/icons-material';
-import { useAuth } from '../../../contexts/AuthContext';
-import apiInstance from '../../../services/api.service';
+import UsersTable from '../../../components/admin/UsersTable';
+import ApiKeysTable from '../../../components/admin/ApiKeysTable';
+import SecurityEventsTable from '../../../components/admin/SecurityEventsTable';
+import RefreshTokensTable from '../../../components/admin/RefreshTokensTable';
+import AuditLogsTable from '../../../components/admin/AuditLogsTable';
+import DatabaseOverview from '../../../components/admin/DatabaseOverview';
+import TableDataViewer from '../../../components/admin/TableDataViewer';
 
 /**
  * SystemAdminHomeDashboard
  *
- * Home dashboard for system_admin role showing platform-wide statistics
- * with date range filtering (1 day, 1 month, 1 year, YTD)
+ * Admin Panel for system_admin role - Database management and system administration
+ * This is the home dashboard that system admins see when they log in
  */
 const SystemAdminHomeDashboard = () => {
-  const { user } = useAuth();
-  const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [dateRange, setDateRange] = useState('1month'); // 1day, 1month, 1year, ytd
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [activeTab, setActiveTab] = useState(0);
+  const [selectedTable, setSelectedTable] = useState(null);
+  const [selectedTableName, setSelectedTableName] = useState(null);
 
-  // Calculate date range for API call
-  const getDateRange = () => {
-    const now = new Date();
-    let startDate, endDate;
-
-    switch(dateRange) {
-      case '1day':
-        startDate = new Date(now);
-        startDate.setHours(0, 0, 0, 0);
-        endDate = new Date(now);
-        endDate.setHours(23, 59, 59, 999);
-        break;
-      case '1month':
-        startDate = new Date(now);
-        startDate.setDate(now.getDate() - 30);
-        endDate = now;
-        break;
-      case '1year':
-        startDate = new Date(now);
-        startDate.setFullYear(now.getFullYear() - 1);
-        endDate = now;
-        break;
-      case 'ytd':
-        startDate = new Date(selectedYear, 0, 1);
-        endDate = selectedYear === now.getFullYear() ? now : new Date(selectedYear, 11, 31, 23, 59, 59);
-        break;
-      default:
-        return null;
-    }
-
-    return { startDate: startDate.toISOString(), endDate: endDate.toISOString() };
+  const handleTableClick = (tableKey, tableName) => {
+    setSelectedTable(tableKey);
+    setSelectedTableName(tableName);
   };
 
-  // Fetch system-wide stats
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setLoading(true);
-        const dateRangeParams = getDateRange();
+  const handleBackToOverview = () => {
+    setSelectedTable(null);
+    setSelectedTableName(null);
+  };
 
-        const params = new URLSearchParams();
-        if (dateRangeParams) {
-          params.append('startDate', dateRangeParams.startDate);
-          params.append('endDate', dateRangeParams.endDate);
-        }
+  const tables = [
+    { name: 'Overview', icon: <DatabaseIcon />, component: DatabaseOverview },
+    { name: 'Users', icon: <PeopleIcon />, component: UsersTable },
+    { name: 'API Keys', icon: <ApiKeyIcon />, component: ApiKeysTable },
+    { name: 'Security Events', icon: <SecurityIcon />, component: SecurityEventsTable },
+    { name: 'Refresh Tokens', icon: <RefreshIcon />, component: RefreshTokensTable },
+    { name: 'Audit Logs', icon: <AuditIcon />, component: AuditLogsTable },
+  ];
 
-        const response = await apiInstance.get(`/stats/system-admin?${params.toString()}`);
-
-        if (response.success) {
-          setStats(response.data);
-        }
-      } catch (error) {
-        console.error('Error fetching system admin stats:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStats();
-  }, [dateRange, selectedYear]);
-
-  // Generate year options (current year and 5 years back)
-  const yearOptions = [];
-  const currentYear = new Date().getFullYear();
-  for (let i = 0; i < 6; i++) {
-    yearOptions.push(currentYear - i);
-  }
-
-  const StatCard = ({ title, value, icon, color }) => (
-    <Card sx={{ height: '100%', transition: 'transform 0.2s', '&:hover': { transform: 'translateY(-4px)' } }}>
-      <CardContent>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" mb={2}>
-          <Box sx={{ bgcolor: color, p: 1, borderRadius: 1, display: 'flex' }}>
-            {icon}
-          </Box>
-          <Typography variant="h4" fontWeight="bold">
-            {loading ? '...' : value?.toLocaleString() || 0}
-          </Typography>
-        </Stack>
-        <Typography variant="body2" color="text.secondary">
-          {title}
-        </Typography>
-      </CardContent>
-    </Card>
+  const TabPanel = ({ children, value, index }) => (
+    <div role="tabpanel" hidden={value !== index}>
+      {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
+    </div>
   );
 
   return (
-    <Box sx={{ width: '100%', minHeight: 'calc(100vh - 64px)', backgroundColor: '#f8f9fa', py: 3 }}>
+    <Box sx={{
+      minHeight: '100vh',
+      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+      py: 3
+    }}>
       <Container maxWidth="xl">
-        {/* Header */}
-        <Box mb={3}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" mb={2}>
+        <Paper elevation={3} sx={{ p: 3, mb: 3, backgroundColor: 'rgba(255, 255, 255, 0.98)' }}>
+          <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
             <Box>
               <Typography variant="h4" fontWeight="bold" gutterBottom>
-                System Admin Dashboard
+                Admin Panel
               </Typography>
-              <Typography variant="body1" color="text.secondary">
-                Platform-wide statistics and metrics
+              <Typography variant="body1" color="textSecondary">
+                System administration and database management
               </Typography>
             </Box>
-            <Chip label="SYSTEM ADMIN" color="error" sx={{ fontWeight: 'bold' }} />
-          </Stack>
+            <Chip
+              label="ADMIN ONLY"
+              color="error"
+              sx={{ fontWeight: 'bold' }}
+            />
+          </Box>
 
-          <Divider sx={{ my: 2 }} />
+          <Tabs
+            value={activeTab}
+            onChange={(e, newValue) => setActiveTab(newValue)}
+            variant="scrollable"
+            scrollButtons="auto"
+            sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}
+          >
+            {tables.map((table, index) => (
+              <Tab
+                key={table.name}
+                icon={table.icon}
+                label={table.name}
+                iconPosition="start"
+              />
+            ))}
+          </Tabs>
 
-          {/* Date Range Controls */}
-          <Stack direction="row" spacing={2} alignItems="center">
-            <ButtonGroup variant="outlined" size="small">
-              <Button
-                variant={dateRange === '1day' ? 'contained' : 'outlined'}
-                onClick={() => setDateRange('1day')}
-              >
-                1 Day
-              </Button>
-              <Button
-                variant={dateRange === '1month' ? 'contained' : 'outlined'}
-                onClick={() => setDateRange('1month')}
-              >
-                1 Month
-              </Button>
-              <Button
-                variant={dateRange === '1year' ? 'contained' : 'outlined'}
-                onClick={() => setDateRange('1year')}
-              >
-                1 Year
-              </Button>
-              <Button
-                variant={dateRange === 'ytd' ? 'contained' : 'outlined'}
-                onClick={() => setDateRange('ytd')}
-              >
-                YTD
-              </Button>
-            </ButtonGroup>
-
-            {dateRange === 'ytd' && (
-              <FormControl size="small" sx={{ minWidth: 120 }}>
-                <Select
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(e.target.value)}
-                >
-                  {yearOptions.map(year => (
-                    <MenuItem key={year} value={year}>{year}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            )}
-          </Stack>
-        </Box>
-
-        {/* Stats Grid */}
-        <Grid container spacing={3}>
-          <Grid item xs={12} sm={6} md={4} lg={3}>
-            <StatCard
-              title="Total Users"
-              value={stats?.totalUsers}
-              icon={<People sx={{ color: 'white' }} />}
-              color="primary.main"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={4} lg={3}>
-            <StatCard
-              title="Total Teams"
-              value={stats?.totalTeams}
-              icon={<Business sx={{ color: 'white' }} />}
-              color="secondary.main"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={4} lg={3}>
-            <StatCard
-              title="Total Escrows"
-              value={stats?.totalEscrows}
-              icon={<Gavel sx={{ color: 'white' }} />}
-              color="success.main"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={4} lg={3}>
-            <StatCard
-              title="Total Listings"
-              value={stats?.totalListings}
-              icon={<Domain sx={{ color: 'white' }} />}
-              color="warning.main"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={4} lg={3}>
-            <StatCard
-              title="Total Clients"
-              value={stats?.totalClients}
-              icon={<People sx={{ color: 'white' }} />}
-              color="info.main"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={4} lg={3}>
-            <StatCard
-              title="Total Appointments"
-              value={stats?.totalAppointments}
-              icon={<EventNote sx={{ color: 'white' }} />}
-              color="error.main"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={4} lg={3}>
-            <StatCard
-              title="Total Leads"
-              value={stats?.totalLeads}
-              icon={<TrendingUp sx={{ color: 'white' }} />}
-              color="primary.dark"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={4} lg={3}>
-            <StatCard
-              title="Active Sessions"
-              value={stats?.activeSessions}
-              icon={<Analytics sx={{ color: 'white' }} />}
-              color="secondary.dark"
-            />
-          </Grid>
-        </Grid>
+          {tables.map((table, index) => (
+            <TabPanel key={table.name} value={activeTab} index={index}>
+              {table.name === 'Overview' && selectedTable ? (
+                <TableDataViewer
+                  tableName={selectedTable}
+                  displayName={selectedTableName}
+                  onBack={handleBackToOverview}
+                />
+              ) : table.name === 'Overview' ? (
+                <DatabaseOverview onTableClick={handleTableClick} />
+              ) : (
+                <table.component />
+              )}
+            </TabPanel>
+          ))}
+        </Paper>
       </Container>
     </Box>
   );
