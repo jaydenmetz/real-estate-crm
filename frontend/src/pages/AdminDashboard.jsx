@@ -38,7 +38,7 @@ import AuditLogsTable from '../components/admin/AuditLogsTable';
 import DatabaseOverview from '../components/admin/DatabaseOverview';
 import TableDataViewer from '../components/admin/TableDataViewer';
 
-const AdminPanel = () => {
+const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [selectedTable, setSelectedTable] = useState(null);
   const [selectedTableName, setSelectedTableName] = useState(null);
@@ -130,4 +130,4 @@ const AdminPanel = () => {
   );
 };
 
-export default AdminPanel;
+export default AdminDashboard;

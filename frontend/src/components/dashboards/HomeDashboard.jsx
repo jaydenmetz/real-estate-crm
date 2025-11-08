@@ -1,152 +1,39 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Box, Typography } from '@mui/material';
+import React from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import apiInstance from '../../services/api.service';
-import BrokerHeroCard from './home/BrokerHeroCard';
-import TeamSelector from '../admin/TeamSelector';
-import TeamHeroCard from './home/TeamHeroCard';
-import UserHeroCard from './home/UserHeroCard';
+import SystemAdminHomeDashboard from './home/SystemAdminHomeDashboard';
+import BrokerHomeDashboard from './home/BrokerHomeDashboard';
+import TeamHomeDashboard from './home/TeamHomeDashboard';
+import AgentHomeDashboard from './home/AgentHomeDashboard';
 
 /**
- * HomeDashboard Component
+ * HomeDashboard Component - Role-Based Router
  *
- * PHASE 3: Multi-Tenant Admin System - Hierarchical Dashboard
+ * Routes users to appropriate home dashboard based on their role:
+ * - system_admin → SystemAdminHomeDashboard (platform-wide stats)
+ * - broker → BrokerHomeDashboard (brokerage-wide stats)
+ * - team_owner → TeamHomeDashboard (team-wide stats)
+ * - agent/user → AgentHomeDashboard (personal stats)
  *
- * Displays role-based hierarchical dashboards:
- * - Broker: Broker Dashboard → Team Selector → Team Dashboard → User Dashboard
- * - Team Owner: Team Dashboard → User Dashboard
- * - Agent: User Dashboard only
- *
- * All sections auto-show based on role (no separate Admin menu)
+ * All dashboards include date range filtering (1 day, 1 month, 1 year, YTD with year selector)
  */
 const HomeDashboard = () => {
   const { user } = useAuth();
-  const [stats, setStats] = useState(null);
-  const [selectedTeamId, setSelectedTeamId] = useState(null);
-  const [loading, setLoading] = useState(true);
 
-  // Determine user's role and permissions
-  const isBroker = user?.role === 'broker' || user?.role === 'system_admin';
-  const isTeamOwner = user?.role === 'team_owner' || isBroker;
-  const brokerId = user?.broker_id;
-
-  // Fetch all stats from single endpoint (role-based response)
-  useEffect(() => {
-    const fetchHomeStats = async () => {
-      try {
-        setLoading(true);
-
-        // Build query string
-        const params = new URLSearchParams();
-        if (selectedTeamId) {
-          params.append('teamId', selectedTeamId);
-        }
-
-        const queryString = params.toString();
-        const url = `/stats/home${queryString ? `?${queryString}` : ''}`;
-
-        const response = await apiInstance.get(url);
-
-        if (response.success) {
-          setStats(response.data);
-        } else {
-          console.error('API returned error:', response.error);
-          setStats(null); // Explicitly set to null to show error page
-        }
-      } catch (error) {
-        console.error('Error fetching home stats:', error);
-        setStats(null); // Explicitly set to null to show error page
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchHomeStats();
-  }, [selectedTeamId]);
-
-  // Show loading state
-  if (loading) {
-    return (
-      <Box sx={{
-        width: '100%',
-        minHeight: 'calc(100vh - 64px)',
-        backgroundColor: '#f8f9fa',
-        py: 3,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center'
-      }}>
-        <Container maxWidth="xl">
-          <Box sx={{ textAlign: 'center' }}>
-            <Typography variant="h5" color="text.secondary">
-              Loading your dashboard...
-            </Typography>
-          </Box>
-        </Container>
-      </Box>
-    );
+  // Route based on user role (highest priority first)
+  if (user?.role === 'system_admin') {
+    return <SystemAdminHomeDashboard />;
   }
 
-  // Show error state if no stats loaded
-  if (!loading && !stats) {
-    return (
-      <Box sx={{
-        width: '100%',
-        minHeight: 'calc(100vh - 64px)',
-        backgroundColor: '#f8f9fa',
-        py: 3
-      }}>
-        <Container maxWidth="xl">
-          <Box sx={{ textAlign: 'center', py: 8 }}>
-            <Typography variant="h5" color="error" gutterBottom>
-              Unable to load dashboard
-            </Typography>
-            <Typography variant="body1" color="text.secondary" gutterBottom>
-              The API call to /stats/home failed or returned an error.
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Check the browser console for detailed error messages.
-            </Typography>
-          </Box>
-        </Container>
-      </Box>
-    );
+  if (user?.role === 'broker') {
+    return <BrokerHomeDashboard />;
   }
 
-  return (
-    <Box sx={{
-      width: '100%',
-      minHeight: 'calc(100vh - 64px)',
-      backgroundColor: '#f8f9fa',
-      py: 3
-    }}>
-      <Container maxWidth="xl">
-        {/* TIER 1: Broker Dashboard (broker/system_admin only) */}
-        {isBroker && stats?.broker && (
-          <BrokerHeroCard stats={stats.broker} loading={loading} />
-        )}
+  if (user?.role === 'team_owner') {
+    return <TeamHomeDashboard />;
+  }
 
-        {/* Team Selector (broker only - switches between teams) */}
-        {isBroker && (
-          <TeamSelector
-            selectedTeamId={selectedTeamId}
-            onTeamChange={setSelectedTeamId}
-            brokerId={brokerId}
-          />
-        )}
-
-        {/* TIER 2: Team Dashboard (team_owner/broker) */}
-        {isTeamOwner && stats?.team && (
-          <TeamHeroCard stats={stats.team} loading={loading} />
-        )}
-
-        {/* TIER 3: User Dashboard (all users) */}
-        {stats?.user && (
-          <UserHeroCard stats={stats.user} loading={loading} />
-        )}
-      </Container>
-    </Box>
-  );
+  // Default: agent/user dashboard
+  return <AgentHomeDashboard />;
 };
 
 export default HomeDashboard;

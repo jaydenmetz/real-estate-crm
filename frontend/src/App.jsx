@@ -60,7 +60,7 @@ import LeadsHealthDashboard from './components/health/LeadsHealthDashboard';
 // Lazy load public profile and settings
 const PublicProfile = React.lazy(() => import('./pages/PublicProfileStunning'));
 const Settings = React.lazy(() => import('./pages/Settings'));
-const AdminPanel = React.lazy(() => import('./pages/AdminPanel'));
+const AdminDashboard = React.lazy(() => import('./pages/AdminDashboard'));
 const Unauthorized = React.lazy(() => import('./pages/Unauthorized'));
 
 // Onboarding components (lazy loaded for performance)
@@ -372,11 +372,11 @@ function App() {
                                   </React.Suspense>
                                 } />
 
-                                {/* Admin Panel (Admin Only) */}
+                                {/* Admin Dashboard (Admin Only) */}
                                 <Route path="/admin" element={
                                   <ProtectedRoute requiredRole="system_admin">
-                                    <React.Suspense fallback={<Box sx={{ p: 4, textAlign: 'center' }}>Loading admin panel...</Box>}>
-                                      <AdminPanel />
+                                    <React.Suspense fallback={<Box sx={{ p: 4, textAlign: 'center' }}>Loading admin dashboard...</Box>}>
+                                      <AdminDashboard />
                                     </React.Suspense>
                                   </ProtectedRoute>
                                 } />
