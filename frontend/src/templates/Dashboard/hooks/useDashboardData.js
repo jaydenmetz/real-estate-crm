@@ -45,7 +45,7 @@ export const useDashboardData = (config, externalDateRange = null) => {
     error,
     refetch,
   } = useQuery({
-    queryKey: [config.entity.namePlural, selectedStatus, selectedScope, dateRange],
+    queryKey: [config.entity.namePlural, selectedStatus, selectedScope, externalDateRange],
     queryFn: async () => {
       // Build query params
       const params = {
@@ -65,8 +65,11 @@ export const useDashboardData = (config, externalDateRange = null) => {
       if (selectedScope !== 'all') {
         params.scope = selectedScope;
       }
-      if (dateRange?.value !== 'all') {
-        params.dateRange = dateRange.value;
+
+      // Add date range filter if present (send actual dates to backend)
+      if (externalDateRange?.startDate && externalDateRange?.endDate) {
+        params.startDate = externalDateRange.startDate.toISOString();
+        params.endDate = externalDateRange.endDate.toISOString();
       }
 
       // Use config's API method if available, otherwise fallback to fetch
@@ -111,23 +114,8 @@ export const useDashboardData = (config, externalDateRange = null) => {
   // Calculate stats from data (FILTERED BY DATE RANGE)
   const stats = useMemo(() => {
     // Ensure rawData is an array (handle undefined/null as empty array)
+    // Data is already filtered by backend (status, scope, date range)
     let dataArray = Array.isArray(rawData) ? rawData : [];
-
-    // CRITICAL: Filter data by date range BEFORE calculating stats
-    // Use externalDateRange from parent (which has startDate, endDate, label)
-    const activeDateRange = externalDateRange || dateRange;
-
-    // Only apply date filtering if explicitly set (not auto-generated)
-    if (activeDateRange && activeDateRange.startDate && activeDateRange.endDate && activeDateRange.value !== 'all') {
-      const startDate = new Date(activeDateRange.startDate);
-      const endDate = new Date(activeDateRange.endDate);
-
-      dataArray = dataArray.filter(item => {
-        // Filter by created_at date (when the escrow was created)
-        const createdDate = new Date(item.created_at || item.createdAt);
-        return createdDate >= startDate && createdDate <= endDate;
-      });
-    }
 
     const statsData = {};
 
