@@ -28,7 +28,6 @@ import {
 } from '@mui/material';
 import {
   Sort,
-  CalendarToday,
   Delete as DeleteIcon,
 } from '@mui/icons-material';
 
@@ -249,8 +248,12 @@ export const DashboardNavigation = ({
             <ToggleButton value="list" title="Full width view">
               <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
             </ToggleButton>
-            <ToggleButton value="calendar" title="Calendar view">
-              <CalendarToday sx={{ fontSize: 16 }} />
+            <ToggleButton value="table" title="Table view">
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.3 }}>
+                <Box sx={{ width: 16, height: 2, bgcolor: 'currentColor', borderRadius: 0.3 }} />
+                <Box sx={{ width: 16, height: 2, bgcolor: 'currentColor', borderRadius: 0.3 }} />
+                <Box sx={{ width: 16, height: 2, bgcolor: 'currentColor', borderRadius: 0.3 }} />
+              </Box>
             </ToggleButton>
           </ToggleButtonGroup>
 
@@ -443,8 +446,12 @@ export const DashboardNavigation = ({
                 <ToggleButton value="list" title="Full width view">
                   <Box sx={{ width: 24, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                 </ToggleButton>
-                <ToggleButton value="calendar" title="Calendar view">
-                  <CalendarToday sx={{ fontSize: 16 }} />
+                <ToggleButton value="table" title="Table view">
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.3 }}>
+                    <Box sx={{ width: 16, height: 2, bgcolor: 'currentColor', borderRadius: 0.3 }} />
+                    <Box sx={{ width: 16, height: 2, bgcolor: 'currentColor', borderRadius: 0.3 }} />
+                    <Box sx={{ width: 16, height: 2, bgcolor: 'currentColor', borderRadius: 0.3 }} />
+                  </Box>
                 </ToggleButton>
               </ToggleButtonGroup>
             </Box>
