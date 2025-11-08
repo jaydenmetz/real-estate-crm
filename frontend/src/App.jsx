@@ -38,10 +38,10 @@ import AppointmentDetail from './components/details/appointments';
 import LeadsDashboard from './components/dashboards/leads';
 import LeadDetail from './components/details/leads';
 
-// Financial Components
-import CommissionDashboard from './components/dashboards/CommissionDashboard';
-import InvoiceDashboard from './components/dashboards/InvoiceDashboard';
-import ExpenseDashboard from './components/dashboards/ExpenseDashboard';
+// Financial Components (moved to _future folder - not yet implemented)
+// import CommissionDashboard from './components/dashboards/_future/CommissionDashboard';
+// import InvoiceDashboard from './components/dashboards/_future/InvoiceDashboard';
+// import ExpenseDashboard from './components/dashboards/_future/ExpenseDashboard';
 
 // System Components (moved to admin/system/)
 import ActivityLog from './components/admin/system/ActivityLog';
@@ -357,10 +357,10 @@ function App() {
                                 <Route path="/leads/health" element={<ProtectedRoute requiredRole="system_admin"><LeadsHealthDashboard /></ProtectedRoute>} />
                                 <Route path="/leads/:id" element={<LeadDetail />} />
                     
-                                {/* Financial Management */}
-                                <Route path="/commissions" element={<CommissionDashboard />} />
-                                <Route path="/invoices" element={<InvoiceDashboard />} />
-                                <Route path="/expenses" element={<ExpenseDashboard />} />
+                                {/* Financial Management - Coming Soon */}
+                                {/* <Route path="/commissions" element={<CommissionDashboard />} /> */}
+                                {/* <Route path="/invoices" element={<InvoiceDashboard />} /> */}
+                                {/* <Route path="/expenses" element={<ExpenseDashboard />} /> */}
                     
                                 {/* System Features */}
                                 <Route path="/activity-log" element={<ActivityLog />} />

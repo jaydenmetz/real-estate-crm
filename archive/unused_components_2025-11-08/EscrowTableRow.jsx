@@ -1,0 +1,224 @@
+import React, { useState, useCallback } from 'react';
+import {
+  Box,
+  Typography,
+  Chip,
+  useTheme,
+  alpha,
+  IconButton,
+} from '@mui/material';
+import {
+  CheckCircle,
+  Cancel,
+  Visibility,
+  VisibilityOff,
+  Close,
+  RestoreFromTrash as RestoreFromTrashIcon,
+} from '@mui/icons-material';
+import { useNavigate } from 'react-router-dom';
+import { useEscrowCalculations } from '../../../hooks/useEscrowCalculations';
+import { getStatusConfig } from '../../../constants/escrowConfig';
+import { formatCurrency, formatDate as formatDateUtil } from '../../../utils/formatters';
+
+/**
+ * EscrowTableRow - Compact table view (no images)
+ * Similar to your second screenshot with table headers + compact rows
+ */
+const EscrowTableRow = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isArchived = false }) => {
+  const navigate = useNavigate();
+  const theme = useTheme();
+  const [showCommission, setShowCommission] = useState(false);
+
+  // Memoized calculations
+  const calculations = useEscrowCalculations(escrow);
+  const {
+    purchasePrice,
+    commission,
+    checklistProgress,
+    closingDate,
+  } = calculations;
+
+  const statusConfig = getStatusConfig(escrow.escrow_status);
+  const address = escrow.property_address || 'No Address';
+
+  const handleClick = useCallback(() => {
+    navigate(`/escrows/${escrow.id}`);
+  }, [escrow.id, navigate]);
+
+  const toggleCommission = useCallback((e) => {
+    e.stopPropagation();
+    setShowCommission(prev => !prev);
+  }, []);
+
+  const maskCommission = (value) => {
+    const absValue = Math.abs(value);
+    if (absValue >= 100000) return '$***,***';
+    if (absValue >= 10000) return '$**,***';
+    if (absValue >= 1000) return '$*,***';
+    return '$***';
+  };
+
+  return (
+    <Box
+      onClick={handleClick}
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: '2fr 1fr 1fr 1.2fr 1fr 0.8fr 80px',
+        gap: 2,
+        alignItems: 'center',
+        width: '100%',
+        minHeight: 60,
+        px: 2,
+        py: 1.5,
+        borderRadius: 2,
+        cursor: 'pointer',
+        position: 'relative',
+        bgcolor: 'background.paper',
+        border: `1px solid ${alpha(theme.palette.divider, 0.1)}`,
+        transition: 'all 0.2s',
+        '&:hover': {
+          bgcolor: alpha(statusConfig.color, 0.03),
+          border: `1px solid ${alpha(statusConfig.color, 0.2)}`,
+          boxShadow: `0 2px 8px ${alpha(statusConfig.color, 0.1)}`,
+        },
+      }}
+    >
+      {/* Property Address */}
+      <Box sx={{ minWidth: 0 }}>
+        <Typography
+          variant="body1"
+          sx={{
+            fontWeight: 700,
+            fontSize: '0.9rem',
+            color: theme.palette.text.primary,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {address}
+        </Typography>
+        <Typography
+          variant="caption"
+          sx={{
+            color: theme.palette.text.secondary,
+            fontSize: '0.75rem',
+          }}
+        >
+          {escrow.city && escrow.state ? `${escrow.city}, ${escrow.state}` : 'Location TBD'}
+        </Typography>
+      </Box>
+
+      {/* Status */}
+      <Box>
+        <Chip
+          label={statusConfig.label}
+          size="small"
+          sx={{
+            fontWeight: 600,
+            fontSize: 10,
+            height: 24,
+            background: statusConfig.bg,
+            color: 'white',
+          }}
+        />
+      </Box>
+
+      {/* Price */}
+      <Box>
+        <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: '#10b981' }}>
+          {formatCurrency(purchasePrice)}
+        </Typography>
+      </Box>
+
+      {/* Commission */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+        <IconButton
+          onClick={toggleCommission}
+          sx={{
+            width: 20,
+            height: 20,
+            p: 0,
+          }}
+        >
+          {showCommission ? (
+            <VisibilityOff sx={{ fontSize: 14, color: '#6366f1' }} />
+          ) : (
+            <Visibility sx={{ fontSize: 14, color: '#6366f1' }} />
+          )}
+        </IconButton>
+        <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: '#6366f1' }}>
+          {showCommission ? formatCurrency(commission) : maskCommission(commission)}
+        </Typography>
+      </Box>
+
+      {/* Closing Date */}
+      <Box>
+        <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.85rem', color: theme.palette.text.primary }}>
+          {formatDateUtil(closingDate, 'MMM d, yyyy') || 'TBD'}
+        </Typography>
+      </Box>
+
+      {/* Progress */}
+      <Box sx={{ textAlign: 'center' }}>
+        <Typography
+          variant="body2"
+          sx={{
+            fontWeight: 700,
+            fontSize: '0.9rem',
+            color: statusConfig.color,
+          }}
+        >
+          {checklistProgress}%
+        </Typography>
+      </Box>
+
+      {/* Actions */}
+      <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
+        {isArchived && onRestore && (
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              onRestore(escrow.id);
+            }}
+            sx={{
+              width: 32,
+              height: 32,
+              color: '#10b981',
+              '&:hover': {
+                bgcolor: alpha('#10b981', 0.1),
+              },
+            }}
+          >
+            <RestoreFromTrashIcon sx={{ fontSize: 16 }} />
+          </IconButton>
+        )}
+        {(onArchive || onDelete) && (
+          <IconButton
+            onClick={(e) => {
+              e.stopPropagation();
+              if (isArchived && onDelete) {
+                onDelete(escrow.id);
+              } else if (onArchive) {
+                onArchive(escrow.id);
+              }
+            }}
+            sx={{
+              width: 32,
+              height: 32,
+              color: theme.palette.text.secondary,
+              '&:hover': {
+                bgcolor: alpha('#ef4444', 0.1),
+                color: '#ef4444',
+              },
+            }}
+          >
+            <Close sx={{ fontSize: 16 }} />
+          </IconButton>
+        )}
+      </Box>
+    </Box>
+  );
+};
+
+export default EscrowTableRow;
