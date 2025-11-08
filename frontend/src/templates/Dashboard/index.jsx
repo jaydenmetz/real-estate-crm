@@ -128,7 +128,10 @@ export const DashboardTemplate = ({
     };
   };
 
-  const calculatedDateRange = getCalculatedDateRange();
+  // Only calculate date range if user has explicitly selected one (not by default)
+  const calculatedDateRange = (customStartDate && customEndDate) || dateRangeFilter !== '1M'
+    ? getCalculatedDateRange()
+    : null;
 
   // Dashboard state from config (with calculated date range)
   const {
