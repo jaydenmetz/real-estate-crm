@@ -15,7 +15,7 @@ import {
 } from '@mui/material';
 
 const DashboardGrid = ({
-  viewMode = 'cards',
+  viewMode = 'card',
   items = [],
   renderCard,
   renderListItem,
@@ -42,8 +42,8 @@ const DashboardGrid = ({
     );
   }
 
-  // Cards View
-  if (viewMode === 'cards' && renderCard) {
+  // Card View
+  if (viewMode === 'card' && renderCard) {
     return (
       <Grid container {...gridProps}>
         {items.map((item, index) => (

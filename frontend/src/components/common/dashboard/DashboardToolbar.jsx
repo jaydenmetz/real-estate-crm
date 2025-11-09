@@ -17,17 +17,17 @@ import {
 } from '@mui/icons-material';
 
 const DashboardToolbar = ({
-  viewMode = 'cards',
+  viewMode = 'card',
   onViewModeChange,
   searchTerm = '',
   onSearchChange,
   onFilterClick,
   actions = [],
-  availableModes = ['cards', 'list', 'table'],
+  availableModes = ['card', 'list', 'table'],
   searchPlaceholder = 'Search...'
 }) => {
   const viewModeIcons = {
-    cards: <ViewModule />,
+    card: <ViewModule />,
     list: <ViewList />,
     table: <TableChart />,
     calendar: <CalendarToday />

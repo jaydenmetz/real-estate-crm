@@ -497,11 +497,11 @@ export const leadsConfig = createEntityConfig({
 
     // View Modes Configuration
     viewModes: [
-      { value: 'cards', label: 'Cards', icon: 'GridView' },
+      { value: 'card', label: 'Card', icon: 'GridView' },
       { value: 'large', label: 'Full Width', icon: 'ViewList' },
       { value: 'calendar', label: 'Calendar', icon: 'CalendarToday' }
     ],
-    defaultViewMode: 'cards', // 4 cards per row
+    defaultViewMode: 'card', // 4 cards per row
 
     // Archive Configuration
     showArchive: true,

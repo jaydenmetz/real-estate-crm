@@ -192,11 +192,11 @@ export const listingsConfig = createEntityConfig({
 
     // View Modes Configuration
     viewModes: [
-      { value: 'cards', label: 'Cards', icon: 'GridView' },
+      { value: 'card', label: 'Card', icon: 'GridView' },
       { value: 'list', label: 'List', icon: 'ViewList' },
       { value: 'map', label: 'Map', icon: 'Map' }
     ],
-    defaultViewMode: 'cards',
+    defaultViewMode: 'card',
 
     // Archive Configuration
     showArchive: true,

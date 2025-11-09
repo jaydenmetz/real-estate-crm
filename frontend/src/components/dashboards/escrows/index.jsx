@@ -1,7 +1,7 @@
 import React from 'react';
 import { DashboardTemplate } from '../../../templates/Dashboard';
 import { escrowsConfig } from '../../../config/entities/escrows.config';
-import EscrowCard from './cards/EscrowCard';
+import EscrowCard from './card/EscrowCard';
 import { NewEscrowModal } from './modals/NewEscrowModal';
 
 /**
