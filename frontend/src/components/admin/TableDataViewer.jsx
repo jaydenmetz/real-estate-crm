@@ -401,6 +401,7 @@ const TableDataViewer = ({ tableName, displayName, onBack }) => {
           rowSelectionModel={selectedRows}
           onRowSelectionModelChange={(newSelection) => setSelectedRows(newSelection)}
           disableRowSelectionOnClick
+          columnResizeMode="onResize"
           sx={{
             '& .MuiDataGrid-cell': {
               overflow: 'visible',
