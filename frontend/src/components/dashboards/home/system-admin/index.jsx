@@ -30,13 +30,13 @@ import {
   Folder as TemplatesIcon,
   Assessment as ReportsIcon
 } from '@mui/icons-material';
-import UsersTable from '../../../components/admin/UsersTable';
-import ApiKeysTable from '../../../components/admin/ApiKeysTable';
-import SecurityEventsTable from '../../../components/admin/SecurityEventsTable';
-import RefreshTokensTable from '../../../components/admin/RefreshTokensTable';
-import AuditLogsTable from '../../../components/admin/AuditLogsTable';
-import DatabaseOverview from '../../../components/admin/DatabaseOverview';
-import TableDataViewer from '../../../components/admin/TableDataViewer';
+import UsersTable from '../../../admin/UsersTable';
+import ApiKeysTable from '../../../admin/ApiKeysTable';
+import SecurityEventsTable from '../../../admin/SecurityEventsTable';
+import RefreshTokensTable from '../../../admin/RefreshTokensTable';
+import AuditLogsTable from '../../../admin/AuditLogsTable';
+import DatabaseOverview from '../../../admin/DatabaseOverview';
+import TableDataViewer from '../../../admin/TableDataViewer';
 
 /**
  * SystemAdminHomeDashboard
