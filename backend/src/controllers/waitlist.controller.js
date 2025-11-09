@@ -18,16 +18,25 @@ class WaitlistController {
       const {
         email,
         username,
-        firstName,
-        lastName,
+        first_name,
+        last_name,
         phone,
-        companyName,
-        companySize,
-        interestedFeatures,
-        howHeardAboutUs,
-        referralSource,
+        company_name,
+        company_size,
+        interested_features,
+        how_heard_about_us,
+        referral_source,
         message
       } = req.body;
+
+      // Support both camelCase and snake_case
+      const firstName = first_name || req.body.firstName;
+      const lastName = last_name || req.body.lastName;
+      const companyName = company_name || req.body.companyName;
+      const companySize = company_size || req.body.companySize;
+      const interestedFeatures = interested_features || req.body.interestedFeatures;
+      const howHeardAboutUs = how_heard_about_us || req.body.howHeardAboutUs;
+      const referralSource = referral_source || req.body.referralSource;
 
       // Validate required fields
       if (!email || !username || !firstName || !lastName) {
