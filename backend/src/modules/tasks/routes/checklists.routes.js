@@ -5,9 +5,9 @@
 const express = require('express');
 const router = express.Router();
 const checklistsController = require('../controllers/checklists.controller');
-const { authenticate } = require('../../../middleware/apiKey.middleware');
+const { authenticate } = require('../../../middleware/auth.middleware');
 
-// All routes require authentication
+// SECURITY: All routes require authentication
 router.use(authenticate);
 
 // GET /v1/checklists - List all checklists

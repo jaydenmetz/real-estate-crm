@@ -2,7 +2,7 @@ const express = require('express');
 
 const router = express.Router();
 const { pool } = require('../config/database');
-const { authenticate, optionalAuth } = require('../middleware/auth.middleware');
+const { authenticate, optionalAuth, requireRole } = require('../middleware/auth.middleware');
 const { authenticateApiKey } = require('../middleware/apiKey.middleware');
 const { authenticateAny } = require('../middleware/combinedAuth.middleware');
 const UserProfileService = require('../services/userProfile.service');
@@ -600,9 +600,9 @@ router.get('/broker/:brokerId', authenticateAny, async (req, res) => {
  * @desc    Create or update broker profile
  * @access  Private (broker admin only - TODO: add authorization)
  */
-router.post('/broker/:brokerId', authenticateAny, async (req, res) => {
+router.post('/broker/:brokerId', authenticateAny, requireRole('broker', 'system_admin'), async (req, res) => {
   try {
-    // TODO: Check if user has broker admin permissions
+    // SECURITY: Added requireRole middleware for broker authorization
     const profile = await BrokerProfileService.upsertProfile(req.params.brokerId, req.body);
 
     res.json({

@@ -26,7 +26,7 @@ const validateLinkPreview = [
 
 // POST /api/v1/link-preview
 // Fetch Open Graph preview data for a URL
-// Temporarily removing auth for testing
-router.post('/', validateLinkPreview, getLinkPreview);
+// SECURITY: Re-enabled authentication (was temporarily disabled for testing)
+router.post('/', authenticate, validateLinkPreview, getLinkPreview);
 
 module.exports = router;

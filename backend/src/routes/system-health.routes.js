@@ -4,8 +4,7 @@ const router = express.Router();
 const os = require('os');
 const pool = require('../config/database');
 const { getRedisClient } = require('../config/redis');
-const { authenticate } = require('../middleware/apiKey.middleware');
-const { adminOnly } = require('../middleware/adminOnly.middleware');
+const { authenticate, requireRole } = require('../middleware/auth.middleware');
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -36,9 +35,10 @@ const path = require('path');
  * 3. Redis (if available) - Could store sessions for faster validation
  */
 
-// Apply admin-only middleware to ALL routes in this file
+// SECURITY: All health check routes require authentication and system_admin role
+// Using standard auth.middleware instead of custom adminOnly middleware
 router.use(authenticate);
-router.use(adminOnly);
+router.use(requireRole('system_admin'));
 
 /**
  * Main system health check - ADMIN ONLY

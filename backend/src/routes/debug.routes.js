@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { pool } = require('../config/database');
-const { authenticate } = require('../middleware/auth.middleware');
+const { authenticate, requireRole } = require('../middleware/auth.middleware');
 
 // Security check - disable debug routes in production
 if (process.env.NODE_ENV === 'production') {
@@ -56,20 +56,9 @@ router.get('/test-db', async (req, res) => {
 });
 
 // Database status endpoint - admin only
-router.get('/db-status', authenticate, async (req, res) => {
+// SECURITY: Using requireRole middleware instead of inline check
+router.get('/db-status', authenticate, requireRole('system_admin', 'broker'), async (req, res) => {
   try {
-    // Check if user is admin
-    const isAdmin = req.user && (req.user.role === 'admin' || req.user.role === 'system_admin');
-    if (!isAdmin) {
-      return res.status(403).json({
-        success: false,
-        error: {
-          code: 'FORBIDDEN',
-          message: 'Admin access required'
-        }
-      });
-    }
-    
     // Check if we want Railway database status
     const checkRailway = req.query.railway === 'true';
     const targetPool = checkRailway && process.env.RAILWAY_DATABASE_URL ? 

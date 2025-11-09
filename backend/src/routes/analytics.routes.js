@@ -1,7 +1,11 @@
 const express = require('express');
 const { query } = require('../config/database');
+const { authenticate } = require('../middleware/auth.middleware');
 
 const router = express.Router();
+
+// SECURITY: All analytics routes require authentication
+router.use(authenticate);
 
 // Dashboard analytics
 router.get('/dashboard', async (req, res) => {

@@ -1,8 +1,12 @@
 // backend/src/routes/documents.routes.js
 const express = require('express');
+const { authenticate } = require('../middleware/auth.middleware');
 
 const router = express.Router();
 const { query } = require('../config/database');
+
+// SECURITY: All document routes require authentication
+router.use(authenticate);
 
 // GET all documents
 router.get('/', async (req, res) => {

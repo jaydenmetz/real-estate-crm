@@ -1,25 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const AdminController = require('../controllers/admin.controller');
-const { authenticate } = require('../middleware/auth.middleware');
+const { authenticate, requireRole } = require('../middleware/auth.middleware');
 
-// Middleware to check if user is admin
-const requireAdmin = (req, res, next) => {
-  if (req.user.role !== 'system_admin' && req.user.role !== 'admin') {
-    return res.status(403).json({
-      success: false,
-      error: {
-        code: 'FORBIDDEN',
-        message: 'Admin access required'
-      }
-    });
-  }
-  next();
-};
-
-// All admin routes require authentication and admin role
+// SECURITY: All admin routes require authentication and system_admin role
+// Using standard requireRole middleware instead of custom requireAdmin
 router.use(authenticate);
-router.use(requireAdmin);
+router.use(requireRole('system_admin'));
 
 // Admin endpoints
 router.get('/database-stats', AdminController.getDatabaseStats);
