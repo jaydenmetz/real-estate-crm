@@ -44,6 +44,29 @@ const TableDataViewer = ({ tableName, displayName, onBack }) => {
     page: 0,
     pageSize: 25,
   });
+  const [columnWidths, setColumnWidths] = useState({});
+
+  // Load saved column widths from localStorage on mount
+  useEffect(() => {
+    const savedWidths = localStorage.getItem(`admin_table_${tableName}_columnWidths`);
+    if (savedWidths) {
+      try {
+        setColumnWidths(JSON.parse(savedWidths));
+      } catch (e) {
+        console.error('Failed to parse saved column widths:', e);
+      }
+    }
+  }, [tableName]);
+
+  // Save column widths to localStorage when they change
+  const handleColumnWidthChange = (params) => {
+    const newWidths = {
+      ...columnWidths,
+      [params.colDef.field]: params.width
+    };
+    setColumnWidths(newWidths);
+    localStorage.setItem(`admin_table_${tableName}_columnWidths`, JSON.stringify(newWidths));
+  };
 
   useEffect(() => {
     fetchTableData();
@@ -234,11 +257,13 @@ const TableDataViewer = ({ tableName, displayName, onBack }) => {
   // Convert columns from database schema to DataGrid format
   const columns = tableData.columns.map((col) => {
     const isPinned = frozenColumns.includes(col.name);
+    const savedWidth = columnWidths[col.name];
 
     return {
       field: col.name,
       headerName: col.name.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
-      flex: 1,
+      width: savedWidth || undefined,
+      flex: savedWidth ? undefined : 1,
       minWidth: 150,
       pinned: isPinned ? 'left' : undefined,
       renderCell: (params) => {
@@ -402,6 +427,7 @@ const TableDataViewer = ({ tableName, displayName, onBack }) => {
           onRowSelectionModelChange={(newSelection) => setSelectedRows(newSelection)}
           disableRowSelectionOnClick
           columnResizeMode="onResize"
+          onColumnWidthChange={handleColumnWidthChange}
           sx={{
             '& .MuiDataGrid-cell': {
               overflow: 'visible',
