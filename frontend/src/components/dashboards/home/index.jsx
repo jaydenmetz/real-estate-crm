@@ -1,9 +1,9 @@
 import React from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import SystemAdminHomeDashboard from './home/system-admin';
-import BrokerHomeDashboard from './home/broker';
-import TeamHomeDashboard from './home/team';
-import AgentHomeDashboard from './home/agent';
+import { useAuth } from '../../../contexts/AuthContext';
+import SystemAdminHomeDashboard from './system-admin';
+import BrokerHomeDashboard from './broker';
+import TeamHomeDashboard from './team';
+import AgentHomeDashboard from './agent';
 
 /**
  * HomeDashboard Component - Role-Based Router
