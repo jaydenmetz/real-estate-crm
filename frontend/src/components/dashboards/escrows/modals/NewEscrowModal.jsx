@@ -188,7 +188,8 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
 
         let results = [];
         if (response.success && response.data) {
-          results = Array.isArray(response.data) ? response.data : [];
+          // API returns { data: { clients: [...], pagination: {...} } }
+          results = response.data.clients || response.data || [];
         }
 
         // Transform to match expected format
@@ -261,7 +262,8 @@ const NewEscrowModal = ({ open, onClose, onSuccess }) => {
 
         let results = [];
         if (response.success && response.data) {
-          results = Array.isArray(response.data) ? response.data : [];
+          // API returns { data: { clients: [...], pagination: {...} } }
+          results = response.data.clients || response.data || [];
         }
 
         // Transform to match expected format
