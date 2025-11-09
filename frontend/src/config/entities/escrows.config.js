@@ -408,7 +408,7 @@ export const escrowsConfig = createEntityConfig({
       { value: 'Closed', label: 'Closed', preferredViewMode: 'list' },
       { value: 'Cancelled', label: 'Cancelled', preferredViewMode: 'list' },
       { value: 'all', label: 'All Escrows', preferredViewMode: 'list' },
-      { value: 'archived', label: 'Archived', preferredViewMode: 'grid' }
+      { value: 'archived', label: 'Archived', preferredViewMode: 'cards' }
     ],
     defaultStatus: 'Active',
 
@@ -461,7 +461,7 @@ export const escrowsConfig = createEntityConfig({
 
     // View Modes Configuration
     viewModes: [
-      { value: 'grid', label: 'Grid', icon: 'GridView' },
+      { value: 'cards', label: 'Cards', icon: 'GridView' },
       { value: 'list', label: 'List', icon: 'ViewList' },
       { value: 'table', label: 'Table', icon: 'TableChart' }
     ],

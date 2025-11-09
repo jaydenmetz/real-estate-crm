@@ -126,7 +126,7 @@ const ESCROWS_PROJECTS = [
         needsAI: true,
         userTasks: [
           'Review current dashboard layout and note what feels clunky',
-          'Decide which view modes you want (Grid, List, Table, Calendar)',
+          'Decide which view modes you want (Cards, List, Table, Calendar)',
           'List all filters you need (status, date range, agent, price range)',
         ],
         aiPrompt: `# TASK: Fix Escrows Dashboard UI/UX
@@ -142,7 +142,7 @@ File: /frontend/src/components/dashboards/escrows/index.jsx
 ## REQUIREMENTS
 
 ### 1. View Modes (User can toggle between)
-- **Grid View**: Cards in responsive grid (3-4 columns on desktop)
+- **Cards View**: Cards in responsive grid (3-4 columns on desktop)
 - **List View**: Vertical list with thumbnails
 - **Table View**: Sortable table with columns
 - **Calendar View**: Escrows plotted by closing date
@@ -178,7 +178,7 @@ ls /frontend/src/components/dashboards/escrows/
 
 ### Step 2: Create View Mode Components
 \`\`\`
-CREATE /frontend/src/components/dashboards/escrows/EscrowsGrid.jsx
+CREATE /frontend/src/components/dashboards/escrows/EscrowsCards.jsx
 CREATE /frontend/src/components/dashboards/escrows/EscrowsList.jsx
 CREATE /frontend/src/components/dashboards/escrows/EscrowsTable.jsx
 CREATE /frontend/src/components/dashboards/escrows/EscrowsCalendar.jsx
@@ -199,7 +199,7 @@ import { useQuery } from '@tanstack/react-query';
 import escrowsService from '../../../services/escrows.service';
 
 const EscrowsDashboard = () => {
-  const [viewMode, setViewMode] = useState('grid'); // grid, list, table, calendar
+  const [viewMode, setViewMode] = useState('cards'); // cards, list, table, calendar
   const [filters, setFilters] = useState({
     status: 'all',
     dateRange: null,
@@ -229,7 +229,7 @@ const EscrowsDashboard = () => {
       {error && <ErrorState onRetry={() => refetch()} />}
       {!isLoading && escrows?.length === 0 && <EmptyState />}
 
-      {viewMode === 'grid' && <EscrowsGrid escrows={escrows} />}
+      {viewMode === 'cards' && <EscrowsCards escrows={escrows} />}
       {viewMode === 'list' && <EscrowsList escrows={escrows} />}
       {viewMode === 'table' && <EscrowsTable escrows={escrows} />}
       {viewMode === 'calendar' && <EscrowsCalendar escrows={escrows} />}
@@ -273,7 +273,7 @@ Show 4 cards:
 ✅ UI is responsive (works on mobile)
 
 ## TESTING
-1. Load dashboard → see escrows in grid view
+1. Load dashboard → see escrows in cards view
 2. Toggle to list view → layout changes
 3. Toggle to table view → sortable columns work
 4. Toggle to calendar view → escrows plotted by closing date
@@ -284,7 +284,7 @@ Show 4 cards:
 
 ## DELIVERABLES
 1. index.jsx (main dashboard)
-2. EscrowsGrid.jsx
+2. EscrowsCards.jsx
 3. EscrowsList.jsx
 4. EscrowsTable.jsx
 5. EscrowsCalendar.jsx
@@ -1036,7 +1036,7 @@ const EscrowsDashboard = () => {
         needsAI: false,
         userTasks: [
           'Dashboard loads without errors',
-          'All view modes work (grid, list, table, calendar)',
+          'All view modes work (cards, list, table, calendar)',
           'Filters work (status, date range, search)',
           'Create new escrow (all fields, save, verify)',
           'Edit existing escrow (change field, save, verify)',
