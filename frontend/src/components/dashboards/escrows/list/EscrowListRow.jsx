@@ -24,7 +24,7 @@ import {
   CalendarToday,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { formatCurrency, formatDate } from '../../../utils/formatters';
+import { formatCurrency, formatDate } from '../../../../utils/formatters';
 
 /**
  * EscrowListRow - Horizontal row layout for list view
