@@ -181,8 +181,8 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
         body: JSON.stringify({
           username: data.username,
           email: data.email,
-          first_name: data.firstName,
-          last_name: data.lastName,
+          firstName: data.firstName,
+          lastName: data.lastName,
           phone: rawPhone,
         }),
       });
