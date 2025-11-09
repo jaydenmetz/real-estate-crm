@@ -78,7 +78,7 @@ const DatabaseOverview = ({ onTableClick }) => {
     { name: 'Leads', icon: TrendingUp, color: '#7b1fa2', key: 'leads' },
 
     // Broker & Team Management (5 tables)
-    { name: 'Brokers', icon: Business, color: '#5d4037', key: 'brokers' },
+    { name: 'Brokerages', icon: Business, color: '#5d4037', key: 'brokerages' },
     { name: 'Broker Profiles', icon: AccountCircle, color: '#6d4c41', key: 'broker_profiles' },
     { name: 'Broker Teams', icon: Groups, color: '#795548', key: 'broker_teams' },
     { name: 'Broker Users', icon: Group, color: '#8d6e63', key: 'broker_users' },

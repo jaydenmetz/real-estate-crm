@@ -8,10 +8,10 @@ class AdminController {
     try {
       const stats = {};
 
-      // Query count for each table (all 26 tables)
+      // Query count for each table
       const tables = [
         'api_key_logs', 'api_keys', 'appointments', 'audit_log', 'audit_logs',
-        'broker_profiles', 'broker_teams', 'broker_users', 'brokers', 'clients',
+        'broker_profiles', 'broker_teams', 'broker_users', 'brokerages', 'clients',
         'contacts', 'document_templates', 'documents', 'escrows', 'generated_documents',
         'leads', 'listing_price_history', 'listing_showings', 'listings', 'migrations',
         'onboarding_progress', 'refresh_tokens', 'security_events', 'teams',
