@@ -153,21 +153,56 @@ export const DashboardContent = ({
     );
   };
 
-  // Grid layout matching ClientContent exactly
+  // Grid layout with responsive columns and calculated gap
+  // This ensures the rightmost card aligns with the hero section edge
+  // and gaps are evenly distributed with a minimum threshold
+  const getGridStyles = () => {
+    if (viewMode === 'table') {
+      return {
+        display: 'grid',
+        gridTemplateColumns: '1fr',
+        gap: 1,
+        width: '100%',
+      };
+    }
+
+    if (viewMode === 'card') {
+      // Responsive grid that maintains alignment with hero section
+      // Min card width: 320px, Min gap: 16px, Max gap: 32px
+      return {
+        display: 'grid',
+        gridTemplateColumns: {
+          xs: '1fr', // Mobile: 1 column
+          sm: 'repeat(auto-fit, minmax(320px, 1fr))', // Small screens: flexible
+          md: 'repeat(auto-fit, minmax(320px, 1fr))', // Medium: flexible
+          lg: 'repeat(3, 1fr)', // Large: 3 columns (aligns with typical hero width)
+          xl: 'repeat(4, 1fr)', // Extra large: 4 columns
+        },
+        gap: {
+          xs: 2, // 16px on mobile
+          sm: 2, // 16px on small
+          md: 2.5, // 20px on medium
+          lg: 3, // 24px on large (equal distribution)
+          xl: 3, // 24px on xl
+        },
+        width: '100%',
+      };
+    }
+
+    // Default (list view)
+    return {
+      display: 'grid',
+      gridTemplateColumns: '1fr',
+      gap: '5px',
+      width: '100%',
+    };
+  };
+
   return (
     <>
       {renderTableHeaders()}
 
-      <Box
-        sx={{
-          display: 'grid',
-          gridTemplateColumns: viewMode === 'card'
-            ? 'repeat(auto-fit, minmax(320px, 1fr))'
-            : '1fr',
-          gap: viewMode === 'table' ? 1 : '5px',
-          width: '100%',
-        }}
-      >
+      <Box sx={getGridStyles()}>
         <AnimatePresence>
           {(() => {
             // Archive view with checkboxes
