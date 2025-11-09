@@ -50,7 +50,7 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
   // Generate unique field ID on mount to prevent browser autofill recognition
   const [fieldId] = useState(() => `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
 
-  const steps = ['Your Information', 'Create Account'];
+  const steps = ['Your Information', 'Create Account', 'Confirmation'];
 
   const { control, handleSubmit, watch, formState: { errors }, trigger, setValue, setError: setFieldError } = useForm({
     defaultValues: {
@@ -113,8 +113,8 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
     while (!available && suffix < 100) {
       try {
         const endpoint = apiUrl.includes('/v1')
-          ? `${apiUrl}/auth/check-username/${testUsername}`
-          : `${apiUrl}/v1/auth/check-username/${testUsername}`;
+          ? `${apiUrl}/waitlist/check-username/${testUsername}`
+          : `${apiUrl}/v1/waitlist/check-username/${testUsername}`;
 
         const response = await fetch(endpoint);
         const result = await response.json();
@@ -168,7 +168,7 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
 
     try {
       const apiUrl = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
-      const endpoint = apiUrl.includes('/v1') ? `${apiUrl}/auth/register` : `${apiUrl}/v1/auth/register`;
+      const endpoint = apiUrl.includes('/v1') ? `${apiUrl}/waitlist` : `${apiUrl}/v1/waitlist`;
 
       // Get unformatted phone number
       const rawPhone = data.phone.replace(/[^\d]/g, '');
@@ -181,9 +181,8 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
         body: JSON.stringify({
           username: data.username,
           email: data.email,
-          password: data.password,
-          firstName: data.firstName,
-          lastName: data.lastName,
+          first_name: data.firstName,
+          last_name: data.lastName,
           phone: rawPhone,
         }),
       });
@@ -191,25 +190,14 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
       const result = await response.json();
 
       if (result.success) {
-        if (result.data?.token) {
-          // PHASE 1: Store tokens with standardized key
-          localStorage.setItem('authToken', result.data.token);
-          localStorage.setItem('user', JSON.stringify(result.data.user));
-
-          // Update auth context to log user in
-          if (login) {
-            await login(result.data.token, result.data.user);
-          }
-
-          // Redirect to onboarding tutorial
-          navigate('/onboarding/welcome');
-        }
+        // Show success step instead of logging in
+        setActiveStep(2); // Move to success screen
       } else {
-        setError(result.error?.message || 'Registration failed');
+        setError(result.error?.message || 'Failed to join waitlist');
       }
     } catch (err) {
-      console.error('Registration error:', err);
-      setError('An error occurred during registration. Please try again.');
+      console.error('Waitlist error:', err);
+      setError('An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -275,8 +263,8 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
     try {
       const apiUrl = process.env.REACT_APP_API_URL || 'https://api.jaydenmetz.com';
       const endpoint = apiUrl.includes('/v1')
-        ? `${apiUrl}/auth/check-username/${usernameToCheck}`
-        : `${apiUrl}/v1/auth/check-username/${usernameToCheck}`;
+        ? `${apiUrl}/waitlist/check-username/${usernameToCheck}`
+        : `${apiUrl}/v1/waitlist/check-username/${usernameToCheck}`;
 
       const response = await fetch(endpoint);
       const result = await response.json();
@@ -670,6 +658,42 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
           </>
         );
 
+      case 2:
+        return (
+          <Box sx={{ textAlign: 'center', py: 4 }}>
+            <CheckCircleOutline
+              sx={{
+                fontSize: 80,
+                color: 'success.main',
+                mb: 3
+              }}
+            />
+            <Typography variant="h5" gutterBottom fontWeight="bold">
+              Thank You for Your Interest!
+            </Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+              We've added you to our waitlist. We'll notify you via email at{' '}
+              <strong>{watch('email')}</strong> when registration opens.
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
+              Your username <strong>{username}</strong> has been reserved for you.
+            </Typography>
+            <Button
+              variant="contained"
+              onClick={() => navigate('/login')}
+              sx={{
+                background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
+                px: 4,
+                '&:hover': {
+                  background: 'linear-gradient(90deg, #5568d3 0%, #66438e 100%)',
+                }
+              }}
+            >
+              Back to Login
+            </Button>
+          </Box>
+        );
+
       default:
         return null;
     }
@@ -751,33 +775,35 @@ const RegisterPage = ({ hasGoogleAuth = false }) => {
 
             {renderStepContent()}
 
-            {/* Actions */}
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4, gap: 2 }}>
-              <Button
-                disabled={activeStep === 0 || loading}
-                onClick={handleBack}
-                startIcon={<ArrowBack />}
-                sx={{ visibility: activeStep === 0 ? 'hidden' : 'visible' }}
-              >
-                Back
-              </Button>
+            {/* Actions - Hide on success screen */}
+            {activeStep !== 2 && (
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 4, gap: 2 }}>
+                <Button
+                  disabled={activeStep === 0 || loading}
+                  onClick={handleBack}
+                  startIcon={<ArrowBack />}
+                  sx={{ visibility: activeStep === 0 ? 'hidden' : 'visible' }}
+                >
+                  Back
+                </Button>
 
-              <Button
-                variant="contained"
-                onClick={handleNext}
-                disabled={loading}
-                endIcon={activeStep === 0 ? <ArrowForward /> : (loading ? <CircularProgress size={20} /> : <CheckCircleOutline />)}
-                sx={{
-                  background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
-                  px: 4,
-                  '&:hover': {
-                    background: 'linear-gradient(90deg, #5568d3 0%, #66438e 100%)',
-                  }
-                }}
-              >
-                {activeStep === 0 ? 'Continue' : (loading ? 'Creating Account...' : 'Create Account')}
-              </Button>
-            </Box>
+                <Button
+                  variant="contained"
+                  onClick={handleNext}
+                  disabled={loading}
+                  endIcon={activeStep === 0 ? <ArrowForward /> : (loading ? <CircularProgress size={20} /> : <CheckCircleOutline />)}
+                  sx={{
+                    background: 'linear-gradient(90deg, #667eea 0%, #764ba2 100%)',
+                    px: 4,
+                    '&:hover': {
+                      background: 'linear-gradient(90deg, #5568d3 0%, #66438e 100%)',
+                    }
+                  }}
+                >
+                  {activeStep === 0 ? 'Continue' : (loading ? 'Joining Waitlist...' : 'Join Waitlist')}
+                </Button>
+              </Box>
+            )}
           </form>
 
           <Divider sx={{ my: 3 }} />

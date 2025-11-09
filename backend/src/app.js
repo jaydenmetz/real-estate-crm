@@ -193,6 +193,9 @@ apiRouter.use(apiLimiter); // API rate limiting
 // Public routes with auth-specific rate limiting
 apiRouter.use('/auth', authLimiter, require('./routes/auth.routes').router);
 
+// Waitlist routes (public registration waitlist)
+apiRouter.use('/waitlist', require('./routes/waitlist.routes'));
+
 // Public status endpoints (no auth required)
 apiRouter.use('/status', require('./routes/public-status.routes')); // Public: /status/public, /status/ping, /status/health
 
