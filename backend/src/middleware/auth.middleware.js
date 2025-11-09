@@ -130,6 +130,7 @@ const optionalAuth = async (req, res, next) => {
 
 /**
  * Require specific roles
+ * Handles both string and array role formats
  */
 const requireRole = (...allowedRoles) => (req, res, next) => {
   if (!req.user) {
@@ -142,7 +143,13 @@ const requireRole = (...allowedRoles) => (req, res, next) => {
     });
   }
 
-  if (!allowedRoles.includes(req.user.role)) {
+  // Handle both string and array role formats
+  const userRoles = Array.isArray(req.user.role) ? req.user.role : [req.user.role];
+
+  // Check if user has any of the allowed roles
+  const hasRole = userRoles.some(role => allowedRoles.includes(role));
+
+  if (!hasRole) {
     return res.status(403).json({
       success: false,
       error: {
