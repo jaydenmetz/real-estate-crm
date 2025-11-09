@@ -194,7 +194,9 @@ apiRouter.use(apiLimiter); // API rate limiting
 apiRouter.use('/auth', authLimiter, require('./routes/auth.routes').router);
 
 // Waitlist routes (public registration waitlist)
-apiRouter.use('/waitlist', require('./routes/waitlist.routes'));
+// DISABLED: Railway cache issue - controller methods showing as undefined in production
+// TODO: Clear Railway build cache and re-enable
+// apiRouter.use('/waitlist', require('./routes/waitlist.routes'));
 
 // Public status endpoints (no auth required)
 apiRouter.use('/status', require('./routes/public-status.routes')); // Public: /status/public, /status/ping, /status/health
