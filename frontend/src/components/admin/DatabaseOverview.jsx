@@ -30,7 +30,21 @@ import {
   Visibility,
   Route,
   AccountCircle,
-  Groups
+  Groups,
+  Assessment,
+  Notifications,
+  Flag,
+  PersonAdd,
+  Public,
+  Lock,
+  SupervisedUserCircle,
+  Work,
+  CheckCircle,
+  Timer,
+  Comment,
+  Schedule,
+  AccountTree,
+  AdminPanelSettings
 } from '@mui/icons-material';
 import apiInstance from '../../services/api.service';
 
@@ -61,10 +75,17 @@ const DatabaseOverview = ({ onTableClick }) => {
     // Core Authentication & Security (6 tables)
     { name: 'Users', icon: People, color: '#1976d2', key: 'users' },
     { name: 'User Profiles', icon: AccountCircle, color: '#42a5f5', key: 'user_profiles' },
+    { name: 'User Roles', icon: AdminPanelSettings, color: '#5c6bc0', key: 'user_roles' },
+    { name: 'User Permissions', icon: Lock, color: '#7e57c2', key: 'user_permissions' },
     { name: 'API Keys', icon: VpnKey, color: '#9c27b0', key: 'api_keys' },
     { name: 'API Key Logs', icon: History, color: '#ab47bc', key: 'api_key_logs' },
     { name: 'Refresh Tokens', icon: Refresh, color: '#388e3c', key: 'refresh_tokens' },
     { name: 'Security Events', icon: Security, color: '#d32f2f', key: 'security_events' },
+
+    // Roles & Access Control (4 tables)
+    { name: 'Roles', icon: SupervisedUserCircle, color: '#303f9f', key: 'roles' },
+    { name: 'Role History', icon: History, color: '#3949ab', key: 'role_history' },
+    { name: 'Data Access Control', icon: Lock, color: '#3f51b5', key: 'data_access_control' },
 
     // Audit & Logging (2 tables)
     { name: 'Audit Log', icon: Description, color: '#f57c00', key: 'audit_log' },
@@ -72,17 +93,24 @@ const DatabaseOverview = ({ onTableClick }) => {
 
     // Core CRM Data (5 tables)
     { name: 'Escrows', icon: Gavel, color: '#0288d1', key: 'escrows' },
+    { name: 'Escrow People', icon: PersonAdd, color: '#039be5', key: 'escrow_people' },
     { name: 'Listings', icon: Domain, color: '#43a047', key: 'listings' },
     { name: 'Clients', icon: Contacts, color: '#00acc1', key: 'clients' },
     { name: 'Appointments', icon: EventNote, color: '#ff6f00', key: 'appointments' },
     { name: 'Leads', icon: TrendingUp, color: '#7b1fa2', key: 'leads' },
 
-    // Broker & Team Management (5 tables)
+    // Broker & Team Management (7 tables)
     { name: 'Brokerages', icon: Business, color: '#5d4037', key: 'brokerages' },
     { name: 'Broker Profiles', icon: AccountCircle, color: '#6d4c41', key: 'broker_profiles' },
     { name: 'Broker Teams', icon: Groups, color: '#795548', key: 'broker_teams' },
     { name: 'Broker Users', icon: Group, color: '#8d6e63', key: 'broker_users' },
-    { name: 'Teams', icon: Groups, color: '#a1887f', key: 'teams' },
+    { name: 'Broker History', icon: History, color: '#a1887f', key: 'broker_history' },
+    { name: 'Broker Notifications', icon: Notifications, color: '#bcaaa4', key: 'broker_notification_settings' },
+    { name: 'Teams', icon: Groups, color: '#d7ccc8', key: 'teams' },
+
+    // Agent KPIs & Goals (2 tables)
+    { name: 'Agent KPIs', icon: Assessment, color: '#2e7d32', key: 'agent_kpis' },
+    { name: 'Goals', icon: Flag, color: '#388e3c', key: 'goals' },
 
     // Listings Related (2 tables)
     { name: 'Listing Price History', icon: ShowChart, color: '#66bb6a', key: 'listing_price_history' },
@@ -93,9 +121,25 @@ const DatabaseOverview = ({ onTableClick }) => {
     { name: 'Document Templates', icon: FileCopy, color: '#42a5f5', key: 'document_templates' },
     { name: 'Generated Documents', icon: Folder, color: '#64b5f6', key: 'generated_documents' },
 
-    // Misc (3 tables)
+    // Contacts & Contact Roles (6 tables)
     { name: 'Contacts', icon: Contacts, color: '#26c6da', key: 'contacts' },
-    { name: 'Onboarding Progress', icon: Assignment, color: '#455a64', key: 'onboarding_progress' },
+    { name: 'Contact Roles', icon: Work, color: '#00acc1', key: 'contact_roles' },
+    { name: 'Contact Role Assignments', icon: Assignment, color: '#0097a7', key: 'contact_role_assignments' },
+    { name: 'Contact Validation Prefs', icon: CheckCircle, color: '#00838f', key: 'contact_validation_preferences' },
+    { name: 'Contacts (All Roles)', icon: Public, color: '#006064', key: 'contacts_with_all_roles' },
+    { name: 'Contacts (Primary Role)', icon: AccountCircle, color: '#00bcd4', key: 'contacts_with_primary_role' },
+
+    // Tasks & Checklists (6 tables)
+    { name: 'Tasks', icon: Assignment, color: '#c62828', key: 'tasks' },
+    { name: 'Task Activity', icon: History, color: '#d32f2f', key: 'task_activity' },
+    { name: 'Task Comments', icon: Comment, color: '#e53935', key: 'task_comments' },
+    { name: 'Checklists', icon: CheckCircle, color: '#f44336', key: 'checklists' },
+    { name: 'Checklist Templates', icon: FileCopy, color: '#ef5350', key: 'checklist_templates' },
+    { name: 'Projects', icon: AccountTree, color: '#e57373', key: 'projects' },
+
+    // System & Misc (3 tables)
+    { name: 'Onboarding Progress', icon: Schedule, color: '#455a64', key: 'onboarding_progress' },
+    { name: 'Timezones', icon: Public, color: '#607d8b', key: 'timezones' },
     { name: 'Migrations', icon: Route, color: '#78909c', key: 'migrations' },
   ];
 

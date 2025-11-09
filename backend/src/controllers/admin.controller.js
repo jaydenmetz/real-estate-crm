@@ -8,14 +8,18 @@ class AdminController {
     try {
       const stats = {};
 
-      // Query count for each table
+      // Query count for all 48 tables in the database
       const tables = [
-        'api_key_logs', 'api_keys', 'appointments', 'audit_log', 'audit_logs',
-        'broker_profiles', 'broker_teams', 'broker_users', 'brokerages', 'clients',
-        'contacts', 'document_templates', 'documents', 'escrows', 'generated_documents',
-        'leads', 'listing_price_history', 'listing_showings', 'listings', 'migrations',
-        'onboarding_progress', 'refresh_tokens', 'security_events', 'teams',
-        'user_profiles', 'users'
+        'agent_kpis', 'api_key_logs', 'api_keys', 'appointments', 'audit_log', 'audit_logs',
+        'broker_history', 'broker_notification_settings', 'broker_profiles', 'broker_teams',
+        'broker_users', 'brokerages', 'checklist_templates', 'checklists', 'clients',
+        'contact_role_assignments', 'contact_roles', 'contact_validation_preferences',
+        'contacts', 'contacts_with_all_roles', 'contacts_with_primary_role',
+        'data_access_control', 'document_templates', 'documents', 'escrow_people', 'escrows',
+        'generated_documents', 'goals', 'leads', 'listing_price_history', 'listing_showings',
+        'listings', 'migrations', 'onboarding_progress', 'projects', 'refresh_tokens',
+        'role_history', 'roles', 'security_events', 'task_activity', 'task_comments', 'tasks',
+        'teams', 'timezones', 'user_permissions', 'user_profiles', 'user_roles', 'users'
       ];
 
       for (const table of tables) {
@@ -199,14 +203,18 @@ class AdminController {
       const limit = parseInt(req.query.limit) || 100;
       const offset = parseInt(req.query.offset) || 0;
 
-      // Whitelist of allowed tables to prevent SQL injection
+      // Whitelist of allowed tables to prevent SQL injection (all 48 tables)
       const allowedTables = [
-        'api_key_logs', 'api_keys', 'appointments', 'audit_log', 'audit_logs',
-        'broker_profiles', 'broker_teams', 'broker_users', 'brokers', 'clients',
-        'contacts', 'document_templates', 'documents', 'escrows', 'generated_documents',
-        'leads', 'listing_price_history', 'listing_showings', 'listings', 'migrations',
-        'onboarding_progress', 'refresh_tokens', 'security_events', 'teams',
-        'user_profiles', 'users'
+        'agent_kpis', 'api_key_logs', 'api_keys', 'appointments', 'audit_log', 'audit_logs',
+        'broker_history', 'broker_notification_settings', 'broker_profiles', 'broker_teams',
+        'broker_users', 'brokerages', 'checklist_templates', 'checklists', 'clients',
+        'contact_role_assignments', 'contact_roles', 'contact_validation_preferences',
+        'contacts', 'contacts_with_all_roles', 'contacts_with_primary_role',
+        'data_access_control', 'document_templates', 'documents', 'escrow_people', 'escrows',
+        'generated_documents', 'goals', 'leads', 'listing_price_history', 'listing_showings',
+        'listings', 'migrations', 'onboarding_progress', 'projects', 'refresh_tokens',
+        'role_history', 'roles', 'security_events', 'task_activity', 'task_comments', 'tasks',
+        'teams', 'timezones', 'user_permissions', 'user_profiles', 'user_roles', 'users'
       ];
 
       if (!allowedTables.includes(tableName)) {
@@ -289,14 +297,18 @@ class AdminController {
       const { tableName } = req.params;
       const { ids } = req.body; // Array of IDs to delete
 
-      // Whitelist validation
+      // Whitelist validation (all 48 tables)
       const allowedTables = [
-        'api_key_logs', 'api_keys', 'appointments', 'audit_log', 'audit_logs',
-        'broker_profiles', 'broker_teams', 'broker_users', 'brokers', 'clients',
-        'contacts', 'document_templates', 'documents', 'escrows', 'generated_documents',
-        'leads', 'listing_price_history', 'listing_showings', 'listings', 'migrations',
-        'onboarding_progress', 'refresh_tokens', 'security_events', 'teams',
-        'user_profiles', 'users'
+        'agent_kpis', 'api_key_logs', 'api_keys', 'appointments', 'audit_log', 'audit_logs',
+        'broker_history', 'broker_notification_settings', 'broker_profiles', 'broker_teams',
+        'broker_users', 'brokerages', 'checklist_templates', 'checklists', 'clients',
+        'contact_role_assignments', 'contact_roles', 'contact_validation_preferences',
+        'contacts', 'contacts_with_all_roles', 'contacts_with_primary_role',
+        'data_access_control', 'document_templates', 'documents', 'escrow_people', 'escrows',
+        'generated_documents', 'goals', 'leads', 'listing_price_history', 'listing_showings',
+        'listings', 'migrations', 'onboarding_progress', 'projects', 'refresh_tokens',
+        'role_history', 'roles', 'security_events', 'task_activity', 'task_comments', 'tasks',
+        'teams', 'timezones', 'user_permissions', 'user_profiles', 'user_roles', 'users'
       ];
 
       if (!allowedTables.includes(tableName)) {
@@ -430,14 +442,18 @@ class AdminController {
         });
       }
 
-      // Whitelist validation
+      // Whitelist validation (all 48 tables)
       const allowedTables = [
-        'api_key_logs', 'api_keys', 'appointments', 'audit_log', 'audit_logs',
-        'broker_profiles', 'broker_teams', 'broker_users', 'brokers', 'clients',
-        'contacts', 'document_templates', 'documents', 'escrows', 'generated_documents',
-        'leads', 'listing_price_history', 'listing_showings', 'listings', 'migrations',
-        'onboarding_progress', 'refresh_tokens', 'security_events', 'teams',
-        'user_profiles', 'users'
+        'agent_kpis', 'api_key_logs', 'api_keys', 'appointments', 'audit_log', 'audit_logs',
+        'broker_history', 'broker_notification_settings', 'broker_profiles', 'broker_teams',
+        'broker_users', 'brokerages', 'checklist_templates', 'checklists', 'clients',
+        'contact_role_assignments', 'contact_roles', 'contact_validation_preferences',
+        'contacts', 'contacts_with_all_roles', 'contacts_with_primary_role',
+        'data_access_control', 'document_templates', 'documents', 'escrow_people', 'escrows',
+        'generated_documents', 'goals', 'leads', 'listing_price_history', 'listing_showings',
+        'listings', 'migrations', 'onboarding_progress', 'projects', 'refresh_tokens',
+        'role_history', 'roles', 'security_events', 'task_activity', 'task_comments', 'tasks',
+        'teams', 'timezones', 'user_permissions', 'user_profiles', 'user_roles', 'users'
       ];
 
       if (!allowedTables.includes(tableName)) {
@@ -550,14 +566,18 @@ class AdminController {
       const { tableName } = req.params;
       const rowData = req.body;
 
-      // Whitelist validation
+      // Whitelist validation (all 48 tables)
       const allowedTables = [
-        'api_key_logs', 'api_keys', 'appointments', 'audit_log', 'audit_logs',
-        'broker_profiles', 'broker_teams', 'broker_users', 'brokers', 'clients',
-        'contacts', 'document_templates', 'documents', 'escrows', 'generated_documents',
-        'leads', 'listing_price_history', 'listing_showings', 'listings', 'migrations',
-        'onboarding_progress', 'refresh_tokens', 'security_events', 'teams',
-        'user_profiles', 'users'
+        'agent_kpis', 'api_key_logs', 'api_keys', 'appointments', 'audit_log', 'audit_logs',
+        'broker_history', 'broker_notification_settings', 'broker_profiles', 'broker_teams',
+        'broker_users', 'brokerages', 'checklist_templates', 'checklists', 'clients',
+        'contact_role_assignments', 'contact_roles', 'contact_validation_preferences',
+        'contacts', 'contacts_with_all_roles', 'contacts_with_primary_role',
+        'data_access_control', 'document_templates', 'documents', 'escrow_people', 'escrows',
+        'generated_documents', 'goals', 'leads', 'listing_price_history', 'listing_showings',
+        'listings', 'migrations', 'onboarding_progress', 'projects', 'refresh_tokens',
+        'role_history', 'roles', 'security_events', 'task_activity', 'task_comments', 'tasks',
+        'teams', 'timezones', 'user_permissions', 'user_profiles', 'user_roles', 'users'
       ];
 
       if (!allowedTables.includes(tableName)) {
