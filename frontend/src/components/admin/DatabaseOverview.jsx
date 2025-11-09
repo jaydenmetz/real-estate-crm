@@ -45,7 +45,9 @@ const DatabaseOverview = ({ onTableClick }) => {
   const fetchDatabaseStats = async () => {
     try {
       const response = await apiInstance.get('/admin/database-stats');
-      if (response.success) {
+      // apiInstance already unwraps the response, so response = { success: true, data: { table_name: count } }
+      console.log('Database stats response:', response);
+      if (response?.data) {
         setStats(response.data);
       }
     } catch (error) {
