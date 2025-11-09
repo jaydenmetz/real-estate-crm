@@ -128,9 +128,9 @@ const theme = createTheme({
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      refetchOnWindowFocus: process.env.NODE_ENV === 'production',
+      refetchOnWindowFocus: false, // Disable auto-refetch on focus - controlled per-hook
       retry: process.env.NODE_ENV === 'production' ? 3 : false,
-      staleTime: process.env.NODE_ENV === 'production' ? 30000 : false,
+      staleTime: process.env.NODE_ENV === 'production' ? 30000 : 0,
     },
     mutations: {
       retry: 1,
