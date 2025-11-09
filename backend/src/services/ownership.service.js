@@ -32,8 +32,14 @@ class OwnershipService {
    * @returns {Promise<boolean>} - Can user access this resource?
    */
   static async canAccessResource(userId, userRole, brokerId, teamId, resourceType, resourceId) {
+    // Normalize userRole - handle both string and array formats
+    let normalizedRole = userRole;
+    if (Array.isArray(userRole)) {
+      normalizedRole = userRole[0]; // Take first role if array
+    }
+
     // system_admin sees everything
-    if (userRole === 'system_admin') {
+    if (normalizedRole === 'system_admin') {
       return true;
     }
 
@@ -64,6 +70,14 @@ class OwnershipService {
         return true;
       }
 
+      // Handle users with invalid/unrecognized roles
+      // If role doesn't match expected values, only allow access to own resources
+      const validRoles = ['system_admin', 'broker', 'team_owner', 'agent'];
+      if (!validRoles.includes(normalizedRole)) {
+        console.warn(`User ${userId} has invalid role: ${normalizedRole} (original: ${JSON.stringify(userRole)}), denying access to ${resourceType} ${resourceId}`);
+        return false;
+      }
+
       // Handle appointment privacy (inherited from lead)
       if (resourceType === 'appointment' && resource.lead_id) {
         const leadQuery = `SELECT is_private, owner_id FROM leads WHERE id = $1`;
@@ -86,7 +100,7 @@ class OwnershipService {
       }
 
       // Broker can see all non-private resources in their brokerage
-      if (userRole === 'broker') {
+      if (normalizedRole === 'broker') {
         // Check if resource belongs to broker's brokerage
         const ownerQuery = `SELECT broker_id FROM users WHERE id = $1`;
         const ownerResult = await pool.query(ownerQuery, [resource.owner_id]);
@@ -97,12 +111,12 @@ class OwnershipService {
       }
 
       // Team owner can see team's non-private resources
-      if (userRole === 'team_owner' && resource.team_id === teamId) {
+      if (normalizedRole === 'team_owner' && resource.team_id === teamId) {
         return true;
       }
 
       // Agent can see team's non-private resources
-      if (userRole === 'agent' && resource.team_id === teamId) {
+      if (normalizedRole === 'agent' && resource.team_id === teamId) {
         return true;
       }
 
@@ -135,8 +149,14 @@ class OwnershipService {
    * @returns {Promise<boolean>} - Can user edit this resource?
    */
   static async canModifyResource(userId, userRole, brokerId, teamId, resourceType, resourceId) {
+    // Normalize userRole - handle both string and array formats
+    let normalizedRole = userRole;
+    if (Array.isArray(userRole)) {
+      normalizedRole = userRole[0];
+    }
+
     // system_admin can modify everything
-    if (userRole === 'system_admin') {
+    if (normalizedRole === 'system_admin') {
       return true;
     }
 
@@ -199,8 +219,14 @@ class OwnershipService {
    * @returns {Promise<boolean>} - Can user delete this resource?
    */
   static async canDeleteResource(userId, userRole, teamId, resourceType, resourceId) {
+    // Normalize userRole - handle both string and array formats
+    let normalizedRole = userRole;
+    if (Array.isArray(userRole)) {
+      normalizedRole = userRole[0];
+    }
+
     // system_admin can delete everything
-    if (userRole === 'system_admin') {
+    if (normalizedRole === 'system_admin') {
       return true;
     }
 
