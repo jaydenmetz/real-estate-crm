@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const WaitlistController = require('../controllers/waitlist.controller');
 const { authMiddleware } = require('../middleware/auth.middleware');
-const { roleAuth } = require('../middleware/roleAuth.middleware');
+const { requireSystemAdmin } = require('../middleware/authorization.middleware');
 
 /**
  * Waitlist Routes
@@ -23,7 +23,7 @@ router.get('/check-username/:username', WaitlistController.checkUsername);
 router.get(
   '/admin',
   authMiddleware,
-  roleAuth(['system_admin']),
+  requireSystemAdmin,
   WaitlistController.getWaitlist
 );
 
