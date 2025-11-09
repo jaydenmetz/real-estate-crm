@@ -37,22 +37,33 @@ exports.getAllClients = async (req, res) => {
 
     // PHASE 2: Handle ownership-based scope filtering (multi-tenant)
     const userRole = req.user?.role;
-    const requestedScope = req.query.scope || getDefaultScope(userRole);
-    const scope = validateScope(requestedScope, userRole);
 
-    // Build ownership filter using new helper (clients table alias is 'cl')
-    const ownershipFilter = buildOwnershipWhereClauseWithAlias(
-      req.user,
-      scope,
-      'client',
-      'cl',
-      paramIndex
-    );
+    // Only apply ownership filtering if user has a recognized role
+    // For users without roles (or invalid roles), show their own data only
+    try {
+      const requestedScope = req.query.scope || getDefaultScope(userRole);
+      const scope = validateScope(requestedScope, userRole);
 
-    if (ownershipFilter.whereClause && ownershipFilter.whereClause !== '1=1') {
-      whereConditions.push(ownershipFilter.whereClause);
-      queryParams.push(...ownershipFilter.params);
-      paramIndex = ownershipFilter.nextParamIndex;
+      // Build ownership filter using new helper (clients table alias is 'cl')
+      const ownershipFilter = buildOwnershipWhereClauseWithAlias(
+        req.user,
+        scope,
+        'client',
+        'cl',
+        paramIndex
+      );
+
+      if (ownershipFilter.whereClause && ownershipFilter.whereClause !== '1=1') {
+        whereConditions.push(ownershipFilter.whereClause);
+        queryParams.push(...ownershipFilter.params);
+        paramIndex = ownershipFilter.nextParamIndex;
+      }
+    } catch (scopeError) {
+      // If scope validation fails (invalid role, etc), default to user's own data
+      console.warn('Scope validation failed, defaulting to user ownership:', scopeError.message);
+      whereConditions.push(`cl.owner_id = $${paramIndex}`);
+      queryParams.push(req.user.id);
+      paramIndex++;
     }
 
     const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
