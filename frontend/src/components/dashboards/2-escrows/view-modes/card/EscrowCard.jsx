@@ -41,16 +41,16 @@ import {
 import { useMotionValue, useTransform, PanInfo } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import { useEscrowCalculations } from '../../../../hooks/useEscrowCalculations';
-import { getStatusConfig } from '../../../../constants/escrowConfig';
-import { EditableTextField } from '../../../common/EditableTextField';
-import { EditableDateField } from '../../../common/EditableDateField';
-import { EditableNumberField } from '../../../common/EditableNumberField';
-import { ContactSelectionModal } from '../../../modals/ContactSelectionModal';
-import { BadgeEditor } from '../../../common/BadgeEditor';
-import PersonRoleContainer from '../../../common/PersonRoleContainer';
-import PeopleEditor from '../../../common/PeopleEditor';
-import { formatCurrency, formatDate as formatDateUtil, getInitials as getInitialsUtil, truncateText } from '../../../../utils/formatters';
+import { useEscrowCalculations } from '../../../../../hooks/useEscrowCalculations';
+import { getStatusConfig } from '../../../../../constants/escrowConfig';
+import { EditableTextField } from '../../../../common/EditableTextField';
+import { EditableDateField } from '../../../../common/EditableDateField';
+import { EditableNumberField } from '../../../../common/EditableNumberField';
+import { ContactSelectionModal } from '../../../../modals/ContactSelectionModal';
+import { BadgeEditor } from '../../../../common/BadgeEditor';
+import PersonRoleContainer from '../../../../common/PersonRoleContainer';
+import PeopleEditor from '../../../../common/PeopleEditor';
+import { formatCurrency, formatDate as formatDateUtil, getInitials as getInitialsUtil, truncateText } from '../../../../../utils/formatters';
 
 const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'spring', animationDuration = 1, animationIntensity = 1, index = 0, onArchive, onDelete, onRestore, isArchived = false, onUpdate }) => {
   const navigate = useNavigate();

@@ -19,9 +19,9 @@ import {
   RestoreFromTrash as RestoreFromTrashIcon,
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
-import { useEscrowCalculations } from '../../../../hooks/useEscrowCalculations';
-import { getStatusConfig } from '../../../../constants/escrowConfig';
-import { formatCurrency, formatDate as formatDateUtil } from '../../../../utils/formatters';
+import { useEscrowCalculations } from '../../../../../hooks/useEscrowCalculations';
+import { getStatusConfig } from '../../../../../constants/escrowConfig';
+import { formatCurrency, formatDate as formatDateUtil } from '../../../../../utils/formatters';
 
 /**
  * EscrowListItem - Full-width horizontal list view with image on left
