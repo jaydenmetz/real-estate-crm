@@ -12,6 +12,15 @@
 import { createEntityConfig } from '../../utils/config/createEntityConfig';
 import { escrowsAPI } from '../../services/api.service';
 
+// Import dashboard components
+import {
+  TotalEscrowsCard,
+  TotalThisMonthCard,
+  TotalVolumeCard,
+  TotalCommissionCard
+} from '../../components/dashboards/2-escrows/hero/stats';
+import EscrowNavigation from '../../components/dashboards/2-escrows/navigation';
+
 // Import widgets
 import TimelineWidget_White from '../../components/details/escrows/components/TimelineWidget_White';
 import FinancialsWidget_White from '../../components/details/escrows/components/FinancialsWidget_White';
@@ -93,78 +102,33 @@ export const escrowsConfig = createEntityConfig({
       addButtonLabel: 'NEW ESCROW'
     },
 
-    // Stats Configuration (dynamic based on selectedStatus and date range)
+    // Stats Configuration (component-based for reusability)
     stats: [
       // ========================================
       // ACTIVE TAB STATS (based on creation date)
       // ========================================
       {
         id: 'total_active_escrows',
-        label: 'TOTAL ESCROWS',
-        calculation: (_data, helpers) => helpers.countByStatus('active'),
-        format: 'number',
-        icon: 'Home',
-        color: '#42a5f5',
-        backgroundColor: null,
-        textColor: '#fff',
-        valueColor: null,
+        component: TotalEscrowsCard,
+        props: { status: 'active' },
         visibleWhen: ['Active']
       },
       {
         id: 'total_active_this_month',
-        label: 'TOTAL THIS MONTH\'S',
-        calculation: (data) => {
-          const now = new Date();
-          const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-
-          return data.filter(item => {
-            const status = item.escrow_status || item.status;
-            const createdDate = new Date(item.created_at || item.createdAt);
-            return status?.toLowerCase() === 'active' &&
-                   createdDate >= monthStart;
-          }).length;
-        },
-        format: 'number',
-        icon: 'Schedule',
-        color: '#42a5f5',
-        backgroundColor: null,
-        textColor: '#fff',
-        valueColor: null,
+        component: TotalThisMonthCard,
+        props: { status: 'active', dateField: 'created_at' },
         visibleWhen: ['Active']
       },
       {
         id: 'total_active_volume',
-        label: 'TOTAL VOLUME',
-        calculation: (_data, helpers) => helpers.sumByStatus('active', 'purchase_price'),
-        format: 'currency',
-        icon: 'AttachMoney',
-        color: '#42a5f5',
-        backgroundColor: null,
-        textColor: '#fff',
-        valueColor: null,
+        component: TotalVolumeCard,
+        props: { status: 'active' },
         visibleWhen: ['Active']
       },
       {
         id: 'total_active_commission',
-        label: 'TOTAL COMMISSION',
-        calculation: (data) => {
-          return data
-            .filter(item => {
-              const status = item.escrow_status || item.status;
-              return status?.toLowerCase() === 'active';
-            })
-            .reduce((sum, item) => {
-              const price = parseFloat(item.purchase_price || 0);
-              const commissionPct = parseFloat(item.commission_percentage || 3);
-              return sum + (price * (commissionPct / 100));
-            }, 0);
-        },
-        format: 'currency',
-        icon: 'Paid',
-        color: '#42a5f5',
-        backgroundColor: null,
-        textColor: '#fff',
-        valueColor: null,
+        component: TotalCommissionCard,
+        props: { status: 'active' },
         visibleWhen: ['Active']
       },
 
@@ -173,71 +137,26 @@ export const escrowsConfig = createEntityConfig({
       // ========================================
       {
         id: 'total_closed_escrows',
-        label: 'TOTAL ESCROWS',
-        calculation: (_data, helpers) => helpers.countByStatus('closed'),
-        format: 'number',
-        icon: 'CheckCircle',
-        color: '#42a5f5',
-        backgroundColor: null,
-        textColor: '#fff',
-        valueColor: null,
+        component: TotalEscrowsCard,
+        props: { status: 'closed' },
         visibleWhen: ['Closed']
       },
       {
         id: 'total_closed_this_month',
-        label: 'TOTAL THIS MONTH\'S',
-        calculation: (data) => {
-          const now = new Date();
-          const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-
-          return data.filter(item => {
-            const status = item.escrow_status || item.status;
-            const closingDate = new Date(item.closing_date);
-            return status?.toLowerCase() === 'closed' &&
-                   closingDate >= monthStart;
-          }).length;
-        },
-        format: 'number',
-        icon: 'EventAvailable',
-        color: '#42a5f5',
-        backgroundColor: null,
-        textColor: '#fff',
-        valueColor: null,
+        component: TotalThisMonthCard,
+        props: { status: 'closed', dateField: 'closing_date' },
         visibleWhen: ['Closed']
       },
       {
         id: 'total_closed_volume',
-        label: 'TOTAL VOLUME',
-        calculation: (_data, helpers) => helpers.sumByStatus('closed', 'purchase_price'),
-        format: 'currency',
-        icon: 'TrendingUp',
-        color: '#42a5f5',
-        backgroundColor: null,
-        textColor: '#fff',
-        valueColor: null,
+        component: TotalVolumeCard,
+        props: { status: 'closed' },
         visibleWhen: ['Closed']
       },
       {
         id: 'total_closed_commission',
-        label: 'TOTAL COMMISSION',
-        calculation: (data) => {
-          return data
-            .filter(item => {
-              const status = item.escrow_status || item.status;
-              return status?.toLowerCase() === 'closed';
-            })
-            .reduce((sum, item) => {
-              const price = parseFloat(item.purchase_price || 0);
-              const commissionPct = parseFloat(item.commission_percentage || 3);
-              return sum + (price * (commissionPct / 100));
-            }, 0);
-        },
-        format: 'currency',
-        icon: 'MonetizationOn',
-        color: '#42a5f5',
-        backgroundColor: null,
-        textColor: '#fff',
-        valueColor: null,
+        component: TotalCommissionCard,
+        props: { status: 'closed' },
         visibleWhen: ['Closed']
       },
 
@@ -246,71 +165,26 @@ export const escrowsConfig = createEntityConfig({
       // ========================================
       {
         id: 'total_cancelled_escrows',
-        label: 'TOTAL ESCROWS',
-        calculation: (_data, helpers) => helpers.countByStatus('cancelled'),
-        format: 'number',
-        icon: 'Cancel',
-        color: '#42a5f5',
-        backgroundColor: null,
-        textColor: '#fff',
-        valueColor: null,
+        component: TotalEscrowsCard,
+        props: { status: 'cancelled' },
         visibleWhen: ['Cancelled']
       },
       {
         id: 'total_cancelled_this_month',
-        label: 'TOTAL THIS MONTH\'S',
-        calculation: (data) => {
-          const now = new Date();
-          const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-
-          return data.filter(item => {
-            const status = item.escrow_status || item.status;
-            const updatedDate = new Date(item.updated_at || item.updatedAt);
-            return status?.toLowerCase() === 'cancelled' &&
-                   updatedDate >= monthStart;
-          }).length;
-        },
-        format: 'number',
-        icon: 'EventBusy',
-        color: '#42a5f5',
-        backgroundColor: null,
-        textColor: '#fff',
-        valueColor: null,
+        component: TotalThisMonthCard,
+        props: { status: 'cancelled', dateField: 'updated_at' },
         visibleWhen: ['Cancelled']
       },
       {
         id: 'total_cancelled_volume',
-        label: 'TOTAL VOLUME',
-        calculation: (_data, helpers) => helpers.sumByStatus('cancelled', 'purchase_price'),
-        format: 'currency',
-        icon: 'TrendingDown',
-        color: '#42a5f5',
-        backgroundColor: null,
-        textColor: '#fff',
-        valueColor: null,
+        component: TotalVolumeCard,
+        props: { status: 'cancelled' },
         visibleWhen: ['Cancelled']
       },
       {
         id: 'total_cancelled_commission',
-        label: 'TOTAL COMMISSION',
-        calculation: (data) => {
-          return data
-            .filter(item => {
-              const status = item.escrow_status || item.status;
-              return status?.toLowerCase() === 'cancelled';
-            })
-            .reduce((sum, item) => {
-              const price = parseFloat(item.purchase_price || 0);
-              const commissionPct = parseFloat(item.commission_percentage || 3);
-              return sum + (price * (commissionPct / 100));
-            }, 0);
-        },
-        format: 'currency',
-        icon: 'MoneyOff',
-        color: '#42a5f5',
-        backgroundColor: null,
-        textColor: '#fff',
-        valueColor: null,
+        component: TotalCommissionCard,
+        props: { status: 'cancelled' },
         visibleWhen: ['Cancelled']
       },
 
@@ -319,88 +193,32 @@ export const escrowsConfig = createEntityConfig({
       // ========================================
       {
         id: 'total_escrows',
-        label: 'TOTAL ESCROWS',
-        calculation: (data) => data.length,
-        format: 'number',
-        icon: 'Dashboard',
-        color: '#42a5f5',
-        backgroundColor: null,
-        textColor: '#fff',
-        valueColor: null,
+        component: TotalEscrowsCard,
+        props: { status: 'all' },
         visibleWhen: ['all']
       },
       {
         id: 'total_escrows_this_month',
-        label: 'TOTAL THIS MONTH\'S',
-        calculation: (data) => {
-          const now = new Date();
-          const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-
-          return data.filter(item => {
-            const createdDate = new Date(item.created_at || item.createdAt);
-            return createdDate >= monthStart;
-          }).length;
-        },
-        format: 'number',
-        icon: 'CalendarMonth',
-        color: '#42a5f5',
-        backgroundColor: null,
-        textColor: '#fff',
-        valueColor: null,
+        component: TotalThisMonthCard,
+        props: { status: 'all', dateField: 'created_at' },
         visibleWhen: ['all']
       },
       {
         id: 'total_volume',
-        label: 'TOTAL VOLUME',
-        calculation: (data) => {
-          return data.reduce((sum, item) => sum + parseFloat(item.purchase_price || 0), 0);
-        },
-        format: 'currency',
-        icon: 'AccountBalance',
-        color: '#42a5f5',
-        backgroundColor: null,
-        textColor: '#fff',
-        valueColor: null,
+        component: TotalVolumeCard,
+        props: { status: 'all' },
         visibleWhen: ['all']
       },
       {
         id: 'total_commission',
-        label: 'TOTAL COMMISSION',
-        calculation: (data) => {
-          // Total Closed Commission - Lost Commission
-          const closedCommission = data
-            .filter(item => {
-              const status = item.escrow_status || item.status;
-              return status?.toLowerCase() === 'closed';
-            })
-            .reduce((sum, item) => {
-              const price = parseFloat(item.purchase_price || 0);
-              const commissionPct = parseFloat(item.commission_percentage || 3);
-              return sum + (price * (commissionPct / 100));
-            }, 0);
-
-          const lostCommission = data
-            .filter(item => {
-              const status = item.escrow_status || item.status;
-              return status?.toLowerCase() === 'cancelled';
-            })
-            .reduce((sum, item) => {
-              const price = parseFloat(item.purchase_price || 0);
-              const commissionPct = parseFloat(item.commission_percentage || 3);
-              return sum + (price * (commissionPct / 100));
-            }, 0);
-
-          return closedCommission - lostCommission;
-        },
-        format: 'currency',
-        icon: 'AccountBalanceWallet',
-        color: '#42a5f5',
-        backgroundColor: null,
-        textColor: '#fff',
-        valueColor: null,
+        component: TotalCommissionCard,
+        props: { status: 'all' },
         visibleWhen: ['all']
       },
     ],
+
+    // Custom Navigation Component
+    customNavigation: EscrowNavigation,
 
     // Status Tabs Configuration
     statusTabs: [

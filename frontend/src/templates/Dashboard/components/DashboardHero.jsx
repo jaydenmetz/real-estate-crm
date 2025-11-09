@@ -425,14 +425,24 @@ export const DashboardHero = ({
                 .filter(statCfg => !statCfg.visibleWhen || statCfg.visibleWhen.includes(selectedStatus))
                 .slice(0, 4) // Max 4 stat cards
                 .map((statCfg, index) => {
-                  // Compute prefix/suffix outside JSX to avoid hoisting issues
+                  // Check if this is a component-based stat (new approach)
+                  if (statCfg.component) {
+                    const StatComponent = statCfg.component;
+                    return (
+                      <Grid item xs={12} sm={6} md={6} xl={3} key={statCfg.id}>
+                        <StatComponent
+                          data={allData}
+                          delay={index}
+                          {...(statCfg.props || {})}
+                        />
+                      </Grid>
+                    );
+                  }
+
+                  // Fallback to old calculation-based approach (for backward compatibility)
                   const prefixValue = statCfg.format === 'currency' ? '$' : (statCfg.prefix || '');
                   const suffixValue = statCfg.format === 'percentage' ? '%' : (statCfg.suffix || '');
-
-                  // Get the stat value
                   const statValue = stats?.[statCfg.id]?.value || 0;
-
-                  // Determine valueColor - support 'dynamic' for positive/negative
                   let valueColor = statCfg.valueColor;
                   if (valueColor === 'dynamic') {
                     valueColor = statValue >= 0 ? '#4caf50' : '#f44336';

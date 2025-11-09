@@ -28,7 +28,8 @@ export const DashboardTemplate = ({
   CardComponent,
   NewItemModal,
   customFilters = null,
-  customActions = null
+  customActions = null,
+  NavigationComponent = null // Optional custom navigation component
 }) => {
   // Auth context for personalized scope options
   const { user } = useAuth();
@@ -316,24 +317,44 @@ export const DashboardTemplate = ({
 
         {/* Stats are now embedded in Hero, so no separate stats section needed */}
 
-        {/* Navigation & Filters */}
-        <DashboardNavigation
-          config={{
-            ...config.dashboard,
-            scopeOptions: scopeOptions // Override with generated scope options
-          }}
-          selectedStatus={selectedStatus}
-          onStatusChange={setSelectedStatus}
-          selectedScope={selectedScope}
-          onScopeChange={setSelectedScope}
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
-          sortBy={sortBy}
-          onSortByChange={setSortBy}
-          showCalendar={showCalendar}
-          onShowCalendarChange={setShowCalendar}
-          archivedCount={archivedCount}
-        />
+        {/* Navigation & Filters - Use custom component if provided, otherwise use default */}
+        {NavigationComponent ? (
+          <NavigationComponent
+            config={{
+              ...config.dashboard,
+              scopeOptions: scopeOptions // Override with generated scope options
+            }}
+            selectedStatus={selectedStatus}
+            onStatusChange={setSelectedStatus}
+            selectedScope={selectedScope}
+            onScopeChange={setSelectedScope}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            sortBy={sortBy}
+            onSortByChange={setSortBy}
+            showCalendar={showCalendar}
+            onShowCalendarChange={setShowCalendar}
+            archivedCount={archivedCount}
+          />
+        ) : (
+          <DashboardNavigation
+            config={{
+              ...config.dashboard,
+              scopeOptions: scopeOptions // Override with generated scope options
+            }}
+            selectedStatus={selectedStatus}
+            onStatusChange={setSelectedStatus}
+            selectedScope={selectedScope}
+            onScopeChange={setSelectedScope}
+            viewMode={viewMode}
+            onViewModeChange={setViewMode}
+            sortBy={sortBy}
+            onSortByChange={setSortBy}
+            showCalendar={showCalendar}
+            onShowCalendarChange={setShowCalendar}
+            archivedCount={archivedCount}
+          />
+        )}
 
         {/* Main Content Grid/List */}
         <DashboardContent
