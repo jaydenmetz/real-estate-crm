@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const WaitlistController = require('../controllers/waitlist.controller');
-const { authMiddleware, requireRole } = require('../middleware/auth.middleware');
+const { authenticate, requireRole } = require('../middleware/auth.middleware');
 
 // DEBUG: Log what we received from the controller
 console.log('🔍 [WAITLIST ROUTES] WaitlistController type:', typeof WaitlistController);
 console.log('🔍 [WAITLIST ROUTES] WaitlistController.addToWaitlist type:', typeof WaitlistController.addToWaitlist);
 console.log('🔍 [WAITLIST ROUTES] WaitlistController.checkUsername type:', typeof WaitlistController.checkUsername);
 console.log('🔍 [WAITLIST ROUTES] WaitlistController.getWaitlist type:', typeof WaitlistController.getWaitlist);
-console.log('🔍 [WAITLIST ROUTES] authMiddleware type:', typeof authMiddleware);
+console.log('🔍 [WAITLIST ROUTES] authenticate type:', typeof authenticate);
 console.log('🔍 [WAITLIST ROUTES] requireRole type:', typeof requireRole);
 
 /**
@@ -33,7 +33,7 @@ router.get('/check-username/:username', WaitlistController.checkUsername);
 console.log('🔍 [WAITLIST ROUTES] Registering GET /admin with handler type:', typeof WaitlistController.getWaitlist);
 router.get(
   '/admin',
-  authMiddleware,
+  authenticate,
   requireRole('system_admin'),
   WaitlistController.getWaitlist
 );
