@@ -3,38 +3,9 @@ import {
   Box,
   Container,
   Typography,
-  Grid,
-  Card,
-  CardContent,
-  CardActionArea,
-  Tabs,
-  Tab,
   Paper,
   Chip
 } from '@mui/material';
-import {
-  People as PeopleIcon,
-  VpnKey as ApiKeyIcon,
-  Security as SecurityIcon,
-  Refresh as RefreshIcon,
-  Storage as DatabaseIcon,
-  Description as AuditIcon,
-  Business as BrokerIcon,
-  Assignment as OnboardingIcon,
-  Contacts as ContactsIcon,
-  Domain as ListingsIcon,
-  EventNote as AppointmentsIcon,
-  TrendingUp as LeadsIcon,
-  Gavel as EscrowsIcon,
-  Description as DocumentsIcon,
-  Folder as TemplatesIcon,
-  Assessment as ReportsIcon
-} from '@mui/icons-material';
-import UsersTable from '../../../admin/UsersTable';
-import ApiKeysTable from '../../../admin/ApiKeysTable';
-import SecurityEventsTable from '../../../admin/SecurityEventsTable';
-import RefreshTokensTable from '../../../admin/RefreshTokensTable';
-import AuditLogsTable from '../../../admin/AuditLogsTable';
 import DatabaseOverview from '../../../admin/DatabaseOverview';
 import TableDataViewer from '../../../admin/TableDataViewer';
 
@@ -45,7 +16,6 @@ import TableDataViewer from '../../../admin/TableDataViewer';
  * This is the home dashboard that system admins see when they log in
  */
 const SystemAdminHomeDashboard = () => {
-  const [activeTab, setActiveTab] = useState(0);
   const [selectedTable, setSelectedTable] = useState(null);
   const [selectedTableName, setSelectedTableName] = useState(null);
 
@@ -59,21 +29,6 @@ const SystemAdminHomeDashboard = () => {
     setSelectedTableName(null);
   };
 
-  const tables = [
-    { name: 'Overview', icon: <DatabaseIcon />, component: DatabaseOverview },
-    { name: 'Users', icon: <PeopleIcon />, component: UsersTable },
-    { name: 'API Keys', icon: <ApiKeyIcon />, component: ApiKeysTable },
-    { name: 'Security Events', icon: <SecurityIcon />, component: SecurityEventsTable },
-    { name: 'Refresh Tokens', icon: <RefreshIcon />, component: RefreshTokensTable },
-    { name: 'Audit Logs', icon: <AuditIcon />, component: AuditLogsTable },
-  ];
-
-  const TabPanel = ({ children, value, index }) => (
-    <div role="tabpanel" hidden={value !== index}>
-      {value === index && <Box sx={{ py: 3 }}>{children}</Box>}
-    </div>
-  );
-
   return (
     <Box sx={{
       minHeight: '100vh',
@@ -82,7 +37,7 @@ const SystemAdminHomeDashboard = () => {
     }}>
       <Container maxWidth="xl">
         <Paper elevation={3} sx={{ p: 3, mb: 3, backgroundColor: 'rgba(255, 255, 255, 0.98)' }}>
-          <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
+          <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
             <Box>
               <Typography variant="h4" fontWeight="bold" gutterBottom>
                 Admin Panel
@@ -98,38 +53,15 @@ const SystemAdminHomeDashboard = () => {
             />
           </Box>
 
-          <Tabs
-            value={activeTab}
-            onChange={(e, newValue) => setActiveTab(newValue)}
-            variant="scrollable"
-            scrollButtons="auto"
-            sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}
-          >
-            {tables.map((table, index) => (
-              <Tab
-                key={table.name}
-                icon={table.icon}
-                label={table.name}
-                iconPosition="start"
-              />
-            ))}
-          </Tabs>
-
-          {tables.map((table, index) => (
-            <TabPanel key={table.name} value={activeTab} index={index}>
-              {table.name === 'Overview' && selectedTable ? (
-                <TableDataViewer
-                  tableName={selectedTable}
-                  displayName={selectedTableName}
-                  onBack={handleBackToOverview}
-                />
-              ) : table.name === 'Overview' ? (
-                <DatabaseOverview onTableClick={handleTableClick} />
-              ) : (
-                <table.component />
-              )}
-            </TabPanel>
-          ))}
+          {selectedTable ? (
+            <TableDataViewer
+              tableName={selectedTable}
+              displayName={selectedTableName}
+              onBack={handleBackToOverview}
+            />
+          ) : (
+            <DatabaseOverview onTableClick={handleTableClick} />
+          )}
         </Paper>
       </Container>
     </Box>
