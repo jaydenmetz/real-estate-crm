@@ -18,8 +18,8 @@ import {
   TotalThisMonthCard,
   TotalVolumeCard,
   TotalCommissionCard
-} from '../../components/dashboards/2-escrows/hero/stats';
-import EscrowNavigation from '../../components/dashboards/2-escrows/navigation';
+} from '../../components/dashboards/escrows/hero/stats';
+import EscrowNavigation from '../../components/dashboards/escrows/navigation';
 
 // Import widgets
 import TimelineWidget_White from '../../components/details/escrows/components/TimelineWidget_White';

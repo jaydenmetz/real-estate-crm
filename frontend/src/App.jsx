@@ -25,17 +25,17 @@ import GlobalErrorBoundary from './components/common/GlobalErrorBoundary';
 import ConnectionStatus from './components/common/ConnectionStatus';
 
 // Dashboard Components
-import HomeDashboard from './components/dashboards/1-home';
+import HomeDashboard from './components/dashboards/home';
 import ProjectRoadmapDashboard from './components/common/ProjectRoadmapDashboard';
-import EscrowsDashboard from './components/dashboards/2-escrows';
+import EscrowsDashboard from './components/dashboards/escrows';
 import EscrowDetail from './components/details/escrows';
-import ListingsDashboard from './components/dashboards/6-listings';
+import ListingsDashboard from './components/dashboards/listings';
 import ListingDetail from './components/details/listings';
-import ClientsDashboard from './components/dashboards/3-clients';
+import ClientsDashboard from './components/dashboards/clients';
 import ClientDetail from './components/details/clients';
-import AppointmentsDashboard from './components/dashboards/4-appointments';
+import AppointmentsDashboard from './components/dashboards/appointments';
 import AppointmentDetail from './components/details/appointments';
-import LeadsDashboard from './components/dashboards/5-leads';
+import LeadsDashboard from './components/dashboards/leads';
 import LeadDetail from './components/details/leads';
 
 // Financial Components (moved to _future folder - not yet implemented)

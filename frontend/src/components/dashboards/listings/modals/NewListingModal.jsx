@@ -39,7 +39,7 @@ import {
 import { listingsAPI, clientsAPI } from '../../../../services/api.service';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { loadGoogleMapsScript } from '../../../../utils/googleMapsLoader';
-import NewClientModal from '../../3-clients/modals/NewClientModal';
+import NewClientModal from '../../clients/modals/NewClientModal';
 import PrivacyControl from '../../../common/PrivacyControl';
 
 const NewListingModal = ({ open, onClose, onSuccess }) => {
