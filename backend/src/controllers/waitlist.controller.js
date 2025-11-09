@@ -1,8 +1,5 @@
 const { pool } = require('../config/database');
 
-// DEBUG: Log that controller is being loaded
-console.log('🔍 [WAITLIST CONTROLLER] Loading WaitlistController...');
-
 /**
  * Waitlist Controller
  *
@@ -245,14 +242,4 @@ class WaitlistController {
   }
 }
 
-// DEBUG: Log methods before export
-console.log('🔍 [WAITLIST CONTROLLER] Class defined. Methods:');
-console.log('🔍 [WAITLIST CONTROLLER]   - addToWaitlist:', typeof WaitlistController.addToWaitlist);
-console.log('🔍 [WAITLIST CONTROLLER]   - checkUsername:', typeof WaitlistController.checkUsername);
-console.log('🔍 [WAITLIST CONTROLLER]   - getWaitlist:', typeof WaitlistController.getWaitlist);
-
 module.exports = WaitlistController;
-
-// DEBUG: Verify export
-console.log('🔍 [WAITLIST CONTROLLER] Exported. Verify export type:', typeof module.exports);
-console.log('🔍 [WAITLIST CONTROLLER] Exported addToWaitlist type:', typeof module.exports.addToWaitlist);
