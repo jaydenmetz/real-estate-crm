@@ -12,6 +12,8 @@ exports.getAllClients = async (req, res) => {
       limit = 20,
       status = 'active',
       search,
+      sortBy = 'created_at',
+      sortOrder = 'desc',
     } = req.query;
 
     const offset = (page - 1) * limit;
@@ -66,6 +68,21 @@ exports.getAllClients = async (req, res) => {
     const countResult = await pool.query(countQuery, queryParams);
     const total = parseInt(countResult.rows[0].total);
 
+    // Validate and build ORDER BY clause
+    const allowedSortFields = {
+      'created_at': 'cl.created_at',
+      'updated_at': 'cl.updated_at',
+      'first_name': 'co.first_name',
+      'last_name': 'co.last_name',
+      'email': 'co.email',
+      'status': 'cl.status',
+      'client_type': 'cl.client_type',
+    };
+
+    const sortField = allowedSortFields[sortBy] || 'cl.created_at';
+    const sortDirection = sortOrder.toLowerCase() === 'asc' ? 'ASC' : 'DESC';
+    const orderByClause = `ORDER BY ${sortField} ${sortDirection}`;
+
     // Get clients with contact info
     queryParams.push(limit, offset);
     const dataQuery = `
@@ -89,7 +106,7 @@ exports.getAllClients = async (req, res) => {
       FROM clients cl
       JOIN contacts co ON cl.contact_id = co.id
       ${whereClause}
-      ORDER BY cl.created_at DESC
+      ${orderByClause}
       LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
     `;
 
