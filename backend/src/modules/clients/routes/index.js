@@ -15,20 +15,40 @@ const {
 // All routes require authentication
 router.use(authenticate);
 
-// Validation rules
+// Validation rules - Accept both camelCase and snake_case for backwards compatibility
 const createValidation = [
-  body('firstName').notEmpty().withMessage('First name is required'),
-  body('lastName').notEmpty().withMessage('Last name is required'),
+  // Name fields - accept either firstName or first_name (at least one required)
+  body().custom((value, { req }) => {
+    const hasFirstName = req.body.firstName || req.body.first_name;
+    const hasLastName = req.body.lastName || req.body.last_name;
+    if (!hasFirstName || !hasLastName) {
+      throw new Error('First name and last name are required');
+    }
+    return true;
+  }),
   body('email').optional().isEmail().withMessage('Valid email is required'),
-  body('clientType').optional().isIn(['Buyer', 'Seller', 'Both', 'Investor', 'Referral', 'buyer', 'seller', 'both', 'investor', 'referral']),
+  // Client type - accept both formats
+  body('clientType')
+    .optional()
+    .isIn(['Buyer', 'Seller', 'Both', 'Investor', 'Referral', 'buyer', 'seller', 'both', 'investor', 'referral']),
+  body('client_type')
+    .optional()
+    .isIn(['Buyer', 'Seller', 'Both', 'Investor', 'Referral', 'buyer', 'seller', 'both', 'investor', 'referral']),
   body('phone').optional().isString().withMessage('Invalid phone number'),
 ];
 
 const updateValidation = [
   body('firstName').optional().notEmpty(),
+  body('first_name').optional().notEmpty(),
   body('lastName').optional().notEmpty(),
+  body('last_name').optional().notEmpty(),
   body('email').optional().isEmail(),
-  body('clientType').optional().isIn(['Buyer', 'Seller', 'Both', 'Investor', 'Referral', 'buyer', 'seller', 'both', 'investor', 'referral']),
+  body('clientType')
+    .optional()
+    .isIn(['Buyer', 'Seller', 'Both', 'Investor', 'Referral', 'buyer', 'seller', 'both', 'investor', 'referral']),
+  body('client_type')
+    .optional()
+    .isIn(['Buyer', 'Seller', 'Both', 'Investor', 'Referral', 'buyer', 'seller', 'both', 'investor', 'referral']),
   body('status').optional().isIn(['active', 'inactive', 'archived']),
 ];
 

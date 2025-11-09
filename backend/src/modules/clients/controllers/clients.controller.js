@@ -208,19 +208,37 @@ exports.getClientById = async (req, res) => {
 exports.createClient = async (req, res) => {
   const client = await pool.connect();
   try {
+    // Accept both camelCase and snake_case field names
     const {
       firstName,
       lastName,
       email,
       phone,
-      clientType = 'Buyer',
+      clientType,
       addressStreet,
       addressCity,
       addressState,
       addressZip,
       notes,
       tags = [],
+      // snake_case alternatives
+      first_name,
+      last_name,
+      client_type,
+      address_street,
+      address_city,
+      address_state,
+      address_zip,
     } = req.body;
+
+    // Use snake_case if camelCase not provided
+    const finalFirstName = firstName || first_name;
+    const finalLastName = lastName || last_name;
+    const finalClientType = (clientType || client_type || 'Buyer');
+    const finalAddressStreet = addressStreet || address_street;
+    const finalAddressCity = addressCity || address_city;
+    const finalAddressState = addressState || address_state;
+    const finalAddressZip = addressZip || address_zip;
 
     await client.query('BEGIN');
 
@@ -254,15 +272,15 @@ exports.createClient = async (req, res) => {
     `;
 
     const contactValues = [
-      clientType.toLowerCase(), // contact_type: 'buyer', 'seller', 'client'
-      firstName,
-      lastName,
+      finalClientType.toLowerCase(), // contact_type: 'buyer', 'seller', 'client'
+      finalFirstName,
+      finalLastName,
       email,
       phone,
-      addressStreet,
-      addressCity,
-      addressState,
-      addressZip,
+      finalAddressStreet,
+      finalAddressCity,
+      finalAddressState,
+      finalAddressZip,
       notes,
       tags,
       req.user?.teamId || req.user?.team_id || null,
@@ -278,7 +296,7 @@ exports.createClient = async (req, res) => {
       RETURNING id
     `;
 
-    const clientResult = await client.query(clientQuery, [contactId, clientType.toLowerCase()]);
+    const clientResult = await client.query(clientQuery, [contactId, finalClientType.toLowerCase()]);
 
     await client.query('COMMIT');
 
@@ -286,11 +304,11 @@ exports.createClient = async (req, res) => {
     const newClient = {
       id: clientResult.rows[0].id,
       contact_id: contactId,
-      first_name: firstName,
-      last_name: lastName,
+      first_name: finalFirstName,
+      last_name: finalLastName,
       email,
       phone,
-      client_type: clientType,
+      client_type: finalClientType,
       status: 'active',
     };
     const teamId = req.user?.teamId || req.user?.team_id;
