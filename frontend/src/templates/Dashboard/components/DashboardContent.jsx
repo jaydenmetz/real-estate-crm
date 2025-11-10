@@ -286,7 +286,7 @@ export const DashboardContent = ({
                             viewMode={viewMode}
                             index={index}
                             isArchived={true}
-                            onUpdate={onUpdate ? (updates) => onUpdate(itemId, updates) : undefined}
+                            onUpdate={onUpdate ? (id, updates) => onUpdate(id, updates) : undefined}
                             onDelete={onDelete ? () => onDelete(itemId) : undefined}
                             onRestore={onRestore ? () => onRestore(itemId) : undefined}
                             customActions={customActions}
@@ -320,7 +320,7 @@ export const DashboardContent = ({
                     viewMode={viewMode}
                     index={index}
                     isArchived={false}
-                    onUpdate={onUpdate ? (updates) => onUpdate(itemId, updates) : undefined}
+                    onUpdate={onUpdate ? (id, updates) => onUpdate(id, updates) : undefined}
                     onDelete={onDelete ? () => onDelete(itemId) : undefined}
                     onArchive={onArchive ? () => onArchive(itemId) : undefined}
                     customActions={customActions}
