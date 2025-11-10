@@ -382,6 +382,16 @@ class AdminController {
       };
       const pkColumn = primaryKeyMap[tableName] || 'id';
 
+      // SPECIAL HANDLING: Users table - clear created_by references in contacts first
+      if (tableName === 'users') {
+        // Clear created_by references in contacts table to prevent foreign key violations
+        const placeholders = ids.map((_, i) => `$${i + 1}`).join(',');
+        await pool.query(
+          `UPDATE contacts SET created_by = NULL WHERE created_by IN (${placeholders})`,
+          ids
+        );
+      }
+
       // Create placeholders for parameterized query
       const placeholders = ids.map((_, i) => `$${i + 1}`).join(',');
 
