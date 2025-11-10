@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Typography, IconButton, TextField } from '@mui/material';
 import { Check, Close, Event } from '@mui/icons-material';
-import { format, parseISO, isValid } from 'date-fns';
+import { format, isValid } from 'date-fns';
+import { parseLocalDate } from '../../../../utils/safeDateUtils';
 import { ModalDialog } from '../shared/ModalDialog';
 import { CustomCalendar } from '../shared/CustomCalendar';
 
@@ -31,19 +32,8 @@ export const EditDate = ({
   useEffect(() => {
     if (open && value) {
       try {
-        let date;
-        if (typeof value === 'string') {
-          // Parse as local date to avoid timezone shifts
-          const parts = value.split('T')[0].split('-');
-          if (parts.length === 3) {
-            const [year, month, day] = parts.map(Number);
-            date = new Date(year, month - 1, day);
-          } else {
-            date = parseISO(value);
-          }
-        } else {
-          date = new Date(value);
-        }
+        // Parse as local date to avoid timezone shifts (for DATE columns)
+        const date = typeof value === 'string' ? parseLocalDate(value) : new Date(value);
 
         if (isValid(date)) {
           setEditValue(date); // Store as Date object
@@ -110,14 +100,10 @@ export const EditDate = ({
     if (dateString) {
       try {
         // Parse as local date to avoid timezone shifts
-        const parts = dateString.split('-');
-        if (parts.length === 3) {
-          const [year, month, day] = parts.map(Number);
-          const date = new Date(year, month - 1, day);
-          if (isValid(date)) {
-            console.log('Parsed manual date:', date);
-            setEditValue(date);
-          }
+        const date = parseLocalDate(dateString);
+        if (isValid(date)) {
+          console.log('Parsed manual date:', date);
+          setEditValue(date);
         }
       } catch (error) {
         console.error('Invalid date input:', error);
@@ -136,19 +122,8 @@ export const EditDate = ({
   const formatDisplayDate = (dateValue) => {
     if (!dateValue) return 'Not set';
     try {
-      let date;
-      if (typeof dateValue === 'string') {
-        // Parse as local date to avoid timezone shifts
-        const parts = dateValue.split('T')[0].split('-');
-        if (parts.length === 3) {
-          const [year, month, day] = parts.map(Number);
-          date = new Date(year, month - 1, day);
-        } else {
-          date = parseISO(dateValue);
-        }
-      } else {
-        date = new Date(dateValue);
-      }
+      // Parse as local date to avoid timezone shifts
+      const date = typeof dateValue === 'string' ? parseLocalDate(dateValue) : new Date(dateValue);
 
       if (!isValid(date)) return 'Not set';
       return format(date, 'MMMM d, yyyy');

@@ -9,7 +9,8 @@ import {
 } from '@mui/material';
 import { Check, Close, Event } from '@mui/icons-material';
 import { alpha } from '@mui/material/styles';
-import { format, parseISO, isValid } from 'date-fns';
+import { format, isValid } from 'date-fns';
+import { parseLocalDate } from '../../../utils/safeDateUtils';
 
 /**
  * Date Picker Modal Popup
@@ -18,9 +19,9 @@ import { format, parseISO, isValid } from 'date-fns';
  *
  * @param {boolean} open - Dialog open state
  * @param {function} onClose - Close handler
- * @param {function} onSave - Save handler (newDateValue) => void
+ * @param {function} onSave - Save handler (newDateValue) => void - expects YYYY-MM-DD string
  * @param {string} label - Field label (e.g., "Acceptance Date", "Closing Date")
- * @param {string|Date} value - Current date value (ISO string or Date object)
+ * @param {string|Date} value - Current date value (YYYY-MM-DD string or Date object)
  * @param {string} color - Calendar color theme (default: indigo)
  */
 export const DatePickerModal = ({
@@ -38,7 +39,8 @@ export const DatePickerModal = ({
   useEffect(() => {
     if (open && value) {
       try {
-        const date = typeof value === 'string' ? parseISO(value) : new Date(value);
+        // Parse as local date to avoid timezone shifts
+        const date = typeof value === 'string' ? parseLocalDate(value) : value;
         if (isValid(date)) {
           // Format for input: YYYY-MM-DD
           setEditValue(format(date, 'yyyy-MM-dd'));
@@ -60,14 +62,15 @@ export const DatePickerModal = ({
 
     setSaving(true);
     try {
-      // Convert to ISO string for backend
-      const date = parseISO(editValue);
-      if (!isValid(date)) {
-        console.error('Invalid date selected');
+      // Validate format: editValue should be YYYY-MM-DD
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(editValue)) {
+        console.error('Invalid date format:', editValue);
+        setSaving(false);
         return;
       }
 
-      await onSave(date.toISOString());
+      // Save as YYYY-MM-DD string (no timezone conversion)
+      await onSave(editValue);
       onClose();
     } catch (error) {
       console.error('Failed to save date:', error);
@@ -87,7 +90,8 @@ export const DatePickerModal = ({
   const formatDisplayDate = (dateValue) => {
     if (!dateValue) return 'Not set';
     try {
-      const date = typeof dateValue === 'string' ? parseISO(dateValue) : new Date(dateValue);
+      // Parse as local date to avoid timezone shifts
+      const date = typeof dateValue === 'string' ? parseLocalDate(dateValue) : dateValue;
       if (!isValid(date)) return 'Not set';
       return format(date, 'MMMM d, yyyy');
     } catch (error) {

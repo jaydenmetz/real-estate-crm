@@ -1,6 +1,7 @@
 // File: frontend/src/utils/formatters.js
 
 import { format, parseISO, isValid, differenceInDays } from 'date-fns';
+import { parseLocalDate } from './safeDateUtils';
 
 /**
  * Format currency values
@@ -60,12 +61,11 @@ export function formatDate(date, formatString = 'MMM d, yyyy') {
     if (typeof date === 'string') {
       // For date-only strings (YYYY-MM-DD), parse as local date to avoid timezone shifts
       // e.g., '2025-11-27' should be Nov 27, not Nov 26 in PST
-      const parts = date.split('T')[0].split('-'); // Handle both '2025-11-27' and '2025-11-27T00:00:00Z'
-      if (parts.length === 3) {
-        const [year, month, day] = parts.map(Number);
-        dateObj = new Date(year, month - 1, day); // month is 0-indexed
-      } else {
-        dateObj = parseISO(date); // Fallback for other formats
+      dateObj = parseLocalDate(date);
+
+      // Fallback to parseISO for timestamp strings (created_at, updated_at, etc.)
+      if (!dateObj) {
+        dateObj = parseISO(date);
       }
     } else {
       dateObj = date;
