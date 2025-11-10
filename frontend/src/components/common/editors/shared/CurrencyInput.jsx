@@ -36,18 +36,24 @@ export const CurrencyInput = ({
 
   // Sync local value when prop value changes (including on mount)
   useEffect(() => {
-    setLocalValue(value || '');
+    if (value !== undefined && value !== null) {
+      setLocalValue(value.toString());
+    } else {
+      setLocalValue('');
+    }
   }, [value]);
 
   useEffect(() => {
     if (autoFocus && inputRef.current) {
       const input = inputRef.current.querySelector('input');
       if (input) {
-        input.focus();
-        // Place cursor at end
+        // Wait for value to be rendered first
         setTimeout(() => {
-          input.setSelectionRange(input.value.length, input.value.length);
-        }, 0);
+          input.focus();
+          // Place cursor at end of formatted value
+          const endPos = input.value.length;
+          input.setSelectionRange(endPos, endPos);
+        }, 50);
       }
     }
   }, [autoFocus]);
@@ -108,10 +114,22 @@ export const CurrencyInput = ({
     onChange(digitsOnly);
   };
 
-  const handleFocus = () => setIsFocused(true);
+  const handleFocus = () => {
+    setIsFocused(true);
+    // Ensure local value is synced when focusing
+    if (value !== undefined && value !== null) {
+      setLocalValue(value.toString());
+    }
+  };
+
   const handleBlur = () => {
     setIsFocused(false);
-    setLocalValue(value || '');
+    // Reset to prop value on blur
+    if (value !== undefined && value !== null) {
+      setLocalValue(value.toString());
+    } else {
+      setLocalValue('');
+    }
   };
 
   const displayValue = formatDisplay(isFocused ? localValue : value);
