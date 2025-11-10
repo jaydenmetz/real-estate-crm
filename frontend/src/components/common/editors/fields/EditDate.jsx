@@ -67,10 +67,11 @@ export const EditDate = ({
         return;
       }
 
-      const isoString = dateToSave.toISOString();
-      console.log('Saving date:', { editValue, dateToSave, isoString });
+      // Format as YYYY-MM-DD for PostgreSQL DATE columns (no time component)
+      const dateString = format(dateToSave, 'yyyy-MM-dd');
+      console.log('Saving date:', { editValue, dateToSave, dateString });
 
-      await onSave(isoString);
+      await onSave(dateString);
       onClose();
     } catch (error) {
       console.error('Failed to save date:', error);
