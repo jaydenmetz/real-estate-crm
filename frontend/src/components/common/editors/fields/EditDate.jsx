@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, IconButton } from '@mui/material';
+import { Box, Typography, IconButton, TextField } from '@mui/material';
 import { Check, Close, Event } from '@mui/icons-material';
 import { format, parseISO, isValid } from 'date-fns';
 import { ModalDialog } from '../shared/ModalDialog';
-import { DateInput } from '../shared/DateInput';
+import { CustomCalendar } from '../shared/CustomCalendar';
 
 /**
  * Generic Date Editor
@@ -53,8 +53,8 @@ export const EditDate = ({
 
     setSaving(true);
     try {
-      // Convert to ISO string for backend
-      const date = parseISO(editValue);
+      // editValue is already a Date object from calendar selection
+      const date = typeof editValue === 'string' ? parseISO(editValue) : editValue;
       if (!isValid(date)) {
         console.error('Invalid date selected');
         return;
@@ -67,6 +67,15 @@ export const EditDate = ({
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleCalendarSelect = (date) => {
+    setEditValue(date);
+  };
+
+  const handleManualInput = (e) => {
+    // Allow manual typing in YYYY-MM-DD format
+    setEditValue(e.target.value);
   };
 
   const handleKeyPress = (e) => {
@@ -121,12 +130,54 @@ export const EditDate = ({
           {formatDisplayDate(value)}
         </Typography>
 
-        {/* Date Picker Input */}
-        <DateInput
-          value={editValue}
-          onChange={setEditValue}
+        {/* Manual Date Input (Optional) */}
+        <TextField
+          fullWidth
+          value={typeof editValue === 'string' ? editValue : editValue ? format(editValue, 'yyyy-MM-dd') : ''}
+          onChange={handleManualInput}
           onKeyDown={handleKeyPress}
+          type="date"
           disabled={saving}
+          inputProps={{
+            max: '2099-12-31',
+          }}
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              backgroundColor: 'rgba(255,255,255,0.15)',
+              borderRadius: 2,
+              fontSize: '1.1rem',
+              fontWeight: 600,
+              color: 'white',
+              '& fieldset': {
+                borderColor: 'rgba(255,255,255,0.3)',
+                borderWidth: 2,
+              },
+              '&:hover fieldset': {
+                borderColor: 'rgba(255,255,255,0.5)',
+              },
+              '&.Mui-focused fieldset': {
+                borderColor: 'white',
+              },
+            },
+            '& .MuiInputBase-input': {
+              color: 'white',
+              fontWeight: 600,
+              fontSize: '1.1rem',
+              padding: '12px',
+            },
+            '& input[type="date"]::-webkit-calendar-picker-indicator': {
+              filter: 'invert(1)',
+              fontSize: '1.2rem',
+              cursor: 'pointer',
+            },
+          }}
+        />
+
+        {/* Custom Calendar */}
+        <CustomCalendar
+          selectedDate={editValue}
+          onSelectDate={handleCalendarSelect}
+          color={color}
         />
 
         {/* Action Buttons */}
