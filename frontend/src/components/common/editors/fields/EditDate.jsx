@@ -68,7 +68,12 @@ export const EditDate = ({
       }
 
       // Format as YYYY-MM-DD for PostgreSQL DATE columns (no time component)
-      const dateString = format(dateToSave, 'yyyy-MM-dd');
+      // Use UTC methods to avoid timezone shifts (e.g., selecting Nov 28 should save as 2025-11-28, not 2025-11-27)
+      const year = dateToSave.getFullYear();
+      const month = String(dateToSave.getMonth() + 1).padStart(2, '0');
+      const day = String(dateToSave.getDate()).padStart(2, '0');
+      const dateString = `${year}-${month}-${day}`;
+
       console.log('Saving date:', { editValue, dateToSave, dateString });
 
       await onSave(dateString);
