@@ -47,8 +47,10 @@ import { EditableTextField } from '../../../../common/editors/EditableTextField'
 import { EditableDateField } from '../../../../common/editors/EditableDateField';
 import { EditableNumberField } from '../../../../common/editors/EditableNumberField';
 import { ContactSelectionModal } from '../../../../modals/ContactSelectionModal';
-import { BadgeEditor } from '../../../../common/editors/BadgeEditor';
-import { DatePickerModal } from '../../../../common/editors/DatePickerModal';
+import { EditPurchasePrice } from '../../editors/EditPurchasePrice';
+import { EditCommissionAmount } from '../../editors/EditCommissionAmount';
+import { EditAcceptanceDate } from '../../editors/EditAcceptanceDate';
+import { EditClosingDate } from '../../editors/EditClosingDate';
 import PersonRoleContainer from '../../../../common/editors/PersonRoleContainer';
 import PeopleEditor from '../../../../common/editors/PeopleEditor';
 import { formatCurrency, formatDate as formatDateUtil, getInitials as getInitialsUtil, truncateText } from '../../../../../utils/formatters';
@@ -1459,47 +1461,36 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
       />
 
       {/* Price Badge Editor */}
-      <BadgeEditor
+      <EditPurchasePrice
         open={priceEditorOpen}
         onClose={() => setPriceEditorOpen(false)}
         onSave={(newValue) => onUpdate(escrow.id, { purchase_price: newValue })}
-        label="Purchase Price"
         value={purchasePrice}
-        color="#10b981"
-        prefix="$"
       />
 
-      {/* Commission Badge Editor */}
-      <BadgeEditor
+      {/* Commission Editor */}
+      <EditCommissionAmount
         open={commissionEditorOpen}
         onClose={() => setCommissionEditorOpen(false)}
         onSave={(newValue) => onUpdate(escrow.id, { my_commission: newValue })}
-        label="Commission"
         value={commission}
-        color="#6366f1"
-        prefix="$"
-        isCommission={true}
         purchasePrice={parseFloat(escrow.purchase_price || escrow.purchasePrice || 0)}
       />
 
-      {/* Acceptance Date Picker Modal */}
-      <DatePickerModal
+      {/* Acceptance Date Editor */}
+      <EditAcceptanceDate
         open={acceptanceDatePickerOpen}
         onClose={() => setAcceptanceDatePickerOpen(false)}
         onSave={(newValue) => onUpdate(escrow.id, { acceptance_date: newValue })}
-        label="Acceptance Date"
         value={acceptanceDate}
-        color="#3b82f6"
       />
 
-      {/* Closing Date Picker Modal */}
-      <DatePickerModal
+      {/* Closing Date Editor */}
+      <EditClosingDate
         open={closingDatePickerOpen}
         onClose={() => setClosingDatePickerOpen(false)}
         onSave={(newValue) => onUpdate(escrow.id, { closing_date: newValue })}
-        label="Closing Date"
         value={closingDate}
-        color="#8b5cf6"
       />
 
       {/* People Editor Modal */}
