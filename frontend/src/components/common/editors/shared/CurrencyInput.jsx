@@ -154,7 +154,7 @@ export const CurrencyInput = ({
   const adaptiveFontSize = getAdaptiveFontSize();
 
   return (
-    <Box sx={{ position: 'relative', width: '100%', maxWidth: '380px' }}>
+    <Box sx={{ position: 'relative', width: '100%', maxWidth: '340px' }}>
       <TextField
         ref={inputRef}
         fullWidth
@@ -229,7 +229,7 @@ export const CurrencyInput = ({
                 fontSize: adaptiveFontSize,
                 fontWeight: 600,
                 color: 'rgba(255,255,255,0.4)',
-                ml: 0.25,
+                ml: 0,
                 letterSpacing: '-0.5px',
                 fontFamily: 'system-ui, -apple-system, sans-serif',
                 transition: 'font-size 0.2s ease',
