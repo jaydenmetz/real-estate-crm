@@ -208,6 +208,13 @@ export const DashboardTemplate = ({
   };
 
   const handleUpdate = async (id, updates) => {
+    console.log('🟡 DashboardTemplate handleUpdate called:', {
+      id,
+      updates,
+      idType: typeof id,
+      updatesType: typeof updates,
+      entity: config.entity.name
+    });
     try {
       await config.api.update(id, updates);
       await refetch();

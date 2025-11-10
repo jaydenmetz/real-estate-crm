@@ -409,7 +409,10 @@ export const escrowsAPI = {
   getById: (id) => apiInstance.get(`/escrows/${id}`),
   getOne: (id) => apiInstance.get(`/escrows/${id}`), // Alias for consistency
   create: (data) => apiInstance.post('/escrows', data),
-  update: (id, data) => apiInstance.put(`/escrows/${id}`, data),
+  update: (id, data) => {
+    console.log('🟢 escrowsAPI.update called:', { id, data, idType: typeof id, dataType: typeof data });
+    return apiInstance.put(`/escrows/${id}`, data);
+  },
   archive: (id) => apiInstance.patch(`/escrows/${id}/archive`),
   restore: (id) => apiInstance.patch(`/escrows/${id}/restore`),
   delete: (id) => apiInstance.delete(`/escrows/${id}`), // Permanent delete (only for archived)
