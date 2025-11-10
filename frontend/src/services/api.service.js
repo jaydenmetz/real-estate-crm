@@ -242,6 +242,12 @@ class ApiService {
 
   // PUT request
   async put(endpoint, data = {}) {
+    console.log('🔵 API PUT REQUEST:', {
+      endpoint,
+      data,
+      dataType: typeof data,
+      stringified: JSON.stringify(data),
+    });
     return this.request(endpoint, {
       method: 'PUT',
       body: JSON.stringify(data),
