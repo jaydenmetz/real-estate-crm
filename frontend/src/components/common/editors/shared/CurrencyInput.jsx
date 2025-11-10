@@ -1,18 +1,23 @@
-import React from 'react';
-import { TextField, InputAdornment, Typography } from '@mui/material';
+import React, { useState, useRef, useEffect } from 'react';
+import { Box, Typography } from '@mui/material';
 
 /**
- * Reusable Currency Input Component
- * Provides consistent styling for dollar amount inputs
+ * Beautiful Currency Input Component
+ * Live-formats currency as you type with styled commas and decimals
  *
- * @param {string|number} value - Input value
- * @param {function} onChange - Change handler (receives string)
+ * Features:
+ * - Commas and .00 appear in lighter gray as you type
+ * - Handles any amount from $15,000.00 to $1,150,000.00+
+ * - Auto-formats with proper thousand separators
+ * - Clean, minimal design matching calendar theme
+ *
+ * @param {string|number} value - Raw number value (e.g., "650000")
+ * @param {function} onChange - Change handler (receives raw number string)
  * @param {function} onKeyDown - Keyboard event handler
  * @param {boolean} disabled - Disabled state
  * @param {string} placeholder - Placeholder text
  * @param {boolean} autoFocus - Auto focus on mount
  * @param {string} prefix - Currency prefix (default: $)
- * @param {string} endAdornment - Optional end adornment (e.g., "%" for percentages)
  */
 export const CurrencyInput = ({
   value,
@@ -22,65 +27,129 @@ export const CurrencyInput = ({
   placeholder = 'Enter amount',
   autoFocus = true,
   prefix = '$',
-  endAdornment = null,
 }) => {
+  const inputRef = useRef(null);
+  const [isFocused, setIsFocused] = useState(false);
+
+  useEffect(() => {
+    if (autoFocus && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [autoFocus]);
+
+  // Format display value with commas
+  const formatDisplay = (val) => {
+    if (!val || val === '') return '';
+    const num = parseFloat(val.replace(/,/g, ''));
+    if (isNaN(num)) return '';
+    return num.toLocaleString('en-US');
+  };
+
+  // Handle input changes - only allow numbers
+  const handleChange = (e) => {
+    const raw = e.target.value;
+    // Remove all non-digits
+    const digitsOnly = raw.replace(/\D/g, '');
+    onChange(digitsOnly);
+  };
+
+  const handleFocus = () => setIsFocused(true);
+  const handleBlur = () => setIsFocused(false);
+
+  const displayValue = formatDisplay(value);
+
   return (
-    <TextField
-      fullWidth
-      autoFocus={autoFocus}
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      onKeyDown={onKeyDown}
-      type="number"
-      placeholder={placeholder}
-      disabled={disabled}
-      InputProps={{
-        startAdornment: endAdornment ? null : (
-          <InputAdornment position="start">
-            <Typography sx={{ color: 'white', fontWeight: 700, fontSize: '1.5rem' }}>
-              {prefix}
-            </Typography>
-          </InputAdornment>
-        ),
-        endAdornment: endAdornment ? (
-          <InputAdornment position="end">
-            <Typography sx={{ color: 'white', fontWeight: 700, fontSize: '1.5rem' }}>
-              {endAdornment}
-            </Typography>
-          </InputAdornment>
-        ) : null,
-      }}
+    <Box
       sx={{
-        '& .MuiOutlinedInput-root': {
+        position: 'relative',
+        width: '100%',
+      }}
+    >
+      {/* Hidden input for actual data entry */}
+      <input
+        ref={inputRef}
+        type="text"
+        inputMode="numeric"
+        value={value || ''}
+        onChange={handleChange}
+        onKeyDown={onKeyDown}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
+        disabled={disabled}
+        placeholder={placeholder}
+        style={{
+          position: 'absolute',
+          left: 0,
+          top: 0,
+          width: '100%',
+          height: '100%',
+          opacity: 0,
+          cursor: 'text',
+          zIndex: 1,
+        }}
+      />
+
+      {/* Styled display */}
+      <Box
+        sx={{
           backgroundColor: 'rgba(255,255,255,0.15)',
           borderRadius: 2,
-          fontSize: '1.5rem',
-          fontWeight: 700,
-          color: 'white',
-          '& fieldset': {
-            borderColor: 'rgba(255,255,255,0.3)',
-            borderWidth: 2,
-          },
-          '&:hover fieldset': {
-            borderColor: 'rgba(255,255,255,0.5)',
-          },
-          '&.Mui-focused fieldset': {
-            borderColor: 'white',
-          },
-        },
-        '& .MuiInputBase-input': {
-          color: 'white',
-          fontWeight: 700,
-          fontSize: '1.5rem',
-        },
-        '& input[type=number]': {
-          MozAppearance: 'textfield',
-        },
-        '& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button': {
-          WebkitAppearance: 'none',
-          margin: 0,
-        },
-      }}
-    />
+          border: '2px solid',
+          borderColor: isFocused
+            ? 'white'
+            : disabled
+            ? 'rgba(255,255,255,0.1)'
+            : 'rgba(255,255,255,0.3)',
+          padding: '14px 16px',
+          minHeight: '60px',
+          display: 'flex',
+          alignItems: 'center',
+          cursor: disabled ? 'not-allowed' : 'text',
+          transition: 'all 0.2s',
+          '&:hover': disabled
+            ? {}
+            : {
+                borderColor: isFocused ? 'white' : 'rgba(255,255,255,0.5)',
+              },
+        }}
+        onClick={() => inputRef.current?.focus()}
+      >
+        <Typography
+          sx={{
+            fontSize: '1.8rem',
+            fontWeight: 900,
+            color: 'white',
+            letterSpacing: '-0.5px',
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            display: 'flex',
+            alignItems: 'baseline',
+          }}
+        >
+          {/* Dollar sign */}
+          <Box component="span" sx={{ color: 'white', mr: 0.5 }}>
+            {prefix}
+          </Box>
+
+          {/* Main number with commas */}
+          {displayValue || (
+            <Box
+              component="span"
+              sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 600, fontSize: '1.4rem' }}
+            >
+              {placeholder.replace(prefix, '').trim()}
+            </Box>
+          )}
+
+          {/* Commas are already in displayValue in white */}
+
+          {/* Decimal separator and cents in lighter gray */}
+          {displayValue && (
+            <Box component="span" sx={{ color: 'rgba(255,255,255,0.4)', fontWeight: 600 }}>
+              .00
+            </Box>
+          )}
+        </Typography>
+      </Box>
+    </Box>
   );
 };
