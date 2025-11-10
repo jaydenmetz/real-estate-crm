@@ -24,25 +24,24 @@ export const EditDate = ({
   value,
   color = '#6366f1',
 }) => {
-  const [editValue, setEditValue] = useState('');
+  const [editValue, setEditValue] = useState(null);
   const [saving, setSaving] = useState(false);
 
-  // Initialize editValue when dialog opens
+  // Initialize editValue when dialog opens - keep as Date object
   useEffect(() => {
     if (open && value) {
       try {
         const date = typeof value === 'string' ? parseISO(value) : new Date(value);
         if (isValid(date)) {
-          // Format for input: YYYY-MM-DD
-          setEditValue(format(date, 'yyyy-MM-dd'));
+          setEditValue(date); // Store as Date object
         } else {
-          setEditValue('');
+          setEditValue(null);
         }
       } catch (error) {
-        setEditValue('');
+        setEditValue(null);
       }
     } else if (open) {
-      setEditValue('');
+      setEditValue(null);
     }
   }, [open, value]);
 
@@ -53,14 +52,14 @@ export const EditDate = ({
 
     setSaving(true);
     try {
-      // editValue is already a Date object from calendar selection
-      const date = typeof editValue === 'string' ? parseISO(editValue) : editValue;
-      if (!isValid(date)) {
+      // editValue should be a Date object
+      if (!isValid(editValue)) {
         console.error('Invalid date selected');
+        setSaving(false);
         return;
       }
 
-      await onSave(date.toISOString());
+      await onSave(editValue.toISOString());
       onClose();
     } catch (error) {
       console.error('Failed to save date:', error);
@@ -74,8 +73,18 @@ export const EditDate = ({
   };
 
   const handleManualInput = (e) => {
-    // Allow manual typing in YYYY-MM-DD format
-    setEditValue(e.target.value);
+    // Allow manual typing in YYYY-MM-DD format, convert to Date object
+    const dateString = e.target.value;
+    if (dateString) {
+      try {
+        const date = parseISO(dateString);
+        if (isValid(date)) {
+          setEditValue(date);
+        }
+      } catch (error) {
+        console.error('Invalid date input:', error);
+      }
+    }
   };
 
   const handleKeyPress = (e) => {
