@@ -1098,12 +1098,12 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                         }}
                       >
                         <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, whiteSpace: 'nowrap' }}>
-                          {formatDateUtil(acceptanceDate, 'MMM d, yy') || 'TBD'}
+                          {formatDateUtil(acceptanceDate, 'MMM d, yyyy') || 'TBD'}
                         </Typography>
                       </Box>
                     ) : (
                       <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, whiteSpace: 'nowrap' }}>
-                        {formatDateUtil(acceptanceDate, 'MMM d, yy') || 'TBD'}
+                        {formatDateUtil(acceptanceDate, 'MMM d, yyyy') || 'TBD'}
                       </Typography>
                     )}
                   </Box>
@@ -1131,12 +1131,12 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                         }}
                       >
                         <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, whiteSpace: 'nowrap' }}>
-                          {formatDateUtil(closingDate, 'MMM d, yy') || 'TBD'}
+                          {formatDateUtil(closingDate, 'MMM d, yyyy') || 'TBD'}
                         </Typography>
                       </Box>
                     ) : (
                       <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, whiteSpace: 'nowrap' }}>
-                        {formatDateUtil(closingDate, 'MMM d, yy') || 'TBD'}
+                        {formatDateUtil(closingDate, 'MMM d, yyyy') || 'TBD'}
                       </Typography>
                     )}
                   </Box>
@@ -1387,7 +1387,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                             {milestone.label}
                           </Typography>
                           <Typography variant="caption" sx={{ fontSize: 11, color: theme.palette.text.secondary }}>
-                            {milestone.date ? formatDateUtil(milestone.date, 'MMM d, yy') : 'Pending'}
+                            {milestone.date ? formatDateUtil(milestone.date, 'MMM d, yyyy') : 'Pending'}
                           </Typography>
                         </Box>
                       </Box>
