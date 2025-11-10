@@ -418,6 +418,131 @@ const data = await apiInstance.get('/escrows');
 - Local state for UI state
 - WebSocket for real-time updates
 
+### Date/Time Handling (CRITICAL - READ THIS!)
+
+**Problem:** PostgreSQL has TWO distinct types of date/time fields, and mixing them causes off-by-one-day bugs!
+
+#### Database Schema (151 date/time columns)
+1. **DATE** (46 columns) - Calendar dates, NO time component
+   - `acceptance_date`, `closing_date`, `birthday`, `listing_date`, `appointment_date`, etc.
+   - Stored as `YYYY-MM-DD` in database
+   - **MUST** be timezone-independent: Nov 27 is Nov 27 everywhere
+   - **Use:** `parseLocalDate()` from `utils/safeDateUtils.js`
+
+2. **TIMESTAMP WITH TIME ZONE** (88 columns) - Exact moments in time
+   - `created_at`, `updated_at`, `last_login`, `completed_at`, etc.
+   - Stored with timezone info in database
+   - **MUST** be timezone-aware: displayed in user's local timezone
+   - **Use:** `parseISO()` from `date-fns` or `new Date()`
+
+3. **TIMESTAMP WITHOUT TIME ZONE** (17 columns) - Legacy fields
+   - To be migrated to TIMESTAMP WITH TIME ZONE
+   - Avoid using for new fields
+
+#### Critical Rules
+
+**❌ WRONG: Using parseISO() on DATE fields**
+```javascript
+// This causes off-by-one-day bugs!
+const date = parseISO('2025-11-27');  // Creates Nov 27 00:00:00 UTC
+// In PST (UTC-8), displays as Nov 26!
+```
+
+**✅ RIGHT: Use parseLocalDate() for DATE fields**
+```javascript
+import { parseLocalDate } from './utils/safeDateUtils';
+
+// For DATE columns (closing_date, birthday, etc.)
+const date = parseLocalDate('2025-11-27');  // Creates Nov 27 00:00:00 local time
+// Displays as Nov 27 in ALL timezones
+```
+
+**✅ RIGHT: Use parseISO() for TIMESTAMP fields**
+```javascript
+// For TIMESTAMP WITH TIME ZONE columns (created_at, updated_at, etc.)
+const timestamp = parseISO('2025-11-27T15:30:00Z');  // Respects timezone
+// Correctly converts to user's local timezone
+```
+
+#### When Building New Features
+
+**For calendar dates (dates without specific times):**
+- Appointments on "Nov 27" (all day, no specific time)
+- Task due dates, project start/end dates
+- Birthday, anniversary, license expiration
+- **Use:** `DATE` column type + `parseLocalDate()`
+
+**For specific moments in time:**
+- "Created at 3:45 PM on Nov 27"
+- Last login timestamp, audit log timestamps
+- Appointment with specific time: "Nov 27 at 2:00 PM"
+- **Use:** `TIMESTAMP WITH TIME ZONE` + `parseISO()`
+
+#### Code Examples
+
+```javascript
+// ✅ Displaying a date field (closing_date, birthday, etc.)
+import { parseLocalDate } from './utils/safeDateUtils';
+import { format } from 'date-fns';
+
+const displayDate = (dateString) => {
+  const date = parseLocalDate(dateString);  // Parse as local date
+  return format(date, 'MMM d, yyyy');  // Nov 27, 2025
+};
+
+// ✅ Saving a date field to backend
+const handleSave = (selectedDate) => {
+  // Extract local date components to prevent timezone conversion
+  const year = selectedDate.getFullYear();
+  const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+  const day = String(selectedDate.getDate()).padStart(2, '0');
+  const dateString = `${year}-${month}-${day}`;  // YYYY-MM-DD
+
+  await api.update({ closing_date: dateString });
+};
+
+// ✅ Displaying a timestamp (created_at, updated_at, etc.)
+import { parseISO } from 'date-fns';
+
+const displayTimestamp = (timestamp) => {
+  const date = parseISO(timestamp);  // Respects timezone
+  return format(date, 'MMM d, yyyy h:mm a');  // Nov 27, 2025 3:45 PM
+};
+```
+
+#### Centralized Utilities
+
+**Location:** `frontend/src/utils/safeDateUtils.js`
+
+**Available Functions:**
+- `parseLocalDate(dateString)` - Parse DATE columns (timezone-independent)
+- `safeParseDate(value)` - Parse TIMESTAMP columns (timezone-aware)
+- `safeFormatDate(value, format)` - Auto-detects type and formats correctly
+- `safeFormatRelativeTime(value)` - "2 hours ago" formatting
+
+**Architecture Documentation:**
+The `safeDateUtils.js` file contains comprehensive comments explaining:
+- When to use each function
+- Common pitfalls and how to avoid them
+- Examples for both DATE and TIMESTAMP columns
+
+#### Testing Your Code
+
+Before implementing any date/time feature:
+1. Check database schema: Is it `DATE` or `TIMESTAMP WITH TIME ZONE`?
+2. Use correct parsing function (parseLocalDate vs parseISO)
+3. Test in multiple timezones (PST, EST, UTC, etc.)
+4. Verify dates don't shift by ±1 day
+
+**Testing in DevTools:**
+```javascript
+// Test timezone independence (should always show Nov 27)
+console.log(parseLocalDate('2025-11-27'));  // Check displayed date
+
+// Test in different timezone (change system timezone and refresh)
+// Date should still show Nov 27, not Nov 26 or Nov 28
+```
+
 ---
 
 ## 🚨 TECHNICAL DEBT & ROADMAP ALIGNMENT
