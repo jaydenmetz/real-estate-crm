@@ -635,11 +635,20 @@ async function updateEscrow(req, res) {
     });
   } catch (error) {
     console.error('Error updating escrow:', error);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      detail: error.detail,
+      hint: error.hint,
+      stack: error.stack,
+      updates: req.body,
+    });
     res.status(500).json({
       success: false,
       error: {
         code: 'UPDATE_ERROR',
-        message: 'Failed to update escrow',
+        message: error.message || 'Failed to update escrow',
+        details: process.env.NODE_ENV === 'development' ? error.detail : undefined,
       },
     });
   } finally {
