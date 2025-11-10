@@ -48,6 +48,7 @@ import { EditableDateField } from '../../../../common/editors/EditableDateField'
 import { EditableNumberField } from '../../../../common/editors/EditableNumberField';
 import { ContactSelectionModal } from '../../../../modals/ContactSelectionModal';
 import { BadgeEditor } from '../../../../common/editors/BadgeEditor';
+import { DatePickerModal } from '../../../../common/editors/DatePickerModal';
 import PersonRoleContainer from '../../../../common/editors/PersonRoleContainer';
 import PeopleEditor from '../../../../common/editors/PeopleEditor';
 import { formatCurrency, formatDate as formatDateUtil, getInitials as getInitialsUtil, truncateText } from '../../../../../utils/formatters';
@@ -61,6 +62,10 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
   // Badge editor states
   const [priceEditorOpen, setPriceEditorOpen] = useState(false);
   const [commissionEditorOpen, setCommissionEditorOpen] = useState(false);
+
+  // Date picker modal states
+  const [acceptanceDatePickerOpen, setAcceptanceDatePickerOpen] = useState(false);
+  const [closingDatePickerOpen, setClosingDatePickerOpen] = useState(false);
 
   // Status menu state
   const [statusMenuAnchor, setStatusMenuAnchor] = useState(null);
@@ -1074,12 +1079,26 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                       Acceptance
                     </Typography>
                     {onUpdate ? (
-                      <EditableDateField
-                        value={acceptanceDate}
-                        onSave={(newValue) => onUpdate(escrow.id, { acceptance_date: newValue })}
-                        variant="body2"
-                        sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, whiteSpace: 'nowrap' }}
-                      />
+                      <Box
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setAcceptanceDatePickerOpen(true);
+                        }}
+                        sx={{
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          borderRadius: 1,
+                          px: 0.5,
+                          py: 0.25,
+                          '&:hover': {
+                            backgroundColor: 'action.hover',
+                          },
+                        }}
+                      >
+                        <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, whiteSpace: 'nowrap' }}>
+                          {formatDateUtil(acceptanceDate, 'MMM d, yy') || 'TBD'}
+                        </Typography>
+                      </Box>
                     ) : (
                       <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, whiteSpace: 'nowrap' }}>
                         {formatDateUtil(acceptanceDate, 'MMM d, yy') || 'TBD'}
@@ -1093,12 +1112,26 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                       Close
                     </Typography>
                     {onUpdate ? (
-                      <EditableDateField
-                        value={closingDate}
-                        onSave={(newValue) => onUpdate(escrow.id, { closing_date: newValue })}
-                        variant="body2"
-                        sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, whiteSpace: 'nowrap' }}
-                      />
+                      <Box
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setClosingDatePickerOpen(true);
+                        }}
+                        sx={{
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          borderRadius: 1,
+                          px: 0.5,
+                          py: 0.25,
+                          '&:hover': {
+                            backgroundColor: 'action.hover',
+                          },
+                        }}
+                      >
+                        <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, whiteSpace: 'nowrap' }}>
+                          {formatDateUtil(closingDate, 'MMM d, yy') || 'TBD'}
+                        </Typography>
+                      </Box>
                     ) : (
                       <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: theme.palette.text.primary, whiteSpace: 'nowrap' }}>
                         {formatDateUtil(closingDate, 'MMM d, yy') || 'TBD'}
@@ -1447,6 +1480,26 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
         prefix="$"
         isCommission={true}
         purchasePrice={parseFloat(escrow.purchase_price || escrow.purchasePrice || 0)}
+      />
+
+      {/* Acceptance Date Picker Modal */}
+      <DatePickerModal
+        open={acceptanceDatePickerOpen}
+        onClose={() => setAcceptanceDatePickerOpen(false)}
+        onSave={(newValue) => onUpdate(escrow.id, { acceptance_date: newValue })}
+        label="Acceptance Date"
+        value={acceptanceDate}
+        color="#3b82f6"
+      />
+
+      {/* Closing Date Picker Modal */}
+      <DatePickerModal
+        open={closingDatePickerOpen}
+        onClose={() => setClosingDatePickerOpen(false)}
+        onSave={(newValue) => onUpdate(escrow.id, { closing_date: newValue })}
+        label="Closing Date"
+        value={closingDate}
+        color="#8b5cf6"
       />
 
       {/* People Editor Modal */}
