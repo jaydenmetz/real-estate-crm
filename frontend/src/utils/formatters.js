@@ -43,15 +43,34 @@ export function formatPriceShort(price, includeDecimals = true) {
 
 /**
  * Format date
- * @param {string|Date} date - Date to format
+ * @param {string|Date} date - Date to format (expects date-only strings like '2025-11-27')
  * @param {string} formatString - Format string (default: 'MMM d, yyyy')
  * @returns {string} Formatted date string
+ *
+ * NOTE: For date-only fields (closing_date, acceptance_date, birthdays, etc.),
+ * we parse and format WITHOUT timezone conversion to avoid off-by-one-day issues.
+ * The date '2025-11-27' should display as Nov 27 regardless of user's timezone.
  */
 export function formatDate(date, formatString = 'MMM d, yyyy') {
   if (!date) return '';
-  
+
   try {
-    const dateObj = typeof date === 'string' ? parseISO(date) : date;
+    let dateObj;
+
+    if (typeof date === 'string') {
+      // For date-only strings (YYYY-MM-DD), parse as local date to avoid timezone shifts
+      // e.g., '2025-11-27' should be Nov 27, not Nov 26 in PST
+      const parts = date.split('T')[0].split('-'); // Handle both '2025-11-27' and '2025-11-27T00:00:00Z'
+      if (parts.length === 3) {
+        const [year, month, day] = parts.map(Number);
+        dateObj = new Date(year, month - 1, day); // month is 0-indexed
+      } else {
+        dateObj = parseISO(date); // Fallback for other formats
+      }
+    } else {
+      dateObj = date;
+    }
+
     return isValid(dateObj) ? format(dateObj, formatString) : '';
   } catch (error) {
     console.error('Error formatting date:', error);
