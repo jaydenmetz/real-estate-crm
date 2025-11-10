@@ -27,8 +27,16 @@ import {
 export const CustomCalendar = ({ selectedDate, onSelectDate, color = '#6366f1' }) => {
   const [currentMonth, setCurrentMonth] = useState(() => {
     if (selectedDate) {
-      const date = typeof selectedDate === 'string' ? parseISO(selectedDate) : selectedDate;
-      return date;
+      if (typeof selectedDate === 'string') {
+        // Parse as local date to avoid timezone shifts
+        const parts = selectedDate.split('T')[0].split('-');
+        if (parts.length === 3) {
+          const [year, month, day] = parts.map(Number);
+          return new Date(year, month - 1, day);
+        }
+        return parseISO(selectedDate);
+      }
+      return selectedDate;
     }
     return new Date();
   });
@@ -108,10 +116,27 @@ export const CustomCalendar = ({ selectedDate, onSelectDate, color = '#6366f1' }
     let days = [];
     let day = startDate;
 
+    // Parse selected date as local date to avoid timezone issues
+    let selectedDateObj = null;
+    if (selectedDate) {
+      if (typeof selectedDate === 'string') {
+        // Parse as local date: '2025-11-26' -> Nov 26 local time (not UTC)
+        const parts = selectedDate.split('T')[0].split('-');
+        if (parts.length === 3) {
+          const [year, month, dayOfMonth] = parts.map(Number);
+          selectedDateObj = new Date(year, month - 1, dayOfMonth);
+        } else {
+          selectedDateObj = parseISO(selectedDate);
+        }
+      } else {
+        selectedDateObj = selectedDate;
+      }
+    }
+
     while (day <= endDate) {
       for (let i = 0; i < 7; i++) {
         const currentDay = day;
-        const isSelected = selectedDate && isSameDay(day, typeof selectedDate === 'string' ? parseISO(selectedDate) : selectedDate);
+        const isSelected = selectedDateObj && isSameDay(day, selectedDateObj);
         const isCurrentMonth = isSameMonth(day, monthStart);
         const isTodayDate = isToday(day);
 

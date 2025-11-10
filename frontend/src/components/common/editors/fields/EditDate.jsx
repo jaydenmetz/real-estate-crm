@@ -31,7 +31,20 @@ export const EditDate = ({
   useEffect(() => {
     if (open && value) {
       try {
-        const date = typeof value === 'string' ? parseISO(value) : new Date(value);
+        let date;
+        if (typeof value === 'string') {
+          // Parse as local date to avoid timezone shifts
+          const parts = value.split('T')[0].split('-');
+          if (parts.length === 3) {
+            const [year, month, day] = parts.map(Number);
+            date = new Date(year, month - 1, day);
+          } else {
+            date = parseISO(value);
+          }
+        } else {
+          date = new Date(value);
+        }
+
         if (isValid(date)) {
           setEditValue(date); // Store as Date object
         } else {
@@ -96,10 +109,15 @@ export const EditDate = ({
     console.log('Manual input:', dateString);
     if (dateString) {
       try {
-        const date = parseISO(dateString);
-        if (isValid(date)) {
-          console.log('Parsed manual date:', date);
-          setEditValue(date);
+        // Parse as local date to avoid timezone shifts
+        const parts = dateString.split('-');
+        if (parts.length === 3) {
+          const [year, month, day] = parts.map(Number);
+          const date = new Date(year, month - 1, day);
+          if (isValid(date)) {
+            console.log('Parsed manual date:', date);
+            setEditValue(date);
+          }
         }
       } catch (error) {
         console.error('Invalid date input:', error);
@@ -118,7 +136,20 @@ export const EditDate = ({
   const formatDisplayDate = (dateValue) => {
     if (!dateValue) return 'Not set';
     try {
-      const date = typeof dateValue === 'string' ? parseISO(dateValue) : new Date(dateValue);
+      let date;
+      if (typeof dateValue === 'string') {
+        // Parse as local date to avoid timezone shifts
+        const parts = dateValue.split('T')[0].split('-');
+        if (parts.length === 3) {
+          const [year, month, day] = parts.map(Number);
+          date = new Date(year, month - 1, day);
+        } else {
+          date = parseISO(dateValue);
+        }
+      } else {
+        date = new Date(dateValue);
+      }
+
       if (!isValid(date)) return 'Not set';
       return format(date, 'MMMM d, yyyy');
     } catch (error) {
