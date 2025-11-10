@@ -85,18 +85,18 @@ const UsersTable = () => {
         </Box>
       </Box>
 
-      <TableContainer component={Paper}>
-        <Table>
+      <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
+        <Table sx={{ minWidth: 900 }}>
           <TableHead>
             <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-              <TableCell><strong>ID</strong></TableCell>
-              <TableCell><strong>Username</strong></TableCell>
-              <TableCell><strong>Email</strong></TableCell>
-              <TableCell><strong>Name</strong></TableCell>
-              <TableCell><strong>Role</strong></TableCell>
-              <TableCell><strong>Active</strong></TableCell>
-              <TableCell><strong>Last Login</strong></TableCell>
-              <TableCell><strong>Created</strong></TableCell>
+              <TableCell sx={{ width: 100, whiteSpace: 'nowrap' }}><strong>ID</strong></TableCell>
+              <TableCell sx={{ minWidth: 120 }}><strong>Username</strong></TableCell>
+              <TableCell sx={{ minWidth: 200 }}><strong>Email</strong></TableCell>
+              <TableCell sx={{ minWidth: 150 }}><strong>Name</strong></TableCell>
+              <TableCell sx={{ width: 120, whiteSpace: 'nowrap' }}><strong>Role</strong></TableCell>
+              <TableCell sx={{ width: 80, textAlign: 'center' }}><strong>Active</strong></TableCell>
+              <TableCell sx={{ width: 180, whiteSpace: 'nowrap' }}><strong>Last Login</strong></TableCell>
+              <TableCell sx={{ width: 120, whiteSpace: 'nowrap' }}><strong>Created</strong></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -109,14 +109,20 @@ const UsersTable = () => {
             ) : (
               filteredUsers.map((user) => (
                 <TableRow key={user.id} hover>
-                  <TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>
                     <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>
                       {user.id.substring(0, 8)}...
                     </Typography>
                   </TableCell>
-                  <TableCell>{user.username}</TableCell>
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.first_name} {user.last_name}</TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 120 }}>
+                    {user.username}
+                  </TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 200 }}>
+                    {user.email}
+                  </TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 150 }}>
+                    {user.first_name} {user.last_name}
+                  </TableCell>
                   <TableCell>
                     <Chip
                       label={user.role}
@@ -124,17 +130,17 @@ const UsersTable = () => {
                       color={user.role === 'system_admin' ? 'error' : user.role === 'admin' ? 'warning' : 'default'}
                     />
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ textAlign: 'center' }}>
                     {user.is_active ? (
                       <CheckCircle sx={{ color: 'success.main' }} />
                     ) : (
                       <Cancel sx={{ color: 'error.main' }} />
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap', fontSize: '0.875rem' }}>
                     {user.last_login ? new Date(user.last_login).toLocaleString() : 'Never'}
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap', fontSize: '0.875rem' }}>
                     {new Date(user.created_at).toLocaleDateString()}
                   </TableCell>
                 </TableRow>

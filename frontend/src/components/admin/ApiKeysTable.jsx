@@ -83,17 +83,17 @@ const ApiKeysTable = () => {
         </Box>
       </Box>
 
-      <TableContainer component={Paper}>
-        <Table>
+      <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
+        <Table sx={{ minWidth: 800 }}>
           <TableHead>
             <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-              <TableCell><strong>ID</strong></TableCell>
-              <TableCell><strong>Name</strong></TableCell>
-              <TableCell><strong>User</strong></TableCell>
-              <TableCell><strong>Active</strong></TableCell>
-              <TableCell><strong>Last Used</strong></TableCell>
-              <TableCell><strong>Expires</strong></TableCell>
-              <TableCell><strong>Created</strong></TableCell>
+              <TableCell sx={{ width: 100, whiteSpace: 'nowrap' }}><strong>ID</strong></TableCell>
+              <TableCell sx={{ minWidth: 150 }}><strong>Name</strong></TableCell>
+              <TableCell sx={{ minWidth: 200 }}><strong>User</strong></TableCell>
+              <TableCell sx={{ width: 80, textAlign: 'center' }}><strong>Active</strong></TableCell>
+              <TableCell sx={{ width: 180, whiteSpace: 'nowrap' }}><strong>Last Used</strong></TableCell>
+              <TableCell sx={{ width: 140, whiteSpace: 'nowrap' }}><strong>Expires</strong></TableCell>
+              <TableCell sx={{ width: 120, whiteSpace: 'nowrap' }}><strong>Created</strong></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -106,24 +106,28 @@ const ApiKeysTable = () => {
             ) : (
               filteredKeys.map((key) => (
                 <TableRow key={key.id} hover>
-                  <TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>
                     <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>
                       {key.id.substring(0, 8)}...
                     </Typography>
                   </TableCell>
-                  <TableCell>{key.name}</TableCell>
-                  <TableCell>{key.user_email || 'Unknown'}</TableCell>
-                  <TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 150 }}>
+                    {key.name}
+                  </TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 200 }}>
+                    {key.user_email || 'Unknown'}
+                  </TableCell>
+                  <TableCell sx={{ textAlign: 'center' }}>
                     {key.is_active ? (
                       <CheckCircle sx={{ color: 'success.main' }} />
                     ) : (
                       <Cancel sx={{ color: 'error.main' }} />
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap', fontSize: '0.875rem' }}>
                     {key.last_used_at ? new Date(key.last_used_at).toLocaleString() : 'Never'}
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap' }}>
                     {key.expires_at ? (
                       <Chip
                         label={new Date(key.expires_at).toLocaleDateString()}
@@ -134,7 +138,7 @@ const ApiKeysTable = () => {
                       <Chip label="Never" size="small" />
                     )}
                   </TableCell>
-                  <TableCell>
+                  <TableCell sx={{ whiteSpace: 'nowrap', fontSize: '0.875rem' }}>
                     {new Date(key.created_at).toLocaleDateString()}
                   </TableCell>
                 </TableRow>

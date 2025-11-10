@@ -38,35 +38,39 @@ const RefreshTokensTable = () => {
         <Typography variant="h6" fontWeight="bold">Refresh Tokens ({tokens.length})</Typography>
         <IconButton onClick={fetchTokens} color="primary"><Refresh /></IconButton>
       </Box>
-      <TableContainer component={Paper}>
-        <Table size="small">
+      <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
+        <Table size="small" sx={{ minWidth: 800 }}>
           <TableHead>
             <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-              <TableCell><strong>User</strong></TableCell>
-              <TableCell><strong>IP Address</strong></TableCell>
-              <TableCell><strong>User Agent</strong></TableCell>
-              <TableCell><strong>Expires</strong></TableCell>
-              <TableCell><strong>Created</strong></TableCell>
+              <TableCell sx={{ minWidth: 200 }}><strong>User</strong></TableCell>
+              <TableCell sx={{ width: 140, whiteSpace: 'nowrap' }}><strong>IP Address</strong></TableCell>
+              <TableCell sx={{ minWidth: 250 }}><strong>User Agent</strong></TableCell>
+              <TableCell sx={{ width: 140, whiteSpace: 'nowrap' }}><strong>Expires</strong></TableCell>
+              <TableCell sx={{ width: 120, whiteSpace: 'nowrap' }}><strong>Created</strong></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {tokens.map((token) => (
               <TableRow key={token.id} hover>
-                <TableCell>{token.user_email || 'N/A'}</TableCell>
-                <TableCell>{token.ip_address || 'N/A'}</TableCell>
+                <TableCell sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 200 }}>
+                  {token.user_email || 'N/A'}
+                </TableCell>
+                <TableCell sx={{ whiteSpace: 'nowrap' }}>{token.ip_address || 'N/A'}</TableCell>
                 <TableCell>
-                  <Typography variant="body2" noWrap sx={{ maxWidth: 200 }}>
+                  <Typography variant="body2" noWrap sx={{ maxWidth: 250, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {token.user_agent || 'N/A'}
                   </Typography>
                 </TableCell>
-                <TableCell>
+                <TableCell sx={{ whiteSpace: 'nowrap' }}>
                   <Chip
                     label={new Date(token.expires_at).toLocaleDateString()}
                     size="small"
                     color={new Date(token.expires_at) < new Date() ? 'error' : 'success'}
                   />
                 </TableCell>
-                <TableCell>{new Date(token.created_at).toLocaleDateString()}</TableCell>
+                <TableCell sx={{ whiteSpace: 'nowrap', fontSize: '0.875rem' }}>
+                  {new Date(token.created_at).toLocaleDateString()}
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

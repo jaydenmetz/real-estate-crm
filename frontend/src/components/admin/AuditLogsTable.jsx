@@ -38,32 +38,36 @@ const AuditLogsTable = () => {
         <Typography variant="h6" fontWeight="bold">Audit Logs (Latest 100)</Typography>
         <IconButton onClick={fetchLogs} color="primary"><Refresh /></IconButton>
       </Box>
-      <TableContainer component={Paper}>
-        <Table size="small">
+      <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
+        <Table size="small" sx={{ minWidth: 900 }}>
           <TableHead>
             <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-              <TableCell><strong>Timestamp</strong></TableCell>
-              <TableCell><strong>User</strong></TableCell>
-              <TableCell><strong>Action</strong></TableCell>
-              <TableCell><strong>Table</strong></TableCell>
-              <TableCell><strong>Record ID</strong></TableCell>
-              <TableCell><strong>Changes</strong></TableCell>
+              <TableCell sx={{ width: 180, whiteSpace: 'nowrap' }}><strong>Timestamp</strong></TableCell>
+              <TableCell sx={{ minWidth: 180 }}><strong>User</strong></TableCell>
+              <TableCell sx={{ width: 100 }}><strong>Action</strong></TableCell>
+              <TableCell sx={{ width: 120 }}><strong>Table</strong></TableCell>
+              <TableCell sx={{ width: 100, whiteSpace: 'nowrap' }}><strong>Record ID</strong></TableCell>
+              <TableCell sx={{ minWidth: 300 }}><strong>Changes</strong></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {logs.map((log) => (
               <TableRow key={log.id} hover>
-                <TableCell>{new Date(log.created_at).toLocaleString()}</TableCell>
-                <TableCell>{log.user_email || 'System'}</TableCell>
-                <TableCell>{log.action}</TableCell>
-                <TableCell>{log.table_name}</TableCell>
-                <TableCell>
+                <TableCell sx={{ whiteSpace: 'nowrap', fontSize: '0.875rem' }}>
+                  {new Date(log.created_at).toLocaleString()}
+                </TableCell>
+                <TableCell sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 180 }}>
+                  {log.user_email || 'System'}
+                </TableCell>
+                <TableCell sx={{ whiteSpace: 'nowrap' }}>{log.action}</TableCell>
+                <TableCell sx={{ whiteSpace: 'nowrap' }}>{log.table_name}</TableCell>
+                <TableCell sx={{ whiteSpace: 'nowrap' }}>
                   <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>
                     {log.record_id?.substring(0, 8)}...
                   </Typography>
                 </TableCell>
                 <TableCell>
-                  <Typography variant="body2" noWrap sx={{ maxWidth: 300 }}>
+                  <Typography variant="body2" noWrap sx={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {JSON.stringify(log.changes)}
                   </Typography>
                 </TableCell>

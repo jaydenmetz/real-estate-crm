@@ -81,30 +81,34 @@ const SecurityEventsTable = () => {
         </Box>
       </Box>
 
-      <TableContainer component={Paper}>
-        <Table size="small">
+      <TableContainer component={Paper} sx={{ maxWidth: '100%', overflowX: 'auto' }}>
+        <Table size="small" sx={{ minWidth: 900 }}>
           <TableHead>
             <TableRow sx={{ backgroundColor: '#f5f5f5' }}>
-              <TableCell><strong>Timestamp</strong></TableCell>
-              <TableCell><strong>Event Type</strong></TableCell>
-              <TableCell><strong>User</strong></TableCell>
-              <TableCell><strong>IP Address</strong></TableCell>
-              <TableCell><strong>Severity</strong></TableCell>
-              <TableCell><strong>Success</strong></TableCell>
-              <TableCell><strong>Message</strong></TableCell>
+              <TableCell sx={{ width: 180, whiteSpace: 'nowrap' }}><strong>Timestamp</strong></TableCell>
+              <TableCell sx={{ width: 180 }}><strong>Event Type</strong></TableCell>
+              <TableCell sx={{ minWidth: 180 }}><strong>User</strong></TableCell>
+              <TableCell sx={{ width: 140, whiteSpace: 'nowrap' }}><strong>IP Address</strong></TableCell>
+              <TableCell sx={{ width: 110 }}><strong>Severity</strong></TableCell>
+              <TableCell sx={{ width: 90 }}><strong>Success</strong></TableCell>
+              <TableCell sx={{ minWidth: 250 }}><strong>Message</strong></TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {filteredEvents.map((event) => (
               <TableRow key={event.id} hover>
-                <TableCell>{new Date(event.created_at).toLocaleString()}</TableCell>
+                <TableCell sx={{ whiteSpace: 'nowrap', fontSize: '0.875rem' }}>
+                  {new Date(event.created_at).toLocaleString()}
+                </TableCell>
                 <TableCell>
-                  <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                  <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.875rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 180 }}>
                     {event.event_type}
                   </Typography>
                 </TableCell>
-                <TableCell>{event.email || 'N/A'}</TableCell>
-                <TableCell>{event.ip_address || 'N/A'}</TableCell>
+                <TableCell sx={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 180 }}>
+                  {event.email || 'N/A'}
+                </TableCell>
+                <TableCell sx={{ whiteSpace: 'nowrap' }}>{event.ip_address || 'N/A'}</TableCell>
                 <TableCell>
                   <Chip
                     label={event.severity}
@@ -123,7 +127,7 @@ const SecurityEventsTable = () => {
                   />
                 </TableCell>
                 <TableCell>
-                  <Typography variant="body2" noWrap sx={{ maxWidth: 300 }}>
+                  <Typography variant="body2" noWrap sx={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {event.message}
                   </Typography>
                 </TableCell>
