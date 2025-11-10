@@ -52,14 +52,25 @@ export const EditDate = ({
 
     setSaving(true);
     try {
-      // editValue should be a Date object
-      if (!isValid(editValue)) {
-        console.error('Invalid date selected');
+      // Ensure editValue is a valid Date object
+      let dateToSave = editValue;
+
+      // If it's a string, parse it
+      if (typeof editValue === 'string') {
+        dateToSave = parseISO(editValue);
+      }
+
+      // Validate the date
+      if (!isValid(dateToSave)) {
+        console.error('Invalid date selected:', editValue);
         setSaving(false);
         return;
       }
 
-      await onSave(editValue.toISOString());
+      const isoString = dateToSave.toISOString();
+      console.log('Saving date:', { editValue, dateToSave, isoString });
+
+      await onSave(isoString);
       onClose();
     } catch (error) {
       console.error('Failed to save date:', error);
@@ -69,16 +80,19 @@ export const EditDate = ({
   };
 
   const handleCalendarSelect = (date) => {
+    console.log('Calendar selected:', date, 'Type:', typeof date);
     setEditValue(date);
   };
 
   const handleManualInput = (e) => {
     // Allow manual typing in YYYY-MM-DD format, convert to Date object
     const dateString = e.target.value;
+    console.log('Manual input:', dateString);
     if (dateString) {
       try {
         const date = parseISO(dateString);
         if (isValid(date)) {
+          console.log('Parsed manual date:', date);
           setEditValue(date);
         }
       } catch (error) {
