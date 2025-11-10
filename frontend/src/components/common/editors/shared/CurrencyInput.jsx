@@ -173,7 +173,7 @@ export const CurrencyInput = ({
             color: 'white',
             letterSpacing: '-0.5px',
             fontFamily: 'system-ui, -apple-system, sans-serif',
-            padding: '14px 16px',
+            padding: '14px 8px 14px 16px', // Reduce right padding
             transition: 'font-size 0.2s ease',
           },
         }}
