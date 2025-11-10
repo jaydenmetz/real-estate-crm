@@ -464,6 +464,12 @@ async function updateEscrow(req, res) {
     const { id } = req.params;
     const updates = req.body;
 
+    console.log('🔍 UPDATE ESCROW REQUEST:', {
+      escrowId: id,
+      updates: updates,
+      keys: Object.keys(updates),
+    });
+
     // Map camelCase fields to snake_case for database
     const fieldMapping = {
       propertyAddress: 'property_address',
