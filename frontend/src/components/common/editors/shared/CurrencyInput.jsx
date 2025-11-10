@@ -34,12 +34,10 @@ export const CurrencyInput = ({
   const [localValue, setLocalValue] = useState('');
   const [cursorPosition, setCursorPosition] = useState(null);
 
-  // Sync local value when prop value changes
+  // Sync local value when prop value changes (including on mount)
   useEffect(() => {
-    if (!isFocused) {
-      setLocalValue(value || '');
-    }
-  }, [value, isFocused]);
+    setLocalValue(value || '');
+  }, [value]);
 
   useEffect(() => {
     if (autoFocus && inputRef.current) {
@@ -118,8 +116,27 @@ export const CurrencyInput = ({
 
   const displayValue = formatDisplay(isFocused ? localValue : value);
 
+  // Dynamic font sizing based on number of digits
+  // Up to 6 digits (999,999): 1.8rem
+  // 7+ digits (1,000,000+): Scale down proportionally
+  const getAdaptiveFontSize = () => {
+    const digitCount = (isFocused ? localValue : value)?.toString().length || 0;
+
+    if (digitCount <= 6) {
+      return '1.8rem'; // Full size for up to 999,999
+    } else if (digitCount === 7) {
+      return '1.6rem'; // 1,000,000 - 9,999,999
+    } else if (digitCount === 8) {
+      return '1.4rem'; // 10,000,000 - 99,999,999
+    } else {
+      return '1.2rem'; // 100,000,000+ (999,999,999 max)
+    }
+  };
+
+  const adaptiveFontSize = getAdaptiveFontSize();
+
   return (
-    <Box sx={{ position: 'relative', width: '100%' }}>
+    <Box sx={{ position: 'relative', width: '100%', maxWidth: '380px' }}>
       <TextField
         ref={inputRef}
         fullWidth
@@ -133,12 +150,13 @@ export const CurrencyInput = ({
         inputProps={{
           inputMode: 'numeric',
           style: {
-            fontSize: '1.8rem',
+            fontSize: adaptiveFontSize,
             fontWeight: 900,
             color: 'white',
             letterSpacing: '-0.5px',
             fontFamily: 'system-ui, -apple-system, sans-serif',
             padding: '14px 16px',
+            transition: 'font-size 0.2s ease',
           },
         }}
         sx={{
@@ -175,12 +193,13 @@ export const CurrencyInput = ({
           startAdornment: (
             <Typography
               sx={{
-                fontSize: '1.8rem',
+                fontSize: adaptiveFontSize,
                 fontWeight: 900,
                 color: 'white',
                 mr: 0.5,
                 letterSpacing: '-0.5px',
                 fontFamily: 'system-ui, -apple-system, sans-serif',
+                transition: 'font-size 0.2s ease',
               }}
             >
               {prefix}
@@ -189,12 +208,13 @@ export const CurrencyInput = ({
           endAdornment: displayValue ? (
             <Typography
               sx={{
-                fontSize: '1.8rem',
+                fontSize: adaptiveFontSize,
                 fontWeight: 600,
                 color: 'rgba(255,255,255,0.4)',
                 ml: 0.25,
                 letterSpacing: '-0.5px',
                 fontFamily: 'system-ui, -apple-system, sans-serif',
+                transition: 'font-size 0.2s ease',
               }}
             >
               .00
