@@ -24,7 +24,7 @@ export const PercentageInput = ({
   onChange,
   onKeyDown,
   disabled = false,
-  placeholder = 'Enter percentage',
+  placeholder = '3',
   autoFocus = true,
 }) => {
   const inputRef = useRef(null);
@@ -209,12 +209,12 @@ export const PercentageInput = ({
           },
         }}
         InputProps={{
-          endAdornment: displayValue ? (
+          endAdornment: (
             <Typography
               sx={{
                 fontSize: adaptiveFontSize,
-                fontWeight: 600,
-                color: 'rgba(255,255,255,0.4)',
+                fontWeight: 900,
+                color: 'white',
                 ml: 0,
                 letterSpacing: '-0.5px',
                 fontFamily: 'system-ui, -apple-system, sans-serif',
@@ -223,7 +223,7 @@ export const PercentageInput = ({
             >
               %
             </Typography>
-          ) : null,
+          ),
         }}
       />
     </Box>

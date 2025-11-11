@@ -166,7 +166,7 @@ export const EditCommission = ({
             onChange={setEditValue}
             onKeyDown={handleKeyPress}
             disabled={saving}
-            placeholder="Enter percentage"
+            placeholder="3"
           />
         ) : (
           <CurrencyInput
@@ -174,7 +174,7 @@ export const EditCommission = ({
             onChange={setEditValue}
             onKeyDown={handleKeyPress}
             disabled={saving}
-            placeholder="Enter dollar amount"
+            placeholder="2000"
           />
         )}
 
