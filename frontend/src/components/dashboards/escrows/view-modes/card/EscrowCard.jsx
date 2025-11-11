@@ -869,46 +869,6 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                     </IconButton>
                   </Box>
                 )}
-
-                {/* Progress Bar */}
-                <Box
-                  sx={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: 6,
-                    backgroundColor: 'rgba(0,0,0,0.3)',
-                    zIndex: 3,
-                  }}
-                >
-                  <Box
-                    sx={{
-                      height: '100%',
-                      width: `${checklistProgress}%`,
-                      background: statusConfig.bg,
-                      transition: 'width 0.5s ease-in-out',
-                      boxShadow: `0 0 10px ${alpha(statusConfig.color, 0.6)}`,
-                    }}
-                  />
-                </Box>
-
-                {/* Progress Percentage */}
-                <Typography
-                  variant="caption"
-                  sx={{
-                    position: 'absolute',
-                    bottom: 12,
-                    left: 12,
-                    fontWeight: 800,
-                    fontSize: 18,
-                    color: 'white',
-                    textShadow: '0 2px 8px rgba(0,0,0,0.5)',
-                    zIndex: 4,
-                  }}
-                >
-                  {checklistProgress}%
-                </Typography>
               </Box>
 
               {/* Card Content */}
