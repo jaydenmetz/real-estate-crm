@@ -166,7 +166,7 @@ const EscrowTableRow = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
             fontSize: '0.75rem',
           }}
         >
-          {escrow.city && escrow.state ? `${escrow.city}, ${escrow.state}` : 'Location TBD'}
+          {escrow.city && escrow.state ? `${escrow.city}, ${escrow.state}${escrow.zip_code ? ' ' + escrow.zip_code : ''}` : 'Location TBD'}
         </Typography>
       </Box>
 

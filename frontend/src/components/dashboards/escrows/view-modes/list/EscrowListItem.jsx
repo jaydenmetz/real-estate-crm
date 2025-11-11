@@ -267,7 +267,7 @@ const EscrowListItem = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
             fontSize: '0.875rem',
           }}
         >
-          {escrow.city && escrow.state ? `${escrow.city}, ${escrow.state}` : 'Location TBD'}
+          {escrow.city && escrow.state ? `${escrow.city}, ${escrow.state}${escrow.zip_code ? ' ' + escrow.zip_code : ''}` : 'Location TBD'}
         </Typography>
 
         {/* Metrics Row */}
