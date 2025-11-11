@@ -286,10 +286,10 @@ const EscrowListItem = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
             </Typography>
           </Box>
 
-          {/* Days/Status */}
+          {/* Progress/Status */}
           <Box>
             <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              {escrow.escrow_status === 'Closed' || escrow.escrow_status === 'Cancelled' ? 'Status' : 'Days'}
+              {escrow.escrow_status === 'Closed' || escrow.escrow_status === 'Cancelled' ? 'Status' : 'Progress'}
             </Typography>
             {escrow.escrow_status === 'Closed' ? (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -305,33 +305,29 @@ const EscrowListItem = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
                   Cancelled
                 </Typography>
               </Box>
-            ) : daysToClose !== null ? (
-              <Typography
-                variant="body1"
-                sx={{
-                  fontWeight: 700,
-                  fontSize: '0.95rem',
-                  color: isPastDue ? '#ef4444' : isUrgent ? '#f59e0b' : '#3b82f6',
-                }}
-              >
-                {isPastDue ? `${Math.abs(daysToClose)}d late` : `${daysToClose}d`}
-              </Typography>
             ) : (
-              <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', color: theme.palette.text.secondary }}>
-                TBD
-              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+                <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.85rem', color: theme.palette.text.primary }}>
+                  {checklistProgress}%
+                </Typography>
+                <LinearProgress
+                  variant="determinate"
+                  value={checklistProgress}
+                  sx={{
+                    width: 50,
+                    height: 5,
+                    borderRadius: 2,
+                    backgroundColor: alpha(theme.palette.mode === 'dark' ? '#fff' : '#000', 0.08),
+                    '& .MuiLinearProgress-bar': {
+                      backgroundColor: '#10b981',
+                      borderRadius: 2,
+                    }
+                  }}
+                />
+              </Box>
             )}
           </Box>
 
-          {/* Progress */}
-          <Box sx={{ ml: 'auto' }}>
-            <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Progress
-            </Typography>
-            <Typography variant="h6" sx={{ fontWeight: 800, fontSize: '1.25rem', color: statusConfig.color }}>
-              {checklistProgress}%
-            </Typography>
-          </Box>
         </Box>
       </Box>
     </Box>
