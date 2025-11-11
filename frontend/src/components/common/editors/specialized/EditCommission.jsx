@@ -74,11 +74,31 @@ export const EditCommission = ({
     }
   };
 
-  const formatDisplayValue = (val) => {
-    if (!val) return '$0.00';
-    const num = parseFloat(val);
-    if (isNaN(num)) return '$0.00';
-    return `$${num.toLocaleString('en-US', {
+  // Calculate display value based on commission type and current input
+  const getDisplayValue = () => {
+    // If no editValue, show the original value (or $0.00)
+    if (!editValue || isNaN(parseFloat(editValue))) {
+      if (!value) return '$0.00';
+      const num = parseFloat(value);
+      if (isNaN(num)) return '$0.00';
+      return `$${num.toLocaleString('en-US', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`;
+    }
+
+    // Calculate based on commission type
+    let displayAmount = 0;
+    if (commissionType === 'percentage' && purchasePrice) {
+      // Convert percentage to decimal (3 → 0.03) and multiply by purchase price
+      displayAmount = (parseFloat(editValue) / 100) * purchasePrice;
+    } else if (commissionType === 'flat') {
+      // Direct dollar amount
+      displayAmount = parseFloat(editValue);
+    }
+
+    if (isNaN(displayAmount)) return '$0.00';
+    return `$${displayAmount.toLocaleString('en-US', {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}`;
@@ -103,7 +123,7 @@ export const EditCommission = ({
           {label}
         </Typography>
 
-        {/* Current Value Display */}
+        {/* Current Value Display - Shows calculated commission amount */}
         <Typography
           variant="h4"
           sx={{
@@ -113,7 +133,7 @@ export const EditCommission = ({
             letterSpacing: '-1px',
           }}
         >
-          {formatDisplayValue(value)}
+          {getDisplayValue()}
         </Typography>
 
         {/* Commission Type Toggle */}
