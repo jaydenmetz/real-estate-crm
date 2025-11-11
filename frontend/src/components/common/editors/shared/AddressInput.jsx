@@ -163,9 +163,8 @@ export const AddressInput = ({
         const minLng = userLng - lngRadius;
         const maxLng = userLng + lngRadius;
 
-        const searchQuery = input.includes(',')
-          ? input
-          : `${input}, ${userCity}, ${userState}`;
+        // Use input as-is - viewbox provides location bias without forcing city
+        const searchQuery = input;
 
         const response = await fetch(
           `https://nominatim.openstreetmap.org/search?` +
