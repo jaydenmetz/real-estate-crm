@@ -54,6 +54,7 @@ import { EditClosingDate } from '../../editors/EditClosingDate';
 import PersonRoleContainer from '../../../../common/editors/PersonRoleContainer';
 import PeopleEditor from '../../../../common/editors/PeopleEditor';
 import { formatCurrency, formatDate as formatDateUtil, getInitials as getInitialsUtil, truncateText } from '../../../../../utils/formatters';
+import { getBestPropertyImage } from '../../../../../utils/streetViewUtils';
 
 const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'spring', animationDuration = 1, animationIntensity = 1, index = 0, onArchive, onDelete, onRestore, isArchived = false, onUpdate }) => {
   const navigate = useNavigate();
@@ -432,7 +433,8 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
   };
 
   // ✅ Removed duplicate getStatusConfig - now using imported constant
-  const propertyImage = escrow.property_image || escrow.zillow_url;
+  // Get best available image: property_image_url > zillow_image_url > street view > placeholder
+  const propertyImage = getBestPropertyImage(escrow);
   const address = escrow.property_address || 'No Address';
 
   /**
