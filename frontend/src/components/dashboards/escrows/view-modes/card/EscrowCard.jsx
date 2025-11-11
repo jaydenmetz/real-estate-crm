@@ -63,18 +63,6 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
   const [showCommission, setShowCommission] = useState(false);
   const [currentPanel, setCurrentPanel] = useState(0); // 0=small, 1=people, 2=timeline, 3=checklists
 
-  // DEBUG: Log zip code field to console
-  if (escrow.property_address?.includes('Woodbrook') || escrow.property_address?.includes('Lake Pyramid')) {
-    console.log('DEBUG EscrowCard:', {
-      address: escrow.property_address,
-      city: escrow.city,
-      state: escrow.state,
-      zip_code: escrow.zip_code,
-      zipCode: escrow.zipCode,
-      hasZipCode: !!(escrow.zip_code || escrow.zipCode)
-    });
-  }
-
   // Badge editor states
   const [priceEditorOpen, setPriceEditorOpen] = useState(false);
   const [commissionEditorOpen, setCommissionEditorOpen] = useState(false);

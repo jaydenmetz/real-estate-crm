@@ -108,6 +108,7 @@ async function getAllEscrows(req, res) {
         e.property_address as property_address,
         e.city,
         e.state,
+        e.zip_code,
         e.closing_date as closing_date,
         e.escrow_status as status,
         e.purchase_price as purchase_price,
