@@ -134,7 +134,7 @@ export const EditDate = ({
 
   return (
     <ModalDialog open={open} onClose={onClose} color={color}>
-      <Box>
+      <Box onClick={(e) => e.stopPropagation()}>
         {/* Label */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
           <Event sx={{ color: 'rgba(255,255,255,0.9)', fontSize: 20 }} />
@@ -218,7 +218,10 @@ export const EditDate = ({
         {/* Action Buttons */}
         <Box sx={{ display: 'flex', gap: 2, mt: 3, justifyContent: 'flex-end' }}>
           <IconButton
-            onClick={onClose}
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
             disabled={saving}
             sx={{
               width: 48,
@@ -237,7 +240,10 @@ export const EditDate = ({
             <Close />
           </IconButton>
           <IconButton
-            onClick={handleSave}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleSave();
+            }}
             disabled={saving || !editValue}
             sx={{
               width: 48,

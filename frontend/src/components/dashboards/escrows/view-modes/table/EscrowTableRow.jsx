@@ -128,7 +128,7 @@ const EscrowTableRow = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
       {/* Property Address - Editable */}
       <Box
         onClick={(e) => {
-          if (onUpdate) {
+          if (onUpdate && !isDragging) {
             e.stopPropagation();
             setAddressEditorOpen(true);
           }
@@ -188,7 +188,7 @@ const EscrowTableRow = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
       {/* Price - Editable */}
       <Box
         onClick={(e) => {
-          if (onUpdate) {
+          if (onUpdate && !isDragging) {
             e.stopPropagation();
             setPriceEditorOpen(true);
           }
@@ -213,7 +213,7 @@ const EscrowTableRow = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
       {/* Commission - Editable */}
       <Box
         onClick={(e) => {
-          if (onUpdate) {
+          if (onUpdate && !isDragging) {
             e.stopPropagation();
             setCommissionEditorOpen(true);
           }
@@ -255,7 +255,7 @@ const EscrowTableRow = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
       {/* Acceptance Date - Editable */}
       <Box
         onClick={(e) => {
-          if (onUpdate) {
+          if (onUpdate && !isDragging) {
             e.stopPropagation();
             setAcceptanceDateEditorOpen(true);
           }
@@ -280,7 +280,7 @@ const EscrowTableRow = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
       {/* Closing Date - Editable */}
       <Box
         onClick={(e) => {
-          if (onUpdate) {
+          if (onUpdate && !isDragging) {
             e.stopPropagation();
             setClosingDateEditorOpen(true);
           }

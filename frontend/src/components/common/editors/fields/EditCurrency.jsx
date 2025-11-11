@@ -72,7 +72,7 @@ export const EditCurrency = ({
 
   return (
     <ModalDialog open={open} onClose={onClose} color={color}>
-      <Box>
+      <Box onClick={(e) => e.stopPropagation()}>
         {/* Label */}
         <Typography
           variant="caption"
@@ -115,7 +115,10 @@ export const EditCurrency = ({
         {/* Action Buttons */}
         <Box sx={{ display: 'flex', gap: 2, mt: 3, justifyContent: 'flex-end' }}>
           <IconButton
-            onClick={onClose}
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
             disabled={saving}
             sx={{
               width: 48,
@@ -134,7 +137,10 @@ export const EditCurrency = ({
             <Close />
           </IconButton>
           <IconButton
-            onClick={handleSave}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleSave();
+            }}
             disabled={saving || !editValue || isNaN(parseFloat(editValue))}
             sx={{
               width: 48,

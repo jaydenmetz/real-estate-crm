@@ -275,7 +275,7 @@ const EscrowListItem = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
           {/* Price - Editable */}
           <Box
             onClick={(e) => {
-              if (onUpdate) {
+              if (onUpdate && !isDragging) {
                 e.stopPropagation();
                 setPriceEditorOpen(true);
               }
@@ -303,7 +303,7 @@ const EscrowListItem = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
           {/* Commission - Editable */}
           <Box
             onClick={(e) => {
-              if (onUpdate) {
+              if (onUpdate && !isDragging) {
                 e.stopPropagation();
                 setCommissionEditorOpen(true);
               }
@@ -347,7 +347,7 @@ const EscrowListItem = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
           {/* Acceptance Date - Editable */}
           <Box
             onClick={(e) => {
-              if (onUpdate) {
+              if (onUpdate && !isDragging) {
                 e.stopPropagation();
                 setAcceptanceDateEditorOpen(true);
               }
@@ -375,7 +375,7 @@ const EscrowListItem = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
           {/* Closing Date - Editable */}
           <Box
             onClick={(e) => {
-              if (onUpdate) {
+              if (onUpdate && !isDragging) {
                 e.stopPropagation();
                 setClosingDateEditorOpen(true);
               }

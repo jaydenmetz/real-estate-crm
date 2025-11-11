@@ -61,7 +61,7 @@ export const EditAddress = ({
 
   return (
     <ModalDialog open={open} onClose={onClose} color={color}>
-      <Box>
+      <Box onClick={(e) => e.stopPropagation()}>
         {/* Label */}
         <Typography
           variant="caption"
@@ -125,7 +125,10 @@ export const EditAddress = ({
         {/* Action Buttons */}
         <Box sx={{ display: 'flex', gap: 2, mt: 3, justifyContent: 'flex-end' }}>
           <IconButton
-            onClick={onClose}
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
             disabled={saving}
             sx={{
               width: 48,
@@ -144,7 +147,10 @@ export const EditAddress = ({
             <Close />
           </IconButton>
           <IconButton
-            onClick={handleSave}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleSave();
+            }}
             disabled={saving || !selectedAddress}
             sx={{
               width: 48,

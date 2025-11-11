@@ -135,7 +135,7 @@ export const EditCommission = ({
 
   return (
     <ModalDialog open={open} onClose={onClose} color={color}>
-      <Box>
+      <Box onClick={(e) => e.stopPropagation()}>
         {/* Label */}
         <Typography
           variant="caption"
@@ -171,6 +171,7 @@ export const EditCommission = ({
             value={commissionType}
             exclusive
             onChange={(e, newType) => {
+              e.stopPropagation(); // Prevent navigation when switching tabs
               if (newType !== null) {
                 setCommissionType(newType);
                 // Load the database value for the new tab (or empty if none exists)
@@ -235,7 +236,10 @@ export const EditCommission = ({
         {/* Action Buttons */}
         <Box sx={{ display: 'flex', gap: 2, mt: 3, justifyContent: 'flex-end' }}>
           <IconButton
-            onClick={onClose}
+            onClick={(e) => {
+              e.stopPropagation();
+              onClose();
+            }}
             disabled={saving}
             sx={{
               width: 48,
@@ -254,7 +258,10 @@ export const EditCommission = ({
             <Close />
           </IconButton>
           <IconButton
-            onClick={handleSave}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleSave();
+            }}
             disabled={saving || !editValue || isNaN(parseFloat(editValue))}
             sx={{
               width: 48,
