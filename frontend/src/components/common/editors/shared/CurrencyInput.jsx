@@ -140,22 +140,8 @@ export const CurrencyInput = ({
 
   const displayValue = formatDisplay(isFocused ? localValue : value);
 
-  // Dynamic font sizing based on number of digits
-  // Up to 7 digits (9,999,999): 1.8rem
-  // 8+ digits (10,000,000+): Scale down proportionally
-  const getAdaptiveFontSize = () => {
-    const digitCount = (isFocused ? localValue : value)?.toString().length || 0;
-
-    if (digitCount <= 7) {
-      return '1.8rem'; // Full size for up to 9,999,999
-    } else if (digitCount === 8) {
-      return '1.4rem'; // 10,000,000 - 99,999,999
-    } else {
-      return '1.2rem'; // 100,000,000+ (999,999,999 max)
-    }
-  };
-
-  const adaptiveFontSize = getAdaptiveFontSize();
+  // Fixed font size - no scaling regardless of digits
+  const adaptiveFontSize = '1.8rem';
 
   return (
     <Box sx={{ position: 'relative', width: '100%', maxWidth: '300px' }}>
