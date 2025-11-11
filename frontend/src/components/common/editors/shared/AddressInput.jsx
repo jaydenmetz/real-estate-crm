@@ -113,16 +113,26 @@ export const AddressInput = ({
         return;
       }
 
+      // Detect if user included a city name (has comma or multiple words that might be city)
+      // If they're typing full address, don't bias - search broadly
+      const hasComma = input.includes(',');
+      const hasMultipleWords = input.trim().split(/\s+/).length > 3;
+      const shouldBias = !hasComma && !hasMultipleWords;
+
       const request = {
         input,
         sessionToken: sessionTokenRef.current,
         componentRestrictions: { country: 'us' },
-        types: ['address'],
-        locationBias: new window.google.maps.Circle({
+        types: ['address']
+      };
+
+      // Only add location bias for short/partial searches
+      if (shouldBias) {
+        request.locationBias = new window.google.maps.Circle({
           center: { lat: userLat, lng: userLng },
           radius: searchRadius * 1609.34
-        })
-      };
+        });
+      }
 
       autocompleteServiceRef.current.getPlacePredictions(request, (predictions, status) => {
         if (status === window.google.maps.places.PlacesServiceStatus.OK && predictions) {
@@ -156,25 +166,33 @@ export const AddressInput = ({
       abortControllerRef.current = controller;
 
       try {
-        const latRadius = searchRadius / 69;
-        const lngRadius = searchRadius / 55;
-        const minLat = userLat - latRadius;
-        const maxLat = userLat + latRadius;
-        const minLng = userLng - lngRadius;
-        const maxLng = userLng + lngRadius;
+        // Detect if user included a city name (has comma or multiple words)
+        const hasComma = input.includes(',');
+        const hasMultipleWords = input.trim().split(/\s+/).length > 3;
+        const shouldBias = !hasComma && !hasMultipleWords;
 
-        // Use input as-is - viewbox provides location bias without forcing city
+        // Use input as-is - don't force city name
         const searchQuery = input;
 
-        const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?` +
+        let url = `https://nominatim.openstreetmap.org/search?` +
           `q=${encodeURIComponent(searchQuery)}&` +
           `format=json&` +
           `countrycodes=us&` +
           `limit=8&` +
-          `addressdetails=1&` +
-          `viewbox=${minLng},${maxLat},${maxLng},${minLat}&` +
-          `bounded=0`,
+          `addressdetails=1`;
+
+        // Only add viewbox bias for short/partial searches
+        if (shouldBias) {
+          const latRadius = searchRadius / 69;
+          const lngRadius = searchRadius / 55;
+          const minLat = userLat - latRadius;
+          const maxLat = userLat + latRadius;
+          const minLng = userLng - lngRadius;
+          const maxLng = userLng + lngRadius;
+          url += `&viewbox=${minLng},${maxLat},${maxLng},${minLat}&bounded=0`;
+        }
+
+        const response = await fetch(url,
           {
             signal: controller.signal,
             headers: {
