@@ -181,6 +181,7 @@ export const CurrencyInput = ({
             fontFamily: 'system-ui, -apple-system, sans-serif',
             padding: '14px 8px 14px 16px', // Reduce right padding
             transition: 'font-size 0.2s ease',
+            textAlign: 'right', // Right-justify the input text
           },
         }}
         sx={{
