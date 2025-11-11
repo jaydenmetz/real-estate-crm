@@ -35,6 +35,7 @@ export const AddressInput = ({
   const [addressSuggestions, setAddressSuggestions] = useState([]);
   const [loadingAddress, setLoadingAddress] = useState(false);
   const [addressSearchText, setAddressSearchText] = useState(value || '');
+  const [selectedPlaceData, setSelectedPlaceData] = useState(null); // Store Google Places data after selection
   const abortControllerRef = useRef(null);
   const autocompleteServiceRef = useRef(null);
   const sessionTokenRef = useRef(null);
@@ -268,45 +269,61 @@ export const AddressInput = ({
   const handleAddressSelect = async (event, value) => {
     // If user typed custom text (not from suggestions), preserve it
     if (!value || typeof value === 'string') {
-      // User pressed Enter on custom text - use what they typed
+      // User pressed Enter or is still editing after autocomplete selection
       if (addressSearchText && addressSearchText.trim()) {
-        // Parse custom address to extract city/state/zip if possible
-        const parts = addressSearchText.split(',').map(p => p.trim());
-        let customAddress = addressSearchText;
-        let city = '';
-        let state = '';
-        let zipCode = '';
+        // If we have stored Google Places data from a previous selection,
+        // use the current text as display address but keep Google data for canonical address
+        if (selectedPlaceData) {
+          onChange({
+            property_address: selectedPlaceData.canonicalAddress, // Keep Google's verified address for geocoding
+            property_address_display: addressSearchText.trim(), // Use edited text for display
+            city: selectedPlaceData.city,
+            state: selectedPlaceData.state,
+            zip_code: selectedPlaceData.zipCode,
+            county: selectedPlaceData.county,
+            latitude: selectedPlaceData.latitude,
+            longitude: selectedPlaceData.longitude,
+          });
+        } else {
+          // No autocomplete data - parse manually entered address
+          const parts = addressSearchText.split(',').map(p => p.trim());
+          let customAddress = addressSearchText;
+          let city = '';
+          let state = '';
+          let zipCode = '';
 
-        // Try to extract city, state, zip from formatted input like "171 & 175 N Cottage St, Porterville, CA 93257"
-        if (parts.length >= 3) {
-          customAddress = parts[0]; // "171 & 175 N Cottage St"
-          city = parts[1]; // "Porterville"
-          const stateZip = parts[2].split(' '); // ["CA", "93257"]
-          state = stateZip[0] || '';
-          zipCode = stateZip[1] || '';
-        } else if (parts.length === 2) {
-          customAddress = parts[0];
-          const stateZip = parts[1].split(' ');
-          state = stateZip[0] || '';
-          zipCode = stateZip[1] || '';
+          // Try to extract city, state, zip from formatted input like "171 & 175 N Cottage St, Porterville, CA 93257"
+          if (parts.length >= 3) {
+            customAddress = parts[0]; // "171 & 175 N Cottage St"
+            city = parts[1]; // "Porterville"
+            const stateZip = parts[2].split(' '); // ["CA", "93257"]
+            state = stateZip[0] || '';
+            zipCode = stateZip[1] || '';
+          } else if (parts.length === 2) {
+            customAddress = parts[0];
+            const stateZip = parts[1].split(' ');
+            state = stateZip[0] || '';
+            zipCode = stateZip[1] || '';
+          }
+
+          onChange({
+            property_address: customAddress,
+            property_address_display: customAddress, // Same as canonical for manual entry
+            city: city || userCity,
+            state: state || userState,
+            zip_code: zipCode,
+            county: '',
+            latitude: null,
+            longitude: null,
+          });
         }
-
-        onChange({
-          property_address: customAddress,
-          city: city || userCity,
-          state: state || userState,
-          zip_code: zipCode,
-          county: '',
-          latitude: null,
-          longitude: null,
-        });
       } else {
         onChange(null);
       }
       return;
     }
 
-    // Google Places result - When user clicks autocomplete, use the selected address (not custom text)
+    // Google Places result - Store the verified data and use for both canonical and display initially
     if (value.placeId && placesServiceRef.current) {
       const request = {
         placeId: value.placeId,
@@ -336,10 +353,25 @@ export const AddressInput = ({
 
           const streetAddress = `${streetNumber} ${route}`.trim();
 
-          // When user clicks autocomplete, always use the selected address (don't preserve custom text)
-          // Custom text is only preserved when user presses Enter without selecting autocomplete
+          // Store the Google Places data so we can preserve it if user edits display address
+          const placeData = {
+            canonicalAddress: streetAddress,
+            city,
+            state,
+            zipCode,
+            county,
+            latitude: place.geometry?.location?.lat(),
+            longitude: place.geometry?.location?.lng(),
+          };
+          setSelectedPlaceData(placeData);
+
+          // Pre-fill the input with the street address so user can edit it
+          setAddressSearchText(streetAddress);
+
+          // Initially, both display and canonical are the same
           onChange({
             property_address: streetAddress,
+            property_address_display: streetAddress,
             city,
             state,
             zip_code: zipCode,
@@ -353,11 +385,27 @@ export const AddressInput = ({
         }
       });
     } else if (value.value) {
-      // Nominatim result - When user clicks autocomplete, use the selected address
+      // Nominatim result
       const addressData = value.value;
+      const streetAddress = addressData.address;
+
+      // Store the data
+      setSelectedPlaceData({
+        canonicalAddress: streetAddress,
+        city: addressData.city,
+        state: addressData.state,
+        zipCode: addressData.zipCode,
+        county: addressData.county,
+        latitude: parseFloat(addressData.lat),
+        longitude: parseFloat(addressData.lon),
+      });
+
+      // Pre-fill the input
+      setAddressSearchText(streetAddress);
 
       onChange({
-        property_address: addressData.address,
+        property_address: streetAddress,
+        property_address_display: streetAddress,
         city: addressData.city,
         state: addressData.state,
         zip_code: addressData.zipCode,

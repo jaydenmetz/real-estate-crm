@@ -114,7 +114,7 @@ export const EditAddress = ({
 
         {/* Address Input */}
         <AddressInput
-          value={value}
+          value={value} // This is property_address_display from parent
           onChange={setSelectedAddress}
           onKeyDown={handleKeyPress}
           disabled={saving}

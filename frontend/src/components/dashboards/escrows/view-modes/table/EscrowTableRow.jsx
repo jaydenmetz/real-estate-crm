@@ -57,7 +57,8 @@ const EscrowTableRow = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
   } = calculations;
 
   const statusConfig = getStatusConfig(escrow.escrow_status);
-  const address = escrow.property_address || 'No Address';
+  // Use display address for UI, fall back to canonical address if not set
+  const address = escrow.property_address_display || escrow.property_address || 'No Address';
 
   // Handle row click - only navigate if not dragging (text selection)
   const handleRowMouseDown = useCallback((e) => {
@@ -366,7 +367,8 @@ const EscrowTableRow = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
         open={addressEditorOpen}
         onClose={() => setAddressEditorOpen(false)}
         onSave={(addressData) => onUpdate(escrow.id, addressData)}
-        value={escrow.property_address}
+        value={escrow.property_address_display || escrow.property_address}
+        canonicalValue={escrow.property_address}
       />
     </Box>
   );
