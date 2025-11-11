@@ -421,36 +421,39 @@ const EscrowListItem = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
       <EditPurchasePrice
         open={priceEditorOpen}
         onClose={() => setPriceEditorOpen(false)}
-        onSave={(updates) => onUpdate(escrow.id, updates)}
-        escrow={escrow}
+        onSave={(newValue) => onUpdate(escrow.id, { purchase_price: newValue })}
+        value={purchasePrice}
       />
 
       <EditCommissionAmount
         open={commissionEditorOpen}
         onClose={() => setCommissionEditorOpen(false)}
         onSave={(updates) => onUpdate(escrow.id, updates)}
-        escrow={escrow}
+        value={commission}
+        commissionPercentage={parseFloat(escrow.commission_percentage || 0)}
+        commissionType={escrow.commission_type || 'percentage'}
+        purchasePrice={parseFloat(escrow.purchase_price || 0)}
       />
 
       <EditAcceptanceDate
         open={acceptanceDateEditorOpen}
         onClose={() => setAcceptanceDateEditorOpen(false)}
-        onSave={(updates) => onUpdate(escrow.id, updates)}
-        escrow={escrow}
+        onSave={(newValue) => onUpdate(escrow.id, { acceptance_date: newValue })}
+        value={acceptanceDate}
       />
 
       <EditClosingDate
         open={closingDateEditorOpen}
         onClose={() => setClosingDateEditorOpen(false)}
-        onSave={(updates) => onUpdate(escrow.id, updates)}
-        escrow={escrow}
+        onSave={(newValue) => onUpdate(escrow.id, { closing_date: newValue })}
+        value={closingDate}
       />
 
       <EditPropertyAddress
         open={addressEditorOpen}
         onClose={() => setAddressEditorOpen(false)}
-        onSave={(updates) => onUpdate(escrow.id, updates)}
-        escrow={escrow}
+        onSave={(addressData) => onUpdate(escrow.id, addressData)}
+        value={escrow.property_address}
       />
     </Box>
   );
