@@ -3,6 +3,7 @@ import { Box, Typography, IconButton, ToggleButtonGroup, ToggleButton } from '@m
 import { Check, Close, Percent, AttachMoney } from '@mui/icons-material';
 import { ModalDialog } from '../shared/ModalDialog';
 import { CurrencyInput } from '../shared/CurrencyInput';
+import { PercentageInput } from '../shared/PercentageInput';
 
 /**
  * Specialized Commission Editor
@@ -159,15 +160,23 @@ export const EditCommission = ({
         </Box>
 
         {/* Edit Input */}
-        <CurrencyInput
-          value={editValue}
-          onChange={setEditValue}
-          onKeyDown={handleKeyPress}
-          disabled={saving}
-          prefix={commissionType === 'percentage' ? '' : '$'}
-          endAdornment={commissionType === 'percentage' ? '%' : null}
-          placeholder={commissionType === 'percentage' ? 'Enter percentage' : 'Enter dollar amount'}
-        />
+        {commissionType === 'percentage' ? (
+          <PercentageInput
+            value={editValue}
+            onChange={setEditValue}
+            onKeyDown={handleKeyPress}
+            disabled={saving}
+            placeholder="Enter percentage"
+          />
+        ) : (
+          <CurrencyInput
+            value={editValue}
+            onChange={setEditValue}
+            onKeyDown={handleKeyPress}
+            disabled={saving}
+            placeholder="Enter dollar amount"
+          />
+        )}
 
         {/* Action Buttons */}
         <Box sx={{ display: 'flex', gap: 2, mt: 3, justifyContent: 'flex-end' }}>
