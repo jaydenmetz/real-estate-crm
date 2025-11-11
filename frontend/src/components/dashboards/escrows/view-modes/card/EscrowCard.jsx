@@ -922,7 +922,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                 overflow: 'hidden'
               }}>
                 {/* Address - Editable */}
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 0.5, mb: 1 }}>
                   {onUpdate ? (
                     <Box
                       onClick={(e) => {
@@ -941,6 +941,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                         },
                       }}
                     >
+                      {/* Street Address */}
                       <Typography
                         variant="h6"
                         sx={{
@@ -952,19 +953,52 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                       >
                         {address}
                       </Typography>
+                      {/* City, State, Zip */}
+                      {(escrow.city || escrow.state || escrow.zip_code) && (
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            fontSize: '0.7rem',
+                            color: theme.palette.text.secondary,
+                            lineHeight: 1.3,
+                            display: 'block',
+                            mt: 0.25,
+                          }}
+                        >
+                          {[escrow.city, escrow.state, escrow.zip_code].filter(Boolean).join(', ')}
+                        </Typography>
+                      )}
                     </Box>
                   ) : (
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        fontWeight: 800,
-                        fontSize: '0.9rem',
-                        color: theme.palette.text.primary,
-                        lineHeight: 1.2,
-                      }}
-                    >
-                      {address}
-                    </Typography>
+                    <Box sx={{ flex: 1 }}>
+                      {/* Street Address */}
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontWeight: 800,
+                          fontSize: '0.9rem',
+                          color: theme.palette.text.primary,
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        {address}
+                      </Typography>
+                      {/* City, State, Zip */}
+                      {(escrow.city || escrow.state || escrow.zip_code) && (
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            fontSize: '0.7rem',
+                            color: theme.palette.text.secondary,
+                            lineHeight: 1.3,
+                            display: 'block',
+                            mt: 0.25,
+                          }}
+                        >
+                          {[escrow.city, escrow.state, escrow.zip_code].filter(Boolean).join(', ')}
+                        </Typography>
+                      )}
+                    </Box>
                   )}
                   {escrow.is_private ? (
                     <Chip
@@ -972,7 +1006,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                       label="Private"
                       size="small"
                       color="error"
-                      sx={{ height: 18, fontSize: '0.65rem' }}
+                      sx={{ height: 18, fontSize: '0.65rem', mt: 0.25 }}
                     />
                   ) : escrow.access_level ? (
                     <Chip
@@ -980,7 +1014,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                       label={escrow.access_level === 'team' ? 'Team' : 'Broker'}
                       size="small"
                       color={escrow.access_level === 'team' ? 'primary' : 'secondary'}
-                      sx={{ height: 18, fontSize: '0.65rem' }}
+                      sx={{ height: 18, fontSize: '0.65rem', mt: 0.25 }}
                     />
                   ) : null}
                 </Box>
