@@ -193,8 +193,38 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
     }
   }, [goToNextPanel, goToPrevPanel]);
 
-  // ✅ Memoized click handler - prevents re-renders
+  // Click vs drag detection (for text selection)
+  const [isDragging, setIsDragging] = useState(false);
+  const [mouseDownPos, setMouseDownPos] = useState(null);
+
+  // Handle card click - only navigate if not dragging (text selection)
+  const handleCardMouseDown = useCallback((e) => {
+    setMouseDownPos({ x: e.clientX, y: e.clientY });
+    setIsDragging(false);
+  }, []);
+
+  const handleCardMouseMove = useCallback((e) => {
+    if (mouseDownPos) {
+      const distance = Math.sqrt(
+        Math.pow(e.clientX - mouseDownPos.x, 2) + Math.pow(e.clientY - mouseDownPos.y, 2)
+      );
+      // If mouse moved more than 5px, consider it a drag (text selection)
+      if (distance > 5) {
+        setIsDragging(true);
+      }
+    }
+  }, [mouseDownPos]);
+
   const handleClick = useCallback(() => {
+    // Only navigate if user didn't drag (text selection)
+    if (!isDragging) {
+      navigate(`/escrows/${escrow.id}`);
+    }
+    setMouseDownPos(null);
+  }, [isDragging, escrow.id, navigate]);
+
+  // Separate handler for QuickActionsMenu that always navigates
+  const handleCardClick = useCallback(() => {
     navigate(`/escrows/${escrow.id}`);
   }, [escrow.id, navigate]);
 
@@ -691,6 +721,8 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
           }}
         >
           <Card
+            onMouseDown={handleCardMouseDown}
+            onMouseMove={handleCardMouseMove}
             onClick={handleClick}
             sx={{
               width: '100%',

@@ -42,6 +42,10 @@ const EscrowTableRow = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
   const [closingDateEditorOpen, setClosingDateEditorOpen] = useState(false);
   const [addressEditorOpen, setAddressEditorOpen] = useState(false);
 
+  // Click vs drag detection (for text selection)
+  const [isDragging, setIsDragging] = useState(false);
+  const [mouseDownPos, setMouseDownPos] = useState(null);
+
   // Memoized calculations
   const calculations = useEscrowCalculations(escrow);
   const {
@@ -55,9 +59,31 @@ const EscrowTableRow = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
   const statusConfig = getStatusConfig(escrow.escrow_status);
   const address = escrow.property_address || 'No Address';
 
-  const handleClick = useCallback(() => {
-    navigate(`/escrows/${escrow.id}`);
-  }, [escrow.id, navigate]);
+  // Handle row click - only navigate if not dragging (text selection)
+  const handleRowMouseDown = useCallback((e) => {
+    setMouseDownPos({ x: e.clientX, y: e.clientY });
+    setIsDragging(false);
+  }, []);
+
+  const handleRowMouseMove = useCallback((e) => {
+    if (mouseDownPos) {
+      const distance = Math.sqrt(
+        Math.pow(e.clientX - mouseDownPos.x, 2) + Math.pow(e.clientY - mouseDownPos.y, 2)
+      );
+      // If mouse moved more than 5px, consider it a drag (text selection)
+      if (distance > 5) {
+        setIsDragging(true);
+      }
+    }
+  }, [mouseDownPos]);
+
+  const handleRowClick = useCallback(() => {
+    // Only navigate if user didn't drag (text selection)
+    if (!isDragging) {
+      navigate(`/escrows/${escrow.id}`);
+    }
+    setMouseDownPos(null);
+  }, [isDragging, escrow.id, navigate]);
 
   const toggleCommission = useCallback((e) => {
     e.stopPropagation();
@@ -74,7 +100,9 @@ const EscrowTableRow = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
 
   return (
     <Box
-      onClick={handleClick}
+      onMouseDown={handleRowMouseDown}
+      onMouseMove={handleRowMouseMove}
+      onClick={handleRowClick}
       sx={{
         display: 'grid',
         gridTemplateColumns: '2fr 1fr 1fr 1.2fr 1fr 1fr 0.8fr 80px',
@@ -292,7 +320,7 @@ const EscrowTableRow = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
       <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
         <QuickActionsMenu
           item={escrow}
-          onView={handleClick}
+          onView={() => navigate(`/escrows/${escrow.id}`)}
           onShare={null} // Future feature
           onArchive={onArchive}
           onRestore={onRestore}
