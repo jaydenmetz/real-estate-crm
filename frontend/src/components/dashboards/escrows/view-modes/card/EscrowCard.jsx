@@ -54,6 +54,7 @@ import { EditClosingDate } from '../../editors/EditClosingDate';
 import { EditPropertyAddress } from '../../editors/EditPropertyAddress';
 import PersonRoleContainer from '../../../../common/editors/PersonRoleContainer';
 import PeopleEditor from '../../../../common/editors/PeopleEditor';
+import { QuickActionsMenu } from '../../../../common/QuickActionsMenu';
 import { formatCurrency, formatDate as formatDateUtil, getInitials as getInitialsUtil, truncateText } from '../../../../../utils/formatters';
 import { getBestPropertyImage } from '../../../../../utils/streetViewUtils';
 
@@ -791,82 +792,40 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                   }}
                 />
 
-                {/* Hover Zone for Delete/Restore Buttons - TOP RIGHT */}
+                {/* Quick Actions Menu - TOP RIGHT */}
                 {(onArchive || onDelete || onRestore) && (
                   <Box
                     sx={{
                       position: 'absolute',
-                      top: 0,
-                      right: 0,
-                      width: 80,
-                      height: 80,
+                      top: 8,
+                      right: 8,
                       zIndex: 3,
-                      '&:hover .action-button': {
+                      opacity: 0,
+                      transition: 'opacity 0.2s',
+                      '.card-wrapper:hover &': {
                         opacity: 1,
                       },
                     }}
+                    className="action-button"
                   >
-                    {/* Restore Button (for archived escrows) */}
-                    {isArchived && onRestore && (
-                      <IconButton
-                        className="action-button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onRestore(escrow.id);
-                        }}
-                        sx={{
-                          position: 'absolute',
-                          top: 10,
-                          right: 46,
-                          opacity: 0,
-                          backgroundColor: 'rgba(34, 197, 94, 0.3)',
-                          color: 'rgba(255, 255, 255, 0.7)',
-                          width: 28,
-                          height: 28,
-                          backdropFilter: 'blur(8px)',
-                          '&:hover': {
-                            backgroundColor: 'rgba(34, 197, 94, 0.5)',
-                            color: 'rgba(255, 255, 255, 0.95)',
-                            transform: 'scale(1.15)',
-                          },
-                          transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                        }}
-                      >
-                        <RestoreFromTrashIcon sx={{ fontSize: 16 }} />
-                      </IconButton>
-                    )}
-
-                    {/* Delete/Archive Button */}
-                    <IconButton
-                      className="action-button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (isArchived && onDelete) {
-                          onDelete(escrow.id);
-                        } else if (onArchive) {
-                          onArchive(escrow.id);
-                        }
-                      }}
+                    <Box
                       sx={{
-                        position: 'absolute',
-                        top: 10,
-                        right: 10,
-                        opacity: 0,
                         backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                        color: 'rgba(255, 255, 255, 0.7)',
-                        width: 28,
-                        height: 28,
                         backdropFilter: 'blur(8px)',
-                        '&:hover': {
-                          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                          color: 'rgba(255, 255, 255, 0.95)',
-                          transform: 'scale(1.15)',
-                        },
-                        transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                        borderRadius: '50%',
                       }}
                     >
-                      <Close sx={{ fontSize: 16 }} />
-                    </IconButton>
+                      <QuickActionsMenu
+                        item={escrow}
+                        onView={handleCardClick}
+                        onShare={null} // Future feature
+                        onArchive={onArchive}
+                        onRestore={onRestore}
+                        onDelete={onDelete}
+                        isArchived={isArchived}
+                        color="white"
+                      />
+                    </Box>
                   </Box>
                 )}
               </Box>

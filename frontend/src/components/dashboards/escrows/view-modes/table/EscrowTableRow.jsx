@@ -24,6 +24,7 @@ import { EditCommissionAmount } from '../../editors/EditCommissionAmount';
 import { EditAcceptanceDate } from '../../editors/EditAcceptanceDate';
 import { EditClosingDate } from '../../editors/EditClosingDate';
 import { EditPropertyAddress } from '../../editors/EditPropertyAddress';
+import { QuickActionsMenu } from '../../../../common/QuickActionsMenu';
 
 /**
  * EscrowTableRow - Compact table view (no images)
@@ -289,47 +290,16 @@ const EscrowTableRow = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
 
       {/* Actions */}
       <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
-        {isArchived && onRestore && (
-          <IconButton
-            onClick={(e) => {
-              e.stopPropagation();
-              onRestore(escrow.id);
-            }}
-            sx={{
-              width: 32,
-              height: 32,
-              color: '#10b981',
-              '&:hover': {
-                bgcolor: alpha('#10b981', 0.1),
-              },
-            }}
-          >
-            <RestoreFromTrashIcon sx={{ fontSize: 16 }} />
-          </IconButton>
-        )}
-        {(onArchive || onDelete) && (
-          <IconButton
-            onClick={(e) => {
-              e.stopPropagation();
-              if (isArchived && onDelete) {
-                onDelete(escrow.id);
-              } else if (onArchive) {
-                onArchive(escrow.id);
-              }
-            }}
-            sx={{
-              width: 32,
-              height: 32,
-              color: theme.palette.text.secondary,
-              '&:hover': {
-                bgcolor: alpha('#ef4444', 0.1),
-                color: '#ef4444',
-              },
-            }}
-          >
-            <Close sx={{ fontSize: 16 }} />
-          </IconButton>
-        )}
+        <QuickActionsMenu
+          item={escrow}
+          onView={handleClick}
+          onShare={null} // Future feature
+          onArchive={onArchive}
+          onRestore={onRestore}
+          onDelete={onDelete}
+          isArchived={isArchived}
+          color={theme.palette.text.secondary}
+        />
       </Box>
 
       {/* Editor Modals */}

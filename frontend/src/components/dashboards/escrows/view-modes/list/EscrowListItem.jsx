@@ -28,6 +28,7 @@ import { EditCommissionAmount } from '../../editors/EditCommissionAmount';
 import { EditAcceptanceDate } from '../../editors/EditAcceptanceDate';
 import { EditClosingDate } from '../../editors/EditClosingDate';
 import { EditPropertyAddress } from '../../editors/EditPropertyAddress';
+import { QuickActionsMenu } from '../../../../common/QuickActionsMenu';
 
 /**
  * EscrowListItem - Full-width horizontal list view with image on left
@@ -152,48 +153,24 @@ const EscrowListItem = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
               gap: 0.5,
             }}
           >
-            {isArchived && onRestore && (
-              <IconButton
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRestore(escrow.id);
-                }}
-                sx={{
-                  backgroundColor: 'rgba(34, 197, 94, 0.3)',
-                  color: 'white',
-                  width: 32,
-                  height: 32,
-                  backdropFilter: 'blur(8px)',
-                  '&:hover': {
-                    backgroundColor: 'rgba(34, 197, 94, 0.5)',
-                  },
-                }}
-              >
-                <RestoreFromTrashIcon sx={{ fontSize: 18 }} />
-              </IconButton>
-            )}
-            <IconButton
-              onClick={(e) => {
-                e.stopPropagation();
-                if (isArchived && onDelete) {
-                  onDelete(escrow.id);
-                } else if (onArchive) {
-                  onArchive(escrow.id);
-                }
-              }}
+            <Box
               sx={{
                 backgroundColor: 'rgba(0, 0, 0, 0.3)',
-                color: 'white',
-                width: 32,
-                height: 32,
                 backdropFilter: 'blur(8px)',
-                '&:hover': {
-                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                },
+                borderRadius: '50%',
               }}
             >
-              <Close sx={{ fontSize: 18 }} />
-            </IconButton>
+              <QuickActionsMenu
+                item={escrow}
+                onView={handleClick}
+                onShare={null} // Future feature
+                onArchive={onArchive}
+                onRestore={onRestore}
+                onDelete={onDelete}
+                isArchived={isArchived}
+                color="white"
+              />
+            </Box>
           </Box>
         )}
       </Box>
