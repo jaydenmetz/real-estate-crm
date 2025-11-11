@@ -37,18 +37,30 @@ export const EditCommission = ({
   // Initialize editValue and commissionType when dialog opens
   useEffect(() => {
     if (open) {
+      // DEBUG: Log what values we're receiving
+      console.log('EditCommission opening with:', {
+        initialCommissionType,
+        commissionPercentage,
+        value,
+        purchasePrice
+      });
+
       // Set commission type from prop
       setCommissionType(initialCommissionType);
 
       // Load the appropriate value based on commission type
       // IMPORTANT: Check for null/undefined explicitly, not falsy (0 is valid!)
       if (initialCommissionType === 'percentage') {
-        setEditValue(commissionPercentage !== null && commissionPercentage !== undefined ? commissionPercentage.toString() : '');
+        const loadedValue = commissionPercentage !== null && commissionPercentage !== undefined ? commissionPercentage.toString() : '';
+        console.log('Loading percentage value:', loadedValue);
+        setEditValue(loadedValue);
       } else {
-        setEditValue(value !== null && value !== undefined ? value.toString() : '');
+        const loadedValue = value !== null && value !== undefined ? value.toString() : '';
+        console.log('Loading flat value:', loadedValue);
+        setEditValue(loadedValue);
       }
     }
-  }, [open, initialCommissionType, value, commissionPercentage]);
+  }, [open, initialCommissionType, value, commissionPercentage, purchasePrice]);
 
   const handleSave = async () => {
     if (!editValue || isNaN(parseFloat(editValue))) {
