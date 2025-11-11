@@ -113,6 +113,8 @@ async function getAllEscrows(req, res) {
         e.escrow_status as status,
         e.purchase_price as purchase_price,
         ${commissionField} as my_commission,
+        e.commission_percentage,
+        e.commission_type,
         e.gross_commission as gross_commission,
         ${acceptanceDateField} as acceptance_date,
         e.created_at as created_at
