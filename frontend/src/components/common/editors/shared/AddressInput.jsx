@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { Box, TextField, Autocomplete, CircularProgress, InputAdornment } from '@mui/material';
+import { Box, TextField, Autocomplete, CircularProgress, InputAdornment, Typography } from '@mui/material';
 import { LocationOn, Close } from '@mui/icons-material';
 import debounce from 'lodash/debounce';
 import { useAuth } from '../../../../contexts/AuthContext';
@@ -433,6 +433,24 @@ export const AddressInput = ({
 
   return (
     <Box sx={{ position: 'relative', width: '100%', maxWidth: '400px' }}>
+      {/* Display Name Label - shows after autocomplete selection */}
+      {selectedPlaceData && (
+        <Typography
+          variant="caption"
+          sx={{
+            fontSize: 11,
+            fontWeight: 600,
+            color: 'rgba(255,255,255,0.7)',
+            mb: 0.5,
+            display: 'block',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+          }}
+        >
+          Display Name
+        </Typography>
+      )}
+
       <Autocomplete
         freeSolo
         options={addressSuggestions}
