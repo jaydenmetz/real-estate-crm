@@ -7,8 +7,8 @@ import { Box, Typography, TextField } from '@mui/material';
  *
  * Features:
  * - Editable formatted value with cursor positioning
- * - Supports decimals (2.5%, 2.875%)
- * - Normalizes trailing zeros (2.50% → 2.5%)
+ * - Supports unlimited decimal precision (2.5%, 2.875%, 2.12345678901%)
+ * - Normalizes trailing zeros (2.50% → 2.5%, 2.87500% → 2.875%)
  * - % shown on right in lighter color
  * - Clean, minimal design matching CurrencyInput theme
  *
@@ -112,10 +112,8 @@ export const PercentageInput = ({
       cleaned = '100';
     }
 
-    // Limit decimal places to 3 (e.g., 2.875%)
-    if (parts.length === 2 && parts[1].length > 3) {
-      cleaned = parts[0] + '.' + parts[1].substring(0, 3);
-    }
+    // No limit on decimal places - allow unlimited precision
+    // Users can enter 2.875% or even 2.12345678901% if needed
 
     // Calculate cursor position
     // For percentage, we don't add commas, so cursor tracking is simpler
