@@ -41,16 +41,32 @@ export const EditCommission = ({
       setCommissionType(initialCommissionType);
 
       // Load the appropriate value based on commission type
+      // IMPORTANT: Check for null/undefined explicitly, not falsy (0 is valid!)
       if (initialCommissionType === 'percentage') {
-        setEditValue(commissionPercentage?.toString() || '');
+        setEditValue(commissionPercentage !== null && commissionPercentage !== undefined ? commissionPercentage.toString() : '');
       } else {
-        setEditValue(value?.toString() || '');
+        setEditValue(value !== null && value !== undefined ? value.toString() : '');
       }
     }
   }, [open, initialCommissionType, value, commissionPercentage]);
 
   const handleSave = async () => {
     if (!editValue || isNaN(parseFloat(editValue))) {
+      return;
+    }
+
+    const newValue = parseFloat(editValue);
+
+    // Check if value actually changed - don't save if unchanged
+    const hasChanged = commissionType === 'percentage'
+      ? newValue !== commissionPercentage
+      : newValue !== value;
+
+    const hasTypeChanged = commissionType !== initialCommissionType;
+
+    // If nothing changed, just close
+    if (!hasChanged && !hasTypeChanged) {
+      onClose();
       return;
     }
 
@@ -62,11 +78,11 @@ export const EditCommission = ({
 
       if (commissionType === 'percentage') {
         // Save percentage and calculate dollar amount
-        updates.commission_percentage = parseFloat(editValue);
-        updates.my_commission = purchasePrice ? (purchasePrice * parseFloat(editValue)) / 100 : 0;
+        updates.commission_percentage = newValue;
+        updates.my_commission = purchasePrice ? (purchasePrice * newValue) / 100 : 0;
       } else {
         // Save flat dollar amount and clear percentage
-        updates.my_commission = parseFloat(editValue);
+        updates.my_commission = newValue;
         updates.commission_percentage = null;
       }
 
