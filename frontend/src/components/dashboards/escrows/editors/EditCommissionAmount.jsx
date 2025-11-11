@@ -32,7 +32,7 @@ export const EditCommissionAmount = ({
       commissionPercentage={commissionPercentage}
       commissionType={commissionType}
       purchasePrice={purchasePrice}
-      color="#10b981" // Green theme for commission
+      color="#6366f1" // Purple theme for commission
     />
   );
 };
