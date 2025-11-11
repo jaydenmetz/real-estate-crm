@@ -280,10 +280,10 @@ export const AddressInput = ({
             if (types.includes('administrative_area_level_2')) county = component.long_name.replace(' County', '');
           });
 
-          const fullAddress = `${streetNumber} ${route}`.trim();
+          const streetAddress = `${streetNumber} ${route}`.trim();
 
           onChange({
-            property_address: place.formatted_address,
+            property_address: streetAddress, // Just street address, not full formatted address
             city,
             state,
             zip_code: zipCode,
@@ -300,7 +300,7 @@ export const AddressInput = ({
       // Nominatim result
       const addressData = value.value;
       onChange({
-        property_address: value.label,
+        property_address: addressData.address, // Just street address, not full label
         city: addressData.city,
         state: addressData.state,
         zip_code: addressData.zipCode,
