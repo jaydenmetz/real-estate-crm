@@ -21,6 +21,7 @@ import { getStatusConfig } from '../../../../../constants/escrowConfig';
 import { formatCurrency, formatDate as formatDateUtil } from '../../../../../utils/formatters';
 import { EditPurchasePrice } from '../../editors/EditPurchasePrice';
 import { EditCommissionAmount } from '../../editors/EditCommissionAmount';
+import { EditAcceptanceDate } from '../../editors/EditAcceptanceDate';
 import { EditClosingDate } from '../../editors/EditClosingDate';
 import { EditPropertyAddress } from '../../editors/EditPropertyAddress';
 
@@ -36,6 +37,7 @@ const EscrowTableRow = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
   // Editor modal states
   const [priceEditorOpen, setPriceEditorOpen] = useState(false);
   const [commissionEditorOpen, setCommissionEditorOpen] = useState(false);
+  const [acceptanceDateEditorOpen, setAcceptanceDateEditorOpen] = useState(false);
   const [closingDateEditorOpen, setClosingDateEditorOpen] = useState(false);
   const [addressEditorOpen, setAddressEditorOpen] = useState(false);
 
@@ -46,6 +48,7 @@ const EscrowTableRow = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
     commission,
     checklistProgress,
     closingDate,
+    acceptanceDate,
   } = calculations;
 
   const statusConfig = getStatusConfig(escrow.escrow_status);
@@ -73,7 +76,7 @@ const EscrowTableRow = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
       onClick={handleClick}
       sx={{
         display: 'grid',
-        gridTemplateColumns: '2fr 1fr 1fr 1.2fr 1fr 0.8fr 80px',
+        gridTemplateColumns: '2fr 1fr 1fr 1.2fr 1fr 1fr 0.8fr 80px',
         gap: 2,
         alignItems: 'center',
         width: '100%',
@@ -220,6 +223,31 @@ const EscrowTableRow = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
         </Typography>
       </Box>
 
+      {/* Acceptance Date - Editable */}
+      <Box
+        onClick={(e) => {
+          if (onUpdate) {
+            e.stopPropagation();
+            setAcceptanceDateEditorOpen(true);
+          }
+        }}
+        sx={{
+          cursor: onUpdate ? 'pointer' : 'default',
+          transition: 'all 0.2s',
+          borderRadius: 1,
+          px: 1,
+          py: 0.5,
+          mx: -1,
+          '&:hover': onUpdate ? {
+            backgroundColor: alpha(theme.palette.text.secondary, 0.08),
+          } : {},
+        }}
+      >
+        <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.85rem', color: theme.palette.text.primary }}>
+          {formatDateUtil(acceptanceDate, 'MMM d, yyyy') || 'TBD'}
+        </Typography>
+      </Box>
+
       {/* Closing Date - Editable */}
       <Box
         onClick={(e) => {
@@ -315,6 +343,13 @@ const EscrowTableRow = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
       <EditCommissionAmount
         open={commissionEditorOpen}
         onClose={() => setCommissionEditorOpen(false)}
+        onSave={(updates) => onUpdate(escrow.id, updates)}
+        escrow={escrow}
+      />
+
+      <EditAcceptanceDate
+        open={acceptanceDateEditorOpen}
+        onClose={() => setAcceptanceDateEditorOpen(false)}
         onSave={(updates) => onUpdate(escrow.id, updates)}
         escrow={escrow}
       />

@@ -25,6 +25,7 @@ import { formatCurrency, formatDate as formatDateUtil } from '../../../../../uti
 import { getBestPropertyImage } from '../../../../../utils/streetViewUtils';
 import { EditPurchasePrice } from '../../editors/EditPurchasePrice';
 import { EditCommissionAmount } from '../../editors/EditCommissionAmount';
+import { EditAcceptanceDate } from '../../editors/EditAcceptanceDate';
 import { EditClosingDate } from '../../editors/EditClosingDate';
 import { EditPropertyAddress } from '../../editors/EditPropertyAddress';
 
@@ -40,6 +41,7 @@ const EscrowListItem = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
   // Editor modal states
   const [priceEditorOpen, setPriceEditorOpen] = useState(false);
   const [commissionEditorOpen, setCommissionEditorOpen] = useState(false);
+  const [acceptanceDateEditorOpen, setAcceptanceDateEditorOpen] = useState(false);
   const [closingDateEditorOpen, setClosingDateEditorOpen] = useState(false);
   const [addressEditorOpen, setAddressEditorOpen] = useState(false);
 
@@ -337,6 +339,34 @@ const EscrowListItem = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
             </Box>
           </Box>
 
+          {/* Acceptance Date - Editable */}
+          <Box
+            onClick={(e) => {
+              if (onUpdate) {
+                e.stopPropagation();
+                setAcceptanceDateEditorOpen(true);
+              }
+            }}
+            sx={{
+              cursor: onUpdate ? 'pointer' : 'default',
+              transition: 'all 0.2s',
+              borderRadius: 1,
+              px: 1,
+              py: 0.5,
+              mx: -1,
+              '&:hover': onUpdate ? {
+                backgroundColor: alpha(theme.palette.text.secondary, 0.08),
+              } : {},
+            }}
+          >
+            <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Accepted
+            </Typography>
+            <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', color: theme.palette.text.primary }}>
+              {formatDateUtil(acceptanceDate, 'MMM d, yyyy') || 'TBD'}
+            </Typography>
+          </Box>
+
           {/* Closing Date - Editable */}
           <Box
             onClick={(e) => {
@@ -421,6 +451,13 @@ const EscrowListItem = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
       <EditCommissionAmount
         open={commissionEditorOpen}
         onClose={() => setCommissionEditorOpen(false)}
+        onSave={(updates) => onUpdate(escrow.id, updates)}
+        escrow={escrow}
+      />
+
+      <EditAcceptanceDate
+        open={acceptanceDateEditorOpen}
+        onClose={() => setAcceptanceDateEditorOpen(false)}
         onSave={(updates) => onUpdate(escrow.id, updates)}
         escrow={escrow}
       />
