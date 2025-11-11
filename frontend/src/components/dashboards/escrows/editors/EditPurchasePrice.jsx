@@ -18,7 +18,7 @@ export const EditPurchasePrice = ({ open, onClose, onSave, value }) => {
       onSave={onSave}
       label="Purchase Price"
       value={value}
-      color="#3b82f6" // Blue theme for purchase price
+      color="#10b981" // Green theme for purchase price
       prefix="$"
     />
   );
