@@ -310,13 +310,14 @@ class AuthController {
           deviceInfo,
         );
 
-        // Set refresh token as httpOnly cookie
+        // Set refresh token as httpOnly cookie (30 days sliding window)
+        const expiryDays = parseInt(process.env.JWT_REFRESH_TOKEN_EXPIRY_DAYS || '30');
         res.cookie('refreshToken', refreshTokenData.token, {
           httpOnly: true,
           secure: true, // Always use HTTPS (production is always HTTPS)
           sameSite: 'lax', // Same-site navigation allowed (crm.jaydenmetz.com → api.jaydenmetz.com share root domain)
           domain: '.jaydenmetz.com',
-          maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+          maxAge: expiryDays * 24 * 60 * 60 * 1000,
         });
       } catch (refreshTokenError) {
         console.error('Failed to create refresh token (non-fatal):', refreshTokenError);
@@ -683,8 +684,9 @@ class AuthController {
   }
 
   /**
-   * Refresh access token using refresh token
+   * Refresh access token using refresh token with sliding window
    * POST /auth/refresh
+   * Implements sliding 30-day window with preserved absolute 90-day limit
    */
   static async refresh(req, res) {
     try {
@@ -701,7 +703,7 @@ class AuthController {
         });
       }
 
-      // Validate refresh token
+      // Validate refresh token (checks both expires_at and absolute_expires_at)
       const tokenData = await RefreshTokenService.validateRefreshToken(refreshToken);
 
       if (!tokenData) {
@@ -717,7 +719,7 @@ class AuthController {
       // Generate new access token
       const accessToken = jwt.sign(
         {
-          id: tokenData.user_id, // CRITICAL FIX: Use user_id, not refresh token id
+          id: tokenData.user_id,
           email: tokenData.email,
           role: tokenData.role,
         },
@@ -725,24 +727,27 @@ class AuthController {
         { expiresIn: jwtAccessExpiry },
       );
 
-      // Optional: Rotate refresh token for enhanced security
+      // Rotate refresh token with sliding window (30 days from now)
+      // CRITICAL: Pass absolute_expires_at from old token to preserve hard limit
       const ipAddress = req.ip || req.connection.remoteAddress;
       const userAgent = req.headers['user-agent'] || 'Unknown';
 
       const newRefreshToken = await RefreshTokenService.rotateRefreshToken(
         refreshToken,
-        tokenData.user_id, // CRITICAL FIX: Use user_id, not refresh token id
+        tokenData.user_id,
         ipAddress,
         userAgent,
+        tokenData.absolute_expires_at, // Preserve original absolute expiry
       );
 
-      // Update cookie with new refresh token
+      // Update cookie with new refresh token (30 days for sliding window)
+      const expiryDays = parseInt(process.env.JWT_REFRESH_TOKEN_EXPIRY_DAYS || '30');
       res.cookie('refreshToken', newRefreshToken.token, {
         httpOnly: true,
         secure: true, // Always use HTTPS (production is always HTTPS)
         sameSite: 'lax', // Same-site navigation allowed (crm.jaydenmetz.com → api.jaydenmetz.com share root domain)
         domain: '.jaydenmetz.com',
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+        maxAge: expiryDays * 24 * 60 * 60 * 1000,
       });
 
       // Log token refresh (fire-and-forget)
@@ -753,6 +758,7 @@ class AuthController {
         data: {
           accessToken,
           expiresIn: jwtAccessExpiry,
+          refreshTokenExpiresIn: `${expiryDays}d`, // Sliding window
         },
       });
     } catch (error) {
@@ -911,13 +917,14 @@ class AuthController {
         req.get('user-agent'),
       );
 
-      // Set httpOnly cookie for refresh token
+      // Set httpOnly cookie for refresh token (30 days sliding window)
+      const expiryDays = parseInt(process.env.JWT_REFRESH_TOKEN_EXPIRY_DAYS || '30');
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
         secure: true, // Always use HTTPS (production is always HTTPS)
         sameSite: 'lax', // Same-site navigation allowed (crm.jaydenmetz.com → api.jaydenmetz.com share root domain)
         domain: '.jaydenmetz.com',
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        maxAge: expiryDays * 24 * 60 * 60 * 1000,
       });
 
       // Log successful login via Google

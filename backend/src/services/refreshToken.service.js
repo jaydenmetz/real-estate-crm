@@ -22,10 +22,15 @@ class RefreshTokenService {
       // Generate cryptographically secure random token (80 characters)
       const token = crypto.randomBytes(40).toString('hex');
 
-      // Set expiration (7 days from now, configurable via env)
+      // Set sliding expiration (30 days from now for CRM use case)
       const expiresAt = new Date();
-      const expiryDays = parseInt(process.env.JWT_REFRESH_TOKEN_EXPIRY_DAYS || '7');
+      const expiryDays = parseInt(process.env.JWT_REFRESH_TOKEN_EXPIRY_DAYS || '30');
       expiresAt.setDate(expiresAt.getDate() + expiryDays);
+
+      // Set absolute maximum expiration (90 days from now - hard limit)
+      const absoluteExpiresAt = new Date();
+      const absoluteExpiryDays = parseInt(process.env.JWT_REFRESH_TOKEN_ABSOLUTE_EXPIRY_DAYS || '90');
+      absoluteExpiresAt.setDate(absoluteExpiresAt.getDate() + absoluteExpiryDays);
 
       // Get location from IP address (fire-and-forget to avoid blocking login)
       let location = null;
@@ -37,10 +42,10 @@ class RefreshTokenService {
 
       const query = `
         INSERT INTO refresh_tokens (
-          user_id, token, expires_at, ip_address, user_agent, device_info,
+          user_id, token, expires_at, absolute_expires_at, ip_address, user_agent, device_info,
           location_city, location_region, location_country, location_lat, location_lng, location_timezone
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
         RETURNING *
       `;
 
@@ -48,6 +53,7 @@ class RefreshTokenService {
         userId,
         token,
         expiresAt,
+        absoluteExpiresAt,
         ipAddress,
         userAgent,
         deviceInfo,
@@ -63,6 +69,7 @@ class RefreshTokenService {
         userId,
         tokenId: result.rows[0].id,
         expiresAt,
+        absoluteExpiresAt,
         location: location ? `${location.city}, ${location.region}` : 'Unknown',
       });
 
@@ -75,6 +82,7 @@ class RefreshTokenService {
 
   /**
    * Validate a refresh token and return user data
+   * Checks both sliding expiry and absolute expiry
    * @param {string} token - Refresh token string
    * @returns {Promise<object|null>} User data if valid, null if invalid
    */
@@ -94,6 +102,7 @@ class RefreshTokenService {
         JOIN users u ON rt.user_id = u.id
         WHERE rt.token = $1
           AND rt.expires_at > NOW()
+          AND rt.absolute_expires_at > NOW()
           AND u.is_active = true
       `;
 
@@ -250,16 +259,17 @@ class RefreshTokenService {
   }
 
   /**
-   * Rotate refresh token (create new one, delete old one)
-   * Useful for added security - tokens are rotated on use
+   * Rotate refresh token with sliding window (create new one, delete old one)
+   * Implements sliding 30-day window while preserving absolute expiry
    * Old token is DELETED (not revoked) since security_events already tracks everything
    * @param {string} oldToken - Old token to delete
    * @param {string} userId - User ID
    * @param {string} ipAddress - Client IP
    * @param {string} userAgent - Client user agent
+   * @param {Date} absoluteExpiresAt - Original absolute expiry from old token (preserved)
    * @returns {Promise<object>} New token data
    */
-  static async rotateRefreshToken(oldToken, userId, ipAddress, userAgent) {
+  static async rotateRefreshToken(oldToken, userId, ipAddress, userAgent, absoluteExpiresAt) {
     const client = await pool.connect();
 
     try {
@@ -273,8 +283,16 @@ class RefreshTokenService {
 
       // Create new token
       const token = crypto.randomBytes(40).toString('hex');
+
+      // Sliding window: Extend expires_at by 30 days from NOW
       const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 7);
+      const expiryDays = parseInt(process.env.JWT_REFRESH_TOKEN_EXPIRY_DAYS || '30');
+      expiresAt.setDate(expiresAt.getDate() + expiryDays);
+
+      // CRITICAL: Preserve absolute_expires_at from original token
+      // This ensures the token can NEVER live beyond 90 days from original creation
+      // Even if user is active daily, they must re-login after 90 days for security
+      const finalAbsoluteExpiresAt = absoluteExpiresAt || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000);
 
       // Get location from IP address
       let location = null;
@@ -286,10 +304,10 @@ class RefreshTokenService {
 
       const insertQuery = `
         INSERT INTO refresh_tokens (
-          user_id, token, expires_at, ip_address, user_agent,
+          user_id, token, expires_at, absolute_expires_at, ip_address, user_agent,
           location_city, location_region, location_country, location_lat, location_lng, location_timezone
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
         RETURNING *
       `;
 
@@ -297,6 +315,7 @@ class RefreshTokenService {
         userId,
         token,
         expiresAt,
+        finalAbsoluteExpiresAt,
         ipAddress,
         userAgent,
         location?.city,
@@ -309,7 +328,11 @@ class RefreshTokenService {
 
       await client.query('COMMIT');
 
-      logger.info('Refresh token rotated (old deleted)', { userId });
+      logger.info('Refresh token rotated with sliding window', {
+        userId,
+        newExpiresAt: expiresAt,
+        absoluteExpiresAt: finalAbsoluteExpiresAt,
+      });
 
       return result.rows[0];
     } catch (error) {
