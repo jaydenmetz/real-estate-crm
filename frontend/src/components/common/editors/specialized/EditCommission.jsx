@@ -30,9 +30,7 @@ export const EditCommission = ({
   purchasePrice = 0,
   color = '#10b981',
 }) => {
-  // Separate state for percentage and flat values - preserves both when switching tabs
-  const [percentageValue, setPercentageValue] = useState('');
-  const [flatValue, setFlatValue] = useState('');
+  const [editValue, setEditValue] = useState('');
   const [commissionType, setCommissionType] = useState(initialCommissionType);
   const [saving, setSaving] = useState(false);
 
@@ -42,32 +40,22 @@ export const EditCommission = ({
       // Set commission type from prop
       setCommissionType(initialCommissionType);
 
-      // Load percentage value (from database)
+      // Load the appropriate value based on commission type
       // IMPORTANT: Check for null/undefined explicitly, not falsy (0 is valid!)
-      setPercentageValue(
-        commissionPercentage !== null && commissionPercentage !== undefined
-          ? commissionPercentage.toString()
-          : ''
-      );
-
-      // Load flat value (from database)
-      setFlatValue(
-        value !== null && value !== undefined
-          ? value.toString()
-          : ''
-      );
+      if (initialCommissionType === 'percentage') {
+        setEditValue(commissionPercentage !== null && commissionPercentage !== undefined ? commissionPercentage.toString() : '');
+      } else {
+        setEditValue(value !== null && value !== undefined ? value.toString() : '');
+      }
     }
   }, [open, initialCommissionType, value, commissionPercentage, purchasePrice]);
 
   const handleSave = async () => {
-    // Get the current value based on selected tab
-    const currentValue = commissionType === 'percentage' ? percentageValue : flatValue;
-
-    if (!currentValue || isNaN(parseFloat(currentValue))) {
+    if (!editValue || isNaN(parseFloat(editValue))) {
       return;
     }
 
-    const newValue = parseFloat(currentValue);
+    const newValue = parseFloat(editValue);
 
     // Check if value actually changed - don't save if unchanged
     const hasChanged = commissionType === 'percentage'
@@ -117,11 +105,8 @@ export const EditCommission = ({
 
   // Calculate display value based on commission type and current input
   const getDisplayValue = () => {
-    // Get the current value based on selected tab
-    const currentValue = commissionType === 'percentage' ? percentageValue : flatValue;
-
-    // If no current value, show the original database value (or $0.00)
-    if (!currentValue || isNaN(parseFloat(currentValue))) {
+    // If no editValue, show the original value (or $0.00)
+    if (!editValue || isNaN(parseFloat(editValue))) {
       if (!value) return '$0.00';
       const num = parseFloat(value);
       if (isNaN(num)) return '$0.00';
@@ -135,10 +120,10 @@ export const EditCommission = ({
     let displayAmount = 0;
     if (commissionType === 'percentage' && purchasePrice) {
       // Convert percentage to decimal (3 → 0.03) and multiply by purchase price
-      displayAmount = (parseFloat(currentValue) / 100) * purchasePrice;
+      displayAmount = (parseFloat(editValue) / 100) * purchasePrice;
     } else if (commissionType === 'flat') {
       // Direct dollar amount
-      displayAmount = parseFloat(currentValue);
+      displayAmount = parseFloat(editValue);
     }
 
     if (isNaN(displayAmount)) return '$0.00';
@@ -188,7 +173,12 @@ export const EditCommission = ({
             onChange={(e, newType) => {
               if (newType !== null) {
                 setCommissionType(newType);
-                // Don't clear values - preserve both percentage and flat when switching
+                // Load the database value for the new tab (or empty if none exists)
+                if (newType === 'percentage') {
+                  setEditValue(commissionPercentage !== null && commissionPercentage !== undefined ? commissionPercentage.toString() : '');
+                } else {
+                  setEditValue(value !== null && value !== undefined ? value.toString() : '');
+                }
               }
             }}
             fullWidth
@@ -226,16 +216,16 @@ export const EditCommission = ({
         {/* Edit Input */}
         {commissionType === 'percentage' ? (
           <PercentageInput
-            value={percentageValue}
-            onChange={setPercentageValue}
+            value={editValue}
+            onChange={setEditValue}
             onKeyDown={handleKeyPress}
             disabled={saving}
             placeholder="3"
           />
         ) : (
           <CurrencyInput
-            value={flatValue}
-            onChange={setFlatValue}
+            value={editValue}
+            onChange={setEditValue}
             onKeyDown={handleKeyPress}
             disabled={saving}
             placeholder="2000"
@@ -265,7 +255,7 @@ export const EditCommission = ({
           </IconButton>
           <IconButton
             onClick={handleSave}
-            disabled={saving || (commissionType === 'percentage' ? !percentageValue || isNaN(parseFloat(percentageValue)) : !flatValue || isNaN(parseFloat(flatValue)))}
+            disabled={saving || !editValue || isNaN(parseFloat(editValue))}
             sx={{
               width: 48,
               height: 48,
