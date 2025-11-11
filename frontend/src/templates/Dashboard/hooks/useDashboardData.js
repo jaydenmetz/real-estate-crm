@@ -9,8 +9,14 @@ import { useQuery } from '@tanstack/react-query';
  * @returns {Object} Dashboard state and handlers
  */
 export const useDashboardData = (config, externalDateRange = null) => {
-  // State management
-  const [selectedStatus, setSelectedStatus] = useState(config.dashboard?.statusTabs?.[0]?.value || 'all');
+  // State management with localStorage persistence for selected tab
+  const [selectedStatus, setSelectedStatus] = useState(() => {
+    const saved = localStorage.getItem(`${config.entity.namePlural}Status`);
+    // Validate that saved status exists in current config
+    const validStatuses = config.dashboard?.statusTabs?.map(tab => tab.value) || [];
+    const isValidStatus = saved && validStatuses.includes(saved);
+    return isValidStatus ? saved : (config.dashboard?.statusTabs?.[0]?.value || 'all');
+  });
 
   // Scope with localStorage persistence
   const [selectedScope, setSelectedScope] = useState(() => {
@@ -284,6 +290,11 @@ export const useDashboardData = (config, externalDateRange = null) => {
   useEffect(() => {
     localStorage.setItem(`${config.entity.namePlural}Scope`, selectedScope);
   }, [selectedScope, config.entity.namePlural]);
+
+  // Persist selectedStatus (tab) to localStorage
+  useEffect(() => {
+    localStorage.setItem(`${config.entity.namePlural}Status`, selectedStatus);
+  }, [selectedStatus, config.entity.namePlural]);
 
   return {
     data: rawData,
