@@ -1612,13 +1612,15 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
     prevProps.escrow.id !== nextProps.escrow.id ||
     prevProps.escrow.property_address !== nextProps.escrow.property_address ||
     prevProps.escrow.purchase_price !== nextProps.escrow.purchase_price ||
-    prevProps.escrow.myCommission !== nextProps.escrow.myCommission ||
+    prevProps.escrow.my_commission !== nextProps.escrow.my_commission ||
+    prevProps.escrow.commission_percentage !== nextProps.escrow.commission_percentage ||
+    prevProps.escrow.commission_type !== nextProps.escrow.commission_type ||
     prevProps.escrow.grossCommission !== nextProps.escrow.grossCommission ||
     prevProps.escrow.escrow_status !== nextProps.escrow.escrow_status ||
     prevProps.escrow.checklistProgress !== nextProps.escrow.checklistProgress ||
     prevProps.escrow.scheduledCoeDate !== nextProps.escrow.scheduledCoeDate ||
     prevProps.escrow.closing_date !== nextProps.escrow.closing_date ||
-    prevProps.escrow.acceptanceDate !== nextProps.escrow.acceptanceDate;
+    prevProps.escrow.acceptance_date !== nextProps.escrow.acceptance_date;
 
   return !escrowChanged; // Return true to SKIP re-render, false to re-render
 });
