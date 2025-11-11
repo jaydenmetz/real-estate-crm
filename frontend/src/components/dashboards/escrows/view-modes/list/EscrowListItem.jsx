@@ -23,6 +23,10 @@ import { useEscrowCalculations } from '../../../../../hooks/useEscrowCalculation
 import { getStatusConfig } from '../../../../../constants/escrowConfig';
 import { formatCurrency, formatDate as formatDateUtil } from '../../../../../utils/formatters';
 import { getBestPropertyImage } from '../../../../../utils/streetViewUtils';
+import { EditPurchasePrice } from '../../editors/EditPurchasePrice';
+import { EditCommissionAmount } from '../../editors/EditCommissionAmount';
+import { EditClosingDate } from '../../editors/EditClosingDate';
+import { EditPropertyAddress } from '../../editors/EditPropertyAddress';
 
 /**
  * EscrowListItem - Full-width horizontal list view with image on left
@@ -32,6 +36,12 @@ const EscrowListItem = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
   const navigate = useNavigate();
   const theme = useTheme();
   const [showCommission, setShowCommission] = useState(false);
+
+  // Editor modal states
+  const [priceEditorOpen, setPriceEditorOpen] = useState(false);
+  const [commissionEditorOpen, setCommissionEditorOpen] = useState(false);
+  const [closingDateEditorOpen, setClosingDateEditorOpen] = useState(false);
+  const [addressEditorOpen, setAddressEditorOpen] = useState(false);
 
   // Memoized calculations
   const calculations = useEscrowCalculations(escrow);
@@ -200,6 +210,12 @@ const EscrowListItem = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
         <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1.5 }}>
           <Typography
             variant="h6"
+            onClick={(e) => {
+              if (onUpdate) {
+                e.stopPropagation();
+                setAddressEditorOpen(true);
+              }
+            }}
             sx={{
               fontWeight: 700,
               fontSize: '1rem',
@@ -209,6 +225,15 @@ const EscrowListItem = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
+              cursor: onUpdate ? 'pointer' : 'default',
+              transition: 'all 0.2s',
+              borderRadius: 1,
+              px: 1,
+              py: 0.5,
+              mx: -1,
+              '&:hover': onUpdate ? {
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              } : {},
             }}
           >
             {address}
@@ -240,8 +265,26 @@ const EscrowListItem = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
 
         {/* Metrics Row */}
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mt: 'auto' }}>
-          {/* Price */}
-          <Box>
+          {/* Price - Editable */}
+          <Box
+            onClick={(e) => {
+              if (onUpdate) {
+                e.stopPropagation();
+                setPriceEditorOpen(true);
+              }
+            }}
+            sx={{
+              cursor: onUpdate ? 'pointer' : 'default',
+              transition: 'all 0.2s',
+              borderRadius: 1,
+              px: 1,
+              py: 0.5,
+              mx: -1,
+              '&:hover': onUpdate ? {
+                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+              } : {},
+            }}
+          >
             <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               Price
             </Typography>
@@ -250,8 +293,26 @@ const EscrowListItem = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
             </Typography>
           </Box>
 
-          {/* Commission */}
-          <Box>
+          {/* Commission - Editable */}
+          <Box
+            onClick={(e) => {
+              if (onUpdate) {
+                e.stopPropagation();
+                setCommissionEditorOpen(true);
+              }
+            }}
+            sx={{
+              cursor: onUpdate ? 'pointer' : 'default',
+              transition: 'all 0.2s',
+              borderRadius: 1,
+              px: 1,
+              py: 0.5,
+              mx: -1,
+              '&:hover': onUpdate ? {
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+              } : {},
+            }}
+          >
             <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               Commission
             </Typography>
@@ -276,8 +337,26 @@ const EscrowListItem = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
             </Box>
           </Box>
 
-          {/* Closing Date */}
-          <Box>
+          {/* Closing Date - Editable */}
+          <Box
+            onClick={(e) => {
+              if (onUpdate) {
+                e.stopPropagation();
+                setClosingDateEditorOpen(true);
+              }
+            }}
+            sx={{
+              cursor: onUpdate ? 'pointer' : 'default',
+              transition: 'all 0.2s',
+              borderRadius: 1,
+              px: 1,
+              py: 0.5,
+              mx: -1,
+              '&:hover': onUpdate ? {
+                backgroundColor: alpha(theme.palette.text.secondary, 0.08),
+              } : {},
+            }}
+          >
             <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               Closes
             </Typography>
@@ -330,6 +409,35 @@ const EscrowListItem = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
 
         </Box>
       </Box>
+
+      {/* Editor Modals */}
+      <EditPurchasePrice
+        open={priceEditorOpen}
+        onClose={() => setPriceEditorOpen(false)}
+        onSave={(updates) => onUpdate(escrow.id, updates)}
+        escrow={escrow}
+      />
+
+      <EditCommissionAmount
+        open={commissionEditorOpen}
+        onClose={() => setCommissionEditorOpen(false)}
+        onSave={(updates) => onUpdate(escrow.id, updates)}
+        escrow={escrow}
+      />
+
+      <EditClosingDate
+        open={closingDateEditorOpen}
+        onClose={() => setClosingDateEditorOpen(false)}
+        onSave={(updates) => onUpdate(escrow.id, updates)}
+        escrow={escrow}
+      />
+
+      <EditPropertyAddress
+        open={addressEditorOpen}
+        onClose={() => setAddressEditorOpen(false)}
+        onSave={(updates) => onUpdate(escrow.id, updates)}
+        escrow={escrow}
+      />
     </Box>
   );
 };

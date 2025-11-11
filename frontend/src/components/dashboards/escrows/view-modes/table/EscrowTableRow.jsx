@@ -19,6 +19,10 @@ import { useNavigate } from 'react-router-dom';
 import { useEscrowCalculations } from '../../../../../hooks/useEscrowCalculations';
 import { getStatusConfig } from '../../../../../constants/escrowConfig';
 import { formatCurrency, formatDate as formatDateUtil } from '../../../../../utils/formatters';
+import { EditPurchasePrice } from '../../editors/EditPurchasePrice';
+import { EditCommissionAmount } from '../../editors/EditCommissionAmount';
+import { EditClosingDate } from '../../editors/EditClosingDate';
+import { EditPropertyAddress } from '../../editors/EditPropertyAddress';
 
 /**
  * EscrowTableRow - Compact table view (no images)
@@ -28,6 +32,12 @@ const EscrowTableRow = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
   const navigate = useNavigate();
   const theme = useTheme();
   const [showCommission, setShowCommission] = useState(false);
+
+  // Editor modal states
+  const [priceEditorOpen, setPriceEditorOpen] = useState(false);
+  const [commissionEditorOpen, setCommissionEditorOpen] = useState(false);
+  const [closingDateEditorOpen, setClosingDateEditorOpen] = useState(false);
+  const [addressEditorOpen, setAddressEditorOpen] = useState(false);
 
   // Memoized calculations
   const calculations = useEscrowCalculations(escrow);
@@ -83,8 +93,27 @@ const EscrowTableRow = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
         },
       }}
     >
-      {/* Property Address */}
-      <Box sx={{ minWidth: 0 }}>
+      {/* Property Address - Editable */}
+      <Box
+        onClick={(e) => {
+          if (onUpdate) {
+            e.stopPropagation();
+            setAddressEditorOpen(true);
+          }
+        }}
+        sx={{
+          minWidth: 0,
+          cursor: onUpdate ? 'pointer' : 'default',
+          transition: 'all 0.2s',
+          borderRadius: 1,
+          px: 1,
+          py: 0.5,
+          mx: -1,
+          '&:hover': onUpdate ? {
+            backgroundColor: 'rgba(16, 185, 129, 0.08)',
+          } : {},
+        }}
+      >
         <Typography
           variant="body1"
           sx={{
@@ -124,15 +153,54 @@ const EscrowTableRow = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
         />
       </Box>
 
-      {/* Price */}
-      <Box>
+      {/* Price - Editable */}
+      <Box
+        onClick={(e) => {
+          if (onUpdate) {
+            e.stopPropagation();
+            setPriceEditorOpen(true);
+          }
+        }}
+        sx={{
+          cursor: onUpdate ? 'pointer' : 'default',
+          transition: 'all 0.2s',
+          borderRadius: 1,
+          px: 1,
+          py: 0.5,
+          mx: -1,
+          '&:hover': onUpdate ? {
+            backgroundColor: 'rgba(16, 185, 129, 0.08)',
+          } : {},
+        }}
+      >
         <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.875rem', color: '#10b981' }}>
           {formatCurrency(purchasePrice)}
         </Typography>
       </Box>
 
-      {/* Commission */}
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+      {/* Commission - Editable */}
+      <Box
+        onClick={(e) => {
+          if (onUpdate) {
+            e.stopPropagation();
+            setCommissionEditorOpen(true);
+          }
+        }}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: 0.5,
+          cursor: onUpdate ? 'pointer' : 'default',
+          transition: 'all 0.2s',
+          borderRadius: 1,
+          px: 1,
+          py: 0.5,
+          mx: -1,
+          '&:hover': onUpdate ? {
+            backgroundColor: 'rgba(99, 102, 241, 0.08)',
+          } : {},
+        }}
+      >
         <IconButton
           onClick={toggleCommission}
           sx={{
@@ -152,8 +220,26 @@ const EscrowTableRow = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
         </Typography>
       </Box>
 
-      {/* Closing Date */}
-      <Box>
+      {/* Closing Date - Editable */}
+      <Box
+        onClick={(e) => {
+          if (onUpdate) {
+            e.stopPropagation();
+            setClosingDateEditorOpen(true);
+          }
+        }}
+        sx={{
+          cursor: onUpdate ? 'pointer' : 'default',
+          transition: 'all 0.2s',
+          borderRadius: 1,
+          px: 1,
+          py: 0.5,
+          mx: -1,
+          '&:hover': onUpdate ? {
+            backgroundColor: alpha(theme.palette.text.secondary, 0.08),
+          } : {},
+        }}
+      >
         <Typography variant="body2" sx={{ fontWeight: 600, fontSize: '0.85rem', color: theme.palette.text.primary }}>
           {formatDateUtil(closingDate, 'MMM d, yyyy') || 'TBD'}
         </Typography>
@@ -217,6 +303,35 @@ const EscrowTableRow = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
           </IconButton>
         )}
       </Box>
+
+      {/* Editor Modals */}
+      <EditPurchasePrice
+        open={priceEditorOpen}
+        onClose={() => setPriceEditorOpen(false)}
+        onSave={(updates) => onUpdate(escrow.id, updates)}
+        escrow={escrow}
+      />
+
+      <EditCommissionAmount
+        open={commissionEditorOpen}
+        onClose={() => setCommissionEditorOpen(false)}
+        onSave={(updates) => onUpdate(escrow.id, updates)}
+        escrow={escrow}
+      />
+
+      <EditClosingDate
+        open={closingDateEditorOpen}
+        onClose={() => setClosingDateEditorOpen(false)}
+        onSave={(updates) => onUpdate(escrow.id, updates)}
+        escrow={escrow}
+      />
+
+      <EditPropertyAddress
+        open={addressEditorOpen}
+        onClose={() => setAddressEditorOpen(false)}
+        onSave={(updates) => onUpdate(escrow.id, updates)}
+        escrow={escrow}
+      />
     </Box>
   );
 };
