@@ -198,7 +198,9 @@ export const AddressInput = ({
             const zipCode = item.address?.postcode || '';
 
             return {
-              label: `${streetAddress}, ${city}, ${state}${zipCode ? ' ' + zipCode : ''}`,
+              label: zipCode
+                ? `${streetAddress}, ${city}, ${state} ${zipCode}`
+                : `${streetAddress}, ${city}, ${state}`,
               value: {
                 address: streetAddress,
                 city,
