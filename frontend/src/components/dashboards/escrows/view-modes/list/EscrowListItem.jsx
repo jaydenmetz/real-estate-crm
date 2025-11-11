@@ -22,6 +22,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEscrowCalculations } from '../../../../../hooks/useEscrowCalculations';
 import { getStatusConfig } from '../../../../../constants/escrowConfig';
 import { formatCurrency, formatDate as formatDateUtil } from '../../../../../utils/formatters';
+import { getBestPropertyImage } from '../../../../../utils/streetViewUtils';
 
 /**
  * EscrowListItem - Full-width horizontal list view with image on left
@@ -46,7 +47,7 @@ const EscrowListItem = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
   } = calculations;
 
   const statusConfig = getStatusConfig(escrow.escrow_status);
-  const propertyImage = escrow.property_image || escrow.zillow_url;
+  const propertyImage = getBestPropertyImage(escrow);
   const address = escrow.property_address || 'No Address';
 
   const handleClick = useCallback(() => {
