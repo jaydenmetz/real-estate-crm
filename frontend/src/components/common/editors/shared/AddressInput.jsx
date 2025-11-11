@@ -383,20 +383,38 @@ export const AddressInput = ({
             }}
           />
         )}
-        sx={{
-          '& .MuiAutocomplete-popper': {
-            '& .MuiPaper-root': {
-              backgroundColor: 'rgba(30,30,30,0.95)',
-              backdropFilter: 'blur(10px)',
-              border: '1px solid rgba(255,255,255,0.1)',
-            },
-            '& .MuiAutocomplete-option': {
-              color: 'white',
-              '&:hover': {
-                backgroundColor: 'rgba(255,255,255,0.1)',
+        componentsProps={{
+          popper: {
+            sx: {
+              '& .MuiPaper-root': {
+                backgroundColor: 'rgba(16, 185, 129, 0.95)', // Green theme matching the modal
+                backdropFilter: 'blur(10px)',
+                border: '2px solid rgba(255,255,255,0.3)',
+                borderRadius: 2,
+                mt: 0.5,
               },
-              '&[aria-selected="true"]': {
-                backgroundColor: 'rgba(255,255,255,0.15)',
+              '& .MuiAutocomplete-listbox': {
+                '& .MuiAutocomplete-option': {
+                  color: 'white',
+                  fontSize: '0.95rem',
+                  fontWeight: 500,
+                  padding: '12px 16px',
+                  '&:hover': {
+                    backgroundColor: 'rgba(255,255,255,0.15)',
+                  },
+                  '&[aria-selected="true"]': {
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    fontWeight: 600,
+                  },
+                  '&.Mui-focused': {
+                    backgroundColor: 'rgba(255,255,255,0.15)',
+                  },
+                },
+              },
+              '& .MuiAutocomplete-noOptions': {
+                color: 'rgba(255,255,255,0.7)',
+                fontSize: '0.9rem',
+                padding: '12px 16px',
               },
             },
           },

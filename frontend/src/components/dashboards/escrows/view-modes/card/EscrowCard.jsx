@@ -965,7 +965,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                             mt: 0.25,
                           }}
                         >
-                          {[escrow.city, escrow.state, escrow.zip_code].filter(Boolean).join(', ')}
+                          {[escrow.city, escrow.state].filter(Boolean).join(', ')}{escrow.zip_code ? ` ${escrow.zip_code}` : ''}
                         </Typography>
                       )}
                     </Box>
@@ -995,7 +995,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                             mt: 0.25,
                           }}
                         >
-                          {[escrow.city, escrow.state, escrow.zip_code].filter(Boolean).join(', ')}
+                          {[escrow.city, escrow.state].filter(Boolean).join(', ')}{escrow.zip_code ? ` ${escrow.zip_code}` : ''}
                         </Typography>
                       )}
                     </Box>
