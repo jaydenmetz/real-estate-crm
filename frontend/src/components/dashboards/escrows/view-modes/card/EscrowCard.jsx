@@ -51,6 +51,7 @@ import { EditPurchasePrice } from '../../editors/EditPurchasePrice';
 import { EditCommissionAmount } from '../../editors/EditCommissionAmount';
 import { EditAcceptanceDate } from '../../editors/EditAcceptanceDate';
 import { EditClosingDate } from '../../editors/EditClosingDate';
+import { EditPropertyAddress } from '../../editors/EditPropertyAddress';
 import PersonRoleContainer from '../../../../common/editors/PersonRoleContainer';
 import PeopleEditor from '../../../../common/editors/PeopleEditor';
 import { formatCurrency, formatDate as formatDateUtil, getInitials as getInitialsUtil, truncateText } from '../../../../../utils/formatters';
@@ -65,6 +66,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
   // Badge editor states
   const [priceEditorOpen, setPriceEditorOpen] = useState(false);
   const [commissionEditorOpen, setCommissionEditorOpen] = useState(false);
+  const [addressEditorOpen, setAddressEditorOpen] = useState(false);
 
   // Date picker modal states
   const [acceptanceDatePickerOpen, setAcceptanceDatePickerOpen] = useState(false);
@@ -920,22 +922,38 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                 overflow: 'hidden'
               }}>
                 {/* Address - Editable */}
-                {onUpdate ? (
-                  <EditableTextField
-                    value={escrow.property_address}
-                    onSave={(newValue) => onUpdate(escrow.id, { property_address: newValue })}
-                    variant="h6"
-                    placeholder="No Address"
-                    sx={{
-                      fontWeight: 800,
-                      fontSize: '0.9rem',
-                      mb: 1,
-                      color: theme.palette.text.primary,
-                      lineHeight: 1.2,
-                    }}
-                  />
-                ) : (
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5, mb: 1 }}>
+                  {onUpdate ? (
+                    <Box
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setAddressEditorOpen(true);
+                      }}
+                      sx={{
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        borderRadius: 1,
+                        px: 0.5,
+                        py: 0.25,
+                        flex: 1,
+                        '&:hover': {
+                          backgroundColor: 'action.hover',
+                        },
+                      }}
+                    >
+                      <Typography
+                        variant="h6"
+                        sx={{
+                          fontWeight: 800,
+                          fontSize: '0.9rem',
+                          color: theme.palette.text.primary,
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        {address}
+                      </Typography>
+                    </Box>
+                  ) : (
                     <Typography
                       variant="h6"
                       sx={{
@@ -947,25 +965,25 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
                     >
                       {address}
                     </Typography>
-                    {escrow.is_private ? (
-                      <Chip
-                        icon={<Lock />}
-                        label="Private"
-                        size="small"
-                        color="error"
-                        sx={{ height: 18, fontSize: '0.65rem' }}
-                      />
-                    ) : escrow.access_level ? (
-                      <Chip
-                        icon={escrow.access_level === 'team' ? <Group /> : <Business />}
-                        label={escrow.access_level === 'team' ? 'Team' : 'Broker'}
-                        size="small"
-                        color={escrow.access_level === 'team' ? 'primary' : 'secondary'}
-                        sx={{ height: 18, fontSize: '0.65rem' }}
-                      />
-                    ) : null}
-                  </Box>
-                )}
+                  )}
+                  {escrow.is_private ? (
+                    <Chip
+                      icon={<Lock />}
+                      label="Private"
+                      size="small"
+                      color="error"
+                      sx={{ height: 18, fontSize: '0.65rem' }}
+                    />
+                  ) : escrow.access_level ? (
+                    <Chip
+                      icon={escrow.access_level === 'team' ? <Group /> : <Business />}
+                      label={escrow.access_level === 'team' ? 'Team' : 'Broker'}
+                      size="small"
+                      color={escrow.access_level === 'team' ? 'primary' : 'secondary'}
+                      sx={{ height: 18, fontSize: '0.65rem' }}
+                    />
+                  ) : null}
+                </Box>
 
                 {/* Metrics Grid */}
                 <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 1, mb: 1 }}>
@@ -1497,6 +1515,14 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
         value={closingDate}
       />
 
+      {/* Property Address Editor */}
+      <EditPropertyAddress
+        open={addressEditorOpen}
+        onClose={() => setAddressEditorOpen(false)}
+        onSave={(addressData) => onUpdate(escrow.id, addressData)}
+        value={escrow.property_address}
+      />
+
       {/* People Editor Modal */}
       {peopleEditorOpen && (
         <PeopleEditor
@@ -1611,6 +1637,10 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
   const escrowChanged =
     prevProps.escrow.id !== nextProps.escrow.id ||
     prevProps.escrow.property_address !== nextProps.escrow.property_address ||
+    prevProps.escrow.city !== nextProps.escrow.city ||
+    prevProps.escrow.state !== nextProps.escrow.state ||
+    prevProps.escrow.zip_code !== nextProps.escrow.zip_code ||
+    prevProps.escrow.county !== nextProps.escrow.county ||
     prevProps.escrow.purchase_price !== nextProps.escrow.purchase_price ||
     prevProps.escrow.my_commission !== nextProps.escrow.my_commission ||
     prevProps.escrow.commission_percentage !== nextProps.escrow.commission_percentage ||
