@@ -12,14 +12,23 @@ import { alpha } from '@mui/material/styles';
  * @param {node} children - Modal content
  */
 export const ModalDialog = ({ open, onClose, color = '#6366f1', children }) => {
+  const handleClose = (event, reason) => {
+    // Stop propagation to prevent navigation when clicking backdrop or close button
+    if (event) {
+      event.stopPropagation();
+    }
+    onClose();
+  };
+
   return (
     <Dialog
       open={open}
-      onClose={onClose}
+      onClose={handleClose}
       TransitionComponent={Zoom}
       TransitionProps={{
         timeout: 300,
       }}
+      onClick={(e) => e.stopPropagation()}
       PaperProps={{
         sx: {
           borderRadius: 3,
@@ -29,6 +38,11 @@ export const ModalDialog = ({ open, onClose, color = '#6366f1', children }) => {
           boxShadow: `0 20px 60px ${alpha(color, 0.4)}`,
           minWidth: 400,
           p: 3,
+        },
+      }}
+      slotProps={{
+        backdrop: {
+          onClick: (e) => e.stopPropagation(),
         },
       }}
     >
