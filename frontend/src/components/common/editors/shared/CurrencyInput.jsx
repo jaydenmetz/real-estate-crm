@@ -160,7 +160,7 @@ export const CurrencyInput = ({
   const adaptiveFontSize = getAdaptiveFontSize();
 
   return (
-    <Box sx={{ position: 'relative', width: '100%', maxWidth: '340px' }}>
+    <Box sx={{ position: 'relative', width: '100%', maxWidth: '300px' }}>
       <TextField
         ref={inputRef}
         fullWidth
