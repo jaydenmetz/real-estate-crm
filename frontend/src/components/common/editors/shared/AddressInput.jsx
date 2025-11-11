@@ -306,7 +306,7 @@ export const AddressInput = ({
       return;
     }
 
-    // Google Places result
+    // Google Places result - When user clicks autocomplete, use the selected address (not custom text)
     if (value.placeId && placesServiceRef.current) {
       const request = {
         placeId: value.placeId,
@@ -336,14 +336,10 @@ export const AddressInput = ({
 
           const streetAddress = `${streetNumber} ${route}`.trim();
 
-          // If user manually typed something different (like "171 & 175"), preserve their input for property_address
-          // but use Google's parsed city/state/zip
-          const useCustomAddress = addressSearchText &&
-                                    addressSearchText.trim() !== value.label &&
-                                    !addressSearchText.includes(','); // Only if they didn't type full formatted address
-
+          // When user clicks autocomplete, always use the selected address (don't preserve custom text)
+          // Custom text is only preserved when user presses Enter without selecting autocomplete
           onChange({
-            property_address: useCustomAddress ? addressSearchText.split(',')[0].trim() : streetAddress,
+            property_address: streetAddress,
             city,
             state,
             zip_code: zipCode,
@@ -357,16 +353,11 @@ export const AddressInput = ({
         }
       });
     } else if (value.value) {
-      // Nominatim result
+      // Nominatim result - When user clicks autocomplete, use the selected address
       const addressData = value.value;
 
-      // If user manually typed something different, preserve it
-      const useCustomAddress = addressSearchText &&
-                                addressSearchText.trim() !== value.label &&
-                                !addressSearchText.includes(',');
-
       onChange({
-        property_address: useCustomAddress ? addressSearchText.split(',')[0].trim() : addressData.address,
+        property_address: addressData.address,
         city: addressData.city,
         state: addressData.state,
         zip_code: addressData.zipCode,
