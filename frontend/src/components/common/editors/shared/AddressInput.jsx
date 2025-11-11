@@ -266,8 +266,43 @@ export const AddressInput = ({
   }, [googleMapsLoaded, searchGooglePlaces, searchNominatim, onChange]);
 
   const handleAddressSelect = async (event, value) => {
+    // If user typed custom text (not from suggestions), preserve it
     if (!value || typeof value === 'string') {
-      onChange(null);
+      // User pressed Enter on custom text - use what they typed
+      if (addressSearchText && addressSearchText.trim()) {
+        // Parse custom address to extract city/state/zip if possible
+        const parts = addressSearchText.split(',').map(p => p.trim());
+        let customAddress = addressSearchText;
+        let city = '';
+        let state = '';
+        let zipCode = '';
+
+        // Try to extract city, state, zip from formatted input like "171 & 175 N Cottage St, Porterville, CA 93257"
+        if (parts.length >= 3) {
+          customAddress = parts[0]; // "171 & 175 N Cottage St"
+          city = parts[1]; // "Porterville"
+          const stateZip = parts[2].split(' '); // ["CA", "93257"]
+          state = stateZip[0] || '';
+          zipCode = stateZip[1] || '';
+        } else if (parts.length === 2) {
+          customAddress = parts[0];
+          const stateZip = parts[1].split(' ');
+          state = stateZip[0] || '';
+          zipCode = stateZip[1] || '';
+        }
+
+        onChange({
+          property_address: customAddress,
+          city: city || userCity,
+          state: state || userState,
+          zip_code: zipCode,
+          county: '',
+          latitude: null,
+          longitude: null,
+        });
+      } else {
+        onChange(null);
+      }
       return;
     }
 
@@ -301,8 +336,14 @@ export const AddressInput = ({
 
           const streetAddress = `${streetNumber} ${route}`.trim();
 
+          // If user manually typed something different (like "171 & 175"), preserve their input for property_address
+          // but use Google's parsed city/state/zip
+          const useCustomAddress = addressSearchText &&
+                                    addressSearchText.trim() !== value.label &&
+                                    !addressSearchText.includes(','); // Only if they didn't type full formatted address
+
           onChange({
-            property_address: streetAddress, // Just street address, not full formatted address
+            property_address: useCustomAddress ? addressSearchText.split(',')[0].trim() : streetAddress,
             city,
             state,
             zip_code: zipCode,
@@ -318,8 +359,14 @@ export const AddressInput = ({
     } else if (value.value) {
       // Nominatim result
       const addressData = value.value;
+
+      // If user manually typed something different, preserve it
+      const useCustomAddress = addressSearchText &&
+                                addressSearchText.trim() !== value.label &&
+                                !addressSearchText.includes(',');
+
       onChange({
-        property_address: addressData.address, // Just street address, not full label
+        property_address: useCustomAddress ? addressSearchText.split(',')[0].trim() : addressData.address,
         city: addressData.city,
         state: addressData.state,
         zip_code: addressData.zipCode,
