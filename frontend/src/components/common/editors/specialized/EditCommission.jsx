@@ -11,9 +11,11 @@ import { PercentageInput } from '../shared/PercentageInput';
  *
  * @param {boolean} open - Dialog open state
  * @param {function} onClose - Close handler
- * @param {function} onSave - Save handler (newValue) => void
+ * @param {function} onSave - Save handler (updates) => void - receives { my_commission, commission_percentage, commission_type }
  * @param {string} label - Field label (default: "Commission")
- * @param {number} value - Current commission value (dollar amount)
+ * @param {number} value - Current commission dollar amount (my_commission)
+ * @param {number} commissionPercentage - Current commission percentage
+ * @param {string} commissionType - Initial commission type ('percentage' or 'flat')
  * @param {number} purchasePrice - Purchase price for percentage calculation
  * @param {string} color - Theme color
  */
@@ -23,25 +25,29 @@ export const EditCommission = ({
   onSave,
   label = 'Commission',
   value,
+  commissionPercentage,
+  commissionType: initialCommissionType = 'percentage',
   purchasePrice = 0,
   color = '#10b981',
 }) => {
   const [editValue, setEditValue] = useState('');
-  const [commissionType, setCommissionType] = useState('flat'); // 'percentage' or 'flat'
+  const [commissionType, setCommissionType] = useState(initialCommissionType);
   const [saving, setSaving] = useState(false);
 
-  // Initialize editValue when dialog opens
+  // Initialize editValue and commissionType when dialog opens
   useEffect(() => {
     if (open) {
-      // Only pre-populate if in flat mode
-      if (commissionType === 'flat') {
-        setEditValue(value?.toString() || '');
+      // Set commission type from prop
+      setCommissionType(initialCommissionType);
+
+      // Load the appropriate value based on commission type
+      if (initialCommissionType === 'percentage') {
+        setEditValue(commissionPercentage?.toString() || '');
       } else {
-        // Clear field when in percentage mode
-        setEditValue('');
+        setEditValue(value?.toString() || '');
       }
     }
-  }, [open, value, commissionType]);
+  }, [open, initialCommissionType, value, commissionPercentage]);
 
   const handleSave = async () => {
     if (!editValue || isNaN(parseFloat(editValue))) {
@@ -50,14 +56,21 @@ export const EditCommission = ({
 
     setSaving(true);
     try {
-      let valueToSave = parseFloat(editValue);
+      const updates = {
+        commission_type: commissionType,
+      };
 
-      // If percentage type, calculate the dollar amount
-      if (commissionType === 'percentage' && purchasePrice) {
-        valueToSave = (purchasePrice * parseFloat(editValue)) / 100;
+      if (commissionType === 'percentage') {
+        // Save percentage and calculate dollar amount
+        updates.commission_percentage = parseFloat(editValue);
+        updates.my_commission = purchasePrice ? (purchasePrice * parseFloat(editValue)) / 100 : 0;
+      } else {
+        // Save flat dollar amount and clear percentage
+        updates.my_commission = parseFloat(editValue);
+        updates.commission_percentage = null;
       }
 
-      await onSave(valueToSave);
+      await onSave(updates);
       onClose();
     } catch (error) {
       console.error('Failed to save commission:', error);

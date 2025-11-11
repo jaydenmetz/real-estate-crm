@@ -1472,8 +1472,10 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
       <EditCommissionAmount
         open={commissionEditorOpen}
         onClose={() => setCommissionEditorOpen(false)}
-        onSave={(newValue) => onUpdate(escrow.id, { my_commission: newValue })}
+        onSave={(updates) => onUpdate(escrow.id, updates)}
         value={commission}
+        commissionPercentage={parseFloat(escrow.commission_percentage || escrow.commissionPercentage || 0)}
+        commissionType={escrow.commission_type || escrow.commissionType || 'percentage'}
         purchasePrice={parseFloat(escrow.purchase_price || escrow.purchasePrice || 0)}
       />
 
