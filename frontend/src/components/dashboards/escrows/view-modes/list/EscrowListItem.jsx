@@ -360,7 +360,7 @@ const EscrowListItem = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
             }}
           >
             <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Accepted
+              Acceptance
             </Typography>
             <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', color: theme.palette.text.primary }}>
               {formatDateUtil(acceptanceDate, 'MMM d, yyyy') || 'TBD'}
@@ -388,7 +388,7 @@ const EscrowListItem = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
             }}
           >
             <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Closes
+              Close
             </Typography>
             <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', color: theme.palette.text.primary }}>
               {formatDateUtil(closingDate, 'MMM d, yyyy') || 'TBD'}

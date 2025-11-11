@@ -120,7 +120,7 @@ export const DashboardContent = ({
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: '2fr 1fr 1fr 1.2fr 1fr 0.8fr 80px',
+          gridTemplateColumns: '2fr 1fr 1fr 1.2fr 1fr 1fr 0.8fr 80px',
           gap: 2,
           px: 2,
           py: 1,
@@ -141,7 +141,10 @@ export const DashboardContent = ({
           Commission
         </Typography>
         <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase' }}>
-          Closing
+          Acceptance
+        </Typography>
+        <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase' }}>
+          Close
         </Typography>
         <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase', textAlign: 'center' }}>
           Progress
