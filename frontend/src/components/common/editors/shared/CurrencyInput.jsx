@@ -84,7 +84,13 @@ export const CurrencyInput = ({
     const cursorPos = input.selectionStart;
 
     // Remove all non-digits
-    const digitsOnly = rawValue.replace(/\D/g, '');
+    let digitsOnly = rawValue.replace(/\D/g, '');
+
+    // Enforce max value of 999,999,999
+    const maxValue = 999999999;
+    if (digitsOnly && parseInt(digitsOnly) > maxValue) {
+      digitsOnly = maxValue.toString();
+    }
 
     // Count how many commas were before cursor
     const textBeforeCursor = rawValue.substring(0, cursorPos);
