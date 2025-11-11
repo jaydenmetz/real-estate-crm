@@ -265,6 +265,9 @@ const EscrowListItem = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
             color: theme.palette.text.secondary,
             mb: 2,
             fontSize: '0.875rem',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
           }}
         >
           {escrow.city && escrow.state ? `${escrow.city}, ${escrow.state}${escrow.zip_code ? ' ' + escrow.zip_code : ''}` : 'Location TBD'}
@@ -292,10 +295,10 @@ const EscrowListItem = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
               } : {},
             }}
           >
-            <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
               Price
             </Typography>
-            <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', color: '#10b981' }}>
+            <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', color: '#10b981', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {formatCurrency(purchasePrice)}
             </Typography>
           </Box>
@@ -320,7 +323,7 @@ const EscrowListItem = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
               } : {},
             }}
           >
-            <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
               Commission
             </Typography>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
@@ -338,7 +341,7 @@ const EscrowListItem = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
                   <Visibility sx={{ fontSize: 14, color: '#6366f1' }} />
                 )}
               </IconButton>
-              <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', color: '#6366f1' }}>
+              <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', color: '#6366f1', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {showCommission ? formatCurrency(commission) : maskCommission(commission)}
               </Typography>
             </Box>
@@ -364,10 +367,10 @@ const EscrowListItem = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
               } : {},
             }}
           >
-            <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
               Acceptance
             </Typography>
-            <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', color: theme.palette.text.primary }}>
+            <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', color: theme.palette.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {formatDateUtil(acceptanceDate, 'MMM d, yyyy') || 'TBD'}
             </Typography>
           </Box>
@@ -392,36 +395,36 @@ const EscrowListItem = ({ escrow, onUpdate, onDelete, onArchive, onRestore, isAr
               } : {},
             }}
           >
-            <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
               Close
             </Typography>
-            <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', color: theme.palette.text.primary }}>
+            <Typography variant="body1" sx={{ fontWeight: 700, fontSize: '0.95rem', color: theme.palette.text.primary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {formatDateUtil(closingDate, 'MMM d, yyyy') || 'TBD'}
             </Typography>
           </Box>
 
           {/* Progress/Status */}
           <Box>
-            <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <Typography variant="caption" sx={{ fontSize: 10, fontWeight: 600, color: theme.palette.text.secondary, textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>
               {escrow.escrow_status === 'Closed' || escrow.escrow_status === 'Cancelled' ? 'Status' : 'Progress'}
             </Typography>
             {escrow.escrow_status === 'Closed' ? (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <CheckCircle sx={{ fontSize: 16, color: '#10b981' }} />
-                <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.85rem', color: '#10b981' }}>
+                <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.85rem', color: '#10b981', whiteSpace: 'nowrap' }}>
                   Closed
                 </Typography>
               </Box>
             ) : escrow.escrow_status === 'Cancelled' ? (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
                 <Cancel sx={{ fontSize: 16, color: '#ef4444' }} />
-                <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.85rem', color: '#ef4444' }}>
+                <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.85rem', color: '#ef4444', whiteSpace: 'nowrap' }}>
                   Cancelled
                 </Typography>
               </Box>
             ) : (
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-                <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.85rem', color: theme.palette.text.primary }}>
+                <Typography variant="body2" sx={{ fontWeight: 700, fontSize: '0.85rem', color: theme.palette.text.primary, whiteSpace: 'nowrap' }}>
                   {checklistProgress}%
                 </Typography>
                 <LinearProgress
