@@ -44,6 +44,12 @@ export const useDashboardData = (config, externalDateRange = null) => {
   const [sortBy, setSortBy] = useState(config.dashboard?.sortOptions?.[0]?.value || 'created_at');
   const [sortOrder, setSortOrder] = useState('desc');
 
+  // Create stable date range key to prevent unnecessary refetches
+  const dateRangeKey = useMemo(() => {
+    if (!externalDateRange?.startDate || !externalDateRange?.endDate) return null;
+    return `${externalDateRange.startDate.toISOString()}_${externalDateRange.endDate.toISOString()}`;
+  }, [externalDateRange?.startDate, externalDateRange?.endDate]);
+
   // Fetch data using React Query
   const {
     data: rawData,
@@ -51,7 +57,7 @@ export const useDashboardData = (config, externalDateRange = null) => {
     error,
     refetch,
   } = useQuery({
-    queryKey: [config.entity.namePlural, selectedStatus, selectedScope, externalDateRange],
+    queryKey: [config.entity.namePlural, selectedStatus, selectedScope, dateRangeKey],
     queryFn: async () => {
       // Build query params
       const params = {
