@@ -13,8 +13,7 @@ import {
   DeleteForever as DeleteForeverIcon,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
-import EscrowListItem from '../../../components/dashboards/escrows/view-modes/list/EscrowListItem';
-import EscrowTableRow from '../../../components/dashboards/escrows/view-modes/table/EscrowTableRow';
+import { EscrowListItem, EscrowTableRow } from '../../../components/dashboards/escrows/view-modes';
 
 /**
  * DashboardContent - Config-driven content grid/list with animations
