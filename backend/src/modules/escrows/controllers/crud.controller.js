@@ -32,12 +32,14 @@ async function getAllEscrows(req, res) {
       sort = 'created_at',
       order = 'desc',
       search,
+      scope = 'user', // Extract scope parameter (user/team/broker)
     } = req.query;
 
     // Get user context for filtering
     const userId = req.user?.id;
     const teamId = req.user?.teamId;
     const userRole = req.user?.role;
+    const brokerId = req.user?.brokerId;
 
     const offset = (page - 1) * limit;
 
@@ -143,11 +145,53 @@ async function getAllEscrows(req, res) {
       paramIndex++;
     }
 
-    // User/team filtering (ownership)
-    if (userId) {
-      conditions.push(`e.created_by = $${paramIndex}`);
-      values.push(userId);
-      paramIndex++;
+    // Scope-based filtering (user/team/broker)
+    if (scope === 'user') {
+      // User scope: Only show records created by this user
+      if (userId) {
+        conditions.push(`e.created_by = $${paramIndex}`);
+        values.push(userId);
+        paramIndex++;
+      }
+    } else if (scope === 'team') {
+      // Team scope: Show all records from user's team
+      if (teamId) {
+        conditions.push(`e.team_id = $${paramIndex}`);
+        values.push(teamId);
+        paramIndex++;
+      } else {
+        // Fallback to user scope if no team
+        if (userId) {
+          conditions.push(`e.created_by = $${paramIndex}`);
+          values.push(userId);
+          paramIndex++;
+        }
+      }
+    } else if (scope === 'broker') {
+      // Broker scope: Show all records from user's brokerage
+      if (brokerId) {
+        conditions.push(`e.broker_id = $${paramIndex}`);
+        values.push(brokerId);
+        paramIndex++;
+      } else {
+        // Fallback to team/user scope if no broker
+        if (teamId) {
+          conditions.push(`e.team_id = $${paramIndex}`);
+          values.push(teamId);
+          paramIndex++;
+        } else if (userId) {
+          conditions.push(`e.created_by = $${paramIndex}`);
+          values.push(userId);
+          paramIndex++;
+        }
+      }
+    } else {
+      // Default to user scope for safety
+      if (userId) {
+        conditions.push(`e.created_by = $${paramIndex}`);
+        values.push(userId);
+        paramIndex++;
+      }
     }
 
     query += ` WHERE ${conditions.join(' AND ')}`;

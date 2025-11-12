@@ -234,11 +234,7 @@ export const escrowsConfig = createEntityConfig({
     // Scope options can be a function that receives user object
     getScopeOptions: (user) => {
       if (!user) {
-        return [
-          { value: 'user', label: 'My Escrows' },
-          { value: 'team', label: 'Team Escrows' },
-          { value: 'broker', label: 'Broker Escrows' }
-        ];
+        return [{ value: 'user', label: 'My Escrows' }];
       }
 
       // Handle both camelCase and snake_case from backend
@@ -247,24 +243,36 @@ export const escrowsConfig = createEntityConfig({
       const fullName = lastName ? `${firstName} ${lastName}` : (user.username || firstName);
       const teamName = user.teamName || user.team_name || 'Team';
       const brokerName = user.brokerName || user.broker_name || 'Broker';
+      const userRole = user.role || 'agent';
 
-      return [
-        {
-          value: 'user',
-          label: `${firstName}'s Escrows`, // Hero card: "Jayden's Escrows"
-          fullLabel: fullName // Filter dropdown: "Jayden Metz"
-        },
-        {
+      const options = [];
+
+      // All users can see their own records
+      options.push({
+        value: 'user',
+        label: `${firstName}'s Escrows`,
+        fullLabel: fullName
+      });
+
+      // Team owners and above can see team view
+      if (['team_owner', 'broker', 'system_admin'].includes(userRole)) {
+        options.push({
           value: 'team',
-          label: `${teamName}'s Escrows`, // Hero card: "Jayden Metz Realty Group's Escrows"
-          fullLabel: teamName // Filter dropdown: "Jayden Metz Realty Group"
-        },
-        {
+          label: `${teamName}'s Escrows`,
+          fullLabel: teamName
+        });
+      }
+
+      // Brokers and system admins can see broker view
+      if (['broker', 'system_admin'].includes(userRole)) {
+        options.push({
           value: 'broker',
-          label: `${brokerName}'s Escrows`, // Hero card: "Josh Riley's Escrows"
-          fullLabel: brokerName // Filter dropdown: "Josh Riley"
-        }
-      ];
+          label: `${brokerName}'s Escrows`,
+          fullLabel: brokerName
+        });
+      }
+
+      return options;
     },
     defaultScope: 'user',
 
