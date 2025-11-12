@@ -18,7 +18,7 @@ import {
   TotalThisMonthCard,
   TotalVolumeCard,
   TotalCommissionCard
-} from '../../components/dashboards/escrows/hero/stats';
+} from '../../components/dashboards/escrows/hero';
 import EscrowNavigation from '../../components/dashboards/escrows/navigation';
 
 // Import widgets
