@@ -169,30 +169,17 @@ export const DashboardContent = ({
     }
 
     if (viewMode === 'card') {
-      // Responsive grid with centered cards
-      // 1-2 cards: centered with equal gaps
-      // 3+ cards: aligned with hero section edges
+      // Responsive grid with fixed 320px cards, centered layout
+      // Cards wrap naturally and center when they don't all fit on one row
       return {
         display: 'grid',
-        gridTemplateColumns: {
-          xs: 'repeat(auto-fit, minmax(320px, 400px))', // Mobile: 1 column, max 400px
-          sm: 'repeat(auto-fit, minmax(320px, 400px))', // Small: 1-2 columns, max 400px
-          md: 'repeat(auto-fit, minmax(320px, 400px))', // Medium: 2-3 columns, max 400px
-          lg: 'repeat(3, 1fr)', // Large: 3 columns (aligns with hero width)
-          xl: 'repeat(4, 1fr)', // Extra large: 4 columns
-        },
-        justifyContent: {
-          xs: 'center', // Center cards on smaller screens (1-2 per row)
-          sm: 'center', // Center cards on small screens (1-2 per row)
-          md: 'center', // Center cards on medium screens (2-3 per row)
-          lg: 'stretch', // Full width on large screens (3 per row - aligns with hero)
-          xl: 'stretch', // Full width on xl screens (4 per row - aligns with hero)
-        },
+        gridTemplateColumns: 'repeat(auto-fit, 320px)', // All cards fixed at 320px
+        justifyContent: 'center', // Always center the cards
         gap: {
           xs: 2, // 16px on mobile
           sm: 2, // 16px on small
           md: 2.5, // 20px on medium
-          lg: 3, // 24px on large (equal distribution)
+          lg: 3, // 24px on large
           xl: 3, // 24px on xl
         },
         width: '100%',
