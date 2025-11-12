@@ -91,9 +91,23 @@ export function getBestPropertyImage(escrow) {
   }
 
   // Priority 3: Street View (if address exists)
-  const address = escrow.property_address || escrow.propertyAddress;
-  if (address) {
-    return getStreetViewUrl(address, {
+  // Build full address with city, state, zip for accurate Street View
+  const streetAddress = escrow.property_address || escrow.propertyAddress;
+  const city = escrow.city;
+  const state = escrow.state;
+  const zipCode = escrow.zip_code || escrow.zipCode;
+
+  if (streetAddress) {
+    // Build complete address for Street View (e.g., "616 42nd St, Bakersfield, CA 93301")
+    let fullAddress = streetAddress;
+    if (city && state) {
+      fullAddress = `${streetAddress}, ${city}, ${state}`;
+      if (zipCode) {
+        fullAddress += ` ${zipCode}`;
+      }
+    }
+
+    return getStreetViewUrl(fullAddress, {
       width: 800,
       height: 600,
       fov: 90,
@@ -102,7 +116,7 @@ export function getBestPropertyImage(escrow) {
   }
 
   // Priority 4: Placeholder
-  return getPlaceholderImage(address || 'Property');
+  return getPlaceholderImage(streetAddress || 'Property');
 }
 
 export default {

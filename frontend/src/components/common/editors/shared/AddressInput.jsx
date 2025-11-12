@@ -147,7 +147,7 @@ export const AddressInput = ({
           callback([]);
         }
       });
-    }, 300),
+    }, 500), // Increased from 300ms to 500ms to reduce API calls
     [userLat, userLng, searchRadius]
   );
 
