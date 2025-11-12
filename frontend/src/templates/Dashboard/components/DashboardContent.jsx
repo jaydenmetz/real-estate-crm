@@ -180,6 +180,10 @@ export const DashboardContent = ({
           lg: 'repeat(3, 1fr)', // Large: 3 columns (aligns with typical hero width)
           xl: 'repeat(4, 1fr)', // Extra large: 4 columns
         },
+        justifyItems: {
+          xs: 'center', // Center single card on mobile
+          sm: 'stretch', // Full width on 2+ columns
+        },
         gap: {
           xs: 2, // 16px on mobile
           sm: 2, // 16px on small

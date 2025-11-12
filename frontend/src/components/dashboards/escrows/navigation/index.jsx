@@ -40,31 +40,28 @@ const EscrowNavigation = ({
 
   return (
     <Box sx={{ mb: 4 }}>
-      {/* Desktop Layout */}
+      {/* Desktop/Tablet Layout - Tabs on first line, Filters on second line if needed */}
       <Box
         sx={{
-          display: { xs: 'none', md: 'flex' },
-          flexWrap: 'wrap',
-          gap: 2,
-          alignItems: 'flex-start',
+          display: { xs: 'none', md: 'block' },
         }}
       >
-        {/* Left: Status Tabs */}
-        <EscrowTabs
-          statusTabs={statusTabs}
-          selectedStatus={selectedStatus}
-          onStatusChange={onStatusChange}
-          archivedCount={archivedCount}
-        />
+        {/* Row 1: Status Tabs (left-justified) */}
+        <Box sx={{ mb: 2 }}>
+          <EscrowTabs
+            statusTabs={statusTabs}
+            selectedStatus={selectedStatus}
+            onStatusChange={onStatusChange}
+            archivedCount={archivedCount}
+          />
+        </Box>
 
-        {/* Spacer - pushes filters to the right */}
-        <Box sx={{ flexGrow: 1 }} />
-
-        {/* Right: Filters */}
+        {/* Row 2: Filters (right-justified) */}
         <Box sx={{
           display: 'flex',
           gap: 1.5,
           alignItems: 'center',
+          justifyContent: 'flex-end',
           flexWrap: 'wrap',
         }}>
           <ScopeFilter
