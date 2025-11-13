@@ -24,4 +24,28 @@ exports.archiveAppointment = crudController.archive;
 exports.deleteAppointment = crudController.delete;
 exports.batchDeleteAppointments = crudController.batchDelete;
 
-// Custom endpoints can be added here if needed
+// Custom endpoints used by routes
+const { pool } = require('../../../config/database');
+const logger = require('../../../utils/logger');
+
+exports.cancelAppointment = async (req, res) => {
+  // Placeholder for canceling appointment
+  res.status(501).json({
+    success: false,
+    error: {
+      code: 'NOT_IMPLEMENTED',
+      message: 'Cancel appointment functionality not yet implemented',
+    },
+  });
+};
+
+exports.markComplete = async (req, res) => {
+  // Placeholder for marking appointment complete
+  res.status(501).json({
+    success: false,
+    error: {
+      code: 'NOT_IMPLEMENTED',
+      message: 'Mark complete functionality not yet implemented',
+    },
+  });
+};

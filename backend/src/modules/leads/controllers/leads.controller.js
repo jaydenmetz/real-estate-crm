@@ -24,4 +24,28 @@ exports.archiveLead = crudController.archive;
 exports.deleteLead = crudController.delete;
 exports.batchDeleteLeads = crudController.batchDelete;
 
-// Custom endpoints can be added here if needed
+// Custom endpoints used by routes
+const { pool } = require('../../../config/database');
+const logger = require('../../../utils/logger');
+
+exports.convertToClient = async (req, res) => {
+  // Placeholder for converting lead to client
+  res.status(501).json({
+    success: false,
+    error: {
+      code: 'NOT_IMPLEMENTED',
+      message: 'Convert to client functionality not yet implemented',
+    },
+  });
+};
+
+exports.recordActivity = async (req, res) => {
+  // Placeholder for recording activity on lead
+  res.status(501).json({
+    success: false,
+    error: {
+      code: 'NOT_IMPLEMENTED',
+      message: 'Record activity functionality not yet implemented',
+    },
+  });
+};

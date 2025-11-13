@@ -18,10 +18,35 @@ const crudController = createCRUDController(clientsConfig);
 // Export standard operations
 exports.getAllClients = crudController.getAll;
 exports.getClient = crudController.getById;
+exports.getClientById = crudController.getById;  // Alias for routes compatibility
 exports.createClient = crudController.create;
 exports.updateClient = crudController.update;
 exports.archiveClient = crudController.archive;
 exports.deleteClient = crudController.delete;
 exports.batchDeleteClients = crudController.batchDelete;
 
-// Custom endpoints can be added here if needed
+// Custom endpoints used by routes
+const { pool } = require('../../../config/database');
+const logger = require('../../../utils/logger');
+
+exports.addNote = async (req, res) => {
+  // Placeholder for adding notes to client
+  res.status(501).json({
+    success: false,
+    error: {
+      code: 'NOT_IMPLEMENTED',
+      message: 'Add note functionality not yet implemented',
+    },
+  });
+};
+
+exports.bulkUpdateTags = async (req, res) => {
+  // Placeholder for bulk updating tags
+  res.status(501).json({
+    success: false,
+    error: {
+      code: 'NOT_IMPLEMENTED',
+      message: 'Bulk update tags functionality not yet implemented',
+    },
+  });
+};
