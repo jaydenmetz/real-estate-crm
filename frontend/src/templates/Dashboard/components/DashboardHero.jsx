@@ -415,7 +415,7 @@ export const DashboardHero = ({
         </Box>
 
         {/* Main Content Row - Stats Grid + Action Buttons */}
-        <Grid container spacing={3} sx={{ flexGrow: 1 }}>
+        <Grid container spacing={3} sx={{ flexGrow: 1, margin: 0, width: '100%' }}>
 
           {/* Stats Cards Grid */}
           <Grid item xs={12} lg={config.showAIAssistant ? 9 : 12}>
