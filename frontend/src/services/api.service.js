@@ -429,7 +429,7 @@ export const escrowsAPI = {
 };
 
 export const listingsAPI = {
-  getAll: (params) => apiInstance.get('/listings', { params }),
+  getAll: (params) => apiInstance.get('/listings', params),
   getById: (id) => apiInstance.get(`/listings/${id}`),
   getOne: (id) => apiInstance.get(`/listings/${id}`), // Alias for consistency
   create: (data) => apiInstance.post('/listings', data),
