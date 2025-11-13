@@ -180,3 +180,131 @@ exports.getListingAnalytics = async (req, res) => {
     });
   }
 };
+
+/**
+ * Record price change
+ * Custom endpoint: Records a price reduction/change
+ */
+exports.recordPriceChange = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { newPrice, reason } = req.body;
+
+    if (!newPrice || newPrice <= 0) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Valid new price is required',
+        },
+      });
+    }
+
+    // Get current price
+    const currentResult = await pool.query(
+      'SELECT list_price FROM listings WHERE id = $1 AND deleted_at IS NULL',
+      [id]
+    );
+
+    if (currentResult.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Listing not found',
+        },
+      });
+    }
+
+    const oldPrice = currentResult.rows[0].list_price;
+
+    // Update listing price
+    const updateResult = await pool.query(
+      `UPDATE listings
+       SET list_price = $1, updated_at = CURRENT_TIMESTAMP
+       WHERE id = $2
+       RETURNING *`,
+      [newPrice, id]
+    );
+
+    logger.info('Listing price updated', {
+      listingId: id,
+      oldPrice,
+      newPrice,
+      reason: reason || 'Price updated',
+    });
+
+    res.json({
+      success: true,
+      data: updateResult.rows[0],
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    logger.error('Error recording price change:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'PRICE_ERROR',
+        message: 'Failed to record price change',
+      },
+    });
+  }
+};
+
+/**
+ * Log showing
+ * Custom endpoint: Logs a property showing
+ */
+exports.logShowing = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      date, time, agentName, agentEmail, agentPhone, feedback, interested,
+    } = req.body;
+
+    if (!date || !time) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'VALIDATION_ERROR',
+          message: 'Date and time are required',
+        },
+      });
+    }
+
+    // Update listing timestamp to track activity
+    await pool.query(
+      'UPDATE listings SET updated_at = CURRENT_TIMESTAMP WHERE id = $1',
+      [id]
+    );
+
+    logger.info('Showing logged', {
+      listingId: id,
+      date,
+      time,
+      agentName,
+    });
+
+    res.json({
+      success: true,
+      data: {
+        listing_id: id,
+        showing_date: date,
+        showing_time: time,
+        agent_name: agentName,
+        feedback,
+        interested: interested || false,
+      },
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    logger.error('Error logging showing:', error);
+    res.status(500).json({
+      success: false,
+      error: {
+        code: 'SHOWING_ERROR',
+        message: 'Failed to log showing',
+      },
+    });
+  }
+};
