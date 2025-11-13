@@ -1,31 +1,31 @@
 /**
- * EscrowStatusTabs.jsx
+ * ListingStatusTabs.jsx
  *
- * Status tab configuration for escrows dashboard navigation.
+ * Status tab configuration for listings dashboard navigation.
  * Defines which tabs appear and their default view modes.
  *
- * Usage: Imported into escrows.config.js
+ * Usage: Imported into listings.config.js
  */
 
-export const escrowStatusTabs = [
+export const listingStatusTabs = [
   {
-    value: 'Active',
+    value: 'active',
     label: 'Active',
     preferredViewMode: 'card'
   },
   {
-    value: 'Closed',
+    value: 'closed',
     label: 'Closed',
     preferredViewMode: 'list'
   },
   {
-    value: 'Cancelled',
-    label: 'Cancelled',
-    preferredViewMode: 'table'
+    value: 'expired',
+    label: 'Expired',
+    preferredViewMode: 'list'
   },
   {
     value: 'all',
-    label: 'All Escrows',
+    label: 'All Listings',
     preferredViewMode: 'table'
   },
   {

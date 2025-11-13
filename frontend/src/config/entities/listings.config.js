@@ -1,6 +1,25 @@
 import { createEntityConfig } from '../../utils/config/createEntityConfig';
 import { api } from '../../services/api.service';
 
+// Import hero stat cards
+import {
+  TotalListingsCard,
+  TotalThisMonthCard,
+  TotalVolumeCard,
+  TotalCommissionCard
+} from '../../components/dashboards/listings/hero';
+
+// Import navigation configurations
+import {
+  listingStatusTabs,
+  listingSortOptions,
+  listingDefaultSort,
+  getListingScopeOptions,
+  listingDefaultScope,
+  listingViewModes,
+  listingDefaultViewMode
+} from '../../components/dashboards/listings/navigation';
+
 // Import widget components
 import PriceHistoryWidget from '../../components/details/listings/components/PriceHistoryWidget';
 import ActivityWidget from '../../components/details/listings/components/ActivityWidget';
@@ -57,146 +76,145 @@ export const listingsConfig = createEntityConfig({
     hero: {
       dateRangeFilters: ['1D', '1M', '1Y', 'YTD', 'Custom'],
       defaultDateRange: '1M',
-      showAIManager: true,
-      aiManagerLabel: 'AI Listing Manager',
-      aiManagerDescription: 'Optimize listings, automate MLS updates, and generate property descriptions.',
+      showAIAssistant: true,
+      aiAssistantLabel: 'AI Listing Manager',
+      aiAssistantDescription: 'Optimize listings, automate MLS updates, and generate property descriptions.',
       showAnalyticsButton: true,
       analyticsButtonLabel: 'LISTING ANALYTICS',
       showAddButton: true,
-      addButtonLabel: 'ADD NEW LISTING'
+      addButtonLabel: 'NEW LISTING'
     },
 
-    // Stats Configuration
+    // Stats Configuration (component-based for reusability)
     stats: [
+      // ========================================
+      // ACTIVE TAB STATS
+      // ========================================
       {
-        id: 'totalListings',
-        label: 'TOTAL LISTINGS',
-        field: 'totalListings',
-        format: 'number',
-        icon: 'Home',
-        color: 'primary.main',
-        goal: 50,
-        showGoal: true,
-        showTrend: true,
-        visibleWhen: ['active', 'all']
+        id: 'total_active_listings',
+        component: TotalListingsCard,
+        props: { status: 'active' },
+        visibleWhen: ['active']
       },
       {
-        id: 'activeListings',
-        label: 'ACTIVE LISTINGS',
-        field: 'activeListings',
-        format: 'number',
-        icon: 'Visibility',
-        color: 'success.main',
-        goal: 30,
-        showGoal: true,
-        showTrend: true,
-        visibleWhen: ['active', 'all']
+        id: 'total_active_this_month',
+        component: TotalThisMonthCard,
+        props: { status: 'active', dateField: 'created_at' },
+        visibleWhen: ['active']
       },
       {
-        id: 'totalValue',
-        label: 'TOTAL VALUE',
-        field: 'totalValue',
-        format: 'currency',
-        icon: 'AttachMoney',
-        color: 'primary.main',
-        goal: 25000000,
-        showGoal: true,
-        showTrend: true,
-        visibleWhen: ['active', 'all']
+        id: 'total_active_volume',
+        component: TotalVolumeCard,
+        props: { status: 'active' },
+        visibleWhen: ['active']
       },
       {
-        id: 'avgDaysOnMarket',
-        label: 'AVG DAYS ON MARKET',
-        field: 'avgDaysOnMarket',
-        format: 'number',
-        suffix: ' days',
-        icon: 'Schedule',
-        color: 'info.main',
-        goal: 30,
-        showGoal: true,
-        showTrend: true,
-        visibleWhen: ['active', 'all']
+        id: 'total_active_commission',
+        component: TotalCommissionCard,
+        props: { status: 'active' },
+        visibleWhen: ['active']
       },
-      // Pending-specific stats
+
+      // ========================================
+      // CLOSED TAB STATS
+      // ========================================
       {
-        id: 'pendingListings',
-        label: 'PENDING LISTINGS',
-        field: 'pendingListings',
-        format: 'number',
-        icon: 'Pending',
-        color: 'warning.main',
-        showTrend: true,
-        visibleWhen: ['pending']
+        id: 'total_closed_listings',
+        component: TotalListingsCard,
+        props: { status: 'closed' },
+        visibleWhen: ['closed']
       },
       {
-        id: 'pendingVolume',
-        label: 'PENDING VOLUME',
-        field: 'pendingVolume',
-        format: 'currency',
-        icon: 'AttachMoney',
-        color: 'warning.main',
-        showTrend: true,
-        visibleWhen: ['pending']
-      },
-      // Sold-specific stats
-      {
-        id: 'soldListings',
-        label: 'SOLD LISTINGS',
-        field: 'soldListings',
-        format: 'number',
-        icon: 'CheckCircle',
-        color: 'success.main',
-        showTrend: true,
-        visibleWhen: ['sold']
+        id: 'total_closed_this_month',
+        component: TotalThisMonthCard,
+        props: { status: 'closed', dateField: 'closing_date' },
+        visibleWhen: ['closed']
       },
       {
-        id: 'soldVolume',
-        label: 'SOLD VOLUME',
-        field: 'soldVolume',
-        format: 'currency',
-        icon: 'TrendingUp',
-        color: 'success.main',
-        goal: 10000000,
-        showGoal: true,
-        showTrend: true,
-        visibleWhen: ['sold']
+        id: 'total_closed_volume',
+        component: TotalVolumeCard,
+        props: { status: 'closed' },
+        visibleWhen: ['closed']
+      },
+      {
+        id: 'total_closed_commission',
+        component: TotalCommissionCard,
+        props: { status: 'closed' },
+        visibleWhen: ['closed']
+      },
+
+      // ========================================
+      // EXPIRED TAB STATS
+      // ========================================
+      {
+        id: 'total_expired_listings',
+        component: TotalListingsCard,
+        props: { status: 'expired' },
+        visibleWhen: ['expired']
+      },
+      {
+        id: 'total_expired_this_month',
+        component: TotalThisMonthCard,
+        props: { status: 'expired', dateField: 'expiration_date' },
+        visibleWhen: ['expired']
+      },
+      {
+        id: 'total_expired_volume',
+        component: TotalVolumeCard,
+        props: { status: 'expired' },
+        visibleWhen: ['expired']
+      },
+      {
+        id: 'total_expired_commission',
+        component: TotalCommissionCard,
+        props: { status: 'expired' },
+        visibleWhen: ['expired']
+      },
+
+      // ========================================
+      // ALL LISTINGS TAB STATS
+      // ========================================
+      {
+        id: 'total_listings',
+        component: TotalListingsCard,
+        props: { status: 'all' },
+        visibleWhen: ['all']
+      },
+      {
+        id: 'total_listings_this_month',
+        component: TotalThisMonthCard,
+        props: { status: 'all', dateField: 'created_at' },
+        visibleWhen: ['all']
+      },
+      {
+        id: 'total_volume',
+        component: TotalVolumeCard,
+        props: { status: 'all' },
+        visibleWhen: ['all']
+      },
+      {
+        id: 'total_commission',
+        component: TotalCommissionCard,
+        props: { status: 'all' },
+        visibleWhen: ['all']
       },
     ],
 
     // Status Tabs Configuration
-    statusTabs: [
-      { value: 'active', label: 'Active', preferredViewMode: 'large' },
-      { value: 'pending', label: 'Pending', preferredViewMode: 'large' },
-      { value: 'sold', label: 'Sold', preferredViewMode: 'medium' },
-      { value: 'all', label: 'All Listings', preferredViewMode: 'small' }
-    ],
+    statusTabs: listingStatusTabs,
     defaultStatus: 'active',
 
     // Scope Filter Configuration
-    scopeOptions: [
-      { value: 'user', label: 'My Listings' },
-      { value: 'team', label: 'Team' },
-      { value: 'office', label: 'Office' }
-    ],
-    defaultScope: 'team',
+    getScopeOptions: getListingScopeOptions,
+    defaultScope: listingDefaultScope,
 
     // Sort Options Configuration
-    sortOptions: [
-      { value: 'created_at', label: 'Date Listed' },
-      { value: 'price', label: 'Price' },
-      { value: 'bedrooms', label: 'Bedrooms' },
-      { value: 'square_feet', label: 'Square Feet' },
-      { value: 'days_on_market', label: 'Days on Market' }
-    ],
-    defaultSort: 'created_at',
+    sortOptions: listingSortOptions,
+    defaultSort: listingDefaultSort,
 
     // View Modes Configuration
-    viewModes: [
-      { value: 'card', label: 'Card', icon: 'GridView' },
-      { value: 'list', label: 'List', icon: 'ViewList' },
-      { value: 'map', label: 'Map', icon: 'Map' }
-    ],
-    defaultViewMode: 'card',
+    viewModes: listingViewModes,
+    defaultViewMode: listingDefaultViewMode,
 
     // Archive Configuration
     showArchive: true,
@@ -235,8 +253,7 @@ export const listingsConfig = createEntityConfig({
       ],
       statusColors: {
         active: '#4caf50',
-        pending: '#ff9800',
-        sold: '#2196f3',
+        closed: '#2196f3',
         expired: '#f44336'
       },
       stats: [
@@ -296,7 +313,7 @@ export const listingsConfig = createEntityConfig({
         { key: 'bedrooms', label: 'Bedrooms', type: 'number', required: true },
         { key: 'bathrooms', label: 'Bathrooms', type: 'number', required: true },
         { key: 'square_feet', label: 'Square Feet', type: 'number' },
-        { key: 'listing_status', label: 'Status', type: 'select', options: ['active', 'pending', 'sold'], default: 'active' },
+        { key: 'listing_status', label: 'Status', type: 'select', options: ['active', 'closed', 'expired'], default: 'active' },
         { key: 'mls_number', label: 'MLS #', type: 'text' },
         { key: 'description', label: 'Description', type: 'textarea' }
       ]
@@ -309,7 +326,7 @@ export const listingsConfig = createEntityConfig({
         { key: 'bedrooms', label: 'Bedrooms', type: 'number', required: true },
         { key: 'bathrooms', label: 'Bathrooms', type: 'number', required: true },
         { key: 'square_feet', label: 'Square Feet', type: 'number' },
-        { key: 'listing_status', label: 'Status', type: 'select', options: ['active', 'pending', 'sold'] },
+        { key: 'listing_status', label: 'Status', type: 'select', options: ['active', 'closed', 'expired'] },
         { key: 'mls_number', label: 'MLS #', type: 'text' },
         { key: 'description', label: 'Description', type: 'textarea' }
       ]
@@ -338,8 +355,7 @@ export const listingsConfig = createEntityConfig({
     getStatusColor: (status) => {
       const colors = {
         'active': 'success',
-        'pending': 'warning',
-        'sold': 'info',
+        'closed': 'info',
         'expired': 'error'
       };
       return colors[status] || 'default';
