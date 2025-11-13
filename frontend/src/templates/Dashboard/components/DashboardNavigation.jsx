@@ -63,69 +63,71 @@ export const DashboardNavigation = ({
 
   return (
     <Box sx={{ mb: 4 }}>
-      {/* Desktop Layout */}
+      {/* Desktop Layout - Flexible single row with wrap */}
       <Box
         sx={{
           display: { xs: 'none', md: 'flex' },
           flexWrap: 'wrap',
+          alignItems: 'center',
+          justifyContent: 'space-between', // Force space between tabs and filters
           gap: 2,
-          alignItems: 'flex-start',
+          mb: 2,
         }}
       >
-        {/* Left: Tabs with gray background */}
-        <Paper
-          elevation={0}
-          sx={{
-            backgroundColor: 'background.paper',
-            borderRadius: '8px',
-            border: '1px solid',
-            borderColor: 'divider',
-            flex: '0 0 auto',
-          }}
-        >
-          <Tabs
-            value={selectedStatus}
-            onChange={(e, newValue) => onStatusChange(newValue)}
+        {/* Status Tabs - only takes space it needs */}
+        <Box sx={{ flexShrink: 0 }}>
+          <Paper
+            elevation={0}
             sx={{
-              minHeight: 48,
-              '& .MuiTab-root': {
-                textTransform: 'none',
-                fontSize: '0.9375rem',
-                fontWeight: 500,
-                minHeight: 48,
-                px: 3,
-                color: 'text.secondary',
-                transition: 'all 0.2s ease',
-                '&:hover': {
-                  color: 'primary.main',
-                  backgroundColor: alpha('#1976d2', 0.04),
-                },
-              },
-              '& .Mui-selected': {
-                fontWeight: 600,
-                color: 'primary.main',
-              },
-              '& .MuiTabs-indicator': {
-                height: 3,
-                borderRadius: '3px 3px 0 0',
-              },
+              backgroundColor: 'background.paper',
+              borderRadius: '8px',
+              border: '1px solid',
+              borderColor: 'divider',
             }}
           >
-            {statusTabs.filter(tab => tab.value !== 'archived').map(tab => (
-              <Tab key={tab.value} label={tab.label} value={tab.value} />
-            ))}
-          </Tabs>
-        </Paper>
+            <Tabs
+              value={selectedStatus}
+              onChange={(e, newValue) => onStatusChange(newValue)}
+              sx={{
+                minHeight: 48,
+                '& .MuiTab-root': {
+                  textTransform: 'none',
+                  fontSize: '0.9375rem',
+                  fontWeight: 500,
+                  minHeight: 48,
+                  px: 3,
+                  color: 'text.secondary',
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    color: 'primary.main',
+                    backgroundColor: alpha('#1976d2', 0.04),
+                  },
+                },
+                '& .Mui-selected': {
+                  fontWeight: 600,
+                  color: 'primary.main',
+                },
+                '& .MuiTabs-indicator': {
+                  height: 3,
+                  borderRadius: '3px 3px 0 0',
+                },
+              }}
+            >
+              {statusTabs.filter(tab => tab.value !== 'archived').map(tab => (
+                <Tab key={tab.value} label={tab.label} value={tab.value} />
+              ))}
+            </Tabs>
+          </Paper>
+        </Box>
 
-        {/* Spacer - CRITICAL for Clients layout */}
-        <Box sx={{ flexGrow: 1 }} />
-
-        {/* Right: Controls */}
+        {/* Filters - stay right-justified, allow horizontal scroll if needed */}
         <Box sx={{
           display: 'flex',
           gap: 1.5,
           alignItems: 'center',
-          flexWrap: 'wrap',
+          flexShrink: 0,
+          overflowX: 'auto',
+          maxWidth: '100%',
         }}>
           {/* Scope Dropdown - Styled like Year Dropdown */}
           {scopeOptions.length > 0 && (
