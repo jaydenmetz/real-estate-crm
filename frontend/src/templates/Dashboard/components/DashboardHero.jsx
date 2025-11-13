@@ -518,7 +518,12 @@ export const DashboardHero = ({
                   <Card
                     elevation={0}
                     sx={{
-                      minHeight: { xs: 250, md: 320 },
+                      width: '300px',
+                      height: '300px',
+                      minWidth: '300px',
+                      minHeight: '300px',
+                      maxWidth: '300px',
+                      maxHeight: '300px',
                       position: 'relative',
                       overflow: 'hidden',
                       background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.08) 100%)',

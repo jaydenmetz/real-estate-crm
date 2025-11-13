@@ -46,6 +46,7 @@ const EscrowNavigation = ({
           display: { xs: 'none', md: 'flex' },
           flexWrap: 'wrap',
           alignItems: 'center',
+          justifyContent: 'space-between', // Force space between tabs and filters
           gap: 2,
           mb: 2,
         }}
@@ -60,9 +61,6 @@ const EscrowNavigation = ({
           />
         </Box>
 
-        {/* Spacer - pushes filters to the right */}
-        <Box sx={{ flexGrow: 1, minWidth: '40px' }} />
-
         {/* Filters - stay right-justified, allow horizontal scroll if needed */}
         <Box sx={{
           display: 'flex',
@@ -71,8 +69,6 @@ const EscrowNavigation = ({
           flexShrink: 0,
           overflowX: 'auto',
           maxWidth: '100%',
-          // When wrapped to second line, align to right
-          marginLeft: 'auto',
         }}>
           <ScopeFilter
             scopeOptions={scopeOptions}
