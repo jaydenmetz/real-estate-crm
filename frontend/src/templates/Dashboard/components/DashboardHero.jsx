@@ -509,7 +509,7 @@ export const DashboardHero = ({
           {/* AI Assistant Card (if enabled) */}
           {config.showAIAssistant && (
             <Grid item xs={12} lg={3}>
-              <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
+              <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
