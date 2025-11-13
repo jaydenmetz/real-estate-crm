@@ -63,7 +63,7 @@ import { listingsAPI } from '../../../services/api.service';
 import { useAuth } from '../../../contexts/AuthContext';
 import NewListingModal from './modals/NewListingModal';
 import networkMonitor from '../../../services/networkMonitor.service';
-import ListingCard from '../../common/widgets/ListingCard';
+import { ListingCard } from '../../common/view-modes/card';
 import { useWebSocket } from '../../../hooks/useWebSocket';
 import ListingHeroCard from './components/ListingHeroCard';
 import ListingNavigation from './components/ListingNavigation';

@@ -1,7 +1,7 @@
 import React from 'react';
 import { DashboardTemplate } from '../../../templates/Dashboard';
 import { clientsConfig } from '../../../config/entities/clients.config';
-import ClientCard from '../../common/widgets/ClientCard';
+import { ClientCard } from '../../common/view-modes/card';
 import NewClientModal from './modals/NewClientModal';
 
 /**

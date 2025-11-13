@@ -29,7 +29,7 @@ import {
   Refresh,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
-import ListingCard from '../../../common/widgets/ListingCard';
+import { ListingCard } from '../../../common/view-modes/card';
 
 const ListingContent = ({
   loading,
