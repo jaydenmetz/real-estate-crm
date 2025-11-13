@@ -239,7 +239,7 @@ export const DashboardNavigation = ({
               },
             }}
           >
-            <ToggleButton value="grid" title="Grid view">
+            <ToggleButton value="card" title="Card view">
               <Box sx={{ display: 'flex', width: 24, height: 12, alignItems: 'center' }}>
                 <Box sx={{ width: 5, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                 <Box sx={{ width: '1.33px' }} />
@@ -442,7 +442,7 @@ export const DashboardNavigation = ({
                   },
                 }}
               >
-                <ToggleButton value="grid" title="Grid view">
+                <ToggleButton value="card" title="Card view">
                   <Box sx={{ display: 'flex', width: 24, height: 12, alignItems: 'center' }}>
                     <Box sx={{ width: 5, height: 12, bgcolor: 'currentColor', borderRadius: 0.5 }} />
                     <Box sx={{ width: '1.33px' }} />

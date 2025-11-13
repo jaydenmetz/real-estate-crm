@@ -3,7 +3,6 @@ import { DashboardTemplate } from '../../../templates/Dashboard';
 import { escrowsConfig } from '../../../config/entities/escrows.config';
 import EscrowCard from './view-modes/card/EscrowCard';
 import { NewEscrowModal } from './modals/NewEscrowModal';
-import EscrowNavigation from './navigation';
 
 /**
  * EscrowsDashboard - Config-driven dashboard using DashboardTemplate
@@ -15,8 +14,8 @@ import EscrowNavigation from './navigation';
  * handled by the template system using the entity configuration.
  *
  * Custom Components:
- * - EscrowNavigation: Custom tabs and filters
  * - Stat Cards: Reusable stat card components in hero/stats/
+ * - Navigation: Uses template DashboardNavigation (no custom component)
  */
 const EscrowsDashboard = () => {
   return (
@@ -24,7 +23,6 @@ const EscrowsDashboard = () => {
       config={escrowsConfig}
       CardComponent={EscrowCard}
       NewItemModal={NewEscrowModal}
-      NavigationComponent={EscrowNavigation}
     />
   );
 };

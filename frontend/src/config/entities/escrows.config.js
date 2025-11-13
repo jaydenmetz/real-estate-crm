@@ -19,7 +19,6 @@ import {
   TotalVolumeCard,
   TotalCommissionCard
 } from '../../components/dashboards/escrows/hero';
-import EscrowNavigation from '../../components/dashboards/escrows/navigation';
 
 // Import widgets
 import TimelineWidget_White from '../../components/details/escrows/components/TimelineWidget_White';
@@ -216,9 +215,6 @@ export const escrowsConfig = createEntityConfig({
         visibleWhen: ['all']
       },
     ],
-
-    // Custom Navigation Component
-    customNavigation: EscrowNavigation,
 
     // Status Tabs Configuration
     statusTabs: [
