@@ -20,6 +20,17 @@ import {
   TotalCommissionCard
 } from '../../components/dashboards/escrows/hero';
 
+// Import navigation configurations
+import {
+  escrowStatusTabs,
+  escrowSortOptions,
+  escrowDefaultSort,
+  getEscrowScopeOptions,
+  escrowDefaultScope,
+  escrowViewModes,
+  escrowDefaultViewMode
+} from '../../components/dashboards/escrows/navigation';
+
 // Import widgets
 import TimelineWidget_White from '../../components/details/escrows/components/TimelineWidget_White';
 import FinancialsWidget_White from '../../components/details/escrows/components/FinancialsWidget_White';
@@ -217,77 +228,20 @@ export const escrowsConfig = createEntityConfig({
     ],
 
     // Status Tabs Configuration
-    statusTabs: [
-      { value: 'Active', label: 'Active', preferredViewMode: 'list' },
-      { value: 'Closed', label: 'Closed', preferredViewMode: 'list' },
-      { value: 'Cancelled', label: 'Cancelled', preferredViewMode: 'list' },
-      { value: 'all', label: 'All Escrows', preferredViewMode: 'list' },
-      { value: 'archived', label: 'Archived', preferredViewMode: 'card' }
-    ],
+    statusTabs: escrowStatusTabs,
     defaultStatus: 'Active',
 
     // Scope Filter Configuration
-    // Scope options can be a function that receives user object
-    getScopeOptions: (user) => {
-      if (!user) {
-        return [{ value: 'user', label: 'My Escrows' }];
-      }
-
-      // Handle both camelCase and snake_case from backend
-      const firstName = user.firstName || user.first_name || 'My';
-      const lastName = user.lastName || user.last_name || '';
-      const fullName = lastName ? `${firstName} ${lastName}` : (user.username || firstName);
-      const teamName = user.teamName || user.team_name || 'Team';
-      const brokerName = user.brokerName || user.broker_name || 'Broker';
-      const userRole = user.role || 'agent';
-
-      const options = [];
-
-      // All users can see their own records
-      options.push({
-        value: 'user',
-        label: `${firstName}'s Escrows`,
-        fullLabel: fullName
-      });
-
-      // Team owners and above can see team view
-      if (['team_owner', 'broker', 'system_admin'].includes(userRole)) {
-        options.push({
-          value: 'team',
-          label: `${teamName}'s Escrows`,
-          fullLabel: teamName
-        });
-      }
-
-      // Brokers and system admins can see broker view
-      if (['broker', 'system_admin'].includes(userRole)) {
-        options.push({
-          value: 'broker',
-          label: `${brokerName}'s Escrows`,
-          fullLabel: brokerName
-        });
-      }
-
-      return options;
-    },
-    defaultScope: 'user',
+    getScopeOptions: getEscrowScopeOptions,
+    defaultScope: escrowDefaultScope,
 
     // Sort Options Configuration
-    sortOptions: [
-      { value: 'created_at', label: 'Created' },
-      { value: 'closing_date', label: 'Closing Date' },
-      { value: 'purchase_price', label: 'Purchase Price' },
-      { value: 'property_address', label: 'Property Address' }
-    ],
-    defaultSort: 'created_at',
+    sortOptions: escrowSortOptions,
+    defaultSort: escrowDefaultSort,
 
     // View Modes Configuration
-    viewModes: [
-      { value: 'card', label: 'Card', icon: 'GridView' },
-      { value: 'list', label: 'List', icon: 'ViewList' },
-      { value: 'table', label: 'Table', icon: 'TableChart' }
-    ],
-    defaultViewMode: 'list', // Full width cards for Active tab
+    viewModes: escrowViewModes,
+    defaultViewMode: escrowDefaultViewMode,
 
     // Archive Configuration
     showArchive: true,
