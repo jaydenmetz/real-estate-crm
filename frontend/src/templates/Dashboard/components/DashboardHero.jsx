@@ -418,7 +418,7 @@ export const DashboardHero = ({
         <Grid container spacing={3} sx={{ flexGrow: 1, margin: 0, width: '100%' }}>
 
           {/* Stats Cards Grid */}
-          <Grid item xs={12} lg={config.showAIAssistant ? 9 : 12}>
+          <Grid item xs={12} xl={config.showAIAssistant ? 9 : 12}>
             <Grid container spacing={3}>
               {/* Render stat cards based on selected status */}
               {statsConfig && statsConfig
@@ -508,7 +508,7 @@ export const DashboardHero = ({
 
           {/* AI Assistant Card (if enabled) */}
           {config.showAIAssistant && (
-            <Grid item xs={12} lg={3}>
+            <Grid item xs={12} xl={3}>
               <Box sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
