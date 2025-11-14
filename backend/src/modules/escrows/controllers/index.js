@@ -11,11 +11,11 @@
  */
 
 const crudController = require('./crud.controller');
-const detailsController = require('./details.controller');
-const checklistsController = require('./checklists.controller');
-const financialsController = require('./financials.controller');
-const peopleController = require('./people.controller');
-const timelineController = require('./timeline.controller');
+const detailsController = require('./sub-resources/details.controller');
+const checklistsController = require('./sub-resources/checklists.controller');
+const financialsController = require('./sub-resources/financials.controller');
+const peopleController = require('./sub-resources/people.controller');
+const timelineController = require('./sub-resources/timeline.controller');
 
 // Export all methods (33 total)
 module.exports = {
