@@ -118,8 +118,7 @@ exports.getListings = async (req, res) => {
       SELECT
         l.*,
         u.first_name || ' ' || u.last_name AS agent_name,
-        u.email AS agent_email,
-        u.phone AS agent_phone
+        u.email AS agent_email
       FROM listings l
       LEFT JOIN users u ON l.listing_agent_id = u.id
       ${whereClause}
