@@ -11,7 +11,7 @@
  */
 
 const crudController = require('./crud.controller');
-const conversionController = require('./conversion.controller');
+const conversionController = require('./sub-resources/conversion.controller');
 
 module.exports = {
   // CRUD operations (7 methods)

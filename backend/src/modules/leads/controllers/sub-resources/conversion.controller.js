@@ -8,8 +8,8 @@
  * @module controllers/leads/conversion
  */
 
-const { pool } = require('../../../config/database');
-const logger = require('../../../utils/logger');
+const { pool } = require('../../../../config/database');
+const logger = require('../../../../utils/logger');
 
 // POST /api/v1/leads/:id/convert
 exports.convertToClient = async (req, res) => {

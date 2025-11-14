@@ -14,7 +14,7 @@
  */
 
 const crudController = require('./crud.controller');
-const statusController = require('./status.controller');
+const statusController = require('./sub-resources/status.controller');
 
 module.exports = {
   // CRUD operations (7 methods)
