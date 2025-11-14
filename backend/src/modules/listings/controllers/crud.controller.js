@@ -148,6 +148,8 @@ exports.getListings = async (req, res) => {
       error: {
         code: 'FETCH_ERROR',
         message: 'Failed to fetch listings',
+        details: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
       },
     });
   }
