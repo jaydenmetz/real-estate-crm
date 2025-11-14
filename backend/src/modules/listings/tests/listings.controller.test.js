@@ -1,5 +1,5 @@
 const { pool, query, transaction } = require('../config/database');
-const listingsController = require('./listings.controller');
+const listingsController = require('../controllers');
 
 // Mock database and logger
 jest.mock('../config/database');
