@@ -70,7 +70,9 @@ export const useDashboardData = (config, externalDateRange = null) => {
       } else {
         // Add status filter for non-archived views
         if (selectedStatus !== 'all') {
-          params.status = selectedStatus;
+          // Use status mapping if defined (e.g., 'Closed' → 'Sold')
+          const statusMapping = config.dashboard?.statusMapping || {};
+          params.status = statusMapping[selectedStatus] || selectedStatus;
         }
       }
 

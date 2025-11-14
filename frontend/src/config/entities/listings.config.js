@@ -72,6 +72,12 @@ export const listingsConfig = createEntityConfig({
   // DASHBOARD CONFIGURATION
   // ========================================
   dashboard: {
+    // Status Mapping (tab label → API status value)
+    // Maps user-facing tab names to database status values
+    statusMapping: {
+      'Closed': 'Sold', // "Closed" tab shows "Sold" listings from database
+    },
+
     // Hero Card Configuration
     hero: {
       dateRangeFilters: ['1D', '1M', '1Y', 'YTD', 'Custom'],
@@ -122,25 +128,25 @@ export const listingsConfig = createEntityConfig({
         id: 'total_closed_listings',
         component: TotalListingsCard,
         props: { status: 'Sold' },
-        visibleWhen: ['Sold']
+        visibleWhen: ['Closed']
       },
       {
         id: 'total_closed_this_month',
         component: TotalThisMonthCard,
         props: { status: 'Sold', dateField: 'closing_date' },
-        visibleWhen: ['Sold']
+        visibleWhen: ['Closed']
       },
       {
         id: 'total_closed_volume',
         component: TotalVolumeCard,
         props: { status: 'Sold' },
-        visibleWhen: ['Sold']
+        visibleWhen: ['Closed']
       },
       {
         id: 'total_closed_commission',
         component: TotalCommissionCard,
         props: { status: 'Sold' },
-        visibleWhen: ['Sold']
+        visibleWhen: ['Closed']
       },
 
       // ========================================
