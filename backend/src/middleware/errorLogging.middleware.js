@@ -36,7 +36,9 @@ const errorLogging = (err, req, res, next) => {
   logger.error('Request Error', errorDetails);
 
   // Check if user is admin
-  const isAdmin = req.user && (req.user.role === 'admin' || req.user.role === 'system_admin');
+  // Normalize role - it might be a string or an array
+  const userRole = req.user ? (Array.isArray(req.user.role) ? req.user.role[0] : req.user.role) : null;
+  const isAdmin = req.user && (userRole === 'admin' || userRole === 'system_admin');
 
   // Send detailed error in development or for admin users
   if (process.env.NODE_ENV === 'development' || isAdmin) {

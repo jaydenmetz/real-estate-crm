@@ -16,13 +16,16 @@ const adminOnly = (req, res, next) => {
   }
 
   // Check if user is system_admin
-  if (req.user.role !== 'system_admin') {
+  // Normalize role - it might be a string or an array
+  const userRole = Array.isArray(req.user.role) ? req.user.role[0] : req.user.role;
+
+  if (userRole !== 'system_admin') {
     return res.status(403).json({
       success: false,
       error: {
         code: 'FORBIDDEN',
         message: 'Admin access required. This endpoint is restricted to system administrators.',
-        userRole: req.user.role,
+        userRole: userRole,
         requiredRole: 'system_admin',
       },
     });

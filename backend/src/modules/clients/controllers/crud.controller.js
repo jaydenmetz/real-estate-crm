@@ -55,7 +55,8 @@ exports.getAllClients = async (req, res) => {
     }
 
     // PHASE 2: Handle ownership-based scope filtering (multi-tenant)
-    const userRole = req.user?.role;
+    // Normalize role - it might be a string or an array
+    const userRole = Array.isArray(req.user?.role) ? req.user.role[0] : req.user?.role;
 
     // Only apply ownership filtering if user has a recognized role
     // For users without roles (or invalid roles), show their own data only

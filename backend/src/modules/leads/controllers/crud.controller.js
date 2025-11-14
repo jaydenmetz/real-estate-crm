@@ -58,7 +58,8 @@ exports.getLeads = async (req, res) => {
 
     // PHASE 2: Handle ownership-based scope filtering with PRIVACY (multi-tenant)
     // IMPORTANT: Leads support is_private flag - brokers cannot see private leads
-    const userRole = req.user?.role;
+    // Normalize role - it might be a string or an array
+    const userRole = Array.isArray(req.user?.role) ? req.user.role[0] : req.user?.role;
     const requestedScope = req.query.scope || getDefaultScope(userRole);
     const scope = validateScope(requestedScope, userRole);
 

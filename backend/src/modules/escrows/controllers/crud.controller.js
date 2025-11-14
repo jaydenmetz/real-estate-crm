@@ -38,7 +38,8 @@ async function getAllEscrows(req, res) {
     // Get user context for filtering
     const userId = req.user?.id;
     const teamId = req.user?.teamId;
-    const userRole = req.user?.role;
+    // Normalize role - it might be a string or an array
+    const userRole = Array.isArray(req.user?.role) ? req.user.role[0] : req.user?.role;
     const brokerId = req.user?.brokerId;
 
     const offset = (page - 1) * limit;

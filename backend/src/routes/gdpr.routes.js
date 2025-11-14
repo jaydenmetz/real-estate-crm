@@ -25,7 +25,9 @@ router.get('/security-events/export', async (req, res) => {
     let targetUserId = req.user.id;
 
     // Admins can export any user's data
-    if (userId && req.user.role === 'system_admin') {
+    // Normalize role - it might be a string or an array
+    const userRole = Array.isArray(req.user.role) ? req.user.role[0] : req.user.role;
+    if (userId && userRole === 'system_admin') {
       targetUserId = userId;
     } else if (userId && userId !== req.user.id) {
       return res.status(403).json({

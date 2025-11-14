@@ -120,7 +120,9 @@ router.get('/', async (req, res) => {
     } = req.query;
 
     // Users can only view their own events (unless admin)
-    const userId = req.user.role === 'system_admin' ? null : req.user.id;
+    // Normalize role - it might be a string or an array
+    const userRole = Array.isArray(req.user.role) ? req.user.role[0] : req.user.role;
+    const userId = userRole === 'system_admin' ? null : req.user.id;
 
     // Parse success parameter
     const successFilter = success !== undefined ? success === 'true' : null;
@@ -174,7 +176,9 @@ router.get('/stats', async (req, res) => {
     const { daysBack = 30 } = req.query;
 
     // Users can only view their own stats (unless admin)
-    const userId = req.user.role === 'system_admin' ? null : req.user.id;
+    // Normalize role - it might be a string or an array
+    const userRole = Array.isArray(req.user.role) ? req.user.role[0] : req.user.role;
+    const userId = userRole === 'system_admin' ? null : req.user.id;
 
     // Limit maximum days back
     const daysValue = Math.min(parseInt(daysBack) || 30, 365);
@@ -212,7 +216,9 @@ router.get('/stats', async (req, res) => {
 router.get('/recent', async (req, res) => {
   try {
     // Users can only view their own events (unless admin)
-    const userId = req.user.role === 'system_admin' ? null : req.user.id;
+    // Normalize role - it might be a string or an array
+    const userRole = Array.isArray(req.user.role) ? req.user.role[0] : req.user.role;
+    const userId = userRole === 'system_admin' ? null : req.user.id;
 
     const events = await SecurityEventService.queryEvents({
       userId,

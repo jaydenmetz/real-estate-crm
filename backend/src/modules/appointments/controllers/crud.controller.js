@@ -57,7 +57,8 @@ exports.getAppointments = async (req, res) => {
     // PHASE 2: Handle ownership-based scope filtering with INHERITED PRIVACY (multi-tenant)
     // CRITICAL: Appointments inherit privacy from linked leads
     // If appointment.lead_id → lead.is_private = TRUE, then appointment is private
-    const userRole = req.user?.role;
+    // Normalize role - it might be a string or an array
+    const userRole = Array.isArray(req.user?.role) ? req.user.role[0] : req.user?.role;
     const requestedScope = req.query.scope || getDefaultScope(userRole);
     const scope = validateScope(requestedScope, userRole);
 

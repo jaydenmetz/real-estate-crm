@@ -331,7 +331,10 @@ const requirePermission = (permissionName) => {
  * Usage: router.get('/admin/users', requireSystemAdmin, adminController.getUsers)
  */
 const requireSystemAdmin = (req, res, next) => {
-  if (req.user.role !== 'system_admin') {
+  // Normalize role - it might be a string or an array
+  const userRole = Array.isArray(req.user.role) ? req.user.role[0] : req.user.role;
+
+  if (userRole !== 'system_admin') {
     return res.status(403).json({
       success: false,
       error: {
@@ -348,7 +351,10 @@ const requireSystemAdmin = (req, res, next) => {
  * Usage: router.get('/broker/kpis', requireBroker, brokerController.getKPIs)
  */
 const requireBroker = (req, res, next) => {
-  if (req.user.role !== 'broker' && req.user.role !== 'system_admin') {
+  // Normalize role - it might be a string or an array
+  const userRole = Array.isArray(req.user.role) ? req.user.role[0] : req.user.role;
+
+  if (userRole !== 'broker' && userRole !== 'system_admin') {
     return res.status(403).json({
       success: false,
       error: {
@@ -365,8 +371,11 @@ const requireBroker = (req, res, next) => {
  * Usage: router.post('/team/permissions', requireTeamOwner, teamController.grantPermissions)
  */
 const requireTeamOwner = (req, res, next) => {
+  // Normalize role - it might be a string or an array
+  const userRole = Array.isArray(req.user.role) ? req.user.role[0] : req.user.role;
+
   const allowedRoles = ['team_owner', 'broker', 'system_admin'];
-  if (!allowedRoles.includes(req.user.role)) {
+  if (!allowedRoles.includes(userRole)) {
     return res.status(403).json({
       success: false,
       error: {
