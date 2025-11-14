@@ -9,8 +9,8 @@
  * as clients don't have their own notes/tags fields but inherit them from contacts.
  */
 
-const { pool } = require('../../../config/database');
-const logger = require('../../../utils/logger');
+const { pool } = require('../../../../config/database');
+const logger = require('../../../../utils/logger');
 
 // POST /api/v1/clients/:id/notes
 exports.addNote = async (req, res) => {

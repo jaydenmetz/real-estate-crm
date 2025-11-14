@@ -16,7 +16,7 @@
  */
 
 const crudController = require('./crud.controller');
-const notesController = require('./notes.controller');
+const notesController = require('./sub-resources/notes.controller');
 
 module.exports = {
   // CRUD operations (7 methods)
