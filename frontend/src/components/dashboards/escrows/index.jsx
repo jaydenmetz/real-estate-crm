@@ -1,7 +1,7 @@
 import React from 'react';
 import { DashboardTemplate } from '../../../templates/Dashboard';
 import { escrowsConfig } from '../../../config/entities/escrows.config';
-import EscrowCard from './view-modes/card/EscrowCard';
+import { EscrowCard, EscrowListItem, EscrowTableRow } from './view-modes';
 import { NewEscrowModal } from './modals/NewEscrowModal';
 
 /**
@@ -16,12 +16,18 @@ import { NewEscrowModal } from './modals/NewEscrowModal';
  * Custom Components:
  * - Stat Cards: Reusable stat card components in hero/stats/
  * - Navigation: Uses template DashboardNavigation (no custom component)
+ * - View Modes:
+ *   - Card (grid): EscrowCard component
+ *   - List: EscrowListItem component (horizontal with image)
+ *   - Table: EscrowTableRow component (compact table)
  */
 const EscrowsDashboard = () => {
   return (
     <DashboardTemplate
       config={escrowsConfig}
       CardComponent={EscrowCard}
+      ListComponent={EscrowListItem}
+      TableComponent={EscrowTableRow}
       NewItemModal={NewEscrowModal}
     />
   );

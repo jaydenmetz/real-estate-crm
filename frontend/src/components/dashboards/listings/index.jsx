@@ -1,7 +1,7 @@
 import React from 'react';
 import { DashboardTemplate } from '../../../templates/Dashboard';
 import { listingsConfig } from '../../../config/entities/listings.config';
-import ListingCard from './view-modes/card/ListingCard';
+import { ListingCard, ListingListItem, ListingTableRow } from './view-modes';
 import NewListingModal from './modals/NewListingModal';
 
 /**
@@ -16,13 +16,18 @@ import NewListingModal from './modals/NewListingModal';
  * Custom Components:
  * - Stat Cards: Reusable stat card components in hero/stats/
  * - Navigation: Uses template DashboardNavigation (no custom component)
- * - View Modes: ListingCard component in view-modes/card/
+ * - View Modes:
+ *   - Card (grid): ListingCard component
+ *   - List: ListingListItem component (horizontal with image)
+ *   - Table: ListingTableRow component (compact table)
  */
 const ListingsDashboard = () => {
   return (
     <DashboardTemplate
       config={listingsConfig}
       CardComponent={ListingCard}
+      ListComponent={ListingListItem}
+      TableComponent={ListingTableRow}
       NewItemModal={NewListingModal}
     />
   );

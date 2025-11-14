@@ -13,7 +13,6 @@ import {
   DeleteForever as DeleteForeverIcon,
 } from '@mui/icons-material';
 import { motion, AnimatePresence } from 'framer-motion';
-import { EscrowListItem, EscrowTableRow } from '../../../components/dashboards/escrows/view-modes';
 
 /**
  * DashboardContent - Config-driven content grid/list with animations
@@ -25,6 +24,8 @@ export const DashboardContent = ({
   data,
   viewMode,
   CardComponent,
+  ListComponent = null, // Optional list view component
+  TableComponent = null, // Optional table view component
   config,
   onUpdate,
   onDelete,
@@ -100,12 +101,10 @@ export const DashboardContent = ({
 
   // Determine which component to use based on viewMode
   const getComponent = () => {
-    // For escrows entity, use different components per viewMode
-    if (config.entity.name === 'escrow') {
-      if (viewMode === 'list') return EscrowListItem;
-      if (viewMode === 'table') return EscrowTableRow;
-    }
-    // Default: use CardComponent (grid view or other entities)
+    // Use provided view components if available
+    if (viewMode === 'list' && ListComponent) return ListComponent;
+    if (viewMode === 'table' && TableComponent) return TableComponent;
+    // Default: use CardComponent (grid view)
     return CardComponent;
   };
 
@@ -113,7 +112,23 @@ export const DashboardContent = ({
 
   // Table view needs headers
   const renderTableHeaders = () => {
-    if (viewMode !== 'table' || config.entity.name !== 'escrow') return null;
+    if (viewMode !== 'table' || !TableComponent) return null;
+
+    // Define headers based on entity type
+    const headersByEntity = {
+      escrow: [
+        'Property', 'Status', 'Price', 'Commission',
+        'Acceptance', 'Close', 'Progress', 'Actions'
+      ],
+      listing: [
+        'Property', 'Status', 'List Price', 'Commission',
+        'MLS#', 'Beds/Baths', 'Days/Listed', 'Actions'
+      ]
+    };
+
+    const headers = headersByEntity[config.entity.name] || [
+      'Item', 'Status', 'Actions'
+    ];
 
     return (
       <Box
@@ -127,30 +142,20 @@ export const DashboardContent = ({
           borderBottom: `2px solid ${alpha('#000', 0.1)}`,
         }}
       >
-        <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase' }}>
-          Property
-        </Typography>
-        <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase' }}>
-          Status
-        </Typography>
-        <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase' }}>
-          Price
-        </Typography>
-        <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase' }}>
-          Commission
-        </Typography>
-        <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase' }}>
-          Acceptance
-        </Typography>
-        <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase' }}>
-          Close
-        </Typography>
-        <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase', textAlign: 'center' }}>
-          Progress
-        </Typography>
-        <Typography variant="caption" sx={{ fontWeight: 700, color: 'text.secondary', textTransform: 'uppercase' }}>
-          Actions
-        </Typography>
+        {headers.map((header, index) => (
+          <Typography
+            key={index}
+            variant="caption"
+            sx={{
+              fontWeight: 700,
+              color: 'text.secondary',
+              textTransform: 'uppercase',
+              textAlign: header === 'Progress' ? 'center' : 'left'
+            }}
+          >
+            {header}
+          </Typography>
+        ))}
       </Box>
     );
   };

@@ -26,6 +26,8 @@ import { useAuth } from '../../contexts/AuthContext';
 export const DashboardTemplate = ({
   config,
   CardComponent,
+  ListComponent = null, // Optional list view component
+  TableComponent = null, // Optional table view component
   NewItemModal,
   customFilters = null,
   customActions = null,
@@ -370,6 +372,8 @@ export const DashboardTemplate = ({
           data={filteredData}
           viewMode={viewMode}
           CardComponent={CardComponent}
+          ListComponent={ListComponent}
+          TableComponent={TableComponent}
           config={config}
           onUpdate={handleUpdate}
           onDelete={handleDelete}
