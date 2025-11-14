@@ -145,53 +145,20 @@ async function getAllEscrows(req, res) {
       paramIndex++;
     }
 
-    // Scope-based filtering (user/team/broker)
-    if (scope === 'user') {
-      // User scope: Only show records created by this user
-      if (userId) {
-        conditions.push(`e.created_by = $${paramIndex}`);
-        values.push(userId);
-        paramIndex++;
-      }
-    } else if (scope === 'team') {
-      // Team scope: Show all records from user's team
-      if (teamId) {
-        conditions.push(`e.team_id = $${paramIndex}`);
-        values.push(teamId);
-        paramIndex++;
-      } else {
-        // Fallback to user scope if no team
-        if (userId) {
-          conditions.push(`e.created_by = $${paramIndex}`);
-          values.push(userId);
-          paramIndex++;
-        }
-      }
-    } else if (scope === 'broker') {
-      // Broker scope: Show all records from user's brokerage
-      if (brokerId) {
-        conditions.push(`e.broker_id = $${paramIndex}`);
-        values.push(brokerId);
-        paramIndex++;
-      } else {
-        // Fallback to team/user scope if no broker
-        if (teamId) {
-          conditions.push(`e.team_id = $${paramIndex}`);
-          values.push(teamId);
-          paramIndex++;
-        } else if (userId) {
-          conditions.push(`e.created_by = $${paramIndex}`);
-          values.push(userId);
-          paramIndex++;
-        }
-      }
-    } else {
-      // Default to user scope for safety
-      if (userId) {
-        conditions.push(`e.created_by = $${paramIndex}`);
-        values.push(userId);
-        paramIndex++;
-      }
+    // PHASE 2: Handle ownership-based scope filtering (multi-tenant)
+    // Build ownership filter using modern helper (escrows table alias is 'e')
+    const ownershipFilter = buildOwnershipWhereClauseWithAlias(
+      req.user,
+      scope,
+      'escrow',
+      'e',
+      paramIndex
+    );
+
+    if (ownershipFilter.whereClause && ownershipFilter.whereClause !== '1=1') {
+      conditions.push(ownershipFilter.whereClause);
+      values.push(...ownershipFilter.params);
+      paramIndex = ownershipFilter.nextParamIndex;
     }
 
     query += ` WHERE ${conditions.join(' AND ')}`;
