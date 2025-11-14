@@ -1,3 +1,22 @@
+/**
+ * Clients CRUD Controller
+ *
+ * Handles basic CRUD operations for client entities:
+ * - getAllClients: List clients with pagination, filtering, and sorting
+ * - getClientById: Retrieve a single client by ID
+ * - createClient: Create a new client (with contact record)
+ * - updateClient: Update existing client data
+ * - archiveClient: Soft delete by setting status to 'archived'
+ * - deleteClient: Hard delete client and associated contact
+ * - batchDeleteClients: Delete multiple clients in one operation
+ *
+ * All operations maintain relationship with contacts table and support:
+ * - Multi-tenant filtering (broker/team/user ownership)
+ * - Real-time WebSocket updates
+ * - Optimistic locking for concurrent updates
+ * - Transaction safety for multi-table operations
+ */
+
 const { pool } = require('../../../config/database');
 const logger = require('../../../utils/logger');
 const websocketService = require('../../../services/websocket.service');
@@ -751,111 +770,5 @@ exports.batchDeleteClients = async (req, res) => {
     });
   } finally {
     client.release();
-  }
-};
-
-// POST /api/v1/clients/:id/notes
-exports.addNote = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { content } = req.body;
-
-    if (!content) {
-      return res.status(400).json({
-        success: false,
-        error: {
-          code: 'MISSING_CONTENT',
-          message: 'Note content is required',
-        },
-      });
-    }
-
-    // Update notes in contacts table
-    const query = `
-      UPDATE contacts
-      SET notes = COALESCE(notes, '') || E'\n' || $1 || ' - ' || NOW()::text,
-          updated_at = NOW()
-      WHERE id = (SELECT contact_id FROM clients WHERE id = $2)
-      RETURNING notes
-    `;
-
-    const result = await pool.query(query, [content, id]);
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: {
-          code: 'NOT_FOUND',
-          message: 'Client not found',
-        },
-      });
-    }
-
-    res.status(201).json({
-      success: true,
-      data: { notes: result.rows[0].notes },
-    });
-  } catch (error) {
-    console.error('Add note error:', error);
-    res.status(500).json({
-      success: false,
-      error: {
-        code: 'NOTE_ERROR',
-        message: 'Failed to add note',
-        details: error.message,
-      },
-    });
-  }
-};
-
-// PATCH /api/v1/clients/:id/tags
-exports.bulkUpdateTags = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { tags } = req.body;
-
-    if (!Array.isArray(tags)) {
-      return res.status(400).json({
-        success: false,
-        error: {
-          code: 'INVALID_TAGS',
-          message: 'Tags must be an array',
-        },
-      });
-    }
-
-    const query = `
-      UPDATE contacts
-      SET tags = $1, updated_at = NOW()
-      WHERE id = (SELECT contact_id FROM clients WHERE id = $2)
-      RETURNING tags
-    `;
-
-    const result = await pool.query(query, [tags, id]);
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: {
-          code: 'NOT_FOUND',
-          message: 'Client not found',
-        },
-      });
-    }
-
-    res.json({
-      success: true,
-      data: { tags: result.rows[0].tags },
-    });
-  } catch (error) {
-    console.error('Update tags error:', error);
-    res.status(500).json({
-      success: false,
-      error: {
-        code: 'TAG_ERROR',
-        message: 'Failed to update tags',
-        details: error.message,
-      },
-    });
   }
 };
