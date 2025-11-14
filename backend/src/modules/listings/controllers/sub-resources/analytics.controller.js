@@ -1,5 +1,5 @@
-const { query } = require('../../../config/database');
-const logger = require('../../../utils/logger');
+const { query } = require('../../../../config/database');
+const logger = require('../../../../utils/logger');
 
 // Get listing analytics
 exports.getListingAnalytics = async (req, res) => {

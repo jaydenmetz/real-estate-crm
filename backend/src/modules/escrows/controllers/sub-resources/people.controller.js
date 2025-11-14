@@ -6,9 +6,9 @@
  * - updateEscrowPeople() - Update people/participants information
  */
 
-const { pool } = require('../../../config/database');
-const { buildRestructuredEscrowResponse } = require('../utils/escrows.helper');
-const { detectSchema } = require('../services/schema.service');
+const { pool } = require('../../../../config/database');
+const { buildRestructuredEscrowResponse } = require('../../utils/escrows.helper');
+const { detectSchema } = require('../../services/schema.service');
 
 /**
  * Get escrow people/participants
