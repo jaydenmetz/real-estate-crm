@@ -51,4 +51,11 @@ router.post(
 router.post('/:id/price-reduction', listingsController.recordPriceChange);
 router.post('/:id/showings', listingsController.logShowing);
 
+// ============================================================================
+// HEALTH CHECK ROUTES - Automated testing endpoints
+// ============================================================================
+
+// Mount health check routes from health subfolder
+router.use('/health', require('./health'));
+
 module.exports = router;

@@ -1,6 +1,6 @@
 const crudController = require('./crud.controller');
-const marketingController = require('./marketing.controller');
-const analyticsController = require('./analytics.controller');
+const marketingController = require('./sub-resources/marketing.controller');
+const analyticsController = require('./sub-resources/analytics.controller');
 
 module.exports = {
   // CRUD operations (8 methods)
