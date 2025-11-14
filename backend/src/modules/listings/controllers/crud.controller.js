@@ -76,7 +76,8 @@ exports.getListings = async (req, res) => {
     }
 
     // PHASE 2: Handle ownership-based scope filtering (multi-tenant)
-    const userRole = req.user?.role;
+    // Normalize role - it might be a string or an array
+    const userRole = Array.isArray(req.user?.role) ? req.user.role[0] : req.user?.role;
     const requestedScope = req.query.scope || getDefaultScope(userRole);
     const scope = validateScope(requestedScope, userRole);
     let paramIndex = params.length + 1;
@@ -148,8 +149,6 @@ exports.getListings = async (req, res) => {
       error: {
         code: 'FETCH_ERROR',
         message: 'Failed to fetch listings',
-        details: error.message,
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
       },
     });
   }
