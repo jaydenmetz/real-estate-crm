@@ -93,26 +93,26 @@ export const listingsConfig = createEntityConfig({
       {
         id: 'total_active_listings',
         component: TotalListingsCard,
-        props: { status: 'active' },
-        visibleWhen: ['active']
+        props: { status: 'Active' },
+        visibleWhen: ['Active']
       },
       {
         id: 'total_active_this_month',
         component: TotalThisMonthCard,
-        props: { status: 'active', dateField: 'created_at' },
-        visibleWhen: ['active']
+        props: { status: 'Active', dateField: 'created_at' },
+        visibleWhen: ['Active']
       },
       {
         id: 'total_active_volume',
         component: TotalVolumeCard,
-        props: { status: 'active' },
-        visibleWhen: ['active']
+        props: { status: 'Active' },
+        visibleWhen: ['Active']
       },
       {
         id: 'total_active_commission',
         component: TotalCommissionCard,
-        props: { status: 'active' },
-        visibleWhen: ['active']
+        props: { status: 'Active' },
+        visibleWhen: ['Active']
       },
 
       // ========================================
@@ -121,26 +121,26 @@ export const listingsConfig = createEntityConfig({
       {
         id: 'total_closed_listings',
         component: TotalListingsCard,
-        props: { status: 'closed' },
-        visibleWhen: ['closed']
+        props: { status: 'Sold' },
+        visibleWhen: ['Sold']
       },
       {
         id: 'total_closed_this_month',
         component: TotalThisMonthCard,
-        props: { status: 'closed', dateField: 'closing_date' },
-        visibleWhen: ['closed']
+        props: { status: 'Sold', dateField: 'closing_date' },
+        visibleWhen: ['Sold']
       },
       {
         id: 'total_closed_volume',
         component: TotalVolumeCard,
-        props: { status: 'closed' },
-        visibleWhen: ['closed']
+        props: { status: 'Sold' },
+        visibleWhen: ['Sold']
       },
       {
         id: 'total_closed_commission',
         component: TotalCommissionCard,
-        props: { status: 'closed' },
-        visibleWhen: ['closed']
+        props: { status: 'Sold' },
+        visibleWhen: ['Sold']
       },
 
       // ========================================
@@ -149,26 +149,26 @@ export const listingsConfig = createEntityConfig({
       {
         id: 'total_expired_listings',
         component: TotalListingsCard,
-        props: { status: 'expired' },
-        visibleWhen: ['expired']
+        props: { status: 'Expired' },
+        visibleWhen: ['Expired']
       },
       {
         id: 'total_expired_this_month',
         component: TotalThisMonthCard,
-        props: { status: 'expired', dateField: 'expiration_date' },
-        visibleWhen: ['expired']
+        props: { status: 'Expired', dateField: 'expiration_date' },
+        visibleWhen: ['Expired']
       },
       {
         id: 'total_expired_volume',
         component: TotalVolumeCard,
-        props: { status: 'expired' },
-        visibleWhen: ['expired']
+        props: { status: 'Expired' },
+        visibleWhen: ['Expired']
       },
       {
         id: 'total_expired_commission',
         component: TotalCommissionCard,
-        props: { status: 'expired' },
-        visibleWhen: ['expired']
+        props: { status: 'Expired' },
+        visibleWhen: ['Expired']
       },
 
       // ========================================

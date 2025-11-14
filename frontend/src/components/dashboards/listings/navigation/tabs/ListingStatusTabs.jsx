@@ -9,17 +9,22 @@
 
 export const listingStatusTabs = [
   {
-    value: 'active',
+    value: 'Active',
     label: 'Active',
     preferredViewMode: 'card'
   },
   {
-    value: 'closed',
-    label: 'Closed',
+    value: 'Sold',
+    label: 'Sold',
     preferredViewMode: 'list'
   },
   {
-    value: 'expired',
+    value: 'Pending',
+    label: 'Pending',
+    preferredViewMode: 'list'
+  },
+  {
+    value: 'Expired',
     label: 'Expired',
     preferredViewMode: 'list'
   },
