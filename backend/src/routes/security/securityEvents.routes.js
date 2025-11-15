@@ -1,8 +1,8 @@
 const express = require('express');
 
 const router = express.Router();
-const SecurityEventService = require('../services/securityEvent.service');
-const { authenticate, requireRole } = require('../middleware/auth/auth.middleware');
+const SecurityEventService = require('../../services/securityEvent.service');
+const { authenticate, requireRole } = require('../../middleware/auth/auth.middleware');
 
 /**
  * GET /v1/security-events/health
@@ -18,7 +18,7 @@ router.get('/health', async (req, res) => {
 
     // Check database connectivity
     try {
-      const { pool } = require('../config/infrastructure/database');
+      const { pool } = require('../../config/infrastructure/database');
       const dbCheck = await pool.query('SELECT COUNT(*) FROM security_events');
       healthData.checks.database = {
         status: 'healthy',
@@ -51,7 +51,7 @@ router.get('/health', async (req, res) => {
 
     // Check event type distribution
     try {
-      const { pool } = require('../config/infrastructure/database');
+      const { pool } = require('../../config/infrastructure/database');
       const statsQuery = await pool.query(`
         SELECT event_type, COUNT(*) as count
         FROM security_events

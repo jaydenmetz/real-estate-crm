@@ -1,8 +1,8 @@
 const express = require('express');
 
 const router = express.Router();
-const { pool } = require('../config/infrastructure/database');
-const { authenticate } = require('../middleware/auth/auth.middleware');
+const { pool } = require('../../config/infrastructure/database');
+const { authenticate } = require('../../middleware/auth/auth.middleware');
 
 // Get user settings
 router.get('/', authenticate, async (req, res) => {

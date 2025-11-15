@@ -1,10 +1,10 @@
 const express = require('express');
 
 const router = express.Router();
-const uploadService = require('../services/upload.service');
-const Document = require('../modules/operations/documents/models/Document.model');
-const { authenticate } = require('../middleware/auth/auth.middleware');
-const logger = require('../utils/logger');
+const uploadService = require('../../services/upload.service');
+const Document = require('../../modules/operations/documents/models/Document.model');
+const { authenticate } = require('../../middleware/auth/auth.middleware');
+const logger = require('../../utils/logger');
 
 // All routes require authentication
 router.use(authenticate);

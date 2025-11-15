@@ -196,38 +196,37 @@ apiRouter.use('/auth', authLimiter, require('./modules/system/auth/routes').rout
 // Waitlist routes (public registration waitlist)
 apiRouter.use('/waitlist', require('./modules/system/waitlist/routes'));
 
+// ============================================
+// Platform Routes (Cross-cutting infrastructure)
+// ============================================
+
 // Public status endpoints (no auth required)
-apiRouter.use('/status', require('./routes/public-status.routes')); // Public: /status/public, /status/ping, /status/health
+apiRouter.use('/status', require('./routes/platform/public-status.routes'));
 
 // Admin-only health endpoints (requires system_admin role)
-apiRouter.use('/health', healthCheckLimiter, require('./routes/system-health.routes')); // Admin-only: Comprehensive system diagnostics
+apiRouter.use('/health', healthCheckLimiter, require('./routes/platform/system-health.routes'));
 
-// Super simple test endpoint for debugging (bypass all middleware)
-apiRouter.get('/test-endpoint', (req, res) => {
-  res.json({ success: true, message: 'Test endpoint works' });
-});
+// AI Natural Language Query routes
+apiRouter.use('/ai', require('./routes/platform/ai.routes'));
 
-// API key validation moved to environment variables
+// Analytics routes (cross-module)
+apiRouter.use('/analytics', require('./routes/platform/analytics.routes'));
 
-// Test endpoint removed for security
+// ============================================
+// Security Routes (Authentication & compliance)
+// ============================================
 
-// Test login endpoint removed for security
+// API key management routes
+apiRouter.use('/api-keys', require('./routes/security/apiKeys.routes'));
 
-// API key management routes (requires JWT authentication)
-apiRouter.use('/api-keys', require('./routes/apiKeys.routes'));
-
-// AI Natural Language Query routes (requires authentication + strict rate limiting)
-apiRouter.use('/ai', require('./routes/ai.routes'));
-
-// Security events routes (requires authentication, except health)
+// Security events routes
 const securityEventsRouter = express.Router();
-securityEventsRouter.use('/', require('./routes/securityEvents-health.routes')); // Health endpoint (public)
-securityEventsRouter.use('/', require('./routes/securityEvents.routes'));
-// All other endpoints (authenticated)
+securityEventsRouter.use('/', require('./routes/security/securityEvents-health.routes'));
+securityEventsRouter.use('/', require('./routes/security/securityEvents.routes'));
 apiRouter.use('/security-events', securityEventsRouter);
 
 // GDPR compliance routes
-apiRouter.use('/gdpr', require('./routes/gdpr.routes'));
+apiRouter.use('/gdpr', require('./routes/security/gdpr.routes'));
 
 // API Routes - Using professional .routes.js files with built-in auth
 // Each route file handles its own authentication and validation
@@ -254,8 +253,6 @@ apiRouter.use('/contact-roles', require('./modules/crm/contacts/routes/contact-r
 // System Modules - Platform-level features
 apiRouter.use('/teams', require('./modules/system/teams/routes'));
 
-// Non-categorized routes
-apiRouter.use('/analytics', require('./routes/analytics.routes'));
 
 // Workflow Modules - Task and project management
 apiRouter.use('/projects', require('./modules/workflow/projects/routes')); // Dev roadmap (admin-only)
@@ -273,10 +270,9 @@ apiRouter.use('/documents', require('./modules/operations/documents/routes'));
 // Admin routes (requires system_admin role)
 apiRouter.use('/admin', require('./modules/system/admin/routes'));
 
-// Debug and test routes (development only)
+// Debug routes (development only)
 if (process.env.NODE_ENV === 'development') {
-  apiRouter.use('/debug', authenticate, require('./routes/debug.routes'));
-  // Removed missing test routes
+  apiRouter.use('/debug', authenticate, require('./routes/platform/debug.routes'));
 }
 
 // Sentry test endpoint (available in all environments for testing)
@@ -311,19 +307,21 @@ apiRouter.use('/commissions', require('./modules/financial/commissions/routes'))
 apiRouter.use('/invoices', require('./modules/financial/invoices/routes'));
 apiRouter.use('/expenses', require('./modules/financial/expenses/routes'));
 
-// Upload routes
-apiRouter.use('/upload', require('./routes/upload.routes'));
-apiRouter.use('/uploads', require('./routes/upload.routes'));
+// ============================================
+// Legacy Routes (To be migrated to modules)
+// ============================================
 
-// Profile and Settings routes
-apiRouter.use('/profiles', require('./routes/profiles.routes'));
-apiRouter.use('/settings', require('./routes/settings.routes'));
+// Upload routes (legacy - will be deprecated for documents module)
+apiRouter.use('/upload', require('./routes/legacy/upload.routes'));
+apiRouter.use('/uploads', require('./routes/legacy/upload.routes'));
+
+// User routes (will be migrated to modules/system/)
+apiRouter.use('/profiles', require('./routes/legacy/profiles.routes'));
+apiRouter.use('/settings', require('./routes/legacy/settings.routes'));
+apiRouter.use('/onboarding', require('./routes/legacy/onboarding.routes'));
 
 // Stats routes (hierarchical dashboard statistics)
 apiRouter.use('/stats', require('./modules/system/stats/routes'));
-
-// Onboarding routes
-apiRouter.use('/onboarding', require('./routes/onboarding.routes'));
 
 // Mount API router
 app.use(`/${process.env.API_VERSION || 'v1'}`, apiRouter);

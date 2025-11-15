@@ -1,7 +1,7 @@
 const express = require('express');
 
 const router = express.Router();
-const { pool } = require('../config/infrastructure/database');
+const { pool } = require('../../config/infrastructure/database');
 
 // Health check endpoint
 router.get('/', async (req, res) => {

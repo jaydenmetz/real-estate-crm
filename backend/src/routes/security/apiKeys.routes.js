@@ -1,9 +1,9 @@
 const express = require('express');
 
 const router = express.Router();
-const ApiKeyService = require('../services/apiKey.service');
-const SecurityEventService = require('../services/securityEvent.service');
-const { authenticate } = require('../middleware/auth/auth.middleware');
+const ApiKeyService = require('../../services/apiKey.service');
+const SecurityEventService = require('../../services/securityEvent.service');
+const { authenticate } = require('../../middleware/auth/auth.middleware');
 
 // All API key routes require authentication
 router.use(authenticate);
