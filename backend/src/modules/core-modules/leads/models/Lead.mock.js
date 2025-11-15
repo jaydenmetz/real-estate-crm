@@ -1,5 +1,5 @@
 // Mock Lead model for development and testing
-const logger = require('../../../utils/logger');
+const logger = require('../../../../utils/logger');
 
 // Comprehensive mock leads data
 const mockLeads = [

@@ -5,7 +5,7 @@
  * This is for tracking CRM development progress only
  */
 
-const { pool } = require('../../../config/database');
+const { pool } = require('../../../../config/database');
 const { v4: uuidv4 } = require('uuid');
 
 /**

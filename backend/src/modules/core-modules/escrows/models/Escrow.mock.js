@@ -1,5 +1,5 @@
 // Mock Escrow model for development and testing
-const logger = require('../../../utils/logger');
+const logger = require('../../../../utils/logger');
 
 // In-memory storage for mock data
 const mockEscrows = [

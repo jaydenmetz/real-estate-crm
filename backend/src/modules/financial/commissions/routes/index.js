@@ -3,8 +3,8 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const commissionsController = require('../controllers/commissions.controller');
-const { authenticate } = require('../../../middleware/auth.middleware');
-const { validate } = require('../../../middleware/validation.middleware');
+const { authenticate } = require('../../../../middleware/auth.middleware');
+const { validate } = require('../../../../middleware/validation.middleware');
 
 // All routes require authentication
 router.use(authenticate);

@@ -1,5 +1,5 @@
 // Mock Commission model for development and testing
-const logger = require('../../../utils/logger');
+const logger = require('../../../../utils/logger');
 
 // Mock commission data
 const mockCommissions = [

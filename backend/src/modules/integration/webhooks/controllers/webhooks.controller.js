@@ -1,7 +1,7 @@
 const { v4: uuidv4 } = require('uuid');
 const crypto = require('crypto');
-const logger = require('../../../utils/logger');
-const { query } = require('../../../config/database');
+const logger = require('../../../../utils/logger');
+const { query } = require('../../../../config/database');
 
 exports.register = async (req, res) => {
   try {

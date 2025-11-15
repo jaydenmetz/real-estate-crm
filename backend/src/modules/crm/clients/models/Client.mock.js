@@ -1,5 +1,5 @@
 // Mock Client model for development and testing
-const logger = require('../../../utils/logger');
+const logger = require('../../../../utils/logger');
 const MockQueryBuilder = require('./MockQueryBuilder');
 
 // Comprehensive mock clients data

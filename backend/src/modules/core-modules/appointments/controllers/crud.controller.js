@@ -13,10 +13,10 @@
  * @module modules/appointments/controllers/crud
  */
 
-const { pool } = require('../../../config/database');
-const logger = require('../../../utils/logger');
+const { pool } = require('../../../../config/database');
+const logger = require('../../../../utils/logger');
 const websocketService = require('../../../services/websocket.service');
-const { buildOwnershipWhereClauseWithAlias, validateScope, getDefaultScope } = require('../../../utils/ownership.helper');
+const { buildOwnershipWhereClauseWithAlias, validateScope, getDefaultScope } = require('../../../../utils/ownership.helper');
 
 // GET /api/v1/appointments
 exports.getAppointments = async (req, res) => {

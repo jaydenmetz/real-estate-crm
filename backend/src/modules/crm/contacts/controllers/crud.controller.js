@@ -11,7 +11,7 @@
  * - Search contacts by role and name/email
  */
 
-const pool = require('../../../config/database');
+const pool = require('../../../../config/database');
 
 // GET /contacts - List all contacts
 exports.list = async (req, res) => {

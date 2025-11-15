@@ -3,15 +3,15 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const listingsController = require('../controllers');
-const { authenticate } = require('../../../middleware/apiKey.middleware');
-const { validate } = require('../../../middleware/validation.middleware');
-const { validateListingRules } = require('../../../middleware/businessRules.middleware');
+const { authenticate } = require('../../../../middleware/apiKey.middleware');
+const { validate } = require('../../../../middleware/validation.middleware');
+const { validateListingRules } = require('../../../../middleware/businessRules.middleware');
 const {
   canAccessScope,
   requireOwnership,
   requireModifyPermission,
   requireDeletePermission
-} = require('../../../middleware/authorization.middleware');
+} = require('../../../../middleware/authorization.middleware');
 
 // All routes require authentication
 router.use(authenticate);

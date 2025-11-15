@@ -1,5 +1,5 @@
 const { v4: uuidv4 } = require('uuid');
-const { query } = require('../../../config/database');
+const { query } = require('../../../../config/database');
 
 class Lead {
   static async create(data) {

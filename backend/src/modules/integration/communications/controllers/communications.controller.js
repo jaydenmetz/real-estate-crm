@@ -1,5 +1,5 @@
 // backend/src/controllers/communications.controller.js
-const logger = require('../../../utils/logger');
+const logger = require('../../../../utils/logger');
 // Mock data store
 let communications = [];
 

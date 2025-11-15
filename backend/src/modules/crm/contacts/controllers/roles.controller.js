@@ -12,7 +12,7 @@
  * and primary role designation.
  */
 
-const pool = require('../../../config/database');
+const pool = require('../../../../config/database');
 
 /**
  * GET /contacts/:id/roles

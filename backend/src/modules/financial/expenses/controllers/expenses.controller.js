@@ -1,6 +1,6 @@
 const { validationResult } = require('express-validator');
 const Expense = require('../models/Expense.mock');
-const logger = require('../../../utils/logger');
+const logger = require('../../../../utils/logger');
 
 // GET /expenses
 exports.getExpenses = async (req, res) => {
