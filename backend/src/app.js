@@ -267,8 +267,8 @@ apiRouter.use('/tasks', require('./modules/workflow/tasks/routes'));
 apiRouter.use('/communications', require('./modules/integration/communications/routes'));
 apiRouter.use('/webhooks', require('./modules/integration/webhooks/routes')); // Webhooks bypass auth for external services
 
-// Non-categorized routes
-apiRouter.use('/documents', require('./routes/documents.routes'));
+// Operations Modules - Document management
+apiRouter.use('/documents', require('./modules/operations/documents/routes'));
 
 // Admin routes (requires system_admin role)
 apiRouter.use('/admin', require('./modules/system/admin/routes'));
