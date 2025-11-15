@@ -1,5 +1,5 @@
 const express = require('express');
-const { authenticate } = require('../middleware/auth.middleware');
+const { authenticate } = require('../middleware/auth/auth.middleware');
 
 const router = express.Router();
 const skyslopeService = require('../services/skyslope');

@@ -8,7 +8,7 @@
 const express = require('express');
 const router = express.Router();
 const teamsController = require('../controllers/teams.controller');
-const { authenticate } = require('../../../../middleware/auth.middleware');
+const { authenticate } = require('../../../../middleware/auth/auth.middleware');
 
 /**
  * GET /v1/teams

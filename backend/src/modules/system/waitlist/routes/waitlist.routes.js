@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const WaitlistController = require('../controllers/waitlist.controller');
-const { authenticate, requireRole } = require('../../../../middleware/auth.middleware');
+const { authenticate, requireRole } = require('../../../../middleware/auth/auth.middleware');
 
 /**
  * Waitlist Routes

@@ -1,5 +1,5 @@
 const winston = require('winston');
-const { pool } = require('../config/infrastructure/database');
+const { pool } = require('../../config/infrastructure/database');
 
 /**
  * Create audit logger with Winston

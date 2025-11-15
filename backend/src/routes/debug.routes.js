@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { pool } = require('../config/infrastructure/database');
-const { authenticate, requireRole } = require('../middleware/auth.middleware');
+const { authenticate, requireRole } = require('../middleware/auth/auth.middleware');
 
 // Security check - disable debug routes in production
 if (process.env.NODE_ENV === 'production') {

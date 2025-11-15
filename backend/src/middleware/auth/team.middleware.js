@@ -1,5 +1,5 @@
-const { query } = require('../config/infrastructure/database');
-const logger = require('../utils/logger');
+const { query } = require('../../config/infrastructure/database');
+const logger = require('../../utils/logger');
 
 /**
  * Team context middleware for multi-tenancy

@@ -6,7 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const { pool } = require('../config/infrastructure/database');
-const { authenticate, requireRole } = require('../middleware/auth.middleware');
+const { authenticate, requireRole } = require('../middleware/auth/auth.middleware');
 const SecurityEventService = require('../services/securityEvent.service');
 
 // All routes require authentication

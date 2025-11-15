@@ -2,7 +2,7 @@ const express = require('express');
 
 const router = express.Router();
 const { pool, query } = require('../../../../../config/infrastructure/database');
-const { authenticate } = require('../../../../../middleware/apiKey.middleware');
+const { authenticate } = require('../../../../../middleware/auth/apiKey.middleware');
 
 // Helper function to format response
 const formatHealthResponse = (success, data, error = null) => ({

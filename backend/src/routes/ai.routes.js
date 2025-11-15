@@ -2,7 +2,7 @@ const express = require('express');
 
 const router = express.Router();
 const rateLimit = require('express-rate-limit');
-const { authenticate } = require('../middleware/auth.middleware');
+const { authenticate } = require('../middleware/auth/auth.middleware');
 const AiService = require('../services/ai.service');
 
 // Stricter rate limiting for AI endpoints (costs money)

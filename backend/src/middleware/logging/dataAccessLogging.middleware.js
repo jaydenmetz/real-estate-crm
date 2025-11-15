@@ -9,7 +9,7 @@
  * NOTE: Uses fire-and-forget pattern - never blocks requests
  */
 
-const SecurityEventService = require('../services/securityEvent.service');
+const SecurityEventService = require('../../services/securityEvent.service');
 
 /**
  * Resource type mapping for friendly names

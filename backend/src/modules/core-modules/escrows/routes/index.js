@@ -6,15 +6,15 @@ const { body, param, query } = require('express-validator');
 
 const router = express.Router();
 const escrowsController = require('../controllers');
-const { validate } = require('../../../../middleware/validation.middleware');
-const { validateEscrowRules } = require('../../../../middleware/businessRules.middleware');
-const { authenticate } = require('../../../../middleware/apiKey.middleware');
+const { validate } = require('../../../../middleware/security/validation.middleware');
+const { validateEscrowRules } = require('../../../../middleware/business/businessRules.middleware');
+const { authenticate } = require('../../../../middleware/auth/apiKey.middleware');
 const {
   canAccessScope,
   requireOwnership,
   requireModifyPermission,
   requireDeletePermission
-} = require('../../../../middleware/authorization.middleware');
+} = require('../../../../middleware/auth/authorization.middleware');
 
 // All routes require authentication
 router.use(authenticate);

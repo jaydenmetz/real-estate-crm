@@ -5,7 +5,7 @@
 const express = require('express');
 const router = express.Router();
 const checklistTemplatesController = require('../controllers/checklistTemplates.controller');
-const { authenticate, requireRole } = require('../../../../middleware/auth.middleware');
+const { authenticate, requireRole } = require('../../../../middleware/auth/auth.middleware');
 
 // SECURITY: All routes require authentication
 router.use(authenticate);

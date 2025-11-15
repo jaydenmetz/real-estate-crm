@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { pool } = require('../config/infrastructure/database');
+const { pool } = require('../../config/infrastructure/database');
 
 // JWT Secret Configuration
 // MUST be set in environment - no fallback for security

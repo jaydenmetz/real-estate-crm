@@ -2,7 +2,7 @@ const express = require('express');
 
 const router = express.Router();
 const SecurityEventService = require('../services/securityEvent.service');
-const { authenticate, requireRole } = require('../middleware/auth.middleware');
+const { authenticate, requireRole } = require('../middleware/auth/auth.middleware');
 
 /**
  * GET /v1/security-events/health

@@ -3,14 +3,14 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const clientsController = require('../controllers');
-const { authenticate } = require('../../../../middleware/apiKey.middleware');
-const { validate } = require('../../../../middleware/validation.middleware');
+const { authenticate } = require('../../../../middleware/auth/apiKey.middleware');
+const { validate } = require('../../../../middleware/security/validation.middleware');
 const {
   canAccessScope,
   requireOwnership,
   requireModifyPermission,
   requireDeletePermission
-} = require('../../../../middleware/authorization.middleware');
+} = require('../../../../middleware/auth/authorization.middleware');
 
 // All routes require authentication
 router.use(authenticate);

@@ -1,5 +1,5 @@
 // backend/src/middleware/businessRules.middleware.js
-const logger = require('../utils/logger');
+const logger = require('../../utils/logger');
 
 /**
  * Validates business rules for escrow operations

@@ -2,7 +2,7 @@ const express = require('express');
 
 const router = express.Router();
 const { pool } = require('../../../../../config/infrastructure/database');
-const { authenticate } = require('../../../../../middleware/apiKey.middleware');
+const { authenticate } = require('../../../../../middleware/auth/apiKey.middleware');
 
 /**
  * Health check endpoint that tests all escrow API operations

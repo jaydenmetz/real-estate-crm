@@ -4,7 +4,7 @@ const router = express.Router();
 const os = require('os');
 const pool = require('../config/infrastructure/database');
 const { getRedisClient } = require('../config/infrastructure/redis');
-const { authenticate, requireRole } = require('../middleware/auth.middleware');
+const { authenticate, requireRole } = require('../middleware/auth/auth.middleware');
 const fs = require('fs').promises;
 const path = require('path');
 

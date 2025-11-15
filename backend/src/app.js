@@ -9,13 +9,13 @@ const Sentry = require('@sentry/node');
 const swaggerUi = require('swagger-ui-express');
 const {
   apiLimiter, authLimiter, strictLimiter, healthCheckLimiter, helmet: helmetConfig,
-} = require('./middleware/security.middleware');
-const { escrowValidationRules, validate, sanitizeRequestBody } = require('./middleware/validation.middleware');
+} = require('./middleware/security/security.middleware');
+const { escrowValidationRules, validate, sanitizeRequestBody } = require('./middleware/security/validation.middleware');
 const logger = require('./utils/logger');
 const websocketService = require('./services/websocket.service');
 const { initializeDatabase } = require('./config/infrastructure/database');
 const { initializeRedis } = require('./config/infrastructure/redis');
-const { errorLogging, requestLogging } = require('./middleware/errorLogging.middleware');
+const { errorLogging, requestLogging } = require('./middleware/logging/errorLogging.middleware');
 
 (async () => {
   try {
@@ -185,7 +185,7 @@ app.use('/v1/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 }));
 
 // Import authentication middleware
-const { authenticate } = require('./middleware/apiKey.middleware');
+const { authenticate } = require('./middleware/auth/apiKey.middleware');
 
 const apiRouter = express.Router();
 apiRouter.use(apiLimiter); // API rate limiting
