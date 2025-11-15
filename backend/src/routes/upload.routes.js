@@ -2,7 +2,7 @@ const express = require('express');
 
 const router = express.Router();
 const uploadService = require('../services/upload.service');
-const Document = require('../models/Document');
+const Document = require('../modules/operations/documents/models/Document.model');
 const { authenticate } = require('../middleware/auth/auth.middleware');
 const logger = require('../utils/logger');
 
