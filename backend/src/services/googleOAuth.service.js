@@ -1,5 +1,5 @@
 const { OAuth2Client } = require('google-auth-library');
-const { pool } = require('../config/database');
+const { pool } = require('../config/infrastructure/database');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const OnboardingService = require('./onboarding.service');

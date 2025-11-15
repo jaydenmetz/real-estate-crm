@@ -12,7 +12,7 @@
  *   0 2 * * * cd /app && node src/jobs/securityEventRetention.job.js >> /var/log/retention.log 2>&1
  */
 
-const { pool } = require('../config/database');
+const { pool } = require('../config/infrastructure/database');
 
 // Retention period in days (default 90, configurable via env)
 const RETENTION_DAYS = parseInt(process.env.SECURITY_EVENT_RETENTION_DAYS) || 90;

@@ -16,7 +16,7 @@ jest.mock('../../../config/database', () => ({
   },
 }));
 
-const { pool } = require('../../../config/database');
+const { pool } = require('../../../config/infrastructure/database');
 
 describe('ApiKeyService', () => {
   beforeEach(() => {

@@ -1,6 +1,6 @@
 const request = require('supertest');
 const app = require('../../app');
-const { pool } = require('../../config/database');
+const { pool } = require('../../config/infrastructure/database');
 
 describe('Authentication API Integration Tests', () => {
   let testUserId;

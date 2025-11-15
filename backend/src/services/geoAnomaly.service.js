@@ -8,7 +8,7 @@
  * Free tier limits: 45 requests/minute
  */
 
-const { pool } = require('../config/database');
+const { pool } = require('../config/infrastructure/database');
 const SecurityEventService = require('./securityEvent.service');
 
 // Simple in-memory cache to reduce API calls

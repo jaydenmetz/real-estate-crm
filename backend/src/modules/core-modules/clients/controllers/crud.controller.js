@@ -17,7 +17,7 @@
  * - Transaction safety for multi-table operations
  */
 
-const { pool } = require('../../../../config/database');
+const { pool } = require('../../../../config/infrastructure/database');
 const logger = require('../../../../utils/logger');
 const websocketService = require('../../../../services/websocket.service');
 const NotificationService = require('../../../../services/notification.service');

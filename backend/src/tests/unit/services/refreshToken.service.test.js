@@ -23,7 +23,7 @@ jest.mock('../../../utils/logger', () => ({
   warn: jest.fn(),
 }));
 
-const { pool } = require('../../../config/database');
+const { pool } = require('../../../config/infrastructure/database');
 const logger = require('../../../utils/logger');
 
 describe('RefreshTokenService', () => {

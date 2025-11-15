@@ -8,7 +8,7 @@
  * - addEscrowNote() - Add a new note
  */
 
-const { pool } = require('../../../../../config/database');
+const { pool } = require('../../../../../config/infrastructure/database');
 const { buildRestructuredEscrowResponse } = require('../../utils/escrows.helper');
 
 /**

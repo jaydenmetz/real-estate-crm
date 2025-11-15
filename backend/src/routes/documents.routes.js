@@ -3,7 +3,7 @@ const express = require('express');
 const { authenticate } = require('../middleware/auth.middleware');
 
 const router = express.Router();
-const { query } = require('../config/database');
+const { query } = require('../config/infrastructure/database');
 
 // SECURITY: All document routes require authentication
 router.use(authenticate);

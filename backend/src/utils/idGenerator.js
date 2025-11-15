@@ -1,4 +1,4 @@
-const { query } = require('../config/database');
+const { query } = require('../config/infrastructure/database');
 
 /**
  * Generate enterprise-grade IDs for different entities

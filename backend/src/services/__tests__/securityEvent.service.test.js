@@ -5,7 +5,7 @@
  * Target: 80%+ coverage
  */
 
-const { pool } = require('../../config/database');
+const { pool } = require('../../config/infrastructure/database');
 const SecurityEventService = require('../securityEvent.service');
 
 // Mock the database pool

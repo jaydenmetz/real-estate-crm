@@ -1,4 +1,4 @@
-const { pool } = require('../config/database');
+const { pool } = require('../config/infrastructure/database');
 const appointmentsController = require('./appointments.controller');
 
 // Mock database and logger

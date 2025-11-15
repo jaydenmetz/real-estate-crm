@@ -2,7 +2,7 @@
 const request = require('supertest');
 const jwt = require('jsonwebtoken');
 const app = require('../app');
-const pool = require('../config/database');
+const pool = require('../config/infrastructure/database');
 
 describe('Refresh Token Tests', () => {
   let testUserId;

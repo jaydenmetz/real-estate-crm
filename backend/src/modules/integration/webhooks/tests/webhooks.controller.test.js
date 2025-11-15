@@ -1,4 +1,4 @@
-const { pool } = require('../config/database');
+const { pool } = require('../config/infrastructure/database');
 const webhooksController = require('./webhooks.controller');
 const crypto = require('crypto');
 

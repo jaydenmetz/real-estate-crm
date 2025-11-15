@@ -5,7 +5,7 @@
 
 const request = require('supertest');
 const app = require('../app');
-const { pool } = require('../config/database');
+const { pool } = require('../config/infrastructure/database');
 
 const BASE_URL = process.env.API_URL || 'http://localhost:5050';
 const TEST_JWT = process.env.TEST_JWT || 'your-test-jwt-here';

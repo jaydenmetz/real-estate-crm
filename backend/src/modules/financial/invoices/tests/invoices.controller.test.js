@@ -1,4 +1,4 @@
-const { pool } = require('../config/database');
+const { pool } = require('../config/infrastructure/database');
 const invoicesController = require('./invoices.controller');
 
 jest.mock('../config/database');

@@ -1,6 +1,6 @@
 const { v4: uuidv4 } = require('uuid');
-const { query } = require('../../../../config/database');
-const twilioClient = require('../../../../config/twilio');
+const { query } = require('../../../../config/infrastructure/database');
+const twilioClient = require('../../../../config/integrations/twilio');
 
 class Appointment {
   static async create(data) {

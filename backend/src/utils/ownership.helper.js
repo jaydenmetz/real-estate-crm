@@ -13,7 +13,7 @@
  * const result = await pool.query(query, [...params, ...otherParams]);
  */
 
-const pool = require('../config/database');
+const pool = require('../config/infrastructure/database');
 
 /**
  * Build WHERE clause for ownership filtering

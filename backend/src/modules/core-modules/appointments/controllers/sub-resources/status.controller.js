@@ -8,7 +8,7 @@
  * @module modules/appointments/controllers/status
  */
 
-const { pool } = require('../../../../../config/database');
+const { pool } = require('../../../../../config/infrastructure/database');
 const logger = require('../../../../../utils/logger');
 
 // POST /api/v1/appointments/:id/cancel

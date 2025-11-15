@@ -30,7 +30,7 @@ const {
   CallToolRequestSchema,
   ListToolsRequestSchema,
 } = require('@modelcontextprotocol/sdk/types.js');
-const { pool } = require('./config/database');
+const { pool } = require('./config/infrastructure/database');
 
 // Initialize MCP server
 const server = new Server(

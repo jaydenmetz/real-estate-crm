@@ -1,4 +1,4 @@
-const { query, transaction } = require('../../../../../config/database');
+const { query, transaction } = require('../../../../../config/infrastructure/database');
 const logger = require('../../../../../utils/logger');
 
 // Record price change

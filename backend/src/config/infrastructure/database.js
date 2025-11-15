@@ -1,6 +1,6 @@
 const { Pool } = require('pg');
-const logger = require('../utils/logger');
-const secureConfig = require('./secure.config');
+const logger = require('../../utils/logger');
+const secureConfig = require('./security');
 
 // Use secure configuration for database connection
 const pool = new Pool({

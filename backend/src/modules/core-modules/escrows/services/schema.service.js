@@ -8,7 +8,7 @@
  * @module escrows/services/schema
  */
 
-const { pool } = require('../../../../config/database');
+const { pool } = require('../../../../config/infrastructure/database');
 
 // Cache for schema detection (persists across requests for performance)
 let schemaInfo = null;

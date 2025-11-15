@@ -17,8 +17,8 @@
  * exports.getListings = listingsController.getAll;
  */
 
-const { pool } = require('../../config/database');
-const { query, transaction } = require('../../config/database');
+const { pool } = require('../../config/infrastructure/database');
+const { query, transaction } = require('../../config/infrastructure/database');
 const logger = require('../logger');
 const { normalizeUser, getUserContext } = require('../user.normalizer');
 const { buildOwnershipWhereClauseWithAlias, validateScope, getDefaultScope } = require('../ownership.helper');

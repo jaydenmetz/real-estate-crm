@@ -1,6 +1,6 @@
 // backend/src/modules/escrows/models/Escrow.model.js
 
-const { query } = require('../../../../config/database');
+const { query } = require('../../../../config/infrastructure/database');
 const redis = require('../../../../config/redis');
 const logger = require('../../../../utils/logger');
 const { generateEscrowIds } = require('../../../../utils/idGenerator');

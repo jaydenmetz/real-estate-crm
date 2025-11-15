@@ -5,7 +5,7 @@
 
 const GeoAnomalyService = require('../../../services/geoAnomaly.service');
 const SecurityEventService = require('../../../services/securityEvent.service');
-const { pool } = require('../../../config/database');
+const { pool } = require('../../../config/infrastructure/database');
 
 // Mock dependencies
 jest.mock('../../../config/database');

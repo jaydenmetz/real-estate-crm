@@ -5,7 +5,7 @@
  * Templates define best-practice workflows that turn into tasks when applied.
  */
 
-const { pool } = require('../../../../config/database');
+const { pool } = require('../../../../config/infrastructure/database');
 const { v4: uuidv4 } = require('uuid');
 
 /**

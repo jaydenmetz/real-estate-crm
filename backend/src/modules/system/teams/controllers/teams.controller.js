@@ -5,7 +5,7 @@
  * PHASE 3: Multi-Tenant Admin System - Team Management
  */
 
-const { pool } = require('../../../../config/database');
+const { pool } = require('../../../../config/infrastructure/database');
 
 /**
  * GET /v1/teams

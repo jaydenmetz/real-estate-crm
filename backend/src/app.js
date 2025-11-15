@@ -13,8 +13,8 @@ const {
 const { escrowValidationRules, validate, sanitizeRequestBody } = require('./middleware/validation.middleware');
 const logger = require('./utils/logger');
 const websocketService = require('./services/websocket.service');
-const { initializeDatabase } = require('./config/database');
-const { initializeRedis } = require('./config/redis');
+const { initializeDatabase } = require('./config/infrastructure/database');
+const { initializeRedis } = require('./config/infrastructure/redis');
 const { errorLogging, requestLogging } = require('./middleware/errorLogging.middleware');
 
 (async () => {

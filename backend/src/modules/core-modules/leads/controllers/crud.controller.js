@@ -13,7 +13,7 @@
  * @module controllers/leads/crud
  */
 
-const { pool } = require('../../../../config/database');
+const { pool } = require('../../../../config/infrastructure/database');
 const logger = require('../../../../utils/logger');
 const websocketService = require('../../../../services/websocket.service');
 const { buildOwnershipWhereClause, validateScope, getDefaultScope } = require('../../../../utils/ownership.helper');

@@ -12,7 +12,7 @@
  * - batchDeleteEscrows (DELETE /escrows/batch)
  */
 
-const { pool } = require('../../../../config/database');
+const { pool } = require('../../../../config/infrastructure/database');
 const { buildRestructuredEscrowResponse } = require('../utils/escrows.helper');
 const { buildOwnershipWhereClauseWithAlias, validateScope, getDefaultScope } = require('../../../../utils/ownership.helper');
 const websocketService = require('../../../../services/websocket.service');

@@ -1,4 +1,4 @@
-const { pool } = require('../config/database');
+const { pool } = require('../config/infrastructure/database');
 const clientsController = require('./clients.controller');
 
 // Mock database

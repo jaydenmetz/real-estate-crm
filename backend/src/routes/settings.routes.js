@@ -1,7 +1,7 @@
 const express = require('express');
 
 const router = express.Router();
-const { pool } = require('../config/database');
+const { pool } = require('../config/infrastructure/database');
 const { authenticate } = require('../middleware/auth.middleware');
 
 // Get user settings

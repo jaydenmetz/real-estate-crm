@@ -1,7 +1,7 @@
 const express = require('express');
 
 const router = express.Router();
-const { pool } = require('../config/database');
+const { pool } = require('../config/infrastructure/database');
 const { authenticate, optionalAuth, requireRole } = require('../middleware/auth.middleware');
 const { authenticateApiKey } = require('../middleware/apiKey.middleware');
 const { authenticateAny } = require('../middleware/combinedAuth.middleware');

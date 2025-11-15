@@ -5,7 +5,7 @@
  * When a checklist is created from a template, it automatically generates tasks.
  */
 
-const { pool } = require('../../../../config/database');
+const { pool } = require('../../../../config/infrastructure/database');
 const { v4: uuidv4 } = require('uuid');
 
 /**

@@ -1,5 +1,5 @@
 const { v4: uuidv4 } = require('uuid');
-const { query } = require('../config/database');
+const { query } = require('../config/infrastructure/database');
 
 class Document {
   static async create(data) {

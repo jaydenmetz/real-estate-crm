@@ -135,7 +135,7 @@ class WebSocketService {
 
   async getBrokerIdForUser(userId, teamId) {
     try {
-      const { pool } = require('../config/database');
+      const { pool } = require('../config/infrastructure/database');
 
       // Try to get broker_id from broker_users table
       const brokerUserResult = await pool.query(

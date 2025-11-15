@@ -11,7 +11,7 @@
  * - Trend analysis (month-over-month comparison)
  */
 
-const { pool } = require('../config/database');
+const { pool } = require('../config/infrastructure/database');
 
 class KPIService {
   /**

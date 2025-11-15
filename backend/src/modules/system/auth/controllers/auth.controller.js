@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { pool } = require('../../../../config/database');
+const { pool } = require('../../../../config/infrastructure/database');
 const RefreshTokenService = require('../../../../services/refreshToken.service');
 const SecurityEventService = require('../../../../services/securityEvent.service');
 const EmailService = require('../../../../services/email.service');

@@ -1,5 +1,5 @@
 const OpenAI = require('openai');
-const { pool } = require('../config/database');
+const { pool } = require('../config/infrastructure/database');
 
 // Initialize OpenAI client
 const openai = process.env.OPENAI_API_KEY

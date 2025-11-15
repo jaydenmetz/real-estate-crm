@@ -6,7 +6,7 @@
 
 const request = require('supertest');
 const app = require('../../app');
-const { pool } = require('../../config/database');
+const { pool } = require('../../config/infrastructure/database');
 
 describe('Contact Search Integration Tests', () => {
   let authToken;

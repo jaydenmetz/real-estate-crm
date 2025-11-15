@@ -4,7 +4,7 @@
  */
 
 const request = require('supertest');
-const { pool } = require('../config/database');
+const { pool } = require('../config/infrastructure/database');
 const app = require('../app');
 
 describe('Security Events Integration Tests', () => {
