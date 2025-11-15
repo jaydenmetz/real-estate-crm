@@ -10,7 +10,7 @@
  * - updateEscrowDocuments() - Update documents list
  */
 
-const { pool } = require('../../../../config/database');
+const { pool } = require('../../../../../config/database');
 const { buildRestructuredEscrowResponse } = require('../../utils/escrows.helper');
 
 /**

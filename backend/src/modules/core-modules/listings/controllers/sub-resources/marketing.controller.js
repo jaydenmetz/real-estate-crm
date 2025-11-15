@@ -1,5 +1,5 @@
-const { query, transaction } = require('../../../../config/database');
-const logger = require('../../../../utils/logger');
+const { query, transaction } = require('../../../../../config/database');
+const logger = require('../../../../../utils/logger');
 
 // Record price change
 exports.recordPriceChange = async (req, res) => {
