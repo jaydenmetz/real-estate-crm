@@ -3,7 +3,7 @@ const { authenticate } = require('../middleware/auth.middleware');
 
 const router = express.Router();
 const skyslopeService = require('../services/skyslope');
-const commissionService = require('../modules/escrows/services/commission');
+const commissionService = require('../modules/core-modules/escrows/services/commission');
 const { pool } = require('../config/database');
 
 // SECURITY: All SkySlope integration routes require authentication

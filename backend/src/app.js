@@ -237,24 +237,34 @@ apiRouter.use('/gdpr', require('./routes/gdpr.routes'));
 // ============================================
 // Core module routes - Consolidated structure (Project-06)
 // All modules use consistent pattern: controllers/, services/, routes/, tests/
-apiRouter.use('/escrows', require('./modules/escrows/routes'));
-apiRouter.use('/listings', require('./modules/listings/routes'));
-apiRouter.use('/clients', require('./modules/clients/routes'));
-apiRouter.use('/appointments', require('./modules/appointments/routes'));
-apiRouter.use('/leads', require('./modules/leads/routes'));
-apiRouter.use('/contacts', require('./modules/contacts/routes'));
-apiRouter.use('/contact-roles', require('./modules/contacts/routes/contact-roles.routes'));
+
+// Core Modules - Primary business entities
+apiRouter.use('/escrows', require('./modules/core-modules/escrows/routes'));
+apiRouter.use('/listings', require('./modules/core-modules/listings/routes'));
+apiRouter.use('/appointments', require('./modules/core-modules/appointments/routes'));
+apiRouter.use('/leads', require('./modules/core-modules/leads/routes'));
+
+// CRM Modules - Customer & contact management
+apiRouter.use('/clients', require('./modules/crm/clients/routes'));
+apiRouter.use('/contacts', require('./modules/crm/contacts/routes'));
+apiRouter.use('/contact-roles', require('./modules/crm/contacts/routes/contact-roles.routes'));
+
+// Non-categorized routes
 apiRouter.use('/analytics', require('./routes/analytics.routes'));
 apiRouter.use('/teams', require('./routes/teams.routes'));
 
-// Tasks and Checklists routes (new project management system)
-apiRouter.use('/projects', require('./modules/projects/routes')); // Dev roadmap (admin-only)
-apiRouter.use('/checklist-templates', require('./modules/tasks/routes/checklistTemplates.routes'));
-apiRouter.use('/checklists', require('./modules/tasks/routes/checklists.routes'));
-apiRouter.use('/tasks', require('./modules/tasks/routes'));
-apiRouter.use('/communications', require('./modules/communications/routes'));
+// Workflow Modules - Task and project management
+apiRouter.use('/projects', require('./modules/workflow/projects/routes')); // Dev roadmap (admin-only)
+apiRouter.use('/checklist-templates', require('./modules/workflow/tasks/routes/checklistTemplates.routes'));
+apiRouter.use('/checklists', require('./modules/workflow/tasks/routes/checklists.routes'));
+apiRouter.use('/tasks', require('./modules/workflow/tasks/routes'));
+
+// Integration Modules - External systems
+apiRouter.use('/communications', require('./modules/integration/communications/routes'));
+apiRouter.use('/webhooks', require('./modules/integration/webhooks/routes')); // Webhooks bypass auth for external services
+
+// Non-categorized routes
 apiRouter.use('/documents', require('./routes/documents.routes'));
-apiRouter.use('/webhooks', require('./modules/webhooks/routes')); // Webhooks bypass auth for external services
 
 // Admin routes (requires system_admin role)
 apiRouter.use('/admin', require('./routes/admin.routes'));
@@ -292,10 +302,10 @@ apiRouter.get('/debug-sentry', (req, res) => {
 });
 apiRouter.use('/link-preview', authenticate, require('./routes/linkPreview.routes'));
 
-// Financial routes
-apiRouter.use('/commissions', require('./modules/commissions/routes'));
-apiRouter.use('/invoices', require('./modules/invoices/routes'));
-apiRouter.use('/expenses', require('./modules/expenses/routes'));
+// Financial Modules - Money-related operations
+apiRouter.use('/commissions', require('./modules/financial/commissions/routes'));
+apiRouter.use('/invoices', require('./modules/financial/invoices/routes'));
+apiRouter.use('/expenses', require('./modules/financial/expenses/routes'));
 
 // Upload routes
 apiRouter.use('/upload', require('./routes/upload.routes'));
