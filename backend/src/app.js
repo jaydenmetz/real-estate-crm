@@ -238,14 +238,16 @@ apiRouter.use('/gdpr', require('./routes/gdpr.routes'));
 // Core module routes - Consolidated structure (Project-06)
 // All modules use consistent pattern: controllers/, services/, routes/, tests/
 
-// Core Modules - Primary business entities
+// Core Modules - The essential 4 primary business entities
 apiRouter.use('/escrows', require('./modules/core-modules/escrows/routes'));
-apiRouter.use('/listings', require('./modules/core-modules/listings/routes'));
+apiRouter.use('/clients', require('./modules/core-modules/clients/routes'));
 apiRouter.use('/appointments', require('./modules/core-modules/appointments/routes'));
 apiRouter.use('/leads', require('./modules/core-modules/leads/routes'));
 
-// CRM Modules - Customer & contact management
-apiRouter.use('/clients', require('./modules/crm/clients/routes'));
+// Operations Modules - Day-to-day business operations
+apiRouter.use('/listings', require('./modules/operations/listings/routes'));
+
+// CRM Modules - Customer relationship support
 apiRouter.use('/contacts', require('./modules/crm/contacts/routes'));
 apiRouter.use('/contact-roles', require('./modules/crm/contacts/routes/contact-roles.routes'));
 
