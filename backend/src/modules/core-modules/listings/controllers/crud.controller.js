@@ -2,8 +2,8 @@ const { validationResult } = require('express-validator');
 const { pool, query, transaction } = require('../../../../config/database');
 const logger = require('../../../../utils/logger');
 const { buildOwnershipWhereClauseWithAlias, validateScope, getDefaultScope } = require('../../../../utils/ownership.helper');
-const websocketService = require('../../../services/websocket.service');
-const NotificationService = require('../../../services/notification.service');
+const websocketService = require('../../../../services/websocket.service');
+const NotificationService = require('../../../../services/notification.service');
 
 // Helper to generate MLS number
 function generateMLSNumber() {

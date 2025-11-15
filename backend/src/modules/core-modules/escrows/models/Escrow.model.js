@@ -4,7 +4,7 @@ const { query } = require('../../../../config/database');
 const redis = require('../../../../config/redis');
 const logger = require('../../../../utils/logger');
 const { generateEscrowIds } = require('../../../../utils/idGenerator');
-const { emitWebhook } = require('../../../services/webhook.service');
+const { emitWebhook } = require('../../../../services/webhook.service');
 
 class Escrow {
   /**
