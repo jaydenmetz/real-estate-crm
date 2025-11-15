@@ -11,7 +11,7 @@
  * The API key/JWT role determines what stats are included in response
  */
 
-const { pool } = require('../config/database');
+const { pool } = require('../../../../config/database');
 
 /**
  * GET /v1/stats/home

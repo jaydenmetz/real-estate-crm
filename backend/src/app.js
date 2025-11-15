@@ -191,10 +191,10 @@ const apiRouter = express.Router();
 apiRouter.use(apiLimiter); // API rate limiting
 
 // Public routes with auth-specific rate limiting
-apiRouter.use('/auth', authLimiter, require('./routes/auth.routes').router);
+apiRouter.use('/auth', authLimiter, require('./modules/system/auth/routes').router);
 
 // Waitlist routes (public registration waitlist)
-apiRouter.use('/waitlist', require('./routes/waitlist.routes'));
+apiRouter.use('/waitlist', require('./modules/system/waitlist/routes'));
 
 // Public status endpoints (no auth required)
 apiRouter.use('/status', require('./routes/public-status.routes')); // Public: /status/public, /status/ping, /status/health
@@ -251,9 +251,11 @@ apiRouter.use('/listings', require('./modules/operations/listings/routes'));
 apiRouter.use('/contacts', require('./modules/crm/contacts/routes'));
 apiRouter.use('/contact-roles', require('./modules/crm/contacts/routes/contact-roles.routes'));
 
+// System Modules - Platform-level features
+apiRouter.use('/teams', require('./modules/system/teams/routes'));
+
 // Non-categorized routes
 apiRouter.use('/analytics', require('./routes/analytics.routes'));
-apiRouter.use('/teams', require('./routes/teams.routes'));
 
 // Workflow Modules - Task and project management
 apiRouter.use('/projects', require('./modules/workflow/projects/routes')); // Dev roadmap (admin-only)
@@ -269,7 +271,7 @@ apiRouter.use('/webhooks', require('./modules/integration/webhooks/routes')); //
 apiRouter.use('/documents', require('./routes/documents.routes'));
 
 // Admin routes (requires system_admin role)
-apiRouter.use('/admin', require('./routes/admin.routes'));
+apiRouter.use('/admin', require('./modules/system/admin/routes'));
 
 // Debug and test routes (development only)
 if (process.env.NODE_ENV === 'development') {
@@ -302,7 +304,7 @@ apiRouter.get('/debug-sentry', (req, res) => {
     });
   }
 });
-apiRouter.use('/link-preview', authenticate, require('./routes/linkPreview.routes'));
+apiRouter.use('/link-preview', authenticate, require('./modules/system/link-preview/routes'));
 
 // Financial Modules - Money-related operations
 apiRouter.use('/commissions', require('./modules/financial/commissions/routes'));
@@ -318,7 +320,7 @@ apiRouter.use('/profiles', require('./routes/profiles.routes'));
 apiRouter.use('/settings', require('./routes/settings.routes'));
 
 // Stats routes (hierarchical dashboard statistics)
-apiRouter.use('/stats', require('./routes/stats.routes'));
+apiRouter.use('/stats', require('./modules/system/stats/routes'));
 
 // Onboarding routes
 apiRouter.use('/onboarding', require('./routes/onboarding.routes'));

@@ -1,8 +1,8 @@
-const { pool } = require('../config/database');
-const AdminController = require('./admin.controller');
+const { pool } = require('../../../../config/database');
+const AdminController = require('../controllers/admin.controller');
 
 // Mock database
-jest.mock('../config/database');
+jest.mock('../../../../config/database');
 
 describe('AdminController', () => {
   let mockReq;

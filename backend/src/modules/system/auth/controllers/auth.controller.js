@@ -1,12 +1,12 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { pool } = require('../config/database');
-const RefreshTokenService = require('../services/refreshToken.service');
-const SecurityEventService = require('../services/securityEvent.service');
-const EmailService = require('../services/email.service');
-const GeoAnomalyService = require('../services/geoAnomaly.service');
-const OnboardingService = require('../services/onboarding.service');
-const GoogleOAuthService = require('../services/googleOAuth.service');
+const { pool } = require('../../../../config/database');
+const RefreshTokenService = require('../../../../services/refreshToken.service');
+const SecurityEventService = require('../../../../services/securityEvent.service');
+const EmailService = require('../../../../services/email.service');
+const GeoAnomalyService = require('../../../../services/geoAnomaly.service');
+const OnboardingService = require('../../../../services/onboarding.service');
+const GoogleOAuthService = require('../../../../services/googleOAuth.service');
 
 // JWT Secret Configuration (matches auth.middleware.js)
 // MUST be set in environment - no fallback for security

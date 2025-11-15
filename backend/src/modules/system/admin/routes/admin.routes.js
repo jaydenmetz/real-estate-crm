@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const AdminController = require('../controllers/admin.controller');
-const { authenticate, requireRole } = require('../middleware/auth.middleware');
+const { authenticate, requireRole } = require('../../../../middleware/auth.middleware');
 
 // SECURITY: All admin routes require authentication and system_admin role
 // Using standard requireRole middleware instead of custom requireAdmin
