@@ -6,7 +6,7 @@
  */
 
 const crypto = require('crypto');
-const ApiKeyService = require('../../../lib/auth/apiKey.service');
+const ApiKeyService = require('../auth/apiKey.service');
 
 // Mock dependencies
 jest.mock('../../../config/database', () => ({

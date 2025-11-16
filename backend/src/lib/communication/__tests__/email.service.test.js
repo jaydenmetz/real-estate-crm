@@ -3,7 +3,7 @@
  * Tests email template generation and sending functionality
  */
 
-const emailService = require('../../../lib/communication/email.service');
+const emailService = require('../communication/email.service');
 const logger = require('../../../utils/logger');
 
 // Mock logger

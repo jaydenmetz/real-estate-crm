@@ -3,11 +3,11 @@
  * Tests critical security alert functionality
  */
 
-const AlertingService = require('../../../lib/communication/alerting.service');
-const EmailService = require('../../../lib/communication/email.service');
+const AlertingService = require('../communication/alerting.service');
+const EmailService = require('../communication/email.service');
 
 // Mock EmailService
-jest.mock('../../../services/email.service');
+jest.mock('../email.service');
 
 describe('AlertingService Unit Tests', () => {
   const originalEnv = process.env;

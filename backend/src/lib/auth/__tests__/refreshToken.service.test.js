@@ -6,7 +6,7 @@
  */
 
 const crypto = require('crypto');
-const RefreshTokenService = require('../../../lib/auth/refreshToken.service');
+const RefreshTokenService = require('../auth/refreshToken.service');
 
 // Mock dependencies
 jest.mock('../../../config/database', () => ({

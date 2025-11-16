@@ -3,7 +3,7 @@
  * Tests real-time communication and Socket.IO integration
  */
 
-const WebSocketService = require('../../../lib/infrastructure/websocket.service');
+const WebSocketService = require('../infrastructure/websocket.service');
 const logger = require('../../../utils/logger');
 const jwt = require('jsonwebtoken');
 
