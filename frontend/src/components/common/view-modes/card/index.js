@@ -6,7 +6,7 @@
  *
  * NOTE: ClientCard has been moved to components/dashboards/clients/view-modes/card/
  * NOTE: AppointmentCard has been moved to components/dashboards/appointments/view-modes/card/
+ * NOTE: LeadCard has been moved to components/dashboards/leads/view-modes/card/
  */
 
-export { default as LeadCard } from './LeadCard';
 export { default as ListingCard } from './ListingCard';
