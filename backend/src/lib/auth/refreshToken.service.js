@@ -1,7 +1,7 @@
 const crypto = require('crypto');
-const { pool } = require('../config/infrastructure/database');
-const logger = require('../utils/logger');
-const IpGeolocationService = require('./ipGeolocation.service');
+const { pool } = require('../../config/infrastructure/database');
+const logger = require('../../utils/logger');
+const IpGeolocationService = require('../security/ipGeolocation.service');
 
 /**
  * Refresh Token Service

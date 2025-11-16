@@ -15,8 +15,8 @@
 const { pool } = require('../../../../config/infrastructure/database');
 const { buildRestructuredEscrowResponse } = require('../utils/escrows.helper');
 const { buildOwnershipWhereClauseWithAlias, validateScope, getDefaultScope } = require('../../../../utils/ownership.helper');
-const websocketService = require('../../../../services/websocket.service');
-const NotificationService = require('../../../../services/notification.service');
+const websocketService = require('../../../../lib/infrastructure/websocket.service');
+const NotificationService = require('../../../../lib/communication/notification.service');
 const { detectSchema } = require('../services/schema.service');
 const { buildCommissionField } = require('../services/commission.service');
 

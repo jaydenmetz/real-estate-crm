@@ -1,8 +1,8 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { pool } = require('../../../../config/infrastructure/database');
-const RefreshTokenService = require('../../../../services/refreshToken.service');
-const SecurityEventService = require('../../../../services/securityEvent.service');
+const RefreshTokenService = require('../../../../lib/auth/refreshToken.service');
+const SecurityEventService = require('../../../../lib/security/securityEvent.service');
 const AuthController = require('../controllers/auth.controller');
 
 // Mock dependencies

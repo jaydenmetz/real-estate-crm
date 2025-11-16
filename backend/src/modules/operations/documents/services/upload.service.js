@@ -3,7 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
 const crypto = require('crypto');
-const logger = require('../utils/logger');
+const logger = require('../../../../utils/logger');
 
 class UploadService {
   constructor() {

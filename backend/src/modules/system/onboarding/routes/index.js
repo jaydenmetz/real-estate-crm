@@ -1,5 +1,5 @@
 const express = require('express');
-const OnboardingService = require('../../../../services/onboarding.service');
+const OnboardingService = require('../../onboarding/services/onboarding.service');
 const { authenticateAny } = require('../../../../middleware/auth/combinedAuth.middleware');
 
 const router = express.Router();

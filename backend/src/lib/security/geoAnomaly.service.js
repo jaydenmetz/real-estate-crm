@@ -8,8 +8,8 @@
  * Free tier limits: 45 requests/minute
  */
 
-const { pool } = require('../config/infrastructure/database');
-const SecurityEventService = require('./securityEvent.service');
+const { pool } = require('../../config/infrastructure/database');
+const SecurityEventService = require('../security/securityEvent.service');
 
 // Simple in-memory cache to reduce API calls
 // Cache TTL: 24 hours (geolocation rarely changes)

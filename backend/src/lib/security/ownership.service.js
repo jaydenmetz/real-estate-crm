@@ -18,7 +18,7 @@
  * - agent: Sees own data + team/broker shared data
  */
 
-const pool = require('../config/infrastructure/database');
+const pool = require('../../config/infrastructure/database');
 
 class OwnershipService {
   /**

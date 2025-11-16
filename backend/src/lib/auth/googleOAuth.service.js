@@ -1,8 +1,8 @@
 const { OAuth2Client } = require('google-auth-library');
-const { pool } = require('../config/infrastructure/database');
+const { pool } = require('../../config/infrastructure/database');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const OnboardingService = require('./onboarding.service');
+const OnboardingService = require('../../modules/system/onboarding/services/onboarding.service');
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 

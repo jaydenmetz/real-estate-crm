@@ -15,7 +15,7 @@
 
 const { pool } = require('../../../../config/infrastructure/database');
 const logger = require('../../../../utils/logger');
-const websocketService = require('../../../../services/websocket.service');
+const websocketService = require('../../../../lib/infrastructure/websocket.service');
 const { buildOwnershipWhereClause, validateScope, getDefaultScope } = require('../../../../utils/ownership.helper');
 
 // GET /api/v1/leads

@@ -1,5 +1,5 @@
-const ApiKeyService = require('../../services/apiKey.service');
-const SecurityEventService = require('../../services/securityEvent.service');
+const ApiKeyService = require('../../lib/auth/apiKey.service');
+const SecurityEventService = require('../../lib/security/securityEvent.service');
 
 /**
  * Authenticate requests using API Key

@@ -3,8 +3,8 @@
  * Tests critical security alert functionality
  */
 
-const AlertingService = require('../../../services/alerting.service');
-const EmailService = require('../../../services/email.service');
+const AlertingService = require('../../../lib/communication/alerting.service');
+const EmailService = require('../../../lib/communication/email.service');
 
 // Mock EmailService
 jest.mock('../../../services/email.service');

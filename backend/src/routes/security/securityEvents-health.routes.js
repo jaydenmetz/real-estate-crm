@@ -2,7 +2,7 @@ const express = require('express');
 
 const router = express.Router();
 const { pool } = require('../../config/infrastructure/database');
-const SecurityEventService = require('../../services/securityEvent.service');
+const SecurityEventService = require('../../lib/security/securityEvent.service');
 
 /**
  * Security Events Health Check Endpoint

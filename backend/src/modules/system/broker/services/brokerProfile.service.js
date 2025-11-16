@@ -1,5 +1,5 @@
-const { pool } = require('../config/infrastructure/database');
-const logger = require('../utils/logger');
+const { pool } = require('../../../../config/infrastructure/database');
+const logger = require('../../../../utils/logger');
 
 /**
  * BrokerProfile Service

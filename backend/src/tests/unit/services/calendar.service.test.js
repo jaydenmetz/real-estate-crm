@@ -3,7 +3,7 @@
  * Tests calendar integration, meeting link generation, and ICS file creation
  */
 
-const calendarService = require('../../../services/calendar.service');
+const calendarService = require('../../../modules/workflow/calendar/services/calendar.service');
 const logger = require('../../../utils/logger');
 const crypto = require('crypto');
 

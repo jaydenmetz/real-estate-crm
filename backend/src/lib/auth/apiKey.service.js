@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const { pool } = require('../config/infrastructure/database');
+const { pool } = require('../../config/infrastructure/database');
 
 class ApiKeyService {
   /**

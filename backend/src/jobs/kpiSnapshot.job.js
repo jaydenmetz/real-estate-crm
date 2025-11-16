@@ -8,7 +8,7 @@
  * Calculates and stores KPIs for the previous month
  */
 
-const KPIService = require('../services/kpi.service');
+const KPIService = require('../modules/system/stats/services/kpi.service');
 
 /**
  * Store monthly KPI snapshots for all users

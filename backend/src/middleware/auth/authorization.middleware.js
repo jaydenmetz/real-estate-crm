@@ -8,7 +8,7 @@
  * - requirePermission: Check if user has specific permission (can_delete, can_edit_team_data, etc.)
  */
 
-const OwnershipService = require('../../services/ownership.service');
+const OwnershipService = require('../../lib/security/ownership.service');
 
 /**
  * Middleware: Check if user can access requested scope

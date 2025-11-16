@@ -3,7 +3,7 @@
  * Sends immediate alerts for critical security events
  */
 
-const EmailService = require('./email.service');
+const EmailService = require('../communication/email.service');
 
 class AlertingService {
   static async sendCriticalAlert(event, user = null) {

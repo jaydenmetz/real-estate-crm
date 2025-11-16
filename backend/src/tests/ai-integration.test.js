@@ -229,7 +229,7 @@ describe('AI Integration Tests', () => {
 
   describe('Security & Validation', () => {
     test('SQL injection attempts should be blocked', () => {
-      const AiService = require('../services/ai.service');
+      const AiService = require('../lib/ai');
 
       const maliciousSQL = 'SELECT * FROM escrows WHERE user_id = $1; DROP TABLE escrows; --';
 
@@ -239,7 +239,7 @@ describe('AI Integration Tests', () => {
     });
 
     test('Write operations in SQL should be blocked', () => {
-      const AiService = require('../services/ai.service');
+      const AiService = require('../lib/ai');
 
       const writeSQL = 'UPDATE escrows SET purchase_price = 999999 WHERE user_id = $1';
 
@@ -249,7 +249,7 @@ describe('AI Integration Tests', () => {
     });
 
     test('Queries without user_id filter should be rejected', () => {
-      const AiService = require('../services/ai.service');
+      const AiService = require('../lib/ai');
 
       const unsafeSQL = 'SELECT * FROM escrows LIMIT 100';
 

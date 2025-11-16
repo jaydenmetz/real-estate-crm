@@ -9,8 +9,8 @@ const { createServer } = require('http');
 const Sentry = require('@sentry/node');
 const app = require('./src/app');
 const logger = require('./src/utils/logger');
-const websocketService = require('./src/services/websocket.service');
-const cronService = require('./src/services/cron.service');
+const websocketService = require('./src/lib/infrastructure/websocket.service');
+const cronService = require('./src/lib/infrastructure/cron.service');
 const bcrypt = require('bcryptjs');
 
 const PORT = process.env.PORT || 5050;

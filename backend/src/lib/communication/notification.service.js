@@ -11,8 +11,8 @@
  * - Configurable minimum thresholds (e.g., only notify for escrows > $100k)
  */
 
-const { pool } = require('../config/infrastructure/database');
-const websocketService = require('./websocket.service');
+const { pool } = require('../../config/infrastructure/database');
+const websocketService = require('../infrastructure/websocket.service');
 
 class NotificationService {
   /**

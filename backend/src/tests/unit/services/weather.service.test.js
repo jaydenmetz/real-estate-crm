@@ -3,7 +3,7 @@
  * Tests weather forecasting for property showing planning
  */
 
-const weatherService = require('../../../services/weather.service');
+const weatherService = require('../../../lib/external/weather.service');
 const logger = require('../../../utils/logger');
 
 // Mock logger

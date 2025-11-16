@@ -2,7 +2,7 @@ const express = require('express');
 const { authenticate } = require('../../../../middleware/auth/auth.middleware');
 
 const router = express.Router();
-const skyslopeService = require('../../../../services/skyslope');
+const skyslopeService = require('../../../../lib/external/skyslope');
 const commissionService = require('../../../../modules/core-modules/escrows/services/commission');
 const { pool } = require('../../../../config/infrastructure/database');
 

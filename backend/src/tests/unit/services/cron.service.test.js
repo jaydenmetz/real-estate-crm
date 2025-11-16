@@ -3,7 +3,7 @@
  * Tests scheduled task service initialization
  */
 
-const cronService = require('../../../services/cron.service');
+const cronService = require('../../../lib/infrastructure/cron.service');
 const logger = require('../../../utils/logger');
 
 // Mock logger

@@ -5,8 +5,8 @@
  * Tests all methods in SecurityEventService with mocked dependencies
  */
 
-const SecurityEventService = require('../../../services/securityEvent.service');
-const { EventTypes, EventCategories, Severity } = require('../../../services/securityEvent.service');
+const SecurityEventService = require('../../../lib/security/securityEvent.service');
+const { EventTypes, EventCategories, Severity } = require('../../../lib/security/securityEvent.service');
 
 // Mock dependencies
 jest.mock('../../../config/database', () => ({

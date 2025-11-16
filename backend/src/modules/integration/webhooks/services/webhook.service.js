@@ -1,8 +1,8 @@
 const axios = require('axios');
 const crypto = require('crypto');
-const { query } = require('../config/infrastructure/database');
-const logger = require('../utils/logger');
-const redis = require('../config/infrastructure/redis');
+const { query } = require('../../../../config/infrastructure/database');
+const logger = require('../../../../utils/logger');
+const redis = require('../../../../config/infrastructure/redis');
 
 /**
  * Webhook service for emitting events to external endpoints

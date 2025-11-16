@@ -7,8 +7,8 @@
 
 const { validationResult } = require('express-validator');
 const logger = require('./logger');
-const websocketService = require('../services/websocket.service');
-const NotificationService = require('../services/notification.service');
+const websocketService = require('../lib/infrastructure/websocket.service');
+const NotificationService = require('../lib/communication/notification.service');
 const { buildOwnershipWhereClauseWithAlias, validateScope, getDefaultScope } = require('./ownership.helper');
 
 /**

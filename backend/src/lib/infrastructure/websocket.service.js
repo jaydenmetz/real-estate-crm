@@ -1,7 +1,7 @@
-// File: backend/src/services/websocket.service.js
+// File: backend/src/lib/infrastructure/websocket.service.js
 const socketIo = require('socket.io');
 const jwt = require('jsonwebtoken');
-const logger = require('../utils/logger');
+const logger = require('../../utils/logger');
 
 class WebSocketService {
   constructor() {
@@ -135,7 +135,7 @@ class WebSocketService {
 
   async getBrokerIdForUser(userId, teamId) {
     try {
-      const { pool } = require('../config/infrastructure/database');
+      const { pool } = require('../../config/infrastructure/database');
 
       // Try to get broker_id from broker_users table
       const brokerUserResult = await pool.query(

@@ -12,7 +12,7 @@ const {
 } = require('./middleware/security/security.middleware');
 const { escrowValidationRules, validate, sanitizeRequestBody } = require('./middleware/security/validation.middleware');
 const logger = require('./utils/logger');
-const websocketService = require('./services/websocket.service');
+const websocketService = require('./lib/infrastructure/websocket.service');
 const { initializeDatabase } = require('./config/infrastructure/database');
 const { initializeRedis } = require('./config/infrastructure/redis');
 const { errorLogging, requestLogging } = require('./middleware/logging/errorLogging.middleware');

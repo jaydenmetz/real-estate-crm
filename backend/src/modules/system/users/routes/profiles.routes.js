@@ -5,8 +5,8 @@ const { pool } = require('../../../../config/infrastructure/database');
 const { authenticate, optionalAuth, requireRole } = require('../../../../middleware/auth/auth.middleware');
 const { authenticateApiKey } = require('../../../../middleware/auth/apiKey.middleware');
 const { authenticateAny } = require('../../../../middleware/auth/combinedAuth.middleware');
-const UserProfileService = require('../../../../services/userProfile.service');
-const BrokerProfileService = require('../../../../services/brokerProfile.service');
+const UserProfileService = require('../services/userProfile.service');
+const BrokerProfileService = require('../../broker/services/brokerProfile.service');
 
 // Get public profile by username
 router.get('/public/:username', optionalAuth, async (req, res) => {
