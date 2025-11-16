@@ -1,4 +1,4 @@
-const { pool } = require('../../config/infrastructure/database');
+const { pool } = require('../../../../../config/infrastructure/database');
 
 class CommissionService {
   /**

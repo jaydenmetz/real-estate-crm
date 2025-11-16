@@ -308,20 +308,20 @@ apiRouter.use('/invoices', require('./modules/financial/invoices/routes'));
 apiRouter.use('/expenses', require('./modules/financial/expenses/routes'));
 
 // ============================================
-// Legacy Routes (To be migrated to modules)
+// Additional System Modules
 // ============================================
 
-// Upload routes (legacy - will be deprecated for documents module)
-apiRouter.use('/upload', require('./routes/legacy/upload.routes'));
-apiRouter.use('/uploads', require('./routes/legacy/upload.routes'));
+// User management routes (profiles, settings)
+apiRouter.use('/', require('./modules/system/users/routes'));
 
-// User routes (will be migrated to modules/system/)
-apiRouter.use('/profiles', require('./routes/legacy/profiles.routes'));
-apiRouter.use('/settings', require('./routes/legacy/settings.routes'));
-apiRouter.use('/onboarding', require('./routes/legacy/onboarding.routes'));
+// Onboarding and tutorial routes
+apiRouter.use('/onboarding', require('./modules/system/onboarding/routes'));
 
 // Stats routes (hierarchical dashboard statistics)
 apiRouter.use('/stats', require('./modules/system/stats/routes'));
+
+// SkySlope integration routes
+apiRouter.use('/skyslope', require('./modules/integration/skyslope/routes'));
 
 // Mount API router
 app.use(`/${process.env.API_VERSION || 'v1'}`, apiRouter);
