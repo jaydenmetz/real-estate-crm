@@ -1,7 +1,13 @@
 # 🏗️ Real Estate CRM - System Architecture
 
+**NOTE (November 2025):** This project has migrated to **Domain-Driven Design (DDD)** architecture. For current structure and patterns, see [DDD_STRUCTURE.md](DDD_STRUCTURE.md). This file remains for historical reference and general architectural principles.
+
+---
+
 ## 📐 Architecture Philosophy
 **Goal:** Enterprise-grade, maintainable, scalable architecture following industry best practices.
+
+**Current Approach:** Domain-Driven Design (DDD) with module-based organization - See [DDD_STRUCTURE.md](DDD_STRUCTURE.md)
 
 ---
 

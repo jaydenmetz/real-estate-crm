@@ -1,8 +1,9 @@
 # CLAUDE.md - Real Estate CRM Development Guide
 
-**Last Updated:** November 3, 2025
+**Last Updated:** November 15, 2025
 **Project Status:** Phase A Complete (15/105 projects) - Phase B Active
 **Roadmap Reference:** `/docs/COMPLETE_ROADMAP.md` (105 projects across 8 phases)
+**Architecture:** Domain-Driven Design (DDD) - See `/docs/DDD_STRUCTURE.md`
 
 ---
 
@@ -348,36 +349,138 @@ git push origin main
 
 ## 📁 PROJECT STRUCTURE
 
-### File Organization Rules
+### Domain-Driven Design (DDD) Architecture
+
+**IMPORTANT:** This project follows **Domain-Driven Design** principles, organizing code by business domain rather than technical layers.
+
+**Key Concepts:**
+- **Module-based structure:** Each module represents a business capability
+- **Collocated code:** Controllers, services, routes, and tests live together
+- **`__tests__/` convention:** Jest auto-discovers tests in `__tests__/` directories (Facebook pattern, 2014)
+- **NO module READMEs:** Documentation lives in `/docs`, not scattered across modules
+
+### Backend Module Structure
+
 ```
-real-estate-crm/
-├── backend/
-│   ├── src/
-│   │   ├── controllers/     # Request handlers
-│   │   ├── middleware/      # Auth, validation
-│   │   ├── routes/         # API endpoints
-│   │   └── services/       # Business logic
-│   └── migrations/         # Database migrations
-├── frontend/
-│   └── src/
-│       ├── components/
-│       │   ├── dashboards/  # Main dashboard views
-│       │   ├── details/     # Detail pages structure
-│       │   │   └── [entity]/
-│       │   │       ├── hero/
-│       │   │       ├── widgets/
-│       │   │       └── sidebar/
-│       │   ├── common/      # Shared components
-│       │   └── health/      # Health check dashboards
-│       └── services/        # API and WebSocket
-├── docs/                    # Active documentation only
-│   ├── COMPLETE_ROADMAP.md # Master plan (105 projects)
-│   └── PROGRESS_TRACKER.md # Living progress document
-├── scripts/                 # Utility scripts
-└── archive/                # Old code versions
+backend/src/
+├── modules/                      # DDD modules (by business domain)
+│   ├── core-modules/            # The Big 4: escrows, clients, leads, appointments
+│   │   └── escrows/
+│   │       ├── controllers/     # HTTP request handlers
+│   │       ├── services/        # Business logic
+│   │       │   ├── index.js
+│   │       │   ├── commission/  # Sub-services
+│   │       │   └── zillow/
+│   │       ├── routes/          # API endpoints
+│   │       └── __tests__/       # Unit tests (colocated!)
+│   ├── operations/              # listings, documents
+│   ├── crm/                     # contacts, contact-roles
+│   ├── system/                  # auth, teams, users, onboarding, admin
+│   ├── workflow/                # projects, tasks
+│   ├── integration/             # communications, webhooks, skyslope
+│   └── financial/               # commissions, invoices, expenses
+│
+├── lib/                         # Shared libraries (cross-cutting)
+│   ├── ai/
+│   ├── communication/
+│   │   └── __tests__/          # Tests for shared services
+│   ├── infrastructure/
+│   └── security/
+│       └── __tests__/
+│
+├── routes/                      # Platform-level routes (cross-cutting)
+│   ├── platform/               # ai, analytics, health
+│   └── security/               # apiKeys, gdpr, securityEvents
+│
+├── tests/                       # Integration tests (full API testing)
+│   ├── escrows.test.js
+│   ├── clients.test.js
+│   └── ...
+│
+├── middleware/                  # Express middleware
+├── config/                      # Configuration
+├── utils/                       # Utility functions
+└── app.js                       # Express app setup
 ```
 
+### Frontend Structure
+
+```
+frontend/src/
+├── components/
+│   ├── dashboards/              # Main dashboard views
+│   ├── details/                 # Detail pages with hero/widgets/sidebar
+│   │   └── [entity]/
+│   │       ├── hero/
+│   │       ├── widgets/
+│   │       └── sidebar/
+│   ├── common/                  # Shared components
+│   └── health/                  # Health check dashboards
+├── services/                    # API and WebSocket
+├── contexts/                    # React contexts (auth, user)
+├── hooks/                       # Custom React hooks
+└── utils/                       # Utility functions
+```
+
+### Testing Structure
+
+**Three Types of Tests:**
+
+1. **Unit Tests** (in module `__tests__/` directories)
+   - Test individual functions/classes
+   - Location: `backend/src/modules/*/\_\_tests\_\_/`
+   - Example: `backend/src/modules/core-modules/escrows/__tests__/escrows.service.test.js`
+
+2. **Shared Library Tests** (in `lib/*/\_\_tests\_\_/`)
+   - Test cross-cutting services
+   - Examples:
+     - `backend/src/lib/communication/__tests__/alerting.service.test.js`
+     - `backend/src/lib/security/__tests__/geoAnomaly.service.test.js`
+
+3. **Integration Tests** (in `backend/src/tests/`)
+   - Test full API endpoints end-to-end
+   - Example: `backend/src/tests/escrows.test.js`
+
+**Running Tests:**
+```bash
+npm test                    # All tests
+npm test -- escrows        # Specific module
+npm test -- --watch        # Watch mode
+npm test -- --coverage     # Coverage report
+```
+
+### Module Organization (7 Categories, 23 Modules)
+
+| Category | Modules | Purpose |
+|----------|---------|---------|
+| **core-modules** | escrows, clients, leads, appointments | Primary business entities |
+| **operations** | listings, documents | Day-to-day operations |
+| **crm** | contacts | Customer relationship management |
+| **system** | auth, teams, users, onboarding, admin, waitlist, link-preview, stats | Platform-level features |
+| **workflow** | projects, tasks | Task/project management |
+| **integration** | communications, webhooks, skyslope | External systems |
+| **financial** | commissions, invoices, expenses | Money operations |
+
+**Comprehensive DDD Documentation:** See [docs/DDD_STRUCTURE.md](docs/DDD_STRUCTURE.md)
+
 ### Critical Rules
+
+**DO:**
+✅ Keep modules self-contained (all related code together)
+✅ Use `__tests__/` for unit tests (Jest convention)
+✅ Centralize documentation in `/docs` (never in modules)
+✅ Follow naming: `*.controller.js`, `*.service.js`, `*.routes.js`, `*.test.js`
+✅ Edit in place - never create duplicate files
+
+**DON'T:**
+❌ **NEVER create module READMEs** - violates DDD principles
+❌ **NEVER put tests in `backend/src/tests/`** - that's for integration tests only
+❌ **NEVER mix concerns** - thin controllers, business logic in services
+❌ **NEVER create duplicate files** - use `git mv` to preserve history
+❌ **NEVER skip error handling** - always wrap in try/catch
+
+### File Organization Rules
+
 - **NO files in root** except README.md, CLAUDE.md, docker-compose.yml, railway.json
 - **NO duplicate files** - Edit existing files, don't create versions
 - **Archive old code** to `archive/ComponentName_YYYY-MM-DD.jsx`
@@ -640,8 +743,9 @@ find frontend/src -name "*ComponentName*" 2>/dev/null
 Keep these docs current in `/docs`:
 - `COMPLETE_ROADMAP.md` - 105 project master plan
 - `PROGRESS_TRACKER.md` - Living progress document
+- `DDD_STRUCTURE.md` - Domain-Driven Design architecture guide (NEW)
 - `ARCHITECTURE.md` - System patterns
-- `API_REFERENCE.md` - Endpoint documentation  
+- `API_REFERENCE.md` - Endpoint documentation
 - `DATABASE_STRUCTURE.md` - Schema reference
 - `SECURITY_REFERENCE.md` - Security architecture
 
