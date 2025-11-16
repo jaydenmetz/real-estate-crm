@@ -1,113 +1,23 @@
 /**
  * Leads CRUD Controller
  *
- * Handles basic CRUD operations for leads:
- * - getLeads: List all leads with filtering, pagination, and ownership scoping
- * - getLead: Get single lead by ID
- * - createLead: Create new lead
- * - updateLead: Update existing lead with optimistic locking
- * - archiveLead: Soft delete (archive) a lead
- * - deleteLead: Permanently delete archived lead
- * - batchDeleteLeads: Batch delete multiple archived leads
+ * HTTP layer for leads operations - delegates business logic to service layer.
+ * Handles request/response and error mapping only.
  *
  * @module controllers/leads/crud
  */
 
-const { pool } = require('../../../../config/infrastructure/database');
+const leadsService = require('../services/leads.service');
 const logger = require('../../../../utils/logger');
-const websocketService = require('../../../../lib/infrastructure/websocket.service');
-const { buildOwnershipWhereClause, validateScope, getDefaultScope } = require('../../../../utils/ownership.helper');
 
 // GET /api/v1/leads
 exports.getLeads = async (req, res) => {
   try {
-    const {
-      leadStatus,
-      leadType,
-      search,
-      page = 1,
-      limit = 20,
-    } = req.query;
-
-    const offset = (page - 1) * limit;
-    const whereConditions = ['deleted_at IS NULL'];
-    const queryParams = [];
-    let paramIndex = 1;
-
-    // Status filter
-    if (leadStatus) {
-      whereConditions.push(`lead_status = $${paramIndex}`);
-      queryParams.push(leadStatus);
-      paramIndex++;
-    }
-
-    // Type filter - column doesn't exist yet, skipping
-    // TODO: Add lead_type column to leads table
-    // if (leadType) {
-    //   whereConditions.push(`lead_type = $${paramIndex}`);
-    //   queryParams.push(leadType);
-    //   paramIndex++;
-    // }
-
-    // Search filter
-    if (search) {
-      whereConditions.push(`(first_name ILIKE $${paramIndex} OR last_name ILIKE $${paramIndex} OR email ILIKE $${paramIndex})`);
-      queryParams.push(`%${search}%`);
-      paramIndex++;
-    }
-
-    // PHASE 2: Handle ownership-based scope filtering with PRIVACY (multi-tenant)
-    // IMPORTANT: Leads support is_private flag - brokers cannot see private leads
-    // Normalize role - it might be a string or an array
-    const userRole = Array.isArray(req.user?.role) ? req.user.role[0] : req.user?.role;
-    const requestedScope = req.query.scope || getDefaultScope(userRole);
-    const scope = validateScope(requestedScope, userRole);
-
-    // Build ownership filter with privacy support (no table alias)
-    const ownershipFilter = buildOwnershipWhereClause(
-      req.user.id,
-      userRole,
-      req.user.broker_id,
-      req.user.team_id || req.user.teamId,
-      'lead',
-      scope,
-      paramIndex
-    );
-
-    if (ownershipFilter.whereClause && ownershipFilter.whereClause !== '1=1') {
-      whereConditions.push(ownershipFilter.whereClause);
-      queryParams.push(...ownershipFilter.params);
-      paramIndex = ownershipFilter.nextParamIndex;
-    }
-
-    const whereClause = `WHERE ${whereConditions.join(' AND ')}`;
-
-    // Get total count
-    const countQuery = `SELECT COUNT(*) as count FROM leads ${whereClause}`;
-    const countResult = await pool.query(countQuery, queryParams);
-    const totalCount = parseInt(countResult.rows[0].count);
-
-    // Get paginated data
-    queryParams.push(limit, offset);
-    const dataQuery = `
-      SELECT * FROM leads
-      ${whereClause}
-      ORDER BY created_at DESC
-      LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
-    `;
-    const dataResult = await pool.query(dataQuery, queryParams);
+    const result = await leadsService.getAllLeads(req.query, req.user);
 
     res.json({
       success: true,
-      data: {
-        leads: dataResult.rows,
-        pagination: {
-          currentPage: parseInt(page),
-          totalPages: Math.ceil(totalCount / limit),
-          totalCount,
-          limit: parseInt(limit),
-        },
-      },
+      data: result,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
@@ -127,11 +37,9 @@ exports.getLeads = async (req, res) => {
 exports.getLead = async (req, res) => {
   try {
     const { id } = req.params;
+    const lead = await leadsService.getLeadById(id);
 
-    const query = 'SELECT * FROM leads WHERE id = $1 AND deleted_at IS NULL';
-    const result = await pool.query(query, [id]);
-
-    if (result.rows.length === 0) {
+    if (!lead) {
       return res.status(404).json({
         success: false,
         error: {
@@ -143,7 +51,7 @@ exports.getLead = async (req, res) => {
 
     res.json({
       success: true,
-      data: result.rows[0],
+      data: lead,
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
@@ -162,70 +70,25 @@ exports.getLead = async (req, res) => {
 // POST /api/v1/leads
 exports.createLead = async (req, res) => {
   try {
-    const {
-      firstName,
-      lastName,
-      email,
-      phone,
-      source,
-      notes,
-      leadStatus = 'New',
-      leadScore = 0,
-      leadTemperature = 'Cold',
-    } = req.body;
-
-    // Validation
-    if (!firstName || !lastName) {
-      return res.status(400).json({
-        success: false,
-        error: {
-          code: 'MISSING_FIELDS',
-          message: 'First name and last name are required',
-        },
-      });
-    }
-
-    const query = `
-      INSERT INTO leads (
-        first_name, last_name, email, phone, lead_source,
-        notes, lead_status, lead_score, lead_temperature,
-        assigned_agent_id, team_id, created_at, updated_at
-      )
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-      RETURNING *
-    `;
-
-    const values = [
-      firstName,
-      lastName,
-      email || null,
-      phone || null,
-      source || null,
-      notes || null,
-      leadStatus,
-      leadScore,
-      leadTemperature,
-      req.user?.id || null,
-      req.user?.teamId || req.user?.team_id || null,
-    ];
-
-    const result = await pool.query(query, values);
-    const newLead = result.rows[0];
-
-    // Emit WebSocket event
-    const teamId = req.user?.teamId || req.user?.team_id;
-    const userId = req.user?.id;
-    const eventData = { entityType: 'lead', entityId: newLead.id, action: 'created', data: { id: newLead.id } };
-    if (teamId) websocketService.sendToTeam(teamId, 'data:update', eventData);
-    if (userId) websocketService.sendToUser(userId, 'data:update', eventData);
+    const newLead = await leadsService.createLead(req.body, req.user);
 
     res.status(201).json({
       success: true,
-      data: result.rows[0],
+      data: newLead,
       message: 'Lead created successfully',
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
+    if (error.code === 'MISSING_FIELDS') {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'MISSING_FIELDS',
+          message: error.message,
+        },
+      });
+    }
+
     logger.error('Error creating lead:', error);
     res.status(500).json({
       success: false,
@@ -242,113 +105,46 @@ exports.createLead = async (req, res) => {
 exports.updateLead = async (req, res) => {
   try {
     const { id } = req.params;
-    const updates = req.body;
+    const updatedLead = await leadsService.updateLead(id, req.body, req.user);
 
-    // Build dynamic update query
-    const setClause = [];
-    const values = [];
-    let paramIndex = 1;
-
-    const allowedFields = [
-      'first_name', 'last_name', 'email', 'phone', 'lead_source',
-      'lead_status', 'lead_score', 'lead_temperature', 'notes',
-      'property_interest', 'budget_range', 'timeline', 'next_follow_up',
-    ];
-
-    for (const field of allowedFields) {
-      if (updates[field] !== undefined) {
-        setClause.push(`${field} = $${paramIndex}`);
-        values.push(updates[field]);
-        paramIndex++;
-      }
-    }
-
-    if (setClause.length === 0) {
+    res.json({
+      success: true,
+      data: updatedLead,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    if (error.code === 'NO_UPDATES') {
       return res.status(400).json({
         success: false,
         error: {
           code: 'NO_UPDATES',
-          message: 'No valid fields to update',
+          message: error.message,
         },
       });
     }
 
-    setClause.push('updated_at = CURRENT_TIMESTAMP');
-    setClause.push('last_contact_date = CURRENT_DATE');
-    setClause.push('version = version + 1');
-    setClause.push(`last_modified_by = $${paramIndex}`);
-    values.push(req.user?.id || null);
-    paramIndex++;
-
-    // Optimistic locking: check version if provided
-    const { version: clientVersion } = updates;
-    let versionClause = '';
-    if (clientVersion !== undefined) {
-      versionClause = ` AND version = $${paramIndex}`;
-      values.push(clientVersion);
-      paramIndex++;
-    }
-
-    values.push(id);
-
-    const query = `
-      UPDATE leads
-      SET ${setClause.join(', ')}
-      WHERE id = $${paramIndex} AND deleted_at IS NULL${versionClause}
-      RETURNING *
-    `;
-
-    const result = await pool.query(query, values);
-
-    if (result.rows.length === 0) {
-      // Check if record exists but version mismatch
-      if (clientVersion !== undefined) {
-        const checkQuery = 'SELECT version FROM leads WHERE id = $1 AND deleted_at IS NULL';
-        const checkResult = await pool.query(checkQuery, [id]);
-
-        if (checkResult.rows.length === 0) {
-          return res.status(404).json({
-            success: false,
-            error: {
-              code: 'NOT_FOUND',
-              message: 'Lead not found',
-            },
-          });
-        }
-        return res.status(409).json({
-          success: false,
-          error: {
-            code: 'VERSION_CONFLICT',
-            message: 'This lead was modified by another user. Please refresh and try again.',
-            currentVersion: checkResult.rows[0].version,
-            attemptedVersion: clientVersion,
-          },
-        });
-      }
-
+    if (error.code === 'NOT_FOUND') {
       return res.status(404).json({
         success: false,
         error: {
           code: 'NOT_FOUND',
-          message: 'Lead not found',
+          message: error.message,
         },
       });
     }
 
-    // Emit WebSocket event
-    const updatedLead = result.rows[0];
-    const teamId = req.user?.teamId || req.user?.team_id;
-    const userId = req.user?.id;
-    const eventData = { entityType: 'lead', entityId: updatedLead.id, action: 'updated', data: { id: updatedLead.id } };
-    if (teamId) websocketService.sendToTeam(teamId, 'data:update', eventData);
-    if (userId) websocketService.sendToUser(userId, 'data:update', eventData);
+    if (error.code === 'VERSION_CONFLICT') {
+      return res.status(409).json({
+        success: false,
+        error: {
+          code: 'VERSION_CONFLICT',
+          message: error.message,
+          currentVersion: error.currentVersion,
+          attemptedVersion: error.attemptedVersion,
+        },
+      });
+    }
 
-    res.json({
-      success: true,
-      data: result.rows[0],
-      timestamp: new Date().toISOString(),
-    });
-  } catch (error) {
     logger.error('Error updating lead:', error);
     res.status(500).json({
       success: false,
@@ -365,33 +161,25 @@ exports.updateLead = async (req, res) => {
 exports.archiveLead = async (req, res) => {
   try {
     const { id } = req.params;
-
-    const query = `
-      UPDATE leads
-      SET deleted_at = CURRENT_TIMESTAMP, lead_status = 'archived', updated_at = CURRENT_TIMESTAMP
-      WHERE id = $1 AND deleted_at IS NULL
-      RETURNING *
-    `;
-
-    const result = await pool.query(query, [id]);
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: {
-          code: 'NOT_FOUND',
-          message: 'Lead not found',
-        },
-      });
-    }
+    const archivedLead = await leadsService.archiveLead(id);
 
     res.json({
       success: true,
-      data: result.rows[0],
+      data: archivedLead,
       message: 'Lead archived successfully',
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
+    if (error.code === 'NOT_FOUND') {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: error.message,
+        },
+      });
+    }
+
     logger.error('Error archiving lead:', error);
     res.status(500).json({
       success: false,
@@ -408,40 +196,7 @@ exports.archiveLead = async (req, res) => {
 exports.deleteLead = async (req, res) => {
   try {
     const { id } = req.params;
-
-    // Check if lead is archived
-    const checkQuery = 'SELECT deleted_at FROM leads WHERE id = $1';
-    const checkResult = await pool.query(checkQuery, [id]);
-
-    if (checkResult.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        error: {
-          code: 'NOT_FOUND',
-          message: 'Lead not found',
-        },
-      });
-    }
-
-    if (!checkResult.rows[0].deleted_at) {
-      return res.status(400).json({
-        success: false,
-        error: {
-          code: 'NOT_ARCHIVED',
-          message: 'Lead must be archived before deletion',
-        },
-      });
-    }
-
-    const deleteQuery = 'DELETE FROM leads WHERE id = $1';
-    await pool.query(deleteQuery, [id]);
-
-    // Emit WebSocket event
-    const teamId = req.user?.teamId || req.user?.team_id;
-    const userId = req.user?.id;
-    const eventData = { entityType: 'lead', entityId: id, action: 'deleted', data: { id: id } };
-    if (teamId) websocketService.sendToTeam(teamId, 'data:update', eventData);
-    if (userId) websocketService.sendToUser(userId, 'data:update', eventData);
+    await leadsService.deleteLead(id, req.user);
 
     res.json({
       success: true,
@@ -449,6 +204,26 @@ exports.deleteLead = async (req, res) => {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
+    if (error.code === 'NOT_FOUND') {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'NOT_FOUND',
+          message: error.message,
+        },
+      });
+    }
+
+    if (error.code === 'NOT_ARCHIVED') {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'NOT_ARCHIVED',
+          message: error.message,
+        },
+      });
+    }
+
     logger.error('Error deleting lead:', error);
     res.status(500).json({
       success: false,
@@ -463,64 +238,27 @@ exports.deleteLead = async (req, res) => {
 
 // POST /api/v1/leads/batch-delete
 exports.batchDeleteLeads = async (req, res) => {
-  const client = await pool.connect();
-
   try {
     const { ids } = req.body;
+    const result = await leadsService.batchDeleteLeads(ids, req.user);
 
-    await client.query('BEGIN');
-
-    // Check which leads exist and are archived
-    const existCheckQuery = `
-      SELECT id, deleted_at FROM leads
-      WHERE id = ANY($1)
-    `;
-    const existResult = await client.query(existCheckQuery, [ids]);
-
-    if (existResult.rows.length === 0) {
-      await client.query('COMMIT');
-      return res.json({
-        success: true,
-        message: 'No leads found to delete',
-        deletedCount: 0,
-        deletedIds: [],
-      });
-    }
-
-    // Check if any are not archived
-    const activeLeads = existResult.rows.filter((r) => !r.deleted_at);
-    if (activeLeads.length > 0) {
-      await client.query('ROLLBACK');
-      const activeIds = activeLeads.map((r) => r.id);
+    res.json({
+      success: true,
+      message: `Successfully deleted ${result.deletedCount} leads`,
+      deletedCount: result.deletedCount,
+      deletedIds: result.deletedIds,
+    });
+  } catch (error) {
+    if (error.code === 'NOT_ARCHIVED') {
       return res.status(400).json({
         success: false,
         error: {
           code: 'NOT_ARCHIVED',
-          message: `Some leads are not archived: ${activeIds.join(', ')}`,
+          message: error.message,
         },
       });
     }
 
-    // Delete archived leads
-    const existingIds = existResult.rows.map((r) => r.id);
-    const deleteQuery = 'DELETE FROM leads WHERE id = ANY($1) RETURNING id';
-    const result = await client.query(deleteQuery, [existingIds]);
-
-    await client.query('COMMIT');
-
-    logger.info('Batch deleted leads', {
-      count: result.rowCount,
-      ids: result.rows.map((r) => r.id),
-    });
-
-    res.json({
-      success: true,
-      message: `Successfully deleted ${result.rowCount} leads`,
-      deletedCount: result.rowCount,
-      deletedIds: result.rows.map((r) => r.id),
-    });
-  } catch (error) {
-    await client.query('ROLLBACK');
     logger.error('Error batch deleting leads:', error);
     res.status(500).json({
       success: false,
@@ -530,7 +268,5 @@ exports.batchDeleteLeads = async (req, res) => {
         details: error.message,
       },
     });
-  } finally {
-    client.release();
   }
 };
