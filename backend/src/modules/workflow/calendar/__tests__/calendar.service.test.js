@@ -3,12 +3,12 @@
  * Tests calendar integration, meeting link generation, and ICS file creation
  */
 
-const calendarService = require('../../../modules/workflow/calendar/services/calendar.service');
-const logger = require('../../../utils/logger');
+const calendarService = require('../services/calendar.service');
+const logger = require('../../../../utils/logger');
 const crypto = require('crypto');
 
 // Mock logger and crypto
-jest.mock('../../../utils/logger');
+jest.mock('../../../../utils/logger');
 jest.mock('crypto');
 
 describe('CalendarService Unit Tests', () => {

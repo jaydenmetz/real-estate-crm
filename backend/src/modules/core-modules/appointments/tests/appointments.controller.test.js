@@ -2,7 +2,7 @@ const { pool } = require('../config/infrastructure/database');
 const appointmentsController = require('./appointments.controller');
 
 // Mock database and logger
-jest.mock('../config/database');
+jest.mock('../../../config/infrastructure/database');
 jest.mock('../utils/logger');
 
 describe('AppointmentsController', () => {

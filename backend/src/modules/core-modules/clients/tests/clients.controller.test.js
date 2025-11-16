@@ -2,7 +2,7 @@ const { pool } = require('../config/infrastructure/database');
 const clientsController = require('./clients.controller');
 
 // Mock database
-jest.mock('../config/database');
+jest.mock('../../../config/infrastructure/database');
 
 describe('ClientsController', () => {
   let mockReq;

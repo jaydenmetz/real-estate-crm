@@ -3,12 +3,12 @@
  * Tests geographic anomaly detection for security monitoring
  */
 
-const GeoAnomalyService = require('../security/geoAnomaly.service');
-const SecurityEventService = require('../security/securityEvent.service');
+const GeoAnomalyService = require('../geoAnomaly.service');
+const SecurityEventService = require('../securityEvent.service');
 const { pool } = require('../../../config/infrastructure/database');
 
 // Mock dependencies
-jest.mock('../../../config/database');
+jest.mock('../../../config/infrastructure/database');
 jest.mock('../securityEvent.service');
 
 // Mock global fetch

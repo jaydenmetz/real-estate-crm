@@ -2,7 +2,7 @@ const { pool, query, transaction } = require('../config/infrastructure/database'
 const listingsController = require('../controllers');
 
 // Mock database and logger
-jest.mock('../config/database');
+jest.mock('../../../config/infrastructure/database');
 jest.mock('../utils/logger');
 jest.mock('express-validator', () => ({
   validationResult: jest.fn(() => ({ isEmpty: () => true, array: () => [] })),

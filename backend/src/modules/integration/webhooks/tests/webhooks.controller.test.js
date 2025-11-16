@@ -2,7 +2,7 @@ const { pool } = require('../config/infrastructure/database');
 const webhooksController = require('./webhooks.controller');
 const crypto = require('crypto');
 
-jest.mock('../config/database');
+jest.mock('../../../config/infrastructure/database');
 
 describe('WebhooksController', () => {
   let mockReq;
