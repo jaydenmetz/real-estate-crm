@@ -349,6 +349,10 @@ export const DashboardContent = ({
                 >
                   <Component
                     {...{ [config.entity.name]: item }}
+                    onClick={() => {
+                      // Navigate to detail page
+                      window.location.href = `/${config.entity.namePlural}/${itemId}`;
+                    }}
                     viewMode={viewMode}
                     index={index}
                     isArchived={false}
