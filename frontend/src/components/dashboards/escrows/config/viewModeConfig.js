@@ -133,7 +133,7 @@ export const escrowCardConfig = {
     // Commission (editable with toggle)
     {
       label: 'Commission',
-      field: (escrow) => escrow.commission_amount || escrow.gross_commission || 0,
+      field: (escrow) => escrow.my_commission || escrow.gross_commission || 0,
       formatter: (value) => formatCurrency(value),
       color: {
         primary: '#6366f1',
@@ -144,7 +144,7 @@ export const escrowCardConfig = {
       editor: EditCommissionAmount,
       // Pass additional props needed by EditCommissionAmount
       editorProps: (escrow) => ({
-        value: escrow.commission_amount || escrow.gross_commission || 0,
+        value: escrow.my_commission || escrow.gross_commission || 0,
         commissionPercentage: escrow.commission_percentage || 3,
         commissionType: escrow.commission_type || 'percentage',
         purchasePrice: escrow.purchase_price || 0,
@@ -152,7 +152,7 @@ export const escrowCardConfig = {
       onSave: (escrow, updates) => {
         // EditCommissionAmount returns { my_commission, commission_percentage, commission_type }
         return {
-          commission_amount: updates.my_commission || updates,
+          my_commission: updates.my_commission || updates,
           commission_percentage: updates.commission_percentage,
           commission_type: updates.commission_type,
         };
@@ -334,13 +334,13 @@ export const escrowListConfig = {
     // Commission (editable with toggle)
     {
       label: 'Commission',
-      field: (escrow) => escrow.commission_amount || escrow.gross_commission || 0,
+      field: (escrow) => escrow.my_commission || escrow.gross_commission || 0,
       formatter: (value) => formatCurrency(value),
       editable: true,
       editor: EditCommissionAmount,
       // Pass additional props needed by EditCommissionAmount
       editorProps: (escrow) => ({
-        value: escrow.commission_amount || escrow.gross_commission || 0,
+        value: escrow.my_commission || escrow.gross_commission || 0,
         commissionPercentage: escrow.commission_percentage || 3,
         commissionType: escrow.commission_type || 'percentage',
         purchasePrice: escrow.purchase_price || 0,
@@ -348,7 +348,7 @@ export const escrowListConfig = {
       onSave: (escrow, updates) => {
         // EditCommissionAmount returns { my_commission, commission_percentage, commission_type }
         return {
-          commission_amount: updates.my_commission || updates,
+          my_commission: updates.my_commission || updates,
           commission_percentage: updates.commission_percentage,
           commission_type: updates.commission_type,
         };
@@ -480,19 +480,19 @@ export const escrowTableConfig = {
     // Commission (editable with toggle)
     {
       label: 'Commission',
-      field: (escrow) => escrow.commission_amount || escrow.gross_commission || 0,
+      field: (escrow) => escrow.my_commission || escrow.gross_commission || 0,
       formatter: (value) => formatCurrency(value),
       editable: true,
       editor: EditCommissionAmount,
       editorProps: (escrow) => ({
-        value: escrow.commission_amount || escrow.gross_commission || 0,
+        value: escrow.my_commission || escrow.gross_commission || 0,
         commissionPercentage: escrow.commission_percentage || 3,
         commissionType: escrow.commission_type || 'percentage',
         purchasePrice: escrow.purchase_price || 0,
       }),
       onSave: (escrow, updates) => {
         return {
-          commission_amount: updates.my_commission || updates,
+          my_commission: updates.my_commission || updates,
           commission_percentage: updates.commission_percentage,
           commission_type: updates.commission_type,
         };
