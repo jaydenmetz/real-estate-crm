@@ -198,6 +198,11 @@ export const listingListConfig = {
       label: 'Price',
       field: (listing) => listing.listing_price || listing.price || 0,
       formatter: (value) => `$${parseFloat(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      color: {
+        primary: '#3b82f6',
+        secondary: '#2563eb',
+        bg: 'rgba(59, 130, 246, 0.08)',
+      },
       icon: AttachMoneyIcon,
     },
     {
@@ -207,18 +212,33 @@ export const listingListConfig = {
         const baths = listing.bathrooms || '—';
         return `${beds}/${baths}`;
       },
+      color: {
+        primary: '#8b5cf6',
+        secondary: '#7c3aed',
+        bg: 'rgba(139, 92, 246, 0.08)',
+      },
       icon: BedIcon,
     },
     {
       label: 'Sqft',
       field: 'square_feet',
       formatter: (value) => value ? value.toLocaleString() : '—',
+      color: {
+        primary: '#f59e0b',
+        secondary: '#d97706',
+        bg: 'rgba(245, 158, 11, 0.08)',
+      },
       icon: SquareFootIcon,
     },
     {
       label: 'Commission',
       field: (listing) => listing.commission_amount || listing.commission || 0,
       formatter: (value) => `$${parseFloat(value || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+      color: {
+        primary: '#10b981',
+        secondary: '#059669',
+        bg: 'rgba(16, 185, 129, 0.08)',
+      },
       icon: AttachMoneyIcon,
     },
   ],
