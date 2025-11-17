@@ -365,8 +365,8 @@ const ListItemTemplate = React.memo(({
             </Typography>
           )}
 
-          {/* Metrics Row */}
-          {config.metrics && config.metrics.length > 0 && (
+          {/* Metrics Row - TEMPORARILY DISABLED FOR DEBUGGING */}
+          {/* {config.metrics && config.metrics.length > 0 && (
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 3, mt: 'auto' }}>
               {config.metrics.map((metric, idx) => {
                 const metricValue = typeof metric.field === 'function'
@@ -438,7 +438,12 @@ const ListItemTemplate = React.memo(({
                 );
               })}
             </Box>
-          )}
+          )} */}
+          <Box sx={{ mt: 'auto', p: 1, bgcolor: 'info.light', borderRadius: 1 }}>
+            <Typography variant="caption" sx={{ color: 'info.contrastText' }}>
+              DEBUG: Metrics temporarily disabled to isolate error
+            </Typography>
+          </Box>
         </Box>
       </Box>
 
