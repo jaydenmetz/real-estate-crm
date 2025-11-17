@@ -111,7 +111,7 @@ export const escrowCardConfig = {
     },
   },
 
-  // Metrics Configuration (2x2 grid - only Price and Commission)
+  // Metrics Configuration (1x2 horizontal row - ONLY Price and Commission)
   metrics: [
     // Purchase Price (editable)
     {
