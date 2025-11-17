@@ -184,7 +184,7 @@ const EscrowCard = React.memo(({ escrow, viewMode = 'small', animationType = 'sp
   }, []);
 
   // ✅ Swipe gesture handling
-  const handleDragEnd = useCallback((event: any, info: PanInfo) => {
+  const handleDragEnd = useCallback((event, info) => {
     const swipeThreshold = 50;
     if (info.offset.x < -swipeThreshold) {
       goToNextPanel();
