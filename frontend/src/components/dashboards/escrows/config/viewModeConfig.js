@@ -146,7 +146,10 @@ export const escrowCardConfig = {
       editorProps: (escrow) => ({
         value: escrow.my_commission || escrow.gross_commission || 0,
         // Normalize commission percentage: parseFloat removes trailing zeros
-        commissionPercentage: escrow.commission_percentage ? parseFloat(escrow.commission_percentage) : 3,
+        // Use null if no percentage stored (allows placeholder to show)
+        commissionPercentage: escrow.commission_percentage !== null && escrow.commission_percentage !== undefined
+          ? parseFloat(escrow.commission_percentage)
+          : null,
         commissionType: escrow.commission_type || 'percentage',
         purchasePrice: escrow.purchase_price || 0,
       }),
@@ -343,7 +346,10 @@ export const escrowListConfig = {
       editorProps: (escrow) => ({
         value: escrow.my_commission || escrow.gross_commission || 0,
         // Normalize commission percentage: parseFloat removes trailing zeros
-        commissionPercentage: escrow.commission_percentage ? parseFloat(escrow.commission_percentage) : 3,
+        // Use null if no percentage stored (allows placeholder to show)
+        commissionPercentage: escrow.commission_percentage !== null && escrow.commission_percentage !== undefined
+          ? parseFloat(escrow.commission_percentage)
+          : null,
         commissionType: escrow.commission_type || 'percentage',
         purchasePrice: escrow.purchase_price || 0,
       }),
@@ -489,7 +495,10 @@ export const escrowTableConfig = {
       editorProps: (escrow) => ({
         value: escrow.my_commission || escrow.gross_commission || 0,
         // Normalize commission percentage: parseFloat removes trailing zeros
-        commissionPercentage: escrow.commission_percentage ? parseFloat(escrow.commission_percentage) : 3,
+        // Use null if no percentage stored (allows placeholder to show)
+        commissionPercentage: escrow.commission_percentage !== null && escrow.commission_percentage !== undefined
+          ? parseFloat(escrow.commission_percentage)
+          : null,
         commissionType: escrow.commission_type || 'percentage',
         purchasePrice: escrow.purchase_price || 0,
       }),
